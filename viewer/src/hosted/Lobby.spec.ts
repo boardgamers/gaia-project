@@ -145,12 +145,12 @@ describe("Lobby", () => {
     expect(wrapper.find(".game-bar__player").exists()).to.equal(false);
   });
 
-  it("hides the New game link from a non-admin", async () => {
+  it("shows the New game link for a non-admin too", async () => {
     const { client } = makeClient([]);
     const wrapper = mount(Lobby, { propsData: { client, session: otherSession } });
     await Vue.nextTick();
     await Vue.nextTick();
 
-    expect(wrapper.find('a[href="?create=1"]').exists()).to.equal(false);
+    expect(wrapper.find('a[href="?create=1"]').exists()).to.equal(true);
   });
 });

@@ -68,7 +68,7 @@
       </b-list-group-item>
     </b-list-group>
 
-    <a v-if="isAdmin" href="?create=1" class="btn btn-primary">+ New game</a>
+    <a href="?create=1" class="btn btn-primary">+ New game</a>
   </div>
 </template>
 

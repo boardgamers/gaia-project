@@ -279,6 +279,32 @@ describe("SpaceMap", () => {
     expect(moweydsHex?.querySelector(".building .planet-fill.p")).to.not.equal(null);
   });
 
+  it("renders Moweyds power rings as a full hex-border overlay so they stay visible around a PI", () => {
+    const engine = new Engine(["init 2 lost-fleet-space-map"], { lostFleet: true });
+    engine.players[0].faction = Faction.Moweyds;
+
+    const targetHex = [...engine.map.grid.values()].find(
+      (hex) => !hex.occupied() && hex.data.planet === Planet.Protoplanet
+    );
+
+    expect(targetHex, "need an unoccupied Protoplanet hex").to.not.equal(undefined);
+
+    targetHex.data.building = Building.PlanetaryInstitute;
+    targetHex.data.player = engine.players[0].player;
+    targetHex.data.powerRing = engine.players[0].player;
+
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(SpaceMap, { store });
+
+    const moweydsHex = container.querySelector(`g.space-hex-cell[id="${targetHex}"]`);
+    const ring = moweydsHex?.querySelector(".space-hex-power-ring.p");
+
+    expect(ring).to.not.equal(null);
+    expect(ring?.getAttribute("xlink:href") ?? ring?.getAttribute("href")).to.equal("#space-hex");
+  });
+
   it("does not render final scoring on the map itself (it lives in ResearchBoard's 7th column instead)", () => {
     const engine = new Engine(["init 2 lost-fleet-space-map"], { lostFleet: true });
     const store = makeStore();

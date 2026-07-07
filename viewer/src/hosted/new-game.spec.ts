@@ -18,6 +18,7 @@ describe("buildCreateGameParams", () => {
 
     // the probe engine must not leak its mutations (map, factionVariantVersion)
     expect(params.p_options).to.deep.equal({ lostFleet: true, advancedRules: true, factionVariant: "standard" });
+    expect(params.p_name).to.be.a("string").and.to.not.equal("");
     expect(params.p_seed).to.equal("fixed-seed");
     expect(params.p_setup_move).to.equal("p2 rotate");
     expect(params.p_current_seat).to.be.a("number");

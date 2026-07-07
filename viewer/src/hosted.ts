@@ -114,9 +114,7 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
         // Re-lock on every state so a user playing several (but not all) seats
         // gets whichever of their seats must act now (leech interrupts included).
         const lock = seatToLock(mySeats, playerCount, turnSeat);
-        if (lock !== null) {
-          emitter.emit("player", { index: lock });
-        }
+        emitter.emit("player", lock !== null ? { index: lock } : null);
       },
       onError: (message: string) => {
         emitter.emit("error", message);

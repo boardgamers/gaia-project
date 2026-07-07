@@ -20,6 +20,23 @@ Vue.component("Resource", Resource);
 // arms hover emulation immediately, so the very first tap on any tooltip target works.
 if (typeof document !== "undefined") {
   document.body.addEventListener("touchstart", () => undefined, true);
+
+  let lastTouchEndAt = 0;
+  let lastTouchTarget: EventTarget | null = null;
+  document.body.addEventListener(
+    "touchend",
+    (event) => {
+      const now = Date.now();
+      const target = event.target;
+      const sameTarget = target !== null && target === lastTouchTarget;
+      if (sameTarget && now - lastTouchEndAt < 350) {
+        event.preventDefault();
+      }
+      lastTouchEndAt = now;
+      lastTouchTarget = target;
+    },
+    { capture: true, passive: false }
+  );
 }
 
 function launch(selector: string, component: VueConstructor<Vue> = Game) {

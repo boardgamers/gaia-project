@@ -26,6 +26,19 @@ describe("HostedBar", () => {
     expect(badge.className).to.contain("d-md-inline-block");
   });
 
+  it("does not show 'Your turn' when the session is merely locked to one of its seats while another seat is active", () => {
+    const engine = new Engine(["init 2 hosted-bar-not-my-turn", "p1 faction terrans", "p2 faction hadsch-hallas"]);
+    engine.turnOrder = engine.players.map((pl) => pl.player);
+    const store = makeStore();
+    store.commit("receiveData", engine);
+    store.commit("player", { index: 1 });
+
+    const { getByText, queryByText } = render(HostedBar, { props: { finished: false }, store });
+
+    expect(queryByText("Your turn")).to.equal(null);
+    expect(getByText(/Player 1 to move/)).to.not.equal(null);
+  });
+
   it("still shows a 'Game finished' badge instead of Turn Order once the game has ended", () => {
     const engine = new Engine(["init 2 hosted-bar-finished", "p1 faction terrans", "p2 faction hadsch-hallas"]);
     const store = makeStore();

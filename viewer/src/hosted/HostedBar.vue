@@ -70,8 +70,9 @@ export default Vue.extend({
     // to a real index, or leaves it unset/placeholder otherwise) - the same signal Game.vue's own
     // canPlay already trusts, reused here instead of threading a separate prop through hosted.ts.
     myTurn(): boolean {
-      const player = this.$store.state.player;
-      return !!player && player.index != null && player.index >= 0;
+      const lockedSeat = this.$store.state.player?.index;
+      const turnSeat = this.$store.state.data?.playerToMove;
+      return lockedSeat != null && lockedSeat >= 0 && lockedSeat === turnSeat;
     },
     turnPlayerName(): string {
       const engine = this.$store.state.data;

@@ -2,35 +2,38 @@
   <div class="container py-4" style="max-width: 46rem">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h3 class="mb-0">New game</h3>
-      <a href="?lobby=1" class="btn btn-outline-secondary btn-sm">← Back to lobby</a>
+      <div class="d-flex align-items-center" style="gap: 0.5rem">
+        <b-button v-b-modal.create-game-info size="sm" variant="outline-secondary">Info</b-button>
+        <a href="?lobby=1" class="btn btn-outline-secondary btn-sm">Back to lobby</a>
+      </div>
     </div>
     <b-alert :show="!!message" variant="info" dismissible @dismissed="message = ''">{{ message }}</b-alert>
 
-    <b-alert v-if="!isAdmin" :show="true" variant="warning">Only the admin can create new games.</b-alert>
-
-    <b-form v-else @submit.prevent="createGame">
-      <b-form-group label="Players">
+    <b-form @submit.prevent="createGame">
+      <div class="create-game-section">
+        <div class="create-game-section__label">Players</div>
         <b-button-group>
           <b-button
             v-for="count in [2, 3, 4]"
             :key="count"
             :variant="form.playerCount === count ? 'primary' : 'outline-secondary'"
             @click="setPlayerCount(count)"
-            >{{ count }}</b-button
           >
+            {{ count }}
+          </b-button>
         </b-button-group>
-      </b-form-group>
+      </div>
 
-      <b-form-checkbox v-model="form.testGame" class="mb-2">
-        Test game — I control all seats
-        <span class="text-muted small">(hot-seat; handy for trying out mechanics solo)</span>
-      </b-form-checkbox>
+      <div class="create-game-section">
+        <b-form-checkbox v-model="form.testGame" class="mb-0">Test game - I control all seats</b-form-checkbox>
+      </div>
 
       <template v-if="!form.testGame">
-        <b-form-group :label="`Invite ${form.playerCount - 1} more player(s)`">
-          <div v-if="loadingUsers" class="text-muted small">Loading registered players…</div>
+        <div class="create-game-section">
+          <div class="create-game-section__label">Invite {{ form.playerCount - 1 }} more</div>
+          <div v-if="loadingUsers" class="text-muted small">Loading registered players...</div>
           <div v-else-if="invitableUsers.length === 0" class="text-muted small">
-            No other registered players yet — they need to sign in to the site once first.
+            No other registered players yet - they need to sign in once first.
           </div>
           <b-form-checkbox
             v-for="user in invitableUsers"
@@ -41,18 +44,20 @@
           >
             {{ user.display_name }} <span class="text-muted small">({{ user.email }})</span>
           </b-form-checkbox>
-        </b-form-group>
+        </div>
         <b-button
           variant="outline-secondary"
           size="sm"
           class="mb-3"
           :disabled="invitedUserIds.length === 0"
           @click="shuffleSeats"
-          >Shuffle seat order</b-button
         >
+          Shuffle seat order
+        </b-button>
       </template>
 
-      <b-form-group label="Faction selection">
+      <div class="create-game-section">
+        <div class="create-game-section__label">Faction selection</div>
         <b-form-radio
           v-for="option in auctionVariantOptions"
           :key="option.value"
@@ -60,22 +65,28 @@
           :value="option.value"
         >
           {{ option.label }}
-          <span class="text-muted small d-block">{{ option.description }}</span>
         </b-form-radio>
-      </b-form-group>
+      </div>
 
-      <h6 class="mt-3">Setup preview</h6>
-      <p class="text-muted small mb-2">
-        Reroll until you like the map, then click sectors to rotate them. Whatever's shown becomes the game when you
-        click "Create game" below.
-      </p>
-      <SetupPreview :player-count="form.playerCount" @update="onSetupUpdate" />
+      <div class="create-game-section create-game-section--preview">
+        <div class="create-game-section__label">Setup preview</div>
+        <SetupPreview ref="setupPreview" :player-count="form.playerCount" @update="onSetupUpdate" />
+      </div>
 
-      <div>
-        <b-button type="submit" variant="primary" :disabled="creating || !canCreate">Create game</b-button>
-        <span v-if="!canCreate" class="text-muted small ml-2">{{ blockedReason }}</span>
+      <div class="create-game-sticky-bar">
+        <div v-if="!canCreate" class="text-muted small create-game-sticky-bar__reason">{{ blockedReason }}</div>
+        <div class="d-flex align-items-center justify-content-end" style="gap: 0.5rem">
+          <b-button type="button" variant="outline-secondary" @click="rerollSetup">Reroll setup</b-button>
+          <b-button type="submit" variant="primary" :disabled="creating || !canCreate">Create game</b-button>
+        </div>
       </div>
     </b-form>
+
+    <b-modal id="create-game-info" title="Create game" ok-only>
+      <p class="mb-2">Pick player count, optionally switch on test-game hot-seat mode, invite seats, then choose a faction-selection variant.</p>
+      <p class="mb-2">The setup preview is live: reroll until you like it, and click sectors to rotate them. Whatever is visible when you press Create becomes the game.</p>
+      <p class="mb-0 text-muted small">Extra seed controls are tucked inside the preview's Seed tools toggle to keep this screen compact on mobile.</p>
+    </b-modal>
   </div>
 </template>
 
@@ -100,9 +111,6 @@ export default Vue.extend({
       message: "",
       users: [] as RegisteredUser[],
       invitedUserIds: [] as string[],
-      // Continuously updated by SetupPreview's "update" event (no separate
-      // lock-in step) - whatever's current here at "Create game" click time
-      // is what gets created.
       currentSeed: "" as string,
       currentRotateMove: "" as string,
       setupValid: false,
@@ -120,14 +128,6 @@ export default Vue.extend({
     myUserId(): string {
       return (this.session as any).user?.id ?? "";
     },
-    // Matches create_game's own admin check (supabase/migrations, see
-    // 0008_admin_only_create_game.sql) and Lobby.vue's isAdmin - kept in sync
-    // manually since there's no roles table; the RPC is the actual
-    // enforcement point, this just avoids showing the create form to everyone
-    // else only to have it fail server-side on submit.
-    isAdmin(): boolean {
-      return ((this.session as any).user?.email ?? "").toLowerCase() === "kim.pham.nguyen2@gmail.com";
-    },
     invitableUsers(): RegisteredUser[] {
       return this.users.filter((u) => u.id !== this.myUserId);
     },
@@ -139,9 +139,9 @@ export default Vue.extend({
     },
     blockedReason(): string {
       if (!this.currentSeed || !this.setupValid) {
-        return "Fix the invalid setup above first";
+        return "Fix the invalid setup first";
       }
-      return `Invite ${this.form.playerCount - 1} more player(s) above first`;
+      return `Invite ${this.form.playerCount - 1} more player(s) first`;
     },
   },
   created() {
@@ -161,8 +161,6 @@ export default Vue.extend({
     setPlayerCount(count: number) {
       this.form.playerCount = count;
       this.invitedUserIds = this.invitedUserIds.slice(0, count - 1);
-      // SetupPreview itself rerolls to a fresh seed on a player-count change
-      // and immediately re-emits "update" with it - no need to clear here.
     },
     isInvited(userId: string): boolean {
       return this.invitedUserIds.includes(userId);
@@ -187,6 +185,9 @@ export default Vue.extend({
       this.currentRotateMove = payload.rotateMove;
       this.setupValid = payload.valid;
     },
+    rerollSetup() {
+      (this.$refs.setupPreview as any)?.reroll?.();
+    },
     async createGame() {
       if (!this.canCreate) {
         return;
@@ -194,8 +195,8 @@ export default Vue.extend({
       this.creating = true;
       this.message = "";
       try {
-        const myName = this.users.find((u) => u.id === this.myUserId)?.display_name ?? (this.session as any).user?.email ?? "Host";
-        // Test games: every seat is the creator, played hot-seat.
+        const myName =
+          this.users.find((u) => u.id === this.myUserId)?.display_name ?? (this.session as any).user?.email ?? "Host";
         const seats = this.form.testGame
           ? Array.from({ length: this.form.playerCount }, (_, i) => ({
               userId: this.myUserId,
@@ -226,3 +227,42 @@ export default Vue.extend({
   },
 });
 </script>
+
+<style lang="scss" scoped>
+.create-game-section {
+  margin-bottom: 0.9rem;
+}
+
+.create-game-section__label {
+  margin-bottom: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #5b657a;
+}
+
+.create-game-section--preview {
+  margin-bottom: 5rem;
+}
+
+.create-game-sticky-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  padding: 0.7rem 0 calc(0.7rem + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, #fff 28%, #fff 100%);
+}
+
+.create-game-sticky-bar__reason {
+  margin-bottom: 0.35rem;
+}
+
+@media (max-width: 767px) {
+  .create-game-sticky-bar {
+    margin: 0 -0.5rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+}
+</style>

@@ -73,3 +73,7 @@
 .pointer {
   cursor: pointer;
 }
+
+body {
+  touch-action: manipulation;
+}

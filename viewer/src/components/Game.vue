@@ -72,7 +72,7 @@
           <div v-if="premoveMode" class="alert alert-info premove-banner">
             <strong>{{ premoveEditSeq !== null ? "EDITING PREMOVE" : "PREMOVE" }}</strong> — plays automatically on
             your turn.
-            <div class="small" v-if="!premoveReady">Build the move you want, then queue it below.</div>
+            <div class="small" v-if="!premoveReady">Build the move you want, then end the turn to queue it.</div>
             <div class="small text-warning" v-if="premoveEditDownstreamCount > 0">
               This will also discard the {{ premoveEditDownstreamCount }} premove{{
                 premoveEditDownstreamCount === 1 ? "" : "s"
@@ -86,9 +86,11 @@
                 :disabled="!premoveReady"
                 @click="queueCurrentPremove"
               >
-                {{ premoveEditSeq !== null ? "Save changes" : "Queue this move" }}
+                {{ premoveEditSeq !== null ? "Save changes" : "Queue now" }}
               </button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" @click="cancelPremoveMode">Cancel</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" @click="cancelPremoveMode">
+                Cancel premove
+              </button>
             </div>
           </div>
           <Commands
@@ -96,6 +98,11 @@
             v-if="canPlay"
             :currentMove="currentMove"
             :hide-spacer="true"
+            :show-premove-cancel="premoveMode"
+            :show-premove-confirm="premoveMode && premoveReady"
+            :premove-confirm-label="premoveEditSeq !== null ? 'Save changes' : 'Queue now'"
+            @cancel-premove="cancelPremoveMode"
+            @confirm-premove="queueCurrentPremove"
             @sticky-bar-height="stickyBarHeight = $event"
           />
           <!-- The old "Current player" heading + circle here was redundant with the turn-order
@@ -113,9 +120,12 @@
             <PremoveBar
               :seat="myLockedSeat"
               :compose-mode-preference="premoveModePreference"
+              :sticky-mobile="!canPlay"
+              :bottom-offset="0"
               @mode-preference="setPremoveModePreference"
               @start-new="onStartNewPremove"
               @start-edit="startEditPremove"
+              @bar-height="premoveBarHeight = $event"
             />
           </div>
           <div v-if="premoveEditCascadeNotice !== null" class="alert alert-light small mt-2 py-1 px-2">
@@ -171,7 +181,11 @@
            large dead gap before the first faction board. Same class/CSS-var contract as the
            in-place spacer it replaces here, so the same media query still collapses it to 0 on
            wide viewports. -->
-      <div class="mobile-sticky-actions-spacer" :style="{ '--sticky-bar-height': stickyBarHeight + 'px' }" aria-hidden="true"></div>
+      <div
+        class="mobile-sticky-actions-spacer"
+        :style="{ '--sticky-bar-height': totalStickyFooterHeight + 'px' }"
+        aria-hidden="true"
+      ></div>
     </template>
     <div v-else class="d-flex flex-column">
       <SpaceMap v-if="hasMap" :class="['mb-1', 'space-map', 'col-md-7']" />
@@ -193,6 +207,7 @@ import Engine, {
   EngineOptions,
   Phase,
   Player,
+  Round,
   ResearchField,
 } from "@gaia-project/engine";
 import AdvancedLog from "./AdvancedLog.vue";
@@ -247,6 +262,7 @@ export default class Game extends Vue {
   // `sticky-bar-height` event) so the reserved space for it can render at the end of the page
   // instead of right after Turn Order.
   stickyBarHeight = 0;
+  premoveBarHeight = 0;
   // When joining a game
   name = "";
 
@@ -410,6 +426,10 @@ export default class Game extends Vue {
     return BASE_RESEARCH_BOARD_HEIGHT;
   }
 
+  get totalStickyFooterHeight() {
+    return this.stickyBarHeight + this.premoveBarHeight;
+  }
+
   get logPlacement(): LogPlacement {
     return this.$store.state.preferences.logPlacement;
   }
@@ -442,7 +462,16 @@ export default class Game extends Vue {
   }
 
   get canPlay() {
-    return !this.ended && (!this.$store.state.player || this.sessionPlayer === this.engine.players[this.player]);
+    if (this.ended) {
+      return false;
+    }
+
+    const lockedSeat = this.$store.state.player?.index;
+    if (lockedSeat !== undefined) {
+      return lockedSeat >= 0 && lockedSeat === this.engine.playerToMove;
+    }
+
+    return true;
   }
 
   get hasMap() {
@@ -507,6 +536,7 @@ export default class Game extends Vue {
       !this.premoveMode &&
       !this.canPlay &&
       !this.ended &&
+      this.engine.round >= Round.Round1 &&
       this.myLockedSeat !== undefined &&
       this.myQueuedPremoves.length < 3 &&
       this.engine.previewAvailableCommandsFor(this.myLockedSeat) !== null
@@ -530,7 +560,12 @@ export default class Game extends Vue {
   }
 
   get showPremoveBar(): boolean {
-    return this.myLockedSeat !== undefined && !this.ended && (this.myQueuedPremoves.length > 0 || this.premoveOffered);
+    return (
+      this.engine.round >= Round.Round1 &&
+      this.myLockedSeat !== undefined &&
+      !this.ended &&
+      (this.myQueuedPremoves.length > 0 || this.premoveOffered)
+    );
   }
 
   /** How many entries editing the seat's currently-being-edited Sequential premove would discard -
@@ -730,6 +765,9 @@ export default class Game extends Vue {
 
     if (move.command === Command.EndTurn) {
       this.addMove(this.currentMove + ".");
+      if (this.premoveMode && this.premoveReady) {
+        this.queueCurrentPremove();
+      }
       return;
     }
 

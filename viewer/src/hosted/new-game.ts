@@ -43,6 +43,38 @@ export function randomSeed(): string {
   return `lf-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
 }
 
+const GAME_NAME_ADJECTIVES = [
+  "Amber",
+  "Cinder",
+  "Copper",
+  "Ivory",
+  "Lunar",
+  "North",
+  "Quiet",
+  "Solar",
+  "Swift",
+  "Verdant",
+];
+
+const GAME_NAME_NOUNS = [
+  "Atlas",
+  "Beacon",
+  "Comet",
+  "Drift",
+  "Echo",
+  "Harbor",
+  "Nova",
+  "Orbit",
+  "Signal",
+  "Spire",
+];
+
+export function randomGameName(): string {
+  const adjective = GAME_NAME_ADJECTIVES[Math.floor(Math.random() * GAME_NAME_ADJECTIVES.length)];
+  const noun = GAME_NAME_NOUNS[Math.floor(Math.random() * GAME_NAME_NOUNS.length)];
+  return `${adjective} ${noun}`;
+}
+
 /**
  * Builds the create_game RPC arguments. Seed and rotation are both fixed at
  * creation, once, forever (§J3 + the sector-rotation extension of it) — both
@@ -72,7 +104,7 @@ export function buildCreateGameParams(form: NewGameForm, seed: string, rotateMov
   );
   probe.generateAvailableCommandsIfNeeded();
   return {
-    p_name: "",
+    p_name: randomGameName(),
     p_seed: seed,
     p_player_count: form.playerCount,
     p_options: options,

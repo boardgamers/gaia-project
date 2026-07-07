@@ -1,5 +1,9 @@
 <template>
-  <div class="premove-bar">
+  <div
+    ref="root"
+    :class="['premove-bar', { 'premove-bar--sticky-mobile': stickyMobile }]"
+    :style="{ '--premove-bottom-offset': `${bottomOffset}px` }"
+  >
     <div v-if="willFireLine" class="premove-bar__will-fire small">{{ willFireLine }}</div>
 
     <div class="premove-bar__actions d-flex align-items-center flex-wrap">
@@ -103,7 +107,7 @@
 
 <script lang="ts">
 import Engine, { PlayerEnum } from "@gaia-project/engine";
-import { Component, Prop, Vue } from "vue-property-decorator";
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { PremoveMode, PremoveRow } from "../hosted/types";
 import { buildSequentialChainPreview } from "../logic/premove-preview";
 
@@ -115,7 +119,14 @@ export default class PremoveBar extends Vue {
   @Prop()
   composeModePreference: PremoveMode;
 
+  @Prop({ default: false })
+  stickyMobile: boolean;
+
+  @Prop({ default: 0 })
+  bottomOffset: number;
+
   private selectedSeq: number | null = null;
+  private resizeObserver: ResizeObserver | null = null;
 
   get engine(): Engine {
     return this.$store.state.data;
@@ -274,6 +285,30 @@ export default class PremoveBar extends Vue {
   reorder(seq: number, direction: "up" | "down") {
     this.$store.dispatch("reorderPremove", { seat: this.seat, seq, direction });
   }
+
+  mounted() {
+    if (typeof ResizeObserver !== "undefined") {
+      this.resizeObserver = new ResizeObserver(() => this.emitBarHeight());
+      this.resizeObserver.observe(this.$refs.root as Element);
+    }
+    this.emitBarHeight();
+  }
+
+  beforeDestroy() {
+    this.resizeObserver?.disconnect();
+    this.$emit("bar-height", 0);
+  }
+
+  @Watch("stickyMobile")
+  @Watch("bottomOffset")
+  onLayoutChanged() {
+    this.$nextTick(() => this.emitBarHeight());
+  }
+
+  private emitBarHeight() {
+    const root = this.$refs.root as HTMLElement | undefined;
+    this.$emit("bar-height", this.stickyMobile && root ? root.getBoundingClientRect().height : 0);
+  }
 }
 </script>
 
@@ -318,6 +353,27 @@ export default class PremoveBar extends Vue {
 
   &__detail-move {
     font-weight: 600;
+  }
+}
+
+@media (max-width: 767px) {
+  .premove-bar--sticky-mobile {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: var(--premove-bottom-offset, 0px);
+    z-index: 1029;
+    max-height: 35vh;
+    overflow-y: auto;
+    margin: 0;
+    padding: 0.55rem calc(0.65rem + env(safe-area-inset-right)) calc(0.55rem + env(safe-area-inset-bottom))
+      calc(0.65rem + env(safe-area-inset-left));
+    border-radius: 16px 16px 0 0;
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 0;
+    background: linear-gradient(180deg, #f9fbff 0%, #eef3fb 100%);
+    box-shadow: 0 -8px 22px rgba(20, 26, 50, 0.14);
   }
 }
 </style>

@@ -5,6 +5,25 @@
         <span v-if="init">Pick the number of players</span>
         <RichTextView :content="statusLine" />
       </h5>
+      <b-badge v-if="showYourTurnLabel" variant="success" class="ml-2">Your turn</b-badge>
+      <b-btn
+        v-if="showPremoveConfirm"
+        size="sm"
+        variant="primary"
+        class="ml-2"
+        @click="$emit('confirm-premove')"
+      >
+        {{ premoveConfirmLabel }}
+      </b-btn>
+      <b-btn
+        v-if="showPremoveCancel"
+        size="sm"
+        variant="outline-secondary"
+        class="ml-2"
+        @click="$emit('cancel-premove')"
+      >
+        Cancel premove
+      </b-btn>
       <b-btn v-if="showSilentAuctionInfo" v-b-modal.silent-auction-info variant="link" size="sm" class="ml-2 silent-auction-info-button">
         How does the auction work? <b-badge variant="info" pill>i</b-badge>
       </b-btn>
@@ -50,6 +69,25 @@
         <h5 class="mb-0">
           <RichTextView :content="statusLine" />
         </h5>
+        <b-badge v-if="showYourTurnLabel" variant="success" class="ml-2">Your turn</b-badge>
+        <b-btn
+          v-if="showPremoveConfirm"
+          size="sm"
+          variant="primary"
+          class="ml-2"
+          @click="$emit('confirm-premove')"
+        >
+          {{ premoveConfirmLabel }}
+        </b-btn>
+        <b-btn
+          v-if="showPremoveCancel"
+          size="sm"
+          variant="outline-secondary"
+          class="ml-2"
+          @click="$emit('cancel-premove')"
+        >
+          Cancel premove
+        </b-btn>
         <b-btn v-if="showSilentAuctionInfo" v-b-modal.silent-auction-info variant="link" size="sm" class="ml-2 silent-auction-info-button">
           How does the auction work? <b-badge variant="info" pill>i</b-badge>
         </b-btn>
@@ -299,6 +337,15 @@ export default class Commands extends Vue implements CommandController {
   @Prop({ default: false })
   hideSpacer: boolean;
 
+  @Prop({ default: false })
+  showPremoveCancel: boolean;
+
+  @Prop({ default: false })
+  showPremoveConfirm: boolean;
+
+  @Prop({ default: "Queue now" })
+  premoveConfirmLabel: string;
+
   get controller() {
     return this;
   }
@@ -510,6 +557,11 @@ export default class Commands extends Vue implements CommandController {
    * and the game has actually started. */
   get showResourceBar(): boolean {
     return this.showAutoLeechSelect && !!this.myPlayer?.faction;
+  }
+
+  get showYourTurnLabel(): boolean {
+    const lockedSeat = this.$store.state.player?.index;
+    return !this.init && this.gameData.playerToMove !== undefined && (lockedSeat === undefined || lockedSeat === this.gameData.playerToMove);
   }
 
   /** Live-tracked rendered height of #move-buttons (already capped by its own CSS max-height +
@@ -1235,6 +1287,19 @@ $mobile-sticky-actions-max-height: 40vh;
     &:focus {
       color: #fff;
       background: rgba(255, 255, 255, 0.2);
+    }
+  }
+
+  .btn-outline-secondary {
+    color: #f3f5fa;
+    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.08);
+
+    &:hover,
+    &:focus {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.18);
+      border-color: rgba(255, 255, 255, 0.42);
     }
   }
 }

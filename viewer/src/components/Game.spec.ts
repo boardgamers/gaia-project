@@ -337,6 +337,38 @@ describe("Game", () => {
     }
   });
 
+  it("shows faction-pick controls in hot-seat test games (no hosted seat lock), but hides them for a locked non-turn hosted seat", async () => {
+    const engine = new Engine(["init 2 hosted-faction-picker-visibility"], { lostFleet: true });
+    const mountWithSeat = (seatIndex: number | undefined) => {
+      const store = makeStore();
+      if (seatIndex !== undefined) {
+        store.commit("player", { index: seatIndex });
+      } else {
+        store.state.player = null;
+      }
+      const vm = new (Vue.extend(Game as any))({ store }) as any;
+      vm.handleData(Engine.fromData(JSON.parse(JSON.stringify(engine))));
+      vm.$mount();
+      document.body.appendChild(vm.$el);
+      return vm;
+    };
+
+    const hotSeatVm = mountWithSeat(undefined);
+    await Vue.nextTick();
+    expect(hotSeatVm.canPlay).to.equal(true);
+    expect(hotSeatVm.$el.querySelector("#move")).to.not.equal(null);
+    hotSeatVm.$el.remove();
+    hotSeatVm.$destroy();
+
+    const lockedVm = mountWithSeat(1);
+    await Vue.nextTick();
+    expect(lockedVm.canPlay).to.equal(false);
+    expect(lockedVm.$el.querySelector("#move-buttons")).to.equal(null);
+    expect(lockedVm.$el.textContent).to.not.contain("Sequential premove");
+    lockedVm.$el.remove();
+    lockedVm.$destroy();
+  });
+
   it("hides ScoringBoard for a Lost Fleet game - final scoring, the 7th adv-tech tile, and the round scoring tiles all moved into ResearchBoard's own extra column", () => {
     const engine = new Engine(["init 2 lf-scoring-extension"], { lostFleet: true });
     engine.players.forEach((pl, index) => {
@@ -410,6 +442,8 @@ describe("Game", () => {
       const store = makeStore();
       if (seatIndex !== undefined) {
         store.commit("player", { index: seatIndex });
+      } else {
+        store.state.player = null;
       }
       const vm = new (Vue.extend(Game as any))({ store }) as any;
       vm.handleData(engine);
