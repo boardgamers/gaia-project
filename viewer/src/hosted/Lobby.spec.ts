@@ -12,12 +12,26 @@ describe("Lobby", () => {
 
   function makeClient(games: any[]) {
     let deleted: string | null = null;
+    let gameRows = [...games];
+    let gamesChangeHandler: (() => void) | null = null;
+    let removedChannel: any = null;
+    const channel = {
+      on: (_event: string, _filter: any, handler: () => void) => {
+        gamesChangeHandler = handler;
+        return channel;
+      },
+      subscribe: () => channel,
+    };
     const client = {
       from: () => ({
         select: () => ({
-          order: async () => ({ data: games, error: null }),
+          order: async () => ({ data: gameRows, error: null }),
         }),
       }),
+      channel: () => channel,
+      removeChannel: (value: any) => {
+        removedChannel = value;
+      },
       rpc: async (name: string, args: any) => {
         if (name === "delete_game") {
           deleted = args.p_game_id;
@@ -26,7 +40,16 @@ describe("Lobby", () => {
         throw new Error(`unexpected rpc ${name}`);
       },
     };
-    return { client, deletedId: () => deleted };
+    return {
+      client,
+      deletedId: () => deleted,
+      emitGamesChange: () => gamesChangeHandler && gamesChangeHandler(),
+      setGames: (next: any[]) => {
+        gameRows = next;
+      },
+      removedChannel: () => removedChannel,
+      channel,
+    };
   }
 
   const sampleGames = [
@@ -145,6 +168,30 @@ describe("Lobby", () => {
     expect(wrapper.find(".game-bar__player").exists()).to.equal(false);
   });
 
+  it("shows R0 for a game still in faction selection instead of hiding the badge", async () => {
+    const { client } = makeClient([
+      {
+        id: "g-setup",
+        name: "Setup game",
+        created_by: "user-other",
+        player_count: 2,
+        options: {},
+        status: "active",
+        current_seat: 1,
+        current_round: 0,
+        players: [
+          { seat: 0, invited_email: "alice@example.com", user_id: "user-other", display_name: "Alice", faction: "terrans", score: 10 },
+        ],
+      },
+    ]);
+    const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    expect(wrapper.text()).to.contain("R0");
+    expect(wrapper.findAll(".game-bar__player").length).to.equal(1);
+  });
+
   it("still labels another player's hot-seat game as a test game when the admin views it", async () => {
     const { client } = makeClient([
       {
@@ -175,5 +222,53 @@ describe("Lobby", () => {
     await Vue.nextTick();
 
     expect(wrapper.find('a[href="?create=1"]').exists()).to.equal(true);
+  });
+
+  it("refreshes the lobby when a games-table realtime event arrives", async () => {
+    const game = {
+      id: "g-live",
+      name: "Live game",
+      created_by: "user-other",
+      player_count: 2,
+      options: {},
+      status: "active",
+      current_seat: 0,
+      current_round: null,
+      players: [],
+    };
+    const { client, emitGamesChange, setGames } = makeClient([game]);
+    const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    expect(wrapper.text()).to.not.contain("R4");
+
+    setGames([
+      {
+        ...game,
+        current_round: 4,
+        players: [
+          { seat: 0, invited_email: "alice@example.com", user_id: "user-other", display_name: "Alice", faction: "terrans", score: 28 },
+          { seat: 1, invited_email: "bob@example.com", user_id: "user-friend", display_name: "Bob", faction: "xenos", score: 24 },
+        ],
+      },
+    ]);
+    emitGamesChange();
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    expect(wrapper.text()).to.contain("R4");
+    expect(wrapper.findAll(".game-bar__player").length).to.equal(2);
+  });
+
+  it("removes the realtime channel when the lobby unmounts", async () => {
+    const { client, removedChannel, channel } = makeClient(sampleGames);
+    const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    wrapper.destroy();
+
+    expect(removedChannel()).to.equal(channel);
   });
 });

@@ -28,7 +28,7 @@
       <b-list-group-item v-else-if="games.length === 0">No games yet — create one below.</b-list-group-item>
       <b-list-group-item v-for="game in games" :key="game.id" class="game-bar d-flex align-items-center">
         <a :href="`?game=${game.id}`" class="text-body text-decoration-none flex-grow-1 game-bar__link">
-          <span class="game-bar__round" v-if="game.current_round">R{{ game.current_round }}</span>
+          <span class="game-bar__round" v-if="game.current_round != null">R{{ game.current_round }}</span>
           <span class="game-bar__title">
             <strong>{{ game.name || "Unnamed game" }}</strong>
             <span class="text-muted small">
@@ -92,6 +92,7 @@ export default Vue.extend({
       pushBusy: false,
       pushEnabled: false,
       message: "",
+      gamesChannel: null as any,
     };
   },
   computed: {
@@ -110,9 +111,16 @@ export default Vue.extend({
   },
   created() {
     this.refresh();
+    this.subscribeGames();
     isPushEnabled().then((enabled) => {
       this.pushEnabled = enabled;
     });
+  },
+  beforeDestroy() {
+    if (this.gamesChannel) {
+      (this.client as any).removeChannel(this.gamesChannel);
+      this.gamesChannel = null;
+    }
   },
   methods: {
     async refresh() {
@@ -127,6 +135,13 @@ export default Vue.extend({
         this.games = data ?? [];
       }
       this.loading = false;
+    },
+    subscribeGames() {
+      const channel = (this.client as any)
+        .channel("lobby-games")
+        .on("postgres_changes", { event: "*", schema: "public", table: "games" }, () => this.refresh())
+        .subscribe();
+      this.gamesChannel = channel;
     },
     playerAtSeat(game: any, seat: number | null): any {
       return (game.players ?? []).find((p: any) => p.seat === seat);
