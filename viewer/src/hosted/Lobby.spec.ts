@@ -152,12 +152,12 @@ describe("Lobby", () => {
     await Vue.nextTick();
 
     expect(wrapper.text()).to.contain("R3");
-    const players = wrapper.findAll(".game-card__player");
+    const players = wrapper.findAll(".game-bar__player");
     expect(players.length).to.equal(2);
     expect(players.at(0).text()).to.contain("24");
     expect(players.at(1).text()).to.contain("31");
-    expect(players.at(0).classes()).to.not.contain("game-card__player--active");
-    expect(players.at(1).classes()).to.contain("game-card__player--active");
+    expect(players.at(0).classes()).to.not.contain("game-bar__player--active");
+    expect(players.at(1).classes()).to.contain("game-bar__player--active");
   });
 
   it("shows no round badge or player chips for a game with no cached lobby data yet", async () => {
@@ -166,8 +166,8 @@ describe("Lobby", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
-    expect(wrapper.find(".game-card__round").exists()).to.equal(false);
-    expect(wrapper.find(".game-card__player").exists()).to.equal(false);
+    expect(wrapper.find(".game-bar__round").exists()).to.equal(false);
+    expect(wrapper.find(".game-bar__player").exists()).to.equal(false);
   });
 
   it("shows the current version and expands the changelog on demand", async () => {
@@ -176,8 +176,8 @@ describe("Lobby", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
-    expect(wrapper.text()).to.contain("Version 5.13.2");
-    expect(wrapper.text()).to.not.contain("2026-07-07");
+    expect(wrapper.text()).to.contain("Version 5.13.4");
+    expect(wrapper.text()).to.contain("2026-07-07");
     expect(wrapper.find(".release-modal").exists()).to.equal(false);
 
     const toggle = wrapper.find(".lobby-meta__toggle-link");
@@ -249,7 +249,7 @@ describe("Lobby", () => {
     await Vue.nextTick();
 
     expect(wrapper.text()).to.contain("R0");
-    expect(wrapper.findAll(".game-card__player").length).to.equal(1);
+    expect(wrapper.findAll(".game-bar__player").length).to.equal(1);
   });
 
   it("still labels another player's hot-seat game as a test game when the admin views it", async () => {
@@ -318,7 +318,7 @@ describe("Lobby", () => {
     await Vue.nextTick();
 
     expect(wrapper.text()).to.contain("R4");
-    expect(wrapper.findAll(".game-card__player").length).to.equal(2);
+    expect(wrapper.findAll(".game-bar__player").length).to.equal(2);
   });
 
   it("removes the realtime channel when the lobby unmounts", async () => {

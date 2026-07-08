@@ -1,153 +1,131 @@
-﻿<template>
-  <div class="lobby-shell">
-    <div class="container py-4" style="max-width: 54rem">
-      <section class="lobby-hero">
-        <div class="lobby-hero__copy">
-          <div class="lobby-brand__eyebrow">Private hosted lobby</div>
-          <h1 class="lobby-brand__title">Gaia Project: The Lost Fleet</h1>
-          <div class="lobby-meta">
-            <span class="font-weight-bold">Version {{ currentRelease.version }}</span>
-            <span class="lobby-meta__sep">&middot;</span>
-            <a href="" class="lobby-meta__toggle-link" @click.prevent="showReleaseNotes = true">View changelog</a>
-          </div>
-        </div>
-        <div class="lobby-hero__actions">
-          <b-button
-            size="sm"
-            class="lobby-pill-button"
-            :variant="pushEnabled ? 'success' : 'outline-secondary'"
-            :disabled="pushBusy"
-            v-b-tooltip.hover
-            :title="
-              pushEnabled
-                ? 'This device is registered for turn notifications. Enable it separately on any other device you play from. Click to turn off.'
-                : 'Enable turn notifications on this device'
-            "
-            @click="pushEnabled ? disablePush() : enablePush()"
-          >
-            &#128276; {{ pushEnabled ? "Notifications on" : "Enable notifications" }}
-          </b-button>
-          <b-button size="sm" variant="outline-secondary" class="lobby-pill-button" @click="signOut">Sign out</b-button>
-        </div>
-      </section>
+<template>
+  <div class="container py-4" style="max-width: 46rem">
+    <div class="lobby-header">
+      <h3 class="mb-0">The Lost Fleet - Games</h3>
+      <div class="lobby-header__actions">
+        <b-button
+          size="sm"
+          :variant="pushEnabled ? 'success' : 'outline-secondary'"
+          :disabled="pushBusy"
+          v-b-tooltip.hover
+          :title="
+            pushEnabled
+              ? 'This device is registered for turn notifications. Enable it separately on any other device you play from. Click to turn off.'
+              : 'Enable turn notifications on this device'
+          "
+          @click="pushEnabled ? disablePush() : enablePush()"
+        >
+          &#128276; {{ pushEnabled ? "Notifications on" : "Enable notifications" }}
+        </b-button>
+        <b-button size="sm" variant="outline-secondary" @click="signOut">Sign out</b-button>
+      </div>
+    </div>
 
-      <div v-if="showReleaseNotes" class="release-modal-backdrop" @click.self="showReleaseNotes = false">
-        <div class="release-modal shadow-lg" role="dialog" aria-modal="true" aria-label="Changelog">
-          <div class="release-modal__header">
-            <div>
-              <div class="release-notes__eyebrow text-uppercase text-muted small">Recent changes</div>
-              <h4 class="release-modal__title mb-0">Hosted changelog</h4>
-            </div>
-            <button type="button" class="release-modal__close" aria-label="Close changelog" @click="showReleaseNotes = false">
-              &times;
-            </button>
+    <div class="lobby-meta text-muted small mb-3">
+      <span>{{ userEmail }}</span>
+      <span class="lobby-meta__sep">&middot;</span>
+      <span class="font-weight-bold">Version {{ currentRelease.version }}</span>
+      <span class="lobby-meta__sep">&middot;</span>
+      <span>{{ currentRelease.releasedAt }}</span>
+      <span class="lobby-meta__sep">&middot;</span>
+      <a href="" class="lobby-meta__toggle-link" @click.prevent="showReleaseNotes = true">View changelog</a>
+    </div>
+
+    <div v-if="showReleaseNotes" class="release-modal-backdrop" @click.self="showReleaseNotes = false">
+      <div class="release-modal shadow-lg" role="dialog" aria-modal="true" aria-label="Changelog">
+        <div class="release-modal__header">
+          <div>
+            <div class="release-notes__eyebrow text-uppercase text-muted small">Recent changes</div>
+            <h4 class="release-modal__title mb-0">Hosted changelog</h4>
           </div>
-          <div class="release-modal__body">
-            <div v-for="entry in releaseEntries" :key="`${entry.version}-${entry.releasedAt}`" class="release-notes__entry">
-              <div class="release-notes__heading">
-                <span class="release-notes__kind">{{ entry.kind }}</span>
-                <strong>v{{ entry.version }}</strong>
-              </div>
-              <div class="release-notes__title">{{ entry.title }}</div>
-              <div v-if="entry.impact" class="release-notes__impact text-muted small">Impact: {{ entry.impact }}</div>
-              <ul class="release-notes__list mb-0">
-                <li v-for="change in entry.changes" :key="change">{{ change }}</li>
-              </ul>
+          <button type="button" class="release-modal__close" aria-label="Close changelog" @click="showReleaseNotes = false">
+            &times;
+          </button>
+        </div>
+        <div class="release-modal__body">
+          <div v-for="entry in releaseEntries" :key="`${entry.version}-${entry.releasedAt}`" class="release-notes__entry">
+            <div class="release-notes__heading">
+              <span class="release-notes__kind">{{ entry.kind }}</span>
+              <strong>v{{ entry.version }}</strong>
+              <span class="text-muted">&middot; {{ entry.releasedAt }}</span>
             </div>
+            <div class="release-notes__title">{{ entry.title }}</div>
+            <div v-if="entry.impact" class="release-notes__impact text-muted small">Impact: {{ entry.impact }}</div>
+            <ul class="release-notes__list mb-0">
+              <li v-for="change in entry.changes" :key="change">{{ change }}</li>
+            </ul>
           </div>
         </div>
       </div>
-
-      <b-alert :show="!!message" variant="info" dismissible @dismissed="message = ''">{{ message }}</b-alert>
-
-      <section class="lobby-panel">
-        <div class="lobby-toolbar">
-          <div class="lobby-tabs" role="tablist" aria-label="Game status tabs">
-            <button
-              type="button"
-              class="lobby-tab"
-              :class="{ 'lobby-tab--active': activeTab === 'active' }"
-              @click="activeTab = 'active'"
-            >
-              Active <span class="lobby-tab__count">{{ activeGames.length }}</span>
-            </button>
-            <button
-              type="button"
-              class="lobby-tab"
-              :class="{ 'lobby-tab--active': activeTab === 'finished' }"
-              @click="activeTab = 'finished'"
-            >
-              Finished <span class="lobby-tab__count">{{ finishedGames.length }}</span>
-            </button>
-          </div>
-          <div class="lobby-toolbar__actions">
-            <a href="?create=1" class="btn btn-primary lobby-action-button">+ New game</a>
-            <a v-if="isAdmin" href="?users=1" class="btn btn-outline-secondary lobby-action-button">Manage users</a>
-          </div>
-        </div>
-
-        <div v-if="loading" class="lobby-empty-state">Loading games...</div>
-        <div v-else-if="visibleGames.length === 0" class="lobby-empty-state">
-          {{ activeTab === "active" ? "No active games yet." : "No finished games yet." }}
-        </div>
-        <div v-else class="lobby-games">
-          <div
-            v-for="game in visibleGames"
-            :key="game.id"
-            class="game-swipe"
-            :class="{ 'game-swipe--revealed': revealedGameId === game.id }"
-            @pointerdown="startSwipe(game.id, $event)"
-            @pointermove="moveSwipe(game.id, $event)"
-            @pointerup="endSwipe(game.id, $event)"
-            @pointercancel="endSwipe(game.id, $event)"
-          >
-            <div v-if="isAdmin" class="game-swipe__actions">
-              <button type="button" class="game-swipe__delete" @click.stop="deleteGame(game)">Delete</button>
-            </div>
-            <a
-              :href="`?game=${game.id}`"
-              class="game-card text-body text-decoration-none"
-              :style="{ transform: `translateX(${swipeOffset(game.id)}px)` }"
-              @click="handleGameClick(game.id, $event)"
-            >
-              <div class="game-card__top">
-                <div class="game-card__identity">
-                  <span class="game-card__round" v-if="game.current_round != null">R{{ game.current_round }}</span>
-                  <div class="game-card__title-block">
-                    <strong class="game-card__title">{{ game.name || "Unnamed game" }}</strong>
-                    <div class="game-card__meta">
-                      <span>{{ game.player_count }}p</span>
-                      <span>&middot;</span>
-                      <span>{{ game.options && game.options.lostFleet ? "Lost Fleet" : "Base game" }}</span>
-                      <template v-if="isTestGame(game)">
-                        <span>&middot;</span>
-                        <span>Test game</span>
-                      </template>
-                    </div>
-                  </div>
-                </div>
-                <b-badge :variant="badgeVariant(game)" class="game-card__badge">{{ turnLabel(game) }}</b-badge>
-              </div>
-              <div v-if="playersWithSummary(game).length > 0" class="game-card__players gaia-viewer-game">
-                <span
-                  v-for="player in playersWithSummary(game)"
-                  :key="player.seat"
-                  class="game-card__player"
-                  :class="{ 'game-card__player--active': player.seat === game.current_seat }"
-                  :title="playerBarTitle(game, player)"
-                >
-                  <span class="game-card__avatar">
-                    <svg viewBox="-22 -22 44 44"><Token :faction="player.faction" /></svg>
-                    <span class="game-card__initial">{{ factionInitial(player) }}</span>
-                    <span class="game-card__score">{{ player.score != null ? player.score : "-" }}</span>
-                  </span>
-                </span>
-              </div>
-            </a>
-          </div>
-        </div>
-      </section>
     </div>
+
+    <b-alert :show="!!message" variant="info" dismissible @dismissed="message = ''">{{ message }}</b-alert>
+
+    <div class="lobby-toolbar mb-3">
+      <div class="lobby-tabs" role="tablist" aria-label="Game status tabs">
+        <button
+          type="button"
+          class="lobby-tab"
+          :class="{ 'lobby-tab--active': activeTab === 'active' }"
+          @click="activeTab = 'active'"
+        >
+          Active <span class="lobby-tab__count">{{ activeGames.length }}</span>
+        </button>
+        <button
+          type="button"
+          class="lobby-tab"
+          :class="{ 'lobby-tab--active': activeTab === 'finished' }"
+          @click="activeTab = 'finished'"
+        >
+          Finished <span class="lobby-tab__count">{{ finishedGames.length }}</span>
+        </button>
+      </div>
+      <div class="lobby-toolbar__actions">
+        <a href="?create=1" class="btn btn-primary">+ New game</a>
+        <a v-if="isAdmin" href="?users=1" class="btn btn-outline-secondary">Manage users</a>
+      </div>
+    </div>
+
+    <b-list-group class="mb-3">
+      <b-list-group-item v-if="loading">Loading games...</b-list-group-item>
+      <b-list-group-item v-else-if="visibleGames.length === 0">
+        {{ activeTab === "active" ? "No active games yet." : "No finished games yet." }}
+      </b-list-group-item>
+      <b-list-group-item v-for="game in visibleGames" :key="game.id" class="game-bar d-flex align-items-center">
+        <a :href="`?game=${game.id}`" class="text-body text-decoration-none flex-grow-1 game-bar__link">
+          <span class="game-bar__identity">
+            <span class="game-bar__round-slot">
+              <span v-if="game.current_round != null" class="game-bar__round">R{{ game.current_round }}</span>
+            </span>
+            <span class="game-bar__title">
+              <strong>{{ game.name || "Unnamed game" }}</strong>
+              <span class="text-muted small">
+                &middot; {{ game.player_count }}p &middot; {{ game.options && game.options.lostFleet ? "Lost Fleet" : "base game" }}
+                <template v-if="isTestGame(game)"> &middot; Test game</template>
+              </span>
+            </span>
+          </span>
+          <span v-if="playersWithSummary(game).length > 0" class="game-bar__players gaia-viewer-game">
+            <span
+              v-for="player in playersWithSummary(game)"
+              :key="player.seat"
+              class="game-bar__player"
+              :class="{ 'game-bar__player--active': player.seat === game.current_seat }"
+              :title="playerBarTitle(game, player)"
+            >
+              <span class="game-bar__avatar">
+                <svg viewBox="-22 -22 44 44"><Token :faction="player.faction" /></svg>
+                <span class="game-bar__initial">{{ factionInitial(player) }}</span>
+                <span class="game-bar__score">{{ player.score != null ? player.score : "-" }}</span>
+              </span>
+            </span>
+          </span>
+          <span v-else class="game-bar__players-spacer"></span>
+          <b-badge :variant="badgeVariant(game)" class="game-bar__badge">{{ turnLabel(game) }}</b-badge>
+        </a>
+        <b-button v-if="isAdmin" size="sm" variant="outline-danger" class="ml-2" @click="deleteGame(game)">Delete</b-button>
+      </b-list-group-item>
+    </b-list-group>
   </div>
 </template>
 
@@ -158,8 +136,6 @@ import Token from "../components/Token.vue";
 import { factionName } from "../data/factions";
 import { isAdminEmail } from "./admin";
 import releaseData from "./release.json";
-
-const SWIPE_ACTION_WIDTH = 88;
 
 type ReleaseEntry = {
   version: string;
@@ -187,11 +163,6 @@ export default Vue.extend({
       gamesChannel: null as any,
       showReleaseNotes: false,
       activeTab: "active" as "active" | "finished",
-      revealedGameId: "" as string,
-      swipeGameId: "" as string,
-      swipeStartX: 0,
-      swipeDeltaX: 0,
-      documentPointerDownHandler: null as ((event: PointerEvent) => void) | null,
     };
   },
   computed: {
@@ -229,28 +200,14 @@ export default Vue.extend({
     isPushEnabled().then((enabled) => {
       this.pushEnabled = enabled;
     });
-    if (typeof document !== "undefined") {
-      this.documentPointerDownHandler = (event: PointerEvent) => this.onDocumentPointerDown(event);
-      document.addEventListener("pointerdown", this.documentPointerDownHandler, true);
-    }
   },
   beforeDestroy() {
     if (this.gamesChannel) {
       (this.client as any).removeChannel(this.gamesChannel);
       this.gamesChannel = null;
     }
-    if (typeof document !== "undefined") {
-      if (this.documentPointerDownHandler) {
-        document.removeEventListener("pointerdown", this.documentPointerDownHandler, true);
-      }
-    }
   },
   methods: {
-    onDocumentPointerDown(event: PointerEvent) {
-      if (!(event.target as HTMLElement | null)?.closest?.(".game-swipe")) {
-        this.revealedGameId = "";
-      }
-    },
     async refresh() {
       this.loading = true;
       const { data, error } = await (this.client as any)
@@ -311,46 +268,6 @@ export default Vue.extend({
       const player = this.playerAtSeat(game, game.current_seat);
       return player && player.user_id === this.myUserId ? "success" : "info";
     },
-    swipeOffset(gameId: string): number {
-      if (!this.isAdmin) {
-        return 0;
-      }
-      if (this.swipeGameId === gameId) {
-        const base = this.revealedGameId === gameId ? -SWIPE_ACTION_WIDTH : 0;
-        return Math.max(-SWIPE_ACTION_WIDTH, Math.min(0, base + this.swipeDeltaX));
-      }
-      return this.revealedGameId === gameId ? -SWIPE_ACTION_WIDTH : 0;
-    },
-    startSwipe(gameId: string, event: PointerEvent) {
-      if (!this.isAdmin || (event.target as HTMLElement | null)?.closest(".game-swipe__delete")) {
-        return;
-      }
-      this.swipeGameId = gameId;
-      this.swipeStartX = event.clientX;
-      this.swipeDeltaX = 0;
-      (event.currentTarget as HTMLElement | null)?.setPointerCapture?.(event.pointerId);
-    },
-    moveSwipe(gameId: string, event: PointerEvent) {
-      if (this.swipeGameId !== gameId) {
-        return;
-      }
-      this.swipeDeltaX = event.clientX - this.swipeStartX;
-    },
-    endSwipe(gameId: string, event: PointerEvent) {
-      if (this.swipeGameId !== gameId) {
-        return;
-      }
-      this.revealedGameId = this.swipeOffset(gameId) <= -(SWIPE_ACTION_WIDTH / 2) ? gameId : "";
-      this.swipeGameId = "";
-      this.swipeDeltaX = 0;
-      (event.currentTarget as HTMLElement | null)?.releasePointerCapture?.(event.pointerId);
-    },
-    handleGameClick(gameId: string, event: MouseEvent) {
-      if (this.revealedGameId === gameId) {
-        event.preventDefault();
-        this.revealedGameId = "";
-      }
-    },
     async deleteGame(game: any) {
       if (!window.confirm(`Delete "${game.name || "this game"}"? This cannot be undone.`)) {
         return;
@@ -359,7 +276,6 @@ export default Vue.extend({
       if (error) {
         this.message = `Could not delete the game: ${error.message}`;
       } else {
-        this.revealedGameId = "";
         await this.refresh();
       }
     },
@@ -384,75 +300,19 @@ export default Vue.extend({
 </script>
 
 <style lang="scss" scoped>
-.lobby-shell {
-  min-height: 100vh;
-  background:
-    radial-gradient(circle at top left, rgba(46, 85, 146, 0.18), transparent 36%),
-    radial-gradient(circle at top right, rgba(60, 179, 113, 0.14), transparent 30%),
-    linear-gradient(180deg, #eef3f9 0%, #f8fafc 26%, #ffffff 100%);
-}
-
-.lobby-hero {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-  padding: 1.1rem 1.15rem;
-  margin-bottom: 1rem;
-  border: 1px solid rgba(28, 43, 74, 0.08);
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 18px 45px rgba(20, 26, 50, 0.08);
-}
-
-.lobby-brand__eyebrow {
-  margin-bottom: 0.3rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #5b6b83;
-}
-
-.lobby-brand__title {
-  margin: 0;
-  font-family: "Cinzel", "Palatino Linotype", Georgia, serif;
-  font-size: clamp(1.45rem, 3vw, 2rem);
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  color: #17253d;
-}
-
-.lobby-hero__actions,
-.lobby-toolbar__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  justify-content: flex-end;
-}
-
-.lobby-pill-button,
-.lobby-action-button {
-  border-radius: 999px;
-  box-shadow: 0 1px 2px rgba(31, 45, 82, 0.08);
-}
-
-.lobby-panel {
-  padding: 1rem;
-  border: 1px solid rgba(28, 43, 74, 0.08);
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.86);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 18px 45px rgba(20, 26, 50, 0.08);
-}
-
+.lobby-header,
 .lobby-toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 0.85rem;
-  margin-bottom: 0.85rem;
+  gap: 0.75rem;
+}
+
+.lobby-header__actions,
+.lobby-toolbar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .lobby-tabs {
@@ -473,9 +333,8 @@ export default Vue.extend({
   font-weight: 700;
 
   &--active {
-    background: #1c2b4a;
+    background: #343a40;
     color: #fff;
-    box-shadow: 0 8px 20px rgba(28, 43, 74, 0.18);
   }
 }
 
@@ -488,7 +347,6 @@ export default Vue.extend({
   flex-wrap: wrap;
   align-items: center;
   gap: 0.35rem;
-  margin-top: 0.45rem;
 }
 
 .lobby-meta__sep {
@@ -518,7 +376,6 @@ export default Vue.extend({
 
 .release-modal {
   width: min(100%, 42rem);
-  max-height: min(80vh, 44rem);
   overflow: hidden;
   border: 1px solid #dce6f0;
   border-radius: 0.85rem;
@@ -552,8 +409,10 @@ export default Vue.extend({
 }
 
 .release-modal__body {
-  overflow-y: auto;
   padding: 1rem 1.1rem 1.15rem;
+  max-height: min(68vh, 32rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .release-notes__eyebrow {
@@ -604,113 +463,70 @@ export default Vue.extend({
   padding-left: 1.15rem;
 }
 
-.lobby-empty-state {
-  padding: 1.6rem 1rem;
-  border-radius: 18px;
-  background: linear-gradient(180deg, #f8fbff 0%, #f2f6fb 100%);
-  color: #627188;
-  text-align: center;
+.game-bar {
+  min-height: 4.5rem;
 }
 
-.lobby-games {
-  display: grid;
-  gap: 0.7rem;
-}
-
-.game-swipe {
-  position: relative;
-  overflow: hidden;
-  border-radius: 18px;
-}
-
-.game-swipe__actions {
-  position: absolute;
-  inset: 0;
+.game-bar__link {
   display: flex;
-  justify-content: flex-end;
-  align-items: stretch;
-  background: linear-gradient(180deg, #7a2020 0%, #541515 100%);
-}
-
-.game-swipe__delete {
-  width: 88px;
-  border: 0;
-  background: transparent;
-  color: #fff;
-  font-size: 0.82rem;
-  font-weight: 700;
-}
-
-.game-card {
-  position: relative;
-  display: block;
-  padding: 0.85rem 0.9rem;
-  border: 1px solid rgba(28, 43, 74, 0.1);
-  border-radius: 18px;
-  background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
-  box-shadow: 0 10px 24px rgba(20, 26, 50, 0.08);
-  transition: transform 0.16s ease-out;
-}
-
-.game-card__top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 0.75rem;
-}
-
-.game-card__identity {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.55rem;
+  align-items: center;
+  gap: 0.6rem;
   min-width: 0;
+  min-height: 100%;
 }
 
-.game-card__round {
+.game-bar__identity {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.game-bar__round-slot {
+  width: 2.35rem;
   flex-shrink: 0;
-  font-size: 0.72rem;
-  font-weight: 800;
-  color: #41536f;
-  background: #e9eef5;
-  border-radius: 999px;
-  padding: 0.16rem 0.48rem;
 }
 
-.game-card__title-block {
-  min-width: 0;
+.game-bar__round {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #495057;
+  background: #e9ecef;
+  border-radius: 0.25rem;
+  padding: 0.1rem 0.4rem;
 }
 
-.game-card__title {
-  display: block;
+.game-bar__title {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: #1b273c;
 }
 
-.game-card__meta {
-  color: #68788f;
-  font-size: 0.78rem;
+.game-bar__players {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
-.game-card__badge {
+.game-bar__players-spacer {
+  margin-left: auto;
+}
+
+.game-bar__badge {
   flex-shrink: 0;
   white-space: nowrap;
 }
 
-.game-card__players {
+.game-bar__player {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  margin-top: 0.65rem;
-}
-
-.game-card__player {
-  display: flex;
-  align-items: center;
-  padding: 0.18rem;
-  border-radius: 999px;
+  padding: 0.15rem;
+  border-radius: 50%;
   border: 2px solid transparent;
 
   &--active {
@@ -720,11 +536,11 @@ export default Vue.extend({
   }
 }
 
-.game-card__avatar {
+.game-bar__avatar {
   position: relative;
   display: inline-flex;
-  width: 1.95rem;
-  height: 1.95rem;
+  width: 1.9rem;
+  height: 1.9rem;
 
   svg {
     width: 100%;
@@ -733,7 +549,7 @@ export default Vue.extend({
   }
 }
 
-.game-card__initial {
+.game-bar__initial {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -745,7 +561,7 @@ export default Vue.extend({
   pointer-events: none;
 }
 
-.game-card__score {
+.game-bar__score {
   position: absolute;
   bottom: -0.3rem;
   right: -0.4rem;
@@ -762,33 +578,19 @@ export default Vue.extend({
 }
 
 @media (max-width: 767px) {
-  .lobby-hero,
+  .lobby-header,
   .lobby-toolbar {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .lobby-hero__actions,
+  .lobby-header__actions,
   .lobby-toolbar__actions {
-    justify-content: stretch;
-  }
-
-  .lobby-pill-button,
-  .lobby-action-button {
-    width: 100%;
+    display: grid;
   }
 
   .lobby-tabs {
     align-self: flex-start;
   }
-
-  .game-card__top {
-    flex-direction: column;
-  }
-
-  .game-card__badge {
-    align-self: flex-start;
-  }
 }
 </style>
-
