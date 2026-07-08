@@ -53,8 +53,28 @@ describe("Lobby", () => {
   }
 
   const sampleGames = [
-    { id: "g-mine", name: "My game", created_by: "user-admin", player_count: 2, options: {}, status: "active", current_seat: 0, players: [] },
-    { id: "g-theirs", name: "Their game", created_by: "user-other", player_count: 2, options: {}, status: "active", current_seat: 0, players: [] },
+    {
+      id: "g-mine",
+      name: "My game",
+      created_by: "user-admin",
+      player_count: 2,
+      options: {},
+      status: "active",
+      current_seat: 0,
+      latest_move_summary: null,
+      players: [],
+    },
+    {
+      id: "g-theirs",
+      name: "Their game",
+      created_by: "user-other",
+      player_count: 2,
+      options: {},
+      status: "active",
+      current_seat: 0,
+      latest_move_summary: null,
+      players: [],
+    },
   ];
 
   const membershipGames = [
@@ -66,6 +86,7 @@ describe("Lobby", () => {
       options: {},
       status: "active",
       current_seat: 0,
+      latest_move_summary: "Terrans up int.",
       players: [{ seat: 0, invited_email: "kim.pham.nguyen2@gmail.com", user_id: "user-admin", display_name: "Admin", faction: "terrans", score: 10 }],
     },
     {
@@ -76,6 +97,7 @@ describe("Lobby", () => {
       options: {},
       status: "active",
       current_seat: 0,
+      latest_move_summary: "Xenos pass booster3.",
       players: [{ seat: 0, invited_email: "someone-else@example.com", user_id: "user-other", display_name: "Other", faction: "xenos", score: 8 }],
     },
     {
@@ -86,6 +108,7 @@ describe("Lobby", () => {
       options: {},
       status: "finished",
       current_seat: null,
+      latest_move_summary: "Nevlas form fed.",
       players: [{ seat: 0, invited_email: "someone-else@example.com", user_id: "user-other", display_name: "Other", faction: "nevlas", score: 40 }],
     },
   ];
@@ -108,7 +131,17 @@ describe("Lobby", () => {
 
   it("shows no admin-only controls at all for a non-admin", async () => {
     const { client } = makeClient([
-      { id: "g-own", name: "My game", created_by: "user-other", player_count: 2, options: {}, status: "active", current_seat: 0, players: [] },
+      {
+        id: "g-own",
+        name: "My game",
+        created_by: "user-other",
+        player_count: 2,
+        options: {},
+        status: "active",
+        current_seat: 0,
+        latest_move_summary: null,
+        players: [],
+      },
     ]);
     const wrapper = mount(Lobby, { propsData: { client, session: otherSession } });
     await Vue.nextTick();
@@ -189,6 +222,7 @@ describe("Lobby", () => {
       status: "active",
       current_seat: 1,
       current_round: 3,
+      latest_move_summary: "Terrans build mine sector 3.",
       players: [
         { seat: 0, invited_email: "alice@example.com", user_id: "user-admin", display_name: "Alice", faction: "terrans", score: 24 },
         { seat: 1, invited_email: "bob@example.com", user_id: "user-other", display_name: "Bob", faction: "nevlas", score: 31 },
@@ -206,6 +240,7 @@ describe("Lobby", () => {
     expect(players.at(1).text()).to.contain("31");
     expect(players.at(0).classes()).to.not.contain("game-bar__player--active");
     expect(players.at(1).classes()).to.contain("game-bar__player--active");
+    expect(wrapper.text()).to.contain("Terrans build mine sector 3.");
     expect(wrapper.text()).to.not.contain("your turn");
     expect(wrapper.text()).to.not.contain("Bob to move");
   });
@@ -226,7 +261,7 @@ describe("Lobby", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
-    expect(wrapper.text()).to.contain("Version 5.13.6");
+    expect(wrapper.text()).to.contain("Version 5.13.7");
     expect(wrapper.text()).to.not.contain("2026-07-08");
     expect(wrapper.text()).to.not.contain("kim.pham.nguyen2@gmail.com");
     expect(wrapper.find(".release-modal").exists()).to.equal(false);
@@ -237,8 +272,10 @@ describe("Lobby", () => {
 
     expect(wrapper.find(".release-modal").exists()).to.equal(true);
     expect(wrapper.text()).to.contain("Hosted changelog");
-    expect(wrapper.text()).to.contain("Add My games lobby tab and global hosted lobby visibility");
-    expect(wrapper.text()).to.contain("The hosted lobby now defaults to a My games tab, while Active and Finished still expose the full hosted lobby.");
+    expect(wrapper.text()).to.contain("Compact lobby game bars and latest move summaries");
+    expect(wrapper.text()).to.contain(
+      "Lobby cards now show the game name and a compact latest-move summary instead of player-count and mode metadata."
+    );
     expect(wrapper.text()).to.contain("2026-07-08");
   });
 
@@ -249,21 +286,27 @@ describe("Lobby", () => {
     await Vue.nextTick();
 
     let titles = wrapper.findAll(".game-bar__title").wrappers.map((node) => node.text());
-    expect(titles).to.deep.equal(["My game · 2p · base game"]);
+    expect(titles).to.deep.equal(["My game"]);
+    let summaries = wrapper.findAll(".game-bar__summary").wrappers.map((node) => node.text());
+    expect(summaries).to.deep.equal(["Terrans up int."]);
 
     const activeTab = wrapper.findAll("button").filter((b) => b.text().includes("Active")).at(0);
     await activeTab.trigger("click");
     await Vue.nextTick();
 
     titles = wrapper.findAll(".game-bar__title").wrappers.map((node) => node.text());
-    expect(titles).to.deep.equal(["My game · 2p · base game", "Their game · 2p · base game"]);
+    expect(titles).to.deep.equal(["My game", "Their game"]);
+    summaries = wrapper.findAll(".game-bar__summary").wrappers.map((node) => node.text());
+    expect(summaries).to.deep.equal(["Terrans up int.", "Xenos pass booster3."]);
 
     const finishedTab = wrapper.findAll("button").filter((b) => b.text().includes("Finished")).at(0);
     await finishedTab.trigger("click");
     await Vue.nextTick();
 
     titles = wrapper.findAll(".game-bar__title").wrappers.map((node) => node.text());
-    expect(titles).to.deep.equal(["Finished theirs · 2p · base game"]);
+    expect(titles).to.deep.equal(["Finished theirs"]);
+    summaries = wrapper.findAll(".game-bar__summary").wrappers.map((node) => node.text());
+    expect(summaries).to.deep.equal(["Nevlas form fed."]);
   });
 
   it("shows a My games empty state when the user is not in any listed game", async () => {
@@ -276,6 +319,7 @@ describe("Lobby", () => {
         options: {},
         status: "active",
         current_seat: 0,
+        latest_move_summary: null,
         players: [{ seat: 0, invited_email: "kim.pham.nguyen2@gmail.com", user_id: "user-admin", display_name: "Admin" }],
       },
     ]);
@@ -298,6 +342,7 @@ describe("Lobby", () => {
         status: "active",
         current_seat: 1,
         current_round: 0,
+        latest_move_summary: "P1 pick Terrans.",
         players: [
           { seat: 0, invited_email: "alice@example.com", user_id: "user-other", display_name: "Alice", faction: "terrans", score: 10 },
         ],
@@ -324,6 +369,7 @@ describe("Lobby", () => {
         options: {},
         status: "active",
         current_seat: 0,
+        latest_move_summary: null,
         players: [
           { seat: 0, invited_email: "other@example.com", user_id: "user-other", display_name: "Other A" },
           { seat: 1, invited_email: "other@example.com", user_id: "user-other", display_name: "Other B" },
@@ -359,6 +405,7 @@ describe("Lobby", () => {
       status: "active",
       current_seat: 0,
       current_round: null,
+      latest_move_summary: null,
       players: [],
     };
     const { client, emitGamesChange, setGames } = makeClient([game]);
@@ -375,6 +422,7 @@ describe("Lobby", () => {
       {
         ...game,
         current_round: 4,
+        latest_move_summary: "Terrans up int.",
         players: [
           { seat: 0, invited_email: "alice@example.com", user_id: "user-other", display_name: "Alice", faction: "terrans", score: 28 },
           { seat: 1, invited_email: "bob@example.com", user_id: "user-friend", display_name: "Bob", faction: "xenos", score: 24 },
@@ -386,6 +434,7 @@ describe("Lobby", () => {
     await Vue.nextTick();
 
     expect(wrapper.text()).to.contain("R4");
+    expect(wrapper.text()).to.contain("Terrans up int.");
     expect(wrapper.findAll(".game-bar__player").length).to.equal(2);
   });
 

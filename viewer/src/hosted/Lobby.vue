@@ -131,12 +131,12 @@
               <span class="game-bar__round-slot">
                 <span v-if="game.current_round != null" class="game-bar__round">R{{ game.current_round }}</span>
               </span>
-              <span class="game-bar__title">
-                <strong>{{ game.name || "Unnamed game" }}</strong>
-                <span class="text-muted small">
-                  &middot; {{ game.player_count }}p &middot; {{ game.options && game.options.lostFleet ? "Lost Fleet" : "base game" }}
-                  <template v-if="isTestGame(game)"> &middot; Test game</template>
+              <span class="game-bar__copy">
+                <span class="game-bar__title">
+                  <strong>{{ game.name || "Unnamed game" }}</strong>
+                  <span v-if="isTestGame(game)" class="game-bar__tag text-muted small">Test game</span>
                 </span>
+                <span v-if="game.latest_move_summary" class="game-bar__summary text-muted small">{{ game.latest_move_summary }}</span>
               </span>
             </span>
             <span v-if="playersWithSummary(game).length > 0" class="game-bar__players gaia-viewer-game">
@@ -629,10 +629,31 @@ export default Vue.extend({
 }
 
 .game-bar__title {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.game-bar__copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.05rem;
+  min-width: 0;
+}
+
+.game-bar__summary {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.game-bar__tag {
+  flex-shrink: 0;
 }
 
 .game-bar__players {
@@ -714,6 +735,10 @@ export default Vue.extend({
   }
 
   .game-bar__title {
+    white-space: normal;
+  }
+
+  .game-bar__summary {
     white-space: normal;
   }
 }

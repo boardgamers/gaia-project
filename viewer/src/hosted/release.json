@@ -1,7 +1,18 @@
 {
-  "version": "5.13.6",
+  "version": "5.13.7",
   "releasedAt": "2026-07-08",
   "entries": [
+    {
+      "version": "5.13.7",
+      "releasedAt": "2026-07-08",
+      "kind": "update",
+      "title": "Compact lobby game bars and latest move summaries",
+      "impact": "",
+      "changes": [
+        "Lobby cards now show the game name and a compact latest-move summary instead of player-count and mode metadata.",
+        "Hosted commits now cache a short latest-move string so Active, My games, and Finished can all render it without replaying full logs."
+      ]
+    },
     {
       "version": "5.13.6",
       "releasedAt": "2026-07-08",

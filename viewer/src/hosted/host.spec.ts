@@ -1,5 +1,6 @@
+import Engine from "@gaia-project/engine";
 import { expect } from "chai";
-import { AutoDecideConfig, engineOptions, HostedGameHost, initMoveLine, seatToLock } from "./host";
+import { AutoDecideConfig, engineOptions, HostedGameHost, initMoveLine, latestMoveSummary, seatToLock } from "./host";
 import {
   CommitTurnArgs,
   GameRow,
@@ -38,7 +39,8 @@ function gameRow(): GameRow {
     current_seat: 0,
     move_count: 0,
     current_round: null,
-    };
+    latest_move_summary: null,
+  };
 }
 
 function playerRows(): PlayerRow[] {
@@ -322,6 +324,7 @@ describe("hosted game host", () => {
     expect(commit.move).to.equal("p1 faction terrans");
     expect(commit.finished).to.equal(false);
     expect(commit.nextSeat).to.equal(host.engine.playerToMove);
+    expect(commit.latestMoveSummary).to.equal("P1 pick Terrans.");
     expect(host.committedMoveCount).to.equal(1);
   });
 
@@ -342,6 +345,17 @@ describe("hosted game host", () => {
       { seat: 0, faction: "terrans", score: 10 },
       { seat: 1, faction: "nevlas", score: 10 },
     ]);
+  });
+
+  it("compacts primary move summaries for the lobby row", async () => {
+    const engine = new Engine(["init 2 randomSeed2", "p1 faction terrans", "p2 faction geodens"]);
+    engine.generateAvailableCommandsIfNeeded();
+
+    expect(latestMoveSummary(engine, "terrans up int.")).to.equal("Terrans up int.");
+    expect(latestMoveSummary(engine, "terrans build m 8A2.")).to.equal("Terrans build mine sector 8.");
+    expect(latestMoveSummary(engine, "terrans action power4.")).to.equal("Terrans power action 4.");
+    expect(latestMoveSummary(engine, "terrans federation 1A4,9A9,9B4,9C fed4.")).to.equal("Terrans form fed.");
+    expect(latestMoveSummary(engine, "terrans explore tfmars. endturn")).to.equal("Terrans explore tfmars.");
   });
 
   it("reports the leech decider as next seat when a build interrupts turn order (§J2)", async () => {

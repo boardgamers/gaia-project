@@ -13,6 +13,7 @@ export type GameRow = {
   // Cached lobby-list display data - null until this game's first post-migration commit (see the
   // migration's own doc comment). Never read by game logic, only the Lobby row.
   current_round: number | null;
+  latest_move_summary: string | null;
 };
 
 export type PlayerRow = {
@@ -44,6 +45,7 @@ export type CommitTurnArgs = {
   /** Freshly-computed from the local engine at commit time (see host.ts) - cached lobby display
    * data only, see GameRow/PlayerRow's current_round/faction/score. */
   currentRound: number;
+  latestMoveSummary: string | null;
   playerUpdates: PlayerUpdate[];
 };
 
