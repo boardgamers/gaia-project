@@ -18,7 +18,6 @@
         <div class="open-lobby-page__section open-lobby-page__section--main">
           <div class="open-lobby-page__label">Players</div>
           <div class="open-lobby-page__joined-line">
-            <span class="open-lobby-page__pill">{{ claimedSeats(game) }}/{{ game.player_count }} joined</span>
             <b-button v-if="canLeaveAnySeat(game)" size="sm" variant="outline-secondary" @click="leaveMySeat(game)">
               Leave seat
             </b-button>
@@ -77,7 +76,10 @@ export default Vue.extend({
   },
   methods: {
     async refresh() {
-      this.loading = true;
+      const showLoading = !this.game;
+      if (showLoading) {
+        this.loading = true;
+      }
       const { data, error } = await (this.client as any).from("games").select("*, players(*)").eq("id", this.gameId).maybeSingle();
       if (error) {
         this.message = `Could not load the game: ${error.message}`;
@@ -123,6 +125,32 @@ export default Vue.extend({
     canLeaveAnySeat(game: any): boolean {
       return game.status === "open" && this.mySeat(game) !== null;
     },
+    updateSeatLocally(seat: number, joined: boolean) {
+      if (!this.game) {
+        return;
+      }
+      const me = (this.session as any).user;
+      this.game = {
+        ...this.game,
+        players: (this.game.players ?? []).map((player: any) => {
+          if (player.seat !== seat) {
+            return player;
+          }
+          return joined
+            ? {
+                ...player,
+                user_id: me?.id ?? null,
+                invited_email: me?.email ?? player.invited_email,
+                display_name: me?.email ?? player.display_name,
+              }
+            : {
+                ...player,
+                user_id: null,
+                display_name: "",
+              };
+        }),
+      };
+    },
     async joinFirstOpenSeat(game: any) {
       const seat = this.firstOpenSeat(game);
       if (seat === null) {
@@ -137,7 +165,7 @@ export default Vue.extend({
         window.location.search = `?game=${game.id}`;
         return;
       }
-      await this.refresh();
+      this.updateSeatLocally(seat, true);
     },
     async leaveMySeat(game: any) {
       const seat = this.mySeat(game);
@@ -149,7 +177,7 @@ export default Vue.extend({
         this.message = `Could not leave the seat: ${error.message}`;
         return;
       }
-      await this.refresh();
+      this.updateSeatLocally(seat, false);
     },
   },
 });

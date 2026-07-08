@@ -1,7 +1,17 @@
 {
-  "version": "5.14.3",
+  "version": "5.14.4",
   "releasedAt": "2026-07-08",
   "entries": [
+    {
+      "version": "5.14.4",
+      "releasedAt": "2026-07-08",
+      "kind": "fix",
+      "title": "Steadier lobby setup previews",
+      "changes": [
+        "Open lobby tables no longer reload the full setup preview just because seats change.",
+        "Lobby setup previews now load their board art and map more reliably on first open."
+      ]
+    },
     {
       "version": "5.14.3",
       "releasedAt": "2026-07-08",

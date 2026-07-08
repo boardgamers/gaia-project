@@ -1,7 +1,7 @@
 <template>
   <div class="open-game-preview">
     <div v-if="error" class="text-muted small">{{ error }}</div>
-    <div v-else ref="board"></div>
+    <component :is="previewRoot" v-else-if="previewRoot" />
   </div>
 </template>
 
@@ -22,24 +22,30 @@ export default class OpenGamePreview extends Vue {
   game: any;
 
   error: string | null = null;
+  previewRoot: any = null;
 
   private nestedStore: Store = null;
-  private nestedApp: Vue = null;
 
   mounted() {
     this.nestedStore = makeStore();
-    this.nestedApp = new Vue({
-      store: this.nestedStore,
+    const nestedStore = this.nestedStore;
+    this.previewRoot = Vue.extend({
+      store: nestedStore,
       render: (h) => h(SetupPreviewBoard),
-    }).$mount(this.$refs.board as Element);
-    this.renderGame();
+    });
+    this.$nextTick(() => this.renderGame());
   }
 
-  beforeDestroy() {
-    this.nestedApp?.$destroy();
+  get previewSignature(): string {
+    return JSON.stringify({
+      playerCount: this.game?.player_count ?? null,
+      seed: this.game?.seed ?? null,
+      setupMove: this.game?.setup_move ?? null,
+      options: this.game?.options ?? null,
+    });
   }
 
-  @Watch("game", { deep: true })
+  @Watch("previewSignature")
   onGameChanged() {
     this.renderGame();
   }
