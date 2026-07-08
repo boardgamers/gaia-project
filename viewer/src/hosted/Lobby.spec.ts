@@ -176,8 +176,8 @@ describe("Lobby", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
-    expect(wrapper.text()).to.contain("Version 5.13.4");
-    expect(wrapper.text()).to.contain("2026-07-07");
+    expect(wrapper.text()).to.contain("Version 5.13.5");
+    expect(wrapper.text()).to.contain("2026-07-08");
     expect(wrapper.find(".release-modal").exists()).to.equal(false);
 
     const toggle = wrapper.find(".lobby-meta__toggle-link");
@@ -186,8 +186,8 @@ describe("Lobby", () => {
 
     expect(wrapper.find(".release-modal").exists()).to.equal(true);
     expect(wrapper.text()).to.contain("Hosted changelog");
-    expect(wrapper.text()).to.contain("Release tracking and hosted lobby changelog");
-    expect(wrapper.text()).to.contain("The hosted lobby now shows the current app version and release date.");
+    expect(wrapper.text()).to.contain("Restore hosted lobby bar layout");
+    expect(wrapper.text()).to.contain("The hosted lobby returns to the earlier list-style layout while keeping the Active and Finished tabs.");
   });
 
   it("defaults to Active games and moves finished games into the Finished tab", async () => {

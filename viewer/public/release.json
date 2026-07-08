@@ -1,7 +1,18 @@
 {
-  "version": "5.13.4",
-  "releasedAt": "2026-07-07",
+  "version": "5.13.5",
+  "releasedAt": "2026-07-08",
   "entries": [
+    {
+      "version": "5.13.5",
+      "releasedAt": "2026-07-08",
+      "kind": "update",
+      "title": "Restore hosted lobby bar layout",
+      "impact": "",
+      "changes": [
+        "The hosted lobby returns to the earlier list-style layout while keeping the Active and Finished tabs.",
+        "Game bars now use a consistent row height again, and the hosted changelog modal scrolls independently."
+      ]
+    },
     {
       "version": "5.13.4",
       "releasedAt": "2026-07-07",
