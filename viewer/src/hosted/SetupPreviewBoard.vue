@@ -6,25 +6,33 @@
     <svg class="setup-preview-defs" aria-hidden="true" focusable="false">
       <Definitions />
     </svg>
-    <SpaceMap class="mb-1 space-map" />
-    <svg
-      class="scoring-research-board"
-      :viewBox="`-50 0 ${researchBoardWidth + (engine.options.lostFleet ? 110 : 120) + 50} ${
-        engine.options.lostFleet ? researchBoardViewHeight + 60 : 550
-      }`"
-    >
-      <ResearchBoard :height="researchBoardViewHeight" x="-50" />
-      <ScoringBoard v-if="!engine.options.lostFleet" class="ml-4" width="90" :x="researchBoardWidth + 20" />
-      <BoardAction
-        :scale="17"
-        :transform="`translate(${45 * i - 20}, ${researchBoardViewHeight + 5})`"
-        v-for="(action, i) in actions"
-        :key="action"
-        :action="action"
-      />
-    </svg>
-    <LostFleetShips class="mt-2" />
-    <Pool class="mt-2" />
+    <div :class="['row', 'no-gutters', 'justify-content-center', engine.players.length > 2 ? 'medium-map' : 'small-map']">
+      <SpaceMap :class="['mb-1', 'space-map', 'col-md-7']" />
+      <div class="col-md-5">
+        <svg
+          class="scoring-research-board"
+          :viewBox="`-50 0 ${researchBoardWidth + (engine.options.lostFleet ? 110 : 120) + 50} ${
+            engine.options.lostFleet ? researchBoardViewHeight + 60 : 550
+          }`"
+        >
+          <ResearchBoard :height="researchBoardViewHeight" x="-50" />
+          <ScoringBoard v-if="!engine.options.lostFleet" class="ml-4" width="90" :x="researchBoardWidth + 20" />
+          <BoardAction
+            :scale="17"
+            :transform="`translate(${45 * i - 20}, ${baseResearchBoardHeight + 5})`"
+            v-for="(action, i) in actions"
+            :key="action"
+            :action="action"
+          />
+        </svg>
+      </div>
+    </div>
+    <div class="row mt-2" v-if="engine.options.lostFleet">
+      <LostFleetShips class="col-12 col-md-5 offset-md-7" />
+    </div>
+    <div class="row mt-2">
+      <Pool class="col-12" />
+    </div>
   </div>
 </template>
 
@@ -39,7 +47,7 @@ import Pool from "../components/Pool.vue";
 import ResearchBoard from "../components/ResearchBoard.vue";
 import ScoringBoard from "../components/ScoringBoard.vue";
 import SpaceMap from "../components/SpaceMap.vue";
-import { researchBoardHeight } from "../logic/utils";
+import { BASE_RESEARCH_BOARD_HEIGHT, researchBoardHeight } from "../logic/utils";
 
 // The setup-preview counterpart of Game.vue's map/research/scoring/board-action
 // composition (Game.vue:9-34) — deliberately NOT the whole Game.vue, which
@@ -70,6 +78,10 @@ export default class SetupPreviewBoard extends Vue {
     return researchBoardHeight(this.engine);
   }
 
+  get baseResearchBoardHeight() {
+    return BASE_RESEARCH_BOARD_HEIGHT;
+  }
+
   get actions(): BoardActionEnum[] {
     return BoardActionEnum.values(this.engine.expansions);
   }
@@ -89,6 +101,11 @@ export default class SetupPreviewBoard extends Vue {
   display: block;
 }
 
+.gaia-viewer-game .medium-map,
+.gaia-viewer-game .small-map {
+  flex-wrap: nowrap;
+}
+
 .gaia-viewer-game .setup-preview-defs {
   position: absolute;
   width: 0;
@@ -98,6 +115,11 @@ export default class SetupPreviewBoard extends Vue {
 }
 
 @media (max-width: 767px) {
+  .gaia-viewer-game .small-map,
+  .gaia-viewer-game .medium-map {
+    flex-wrap: wrap;
+  }
+
   .gaia-viewer-game .scoring-research-board {
     width: calc(100% + 1rem);
     max-width: none;

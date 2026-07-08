@@ -43,6 +43,15 @@ function gameRow(): GameRow {
   };
 }
 
+function lostFleetGameRow(): GameRow {
+  return {
+    ...gameRow(),
+    seed: "lost-fleet-space-map",
+    player_count: 2,
+    options: { lostFleet: true, advancedRules: true, factionVariant: "standard" },
+  };
+}
+
 function playerRows(): PlayerRow[] {
   return [
     { game_id: "game-1", seat: 0, invited_email: "alice@example.com", user_id: "user-alice", display_name: "Alice", faction: null, score: null },
@@ -523,6 +532,25 @@ describe("hosted game host", () => {
     expect(backend.fetchMovesCalls).to.equal(fetchesBefore + 1);
     // after resync the engine includes the move the other client committed
     expect(host.committedMoveCount).to.equal(3);
+  });
+
+  it("rebuilds on a seq_conflict even when the server move count matches the optimistic local count", async () => {
+    const backend = new FakeBackend(lostFleetGameRow(), playerRows());
+    backend.seedMoves(["p2 rotate"]);
+    const { host, errors } = makeHost(backend);
+    await host.load();
+
+    // Another tab already landed the first faction pick at seq 2.
+    backend.moves.push({ game_id: "game-1", seq: 2, seat: 0, move: "p1 faction terrans" });
+    (backend as any).game.move_count = 2;
+    backend.failNextCommitWith = "seq_conflict: expected 3, got 2";
+
+    await host.submitMove("p1 faction hadsch-hallas");
+
+    expect(errors).to.deep.equal([]);
+    expect(host.committedMoveCount).to.equal(2);
+    expect(host.engine.moveHistory.slice(1)).to.deep.equal(["p2 rotate", "p1 faction terrans"]);
+    expect(host.engine.players[0].faction).to.equal("terrans");
   });
 
   it("still surfaces a genuine (non-seq_conflict) commit failure as an error", async () => {

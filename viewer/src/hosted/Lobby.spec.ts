@@ -298,6 +298,9 @@ describe("Lobby", () => {
       await Vue.nextTick();
       await Vue.nextTick();
 
+      wrapper.setData({ activeTab: "active" });
+      await Vue.nextTick();
+
       wrapper.setData({ revealedGameId: "g-mine" });
       await Vue.nextTick();
 
@@ -349,6 +352,9 @@ describe("Lobby", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
+    wrapper.setData({ activeTab: "active" });
+    await Vue.nextTick();
+
     expect(wrapper.text()).to.contain("R3");
     const players = wrapper.findAll(".game-bar__player");
     expect(players.length).to.equal(2);
@@ -398,7 +404,7 @@ describe("Lobby", () => {
     expect(wrapper.text()).to.contain("2026-07-08");
   });
 
-  it("defaults to My games, while Lobby, Active, and Finished keep their own sections", async () => {
+  it("defaults to Lobby, while My games, Active, and Finished keep their own sections", async () => {
     const { client } = makeClient(membershipGames, [
       { game_id: "g-open", seq: 1, move: "p3 rotate", committed_at: "2026-07-08T09:00:00Z" },
       { game_id: "g-mine", seq: 7, move: "terrans up int.", committed_at: "2026-07-08T11:05:00Z" },
@@ -410,18 +416,18 @@ describe("Lobby", () => {
     await Vue.nextTick();
 
     let titles = wrapper.findAll(".game-bar__title").wrappers.map((node) => node.text());
-    expect(titles).to.deep.equal(["My gameStandard"]);
+    expect(titles).to.deep.equal(["Open table1/3 joinedStandard"]);
     let summaries = wrapper.findAll(".game-bar__summary").wrappers.map((node) => node.text());
-    expect(summaries).to.deep.equal(["55m ago Terrans up int."]);
+    expect(summaries).to.deep.equal([]);
 
-    const lobbyTab = wrapper.findAll("button").filter((b) => b.text().includes("Lobby")).at(0);
-    await lobbyTab.trigger("click");
+    const mineTab = wrapper.findAll("button").filter((b) => b.text().includes("My games")).at(0);
+    await mineTab.trigger("click");
     await Vue.nextTick();
 
     titles = wrapper.findAll(".game-bar__title").wrappers.map((node) => node.text());
-    expect(titles).to.deep.equal(["Open table1/3 joinedStandard"]);
+    expect(titles).to.deep.equal(["My gameStandard"]);
     summaries = wrapper.findAll(".game-bar__summary").wrappers.map((node) => node.text());
-    expect(summaries).to.deep.equal([]);
+    expect(summaries).to.deep.equal(["55m ago Terrans up int."]);
 
     const activeTab = wrapper.findAll("button").filter((b) => b.text().includes("Active")).at(0);
     await activeTab.trigger("click");
@@ -476,6 +482,9 @@ describe("Lobby", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
+    wrapper.setData({ activeTab: "active" });
+    await Vue.nextTick();
+
     expect(wrapper.find(".game-bar__summary").text()).to.equal("55m ago Ivits up int.");
   });
 
@@ -501,6 +510,9 @@ describe("Lobby", () => {
     ]);
     const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
     await Vue.nextTick();
+    await Vue.nextTick();
+
+    wrapper.setData({ activeTab: "active" });
     await Vue.nextTick();
 
     expect(wrapper.findAll(".game-bar__player-row").length).to.equal(2);
@@ -535,6 +547,9 @@ describe("Lobby", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
+    wrapper.setData({ activeTab: "active" });
+    await Vue.nextTick();
+
     const presenceDots = wrapper.findAll(".game-bar__presence");
     expect(presenceDots.at(0).classes()).to.contain("game-bar__presence--yellow");
     expect(presenceDots.at(1).classes()).to.contain("game-bar__presence--yellow");
@@ -556,6 +571,9 @@ describe("Lobby", () => {
     ]);
     const wrapper = mount(Lobby, { propsData: { client, session: otherSession } });
     await Vue.nextTick();
+    await Vue.nextTick();
+
+    wrapper.setData({ activeTab: "mine" });
     await Vue.nextTick();
 
     expect(wrapper.text()).to.contain("No games with you in them yet.");

@@ -46,8 +46,8 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
   root.appendChild(loadingEl);
   root.appendChild(gameWrapperEl);
 
-  // Created before `bar` so HostedBar.vue can embed <TurnOrder /> (PROGRESS.md Gaia 10, folded in
-  // to replace the old "X to move" text) sharing the SAME store as the Game tree below - TurnOrder
+  // Created before `bar` so HostedBar.vue can embed <TurnOrder /> (PROGRESS.md Gaia 10) sharing
+  // the SAME store as the Game tree below - TurnOrder
   // reads engine/presence state via `this.$store`, which only works if `bar`'s root Vue instance is
   // given this same store at construction (Vuex injects `$store` from the root's `store` option).
   const emitter = launch("#hosted-game", Game);

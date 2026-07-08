@@ -346,7 +346,7 @@ export default Vue.extend({
       message: "",
       gamesChannel: null as any,
       showReleaseNotes: false,
-      activeTab: "mine" as "mine" | "open" | "active" | "finished",
+      activeTab: "open" as "mine" | "open" | "active" | "finished",
       revealedGameId: "" as string,
       swipeGameId: "" as string,
       swipeStartX: 0,
@@ -426,7 +426,7 @@ export default Vue.extend({
     isPushEnabled().then((enabled) => {
       this.pushEnabled = enabled;
     });
-    this.activeTab = "mine";
+    this.activeTab = "open";
     if (typeof document !== "undefined") {
       this.documentPointerDownHandler = (event: PointerEvent) => this.onDocumentPointerDown(event);
       document.addEventListener("pointerdown", this.documentPointerDownHandler, true);

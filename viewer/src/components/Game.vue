@@ -12,8 +12,8 @@
            banner is simpler and also gives each player's circle room for a presence dot (green =
            actively viewing this game right now, yellow = present in the lobby or another game,
            grey = no live presence at all - see hosted/presence.ts). Hosted mode instead folds this
-           into HostedBar.vue's own top banner (PROGRESS.md Gaia 10), replacing its "X to move" text
-           - so this standalone banner only renders for self-contained/hot-seat play now. -->
+           into HostedBar.vue's own top banner (PROGRESS.md Gaia 10), so this standalone banner only
+           renders for self-contained/hot-seat play now. -->
       <div class="row" v-if="!ended && engine.players.length > 0 && !isHostedMode">
         <div class="col-12 turn-order-banner">
           <TurnOrder />

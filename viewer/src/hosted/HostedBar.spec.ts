@@ -5,7 +5,7 @@ import { makeStore } from "../store";
 import HostedBar from "./HostedBar.vue";
 
 describe("HostedBar", () => {
-  it("renders Turn Order alongside an always-visible status badge for an ongoing game", () => {
+  it("renders Turn Order for an ongoing game without a duplicate turn-status badge", () => {
     const engine = new Engine(["init 2 hosted-bar-turn-order", "p1 faction terrans", "p2 faction hadsch-hallas"]);
     engine.turnOrder = engine.players.map((pl) => pl.player);
     const store = makeStore();
@@ -15,24 +15,11 @@ describe("HostedBar", () => {
     // test's outcome doesn't depend on suite execution order.
     store.state.player = null;
 
-    const { container, getByText } = render(HostedBar, { props: { finished: false }, store });
+    const { container, queryByText } = render(HostedBar, { props: { finished: false }, store });
 
     expect(container.querySelector(".turn-order"), "expected the Turn Order circles to render").to.not.equal(null);
-    const badge = getByText(/to move/);
-    expect(badge.className).to.contain("hosted-bar__turn-pill");
-  });
-
-  it("does not show 'Your turn' when the session is merely locked to one of its seats while another seat is active", () => {
-    const engine = new Engine(["init 2 hosted-bar-not-my-turn", "p1 faction terrans", "p2 faction hadsch-hallas"]);
-    engine.turnOrder = engine.players.map((pl) => pl.player);
-    const store = makeStore();
-    store.commit("receiveData", engine);
-    store.commit("player", { index: 1 });
-
-    const { getByText, queryByText } = render(HostedBar, { props: { finished: false }, store });
-
     expect(queryByText("Your turn")).to.equal(null);
-    expect(getByText(/Player 1 to move/)).to.not.equal(null);
+    expect(queryByText(/to move/)).to.equal(null);
   });
 
   it("still shows a 'Game finished' badge instead of Turn Order once the game has ended", () => {

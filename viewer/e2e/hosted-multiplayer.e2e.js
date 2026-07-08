@@ -122,17 +122,15 @@ function check(name) {
   console.log(`✔ ${step}. ${name}`);
 }
 
-async function barBadge(page) {
-  return (await page.locator(".badge").first().textContent()).trim();
-}
+async function waitForTurnState(page, canPlay, timeout = 30000) {
+  if (canPlay) {
+    await page.locator("button.move-button").first().waitFor({ state: "visible", timeout });
+    return;
+  }
 
-async function waitForBadge(page, text, timeout = 30000) {
   await page.waitForFunction(
-    (expected) => {
-      const badge = document.querySelector(".badge");
-      return badge && badge.textContent.trim() === expected;
-    },
-    text,
+    () => document.querySelectorAll("button.move-button").length === 0,
+    undefined,
     { timeout }
   );
 }
@@ -216,14 +214,14 @@ async function main() {
     check(`create_game RPC + redirect (game ${gameId})`);
 
     // --- Seat locking on both sides ---
-    await waitForBadge(pageA, "Your turn");
+    await waitForTurnState(pageA, true);
     if (!(await pageA.locator("text=You play Alice").count())) {
       throw new Error("browser A is not seated as Alice");
     }
     check("browser A: seat 0 locked, engine says it's A's turn");
 
     await pageB.goto(`${BASE_URL}/?game=${gameId}`);
-    await waitForBadge(pageB, "Alice to move");
+    await waitForTurnState(pageB, false);
     if (!(await pageB.locator("text=You play Bob").count())) {
       throw new Error("browser B is not seated as Bob");
     }
@@ -237,19 +235,19 @@ async function main() {
     check(`browser A: picked faction via UI (${factionA})`);
 
     // --- Realtime fan-out: B unlocks WITHOUT reloading ---
-    await waitForBadge(pageB, "Your turn");
+    await waitForTurnState(pageB, true);
     check("browser B: unlocked in realtime after A's commit (no reload)");
-    await waitForBadge(pageA, "Bob to move");
+    await waitForTurnState(pageA, false);
     check("browser A: now locked, B to move");
 
     // --- B commits its faction pick ---
     const factionB = await pickFirstFaction(pageB);
-    await waitForBadge(pageA, "Your turn");
+    await waitForTurnState(pageA, true);
     check(`browser B: picked faction via UI (${factionB}); A unlocked in realtime`);
 
     // --- Persistence: the move log survives a full reload ---
     await pageA.reload();
-    await waitForBadge(pageA, "Your turn");
+    await waitForTurnState(pageA, true);
     const moves = await committedMoves(pageA, gameId);
     if (moves.length !== 2 || moves[0].seq !== 1 || moves[1].seq !== 2) {
       throw new Error(`expected 2 committed moves, got ${JSON.stringify(moves)}`);
@@ -275,7 +273,7 @@ async function main() {
         [SUPABASE_URL, ANON_KEY, PROJECT_REF, gameId],
         { timeout: 20000 }
       );
-      await waitForBadge(pageB, "Your turn");
+      await waitForTurnState(pageB, true);
       check("browser A: placed the first mine via map click; B unlocked in realtime");
     } else {
       console.log("~ skipped map-click mine placement (no selectable hex found)");

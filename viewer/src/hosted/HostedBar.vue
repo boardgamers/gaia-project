@@ -11,9 +11,6 @@
       <b-badge variant="secondary">Game finished</b-badge>
     </template>
     <template v-else>
-      <b-badge :variant="myTurn ? 'success' : 'info'" class="hosted-bar__turn-pill">
-        {{ myTurn ? "Your turn" : `${turnPlayerName} to move` }}
-      </b-badge>
       <div class="hosted-bar__turn-order">
         <TurnOrder compact />
       </div>
@@ -61,21 +58,6 @@ export default Vue.extend({
     pushBusy: { type: Boolean, default: false },
     pushEnabled: { type: Boolean, default: false },
   },
-  computed: {
-    myTurn(): boolean {
-      const lockedSeat = this.$store.state.player?.index;
-      const turnSeat = this.$store.state.data?.playerToMove;
-      return lockedSeat != null && lockedSeat >= 0 && lockedSeat === turnSeat;
-    },
-    turnPlayerName(): string {
-      const engine = this.$store.state.data;
-      const seat = engine?.playerToMove;
-      if (seat == null) {
-        return "";
-      }
-      return engine.players?.[seat]?.name ?? `Player ${seat + 1}`;
-    },
-  },
 });
 </script>
 
@@ -102,11 +84,6 @@ export default Vue.extend({
   min-height: 0;
 }
 
-.hosted-bar__turn-pill {
-  align-self: center;
-  white-space: nowrap;
-}
-
 ::v-deep(.hosted-bar__turn-order .turn-order) {
   display: flex;
   align-items: center;
@@ -124,11 +101,6 @@ export default Vue.extend({
     gap: 0.5rem !important;
     padding-left: 0.75rem !important;
     padding-right: 2.9rem !important;
-  }
-
-  .hosted-bar__turn-pill {
-    font-size: 0.68rem;
-    padding: 0.22rem 0.42rem;
   }
 }
 </style>

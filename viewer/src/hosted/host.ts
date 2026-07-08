@@ -520,6 +520,7 @@ export class HostedGameHost {
 
   private async resyncNow(): Promise<void> {
     const [game, moves] = await Promise.all([this.backend.fetchGame(this.gameId), this.backend.fetchMoves(this.gameId)]);
+    const ordered = [...moves].sort((a, b) => a.seq - b.seq);
 
     // A resync can fire for reasons that have nothing to do with the game actually changing - a
     // backgrounded tab coming back to the foreground (hosted.ts's visibilitychange listener), or a
@@ -533,10 +534,17 @@ export class HostedGameHost {
     // every local commit/remote-move-apply already), so comparing it against the freshly-fetched
     // move count is reliable without needing `this.game`'s own cached fields to be kept in perfect
     // sync everywhere.
-    const unchanged = this.engine && moves.length === this.committedMoveCount && game.status === this.game?.status;
+    const unchanged =
+      this.engine &&
+      ordered.length === this.committedMoveCount &&
+      game.status === this.game?.status &&
+      ordered.every((row, index) => {
+        const replayed = this.engine.moveHistory[index + 1] ?? "";
+        return replayed === row.move || replayed.startsWith(`${row.move} `) || replayed.startsWith(`${row.move}(`);
+      });
     this.game = game;
     if (!unchanged) {
-      this.engine = this.buildEngine(game, moves);
+      this.engine = this.buildEngine(game, ordered);
       this.emitState(this.engine);
     }
     await this.refreshPremoveState();
