@@ -1,7 +1,18 @@
 {
-  "version": "5.14.7",
+  "version": "5.14.8",
   "releasedAt": "2026-07-08",
   "entries": [
+    {
+      "version": "5.14.8",
+      "releasedAt": "2026-07-08",
+      "kind": "fix",
+      "title": "Hosted persistence repair",
+      "impact": "",
+      "changes": [
+        "Hosted games now repair stale move-count drift before the first turn save, preventing setup picks from snapping back to player 1.",
+        "A new hot-seat Playwright harness covers faction-pick and setup-move persistence through a full reload."
+      ]
+    },
     {
       "version": "5.14.7",
       "releasedAt": "2026-07-08",

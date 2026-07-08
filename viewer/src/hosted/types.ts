@@ -67,6 +67,7 @@ export interface HostedBackend {
   fetchPlayers(gameId: string): Promise<PlayerRow[]>;
   fetchMoves(gameId: string): Promise<MoveRow[]>;
   claimMySeats(): Promise<void>;
+  repairMoveCount(gameId: string): Promise<number>;
   commitTurn(args: CommitTurnArgs): Promise<void>;
   fetchPremoves(gameId: string): Promise<PremoveRow[]>;
   fetchPremoveFailures(gameId: string): Promise<PremoveFailureRow[]>;

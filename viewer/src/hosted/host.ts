@@ -248,6 +248,7 @@ export class HostedGameHost {
         this.backend.fetchPlayers(this.gameId),
         this.backend.fetchMoves(this.gameId),
       ]);
+      await this.repairMoveCountIfNeeded(game, moves);
       this.game = game;
       this.players = players;
       this.engine = this.buildEngine(game, moves);
@@ -412,10 +413,13 @@ export class HostedGameHost {
         if (err === null) {
           // The one-shot re-claim + retry succeeded; keep the optimistic committed state.
         } else {
-        // seq_conflict means someone else (another tab, another automated committer) already
-        // landed the next turn - not alarming, just stale local state. Silently resync instead of
-        // showing a scary error for something that isn't actually a problem (this also affects
-        // auto-leech and the premove fast-path below, both of which can race a commit the same way).
+          if (isSeqConflict(err)) {
+            await this.repairMoveCountIfNeeded();
+          }
+          // seq_conflict means someone else (another tab, another automated committer) already
+          // landed the next turn - not alarming, just stale local state. Silently resync instead of
+          // showing a scary error for something that isn't actually a problem (this also affects
+          // auto-leech and the premove fast-path below, both of which can race a commit the same way).
           if (!isSeqConflict(err)) {
             this.callbacks.onError?.(`Could not save the turn (${errorMessage(err)}); reloading the game state.`);
           }
@@ -539,6 +543,7 @@ export class HostedGameHost {
   private async resyncNow(): Promise<void> {
     const [game, moves] = await Promise.all([this.backend.fetchGame(this.gameId), this.backend.fetchMoves(this.gameId)]);
     const ordered = [...moves].sort((a, b) => a.seq - b.seq);
+    await this.repairMoveCountIfNeeded(game, ordered);
 
     // A resync can fire for reasons that have nothing to do with the game actually changing - a
     // backgrounded tab coming back to the foreground (hosted.ts's visibilitychange listener), or a
@@ -567,6 +572,20 @@ export class HostedGameHost {
     }
     await this.refreshPremoveState();
     await this.resolveAutoDecisions();
+  }
+
+  private async repairMoveCountIfNeeded(game?: GameRow, moves?: MoveRow[]): Promise<void> {
+    const row = game ?? this.game;
+    const orderedMoves = moves ?? new Array(this.committedMoveCount);
+    if (!row || row.move_count === orderedMoves.length) {
+      return;
+    }
+    try {
+      row.move_count = await this.backend.repairMoveCount(this.gameId);
+    } catch {
+      // Best-effort repair: if it fails, the normal commit/resync path still surfaces
+      // the underlying problem instead of hiding it behind a secondary RPC error.
+    }
   }
 
   /**

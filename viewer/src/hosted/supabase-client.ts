@@ -69,6 +69,7 @@ export function createSupabaseBackend(client: SupabaseClient): HostedBackend {
     fetchMoves: (gameId): Promise<MoveRow[]> =>
       unwrap(client.from("moves").select("game_id,seq,seat,move").eq("game_id", gameId).order("seq")),
     claimMySeats: (): Promise<void> => unwrap(client.rpc("claim_my_seats")),
+    repairMoveCount: (gameId): Promise<number> => unwrap(client.rpc("repair_game_move_count", { p_game_id: gameId })),
     commitTurn: (args: CommitTurnArgs): Promise<void> =>
       unwrap(
         client.rpc("commit_turn", {

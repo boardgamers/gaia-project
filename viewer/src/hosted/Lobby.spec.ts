@@ -3,6 +3,7 @@ import { expect } from "chai";
 import Vue from "vue";
 import { mount } from "@vue/test-utils";
 import Lobby from "./Lobby.vue";
+import release from "./release.json";
 
 Vue.use(BootstrapVue);
 
@@ -388,7 +389,8 @@ describe("Lobby", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
-    expect(wrapper.text()).to.contain("Version 5.14.5");
+    const currentEntry = release.entries[0];
+    expect(wrapper.text()).to.contain(`Version ${release.version}`);
     expect(wrapper.text()).to.not.contain("2026-07-08");
     expect(wrapper.text()).to.not.contain("kim.pham.nguyen2@gmail.com");
     expect(wrapper.find(".release-modal").exists()).to.equal(false);
@@ -399,9 +401,9 @@ describe("Lobby", () => {
 
     expect(wrapper.find(".release-modal").exists()).to.equal(true);
     expect(wrapper.text()).to.contain("Hosted changelog");
-    expect(wrapper.text()).to.contain("More reliable full setup previews");
-    expect(wrapper.text()).to.contain("Open lobby setup previews now carry their own map and board SVG definitions so missing art is less likely on mobile.");
-    expect(wrapper.text()).to.contain("2026-07-08");
+    expect(wrapper.text()).to.contain(currentEntry.title);
+    expect(wrapper.text()).to.contain(currentEntry.changes[0]);
+    expect(wrapper.text()).to.contain(currentEntry.releasedAt);
   });
 
   it("defaults to Lobby, while My games, Active, and Finished keep their own sections", async () => {

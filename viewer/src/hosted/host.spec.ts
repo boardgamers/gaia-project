@@ -65,8 +65,10 @@ class FakeBackend implements HostedBackend {
   fetchMovesCalls = 0;
   failNextCommitWith: string | null = null;
   claimMySeatsCalls = 0;
+  repairMoveCountCalls = 0;
   premoves: PremoveRow[] = [];
   premoveFailures: PremoveFailureRow[] = [];
+  commitUsesGameMoveCount = false;
   private nextFailureId = 1;
 
   constructor(private game: GameRow, private players: PlayerRow[]) {}
@@ -93,14 +95,21 @@ class FakeBackend implements HostedBackend {
     this.claimMySeatsCalls++;
   }
 
+  async repairMoveCount(): Promise<number> {
+    this.repairMoveCountCalls++;
+    this.game.move_count = this.moves.length;
+    return this.game.move_count;
+  }
+
   async commitTurn(args: CommitTurnArgs): Promise<void> {
     if (this.failNextCommitWith) {
       const message = this.failNextCommitWith;
       this.failNextCommitWith = null;
       throw new Error(message);
     }
-    if (args.seq !== this.moves.length + 1) {
-      throw new Error(`seq_conflict: expected ${this.moves.length + 1}, got ${args.seq}`);
+    const expectedSeq = (this.commitUsesGameMoveCount ? this.game.move_count : this.moves.length) + 1;
+    if (args.seq !== expectedSeq) {
+      throw new Error(`seq_conflict: expected ${expectedSeq}, got ${args.seq}`);
     }
     this.commits.push(args);
     this.moves.push({ game_id: args.gameId, seq: args.seq, seat: args.seat, move: args.move });
@@ -285,6 +294,23 @@ describe("hosted game host", () => {
     await host.load();
 
     expect(backend.claimMySeatsCalls).to.equal(1);
+  });
+
+  it("repairs a stale stored move_count on load before the first hosted commit", async () => {
+    const backend = new FakeBackend(lostFleetGameRow(), playerRows());
+    backend.commitUsesGameMoveCount = true;
+    backend.seedMoves(["p2 rotate"]);
+    backend.game.move_count = 0;
+    const { host, errors } = makeHost(backend);
+
+    await host.load();
+    await host.submitMove("p1 faction terrans");
+
+    expect(backend.repairMoveCountCalls).to.equal(1);
+    expect(backend.commits).to.have.length(1);
+    expect(backend.commits[0].seq).to.equal(2);
+    expect(host.committedMoveCount).to.equal(2);
+    expect(errors).to.deep.equal([]);
   });
 
   it("skips rebuilding/re-emitting on a resync that finds nothing new (spurious tab-foreground/reconnect resync)", async () => {
