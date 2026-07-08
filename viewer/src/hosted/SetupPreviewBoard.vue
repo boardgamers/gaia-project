@@ -3,6 +3,9 @@
        color is a CSS custom property scoped to this class (stylesheets/planets.css, imported by
        Game.vue's <style>). Without it here, every color falls back to invalid/black. -->
   <div class="gaia-viewer-game">
+    <svg class="setup-preview-defs" aria-hidden="true" focusable="false">
+      <Definitions />
+    </svg>
     <SpaceMap class="mb-1 space-map" />
     <svg
       class="scoring-research-board"
@@ -30,6 +33,7 @@ import Vue from "vue";
 import { Component } from "vue-property-decorator";
 import Engine, { BoardAction as BoardActionEnum, ResearchField } from "@gaia-project/engine";
 import BoardAction from "../components/BoardAction.vue";
+import Definitions from "../components/definitions/Definitions.vue";
 import LostFleetShips from "../components/LostFleetShips.vue";
 import Pool from "../components/Pool.vue";
 import ResearchBoard from "../components/ResearchBoard.vue";
@@ -47,6 +51,7 @@ import { researchBoardHeight } from "../logic/utils";
     SpaceMap,
     ResearchBoard,
     ScoringBoard,
+    Definitions,
     BoardAction,
     LostFleetShips,
     Pool,
@@ -77,10 +82,28 @@ export default class SetupPreviewBoard extends Vue {
 
 .gaia-viewer-game .space-map,
 .gaia-viewer-game .scoring-research-board {
+  width: 100%;
   max-width: 100%;
+  max-height: 600px;
+  height: intrinsic;
+  display: block;
 }
 
-.gaia-viewer-game .space-map {
-  max-height: 600px;
+.gaia-viewer-game .setup-preview-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+@media (max-width: 767px) {
+  .gaia-viewer-game .scoring-research-board {
+    width: calc(100% + 1rem);
+    max-width: none;
+    max-height: none;
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+  }
 }
 </style>

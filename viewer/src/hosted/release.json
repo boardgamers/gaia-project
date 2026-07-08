@@ -1,7 +1,17 @@
 {
-  "version": "5.14.4",
+  "version": "5.14.5",
   "releasedAt": "2026-07-08",
   "entries": [
+    {
+      "version": "5.14.5",
+      "releasedAt": "2026-07-08",
+      "kind": "fix",
+      "title": "More reliable full setup previews",
+      "changes": [
+        "Open lobby setup previews now carry their own map and board SVG definitions so missing art is less likely on mobile.",
+        "The full setup preview now uses the same sizing rules as the main game screen, which helps the map render correctly."
+      ]
+    },
     {
       "version": "5.14.4",
       "releasedAt": "2026-07-08",

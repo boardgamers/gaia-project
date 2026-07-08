@@ -382,7 +382,7 @@ describe("Lobby", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
-    expect(wrapper.text()).to.contain("Version 5.14.4");
+    expect(wrapper.text()).to.contain("Version 5.14.5");
     expect(wrapper.text()).to.not.contain("2026-07-08");
     expect(wrapper.text()).to.not.contain("kim.pham.nguyen2@gmail.com");
     expect(wrapper.find(".release-modal").exists()).to.equal(false);
@@ -393,8 +393,8 @@ describe("Lobby", () => {
 
     expect(wrapper.find(".release-modal").exists()).to.equal(true);
     expect(wrapper.text()).to.contain("Hosted changelog");
-    expect(wrapper.text()).to.contain("Open lobby tables and compact release notes");
-    expect(wrapper.text()).to.contain("New games now open in the lobby for players to join instead of requiring direct invites.");
+    expect(wrapper.text()).to.contain("More reliable full setup previews");
+    expect(wrapper.text()).to.contain("Open lobby setup previews now carry their own map and board SVG definitions so missing art is less likely on mobile.");
     expect(wrapper.text()).to.contain("2026-07-08");
   });
 
