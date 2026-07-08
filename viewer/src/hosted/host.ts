@@ -322,8 +322,12 @@ export class HostedGameHost {
   /**
    * The launcher "move" handler. The payload is the whole turn line so far
    * (Game.vue accumulates commands with ". "), so an incomplete line is just
-   * rendered from a throwaway clone; a complete one is committed atomically
-   * and only kept locally once the backend accepted it.
+   * rendered from a throwaway clone; a complete one is committed atomically.
+   *
+   * Completed turns are applied locally BEFORE awaiting the backend round-trip:
+   * otherwise setup-turn confirms (notably initial mines in round 0) can sit
+   * on a stale "Confirm" prompt long enough to look broken even when the move
+   * did save. A commit failure still resyncs back to the real stored state.
    */
   submitMove(move: string): Promise<void> {
     return this.enqueue(async () => {
@@ -369,6 +373,7 @@ export class HostedGameHost {
       return false;
     }
 
+    let emittedCommittedState = false;
     if (copy.newTurn) {
       const finished = copy.phase === Phase.EndGame;
       const args: CommitTurnArgs = {
@@ -382,6 +387,11 @@ export class HostedGameHost {
         latestMoveSummary: latestMoveSummary(copy, move),
         playerUpdates: playerUpdates(copy),
       };
+      // Completed-turn submits should feel immediate on the acting browser too:
+      // keep the optimistic state locally unless the backend rejects it.
+      this.engine = copy;
+      this.emitState(copy);
+      emittedCommittedState = true;
       try {
         await this.backend.commitTurn(args);
       } catch (err) {
@@ -395,7 +405,6 @@ export class HostedGameHost {
         await this.resyncNow();
         return false;
       }
-      this.engine = copy;
       // Phase 3 (§10.7) - a manual move for a seat that still has a queue on file means the queue
       // didn't get the chance to fire for this turn (most commonly: the fast-path's own attempt
       // already failed silently and the human is now looking at the real board). Reconcile before
@@ -405,7 +414,9 @@ export class HostedGameHost {
         await this.reconcileStaleQueue(seat, move);
       }
     }
-    this.emitState(copy);
+    if (!emittedCommittedState) {
+      this.emitState(copy);
+    }
     await this.refreshPremoveState();
     // After emitting, not before: a chained auto-decision computes/commits/emits its own
     // further state, which must never be overwritten by this call's own (now-stale) copy.

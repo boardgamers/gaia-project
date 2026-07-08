@@ -1,7 +1,16 @@
 {
-  "version": "5.14.0",
+  "version": "5.14.1",
   "releasedAt": "2026-07-08",
   "entries": [
+    {
+      "version": "5.14.1",
+      "releasedAt": "2026-07-08",
+      "kind": "fix",
+      "title": "Faster setup-turn updates",
+      "changes": [
+        "Initial faction and mine placement now update immediately after you confirm instead of appearing to stall on the same prompt."
+      ]
+    },
     {
       "version": "5.14.0",
       "releasedAt": "2026-07-08",

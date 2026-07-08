@@ -361,6 +361,35 @@ describe("hosted game host", () => {
     expect(host.engine.playerToMove).to.equal(1);
   });
 
+  it("optimistically advances a completed setup turn before the backend ack returns", async () => {
+    const backend = new FakeBackend(gameRow(), playerRows());
+    backend.seedMoves(["p1 faction terrans", "p2 faction nevlas"]);
+    const { host, states } = makeHost(backend);
+    await host.load();
+
+    let releaseCommit!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      releaseCommit = resolve;
+    });
+    const realCommitTurn = backend.commitTurn.bind(backend);
+    (backend as any).commitTurn = async (args: CommitTurnArgs) => {
+      await gate;
+      return realCommitTurn(args);
+    };
+
+    const submit = host.submitMove("terrans build m -1x2");
+    await Promise.resolve();
+
+    expect(states[states.length - 1].phase).to.equal("setupBuilding");
+    expect(states[states.length - 1].playerToMove).to.equal(1);
+    expect(states[states.length - 1].moveHistory[states[states.length - 1].moveHistory.length - 1]).to.equal(
+      "terrans build m -1x2"
+    );
+
+    releaseCommit();
+    await submit;
+  });
+
   it("compacts primary move summaries for the lobby row", async () => {
     const engine = new Engine(["init 2 randomSeed2", "p1 faction terrans", "p2 faction geodens"]);
     engine.generateAvailableCommandsIfNeeded();

@@ -12,11 +12,12 @@ alter table public.games
   add column if not exists starting_seat int,
   add column if not exists setup_move text;
 
-update public.games
-set starting_seat = coalesce(starting_seat, current_seat);
+alter table public.games
+  drop constraint if exists games_open_requires_starting_seat;
 
 alter table public.games
-  alter column starting_seat set not null;
+  add constraint games_open_requires_starting_seat
+  check (status <> 'open' or starting_seat is not null);
 
 create or replace function public.create_game(
   p_name text,
@@ -57,7 +58,7 @@ begin
     raise exception 'invite seats must be exactly 0..%', p_player_count - 1;
   end if;
   if not exists (select 1 from jsonb_array_elements(p_invites) i
-                 where (i ->> 'user_id')::uuid = v_uid) then
+                 where nullif(i ->> 'user_id', '')::uuid = v_uid) then
     raise exception 'the game creator must occupy one of the seats';
   end if;
   if p_current_seat is null or p_current_seat < 0 or p_current_seat >= p_player_count then
@@ -115,7 +116,7 @@ begin
     end,
     u.id
   from jsonb_array_elements(p_invites) i
-  left join auth.users u on u.id = (i ->> 'user_id')::uuid;
+  left join auth.users u on u.id = nullif(i ->> 'user_id', '')::uuid;
 
   if p_setup_move is not null and length(trim(p_setup_move)) > 0 then
     insert into public.moves (game_id, seq, seat, move, committed_by)
