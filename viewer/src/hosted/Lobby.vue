@@ -5,6 +5,7 @@
       <div class="lobby-header__actions">
         <b-button
           size="sm"
+          class="lobby-icon-button"
           :variant="pushEnabled ? 'success' : 'outline-secondary'"
           :disabled="pushBusy"
           v-b-tooltip.hover
@@ -13,20 +14,31 @@
               ? 'This device is registered for turn notifications. Enable it separately on any other device you play from. Click to turn off.'
               : 'Enable turn notifications on this device'
           "
+          aria-label="Toggle notifications"
           @click="pushEnabled ? disablePush() : enablePush()"
         >
-          &#128276; {{ pushEnabled ? "Notifications on" : "Enable notifications" }}
+          &#128276;
         </b-button>
-        <b-button size="sm" variant="outline-secondary" @click="signOut">Sign out</b-button>
+        <b-dropdown
+          size="sm"
+          right
+          no-caret
+          variant="outline-secondary"
+          toggle-class="lobby-icon-button"
+          menu-class="lobby-settings-menu"
+        >
+          <template #button-content>
+            <span aria-hidden="true">&#9881;</span>
+            <span class="sr-only">Settings</span>
+          </template>
+          <b-dropdown-item v-if="isAdmin" href="?users=1">Manage users</b-dropdown-item>
+          <b-dropdown-item-button @click="signOut">Sign out</b-dropdown-item-button>
+        </b-dropdown>
       </div>
     </div>
 
     <div class="lobby-meta text-muted small mb-3">
-      <span>{{ userEmail }}</span>
-      <span class="lobby-meta__sep">&middot;</span>
       <span class="font-weight-bold">Version {{ currentRelease.version }}</span>
-      <span class="lobby-meta__sep">&middot;</span>
-      <span>{{ currentRelease.releasedAt }}</span>
       <span class="lobby-meta__sep">&middot;</span>
       <a href="" class="lobby-meta__toggle-link" @click.prevent="showReleaseNotes = true">View changelog</a>
     </div>
@@ -66,6 +78,14 @@
         <button
           type="button"
           class="lobby-tab"
+          :class="{ 'lobby-tab--active': activeTab === 'mine' }"
+          @click="activeTab = 'mine'"
+        >
+          My games <span class="lobby-tab__count">{{ myGames.length }}</span>
+        </button>
+        <button
+          type="button"
+          class="lobby-tab"
           :class="{ 'lobby-tab--active': activeTab === 'active' }"
           @click="activeTab = 'active'"
         >
@@ -82,50 +102,62 @@
       </div>
       <div class="lobby-toolbar__actions">
         <a href="?create=1" class="btn btn-primary">+ New game</a>
-        <a v-if="isAdmin" href="?users=1" class="btn btn-outline-secondary">Manage users</a>
       </div>
     </div>
 
-    <b-list-group class="mb-3">
+    <b-list-group v-if="loading || visibleGames.length === 0" class="mb-3">
       <b-list-group-item v-if="loading">Loading games...</b-list-group-item>
-      <b-list-group-item v-else-if="visibleGames.length === 0">
-        {{ activeTab === "active" ? "No active games yet." : "No finished games yet." }}
-      </b-list-group-item>
-      <b-list-group-item v-for="game in visibleGames" :key="game.id" class="game-bar d-flex align-items-center">
-        <a :href="`?game=${game.id}`" class="text-body text-decoration-none flex-grow-1 game-bar__link">
-          <span class="game-bar__identity">
-            <span class="game-bar__round-slot">
-              <span v-if="game.current_round != null" class="game-bar__round">R{{ game.current_round }}</span>
-            </span>
-            <span class="game-bar__title">
-              <strong>{{ game.name || "Unnamed game" }}</strong>
-              <span class="text-muted small">
-                &middot; {{ game.player_count }}p &middot; {{ game.options && game.options.lostFleet ? "Lost Fleet" : "base game" }}
-                <template v-if="isTestGame(game)"> &middot; Test game</template>
-              </span>
-            </span>
-          </span>
-          <span v-if="playersWithSummary(game).length > 0" class="game-bar__players gaia-viewer-game">
-            <span
-              v-for="player in playersWithSummary(game)"
-              :key="player.seat"
-              class="game-bar__player"
-              :class="{ 'game-bar__player--active': player.seat === game.current_seat }"
-              :title="playerBarTitle(game, player)"
-            >
-              <span class="game-bar__avatar">
-                <svg viewBox="-22 -22 44 44"><Token :faction="player.faction" /></svg>
-                <span class="game-bar__initial">{{ factionInitial(player) }}</span>
-                <span class="game-bar__score">{{ player.score != null ? player.score : "-" }}</span>
-              </span>
-            </span>
-          </span>
-          <span v-else class="game-bar__players-spacer"></span>
-          <b-badge :variant="badgeVariant(game)" class="game-bar__badge">{{ turnLabel(game) }}</b-badge>
-        </a>
-        <b-button v-if="isAdmin" size="sm" variant="outline-danger" class="ml-2" @click="deleteGame(game)">Delete</b-button>
+      <b-list-group-item v-else>
+        {{ emptyStateText }}
       </b-list-group-item>
     </b-list-group>
+
+    <div v-else class="lobby-games">
+      <div
+        v-for="game in visibleGames"
+        :key="game.id"
+        class="game-swipe"
+        @pointerdown="startSwipe(game.id, $event)"
+        @pointermove="moveSwipe(game.id, $event)"
+        @pointerup="endSwipe(game.id, $event)"
+        @pointercancel="endSwipe(game.id, $event)"
+      >
+        <div v-if="isAdmin" class="game-swipe__actions">
+          <button type="button" class="game-swipe__delete" @click.stop="deleteGame(game)">Delete</button>
+        </div>
+        <b-list-group-item class="game-bar" :style="{ transform: `translateX(${swipeOffset(game.id)}px)` }">
+          <a :href="`?game=${game.id}`" class="text-body text-decoration-none flex-grow-1 game-bar__link" @click="handleGameClick(game.id, $event)">
+            <span class="game-bar__identity">
+              <span class="game-bar__round-slot">
+                <span v-if="game.current_round != null" class="game-bar__round">R{{ game.current_round }}</span>
+              </span>
+              <span class="game-bar__title">
+                <strong>{{ game.name || "Unnamed game" }}</strong>
+                <span class="text-muted small">
+                  &middot; {{ game.player_count }}p &middot; {{ game.options && game.options.lostFleet ? "Lost Fleet" : "base game" }}
+                  <template v-if="isTestGame(game)"> &middot; Test game</template>
+                </span>
+              </span>
+            </span>
+            <span v-if="playersWithSummary(game).length > 0" class="game-bar__players gaia-viewer-game">
+              <span
+                v-for="player in playersWithSummary(game)"
+                :key="player.seat"
+                class="game-bar__player"
+                :class="{ 'game-bar__player--active': player.seat === game.current_seat }"
+                :title="playerBarTitle(game, player)"
+              >
+                <span class="game-bar__avatar">
+                  <svg viewBox="-22 -22 44 44"><Token :faction="player.faction" /></svg>
+                  <span class="game-bar__initial">{{ factionInitial(player) }}</span>
+                  <span class="game-bar__score">{{ player.score != null ? player.score : "-" }}</span>
+                </span>
+              </span>
+            </span>
+          </a>
+        </b-list-group-item>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -136,6 +168,8 @@ import Token from "../components/Token.vue";
 import { factionName } from "../data/factions";
 import { isAdminEmail } from "./admin";
 import releaseData from "./release.json";
+
+const SWIPE_ACTION_WIDTH = 88;
 
 type ReleaseEntry = {
   version: string;
@@ -162,18 +196,23 @@ export default Vue.extend({
       message: "",
       gamesChannel: null as any,
       showReleaseNotes: false,
-      activeTab: "active" as "active" | "finished",
+      activeTab: "mine" as "mine" | "active" | "finished",
+      revealedGameId: "" as string,
+      swipeGameId: "" as string,
+      swipeStartX: 0,
+      swipeDeltaX: 0,
+      documentPointerDownHandler: null as ((event: PointerEvent) => void) | null,
     };
   },
   computed: {
     userEmail(): string {
       return (this.session as any).user?.email ?? "";
     },
-    myUserId(): string {
-      return (this.session as any).user?.id ?? "";
-    },
     isAdmin(): boolean {
       return isAdminEmail(this.userEmail);
+    },
+    myUserId(): string {
+      return (this.session as any).user?.id ?? "";
     },
     currentRelease(): { version: string; releasedAt: string } {
       return {
@@ -187,11 +226,31 @@ export default Vue.extend({
     activeGames(): any[] {
       return (this.games as any[]).filter((game) => game.status !== "finished");
     },
+    myGames(): any[] {
+      const email = this.userEmail.toLowerCase();
+      return (this.games as any[]).filter((game) => {
+        if (game.created_by === this.myUserId) {
+          return true;
+        }
+        return (game.players ?? []).some(
+          (player: any) => player.user_id === this.myUserId || (player.invited_email ?? "").toLowerCase() === email
+        );
+      });
+    },
     finishedGames(): any[] {
       return (this.games as any[]).filter((game) => game.status === "finished");
     },
     visibleGames(): any[] {
+      if (this.activeTab === "mine") {
+        return this.myGames;
+      }
       return this.activeTab === "active" ? this.activeGames : this.finishedGames;
+    },
+    emptyStateText(): string {
+      if (this.activeTab === "mine") {
+        return "No games with you in them yet.";
+      }
+      return this.activeTab === "active" ? "No active games yet." : "No finished games yet.";
     },
   },
   created() {
@@ -200,14 +259,26 @@ export default Vue.extend({
     isPushEnabled().then((enabled) => {
       this.pushEnabled = enabled;
     });
+    if (typeof document !== "undefined") {
+      this.documentPointerDownHandler = (event: PointerEvent) => this.onDocumentPointerDown(event);
+      document.addEventListener("pointerdown", this.documentPointerDownHandler, true);
+    }
   },
   beforeDestroy() {
     if (this.gamesChannel) {
       (this.client as any).removeChannel(this.gamesChannel);
       this.gamesChannel = null;
     }
+    if (typeof document !== "undefined" && this.documentPointerDownHandler) {
+      document.removeEventListener("pointerdown", this.documentPointerDownHandler, true);
+    }
   },
   methods: {
+    onDocumentPointerDown(event: PointerEvent) {
+      if (!(event.target as HTMLElement | null)?.closest?.(".game-swipe")) {
+        this.revealedGameId = "";
+      }
+    },
     async refresh() {
       this.loading = true;
       const { data, error } = await (this.client as any)
@@ -250,23 +321,45 @@ export default Vue.extend({
       const userIds = players.map((p: any) => p.user_id).filter((id: string | null) => !!id);
       return userIds.length > 0 && new Set(userIds).size < players.length;
     },
-    turnLabel(game: any): string {
-      if (game.status === "finished") {
-        return "finished";
+    swipeOffset(gameId: string): number {
+      if (!this.isAdmin) {
+        return 0;
       }
-      const player = this.playerAtSeat(game, game.current_seat);
-      if (!player) {
-        return "active";
+      if (this.swipeGameId === gameId) {
+        const base = this.revealedGameId === gameId ? -SWIPE_ACTION_WIDTH : 0;
+        return Math.max(-SWIPE_ACTION_WIDTH, Math.min(0, base + this.swipeDeltaX));
       }
-      const mine = player.user_id === this.myUserId;
-      return mine ? "your turn" : `${player.display_name || player.invited_email} to move`;
+      return this.revealedGameId === gameId ? -SWIPE_ACTION_WIDTH : 0;
     },
-    badgeVariant(game: any): string {
-      if (game.status === "finished") {
-        return "secondary";
+    startSwipe(gameId: string, event: PointerEvent) {
+      if (!this.isAdmin || (event.target as HTMLElement | null)?.closest(".game-swipe__delete")) {
+        return;
       }
-      const player = this.playerAtSeat(game, game.current_seat);
-      return player && player.user_id === this.myUserId ? "success" : "info";
+      this.swipeGameId = gameId;
+      this.swipeStartX = event.clientX;
+      this.swipeDeltaX = 0;
+      (event.currentTarget as HTMLElement | null)?.setPointerCapture?.(event.pointerId);
+    },
+    moveSwipe(gameId: string, event: PointerEvent) {
+      if (this.swipeGameId !== gameId) {
+        return;
+      }
+      this.swipeDeltaX = event.clientX - this.swipeStartX;
+    },
+    endSwipe(gameId: string, event: PointerEvent) {
+      if (this.swipeGameId !== gameId) {
+        return;
+      }
+      this.revealedGameId = this.swipeOffset(gameId) <= -(SWIPE_ACTION_WIDTH / 2) ? gameId : "";
+      this.swipeGameId = "";
+      this.swipeDeltaX = 0;
+      (event.currentTarget as HTMLElement | null)?.releasePointerCapture?.(event.pointerId);
+    },
+    handleGameClick(gameId: string, event: MouseEvent) {
+      if (this.revealedGameId === gameId) {
+        event.preventDefault();
+        this.revealedGameId = "";
+      }
     },
     async deleteGame(game: any) {
       if (!window.confirm(`Delete "${game.name || "this game"}"? This cannot be undone.`)) {
@@ -276,6 +369,7 @@ export default Vue.extend({
       if (error) {
         this.message = `Could not delete the game: ${error.message}`;
       } else {
+        this.revealedGameId = "";
         await this.refresh();
       }
     },
@@ -311,8 +405,14 @@ export default Vue.extend({
 .lobby-header__actions,
 .lobby-toolbar__actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.lobby-icon-button {
+  min-width: 2.2rem;
+  padding-left: 0.45rem;
+  padding-right: 0.45rem;
 }
 
 .lobby-tabs {
@@ -463,14 +563,44 @@ export default Vue.extend({
   padding-left: 1.15rem;
 }
 
+.lobby-games {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.game-swipe {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.25rem;
+}
+
+.game-swipe__actions {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: stretch;
+  background: linear-gradient(180deg, #7a2020 0%, #541515 100%);
+}
+
+.game-swipe__delete {
+  width: 88px;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
 .game-bar {
-  min-height: 4.5rem;
+  min-height: 4.25rem;
+  transition: transform 0.16s ease-out;
 }
 
 .game-bar__link {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.5rem;
   min-width: 0;
   min-height: 100%;
 }
@@ -478,7 +608,7 @@ export default Vue.extend({
 .game-bar__identity {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.5rem;
   min-width: 0;
   flex: 1 1 auto;
 }
@@ -508,30 +638,21 @@ export default Vue.extend({
 .game-bar__players {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.12rem;
   flex-shrink: 0;
   margin-left: auto;
-}
-
-.game-bar__players-spacer {
-  margin-left: auto;
-}
-
-.game-bar__badge {
-  flex-shrink: 0;
-  white-space: nowrap;
 }
 
 .game-bar__player {
   display: flex;
   align-items: center;
-  padding: 0.15rem;
+  padding: 0.1rem;
   border-radius: 50%;
   border: 2px solid transparent;
 
   &--active {
     border-color: var(--success, #28a745);
-    background: rgba(40, 167, 69, 0.35);
+    background: rgba(40, 167, 69, 0.24);
     box-shadow: 0 0 0 1px var(--success, #28a745);
   }
 }
@@ -580,17 +701,20 @@ export default Vue.extend({
 @media (max-width: 767px) {
   .lobby-header,
   .lobby-toolbar {
+    align-items: center;
+  }
+
+  .lobby-toolbar {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .lobby-header__actions,
-  .lobby-toolbar__actions {
-    display: grid;
-  }
-
   .lobby-tabs {
     align-self: flex-start;
+  }
+
+  .game-bar__title {
+    white-space: normal;
   }
 }
 </style>

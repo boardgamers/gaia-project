@@ -1,7 +1,18 @@
 {
-  "version": "5.13.5",
+  "version": "5.13.6",
   "releasedAt": "2026-07-08",
   "entries": [
+    {
+      "version": "5.13.6",
+      "releasedAt": "2026-07-08",
+      "kind": "update",
+      "title": "Add My games lobby tab and global hosted lobby visibility",
+      "impact": "",
+      "changes": [
+        "The hosted lobby now defaults to a My games tab, while Active and Finished still expose the full hosted lobby.",
+        "Settings, notification, and swipe-to-delete controls stay compact, and authenticated users can now see all hosted games instead of only their own seats."
+      ]
+    },
     {
       "version": "5.13.5",
       "releasedAt": "2026-07-08",
