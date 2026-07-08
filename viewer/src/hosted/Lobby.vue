@@ -1,7 +1,7 @@
 <template>
   <div class="container py-4" style="max-width: 46rem">
     <div class="lobby-header">
-      <h3 class="mb-0">The Lost Fleet - Games</h3>
+      <h3 class="mb-0">Gaia Project: The Lost Fleet</h3>
       <div class="lobby-header__actions">
         <b-button
           size="sm"
@@ -134,23 +134,31 @@
               <span class="game-bar__copy">
                 <span class="game-bar__title">
                   <strong>{{ game.name || "Unnamed game" }}</strong>
-                  <span v-if="isTestGame(game)" class="game-bar__tag text-muted small">Test game</span>
+                  <span v-if="auctionLabel(game)" class="game-bar__tag">{{ auctionLabel(game) }}</span>
+                  <span v-if="isTestGame(game)" class="game-bar__tag">Test game</span>
                 </span>
-                <span v-if="game.latest_move_summary" class="game-bar__summary text-muted small">{{ game.latest_move_summary }}</span>
+                <span v-if="summaryForGame(game)" class="game-bar__summary text-muted small">{{ summaryForGame(game) }}</span>
               </span>
             </span>
-            <span v-if="playersWithSummary(game).length > 0" class="game-bar__players gaia-viewer-game">
-              <span
-                v-for="player in playersWithSummary(game)"
-                :key="player.seat"
-                class="game-bar__player"
-                :class="{ 'game-bar__player--active': player.seat === game.current_seat }"
-                :title="playerBarTitle(game, player)"
-              >
-                <span class="game-bar__avatar">
-                  <svg viewBox="-22 -22 44 44"><Token :faction="player.faction" /></svg>
-                  <span class="game-bar__initial">{{ factionInitial(player) }}</span>
-                  <span class="game-bar__score">{{ player.score != null ? player.score : "-" }}</span>
+            <span
+              v-if="playersWithSummary(game).length > 0"
+              class="game-bar__players gaia-viewer-game"
+              :class="{ 'game-bar__players--stacked': playersWithSummary(game).length >= 3 }"
+            >
+              <span v-for="(row, rowIndex) in playerRows(game)" :key="`row-${rowIndex}`" class="game-bar__player-row">
+                <span
+                  v-for="(player, index) in row"
+                  :key="player.seat"
+                  class="game-bar__player"
+                  :class="{ 'game-bar__player--active': player.seat === game.current_seat }"
+                  :style="{ zIndex: String(row.length - index) }"
+                  :title="playerBarTitle(game, player)"
+                >
+                  <span class="game-bar__avatar">
+                    <svg viewBox="-22 -22 44 44"><Token :faction="player.faction" /></svg>
+                    <span class="game-bar__initial">{{ factionInitial(player) }}</span>
+                    <span class="game-bar__score">{{ player.score != null ? player.score : "-" }}</span>
+                  </span>
                 </span>
               </span>
             </span>
@@ -170,6 +178,102 @@ import { isAdminEmail } from "./admin";
 import releaseData from "./release.json";
 
 const SWIPE_ACTION_WIDTH = 88;
+
+function compactFactionLabel(raw: string): string {
+  if (!raw) {
+    return "";
+  }
+  if (raw.startsWith("p") && /^p\d+$/.test(raw)) {
+    return raw.toUpperCase();
+  }
+  try {
+    return factionName(raw as any);
+  } catch {
+    return raw
+      .split("-")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+  }
+}
+
+function powerOrQicActionLabel(action: string): string | null {
+  const match = action.match(/^(power|qic)(\d+)$/);
+  return match ? `${match[1]} action ${match[2]}.` : null;
+}
+
+function compactMoveSummary(move: string): string | null {
+  const trimmed = (move ?? "").trim();
+  if (!trimmed) {
+    return null;
+  }
+  const parts = trimmed
+    .split(".")
+    .map((part) => part.trim())
+    .filter((part) => !!part);
+  if (parts.length === 0) {
+    return null;
+  }
+  const commands = parts.map((part) => part.split(/\s+/));
+  const actor = compactFactionLabel(commands[0][0]);
+  const primary =
+    commands.find((tokens) =>
+      ["build", "up", "explore", "federation", "action", "spaceshipAction", "pass", "banFaction", "faction"].includes(
+        tokens[1]
+      )
+    ) ?? commands[0];
+  let detail: string | null = null;
+
+  switch (primary[1]) {
+    case "build": {
+      const kind = primary[2];
+      if (kind === "m" && primary[3]) {
+        const sector = primary[3].match(/^(\d+|DS\d+|IS\d+)/)?.[1];
+        detail = sector ? `build mine sector ${sector}.` : "build mine.";
+      } else if (kind === "t") {
+        detail = "build ts.";
+      } else if (kind === "l") {
+        detail = "build lab.";
+      } else if (kind === "i") {
+        detail = "build PI.";
+      } else {
+        detail = `build ${kind ?? ""}.`.replace(/\s+\./, ".");
+      }
+      break;
+    }
+    case "up":
+      detail = primary[2] ? `up ${primary[2]}.` : "up.";
+      break;
+    case "explore":
+      detail = primary[2] ? `explore ${primary[2]}.` : "explore.";
+      break;
+    case "federation":
+      detail = "form fed.";
+      break;
+    case "action":
+      detail = primary[2] ? powerOrQicActionLabel(primary[2]) ?? `${primary[2]}.` : "action.";
+      break;
+    case "spaceshipAction":
+      detail = primary[2] && primary[3] ? `${primary[2]} ${primary[3]}.` : "ship action.";
+      break;
+    case "pass":
+      detail = primary[2] ? `pass ${primary[2]}.` : "pass.";
+      break;
+    case "banFaction":
+      detail = primary[2] ? `ban ${compactFactionLabel(primary[2])}.` : "ban faction.";
+      break;
+    case "faction":
+      detail = primary[2] ? `pick ${compactFactionLabel(primary[2])}.` : "pick faction.";
+      break;
+    default:
+      detail = primary.slice(1).join(" ");
+      if (detail && !detail.endsWith(".")) {
+        detail += ".";
+      }
+      break;
+  }
+
+  return detail ? `${actor} ${detail}` : null;
+}
 
 type ReleaseEntry = {
   version: string;
@@ -288,7 +392,30 @@ export default Vue.extend({
       if (error) {
         this.message = `Could not load games: ${error.message}`;
       } else {
-        this.games = data ?? [];
+        const games = (data ?? []).map((game: any) => ({ ...game }));
+        const missingSummaryIds = games.filter((game: any) => !game.latest_move_summary).map((game: any) => game.id);
+        if (missingSummaryIds.length > 0) {
+          const latestMoves = await (this.client as any)
+            .from("moves")
+            .select("game_id,seq,move")
+            .in("game_id", missingSummaryIds)
+            .order("seq", { ascending: false });
+          if (!latestMoves.error) {
+            const summaries = new Map<string, string>();
+            for (const row of latestMoves.data ?? []) {
+              if (!summaries.has(row.game_id)) {
+                const summary = compactMoveSummary(row.move);
+                if (summary) {
+                  summaries.set(row.game_id, summary);
+                }
+              }
+            }
+            for (const game of games) {
+              game._fallback_latest_move_summary = summaries.get(game.id) ?? null;
+            }
+          }
+        }
+        this.games = games;
       }
       this.loading = false;
     },
@@ -308,6 +435,10 @@ export default Vue.extend({
         .slice()
         .sort((a: any, b: any) => a.seat - b.seat);
     },
+    playerRows(game: any): any[][] {
+      const players = this.playersWithSummary(game);
+      return players.length >= 3 ? [players.slice(0, 2), players.slice(2, 4)] : [players];
+    },
     factionInitial(player: any): string {
       return player.faction ? player.faction.substr(0, 1).toUpperCase() : "";
     },
@@ -320,6 +451,12 @@ export default Vue.extend({
       const players = game.players ?? [];
       const userIds = players.map((p: any) => p.user_id).filter((id: string | null) => !!id);
       return userIds.length > 0 && new Set(userIds).size < players.length;
+    },
+    auctionLabel(game: any): string {
+      return game.options?.auction === "silent" ? "Silent Auction" : "Standard";
+    },
+    summaryForGame(game: any): string | null {
+      return game.latest_move_summary || game._fallback_latest_move_summary || null;
     },
     swipeOffset(gameId: string): number {
       if (!this.isAdmin) {
@@ -631,6 +768,7 @@ export default Vue.extend({
 .game-bar__title {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.35rem;
   min-width: 0;
   overflow: hidden;
@@ -654,14 +792,30 @@ export default Vue.extend({
 
 .game-bar__tag {
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.2rem;
+  padding: 0.08rem 0.42rem;
+  border-radius: 999px;
+  background: #eef3f8;
+  color: #55657a;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .game-bar__players {
   display: flex;
-  align-items: center;
-  gap: 0.12rem;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.18rem;
   flex-shrink: 0;
   margin-left: auto;
+}
+
+.game-bar__player-row {
+  display: flex;
+  align-items: center;
 }
 
 .game-bar__player {
@@ -670,12 +824,21 @@ export default Vue.extend({
   padding: 0.1rem;
   border-radius: 50%;
   border: 2px solid transparent;
+  position: relative;
+
+  & + & {
+    margin-left: -0.65rem;
+  }
 
   &--active {
     border-color: var(--success, #28a745);
     background: rgba(40, 167, 69, 0.24);
     box-shadow: 0 0 0 1px var(--success, #28a745);
   }
+}
+
+.game-bar__players--stacked {
+  min-width: 3.35rem;
 }
 
 .game-bar__avatar {

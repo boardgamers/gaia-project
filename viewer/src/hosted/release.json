@@ -1,7 +1,18 @@
 {
-  "version": "5.13.7",
+  "version": "5.13.8",
   "releasedAt": "2026-07-08",
   "entries": [
+    {
+      "version": "5.13.8",
+      "releasedAt": "2026-07-08",
+      "kind": "update",
+      "title": "Polish hosted lobby labels and avatar layout",
+      "impact": "",
+      "changes": [
+        "Lobby rows now show Gaia Project: The Lost Fleet branding, overlapping avatar stacks, and visible Standard/Silent Auction plus Test game labels.",
+        "Older games without a cached latest-move summary now fall back to compacting their latest stored move so the lobby bar still shows recent action."
+      ]
+    },
     {
       "version": "5.13.7",
       "releasedAt": "2026-07-08",

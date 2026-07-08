@@ -10,9 +10,10 @@ describe("Lobby", () => {
   const adminSession = { user: { id: "user-admin", email: "kim.pham.nguyen2@gmail.com" } } as any;
   const otherSession = { user: { id: "user-other", email: "someone-else@example.com" } } as any;
 
-  function makeClient(games: any[]) {
+  function makeClient(games: any[], moves: any[] = []) {
     let deleted: string | null = null;
     let gameRows = [...games];
+    let moveRows = [...moves];
     let gamesChangeHandler: (() => void) | null = null;
     let removedChannel: any = null;
     const channel = {
@@ -23,11 +24,31 @@ describe("Lobby", () => {
       subscribe: () => channel,
     };
     const client = {
-      from: () => ({
-        select: () => ({
-          order: async () => ({ data: gameRows, error: null }),
-        }),
-      }),
+      from: (table: string) => {
+        if (table === "games") {
+          return {
+            select: () => ({
+              order: async () => ({ data: gameRows, error: null }),
+            }),
+          };
+        }
+        if (table === "moves") {
+          return {
+            select: () => ({
+              in: (_column: string, ids: string[]) => ({
+                order: async () => ({
+                  data: moveRows
+                    .filter((row) => ids.includes(row.game_id))
+                    .slice()
+                    .sort((a, b) => b.seq - a.seq),
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+        throw new Error(`unexpected table ${table}`);
+      },
       channel: () => channel,
       removeChannel: (value: any) => {
         removedChannel = value;
@@ -46,6 +67,9 @@ describe("Lobby", () => {
       emitGamesChange: () => gamesChangeHandler && gamesChangeHandler(),
       setGames: (next: any[]) => {
         gameRows = next;
+      },
+      setMoves: (next: any[]) => {
+        moveRows = next;
       },
       removedChannel: () => removedChannel,
       channel,
@@ -94,7 +118,7 @@ describe("Lobby", () => {
       name: "Their game",
       created_by: "user-other",
       player_count: 2,
-      options: {},
+      options: { auction: "silent" },
       status: "active",
       current_seat: 0,
       latest_move_summary: "Xenos pass booster3.",
@@ -105,7 +129,7 @@ describe("Lobby", () => {
       name: "Finished theirs",
       created_by: "user-other",
       player_count: 2,
-      options: {},
+      options: { auction: "silent" },
       status: "finished",
       current_seat: null,
       latest_move_summary: "Nevlas form fed.",
@@ -119,6 +143,7 @@ describe("Lobby", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
+    expect(wrapper.text()).to.contain("Gaia Project: The Lost Fleet");
     expect(wrapper.find(".lobby-toolbar__actions")!.text()).to.not.contain("Manage users");
     expect((wrapper.vm as any).swipeOffset("g-mine")).to.equal(0);
     expect((wrapper.vm as any).swipeOffset("g-theirs")).to.equal(0);
@@ -261,7 +286,7 @@ describe("Lobby", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
-    expect(wrapper.text()).to.contain("Version 5.13.7");
+    expect(wrapper.text()).to.contain("Version 5.13.8");
     expect(wrapper.text()).to.not.contain("2026-07-08");
     expect(wrapper.text()).to.not.contain("kim.pham.nguyen2@gmail.com");
     expect(wrapper.find(".release-modal").exists()).to.equal(false);
@@ -272,9 +297,9 @@ describe("Lobby", () => {
 
     expect(wrapper.find(".release-modal").exists()).to.equal(true);
     expect(wrapper.text()).to.contain("Hosted changelog");
-    expect(wrapper.text()).to.contain("Compact lobby game bars and latest move summaries");
+    expect(wrapper.text()).to.contain("Polish hosted lobby labels and avatar layout");
     expect(wrapper.text()).to.contain(
-      "Lobby cards now show the game name and a compact latest-move summary instead of player-count and mode metadata."
+      "Lobby rows now show Gaia Project: The Lost Fleet branding, overlapping avatar stacks, and visible Standard/Silent Auction plus Test game labels."
     );
     expect(wrapper.text()).to.contain("2026-07-08");
   });
@@ -286,7 +311,7 @@ describe("Lobby", () => {
     await Vue.nextTick();
 
     let titles = wrapper.findAll(".game-bar__title").wrappers.map((node) => node.text());
-    expect(titles).to.deep.equal(["My game"]);
+    expect(titles).to.deep.equal(["My gameStandard"]);
     let summaries = wrapper.findAll(".game-bar__summary").wrappers.map((node) => node.text());
     expect(summaries).to.deep.equal(["Terrans up int."]);
 
@@ -295,7 +320,7 @@ describe("Lobby", () => {
     await Vue.nextTick();
 
     titles = wrapper.findAll(".game-bar__title").wrappers.map((node) => node.text());
-    expect(titles).to.deep.equal(["My game", "Their game"]);
+    expect(titles).to.deep.equal(["My gameStandard", "Their gameSilent Auction"]);
     summaries = wrapper.findAll(".game-bar__summary").wrappers.map((node) => node.text());
     expect(summaries).to.deep.equal(["Terrans up int.", "Xenos pass booster3."]);
 
@@ -304,9 +329,62 @@ describe("Lobby", () => {
     await Vue.nextTick();
 
     titles = wrapper.findAll(".game-bar__title").wrappers.map((node) => node.text());
-    expect(titles).to.deep.equal(["Finished theirs"]);
+    expect(titles).to.deep.equal(["Finished theirsSilent Auction"]);
     summaries = wrapper.findAll(".game-bar__summary").wrappers.map((node) => node.text());
     expect(summaries).to.deep.equal(["Nevlas form fed."]);
+  });
+
+  it("falls back to compacting the latest stored move when the cached lobby summary is still missing", async () => {
+    const { client } = makeClient(
+      [
+        {
+          id: "g-fallback",
+          name: "Fallback game",
+          created_by: "user-admin",
+          player_count: 2,
+          options: {},
+          status: "active",
+          current_seat: 0,
+          latest_move_summary: null,
+          players: [{ seat: 0, invited_email: "kim.pham.nguyen2@gmail.com", user_id: "user-admin", display_name: "Admin", faction: "ivits", score: 20 }],
+        },
+      ],
+      [{ game_id: "g-fallback", seq: 6, move: "ivits up int." }]
+    );
+    const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    expect(wrapper.find(".game-bar__summary").text()).to.equal("Ivits up int.");
+  });
+
+  it("overlaps avatars and splits 3-4 player games into two rows", async () => {
+    const { client } = makeClient([
+      {
+        id: "g-four",
+        name: "Four player",
+        created_by: "user-admin",
+        player_count: 4,
+        options: {},
+        status: "active",
+        current_seat: 2,
+        current_round: 2,
+        latest_move_summary: "Terrans up int.",
+        players: [
+          { seat: 0, invited_email: "a@example.com", user_id: "a", display_name: "A", faction: "terrans", score: 20 },
+          { seat: 1, invited_email: "b@example.com", user_id: "b", display_name: "B", faction: "nevlas", score: 21 },
+          { seat: 2, invited_email: "c@example.com", user_id: "c", display_name: "C", faction: "ivits", score: 22 },
+          { seat: 3, invited_email: "d@example.com", user_id: "d", display_name: "D", faction: "xenos", score: 23 },
+        ],
+      },
+    ]);
+    const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    expect(wrapper.findAll(".game-bar__player-row").length).to.equal(2);
+    expect(wrapper.find(".game-bar__players").classes()).to.contain("game-bar__players--stacked");
+    expect(wrapper.findAll(".game-bar__player").length).to.equal(4);
   });
 
   it("shows a My games empty state when the user is not in any listed game", async () => {
