@@ -382,7 +382,7 @@ describe("Lobby", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
-    expect(wrapper.text()).to.contain("Version 5.14.0");
+    expect(wrapper.text()).to.contain("Version 5.14.1");
     expect(wrapper.text()).to.not.contain("2026-07-08");
     expect(wrapper.text()).to.not.contain("kim.pham.nguyen2@gmail.com");
     expect(wrapper.find(".release-modal").exists()).to.equal(false);
@@ -419,9 +419,9 @@ describe("Lobby", () => {
     await Vue.nextTick();
 
     titles = wrapper.findAll(".game-bar__title").wrappers.map((node) => node.text());
-    expect(titles).to.deep.equal(["Open tableLobbyStandard"]);
+    expect(titles).to.deep.equal(["Open table1/3 joinedStandard"]);
     summaries = wrapper.findAll(".game-bar__summary").wrappers.map((node) => node.text());
-    expect(summaries).to.deep.equal(["1/3 seats filled"]);
+    expect(summaries).to.deep.equal([]);
 
     const activeTab = wrapper.findAll("button").filter((b) => b.text().includes("Active")).at(0);
     await activeTab.trigger("click");
@@ -442,12 +442,9 @@ describe("Lobby", () => {
     expect(summaries).to.deep.equal(["2d ago Nevlas form fed."]);
   });
 
-  it("opens a lobby-game preview instead of navigating directly, and shows joinable seats", async () => {
+  it("links open games to their dedicated preview page", async () => {
     const { client } = makeClient([membershipGames[0]]);
-    const wrapper = mount(Lobby, {
-      propsData: { client, session: adminSession },
-      stubs: { OpenGamePreview: true },
-    });
+    const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
     await Vue.nextTick();
     await Vue.nextTick();
 
@@ -455,13 +452,7 @@ describe("Lobby", () => {
     await Vue.nextTick();
 
     const link = wrapper.find(".game-bar__link");
-    await link.trigger("click");
-    await Vue.nextTick();
-
-    expect(wrapper.find(".lobby-preview-modal").exists()).to.equal(true);
-    expect(wrapper.text()).to.contain("1/3 seats filled");
-    expect(wrapper.text()).to.contain("Seat 2");
-    expect(wrapper.text()).to.contain("Join");
+    expect(link.attributes("href")).to.equal("?preview=g-open");
   });
 
   it("falls back to compacting the latest stored move when the cached lobby summary is still missing", async () => {

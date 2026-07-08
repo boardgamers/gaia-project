@@ -1,7 +1,16 @@
 {
-  "version": "5.14.1",
+  "version": "5.14.2",
   "releasedAt": "2026-07-08",
   "entries": [
+    {
+      "version": "5.14.2",
+      "releasedAt": "2026-07-08",
+      "kind": "update",
+      "title": "Full-page lobby previews",
+      "changes": [
+        "Open lobby tables now open on their own page with compact seat controls above the setup preview."
+      ]
+    },
     {
       "version": "5.14.1",
       "releasedAt": "2026-07-08",

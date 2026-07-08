@@ -5,6 +5,7 @@ import CreateGame from "./hosted/CreateGame.vue";
 import HostedBar from "./hosted/HostedBar.vue";
 import { HostedGameHost, seatToLock } from "./hosted/host";
 import Lobby from "./hosted/Lobby.vue";
+import OpenLobbyGame from "./hosted/OpenLobbyGame.vue";
 import { disablePushNotifications, enablePushNotifications, isPushEnabled, registerServiceWorker } from "./hosted/push";
 import { trackPresence } from "./hosted/presence";
 import SignIn from "./hosted/SignIn.vue";
@@ -305,7 +306,9 @@ export default async function launchHosted(selector = "#app"): Promise<void> {
   // Lobby and create-game are meant for one-handed phone use; lock pinch-zoom
   // there (viewport.ts), unlike the actual game board above.
   setViewportZoomLocked(true);
-  if (params.has("users")) {
+  if (params.has("preview")) {
+    mountChild(root, OpenLobbyGame, { client, session, gameId: params.get("preview") });
+  } else if (params.has("users")) {
     mountChild(root, AdminUsers, { client, session });
   } else if (params.has("create")) {
     mountChild(root, CreateGame, { client, session });

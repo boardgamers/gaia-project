@@ -74,54 +74,6 @@
       </div>
     </div>
 
-    <div v-if="previewGame" class="release-modal-backdrop" @click.self="closePreview">
-      <div class="release-modal shadow-lg lobby-preview-modal" role="dialog" aria-modal="true" aria-label="Open lobby game">
-        <div class="release-modal__header">
-          <div>
-            <div class="release-notes__eyebrow text-uppercase text-muted small">Open lobby game</div>
-            <h4 class="release-modal__title mb-0">{{ previewGame.name || "Unnamed game" }}</h4>
-            <div class="text-muted small mt-1">
-              {{ auctionLabel(previewGame) }} &middot; {{ claimedSeats(previewGame) }}/{{ previewGame.player_count }} seats filled
-            </div>
-          </div>
-          <button type="button" class="release-modal__close" aria-label="Close preview" @click="closePreview">
-            &times;
-          </button>
-        </div>
-        <div class="release-modal__body">
-          <OpenGamePreview :game="previewGame" />
-          <div class="lobby-preview__section mt-3">
-            <div class="lobby-preview__label">Seats</div>
-            <div class="lobby-preview__seats">
-              <div v-for="seat in previewSeats(previewGame)" :key="seat.seat" class="lobby-preview__seat">
-                <div>
-                  <strong>Seat {{ seat.seat + 1 }}</strong>
-                  <div class="text-muted small">{{ seatLabel(seat) }}</div>
-                </div>
-                <b-button
-                  v-if="canLeaveSeat(previewGame, seat)"
-                  size="sm"
-                  variant="outline-secondary"
-                  @click="leaveSeat(previewGame, seat.seat)"
-                >
-                  Leave
-                </b-button>
-                <b-button
-                  v-else-if="canJoinSeat(previewGame, seat)"
-                  size="sm"
-                  variant="primary"
-                  @click="joinSeat(previewGame, seat.seat)"
-                >
-                  Join
-                </b-button>
-                <span v-else class="text-muted small">Taken</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <b-alert :show="!!message" variant="info" dismissible @dismissed="message = ''">{{ message }}</b-alert>
 
     <div class="lobby-toolbar mb-3">
@@ -186,19 +138,18 @@
         </div>
         <b-list-group-item class="game-bar" :style="{ transform: `translateX(${swipeOffset(game.id)}px)` }">
           <a
-            :href="game.status === 'open' ? `?lobby=1&preview=${game.id}` : `?game=${game.id}`"
+            :href="game.status === 'open' ? `?preview=${game.id}` : `?game=${game.id}`"
             class="text-body text-decoration-none flex-grow-1 game-bar__link"
             @click="handleGameClick(game.id, $event)"
           >
             <span class="game-bar__identity">
-                <span class="game-bar__round-slot">
-                <span v-if="game.status === 'open'" class="game-bar__round">Open</span>
-                <span v-else-if="game.current_round != null" class="game-bar__round">R{{ game.current_round }}</span>
+              <span class="game-bar__round-slot">
+                <span v-if="game.current_round != null" class="game-bar__round">R{{ game.current_round }}</span>
               </span>
               <span class="game-bar__copy">
                 <span class="game-bar__title">
                   <strong>{{ game.name || "Unnamed game" }}</strong>
-                  <span v-if="game.status === 'open'" class="game-bar__tag">Lobby</span>
+                  <span v-if="game.status === 'open'" class="game-bar__tag">{{ claimedSeats(game) }}/{{ game.player_count }} joined</span>
                   <span v-if="auctionLabel(game)" class="game-bar__tag">{{ auctionLabel(game) }}</span>
                   <span v-if="isTestGame(game)" class="game-bar__tag">Test game</span>
                 </span>
@@ -246,7 +197,6 @@ import { disablePushNotifications, enablePushNotifications, isPushEnabled } from
 import Token from "../components/Token.vue";
 import { factionName } from "../data/factions";
 import { isAdminEmail } from "./admin";
-import OpenGamePreview from "./OpenGamePreview.vue";
 import releaseData from "./release.json";
 
 const SWIPE_ACTION_WIDTH = 88;
@@ -382,7 +332,7 @@ function lobbyPresenceStatus(state: PresenceState, userId: string | null, gameId
 
 export default Vue.extend({
   name: "HostedLobby",
-  components: { OpenGamePreview, Token },
+  components: { Token },
   props: {
     client: { type: Object, required: true },
     session: { type: Object, required: true },
@@ -397,7 +347,6 @@ export default Vue.extend({
       gamesChannel: null as any,
       showReleaseNotes: false,
       activeTab: "mine" as "mine" | "open" | "active" | "finished",
-      previewGame: null as any,
       revealedGameId: "" as string,
       swipeGameId: "" as string,
       swipeStartX: 0,
@@ -477,7 +426,7 @@ export default Vue.extend({
     isPushEnabled().then((enabled) => {
       this.pushEnabled = enabled;
     });
-    this.activeTab = new URLSearchParams(window.location.search).has("preview") ? "open" : "mine";
+    this.activeTab = "mine";
     if (typeof document !== "undefined") {
       this.documentPointerDownHandler = (event: PointerEvent) => this.onDocumentPointerDown(event);
       document.addEventListener("pointerdown", this.documentPointerDownHandler, true);
@@ -534,15 +483,6 @@ export default Vue.extend({
           }
         }
         this.games = games;
-        const previewId = new URLSearchParams(window.location.search).get("preview");
-        if (previewId) {
-          this.previewGame = games.find((game: any) => game.id === previewId && game.status === "open") ?? null;
-        } else if (this.previewGame) {
-          this.previewGame = games.find((game: any) => game.id === this.previewGame.id) ?? null;
-          if (this.previewGame?.status !== "open") {
-            this.previewGame = null;
-          }
-        }
       }
       this.loading = false;
     },
@@ -591,7 +531,7 @@ export default Vue.extend({
     },
     summaryForGame(game: any): string | null {
       if (game.status === "open") {
-        return `${this.claimedSeats(game)}/${game.player_count} seats filled`;
+        return null;
       }
       return game.latest_move_summary || game._fallback_latest_move_summary || null;
     },
@@ -603,22 +543,6 @@ export default Vue.extend({
     },
     claimedSeats(game: any): number {
       return (game.players ?? []).filter((player: any) => !!player.user_id).length;
-    },
-    previewSeats(game: any): any[] {
-      return [...(game.players ?? [])].sort((a: any, b: any) => a.seat - b.seat);
-    },
-    seatLabel(player: any): string {
-      return player.user_id ? player.display_name || player.invited_email : "Open seat";
-    },
-    canJoinSeat(game: any, player: any): boolean {
-      return (
-        game.status === "open" &&
-        !player.user_id &&
-        !(game.players ?? []).some((seat: any) => seat.user_id === this.myUserId)
-      );
-    },
-    canLeaveSeat(game: any, player: any): boolean {
-      return game.status === "open" && player.user_id === this.myUserId;
     },
     swipeOffset(gameId: string): number {
       if (!this.isAdmin) {
@@ -655,50 +579,10 @@ export default Vue.extend({
       (event.currentTarget as HTMLElement | null)?.releasePointerCapture?.(event.pointerId);
     },
     handleGameClick(gameId: string, event: MouseEvent) {
-      const game = (this.games as any[]).find((candidate) => candidate.id === gameId);
-      if (game?.status === "open") {
-        event.preventDefault();
-        this.previewGame = game;
-        this.replacePreviewQuery(game.id);
-        return;
-      }
       if (this.revealedGameId === gameId) {
         event.preventDefault();
         this.revealedGameId = "";
       }
-    },
-    replacePreviewQuery(gameId: string | null) {
-      const url = new URL(window.location.href);
-      if (gameId) {
-        url.searchParams.set("lobby", "1");
-        url.searchParams.set("preview", gameId);
-      } else {
-        url.searchParams.delete("preview");
-      }
-      window.history.replaceState({}, "", `${url.pathname}${url.search}`);
-    },
-    closePreview() {
-      this.previewGame = null;
-      this.replacePreviewQuery(null);
-    },
-    async joinSeat(game: any, seat: number) {
-      const { data, error } = await (this.client as any).rpc("join_open_game_seat", { p_game_id: game.id, p_seat: seat });
-      if (error) {
-        this.message = `Could not join the game: ${error.message}`;
-        return;
-      }
-      await this.refresh();
-      if (data?.status === "active") {
-        window.location.search = `?game=${game.id}`;
-      }
-    },
-    async leaveSeat(game: any, seat: number) {
-      const { error } = await (this.client as any).rpc("leave_open_game_seat", { p_game_id: game.id, p_seat: seat });
-      if (error) {
-        this.message = `Could not leave the seat: ${error.message}`;
-        return;
-      }
-      await this.refresh();
     },
     async deleteGame(game: any) {
       if (!window.confirm(`Delete "${game.name || "this game"}"? This cannot be undone.`)) {
@@ -900,34 +784,6 @@ export default Vue.extend({
 .release-notes__list {
   margin-top: 0.45rem;
   padding-left: 1.15rem;
-}
-
-.lobby-preview-modal {
-  width: min(100%, 52rem);
-}
-
-.lobby-preview__label {
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: #5b657a;
-  margin-bottom: 0.45rem;
-}
-
-.lobby-preview__seats {
-  display: grid;
-  gap: 0.45rem;
-}
-
-.lobby-preview__seat {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.65rem 0.75rem;
-  border-radius: 10px;
-  background: #f5f7fb;
 }
 
 .lobby-games {

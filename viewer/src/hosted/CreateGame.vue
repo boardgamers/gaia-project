@@ -191,7 +191,7 @@ export default Vue.extend({
         if (error) {
           throw new Error(error.message);
         }
-        window.location.search = this.form.testGame ? `?game=${data}` : `?lobby=1&preview=${data}`;
+        window.location.search = this.form.testGame ? `?game=${data}` : `?preview=${data}`;
       } catch (err) {
         this.message = `Could not create the game: ${err instanceof Error ? err.message : err}`;
         this.creating = false;

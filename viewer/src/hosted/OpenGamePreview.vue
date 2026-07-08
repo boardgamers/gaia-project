@@ -65,11 +65,6 @@ export default class OpenGamePreview extends Vue {
 
 <style lang="scss" scoped>
 .open-game-preview {
-  max-height: 28rem;
-  overflow: auto;
-  border: 1px solid rgba(28, 43, 74, 0.08);
-  border-radius: 12px;
-  padding: 0.5rem;
-  background: linear-gradient(180deg, #ffffff 0%, #f5f7fb 100%);
+  overflow: visible;
 }
 </style>
