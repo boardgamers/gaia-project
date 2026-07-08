@@ -1,7 +1,18 @@
 {
-  "version": "5.14.6",
+  "version": "5.14.7",
   "releasedAt": "2026-07-08",
   "entries": [
+    {
+      "version": "5.14.7",
+      "releasedAt": "2026-07-08",
+      "kind": "update",
+      "title": "Hosted faction-pick persistence",
+      "impact": "",
+      "changes": [
+        "Hosted games now retry seat claiming before giving up on a faction pick or turn save.",
+        "Games that briefly lose seat ownership during setup no longer snap back to player 1's faction picker after resync."
+      ]
+    },
     {
       "version": "5.14.6",
       "releasedAt": "2026-07-08",
