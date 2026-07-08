@@ -23,6 +23,10 @@ function isSeqConflict(err: unknown): boolean {
   return errorMessage(err).includes(SEQ_CONFLICT_PREFIX);
 }
 
+function isSeatOwnershipError(err: unknown): boolean {
+  return errorMessage(err).includes("seat ") && errorMessage(err).includes(" is not yours");
+}
+
 /** A move line is "<player> <command> <args...>", possibly several joined by ". " - true if any of
  * them is a pass (§8/§10.7: a manual pass always clears the seat's queue, regardless of mode). */
 function isPassMove(move: string): boolean {
@@ -238,6 +242,7 @@ export class HostedGameHost {
 
   load(): Promise<void> {
     return this.enqueue(async () => {
+      await this.backend.claimMySeats();
       const [game, players, moves] = await Promise.all([
         this.backend.fetchGame(this.gameId),
         this.backend.fetchPlayers(this.gameId),
@@ -395,15 +400,28 @@ export class HostedGameHost {
       try {
         await this.backend.commitTurn(args);
       } catch (err) {
+        if (isSeatOwnershipError(err)) {
+          try {
+            await this.backend.claimMySeats();
+            await this.backend.commitTurn(args);
+            err = null;
+          } catch (retryErr) {
+            err = retryErr;
+          }
+        }
+        if (err === null) {
+          // The one-shot re-claim + retry succeeded; keep the optimistic committed state.
+        } else {
         // seq_conflict means someone else (another tab, another automated committer) already
         // landed the next turn - not alarming, just stale local state. Silently resync instead of
         // showing a scary error for something that isn't actually a problem (this also affects
         // auto-leech and the premove fast-path below, both of which can race a commit the same way).
-        if (!isSeqConflict(err)) {
-          this.callbacks.onError?.(`Could not save the turn (${errorMessage(err)}); reloading the game state.`);
+          if (!isSeqConflict(err)) {
+            this.callbacks.onError?.(`Could not save the turn (${errorMessage(err)}); reloading the game state.`);
+          }
+          await this.resyncNow();
+          return false;
         }
-        await this.resyncNow();
-        return false;
       }
       // Phase 3 (§10.7) - a manual move for a seat that still has a queue on file means the queue
       // didn't get the chance to fire for this turn (most commonly: the fast-path's own attempt

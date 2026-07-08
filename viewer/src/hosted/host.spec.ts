@@ -64,6 +64,7 @@ class FakeBackend implements HostedBackend {
   commits: CommitTurnArgs[] = [];
   fetchMovesCalls = 0;
   failNextCommitWith: string | null = null;
+  claimMySeatsCalls = 0;
   premoves: PremoveRow[] = [];
   premoveFailures: PremoveFailureRow[] = [];
   private nextFailureId = 1;
@@ -86,6 +87,10 @@ class FakeBackend implements HostedBackend {
   async fetchMoves(): Promise<MoveRow[]> {
     this.fetchMovesCalls++;
     return this.moves.map((m) => ({ ...m }));
+  }
+
+  async claimMySeats(): Promise<void> {
+    this.claimMySeatsCalls++;
   }
 
   async commitTurn(args: CommitTurnArgs): Promise<void> {
@@ -272,6 +277,16 @@ describe("hosted game host", () => {
     expect(states[0].playerToMove).to.equal(host.engine.playerToMove);
   });
 
+  it("re-claims seats on load before fetching the hosted game state", async () => {
+    const backend = new FakeBackend(gameRow(), playerRows());
+    backend.seedMoves(SETUP_MOVES);
+    const { host } = makeHost(backend);
+
+    await host.load();
+
+    expect(backend.claimMySeatsCalls).to.equal(1);
+  });
+
   it("skips rebuilding/re-emitting on a resync that finds nothing new (spurious tab-foreground/reconnect resync)", async () => {
     const backend = new FakeBackend(gameRow(), playerRows());
     backend.seedMoves(SETUP_MOVES);
@@ -335,6 +350,21 @@ describe("hosted game host", () => {
     expect(commit.nextSeat).to.equal(host.engine.playerToMove);
     expect(commit.latestMoveSummary).to.equal("P1 pick Terrans.");
     expect(host.committedMoveCount).to.equal(1);
+  });
+
+  it("re-claims seats and retries once when commit_turn says the seat is not yours", async () => {
+    const backend = new FakeBackend(gameRow(), playerRows());
+    backend.seedMoves([]);
+    backend.failNextCommitWith = "seat 0 is not yours";
+    const { host, errors } = makeHost(backend);
+    await host.load();
+
+    await host.submitMove("p1 faction terrans");
+
+    expect(backend.claimMySeatsCalls).to.equal(2);
+    expect(backend.commits).to.have.length(1);
+    expect(host.committedMoveCount).to.equal(1);
+    expect(errors).to.deep.equal([]);
   });
 
   it("caches the current round and each faction-having seat's score on every commit (for the Lobby list)", async () => {
