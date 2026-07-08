@@ -70,3 +70,17 @@ export default class SetupPreviewBoard extends Vue {
   }
 }
 </script>
+
+<style lang="scss">
+@import "../stylesheets/frontend.scss";
+@import "../stylesheets/planets.css";
+
+.gaia-viewer-game .space-map,
+.gaia-viewer-game .scoring-research-board {
+  max-width: 100%;
+}
+
+.gaia-viewer-game .space-map {
+  max-height: 600px;
+}
+</style>

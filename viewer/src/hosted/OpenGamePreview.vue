@@ -54,6 +54,7 @@ export default class OpenGamePreview extends Vue {
         moves.push(this.game.setup_move);
       }
       const engine = new Engine(moves, JSON.parse(JSON.stringify(this.game.options ?? {})));
+      engine.generateAvailableCommandsIfNeeded();
       this.nestedStore.commit("receiveData", engine);
       this.error = null;
     } catch (err) {

@@ -56,7 +56,7 @@ describe("OpenLobbyGame", () => {
     };
   }
 
-  it("renders compact seats above the full-page setup preview", async () => {
+  it("renders joined names plus a single join action above the full-page setup preview", async () => {
     const client = makeClient({
       id: "g-open",
       name: "Open table",
@@ -76,9 +76,9 @@ describe("OpenLobbyGame", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
-    expect(wrapper.text()).to.contain("Seat 1");
-    expect(wrapper.text()).to.contain("Seat 2");
-    expect(wrapper.text()).to.contain("Join");
+    expect(wrapper.text()).to.contain("1/3 joined");
+    expect(wrapper.text()).to.contain("Other");
+    expect(wrapper.text()).to.contain("Join game");
     expect(wrapper.text()).to.contain("Standard");
     expect(wrapper.findComponent({ name: "OpenGamePreview" }).exists()).to.equal(true);
   });

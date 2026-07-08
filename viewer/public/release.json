@@ -1,7 +1,17 @@
 {
-  "version": "5.14.2",
+  "version": "5.14.3",
   "releasedAt": "2026-07-08",
   "entries": [
+    {
+      "version": "5.14.3",
+      "releasedAt": "2026-07-08",
+      "kind": "fix",
+      "title": "Cleaner lobby previews",
+      "changes": [
+        "Open lobby tables now show one join action with joined player names instead of a full seat-by-seat button list.",
+        "Setup previews now load the map and board art more reliably on the full-page lobby screen."
+      ]
+    },
     {
       "version": "5.14.2",
       "releasedAt": "2026-07-08",

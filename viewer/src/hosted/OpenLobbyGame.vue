@@ -4,9 +4,7 @@
       <div>
         <div class="text-muted small text-uppercase">Lobby game</div>
         <h3 class="mb-1">{{ gameName }}</h3>
-        <div v-if="game" class="text-muted small">
-          {{ auctionLabel(game) }} · {{ claimedSeats(game) }}/{{ game.player_count }} joined
-        </div>
+        <div v-if="game" class="text-muted small">{{ auctionLabel(game) }} · {{ claimedSeats(game) }}/{{ game.player_count }} joined</div>
       </div>
       <a href="?lobby=1" class="btn btn-outline-secondary btn-sm">Back to lobby</a>
     </div>
@@ -17,30 +15,20 @@
     <div v-else-if="!game" class="alert alert-warning mb-0">This lobby game is no longer available.</div>
     <template v-else>
       <div class="open-lobby-page__top">
-        <div class="open-lobby-page__section">
-          <div class="open-lobby-page__label">Seats</div>
-          <div class="open-lobby-page__seats">
-            <div v-for="seat in previewSeats(game)" :key="seat.seat" class="open-lobby-page__seat">
-              <div class="open-lobby-page__seat-copy">
-                <strong>Seat {{ seat.seat + 1 }}</strong>
-                <span class="text-muted small">{{ seatLabel(seat) }}</span>
-              </div>
-              <b-button v-if="canLeaveSeat(game, seat)" size="sm" variant="outline-secondary" @click="leaveSeat(game, seat.seat)">
-                Leave
-              </b-button>
-              <b-button v-else-if="canJoinSeat(game, seat)" size="sm" variant="primary" @click="joinSeat(game, seat.seat)">
-                Join
-              </b-button>
-              <span v-else class="text-muted small">Taken</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="open-lobby-page__section">
-          <div class="open-lobby-page__label">Setup</div>
-          <div class="open-lobby-page__meta">
-            <span class="open-lobby-page__pill">{{ auctionLabel(game) }}</span>
+        <div class="open-lobby-page__section open-lobby-page__section--main">
+          <div class="open-lobby-page__label">Players</div>
+          <div class="open-lobby-page__joined-line">
             <span class="open-lobby-page__pill">{{ claimedSeats(game) }}/{{ game.player_count }} joined</span>
+            <b-button v-if="canLeaveAnySeat(game)" size="sm" variant="outline-secondary" @click="leaveMySeat(game)">
+              Leave seat
+            </b-button>
+            <b-button v-else-if="canJoinGame(game)" size="sm" variant="primary" @click="joinFirstOpenSeat(game)">
+              Join game
+            </b-button>
+          </div>
+          <div class="open-lobby-page__names">
+            <span v-for="name in joinedNames(game)" :key="name" class="open-lobby-page__name-chip">{{ name }}</span>
+            <span v-if="joinedNames(game).length === 0" class="text-muted small">Nobody has joined yet.</span>
           </div>
         </div>
       </div>
@@ -115,23 +103,31 @@ export default Vue.extend({
     claimedSeats(game: any): number {
       return (game.players ?? []).filter((player: any) => !!player.user_id).length;
     },
-    previewSeats(game: any): any[] {
-      return [...(game.players ?? [])].sort((a: any, b: any) => a.seat - b.seat);
+    joinedNames(game: any): string[] {
+      return (game.players ?? [])
+        .filter((player: any) => !!player.user_id)
+        .sort((a: any, b: any) => a.seat - b.seat)
+        .map((player: any) => player.display_name || player.invited_email);
     },
-    seatLabel(player: any): string {
-      return player.user_id ? player.display_name || player.invited_email : "Open seat";
+    firstOpenSeat(game: any): number | null {
+      const open = (game.players ?? []).find((player: any) => !player.user_id);
+      return open ? open.seat : null;
     },
-    canJoinSeat(game: any, player: any): boolean {
-      return (
-        game.status === "open" &&
-        !player.user_id &&
-        !(game.players ?? []).some((seat: any) => seat.user_id === (this.session as any).user?.id)
-      );
+    mySeat(game: any): number | null {
+      const mine = (game.players ?? []).find((seat: any) => seat.user_id === (this.session as any).user?.id);
+      return mine ? mine.seat : null;
     },
-    canLeaveSeat(game: any, player: any): boolean {
-      return game.status === "open" && player.user_id === (this.session as any).user?.id;
+    canJoinGame(game: any): boolean {
+      return game.status === "open" && this.firstOpenSeat(game) !== null && this.mySeat(game) === null;
     },
-    async joinSeat(game: any, seat: number) {
+    canLeaveAnySeat(game: any): boolean {
+      return game.status === "open" && this.mySeat(game) !== null;
+    },
+    async joinFirstOpenSeat(game: any) {
+      const seat = this.firstOpenSeat(game);
+      if (seat === null) {
+        return;
+      }
       const { data, error } = await (this.client as any).rpc("join_open_game_seat", { p_game_id: game.id, p_seat: seat });
       if (error) {
         this.message = `Could not join the game: ${error.message}`;
@@ -143,7 +139,11 @@ export default Vue.extend({
       }
       await this.refresh();
     },
-    async leaveSeat(game: any, seat: number) {
+    async leaveMySeat(game: any) {
+      const seat = this.mySeat(game);
+      if (seat === null) {
+        return;
+      }
       const { error } = await (this.client as any).rpc("leave_open_game_seat", { p_game_id: game.id, p_seat: seat });
       if (error) {
         this.message = `Could not leave the seat: ${error.message}`;
@@ -173,6 +173,10 @@ export default Vue.extend({
   min-width: 16rem;
 }
 
+.open-lobby-page__section--main {
+  flex: 1 1 36rem;
+}
+
 .open-lobby-page__label {
   margin-bottom: 0.45rem;
   font-size: 0.78rem;
@@ -182,32 +186,16 @@ export default Vue.extend({
   color: #5b657a;
 }
 
-.open-lobby-page__seats {
+.open-lobby-page__joined-line,
+.open-lobby-page__names {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
 }
 
-.open-lobby-page__seat {
-  display: inline-flex;
+.open-lobby-page__joined-line {
   align-items: center;
-  gap: 0.65rem;
-  padding: 0.45rem 0.6rem;
-  border-radius: 10px;
-  background: #f5f7fb;
-}
-
-.open-lobby-page__seat-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 0.05rem;
-  min-width: 0;
-}
-
-.open-lobby-page__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
+  margin-bottom: 0.55rem;
 }
 
 .open-lobby-page__pill {
@@ -221,6 +209,16 @@ export default Vue.extend({
   font-weight: 700;
 }
 
+.open-lobby-page__name-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  background: #f5f7fb;
+  color: #364152;
+  font-size: 0.82rem;
+}
+
 .open-lobby-page__preview {
   border: 1px solid rgba(28, 43, 74, 0.08);
   border-radius: 12px;
@@ -229,9 +227,9 @@ export default Vue.extend({
 }
 
 @media (max-width: 767px) {
-  .open-lobby-page__header {
-    flex-direction: column;
-    align-items: stretch;
+  .open-lobby-page__header,
+  .open-lobby-page__top {
+    align-items: flex-start;
   }
 }
 </style>
