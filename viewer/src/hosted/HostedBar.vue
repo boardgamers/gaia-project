@@ -82,7 +82,7 @@ export default Vue.extend({
 <style lang="scss" scoped>
 .hosted-bar {
   align-items: stretch;
-  min-height: 58px;
+  min-height: 66px;
 }
 
 .hosted-bar__title {
@@ -116,7 +116,7 @@ export default Vue.extend({
 ::v-deep(.hosted-bar__turn-order .turn-order > svg) {
   width: auto !important;
   height: 100% !important;
-  max-height: 52px;
+  max-height: 60px;
 }
 
 @media (max-width: 767px) {

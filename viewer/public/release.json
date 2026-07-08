@@ -1,7 +1,18 @@
 {
-  "version": "5.13.8",
+  "version": "5.13.9",
   "releasedAt": "2026-07-08",
   "entries": [
+    {
+      "version": "5.13.9",
+      "releasedAt": "2026-07-08",
+      "kind": "update",
+      "title": "Refine lobby presence and turn-order emphasis",
+      "impact": "",
+      "changes": [
+        "Lobby avatars now show green-or-grey presence dots, and the active seat is highlighted by a green VP pill instead of an avatar ring.",
+        "The in-game hosted top bar now renders larger turn-order avatars for easier scanning."
+      ]
+    },
     {
       "version": "5.13.8",
       "releasedAt": "2026-07-08",

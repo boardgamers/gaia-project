@@ -150,14 +150,16 @@
                   v-for="(player, index) in row"
                   :key="player.seat"
                   class="game-bar__player"
-                  :class="{ 'game-bar__player--active': player.seat === game.current_seat }"
                   :style="{ zIndex: String(row.length - index) }"
                   :title="playerBarTitle(game, player)"
                 >
                   <span class="game-bar__avatar">
                     <svg viewBox="-22 -22 44 44"><Token :faction="player.faction" /></svg>
                     <span class="game-bar__initial">{{ factionInitial(player) }}</span>
-                    <span class="game-bar__score">{{ player.score != null ? player.score : "-" }}</span>
+                    <span class="game-bar__presence" :class="`game-bar__presence--${playerPresence(game, player)}`"></span>
+                    <span class="game-bar__score" :class="{ 'game-bar__score--active': player.seat === game.current_seat }">
+                      {{ player.score != null ? player.score : "-" }}
+                    </span>
                   </span>
                 </span>
               </span>
@@ -171,6 +173,7 @@
 
 <script lang="ts">
 import Vue from "vue";
+import { presenceStatus, PresenceState, trackPresence } from "./presence";
 import { disablePushNotifications, enablePushNotifications, isPushEnabled } from "./push";
 import Token from "../components/Token.vue";
 import { factionName } from "../data/factions";
@@ -284,6 +287,10 @@ type ReleaseEntry = {
   changes: string[];
 };
 
+function lobbyPresenceStatus(state: PresenceState, userId: string | null, gameId: string): "green" | "grey" {
+  return presenceStatus(state, userId, gameId) === "green" ? "green" : "grey";
+}
+
 export default Vue.extend({
   name: "HostedLobby",
   components: { Token },
@@ -306,6 +313,8 @@ export default Vue.extend({
       swipeStartX: 0,
       swipeDeltaX: 0,
       documentPointerDownHandler: null as ((event: PointerEvent) => void) | null,
+      stopPresenceTracking: null as (() => void) | null,
+      presenceState: {} as PresenceState,
     };
   },
   computed: {
@@ -360,6 +369,12 @@ export default Vue.extend({
   created() {
     this.refresh();
     this.subscribeGames();
+    const userId = (this.session as any).user?.id;
+    if (userId) {
+      this.stopPresenceTracking = trackPresence(this.client as any, userId, { type: "lobby" }, (state) => {
+        this.presenceState = state;
+      });
+    }
     isPushEnabled().then((enabled) => {
       this.pushEnabled = enabled;
     });
@@ -372,6 +387,10 @@ export default Vue.extend({
     if (this.gamesChannel) {
       (this.client as any).removeChannel(this.gamesChannel);
       this.gamesChannel = null;
+    }
+    if (this.stopPresenceTracking) {
+      this.stopPresenceTracking();
+      this.stopPresenceTracking = null;
     }
     if (typeof document !== "undefined" && this.documentPointerDownHandler) {
       document.removeEventListener("pointerdown", this.documentPointerDownHandler, true);
@@ -446,6 +465,9 @@ export default Vue.extend({
       const name = player.display_name || player.invited_email;
       const vp = player.score != null ? `${player.score} VP` : "no score yet";
       return `${name} - ${factionName(player.faction)} - ${vp}`;
+    },
+    playerPresence(game: any, player: any): "green" | "grey" {
+      return lobbyPresenceStatus(this.presenceState, player.user_id ?? null, game.id);
     },
     isTestGame(game: any): boolean {
       const players = game.players ?? [];
@@ -822,18 +844,10 @@ export default Vue.extend({
   display: flex;
   align-items: center;
   padding: 0.1rem;
-  border-radius: 50%;
-  border: 2px solid transparent;
   position: relative;
 
   & + & {
     margin-left: -0.65rem;
-  }
-
-  &--active {
-    border-color: var(--success, #28a745);
-    background: rgba(40, 167, 69, 0.24);
-    box-shadow: 0 0 0 1px var(--success, #28a745);
   }
 }
 
@@ -880,6 +894,29 @@ export default Vue.extend({
   min-width: 0.9rem;
   text-align: center;
   box-shadow: 0 0 0 1px #fff;
+
+  &--active {
+    background: #28a745;
+  }
+}
+
+.game-bar__presence {
+  position: absolute;
+  top: -0.08rem;
+  right: -0.02rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  border: 1px solid #fff;
+  box-shadow: 0 0 0 1px rgba(73, 80, 87, 0.12);
+
+  &--green {
+    background: #28a745;
+  }
+
+  &--grey {
+    background: #95a5a6;
+  }
 }
 
 @media (max-width: 767px) {

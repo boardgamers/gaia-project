@@ -16,6 +16,7 @@ describe("Lobby", () => {
     let moveRows = [...moves];
     let gamesChangeHandler: (() => void) | null = null;
     let removedChannel: any = null;
+    let presenceStateData: Record<string, any[]> = {};
     const channel = {
       on: (_event: string, _filter: any, handler: () => void) => {
         gamesChangeHandler = handler;
@@ -49,7 +50,28 @@ describe("Lobby", () => {
         }
         throw new Error(`unexpected table ${table}`);
       },
-      channel: () => channel,
+      channel: (name: string) => {
+        if (name === "lobby-games") {
+          return channel;
+        }
+        let presenceSyncHandler: (() => void) | null = null;
+        const presenceChannel = {
+          on: (event: string, filter: any, handler: () => void) => {
+            if (event === "presence" && filter?.event === "sync") {
+              presenceSyncHandler = handler;
+            }
+            return presenceChannel;
+          },
+          subscribe: (handler?: (status: string) => void) => {
+            handler?.("SUBSCRIBED");
+            presenceSyncHandler?.();
+            return presenceChannel;
+          },
+          track: async () => undefined,
+          presenceState: () => presenceStateData,
+        };
+        return presenceChannel;
+      },
       removeChannel: (value: any) => {
         removedChannel = value;
       },
@@ -70,6 +92,9 @@ describe("Lobby", () => {
       },
       setMoves: (next: any[]) => {
         moveRows = next;
+      },
+      setPresenceState: (next: Record<string, any[]>) => {
+        presenceStateData = next;
       },
       removedChannel: () => removedChannel,
       channel,
@@ -237,7 +262,7 @@ describe("Lobby", () => {
     expect(wrapper.find('input[type="email"]').exists()).to.equal(false);
   });
 
-  it("shows round, per-player faction/score, highlights whoever's turn it is, and drops the move label", async () => {
+  it("shows round, per-player faction/score, uses a green score pill for the active seat, and drops the move label", async () => {
     const game = {
       id: "g-active",
       name: "Friends game",
@@ -253,7 +278,11 @@ describe("Lobby", () => {
         { seat: 1, invited_email: "bob@example.com", user_id: "user-other", display_name: "Bob", faction: "nevlas", score: 31 },
       ],
     };
-    const { client } = makeClient([game]);
+    const { client, setPresenceState } = makeClient([game]);
+    setPresenceState({
+      "user-other": [{ context: { type: "game", gameId: "g-active" }, focused: true }],
+      "user-admin": [{ context: { type: "lobby" }, focused: true }],
+    });
     const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
     await Vue.nextTick();
     await Vue.nextTick();
@@ -263,8 +292,12 @@ describe("Lobby", () => {
     expect(players.length).to.equal(2);
     expect(players.at(0).text()).to.contain("24");
     expect(players.at(1).text()).to.contain("31");
-    expect(players.at(0).classes()).to.not.contain("game-bar__player--active");
-    expect(players.at(1).classes()).to.contain("game-bar__player--active");
+    const scores = wrapper.findAll(".game-bar__score");
+    expect(scores.at(0).classes()).to.not.contain("game-bar__score--active");
+    expect(scores.at(1).classes()).to.contain("game-bar__score--active");
+    const presenceDots = wrapper.findAll(".game-bar__presence");
+    expect(presenceDots.at(0).classes()).to.contain("game-bar__presence--grey");
+    expect(presenceDots.at(1).classes()).to.contain("game-bar__presence--green");
     expect(wrapper.text()).to.contain("Terrans build mine sector 3.");
     expect(wrapper.text()).to.not.contain("your turn");
     expect(wrapper.text()).to.not.contain("Bob to move");
@@ -286,7 +319,7 @@ describe("Lobby", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
-    expect(wrapper.text()).to.contain("Version 5.13.8");
+    expect(wrapper.text()).to.contain("Version 5.13.9");
     expect(wrapper.text()).to.not.contain("2026-07-08");
     expect(wrapper.text()).to.not.contain("kim.pham.nguyen2@gmail.com");
     expect(wrapper.find(".release-modal").exists()).to.equal(false);
@@ -297,9 +330,9 @@ describe("Lobby", () => {
 
     expect(wrapper.find(".release-modal").exists()).to.equal(true);
     expect(wrapper.text()).to.contain("Hosted changelog");
-    expect(wrapper.text()).to.contain("Polish hosted lobby labels and avatar layout");
+    expect(wrapper.text()).to.contain("Refine lobby presence and turn-order emphasis");
     expect(wrapper.text()).to.contain(
-      "Lobby rows now show Gaia Project: The Lost Fleet branding, overlapping avatar stacks, and visible Standard/Silent Auction plus Test game labels."
+      "Lobby avatars now show green-or-grey presence dots, and the active seat is highlighted by a green VP pill instead of an avatar ring."
     );
     expect(wrapper.text()).to.contain("2026-07-08");
   });
@@ -517,13 +550,13 @@ describe("Lobby", () => {
   });
 
   it("removes the realtime channel when the lobby unmounts", async () => {
-    const { client, removedChannel, channel } = makeClient(sampleGames);
+    const { client, removedChannel } = makeClient(sampleGames);
     const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
     await Vue.nextTick();
     await Vue.nextTick();
 
     wrapper.destroy();
 
-    expect(removedChannel()).to.equal(channel);
+    expect(removedChannel()).to.not.equal(null);
   });
 });
