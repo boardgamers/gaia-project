@@ -439,14 +439,14 @@ export default Vue.extend({
         if (gameIds.length > 0) {
           const latestMoves = await (this.client as any)
             .from("moves")
-            .select("game_id,seq,move,created_at")
+            .select("game_id,seq,move,committed_at")
             .in("game_id", gameIds)
             .order("seq", { ascending: false });
           if (!latestMoves.error) {
             const summaries = new Map<string, { summary: string | null; createdAt: string | null }>();
             for (const row of latestMoves.data ?? []) {
               if (!summaries.has(row.game_id)) {
-                summaries.set(row.game_id, { summary: compactMoveSummary(row.move), createdAt: row.created_at ?? null });
+                summaries.set(row.game_id, { summary: compactMoveSummary(row.move), createdAt: row.committed_at ?? null });
               }
             }
             for (const game of games) {

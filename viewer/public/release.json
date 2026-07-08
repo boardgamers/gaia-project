@@ -1,7 +1,18 @@
 {
-  "version": "5.13.10",
+  "version": "5.13.11",
   "releasedAt": "2026-07-08",
   "entries": [
+    {
+      "version": "5.13.11",
+      "releasedAt": "2026-07-08",
+      "kind": "update",
+      "title": "Fix lobby latest-move fetch",
+      "impact": "",
+      "changes": [
+        "The hosted lobby now reads the real move commit timestamp again, restoring the latest-move summary and age prefix in production.",
+        "This fixes the last release's schema mismatch in the lobby move query."
+      ]
+    },
     {
       "version": "5.13.10",
       "releasedAt": "2026-07-08",

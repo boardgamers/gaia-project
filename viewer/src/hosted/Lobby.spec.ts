@@ -202,7 +202,7 @@ describe("Lobby", () => {
         latest_move_summary: null,
         players: [],
       },
-    ], [{ game_id: "g-four", seq: 12, move: "terrans up int.", created_at: "2026-07-08T11:05:00Z" }]);
+    ], [{ game_id: "g-four", seq: 12, move: "terrans up int.", committed_at: "2026-07-08T11:05:00Z" }]);
     const wrapper = mount(Lobby, { propsData: { client, session: otherSession } });
     await Vue.nextTick();
     await Vue.nextTick();
@@ -289,7 +289,7 @@ describe("Lobby", () => {
       ],
     };
     const { client, setPresenceState } = makeClient([game], [
-      { game_id: "g-active", seq: 11, move: "terrans build m 3B0.", created_at: "2026-07-08T11:05:00Z" },
+      { game_id: "g-active", seq: 11, move: "terrans build m 3B0.", committed_at: "2026-07-08T11:05:00Z" },
     ]);
     setPresenceState({
       "user-other": [{ context: { type: "game", gameId: "g-active" }, focused: true }],
@@ -332,7 +332,7 @@ describe("Lobby", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
-    expect(wrapper.text()).to.contain("Version 5.13.10");
+    expect(wrapper.text()).to.contain("Version 5.13.11");
     expect(wrapper.text()).to.not.contain("2026-07-08");
     expect(wrapper.text()).to.not.contain("kim.pham.nguyen2@gmail.com");
     expect(wrapper.find(".release-modal").exists()).to.equal(false);
@@ -343,18 +343,18 @@ describe("Lobby", () => {
 
     expect(wrapper.find(".release-modal").exists()).to.equal(true);
     expect(wrapper.text()).to.contain("Hosted changelog");
-    expect(wrapper.text()).to.contain("Add compact last-move age to lobby");
+    expect(wrapper.text()).to.contain("Fix lobby latest-move fetch");
     expect(wrapper.text()).to.contain(
-      "Lobby game bars now prefix the latest move summary with a compact age like 55m ago, 1h ago, or 2d ago."
+      "The hosted lobby now reads the real move commit timestamp again, restoring the latest-move summary and age prefix in production."
     );
     expect(wrapper.text()).to.contain("2026-07-08");
   });
 
   it("defaults to My games, while Active and Finished still show the full lobby", async () => {
     const { client } = makeClient(membershipGames, [
-      { game_id: "g-mine", seq: 7, move: "terrans up int.", created_at: "2026-07-08T11:05:00Z" },
-      { game_id: "g-theirs", seq: 9, move: "xenos pass booster3.", created_at: "2026-07-08T10:00:00Z" },
-      { game_id: "g-finished", seq: 42, move: "nevlas federation 1A4,9A9,9B4,9C fed4.", created_at: "2026-07-06T12:00:00Z" },
+      { game_id: "g-mine", seq: 7, move: "terrans up int.", committed_at: "2026-07-08T11:05:00Z" },
+      { game_id: "g-theirs", seq: 9, move: "xenos pass booster3.", committed_at: "2026-07-08T10:00:00Z" },
+      { game_id: "g-finished", seq: 42, move: "nevlas federation 1A4,9A9,9B4,9C fed4.", committed_at: "2026-07-06T12:00:00Z" },
     ]);
     const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
     await Vue.nextTick();
@@ -399,7 +399,7 @@ describe("Lobby", () => {
           players: [{ seat: 0, invited_email: "kim.pham.nguyen2@gmail.com", user_id: "user-admin", display_name: "Admin", faction: "ivits", score: 20 }],
         },
       ],
-      [{ game_id: "g-fallback", seq: 6, move: "ivits up int.", created_at: "2026-07-08T11:05:00Z" }]
+      [{ game_id: "g-fallback", seq: 6, move: "ivits up int.", committed_at: "2026-07-08T11:05:00Z" }]
     );
     const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
     await Vue.nextTick();
@@ -557,7 +557,7 @@ describe("Lobby", () => {
         ],
       },
     ]);
-    setMoves([{ game_id: "g-live", seq: 5, move: "terrans up int.", created_at: "2026-07-08T11:05:00Z" }]);
+    setMoves([{ game_id: "g-live", seq: 5, move: "terrans up int.", committed_at: "2026-07-08T11:05:00Z" }]);
     emitGamesChange();
     await Vue.nextTick();
     await Vue.nextTick();
