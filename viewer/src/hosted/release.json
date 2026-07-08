@@ -1,7 +1,18 @@
 {
-  "version": "5.13.9",
+  "version": "5.13.10",
   "releasedAt": "2026-07-08",
   "entries": [
+    {
+      "version": "5.13.10",
+      "releasedAt": "2026-07-08",
+      "kind": "update",
+      "title": "Add compact last-move age to lobby",
+      "impact": "",
+      "changes": [
+        "Lobby game bars now prefix the latest move summary with a compact age like 55m ago, 1h ago, or 2d ago.",
+        "The lobby derives that age from the latest move timestamp while keeping the summary text compact for older and newer games alike."
+      ]
+    },
     {
       "version": "5.13.9",
       "releasedAt": "2026-07-08",

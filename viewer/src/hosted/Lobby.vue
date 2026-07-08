@@ -137,7 +137,10 @@
                   <span v-if="auctionLabel(game)" class="game-bar__tag">{{ auctionLabel(game) }}</span>
                   <span v-if="isTestGame(game)" class="game-bar__tag">Test game</span>
                 </span>
-                <span v-if="summaryForGame(game)" class="game-bar__summary text-muted small">{{ summaryForGame(game) }}</span>
+                <span v-if="summaryForGame(game)" class="game-bar__summary text-muted small">
+                  <span v-if="moveAge(game)" class="game-bar__age">{{ moveAge(game) }}</span>
+                  {{ summaryForGame(game) }}
+                </span>
               </span>
             </span>
             <span
@@ -278,6 +281,26 @@ function compactMoveSummary(move: string): string | null {
   return detail ? `${actor} ${detail}` : null;
 }
 
+function formatMoveAge(value: string | null | undefined): string | null {
+  if (!value) {
+    return null;
+  }
+  const ms = Date.now() - new Date(value).getTime();
+  if (!Number.isFinite(ms) || ms < 0) {
+    return null;
+  }
+  const minutes = Math.floor(ms / 60_000);
+  if (minutes < 60) {
+    return `${Math.max(1, minutes)}m ago`;
+  }
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) {
+    return `${hours}h ago`;
+  }
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
 type ReleaseEntry = {
   version: string;
   releasedAt: string;
@@ -412,25 +435,24 @@ export default Vue.extend({
         this.message = `Could not load games: ${error.message}`;
       } else {
         const games = (data ?? []).map((game: any) => ({ ...game }));
-        const missingSummaryIds = games.filter((game: any) => !game.latest_move_summary).map((game: any) => game.id);
-        if (missingSummaryIds.length > 0) {
+        const gameIds = games.map((game: any) => game.id);
+        if (gameIds.length > 0) {
           const latestMoves = await (this.client as any)
             .from("moves")
-            .select("game_id,seq,move")
-            .in("game_id", missingSummaryIds)
+            .select("game_id,seq,move,created_at")
+            .in("game_id", gameIds)
             .order("seq", { ascending: false });
           if (!latestMoves.error) {
-            const summaries = new Map<string, string>();
+            const summaries = new Map<string, { summary: string | null; createdAt: string | null }>();
             for (const row of latestMoves.data ?? []) {
               if (!summaries.has(row.game_id)) {
-                const summary = compactMoveSummary(row.move);
-                if (summary) {
-                  summaries.set(row.game_id, summary);
-                }
+                summaries.set(row.game_id, { summary: compactMoveSummary(row.move), createdAt: row.created_at ?? null });
               }
             }
             for (const game of games) {
-              game._fallback_latest_move_summary = summaries.get(game.id) ?? null;
+              const latest = summaries.get(game.id);
+              game._fallback_latest_move_summary = latest?.summary ?? null;
+              game._latest_move_created_at = latest?.createdAt ?? null;
             }
           }
         }
@@ -479,6 +501,9 @@ export default Vue.extend({
     },
     summaryForGame(game: any): string | null {
       return game.latest_move_summary || game._fallback_latest_move_summary || null;
+    },
+    moveAge(game: any): string | null {
+      return formatMoveAge(game._latest_move_created_at);
     },
     swipeOffset(gameId: string): number {
       if (!this.isAdmin) {
@@ -810,6 +835,12 @@ export default Vue.extend({
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.game-bar__age {
+  margin-right: 0.35rem;
+  font-weight: 700;
+  color: #6c757d;
 }
 
 .game-bar__tag {

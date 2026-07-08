@@ -9,6 +9,8 @@ Vue.use(BootstrapVue);
 describe("Lobby", () => {
   const adminSession = { user: { id: "user-admin", email: "kim.pham.nguyen2@gmail.com" } } as any;
   const otherSession = { user: { id: "user-other", email: "someone-else@example.com" } } as any;
+  const NOW = new Date("2026-07-08T12:00:00Z").getTime();
+  const realDateNow = Date.now;
 
   function makeClient(games: any[], moves: any[] = []) {
     let deleted: string | null = null;
@@ -162,6 +164,14 @@ describe("Lobby", () => {
     },
   ];
 
+  beforeEach(() => {
+    (Date as any).now = () => NOW;
+  });
+
+  afterEach(() => {
+    (Date as any).now = realDateNow;
+  });
+
   it("keeps admin controls inside the settings menu and hides delete until a row is swiped open", async () => {
     const { client } = makeClient(sampleGames);
     const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
@@ -192,7 +202,7 @@ describe("Lobby", () => {
         latest_move_summary: null,
         players: [],
       },
-    ]);
+    ], [{ game_id: "g-four", seq: 12, move: "terrans up int.", created_at: "2026-07-08T11:05:00Z" }]);
     const wrapper = mount(Lobby, { propsData: { client, session: otherSession } });
     await Vue.nextTick();
     await Vue.nextTick();
@@ -278,7 +288,9 @@ describe("Lobby", () => {
         { seat: 1, invited_email: "bob@example.com", user_id: "user-other", display_name: "Bob", faction: "nevlas", score: 31 },
       ],
     };
-    const { client, setPresenceState } = makeClient([game]);
+    const { client, setPresenceState } = makeClient([game], [
+      { game_id: "g-active", seq: 11, move: "terrans build m 3B0.", created_at: "2026-07-08T11:05:00Z" },
+    ]);
     setPresenceState({
       "user-other": [{ context: { type: "game", gameId: "g-active" }, focused: true }],
       "user-admin": [{ context: { type: "lobby" }, focused: true }],
@@ -298,6 +310,7 @@ describe("Lobby", () => {
     const presenceDots = wrapper.findAll(".game-bar__presence");
     expect(presenceDots.at(0).classes()).to.contain("game-bar__presence--grey");
     expect(presenceDots.at(1).classes()).to.contain("game-bar__presence--green");
+    expect(wrapper.text()).to.contain("55m ago");
     expect(wrapper.text()).to.contain("Terrans build mine sector 3.");
     expect(wrapper.text()).to.not.contain("your turn");
     expect(wrapper.text()).to.not.contain("Bob to move");
@@ -319,7 +332,7 @@ describe("Lobby", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
-    expect(wrapper.text()).to.contain("Version 5.13.9");
+    expect(wrapper.text()).to.contain("Version 5.13.10");
     expect(wrapper.text()).to.not.contain("2026-07-08");
     expect(wrapper.text()).to.not.contain("kim.pham.nguyen2@gmail.com");
     expect(wrapper.find(".release-modal").exists()).to.equal(false);
@@ -330,15 +343,19 @@ describe("Lobby", () => {
 
     expect(wrapper.find(".release-modal").exists()).to.equal(true);
     expect(wrapper.text()).to.contain("Hosted changelog");
-    expect(wrapper.text()).to.contain("Refine lobby presence and turn-order emphasis");
+    expect(wrapper.text()).to.contain("Add compact last-move age to lobby");
     expect(wrapper.text()).to.contain(
-      "Lobby avatars now show green-or-grey presence dots, and the active seat is highlighted by a green VP pill instead of an avatar ring."
+      "Lobby game bars now prefix the latest move summary with a compact age like 55m ago, 1h ago, or 2d ago."
     );
     expect(wrapper.text()).to.contain("2026-07-08");
   });
 
   it("defaults to My games, while Active and Finished still show the full lobby", async () => {
-    const { client } = makeClient(membershipGames);
+    const { client } = makeClient(membershipGames, [
+      { game_id: "g-mine", seq: 7, move: "terrans up int.", created_at: "2026-07-08T11:05:00Z" },
+      { game_id: "g-theirs", seq: 9, move: "xenos pass booster3.", created_at: "2026-07-08T10:00:00Z" },
+      { game_id: "g-finished", seq: 42, move: "nevlas federation 1A4,9A9,9B4,9C fed4.", created_at: "2026-07-06T12:00:00Z" },
+    ]);
     const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
     await Vue.nextTick();
     await Vue.nextTick();
@@ -346,7 +363,7 @@ describe("Lobby", () => {
     let titles = wrapper.findAll(".game-bar__title").wrappers.map((node) => node.text());
     expect(titles).to.deep.equal(["My gameStandard"]);
     let summaries = wrapper.findAll(".game-bar__summary").wrappers.map((node) => node.text());
-    expect(summaries).to.deep.equal(["Terrans up int."]);
+    expect(summaries).to.deep.equal(["55m ago Terrans up int."]);
 
     const activeTab = wrapper.findAll("button").filter((b) => b.text().includes("Active")).at(0);
     await activeTab.trigger("click");
@@ -355,7 +372,7 @@ describe("Lobby", () => {
     titles = wrapper.findAll(".game-bar__title").wrappers.map((node) => node.text());
     expect(titles).to.deep.equal(["My gameStandard", "Their gameSilent Auction"]);
     summaries = wrapper.findAll(".game-bar__summary").wrappers.map((node) => node.text());
-    expect(summaries).to.deep.equal(["Terrans up int.", "Xenos pass booster3."]);
+    expect(summaries).to.deep.equal(["55m ago Terrans up int.", "2h ago Xenos pass booster3."]);
 
     const finishedTab = wrapper.findAll("button").filter((b) => b.text().includes("Finished")).at(0);
     await finishedTab.trigger("click");
@@ -364,7 +381,7 @@ describe("Lobby", () => {
     titles = wrapper.findAll(".game-bar__title").wrappers.map((node) => node.text());
     expect(titles).to.deep.equal(["Finished theirsSilent Auction"]);
     summaries = wrapper.findAll(".game-bar__summary").wrappers.map((node) => node.text());
-    expect(summaries).to.deep.equal(["Nevlas form fed."]);
+    expect(summaries).to.deep.equal(["2d ago Nevlas form fed."]);
   });
 
   it("falls back to compacting the latest stored move when the cached lobby summary is still missing", async () => {
@@ -382,13 +399,13 @@ describe("Lobby", () => {
           players: [{ seat: 0, invited_email: "kim.pham.nguyen2@gmail.com", user_id: "user-admin", display_name: "Admin", faction: "ivits", score: 20 }],
         },
       ],
-      [{ game_id: "g-fallback", seq: 6, move: "ivits up int." }]
+      [{ game_id: "g-fallback", seq: 6, move: "ivits up int.", created_at: "2026-07-08T11:05:00Z" }]
     );
     const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
     await Vue.nextTick();
     await Vue.nextTick();
 
-    expect(wrapper.find(".game-bar__summary").text()).to.equal("Ivits up int.");
+    expect(wrapper.find(".game-bar__summary").text()).to.equal("55m ago Ivits up int.");
   });
 
   it("overlaps avatars and splits 3-4 player games into two rows", async () => {
@@ -519,7 +536,7 @@ describe("Lobby", () => {
       latest_move_summary: null,
       players: [],
     };
-    const { client, emitGamesChange, setGames } = makeClient([game]);
+    const { client, emitGamesChange, setGames, setMoves } = makeClient([game]);
     const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
     await Vue.nextTick();
     await Vue.nextTick();
@@ -540,11 +557,13 @@ describe("Lobby", () => {
         ],
       },
     ]);
+    setMoves([{ game_id: "g-live", seq: 5, move: "terrans up int.", created_at: "2026-07-08T11:05:00Z" }]);
     emitGamesChange();
     await Vue.nextTick();
     await Vue.nextTick();
 
     expect(wrapper.text()).to.contain("R4");
+    expect(wrapper.text()).to.contain("55m ago");
     expect(wrapper.text()).to.contain("Terrans up int.");
     expect(wrapper.findAll(".game-bar__player").length).to.equal(2);
   });
