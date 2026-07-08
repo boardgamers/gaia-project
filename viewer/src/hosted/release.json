@@ -1,7 +1,19 @@
 {
-  "version": "5.14.5",
+  "version": "5.14.6",
   "releasedAt": "2026-07-08",
   "entries": [
+    {
+      "version": "5.14.6",
+      "releasedAt": "2026-07-08",
+      "kind": "update",
+      "title": "Hosted sync and lobby fixes",
+      "impact": "",
+      "changes": [
+        "Hosted turns now resync correctly when another tab or player already committed a conflicting move.",
+        "The lobby now opens on public tables first, and open-table visibility is backed by the latest SQL policy update.",
+        "The duplicate top turn banner is gone, and full setup previews use the main game layout so maps load more reliably."
+      ]
+    },
     {
       "version": "5.14.5",
       "releasedAt": "2026-07-08",
