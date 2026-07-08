@@ -82,6 +82,39 @@ describe("Lobby", () => {
           deleted = args.p_game_id;
           return { error: null };
         }
+        if (name === "join_open_game_seat") {
+          gameRows = gameRows.map((game) =>
+            game.id !== args.p_game_id
+              ? game
+              : {
+                  ...game,
+                  players: (game.players ?? []).map((player: any) =>
+                    player.seat === args.p_seat
+                      ? {
+                          ...player,
+                          user_id: "user-admin",
+                          invited_email: "kim.pham.nguyen2@gmail.com",
+                          display_name: "Admin",
+                        }
+                      : player
+                  ),
+                }
+          );
+          return { data: gameRows.find((game) => game.id === args.p_game_id), error: null };
+        }
+        if (name === "leave_open_game_seat") {
+          gameRows = gameRows.map((game) =>
+            game.id !== args.p_game_id
+              ? game
+              : {
+                  ...game,
+                  players: (game.players ?? []).map((player: any) =>
+                    player.seat === args.p_seat ? { ...player, user_id: null, display_name: "", invited_email: "open-seat@lobby.invalid" } : player
+                  ),
+                }
+          );
+          return { data: gameRows.find((game) => game.id === args.p_game_id), error: null };
+        }
         throw new Error(`unexpected rpc ${name}`);
       },
     };
@@ -130,6 +163,22 @@ describe("Lobby", () => {
 
   const membershipGames = [
     {
+      id: "g-open",
+      name: "Open table",
+      created_by: "user-other",
+      player_count: 3,
+      options: {},
+      status: "open",
+      current_seat: null,
+      latest_move_summary: null,
+      setup_move: "p3 rotate",
+      players: [
+        { seat: 0, invited_email: "someone-else@example.com", user_id: "user-other", display_name: "Other", faction: null, score: null },
+        { seat: 1, invited_email: "open-seat@lobby.invalid", user_id: null, display_name: "", faction: null, score: null },
+        { seat: 2, invited_email: "open-seat@lobby.invalid", user_id: null, display_name: "", faction: null, score: null },
+      ],
+    },
+    {
       id: "g-mine",
       name: "My game",
       created_by: "user-admin",
@@ -166,6 +215,7 @@ describe("Lobby", () => {
 
   beforeEach(() => {
     (Date as any).now = () => NOW;
+    window.history.replaceState({}, "", "/");
   });
 
   afterEach(() => {
@@ -308,7 +358,7 @@ describe("Lobby", () => {
     expect(scores.at(0).classes()).to.not.contain("game-bar__score--active");
     expect(scores.at(1).classes()).to.contain("game-bar__score--active");
     const presenceDots = wrapper.findAll(".game-bar__presence");
-    expect(presenceDots.at(0).classes()).to.contain("game-bar__presence--grey");
+    expect(presenceDots.at(0).classes()).to.contain("game-bar__presence--yellow");
     expect(presenceDots.at(1).classes()).to.contain("game-bar__presence--green");
     expect(wrapper.text()).to.contain("55m ago");
     expect(wrapper.text()).to.contain("Terrans build mine sector 3.");
@@ -332,7 +382,7 @@ describe("Lobby", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
-    expect(wrapper.text()).to.contain("Version 5.13.11");
+    expect(wrapper.text()).to.contain("Version 5.14.0");
     expect(wrapper.text()).to.not.contain("2026-07-08");
     expect(wrapper.text()).to.not.contain("kim.pham.nguyen2@gmail.com");
     expect(wrapper.find(".release-modal").exists()).to.equal(false);
@@ -343,15 +393,14 @@ describe("Lobby", () => {
 
     expect(wrapper.find(".release-modal").exists()).to.equal(true);
     expect(wrapper.text()).to.contain("Hosted changelog");
-    expect(wrapper.text()).to.contain("Fix lobby latest-move fetch");
-    expect(wrapper.text()).to.contain(
-      "The hosted lobby now reads the real move commit timestamp again, restoring the latest-move summary and age prefix in production."
-    );
+    expect(wrapper.text()).to.contain("Open lobby tables and compact release notes");
+    expect(wrapper.text()).to.contain("New games now open in the lobby for players to join instead of requiring direct invites.");
     expect(wrapper.text()).to.contain("2026-07-08");
   });
 
-  it("defaults to My games, while Active and Finished still show the full lobby", async () => {
+  it("defaults to My games, while Lobby, Active, and Finished keep their own sections", async () => {
     const { client } = makeClient(membershipGames, [
+      { game_id: "g-open", seq: 1, move: "p3 rotate", committed_at: "2026-07-08T09:00:00Z" },
       { game_id: "g-mine", seq: 7, move: "terrans up int.", committed_at: "2026-07-08T11:05:00Z" },
       { game_id: "g-theirs", seq: 9, move: "xenos pass booster3.", committed_at: "2026-07-08T10:00:00Z" },
       { game_id: "g-finished", seq: 42, move: "nevlas federation 1A4,9A9,9B4,9C fed4.", committed_at: "2026-07-06T12:00:00Z" },
@@ -364,6 +413,15 @@ describe("Lobby", () => {
     expect(titles).to.deep.equal(["My gameStandard"]);
     let summaries = wrapper.findAll(".game-bar__summary").wrappers.map((node) => node.text());
     expect(summaries).to.deep.equal(["55m ago Terrans up int."]);
+
+    const lobbyTab = wrapper.findAll("button").filter((b) => b.text().includes("Lobby")).at(0);
+    await lobbyTab.trigger("click");
+    await Vue.nextTick();
+
+    titles = wrapper.findAll(".game-bar__title").wrappers.map((node) => node.text());
+    expect(titles).to.deep.equal(["Open tableLobbyStandard"]);
+    summaries = wrapper.findAll(".game-bar__summary").wrappers.map((node) => node.text());
+    expect(summaries).to.deep.equal(["1/3 seats filled"]);
 
     const activeTab = wrapper.findAll("button").filter((b) => b.text().includes("Active")).at(0);
     await activeTab.trigger("click");
@@ -382,6 +440,28 @@ describe("Lobby", () => {
     expect(titles).to.deep.equal(["Finished theirsSilent Auction"]);
     summaries = wrapper.findAll(".game-bar__summary").wrappers.map((node) => node.text());
     expect(summaries).to.deep.equal(["2d ago Nevlas form fed."]);
+  });
+
+  it("opens a lobby-game preview instead of navigating directly, and shows joinable seats", async () => {
+    const { client } = makeClient([membershipGames[0]]);
+    const wrapper = mount(Lobby, {
+      propsData: { client, session: adminSession },
+      stubs: { OpenGamePreview: true },
+    });
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    wrapper.setData({ activeTab: "open" });
+    await Vue.nextTick();
+
+    const link = wrapper.find(".game-bar__link");
+    await link.trigger("click");
+    await Vue.nextTick();
+
+    expect(wrapper.find(".lobby-preview-modal").exists()).to.equal(true);
+    expect(wrapper.text()).to.contain("1/3 seats filled");
+    expect(wrapper.text()).to.contain("Seat 2");
+    expect(wrapper.text()).to.contain("Join");
   });
 
   it("falls back to compacting the latest stored move when the cached lobby summary is still missing", async () => {
@@ -435,6 +515,38 @@ describe("Lobby", () => {
     expect(wrapper.findAll(".game-bar__player-row").length).to.equal(2);
     expect(wrapper.find(".game-bar__players").classes()).to.contain("game-bar__players--stacked");
     expect(wrapper.findAll(".game-bar__player").length).to.equal(4);
+  });
+
+  it("shows yellow in the lobby when a player is online elsewhere in the app", async () => {
+    const game = {
+      id: "g-yellow",
+      name: "Presence game",
+      created_by: "user-admin",
+      player_count: 2,
+      options: {},
+      status: "active",
+      current_seat: 0,
+      current_round: 1,
+      latest_move_summary: "Terrans up int.",
+      players: [
+        { seat: 0, invited_email: "alice@example.com", user_id: "user-admin", display_name: "Alice", faction: "terrans", score: 20 },
+        { seat: 1, invited_email: "bob@example.com", user_id: "user-other", display_name: "Bob", faction: "nevlas", score: 21 },
+      ],
+    };
+    const { client, setPresenceState } = makeClient([game], [
+      { game_id: "g-yellow", seq: 3, move: "terrans up int.", committed_at: "2026-07-08T11:05:00Z" },
+    ]);
+    setPresenceState({
+      "user-admin": [{ context: { type: "lobby" }, focused: true }],
+      "user-other": [{ context: { type: "game", gameId: "other-game" }, focused: true }],
+    });
+    const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    const presenceDots = wrapper.findAll(".game-bar__presence");
+    expect(presenceDots.at(0).classes()).to.contain("game-bar__presence--yellow");
+    expect(presenceDots.at(1).classes()).to.contain("game-bar__presence--yellow");
   });
 
   it("shows a My games empty state when the user is not in any listed game", async () => {

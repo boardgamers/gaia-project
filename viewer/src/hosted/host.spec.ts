@@ -347,6 +347,20 @@ describe("hosted game host", () => {
     ]);
   });
 
+  it("commits an initial-mine setup turn cleanly during round 0", async () => {
+    const backend = new FakeBackend(gameRow(), playerRows());
+    backend.seedMoves(["p1 faction terrans", "p2 faction nevlas"]);
+    const { host } = makeHost(backend);
+    await host.load();
+
+    await host.submitMove("terrans build m -1x2");
+
+    expect(backend.commits).to.have.length(1);
+    expect(backend.commits[0].move).to.equal("terrans build m -1x2");
+    expect(host.engine.phase).to.equal("setupBuilding");
+    expect(host.engine.playerToMove).to.equal(1);
+  });
+
   it("compacts primary move summaries for the lobby row", async () => {
     const engine = new Engine(["init 2 randomSeed2", "p1 faction terrans", "p2 faction geodens"]);
     engine.generateAvailableCommandsIfNeeded();

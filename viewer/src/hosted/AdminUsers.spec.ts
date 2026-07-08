@@ -1,0 +1,99 @@
+import BootstrapVue from "bootstrap-vue";
+import { expect } from "chai";
+import Vue from "vue";
+import { mount } from "@vue/test-utils";
+import AdminUsers from "./AdminUsers.vue";
+
+Vue.use(BootstrapVue);
+
+describe("AdminUsers", () => {
+  const adminSession = { user: { id: "user-admin", email: "kim.pham.nguyen2@gmail.com" } } as any;
+  const otherSession = { user: { id: "user-other", email: "someone-else@example.com" } } as any;
+
+  function makeClient() {
+    const deleted: any[] = [];
+    const listedUsers = [
+      {
+        id: "user-a",
+        email: "alice@example.com",
+        display_name: "Alice",
+        created_at: "2026-07-01T10:00:00Z",
+        last_sign_in_at: "2026-07-07T10:00:00Z",
+        invited_seats: 2,
+        claimed_seats: 1,
+        games_created: 1,
+        active_games: 1,
+        subscription_count: 1,
+      },
+      {
+        id: "user-b",
+        email: "bob@example.com",
+        display_name: "Bob",
+        created_at: "2026-07-02T10:00:00Z",
+        last_sign_in_at: null,
+        invited_seats: 1,
+        claimed_seats: 0,
+        games_created: 0,
+        active_games: 0,
+        subscription_count: 0,
+      },
+    ];
+    const client = {
+      functions: {
+        invoke: async (_name: string, { body }: any) => {
+          if (body.action === "list") {
+            return { data: { users: listedUsers }, error: null };
+          }
+          if (body.action === "delete") {
+            deleted.push(body);
+            return { data: { ok: true, message: "User deleted." }, error: null };
+          }
+          throw new Error(`unexpected action ${body.action}`);
+        },
+      },
+    };
+    return { client, deleted };
+  }
+
+  it("shows admin-only warning to non-admins and does not load users", async () => {
+    const { client } = makeClient();
+    const wrapper = mount(AdminUsers, { propsData: { client, session: otherSession } });
+    await Vue.nextTick();
+
+    expect(wrapper.text()).to.contain("Admin only.");
+    expect(wrapper.text()).to.not.contain("Alice");
+  });
+
+  it("loads and renders managed users for the admin", async () => {
+    const { client } = makeClient();
+    const wrapper = mount(AdminUsers, { propsData: { client, session: adminSession } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    expect(wrapper.text()).to.contain("Alice");
+    expect(wrapper.text()).to.contain("alice@example.com");
+    expect(wrapper.text()).to.contain("Bob");
+    expect(wrapper.findAll("tbody tr").length).to.equal(2);
+  });
+
+  it("soft-deletes a selected user and reloads the list", async () => {
+    const { client, deleted } = makeClient();
+    const originalConfirm = window.confirm;
+    window.confirm = () => true;
+    try {
+      const wrapper = mount(AdminUsers, { propsData: { client, session: adminSession } });
+      await Vue.nextTick();
+      await Vue.nextTick();
+
+      const deleteButton = wrapper.findAll("button").filter((b) => b.text() === "Delete").at(0);
+      await deleteButton.trigger("click");
+      await Vue.nextTick();
+      await Vue.nextTick();
+
+      expect(deleted).to.deep.equal([{ action: "delete", userId: "user-a" }]);
+      expect(wrapper.text()).to.contain("User deleted.");
+    } finally {
+      window.confirm = originalConfirm;
+    }
+  });
+});

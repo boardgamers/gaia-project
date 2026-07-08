@@ -11,6 +11,8 @@ describe("buildCreateGameParams", () => {
           { userId: "user-alice", name: "Alice" },
           { userId: "user-bob", name: "Bob" },
         ],
+        auctionVariant: "none",
+        openLobby: false,
       },
       "fixed-seed",
       "p2 rotate"
@@ -22,6 +24,7 @@ describe("buildCreateGameParams", () => {
     expect(params.p_seed).to.equal("fixed-seed");
     expect(params.p_setup_move).to.equal("p2 rotate");
     expect(params.p_current_seat).to.be.a("number");
+    expect(params.p_open_lobby).to.equal(false);
     expect(params.p_invites).to.deep.equal([
       { user_id: "user-alice", seat: 0, display_name: "Alice" },
       { user_id: "user-bob", seat: 1, display_name: "Bob" },
@@ -50,6 +53,8 @@ describe("buildCreateGameParams", () => {
           { userId: "user-bob", name: "Bob" },
           { userId: "user-carol", name: "Carol" },
         ],
+        auctionVariant: "none",
+        openLobby: false,
       },
       "fixed-seed-3p",
       "p3 rotate"
@@ -60,12 +65,22 @@ describe("buildCreateGameParams", () => {
 
   it("does not mutate the options object it returns across repeated calls", () => {
     const params1 = buildCreateGameParams(
-      { playerCount: 2, seats: [{ userId: "a", name: "A" }, { userId: "b", name: "B" }] },
+      {
+        playerCount: 2,
+        seats: [{ userId: "a", name: "A" }, { userId: "b", name: "B" }],
+        auctionVariant: "none",
+        openLobby: false,
+      },
       "seed-1",
       "p2 rotate"
     );
     const params2 = buildCreateGameParams(
-      { playerCount: 2, seats: [{ userId: "a", name: "A" }, { userId: "b", name: "B" }] },
+      {
+        playerCount: 2,
+        seats: [{ userId: "a", name: "A" }, { userId: "b", name: "B" }],
+        auctionVariant: "none",
+        openLobby: false,
+      },
       "seed-2",
       "p2 rotate"
     );

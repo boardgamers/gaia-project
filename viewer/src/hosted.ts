@@ -1,4 +1,5 @@
 import Vue from "vue";
+import AdminUsers from "./hosted/AdminUsers.vue";
 import Game from "./components/Game.vue";
 import CreateGame from "./hosted/CreateGame.vue";
 import HostedBar from "./hosted/HostedBar.vue";
@@ -304,7 +305,9 @@ export default async function launchHosted(selector = "#app"): Promise<void> {
   // Lobby and create-game are meant for one-handed phone use; lock pinch-zoom
   // there (viewport.ts), unlike the actual game board above.
   setViewportZoomLocked(true);
-  if (params.has("create")) {
+  if (params.has("users")) {
+    mountChild(root, AdminUsers, { client, session });
+  } else if (params.has("create")) {
     mountChild(root, CreateGame, { client, session });
   } else {
     mountChild(root, Lobby, { client, session });

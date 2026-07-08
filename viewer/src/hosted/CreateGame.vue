@@ -62,46 +62,12 @@
         </section>
 
         <section v-if="!form.testGame" class="create-game-section create-game-section--full">
-          <div class="d-flex align-items-start justify-content-between flex-wrap mb-2" style="gap: 0.5rem">
-            <div>
-              <div class="create-game-section__label mb-1">Invite {{ form.playerCount - 1 }} More</div>
-              <p class="create-game-help mb-0">You are always seat 1. Pick the other seats here, then optionally shuffle them.</p>
-            </div>
-            <b-button
-              variant="outline-secondary"
-              size="sm"
-              :disabled="invitedUserIds.length === 0"
-              @click="shuffleSeats"
-            >
-              Shuffle seats
-            </b-button>
-          </div>
-          <div v-if="loadingUsers" class="text-muted small">Loading registered players...</div>
-          <div v-else-if="invitableUsers.length === 0" class="text-muted small">
-            No other registered players yet - they need to sign in once first.
-          </div>
-          <div v-else class="create-game-invite-list">
-            <label
-              v-for="user in invitableUsers"
-              :key="user.id"
-              class="create-game-invite-row"
-              :class="{
-                'create-game-invite-row--selected': isInvited(user.id),
-                'create-game-invite-row--disabled': !isInvited(user.id) && invitedUserIds.length >= form.playerCount - 1,
-              }"
-            >
-              <input
-                type="checkbox"
-                :checked="isInvited(user.id)"
-                :disabled="!isInvited(user.id) && invitedUserIds.length >= form.playerCount - 1"
-                @change="toggleInvite(user.id)"
-              />
-              <span class="create-game-invite-row__name">
-                {{ user.display_name }}
-              </span>
-              <span v-if="isInvited(user.id)" class="create-game-invite-row__seat">Seat {{ inviteSeatNumber(user.id) }}</span>
-            </label>
-          </div>
+          <div class="create-game-section__label mb-1">Open Lobby</div>
+          <p class="create-game-help mb-0">
+            Regular games now open in the lobby instead of sending invites. You take seat 1 immediately, the other
+            {{ form.playerCount - 1 }} seat<span v-if="form.playerCount > 2">s</span> stay open for anyone in the lobby to join,
+            and the game starts automatically once the table is full.
+          </p>
         </section>
 
         <section class="create-game-section create-game-section--full create-game-section--preview">
@@ -135,8 +101,6 @@ import Vue from "vue";
 import { AUCTION_VARIANT_OPTIONS, buildCreateGameParams } from "./new-game";
 import SetupPreview from "./SetupPreview.vue";
 
-type RegisteredUser = { id: string; email: string; display_name: string };
-
 export default Vue.extend({
   name: "HostedCreateGame",
   components: { SetupPreview },
@@ -147,10 +111,7 @@ export default Vue.extend({
   data() {
     return {
       creating: false,
-      loadingUsers: true,
       message: "",
-      users: [] as RegisteredUser[],
-      invitedUserIds: [] as string[],
       openAuctionInfo: {} as Record<string, boolean>,
       currentSeed: "" as string,
       currentRotateMove: "" as string,
@@ -169,53 +130,20 @@ export default Vue.extend({
     myUserId(): string {
       return (this.session as any).user?.id ?? "";
     },
-    invitableUsers(): RegisteredUser[] {
-      return this.users.filter((u) => u.id !== this.myUserId);
+    myDisplayName(): string {
+      const metadata = (this.session as any).user?.user_metadata ?? {};
+      return metadata.full_name || metadata.name || (this.session as any).user?.email?.split("@")[0] || "Host";
     },
     canCreate(): boolean {
-      if (!this.currentSeed || !this.setupValid) {
-        return false;
-      }
-      return this.form.testGame || this.invitedUserIds.length === this.form.playerCount - 1;
+      return !!this.currentSeed && this.setupValid;
     },
     blockedReason(): string {
-      if (!this.currentSeed || !this.setupValid) {
-        return "Fix the invalid setup first";
-      }
-      return `Invite ${this.form.playerCount - 1} more player(s) first`;
+      return "Fix the invalid setup first";
     },
-  },
-  created() {
-    this.loadUsers();
   },
   methods: {
-    async loadUsers() {
-      this.loadingUsers = true;
-      const { data, error } = await (this.client as any).rpc("list_registered_users");
-      if (error) {
-        this.message = `Could not load registered players: ${error.message}`;
-      } else {
-        this.users = data ?? [];
-      }
-      this.loadingUsers = false;
-    },
     setPlayerCount(count: number) {
       this.form.playerCount = count;
-      this.invitedUserIds = this.invitedUserIds.slice(0, count - 1);
-    },
-    isInvited(userId: string): boolean {
-      return this.invitedUserIds.includes(userId);
-    },
-    toggleInvite(userId: string) {
-      if (this.isInvited(userId)) {
-        this.invitedUserIds = this.invitedUserIds.filter((id) => id !== userId);
-      } else if (this.invitedUserIds.length < this.form.playerCount - 1) {
-        this.invitedUserIds = [...this.invitedUserIds, userId];
-      }
-    },
-    inviteSeatNumber(userId: string) {
-      const index = this.invitedUserIds.indexOf(userId);
-      return index >= 0 ? index + 2 : null;
     },
     isAuctionInfoOpen(value: "none" | "silent") {
       return !!this.openAuctionInfo[value];
@@ -225,14 +153,6 @@ export default Vue.extend({
         ...this.openAuctionInfo,
         [value]: !this.openAuctionInfo[value],
       };
-    },
-    shuffleSeats() {
-      const ids = [...this.invitedUserIds];
-      for (let i = ids.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [ids[i], ids[j]] = [ids[j], ids[i]];
-      }
-      this.invitedUserIds = ids;
     },
     onSetupUpdate(payload: { seed: string; rotateMove: string; valid: boolean }) {
       this.currentSeed = payload.seed;
@@ -249,22 +169,21 @@ export default Vue.extend({
       this.creating = true;
       this.message = "";
       try {
-        const myName =
-          this.users.find((u) => u.id === this.myUserId)?.display_name ?? (this.session as any).user?.email ?? "Host";
         const seats = this.form.testGame
           ? Array.from({ length: this.form.playerCount }, (_, i) => ({
               userId: this.myUserId,
               name: `Player ${i + 1}`,
             }))
-          : [
-              { userId: this.myUserId, name: myName },
-              ...this.invitedUserIds.map((id) => ({
-                userId: id,
-                name: this.users.find((u) => u.id === id)?.display_name ?? "",
-              })),
-            ];
+          : Array.from({ length: this.form.playerCount }, (_, i) =>
+              i === 0 ? { userId: this.myUserId, name: this.myDisplayName } : { userId: null, name: "" }
+            );
         const params = buildCreateGameParams(
-          { playerCount: this.form.playerCount, seats, auctionVariant: this.form.auctionVariant },
+          {
+            playerCount: this.form.playerCount,
+            seats,
+            auctionVariant: this.form.auctionVariant,
+            openLobby: !this.form.testGame,
+          },
           this.currentSeed,
           this.currentRotateMove
         );
@@ -272,7 +191,7 @@ export default Vue.extend({
         if (error) {
           throw new Error(error.message);
         }
-        window.location.search = `?game=${data}`;
+        window.location.search = this.form.testGame ? `?game=${data}` : `?lobby=1&preview=${data}`;
       } catch (err) {
         this.message = `Could not create the game: ${err instanceof Error ? err.message : err}`;
         this.creating = false;
@@ -392,50 +311,6 @@ export default Vue.extend({
   font-weight: 700;
   line-height: 1;
   flex: 0 0 auto;
-}
-
-.create-game-invite-list {
-  border-top: 1px solid rgba(28, 43, 74, 0.1);
-  max-height: 15.25rem;
-  overflow-y: auto;
-}
-
-.create-game-invite-row {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  min-width: 0;
-  padding: 0.45rem 0.1rem;
-  border-bottom: 1px solid rgba(28, 43, 74, 0.1);
-  cursor: pointer;
-
-  input {
-    margin: 0;
-  }
-
-  &--selected {
-    color: #204b93;
-  }
-
-  &--disabled {
-    opacity: 0.55;
-  }
-}
-
-.create-game-invite-row__name {
-  min-width: 0;
-  flex: 1 1 auto;
-  font-size: 0.92rem;
-}
-
-.create-game-invite-row__seat {
-  flex: 0 0 auto;
-  padding: 0.12rem 0.42rem;
-  border-radius: 999px;
-  background: #e9f1ff;
-  color: #2558ad;
-  font-size: 0.72rem;
-  font-weight: 700;
 }
 
 .create-game-sticky-bar {

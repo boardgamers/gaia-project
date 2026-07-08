@@ -9,23 +9,8 @@ Vue.use(BootstrapVue);
 
 describe("CreateGame", () => {
   const session = { user: { id: "user-me", email: "kim.pham.nguyen2@gmail.com" } } as any;
-  const registeredUsers = [
-    { id: "user-me", email: "me@example.com", display_name: "Me" },
-    { id: "user-alice", email: "alice@example.com", display_name: "Alice" },
-    { id: "user-bob", email: "bob@example.com", display_name: "Bob" },
-    { id: "user-carol", email: "carol@example.com", display_name: "Carol" },
-  ];
-
   function makeClient() {
-    const client = {
-      rpc: async (name: string) => {
-        if (name === "list_registered_users") {
-          return { data: registeredUsers, error: null };
-        }
-        throw new Error(`unexpected rpc ${name}`);
-      },
-    };
-    return client;
+    return { rpc: async () => ({ data: null, error: null }) };
   }
 
   it("offers 2/3/4 player-count buttons instead of a dropdown, and has no name field", async () => {
@@ -43,7 +28,7 @@ describe("CreateGame", () => {
     expect(wrapper.find('input[type="email"]').exists()).to.equal(false);
   });
 
-  it("lists other registered users to invite, excluding the signed-in host", async () => {
+  it("explains that regular games open in the lobby instead of inviting players directly", async () => {
     const wrapper = mount(CreateGame, {
       propsData: { client: makeClient(), session },
       stubs: { SetupPreview: true },
@@ -51,32 +36,8 @@ describe("CreateGame", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
-    expect(wrapper.text()).to.include("Alice");
-    expect(wrapper.text()).to.include("Bob");
-    expect(wrapper.text()).to.include("Carol");
-    expect(wrapper.text()).to.not.include("me@example.com");
-    expect(wrapper.text()).to.not.include("alice@example.com");
-    expect(wrapper.text()).to.not.include("bob@example.com");
-    expect(wrapper.text()).to.not.include("carol@example.com");
-  });
-
-  it("caps invited players at playerCount - 1 (2p game only needs 1 other player)", async () => {
-    const wrapper = mount(CreateGame, {
-      propsData: { client: makeClient(), session },
-      stubs: { SetupPreview: true },
-    });
-    await Vue.nextTick();
-    await Vue.nextTick();
-
-    const checkboxes = wrapper.findAll('input[type="checkbox"]');
-    // First checkbox belongs to "Test game"; the rest are invite checkboxes (Alice, Bob, Carol for a 2p game).
-    const inviteCheckboxes = checkboxes.wrappers.slice(1);
-    await inviteCheckboxes[0].setChecked(true);
-    await Vue.nextTick();
-
-    // Alice is now invited (2p game = 1 slot); Bob and Carol should be disabled.
-    expect((inviteCheckboxes[1].element as HTMLInputElement).disabled).to.equal(true);
-    expect((inviteCheckboxes[2].element as HTMLInputElement).disabled).to.equal(true);
+    expect(wrapper.text()).to.include("Regular games now open in the lobby instead of sending invites.");
+    expect(wrapper.text()).to.include("You take seat 1 immediately");
   });
 
   it("keeps Create disabled until the setup preview reports a valid setup", async () => {
@@ -91,13 +52,6 @@ describe("CreateGame", () => {
     expect((createButton.element as HTMLButtonElement).disabled).to.equal(true);
 
     await wrapper.findComponent(SetupPreview as any).vm.$emit("update", { seed: "s", rotateMove: "p2 rotate", valid: true });
-    await Vue.nextTick();
-
-    // Still disabled: no invited player yet for this 2p (non-test) game.
-    expect((createButton.element as HTMLButtonElement).disabled).to.equal(true);
-
-    const inviteCheckboxes = wrapper.findAll('input[type="checkbox"]').wrappers.slice(1);
-    await inviteCheckboxes[0].setChecked(true);
     await Vue.nextTick();
 
     expect((createButton.element as HTMLButtonElement).disabled).to.equal(false);

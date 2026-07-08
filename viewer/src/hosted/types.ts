@@ -7,8 +7,10 @@ export type GameRow = {
   seed: string;
   player_count: number;
   options: Record<string, unknown>;
-  status: "active" | "finished";
+  status: "open" | "active" | "finished";
   current_seat: number | null;
+  starting_seat?: number;
+  setup_move?: string | null;
   move_count: number;
   // Cached lobby-list display data - null until this game's first post-migration commit (see the
   // migration's own doc comment). Never read by game logic, only the Lobby row.

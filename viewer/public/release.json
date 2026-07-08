@@ -1,163 +1,54 @@
 {
-  "version": "5.13.11",
+  "version": "5.14.0",
   "releasedAt": "2026-07-08",
   "entries": [
     {
-      "version": "5.13.11",
+      "version": "5.14.0",
       "releasedAt": "2026-07-08",
-      "kind": "update",
-      "title": "Fix lobby latest-move fetch",
-      "impact": "",
+      "kind": "feature",
+      "title": "Open lobby tables and compact release notes",
       "changes": [
-        "The hosted lobby now reads the real move commit timestamp again, restoring the latest-move summary and age prefix in production.",
-        "This fixes the last release's schema mismatch in the lobby move query."
-      ]
-    },
-    {
-      "version": "5.13.10",
-      "releasedAt": "2026-07-08",
-      "kind": "update",
-      "title": "Add compact last-move age to lobby",
-      "impact": "",
-      "changes": [
-        "Lobby game bars now prefix the latest move summary with a compact age like 55m ago, 1h ago, or 2d ago.",
-        "The lobby derives that age from the latest move timestamp while keeping the summary text compact for older and newer games alike."
-      ]
-    },
-    {
-      "version": "5.13.9",
-      "releasedAt": "2026-07-08",
-      "kind": "update",
-      "title": "Refine lobby presence and turn-order emphasis",
-      "impact": "",
-      "changes": [
-        "Lobby avatars now show green-or-grey presence dots, and the active seat is highlighted by a green VP pill instead of an avatar ring.",
-        "The in-game hosted top bar now renders larger turn-order avatars for easier scanning."
-      ]
-    },
-    {
-      "version": "5.13.8",
-      "releasedAt": "2026-07-08",
-      "kind": "update",
-      "title": "Polish hosted lobby labels and avatar layout",
-      "impact": "",
-      "changes": [
-        "Lobby rows now show Gaia Project: The Lost Fleet branding, overlapping avatar stacks, and visible Standard/Silent Auction plus Test game labels.",
-        "Older games without a cached latest-move summary now fall back to compacting their latest stored move so the lobby bar still shows recent action."
-      ]
-    },
-    {
-      "version": "5.13.7",
-      "releasedAt": "2026-07-08",
-      "kind": "update",
-      "title": "Compact lobby game bars and latest move summaries",
-      "impact": "",
-      "changes": [
-        "Lobby cards now show the game name and a compact latest-move summary instead of player-count and mode metadata.",
-        "Hosted commits now cache a short latest-move string so Active, My games, and Finished can all render it without replaying full logs."
-      ]
-    },
-    {
-      "version": "5.13.6",
-      "releasedAt": "2026-07-08",
-      "kind": "update",
-      "title": "Add My games lobby tab and global hosted lobby visibility",
-      "impact": "",
-      "changes": [
-        "The hosted lobby now defaults to a My games tab, while Active and Finished still expose the full hosted lobby.",
-        "Settings, notification, and swipe-to-delete controls stay compact, and authenticated users can now see all hosted games instead of only their own seats."
-      ]
-    },
-    {
-      "version": "5.13.5",
-      "releasedAt": "2026-07-08",
-      "kind": "update",
-      "title": "Restore hosted lobby bar layout",
-      "impact": "",
-      "changes": [
-        "The hosted lobby returns to the earlier list-style layout while keeping the Active and Finished tabs.",
-        "Game bars now use a consistent row height again, and the hosted changelog modal scrolls independently."
-      ]
-    },
-    {
-      "version": "5.13.4",
-      "releasedAt": "2026-07-07",
-      "kind": "update",
-      "title": "Fix hosted lobby deploy",
-      "impact": "",
-      "changes": [
-        "Added the missing hosted admin helper module so the lobby build no longer fails on Vercel.",
-        "This release contains no gameplay changes; it restores the production deploy after the lobby redesign."
+        "New games now open in the lobby for players to join instead of requiring direct invites.",
+        "Open tables show the setup preview, faction-pick mode, occupied seats, and join or leave actions until the game auto-starts.",
+        "The changelog now keeps only short player-facing highlights instead of every developer follow-up fix."
       ]
     },
     {
       "version": "5.13.3",
       "releasedAt": "2026-07-07",
       "kind": "update",
-      "title": "Lobby redesign and mobile control polish",
-      "impact": "",
+      "title": "Hosted lobby and mobile polish",
       "changes": [
-        "The hosted lobby now uses the new compact card layout with Active and Finished tabs, swipe-to-delete for admins, and the updated Lost Fleet branding.",
-        "Mobile game chrome now shows the turn state in the top bar, gives off-turn auto-leech its own floating control, and restyles premove tabs/buttons to match the main action bar.",
-        "Faction picking and previews were refreshed with icon-based starting resources, cleaner faction buttons, the duplicate Examine Artifact cost text was removed, and Lost Fleet setup colors now hide once factions are chosen."
+        "The hosted lobby uses the compact list layout with Active and Finished tabs.",
+        "Mobile play shows cleaner top-bar turn state, premove controls, and refreshed faction/setup presentation."
       ]
     },
     {
       "version": "5.13.2",
       "releasedAt": "2026-07-07",
       "kind": "update",
-      "title": "Desktop turn notifications stay on while game is open",
-      "impact": "",
+      "title": "Smarter turn notifications",
       "changes": [
-        "Desktop subscriptions now still receive turn notifications even if that player already has the game open.",
-        "Mobile and installed-PWA subscriptions keep the existing active-tab suppression behavior.",
-        "Master pushes now redeploy the notify Edge Function as well as resolve-automation."
+        "Desktop devices still get turn alerts even while the game is open.",
+        "Mobile and installed PWA sessions keep duplicate-alert suppression while you are actively playing."
       ]
     },
     {
       "version": "5.13.1",
       "releasedAt": "2026-07-07",
-      "kind": "update",
-      "title": "Fix fourth spaceship exploration reward",
-      "impact": "",
+      "kind": "fix",
+      "title": "Correct fourth exploration reward",
       "changes": [
-        "In 4-player Lost Fleet games, the fourth exploration slot on a ship board now charges exactly 3 power instead of 4.",
-        "The Lost Fleet exploration tests and rules oracle were updated to lock in the 0/2/2/3 shuttle track."
+        "The fourth spaceship exploration slot in 4-player Lost Fleet games now charges exactly 3 power."
       ]
     },
     {
       "version": "5.13.0",
       "releasedAt": "2026-07-07",
       "kind": "update",
-      "title": "In-app update prompt for newer deploys",
-      "impact": "",
+      "title": "In-app update prompt",
       "changes": [
-        "Hosted tabs now detect when a newer version was deployed while they were open.",
-        "When that happens, the app shows a reload prompt so players can refresh into the latest build.",
-        "The release metadata is now published to /release.json as well as bundled into the hosted app."
-      ]
-    },
-    {
-      "version": "5.12.0",
-      "releasedAt": "2026-07-07",
-      "kind": "feature",
-      "title": "Release tracking and hosted lobby changelog",
-      "impact": "No player action required; this release only changes the hosted app UI and release workflow.",
-      "changes": [
-        "The hosted lobby now shows the current app version and release date.",
-        "Players can open a dated changelog directly from the lobby to review recent updates.",
-        "Master pushes are now blocked unless the viewer version and hosted changelog were updated together.",
-        "Includes the Terraform ship-tech fix so its free mine prompt now fires before the tech-track bump."
-      ]
-    },
-    {
-      "version": "5.11.50",
-      "releasedAt": "2026-07-07",
-      "kind": "fix",
-      "title": "Baseline before hosted release notes",
-      "impact": "",
-      "changes": [
-        "Introduced lobby progress refresh improvements and Terraform ship-tech prompt ordering fixes."
+        "Hosted tabs can detect when a newer version was deployed and prompt you to reload into it."
       ]
     }
   ]

@@ -326,7 +326,9 @@ export class HostedGameHost {
    * and only kept locally once the backend accepted it.
    */
   submitMove(move: string): Promise<void> {
-    return this.enqueue(() => this.applyAndCommit(move));
+    return this.enqueue(async () => {
+      await this.applyAndCommit(move);
+    });
   }
 
   /**
