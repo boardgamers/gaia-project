@@ -199,7 +199,20 @@ export const victoryPointSources = (
       // tile/planet type) - tagged with the ship itself as source (spaceships.ts's
       // spaceshipActionEffects), not a BoardAction, but it's still a QIC action so it belongs here
       // rather than under "Spaceship" (which is just the VP cost of exploring - see below).
-      types: [...BoardAction.values(expansion), Spaceship.TFMars, Spaceship.Eclipse],
+      //
+      // BoardAction.Qic2 is added unconditionally, even though BoardAction.values(expansion)
+      // itself correctly excludes it under Lost Fleet (that list gates "is this a legal action to
+      // take", and Qic2 as a live board action is genuinely replaced by the spaceship boards' own
+      // QIC actions there - see the enum's own doc comment). But rescoring a Federation tile always
+      // tags its reward "qic2" (move/federation.ts's moveChooseFederationTile/
+      // rescoreSpaceshipFederationToken both hardcode BoardAction.Qic2 as the EventSource,
+      // regardless of what triggered the rescore) - including Lost Fleet's own Twilight ship-board
+      // QIC action and Artifact-token rescores. Filtering "qic2" out of `types` for Lost Fleet games
+      // silently dropped every rescored Federation tile's VP from the stats total while the
+      // player's real victoryPoints correctly kept it - confirmed against a real finished game
+      // (PROGRESS.md's "solar drift" report) where 2 Twilight-QIC rescores left 2 players' displayed
+      // totals 14 VP under their actual score.
+      types: [...BoardAction.values(expansion), BoardAction.Qic2, Spaceship.TFMars, Spaceship.Eclipse],
       label: "QIC",
       description: "QIC actions, including T F Mars/Eclipse's spaceship-board QIC action",
       color: "--specialAction",

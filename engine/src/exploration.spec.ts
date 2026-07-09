@@ -387,6 +387,31 @@ describe("Lost Fleet exploration", () => {
     expect(qicCost).to.equal(target.qic);
   });
 
+  it("grants the Protoplanet +6VP bonus when building via the Terraform Standard Tech tile's free mine", () => {
+    const engine = createLostFleetRoundMoveEngine(3);
+    const player = engine.player(PlayerEnum.Player1);
+
+    occupyNearestPlanet(engine, PlayerEnum.Player1, Spaceship.TFMars);
+
+    const protoplanetHex = [...engine.map.grid.values()].find(
+      (hex) => hex.data.planet === Planet.Protoplanet && !hex.occupied()
+    );
+    expect(protoplanetHex, "need an unoccupied Protoplanet hex").to.not.equal(undefined);
+
+    const [buildCommand] = possibleSpaceshipTechTileBuildMine(engine, PlayerEnum.Player1);
+    const building = buildCommand.data.buildings.find((b) => b.coordinates === protoplanetHex.toString());
+    expect(building, "Protoplanet should be buildable via the Terraform tech tile's free mine").to.not.equal(
+      undefined
+    );
+
+    const cost = Reward.parse(building.cost);
+    expect(cost.find((r) => r.type === Resource.VictoryPoint)?.count ?? 0).to.equal(-6);
+
+    const beforeVp = player.data.victoryPoints;
+    player.build(Building.Mine, protoplanetHex, cost, engine.map, building.steps);
+    expect(player.data.victoryPoints - beforeVp).to.equal(6);
+  });
+
   it("should let an advanced tech cover a claimed ship Standard Tech tile", () => {
     const engine = createLostFleetRoundMoveEngine(3);
     const player = engine.player(PlayerEnum.Player1);

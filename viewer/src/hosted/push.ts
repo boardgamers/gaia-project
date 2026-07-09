@@ -47,6 +47,31 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
 }
 
 /**
+ * Tapping a push notification should land on the specific game it's about, not the lobby. `sw.js`'s
+ * `notificationclick` handler tries `clients.openWindow(url)` for that, but installed/standalone
+ * PWAs are commonly single-instance: if an app window is already open (even on a different page,
+ * even backgrounded), the browser just refocuses it instead of navigating it - `openWindow`'s target
+ * URL is silently ignored. As a fallback for exactly that case, the service worker also posts a
+ * `{type: "navigate", url}` message to the client it focused; this listens for that and completes
+ * the navigation client-side. A full reload (rather than an in-app route change) because `hosted.ts`
+ * has no SPA router - it decides what to mount once, from `location.search`, at boot.
+ */
+export function registerServiceWorkerNavigationListener(): void {
+  if (!("serviceWorker" in navigator)) {
+    return;
+  }
+  navigator.serviceWorker.addEventListener("message", (event) => {
+    const data = event.data;
+    if (data && data.type === "navigate" && typeof data.url === "string") {
+      const target = new URL(data.url, window.location.origin);
+      if (target.href !== window.location.href) {
+        window.location.href = target.href;
+      }
+    }
+  });
+}
+
+/**
  * Full opt-in flow — must run from a user gesture (browsers require one for
  * the permission prompt). Stores the subscription per user+device; the
  * `notify` Edge Function pushes turn notifications to every stored device.

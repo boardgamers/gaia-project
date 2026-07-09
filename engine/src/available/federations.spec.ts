@@ -235,6 +235,28 @@ describe("possibleFederationTokenBuildMine", () => {
     expect(withTerra.gain - baseline.gain).to.equal(2 * withTerra.steps);
   });
 
+  it("grants the Protoplanet +6VP bonus when building via a Federation token's free mine", () => {
+    const engine = createLostFleetRoundMoveEngine(2);
+    occupyStartingHex(engine, PlayerEnum.Player1);
+    const player = engine.player(PlayerEnum.Player1);
+
+    const protoplanetHex = findUnoccupiedHexOfPlanet(engine, Planet.Protoplanet);
+    expect(protoplanetHex, "need an unoccupied Protoplanet hex").to.not.equal(undefined);
+
+    const [command] = possibleFederationTokenBuildMine(engine, PlayerEnum.Player1, {
+      federation: SpaceshipFederation.Range,
+    });
+    const building = command.data.buildings.find((b) => b.coordinates === protoplanetHex.toString());
+    expect(building, "Protoplanet should be buildable via the Range token's free mine").to.not.equal(undefined);
+
+    const cost = Reward.parse(building.cost);
+    expect(cost.find((r) => r.type === Resource.VictoryPoint)?.count ?? 0).to.equal(-6);
+
+    const beforeVp = player.data.victoryPoints;
+    player.build(Building.Mine, protoplanetHex, cost, engine.map, building.steps);
+    expect(player.data.victoryPoints - beforeVp).to.equal(6);
+  });
+
   it("still charges the Gaia-forming QIC cost for Gaia planets with either token, on top of Terraform's range QIC", () => {
     const engine = createLostFleetRoundMoveEngine(2);
     occupyStartingHex(engine, PlayerEnum.Player1);

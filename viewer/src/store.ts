@@ -70,6 +70,9 @@ export type State = {
   /** Hosted mode only - seat -> user id, for matching a seat to its presence entry below. Never
    * populated in self-contained hot-seat play (no accounts/seats to map). */
   seatUsers: Record<number, string | null>;
+  /** Hosted mode only - seat -> players.last_active_at, the "seen recently" presence fallback
+   * (presence.ts's presenceStatus) for a seat with no live Realtime Presence entry. */
+  seatLastActive: Record<number, string | null>;
   /** Hosted mode only (presence.ts) - the shared cross-page roster, keyed by user id. */
   presence: PresenceState;
 };
@@ -133,6 +136,7 @@ const gaiaViewer = {
     premoveFailures: [],
     premovePlayedNotice: null,
     seatUsers: {},
+    seatLastActive: {},
     presence: {},
   } as State,
   mutations: {
@@ -256,6 +260,10 @@ const gaiaViewer = {
 
     seatUsers(state: State, data: Record<number, string | null>) {
       state.seatUsers = data;
+    },
+
+    seatLastActive(state: State, data: Record<number, string | null>) {
+      state.seatLastActive = data;
     },
 
     presence(state: State, data: PresenceState) {

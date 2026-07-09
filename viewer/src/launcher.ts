@@ -112,6 +112,7 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
   item.addListener("avatars", (data) => store.commit("avatars", data));
   // Presence (PROGRESS.md Gaia 9) - hosted-mode-only; self-contained mode never emits either.
   item.addListener("seatUsers", (data) => store.commit("seatUsers", data));
+  item.addListener("seatLastActive", (data) => store.commit("seatLastActive", data));
   item.addListener("presence", (data) => store.commit("presence", data));
   item.addListener("replay:end", () => {
     store.dispatch("replayEnd");

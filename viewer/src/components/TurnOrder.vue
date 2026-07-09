@@ -52,7 +52,8 @@ export default class TurnOrder extends Vue {
       return null;
     }
     const userId = this.$store.state.seatUsers?.[player.player] ?? null;
-    return presenceStatus(this.$store.state.presence, userId, this.gameId);
+    const lastActiveAt = this.$store.state.seatLastActive?.[player.player] ?? null;
+    return presenceStatus(this.$store.state.presence, userId, this.gameId, lastActiveAt);
   }
 
   get turnOrder(): Player[] {

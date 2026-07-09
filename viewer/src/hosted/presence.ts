@@ -63,20 +63,40 @@ export function subscribePresence(client: SupabaseClient, onState: (state: Prese
 
 export type PresenceStatus = "green" | "yellow" | "grey";
 
+/** How recently `last_active_at` (players table, refreshed every ~20s while a tab is open, see
+ * hosted.ts's markSeatsActive) still counts as "recently active" for the yellow-dot fallback below.
+ * Deliberately its own, longer constant rather than reusing the `notify` edge function's 45s
+ * RECENTLY_ACTIVE_MS - that one is tuned to avoid duplicate push notifications for a tab that's
+ * merely still open, not to answer "should this look online" for a UI status dot. */
+const RECENTLY_ACTIVE_UI_MS = 10 * 60_000;
+
 /**
  * green = this user has a tab open on exactly this game, and it's the visible/focused one.
  * yellow = this user is present somewhere (lobby, a different game, or a background tab of this
- * same game) but not actively looking at this game right now.
- * grey = no live presence at all (fully offline).
+ * same game) but not actively looking at this game right now - OR they have no live Realtime
+ * Presence entry at all (tab minimized/backgrounded and disconnected) but were seen, via
+ * `lastActiveAt`, within the last 10 minutes.
+ * grey = no live presence and no recent activity - fully offline.
  */
-export function presenceStatus(state: PresenceState, userId: string | null, gameId: string): PresenceStatus {
+export function presenceStatus(
+  state: PresenceState,
+  userId: string | null,
+  gameId: string,
+  lastActiveAt?: string | null
+): PresenceStatus {
   if (!userId) {
     return "grey";
   }
   const metas = state[userId];
-  if (!metas || metas.length === 0) {
-    return "grey";
+  if (metas && metas.length > 0) {
+    const activeHere = metas.some((m) => m.context.type === "game" && m.context.gameId === gameId && m.focused);
+    return activeHere ? "green" : "yellow";
   }
-  const activeHere = metas.some((m) => m.context.type === "game" && m.context.gameId === gameId && m.focused);
-  return activeHere ? "green" : "yellow";
+  if (lastActiveAt) {
+    const ageMs = Date.now() - new Date(lastActiveAt).getTime();
+    if (Number.isFinite(ageMs) && ageMs >= 0 && ageMs <= RECENTLY_ACTIVE_UI_MS) {
+      return "yellow";
+    }
+  }
+  return "grey";
 }

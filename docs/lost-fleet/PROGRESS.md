@@ -3656,6 +3656,132 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       equally gated by the new approval system, so both paths are now genuinely private. The
       `admin-users` edge function (list-with-detail + delete) is still undeployed; only the new
       approve/revoke flow was made independent of it. See "Next actions" for suggested follow-ups.
+83. ✅ **"Gaia 16" owner bug-report batch (2026-07-09), 12 of 14 items fixed, engine + viewer
+    494/494 + 374/374 excluding the same pre-existing 30-ish `Chart`/`Resource Counter`/`lost-fleet
+    buttons`/`LostFleetShips` failures documented at #81/#82 (confirmed still pre-existing via
+    `git stash` before this session's changes too — not new breakage):**
+    - **Leech-timing question (answer only, no bug):** traced `engine/src/move/phase.ts`'s
+      `engine.leechSources` — an `unshift`-based stack, not a queue. Building a Research Lab then
+      later claiming a Lost Planet next to Player 1 in the same turn queues 2 leech sources; both
+      leech decisions fire consecutively in `Phase.RoundLeech`, but only AFTER the acting player's
+      entire turn ends (not interleaved mid-turn), and in LIFO order (most-recently-placed building
+      leeched first) — `move/phase.ts`'s own comment already documents this exact scenario.
+    - **Protoplanet +6VP bug — CONFIRMED and FIXED:** `engine/src/available/federations.ts`'s
+      `possibleFreeBuildMine()` (the shared helper behind both a Federation token's chained bonus
+      Build-a-Mine and the Terraform Standard Tech tile's free-mine-plus-terraforming action) never
+      called `canBuild()` — it hand-rolled its own cost computation and never added the Protoplanet
+      `-6vp` reward that `player.ts`'s `canBuild()` has. Fixed by adding the same
+      `Protoplanet && !== pl.planet` check directly in `possibleFreeBuildMine()`. 2 new engine tests
+      (`federations.spec.ts`, `exploration.spec.ts`) cover both entry points.
+    - **Game-bar turn summary — CONFIRMED and FIXED:** both `host.ts`'s server-cached
+      `latestMoveSummary()` and `Lobby.vue`'s client-fallback `compactMoveSummary()` computed a new
+      lobby-row summary on ANY committed move, including leech/income decisions (`charge`/
+      `brainstone`/`income`/`decline`), overwriting the real last-main-action summary with e.g.
+      "White charge 3.". Both now skip out-of-turn-only moves (reusing `logic/recent.ts`'s existing
+      `ownTurn`/`outOfTurn` categorization server-side; a local mirror of the same 4 command names
+      client-side, since that path deliberately has no engine dependency) so `commit_turn`'s
+      `coalesce` leaves the previous real summary in place instead.
+    - **Faction-board Protoplanet/Asteroid counters — DONE:** `PlayerInfo.vue`'s Gaia/Lost-Planet
+      counter column (previously hardcoded to 1-2 fixed positions) is now a data-driven
+      `planetCounters` list (Gaia + Protoplanet + Asteroid under Lost Fleet, +Lost Planet when
+      owned), auto-spacing up to 4 entries in one column. Also fixed a real pre-existing bug found
+      while touching this code: the Gaia/Lost circles' click handler passed the player's own HOME
+      planet (`this.planet`, a same-named but unrelated getter) instead of the clicked planet type,
+      so clicking either counter toggled the wrong map highlight — fixed for all 4 counters now.
+    - **Statistics-vs-player-board VP mismatch — CONFIRMED and FIXED, verified against the real
+      "solar drift" games:** queried both finished "Solar Drift" games (2p and 4p) directly via the
+      Supabase MCP tool, replayed their real move logs through the engine, and replicated the
+      viewer's own `victoryPointSources()`/`getDataPoints()` chart logic in a throwaway script.
+      Found the real bug: `move/federation.ts`'s Federation-tile rescore (both the pool-tile path
+      and `rescoreSpaceshipFederationToken`) always hardcodes `BoardAction.Qic2` as the reward's
+      `EventSource`, regardless of what triggered it — including Lost Fleet's Twilight ship-board
+      QIC action and Artifact-token rescores, the ONLY way to rescore under Lost Fleet (the real
+      Qic2 board action is disabled there). But `victory-point-charts.ts`'s "QIC" bucket built its
+      `types` list from `BoardAction.values(expansion)`, which deliberately excludes Qic1-3 under
+      Lost Fleet (correct for "is this a legal action", wrong for "is this a possible VP source
+      tag") — so every Lost Fleet rescore's VP silently vanished from the stats total while the
+      real `player.data.victoryPoints` correctly kept it. Both real games' stats total exactly
+      matched their player-board score after adding `BoardAction.Qic2` unconditionally to that
+      bucket's `types` (verified 0-diff for all 6 players across both games, was -14 for 2 of the 4
+      "solar drift" players before the fix). 2 new tests in a new
+      `logic/charts/victory-point-charts.spec.ts`.
+    - **Lobby "pulse green on your turn" — DONE:** `Lobby.vue`'s game-bar row now gets a
+      `game-bar--my-turn` class (new `isMyTurn(game)` method) driving a green pulsing
+      `box-shadow` keyframe animation, reusing the same visual language as `Commands.vue`'s existing
+      auto-leech pulse dot.
+    - **Lobby seat randomization on game start — DONE (migration written, NOT yet applied to the
+      live database — needs an explicit apply step, see "Next actions"):** new migration
+      `0025_randomize_seats_on_lobby_fill.sql` replaces `join_open_game_seat()`: the moment the last
+      seat is claimed (status flips `open`→`active`), it now randomly permutes the `seat` column
+      among the game's players (two-pass negative-temp-seat swap to avoid the `(game_id, seat)`
+      primary key mid-shuffle) before setting `current_seat`. Confirmed safe: no `moves` rows can
+      exist yet while `status='open'` (`commit_turn` requires `'active'`), and `starting_seat` names
+      which *engine* seat goes first, not which human, so reassigning humans afterward doesn't
+      invalidate it.
+    - **Lobby preview missing the map (asked 3× before) — root cause found and FIXED:**
+      `SetupPreviewBoard.vue` rendered `<SpaceMap>` with no `v-if` guard (unlike `Game.vue`, which
+      gates the same component behind `hasMap`). `OpenGamePreview.vue`'s `mounted()` defers its real
+      engine load to `$nextTick()`, so `SpaceMap`'s very first render hit a placeholder mapless
+      `new Engine()`, threw inside a computed getter, and Vue 2 silently swallowed the render
+      exception — critically, the failed render never subscribed `state.data` as a reactive
+      dependency, so the map stayed permanently blank even once the real engine committed a tick
+      later. `SetupPreview.vue`'s sibling flow never hit this because it commits synchronously
+      before its first mount. Added the same `hasMap` guard `SetupPreviewBoard.vue` was missing.
+    - **Off-turn sticky bar visuals (asked before) — DONE:** `PremoveBar.vue`'s sticky-mobile CSS
+      now matches `Commands.vue`'s on-turn bar exactly: same `z-index` (was 1029 vs 1030), no
+      leftover top-border hairline (the base in-flow `.premove-bar` card rule's border wasn't fully
+      zeroed on 3 of 4 sides), and the "keycap" button styling (rounded corners/gradient/press
+      state) is now scoped to the sticky-mobile context only for both files (was unconditional on
+      `PremoveBar.vue`'s buttons, making them look inconsistently "raised" everywhere vs. Commands'
+      buttons which only get that look inside the sticky bar). Also ported Commands.vue's
+      VisualViewport pinch-zoom counter-transform (the fix for "elastic jumping"/floating on scroll)
+      to `PremoveBar.vue`, which never had it — this is almost certainly the literal "kinda floats
+      when I scroll" symptom, since it's the exact bug Commands.vue's bar had before that fix.
+    - **Push notification routing — root cause found and FIXED:** `sw.js`'s `notificationclick`
+      called `clients.openWindow(url)` when no already-open client matched the target URL by
+      substring — but installed/standalone PWAs are commonly single-instance windows, where
+      `openWindow` often just refocuses the existing window at whatever URL it already has (e.g.
+      the lobby) instead of navigating it. Added a `postMessage({type:"navigate", url})` fallback to
+      an already-open client (new `registerServiceWorkerNavigationListener()` in `push.ts`, wired
+      into `hosted.ts`'s boot, does a full `location.href` navigation on receipt since `hosted.ts`
+      has no SPA router) before falling back to `openWindow` only when truly no window is open. Also
+      fixed the URL-matching itself from a fragile substring `.includes()` to exact pathname+search
+      comparison.
+    - **Online status "recently active while minimized" — DONE:** `players.last_active_at`
+      (refreshed every 20s while a tab is open, already existed from the earlier presence/heartbeat
+      work) was tracked server-side but never read by the client-side presence dot. `presence.ts`'s
+      `presenceStatus()` now takes an optional `lastActiveAt` and falls back to yellow when there's
+      no live Realtime Presence entry but the seat was active within the last 10 minutes (own
+      constant, deliberately not reusing the unrelated 45s `notify`-function threshold). Wired
+      through both `Lobby.vue` (already had the data via `select("*, players(*)")`) and the in-game
+      `TurnOrder.vue` (new `seatLastActive` store field, emitted once at game load alongside the
+      existing `seatUsers` map).
+    - **"Time since last move" disappeared — investigated, appears ALREADY FIXED in source:**
+      `git log` shows this was broken by commit `1edc48d` (selected a nonexistent `moves.created_at`
+      column instead of `committed_at`, so the whole timestamp-lookup query silently errored) and
+      fixed 5 minutes later by `0685d85`, both already on `master` before this session. If still
+      missing live, most likely a stale cached bundle rather than a code bug — no further change
+      made here. (While fixing #2 above, also decoupled the age display from the summary text so a
+      leech-only latest move no longer hides the age too.)
+    - **Game-tab ordering — DONE:** `Lobby.vue`'s `openGames`/`activeGames`/`myGames`/
+      `finishedGames` computeds now run through a new `sortGames()`: your-turn games first, then by
+      longest-since-last-move within a bucket; finished games sort separately by most-recent-finish
+      (using the latest move's timestamp as a finish-time proxy, no dedicated `finished_at` column
+      exists).
+    - **Sequential premove chaining — investigated at length, NO BUG FOUND in code:**
+      `logic/premove-preview.ts`'s `buildSequentialChainPreview()` already replays every
+      already-queued move in order before previewing the next slot (exactly "assume prior premoves
+      succeeded"), is called correctly from both `Game.vue` (composing a new slot / editing an
+      existing one) and `PremoveBar.vue` (the queued-rows legality map), and has unit tests already
+      covering a 1-deep chain end-to-end including the composed move actually executing against the
+      chained state. The real server-side execution (`logic/premove-resolver.ts`) only ever fires
+      one queued move at a time as each real turn arrives, which is correct queue semantics, not a
+      bug. Could not reproduce a live bug via static reading — needs a concrete repro (the exact
+      premove 1 + premove 2 moves and what was seen vs. expected) rather than further speculative
+      changes to code that already looks correct and tested.
+    - **Not yet done, needs the user's OK before running against the live database:** migration
+      `0025` (seat randomization) is written and reviewed but not applied — same "MCP tool call
+      requires approval" pattern noted at #81 may apply; run `apply_migration` once confirmed.
 
 ## Still MISSING — only one art-only item left
 

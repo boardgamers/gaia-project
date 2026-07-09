@@ -160,7 +160,11 @@
         <div v-if="isAdmin" class="game-swipe__actions">
           <button type="button" class="game-swipe__delete" @click.stop="deleteGame(game)">Delete</button>
         </div>
-        <b-list-group-item class="game-bar" :style="{ transform: `translateX(${swipeOffset(game.id)}px)` }">
+        <b-list-group-item
+          class="game-bar"
+          :class="{ 'game-bar--my-turn': isMyTurn(game) }"
+          :style="{ transform: `translateX(${swipeOffset(game.id)}px)` }"
+        >
           <a
             :href="game.status === 'open' ? `?preview=${game.id}` : `?game=${game.id}`"
             class="text-body text-decoration-none flex-grow-1 game-bar__link"
@@ -248,6 +252,11 @@ function powerOrQicActionLabel(action: string): string | null {
   return match ? `${match[1]} action ${match[2]}.` : null;
 }
 
+// Same set as the engine's Command.ChargePower/BrainStone/ChooseIncome/Decline (logic/recent.ts's
+// `outOfTurn`) - kept as raw string literals here since this fallback path deliberately has no
+// @gaia-project/engine dependency (parses the raw move text only).
+const OUT_OF_TURN_COMMANDS = ["charge", "brainstone", "income", "decline"];
+
 function compactMoveSummary(move: string): string | null {
   const trimmed = (move ?? "").trim();
   if (!trimmed) {
@@ -261,6 +270,11 @@ function compactMoveSummary(move: string): string | null {
     return null;
   }
   const commands = parts.map((part) => part.split(/\s+/));
+  // A move made up entirely of leech/income decisions isn't a "turn" for lobby-summary purposes -
+  // skip it so the previously shown main-action summary stays put instead of being overwritten.
+  if (commands.every((tokens) => OUT_OF_TURN_COMMANDS.includes(tokens[1]))) {
+    return null;
+  }
   const actor = compactFactionLabel(commands[0][0]);
   const primary =
     commands.find((tokens) =>
@@ -351,8 +365,13 @@ type ReleaseEntry = {
   changes: string[];
 };
 
-function lobbyPresenceStatus(state: PresenceState, userId: string | null, gameId: string): "green" | "yellow" | "grey" {
-  return presenceStatus(state, userId, gameId);
+function lobbyPresenceStatus(
+  state: PresenceState,
+  userId: string | null,
+  gameId: string,
+  lastActiveAt: string | null
+): "green" | "yellow" | "grey" {
+  return presenceStatus(state, userId, gameId, lastActiveAt);
 }
 
 export default Vue.extend({
@@ -405,24 +424,26 @@ export default Vue.extend({
       return ((releaseData as any).entries ?? []).filter((entry: ReleaseEntry) => entry.visible !== false).slice(0, 5);
     },
     openGames(): any[] {
-      return (this.games as any[]).filter((game) => game.status === "open");
+      return this.sortGames((this.games as any[]).filter((game) => game.status === "open"));
     },
     activeGames(): any[] {
-      return (this.games as any[]).filter((game) => game.status === "active");
+      return this.sortGames((this.games as any[]).filter((game) => game.status === "active"));
     },
     myGames(): any[] {
       const email = this.userEmail.toLowerCase();
-      return (this.games as any[]).filter((game) => {
-        if (game.created_by === this.myUserId) {
-          return true;
-        }
-        return (game.players ?? []).some(
-          (player: any) => player.user_id === this.myUserId || (player.invited_email ?? "").toLowerCase() === email
-        );
-      });
+      return this.sortGames(
+        (this.games as any[]).filter((game) => {
+          if (game.created_by === this.myUserId) {
+            return true;
+          }
+          return (game.players ?? []).some(
+            (player: any) => player.user_id === this.myUserId || (player.invited_email ?? "").toLowerCase() === email
+          );
+        })
+      );
     },
     finishedGames(): any[] {
-      return (this.games as any[]).filter((game) => game.status === "finished");
+      return this.sortGames((this.games as any[]).filter((game) => game.status === "finished"));
     },
     visibleGames(): any[] {
       if (this.activeTab === "mine") {
@@ -501,10 +522,17 @@ export default Vue.extend({
             .in("game_id", gameIds)
             .order("seq", { ascending: false });
           if (!latestMoves.error) {
+            // "Time since last move" should reflect the literal latest row (even a leech/income
+            // decision); the summary text should skip past any out-of-turn-only rows to the most
+            // recent actual main action - the two are independent, so track them separately rather
+            // than assuming the newest row has both.
             const summaries = new Map<string, { summary: string | null; createdAt: string | null }>();
             for (const row of latestMoves.data ?? []) {
-              if (!summaries.has(row.game_id)) {
+              const existing = summaries.get(row.game_id);
+              if (!existing) {
                 summaries.set(row.game_id, { summary: compactMoveSummary(row.move), createdAt: row.committed_at ?? null });
+              } else if (existing.summary === null) {
+                existing.summary = compactMoveSummary(row.move);
               }
             }
             for (const game of games) {
@@ -529,6 +557,41 @@ export default Vue.extend({
     playerAtSeat(game: any, seat: number | null): any {
       return (game.players ?? []).find((p: any) => p.seat === seat);
     },
+    isMyTurn(game: any): boolean {
+      if (game.status !== "active" || game.current_seat == null) {
+        return false;
+      }
+      const seat = this.playerAtSeat(game, game.current_seat);
+      if (!seat) {
+        return false;
+      }
+      const email = this.userEmail.toLowerCase();
+      return seat.user_id === this.myUserId || (seat.invited_email ?? "").toLowerCase() === email;
+    },
+    lastMoveTime(game: any): number {
+      return game._latest_move_created_at ? new Date(game._latest_move_created_at).getTime() : 0;
+    },
+    // Ordering (owner request): your-turn games first, then by how long since the last move (the
+    // longest-waiting game surfaces first within each bucket); finished games sort separately by
+    // most-recently-finished first, using the same "last move" timestamp as a finish-time proxy.
+    sortGames(games: any[]): any[] {
+      return [...games].sort((a, b) => {
+        const aFinished = a.status === "finished";
+        const bFinished = b.status === "finished";
+        if (aFinished !== bFinished) {
+          return aFinished ? 1 : -1;
+        }
+        if (aFinished) {
+          return this.lastMoveTime(b) - this.lastMoveTime(a);
+        }
+        const aTurn = this.isMyTurn(a);
+        const bTurn = this.isMyTurn(b);
+        if (aTurn !== bTurn) {
+          return aTurn ? -1 : 1;
+        }
+        return this.lastMoveTime(a) - this.lastMoveTime(b);
+      });
+    },
     playersWithSummary(game: any): any[] {
       return (game.players ?? [])
         .filter((p: any) => !!p.faction)
@@ -548,7 +611,7 @@ export default Vue.extend({
       return `${name} - ${factionName(player.faction)} - ${vp}`;
     },
     playerPresence(game: any, player: any): "green" | "yellow" | "grey" {
-      return lobbyPresenceStatus(this.presenceState, player.user_id ?? null, game.id);
+      return lobbyPresenceStatus(this.presenceState, player.user_id ?? null, game.id, player.last_active_at ?? null);
     },
     isTestGame(game: any): boolean {
       if (game.status === "open") {
@@ -869,6 +932,22 @@ export default Vue.extend({
 .game-bar {
   min-height: 4.25rem;
   transition: transform 0.16s ease-out;
+}
+
+.game-bar--my-turn {
+  animation: game-bar-my-turn-pulse 2s infinite;
+}
+
+@keyframes game-bar-my-turn-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--highlighted-rgb, 32, 204, 68), 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(var(--highlighted-rgb, 32, 204, 68), 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--highlighted-rgb, 32, 204, 68), 0);
+  }
 }
 
 .game-bar__link {

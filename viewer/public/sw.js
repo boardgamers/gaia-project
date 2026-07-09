@@ -34,10 +34,23 @@ self.addEventListener("notificationclick", (event) => {
   const url = (event.notification.data && event.notification.data.url) || "/?lobby=1";
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((windows) => {
+      const targetPath = new URL(url, self.location.origin).pathname + new URL(url, self.location.origin).search;
       for (const client of windows) {
-        if (client.url.includes(url) && "focus" in client) {
+        const clientUrl = new URL(client.url);
+        if (clientUrl.pathname + clientUrl.search === targetPath && "focus" in client) {
           return client.focus();
         }
+      }
+      // No window is already showing this exact game. Installed/standalone PWAs are commonly
+      // single-instance: if a window exists at all, `clients.openWindow(url)` often just refocuses
+      // it at whatever URL it already had (e.g. the lobby) instead of actually navigating - that's
+      // the "notification click lands on the lobby" bug. Ask the app to navigate itself instead
+      // (push.ts's registerServiceWorkerNavigationListener), falling back to openWindow only when
+      // no window exists yet to receive that message.
+      if (windows.length > 0) {
+        const client = windows[0];
+        client.postMessage({ type: "navigate", url });
+        return "focus" in client ? client.focus() : undefined;
       }
       return self.clients.openWindow(url);
     })

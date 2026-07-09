@@ -7,7 +7,7 @@
       <Definitions />
     </svg>
     <div :class="['row', 'no-gutters', 'justify-content-center', engine.players.length > 2 ? 'medium-map' : 'small-map']">
-      <SpaceMap :class="['mb-1', 'space-map', 'col-md-7']" />
+      <SpaceMap v-if="hasMap" :class="['mb-1', 'space-map', 'col-md-7']" />
       <div class="col-md-5">
         <svg
           class="scoring-research-board"
@@ -68,6 +68,16 @@ import { BASE_RESEARCH_BOARD_HEIGHT, researchBoardHeight } from "../logic/utils"
 export default class SetupPreviewBoard extends Vue {
   get engine(): Engine {
     return this.$store.state.data;
+  }
+
+  // Mirrors Game.vue's own `hasMap` guard - `OpenGamePreview.vue` mounts this component before its
+  // deferred `$nextTick` data load commits a real, mapped engine (see `SpaceMap.vue`'s `map` getter
+  // dereferencing `engine.map`), so the very first render here can hit a placeholder `new Engine()`
+  // with no map. Without this guard, that first render throws inside SpaceMap, Vue 2 swallows the
+  // render-function exception, and the map is left permanently blank even once the real engine
+  // commits a tick later (the failed render never subscribed to `state.data` as a dependency).
+  get hasMap(): boolean {
+    return !!this.engine.map;
   }
 
   get researchBoardWidth() {

@@ -2,7 +2,7 @@ import Engine, { Phase } from "@gaia-project/engine";
 import { AutoCharge } from "@gaia-project/engine/src/player";
 import { factionName } from "../data/factions";
 import { autoDecideChargePower } from "../logic/auto-decide";
-import { parseCommands } from "../logic/recent";
+import { ownTurn, parseCommands, parsedMove } from "../logic/recent";
 import { PremoveResolution, resolvePremoveQueue } from "../logic/premove-resolver";
 import {
   CommitTurnArgs,
@@ -142,6 +142,13 @@ function sectorLabelFromLocation(engine: Engine, location: string): string | nul
 export function latestMoveSummary(engine: Engine, move: string): string | null {
   const commands = parseCommands(move);
   if (commands.length === 0) {
+    return null;
+  }
+
+  // A move made up entirely of leech/income decisions (charge/brainstone/income/decline) isn't a
+  // "turn" in the lobby-summary sense - skip it so `commit_turn`'s coalesce leaves the previously
+  // committed main-action summary in place instead of overwriting it with e.g. "White charge 3.".
+  if (!ownTurn(parsedMove(move))) {
     return null;
   }
 

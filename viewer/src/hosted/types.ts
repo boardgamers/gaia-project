@@ -26,6 +26,11 @@ export type PlayerRow = {
   display_name: string;
   faction: string | null;
   score: number | null;
+  /** Refreshed every ~20s while a tab for this seat is open (hosted.ts's markSeatsActive) - used as
+   * a "seen recently" presence fallback when there's no live Realtime Presence entry (migration
+   * 0013_notify_presence_gate.sql). Optional so existing test fixtures that predate this field don't
+   * all need updating; genuinely absent only pre-migration-0013 rows, which don't exist anymore. */
+  last_active_at?: string | null;
 };
 
 export type MoveRow = {

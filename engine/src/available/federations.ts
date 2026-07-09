@@ -155,6 +155,10 @@ function possibleFreeBuildMine(
       }
     }
 
+    if (hex.data.planet === Planet.Protoplanet && hex.data.planet !== pl.planet) {
+      rewards.push(new Reward(-6, Resource.VictoryPoint));
+    }
+
     let qicWarning: BuildWarning | undefined;
     if (!discount.waiveRangeQic) {
       const qicNeeded = qicForDistance(engine.map, hex, pl, engine.replay);

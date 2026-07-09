@@ -1,7 +1,7 @@
 import Engine, { Operator } from "@gaia-project/engine";
-import { Booster, Spaceship, SpaceshipFederation, SpaceshipTechTile } from "@gaia-project/engine/src/enums";
+import { Booster, Planet, Spaceship, SpaceshipFederation, SpaceshipTechTile } from "@gaia-project/engine/src/enums";
 import { boosterEvents } from "@gaia-project/engine/src/tiles/boosters";
-import { render } from "@testing-library/vue";
+import { fireEvent, render } from "@testing-library/vue";
 import { expect } from "chai";
 import { makeStore } from "../store";
 import PlayerInfo from "./PlayerInfo.vue";
@@ -111,6 +111,55 @@ describe("PlayerInfo terraforming strip", () => {
       img.outerHTML.includes("dig-arrow")
     );
     expect(arrows.length, "expected 3 terraform-step arrows").to.equal(3);
+  });
+
+  it("shows only the Gaia planet counter for base-game (non-Lost-Fleet) games", () => {
+    const engine = new Engine(["init 2 player-info-planet-counters-base", "p1 faction terrans", "p2 faction hadsch-hallas"]);
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(PlayerInfo, { props: { player: engine.players[0] }, store });
+
+    expect(container.querySelector(".planet-fill.g")).to.not.equal(null);
+    expect(container.querySelector(".planet-fill.p")).to.equal(null);
+    expect(container.querySelector(".planet-fill.a")).to.equal(null);
+  });
+
+  it("shows a Gaia/Protoplanet/Asteroid 3-counter column for Lost Fleet games", () => {
+    const engine = new Engine(["init 2 player-info-planet-counters-lf", "p1 faction terrans", "p2 faction hadsch-hallas"], {
+      lostFleet: true,
+    });
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(PlayerInfo, { props: { player: engine.players[0] }, store });
+
+    const gaia = container.querySelector(".planet-fill.g");
+    const proto = container.querySelector(".planet-fill.p");
+    const asteroid = container.querySelector(".planet-fill.a");
+    expect(gaia, "Gaia counter").to.not.equal(null);
+    expect(proto, "Protoplanet counter").to.not.equal(null);
+    expect(asteroid, "Asteroid counter").to.not.equal(null);
+
+    // All 3 share one column (same x translate on their parent <g>).
+    const xOf = (el: Element) => el.parentElement?.getAttribute("transform")?.match(/translate\(([\d.]+),/)?.[1];
+    expect(xOf(gaia!)).to.equal(xOf(proto!));
+    expect(xOf(proto!)).to.equal(xOf(asteroid!));
+  });
+
+  it("toggles the correct planet type's highlight when a counter is clicked (not the player's home planet)", async () => {
+    const engine = new Engine(["init 2 player-info-planet-click", "p1 faction terrans", "p2 faction hadsch-hallas"], {
+      lostFleet: true,
+    });
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(PlayerInfo, { props: { player: engine.players[0] }, store });
+    const protoHitArea = container.querySelectorAll(".planet-fill.p")[0].parentElement!.querySelectorAll("circle")[1];
+
+    await fireEvent.click(protoHitArea);
+
+    expect(store.state.context.mapModes).to.deep.equal([{ type: "planetType", planet: Planet.Protoplanet }]);
   });
 
   it("marks a booster's special action with the same used-X as a power action, once activated", () => {

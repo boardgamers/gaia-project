@@ -8,7 +8,13 @@ import { HostedGameHost, seatToLock } from "./hosted/host";
 import Lobby from "./hosted/Lobby.vue";
 import OpenLobbyGame from "./hosted/OpenLobbyGame.vue";
 import PendingApproval from "./hosted/PendingApproval.vue";
-import { disablePushNotifications, enablePushNotifications, isPushEnabled, registerServiceWorker } from "./hosted/push";
+import {
+  disablePushNotifications,
+  enablePushNotifications,
+  isPushEnabled,
+  registerServiceWorker,
+  registerServiceWorkerNavigationListener,
+} from "./hosted/push";
 import { trackPresence } from "./hosted/presence";
 import SignIn from "./hosted/SignIn.vue";
 import { createSupabaseBackend, getSupabaseClient, subscribeMoves, SupabaseClient } from "./hosted/supabase-client";
@@ -165,6 +171,10 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
     "seatUsers",
     Object.fromEntries(host.players.map((p) => [p.seat, p.user_id]))
   );
+  emitter.emit(
+    "seatLastActive",
+    Object.fromEntries(host.players.map((p) => [p.seat, p.last_active_at ?? null]))
+  );
   trackPresence(client, session.user.id, { type: "game", gameId }, (state) => emitter.emit("presence", state));
 
   // Seat locking happens inside onState via seatToLock (launcher.ts "player"
@@ -286,6 +296,7 @@ export default async function launchHosted(selector = "#app"): Promise<void> {
   // Keep the service worker registered on every visit so push subscriptions
   // stay alive; actual permission/subscription is behind an explicit button.
   registerServiceWorker().catch(() => undefined);
+  registerServiceWorkerNavigationListener();
 
   const { data } = await client.auth.getSession();
   const session = data?.session;

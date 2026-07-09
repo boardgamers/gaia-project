@@ -133,6 +133,8 @@ export default class PremoveBar extends Vue {
 
   private selectedSeq: number | null = null;
   private resizeObserver: ResizeObserver | null = null;
+  private visualViewportListener: (() => void) | null = null;
+  private zoomTransformUpdater: (() => void) | null = null;
 
   get engine(): Engine {
     return this.$store.state.data;
@@ -293,15 +295,64 @@ export default class PremoveBar extends Vue {
   }
 
   mounted() {
+    const root = this.$refs.root as HTMLElement;
+
+    // Same fix as Commands.vue's on-turn sticky bar (see its `mounted()` for the full rationale):
+    // without this, pinch-zooming the map makes this `position: fixed` bar balloon/detach along
+    // with the visual viewport instead of staying put - the "kinda floats when I scroll" symptom.
+    const vv = window.visualViewport;
+    const updateZoomTransform = () => {
+      if (!root || !vv) {
+        return;
+      }
+      if (!this.stickyMobile) {
+        root.style.transform = "";
+        return;
+      }
+      const scale = vv.scale || 1;
+      if (scale === 1) {
+        root.style.transform = "";
+        return;
+      }
+      const x = vv.offsetLeft;
+      const y = vv.offsetTop + vv.height - window.innerHeight;
+      if (x === 0 && y === 0) {
+        root.style.transform = "";
+        return;
+      }
+      root.style.transform = `translate(${x}px, ${y}px) scale(${1 / scale})`;
+    };
+    this.zoomTransformUpdater = updateZoomTransform;
+
     if (typeof ResizeObserver !== "undefined") {
-      this.resizeObserver = new ResizeObserver(() => this.emitBarHeight());
-      this.resizeObserver.observe(this.$refs.root as Element);
+      this.resizeObserver = new ResizeObserver(() => {
+        this.emitBarHeight();
+        updateZoomTransform();
+      });
+      this.resizeObserver.observe(root);
     }
     this.emitBarHeight();
+
+    if (root && vv) {
+      updateZoomTransform();
+      vv.addEventListener("resize", updateZoomTransform);
+      vv.addEventListener("scroll", updateZoomTransform);
+      this.visualViewportListener = () => {
+        vv.removeEventListener("resize", updateZoomTransform);
+        vv.removeEventListener("scroll", updateZoomTransform);
+        root.style.transform = "";
+      };
+    }
+  }
+
+  @Watch("stickyMobile")
+  onStickyMobileChanged() {
+    this.zoomTransformUpdater?.();
   }
 
   beforeDestroy() {
     this.resizeObserver?.disconnect();
+    this.visualViewportListener?.();
     this.$emit("bar-height", 0);
   }
 
@@ -336,15 +387,6 @@ export default class PremoveBar extends Vue {
     margin: -1.2rem 0 0.55rem;
     gap: 0.3rem;
     padding-left: 0.15rem;
-  }
-
-  &__action-button,
-  &__mini-button {
-    border-radius: 10px;
-    border-color: rgba(31, 45, 82, 0.14);
-    background: linear-gradient(180deg, #ffffff 0%, #e7ebf3 100%);
-    color: #33415c;
-    box-shadow: 0 1px 2px rgba(31, 45, 82, 0.08);
   }
 
   &__tab {
@@ -383,25 +425,36 @@ export default class PremoveBar extends Vue {
 }
 
 @media (max-width: 767px) {
+  // Matches Commands.vue's `#move-buttons.mobile-sticky-actions` bar exactly (same position/
+  // z-index/border/shadow) so the off-turn sticky bar is visually identical to the on-turn one,
+  // not just similar - including a fully borderless edge (no leftover top hairline from the
+  // in-flow `.premove-bar` card rule above).
   .premove-bar--sticky-mobile {
     position: fixed;
     left: 0;
     right: 0;
     bottom: var(--premove-bottom-offset, 0px);
-    z-index: 1029;
+    z-index: 1030;
     max-height: 35vh;
     overflow-y: auto;
     margin: 0;
     padding: 0.7rem calc(0.5rem + env(safe-area-inset-right)) calc(0.45rem + env(safe-area-inset-bottom) + 8px)
       calc(0.5rem + env(safe-area-inset-left));
     border-radius: 16px 16px 0 0;
-    border-left: 0;
-    border-right: 0;
-    border-bottom: 0;
+    border: 0;
     background: linear-gradient(180deg, #ffffff 0%, #eef1f6 100%);
     box-shadow: 0 -12px 28px rgba(20, 26, 50, 0.18), 0 -1px 0 rgba(255, 255, 255, 0.6);
 
-    .premove-bar__action-button {
+    // Same "keycap" treatment Commands.vue applies to its own move buttons, scoped to this same
+    // sticky-bar context only (so the desktop/in-flow premove card keeps plain Bootstrap buttons,
+    // matching how normal move buttons look outside the sticky bar too).
+    .premove-bar__action-button,
+    .premove-bar__mini-button {
+      border-radius: 10px;
+      border-color: rgba(31, 45, 82, 0.14);
+      box-shadow: 0 1px 2px rgba(31, 45, 82, 0.08);
+      background: linear-gradient(180deg, #ffffff 0%, #e7ebf3 100%);
+      color: #33415c;
       transition: transform 0.08s ease-out, box-shadow 0.08s ease-out;
 
       &:active {

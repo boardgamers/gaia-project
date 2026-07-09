@@ -224,19 +224,28 @@
             </g>
             <line x1="1.9" x2="1.9" y1="-2.3" y2="2.3" stroke-width="0.06" stroke="black" />
           </g>
-          <g :transform="`translate(7.6, ${hasLostPlanet ? -1.4 : 0})`">
-            <circle :r="1" style="stroke-width: 0.06px !important" :class="['player-token', 'planet-fill', 'g']" />
-            <text style="font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: white">
-              {{ player.ownedPlanetsCount["g"] }}
+          <g
+            v-for="entry in planetCounters"
+            :key="entry.planet"
+            :transform="`translate(7.6, ${entry.y})`"
+          >
+            <circle
+              :r="planetCounterRadius"
+              style="stroke-width: 0.06px !important"
+              :class="['player-token', 'planet-fill', entry.planet]"
+            />
+            <text
+              :style="`font-size: ${planetCounterFontSize}px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(
+                entry.planet
+              )}`"
+            >
+              {{ player.ownedPlanetsCount[entry.planet] }}
             </text>
-            <circle :r="1" style="cursor: pointer; opacity: 0" @click="togglePlanetHighlight(planet)" />
-          </g>
-          <g v-if="hasLostPlanet" :transform="`translate(7.6, 1.4 )`">
-            <circle :r="1" style="stroke-width: 0.06px !important" :class="['player-token', 'planet-fill', 'l']" />
-            <text style="font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: white">
-              {{ player.ownedPlanetsCount["l"] }}
-            </text>
-            <circle :r="1" style="cursor: pointer; opacity: 0" @click="togglePlanetHighlight(planet)" />
+            <circle
+              :r="planetCounterRadius"
+              style="cursor: pointer; opacity: 0"
+              @click="togglePlanetHighlight(entry.planet)"
+            />
           </g>
         </g>
 
@@ -414,7 +423,7 @@ export default class PlayerInfo extends Vue {
   }
 
   planetFill(planet: string) {
-    if (planet === Planet.Titanium || planet === Planet.Swamp) {
+    if ([Planet.Titanium, Planet.Swamp, Planet.Gaia, Planet.Lost].includes(planet as Planet)) {
       return "white";
     }
     return "black";
@@ -551,6 +560,46 @@ export default class PlayerInfo extends Vue {
 
   get isFrontiers() {
     return hasExpansion(this.engine.expansions, Expansion.Frontiers);
+  }
+
+  get isLostFleet() {
+    return hasExpansion(this.engine.expansions, Expansion.LostFleet);
+  }
+
+  // Owner request: Gaia/Protoplanet/Asteroid planet counters share one column (3 entries in the
+  // common case); the pre-existing Lost Planet counter (a rare, separate base-game mechanic) still
+  // shares the same slot when present, so this supports up to 4.
+  get planetCounters(): { planet: string; y: number }[] {
+    const planets: string[] = [Planet.Gaia];
+    if (this.isLostFleet) {
+      planets.push(Planet.Protoplanet, Planet.Asteroid);
+    }
+    if (this.hasLostPlanet) {
+      planets.push(Planet.Lost);
+    }
+    const yPositions = this.planetCounterYPositions(planets.length);
+    return planets.map((planet, index) => ({ planet, y: yPositions[index] }));
+  }
+
+  planetCounterYPositions(count: number): number[] {
+    switch (count) {
+      case 1:
+        return [0];
+      case 2:
+        return [-1.4, 1.4];
+      case 3:
+        return [-1.9, 0, 1.9];
+      default:
+        return [-2.4, -0.8, 0.8, 2.4];
+    }
+  }
+
+  get planetCounterRadius(): number {
+    return this.planetCounters.length > 2 ? 0.85 : 1;
+  }
+
+  get planetCounterFontSize(): number {
+    return this.planetCounters.length > 2 ? 1.05 : 1.2;
   }
 
   get engine() {
