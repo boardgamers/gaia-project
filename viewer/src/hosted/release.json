@@ -1,16 +1,32 @@
 {
-  "version": "5.15.0",
+  "version": "5.16.0",
   "releasedAt": "2026-07-09",
   "entries": [
+    {
+      "version": "5.16.0",
+      "releasedAt": "2026-07-09",
+      "kind": "fix",
+      "title": "Gaia 16 bug-fix batch",
+      "impact": "",
+      "changes": [
+        "Building on a Protoplanet via a Federation token's or Standard Tech tile's free mine now correctly grants +6 VP.",
+        "Statistics panel VP totals now match the player board (a Lost Fleet Federation-tile rescore's VP was being silently dropped from the total).",
+        "Lobby game previews now show the map.",
+        "Off-turn sticky bar now matches the on-turn bar's look and no longer floats while scrolling.",
+        "Push notifications now open the specific game instead of the lobby.",
+        "Online status now shows recently-active players even while their tab is minimized.",
+        "Game tabs now sort by your-turn-first, then most-recently-active.",
+        "Faction board gained Protoplanet/Asteroid planet counters alongside the Gaia counter.",
+        "Game-bar turn summaries no longer get overwritten by leech/income decision moves."
+      ]
+    },
     {
       "version": "5.15.0",
       "releasedAt": "2026-07-09",
       "kind": "update",
       "title": "Private access control",
       "impact": "",
-      "changes": [
-        "New accounts start unapproved and see no game data until approved from Settings > Manage users"
-      ]
+      "changes": ["New accounts start unapproved and see no game data until approved from Settings > Manage users"]
     },
     {
       "version": "5.14.8",
@@ -81,9 +97,7 @@
       "releasedAt": "2026-07-08",
       "kind": "update",
       "title": "Full-page lobby previews",
-      "changes": [
-        "Open lobby tables now open on their own page with compact seat controls above the setup preview."
-      ]
+      "changes": ["Open lobby tables now open on their own page with compact seat controls above the setup preview."]
     },
     {
       "version": "5.14.1",
@@ -130,18 +144,14 @@
       "releasedAt": "2026-07-07",
       "kind": "fix",
       "title": "Correct fourth exploration reward",
-      "changes": [
-        "The fourth spaceship exploration slot in 4-player Lost Fleet games now charges exactly 3 power."
-      ]
+      "changes": ["The fourth spaceship exploration slot in 4-player Lost Fleet games now charges exactly 3 power."]
     },
     {
       "version": "5.13.0",
       "releasedAt": "2026-07-07",
       "kind": "update",
       "title": "In-app update prompt",
-      "changes": [
-        "Hosted tabs can detect when a newer version was deployed and prompt you to reload into it."
-      ]
+      "changes": ["Hosted tabs can detect when a newer version was deployed and prompt you to reload into it."]
     }
   ]
 }
