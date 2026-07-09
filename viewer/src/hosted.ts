@@ -1,11 +1,13 @@
 import Vue from "vue";
 import AdminUsers from "./hosted/AdminUsers.vue";
+import { fetchMyApprovalStatus } from "./hosted/approval";
 import Game from "./components/Game.vue";
 import CreateGame from "./hosted/CreateGame.vue";
 import HostedBar from "./hosted/HostedBar.vue";
 import { HostedGameHost, seatToLock } from "./hosted/host";
 import Lobby from "./hosted/Lobby.vue";
 import OpenLobbyGame from "./hosted/OpenLobbyGame.vue";
+import PendingApproval from "./hosted/PendingApproval.vue";
 import { disablePushNotifications, enablePushNotifications, isPushEnabled, registerServiceWorker } from "./hosted/push";
 import { trackPresence } from "./hosted/presence";
 import SignIn from "./hosted/SignIn.vue";
@@ -289,6 +291,16 @@ export default async function launchHosted(selector = "#app"): Promise<void> {
   const session = data?.session;
   if (!session) {
     mountChild(root, SignIn, { client });
+    return;
+  }
+
+  // Private access gate: every account starts unapproved (see migration
+  // 20260708172234_admin_private_user_approval.sql) and sees no game data - checked here, before
+  // anything else touches games/players/moves, so a pending user never even briefly renders the
+  // lobby shell.
+  const approval = await fetchMyApprovalStatus(client, session);
+  if (approval !== "approved") {
+    mountChild(root, PendingApproval, { client, session });
     return;
   }
 

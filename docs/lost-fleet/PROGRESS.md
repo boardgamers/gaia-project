@@ -7,7 +7,7 @@
 > anything else, including the **Testing — required going forward** section it points to — both
 > are standing process, not optional. Then ask the user "what next?" and use the **Next actions**
 > section below to guide them.
-> Last updated: **2026-07-06**.
+> Last updated: **2026-07-09**.
 
 ## Working agreements (read every session, not optional)
 
@@ -3615,6 +3615,47 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       Counter`/`lost-fleet buttons`/`LostFleetShips` specs) that don't touch anything this session
       edited - flagging in "Next actions" below rather than investigating, since it's out of scope
       for a personal-info-exposure fix and wasn't caused by it (confirmed zero file overlap).
+82. ✅ **Private access control (2026-07-09): the app was fully open to anyone who could complete
+    magic-link sign-in — now every account starts "pending" and sees zero game data until the
+    admin approves it.** Owner's stated concern: Feyerland's IP requires this app to be
+    demonstrably private, not just "gated by an unverified Google OAuth screen" (which only
+    restricts the Google login path, not magic link).
+    - Filled in the previously-empty stub migration
+      `supabase/migrations/20260708172234_admin_private_user_approval.sql`: a new
+      `public.user_approvals` table (one row per `auth.users` row, auto-populated by a trigger on
+      signup, default `'pending'`), `public.is_approved()`/`public.is_admin()` security-definer
+      helpers, and `public.set_user_approval(user_id, approved)` (the admin-only approve/revoke
+      RPC). Every existing user was backfilled as already-approved so nobody with access today
+      lost it.
+    - **Reads** (`games`/`players`/`moves`/`premoves`/`premove_failures` select policies) now
+      require `is_approved()` in addition to their existing visibility rules. **Writes** are gated
+      by a single `public.require_approved()` `BEFORE INSERT OR UPDATE` trigger attached to those
+      same 5 tables, rather than threading an approval check through every existing/future RPC
+      body individually. `is_approved()` returns true when `auth.uid()` is null (i.e. no user
+      JWT), which is exactly the `commit_automated_turn`/premove-auto-resolution service-role
+      path — this was deliberately checked so private-access didn't silently break offline
+      auto-leech.
+    - Client: `viewer/src/hosted/approval.ts` (`fetchMyApprovalStatus`) is checked in
+      `hosted.ts`'s `launchHosted()` immediately after session load, before `claim_my_seats` or
+      any route (`?game=`/`?lobby=1`/etc.) mounts — a pending user sees only the new
+      `PendingApproval.vue` screen. `AdminUsers.vue` (already existed, wired to the Settings
+      menu's "Manage users" link but only supported list/delete via the `admin-users` edge
+      function, which isn't deployed) now has a "Pending approval" section reading
+      `user_approvals` directly (no edge-function dependency) with a one-click Approve button, plus
+      an Approved/Pending badge + Revoke toggle in the existing full user list.
+    - Migration applied directly to the live project (`mitawjpdxkheascdiffz`) via the Supabase MCP
+      tool and verified: `user_approvals` backfilled all 14 existing users as approved (confirmed
+      by query), `get_advisors` security scan showed no new issues beyond this codebase's
+      pre-existing "every RPC is `security definer` + callable by `authenticated`" pattern (by
+      design, per migration `0001`'s "no direct writes" architecture).
+    - Viewer **382/382 excluding 28 pre-existing unrelated `resource-counter.spec.ts` failures**
+      (confirmed pre-existing by stashing this session's changes and rerunning — same 28 failures
+      with or without this work), all `src/hosted/*.spec.ts` (105 tests) passing.
+    - **Not yet done, still open:** Google OAuth is still gated by manually adding Test Users in
+      Google Cloud Console (unrelated system, unaffected by this migration) — magic link is now
+      equally gated by the new approval system, so both paths are now genuinely private. The
+      `admin-users` edge function (list-with-detail + delete) is still undeployed; only the new
+      approve/revoke flow was made independent of it. See "Next actions" for suggested follow-ups.
 
 ## Still MISSING — only one art-only item left
 
@@ -4011,23 +4052,29 @@ section originally said Chunk 2 must also carry the _full_ `planets.ts` terrafor
 
 ## Next actions
 
-**Blocked from #81 (2026-07-09 session), needs a session with working Supabase MCP access:**
-migration `0024_profile_nicknames.sql` (the personal-info-exposure nickname fix) is written,
-reviewed, and unit-tested but **not applied** to the live `mitawjpdxkheascdiffz` project - every
-Supabase MCP tool call this session (including plain reads like `get_project`) failed with "MCP
-tool call requires approval," which looks like a session-level authorization gap rather than
-anything retrying fixed. Until a session that can actually reach Supabase runs this migration (or
-the owner runs `supabase db push`/applies it via the dashboard), real names/emails are still being
-shown in the lobby in production - the code fix alone does nothing live.
+**Blocked from #81 (2026-07-09 session):** migration `0024_profile_nicknames.sql` (the
+personal-info-exposure nickname fix) is written, reviewed, and unit-tested but was **not applied**
+during #81's session — its Supabase MCP tool calls failed with "MCP tool call requires approval."
+#82's session (same day) confirmed Supabase MCP access works fine from its own environment, so this
+should be resolved by that session's own migration apply pass rather than being a lasting blocker —
+check "Done so far" #82 for whether it also applied `0024` before trusting this note.
 
 **Open from #81 (2026-07-09 session), not investigated - out of scope for the nickname fix:** a
-full `pnpm test` rerun surfaced 32 pre-existing failures with zero overlap with anything #81
-touched: `Chart`/`Resource Counter`/`lost-fleet buttons`/`LostFleetShips` specs failing on engine
+full `pnpm test` rerun surfaced failures with zero overlap with anything #81 touched:
+`Chart`/`Resource Counter`/`lost-fleet buttons`/`LostFleetShips` specs failing on engine
 `leech.ts`/`buildings.ts` errors (`Cannot read properties of undefined (reading 'data')`,
-`Cannot leech 3pw`, `power1 is not in the available power actions`). The last documented clean
-full run was #80's "Viewer 381/381" - something regressed between then and now outside this
-session's changes. Worth a dedicated session to `git bisect` or otherwise track down before
-trusting the full suite again.
+`Cannot leech 3pw`, `power1 is not in the available power actions`) — the #82 session independently
+confirmed (by stashing its own changes and rerunning) that at least the `resource-counter.spec.ts`
+subset of these (28 cases) pre-dates both sessions' work, so this is not new breakage from #81 or
+#82; still worth a dedicated `git bisect` session to find when it actually regressed, since the last
+documented fully-clean run was #80's "Viewer 381/381."
+
+**Done from #82 (2026-07-09), optional follow-up still open:** the private-access-control system
+is live (approval-gated reads/writes, "Pending approval" screen, admin approve/revoke UI). The
+pre-existing `admin-users` edge function (richer per-user detail: seats/active games/push counts,
+plus account deletion) is still undeployed — deploying it is a ~2-minute owner action
+(`supabase functions deploy admin-users`) if that detail view is wanted; the new approval workflow
+itself doesn't depend on it.
 
 **Done from #75-#76 (2026-07-06 "Gaia 9" session), needs a live pass once a real Supabase CLI/
 session is available:** several pieces from this session were reasoned through carefully and

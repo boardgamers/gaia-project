@@ -12,6 +12,48 @@
 
     <div v-if="!isAdmin" class="alert alert-danger mb-0">Admin only.</div>
     <template v-else>
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5 class="mb-0">Pending approval</h5>
+        <b-button variant="outline-secondary" size="sm" :disabled="loadingApprovals" @click="loadApprovals"
+          >Refresh</b-button
+        >
+      </div>
+      <div v-if="loadingApprovals" class="text-muted mb-3">Loading...</div>
+      <div v-else-if="pendingApprovals.length === 0" class="text-muted mb-3">
+        Nobody is waiting on approval right now.
+      </div>
+      <div v-else class="table-responsive mb-4">
+        <table class="table table-sm table-hover admin-users-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Requested</th>
+              <th class="text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="row in pendingApprovals" :key="row.user_id">
+              <td>
+                <div class="font-weight-bold">{{ row.display_name || localPart(row.email) }}</div>
+                <div class="text-muted small">{{ row.email }}</div>
+              </td>
+              <td>{{ formatDate(row.created_at) }}</td>
+              <td class="text-right">
+                <b-button
+                  size="sm"
+                  variant="success"
+                  :disabled="approvingUserId === row.user_id"
+                  @click="approve(row)"
+                >
+                  &#10003; Approve
+                </b-button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h5 class="mb-2">All users</h5>
       <div class="admin-users-toolbar mb-3">
         <b-form-input
           v-model.trim="query"
@@ -32,6 +74,7 @@
               <th>User</th>
               <th>Joined</th>
               <th>Last sign-in</th>
+              <th class="text-center">Access</th>
               <th class="text-center">Seats</th>
               <th class="text-center">Active games</th>
               <th class="text-center">Created</th>
@@ -47,6 +90,24 @@
               </td>
               <td>{{ formatDate(user.created_at) }}</td>
               <td>{{ formatDate(user.last_sign_in_at) }}</td>
+              <td class="text-center">
+                <span
+                  class="badge"
+                  :class="isApproved(user.id) ? 'badge-success' : 'badge-warning'"
+                >
+                  {{ isApproved(user.id) ? "Approved" : "Pending" }}
+                </span>
+                <div v-if="!isSelf(user)">
+                  <button
+                    type="button"
+                    class="btn btn-link btn-sm p-0"
+                    :disabled="approvingUserId === user.id"
+                    @click="toggleApproval(user)"
+                  >
+                    {{ isApproved(user.id) ? "Revoke" : "Approve" }}
+                  </button>
+                </div>
+              </td>
               <td class="text-center">
                 <div>{{ user.claimed_seats }} claimed</div>
                 <div class="text-muted small">{{ user.invited_seats }} invited</div>
@@ -91,6 +152,14 @@ type AdminManagedUser = {
   subscription_count: number;
 };
 
+type UserApprovalRow = {
+  user_id: string;
+  email: string;
+  display_name: string;
+  status: "pending" | "approved";
+  created_at: string | null;
+};
+
 export default Vue.extend({
   name: "HostedAdminUsers",
   props: {
@@ -100,10 +169,13 @@ export default Vue.extend({
   data() {
     return {
       loading: false,
+      loadingApprovals: false,
       deletingUserId: "" as string,
+      approvingUserId: "" as string,
       message: "",
       query: "",
       users: [] as AdminManagedUser[],
+      approvals: [] as UserApprovalRow[],
     };
   },
   computed: {
@@ -123,13 +195,61 @@ export default Vue.extend({
         return haystacks.some((value) => value.toLowerCase().includes(needle));
       });
     },
+    pendingApprovals(): UserApprovalRow[] {
+      return this.approvals.filter((row) => row.status === "pending");
+    },
   },
   created() {
     if (this.isAdmin) {
       this.loadUsers();
+      this.loadApprovals();
     }
   },
   methods: {
+    isApproved(userId: string): boolean {
+      return this.approvals.some((row) => row.user_id === userId && row.status === "approved");
+    },
+    async loadApprovals() {
+      this.loadingApprovals = true;
+      try {
+        const { data, error } = await (this.client as any)
+          .from("user_approvals")
+          .select("user_id,email,display_name,status,created_at")
+          .order("created_at", { ascending: false });
+        if (error) {
+          throw new Error(error.message);
+        }
+        this.approvals = (data ?? []) as UserApprovalRow[];
+      } catch (err) {
+        this.message = `Could not load approvals: ${err instanceof Error ? err.message : err}`;
+      } finally {
+        this.loadingApprovals = false;
+      }
+    },
+    async setApproval(userId: string, approved: boolean, label: string) {
+      this.approvingUserId = userId;
+      try {
+        const { error } = await (this.client as any).rpc("set_user_approval", {
+          p_user_id: userId,
+          p_approved: approved,
+        });
+        if (error) {
+          throw new Error(error.message);
+        }
+        this.message = approved ? `Approved ${label}.` : `Revoked access for ${label}.`;
+        await this.loadApprovals();
+      } catch (err) {
+        this.message = `Could not update ${label}: ${err instanceof Error ? err.message : err}`;
+      } finally {
+        this.approvingUserId = "";
+      }
+    },
+    approve(row: UserApprovalRow) {
+      this.setApproval(row.user_id, true, row.display_name || this.localPart(row.email));
+    },
+    toggleApproval(user: AdminManagedUser) {
+      this.setApproval(user.id, !this.isApproved(user.id), user.display_name || this.localPart(user.email));
+    },
     async loadUsers() {
       this.loading = true;
       try {
