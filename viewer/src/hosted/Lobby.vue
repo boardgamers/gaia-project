@@ -571,9 +571,10 @@ export default Vue.extend({
     lastMoveTime(game: any): number {
       return game._latest_move_created_at ? new Date(game._latest_move_created_at).getTime() : 0;
     },
-    // Ordering (owner request): your-turn games first, then by how long since the last move (the
-    // longest-waiting game surfaces first within each bucket); finished games sort separately by
-    // most-recently-finished first, using the same "last move" timestamp as a finish-time proxy.
+    // Ordering (owner request): your-turn games first, then by most-recent-move-first; finished
+    // games sort separately by most-recently-finished first, using the same "last move" timestamp
+    // as a finish-time proxy. Both non-finished tiers and the finished tier all sort the same
+    // direction (newest activity first) - only "is it my turn" ever takes priority over recency.
     sortGames(games: any[]): any[] {
       return [...games].sort((a, b) => {
         const aFinished = a.status === "finished";
@@ -589,7 +590,7 @@ export default Vue.extend({
         if (aTurn !== bTurn) {
           return aTurn ? -1 : 1;
         }
-        return this.lastMoveTime(a) - this.lastMoveTime(b);
+        return this.lastMoveTime(b) - this.lastMoveTime(a);
       });
     },
     playersWithSummary(game: any): any[] {

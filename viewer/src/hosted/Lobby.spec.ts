@@ -465,6 +465,67 @@ describe("Lobby", () => {
     expect(summaries).to.deep.equal(["2d ago Nevlas form fed."]);
   });
 
+  it("orders games your-turn first, then by most-recent-move (not longest-waiting)", async () => {
+    const games = [
+      {
+        id: "g-old-not-my-turn",
+        name: "Old game",
+        created_by: "user-admin",
+        player_count: 2,
+        options: {},
+        status: "active",
+        current_seat: 0,
+        latest_move_summary: "Nevlas up int.",
+        players: [
+          { seat: 0, invited_email: "someone-else@example.com", user_id: "user-other", display_name: "Other", faction: "nevlas", score: 10 },
+          { seat: 1, invited_email: "kim.pham.nguyen2@gmail.com", user_id: "user-admin", display_name: "Admin", faction: "terrans", score: 8 },
+        ],
+      },
+      {
+        id: "g-recent-not-my-turn",
+        name: "Recent game",
+        created_by: "user-admin",
+        player_count: 2,
+        options: {},
+        status: "active",
+        current_seat: 0,
+        latest_move_summary: "Nevlas up nav.",
+        players: [
+          { seat: 0, invited_email: "someone-else@example.com", user_id: "user-other", display_name: "Other", faction: "nevlas", score: 10 },
+          { seat: 1, invited_email: "kim.pham.nguyen2@gmail.com", user_id: "user-admin", display_name: "Admin", faction: "terrans", score: 8 },
+        ],
+      },
+      {
+        id: "g-my-turn-oldest-move",
+        name: "My turn, oldest move",
+        created_by: "user-admin",
+        player_count: 2,
+        options: {},
+        status: "active",
+        current_seat: 1,
+        latest_move_summary: "Nevlas pass.",
+        players: [
+          { seat: 0, invited_email: "someone-else@example.com", user_id: "user-other", display_name: "Other", faction: "nevlas", score: 10 },
+          { seat: 1, invited_email: "kim.pham.nguyen2@gmail.com", user_id: "user-admin", display_name: "Admin", faction: "terrans", score: 8 },
+        ],
+      },
+    ];
+    const { client } = makeClient(games, [
+      { game_id: "g-old-not-my-turn", seq: 1, move: "nevlas up int.", committed_at: "2026-07-08T09:00:00Z" },
+      { game_id: "g-recent-not-my-turn", seq: 1, move: "nevlas up nav.", committed_at: "2026-07-08T11:30:00Z" },
+      { game_id: "g-my-turn-oldest-move", seq: 1, move: "nevlas pass.", committed_at: "2026-07-08T05:00:00Z" },
+    ]);
+    const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    wrapper.setData({ activeTab: "mine" });
+    await Vue.nextTick();
+
+    const titles = wrapper.findAll(".game-bar__title").wrappers.map((node) => node.text());
+    expect(titles).to.deep.equal(["My turn, oldest moveStandard", "Recent gameStandard", "Old gameStandard"]);
+  });
+
   it("links open games to their dedicated preview page", async () => {
     const { client } = makeClient([membershipGames[0]]);
     const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
