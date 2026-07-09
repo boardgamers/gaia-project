@@ -1,7 +1,17 @@
 {
-  "version": "5.14.8",
-  "releasedAt": "2026-07-08",
+  "version": "5.15.0",
+  "releasedAt": "2026-07-09",
   "entries": [
+    {
+      "version": "5.15.0",
+      "releasedAt": "2026-07-09",
+      "kind": "update",
+      "title": "Private access control",
+      "impact": "",
+      "changes": [
+        "New accounts start unapproved and see no game data until approved from Settings > Manage users"
+      ]
+    },
     {
       "version": "5.14.8",
       "releasedAt": "2026-07-08",
