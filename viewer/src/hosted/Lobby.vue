@@ -986,15 +986,19 @@ export default Vue.extend({
   animation: game-bar-my-turn-pulse 2s infinite;
 }
 
+// `inset`, not an outward ring: this bar's direct parent (.game-swipe, for the swipe-to-delete
+// interaction) has `overflow: hidden`, which silently clipped an earlier outward box-shadow ring
+// to nothing - the class/animation was applying correctly the whole time, it just had nowhere
+// visible to render. An inset shadow stays within the bar's own box, so it can't be clipped.
 @keyframes game-bar-my-turn-pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(var(--highlighted-rgb, 32, 204, 68), 0.55);
+    box-shadow: inset 0 0 0 0 rgba(var(--highlighted-rgb, 32, 204, 68), 0.65);
   }
-  70% {
-    box-shadow: 0 0 0 8px rgba(var(--highlighted-rgb, 32, 204, 68), 0);
+  50% {
+    box-shadow: inset 0 0 0 3px rgba(var(--highlighted-rgb, 32, 204, 68), 0.65);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(var(--highlighted-rgb, 32, 204, 68), 0);
+    box-shadow: inset 0 0 0 0 rgba(var(--highlighted-rgb, 32, 204, 68), 0.65);
   }
 }
 
