@@ -36,6 +36,7 @@
             <b-dropdown-item href="?users=1">Manage users</b-dropdown-item>
             <b-dropdown-divider></b-dropdown-divider>
           </template>
+          <b-dropdown-item-button @click="openNicknameModal">Edit nickname</b-dropdown-item-button>
           <b-dropdown-item-button @click="signOut">Sign out</b-dropdown-item-button>
         </b-dropdown>
       </div>
@@ -70,6 +71,29 @@
               <li v-for="change in entry.changes" :key="change">{{ change }}</li>
             </ul>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="showNicknameModal" class="release-modal-backdrop" @click.self="closeNicknameModal">
+      <div class="release-modal shadow-lg" role="dialog" aria-modal="true" aria-label="Edit nickname">
+        <div class="release-modal__header">
+          <div>
+            <h4 class="release-modal__title mb-0">Edit nickname</h4>
+          </div>
+          <button type="button" class="release-modal__close" aria-label="Close" @click="closeNicknameModal">&times;</button>
+        </div>
+        <div class="release-modal__body">
+          <p class="text-muted small">
+            This is the name other players see in the lobby and in games, instead of your account name or email.
+          </p>
+          <b-form @submit.prevent="saveNickname">
+            <b-form-input v-model="nicknameInput" maxlength="40" placeholder="Nickname" autofocus />
+            <div class="d-flex justify-content-end mt-3" style="gap: 0.5rem">
+              <b-button variant="outline-secondary" type="button" @click="closeNicknameModal">Cancel</b-button>
+              <b-button type="submit" variant="primary" :disabled="nicknameSaving || !nicknameInput.trim()">Save</b-button>
+            </div>
+          </b-form>
         </div>
       </div>
     </div>
@@ -197,6 +221,7 @@ import { disablePushNotifications, enablePushNotifications, isPushEnabled } from
 import Token from "../components/Token.vue";
 import { factionName } from "../data/factions";
 import { isAdminEmail } from "./admin";
+import { fetchMyNickname, setMyNickname } from "./profile";
 import releaseData from "./release.json";
 
 const SWIPE_ACTION_WIDTH = 88;
@@ -346,6 +371,10 @@ export default Vue.extend({
       message: "",
       gamesChannel: null as any,
       showReleaseNotes: false,
+      showNicknameModal: false,
+      myNickname: "" as string,
+      nicknameInput: "" as string,
+      nicknameSaving: false,
       activeTab: "open" as "mine" | "open" | "active" | "finished",
       revealedGameId: "" as string,
       swipeGameId: "" as string,
@@ -423,6 +452,9 @@ export default Vue.extend({
         this.presenceState = state;
       });
     }
+    fetchMyNickname(this.client as any, this.myUserId).then((nickname) => {
+      this.myNickname = nickname;
+    });
     isPushEnabled().then((enabled) => {
       this.pushEnabled = enabled;
     });
@@ -511,7 +543,7 @@ export default Vue.extend({
       return player.faction ? player.faction.substr(0, 1).toUpperCase() : "";
     },
     playerBarTitle(game: any, player: any): string {
-      const name = player.display_name || player.invited_email;
+      const name = player.display_name || "Unknown player";
       const vp = player.score != null ? `${player.score} VP` : "no score yet";
       return `${name} - ${factionName(player.faction)} - ${vp}`;
     },
@@ -611,6 +643,25 @@ export default Vue.extend({
     async signOut() {
       await (this.client as any).auth.signOut();
       window.location.reload();
+    },
+    openNicknameModal() {
+      this.nicknameInput = this.myNickname;
+      this.showNicknameModal = true;
+    },
+    closeNicknameModal() {
+      this.showNicknameModal = false;
+    },
+    async saveNickname() {
+      this.nicknameSaving = true;
+      const error = await setMyNickname(this.client as any, this.nicknameInput);
+      this.nicknameSaving = false;
+      if (error) {
+        this.message = error;
+        return;
+      }
+      this.myNickname = this.nicknameInput.trim();
+      this.showNicknameModal = false;
+      await this.refresh();
     },
   },
 });

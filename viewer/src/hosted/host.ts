@@ -671,7 +671,7 @@ export class HostedGameHost {
     engine.generateAvailableCommandsIfNeeded();
     for (const p of this.players) {
       if (engine.players[p.seat]) {
-        engine.players[p.seat].name = p.display_name || p.invited_email;
+        engine.players[p.seat].name = p.display_name || "Unknown player";
       }
     }
     return engine;

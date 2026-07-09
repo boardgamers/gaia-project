@@ -9,7 +9,7 @@ Vue.use(BootstrapVue);
 describe("OpenLobbyGame", () => {
   const session = { user: { id: "user-admin", email: "kim.pham.nguyen2@gmail.com" } } as any;
 
-  function makeClient(game: any) {
+  function makeClient(game: any, nickname = "Admin") {
     let gameRow = game;
     const channel = {
       on: () => channel,
@@ -17,16 +17,25 @@ describe("OpenLobbyGame", () => {
     };
     return {
       from: (table: string) => {
-        if (table !== "games") {
-          throw new Error(`unexpected table ${table}`);
-        }
-        return {
-          select: () => ({
-            eq: () => ({
-              maybeSingle: async () => ({ data: gameRow, error: null }),
+        if (table === "games") {
+          return {
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({ data: gameRow, error: null }),
+              }),
             }),
-          }),
-        };
+          };
+        }
+        if (table === "profiles") {
+          return {
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({ data: { nickname }, error: null }),
+              }),
+            }),
+          };
+        }
+        throw new Error(`unexpected table ${table}`);
       },
       channel: () => channel,
       removeChannel: () => undefined,
@@ -81,5 +90,37 @@ describe("OpenLobbyGame", () => {
     expect(wrapper.text()).to.contain("Join game");
     expect(wrapper.text()).to.contain("Standard");
     expect(wrapper.findComponent({ name: "OpenGamePreview" }).exists()).to.equal(true);
+  });
+
+  it("shows the joiner's nickname immediately on join, never their raw email", async () => {
+    const client = makeClient(
+      {
+        id: "g-open",
+        name: "Open table",
+        player_count: 2,
+        status: "open",
+        options: {},
+        players: [
+          { seat: 0, invited_email: "open-seat@lobby.invalid", user_id: null, display_name: "" },
+          { seat: 1, invited_email: "open-seat@lobby.invalid", user_id: null, display_name: "" },
+        ],
+      },
+      "Star Fox"
+    );
+    const wrapper = mount(OpenLobbyGame, {
+      propsData: { client, session, gameId: "g-open" },
+      stubs: { OpenGamePreview: true },
+    });
+    await Vue.nextTick();
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    const joinButton = wrapper.findAll("button").filter((b) => b.text() === "Join game").at(0);
+    await joinButton.trigger("click");
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    expect(wrapper.text()).to.contain("Star Fox");
+    expect(wrapper.text()).to.not.contain("kim.pham.nguyen2@gmail.com");
   });
 });

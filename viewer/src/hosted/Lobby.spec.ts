@@ -13,10 +13,11 @@ describe("Lobby", () => {
   const NOW = new Date("2026-07-08T12:00:00Z").getTime();
   const realDateNow = Date.now;
 
-  function makeClient(games: any[], moves: any[] = []) {
+  function makeClient(games: any[], moves: any[] = [], nickname = "") {
     let deleted: string | null = null;
     let gameRows = [...games];
     let moveRows = [...moves];
+    let myNickname = nickname;
     let gamesChangeHandler: (() => void) | null = null;
     let removedChannel: any = null;
     let presenceStateData: Record<string, any[]> = {};
@@ -47,6 +48,15 @@ describe("Lobby", () => {
                     .sort((a, b) => b.seq - a.seq),
                   error: null,
                 }),
+              }),
+            }),
+          };
+        }
+        if (table === "profiles") {
+          return {
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({ data: { nickname: myNickname }, error: null }),
               }),
             }),
           };
@@ -116,6 +126,10 @@ describe("Lobby", () => {
           );
           return { data: gameRows.find((game) => game.id === args.p_game_id), error: null };
         }
+        if (name === "set_my_nickname") {
+          myNickname = args.p_nickname;
+          return { data: { user_id: "user-admin", nickname: myNickname }, error: null };
+        }
         throw new Error(`unexpected rpc ${name}`);
       },
     };
@@ -134,6 +148,7 @@ describe("Lobby", () => {
       },
       removedChannel: () => removedChannel,
       channel,
+      currentNickname: () => myNickname,
     };
   }
 
@@ -700,5 +715,41 @@ describe("Lobby", () => {
     wrapper.destroy();
 
     expect(removedChannel()).to.not.equal(null);
+  });
+
+  it("lets a player edit their nickname from the settings menu", async () => {
+    const { client, currentNickname } = makeClient(sampleGames, [], "OldName");
+    const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    expect((wrapper.vm as any).myNickname).to.equal("OldName");
+
+    (wrapper.vm as any).openNicknameModal();
+    await Vue.nextTick();
+
+    expect((wrapper.vm as any).showNicknameModal).to.equal(true);
+    expect((wrapper.vm as any).nicknameInput).to.equal("OldName");
+    expect(wrapper.find(".release-modal").text()).to.contain("Edit nickname");
+
+    wrapper.setData({ nicknameInput: "Star Fox" });
+    await (wrapper.vm as any).saveNickname();
+    await Vue.nextTick();
+
+    expect(currentNickname()).to.equal("Star Fox");
+    expect((wrapper.vm as any).myNickname).to.equal("Star Fox");
+    expect((wrapper.vm as any).showNicknameModal).to.equal(false);
+  });
+
+  it("never falls back to showing a player's email in the game bar tooltip", () => {
+    const { client } = makeClient(sampleGames);
+    const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
+    const player = { display_name: "", invited_email: "secret@example.com", score: 5, faction: "terrans" };
+
+    const title = (wrapper.vm as any).playerBarTitle({}, player);
+
+    expect(title).to.not.contain("secret@example.com");
+    expect(title).to.contain("Unknown player");
   });
 });

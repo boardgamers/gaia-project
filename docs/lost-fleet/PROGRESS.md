@@ -3580,6 +3580,41 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       general fix) was deliberately left alone as out of scope for this session - flagging here in
       case another latent-state-leak test failure surfaces later.
     - Viewer **381/381** (1 `HostedBar.spec.ts` case rewritten, not net-new), production build clean.
+81. ✅ **User-level nicknames, replacing Google name/email as the displayed identity everywhere
+    (owner-reported personal-info-exposure issue, 2026-07-09 session).** Previously `display_name`
+    was derived per-seat from `auth.users.raw_user_meta_data` (Google `full_name`/`name`) or the
+    email local-part, both client-side (`CreateGame.vue`'s old `myDisplayName`) and server-side
+    (`join_open_game_seat`'s old fallback chain in `0020_open_lobby_games.sql`) - with no UI to
+    change it, so a signed-in player's real name (or email) showed to every other lobby member.
+    - New migration `0024_profile_nicknames.sql`: a `public.profiles` table (`user_id` PK, own-row-
+      only RLS), a `handle_new_user_profile` trigger on `auth.users` insert that assigns a random
+      anonymous default (`random_default_nickname()` → `"Player 1234"`) to every new signup, a
+      one-time backfill for existing accounts, and a `set_my_nickname(text)` RPC (validates
+      1-40 chars, upserts `profiles`, and immediately syncs *every* `public.players` row for that
+      `user_id` regardless of game status so a rename takes effect everywhere, not just future
+      games). Also scrubs any real name/email already sitting in `players.display_name` from before
+      this migration, so old exposure is fixed retroactively, not just prevented going forward.
+      `join_open_game_seat` now reads `profiles.nickname` instead of Google metadata/email.
+    - New `hosted/profile.ts` helper (`fetchMyNickname`/`setMyNickname`), wired into `CreateGame.vue`
+      (host-seat name), `OpenLobbyGame.vue` (fixes a bug where the optimistic post-join UI briefly
+      showed the joiner's raw email before realtime caught up), and `Lobby.vue` - which gets a new
+      **"Edit nickname"** item in the existing gear-icon settings dropdown (top right), opening a
+      small modal reusing the changelog modal's styling. Every remaining `display_name || invited_email`
+      fallback in the lobby/in-game UI (`Lobby.vue`'s tooltip, `OpenLobbyGame.vue`'s joined-name
+      chips, `host.ts`'s in-game player name) was changed to fall back to `"Unknown player"` instead,
+      so an email is never shown as a name anywhere a player is displayed to others.
+    - **Migration NOT yet applied to the live `mitawjpdxkheascdiffz` project** - the Supabase MCP
+      tools errored with "MCP tool call requires approval" on every call this session (even a plain
+      read-only `get_project`), which looked like a session-level authorization problem rather than
+      anything fixable by retrying. Needs a session with working Supabase MCP access (or `supabase
+      db push` from a local checkout) to actually deploy `0024_profile_nicknames.sql` before this
+      protection is live - until then the old Google-name/email exposure is still live in production.
+    - Viewer: all `hosted/` tests pass (5 new: 2 `Lobby.spec.ts`, 2 `CreateGame.spec.ts`,
+      1 `OpenLobbyGame.spec.ts`); full-suite rerun this session surfaced **32 pre-existing failures
+      unrelated to this change** (engine `leech.ts`/`buildings.ts` errors under `Chart`/`Resource
+      Counter`/`lost-fleet buttons`/`LostFleetShips` specs) that don't touch anything this session
+      edited - flagging in "Next actions" below rather than investigating, since it's out of scope
+      for a personal-info-exposure fix and wasn't caused by it (confirmed zero file overlap).
 
 ## Still MISSING — only one art-only item left
 
@@ -3975,6 +4010,24 @@ section originally said Chunk 2 must also carry the _full_ `planets.ts` terrafor
    exact shape for adv-tech/federation/booster/scoring enum members when those chunks come up.
 
 ## Next actions
+
+**Blocked from #81 (2026-07-09 session), needs a session with working Supabase MCP access:**
+migration `0024_profile_nicknames.sql` (the personal-info-exposure nickname fix) is written,
+reviewed, and unit-tested but **not applied** to the live `mitawjpdxkheascdiffz` project - every
+Supabase MCP tool call this session (including plain reads like `get_project`) failed with "MCP
+tool call requires approval," which looks like a session-level authorization gap rather than
+anything retrying fixed. Until a session that can actually reach Supabase runs this migration (or
+the owner runs `supabase db push`/applies it via the dashboard), real names/emails are still being
+shown in the lobby in production - the code fix alone does nothing live.
+
+**Open from #81 (2026-07-09 session), not investigated - out of scope for the nickname fix:** a
+full `pnpm test` rerun surfaced 32 pre-existing failures with zero overlap with anything #81
+touched: `Chart`/`Resource Counter`/`lost-fleet buttons`/`LostFleetShips` specs failing on engine
+`leech.ts`/`buildings.ts` errors (`Cannot read properties of undefined (reading 'data')`,
+`Cannot leech 3pw`, `power1 is not in the available power actions`). The last documented clean
+full run was #80's "Viewer 381/381" - something regressed between then and now outside this
+session's changes. Worth a dedicated session to `git bisect` or otherwise track down before
+trusting the full suite again.
 
 **Done from #75-#76 (2026-07-06 "Gaia 9" session), needs a live pass once a real Supabase CLI/
 session is available:** several pieces from this session were reasoned through carefully and

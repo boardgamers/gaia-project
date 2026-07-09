@@ -9,8 +9,22 @@ Vue.use(BootstrapVue);
 
 describe("CreateGame", () => {
   const session = { user: { id: "user-me", email: "kim.pham.nguyen2@gmail.com" } } as any;
-  function makeClient() {
-    return { rpc: async () => ({ data: null, error: null }) };
+  function makeClient(nickname = "") {
+    return {
+      rpc: async () => ({ data: null, error: null }),
+      from: (table: string) => {
+        if (table === "profiles") {
+          return {
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({ data: { nickname }, error: null }),
+              }),
+            }),
+          };
+        }
+        throw new Error(`unexpected table ${table}`);
+      },
+    };
   }
 
   it("offers 2/3/4 player-count buttons instead of a dropdown, and has no name field", async () => {
@@ -68,5 +82,27 @@ describe("CreateGame", () => {
 
     expect(wrapper.text()).to.not.include("Only the admin can create new games.");
     expect(wrapper.find("form").exists()).to.equal(true);
+  });
+
+  it("uses the player's saved nickname as the host seat name instead of their Google name/email", async () => {
+    const wrapper = mount(CreateGame, {
+      propsData: { client: makeClient("Star Fox"), session },
+      stubs: { SetupPreview: true },
+    });
+    await Vue.nextTick();
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    expect((wrapper.vm as any).myDisplayName).to.equal("Star Fox");
+  });
+
+  it("falls back to a generic 'Host' label, never the account email, before the nickname loads", async () => {
+    const wrapper = mount(CreateGame, {
+      propsData: { client: makeClient(""), session },
+      stubs: { SetupPreview: true },
+    });
+    await Vue.nextTick();
+
+    expect((wrapper.vm as any).myDisplayName).to.equal("Host");
   });
 });

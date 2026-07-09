@@ -42,6 +42,7 @@
 <script lang="ts">
 import Vue from "vue";
 import OpenGamePreview from "./OpenGamePreview.vue";
+import { fetchMyNickname } from "./profile";
 
 export default Vue.extend({
   name: "HostedOpenLobbyGame",
@@ -57,11 +58,15 @@ export default Vue.extend({
       loading: true,
       message: "",
       gameChannel: null as any,
+      myNickname: "" as string,
     };
   },
   created() {
     this.refresh();
     this.subscribeGame();
+    fetchMyNickname(this.client as any, (this.session as any).user?.id ?? "").then((nickname) => {
+      this.myNickname = nickname;
+    });
   },
   beforeDestroy() {
     if (this.gameChannel) {
@@ -109,7 +114,7 @@ export default Vue.extend({
       return (game.players ?? [])
         .filter((player: any) => !!player.user_id)
         .sort((a: any, b: any) => a.seat - b.seat)
-        .map((player: any) => player.display_name || player.invited_email);
+        .map((player: any) => player.display_name || "Unknown player");
     },
     firstOpenSeat(game: any): number | null {
       const open = (game.players ?? []).find((player: any) => !player.user_id);
@@ -141,7 +146,7 @@ export default Vue.extend({
                 ...player,
                 user_id: me?.id ?? null,
                 invited_email: me?.email ?? player.invited_email,
-                display_name: me?.email ?? player.display_name,
+                display_name: this.myNickname || player.display_name,
               }
             : {
                 ...player,

@@ -99,6 +99,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { AUCTION_VARIANT_OPTIONS, buildCreateGameParams } from "./new-game";
+import { fetchMyNickname } from "./profile";
 import SetupPreview from "./SetupPreview.vue";
 
 export default Vue.extend({
@@ -112,6 +113,7 @@ export default Vue.extend({
     return {
       creating: false,
       message: "",
+      myNickname: "" as string,
       openAuctionInfo: {} as Record<string, boolean>,
       currentSeed: "" as string,
       currentRotateMove: "" as string,
@@ -123,6 +125,11 @@ export default Vue.extend({
       },
     };
   },
+  created() {
+    fetchMyNickname(this.client as any, this.myUserId).then((nickname) => {
+      this.myNickname = nickname;
+    });
+  },
   computed: {
     auctionVariantOptions() {
       return AUCTION_VARIANT_OPTIONS;
@@ -131,8 +138,7 @@ export default Vue.extend({
       return (this.session as any).user?.id ?? "";
     },
     myDisplayName(): string {
-      const metadata = (this.session as any).user?.user_metadata ?? {};
-      return metadata.full_name || metadata.name || (this.session as any).user?.email?.split("@")[0] || "Host";
+      return this.myNickname || "Host";
     },
     canCreate(): boolean {
       return !!this.currentSeed && this.setupValid;
