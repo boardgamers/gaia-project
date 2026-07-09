@@ -543,12 +543,23 @@ export default Vue.extend({
         this.message = `Could not load games: ${error.message}`;
       } else {
         const games = (data ?? []).map((game: any) => ({ ...game }));
-        const gameIds = games.map((game: any) => game.id);
-        if (gameIds.length > 0) {
+        // Only games missing their cached summary/timestamp (pre-existing rows from before those
+        // columns existed, or a genuinely new row commit_turn hasn't touched yet) need this
+        // fallback - deliberately NOT every game's id. An earlier version queried every game's
+        // moves unconditionally with no cap; this project has 1500+ move rows total, well past
+        // PostgREST's default row cap, so that cross-game query silently truncated and some
+        // games' "time since last move" vanished (while latest_move_summary, cached separately at
+        // commit time, kept working) - exactly the "summary shows, age doesn't" bug reported live.
+        // latest_move_committed_at (migration 0026) now covers age directly with no query at all
+        // for the common case; this fallback path is only for the increasingly rare gap.
+        const fallbackIds = games
+          .filter((game: any) => !game.latest_move_summary || !game.latest_move_committed_at)
+          .map((game: any) => game.id);
+        if (fallbackIds.length > 0) {
           const latestMoves = await (this.client as any)
             .from("moves")
             .select("game_id,seq,move,committed_at")
-            .in("game_id", gameIds)
+            .in("game_id", fallbackIds)
             .order("seq", { ascending: false });
           if (!latestMoves.error) {
             // "Time since last move" should reflect the literal latest row (even a leech/income
@@ -600,8 +611,12 @@ export default Vue.extend({
       const email = this.userEmail.toLowerCase();
       return seat.user_id === this.myUserId || (seat.invited_email ?? "").toLowerCase() === email;
     },
+    lastMoveTimestamp(game: any): string | null {
+      return game.latest_move_committed_at ?? game._latest_move_created_at ?? null;
+    },
     lastMoveTime(game: any): number {
-      return game._latest_move_created_at ? new Date(game._latest_move_created_at).getTime() : 0;
+      const value = this.lastMoveTimestamp(game);
+      return value ? new Date(value).getTime() : 0;
     },
     // Ordering (owner request): your-turn games first, then by most-recent-move-first; finished
     // games sort separately by most-recently-finished first, using the same "last move" timestamp
@@ -667,7 +682,7 @@ export default Vue.extend({
       if (game.status === "open") {
         return null;
       }
-      return formatMoveAge(game._latest_move_created_at);
+      return formatMoveAge(this.lastMoveTimestamp(game));
     },
     claimedSeats(game: any): number {
       return (game.players ?? []).filter((player: any) => !!player.user_id).length;

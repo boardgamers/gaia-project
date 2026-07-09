@@ -553,6 +553,48 @@ describe("Lobby", () => {
     expect(wrapper.text()).to.contain("1m ago");
   });
 
+  it("shows the move age straight from the cached games.latest_move_committed_at column, with no moves-table query needed at all", async () => {
+    // Regression for a live bug: the old implementation queried EVERY listed game's moves in one
+    // unbounded request to find each one's latest row - with enough total moves across all games
+    // (this project has 1500+), that request silently hit PostgREST's default row cap, and
+    // whichever games' rows didn't survive lost their age entirely (while latest_move_summary,
+    // cached separately, kept working - "summary shows, age doesn't" was the exact live symptom).
+    // Migration 0026 caches the timestamp on `games` directly; this game intentionally has ZERO
+    // rows in the mocked `moves` table to prove the age no longer depends on that query at all.
+    const game = {
+      id: "g-cached-age",
+      name: "Cached age game",
+      created_by: "user-admin",
+      player_count: 2,
+      options: {},
+      status: "active",
+      current_seat: 0,
+      current_round: 3,
+      latest_move_summary: "Hadsch Hallas power action 6.",
+      latest_move_committed_at: "2026-07-08T09:00:00Z",
+      players: [
+        {
+          seat: 0,
+          invited_email: "someone-else@example.com",
+          user_id: "user-other",
+          display_name: "Other",
+          faction: "hadsch-hallas",
+          score: 20,
+        },
+      ],
+    };
+    const { client } = makeClient([game], []);
+    const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    wrapper.setData({ activeTab: "active" });
+    await Vue.nextTick();
+
+    expect(wrapper.text()).to.contain("3h ago");
+    expect(wrapper.text()).to.contain("Hadsch Hallas power action 6.");
+  });
+
   it("shows no round badge or player chips for a game with no cached lobby data yet", async () => {
     const { client } = makeClient(sampleGames);
     const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });

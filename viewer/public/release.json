@@ -1,7 +1,17 @@
 {
-  "version": "5.16.1",
+  "version": "5.16.2",
   "releasedAt": "2026-07-09",
   "entries": [
+    {
+      "version": "5.16.2",
+      "releasedAt": "2026-07-09",
+      "kind": "update",
+      "title": "Fix missing move-age on some games",
+      "impact": "",
+      "changes": [
+        "Time since last move no longer silently disappears for some games - it was relying on a query that could hit a row limit once the project had enough total moves across all games."
+      ]
+    },
     {
       "version": "5.16.1",
       "releasedAt": "2026-07-09",
