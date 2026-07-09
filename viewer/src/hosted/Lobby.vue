@@ -55,12 +55,21 @@
             <div class="release-notes__eyebrow text-uppercase text-muted small">Recent changes</div>
             <h4 class="release-modal__title mb-0">Hosted changelog</h4>
           </div>
-          <button type="button" class="release-modal__close" aria-label="Close changelog" @click="showReleaseNotes = false">
+          <button
+            type="button"
+            class="release-modal__close"
+            aria-label="Close changelog"
+            @click="showReleaseNotes = false"
+          >
             &times;
           </button>
         </div>
         <div class="release-modal__body">
-          <div v-for="entry in releaseEntries" :key="`${entry.version}-${entry.releasedAt}`" class="release-notes__entry">
+          <div
+            v-for="entry in releaseEntries"
+            :key="`${entry.version}-${entry.releasedAt}`"
+            class="release-notes__entry"
+          >
             <div class="release-notes__heading">
               <span class="release-notes__kind">{{ entry.kind }}</span>
               <strong>v{{ entry.version }}</strong>
@@ -81,7 +90,9 @@
           <div>
             <h4 class="release-modal__title mb-0">Edit nickname</h4>
           </div>
-          <button type="button" class="release-modal__close" aria-label="Close" @click="closeNicknameModal">&times;</button>
+          <button type="button" class="release-modal__close" aria-label="Close" @click="closeNicknameModal">
+            &times;
+          </button>
         </div>
         <div class="release-modal__body">
           <p class="text-muted small">
@@ -91,7 +102,9 @@
             <b-form-input v-model="nicknameInput" maxlength="40" placeholder="Nickname" autofocus />
             <div class="d-flex justify-content-end mt-3" style="gap: 0.5rem">
               <b-button variant="outline-secondary" type="button" @click="closeNicknameModal">Cancel</b-button>
-              <b-button type="submit" variant="primary" :disabled="nicknameSaving || !nicknameInput.trim()">Save</b-button>
+              <b-button type="submit" variant="primary" :disabled="nicknameSaving || !nicknameInput.trim()"
+                >Save</b-button
+              >
             </div>
           </b-form>
         </div>
@@ -173,11 +186,16 @@
             <span class="game-bar__identity">
               <span class="game-bar__round-slot">
                 <span v-if="game.current_round != null" class="game-bar__round">R{{ game.current_round }}</span>
+                <span
+                  v-else-if="game.status === 'open'"
+                  class="game-bar__seats"
+                  :title="`${claimedSeats(game)} of ${game.player_count} seats joined`"
+                  >{{ claimedSeats(game) }}/{{ game.player_count }}</span
+                >
               </span>
               <span class="game-bar__copy">
                 <span class="game-bar__title">
                   <strong>{{ game.name || "Unnamed game" }}</strong>
-                  <span v-if="game.status === 'open'" class="game-bar__tag">{{ claimedSeats(game) }}/{{ game.player_count }} joined</span>
                   <span v-if="auctionLabel(game)" class="game-bar__tag">{{ auctionLabel(game) }}</span>
                   <span v-if="isTestGame(game)" class="game-bar__tag">Test game</span>
                 </span>
@@ -203,8 +221,14 @@
                   <span class="game-bar__avatar">
                     <svg viewBox="-22 -22 44 44"><Token :faction="player.faction" /></svg>
                     <span class="game-bar__initial">{{ factionInitial(player) }}</span>
-                    <span class="game-bar__presence" :class="`game-bar__presence--${playerPresence(game, player)}`"></span>
-                    <span class="game-bar__score" :class="{ 'game-bar__score--active': player.seat === game.current_seat }">
+                    <span
+                      class="game-bar__presence"
+                      :class="`game-bar__presence--${playerPresence(game, player)}`"
+                    ></span>
+                    <span
+                      class="game-bar__score"
+                      :class="{ 'game-bar__score--active': player.seat === game.current_seat }"
+                    >
                       {{ player.score != null ? player.score : "-" }}
                     </span>
                   </span>
@@ -340,10 +364,15 @@ function formatMoveAge(value: string | null | undefined): string | null {
   if (!value) {
     return null;
   }
-  const ms = Date.now() - new Date(value).getTime();
-  if (!Number.isFinite(ms) || ms < 0) {
+  const rawMs = Date.now() - new Date(value).getTime();
+  if (!Number.isFinite(rawMs)) {
     return null;
   }
+  // A slightly-behind client clock (or a move committed within the same second as this render)
+  // can make the delta briefly negative - clamp to 0 ("just now") instead of hiding the age
+  // entirely, which previously made the whole age display vanish for any client with even a few
+  // seconds of clock skew relative to the server.
+  const ms = Math.max(0, rawMs);
   const minutes = Math.floor(ms / 60_000);
   if (minutes < 60) {
     return `${Math.max(1, minutes)}m ago`;
@@ -530,7 +559,10 @@ export default Vue.extend({
             for (const row of latestMoves.data ?? []) {
               const existing = summaries.get(row.game_id);
               if (!existing) {
-                summaries.set(row.game_id, { summary: compactMoveSummary(row.move), createdAt: row.committed_at ?? null });
+                summaries.set(row.game_id, {
+                  summary: compactMoveSummary(row.move),
+                  createdAt: row.committed_at ?? null,
+                });
               } else if (existing.summary === null) {
                 existing.summary = compactMoveSummary(row.move);
               }
@@ -978,6 +1010,20 @@ export default Vue.extend({
   font-weight: 700;
   color: #495057;
   background: #e9ecef;
+  border-radius: 0.25rem;
+  padding: 0.1rem 0.4rem;
+}
+
+// Same slot/shape as .game-bar__round (open games have no round yet, so that slot was just
+// empty) - shows claimed/total seats instead, in the same green used for "it's this seat's turn"
+// elsewhere in this bar (.game-bar__score--active), so a glance at the left edge tells you
+// "in progress, round N" vs "still filling up, X of Y joined" consistently.
+.game-bar__seats {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  background: #28a745;
   border-radius: 0.25rem;
   padding: 0.1rem 0.4rem;
 }

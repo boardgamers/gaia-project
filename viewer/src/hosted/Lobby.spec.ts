@@ -120,7 +120,9 @@ describe("Lobby", () => {
               : {
                   ...game,
                   players: (game.players ?? []).map((player: any) =>
-                    player.seat === args.p_seat ? { ...player, user_id: null, display_name: "", invited_email: "open-seat@lobby.invalid" } : player
+                    player.seat === args.p_seat
+                      ? { ...player, user_id: null, display_name: "", invited_email: "open-seat@lobby.invalid" }
+                      : player
                   ),
                 }
           );
@@ -189,9 +191,30 @@ describe("Lobby", () => {
       latest_move_summary: null,
       setup_move: "p3 rotate",
       players: [
-        { seat: 0, invited_email: "someone-else@example.com", user_id: "user-other", display_name: "Other", faction: null, score: null },
-        { seat: 1, invited_email: "open-seat@lobby.invalid", user_id: null, display_name: "", faction: null, score: null },
-        { seat: 2, invited_email: "open-seat@lobby.invalid", user_id: null, display_name: "", faction: null, score: null },
+        {
+          seat: 0,
+          invited_email: "someone-else@example.com",
+          user_id: "user-other",
+          display_name: "Other",
+          faction: null,
+          score: null,
+        },
+        {
+          seat: 1,
+          invited_email: "open-seat@lobby.invalid",
+          user_id: null,
+          display_name: "",
+          faction: null,
+          score: null,
+        },
+        {
+          seat: 2,
+          invited_email: "open-seat@lobby.invalid",
+          user_id: null,
+          display_name: "",
+          faction: null,
+          score: null,
+        },
       ],
     },
     {
@@ -203,7 +226,16 @@ describe("Lobby", () => {
       status: "active",
       current_seat: 0,
       latest_move_summary: "Terrans up int.",
-      players: [{ seat: 0, invited_email: "kim.pham.nguyen2@gmail.com", user_id: "user-admin", display_name: "Admin", faction: "terrans", score: 10 }],
+      players: [
+        {
+          seat: 0,
+          invited_email: "kim.pham.nguyen2@gmail.com",
+          user_id: "user-admin",
+          display_name: "Admin",
+          faction: "terrans",
+          score: 10,
+        },
+      ],
     },
     {
       id: "g-theirs",
@@ -214,7 +246,16 @@ describe("Lobby", () => {
       status: "active",
       current_seat: 0,
       latest_move_summary: "Xenos pass booster3.",
-      players: [{ seat: 0, invited_email: "someone-else@example.com", user_id: "user-other", display_name: "Other", faction: "xenos", score: 8 }],
+      players: [
+        {
+          seat: 0,
+          invited_email: "someone-else@example.com",
+          user_id: "user-other",
+          display_name: "Other",
+          faction: "xenos",
+          score: 8,
+        },
+      ],
     },
     {
       id: "g-finished",
@@ -225,7 +266,16 @@ describe("Lobby", () => {
       status: "finished",
       current_seat: null,
       latest_move_summary: "Nevlas form fed.",
-      players: [{ seat: 0, invited_email: "someone-else@example.com", user_id: "user-other", display_name: "Other", faction: "nevlas", score: 40 }],
+      players: [
+        {
+          seat: 0,
+          invited_email: "someone-else@example.com",
+          user_id: "user-other",
+          display_name: "Other",
+          faction: "nevlas",
+          score: 40,
+        },
+      ],
     },
   ];
 
@@ -256,19 +306,22 @@ describe("Lobby", () => {
   });
 
   it("shows no admin-only controls at all for a non-admin", async () => {
-    const { client } = makeClient([
-      {
-        id: "g-own",
-        name: "My game",
-        created_by: "user-other",
-        player_count: 2,
-        options: {},
-        status: "active",
-        current_seat: 0,
-        latest_move_summary: null,
-        players: [],
-      },
-    ], [{ game_id: "g-four", seq: 12, move: "terrans up int.", committed_at: "2026-07-08T11:05:00Z" }]);
+    const { client } = makeClient(
+      [
+        {
+          id: "g-own",
+          name: "My game",
+          created_by: "user-other",
+          player_count: 2,
+          options: {},
+          status: "active",
+          current_seat: 0,
+          latest_move_summary: null,
+          players: [],
+        },
+      ],
+      [{ game_id: "g-four", seq: 12, move: "terrans up int.", committed_at: "2026-07-08T11:05:00Z" }]
+    );
     const wrapper = mount(Lobby, { propsData: { client, session: otherSession } });
     await Vue.nextTick();
     await Vue.nextTick();
@@ -294,7 +347,10 @@ describe("Lobby", () => {
       wrapper.setData({ revealedGameId: "g-theirs" });
       await Vue.nextTick();
 
-      const button = wrapper.findAll("button").filter((b) => b.text() === "Delete").at(0);
+      const button = wrapper
+        .findAll("button")
+        .filter((b) => b.text() === "Delete")
+        .at(0);
       await button.trigger("click");
       await Vue.nextTick();
       await Vue.nextTick();
@@ -320,7 +376,10 @@ describe("Lobby", () => {
       wrapper.setData({ revealedGameId: "g-mine" });
       await Vue.nextTick();
 
-      const button = wrapper.findAll("button").filter((b) => b.text() === "Delete").at(0);
+      const button = wrapper
+        .findAll("button")
+        .filter((b) => b.text() === "Delete")
+        .at(0);
       await button.trigger("click");
       await Vue.nextTick();
 
@@ -353,13 +412,28 @@ describe("Lobby", () => {
       current_round: 3,
       latest_move_summary: "Terrans build mine sector 3.",
       players: [
-        { seat: 0, invited_email: "alice@example.com", user_id: "user-admin", display_name: "Alice", faction: "terrans", score: 24 },
-        { seat: 1, invited_email: "bob@example.com", user_id: "user-other", display_name: "Bob", faction: "nevlas", score: 31 },
+        {
+          seat: 0,
+          invited_email: "alice@example.com",
+          user_id: "user-admin",
+          display_name: "Alice",
+          faction: "terrans",
+          score: 24,
+        },
+        {
+          seat: 1,
+          invited_email: "bob@example.com",
+          user_id: "user-other",
+          display_name: "Bob",
+          faction: "nevlas",
+          score: 31,
+        },
       ],
     };
-    const { client, setPresenceState } = makeClient([game], [
-      { game_id: "g-active", seq: 11, move: "terrans build m 3B0.", committed_at: "2026-07-08T11:05:00Z" },
-    ]);
+    const { client, setPresenceState } = makeClient(
+      [game],
+      [{ game_id: "g-active", seq: 11, move: "terrans build m 3B0.", committed_at: "2026-07-08T11:05:00Z" }]
+    );
     setPresenceState({
       "user-other": [{ context: { type: "game", gameId: "g-active" }, focused: true }],
       "user-admin": [{ context: { type: "lobby" }, focused: true }],
@@ -386,6 +460,97 @@ describe("Lobby", () => {
     expect(wrapper.text()).to.contain("Terrans build mine sector 3.");
     expect(wrapper.text()).to.not.contain("your turn");
     expect(wrapper.text()).to.not.contain("Bob to move");
+  });
+
+  it("pulses green and still shows the move age for an active game that's genuinely the viewer's turn", async () => {
+    const game = {
+      id: "g-my-turn",
+      name: "Cinder Spire",
+      created_by: "user-admin",
+      player_count: 2,
+      options: {},
+      status: "active",
+      current_seat: 1,
+      current_round: 4,
+      latest_move_summary: "Hadsch Hallas power action 6.",
+      players: [
+        {
+          seat: 0,
+          invited_email: "someone-else@example.com",
+          user_id: "user-other",
+          display_name: "Other",
+          faction: "hadsch-hallas",
+          score: 20,
+        },
+        {
+          seat: 1,
+          invited_email: "kim.pham.nguyen2@gmail.com",
+          user_id: "user-admin",
+          display_name: "Admin",
+          faction: "moweyds",
+          score: 18,
+        },
+      ],
+    };
+    const { client } = makeClient(
+      [game],
+      [
+        {
+          game_id: "g-my-turn",
+          seq: 62,
+          move: "hadsch-hallas action power6. build m 2A5.",
+          committed_at: "2026-07-08T09:00:00Z",
+        },
+      ]
+    );
+    const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    wrapper.setData({ activeTab: "active" });
+    await Vue.nextTick();
+
+    expect(wrapper.find(".game-bar").classes()).to.contain("game-bar--my-turn");
+    expect(wrapper.text()).to.contain("3h ago");
+    expect(wrapper.text()).to.contain("Hadsch Hallas power action 6.");
+  });
+
+  it("shows the move age as 'just now' instead of hiding it when the client clock is slightly behind the server's", async () => {
+    const game = {
+      id: "g-clock-skew",
+      name: "Skewed clock game",
+      created_by: "user-admin",
+      player_count: 2,
+      options: {},
+      status: "active",
+      current_seat: 0,
+      latest_move_summary: "Terrans up nav.",
+      players: [
+        {
+          seat: 0,
+          invited_email: "someone-else@example.com",
+          user_id: "user-other",
+          display_name: "Other",
+          faction: "terrans",
+          score: 5,
+        },
+      ],
+    };
+    // committed 30s AFTER "now" from this client's clock's point of view - simulates the client
+    // being slightly behind the server.
+    const { client } = makeClient(
+      [game],
+      [{ game_id: "g-clock-skew", seq: 1, move: "terrans up nav.", committed_at: "2026-07-08T12:00:30Z" }]
+    );
+    const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    wrapper.setData({ activeTab: "active" });
+    await Vue.nextTick();
+
+    expect(wrapper.find(".game-bar__age").exists(), "age should still render, not vanish").to.equal(true);
+    expect(wrapper.text()).to.contain("1m ago");
   });
 
   it("shows no round badge or player chips for a game with no cached lobby data yet", async () => {
@@ -426,18 +591,27 @@ describe("Lobby", () => {
       { game_id: "g-open", seq: 1, move: "p3 rotate", committed_at: "2026-07-08T09:00:00Z" },
       { game_id: "g-mine", seq: 7, move: "terrans up int.", committed_at: "2026-07-08T11:05:00Z" },
       { game_id: "g-theirs", seq: 9, move: "xenos pass booster3.", committed_at: "2026-07-08T10:00:00Z" },
-      { game_id: "g-finished", seq: 42, move: "nevlas federation 1A4,9A9,9B4,9C fed4.", committed_at: "2026-07-06T12:00:00Z" },
+      {
+        game_id: "g-finished",
+        seq: 42,
+        move: "nevlas federation 1A4,9A9,9B4,9C fed4.",
+        committed_at: "2026-07-06T12:00:00Z",
+      },
     ]);
     const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
     await Vue.nextTick();
     await Vue.nextTick();
 
     let titles = wrapper.findAll(".game-bar__title").wrappers.map((node) => node.text());
-    expect(titles).to.deep.equal(["Open table1/3 joinedStandard"]);
+    expect(titles).to.deep.equal(["Open tableStandard"]);
+    expect(wrapper.findAll(".game-bar__seats").wrappers.map((node) => node.text())).to.deep.equal(["1/3"]);
     let summaries = wrapper.findAll(".game-bar__summary").wrappers.map((node) => node.text());
     expect(summaries).to.deep.equal([]);
 
-    const mineTab = wrapper.findAll("button").filter((b) => b.text().includes("My games")).at(0);
+    const mineTab = wrapper
+      .findAll("button")
+      .filter((b) => b.text().includes("My games"))
+      .at(0);
     await mineTab.trigger("click");
     await Vue.nextTick();
 
@@ -446,7 +620,10 @@ describe("Lobby", () => {
     summaries = wrapper.findAll(".game-bar__summary").wrappers.map((node) => node.text());
     expect(summaries).to.deep.equal(["55m ago Terrans up int."]);
 
-    const activeTab = wrapper.findAll("button").filter((b) => b.text().includes("Active")).at(0);
+    const activeTab = wrapper
+      .findAll("button")
+      .filter((b) => b.text().includes("Active"))
+      .at(0);
     await activeTab.trigger("click");
     await Vue.nextTick();
 
@@ -455,7 +632,10 @@ describe("Lobby", () => {
     summaries = wrapper.findAll(".game-bar__summary").wrappers.map((node) => node.text());
     expect(summaries).to.deep.equal(["55m ago Terrans up int.", "2h ago Xenos pass booster3."]);
 
-    const finishedTab = wrapper.findAll("button").filter((b) => b.text().includes("Finished")).at(0);
+    const finishedTab = wrapper
+      .findAll("button")
+      .filter((b) => b.text().includes("Finished"))
+      .at(0);
     await finishedTab.trigger("click");
     await Vue.nextTick();
 
@@ -477,8 +657,22 @@ describe("Lobby", () => {
         current_seat: 0,
         latest_move_summary: "Nevlas up int.",
         players: [
-          { seat: 0, invited_email: "someone-else@example.com", user_id: "user-other", display_name: "Other", faction: "nevlas", score: 10 },
-          { seat: 1, invited_email: "kim.pham.nguyen2@gmail.com", user_id: "user-admin", display_name: "Admin", faction: "terrans", score: 8 },
+          {
+            seat: 0,
+            invited_email: "someone-else@example.com",
+            user_id: "user-other",
+            display_name: "Other",
+            faction: "nevlas",
+            score: 10,
+          },
+          {
+            seat: 1,
+            invited_email: "kim.pham.nguyen2@gmail.com",
+            user_id: "user-admin",
+            display_name: "Admin",
+            faction: "terrans",
+            score: 8,
+          },
         ],
       },
       {
@@ -491,8 +685,22 @@ describe("Lobby", () => {
         current_seat: 0,
         latest_move_summary: "Nevlas up nav.",
         players: [
-          { seat: 0, invited_email: "someone-else@example.com", user_id: "user-other", display_name: "Other", faction: "nevlas", score: 10 },
-          { seat: 1, invited_email: "kim.pham.nguyen2@gmail.com", user_id: "user-admin", display_name: "Admin", faction: "terrans", score: 8 },
+          {
+            seat: 0,
+            invited_email: "someone-else@example.com",
+            user_id: "user-other",
+            display_name: "Other",
+            faction: "nevlas",
+            score: 10,
+          },
+          {
+            seat: 1,
+            invited_email: "kim.pham.nguyen2@gmail.com",
+            user_id: "user-admin",
+            display_name: "Admin",
+            faction: "terrans",
+            score: 8,
+          },
         ],
       },
       {
@@ -505,8 +713,22 @@ describe("Lobby", () => {
         current_seat: 1,
         latest_move_summary: "Nevlas pass.",
         players: [
-          { seat: 0, invited_email: "someone-else@example.com", user_id: "user-other", display_name: "Other", faction: "nevlas", score: 10 },
-          { seat: 1, invited_email: "kim.pham.nguyen2@gmail.com", user_id: "user-admin", display_name: "Admin", faction: "terrans", score: 8 },
+          {
+            seat: 0,
+            invited_email: "someone-else@example.com",
+            user_id: "user-other",
+            display_name: "Other",
+            faction: "nevlas",
+            score: 10,
+          },
+          {
+            seat: 1,
+            invited_email: "kim.pham.nguyen2@gmail.com",
+            user_id: "user-admin",
+            display_name: "Admin",
+            faction: "terrans",
+            score: 8,
+          },
         ],
       },
     ];
@@ -551,7 +773,16 @@ describe("Lobby", () => {
           status: "active",
           current_seat: 0,
           latest_move_summary: null,
-          players: [{ seat: 0, invited_email: "kim.pham.nguyen2@gmail.com", user_id: "user-admin", display_name: "Admin", faction: "ivits", score: 20 }],
+          players: [
+            {
+              seat: 0,
+              invited_email: "kim.pham.nguyen2@gmail.com",
+              user_id: "user-admin",
+              display_name: "Admin",
+              faction: "ivits",
+              score: 20,
+            },
+          ],
         },
       ],
       [{ game_id: "g-fallback", seq: 6, move: "ivits up int.", committed_at: "2026-07-08T11:05:00Z" }]
@@ -610,13 +841,28 @@ describe("Lobby", () => {
       current_round: 1,
       latest_move_summary: "Terrans up int.",
       players: [
-        { seat: 0, invited_email: "alice@example.com", user_id: "user-admin", display_name: "Alice", faction: "terrans", score: 20 },
-        { seat: 1, invited_email: "bob@example.com", user_id: "user-other", display_name: "Bob", faction: "nevlas", score: 21 },
+        {
+          seat: 0,
+          invited_email: "alice@example.com",
+          user_id: "user-admin",
+          display_name: "Alice",
+          faction: "terrans",
+          score: 20,
+        },
+        {
+          seat: 1,
+          invited_email: "bob@example.com",
+          user_id: "user-other",
+          display_name: "Bob",
+          faction: "nevlas",
+          score: 21,
+        },
       ],
     };
-    const { client, setPresenceState } = makeClient([game], [
-      { game_id: "g-yellow", seq: 3, move: "terrans up int.", committed_at: "2026-07-08T11:05:00Z" },
-    ]);
+    const { client, setPresenceState } = makeClient(
+      [game],
+      [{ game_id: "g-yellow", seq: 3, move: "terrans up int.", committed_at: "2026-07-08T11:05:00Z" }]
+    );
     setPresenceState({
       "user-admin": [{ context: { type: "lobby" }, focused: true }],
       "user-other": [{ context: { type: "game", gameId: "other-game" }, focused: true }],
@@ -644,7 +890,9 @@ describe("Lobby", () => {
         status: "active",
         current_seat: 0,
         latest_move_summary: null,
-        players: [{ seat: 0, invited_email: "kim.pham.nguyen2@gmail.com", user_id: "user-admin", display_name: "Admin" }],
+        players: [
+          { seat: 0, invited_email: "kim.pham.nguyen2@gmail.com", user_id: "user-admin", display_name: "Admin" },
+        ],
       },
     ]);
     const wrapper = mount(Lobby, { propsData: { client, session: otherSession } });
@@ -671,7 +919,14 @@ describe("Lobby", () => {
         current_round: 0,
         latest_move_summary: "P1 pick Terrans.",
         players: [
-          { seat: 0, invited_email: "alice@example.com", user_id: "user-other", display_name: "Alice", faction: "terrans", score: 10 },
+          {
+            seat: 0,
+            invited_email: "alice@example.com",
+            user_id: "user-other",
+            display_name: "Alice",
+            faction: "terrans",
+            score: 10,
+          },
         ],
       },
     ]);
@@ -751,8 +1006,22 @@ describe("Lobby", () => {
         current_round: 4,
         latest_move_summary: "Terrans up int.",
         players: [
-          { seat: 0, invited_email: "alice@example.com", user_id: "user-other", display_name: "Alice", faction: "terrans", score: 28 },
-          { seat: 1, invited_email: "bob@example.com", user_id: "user-friend", display_name: "Bob", faction: "xenos", score: 24 },
+          {
+            seat: 0,
+            invited_email: "alice@example.com",
+            user_id: "user-other",
+            display_name: "Alice",
+            faction: "terrans",
+            score: 28,
+          },
+          {
+            seat: 1,
+            invited_email: "bob@example.com",
+            user_id: "user-friend",
+            display_name: "Bob",
+            faction: "xenos",
+            score: 24,
+          },
         ],
       },
     ]);

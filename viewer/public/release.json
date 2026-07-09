@@ -1,7 +1,18 @@
 {
-  "version": "5.16.0",
+  "version": "5.16.1",
   "releasedAt": "2026-07-09",
   "entries": [
+    {
+      "version": "5.16.1",
+      "releasedAt": "2026-07-09",
+      "kind": "update",
+      "title": "Lobby game-bar polish",
+      "impact": "",
+      "changes": [
+        "Open-lobby games now show a green X/Y seats-joined badge where the round number goes, instead of an empty slot.",
+        "Move age no longer disappears if the client clock is even slightly behind the server's."
+      ]
+    },
     {
       "version": "5.16.0",
       "releasedAt": "2026-07-09",
