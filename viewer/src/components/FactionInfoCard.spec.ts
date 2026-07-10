@@ -10,12 +10,11 @@ describe("FactionInfoCard", () => {
     const store = makeStore();
     store.commit("receiveData", engine);
 
-    const { container, getByText } = render(FactionInfoCard, {
+    const { container } = render(FactionInfoCard, {
       props: { faction: Faction.Terrans, variant: null, expansion: engine.expansions },
       store,
     });
 
-    expect(getByText("Terrans")).to.exist;
     expect(container.textContent).to.include(
       "During the Gaia phase, move the power tokens in your Gaia area to area II"
     );

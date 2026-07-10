@@ -32,6 +32,7 @@
     <b-modal
       v-if="button.modal"
       v-model="modalShow"
+      lazy
       size="lg"
       @ok="handleOK"
       @hide="modalCancel"
@@ -181,7 +182,10 @@ export default class MoveButton extends Vue implements MoveButtonController {
   }
 
   get variant(): string {
-    return enabledButtonWarnings(this.button, this.$store.state.preferences).length > 0 && this.warningPreference !== WarningsPreference.Tooltip ? "warning" : "secondary";
+    return enabledButtonWarnings(this.button, this.$store.state.preferences).length > 0 &&
+      this.warningPreference !== WarningsPreference.Tooltip
+      ? "warning"
+      : "secondary";
   }
 }
 </script>
