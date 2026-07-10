@@ -1,7 +1,20 @@
 {
-  "version": "5.20.2",
+  "version": "5.20.3",
   "releasedAt": "2026-07-10",
   "entries": [
+    {
+      "version": "5.20.3",
+      "releasedAt": "2026-07-10",
+      "kind": "update",
+      "title": "Lantids Lost Fleet income + faction-window fixes",
+      "impact": "",
+      "changes": [
+        "Lantids now correctly gain a power token to Area I as income under Lost Fleet, and the faction window notes the Bescods knowledge and Ivits power-bowl Lost Fleet changes"
+      ],
+      "userChanges": [
+        "Lantids now correctly gain a power token to Area I as income under Lost Fleet, and the faction window notes the Bescods knowledge and Ivits power-bowl Lost Fleet changes"
+      ]
+    },
     {
       "version": "5.20.2",
       "releasedAt": "2026-07-10",
