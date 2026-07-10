@@ -27,6 +27,11 @@ function gainAdjustedPiBonus(player: Player, hex: GaiaHex) {
 
 const lantids: FactionBoardVariants = {
   faction: Faction.Lantids,
+  // Lost Fleet §I2 (owner board-read): Lantids gain +1 power token to Area I as basic income, from
+  // the start. New to the base faction, so gated to Lost Fleet games (appended in FactionBoard's
+  // constructor) rather than added to `standard.income`. Encoded as "t" (a gained power token, which
+  // enters Area I), matching how Itars' board writes its own +1PB1 income ("+o,k,t").
+  lostFleetIncome: ["+t"],
   standard: {
     buildings: {
       [Building.PlanetaryInstitute]: {

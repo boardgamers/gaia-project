@@ -219,13 +219,10 @@ export function piAbilityNote(faction: Faction): string | null {
   return null;
 }
 
-// Base-game factions changed by Lost Fleet get a "changes" section. Beyond the two new special
-// abilities the §I audit flagged (Xenos, Gleens), owner board-reads add starting-stat changes for
-// Ivits and Lantids.
-// NOTE (Lantids): the +1 power-token income is NOT yet reflected in the engine board
-// (engine/src/faction-boards/lantids.ts income is only "+o,k"), so the reused board above will not
-// show it until that is added - see the owner discussion. NOTE (Ivits): the base bowls (4/2/0) come
-// from the owner board-read; the engine only encodes the Lost Fleet value (2/2/0).
+// Base-game factions changed by Lost Fleet get a "changes" section. Two are new special abilities
+// the §I audit flagged (Xenos, Gleens); the rest are owner-confirmed starting-stat changes. The
+// Lantids power-token income is implemented via lantids.ts lostFleetIncome; Bescods' knowledge and
+// Ivits' bowls are display-only here (the engine already encodes the Lost Fleet values).
 export function baseFactionLostFleetChanges(faction: Faction): string[] {
   switch (faction) {
     case Faction.Xenos:
@@ -235,7 +232,9 @@ export function baseFactionLostFleetChanges(faction: Faction): string[] {
     case Faction.Lantids:
       return ["Gains 1 power token in Area I (bowl 1) as basic income each round, from the start."];
     case Faction.Ivits:
-      return ["Starting power tokens reduced from 4 / 2 / 0 to 2 / 2 / 0 across the bowls."];
+      return ["Starting power tokens reduced from 2 / 4 / 0 to 2 / 2 / 0 across the bowls."];
+    case Faction.Bescods:
+      return ["Starts with 3 knowledge instead of 1."];
     default:
       return [];
   }

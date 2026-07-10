@@ -262,4 +262,16 @@ describe("Lantids - Lost Fleet adjusted PI tile (§I2)", () => {
     player.build(Building.Mine, hex, [], map);
     expect(player.data.knowledge).to.equal(before);
   });
+
+  // RULES_CLARIFICATIONS.md §I2 (owner board-read): Lantids gain +1 power token to Area I as basic
+  // income under Lost Fleet, from the start - not present in the base game.
+  it("should gain 1 power token in Area I as basic income under Lost Fleet", () => {
+    const player = lantidsPlayer(2);
+    expect(player.resourceIncome(Resource.GainToken)).to.equal(1);
+  });
+
+  it("should not gain the Lost Fleet power-token income in a base game", () => {
+    const player = lantidsPlayer(2, Expansion.None);
+    expect(player.resourceIncome(Resource.GainToken)).to.equal(0);
+  });
 });

@@ -7172,20 +7172,20 @@ var Spaceship = /* @__PURE__ */ ((Spaceship10) => {
   }
   Spaceship10.values = values;
 })(Spaceship || (Spaceship = {}));
-var SpaceshipTechTile = /* @__PURE__ */ ((SpaceshipTechTile6) => {
-  SpaceshipTechTile6["Range"] = "ship-tech-range";
-  SpaceshipTechTile6["Terraform"] = "ship-tech-terraform";
-  SpaceshipTechTile6["Resource"] = "ship-tech-resource";
-  return SpaceshipTechTile6;
+var SpaceshipTechTile = /* @__PURE__ */ ((SpaceshipTechTile5) => {
+  SpaceshipTechTile5["Range"] = "ship-tech-range";
+  SpaceshipTechTile5["Terraform"] = "ship-tech-terraform";
+  SpaceshipTechTile5["Resource"] = "ship-tech-resource";
+  return SpaceshipTechTile5;
 })(SpaceshipTechTile || {});
-((SpaceshipTechTile6) => {
+((SpaceshipTechTile5) => {
   function values(expansions) {
     if (!hasExpansion(expansions, 4 /* LostFleet */)) {
       return [];
     }
     return ["ship-tech-range" /* Range */, "ship-tech-terraform" /* Terraform */, "ship-tech-resource" /* Resource */];
   }
-  SpaceshipTechTile6.values = values;
+  SpaceshipTechTile5.values = values;
 })(SpaceshipTechTile || (SpaceshipTechTile = {}));
 var SpaceshipFederation = /* @__PURE__ */ ((SpaceshipFederation6) => {
   SpaceshipFederation6["Credit"] = "ship-fed-credit";
@@ -7325,7 +7325,7 @@ var spaceshipBoards = {
     ]
   }
 };
-var EXPLORATION_CHARGE_TRACK = [0, 2, 2, 4];
+var EXPLORATION_CHARGE_TRACK = [0, 2, 2, 3];
 function artifactSlotCount(ship, nbPlayers) {
   return ship === "twilight" /* Twilight */ ? nbPlayers : 0;
 }
@@ -8805,9 +8805,21 @@ function lostFleetSectorTiles(nbPlayers) {
   }
   return [s1, s2, s3, s4, s5, s6, s7, s8, s9, s10];
 }
-function generateSectorGrid(nbPlayers, rng) {
+var CENTER_ELIGIBLE_SECTOR_NAMES = ["1", "2", "3", "4"];
+function officialCenterTileOrder(nbPlayers, rng) {
+  const allTiles = lostFleetSectorTiles(nbPlayers);
+  const centerPool = allTiles.filter((t) => CENTER_ELIGIBLE_SECTOR_NAMES.includes(t.name));
+  const rest = allTiles.filter((t) => !CENTER_ELIGIBLE_SECTOR_NAMES.includes(t.name));
+  const numCenters = nbPlayers === 4 ? 2 : 1;
+  const shuffledCenterPool = import_shuffle_seed2.default.shuffle(centerPool, rng());
+  const chosenCenters = shuffledCenterPool.slice(0, numCenters);
+  const leftoverCenterPoolTiles = shuffledCenterPool.slice(numCenters);
+  const outerTiles = import_shuffle_seed2.default.shuffle([...rest, ...leftoverCenterPoolTiles], rng());
+  return [...chosenCenters, ...outerTiles];
+}
+function generateSectorGrid(nbPlayers, rng, officialCenterSectors = false) {
   const centers = lostFleetSectorCenters(nbPlayers);
-  const tiles = import_shuffle_seed2.default.shuffle(lostFleetSectorTiles(nbPlayers), rng());
+  const tiles = officialCenterSectors ? officialCenterTileOrder(nbPlayers, rng) : import_shuffle_seed2.default.shuffle(lostFleetSectorTiles(nbPlayers), rng());
   const sectors2 = [];
   const grids = tiles.map((tile, i) => {
     const rotation = Math.floor(rng() * 6);
@@ -8896,10 +8908,10 @@ function isValidBoard(grid) {
   return true;
 }
 var MAX_LAYOUT_ATTEMPTS = 50;
-function generateLostFleetBoard(nbPlayers, seed) {
+function generateLostFleetBoard(nbPlayers, seed, officialCenterSectors = false) {
   for (let attempt = 0; attempt < MAX_LAYOUT_ATTEMPTS; attempt++) {
     const rng = (0, import_seedrandom.default)(attempt === 0 ? seed : `${seed}-retry${attempt}`);
-    const { grid, sectors: sectors2 } = generateSectorGrid(nbPlayers, rng);
+    const { grid, sectors: sectors2 } = generateSectorGrid(nbPlayers, rng, officialCenterSectors);
     placeInterspaceTiles(grid, nbPlayers, rng);
     placeDeepSpaceTiles(grid, nbPlayers, rng);
     if (isValidBoard(grid)) {
@@ -8982,7 +8994,7 @@ function parseLocation(coords) {
   return { sector, suffix };
 }
 var SpaceMap = class _SpaceMap {
-  constructor(nbPlayers, seed, mirror, layout = "standard", lostFleet = false) {
+  constructor(nbPlayers, seed, mirror, layout = "standard", lostFleet = false, officialCenterSectors = false) {
     // hexagrid
     this.distanceCache = {};
     if (nbPlayers === void 0) {
@@ -8994,7 +9006,7 @@ var SpaceMap = class _SpaceMap {
     this.layout = layout;
     this.lostFleet = lostFleet;
     if (lostFleet) {
-      const board = generateLostFleetBoard(nbPlayers, seed);
+      const board = generateLostFleetBoard(nbPlayers, seed, officialCenterSectors);
       this.grid = board.grid;
       this.placement = { sectors: board.sectors, mirror: false };
       return;
@@ -9473,7 +9485,7 @@ var bescods = {
         income: [["+4pw", "+2t"]]
       }
     },
-    income: ["k,4o,15c,q", "+o", "=> up-lowest"]
+    income: ["3k,4o,15c,q", "+o", "=> up-lowest"]
   },
   variants: [
     {
@@ -9605,6 +9617,13 @@ function gaiaVp(hex, player) {
 }
 var gleens = {
   faction: "gleens" /* Gleens */,
+  // Lost Fleet §I5: a once-per-round special action granting +2 range (RULES_CLARIFICATIONS.md
+  // p.11) - new to the base faction, so it's gated to Lost Fleet games only (see
+  // FactionBoard's constructor) rather than added to `standard.income` unconditionally. Same
+  // "=>" Activate-operator mechanism as Space Giants' "=> 2step" and Booster5's "=> range+3",
+  // both of which already exercise the generic hasActiveBooster()/temporaryRange plumbing this
+  // reuses, so no new engine mechanism is needed.
+  lostFleetIncome: ["=> range+2"],
   standard: {
     buildings: {
       ["PI" /* PlanetaryInstitute */]: {
@@ -9713,6 +9732,10 @@ var itars_default = itars;
 var ivits = {
   faction: "ivits" /* Ivits */,
   standard: {
+    power: {
+      area1: 2,
+      area2: 2
+    },
     buildings: {
       ["PI" /* PlanetaryInstitute */]: {
         cost: "~",
@@ -9755,6 +9778,11 @@ function gainAdjustedPiBonus(player, hex) {
 }
 var lantids = {
   faction: "lantids" /* Lantids */,
+  // Lost Fleet §I2 (owner board-read): Lantids gain +1 power token to Area I as basic income, from
+  // the start. New to the base faction, so gated to Lost Fleet games (appended in FactionBoard's
+  // constructor) rather than added to `standard.income`. Encoded as "t" (a gained power token, which
+  // enters Area I), matching how Itars' board writes its own +1PB1 income ("+o,k,t").
+  lostFleetIncome: ["+t"],
   standard: {
     buildings: {
       ["PI" /* PlanetaryInstitute */]: {
@@ -10051,8 +10079,11 @@ var defaultBoard = {
   handlers: {}
 };
 var FactionBoard = class {
-  constructor(input, variant) {
+  constructor(input, variant, expansion) {
     Object.assign(this, merge({}, defaultBoard, input.standard, variant ?? {}));
+    if (input.lostFleetIncome && hasExpansion(expansion, 4 /* LostFleet */)) {
+      this.income = [...this.income, ...input.lostFleetIncome];
+    }
     const buildings = Building.values(6 /* All */);
     const toRewards = [`${"ts" /* TradingStation */}.isolatedCost`].concat(buildings.map((bld) => `${bld}.cost`));
     const toIncome = buildings.map((bld) => `${bld}.income`);
@@ -10166,8 +10197,8 @@ function latestVariantVersion(variant) {
     0
   );
 }
-function factionBoard(faction, variant) {
-  return new FactionBoard(factionBoards[faction], variant);
+function factionBoard(faction, variant, expansion) {
+  return new FactionBoard(factionBoards[faction], variant, expansion);
 }
 
 // engine/src/factions.ts
@@ -10696,6 +10727,9 @@ function techTileEventSource(pos) {
   return isAdvanced(pos) ? pos : `tech-${pos}`;
 }
 function techTileEvents(chooseTechTile) {
+  if (chooseTechTile.tile === "ship-tech-resource" /* Resource */) {
+    return Event.parse(["o,3k"], chooseTechTile.pos);
+  }
   if (isSpaceshipTechTile(chooseTechTile.tile)) {
     return [];
   }
@@ -10967,7 +11001,7 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
   maxBuildings(building) {
     switch (building) {
       case "gf" /* GaiaFormer */:
-        return this.data.gaiaformers - this.data.gaiaformersInGaia;
+        return this.data.gaiaformers - this.data.gaiaformersInGaia - this.data.gaiaformersUsedForAsteroid;
       case "tradeShip" /* TradeShip */:
         return this.data.tradeShips;
       default:
@@ -10983,7 +11017,7 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
       version: board?.version
     };
     this.loadBoard(
-      factionBoard(this.faction, this.variant.board),
+      factionBoard(this.faction, this.variant.board, expansions),
       expansions,
       skipIncome,
       true,
@@ -11434,7 +11468,9 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
       case "tt" /* TechTile */:
         return this.data.tiles.techs.filter((tech) => !isAdvanced(tech.pos)).length;
       case "s" /* Sector */:
-        return (0, import_lodash13.uniq)(this.data.occupied.filter((hex) => hex.colonizedBy(this.player)).map((hex) => hex.data.sector)).length;
+        return (0, import_lodash13.uniq)(
+          this.data.occupied.filter((hex) => hex.colonizedBy(this.player) && classifySectorId(hex.data.sector) === "space" /* Space */).map((hex) => hex.data.sector)
+        ).length;
       case "st" /* Structure */:
         return this.data.occupied.filter((hex) => hex.colonizedBy(this.player)).length;
       case "stfed" /* StructureFed */:
@@ -11971,7 +12007,8 @@ function moveInit(engine, players, seed) {
     seed,
     engine.options.map?.mirror ?? false,
     engine.options.layout,
-    engine.options.lostFleet
+    engine.options.lostFleet,
+    engine.options.officialCenterSectors
   );
   if (engine.options.map?.sectors) {
     engine.map.load(engine.options.map);
@@ -12213,7 +12250,8 @@ function beginSetupBoardPhase(engine) {
   }
 }
 function beginSetupFactionPhaseOrBan(engine) {
-  if (engine.options.auction === "silent" /* Silent */) {
+  const banPhase = engine.options.banPhase ?? engine.options.auction === "silent" /* Silent */;
+  if (banPhase) {
     beginSetupFactionBanPhase(engine);
   } else {
     beginSetupFactionPhase(engine);
@@ -14124,6 +14162,9 @@ function possibleFreeBuildMine(engine, player, discount) {
         rewards.push(oreCost);
       }
     }
+    if (hex.data.planet === "p" /* Protoplanet */ && hex.data.planet !== pl.planet) {
+      rewards.push(new Reward(-6, "vp" /* VictoryPoint */));
+    }
     let qicWarning;
     if (!discount.waiveRangeQic) {
       const qicNeeded = qicForDistance(engine.map, hex, pl, engine.replay);
@@ -14995,6 +15036,9 @@ function moveChooseTechTile(engine, command, player, pos) {
   } else {
     engine.tiles.techs[pos].count -= 1;
   }
+  if (tileAvailable.tile === "ship-tech-terraform" /* Terraform */) {
+    engine.processNextMove("spaceshipTechTileBuildMine" /* SpaceshipTechTileBuildMine */, null, false);
+  }
   engine.processNextMove(
     "upgradeResearch" /* UpgradeResearch */,
     ResearchField.values(engine.expansions).includes(pos) ? { pos } : void 0
@@ -15374,14 +15418,14 @@ var Engine3 = class _Engine {
    * "Premove" support (PREMOVE_PLAN.md §2): what `seat` could legally do right now if it were their
    * turn, without it actually being their turn. Returns `null` (premove not offered) when it already
    * is their turn (the real buttons apply), when they've already passed this round (nothing to
-   * premove into), or when the phase isn't `RoundMove` (setup/income/gaia/leech/scoring/endgame/
-   * auction all have a differently-shaped "next turn" that isn't well-defined to preview).
+   * premove into), or before round 1 / outside `RoundMove` (setup/income/gaia/leech/scoring/
+   * endgame/auction all have a differently-shaped "next turn" that isn't well-defined to preview).
    *
    * Never mutates `this` - operates on a disposable clone, exactly like every other preview/replay
    * path in this engine (`fromData(JSON.parse(JSON.stringify(...)))`).
    */
   previewAvailableCommandsFor(seat) {
-    if (seat === this.playerToMove || this.passedPlayers.includes(seat) || this.phase !== "roundMove" /* RoundMove */) {
+    if (this.round < 1 /* Round1 */ || this.phase !== "roundMove" /* RoundMove */ || seat === this.playerToMove || this.passedPlayers?.includes(seat)) {
       return null;
     }
     const clone2 = _Engine.fromData(JSON.parse(JSON.stringify(this)));
