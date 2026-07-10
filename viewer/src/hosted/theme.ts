@@ -7,10 +7,11 @@ export function getTheme(): Theme {
     return "light";
   }
   const stored = window.localStorage.getItem(STORAGE_KEY);
-  if (stored === "light" || stored === "dark") {
-    return stored;
-  }
-  return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  // Deliberately NOT auto-detecting from `prefers-color-scheme`: the dark theme here is a
+  // whole-page `filter: invert()` hack (see frontend.scss), not a real color system - it looked
+  // broken/unreadable when it silently activated for anyone whose OS/browser defaults to dark
+  // mode, which is extremely common. Only ever switch on an explicit in-app toggle.
+  return stored === "dark" ? "dark" : "light";
 }
 
 export function applyTheme(theme: Theme): void {
