@@ -1,7 +1,20 @@
 {
-  "version": "5.20.1",
+  "version": "5.20.2",
   "releasedAt": "2026-07-10",
   "entries": [
+    {
+      "version": "5.20.2",
+      "releasedAt": "2026-07-10",
+      "kind": "update",
+      "title": "Faction window: PI conversions and terraforming detail",
+      "impact": "",
+      "changes": [
+        "The faction pick/ban window now shows the Terrans/Hadsch Hallas Planetary Institute conversions, the Tinkeroids/Moweyds terraforming-board colours, the Space Giants 2-step special action, and labels the Gaia mine cost"
+      ],
+      "userChanges": [
+        "The faction pick/ban window now shows the Terrans/Hadsch Hallas Planetary Institute conversions, the Tinkeroids/Moweyds terraforming-board colours, the Space Giants 2-step special action, and labels the Gaia mine cost"
+      ]
+    },
     {
       "version": "5.20.1",
       "releasedAt": "2026-07-10",
