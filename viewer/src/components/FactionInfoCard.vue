@@ -297,7 +297,7 @@ export default class FactionInfoCard extends Vue {
       },
       {
         label: "3p",
-        content: [richText("also a mine next to an opponent"), richTextArrow, pw1],
+        content: [richText("also a mine on an opponent-colonised planet"), richTextArrow, pw1],
       },
     ];
   }
