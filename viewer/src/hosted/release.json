@@ -1,7 +1,20 @@
 {
-  "version": "5.20.5",
+  "version": "5.20.6",
   "releasedAt": "2026-07-10",
   "entries": [
+    {
+      "version": "5.20.6",
+      "releasedAt": "2026-07-10",
+      "kind": "update",
+      "title": "Tidy Lantids PI player-count rows",
+      "impact": "",
+      "changes": [
+        "Reordered the Lantids Planetary Institute player-count rows (4/3/2 players) and show the full 3-player reward (2 knowledge plus a power charge) with icons"
+      ],
+      "userChanges": [
+        "Reordered the Lantids Planetary Institute player-count rows (4/3/2 players) and show the full 3-player reward (2 knowledge plus a power charge) with icons"
+      ]
+    },
     {
       "version": "5.20.5",
       "releasedAt": "2026-07-10",
