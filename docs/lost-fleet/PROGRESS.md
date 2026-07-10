@@ -1249,93 +1249,95 @@ vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec
     on the map to rotate them live (no arming step), then lock in. Faction selection stayed out of
     scope, as specified — `SetupFaction` still happens later, unaffected.
 
-        - **Engine: confirmed unchanged**, as expected — `new Engine(["init N seed"], { lostFleet: true })`
-          already resolves the entire random setup synchronously (`applyRandomBoardSetup`), and
-          `Command.RotateSectors` already existed (`moveRotateSectors`, engine/src/move/setup.ts). One
-          new regression test added: `engine/src/map.spec.ts`'s Lost Fleet block now has "should throw
-          the German-rules assert via moveRotateSectors when a rotation puts two matching planet types
-          adjacent" — found by brute-force search (not guessed) that `init 2 lost-fleet-space-map` +
-          `p2 rotate 0x0 3` trips the assert; this exact repro is reused by both the viewer's
-          `validateRotation` unit test and the `SetupPreview.vue` component test, so all three layers
-          agree on one concrete counterexample. **Engine suite: 521/521** (was 490 per this file's
-          stale count; the real baseline had already grown via sessions not yet reflected here — no
-          regressions either way).
-        - **New `viewer/src/hosted/SetupPreview.vue` + `SetupPreviewBoard.vue`.** `SetupPreview.vue`
-          mounts its OWN nested Vue app (`makeStore()` + a plain `new Vue({ store, render })`) into a
-          `ref`'d div, mirroring `launcher.ts`'s `launch()` / `hosted.ts`'s `mountChild()` pattern —
-          required because `Lobby.vue` itself has no `$store` (it's mounted store-less via
-          `mountChild()`). `SetupPreviewBoard.vue` composes `SpaceMap` + the research/scoring/
-          board-action SVG + `LostFleetShips` + `LostFleetTerraformingBoard`, mirroring `Game.vue`'s
-          map/board composition (Game.vue:9-34) without the player-board/Commands parts that assume
-          factions already exist. Click-to-rotate reuses the existing mechanism directly against the
-          nested store (`highlightHexes({ hexes: new Map(), backgroundLight: true, selectAnyHex: true })`
-          once + a permanent `subscribeAction` on `"hexClick"` committing `"rotate"`) instead of the
-          button-chain machinery in `logic/buttons/setup.ts` — no arming step, every click rotates live.
-          Seed reroll/history/direct-entry/copy and a "Reset rotations" button (`receiveData` again,
-          which already clears `context.rotation`) are all wired. Lock-in mirrors
-          `logic/buttons/setup.ts:114-119`'s exact mod-6/filter-zero logic (factored into a pure
-          `viewer/src/hosted/setup-preview.ts` — `buildRotateMove`/`validateRotation` — so it's unit
-          tested without a DOM) and validates against a scratch `advancedRules: true` Engine before
-          emitting `lock-in`, catching the German-rules assert with an inline message instead of
-          throwing uncaught.
-        - **Real bug found and fixed via manual browser verification, not just component tests:**
-          planet/resource/tech colors are CSS custom properties (`--terra`, `--asteroid`, etc.,
-          `stylesheets/planets.css`) scoped to the `.gaia-viewer-game` class, which only `Game.vue`'s
-          own root applies. `SetupPreviewBoard.vue`'s tree never had that ancestor class, so every
-          planet rendered as flat black — caught by screenshotting the dev server with Playwright
-          (jsdom-based component tests never render actual CSS custom-property resolution, so they
-          missed this). Fixed by adding `class="gaia-viewer-game"` to `SetupPreviewBoard.vue`'s root
-          div; re-verified with a fresh screenshot showing correct planet-type colors matching the
-          existing self-contained viewer exactly.
-        - **`viewer/src/hosted/new-game.ts`:** `NewGameForm` drops `lostFleet` (always true now, no
-          toggle). `buildCreateGameParams(form, seed, rotateMove)` no longer mints its own seed — it
-          takes the already-locked-in seed + rotate move from `SetupPreview`, sets
-          `options = { lostFleet: true, advancedRules: true, factionVariant: "standard" }` (the
-          `advancedRules` flag is new and required so replay re-enters `Phase.SetupBoard`), builds the
-          probe as `init ...` + the rotate move applied, and reads `p_current_seat` AFTER that move
-          (previously it read straight off `init`, which would have been wrong once `advancedRules`
-          entered `Phase.SetupBoard` first). Adds `p_setup_move` to the RPC params. The pre-existing
-          `buildCreateGameParams` test living in `host.spec.ts` was moved to a new dedicated
-          `viewer/src/hosted/new-game.spec.ts` (none existed before) and extended to prove
-          `p_current_seat` reflects the post-rotation seat, not the bare-init seat.
-        - **`viewer/src/hosted/Lobby.vue`:** removed the "Lost Fleet expansion" checkbox entirely;
-          `SetupPreview` is mounted under the player-count select, its `@lock-in` populates
-          `lockedSeed`/`lockedRotateMove` (cleared again if the player count changes, since a seed's
-          draws are player-count-dependent), and "Create game" stays disabled until locked in. The
-          seat-email/test-game flow below is unchanged.
-        - **`supabase/migrations/0004_setup_move.sql`:** extends `create_game` (again, `create or
+            - **Engine: confirmed unchanged**, as expected — `new Engine(["init N seed"], { lostFleet: true })`
+              already resolves the entire random setup synchronously (`applyRandomBoardSetup`), and
+              `Command.RotateSectors` already existed (`moveRotateSectors`, engine/src/move/setup.ts). One
+              new regression test added: `engine/src/map.spec.ts`'s Lost Fleet block now has "should throw
+              the German-rules assert via moveRotateSectors when a rotation puts two matching planet types
+              adjacent" — found by brute-force search (not guessed) that `init 2 lost-fleet-space-map` +
+              `p2 rotate 0x0 3` trips the assert; this exact repro is reused by both the viewer's
+              `validateRotation` unit test and the `SetupPreview.vue` component test, so all three layers
+              agree on one concrete counterexample. **Engine suite: 521/521** (was 490 per this file's
+              stale count; the real baseline had already grown via sessions not yet reflected here — no
+              regressions either way).
+            - **New `viewer/src/hosted/SetupPreview.vue` + `SetupPreviewBoard.vue`.** `SetupPreview.vue`
+              mounts its OWN nested Vue app (`makeStore()` + a plain `new Vue({ store, render })`) into a
+              `ref`'d div, mirroring `launcher.ts`'s `launch()` / `hosted.ts`'s `mountChild()` pattern —
+              required because `Lobby.vue` itself has no `$store` (it's mounted store-less via
+              `mountChild()`). `SetupPreviewBoard.vue` composes `SpaceMap` + the research/scoring/
+              board-action SVG + `LostFleetShips` + `LostFleetTerraformingBoard`, mirroring `Game.vue`'s
+              map/board composition (Game.vue:9-34) without the player-board/Commands parts that assume
+              factions already exist. Click-to-rotate reuses the existing mechanism directly against the
+              nested store (`highlightHexes({ hexes: new Map(), backgroundLight: true, selectAnyHex: true })`
+              once + a permanent `subscribeAction` on `"hexClick"` committing `"rotate"`) instead of the
+              button-chain machinery in `logic/buttons/setup.ts` — no arming step, every click rotates live.
+              Seed reroll/history/direct-entry/copy and a "Reset rotations" button (`receiveData` again,
+              which already clears `context.rotation`) are all wired. Lock-in mirrors
+              `logic/buttons/setup.ts:114-119`'s exact mod-6/filter-zero logic (factored into a pure
+              `viewer/src/hosted/setup-preview.ts` — `buildRotateMove`/`validateRotation` — so it's unit
+              tested without a DOM) and validates against a scratch `advancedRules: true` Engine before
+              emitting `lock-in`, catching the German-rules assert with an inline message instead of
+              throwing uncaught.
+            - **Real bug found and fixed via manual browser verification, not just component tests:**
+              planet/resource/tech colors are CSS custom properties (`--terra`, `--asteroid`, etc.,
+              `stylesheets/planets.css`) scoped to the `.gaia-viewer-game` class, which only `Game.vue`'s
+              own root applies. `SetupPreviewBoard.vue`'s tree never had that ancestor class, so every
+              planet rendered as flat black — caught by screenshotting the dev server with Playwright
+              (jsdom-based component tests never render actual CSS custom-property resolution, so they
+              missed this). Fixed by adding `class="gaia-viewer-game"` to `SetupPreviewBoard.vue`'s root
+              div; re-verified with a fresh screenshot showing correct planet-type colors matching the
+              existing self-contained viewer exactly.
+            - **`viewer/src/hosted/new-game.ts`:** `NewGameForm` drops `lostFleet` (always true now, no
+              toggle). `buildCreateGameParams(form, seed, rotateMove)` no longer mints its own seed — it
+              takes the already-locked-in seed + rotate move from `SetupPreview`, sets
+              `options = { lostFleet: true, advancedRules: true, factionVariant: "standard" }` (the
+              `advancedRules` flag is new and required so replay re-enters `Phase.SetupBoard`), builds the
+              probe as `init ...` + the rotate move applied, and reads `p_current_seat` AFTER that move
+              (previously it read straight off `init`, which would have been wrong once `advancedRules`
+              entered `Phase.SetupBoard` first). Adds `p_setup_move` to the RPC params. The pre-existing
+              `buildCreateGameParams` test living in `host.spec.ts` was moved to a new dedicated
+              `viewer/src/hosted/new-game.spec.ts` (none existed before) and extended to prove
+              `p_current_seat` reflects the post-rotation seat, not the bare-init seat.
+            - **`viewer/src/hosted/Lobby.vue`:** removed the "Lost Fleet expansion" checkbox entirely;
+              `SetupPreview` is mounted under the player-count select, its `@lock-in` populates
+              `lockedSeed`/`lockedRotateMove` (cleared again if the player count changes, since a seed's
+              draws are player-count-dependent), and "Create game" stays disabled until locked in. The
+              seat-email/test-game flow below is unchanged.
+            - **`supabase/migrations/0004_setup_move.sql`:** extends `create_game` (again, `create or
 
-    replace`, third time after 0001→0003) with a trailing `p_setup_move text default null`param;
-  when non-null/non-empty it inserts the`moves`row for`seq = 1`, `seat = p_player_count - 1`      (matching`beginSetupBoardPhase`'s "last player" convention), and bumps `games.move_count`to
-  1 in the same transaction so the next real`commit_turn`call correctly expects`seq = 2`      instead of colliding with the row just inserted.
-  **Applied to the live`gaia-lost-fleet`Supabase project (2026-07-02), on explicit owner
-  request, and one real bug found + fixed in the process:** 0004's original comment assumed
- `CREATE OR REPLACE FUNCTION`with a trailing default parameter reuses the old function's
-  identity/oid (true for 0001→0002→0003, which never changed the argument list) — this time it
-  didn't. Querying`pg_proc`after applying 0004 showed **two distinct`create_game`entries**
-  (6-arg,`pronargdefaults=0`; 7-arg, `pronargdefaults=1`), and the security advisor confirmed
-  both were separately callable by `authenticated`. Supabase-js's `.rpc()`calls with named
-  parameters, so this app's own calls (always including`p_setup_move`) only ever resolved to
-  the new overload — no player-facing bug — but the stale 6-arg overload stayed live and
-  callable, skipping the setup-move insert entirely (the exact "stuck game" failure mode 0004's
-  comment warned about, reachable by any caller of the old signature). Fixed with
-  **`supabase/migrations/0005_drop_stale_create_game_overload.sql`** (`drop function if exists
-    public.create_game(text, text, int, jsonb, jsonb, int)`), applied immediately after; `pg_proc`      now shows exactly one`create_game`(7-arg), and the advisor listing matches the pre-#54
-  baseline shape (one`create_game`entry, same acknowledged intentionally-callable-RPC set
-  documented in`BACKEND.md`). 0004's misleading comment about "same identity/oid" was also
-  corrected in place to point at this finding. **Lesson for future migrations that widen an
-  existing function's argument list: always verify via `pg_proc`/the advisor that the old
-  signature didn't survive as an orphaned overload — don't assume `CREATE OR REPLACE`unifies
+        replace`, third time after 0001→0003) with a trailing `p_setup_move text default null`param;
+
+    when non-null/non-empty it inserts the`moves`row for`seq = 1`, `seat = p_player_count - 1` (matching`beginSetupBoardPhase`'s "last player" convention), and bumps `games.move_count`to
+    1 in the same transaction so the next real`commit_turn`call correctly expects`seq = 2` instead of colliding with the row just inserted.
+    **Applied to the live`gaia-lost-fleet`Supabase project (2026-07-02), on explicit owner
+    request, and one real bug found + fixed in the process:** 0004's original comment assumed
+    `CREATE OR REPLACE FUNCTION`with a trailing default parameter reuses the old function's
+    identity/oid (true for 0001→0002→0003, which never changed the argument list) — this time it
+    didn't. Querying`pg_proc`after applying 0004 showed **two distinct`create_game`entries**
+    (6-arg,`pronargdefaults=0`; 7-arg, `pronargdefaults=1`), and the security advisor confirmed
+    both were separately callable by `authenticated`. Supabase-js's `.rpc()`calls with named
+    parameters, so this app's own calls (always including`p_setup_move`) only ever resolved to
+    the new overload — no player-facing bug — but the stale 6-arg overload stayed live and
+    callable, skipping the setup-move insert entirely (the exact "stuck game" failure mode 0004's
+    comment warned about, reachable by any caller of the old signature). Fixed with
+    **`supabase/migrations/0005_drop_stale_create_game_overload.sql`** (`drop function if exists
+    public.create_game(text, text, int, jsonb, jsonb, int)`), applied immediately after; `pg_proc` now shows exactly one`create_game`(7-arg), and the advisor listing matches the pre-#54
+    baseline shape (one`create_game`entry, same acknowledged intentionally-callable-RPC set
+    documented in`BACKEND.md`). 0004's misleading comment about "same identity/oid" was also
+    corrected in place to point at this finding. \*\*Lesson for future migrations that widen an
+    existing function's argument list: always verify via `pg_proc`/the advisor that the old
+    signature didn't survive as an orphaned overload — don't assume `CREATE OR REPLACE`unifies
     them just because it worked for same-arity changes before.\*\*
 
-    - **Tests:**`viewer/src/hosted/setup-preview.spec.ts`(pure`buildRotateMove`/
-      `validateRotation`unit tests, mod-6 wrap + zero-filter + the shared German-rules repro),
-      `viewer/src/hosted/new-game.spec.ts`(new file,`buildCreateGameParams`'s new signature),
-      `viewer/src/hosted/SetupPreview.spec.ts`(new, render-path: full setup renders with real
-      components, a hex click rotates its sector exactly once — verified via the CSS`rotate()` transform through 6 clicks back to a visually-equivalent 360°, reroll changes the seed,
-      changing player count resets to a fresh seed + correct ship count, the invalid-rotation case
-      disables lock-in with the German-rules message visible, and a valid lock-in emits`{ seed,
-rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; net +13 after
+        - **Tests:**`viewer/src/hosted/setup-preview.spec.ts`(pure`buildRotateMove`/
+          `validateRotation`unit tests, mod-6 wrap + zero-filter + the shared German-rules repro),
+          `viewer/src/hosted/new-game.spec.ts`(new file,`buildCreateGameParams`'s new signature),
+          `viewer/src/hosted/SetupPreview.spec.ts`(new, render-path: full setup renders with real
+          components, a hex click rotates its sector exactly once — verified via the CSS`rotate()` transform through 6 clicks back to a visually-equivalent 360°, reroll changes the seed,
+          changing player count resets to a fresh seed + correct ship count, the invalid-rotation case
+          disables lock-in with the German-rules message visible, and a valid lock-in emits`{ seed,
+
+    rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; net +13 after
       also relocating the one pre-existing `buildCreateGameParams`test out of`host.spec.ts`).
     - **Manual verification, done via the dev server + a temporary harness (not committed) driving
       real Chromium via Playwright:** 2p/3p/4p all render every tile category with real art;
@@ -1346,10 +1348,10 @@ rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; n
       The end-to-end "created game's board matches what was locked in" check (comparing against a
       live Supabase-backed game immediately after creation) was **not done** — this environment has
       no credentials for the live`gaia-lost-fleet` Supabase project's viewer-facing auth (Google/
-      magic-link sign-in), only Supabase project-management access (used to apply 0004/0005 above,
-      see that entry for the overload bug those applies caught). A natural next step for whoever
-      has real sign-in credentials: create a game through the real Lobby flow end-to-end and confirm
-      a rotated sector's on-screen orientation matches between the preview and the live game.
+    magic-link sign-in), only Supabase project-management access (used to apply 0004/0005 above,
+    see that entry for the overload bug those applies caught). A natural next step for whoever
+    has real sign-in credentials: create a game through the real Lobby flow end-to-end and confirm
+    a rotated sector's on-screen orientation matches between the preview and the live game.
 
 55. ✅ **Nine owner-reported bugs/polish items, CODED & TESTED** (done 2026-07-02). A batch of
     gameplay-correctness and viewer-polish fixes reported directly by the owner after playing a real
@@ -1553,19 +1555,20 @@ min` convention above). `Engine.move()`'s `execute()` wrapped `executeMove()` in
           `viewBox`) and `.lost-fleet-ships` moved from `flex-wrap` to `display: grid;
 
     grid-template-columns: repeat(auto-fit, minmax(165px, 1fr))`— this was the actual root
-      cause of "only 1 ship fits per row with lots of dead space on mobile" (confirmed via a real
-      iPhone-15-Pro-viewport (393px) Playwright render before/after: now renders exactly 2 ships
-      per row). This same fix also closed most of the "ship action octagon looks bigger than the
-      base-game one" gap, since the whole ship (including its actions) now scales down with its
-      grid column instead of rendering at native size unconditionally — measured 26.5px vs 29.0px
-      rendered octagon width after the fix (was full native-size mismatch before).
+    cause of "only 1 ship fits per row with lots of dead space on mobile" (confirmed via a real
+    iPhone-15-Pro-viewport (393px) Playwright render before/after: now renders exactly 2 ships
+    per row). This same fix also closed most of the "ship action octagon looks bigger than the
+    base-game one" gap, since the whole ship (including its actions) now scales down with its
+    grid column instead of rendering at native size unconditionally — measured 26.5px vs 29.0px
+    rendered octagon width after the fix (was full native-size mismatch before).
+
     - Ship name text removed from the header (was`<text x="22" ...>`); that space is now used for
       the 4 exploration-track slots as a 2x2 grid (was a 1x4 row) with a small ordinal number
       (1-4) per slot plus the actual power-charge icon (`power-charge.svg`, already used elsewhere)
       next to the EXPLORATION_CHARGE_TRACK cost, instead of a bare number.
     - Taken ship actions now get `:planet="actionPlanet(ship, type)"`on their`<SpecialAction>`,
       mirroring `BoardAction.vue`'s exact mechanism (`factionPiecePlanet(user.faction)`→
-     `planet-fill`CSS class on the octagon) — previously a taken ship action showed only a gray
+      `planet-fill`CSS class on the octagon) — previously a taken ship action showed only a gray
       X with zero player-color indication, unlike every base-game power action.
     - The action-overlay icon group (Building/Resource/Condition combos for the 5 bespoke SubPhase
       actions) is now wrapped in`scale(0.82)` — it was previously rendered at the SAME raw scale
@@ -1583,13 +1586,13 @@ min` convention above). `Engine.move()`'s `execute()` wrapped `executeMove()` in
       confirmed via code search before changing anything, not assumed.
     - Tests: 4 new cases in`LostFleetShips.spec.ts`(responsive svg has no width/height, 2x2 slot
       grid + ordinals, action-taken coloring, 6c bubble sizing) plus new assertions in
-     `SpaceMap.spec.ts`for the simplified map marker. **Viewer: 235/235 passing** (231 baseline
+      `SpaceMap.spec.ts`for the simplified map marker. **Viewer: 235/235 passing** (231 baseline
       from #56 + 4 new), excluding the same pre-existing flaky`SetupPreview.spec.ts`seed test
       documented under #55/Testing. Production build clean.
     - Verified visually with Playwright against the self-contained`?lostFleet=1` demo (no Supabase
-    auth needed) at a 393x852 iPhone-15-Pro viewport — screenshots are not committed (temp
-    scratch files), but the exact commands are in this session's transcript if a future session
-    wants to re-verify the same way.
+      auth needed) at a 393x852 iPhone-15-Pro viewport — screenshots are not committed (temp
+      scratch files), but the exact commands are in this session's transcript if a future session
+      wants to re-verify the same way.
 
 60. ✅ **Map/HUD cleanup batch — CODED, TESTED & visually verified** (done 2026-07-03, same session
     as #56/#57). 8 owner-requested items, all in `viewer/src/components/` unless noted:
@@ -2321,35 +2324,34 @@ ty)">` does NOT center the component's local origin at `(tx, ty)` (a nested `<sv
         - **Mobile turn-status duplicate, actually hidden this time.** `#move-title.hide-on-mobile-sticky
 
     { display: none; }`(added in #63) never took effect: the same element also carries
-      Bootstrap's`.d-flex`utility class, which compiles to`display: flex !important`- and
-     `!important`always wins over a plain declaration regardless of selector specificity. Added
-     `!important`to the override. Verified:`getComputedStyle(#move-title).display`was`"flex"`      before this fix,`"none"`after, on a live rendered page.
+  Bootstrap's`.d-flex`utility class, which compiles to`display: flex !important`- and
+ `!important`always wins over a plain declaration regardless of selector specificity. Added
+ `!important`to the override. Verified:`getComputedStyle(#move-title).display`was`"flex"`      before this fix,`"none"`after, on a live rendered page.
+
     - **Round scoring tiles no longer overlap.**`ScoringTile` renders a 40-unit-tall tile, but 4 of
       its 5 slots in the 7th research-board column (`SCORING*TILE_Y`, #63) are only 38 units apart
-    (mirroring the research track's own level-tile spacing) - a 2-unit overlap each, since the
-    \_track's own* tiles are only 36 units tall in those same 38-unit slots (`ResearchTile.vue`'s
-    `height` getter). Scaled `ScoringTile` down to 0.9 (36 tall) to match, keeping the same
-    top-aligned anchor so the "aligns perfectly with the track" requirement from #63 still holds.
-    Verified before/after with real rendered bounding boxes: 4 of 6 tile-pairs overlapped by ~1.4px
-    pre-fix, 0 overlap post-fix (clean ~1.4px gaps everywhere, matching the track's own margin). - **Power action icons now align with the research track's left edge.** Previously ~18px (≈26
-    SVG units, at this layout's ~0.69 px/unit scale) to the right of it - `BoardAction`'s own
-    nested `<svg viewBox="-28 -28 56 56">` local coordinate system offsets rendered content by
-    that same 28 units before the outer `translate(45*i+6, 455)` is even applied. Shifted the
-    shared per-icon transform from `45*i+6` to `45*i-20` (`Game.vue`, used by both base and Lost
-    Fleet games - same underlying bug in both). Verified: left-edge diff between the leftmost
-    power-action icon and the leftmost research-track tile was 18.0px before, 0.05px after. - **Removed ~28px of unused blank space below the power actions, Lost Fleet only.** The
-    combined research-board/power-actions `<svg>`'s `viewBox` height was a flat `550` regardless
-    of game type - sized for base game's `ScoringBoard` column (which needs the full height for
-    final + round scoring), but Lost Fleet doesn't render `ScoringBoard` at all (moved to the map
-    in #63), so ~48 of those 550 units sat empty below the icons. Made the height conditional
-    (`510` for Lost Fleet, unchanged `550` for base game) - reducing viewBox height only shrinks
-    the rendered element's total height (px-per-unit scale is set by width alone), so this doesn't
-    change the size of anything, only trims the dead space. Verified: the gap between the visible
-    bottom of the power-action icons and the spaceship-boards row below dropped from ~41px to
-    ~13px. - `Commands.vue`, `ResearchBoard.vue` (+ a new assertion in `ResearchBoard.spec.ts` for the
-    `scale(0.9)` fix - the `!important` and alignment fixes aren't unit-testable in jsdom since
-    they depend on real stylesheet cascade/rendering, verified via live Playwright instead),
-    `Game.vue`. Viewer 275/275 tests still pass.
+      (mirroring the research track's own level-tile spacing) - a 2-unit overlap each, since the
+      \_track's own* tiles are only 36 units tall in those same 38-unit slots (`ResearchTile.vue`'s
+      `height` getter). Scaled `ScoringTile` down to 0.9 (36 tall) to match, keeping the same
+      top-aligned anchor so the "aligns perfectly with the track" requirement from #63 still holds.
+      Verified before/after with real rendered bounding boxes: 4 of 6 tile-pairs overlapped by ~1.4px
+      pre-fix, 0 overlap post-fix (clean ~1.4px gaps everywhere, matching the track's own margin). - **Power action icons now align with the research track's left edge.** Previously ~18px (≈26
+      SVG units, at this layout's ~0.69 px/unit scale) to the right of it - `BoardAction`'s own
+      nested `<svg viewBox="-28 -28 56 56">` local coordinate system offsets rendered content by
+      that same 28 units before the outer `translate(45*i+6, 455)`is even applied. Shifted the
+shared per-icon transform from`45*i+6`to`45*i-20` (`Game.vue`, used by both base and Lost
+Fleet games - same underlying bug in both). Verified: left-edge diff between the leftmost
+power-action icon and the leftmost research-track tile was 18.0px before, 0.05px after. - **Removed ~28px of unused blank space below the power actions, Lost Fleet only.** The
+combined research-board/power-actions `<svg>`'s `viewBox`height was a flat`550`regardless
+of game type - sized for base game's`ScoringBoard`column (which needs the full height for
+final + round scoring), but Lost Fleet doesn't render`ScoringBoard` at all (moved to the map
+in #63), so ~48 of those 550 units sat empty below the icons. Made the height conditional
+(`510`for Lost Fleet, unchanged`550`for base game) - reducing viewBox height only shrinks
+the rendered element's total height (px-per-unit scale is set by width alone), so this doesn't
+change the size of anything, only trims the dead space. Verified: the gap between the visible
+bottom of the power-action icons and the spaceship-boards row below dropped from ~41px to
+~13px. -`Commands.vue`, `ResearchBoard.vue`(+ a new assertion in`ResearchBoard.spec.ts`for the`scale(0.9)`fix - the`!important`and alignment fixes aren't unit-testable in jsdom since
+they depend on real stylesheet cascade/rendering, verified via live Playwright instead),`Game.vue`. Viewer 275/275 tests still pass.
 
 74. ✅ **Gaia 3 UI layout pass (2026-07-04)** - a batch of owner-reported layout bugs plus two "free
     creativity" redesigns, all on `claude/gaia3-ui-layout-fixes-h3uzra`:
@@ -2568,26 +2570,27 @@ ty)">` does NOT center the component's local origin at `(tx, ty)` (a nested `<sv
           column, producing two adjacent columns of round scoring tiles, and (2) had its outer `<svg
 
     viewBox>`start at x=0 while`ResearchBoard`sat at`x="-50"`inside it, cropping the
-      research track's own left edge off screen. Fixed both (added the same
-     `v-if="!engine.options.lostFleet"`guard Game.vue already uses for ScoringBoard, and aligned
-      the viewBox's minX to -50), and adopted the same`researchBoardHeight`fix as above.
+  research track's own left edge off screen. Fixed both (added the same
+ `v-if="!engine.options.lostFleet"`guard Game.vue already uses for ScoringBoard, and aligned
+  the viewBox's minX to -50), and adopted the same`researchBoardHeight`fix as above.
+
     - **Twilight's artifact icons overlapped**: a 26-unit grid repeat with icons at their native
       30-unit size. Used the new`size`prop to render them at 24 instead - smaller than the grid
       repeat, so consecutive icons no longer touch.
     - **T F Mars's "VP per tech tile" QIC action showed raw text**:`Condition.vue`had no branch
       for`Condition.TechTile`("tt"), and`TechContent.vue`'s `showText`whitelist (the list of
       conditions that suppress the raw-spec-string fallback) never included it either. Added a
-     `<Resource kind="tech">`branch (the existing white/blue tech-tile icon, already used for the
+      `<Resource kind="tech">`branch (the existing white/blue tech-tile icon, already used for the
       Federation "tech" token reward) and added`TechTile`to the whitelist.
     - **Deep Space condition icon was dark navy instead of white**:`Condition.vue`'s standalone
-      `'ds'`branch never passed`DeepSpaceSector`'s `white`prop (unlike the adjacent`newsector`      combo icon, which already did - though that turned out to have the same bug too, see below).
+      `'ds'`branch never passed`DeepSpaceSector`'s `white`prop (unlike the adjacent`newsector` combo icon, which already did - though that turned out to have the same bug too, see below).
       Both now pass`:white="true"`explicitly - a bare`white`attribute (no`:`) was silently not
       being cast to a real boolean prop value in this codebase's Vue/TS toolchain (confirmed via a
       failing unit test), which is presumably why the `newsector`combo's own`<DeepSpaceSector
-    white />`never actually took effect either, an unnoticed pre-existing instance of the same
+white />`never actually took effect either, an unnoticed pre-existing instance of the same
       bug fixed as a side effect here.
     - Engine **582/582** (up from 581 - 1 new`artifacts.spec.ts`case, 1 new
-     `exploration.spec.ts`case testing`possibleSpaceshipTechTileBuildMine`in isolation - see the
+      `exploration.spec.ts`case testing`possibleSpaceshipTechTileBuildMine`in isolation - see the
       revert note above, this no longer covers a wired-up`moveChooseTechTile`trigger). Viewer
       **303/303** (up from 295 - new/updated specs in`Lobby.spec.ts`, `PlayerInfo`covered via
       existing specs,`Commands.spec.ts`, `SetupPreview.spec.ts`, `LostFleetShips.spec.ts`,
@@ -3039,39 +3042,38 @@ ty)">` does NOT center the component's local origin at `(tx, ty)` (a nested `<sv
     escape hatch for poppers inside scrolling/fixed containers), verified live at a 375x700 mobile
     viewport with all 7 options now visible; and the sticky resource bar was expanded with VP,
     sector count, a federation-tokens-formed count, and a 6/7-pip research-track strip colored with
-    the same `--rt-*` vars as the main research board - deliberately did NOT add a live "distance to
-    next federation" metric, since that needs `Player.possibleFederations()`'s spanning-tree search
+    the same `--rt-*`vars as the main research board - deliberately did NOT add a live "distance to
+    next federation" metric, since that needs`Player.possibleFederations()`'s spanning-tree search
     over the map, too expensive to run on every render of an always-visible bar (see PERFORMANCE.md). - Engine **618/618**, viewer **354/354** (up from 351 pre-session - 3 new spec files:
-    `StickyResourceBar.spec.ts`, `push.spec.ts`, plus `gleens.spec.ts`/`LostFleetShips.spec.ts`
-    additions), both production builds clean. Every visual fix verified via Playwright screenshots
-    and `getBoundingClientRect()` measurements against the real running dev server, not just unit
+    `StickyResourceBar.spec.ts`, `push.spec.ts`, plus `gleens.spec.ts`/`LostFleetShips.spec.ts`    additions), both production builds clean. Every visual fix verified via Playwright screenshots
+    and`getBoundingClientRect()`measurements against the real running dev server, not just unit
     tests, including finding a real game seed that seeds specific artifacts/federations to compare
     against their design references pixel-for-pixel. - **Same-session follow-up round, from live owner feedback on the above (still 2026-07-06):**
     moved the sticky bar's status-line title from the bottom to the top (first thing read when
     the bar comes into view, not buried below the buttons); gave the resource bar (now the
     bottom-most row) its own divider from the buttons above plus an extra fixed buffer beyond
-    `env(safe-area-inset-bottom)`, since the inset value alone still let its wide, edge-to-edge
+   `env(safe-area-inset-bottom)`, since the inset value alone still let its wide, edge-to-edge
     row of icons sit close enough to the iPhone 16's bottom rounded corners to look clipped;
     dropped the sector/federation/research-track additions entirely per owner instruction (judged
     not worth the clutter in practice); moved VP to the end of the row; replaced the reused
-    `PowerBowls` component (the player board's own triangular layout, "the same 3 identical bowls"
+    `PowerBowls`component (the player board's own triangular layout, "the same 3 identical bowls"
     at this scale) with 3 separate circles, one per bowl, each its own shade - then, on further
     owner feedback, enlarged both the circles and the count text, and matched the count text's
-    font-weight to `Resource.vue`'s own shared count-text style (removing a bespoke heavier/
+    font-weight to`Resource.vue`'s own shared count-text style (removing a bespoke heavier/
     outlined treatment) so it reads as the same typographic family as the other resource counts,
-    just bigger. Also fixed a real bug the `.click` tooltip trigger (see this item's own tooltip
+    just bigger. Also fixed a real bug the `.click`tooltip trigger (see this item's own tooltip
     fix above) introduced: a click-opened tooltip no longer auto-hid when tapping a \_different*
     component the way a hover-only one naturally did, so one could get stuck open - fixed with a
-    capture-phase document click listener in `launcher.ts` that emits BootstrapVue's global
-    `bv::hide::tooltip` root event (closing every open tooltip) before the newly-tapped element's
+    capture-phase document click listener in`launcher.ts`that emits BootstrapVue's global
+   `bv::hide::tooltip`root event (closing every open tooltip) before the newly-tapped element's
     own click handler runs, verified live via Playwright (exactly one tooltip visible after
     clicking a second component). Also found and fixed a pre-existing test-isolation leak while
     chasing a StickyResourceBar.spec.ts failure that only reproduced in the full suite, never
-    alone: `SpaceMap.spec.ts` mutates `store.state.preferences.flatBuildings` on what turned out to
+    alone:`SpaceMap.spec.ts`mutates`store.state.preferences.flatBuildings`on what turned out to
     be a shared mutable default-state object, leaking into later test files' fresh stores in the
     same process - not fixed at the root (out of scope for this session), but the new spec's own
-    assertion was narrowed to a dedicated `.sticky-resource-bar__bowl` class so it no longer
-    depends on being the only thing in the container that renders a `<circle>`. Viewer **355/355**,
+    assertion was narrowed to a dedicated`.sticky-resource-bar\__bowl`class so it no longer
+    depends on being the only thing in the container that renders a`<circle>`. Viewer **355/355**,
     production build clean. - **Third same-session round (still 2026-07-06):** the resource bar's icons are now centered
     (`justify-content: center`) instead of left-packed, and the bar itself got a lightweight visual
     refresh - a soft rounded "chip" background (subtle tonal gradient, inset hairline, faint drop
@@ -3098,19 +3100,18 @@ ty)">` does NOT center the component's local origin at `(tx, ty)` (a nested `<sv
     that substitutes for a normal power token in whichever bowl it currently occupies,
     `player.data.brainstone: PowerArea`) now gets a small black "B" badge overlaid on that bowl's
     circle in the sticky resource bar, matching the same convention the engine's own
-    `powerLogString()` already uses for text logs. Works generically off `player.data.brainstone`
-    with no faction check needed, since that field stays `null` for every faction except Taklons.
+    `powerLogString()`already uses for text logs. Works generically off`player.data.brainstone`    with no faction check needed, since that field stays`null`for every faction except Taklons.
     2 new tests (badge present on the correct bowl only; absent entirely for non-Taklons players).
     Viewer 357/357, production build clean. - **Sixth same-session round (still 2026-07-06):** dropped the resource bar's card/border
     entirely (owner feedback: still read as "a pill," wanted removed, not just re-shaped) - it's
-    back to plain icons with just a hairline `border-top` divider from the buttons above. Tightened
+    back to plain icons with just a hairline`border-top`divider from the buttons above. Tightened
     spacing throughout the whole sticky bar for a more compact feel: the dark header's padding,
-    the container's own top/side padding, and move-button margins (down from Bootstrap's `.mr-2`/
-    `.mb-2` 0.5rem default to 0.35rem, scoped to this sticky-bar context only). Also added a fix
-    for native pinch-zoom (intentionally still allowed on the game board, see `hosted/viewport.ts`)
+    the container's own top/side padding, and move-button margins (down from Bootstrap's`.mr-2`/
+    `.mb-2`0.5rem default to 0.35rem, scoped to this sticky-bar context only). Also added a fix
+    for native pinch-zoom (intentionally still allowed on the game board, see`hosted/viewport.ts`)
     visibly scaling the fixed sticky bar along with the map: a VisualViewport-API-driven
-    counter-transform in `Commands.vue`'s `mounted()` hook keeps the bar's on-screen size/position
-    constant regardless of zoom level, recalculated both on `visualViewport` resize/scroll events
+    counter-transform in `Commands.vue`'s `mounted()`hook keeps the bar's on-screen size/position
+    constant regardless of zoom level, recalculated both on`visualViewport`resize/scroll events
     and inside the existing ResizeObserver (needed too, since the bar first becoming the fixed
     sticky layout - e.g. once round 1 starts - isn't itself a visualViewport event and was
     initially missed). Verified the identity/no-zoom case renders an exact no-op transform via
@@ -3119,30 +3120,29 @@ ty)">` does NOT center the component's local origin at `(tx, ty)` (a nested `<sv
     real-device confirmation. Viewer 357/357, production build clean. - **Also investigated (same round): owner-reported "the log has disappeared" on one specific
     hosted game only** (not a general regression - other games still show it fine). Ruled out: the
     sticky-bar spacer/height mechanism (tested at 2 viewport sizes, log renders correctly above the
-    bar both times, no mismatch), and `LogPlacement`'s dead `"off"` value (nothing in the codebase
-    can actually set it - `store.ts`'s default is `"bottom"` and it's read-only everywhere else, so
+    bar both times, no mismatch), and`LogPlacement`'s dead `"off"`value (nothing in the codebase
+    can actually set it -`store.ts`'s default is `"bottom"`and it's read-only everywhere else, so
     it can't explain a single-game-only symptom). Given the owner confirmed even the "Hide log"
     checkbox itself is missing (not just an empty table), the most likely remaining explanation is
-    `AdvancedLog`'s own `v-if="engine.phase !== 'setupInit'"` gate, or a replay-time exception in
-    that one game's specific move history - `factionBoard()`'s new `expansion` parameter (this
+   `AdvancedLog`'s own `v-if="engine.phase !== 'setupInit'"`gate, or a replay-time exception in
+    that one game's specific move history -`factionBoard()`'s new `expansion`parameter (this
     session's Gleens change, see the 4th "Done so far" entry above) was audited for the same
     "silently breaks replay of an old game" failure mode documented for the reverted Terraform-tile
     trigger (see item #66's revert note) and judged safe: the new ability is purely additive and
-    optional (an available `=> range+2` special action a player chooses to invoke, like the
+    optional (an available`=> range+2`special action a player chooses to invoke, like the
     pre-existing Space Giants/Booster5 ones), never auto-inserted into a replay sequence, so old
     games without that move in their history should replay unaffected regardless of faction. Still
     open - asked the owner for the specific game/browser console errors to pin down further. - **Seventh same-session round (still 2026-07-06): fixed a tooltip flash-then-vanish regression**
-    introduced by the #20 fix above. Root cause (found by reading bootstrap-vue's `bv-tooltip.js`
-    source): the #20 fix's capture-phase `document` click listener unconditionally force-hid every
+    introduced by the #20 fix above. Root cause (found by reading bootstrap-vue's`bv-tooltip.js`    source): the #20 fix's capture-phase`document`click listener unconditionally force-hid every
     open tooltip on every click, then bootstrap-vue's own bubble-phase click handler toggled
-    `activeTrigger.click` and immediately re-showed it — a hide-then-instant-reshow within the same
+   `activeTrigger.click` and immediately re-showed it — a hide-then-instant-reshow within the same
     tap that reads as "flashes and vanishes." Fix (`launcher.ts`): skip the force-hide when the
     click target (or an ancestor, via `.closest()`) already carries bootstrap-vue's own
-    `aria-describedby` marker — the attribute it sets for exactly as long as that element's own
+    `aria-describedby`marker — the attribute it sets for exactly as long as that element's own
     tooltip is shown — so that element's own toggle handler runs untouched instead of racing with
-    a blanket hide. Verified via Playwright against a real `.hover.click` tooltip (an artifact icon
-    in the `lost-fleet-artifact-choice` scenario): tapping it now stays open past 430ms (previously
-    would have raced), and tapping a _different_ tooltip target still correctly closes the first and
+    a blanket hide. Verified via Playwright against a real`.hover.click`tooltip (an artifact icon
+    in the`lost-fleet-artifact-choice` scenario): tapping it now stays open past 430ms (previously
+    would have raced), and tapping a \_different_ tooltip target still correctly closes the first and
     opens the second (regression check against #20 held). Noted one minor side effect: re-tapping
     the _same_ already-open tooltip a second time no longer closes it (only tapping elsewhere does)
     — because skipping the force-hide also skips resetting the sticky `activeTrigger.hover` flag
@@ -3839,6 +3839,32 @@ buttons`/`LostFleetShips` failures documented at #81/#82 (confirmed still pre-ex
     - Full regression pass: **engine 627/627**, **viewer 400/432** (32 pre-existing failures confirmed
       unrelated via `git stash` — same `Chart`/`lost-fleet buttons`/`LostFleetShips`/`Resource Counter`
       set #81/#82 already flagged as needing a dedicated bisect session, untouched by this batch).
+
+- **#83 (2026-07-10): Credits menu item, real-board faction-picker visual, Lantids popup crash fixed.**
+  Three owner-reported issues from the faction-picker popup (`Commands.vue` → `FactionInfoCard.vue`):
+  - **Credits.** A new "Credits" item in both settings menus (`Lobby.vue`'s and the in-game
+    `HostedBar.vue`'s gear dropdown) opens an `InfoModal` with a new `CreditsContent.vue`: Gaia
+    Project/Gaia Project – The Lost Fleet's designers (Helge Ostertag & Jens Drögemüller), artist
+    (Dennis Lohausen), and Feuerland Spiele/Rio Grande Games, plus the Lost Fleet rulebook's own
+    credits page (rules writers, editors, testing team), plus attribution and an MIT License notice
+    for the underlying `boardgamers/gaia-project` engine/viewer this app is built on.
+  - **Faction board doesn't look like the real board (reported 3 times).** #66's `FactionBoardPreview`
+    (a generic card grid of building icons only) is replaced by `FactionBoardVisual.vue`, which
+    reproduces the actual physical faction board: colored panel matching the faction's planet color,
+    a resource row with real maxima (30/15/15), the VP gear, the research track wheel colored per
+    field, power bowls I/II/III (+ Gaia), and the building grid below — verified against the owner's
+    own in-game screenshot via a live Playwright pass against `?lostFleet=1` (Bal T'aks board matches:
+    15/30 credits, 4/15 ore, 3/15 knowledge, 10 VP, bowls I=2/II=2). All of it is store-free (derived
+    only from `factionPreviewEngine`'s data), so it can't read/leak the real live game's Vuex state.
+  - **Lantids showed nothing in the popup.** Root cause: `faction-preview.ts`'s `factionPreviewEngine`
+    always filled the second (throwaway) seat with Terrans unless the requested faction _was_
+    Terrans — but Terrans and Lantids share a home planet (Terra) and are the engine's "opposite
+    factions" exclusivity pair, so constructing `p1 faction lantids` / `p2 faction terrans` threw
+    (`terrans is not in the available factions`), and the modal rendered blank. Fixed by picking the
+    filler as any faction that doesn't share a planet with the requested one; added a regression spec
+    (`FactionInfoCard.spec.ts`).
+  - Full regression pass: **viewer 409/439** (30 pre-existing failures, confirmed via `git stash` to
+    be the same already-flagged #81/#82 flaky set, none newly introduced by this batch).
 
 ## Still MISSING — only one art-only item left
 
