@@ -1,7 +1,17 @@
 {
-  "version": "5.18.0",
+  "version": "5.18.1",
   "releasedAt": "2026-07-10",
   "entries": [
+    {
+      "version": "5.18.1",
+      "releasedAt": "2026-07-10",
+      "kind": "update",
+      "title": "Dark mode hotfix",
+      "impact": "",
+      "changes": [
+        "Fixed dark mode auto-activating (and making the page look broken) for anyone whose device defaults to dark mode"
+      ]
+    },
     {
       "version": "5.18.0",
       "releasedAt": "2026-07-10",
