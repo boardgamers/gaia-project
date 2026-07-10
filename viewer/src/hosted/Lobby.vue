@@ -52,17 +52,58 @@
       <a href="" class="lobby-meta__toggle-link" @click.prevent="showReleaseNotes = true">View changelog</a>
     </div>
 
-    <InfoModal :open="showReleaseNotes" title="Hosted changelog" @close="showReleaseNotes = false">
-      <div v-for="entry in releaseEntries" :key="`${entry.version}-${entry.releasedAt}`" class="release-notes__entry">
-        <div class="release-notes__heading">
-          <span class="release-notes__kind">{{ entry.kind }}</span>
-          <strong>v{{ entry.version }}</strong>
-          <span class="text-muted">&middot; {{ entry.releasedAt }}</span>
+    <InfoModal :open="showReleaseNotes" title="Changelog" @close="showReleaseNotes = false">
+      <div class="release-notes__tabs" role="tablist">
+        <button
+          type="button"
+          class="release-notes__tab"
+          :class="{ 'release-notes__tab--active': changelogTab === 'user' }"
+          @click="changelogTab = 'user'"
+        >
+          What's new
+        </button>
+        <button
+          type="button"
+          class="release-notes__tab"
+          :class="{ 'release-notes__tab--active': changelogTab === 'dev' }"
+          @click="changelogTab = 'dev'"
+        >
+          Developer
+        </button>
+      </div>
+
+      <div v-if="changelogTab === 'user'">
+        <div
+          v-for="entry in userReleaseEntries"
+          :key="`${entry.version}-${entry.releasedAt}`"
+          class="release-notes__entry"
+        >
+          <div class="release-notes__heading">
+            <strong>v{{ entry.version }}</strong>
+            <span class="text-muted">&middot; {{ entry.releasedAt }}</span>
+          </div>
+          <div class="release-notes__title">{{ entry.title }}</div>
+          <ul class="release-notes__list mb-0">
+            <li v-for="change in entry.changes" :key="change">{{ change }}</li>
+          </ul>
         </div>
-        <div class="release-notes__title">{{ entry.title }}</div>
-        <ul class="release-notes__list mb-0">
-          <li v-for="change in entry.changes" :key="change">{{ change }}</li>
-        </ul>
+      </div>
+      <div v-else>
+        <div
+          v-for="entry in devReleaseEntries"
+          :key="`${entry.version}-${entry.releasedAt}`"
+          class="release-notes__entry"
+        >
+          <div class="release-notes__heading">
+            <span class="release-notes__kind">{{ entry.kind }}</span>
+            <strong>v{{ entry.version }}</strong>
+            <span class="text-muted">&middot; {{ entry.releasedAt }}</span>
+          </div>
+          <div class="release-notes__title">{{ entry.title }}</div>
+          <ul class="release-notes__list mb-0">
+            <li v-for="change in entry.changes" :key="change">{{ change }}</li>
+          </ul>
+        </div>
       </div>
     </InfoModal>
 
@@ -380,6 +421,12 @@ type ReleaseEntry = {
   title: string;
   visible?: boolean;
   changes: string[];
+  /** Short, plain-language bullets for the "What's new" tab - only real, visible/usable changes
+   * (new features, new options, redesigns). Never bug fixes, crashes, or backend/technical work,
+   * even if the change list above happens to mention one - scripts/update-viewer-release.js
+   * enforces this split at authoring time. Empty/absent means this entry is developer-only and
+   * never shown on the "What's new" tab. */
+  userChanges?: string[];
 };
 
 function lobbyPresenceStatus(
@@ -408,6 +455,7 @@ export default Vue.extend({
       message: "",
       gamesChannel: null as any,
       showReleaseNotes: false,
+      changelogTab: "user" as "user" | "dev",
       showNicknameModal: false,
       showCredits: false,
       myNickname: "" as string,
@@ -440,8 +488,20 @@ export default Vue.extend({
         releasedAt: (releaseData as any).releasedAt,
       };
     },
-    releaseEntries(): ReleaseEntry[] {
-      return ((releaseData as any).entries ?? []).filter((entry: ReleaseEntry) => entry.visible !== false).slice(0, 5);
+    allReleaseEntries(): ReleaseEntry[] {
+      return ((releaseData as any).entries ?? []).filter((entry: ReleaseEntry) => entry.visible !== false);
+    },
+    // "What's new" tab: only entries with real user-facing content, showing just those short
+    // bullets - never the full (often technical) `changes` list.
+    userReleaseEntries(): (ReleaseEntry & { changes: string[] })[] {
+      return this.allReleaseEntries
+        .filter((entry) => (entry.userChanges ?? []).length > 0)
+        .map((entry) => ({ ...entry, changes: entry.userChanges }))
+        .slice(0, 10);
+    },
+    // "Developer" tab: the unfiltered, full history.
+    devReleaseEntries(): ReleaseEntry[] {
+      return this.allReleaseEntries.slice(0, 20);
     },
     openGames(): any[] {
       return this.sortGames((this.games as any[]).filter((game) => game.status === "open"));
@@ -906,6 +966,29 @@ export default Vue.extend({
 .lobby-meta__toggle-link:hover {
   color: #084298;
   text-decoration: underline;
+}
+
+.release-notes__tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.85rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.release-notes__tab {
+  border: none;
+  background: none;
+  padding: 0.3rem 0.1rem 0.55rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6c757d;
+  border-bottom: 2px solid transparent;
+  margin-right: 0.9rem;
+}
+
+.release-notes__tab--active {
+  color: #0b5ed7;
+  border-bottom-color: #0b5ed7;
 }
 
 .release-notes__entry + .release-notes__entry {

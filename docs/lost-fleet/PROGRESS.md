@@ -18,6 +18,14 @@
    guessing. A plan that doesn't reflect how the existing code actually works isn't useful.
 2. **Testing convention** — see the **Testing — required going forward** section below; it's the
    same kind of standing instruction.
+3. **Changelog discipline (added #83, 2026-07-10).** The hosted changelog (`viewer/src/hosted/
+release.json`) has two audiences and they must not blur together: a "What's new" tab for players
+   (real, visible/usable changes only — new features, new options, redesigns) and a "Developer" tab
+   (the full unfiltered history, including every bug/crash fix and backend/technical change). Never
+   add a release entry by hand-editing `release.json`'s `changes`/`userChanges` arrays directly —
+   always go through `node scripts/update-viewer-release.js <bump> "<title>" "user:<change>" "dev:
+<change>" ...`, which refuses untagged input and won't let a fix slip into the user-facing tab.
+   Keep `userChanges` bullets short and in plain language — players don't want to read much.
 
 ## What this project is
 
@@ -1321,7 +1329,7 @@ vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec
     callable, skipping the setup-move insert entirely (the exact "stuck game" failure mode 0004's
     comment warned about, reachable by any caller of the old signature). Fixed with
     **`supabase/migrations/0005_drop_stale_create_game_overload.sql`** (`drop function if exists
-    public.create_game(text, text, int, jsonb, jsonb, int)`), applied immediately after; `pg_proc` now shows exactly one`create_game`(7-arg), and the advisor listing matches the pre-#54
+public.create_game(text, text, int, jsonb, jsonb, int)`), applied immediately after; `pg_proc` now shows exactly one`create_game`(7-arg), and the advisor listing matches the pre-#54
     baseline shape (one`create_game`entry, same acknowledged intentionally-callable-RPC set
     documented in`BACKEND.md`). 0004's misleading comment about "same identity/oid" was also
     corrected in place to point at this finding. \*\*Lesson for future migrations that widen an
@@ -1338,7 +1346,8 @@ vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec
           disables lock-in with the German-rules message visible, and a valid lock-in emits`{ seed,
 
     rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; net +13 after
-      also relocating the one pre-existing `buildCreateGameParams`test out of`host.spec.ts`).
+  also relocating the one pre-existing `buildCreateGameParams`test out of`host.spec.ts`).
+
     - **Manual verification, done via the dev server + a temporary harness (not committed) driving
       real Chromium via Playwright:** 2p/3p/4p all render every tile category with real art;
       clicking sectors rotates them live with no reload (confirmed via the actual CSS `rotate()`
@@ -1348,10 +1357,10 @@ vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec
       The end-to-end "created game's board matches what was locked in" check (comparing against a
       live Supabase-backed game immediately after creation) was **not done** — this environment has
       no credentials for the live`gaia-lost-fleet` Supabase project's viewer-facing auth (Google/
-    magic-link sign-in), only Supabase project-management access (used to apply 0004/0005 above,
-    see that entry for the overload bug those applies caught). A natural next step for whoever
-    has real sign-in credentials: create a game through the real Lobby flow end-to-end and confirm
-    a rotated sector's on-screen orientation matches between the preview and the live game.
+      magic-link sign-in), only Supabase project-management access (used to apply 0004/0005 above,
+      see that entry for the overload bug those applies caught). A natural next step for whoever
+      has real sign-in credentials: create a game through the real Lobby flow end-to-end and confirm
+      a rotated sector's on-screen orientation matches between the preview and the live game.
 
 55. ✅ **Nine owner-reported bugs/polish items, CODED & TESTED** (done 2026-07-02). A batch of
     gameplay-correctness and viewer-polish fixes reported directly by the owner after playing a real
@@ -2321,37 +2330,39 @@ ty)">` does NOT center the component's local origin at `(tx, ty)` (a nested `<sv
 73. ✅ **4 follow-up layout fixes on the #63/#64 mobile Lost Fleet UI, all confirmed via real
     Playwright measurement (`getBoundingClientRect`), not visual guessing.**
 
-        - **Mobile turn-status duplicate, actually hidden this time.** `#move-title.hide-on-mobile-sticky
+            - **Mobile turn-status duplicate, actually hidden this time.** `#move-title.hide-on-mobile-sticky
 
-    { display: none; }`(added in #63) never took effect: the same element also carries
-  Bootstrap's`.d-flex`utility class, which compiles to`display: flex !important`- and
- `!important`always wins over a plain declaration regardless of selector specificity. Added
- `!important`to the override. Verified:`getComputedStyle(#move-title).display`was`"flex"`      before this fix,`"none"`after, on a live rendered page.
+        { display: none; }`(added in #63) never took effect: the same element also carries
 
-    - **Round scoring tiles no longer overlap.**`ScoringTile` renders a 40-unit-tall tile, but 4 of
-      its 5 slots in the 7th research-board column (`SCORING*TILE_Y`, #63) are only 38 units apart
-      (mirroring the research track's own level-tile spacing) - a 2-unit overlap each, since the
-      \_track's own* tiles are only 36 units tall in those same 38-unit slots (`ResearchTile.vue`'s
-      `height` getter). Scaled `ScoringTile` down to 0.9 (36 tall) to match, keeping the same
-      top-aligned anchor so the "aligns perfectly with the track" requirement from #63 still holds.
-      Verified before/after with real rendered bounding boxes: 4 of 6 tile-pairs overlapped by ~1.4px
-      pre-fix, 0 overlap post-fix (clean ~1.4px gaps everywhere, matching the track's own margin). - **Power action icons now align with the research track's left edge.** Previously ~18px (≈26
-      SVG units, at this layout's ~0.69 px/unit scale) to the right of it - `BoardAction`'s own
-      nested `<svg viewBox="-28 -28 56 56">` local coordinate system offsets rendered content by
-      that same 28 units before the outer `translate(45*i+6, 455)`is even applied. Shifted the
-shared per-icon transform from`45*i+6`to`45*i-20` (`Game.vue`, used by both base and Lost
-Fleet games - same underlying bug in both). Verified: left-edge diff between the leftmost
-power-action icon and the leftmost research-track tile was 18.0px before, 0.05px after. - **Removed ~28px of unused blank space below the power actions, Lost Fleet only.** The
-combined research-board/power-actions `<svg>`'s `viewBox`height was a flat`550`regardless
-of game type - sized for base game's`ScoringBoard`column (which needs the full height for
-final + round scoring), but Lost Fleet doesn't render`ScoringBoard` at all (moved to the map
-in #63), so ~48 of those 550 units sat empty below the icons. Made the height conditional
-(`510`for Lost Fleet, unchanged`550`for base game) - reducing viewBox height only shrinks
-the rendered element's total height (px-per-unit scale is set by width alone), so this doesn't
-change the size of anything, only trims the dead space. Verified: the gap between the visible
-bottom of the power-action icons and the spaceship-boards row below dropped from ~41px to
-~13px. -`Commands.vue`, `ResearchBoard.vue`(+ a new assertion in`ResearchBoard.spec.ts`for the`scale(0.9)`fix - the`!important`and alignment fixes aren't unit-testable in jsdom since
-they depend on real stylesheet cascade/rendering, verified via live Playwright instead),`Game.vue`. Viewer 275/275 tests still pass.
+    Bootstrap's`.d-flex`utility class, which compiles to`display: flex !important`- and
+    `!important`always wins over a plain declaration regardless of selector specificity. Added
+    `!important`to the override. Verified:`getComputedStyle(#move-title).display`was`"flex"` before this fix,`"none"`after, on a live rendered page.
+
+        - **Round scoring tiles no longer overlap.**`ScoringTile` renders a 40-unit-tall tile, but 4 of
+          its 5 slots in the 7th research-board column (`SCORING*TILE_Y`, #63) are only 38 units apart
+          (mirroring the research track's own level-tile spacing) - a 2-unit overlap each, since the
+          \_track's own* tiles are only 36 units tall in those same 38-unit slots (`ResearchTile.vue`'s
+          `height` getter). Scaled `ScoringTile` down to 0.9 (36 tall) to match, keeping the same
+          top-aligned anchor so the "aligns perfectly with the track" requirement from #63 still holds.
+          Verified before/after with real rendered bounding boxes: 4 of 6 tile-pairs overlapped by ~1.4px
+          pre-fix, 0 overlap post-fix (clean ~1.4px gaps everywhere, matching the track's own margin). - **Power action icons now align with the research track's left edge.** Previously ~18px (≈26
+          SVG units, at this layout's ~0.69 px/unit scale) to the right of it - `BoardAction`'s own
+          nested `<svg viewBox="-28 -28 56 56">` local coordinate system offsets rendered content by
+          that same 28 units before the outer `translate(45*i+6, 455)`is even applied. Shifted the
+
+    shared per-icon transform from`45*i+6`to`45*i-20` (`Game.vue`, used by both base and Lost
+    Fleet games - same underlying bug in both). Verified: left-edge diff between the leftmost
+    power-action icon and the leftmost research-track tile was 18.0px before, 0.05px after. - **Removed ~28px of unused blank space below the power actions, Lost Fleet only.** The
+    combined research-board/power-actions `<svg>`'s `viewBox`height was a flat`550`regardless
+    of game type - sized for base game's`ScoringBoard`column (which needs the full height for
+    final + round scoring), but Lost Fleet doesn't render`ScoringBoard` at all (moved to the map
+    in #63), so ~48 of those 550 units sat empty below the icons. Made the height conditional
+    (`510`for Lost Fleet, unchanged`550`for base game) - reducing viewBox height only shrinks
+    the rendered element's total height (px-per-unit scale is set by width alone), so this doesn't
+    change the size of anything, only trims the dead space. Verified: the gap between the visible
+    bottom of the power-action icons and the spaceship-boards row below dropped from ~41px to
+    ~13px. -`Commands.vue`, `ResearchBoard.vue`(+ a new assertion in`ResearchBoard.spec.ts`for the`scale(0.9)`fix - the`!important`and alignment fixes aren't unit-testable in jsdom since
+    they depend on real stylesheet cascade/rendering, verified via live Playwright instead),`Game.vue`. Viewer 275/275 tests still pass.
 
 74. ✅ **Gaia 3 UI layout pass (2026-07-04)** - a batch of owner-reported layout bugs plus two "free
     creativity" redesigns, all on `claude/gaia3-ui-layout-fixes-h3uzra`:
@@ -2505,89 +2516,91 @@ they depend on real stylesheet cascade/rendering, verified via live Playwright i
 76. ✅ **"Gaia 4" UI polish pass - 12 owner-reported bugs, all fixed and verified visually via a
     live dev server + Playwright (2026-07-04, new session).**
 
-        - **Faction wheel spacing**: the 4 extra planet-color swatches below the 7-planet ring
-          (`FactionWheel.vue`) had `spacing = 2` for `r=1` circles (diameter 2) - touching edge-to-edge.
-          Bumped to 2.6, matching the ring's own visual density.
-        - **Lobby per-game bar circles were black**: `Lobby.vue`'s player chips render `Token.vue`,
-          whose `.planet-fill.X { fill: var(--terra) }` etc. rules only resolve inside a
-          `.gaia-viewer-game`/`.gaia-viewer-modal` ancestor (`stylesheets/planets.css`) - Lobby.vue
-          never had one, so every color var fell back to unset -> black. Added the class, enlarged the
-          circle, overlaid the faction's initial letter, and moved the VP into a small badge on the
-          circle's lower-right instead of text beside it.
-        - **Taken artifacts disappeared**: `PlayerData` never recorded which Artifact tokens a player
-          had claimed (`applyArtifactToken` computed rewards but never stored the token itself). Added
-          `PlayerData.artifacts: ArtifactToken[]`, pushed on claim, and `PlayerInfo.vue` now renders them
-          via `ArtifactIcon` in the same `.tiles` row as Federation tokens/Tech tiles.
-        - **Terraform Standard Tech tile's free-mine prompt never fired**: `spaceship-techs.ts` itself
-          said "Terraform ... still ha[d] no execution wired anywhere" - claiming it did nothing besides
-          the flat tech-track bump. Added `possibleSpaceshipTechTileBuildMine` (a 2-step-discount sibling
-          of the existing Federation-token `possibleFreeBuildMine`, refactored out of
-          `possibleFederationTokenBuildMine`) behind a new `SubPhase.SpaceshipTechTileBuildMine`.
-          **REVERTED same day, right after this shipped to `master`**: wiring the trigger into
-          `moveChooseTechTile` inserted a brand-new _required_ move into the game's move sequence
-          whenever the tile was claimed. The hosted app reconstructs a game by replaying its entire
-          stored move history through whatever code is currently live, with no version gate - so the
-          one real in-progress game that had already claimed this tile (before the trigger existed)
-          had its historical log misinterpreted on load and threw during replay, taking down the whole
-          page (blank screen under the banner). Confirmed the exact mechanism with a repro test (feed
-          an old-format move log - tile claim then an unrelated move, no "build m ..." entry - through
-          the wired-up code; it throws) before reverting just the `moveChooseTechTile` trigger call.
-          `possibleSpaceshipTechTileBuildMine` and the `SubPhase`/available-command wiring are left in
-          place (inert, unreachable, correct in isolation - not the cause) since removing them added no
-          safety and this needs a real fix, not just a revert. **Still open**: re-implementing the
-          "prompt on claim" UX needs a way to tell an old game's already-recorded history apart from a
-          move being made fresh, which this engine has no mechanism for today (no per-move version
-          marker, `new Engine(fullHistory, options)` always replays through current code) - don't
-          re-attempt this without solving that first, or any other "insert a new required move into an
-          existing action" change will hit the exact same failure mode. Two commits: the trigger
-          (`0966597`) then the revert (`cf1137f`), both already pushed straight to `master` (see git log
-          - this file's own numbering can't cleanly show a mid-entry revert, so both are folded into this
-            one numbered item rather than getting separate #67/#68 slots).
-        - **Examine Artifact buttons' icons were tiny**: `ArtifactIcon.vue` had no size prop (hardcoded
-          30x30); added one (default 30, unchanged everywhere else) and the "Choose Artifact"
-          button (`RichTextView.vue`'s `artifactToken` case, the only caller) now renders at 48.
-        - **Round scoring tiles / power-action row**: `ResearchBoard.vue` declared a fixed
-          `height="450"` (Game.vue) that never matched its own real content height (440 base, up to 471
-          for Lost Fleet's round+final-scoring column) - the nested SVG silently rescaled to fit,
-          and the power-action row's hardcoded `y=455` sat wherever that happened to land. Added
-          `researchBoardHeight(engine)` (`logic/utils.ts`, shared with `ResearchBoard.vue`'s own
-          `viewHeight` and a new `SetupPreviewBoard.vue` getter) and made both the board's declared
-          height and the action row's y-offset (`researchBoardViewHeight + 5`) derive from it, so the
-          row is always pinned exactly below the board's real bottom edge, matching the pre-Lost-Fleet
-          base game, regardless of how tall the 7th column grows.
-        - **Mobile gap between Turn Order and the first faction board (also the "log unreachable" bug,
-          #12 below - same root cause)**: `Commands.vue`'s mobile sticky action bar reserves a spacer
-          for its own fixed-position footprint right where `<Commands>` is mounted - directly after
-          Turn Order - leaving a large dead gap there _and_, since nothing reserved that space at the
-          true end of the page, permanently hiding whatever real content (the log) landed in the last
-          ~260px once scrolled to the bottom, with no further scroll room to reveal it. Added a
-          `hideSpacer` prop + `sticky-bar-height` event to `Commands.vue` so `Game.vue` can suppress the
-          in-place spacer and render an equivalent one at the true end of the page instead. Verified
-          both the closed gap and the previously-hidden log tail becoming reachable, via a real
-          before/after Playwright comparison (`git stash` the fix, screenshot, restore, re-screenshot).
-        - **Setup preview layout bugs**: `SetupPreviewBoard.vue` (1) rendered the base game's
-          `ScoringBoard` unconditionally alongside `ResearchBoard`'s own Lost Fleet round/final-scoring
-          column, producing two adjacent columns of round scoring tiles, and (2) had its outer `<svg
+            - **Faction wheel spacing**: the 4 extra planet-color swatches below the 7-planet ring
+              (`FactionWheel.vue`) had `spacing = 2` for `r=1` circles (diameter 2) - touching edge-to-edge.
+              Bumped to 2.6, matching the ring's own visual density.
+            - **Lobby per-game bar circles were black**: `Lobby.vue`'s player chips render `Token.vue`,
+              whose `.planet-fill.X { fill: var(--terra) }` etc. rules only resolve inside a
+              `.gaia-viewer-game`/`.gaia-viewer-modal` ancestor (`stylesheets/planets.css`) - Lobby.vue
+              never had one, so every color var fell back to unset -> black. Added the class, enlarged the
+              circle, overlaid the faction's initial letter, and moved the VP into a small badge on the
+              circle's lower-right instead of text beside it.
+            - **Taken artifacts disappeared**: `PlayerData` never recorded which Artifact tokens a player
+              had claimed (`applyArtifactToken` computed rewards but never stored the token itself). Added
+              `PlayerData.artifacts: ArtifactToken[]`, pushed on claim, and `PlayerInfo.vue` now renders them
+              via `ArtifactIcon` in the same `.tiles` row as Federation tokens/Tech tiles.
+            - **Terraform Standard Tech tile's free-mine prompt never fired**: `spaceship-techs.ts` itself
+              said "Terraform ... still ha[d] no execution wired anywhere" - claiming it did nothing besides
+              the flat tech-track bump. Added `possibleSpaceshipTechTileBuildMine` (a 2-step-discount sibling
+              of the existing Federation-token `possibleFreeBuildMine`, refactored out of
+              `possibleFederationTokenBuildMine`) behind a new `SubPhase.SpaceshipTechTileBuildMine`.
+              **REVERTED same day, right after this shipped to `master`**: wiring the trigger into
+              `moveChooseTechTile` inserted a brand-new _required_ move into the game's move sequence
+              whenever the tile was claimed. The hosted app reconstructs a game by replaying its entire
+              stored move history through whatever code is currently live, with no version gate - so the
+              one real in-progress game that had already claimed this tile (before the trigger existed)
+              had its historical log misinterpreted on load and threw during replay, taking down the whole
+              page (blank screen under the banner). Confirmed the exact mechanism with a repro test (feed
+              an old-format move log - tile claim then an unrelated move, no "build m ..." entry - through
+              the wired-up code; it throws) before reverting just the `moveChooseTechTile` trigger call.
+              `possibleSpaceshipTechTileBuildMine` and the `SubPhase`/available-command wiring are left in
+              place (inert, unreachable, correct in isolation - not the cause) since removing them added no
+              safety and this needs a real fix, not just a revert. **Still open**: re-implementing the
+              "prompt on claim" UX needs a way to tell an old game's already-recorded history apart from a
+              move being made fresh, which this engine has no mechanism for today (no per-move version
+              marker, `new Engine(fullHistory, options)` always replays through current code) - don't
+              re-attempt this without solving that first, or any other "insert a new required move into an
+              existing action" change will hit the exact same failure mode. Two commits: the trigger
+              (`0966597`) then the revert (`cf1137f`), both already pushed straight to `master` (see git log
+              - this file's own numbering can't cleanly show a mid-entry revert, so both are folded into this
+                one numbered item rather than getting separate #67/#68 slots).
+            - **Examine Artifact buttons' icons were tiny**: `ArtifactIcon.vue` had no size prop (hardcoded
+              30x30); added one (default 30, unchanged everywhere else) and the "Choose Artifact"
+              button (`RichTextView.vue`'s `artifactToken` case, the only caller) now renders at 48.
+            - **Round scoring tiles / power-action row**: `ResearchBoard.vue` declared a fixed
+              `height="450"` (Game.vue) that never matched its own real content height (440 base, up to 471
+              for Lost Fleet's round+final-scoring column) - the nested SVG silently rescaled to fit,
+              and the power-action row's hardcoded `y=455` sat wherever that happened to land. Added
+              `researchBoardHeight(engine)` (`logic/utils.ts`, shared with `ResearchBoard.vue`'s own
+              `viewHeight` and a new `SetupPreviewBoard.vue` getter) and made both the board's declared
+              height and the action row's y-offset (`researchBoardViewHeight + 5`) derive from it, so the
+              row is always pinned exactly below the board's real bottom edge, matching the pre-Lost-Fleet
+              base game, regardless of how tall the 7th column grows.
+            - **Mobile gap between Turn Order and the first faction board (also the "log unreachable" bug,
+              #12 below - same root cause)**: `Commands.vue`'s mobile sticky action bar reserves a spacer
+              for its own fixed-position footprint right where `<Commands>` is mounted - directly after
+              Turn Order - leaving a large dead gap there _and_, since nothing reserved that space at the
+              true end of the page, permanently hiding whatever real content (the log) landed in the last
+              ~260px once scrolled to the bottom, with no further scroll room to reveal it. Added a
+              `hideSpacer` prop + `sticky-bar-height` event to `Commands.vue` so `Game.vue` can suppress the
+              in-place spacer and render an equivalent one at the true end of the page instead. Verified
+              both the closed gap and the previously-hidden log tail becoming reachable, via a real
+              before/after Playwright comparison (`git stash` the fix, screenshot, restore, re-screenshot).
+            - **Setup preview layout bugs**: `SetupPreviewBoard.vue` (1) rendered the base game's
+              `ScoringBoard` unconditionally alongside `ResearchBoard`'s own Lost Fleet round/final-scoring
+              column, producing two adjacent columns of round scoring tiles, and (2) had its outer `<svg
 
-    viewBox>`start at x=0 while`ResearchBoard`sat at`x="-50"`inside it, cropping the
-  research track's own left edge off screen. Fixed both (added the same
- `v-if="!engine.options.lostFleet"`guard Game.vue already uses for ScoringBoard, and aligned
-  the viewBox's minX to -50), and adopted the same`researchBoardHeight`fix as above.
+        viewBox>`start at x=0 while`ResearchBoard`sat at`x="-50"`inside it, cropping the
 
-    - **Twilight's artifact icons overlapped**: a 26-unit grid repeat with icons at their native
-      30-unit size. Used the new`size`prop to render them at 24 instead - smaller than the grid
-      repeat, so consecutive icons no longer touch.
-    - **T F Mars's "VP per tech tile" QIC action showed raw text**:`Condition.vue`had no branch
-      for`Condition.TechTile`("tt"), and`TechContent.vue`'s `showText`whitelist (the list of
-      conditions that suppress the raw-spec-string fallback) never included it either. Added a
-      `<Resource kind="tech">`branch (the existing white/blue tech-tile icon, already used for the
-      Federation "tech" token reward) and added`TechTile`to the whitelist.
-    - **Deep Space condition icon was dark navy instead of white**:`Condition.vue`'s standalone
-      `'ds'`branch never passed`DeepSpaceSector`'s `white`prop (unlike the adjacent`newsector` combo icon, which already did - though that turned out to have the same bug too, see below).
-      Both now pass`:white="true"`explicitly - a bare`white`attribute (no`:`) was silently not
-      being cast to a real boolean prop value in this codebase's Vue/TS toolchain (confirmed via a
-      failing unit test), which is presumably why the `newsector`combo's own`<DeepSpaceSector
-white />`never actually took effect either, an unnoticed pre-existing instance of the same
+    research track's own left edge off screen. Fixed both (added the same
+    `v-if="!engine.options.lostFleet"`guard Game.vue already uses for ScoringBoard, and aligned
+    the viewBox's minX to -50), and adopted the same`researchBoardHeight`fix as above.
+
+        - **Twilight's artifact icons overlapped**: a 26-unit grid repeat with icons at their native
+          30-unit size. Used the new`size`prop to render them at 24 instead - smaller than the grid
+          repeat, so consecutive icons no longer touch.
+        - **T F Mars's "VP per tech tile" QIC action showed raw text**:`Condition.vue`had no branch
+          for`Condition.TechTile`("tt"), and`TechContent.vue`'s `showText`whitelist (the list of
+          conditions that suppress the raw-spec-string fallback) never included it either. Added a
+          `<Resource kind="tech">`branch (the existing white/blue tech-tile icon, already used for the
+          Federation "tech" token reward) and added`TechTile`to the whitelist.
+        - **Deep Space condition icon was dark navy instead of white**:`Condition.vue`'s standalone
+          `'ds'`branch never passed`DeepSpaceSector`'s `white`prop (unlike the adjacent`newsector` combo icon, which already did - though that turned out to have the same bug too, see below).
+          Both now pass`:white="true"`explicitly - a bare`white`attribute (no`:`) was silently not
+          being cast to a real boolean prop value in this codebase's Vue/TS toolchain (confirmed via a
+          failing unit test), which is presumably why the `newsector`combo's own`<DeepSpaceSector
+
+    white />`never actually took effect either, an unnoticed pre-existing instance of the same
       bug fixed as a side effect here.
     - Engine **582/582** (up from 581 - 1 new`artifacts.spec.ts`case, 1 new
       `exploration.spec.ts`case testing`possibleSpaceshipTechTileBuildMine`in isolation - see the
@@ -3865,6 +3878,23 @@ buttons`/`LostFleetShips` failures documented at #81/#82 (confirmed still pre-ex
     (`FactionInfoCard.spec.ts`).
   - Full regression pass: **viewer 409/439** (30 pre-existing failures, confirmed via `git stash` to
     be the same already-flagged #81/#82 flaky set, none newly introduced by this batch).
+- **#84 (2026-07-10): Changelog split into a strict user-facing tab and a full developer tab.**
+  Owner feedback: the single changelog was showing bug fixes, crash fixes, and backend/technical
+  entries that players don't care about. `Lobby.vue`'s changelog modal now has two tabs: **"What's
+  new"** (default), which shows only real, visible/usable changes — new features, new options,
+  redesigns — as short plain-language bullets; and **"Developer"**, the old unfiltered full history
+  (every entry, every bullet, `kind` badges included). Every existing `release.json` entry (5.13.0
+  through 5.18.3) was reclassified retroactively: added a `userChanges` field (empty for dev-only
+  entries like the recent lobby/dark-mode hotfixes and the Lantids-fix commit; a short curated
+  subset for entries that also shipped something real, e.g. Gaia 18's "new settings menu", "new
+  auction options"). **The rule is enforced going forward, not just documented**:
+  `scripts/update-viewer-release.js` (already the only tool used to append release entries, per
+  root `package.json`'s `release:viewer` script) now requires every `changes` argument to be
+  prefixed `user:` or `dev:` and refuses to run otherwise — there's no way to add an entry through
+  it without explicitly tagging each line, so a fix can't accidentally leak onto the "What's new"
+  tab. See PROGRESS's **Working agreements** #3 for the standing rule. `Lobby.spec.ts`'s changelog
+  test now asserts the default tab excludes a dev-only entry's title/text and the Developer tab
+  shows it. Full regression pass: **viewer 409/439** (same pre-existing 30 failures, unrelated).
 
 ## Still MISSING — only one art-only item left
 

@@ -605,13 +605,17 @@ describe("Lobby", () => {
     expect(wrapper.find(".game-bar__player").exists()).to.equal(false);
   });
 
-  it("shows the current version and expands the changelog on demand", async () => {
+  it("shows the current version and expands the changelog on demand, defaulting to the user-facing tab", async () => {
     const { client } = makeClient([]);
     const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
     await Vue.nextTick();
     await Vue.nextTick();
 
-    const currentEntry = release.entries[0];
+    // Some entry near the top is a dev-only hotfix (no user-visible content) - the default tab
+    // must not show it, proving the filter is real and not just "show the newest N entries".
+    const devOnlyEntry = release.entries.find((e) => (e.userChanges ?? []).length === 0);
+    const userFacingEntry = release.entries.find((e) => (e.userChanges ?? []).length > 0);
+
     expect(wrapper.text()).to.contain(`Version ${release.version}`);
     expect(wrapper.text()).to.not.contain("2026-07-08");
     expect(wrapper.text()).to.not.contain("kim.pham.nguyen2@gmail.com");
@@ -622,10 +626,22 @@ describe("Lobby", () => {
     await Vue.nextTick();
 
     expect(wrapper.find(".info-modal").exists()).to.equal(true);
-    expect(wrapper.text()).to.contain("Hosted changelog");
-    expect(wrapper.text()).to.contain(currentEntry.title);
-    expect(wrapper.text()).to.contain(currentEntry.changes[0]);
-    expect(wrapper.text()).to.contain(currentEntry.releasedAt);
+    expect(wrapper.text()).to.contain("Changelog");
+    expect(wrapper.text()).to.contain("What's new");
+    expect(wrapper.text()).to.contain(userFacingEntry.userChanges[0]);
+    expect(wrapper.text()).to.not.contain(devOnlyEntry.title);
+    expect(wrapper.text()).to.not.contain(devOnlyEntry.changes[0]);
+
+    const devTab = wrapper
+      .findAll("button")
+      .filter((b) => b.text() === "Developer")
+      .at(0);
+    await devTab.trigger("click");
+    await Vue.nextTick();
+
+    expect(wrapper.text()).to.contain(devOnlyEntry.title);
+    expect(wrapper.text()).to.contain(devOnlyEntry.changes[0]);
+    expect(wrapper.text()).to.contain(devOnlyEntry.releasedAt);
   });
 
   it("opens the Credits modal (MIT-license/game-design attribution) from the settings menu", async () => {

@@ -1,34 +1,55 @@
 {
-  "version": "5.18.3",
+  "version": "5.19.0",
   "releasedAt": "2026-07-10",
   "entries": [
     {
-      "version": "5.18.3",
+      "version": "5.19.0",
       "releasedAt": "2026-07-10",
       "kind": "update",
+      "title": "Gaia 19: credits, faction board redesign, changelog revamp",
+      "impact": "",
+      "changes": [
+        "Added a Credits screen crediting the game's designers/artist and this app's open-source license",
+        "Faction picker now shows the real physical faction board, not a simplified list",
+        "Fixed the Lantids faction-info popup showing nothing",
+        "Changelog now has a short \"What's new\" tab for players and a separate \"Developer\" tab with the full history"
+      ],
+      "userChanges": [
+        "Added a Credits screen crediting the game's designers/artist and this app's open-source license",
+        "Faction picker now shows the real physical faction board, not a simplified list",
+        "Changelog now has a short \"What's new\" tab for players and a separate \"Developer\" tab with the full history"
+      ]
+    },
+    {
+      "version": "5.18.3",
+      "releasedAt": "2026-07-10",
+      "kind": "fix",
       "title": "Lobby crash hotfix",
       "impact": "",
-      "changes": ["Fixed a crash in the lobby's game-loading code (rpc().catch is not a function)"]
+      "changes": ["Fixed a crash in the lobby's game-loading code (rpc().catch is not a function)"],
+      "userChanges": []
     },
     {
       "version": "5.18.2",
       "releasedAt": "2026-07-10",
-      "kind": "update",
+      "kind": "fix",
       "title": "Lobby loading hotfix",
       "impact": "",
       "changes": [
         "Fixed the lobby getting stuck on \"Loading games...\" forever on a network hiccup, with a Retry button on failure"
-      ]
+      ],
+      "userChanges": []
     },
     {
       "version": "5.18.1",
       "releasedAt": "2026-07-10",
-      "kind": "update",
+      "kind": "fix",
       "title": "Dark mode hotfix",
       "impact": "",
       "changes": [
         "Fixed dark mode auto-activating (and making the page look broken) for anyone whose device defaults to dark mode"
-      ]
+      ],
+      "userChanges": []
     },
     {
       "version": "5.18.0",
@@ -49,6 +70,13 @@
         "In-game settings menu: abandon game and dark/light mode toggle",
         "Faction pick/ban popup shows the real round-1 starting position",
         "Fixed deleted admin users leaving a ghost account behind"
+      ],
+      "userChanges": [
+        "Renamed to \"GP: Fight Club\"",
+        "New auction options: Choose-Bid and Bid-While-Choosing",
+        "Direct-invite game creation with a player picker",
+        "New settings menu: dark mode and abandon game",
+        "Faction picker now shows the real starting board"
       ]
     },
     {
@@ -62,27 +90,34 @@
         "Optional official center-sector (1-4) map rule",
         "Redesigned faction-info popup with real in-game icons and a faction board preview",
         "Used special-action indicator now shows on claimed tech tiles too"
+      ],
+      "userChanges": [
+        "Optional ban phase when picking factions",
+        "Optional official center-sector rule",
+        "Redesigned faction-info popup with real board art"
       ]
     },
     {
       "version": "5.16.3",
       "releasedAt": "2026-07-09",
-      "kind": "update",
+      "kind": "fix",
       "title": "Fix invisible your-turn pulse",
       "impact": "",
       "changes": [
         "The green \"your turn\" pulse on the lobby game bar was being rendered correctly but clipped to invisible by its own swipe-to-delete container - now shows as an inset glow instead."
-      ]
+      ],
+      "userChanges": []
     },
     {
       "version": "5.16.2",
       "releasedAt": "2026-07-09",
-      "kind": "update",
+      "kind": "fix",
       "title": "Fix missing move-age on some games",
       "impact": "",
       "changes": [
         "Time since last move no longer silently disappears for some games - it was relying on a query that could hit a row limit once the project had enough total moves across all games."
-      ]
+      ],
+      "userChanges": []
     },
     {
       "version": "5.16.1",
@@ -93,7 +128,8 @@
       "changes": [
         "Open-lobby games now show a green X/Y seats-joined badge where the round number goes, instead of an empty slot.",
         "Move age no longer disappears if the client clock is even slightly behind the server's."
-      ]
+      ],
+      "userChanges": ["Open lobby games show a seats-joined badge"]
     },
     {
       "version": "5.16.0",
@@ -111,6 +147,11 @@
         "Game tabs now sort by your-turn-first, then most-recently-active.",
         "Faction board gained Protoplanet/Asteroid planet counters alongside the Gaia counter.",
         "Game-bar turn summaries no longer get overwritten by leech/income decision moves."
+      ],
+      "userChanges": [
+        "Lobby game previews now show the map",
+        "Games sorted with your-turn games first",
+        "Faction board shows Protoplanet/Asteroid planet counters"
       ]
     },
     {
@@ -119,7 +160,8 @@
       "kind": "update",
       "title": "Private access control",
       "impact": "",
-      "changes": ["New accounts start unapproved and see no game data until approved from Settings > Manage users"]
+      "changes": ["New accounts start unapproved and see no game data until approved from Settings > Manage users"],
+      "userChanges": ["New accounts need admin approval before they can see any games"]
     },
     {
       "version": "5.14.8",
@@ -130,30 +172,33 @@
       "changes": [
         "Hosted games now repair stale move-count drift before the first turn save, preventing setup picks from snapping back to player 1.",
         "A new hot-seat Playwright harness covers faction-pick and setup-move persistence through a full reload."
-      ]
+      ],
+      "userChanges": []
     },
     {
       "version": "5.14.7",
       "releasedAt": "2026-07-08",
-      "kind": "update",
+      "kind": "fix",
       "title": "Hosted faction-pick persistence",
       "impact": "",
       "changes": [
         "Hosted games now retry seat claiming before giving up on a faction pick or turn save.",
         "Games that briefly lose seat ownership during setup no longer snap back to player 1's faction picker after resync."
-      ]
+      ],
+      "userChanges": []
     },
     {
       "version": "5.14.6",
       "releasedAt": "2026-07-08",
-      "kind": "update",
+      "kind": "fix",
       "title": "Hosted sync and lobby fixes",
       "impact": "",
       "changes": [
         "Hosted turns now resync correctly when another tab or player already committed a conflicting move.",
         "The lobby now opens on public tables first, and open-table visibility is backed by the latest SQL policy update.",
         "The duplicate top turn banner is gone, and full setup previews use the main game layout so maps load more reliably."
-      ]
+      ],
+      "userChanges": ["Lobby now shows public tables first"]
     },
     {
       "version": "5.14.5",
@@ -163,7 +208,8 @@
       "changes": [
         "Open lobby setup previews now carry their own map and board SVG definitions so missing art is less likely on mobile.",
         "The full setup preview now uses the same sizing rules as the main game screen, which helps the map render correctly."
-      ]
+      ],
+      "userChanges": []
     },
     {
       "version": "5.14.4",
@@ -173,7 +219,8 @@
       "changes": [
         "Open lobby tables no longer reload the full setup preview just because seats change.",
         "Lobby setup previews now load their board art and map more reliably on first open."
-      ]
+      ],
+      "userChanges": []
     },
     {
       "version": "5.14.3",
@@ -183,14 +230,16 @@
       "changes": [
         "Open lobby tables now show one join action with joined player names instead of a full seat-by-seat button list.",
         "Setup previews now load the map and board art more reliably on the full-page lobby screen."
-      ]
+      ],
+      "userChanges": ["Open lobby tables show one join button with joined player names"]
     },
     {
       "version": "5.14.2",
       "releasedAt": "2026-07-08",
-      "kind": "update",
+      "kind": "feature",
       "title": "Full-page lobby previews",
-      "changes": ["Open lobby tables now open on their own page with compact seat controls above the setup preview."]
+      "changes": ["Open lobby tables now open on their own page with compact seat controls above the setup preview."],
+      "userChanges": ["Open lobby tables now open on their own page with seat controls"]
     },
     {
       "version": "5.14.1",
@@ -199,7 +248,8 @@
       "title": "Faster setup-turn updates",
       "changes": [
         "Initial faction and mine placement now update immediately after you confirm instead of appearing to stall on the same prompt."
-      ]
+      ],
+      "userChanges": []
     },
     {
       "version": "5.14.0",
@@ -210,6 +260,10 @@
         "New games now open in the lobby for players to join instead of requiring direct invites.",
         "Open tables show the setup preview, faction-pick mode, occupied seats, and join or leave actions until the game auto-starts.",
         "The changelog now keeps only short player-facing highlights instead of every developer follow-up fix."
+      ],
+      "userChanges": [
+        "New games open in the lobby for anyone to join instead of requiring direct invites",
+        "Open tables show the setup preview and open seats until the game starts"
       ]
     },
     {
@@ -220,6 +274,10 @@
       "changes": [
         "The hosted lobby uses the compact list layout with Active and Finished tabs.",
         "Mobile play shows cleaner top-bar turn state, premove controls, and refreshed faction/setup presentation."
+      ],
+      "userChanges": [
+        "Lobby has Active and Finished tabs",
+        "Cleaner mobile layout for the top bar, premoves, and faction/setup screens"
       ]
     },
     {
@@ -230,21 +288,24 @@
       "changes": [
         "Desktop devices still get turn alerts even while the game is open.",
         "Mobile and installed PWA sessions keep duplicate-alert suppression while you are actively playing."
-      ]
+      ],
+      "userChanges": ["Turn notifications now work correctly on both desktop and mobile"]
     },
     {
       "version": "5.13.1",
       "releasedAt": "2026-07-07",
       "kind": "fix",
       "title": "Correct fourth exploration reward",
-      "changes": ["The fourth spaceship exploration slot in 4-player Lost Fleet games now charges exactly 3 power."]
+      "changes": ["The fourth spaceship exploration slot in 4-player Lost Fleet games now charges exactly 3 power."],
+      "userChanges": []
     },
     {
       "version": "5.13.0",
       "releasedAt": "2026-07-07",
-      "kind": "update",
+      "kind": "feature",
       "title": "In-app update prompt",
-      "changes": ["Hosted tabs can detect when a newer version was deployed and prompt you to reload into it."]
+      "changes": ["Hosted tabs can detect when a newer version was deployed and prompt you to reload into it."],
+      "userChanges": ["The app can now prompt you to reload when a new version is available"]
     }
   ]
 }
