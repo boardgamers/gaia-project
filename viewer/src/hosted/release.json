@@ -1,7 +1,17 @@
 {
-  "version": "5.18.1",
+  "version": "5.18.2",
   "releasedAt": "2026-07-10",
   "entries": [
+    {
+      "version": "5.18.2",
+      "releasedAt": "2026-07-10",
+      "kind": "update",
+      "title": "Lobby loading hotfix",
+      "impact": "",
+      "changes": [
+        "Fixed the lobby getting stuck on \"Loading games...\" forever on a network hiccup, with a Retry button on failure"
+      ]
+    },
     {
       "version": "5.18.1",
       "releasedAt": "2026-07-10",
