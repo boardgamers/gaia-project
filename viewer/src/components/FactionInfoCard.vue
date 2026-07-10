@@ -24,6 +24,8 @@
       </div>
     </div>
 
+    <p v-if="exploreNote" class="faction-info-card__note">{{ exploreNote }}</p>
+
     <div v-if="buildingActions.length || piTech" class="faction-info-card__section">
       <div class="faction-info-card__label">Building actions (granted once built)</div>
       <div class="faction-info-card__actions">
@@ -83,6 +85,7 @@
       <details class="faction-info-card__acc-item">
         <summary class="faction-info-card__acc-header">Planetary Institute ability</summary>
         <p class="faction-info-card__text">{{ pi }}</p>
+        <p v-if="piNote" class="faction-info-card__text faction-info-card__pi-note">{{ piNote }}</p>
       </details>
     </div>
   </div>
@@ -105,9 +108,11 @@ import {
   DEFAULT_GAIA_MINE_COST,
   exploreCostIsDefault,
   exploreDeployCost,
+  exploreNote,
   gaiaMineExtraCost,
   hasGaiaMineSurcharge,
   isExpansionFaction,
+  piAbilityNote,
   piGrantsTechTile,
   startingBuildingNote,
   terraformCostDependsOnFactions,
@@ -218,6 +223,14 @@ export default class FactionInfoCard extends Vue {
 
   get gaiaSurcharge(): boolean {
     return hasGaiaMineSurcharge(this.previewPlayer);
+  }
+
+  get exploreNote(): string | null {
+    return exploreNote(this.faction);
+  }
+
+  get piNote(): string | null {
+    return piAbilityNote(this.faction);
   }
 
   get terraformNote(): string | null {
@@ -341,6 +354,19 @@ export default class FactionInfoCard extends Vue {
   font-size: 0.9rem;
   line-height: 1.35;
   white-space: pre-line;
+}
+
+.faction-info-card__note {
+  margin: -0.2rem 0 0.6rem;
+  font-size: 0.8rem;
+  line-height: 1.3;
+  opacity: 0.75;
+}
+
+.faction-info-card__pi-note {
+  opacity: 0.8;
+  border-top: 1px dashed rgba(0, 0, 0, 0.15);
+  padding-top: 0.4rem;
 }
 
 .faction-info-card__actions {

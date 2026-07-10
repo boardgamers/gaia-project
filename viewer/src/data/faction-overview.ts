@@ -107,6 +107,16 @@ export function exploreCostIsDefault(player: Player): boolean {
   );
 }
 
+// Faction-specific side effects of deploying an Exploration Shuttle, beyond paying the cost.
+export function exploreNote(faction: Faction): string | null {
+  if (faction === Faction.Taklons) {
+    // exploration.ts deployExplorationShuttle(): a Taklon moves the Brainstone to the Gaia area when
+    // exploring (and canPayExplorationCost forbids exploring while it is already there).
+    return "Deploying an Exploration Shuttle also moves your Brainstone into the Gaia area (so you cannot Explore while it is already there).";
+  }
+  return null;
+}
+
 // The default cost to build a mine on a Gaia planet (1 Q.I.C.), for the reference note next to a
 // surcharged faction.
 export const DEFAULT_GAIA_MINE_COST: Reward = new Reward(1, Resource.Qic);
@@ -161,6 +171,22 @@ export function startingBuildingNote(faction: Faction): string | null {
     default:
       return null;
   }
+}
+
+// Extra Planetary-Institute detail the one-line ability text doesn't capture. Lantids' PI tile
+// depends on the player count (RULES_CLARIFICATIONS §I2, engine lantids.ts gainAdjustedPiBonus):
+// with fewer than 4 players an adjusted tile is used.
+export function piAbilityNote(faction: Faction): string | null {
+  if (faction === Faction.Lantids) {
+    return (
+      "The Planetary Institute tile depends on the player count. With 4 players it is the base tile " +
+      "(gain 2 knowledge each time you build a mine on a planet already colonized by an opponent). " +
+      "With 2 players (or solo) you additionally gain 2 knowledge whenever you build a mine on a " +
+      "Terra planet (your home type) - even a normal first colonization. With 3 players you " +
+      "additionally charge 1 power each time you build a mine next to an opponent's structure."
+    );
+  }
+  return null;
 }
 
 // Only base-game factions genuinely changed by Lost Fleet get a "changes" section. Per the §I audit
