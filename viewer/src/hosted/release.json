@@ -1,7 +1,20 @@
 {
-  "version": "5.16.3",
-  "releasedAt": "2026-07-09",
+  "version": "5.17.0",
+  "releasedAt": "2026-07-10",
   "entries": [
+    {
+      "version": "5.17.0",
+      "releasedAt": "2026-07-10",
+      "kind": "update",
+      "title": "Gaia 17: setup features",
+      "impact": "",
+      "changes": [
+        "Optional ban phase for faction selection, usable with any pick/auction variant",
+        "Optional official center-sector (1-4) map rule",
+        "Redesigned faction-info popup with real in-game icons and a faction board preview",
+        "Used special-action indicator now shows on claimed tech tiles too"
+      ]
+    },
     {
       "version": "5.16.3",
       "releasedAt": "2026-07-09",
