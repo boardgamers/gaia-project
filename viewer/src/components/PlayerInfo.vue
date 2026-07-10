@@ -39,6 +39,7 @@
             :player="player"
             :placed="playerData.buildings.PI"
             :resource="['pw', 't']"
+            :reveal-income="preview"
           />
           <BuildingGroup
             :transform="player.faction === 'bescods' ? 'translate(2.2, 10)' : 'translate(12, 10)'"
@@ -49,6 +50,7 @@
             :ac1="playerData.buildings.ac1"
             :ac2="playerData.buildings.ac2"
             :resource="['q']"
+            :reveal-income="preview"
           />
           <BuildingGroup
             v-if="isFrontiers"
@@ -75,6 +77,7 @@
             :player="player"
             :placed="playerData.buildings.ts"
             :resource="['c']"
+            :reveal-income="preview"
           />
           <BuildingGroup
             transform="translate(11, 13)"
@@ -83,6 +86,7 @@
             :player="player"
             :placed="playerData.buildings.lab"
             :resource="['k']"
+            :reveal-income="preview"
           />
           <BuildingGroup
             transform="translate(0, 16)"
@@ -91,6 +95,7 @@
             :player="player"
             :placed="playerData.buildings.m"
             :resource="['o']"
+            :reveal-income="preview"
           />
           <!-- M to TS -->
           <line x1="5.7" x2="5.7" y1="14.2" y2="14.8" stroke="black" stroke-width="0.06" />

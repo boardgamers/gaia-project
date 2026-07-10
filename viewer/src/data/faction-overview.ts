@@ -1,4 +1,4 @@
-import { Building, Faction, FactionBoard, Operator, Player, Reward } from "@gaia-project/engine";
+import { Building, Faction, FactionBoard, Operator, Player, Resource, Reward } from "@gaia-project/engine";
 import { TinkeringTile } from "@gaia-project/engine/src/enums";
 import { explorationCost } from "@gaia-project/engine/src/exploration";
 import { tinkeringTilesForRound, tinkeringTileSpec } from "@gaia-project/engine/src/factions";
@@ -28,10 +28,30 @@ export function exploreDeployCost(player: Player): Reward[] {
   return explorationCost(player);
 }
 
-// The extra cost to build a mine on a Gaia planet: 1 Q.I.C. normally, 1 ore for Gleens, and a
-// 2-Q.I.C. surcharge for Darkanians and Space Giants.
+// The cost to build a mine on a Gaia planet: 1 Q.I.C. by default, so only worth surfacing when a
+// faction pays a genuine surcharge (Darkanians and Space Giants pay 2 Q.I.C.). Gleens' 1-ore
+// substitution is a lateral change covered by their faction ability, not an extra cost.
 export function gaiaMineExtraCost(player: Player): Reward {
   return player.gaiaFormingCost();
+}
+
+export function hasGaiaMineSurcharge(player: Player): boolean {
+  const cost = player.gaiaFormingCost();
+  return cost.type === Resource.Qic && cost.count > 1;
+}
+
+// Short board labels, matching common table/forum shorthand (notably AC1/AC2 for the two academies).
+const BUILDING_SHORT_LABELS: { [building in Building]?: string } = {
+  [Building.Mine]: "M",
+  [Building.TradingStation]: "TS",
+  [Building.ResearchLab]: "RL",
+  [Building.Academy1]: "AC1",
+  [Building.Academy2]: "AC2",
+  [Building.PlanetaryInstitute]: "PI",
+};
+
+export function buildingShortLabel(building: Building): string {
+  return BUILDING_SHORT_LABELS[building] ?? "";
 }
 
 export type BuildingSpecialAction = { building: Building; income: string };

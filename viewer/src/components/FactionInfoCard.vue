@@ -13,7 +13,7 @@
       <div class="faction-info-card__hint">Deploy cost only; range Q.I.C. depends on board position.</div>
     </div>
 
-    <div class="faction-info-card__section">
+    <div v-if="gaiaSurcharge" class="faction-info-card__section">
       <div class="faction-info-card__label">Mine on a Gaia planet (extra)</div>
       <RichTextView :content="gaiaMineCostContent" />
     </div>
@@ -22,16 +22,22 @@
       <div class="faction-info-card__label">Building actions (granted once built)</div>
       <div class="faction-info-card__actions">
         <div v-for="(a, i) in buildingActions" :key="'act-' + i" class="faction-info-card__action">
-          <svg viewBox="0 0 10 10" width="30" height="30">
-            <Building :building="a.building" :faction="faction" transform="translate(5,5) scale(1.3)" flat />
-          </svg>
+          <span class="faction-info-card__building">
+            <svg viewBox="0 0 10 10" width="30" height="30">
+              <Building :building="a.building" :faction="faction" transform="translate(5,5) scale(0.8)" flat />
+            </svg>
+            <span class="faction-info-card__building-label">{{ buildingLabel(a.building) }}</span>
+          </span>
           <span class="faction-info-card__arrow">&rarr;</span>
           <SpecialAction :action="[a.income]" board />
         </div>
         <div v-if="piTech" class="faction-info-card__action">
-          <svg viewBox="0 0 10 10" width="30" height="30">
-            <Building :building="PI" :faction="faction" transform="translate(5,5) scale(1.3)" flat />
-          </svg>
+          <span class="faction-info-card__building">
+            <svg viewBox="0 0 10 10" width="30" height="30">
+              <Building :building="PI" :faction="faction" transform="translate(5,5) scale(0.8)" flat />
+            </svg>
+            <span class="faction-info-card__building-label">PI</span>
+          </span>
           <span class="faction-info-card__arrow">&rarr;</span>
           <span class="faction-info-card__chip">tech tile of choice</span>
         </div>
@@ -84,8 +90,10 @@ import {
   baseFactionLostFleetChanges,
   BuildingSpecialAction,
   buildingSpecialActions,
+  buildingShortLabel,
   exploreDeployCost,
   gaiaMineExtraCost,
+  hasGaiaMineSurcharge,
   isExpansionFaction,
   piGrantsTechTile,
   startingBuildingNote,
@@ -172,6 +180,14 @@ export default class FactionInfoCard extends Vue {
 
   get gaiaMineCostContent(): RichText {
     return [richTextRewards([gaiaMineExtraCost(this.previewPlayer)])];
+  }
+
+  get gaiaSurcharge(): boolean {
+    return hasGaiaMineSurcharge(this.previewPlayer);
+  }
+
+  buildingLabel(building: BuildingEnum): string {
+    return buildingShortLabel(building);
   }
 
   get buildingActions(): BuildingSpecialAction[] {
@@ -268,7 +284,21 @@ export default class FactionInfoCard extends Vue {
 .faction-info-card__action {
   display: flex;
   align-items: center;
-  gap: 0.15rem;
+  gap: 0.25rem;
+}
+
+.faction-info-card__building {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+
+.faction-info-card__building-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  opacity: 0.7;
+  margin-top: 0.05rem;
 }
 
 .faction-info-card__arrow {
