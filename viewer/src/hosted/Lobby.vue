@@ -521,8 +521,10 @@ export default Vue.extend({
       this.loadFailed = false;
       try {
         // Fire-and-forget: no pg_cron dependency for pruning week-old abandoned games, any lobby
-        // visit nudges it along instead.
-        (this.client as any).rpc("prune_abandoned_games").catch(() => undefined);
+        // visit nudges it along instead. Wrapped in Promise.resolve() because the query builder
+        // returned by .rpc() is only thenable (implements .then()), not a real Promise - calling
+        // .catch() directly on it throws synchronously instead of catching a rejection.
+        Promise.resolve((this.client as any).rpc("prune_abandoned_games")).catch(() => undefined);
         // Race against a timeout too, not just try/catch: a genuinely hung request (dead
         // connection, no response ever) never rejects on its own, so try/catch alone still leaves
         // `loading` stuck forever on a bad network.
