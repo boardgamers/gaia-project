@@ -1,7 +1,15 @@
 {
-  "version": "5.18.2",
+  "version": "5.18.3",
   "releasedAt": "2026-07-10",
   "entries": [
+    {
+      "version": "5.18.3",
+      "releasedAt": "2026-07-10",
+      "kind": "update",
+      "title": "Lobby crash hotfix",
+      "impact": "",
+      "changes": ["Fixed a crash in the lobby's game-loading code (rpc().catch is not a function)"]
+    },
     {
       "version": "5.18.2",
       "releasedAt": "2026-07-10",
