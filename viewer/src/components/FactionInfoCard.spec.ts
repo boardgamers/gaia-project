@@ -18,7 +18,7 @@ describe("FactionInfoCard", () => {
     // The actual in-game board component is reused (its root svg carries the .player-board class).
     expect(container.querySelector(".player-board")).to.not.equal(null);
     // Explore cost is always shown.
-    expect(container.textContent).to.include("Explore cost");
+    expect(container.textContent).to.include("Explore");
     // Abilities remain in the DOM (behind a collapse toggle).
     expect(container.textContent).to.include(
       "During the Gaia phase, move the power tokens in your Gaia area to area II"

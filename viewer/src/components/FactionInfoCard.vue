@@ -7,15 +7,16 @@
          below. -->
     <FactionBoardPreview :engine="previewEngine" :player="previewPlayer" />
 
-    <div class="faction-info-card__section">
-      <div class="faction-info-card__label">Explore cost</div>
-      <RichTextView :content="exploreCostContent" />
-      <div class="faction-info-card__hint">Deploy cost only; range Q.I.C. depends on board position.</div>
-    </div>
-
-    <div v-if="gaiaSurcharge" class="faction-info-card__section">
-      <div class="faction-info-card__label">Mine on a Gaia planet (extra)</div>
-      <RichTextView :content="gaiaMineCostContent" />
+    <div class="faction-info-card__facts">
+      <div class="faction-info-card__fact">
+        <span class="faction-info-card__label">Explore</span>
+        <RichTextView :content="exploreCostContent" />
+        <span class="faction-info-card__hint">(deploy; +range Q.I.C. by distance)</span>
+      </div>
+      <div v-if="gaiaSurcharge" class="faction-info-card__fact">
+        <span class="faction-info-card__label">Gaia mine</span>
+        <RichTextView :content="gaiaMineCostContent" />
+      </div>
     </div>
 
     <div v-if="buildingActions.length || piTech" class="faction-info-card__section">
@@ -24,7 +25,7 @@
         <div v-for="(a, i) in buildingActions" :key="'act-' + i" class="faction-info-card__action">
           <span class="faction-info-card__building">
             <svg viewBox="0 0 10 10" width="30" height="30">
-              <Building :building="a.building" :faction="faction" transform="translate(5,5) scale(0.8)" flat />
+              <Building :building="a.building" :faction="faction" transform="translate(5,5) scale(0.8)" outline />
             </svg>
             <span class="faction-info-card__building-label">{{ buildingLabel(a.building) }}</span>
           </span>
@@ -34,7 +35,7 @@
         <div v-if="piTech" class="faction-info-card__action">
           <span class="faction-info-card__building">
             <svg viewBox="0 0 10 10" width="30" height="30">
-              <Building :building="PI" :faction="faction" transform="translate(5,5) scale(0.8)" flat />
+              <Building :building="PI" :faction="faction" transform="translate(5,5) scale(0.8)" outline />
             </svg>
             <span class="faction-info-card__building-label">PI</span>
           </span>
@@ -105,6 +106,7 @@ import RichTextView from "./Resources/RichTextView.vue";
 import PlayerInfo from "./PlayerInfo.vue";
 import Building from "./Building.vue";
 import SpecialAction from "./SpecialAction.vue";
+import Buildings from "./definitions/Buildings.vue";
 
 // A thin wrapper that renders the in-game faction board (PlayerInfo, preview mode) against a
 // dedicated read-only preview store instead of the live game store. Swapping `$store` in
@@ -112,7 +114,13 @@ import SpecialAction from "./SpecialAction.vue";
 // component read the preview engine, with clicks/tooltips/highlights inertly no-ops. The engine
 // committed here is the same instance the parent reads for its supplemental costs, so board and
 // text never drift.
-@Component({ components: { PlayerInfo } })
+//
+// It also emits a `<Buildings>` <defs> block on the preview store: those building images
+// (`#ac-<faction>`, `#gf-<faction>`, `#sp-<faction>`, ...) are otherwise only generated for factions
+// already in the live game, so during faction selection they don't exist and every building `<use>`
+// (the reused board's gaiaformer, the Ivits space-station action icon, the building-action icons)
+// renders blank. Emitting them here - keyed by the preview player's faction - makes them resolve.
+@Component({ components: { PlayerInfo, Buildings } })
 class FactionBoardPreview extends Vue {
   @Prop()
   engine: Engine;
@@ -130,7 +138,10 @@ class FactionBoardPreview extends Vue {
   }
 
   render(h: any) {
-    return h(PlayerInfo, { props: { player: this.player, preview: true } });
+    return h("div", [
+      h("svg", { attrs: { width: 0, height: 0 }, style: { position: "absolute" } }, [h(Buildings)]),
+      h(PlayerInfo, { props: { player: this.player, preview: true } }),
+    ]);
   }
 }
 
@@ -240,7 +251,7 @@ export default class FactionInfoCard extends Vue {
 
 <style lang="scss" scoped>
 .faction-info-card__section {
-  margin-bottom: 0.9rem;
+  margin-bottom: 0.6rem;
 
   &:last-child {
     margin-bottom: 0;
@@ -253,13 +264,31 @@ export default class FactionInfoCard extends Vue {
   text-transform: uppercase;
   letter-spacing: 0.04em;
   opacity: 0.85;
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.25rem;
 }
 
 .faction-info-card__hint {
   font-size: 0.72rem;
   opacity: 0.6;
-  margin-top: 0.15rem;
+}
+
+// Compact "label: value" rows (explore cost, Gaia mine) that sit inline instead of stacking.
+.faction-info-card__facts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.1rem 1.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.faction-info-card__fact {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+
+  .faction-info-card__label {
+    margin-bottom: 0;
+  }
 }
 
 .faction-info-card__list {
