@@ -126,6 +126,10 @@
 
     <b-list-group v-if="loading || visibleGames.length === 0" class="mb-3">
       <b-list-group-item v-if="loading">Loading games...</b-list-group-item>
+      <b-list-group-item v-else-if="loadFailed" class="d-flex justify-content-between align-items-center">
+        {{ emptyStateText }}
+        <b-button size="sm" variant="outline-secondary" @click="refresh">Retry</b-button>
+      </b-list-group-item>
       <b-list-group-item v-else>
         {{ emptyStateText }}
       </b-list-group-item>
@@ -392,6 +396,7 @@ export default Vue.extend({
     return {
       games: [] as any[],
       loading: true,
+      loadFailed: false,
       pushBusy: false,
       pushEnabled: false,
       message: "",
@@ -456,6 +461,9 @@ export default Vue.extend({
       return Object.keys(this.presenceState).filter((userId) => (this.presenceState[userId] ?? []).length > 0).length;
     },
     emptyStateText(): string {
+      if (this.loadFailed) {
+        return this.message || "Could not load games.";
+      }
       if (this.activeTab === "mine") {
         return "No games with you in them yet.";
       }
@@ -510,16 +518,23 @@ export default Vue.extend({
     },
     async refresh() {
       this.loading = true;
-      // Fire-and-forget: no pg_cron dependency for pruning week-old abandoned games, any lobby
-      // visit nudges it along instead.
-      (this.client as any).rpc("prune_abandoned_games").catch(() => undefined);
-      const { data, error } = await (this.client as any)
-        .from("games")
-        .select("*, players(*)")
-        .order("created_at", { ascending: false });
-      if (error) {
-        this.message = `Could not load games: ${error.message}`;
-      } else {
+      this.loadFailed = false;
+      try {
+        // Fire-and-forget: no pg_cron dependency for pruning week-old abandoned games, any lobby
+        // visit nudges it along instead.
+        (this.client as any).rpc("prune_abandoned_games").catch(() => undefined);
+        // Race against a timeout too, not just try/catch: a genuinely hung request (dead
+        // connection, no response ever) never rejects on its own, so try/catch alone still leaves
+        // `loading` stuck forever on a bad network.
+        const { data, error } = await Promise.race([
+          (this.client as any).from("games").select("*, players(*)").order("created_at", { ascending: false }),
+          new Promise<never>((_resolve, reject) =>
+            setTimeout(() => reject(new Error("Timed out - check your connection")), 15000)
+          ),
+        ]);
+        if (error) {
+          throw new Error(error.message);
+        }
         const games = (data ?? []).map((game: any) => ({ ...game }));
         // Only games missing their cached summary/timestamp (pre-existing rows from before those
         // columns existed, or a genuinely new row commit_turn hasn't touched yet) need this
@@ -564,8 +579,15 @@ export default Vue.extend({
           }
         }
         this.games = games;
+      } catch (err) {
+        // A rejected fetch (a real network failure, not a server-returned error object) used to
+        // leave `loading` stuck true forever - "Loading games..." with no way out and no error
+        // shown, reported live as "no games show". Always land back in a recoverable state now.
+        this.message = `Could not load games: ${err instanceof Error ? err.message : err}`;
+        this.loadFailed = true;
+      } finally {
+        this.loading = false;
       }
-      this.loading = false;
     },
     subscribeGames() {
       const channel = (this.client as any)

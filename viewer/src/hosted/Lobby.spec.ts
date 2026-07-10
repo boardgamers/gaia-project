@@ -1071,6 +1071,7 @@ describe("Lobby", () => {
     emitGamesChange();
     await Vue.nextTick();
     await Vue.nextTick();
+    await Vue.nextTick();
 
     expect(wrapper.text()).to.contain("R4");
     expect(wrapper.text()).to.contain("55m ago");
