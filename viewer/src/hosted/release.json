@@ -1,7 +1,28 @@
 {
-  "version": "5.17.0",
+  "version": "5.18.0",
   "releasedAt": "2026-07-10",
   "entries": [
+    {
+      "version": "5.18.0",
+      "releasedAt": "2026-07-10",
+      "kind": "update",
+      "title": "Gaia 18 UI improvements",
+      "impact": "",
+      "changes": [
+        "Rebranded to \"GP: Fight Club\"",
+        "Info buttons now open a popup instead of expanding inline text",
+        "Active tab no longer double-lists your own games",
+        "Choose-Bid and Bid-While-Choosing auction variants selectable at game creation",
+        "Nickname editor auto-opens for accounts still on a default nickname",
+        "Ban Phase / Sector 1-4 tags shown on game rows",
+        "Direct-invite game creation with a nickname-sorted player picker",
+        "Pulsing online-player-count indicator on mobile",
+        "Fixed avatar and score-badge overlap in the game bar",
+        "In-game settings menu: abandon game and dark/light mode toggle",
+        "Faction pick/ban popup shows the real round-1 starting position",
+        "Fixed deleted admin users leaving a ghost account behind"
+      ]
+    },
     {
       "version": "5.17.0",
       "releasedAt": "2026-07-10",
