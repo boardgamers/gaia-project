@@ -41,6 +41,17 @@
       >
         &#128276;
       </b-button>
+      <b-dropdown size="sm" right no-caret variant="outline-secondary" toggle-class="hosted-bar__settings-toggle">
+        <template #button-content>
+          <span aria-hidden="true">&#9881;</span>
+          <span class="sr-only">Settings</span>
+        </template>
+        <b-dropdown-item-button @click="toggleDarkMode">{{
+          isDarkMode ? "Light mode" : "Dark mode"
+        }}</b-dropdown-item-button>
+        <b-dropdown-divider></b-dropdown-divider>
+        <b-dropdown-item-button v-if="!abandoned" @click="confirmAbandon">Abandon game</b-dropdown-item-button>
+      </b-dropdown>
     </span>
   </div>
 </template>
@@ -48,6 +59,7 @@
 <script lang="ts">
 import Vue from "vue";
 import TurnOrder from "../components/TurnOrder.vue";
+import { getTheme, toggleTheme } from "./theme";
 
 export default Vue.extend({
   name: "HostedBar",
@@ -57,6 +69,22 @@ export default Vue.extend({
     finished: { type: Boolean, default: false },
     pushBusy: { type: Boolean, default: false },
     pushEnabled: { type: Boolean, default: false },
+    abandoned: { type: Boolean, default: false },
+  },
+  data() {
+    return {
+      isDarkMode: getTheme() === "dark",
+    };
+  },
+  methods: {
+    toggleDarkMode() {
+      this.isDarkMode = toggleTheme() === "dark";
+    },
+    confirmAbandon() {
+      if (window.confirm("Abandon this game? It will be unplayable and shown as abandoned to the other players.")) {
+        this.$emit("abandon-game");
+      }
+    },
   },
 });
 </script>
@@ -75,6 +103,12 @@ export default Vue.extend({
 
 .hosted-bar__back {
   text-decoration: none;
+}
+
+::v-deep(.hosted-bar__settings-toggle) {
+  min-width: 2.2rem;
+  padding-left: 0.45rem;
+  padding-right: 0.45rem;
 }
 
 .hosted-bar__turn-order {
@@ -104,4 +138,3 @@ export default Vue.extend({
   }
 }
 </style>
-

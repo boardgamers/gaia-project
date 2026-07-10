@@ -19,6 +19,7 @@ export type GameRow = {
   // Cached lobby-list "time since last move" (migration 0026) - avoids an unbounded cross-game
   // moves query that silently hit PostgREST's row cap once this project passed ~1000 total moves.
   latest_move_committed_at?: string | null;
+  abandoned_at?: string | null;
 };
 
 export type PlayerRow = {

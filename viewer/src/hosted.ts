@@ -18,6 +18,7 @@ import {
 import { trackPresence } from "./hosted/presence";
 import SignIn from "./hosted/SignIn.vue";
 import { createSupabaseBackend, getSupabaseClient, subscribeMoves, SupabaseClient } from "./hosted/supabase-client";
+import { initTheme } from "./hosted/theme";
 import { setViewportZoomLocked } from "./hosted/viewport";
 import launch from "./launcher";
 import { parseAutoChargePreference } from "./logic/auto-decide";
@@ -71,6 +72,7 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
       finished: false,
       pushBusy: false,
       pushEnabled: false,
+      abandoned: false,
     },
     render(h) {
       return h(HostedBar, {
@@ -87,6 +89,14 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
             window.alert(await disablePushNotifications(client));
             bar.pushEnabled = await isPushEnabled();
             bar.pushBusy = false;
+          },
+          "abandon-game": async () => {
+            const { error } = await client.rpc("abandon_game", { p_game_id: gameId });
+            if (error) {
+              window.alert(`Could not abandon the game: ${error.message}`);
+            } else {
+              bar.abandoned = true;
+            }
           },
         },
       });
@@ -119,6 +129,7 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
         emitter.emit("state", data);
         bar.gameName = host.game?.name ?? "";
         bar.finished = data.phase === "endGame";
+        bar.abandoned = !!host.game?.abandoned_at;
         const turnSeat = data.playerToMove;
         const playerCount = host.game?.player_count ?? 0;
         // Re-lock on every state so a user playing several (but not all) seats
@@ -167,14 +178,8 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
   // its presence entry) is only known once host.players is populated by load() above; the presence
   // channel join itself doesn't need to wait on that, but there's nothing useful to track before a
   // gameId exists, so it's started here too rather than earlier.
-  emitter.emit(
-    "seatUsers",
-    Object.fromEntries(host.players.map((p) => [p.seat, p.user_id]))
-  );
-  emitter.emit(
-    "seatLastActive",
-    Object.fromEntries(host.players.map((p) => [p.seat, p.last_active_at ?? null]))
-  );
+  emitter.emit("seatUsers", Object.fromEntries(host.players.map((p) => [p.seat, p.user_id])));
+  emitter.emit("seatLastActive", Object.fromEntries(host.players.map((p) => [p.seat, p.last_active_at ?? null])));
   trackPresence(client, session.user.id, { type: "game", gameId }, (state) => emitter.emit("presence", state));
 
   // Seat locking happens inside onState via seatToLock (launcher.ts "player"
@@ -280,6 +285,7 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
 }
 
 export default async function launchHosted(selector = "#app"): Promise<void> {
+  initTheme();
   const root = document.querySelector(selector);
   if (!root) {
     throw new Error(`no element matches ${selector}`);

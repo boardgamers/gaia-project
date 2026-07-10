@@ -294,7 +294,7 @@ describe("Lobby", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
-    expect(wrapper.text()).to.contain("Gaia Project: The Lost Fleet");
+    expect(wrapper.text()).to.contain("GP: Fight Club");
     expect(wrapper.find(".lobby-toolbar__actions")!.text()).to.not.contain("Manage users");
     expect((wrapper.vm as any).swipeOffset("g-mine")).to.equal(0);
     expect((wrapper.vm as any).swipeOffset("g-theirs")).to.equal(0);
@@ -370,7 +370,7 @@ describe("Lobby", () => {
       await Vue.nextTick();
       await Vue.nextTick();
 
-      wrapper.setData({ activeTab: "active" });
+      wrapper.setData({ activeTab: "mine" });
       await Vue.nextTick();
 
       wrapper.setData({ revealedGameId: "g-mine" });
@@ -383,7 +383,7 @@ describe("Lobby", () => {
       await button.trigger("click");
       await Vue.nextTick();
 
-      expect(deletedId()).to.equal(null);
+      expect(deletedId(), "delete_game should not be called").to.equal(null);
     } finally {
       window.confirm = originalConfirm;
     }
@@ -442,7 +442,7 @@ describe("Lobby", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
-    wrapper.setData({ activeTab: "active" });
+    wrapper.setData({ activeTab: "mine" });
     await Vue.nextTick();
 
     expect(wrapper.text()).to.contain("R3");
@@ -507,7 +507,7 @@ describe("Lobby", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
-    wrapper.setData({ activeTab: "active" });
+    wrapper.setData({ activeTab: "mine" });
     await Vue.nextTick();
 
     expect(wrapper.find(".game-bar").classes()).to.contain("game-bar--my-turn");
@@ -546,7 +546,7 @@ describe("Lobby", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
-    wrapper.setData({ activeTab: "active" });
+    wrapper.setData({ activeTab: "mine" });
     await Vue.nextTick();
 
     expect(wrapper.find(".game-bar__age").exists(), "age should still render, not vanish").to.equal(true);
@@ -588,7 +588,7 @@ describe("Lobby", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
-    wrapper.setData({ activeTab: "active" });
+    wrapper.setData({ activeTab: "mine" });
     await Vue.nextTick();
 
     expect(wrapper.text()).to.contain("3h ago");
@@ -615,13 +615,13 @@ describe("Lobby", () => {
     expect(wrapper.text()).to.contain(`Version ${release.version}`);
     expect(wrapper.text()).to.not.contain("2026-07-08");
     expect(wrapper.text()).to.not.contain("kim.pham.nguyen2@gmail.com");
-    expect(wrapper.find(".release-modal").exists()).to.equal(false);
+    expect(wrapper.find(".info-modal").exists()).to.equal(false);
 
     const toggle = wrapper.find(".lobby-meta__toggle-link");
     await toggle.trigger("click");
     await Vue.nextTick();
 
-    expect(wrapper.find(".release-modal").exists()).to.equal(true);
+    expect(wrapper.find(".info-modal").exists()).to.equal(true);
     expect(wrapper.text()).to.contain("Hosted changelog");
     expect(wrapper.text()).to.contain(currentEntry.title);
     expect(wrapper.text()).to.contain(currentEntry.changes[0]);
@@ -670,9 +670,9 @@ describe("Lobby", () => {
     await Vue.nextTick();
 
     titles = wrapper.findAll(".game-bar__title").wrappers.map((node) => node.text());
-    expect(titles).to.deep.equal(["My gameStandard", "Their gameSilent Auction"]);
+    expect(titles).to.deep.equal(["Their gameSilent Auction"]);
     summaries = wrapper.findAll(".game-bar__summary").wrappers.map((node) => node.text());
-    expect(summaries).to.deep.equal(["55m ago Terrans up int.", "2h ago Xenos pass booster3."]);
+    expect(summaries).to.deep.equal(["2h ago Xenos pass booster3."]);
 
     const finishedTab = wrapper
       .findAll("button")
@@ -833,7 +833,7 @@ describe("Lobby", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
-    wrapper.setData({ activeTab: "active" });
+    wrapper.setData({ activeTab: "mine" });
     await Vue.nextTick();
 
     expect(wrapper.find(".game-bar__summary").text()).to.equal("55m ago Ivits up int.");
@@ -863,7 +863,7 @@ describe("Lobby", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
-    wrapper.setData({ activeTab: "active" });
+    wrapper.setData({ activeTab: "mine" });
     await Vue.nextTick();
 
     expect(wrapper.findAll(".game-bar__player-row").length).to.equal(2);
@@ -913,7 +913,7 @@ describe("Lobby", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
-    wrapper.setData({ activeTab: "active" });
+    wrapper.setData({ activeTab: "mine" });
     await Vue.nextTick();
 
     const presenceDots = wrapper.findAll(".game-bar__presence");
@@ -1103,7 +1103,7 @@ describe("Lobby", () => {
 
     expect((wrapper.vm as any).showNicknameModal).to.equal(true);
     expect((wrapper.vm as any).nicknameInput).to.equal("OldName");
-    expect(wrapper.find(".release-modal").text()).to.contain("Edit nickname");
+    expect(wrapper.find(".info-modal").text()).to.contain("Edit nickname");
 
     wrapper.setData({ nicknameInput: "Star Fox" });
     await (wrapper.vm as any).saveNickname();

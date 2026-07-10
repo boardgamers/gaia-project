@@ -115,7 +115,10 @@ Deno.serve(async (req) => {
       }
 
       await service.from("push_subscriptions").delete().eq("user_id", body.userId);
-      const { error } = await service.auth.admin.deleteUser(body.userId, true);
+      // Hard delete (default): a soft delete leaves the auth.users row behind with its email
+      // scrambled to a random string, which then lingers forever in listUsers() as a ghost entry
+      // showing that scrambled string instead of the account actually being gone.
+      const { error } = await service.auth.admin.deleteUser(body.userId);
       if (error) {
         throw error;
       }
@@ -156,7 +159,9 @@ Deno.serve(async (req) => {
         const email = (user.email ?? "").toLowerCase();
         const claimedSeats = players.filter((player) => player.user_id === user.id);
         const invitedSeats = players.filter((player) => player.user_id === user.id || player.invited_email === email);
-        const activeGames = new Set(invitedSeats.map((player) => player.game_id).filter((gameId) => activeGameIds.has(gameId)));
+        const activeGames = new Set(
+          invitedSeats.map((player) => player.game_id).filter((gameId) => activeGameIds.has(gameId))
+        );
         return {
           id: user.id,
           email: user.email,

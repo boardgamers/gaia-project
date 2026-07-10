@@ -42,7 +42,7 @@ describe("CreateGame", () => {
     expect(wrapper.find('input[type="email"]').exists()).to.equal(false);
   });
 
-  it("explains that regular games open in the lobby instead of inviting players directly", async () => {
+  it("defaults to open lobby, explaining that seats stay open for anyone to join", async () => {
     const wrapper = mount(CreateGame, {
       propsData: { client: makeClient(), session },
       stubs: { SetupPreview: true },
@@ -50,8 +50,43 @@ describe("CreateGame", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
-    expect(wrapper.text()).to.include("Regular games now open in the lobby instead of sending invites.");
     expect(wrapper.text()).to.include("You take seat 1 immediately");
+    expect(wrapper.text()).to.include("stay open in the lobby for anyone to join");
+  });
+
+  it("offers a direct-invite picker of other players, sorted by nickname", async () => {
+    const client = makeClient();
+    (client as any).rpc = async (name: string) => {
+      if (name === "list_invitable_players") {
+        return {
+          // list_invitable_players already orders by nickname server-side (migration
+          // 0027_list_invitable_players.sql); the mock returns them pre-sorted the same way.
+          data: [
+            { user_id: "user-amy", nickname: "Amy" },
+            { user_id: "user-zed", nickname: "Zed" },
+          ],
+          error: null,
+        };
+      }
+      return { data: null, error: null };
+    };
+    const wrapper = mount(CreateGame, {
+      propsData: { client, session },
+      stubs: { SetupPreview: true },
+    });
+    await Vue.nextTick();
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    const directButton = wrapper
+      .findAll("button")
+      .filter((b) => b.text() === "Direct invite")
+      .at(0);
+    await directButton.trigger("click");
+    await Vue.nextTick();
+
+    const rows = wrapper.findAll(".create-game-invite-row");
+    expect(rows.wrappers.map((row) => row.text())).to.deep.equal(["Amy", "Zed"]);
   });
 
   it("keeps Create disabled until the setup preview reports a valid setup", async () => {
@@ -62,10 +97,15 @@ describe("CreateGame", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
-    const createButton = wrapper.findAll("button").filter((b) => b.text() === "Create game").at(0);
+    const createButton = wrapper
+      .findAll("button")
+      .filter((b) => b.text() === "Create game")
+      .at(0);
     expect((createButton.element as HTMLButtonElement).disabled).to.equal(true);
 
-    await wrapper.findComponent(SetupPreview as any).vm.$emit("update", { seed: "s", rotateMove: "p2 rotate", valid: true });
+    await wrapper
+      .findComponent(SetupPreview as any)
+      .vm.$emit("update", { seed: "s", rotateMove: "p2 rotate", valid: true });
     await Vue.nextTick();
 
     expect((createButton.element as HTMLButtonElement).disabled).to.equal(false);

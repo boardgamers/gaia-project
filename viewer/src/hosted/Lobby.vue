@@ -37,6 +37,9 @@
             <b-dropdown-divider></b-dropdown-divider>
           </template>
           <b-dropdown-item-button @click="openNicknameModal">Edit nickname</b-dropdown-item-button>
+          <b-dropdown-item-button @click="toggleDarkMode">{{
+            isDarkMode ? "Light mode" : "Dark mode"
+          }}</b-dropdown-item-button>
           <b-dropdown-item-button @click="signOut">Sign out</b-dropdown-item-button>
         </b-dropdown>
       </div>
@@ -170,6 +173,7 @@
                     >Sector 1-4</span
                   >
                   <span v-if="isTestGame(game)" class="game-bar__tag">Test game</span>
+                  <span v-if="game.abandoned_at" class="game-bar__tag game-bar__tag--abandoned">Abandoned</span>
                 </span>
                 <span v-if="summaryForGame(game)" class="game-bar__summary text-muted small">
                   <span v-if="moveAge(game)" class="game-bar__age">{{ moveAge(game) }}</span>
@@ -224,6 +228,7 @@ import { isAdminEmail } from "./admin";
 import InfoModal from "./InfoModal.vue";
 import { fetchMyNickname, setMyNickname } from "./profile";
 import releaseData from "./release.json";
+import { getTheme, toggleTheme } from "./theme";
 
 const SWIPE_ACTION_WIDTH = 88;
 
@@ -404,6 +409,7 @@ export default Vue.extend({
       documentPointerDownHandler: null as ((event: PointerEvent) => void) | null,
       stopPresenceTracking: null as (() => void) | null,
       presenceState: {} as PresenceState,
+      isDarkMode: getTheme() === "dark",
     };
   },
   computed: {
@@ -504,6 +510,9 @@ export default Vue.extend({
     },
     async refresh() {
       this.loading = true;
+      // Fire-and-forget: no pg_cron dependency for pruning week-old abandoned games, any lobby
+      // visit nudges it along instead.
+      (this.client as any).rpc("prune_abandoned_games").catch(() => undefined);
       const { data, error } = await (this.client as any)
         .from("games")
         .select("*, players(*)")
@@ -737,6 +746,9 @@ export default Vue.extend({
       this.message = await disablePushNotifications(this.client);
       this.pushEnabled = await isPushEnabled();
       this.pushBusy = false;
+    },
+    toggleDarkMode() {
+      this.isDarkMode = toggleTheme() === "dark";
     },
     async signOut() {
       await (this.client as any).auth.signOut();
@@ -1050,6 +1062,11 @@ export default Vue.extend({
   font-size: 0.68rem;
   font-weight: 700;
   line-height: 1;
+
+  &--abandoned {
+    background: #f8d7da;
+    color: #842029;
+  }
 }
 
 .game-bar__players {

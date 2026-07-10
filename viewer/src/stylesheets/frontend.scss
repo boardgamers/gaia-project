@@ -77,3 +77,18 @@
 body {
   touch-action: manipulation;
 }
+
+// Dark mode (Gaia 18): the app has no first-class theming (hardcoded colors throughout every
+// component), so rather than re-theme every component individually this inverts the whole page
+// and re-inverts raster/vector art back to normal - a standard lightweight technique for adding a
+// dark mode to an existing light-only app without a full color-system rewrite.
+:root[data-theme="dark"] {
+  filter: invert(1) hue-rotate(180deg);
+  background: #fff;
+
+  img,
+  svg,
+  video {
+    filter: invert(1) hue-rotate(180deg);
+  }
+}

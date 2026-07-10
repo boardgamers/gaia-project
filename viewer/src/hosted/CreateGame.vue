@@ -69,12 +69,51 @@
         </section>
 
         <section v-if="!form.testGame" class="create-game-section create-game-section--full">
-          <div class="create-game-section__label mb-1">Open Lobby</div>
-          <p class="create-game-help mb-0">
-            Regular games now open in the lobby instead of sending invites. You take seat 1 immediately, the other
-            {{ form.playerCount - 1 }} seat<span v-if="form.playerCount > 2">s</span> stay open for anyone in the lobby
-            to join, and the game starts automatically once the table is full.
+          <div class="create-game-section__label mb-1">Invites</div>
+          <b-button-group class="mb-2">
+            <b-button
+              size="sm"
+              :variant="inviteMode === 'open' ? 'primary' : 'outline-secondary'"
+              @click="inviteMode = 'open'"
+            >
+              Open lobby
+            </b-button>
+            <b-button
+              size="sm"
+              :variant="inviteMode === 'direct' ? 'primary' : 'outline-secondary'"
+              @click="inviteMode = 'direct'"
+            >
+              Direct invite
+            </b-button>
+          </b-button-group>
+
+          <p v-if="inviteMode === 'open'" class="create-game-help mb-0">
+            You take seat 1 immediately. The other {{ form.playerCount - 1 }} seat<span v-if="form.playerCount > 2"
+              >s</span
+            >
+            stay open in the lobby for anyone to join, and the game starts automatically once the table is full.
           </p>
+
+          <div v-else>
+            <p class="create-game-help mb-2">
+              Pick {{ form.playerCount - 1 }} player<span v-if="form.playerCount > 2">s</span> to invite (seat 1 is
+              you). {{ selectedInvitees.length }}/{{ form.playerCount - 1 }} selected.
+            </p>
+            <div class="create-game-invite-list">
+              <button
+                v-for="player in invitablePlayers"
+                :key="player.user_id"
+                type="button"
+                class="create-game-invite-row"
+                :class="{ 'create-game-invite-row--active': isInvited(player.user_id) }"
+                :disabled="!isInvited(player.user_id) && selectedInvitees.length >= form.playerCount - 1"
+                @click="toggleInvitee(player.user_id)"
+              >
+                {{ player.nickname }}
+              </button>
+              <div v-if="invitablePlayers.length === 0" class="text-muted small p-2">No other players yet.</div>
+            </div>
+          </div>
         </section>
 
         <section class="create-game-section create-game-section--full create-game-section--preview">
@@ -166,6 +205,9 @@ export default Vue.extend({
       currentSeed: "" as string,
       currentRotateMove: "" as string,
       setupValid: false,
+      inviteMode: "open" as "open" | "direct",
+      invitablePlayers: [] as { user_id: string; nickname: string }[],
+      selectedInvitees: [] as string[],
       form: {
         playerCount: 2,
         testGame: false,
@@ -179,6 +221,11 @@ export default Vue.extend({
     fetchMyNickname(this.client as any, this.myUserId).then((nickname) => {
       this.myNickname = nickname;
     });
+    (this.client as any).rpc("list_invitable_players").then(({ data, error }: any) => {
+      if (!error) {
+        this.invitablePlayers = (data ?? []).filter((p: any) => p.user_id !== this.myUserId);
+      }
+    });
   },
   computed: {
     auctionVariantOptions() {
@@ -191,9 +238,22 @@ export default Vue.extend({
       return this.myNickname || "Host";
     },
     canCreate(): boolean {
-      return !!this.currentSeed && this.setupValid;
+      if (!this.currentSeed || !this.setupValid) {
+        return false;
+      }
+      if (!this.form.testGame && this.inviteMode === "direct") {
+        return this.selectedInvitees.length === this.form.playerCount - 1;
+      }
+      return true;
     },
     blockedReason(): string {
+      if (
+        !this.form.testGame &&
+        this.inviteMode === "direct" &&
+        this.selectedInvitees.length !== this.form.playerCount - 1
+      ) {
+        return `Pick ${this.form.playerCount - 1} player(s) to invite first`;
+      }
       return "Fix the invalid setup first";
     },
     banPhaseInfo(): string {
@@ -206,6 +266,20 @@ export default Vue.extend({
   methods: {
     setPlayerCount(count: number) {
       this.form.playerCount = count;
+      this.selectedInvitees = this.selectedInvitees.slice(0, count - 1);
+    },
+    isInvited(userId: string): boolean {
+      return this.selectedInvitees.includes(userId);
+    },
+    toggleInvitee(userId: string) {
+      if (this.isInvited(userId)) {
+        this.selectedInvitees = this.selectedInvitees.filter((id) => id !== userId);
+      } else if (this.selectedInvitees.length < this.form.playerCount - 1) {
+        this.selectedInvitees = [...this.selectedInvitees, userId];
+      }
+    },
+    nicknameFor(userId: string): string {
+      return this.invitablePlayers.find((p) => p.user_id === userId)?.nickname ?? "";
     },
     showInfo(title: string, description: string) {
       this.activeInfo = { title, description };
@@ -225,11 +299,17 @@ export default Vue.extend({
       this.creating = true;
       this.message = "";
       try {
+        const directInvite = !this.form.testGame && this.inviteMode === "direct";
         const seats = this.form.testGame
           ? Array.from({ length: this.form.playerCount }, (_, i) => ({
               userId: this.myUserId,
               name: `Player ${i + 1}`,
             }))
+          : directInvite
+          ? [
+              { userId: this.myUserId, name: this.myDisplayName },
+              ...this.selectedInvitees.map((id) => ({ userId: id, name: this.nicknameFor(id) })),
+            ]
           : Array.from({ length: this.form.playerCount }, (_, i) =>
               i === 0 ? { userId: this.myUserId, name: this.myDisplayName } : { userId: null, name: "" }
             );
@@ -240,7 +320,7 @@ export default Vue.extend({
             auctionVariant: this.form.auctionVariant,
             banPhase: this.form.banPhase,
             officialCenterSectors: this.form.officialCenterSectors,
-            openLobby: !this.form.testGame,
+            openLobby: !this.form.testGame && !directInvite,
           },
           this.currentSeed,
           this.currentRotateMove
@@ -249,7 +329,7 @@ export default Vue.extend({
         if (error) {
           throw new Error(error.message);
         }
-        window.location.search = this.form.testGame ? `?game=${data}` : `?preview=${data}`;
+        window.location.search = this.form.testGame || directInvite ? `?game=${data}` : `?preview=${data}`;
       } catch (err) {
         this.message = `Could not create the game: ${err instanceof Error ? err.message : err}`;
         this.creating = false;
@@ -344,6 +424,41 @@ export default Vue.extend({
   font-size: 0.82rem;
   line-height: 1.25;
   color: #60708d;
+}
+
+.create-game-invite-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 12.5rem;
+  overflow-y: auto;
+  border: 1px solid rgba(28, 43, 74, 0.12);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.create-game-invite-row {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  border-bottom: 1px solid rgba(28, 43, 74, 0.08);
+  padding: 0.5rem 0.7rem;
+  background: transparent;
+  color: #2a354d;
+  font-size: 0.88rem;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  &:disabled {
+    color: #adb5bd;
+  }
+
+  &--active {
+    background: #f4f8ff;
+    color: #2b5db8;
+    font-weight: 700;
+  }
 }
 
 .create-game-ban-phase {
