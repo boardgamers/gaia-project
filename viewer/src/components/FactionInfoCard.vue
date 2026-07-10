@@ -76,9 +76,14 @@
           v-for="(planet, i) in terraformBoard"
           :key="i"
           class="faction-info-card__swatch"
+          :class="{ 'faction-info-card__swatch--cost3': cost3Set.includes(planet) }"
           :style="{ background: planetColor(planet) }"
-          :title="`Terraforming board colour ${i + 1}`"
-        />
+          :title="`Colour ${i + 1}: ${cost3Set.includes(planet) ? 3 : 1} terraforming step${
+            cost3Set.includes(planet) ? 's' : ''
+          }`"
+        >
+          <span class="faction-info-card__swatch-cost">{{ cost3Set.includes(planet) ? 3 : 1 }}</span>
+        </span>
       </div>
     </div>
 
@@ -155,6 +160,7 @@ import {
   piConversions,
   piGrantsTechTile,
   startingBuildingNote,
+  terraformCost3Set,
   terraformCostDependsOnFactions,
   TinkeringRound,
   tinkeringRounds,
@@ -231,9 +237,21 @@ export default class FactionInfoCard extends Vue {
   // for the reused board and for all supplemental costs below.
   get previewEngine(): Engine {
     if (!this.engineInstance) {
-      this.engineInstance = markRaw(factionPreviewEngine(this.faction));
+      const engine = markRaw(factionPreviewEngine(this.faction));
+      // The preview's own cost-3 terraforming set is computed against a throwaway filler opponent and
+      // the preview seed, so it would contradict the real 7-colour row we show. Replace it with the
+      // set computed from the live game's board + opponents so the board markers and swatches agree.
+      if (terraformCostDependsOnFactions(this.faction)) {
+        engine.players[0].data.lostFleetCost3Planets = this.cost3Set;
+      }
+      this.engineInstance = engine;
     }
     return this.engineInstance;
+  }
+
+  // Live-game terraforming row (the 7 swatches) and the cost-3 subset for this faction.
+  get cost3Set(): Planet[] {
+    return terraformCost3Set(this.$store.state.data as Engine, this.faction, this.terraformBoard);
   }
 
   get previewPlayer(): Player {
@@ -331,9 +349,9 @@ export default class FactionInfoCard extends Vue {
   get terraformNote(): string | null {
     return terraformCostDependsOnFactions(this.faction)
       ? "Per-planet terraforming costs come from the Lost Fleet Terraforming board - the 7 colour " +
-          "swatches shown top-right of the map (repeated below). Three of the seven planet colours " +
-          "cost 3 terraforming steps and the rest cost 1, fixed once the final factions are set, so " +
-          "the terraform costs on the board above are only a snapshot of the current selection."
+          "swatches below (also shown top-right of the map), each marked with its step cost. " +
+          "Opponents' home colours always cost 3; the rest of the three cost-3 colours fill from the " +
+          "row left-to-right. This is provisional until every faction is chosen."
       : null;
   }
 
@@ -508,15 +526,33 @@ export default class FactionInfoCard extends Vue {
 
 .faction-info-card__swatches {
   display: flex;
-  gap: 0.25rem;
+  gap: 0.3rem;
   margin-top: 0.4rem;
 }
 
 .faction-info-card__swatch {
-  width: 1.1rem;
-  height: 1.1rem;
+  position: relative;
+  width: 1.6rem;
+  height: 1.6rem;
   border-radius: 3px;
   border: 1px solid rgba(0, 0, 0, 0.5);
+
+  &--cost3 {
+    border: 2px solid #111;
+    box-shadow: 0 0 0 1px #fff inset;
+  }
+}
+
+.faction-info-card__swatch-cost {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 0 2px #000, 0 0 2px #000, 0 0 2px #000;
 }
 
 .faction-info-card__actions {

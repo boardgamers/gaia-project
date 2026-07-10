@@ -1,8 +1,21 @@
-import { Building, Faction, FactionBoard, Operator, Player, Resource, Reward } from "@gaia-project/engine";
+import Engine, {
+  Building,
+  Faction,
+  FactionBoard,
+  Operator,
+  Planet,
+  Player,
+  Resource,
+  Reward,
+} from "@gaia-project/engine";
 import { freeActionsHadschHallas, freeActionsTerrans } from "@gaia-project/engine/src/actions";
-import { TinkeringTile } from "@gaia-project/engine/src/enums";
+import { Player as PlayerEnum, TinkeringTile } from "@gaia-project/engine/src/enums";
 import { explorationCost } from "@gaia-project/engine/src/exploration";
-import { tinkeringTilesForRound, tinkeringTileSpec } from "@gaia-project/engine/src/factions";
+import {
+  lostFleetTerraformingCost3Planets,
+  tinkeringTilesForRound,
+  tinkeringTileSpec,
+} from "@gaia-project/engine/src/factions";
 
 /**
  * Supplemental faction-overview data for the pick/ban window (`FactionInfoCard.vue`). Everything
@@ -140,6 +153,34 @@ export function tinkeringRounds(): TinkeringRound[] {
 // a snapshot of the current selection.
 export function terraformCostDependsOnFactions(faction: Faction): boolean {
   return faction === Faction.Tinkeroids || faction === Faction.Moweyds;
+}
+
+// The set of base planet colours that cost 3 terraform steps for a Tinkeroids/Moweyds player, from
+// the live game (§B5): the base-game opponents' home colours are mandatory, the rest fill from the
+// real terraforming row left-to-right. Reuses the engine's own selection so the window can't drift
+// from actual play. During faction selection the viewed faction usually isn't a seat yet, so it is
+// injected as a hypothetical special player alongside the opponents already chosen - the result is
+// provisional until every faction is set. If the faction is already an in-game seat with a computed
+// set, that authoritative set is used instead.
+export function terraformCost3Set(engine: Engine, faction: Faction, board: Planet[]): Planet[] {
+  if (!terraformCostDependsOnFactions(faction) || board.length === 0) {
+    return [];
+  }
+
+  const existing = engine.players.find((pl) => pl.faction === faction);
+  if (existing && existing.data.lostFleetCost3Planets?.length) {
+    return existing.data.lostFleetCost3Planets;
+  }
+
+  const opponents = engine.players
+    .filter((pl) => pl.faction && pl.faction !== faction)
+    .map((pl) => ({ player: pl.player, faction: pl.faction }));
+  const specialId = engine.players.length as PlayerEnum;
+  const players = [...opponents, { player: specialId, faction }];
+  const turnOrder = [...opponents.map((pl) => pl.player), specialId];
+
+  const map = lostFleetTerraformingCost3Planets(players, turnOrder, board);
+  return map[specialId] ?? [];
 }
 
 // Pieces already on the board (or off it) at game start that the empty preview board can't depict,
