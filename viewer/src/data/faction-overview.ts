@@ -203,22 +203,6 @@ export function boardActionSpec(faction: Faction): string | null {
   return faction === Faction.SpaceGiants ? "2step" : null;
 }
 
-// Extra Planetary-Institute detail the one-line ability text doesn't capture. Lantids' PI tile
-// depends on the player count (RULES_CLARIFICATIONS §I2, engine lantids.ts gainAdjustedPiBonus):
-// with fewer than 4 players an adjusted tile is used.
-export function piAbilityNote(faction: Faction): string | null {
-  if (faction === Faction.Lantids) {
-    return (
-      "The Planetary Institute tile depends on the player count. With 4 players it is the base tile " +
-      "(gain 2 knowledge each time you build a mine on a planet already colonized by an opponent). " +
-      "With 2 players (or solo) you additionally gain 2 knowledge whenever you build a mine on a " +
-      "Terra planet (your home type) - even a normal first colonization. With 3 players you " +
-      "additionally charge 1 power each time you build a mine next to an opponent's structure."
-    );
-  }
-  return null;
-}
-
 // Base-game factions changed by Lost Fleet get a "changes" section. Two are new special abilities
 // the §I audit flagged (Xenos, Gleens); the rest are owner-confirmed starting-stat changes. The
 // Lantids power-token income is implemented via lantids.ts lostFleetIncome; Bescods' knowledge and

@@ -82,11 +82,18 @@
       </div>
     </div>
 
-    <div v-if="lostFleetChanges.length" class="faction-info-card__section">
+    <div v-if="lostFleetChanges.length || lantidsPiRows.length" class="faction-info-card__section">
       <div class="faction-info-card__label">Lost Fleet changes</div>
-      <ul class="faction-info-card__list">
+      <ul v-if="lostFleetChanges.length" class="faction-info-card__list">
         <li v-for="(line, i) in lostFleetChanges" :key="i">{{ line }}</li>
       </ul>
+      <div v-if="lantidsPiRows.length" class="faction-info-card__pi-rows">
+        <div class="faction-info-card__sublabel">Planetary Institute (Lost Fleet adjusted tiles, by player count)</div>
+        <div v-for="(row, i) in lantidsPiRows" :key="i" class="faction-info-card__pi-row">
+          <span class="faction-info-card__pi-count">{{ row.label }}</span>
+          <RichTextView :content="row.content" />
+        </div>
+      </div>
     </div>
 
     <div v-if="startingNote" class="faction-info-card__section">
@@ -108,7 +115,6 @@
             <RichTextView :content="conversionContent(c)" />
           </div>
         </div>
-        <p v-if="piNote" class="faction-info-card__text faction-info-card__pi-note">{{ piNote }}</p>
       </details>
     </div>
   </div>
@@ -146,7 +152,6 @@ import {
   gaiaMineExtraCost,
   hasGaiaMineSurcharge,
   isExpansionFaction,
-  piAbilityNote,
   piConversions,
   piGrantsTechTile,
   startingBuildingNote,
@@ -157,7 +162,7 @@ import {
 import { lostFleetTerraformingBoard } from "@gaia-project/engine/src/factions";
 import { gameSeed } from "../logic/utils";
 import { planetColor } from "../graphics/utils";
-import { richTextRewards, RichText, richTextArrow } from "../graphics/rich-text";
+import { richText, richTextPlanet, richTextRewards, RichText, richTextArrow } from "../graphics/rich-text";
 import RichTextView from "./Resources/RichTextView.vue";
 import PlayerInfo from "./PlayerInfo.vue";
 import Building from "./Building.vue";
@@ -267,8 +272,34 @@ export default class FactionInfoCard extends Vue {
     return exploreNote(this.faction);
   }
 
-  get piNote(): string | null {
-    return piAbilityNote(this.faction);
+  // Lantids' Planetary Institute uses Lost Fleet adjusted tiles below 4 players (§I2). Rendered with
+  // real reward/planet iconography rather than prose, under "Lost Fleet changes".
+  get lantidsPiRows(): { label: string; content: RichText }[] {
+    if (this.faction !== Faction.Lantids) {
+      return [];
+    }
+    const k2 = richTextRewards(Reward.parse("2k"));
+    const pw1 = richTextRewards(Reward.parse("1pw"));
+    return [
+      {
+        label: "4p",
+        content: [richText("mine on an opponent-colonised planet"), richTextArrow, k2],
+      },
+      {
+        label: "2p / solo",
+        content: [
+          richText("also a mine on a home"),
+          richTextPlanet(Planet.Terra),
+          richText("planet"),
+          richTextArrow,
+          k2,
+        ],
+      },
+      {
+        label: "3p",
+        content: [richText("also a mine next to an opponent"), richTextArrow, pw1],
+      },
+    ];
   }
 
   get piConversions(): Conversion[] {
@@ -434,12 +465,6 @@ export default class FactionInfoCard extends Vue {
   opacity: 0.75;
 }
 
-.faction-info-card__pi-note {
-  opacity: 0.8;
-  border-top: 1px dashed rgba(0, 0, 0, 0.15);
-  padding-top: 0.4rem;
-}
-
 .faction-info-card__conversions {
   display: flex;
   flex-wrap: wrap;
@@ -456,6 +481,30 @@ export default class FactionInfoCard extends Vue {
 
 .faction-info-card__conversion ::v-deep svg {
   height: 24px;
+}
+
+.faction-info-card__sublabel {
+  font-size: 0.74rem;
+  font-weight: 600;
+  opacity: 0.7;
+  margin: 0.3rem 0 0.15rem;
+}
+
+.faction-info-card__pi-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+
+  ::v-deep svg {
+    height: 22px;
+  }
+}
+
+.faction-info-card__pi-count {
+  min-width: 3.6rem;
+  font-weight: 700;
+  opacity: 0.75;
 }
 
 .faction-info-card__action-text {
