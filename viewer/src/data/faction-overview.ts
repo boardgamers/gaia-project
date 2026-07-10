@@ -132,31 +132,29 @@ export function terraformCostDependsOnFactions(faction: Faction): boolean {
 }
 
 // Pieces already on the board (or off it) at game start that the empty preview board can't depict,
-// plus the setup phase in which a faction's single starting piece is placed. Base-game factions set
-// up first (snake order); the four expansion factions place their single piece in a later
-// expansion-faction setup stage; Ivits places its Planetary Institute last of all.
+// plus the setup phase in which a faction's single starting piece is placed. Starting buildings are
+// placed in three stages: (1) the base-game factions in snake order (with the Xenos' third mine at
+// the end), then (2) the four expansion factions place their single piece, and finally (3) Ivits
+// places its Planetary Institute last of all.
 export function startingBuildingNote(faction: Faction): string | null {
+  const expansionStage =
+    "in the expansion-faction setup stage - after the base-game factions' mine setup, but before " +
+    "Ivits places its Planetary Institute";
   switch (faction) {
     case Faction.Tinkeroids:
-      return (
-        "Starts with the Planetary Institute already built (instead of two mines), placed in the " +
-        "expansion-faction setup stage, after every base-game faction has set up."
-      );
+      return `Starts with the Planetary Institute already built (instead of two mines), placed ${expansionStage}.`;
     case Faction.Moweyds:
       return (
         "Starts with one mine (instead of two) and an Exploration Shuttle already on T F Mars. The " +
-        "mine is placed in the expansion-faction setup stage, after every base-game faction."
+        `mine is placed ${expansionStage}.`
       );
     case Faction.Darkanians:
     case Faction.SpaceGiants:
-      return (
-        "Places only one starting mine (instead of two), in the expansion-faction setup stage, " +
-        "after every base-game faction has set up."
-      );
+      return `Places only one starting mine (instead of two), ${expansionStage}.`;
     case Faction.Ivits:
       return (
         "Places no starting mines - places the Planetary Institute on any red planet last of all, " +
-        "after every other faction (including the Xenos' third mine)."
+        "after every other faction (including the expansion factions and the Xenos' third mine)."
       );
     case Faction.Xenos:
       return "Places a third starting mine after all other base-game factions have placed their two.";

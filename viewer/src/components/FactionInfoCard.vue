@@ -12,14 +12,15 @@
         <span class="faction-info-card__label">Explore cost</span>
         <RichTextView :content="exploreCostContent" />
         <span v-if="!exploreIsDefault" class="faction-info-card__default">
-          (default <RichTextView :content="defaultExploreContent" />)
+          (default&nbsp;<RichTextView :content="defaultExploreContent" />)
         </span>
-        <span class="faction-info-card__hint">deploy; +range Q.I.C. by distance</span>
       </div>
       <div v-if="gaiaSurcharge" class="faction-info-card__fact">
         <span class="faction-info-card__label">Gaia mine</span>
         <RichTextView :content="gaiaMineCostContent" />
-        <span class="faction-info-card__default"> (default <RichTextView :content="defaultGaiaMineContent" />) </span>
+        <span class="faction-info-card__default"
+          >(default&nbsp;<RichTextView :content="defaultGaiaMineContent" />)</span
+        >
       </div>
     </div>
 
@@ -310,16 +311,23 @@ export default class FactionInfoCard extends Vue {
   }
 }
 
-// "(default <icon>)" reference shown next to a non-default cost.
+// "(default <icon>)" reference shown next to a non-default cost. The reward svg carries a wide
+// (length*30) intrinsic width around a 20-unit viewBox, so pin both dimensions to the icon's real
+// aspect to drop the empty side padding, and collapse RichTextView's own flex spacing.
 .faction-info-card__default {
   display: inline-flex;
   align-items: center;
-  gap: 0.2rem;
   font-size: 0.74rem;
   opacity: 0.7;
 
+  ::v-deep > div {
+    display: inline-flex;
+    margin: 0;
+  }
+
   ::v-deep svg {
-    height: 22px;
+    height: 18px;
+    width: 15px;
   }
 }
 
