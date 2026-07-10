@@ -1,6 +1,6 @@
 <template>
   <div class="player-info no-gutters" v-if="player && player.faction">
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center" v-if="!preview">
       <div style="display: flex; align-items: center" @click="playerClick(player)" role="button">
         <img class="player-avatar" :alt="`${name}'s avatar`" :src="avatar" />
         <span :class="['player-name', { dropped: player.dropped }]" role="button">{{ name }}</span>
@@ -29,6 +29,7 @@
           :faction="player.faction"
           :data="playerData"
           :height="height"
+          :preview="preview"
         />
         <g transform="translate(4.4, 0)">
           <BuildingGroup
@@ -214,21 +215,21 @@
                 :class="['player-token', 'planet-fill', marker.planet]"
               />
               <text
-                :style="`font-size: ${marker.fontSize}px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(
-                  marker.planet
-                )}`"
+                :style="`font-size: ${
+                  marker.fontSize
+                }px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(marker.planet)}`"
               >
                 {{ player.ownedPlanetsCount[marker.planet] }}
               </text>
-              <circle :r="marker.radius" style="cursor: pointer; opacity: 0" @click="togglePlanetHighlight(marker.planet)" />
+              <circle
+                :r="marker.radius"
+                style="cursor: pointer; opacity: 0"
+                @click="togglePlanetHighlight(marker.planet)"
+              />
             </g>
             <line x1="1.9" x2="1.9" y1="-2.3" y2="2.3" stroke-width="0.06" stroke="black" />
           </g>
-          <g
-            v-for="entry in planetCounters"
-            :key="entry.planet"
-            :transform="`translate(7.6, ${entry.y})`"
-          >
+          <g v-for="entry in planetCounters" :key="entry.planet" :transform="`translate(7.6, ${entry.y})`">
             <circle
               :r="planetCounterRadius"
               style="stroke-width: 0.06px !important"
@@ -264,7 +265,7 @@
       </svg>
     </div>
 
-    <div class="tiles row no-gutters mt-1">
+    <div class="tiles row no-gutters mt-1" v-if="!preview">
       <FederationTile
         v-for="(fed, i) in playerData.tiles.federations"
         class="mb-1 mr-1"
@@ -303,7 +304,7 @@
         <ArtifactIcon :artifact="artifact" />
       </span>
     </div>
-    <Rules :id="player.faction" :type="player.faction" />
+    <Rules v-if="!preview" :id="player.faction" :type="player.faction" />
   </div>
 </template>
 
@@ -360,6 +361,12 @@ type TerraformingMarker = {
 export default class PlayerInfo extends Vue {
   @Prop()
   player: Player;
+
+  // Read-only "duplicate of the in-game faction board" mode for the faction pick/ban window: hides
+  // the player-chrome (avatar, name, map-mode select, tiles, per-faction Rules) and interactions,
+  // rendering only the faction board itself from a preview store (see FactionInfoCard.vue).
+  @Prop({ default: false })
+  preview: boolean;
 
   protected selectedMapModeType: MapModeType = MapModeType.default;
 

@@ -92,53 +92,60 @@ function indexCommands(commands, command: Command) {
 }
 
 const gaiaViewer = {
-  state: {
-    data: new Engine(),
-    context: {
-      highlighted: {
-        sectors: [],
-        hexes: null,
-        researchTiles: new Set(),
-        techs: new Set(),
-        boosters: new Set(),
-        boardActions: new Set(),
-        specialActions: new Set(),
+  // A factory (not a shared object literal) so every `new Vuex.Store(gaiaViewer)` gets its own
+  // independent state. This matters because the app can hold more than one live store at once - the
+  // faction pick/ban window mounts a self-contained preview board on its own store while the game
+  // store is still active - and a shared state object would let the preview clobber the live game's
+  // `state.data` (and cross-contaminate tests, per HostedBar.spec's note).
+  state(): State {
+    return {
+      data: new Engine(),
+      context: {
+        highlighted: {
+          sectors: [],
+          hexes: null,
+          researchTiles: new Set(),
+          techs: new Set(),
+          boosters: new Set(),
+          boardActions: new Set(),
+          specialActions: new Set(),
+        },
+        rotation: new Map(),
+        activeButton: null,
+        hasCommandChain: false,
+        autoClick: [],
+        mapModes: [],
+        fastConversionTooltips: {} as FastConversionTooltips,
       },
-      rotation: new Map(),
-      activeButton: null,
-      hasCommandChain: false,
-      autoClick: [],
-      mapModes: [],
-      fastConversionTooltips: {} as FastConversionTooltips,
-    },
-    preferences: {
-      accessibleSpaceMap: !!process.env.VUE_APP_accessibleSpaceMap,
-      noFactionFill: !!process.env.VUE_APP_noFactionFill,
-      flatBuildings: !!process.env.VUE_APP_flatBuildings,
-      highlightRecentActions: !!process.env.VUE_APP_highlightRecentActions,
-      autoClick: process.env.VUE_APP_autoClick ?? "smart",
-      logPlacement: process.env.VUE_APP_logPlacement ?? "bottom",
-      extendedLog: !!process.env.VUE_APP_extendedLog,
-      warnings: process.env.VUE_APP_warnings ?? "modalDialog",
-      uiMode: process.env.VUE_APP_uiMode ?? "graphical",
-      // "Auto leech": a purely local, per-browser convenience - never part of synced/persisted
-      // game state (see logic/auto-decide.ts) - so it's the one preference read back from
-      // localStorage rather than a fresh env-var default every load, matching what a user expects
-      // from a "preference" toggle they set once.
-      autoChargePower:
-        (typeof localStorage !== "undefined" && localStorage.getItem(AUTO_CHARGE_POWER_STORAGE_KEY)) ||
-        process.env.VUE_APP_autoChargePower ||
-        "ask",
-    },
-    player: null,
-    avatars: [] as string[],
-    premoves: [],
-    premoveFailures: [],
-    premovePlayedNotice: null,
-    seatUsers: {},
-    seatLastActive: {},
-    presence: {},
-  } as State,
+      preferences: {
+        accessibleSpaceMap: !!process.env.VUE_APP_accessibleSpaceMap,
+        noFactionFill: !!process.env.VUE_APP_noFactionFill,
+        flatBuildings: !!process.env.VUE_APP_flatBuildings,
+        highlightRecentActions: !!process.env.VUE_APP_highlightRecentActions,
+        autoClick: process.env.VUE_APP_autoClick ?? "smart",
+        logPlacement: process.env.VUE_APP_logPlacement ?? "bottom",
+        extendedLog: !!process.env.VUE_APP_extendedLog,
+        warnings: process.env.VUE_APP_warnings ?? "modalDialog",
+        uiMode: process.env.VUE_APP_uiMode ?? "graphical",
+        // "Auto leech": a purely local, per-browser convenience - never part of synced/persisted
+        // game state (see logic/auto-decide.ts) - so it's the one preference read back from
+        // localStorage rather than a fresh env-var default every load, matching what a user expects
+        // from a "preference" toggle they set once.
+        autoChargePower:
+          (typeof localStorage !== "undefined" && localStorage.getItem(AUTO_CHARGE_POWER_STORAGE_KEY)) ||
+          process.env.VUE_APP_autoChargePower ||
+          "ask",
+      },
+      player: null,
+      avatars: [] as string[],
+      premoves: [],
+      premoveFailures: [],
+      premovePlayedNotice: null,
+      seatUsers: {},
+      seatLastActive: {},
+      presence: {},
+    } as State;
+  },
   mutations: {
     receiveData(state: State, data: Engine) {
       // The engine state is large, deeply nested, and replaced wholesale on every

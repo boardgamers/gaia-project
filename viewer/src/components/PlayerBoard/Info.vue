@@ -40,6 +40,7 @@
         </g>
         <Resource kind="q" :count="data.qics" :center-left="true" transform="translate(12.5,0) scale(0.1)" />
         <g
+          v-if="!preview"
           v-b-tooltip.hover
           title="Leech network - number of upgradable buildings by other players within leeching distance"
           :transform="`translate(33.5,${height - 16.6}) scale(.08)`"
@@ -50,14 +51,9 @@
             {{ leechNetwork }}
           </text>
         </g>
-        <g :transform="`translate(34.7,${height - 6.8}) scale(.1)`">
+        <g v-if="!preview" :transform="`translate(34.7,${height - 6.8}) scale(.1)`">
           <Undo v-if="canUndo" transform="translate(-8, -8) scale(.9)" />
-          <use
-            v-else
-            xlink:href="#info"
-            v-b-tooltip.hover.click.html="buttonTooltip"
-            style="cursor: pointer"
-          />
+          <use v-else xlink:href="#info" v-b-tooltip.hover.click.html="buttonTooltip" style="cursor: pointer" />
         </g>
         <g transform="translate(15, -3) scale(0.2)">
           <VictoryPoint width="15" height="15" />
@@ -183,6 +179,11 @@ export default class PlayerBoardInfo extends Vue {
   @Prop()
   player: Player;
 
+  // Preview mode (faction pick/ban window): hide the interactive undo/info button and the
+  // leech-network readout, which are meaningless for a not-yet-in-play faction board.
+  @Prop({ default: false })
+  preview: boolean;
+
   get engine(): Engine {
     return this.$store.state.data;
   }
@@ -218,7 +219,8 @@ export default class PlayerBoardInfo extends Vue {
   }
 
   get buttonTooltip() {
-    return "<ul>" +
+    return (
+      "<ul>" +
       "<li>Click on the faction name to see the faction rules (and there's a dropdown to see all faction rules)</li>" +
       "<li>Click on the buildings to see their cost, income, and power value</li>" +
       "<li>Click on the resources to get an additional resource of this kind (using the best conversion available)</li>" +
@@ -227,8 +229,9 @@ export default class PlayerBoardInfo extends Vue {
       "<li>Click on the sectors icon to highlight all colonized sectors (also works for other players)</li>" +
       "<li>Click on the federation icon to highlight all federation (also works for other players)</li>" +
       "<li>Click on the network icon (right of power bowl) to leech network - how much power can be gained if other players upgrade buildings</li>" +
-      (this.isFrontiers ? "<li>Click on the trade bonus or cost icons to see the trade rewards table</li>": "") +
-      "</ul>";
+      (this.isFrontiers ? "<li>Click on the trade bonus or cost icons to see the trade rewards table</li>" : "") +
+      "</ul>"
+    );
   }
 
   income(resource: ResourceEnum) {

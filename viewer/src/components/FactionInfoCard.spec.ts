@@ -5,7 +5,7 @@ import { makeStore } from "../store";
 import FactionInfoCard from "./FactionInfoCard.vue";
 
 describe("FactionInfoCard", () => {
-  it("renders every field the old HTML-string popup showed, for a base-game faction", () => {
+  it("renders the reused in-game faction board plus the explore cost, for a base-game faction", () => {
     const engine = new Engine(["init 2 faction-info-base"]);
     const store = makeStore();
     store.commit("receiveData", engine);
@@ -15,21 +15,34 @@ describe("FactionInfoCard", () => {
       store,
     });
 
+    // The actual in-game board component is reused (its root svg carries the .player-board class).
+    expect(container.querySelector(".player-board")).to.not.equal(null);
+    // Explore cost is always shown.
+    expect(container.textContent).to.include("Explore cost");
+    // Abilities remain in the DOM (behind a collapse toggle).
     expect(container.textContent).to.include(
       "During the Gaia phase, move the power tokens in your Gaia area to area II"
     );
-    expect(container.textContent).to.include(
-      "During the Gaia phase, when you move power tokens from your Gaia area to area II"
-    );
     // No Lost Fleet section for a plain base-game render.
     expect(container.textContent).to.not.include("Lost Fleet changes");
-    // Real icon components rendered (not the old text-badge HTML), one per building slot.
-    expect(container.querySelectorAll(".faction-board-visual__building").length).to.equal(6);
-    expect(container.querySelectorAll("g.resource").length).to.be.greaterThan(0);
   });
 
-  it("includes the Lost Fleet changes section for a faction with a Lost Fleet delta, under the expansion", () => {
+  it("shows the Lost Fleet changes section only for a base faction with a real Lost Fleet delta", () => {
     const engine = new Engine(["init 2 faction-info-lf"], { lostFleet: true });
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(FactionInfoCard, {
+      props: { faction: Faction.Gleens, variant: null, expansion: Expansion.LostFleet },
+      store,
+    });
+
+    expect(container.textContent).to.include("Lost Fleet changes");
+    expect(container.textContent).to.include("+2 range");
+  });
+
+  it("omits the Lost Fleet changes section for an expansion-native faction, showing a starting-setup note instead", () => {
+    const engine = new Engine(["init 2 faction-info-exp"], { lostFleet: true });
     const store = makeStore();
     store.commit("receiveData", engine);
 
@@ -38,8 +51,23 @@ describe("FactionInfoCard", () => {
       store,
     });
 
-    expect(container.textContent).to.include("Lost Fleet changes");
-    expect(container.textContent).to.include("standard planets always terraform in 1 step");
+    expect(container.textContent).to.not.include("Lost Fleet changes");
+    expect(container.textContent).to.include("Starts with one mine");
+  });
+
+  it("shows the per-round Tinkering tiles for Tinkeroids", () => {
+    const engine = new Engine(["init 2 faction-info-tink"], { lostFleet: true });
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(FactionInfoCard, {
+      props: { faction: Faction.Tinkeroids, variant: null, expansion: Expansion.LostFleet },
+      store,
+    });
+
+    expect(container.textContent).to.include("Tinkering tiles");
+    expect(container.textContent).to.include("Rounds 1-3");
+    expect(container.textContent).to.include("Rounds 4-6");
   });
 
   it("renders Lantids without throwing (its filler opponent must not also be Terrans, its opposite faction)", () => {
