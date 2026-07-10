@@ -279,25 +279,19 @@ export default class FactionInfoCard extends Vue {
       return [];
     }
     const k2 = richTextRewards(Reward.parse("2k"));
-    const pw1 = richTextRewards(Reward.parse("1pw"));
+    const k2pw1 = richTextRewards(Reward.parse("2k,1pw"));
     return [
       {
         label: "4p",
         content: [richText("mine on an opponent-colonised planet"), richTextArrow, k2],
       },
       {
-        label: "2p / solo",
-        content: [
-          richText("also a mine on a home"),
-          richTextPlanet(Planet.Terra),
-          richText("planet"),
-          richTextArrow,
-          k2,
-        ],
+        label: "3p",
+        content: [richText("mine on an opponent-colonised planet"), richTextArrow, k2pw1],
       },
       {
-        label: "3p",
-        content: [richText("also a mine on an opponent-colonised planet"), richTextArrow, pw1],
+        label: "2p",
+        content: [richText("mine on a home"), richTextPlanet(Planet.Terra), richText("planet"), richTextArrow, k2],
       },
     ];
   }
