@@ -16,7 +16,7 @@
         </span>
       </div>
       <div v-if="gaiaSurcharge" class="faction-info-card__fact">
-        <span class="faction-info-card__label">Gaia mine</span>
+        <span class="faction-info-card__label">Gaia mine cost</span>
         <RichTextView :content="gaiaMineCostContent" />
         <span class="faction-info-card__default"
           >(default&nbsp;<RichTextView :content="defaultGaiaMineContent" />)</span
@@ -52,6 +52,14 @@
       </div>
     </div>
 
+    <div v-if="boardActionNote" class="faction-info-card__section">
+      <div class="faction-info-card__label">Special action</div>
+      <div class="faction-info-card__action">
+        <SpecialAction v-if="boardActionSpec" :action="[boardActionSpec]" board />
+        <p class="faction-info-card__text faction-info-card__action-text">{{ boardActionNote }}</p>
+      </div>
+    </div>
+
     <div v-if="tinkering" class="faction-info-card__section">
       <div class="faction-info-card__label">Tinkering tiles (one special action per round)</div>
       <div v-for="(round, i) in tinkering" :key="'tk-' + i" class="faction-info-card__tinkering-row">
@@ -63,6 +71,15 @@
     <div v-if="terraformNote" class="faction-info-card__section">
       <div class="faction-info-card__label">Terraforming costs</div>
       <p class="faction-info-card__text">{{ terraformNote }}</p>
+      <div v-if="terraformBoard.length" class="faction-info-card__swatches">
+        <span
+          v-for="(planet, i) in terraformBoard"
+          :key="i"
+          class="faction-info-card__swatch"
+          :style="{ background: planetColor(planet) }"
+          :title="`Terraforming board colour ${i + 1}`"
+        />
+      </div>
     </div>
 
     <div v-if="lostFleetChanges.length" class="faction-info-card__section">
@@ -85,6 +102,12 @@
       <details class="faction-info-card__acc-item">
         <summary class="faction-info-card__acc-header">Planetary Institute ability</summary>
         <p class="faction-info-card__text">{{ pi }}</p>
+        <div v-if="piConversions.length" class="faction-info-card__conversions">
+          <span class="faction-info-card__conv-label">Conversions:</span>
+          <div v-for="(c, i) in piConversions" :key="i" class="faction-info-card__conversion">
+            <RichTextView :content="conversionContent(c)" />
+          </div>
+        </div>
         <p v-if="piNote" class="faction-info-card__text faction-info-card__pi-note">{{ piNote }}</p>
       </details>
     </div>
@@ -94,16 +117,27 @@
 <script lang="ts">
 import Vue, { markRaw } from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import Engine, { Building as BuildingEnum, Expansion, Faction, factionBoard, Player } from "@gaia-project/engine";
+import Engine, {
+  Building as BuildingEnum,
+  Expansion,
+  Faction,
+  factionBoard,
+  Planet,
+  Player,
+  Reward,
+} from "@gaia-project/engine";
 import { FactionBoardRaw } from "@gaia-project/engine/src/faction-boards";
 import { makeStore } from "../store";
 import { factionPreviewEngine } from "../data/faction-preview";
 import { factionData, factionName } from "../data/factions";
 import {
   baseFactionLostFleetChanges,
+  boardActionNote,
+  boardActionSpec,
   BuildingSpecialAction,
   buildingSpecialActions,
   buildingShortLabel,
+  Conversion,
   DEFAULT_EXPLORE_COST,
   DEFAULT_GAIA_MINE_COST,
   exploreCostIsDefault,
@@ -113,13 +147,17 @@ import {
   hasGaiaMineSurcharge,
   isExpansionFaction,
   piAbilityNote,
+  piConversions,
   piGrantsTechTile,
   startingBuildingNote,
   terraformCostDependsOnFactions,
   TinkeringRound,
   tinkeringRounds,
 } from "../data/faction-overview";
-import { richTextRewards, RichText } from "../graphics/rich-text";
+import { lostFleetTerraformingBoard } from "@gaia-project/engine/src/factions";
+import { gameSeed } from "../logic/utils";
+import { planetColor } from "../graphics/utils";
+import { richTextRewards, RichText, richTextArrow } from "../graphics/rich-text";
 import RichTextView from "./Resources/RichTextView.vue";
 import PlayerInfo from "./PlayerInfo.vue";
 import Building from "./Building.vue";
@@ -233,11 +271,44 @@ export default class FactionInfoCard extends Vue {
     return piAbilityNote(this.faction);
   }
 
+  get piConversions(): Conversion[] {
+    return piConversions(this.faction);
+  }
+
+  conversionContent(c: Conversion): RichText {
+    return [richTextRewards(Reward.parse(c.cost)), richTextArrow, richTextRewards(Reward.parse(c.income))];
+  }
+
+  get boardActionNote(): string | null {
+    return boardActionNote(this.faction);
+  }
+
+  get boardActionSpec(): string | null {
+    return boardActionSpec(this.faction);
+  }
+
+  planetColor(planet: Planet): string {
+    return planetColor(planet as Exclude<Planet, Planet.Empty>);
+  }
+
+  // The real game's Lost Fleet Terraforming board (the 7 colour swatches shown top-right of the map),
+  // read from the live engine's seed - NOT the preview engine, whose seed differs. Only meaningful
+  // for the two factions whose per-planet cost is drawn from it.
+  get terraformBoard(): Planet[] {
+    if (!terraformCostDependsOnFactions(this.faction)) {
+      return [];
+    }
+    const engine = this.$store.state.data as Engine;
+    const seed = engine ? gameSeed(engine) : undefined;
+    return seed ? lostFleetTerraformingBoard(seed) : [];
+  }
+
   get terraformNote(): string | null {
     return terraformCostDependsOnFactions(this.faction)
-      ? "Per-planet terraforming costs are drawn from the Lost Fleet Terraforming board during " +
-          "setup and depend on the final set of factions - the costs shown on the board above are " +
-          "only a snapshot of the current selection and may change."
+      ? "Per-planet terraforming costs come from the Lost Fleet Terraforming board - the 7 colour " +
+          "swatches shown top-right of the map (repeated below). Three of the seven planet colours " +
+          "cost 3 terraforming steps and the rest cost 1, fixed once the final factions are set, so " +
+          "the terraform costs on the board above are only a snapshot of the current selection."
       : null;
   }
 
@@ -367,6 +438,42 @@ export default class FactionInfoCard extends Vue {
   opacity: 0.8;
   border-top: 1px dashed rgba(0, 0, 0, 0.15);
   padding-top: 0.4rem;
+}
+
+.faction-info-card__conversions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.15rem 0.9rem;
+  margin: 0 0 0.5rem;
+}
+
+.faction-info-card__conv-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+.faction-info-card__conversion ::v-deep svg {
+  height: 24px;
+}
+
+.faction-info-card__action-text {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.faction-info-card__swatches {
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 0.4rem;
+}
+
+.faction-info-card__swatch {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.5);
 }
 
 .faction-info-card__actions {

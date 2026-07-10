@@ -1,4 +1,5 @@
 import { Building, Faction, FactionBoard, Operator, Player, Resource, Reward } from "@gaia-project/engine";
+import { freeActionsHadschHallas, freeActionsTerrans } from "@gaia-project/engine/src/actions";
 import { TinkeringTile } from "@gaia-project/engine/src/enums";
 import { explorationCost } from "@gaia-project/engine/src/exploration";
 import { tinkeringTilesForRound, tinkeringTileSpec } from "@gaia-project/engine/src/factions";
@@ -171,6 +172,35 @@ export function startingBuildingNote(faction: Faction): string | null {
     default:
       return null;
   }
+}
+
+export type Conversion = { cost: string; income: string };
+
+// Conversions that a faction's Planetary Institute unlocks, in the same cost -> income form the
+// in-game free-action buttons use. Terrans convert Gaia-area power tokens (during the Gaia phase);
+// Hadsch Hallas may spend credits in place of power for the resource free actions.
+export function piConversions(faction: Faction): Conversion[] {
+  const table =
+    faction === Faction.Terrans
+      ? freeActionsTerrans
+      : faction === Faction.HadschHallas
+      ? freeActionsHadschHallas
+      : null;
+  return table ? Object.values(table).map((c) => ({ cost: c!.cost, income: c!.income })) : [];
+}
+
+// A board special action worth spelling out in text (its octagon is on the board but not labelled).
+export function boardActionNote(faction: Faction): string | null {
+  if (faction === Faction.SpaceGiants) {
+    // space-giants.ts income "=> 2step": Build a Mine with 2 free terraforming steps.
+    return "Special action (once per round): Build a Mine with 2 free terraforming steps - you still pay ore for any step beyond those two.";
+  }
+  return null;
+}
+
+// The board special-action reward spec to render as an octagon next to boardActionNote.
+export function boardActionSpec(faction: Faction): string | null {
+  return faction === Faction.SpaceGiants ? "2step" : null;
 }
 
 // Extra Planetary-Institute detail the one-line ability text doesn't capture. Lantids' PI tile
