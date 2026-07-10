@@ -189,15 +189,23 @@ export function piAbilityNote(faction: Faction): string | null {
   return null;
 }
 
-// Only base-game factions genuinely changed by Lost Fleet get a "changes" section. Per the §I audit
-// in RULES_CLARIFICATIONS.md, the "LF special ability" column is non-None for exactly Xenos and
-// Gleens among the base factions; every other base faction (Ivits included) is unchanged.
+// Base-game factions changed by Lost Fleet get a "changes" section. Beyond the two new special
+// abilities the §I audit flagged (Xenos, Gleens), owner board-reads add starting-stat changes for
+// Ivits and Lantids.
+// NOTE (Lantids): the +1 power-token income is NOT yet reflected in the engine board
+// (engine/src/faction-boards/lantids.ts income is only "+o,k"), so the reused board above will not
+// show it until that is added - see the owner discussion. NOTE (Ivits): the base bowls (4/2/0) come
+// from the owner board-read; the engine only encodes the Lost Fleet value (2/2/0).
 export function baseFactionLostFleetChanges(faction: Faction): string[] {
   switch (faction) {
     case Faction.Xenos:
       return ["Adds a free action: spend 1 ore to gain 1 power directly into Area III."];
     case Faction.Gleens:
       return ["Adds a once-per-round special action granting +2 range (also applies to Explore)."];
+    case Faction.Lantids:
+      return ["Gains 1 power token in Area I (bowl 1) as basic income each round, from the start."];
+    case Faction.Ivits:
+      return ["Starting power tokens reduced from 4 / 2 / 0 to 2 / 2 / 0 across the bowls."];
     default:
       return [];
   }
