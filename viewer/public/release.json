@@ -1,7 +1,20 @@
 {
-  "version": "5.19.0",
+  "version": "5.19.1",
   "releasedAt": "2026-07-10",
   "entries": [
+    {
+      "version": "5.19.1",
+      "releasedAt": "2026-07-10",
+      "kind": "update",
+      "title": "Credits simplified to boardgamers.space",
+      "impact": "",
+      "changes": [
+        "Credits screen now only credits boardgamers.space and the open-source engine, and is lobby-only (removed from the in-game menu)"
+      ],
+      "userChanges": [
+        "Credits screen now only credits boardgamers.space and the open-source engine, and is lobby-only (removed from the in-game menu)"
+      ]
+    },
     {
       "version": "5.19.0",
       "releasedAt": "2026-07-10",

@@ -42,15 +42,13 @@ describe("HostedBar", () => {
     expect(queryByText(/notification/i), "the button text label should be gone, bell-icon only").to.equal(null);
   });
 
-  it("opens the Credits modal (MIT-license/game-design attribution) from the settings menu", async () => {
-    const engine = new Engine(["init 2 hosted-bar-credits", "p1 faction terrans", "p2 faction hadsch-hallas"]);
+  it("does not show a Credits option - that's a lobby-only settings item", () => {
+    const engine = new Engine(["init 2 hosted-bar-no-credits", "p1 faction terrans", "p2 faction hadsch-hallas"]);
     const store = makeStore();
     store.commit("receiveData", engine);
 
-    const { getByText, queryByText } = render(HostedBar, { props: { finished: false }, store });
+    const { queryByText } = render(HostedBar, { props: { finished: false }, store });
 
-    expect(queryByText("Licensed under the MIT License"), "closed by default").to.equal(null);
-    await getByText("Credits").click();
-    expect(getByText("Licensed under the MIT License")).to.not.equal(null);
+    expect(queryByText("Credits")).to.equal(null);
   });
 });

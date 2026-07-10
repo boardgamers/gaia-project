@@ -644,7 +644,7 @@ describe("Lobby", () => {
     expect(wrapper.text()).to.contain(devOnlyEntry.releasedAt);
   });
 
-  it("opens the Credits modal (MIT-license/game-design attribution) from the settings menu", async () => {
+  it("opens the Credits modal (boardgamers.space / MIT-license attribution) from the settings menu", async () => {
     const { client } = makeClient([]);
     const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
     await Vue.nextTick();
@@ -661,7 +661,7 @@ describe("Lobby", () => {
 
     expect(wrapper.find(".info-modal").exists()).to.equal(true);
     expect(wrapper.text()).to.contain("Licensed under the MIT License");
-    expect(wrapper.text()).to.contain("Feuerland Spiele");
+    expect(wrapper.text()).to.contain("boardgamers.space");
   });
 
   it("defaults to Lobby, while My games, Active, and Finished keep their own sections", async () => {
