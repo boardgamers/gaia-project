@@ -14,7 +14,7 @@ export type NewGameForm = {
  * (no bidding at all). Add future variants here and to `AUCTION_VARIANT_OPTIONS` below - the
  * dropdown in CreateGame.vue is driven entirely off that list.
  */
-export type AuctionVariantOption = "none" | "silent";
+export type AuctionVariantOption = "none" | "silent" | "choose-bid" | "bid-while-choosing";
 
 export const AUCTION_VARIANT_OPTIONS: {
   value: AuctionVariantOption;
@@ -26,16 +26,31 @@ export const AUCTION_VARIANT_OPTIONS: {
     value: "none",
     label: "Standard",
     summary: "Take turns choosing factions.",
-    description: "Each player picks a faction in turn order, no bidding.",
+    description: "Each player picks a faction in turn order. No bidding.",
   },
   {
     value: "silent",
     label: "Silent Auction",
     summary: "Pick, then submit private VP bids.",
     description:
-      "Everyone picks one faction each, then every player privately submits a max-VP bid for every picked " +
-      "faction. An ascending-auction algorithm then assigns each player the faction that maximizes their own " +
-      "value. Turn on the Ban phase below to have everyone ban a faction first, same as any other variant.",
+      "Every player picks one faction, then privately submits a maximum VP bid for each picked faction. An " +
+      "ascending-auction algorithm assigns each player the faction that maximizes their own value.",
+  },
+  {
+    value: "choose-bid",
+    label: "Choose, Then Bid",
+    summary: "Everyone picks a faction, then bids for a different one.",
+    description:
+      "Each player picks a faction in turn order first. Once every faction is taken, players bid VP in turn " +
+      "order to swap into a different picked faction, passing when they no longer want to bid.",
+  },
+  {
+    value: "bid-while-choosing",
+    label: "Bid While Choosing",
+    summary: "Bid for factions as they're picked, one at a time.",
+    description:
+      "Players bid VP on each faction in turn order as it comes up for selection, one faction at a time, until " +
+      "every faction is assigned.",
   },
 ];
 
@@ -43,6 +58,10 @@ function engineAuctionOption(variant: AuctionVariantOption): AuctionVariant | un
   switch (variant) {
     case "silent":
       return AuctionVariant.Silent;
+    case "choose-bid":
+      return AuctionVariant.ChooseBid;
+    case "bid-while-choosing":
+      return AuctionVariant.BidWhileChoosing;
     case "none":
     default:
       return undefined;
@@ -66,18 +85,7 @@ const GAME_NAME_ADJECTIVES = [
   "Verdant",
 ];
 
-const GAME_NAME_NOUNS = [
-  "Atlas",
-  "Beacon",
-  "Comet",
-  "Drift",
-  "Echo",
-  "Harbor",
-  "Nova",
-  "Orbit",
-  "Signal",
-  "Spire",
-];
+const GAME_NAME_NOUNS = ["Atlas", "Beacon", "Comet", "Drift", "Echo", "Harbor", "Nova", "Orbit", "Signal", "Spire"];
 
 export function randomGameName(): string {
   const adjective = GAME_NAME_ADJECTIVES[Math.floor(Math.random() * GAME_NAME_ADJECTIVES.length)];
@@ -113,10 +121,7 @@ export function buildCreateGameParams(form: NewGameForm, seed: string, rotateMov
     banPhase: !!form.banPhase,
     ...(form.officialCenterSectors ? { officialCenterSectors: true } : {}),
   };
-  const probe = new Engine(
-    [`init ${form.playerCount} ${seed}`, rotateMove],
-    JSON.parse(JSON.stringify(options))
-  );
+  const probe = new Engine([`init ${form.playerCount} ${seed}`, rotateMove], JSON.parse(JSON.stringify(options)));
   probe.generateAvailableCommandsIfNeeded();
   return {
     p_name: randomGameName(),

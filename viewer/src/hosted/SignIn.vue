@@ -1,6 +1,6 @@
 <template>
   <div class="container py-5" style="max-width: 30rem">
-    <h3 class="sign-in-title">Gaia Project: The Lost Fleet</h3>
+    <h3 class="sign-in-title">GP: Fight Club</h3>
     <p class="text-muted">Sign in once on this device and you stay signed in.</p>
     <b-button block variant="primary" :disabled="busy" @click="google">Sign in with Google</b-button>
     <hr />

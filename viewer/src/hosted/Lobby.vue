@@ -1,7 +1,7 @@
 <template>
   <div class="container py-4" style="max-width: 46rem">
     <div class="lobby-header">
-      <h3 class="mb-0">Gaia Project: The Lost Fleet</h3>
+      <h3 class="mb-0">GP: Fight Club</h3>
       <div class="lobby-header__actions">
         <b-button
           size="sm"
@@ -48,68 +48,32 @@
       <a href="" class="lobby-meta__toggle-link" @click.prevent="showReleaseNotes = true">View changelog</a>
     </div>
 
-    <div v-if="showReleaseNotes" class="release-modal-backdrop" @click.self="showReleaseNotes = false">
-      <div class="release-modal shadow-lg" role="dialog" aria-modal="true" aria-label="Changelog">
-        <div class="release-modal__header">
-          <div>
-            <div class="release-notes__eyebrow text-uppercase text-muted small">Recent changes</div>
-            <h4 class="release-modal__title mb-0">Hosted changelog</h4>
-          </div>
-          <button
-            type="button"
-            class="release-modal__close"
-            aria-label="Close changelog"
-            @click="showReleaseNotes = false"
-          >
-            &times;
-          </button>
+    <InfoModal :open="showReleaseNotes" title="Hosted changelog" @close="showReleaseNotes = false">
+      <div v-for="entry in releaseEntries" :key="`${entry.version}-${entry.releasedAt}`" class="release-notes__entry">
+        <div class="release-notes__heading">
+          <span class="release-notes__kind">{{ entry.kind }}</span>
+          <strong>v{{ entry.version }}</strong>
+          <span class="text-muted">&middot; {{ entry.releasedAt }}</span>
         </div>
-        <div class="release-modal__body">
-          <div
-            v-for="entry in releaseEntries"
-            :key="`${entry.version}-${entry.releasedAt}`"
-            class="release-notes__entry"
-          >
-            <div class="release-notes__heading">
-              <span class="release-notes__kind">{{ entry.kind }}</span>
-              <strong>v{{ entry.version }}</strong>
-              <span class="text-muted">&middot; {{ entry.releasedAt }}</span>
-            </div>
-            <div class="release-notes__title">{{ entry.title }}</div>
-            <ul class="release-notes__list mb-0">
-              <li v-for="change in entry.changes" :key="change">{{ change }}</li>
-            </ul>
-          </div>
-        </div>
+        <div class="release-notes__title">{{ entry.title }}</div>
+        <ul class="release-notes__list mb-0">
+          <li v-for="change in entry.changes" :key="change">{{ change }}</li>
+        </ul>
       </div>
-    </div>
+    </InfoModal>
 
-    <div v-if="showNicknameModal" class="release-modal-backdrop" @click.self="closeNicknameModal">
-      <div class="release-modal shadow-lg" role="dialog" aria-modal="true" aria-label="Edit nickname">
-        <div class="release-modal__header">
-          <div>
-            <h4 class="release-modal__title mb-0">Edit nickname</h4>
-          </div>
-          <button type="button" class="release-modal__close" aria-label="Close" @click="closeNicknameModal">
-            &times;
-          </button>
+    <InfoModal :open="showNicknameModal" title="Edit nickname" @close="closeNicknameModal">
+      <p class="text-muted small">
+        This is the name other players see in the lobby and in games, instead of your account name or email.
+      </p>
+      <b-form @submit.prevent="saveNickname">
+        <b-form-input v-model="nicknameInput" maxlength="40" placeholder="Nickname" autofocus />
+        <div class="d-flex justify-content-end mt-3" style="gap: 0.5rem">
+          <b-button variant="outline-secondary" type="button" @click="closeNicknameModal">Cancel</b-button>
+          <b-button type="submit" variant="primary" :disabled="nicknameSaving || !nicknameInput.trim()">Save</b-button>
         </div>
-        <div class="release-modal__body">
-          <p class="text-muted small">
-            This is the name other players see in the lobby and in games, instead of your account name or email.
-          </p>
-          <b-form @submit.prevent="saveNickname">
-            <b-form-input v-model="nicknameInput" maxlength="40" placeholder="Nickname" autofocus />
-            <div class="d-flex justify-content-end mt-3" style="gap: 0.5rem">
-              <b-button variant="outline-secondary" type="button" @click="closeNicknameModal">Cancel</b-button>
-              <b-button type="submit" variant="primary" :disabled="nicknameSaving || !nicknameInput.trim()"
-                >Save</b-button
-              >
-            </div>
-          </b-form>
-        </div>
-      </div>
-    </div>
+      </b-form>
+    </InfoModal>
 
     <b-alert :show="!!message" variant="info" dismissible @dismissed="message = ''">{{ message }}</b-alert>
 
@@ -150,6 +114,10 @@
       </div>
       <div class="lobby-toolbar__actions">
         <a href="?create=1" class="btn btn-primary">+ New game</a>
+        <span class="lobby-online d-md-none" :title="`${onlineCount} online`">
+          <span class="lobby-online__dot"></span>
+          {{ onlineCount }} online
+        </span>
       </div>
     </div>
 
@@ -197,6 +165,10 @@
                 <span class="game-bar__title">
                   <strong>{{ game.name || "Unnamed game" }}</strong>
                   <span v-if="auctionLabel(game)" class="game-bar__tag">{{ auctionLabel(game) }}</span>
+                  <span v-if="game.options && game.options.banPhase" class="game-bar__tag">Ban Phase</span>
+                  <span v-if="game.options && game.options.officialCenterSectors" class="game-bar__tag"
+                    >Sector 1-4</span
+                  >
                   <span v-if="isTestGame(game)" class="game-bar__tag">Test game</span>
                 </span>
                 <span v-if="summaryForGame(game)" class="game-bar__summary text-muted small">
@@ -249,6 +221,7 @@ import { disablePushNotifications, enablePushNotifications, isPushEnabled } from
 import Token from "../components/Token.vue";
 import { factionName } from "../data/factions";
 import { isAdminEmail } from "./admin";
+import InfoModal from "./InfoModal.vue";
 import { fetchMyNickname, setMyNickname } from "./profile";
 import releaseData from "./release.json";
 
@@ -405,7 +378,7 @@ function lobbyPresenceStatus(
 
 export default Vue.extend({
   name: "HostedLobby",
-  components: { Token },
+  components: { Token, InfoModal },
   props: {
     client: { type: Object, required: true },
     session: { type: Object, required: true },
@@ -456,20 +429,10 @@ export default Vue.extend({
       return this.sortGames((this.games as any[]).filter((game) => game.status === "open"));
     },
     activeGames(): any[] {
-      return this.sortGames((this.games as any[]).filter((game) => game.status === "active"));
+      return this.sortGames((this.games as any[]).filter((game) => game.status === "active" && !this.isMyGame(game)));
     },
     myGames(): any[] {
-      const email = this.userEmail.toLowerCase();
-      return this.sortGames(
-        (this.games as any[]).filter((game) => {
-          if (game.created_by === this.myUserId) {
-            return true;
-          }
-          return (game.players ?? []).some(
-            (player: any) => player.user_id === this.myUserId || (player.invited_email ?? "").toLowerCase() === email
-          );
-        })
-      );
+      return this.sortGames((this.games as any[]).filter((game) => this.isMyGame(game)));
     },
     finishedGames(): any[] {
       return this.sortGames((this.games as any[]).filter((game) => game.status === "finished"));
@@ -482,6 +445,9 @@ export default Vue.extend({
         return this.openGames;
       }
       return this.activeTab === "active" ? this.activeGames : this.finishedGames;
+    },
+    onlineCount(): number {
+      return Object.keys(this.presenceState).filter((userId) => (this.presenceState[userId] ?? []).length > 0).length;
     },
     emptyStateText(): string {
       if (this.activeTab === "mine") {
@@ -504,6 +470,9 @@ export default Vue.extend({
     }
     fetchMyNickname(this.client as any, this.myUserId).then((nickname) => {
       this.myNickname = nickname;
+      if (/^Player \d{4}$/.test(nickname)) {
+        this.openNicknameModal();
+      }
     });
     isPushEnabled().then((enabled) => {
       this.pushEnabled = enabled;
@@ -597,6 +566,15 @@ export default Vue.extend({
         .subscribe();
       this.gamesChannel = channel;
     },
+    isMyGame(game: any): boolean {
+      if (game.created_by === this.myUserId) {
+        return true;
+      }
+      const email = this.userEmail.toLowerCase();
+      return (game.players ?? []).some(
+        (player: any) => player.user_id === this.myUserId || (player.invited_email ?? "").toLowerCase() === email
+      );
+    },
     playerAtSeat(game: any, seat: number | null): any {
       return (game.players ?? []).find((p: any) => p.seat === seat);
     },
@@ -670,7 +648,16 @@ export default Vue.extend({
       return userIds.length > 0 && new Set(userIds).size < players.length;
     },
     auctionLabel(game: any): string {
-      return game.options?.auction === "silent" ? "Silent Auction" : "Standard";
+      switch (game.options?.auction) {
+        case "silent":
+          return "Silent Auction";
+        case "choose-bid":
+          return "Choose, Then Bid";
+        case "bid-while-choosing":
+          return "Bid While Choosing";
+        default:
+          return "Standard";
+      }
     },
     summaryForGame(game: any): string | null {
       if (game.status === "open") {
@@ -800,6 +787,36 @@ export default Vue.extend({
   padding-right: 0.45rem;
 }
 
+.lobby-online {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #495057;
+}
+
+.lobby-online__dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: #28a745;
+  box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.65);
+  animation: lobby-online-pulse 1.8s infinite;
+}
+
+@keyframes lobby-online-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 0.45rem rgba(40, 167, 69, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+  }
+}
+
 .lobby-tabs {
   display: inline-flex;
   gap: 0.3rem;
@@ -846,63 +863,6 @@ export default Vue.extend({
 .lobby-meta__toggle-link:hover {
   color: #084298;
   text-decoration: underline;
-}
-
-.release-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 1050;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.25rem;
-  background: rgba(15, 23, 42, 0.42);
-}
-
-.release-modal {
-  width: min(100%, 42rem);
-  overflow: hidden;
-  border: 1px solid #dce6f0;
-  border-radius: 0.85rem;
-  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
-}
-
-.release-modal__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-  padding: 1rem 1.1rem 0.85rem;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.release-modal__title {
-  font-size: 1.05rem;
-}
-
-.release-modal__close {
-  border: 0;
-  background: transparent;
-  color: #6c757d;
-  font-size: 1.5rem;
-  line-height: 1;
-  padding: 0;
-}
-
-.release-modal__close:hover {
-  color: #212529;
-}
-
-.release-modal__body {
-  padding: 1rem 1.1rem 1.15rem;
-  max-height: min(68vh, 32rem);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-
-.release-notes__eyebrow {
-  letter-spacing: 0.08em;
-  margin-bottom: 0.2rem;
 }
 
 .release-notes__entry + .release-notes__entry {
@@ -1113,7 +1073,7 @@ export default Vue.extend({
   position: relative;
 
   & + & {
-    margin-left: -0.65rem;
+    margin-left: 0.35rem;
   }
 }
 
@@ -1149,17 +1109,20 @@ export default Vue.extend({
 .game-bar__score {
   position: absolute;
   bottom: -0.3rem;
-  right: -0.4rem;
+  right: -0.2rem;
   font-size: 0.6rem;
   font-weight: 700;
   line-height: 1;
   color: #fff;
   background: #495057;
   border-radius: 0.6rem;
-  padding: 0.15rem 0.3rem;
+  padding: 0.15rem 0.25rem;
   min-width: 0.9rem;
+  max-width: 1.5rem;
   text-align: center;
+  white-space: nowrap;
   box-shadow: 0 0 0 1px #fff;
+  z-index: 1;
 
   &--active {
     background: #28a745;

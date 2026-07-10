@@ -17,7 +17,7 @@ self.addEventListener("push", (event) => {
   } catch (err) {
     data = { body: event.data ? event.data.text() : "" };
   }
-  const title = data.title || "The Lost Fleet";
+  const title = data.title || "GP: Fight Club";
   event.waitUntil(
     self.registration.showNotification(title, {
       body: data.body || "",

@@ -46,17 +46,13 @@
                 <button
                   type="button"
                   class="create-game-info-dot"
-                  :aria-expanded="isAuctionInfoOpen(option.value) ? 'true' : 'false'"
                   :aria-label="`About ${option.label}`"
-                  @click.stop="toggleAuctionInfo(option.value)"
+                  @click.stop="showInfo(option.label, option.description)"
                 >
                   i
                 </button>
               </div>
               <div class="create-game-variant__summary">{{ option.summary }}</div>
-              <div v-if="isAuctionInfoOpen(option.value)" class="create-game-variant__detail">
-                {{ option.description }}
-              </div>
             </div>
           </div>
           <div class="create-game-ban-phase">
@@ -64,18 +60,11 @@
             <button
               type="button"
               class="create-game-info-dot"
-              :aria-expanded="banPhaseInfoOpen ? 'true' : 'false'"
               aria-label="About the ban phase"
-              @click="banPhaseInfoOpen = !banPhaseInfoOpen"
+              @click="showInfo('Ban phase', banPhaseInfo)"
             >
               i
             </button>
-          </div>
-          <div v-if="banPhaseInfoOpen" class="create-game-variant__detail">
-            Before factions are chosen, each player bans one faction (in turn order); banned factions can't be
-            picked, bid on, or randomly assigned to anyone for the rest of the game. The ban phase always happens
-            first, before any pick or auction step - it works with every Faction Selection option above, including
-            Standard.
           </div>
         </section>
 
@@ -83,8 +72,8 @@
           <div class="create-game-section__label mb-1">Open Lobby</div>
           <p class="create-game-help mb-0">
             Regular games now open in the lobby instead of sending invites. You take seat 1 immediately, the other
-            {{ form.playerCount - 1 }} seat<span v-if="form.playerCount > 2">s</span> stay open for anyone in the lobby to join,
-            and the game starts automatically once the table is full.
+            {{ form.playerCount - 1 }} seat<span v-if="form.playerCount > 2">s</span> stay open for anyone in the lobby
+            to join, and the game starts automatically once the table is full.
           </p>
         </section>
 
@@ -92,7 +81,9 @@
           <div class="d-flex align-items-start justify-content-between flex-wrap mb-2" style="gap: 0.5rem">
             <div>
               <div class="create-game-section__label mb-1">Setup Preview</div>
-              <p class="create-game-help mb-0">Tap sectors to rotate them. Seed tools stay tucked away unless you need them.</p>
+              <p class="create-game-help mb-0">
+                Tap sectors to rotate them. Seed tools stay tucked away unless you need them.
+              </p>
             </div>
           </div>
           <div class="create-game-ban-phase mb-2">
@@ -102,17 +93,11 @@
             <button
               type="button"
               class="create-game-info-dot"
-              :aria-expanded="centerSectorInfoOpen ? 'true' : 'false'"
               aria-label="About the official center-sector rule"
-              @click="centerSectorInfoOpen = !centerSectorInfoOpen"
+              @click="showInfo('Official center-sector rule', centerSectorInfo)"
             >
               i
             </button>
-          </div>
-          <div v-if="centerSectorInfoOpen" class="create-game-variant__detail mb-2">
-            Restricts the map's center sector(s) to the 4 original numbered sectors (1-4), per the printed Lost
-            Fleet setup rule. Off (default) picks the center from any of the sectors in play, which this project
-            has used until now.
           </div>
           <SetupPreview
             ref="setupPreview"
@@ -127,26 +112,47 @@
         <div class="create-game-sticky-bar__content">
           <div v-if="!canCreate" class="text-muted small create-game-sticky-bar__reason">{{ blockedReason }}</div>
           <div class="create-game-sticky-bar__buttons">
-            <b-button type="button" variant="secondary" class="create-game-sticky-button" @click="rerollSetup">Reroll setup</b-button>
-            <b-button type="submit" variant="primary" class="create-game-sticky-button" :disabled="creating || !canCreate">
+            <b-button type="button" variant="secondary" class="create-game-sticky-button" @click="rerollSetup"
+              >Reroll setup</b-button
+            >
+            <b-button
+              type="submit"
+              variant="primary"
+              class="create-game-sticky-button"
+              :disabled="creating || !canCreate"
+            >
               Create game
             </b-button>
           </div>
         </div>
       </div>
     </b-form>
+
+    <InfoModal :open="!!activeInfo" :title="activeInfo ? activeInfo.title : ''" @close="activeInfo = null">
+      {{ activeInfo ? activeInfo.description : "" }}
+    </InfoModal>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
+import InfoModal from "./InfoModal.vue";
 import { AUCTION_VARIANT_OPTIONS, buildCreateGameParams } from "./new-game";
 import { fetchMyNickname } from "./profile";
 import SetupPreview from "./SetupPreview.vue";
 
+const BAN_PHASE_INFO =
+  "Each player bans one faction, in turn order, before factions are picked or auctioned. Banned factions " +
+  "can't be picked, bid on, or randomly assigned to anyone for the rest of the game. This happens first, " +
+  "regardless of which Faction Selection option is chosen.";
+
+const CENTER_SECTOR_INFO =
+  "Restricts the map's center sector to the 4 original numbered sectors (1-4). When off, the center can be " +
+  "any sector in play.";
+
 export default Vue.extend({
   name: "HostedCreateGame",
-  components: { SetupPreview },
+  components: { SetupPreview, InfoModal },
   props: {
     client: { type: Object, required: true },
     session: { type: Object, required: true },
@@ -156,16 +162,14 @@ export default Vue.extend({
       creating: false,
       message: "",
       myNickname: "" as string,
-      openAuctionInfo: {} as Record<string, boolean>,
-      banPhaseInfoOpen: false,
-      centerSectorInfoOpen: false,
+      activeInfo: null as null | { title: string; description: string },
       currentSeed: "" as string,
       currentRotateMove: "" as string,
       setupValid: false,
       form: {
         playerCount: 2,
         testGame: false,
-        auctionVariant: "none" as "none" | "silent",
+        auctionVariant: "none" as import("./new-game").AuctionVariantOption,
         banPhase: false,
         officialCenterSectors: false,
       },
@@ -192,19 +196,19 @@ export default Vue.extend({
     blockedReason(): string {
       return "Fix the invalid setup first";
     },
+    banPhaseInfo(): string {
+      return BAN_PHASE_INFO;
+    },
+    centerSectorInfo(): string {
+      return CENTER_SECTOR_INFO;
+    },
   },
   methods: {
     setPlayerCount(count: number) {
       this.form.playerCount = count;
     },
-    isAuctionInfoOpen(value: "none" | "silent") {
-      return !!this.openAuctionInfo[value];
-    },
-    toggleAuctionInfo(value: "none" | "silent") {
-      this.openAuctionInfo = {
-        ...this.openAuctionInfo,
-        [value]: !this.openAuctionInfo[value],
-      };
+    showInfo(title: string, description: string) {
+      this.activeInfo = { title, description };
     },
     onSetupUpdate(payload: { seed: string; rotateMove: string; valid: boolean }) {
       this.currentSeed = payload.seed;
@@ -340,15 +344,6 @@ export default Vue.extend({
   font-size: 0.82rem;
   line-height: 1.25;
   color: #60708d;
-}
-
-.create-game-variant__detail {
-  margin-top: 0.45rem;
-  padding-top: 0.45rem;
-  border-top: 1px solid rgba(28, 43, 74, 0.1);
-  font-size: 0.8rem;
-  line-height: 1.3;
-  color: #44506a;
 }
 
 .create-game-ban-phase {

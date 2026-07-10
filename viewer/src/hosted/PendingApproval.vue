@@ -1,9 +1,9 @@
 <template>
   <div class="container py-5" style="max-width: 30rem">
-    <h3 class="sign-in-title">Gaia Project: The Lost Fleet</h3>
+    <h3 class="sign-in-title">GP: Fight Club</h3>
     <b-alert show variant="info">
-      You're signed in as <strong>{{ email }}</strong>, but this app is private. The host still
-      needs to approve your account before you can see or join any games.
+      You're signed in as <strong>{{ email }}</strong
+      >, but this app is private. The host still needs to approve your account before you can see or join any games.
     </b-alert>
     <p class="text-muted small">Ask the host to approve you, then reload this page.</p>
     <b-button variant="outline-secondary" :disabled="busy" @click="signOut">Sign out</b-button>
