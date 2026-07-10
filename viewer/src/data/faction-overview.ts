@@ -95,33 +95,71 @@ export function piGrantsTechTile(board: FactionBoard): boolean {
   );
 }
 
-export type TinkeringRound = { label: string; rewards: Reward[][] };
+// The flat default Explore deploy cost (5 VP). Factions differing from this get the default called
+// out for reference.
+export const DEFAULT_EXPLORE_COST: Reward[] = [new Reward(5, Resource.VictoryPoint)];
 
-// Tinkeroids only: the per-round Tinkering tile options, in real reward iconography. Rounds 1-3 and
-// 4-6 each offer a different set of three tiles (one used per round).
+export function exploreCostIsDefault(player: Player): boolean {
+  const cost = exploreDeployCost(player);
+  return (
+    cost.length === DEFAULT_EXPLORE_COST.length &&
+    cost.every((r, i) => r.type === DEFAULT_EXPLORE_COST[i].type && r.count === DEFAULT_EXPLORE_COST[i].count)
+  );
+}
+
+// The default cost to build a mine on a Gaia planet (1 Q.I.C.), for the reference note next to a
+// surcharged faction.
+export const DEFAULT_GAIA_MINE_COST: Reward = new Reward(1, Resource.Qic);
+
+export type TinkeringRound = { label: string; tiles: string[] };
+
+// Tinkeroids only: the per-round Tinkering tile options as reward specs (rendered as special-action
+// octagons, since each is a once-per-round action). Rounds 1-3 and 4-6 each offer three tiles.
 export function tinkeringRounds(): TinkeringRound[] {
-  const toRewards = (tiles: TinkeringTile[]) => tiles.map((tile) => Reward.parse(tinkeringTileSpec(tile)));
+  const specs = (tiles: TinkeringTile[]) => tiles.map((tile) => tinkeringTileSpec(tile));
   return [
-    { label: "Rounds 1-3", rewards: toRewards(tinkeringTilesForRound(1)) },
-    { label: "Rounds 4-6", rewards: toRewards(tinkeringTilesForRound(4)) },
+    { label: "Rounds 1-3", tiles: specs(tinkeringTilesForRound(1)) },
+    { label: "Rounds 4-6", tiles: specs(tinkeringTilesForRound(4)) },
   ];
 }
 
-// Pieces already on the board (or off it) at game start that the empty preview board can't depict -
-// surfaced as a short text note per the owner's request.
+// Factions whose per-planet terraforming costs are not fixed by the faction alone: three planet
+// colours cost 3 steps and the rest 1, but *which* three is drawn from the Lost Fleet Terraforming
+// board during setup (depends on the final set of factions). The board's terraform markers are only
+// a snapshot of the current selection.
+export function terraformCostDependsOnFactions(faction: Faction): boolean {
+  return faction === Faction.Tinkeroids || faction === Faction.Moweyds;
+}
+
+// Pieces already on the board (or off it) at game start that the empty preview board can't depict,
+// plus the setup phase in which a faction's single starting piece is placed. Base-game factions set
+// up first (snake order); the four expansion factions place their single piece in a later
+// expansion-faction setup stage; Ivits places its Planetary Institute last of all.
 export function startingBuildingNote(faction: Faction): string | null {
   switch (faction) {
     case Faction.Tinkeroids:
-      return "Starts with the Planetary Institute already built, instead of two mines.";
+      return (
+        "Starts with the Planetary Institute already built (instead of two mines), placed in the " +
+        "expansion-faction setup stage, after every base-game faction has set up."
+      );
     case Faction.Moweyds:
-      return "Starts with one mine and an Exploration Shuttle already deployed on T F Mars.";
+      return (
+        "Starts with one mine (instead of two) and an Exploration Shuttle already on T F Mars. The " +
+        "mine is placed in the expansion-faction setup stage, after every base-game faction."
+      );
     case Faction.Darkanians:
     case Faction.SpaceGiants:
-      return "Starts with one mine, instead of two.";
+      return (
+        "Places only one starting mine (instead of two), in the expansion-faction setup stage, " +
+        "after every base-game faction has set up."
+      );
     case Faction.Ivits:
-      return "Places no starting mines - places the Planetary Institute on any red planet after everyone else.";
+      return (
+        "Places no starting mines - places the Planetary Institute on any red planet last of all, " +
+        "after every other faction (including the Xenos' third mine)."
+      );
     case Faction.Xenos:
-      return "Places a third starting mine after all other factions have placed theirs.";
+      return "Places a third starting mine after all other base-game factions have placed their two.";
     default:
       return null;
   }

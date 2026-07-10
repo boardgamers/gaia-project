@@ -9,13 +9,17 @@
 
     <div class="faction-info-card__facts">
       <div class="faction-info-card__fact">
-        <span class="faction-info-card__label">Explore</span>
+        <span class="faction-info-card__label">Explore cost</span>
         <RichTextView :content="exploreCostContent" />
-        <span class="faction-info-card__hint">(deploy; +range Q.I.C. by distance)</span>
+        <span v-if="!exploreIsDefault" class="faction-info-card__default">
+          (default <RichTextView :content="defaultExploreContent" />)
+        </span>
+        <span class="faction-info-card__hint">deploy; +range Q.I.C. by distance</span>
       </div>
       <div v-if="gaiaSurcharge" class="faction-info-card__fact">
         <span class="faction-info-card__label">Gaia mine</span>
         <RichTextView :content="gaiaMineCostContent" />
+        <span class="faction-info-card__default"> (default <RichTextView :content="defaultGaiaMineContent" />) </span>
       </div>
     </div>
 
@@ -46,11 +50,16 @@
     </div>
 
     <div v-if="tinkering" class="faction-info-card__section">
-      <div class="faction-info-card__label">Tinkering tiles (one action per round)</div>
+      <div class="faction-info-card__label">Tinkering tiles (one special action per round)</div>
       <div v-for="(round, i) in tinkering" :key="'tk-' + i" class="faction-info-card__tinkering-row">
         <span class="faction-info-card__tinkering-label">{{ round.label }}</span>
-        <RichTextView :content="tinkeringContent(round)" />
+        <SpecialAction v-for="(tile, j) in round.tiles" :key="'tk-' + i + '-' + j" :action="[tile]" board />
       </div>
+    </div>
+
+    <div v-if="terraformNote" class="faction-info-card__section">
+      <div class="faction-info-card__label">Terraforming costs</div>
+      <p class="faction-info-card__text">{{ terraformNote }}</p>
     </div>
 
     <div v-if="lostFleetChanges.length" class="faction-info-card__section">
@@ -65,16 +74,15 @@
       <p class="faction-info-card__text">{{ startingNote }}</p>
     </div>
 
-    <div class="faction-info-card__section">
-      <button type="button" class="faction-info-card__toggle" @click="showAbilities = !showAbilities">
-        {{ showAbilities ? "Hide" : "Show" }} faction &amp; Planetary Institute abilities
-      </button>
-      <div v-show="showAbilities" class="faction-info-card__abilities">
-        <div class="faction-info-card__label">Faction ability</div>
+    <div class="faction-info-card__accordion">
+      <details class="faction-info-card__acc-item">
+        <summary class="faction-info-card__acc-header">Faction ability</summary>
         <p class="faction-info-card__text">{{ ability }}</p>
-        <div class="faction-info-card__label">Planetary Institute ability</div>
+      </details>
+      <details class="faction-info-card__acc-item">
+        <summary class="faction-info-card__acc-header">Planetary Institute ability</summary>
         <p class="faction-info-card__text">{{ pi }}</p>
-      </div>
+      </details>
     </div>
   </div>
 </template>
@@ -92,16 +100,20 @@ import {
   BuildingSpecialAction,
   buildingSpecialActions,
   buildingShortLabel,
+  DEFAULT_EXPLORE_COST,
+  DEFAULT_GAIA_MINE_COST,
+  exploreCostIsDefault,
   exploreDeployCost,
   gaiaMineExtraCost,
   hasGaiaMineSurcharge,
   isExpansionFaction,
   piGrantsTechTile,
   startingBuildingNote,
+  terraformCostDependsOnFactions,
   TinkeringRound,
   tinkeringRounds,
 } from "../data/faction-overview";
-import { richText, richTextRewards, RichText } from "../graphics/rich-text";
+import { richTextRewards, RichText } from "../graphics/rich-text";
 import RichTextView from "./Resources/RichTextView.vue";
 import PlayerInfo from "./PlayerInfo.vue";
 import Building from "./Building.vue";
@@ -158,8 +170,6 @@ export default class FactionInfoCard extends Vue {
   @Prop()
   expansion: Expansion;
 
-  protected showAbilities = false;
-
   // Built once and shared between the board and every supplemental getter. markRaw keeps Vue from
   // deep-observing the large engine graph (it is read-only display data that never mutates here).
   private engineInstance: Engine | null = null;
@@ -189,12 +199,32 @@ export default class FactionInfoCard extends Vue {
     return [richTextRewards(exploreDeployCost(this.previewPlayer))];
   }
 
+  get exploreIsDefault(): boolean {
+    return exploreCostIsDefault(this.previewPlayer);
+  }
+
+  get defaultExploreContent(): RichText {
+    return [richTextRewards(DEFAULT_EXPLORE_COST)];
+  }
+
   get gaiaMineCostContent(): RichText {
     return [richTextRewards([gaiaMineExtraCost(this.previewPlayer)])];
   }
 
+  get defaultGaiaMineContent(): RichText {
+    return [richTextRewards([DEFAULT_GAIA_MINE_COST])];
+  }
+
   get gaiaSurcharge(): boolean {
     return hasGaiaMineSurcharge(this.previewPlayer);
+  }
+
+  get terraformNote(): string | null {
+    return terraformCostDependsOnFactions(this.faction)
+      ? "Per-planet terraforming costs are drawn from the Lost Fleet Terraforming board during " +
+          "setup and depend on the final set of factions - the costs shown on the board above are " +
+          "only a snapshot of the current selection and may change."
+      : null;
   }
 
   buildingLabel(building: BuildingEnum): string {
@@ -211,17 +241,6 @@ export default class FactionInfoCard extends Vue {
 
   get tinkering(): TinkeringRound[] | null {
     return this.faction === Faction.Tinkeroids ? tinkeringRounds() : null;
-  }
-
-  tinkeringContent(round: TinkeringRound): RichText {
-    const parts: RichText = [];
-    round.rewards.forEach((rewards, i) => {
-      if (i > 0) {
-        parts.push(richText("/"));
-      }
-      parts.push(richTextRewards(rewards));
-    });
-    return parts;
   }
 
   get lostFleetChanges(): string[] {
@@ -291,6 +310,19 @@ export default class FactionInfoCard extends Vue {
   }
 }
 
+// "(default <icon>)" reference shown next to a non-default cost.
+.faction-info-card__default {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.74rem;
+  opacity: 0.7;
+
+  ::v-deep svg {
+    height: 22px;
+  }
+}
+
 .faction-info-card__list {
   margin: 0;
   padding-left: 1.1rem;
@@ -354,18 +386,50 @@ export default class FactionInfoCard extends Vue {
   min-width: 5rem;
 }
 
-.faction-info-card__toggle {
-  background: none;
-  border: none;
-  padding: 0;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--highlighted, #3273dc);
-  cursor: pointer;
-  text-decoration: underline;
+// Native <details> accordion for the ability text - one item per ability, closed by default.
+.faction-info-card__accordion {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-.faction-info-card__abilities {
-  margin-top: 0.5rem;
+.faction-info-card__acc-item {
+  & + & {
+    border-top: 1px solid rgba(0, 0, 0, 0.12);
+  }
+
+  .faction-info-card__text {
+    margin: 0;
+    padding: 0 0.7rem 0.7rem;
+  }
+}
+
+.faction-info-card__acc-header {
+  list-style: none;
+  cursor: pointer;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  user-select: none;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  &::before {
+    content: "▸";
+    display: inline-block;
+    margin-right: 0.4rem;
+    opacity: 0.6;
+    transition: transform 0.15s ease;
+  }
+}
+
+details[open] > .faction-info-card__acc-header::before {
+  transform: rotate(90deg);
 }
 </style>

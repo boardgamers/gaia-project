@@ -52,7 +52,9 @@ describe("FactionInfoCard", () => {
     });
 
     expect(container.textContent).to.not.include("Lost Fleet changes");
-    expect(container.textContent).to.include("Starts with one mine");
+    expect(container.textContent).to.include("Places only one starting mine");
+    // The expansion factions place in their own setup stage after the base-game factions.
+    expect(container.textContent).to.include("expansion-faction setup stage");
   });
 
   it("shows the per-round Tinkering tiles for Tinkeroids", () => {
