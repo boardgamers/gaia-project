@@ -628,6 +628,26 @@ describe("Lobby", () => {
     expect(wrapper.text()).to.contain(currentEntry.releasedAt);
   });
 
+  it("opens the Credits modal (MIT-license/game-design attribution) from the settings menu", async () => {
+    const { client } = makeClient([]);
+    const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    expect(wrapper.find(".info-modal").exists()).to.equal(false);
+
+    const creditsButton = wrapper
+      .findAll("button")
+      .filter((b) => b.text() === "Credits")
+      .at(0);
+    await creditsButton.trigger("click");
+    await Vue.nextTick();
+
+    expect(wrapper.find(".info-modal").exists()).to.equal(true);
+    expect(wrapper.text()).to.contain("Licensed under the MIT License");
+    expect(wrapper.text()).to.contain("Feuerland Spiele");
+  });
+
   it("defaults to Lobby, while My games, Active, and Finished keep their own sections", async () => {
     const { client } = makeClient(membershipGames, [
       { game_id: "g-open", seq: 1, move: "p3 rotate", committed_at: "2026-07-08T09:00:00Z" },

@@ -2,27 +2,6 @@
   <div class="faction-info-card">
     <div class="faction-info-card__section">
       <div class="faction-info-card__label">Round 1 starting position (before booster income)</div>
-      <div class="faction-info-card__resources-row">
-        <RichTextView :content="startingResourcesContent" />
-        <span class="faction-info-card__power">
-          <svg viewBox="-12 -12 24 24" width="28" height="28">
-            <Resource kind="t" :count="info.power.area1" />
-          </svg>
-          <span class="faction-info-card__power-label">Bowl I</span>
-        </span>
-        <span class="faction-info-card__power">
-          <svg viewBox="-12 -12 24 24" width="28" height="28">
-            <Resource kind="t" :count="info.power.area2" />
-          </svg>
-          <span class="faction-info-card__power-label">Bowl II</span>
-        </span>
-        <span v-if="info.power.brainstone" class="faction-info-card__power">
-          <svg viewBox="-12 -12 24 24" width="28" height="28">
-            <Resource kind="brainstone" />
-          </svg>
-          <span class="faction-info-card__power-label">Brainstone in Bowl I</span>
-        </span>
-      </div>
       <div v-if="startingTechBumps.length" class="faction-info-card__tech-bumps">
         Tech track: {{ startingTechBumps.join(", ") }}
       </div>
@@ -30,10 +9,17 @@
 
     <div class="faction-info-card__section">
       <div class="faction-info-card__label">Faction board</div>
-      <FactionBoardPreview
+      <FactionBoardVisual
         :faction="info.faction"
-        :buildings="info.buildings"
+        :name="info.name"
+        :color="info.color"
+        :text-color="info.textColor"
         :starting-resources="info.startingResources"
+        :power="info.power"
+        :victory-points="startingVictoryPoints"
+        :research-levels="researchLevels"
+        :research-fields="researchFields"
+        :buildings="info.buildings"
       />
     </div>
 
@@ -65,14 +51,13 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { Expansion, Faction, ResearchField } from "@gaia-project/engine";
+import { Expansion, Faction, PlayerData, ResearchField } from "@gaia-project/engine";
 import { FactionBoardRaw } from "@gaia-project/engine/src/faction-boards";
 import { factionPreviewEngine } from "../data/faction-preview";
 import { factionInfoData, FactionInfoData } from "../data/factions";
 import { richTextRewards, RichText } from "../graphics/rich-text";
-import Resource from "./Resource.vue";
 import RichTextView from "./Resources/RichTextView.vue";
-import FactionBoardPreview from "./FactionBoardPreview.vue";
+import FactionBoardVisual from "./FactionBoardVisual.vue";
 
 const RESEARCH_FIELD_NAMES: { [key in ResearchField]: string } = {
   [ResearchField.Terraforming]: "Terraforming",
@@ -85,7 +70,7 @@ const RESEARCH_FIELD_NAMES: { [key in ResearchField]: string } = {
 };
 
 @Component({
-  components: { Resource, RichTextView, FactionBoardPreview },
+  components: { RichTextView, FactionBoardVisual },
 })
 export default class FactionInfoCard extends Vue {
   @Prop()
@@ -101,10 +86,6 @@ export default class FactionInfoCard extends Vue {
     return factionInfoData(this.faction, this.variant, this.expansion);
   }
 
-  get startingResourcesContent(): RichText {
-    return [richTextRewards(this.info.startingResources)];
-  }
-
   get roundIncomeContent(): RichText {
     return [richTextRewards(this.info.roundIncome)];
   }
@@ -112,11 +93,27 @@ export default class FactionInfoCard extends Vue {
   // A fresh single-faction engine, read purely as data (never mounted as a component) - the
   // safest way to get each research track's real starting bump, matching what round 1 actually
   // looks like, without needing a second live Vue/Vuex tree inside this already-interactive modal.
+  get previewData(): PlayerData {
+    return factionPreviewEngine(this.faction).players[0].data;
+  }
+
   get startingTechBumps(): string[] {
-    const research = factionPreviewEngine(this.faction).players[0].data.research;
+    const research = this.previewData.research;
     return Object.entries(research)
       .filter(([, level]) => (level as number) > 0)
       .map(([field, level]) => `${RESEARCH_FIELD_NAMES[field as ResearchField]} +${level}`);
+  }
+
+  get startingVictoryPoints(): number {
+    return this.previewData.victoryPoints;
+  }
+
+  get researchLevels(): { [key in ResearchField]: number } {
+    return this.previewData.research;
+  }
+
+  get researchFields(): ResearchField[] {
+    return ResearchField.values(this.expansion);
   }
 }
 </script>
@@ -128,24 +125,6 @@ export default class FactionInfoCard extends Vue {
   &:last-child {
     margin-bottom: 0;
   }
-}
-
-.faction-info-card__resources-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-}
-
-.faction-info-card__power {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.78rem;
-}
-
-.faction-info-card__power-label {
-  opacity: 0.85;
 }
 
 .faction-info-card__tech-bumps {

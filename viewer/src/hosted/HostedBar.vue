@@ -49,21 +49,28 @@
         <b-dropdown-item-button @click="toggleDarkMode">{{
           isDarkMode ? "Light mode" : "Dark mode"
         }}</b-dropdown-item-button>
+        <b-dropdown-item-button @click="showCredits = true">Credits</b-dropdown-item-button>
         <b-dropdown-divider></b-dropdown-divider>
         <b-dropdown-item-button v-if="!abandoned" @click="confirmAbandon">Abandon game</b-dropdown-item-button>
       </b-dropdown>
     </span>
+
+    <InfoModal :open="showCredits" title="Credits" @close="showCredits = false">
+      <CreditsContent />
+    </InfoModal>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
 import TurnOrder from "../components/TurnOrder.vue";
+import InfoModal from "./InfoModal.vue";
+import CreditsContent from "../components/CreditsContent.vue";
 import { getTheme, toggleTheme } from "./theme";
 
 export default Vue.extend({
   name: "HostedBar",
-  components: { TurnOrder },
+  components: { TurnOrder, InfoModal, CreditsContent },
   props: {
     gameName: { type: String, default: "" },
     finished: { type: Boolean, default: false },
@@ -74,6 +81,7 @@ export default Vue.extend({
   data() {
     return {
       isDarkMode: getTheme() === "dark",
+      showCredits: false,
     };
   },
   methods: {

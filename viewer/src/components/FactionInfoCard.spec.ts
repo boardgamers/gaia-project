@@ -24,7 +24,7 @@ describe("FactionInfoCard", () => {
     // No Lost Fleet section for a plain base-game render.
     expect(container.textContent).to.not.include("Lost Fleet changes");
     // Real icon components rendered (not the old text-badge HTML), one per building slot.
-    expect(container.querySelectorAll(".faction-board-preview__building").length).to.equal(6);
+    expect(container.querySelectorAll(".faction-board-visual__building").length).to.equal(6);
     expect(container.querySelectorAll("g.resource").length).to.be.greaterThan(0);
   });
 
@@ -40,5 +40,18 @@ describe("FactionInfoCard", () => {
 
     expect(container.textContent).to.include("Lost Fleet changes");
     expect(container.textContent).to.include("standard planets always terraform in 1 step");
+  });
+
+  it("renders Lantids without throwing (its filler opponent must not also be Terrans, its opposite faction)", () => {
+    const engine = new Engine(["init 2 faction-info-lantids"]);
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(FactionInfoCard, {
+      props: { faction: Faction.Lantids, variant: null, expansion: engine.expansions },
+      store,
+    });
+
+    expect(container.textContent).to.include("build a mine on a planet colonized by an opponent");
   });
 });

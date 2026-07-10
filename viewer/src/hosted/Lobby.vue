@@ -40,6 +40,7 @@
           <b-dropdown-item-button @click="toggleDarkMode">{{
             isDarkMode ? "Light mode" : "Dark mode"
           }}</b-dropdown-item-button>
+          <b-dropdown-item-button @click="showCredits = true">Credits</b-dropdown-item-button>
           <b-dropdown-item-button @click="signOut">Sign out</b-dropdown-item-button>
         </b-dropdown>
       </div>
@@ -76,6 +77,10 @@
           <b-button type="submit" variant="primary" :disabled="nicknameSaving || !nicknameInput.trim()">Save</b-button>
         </div>
       </b-form>
+    </InfoModal>
+
+    <InfoModal :open="showCredits" title="Credits" @close="showCredits = false">
+      <CreditsContent />
     </InfoModal>
 
     <b-alert :show="!!message" variant="info" dismissible @dismissed="message = ''">{{ message }}</b-alert>
@@ -227,6 +232,7 @@ import Vue from "vue";
 import { presenceStatus, PresenceState, trackPresence } from "./presence";
 import { disablePushNotifications, enablePushNotifications, isPushEnabled } from "./push";
 import Token from "../components/Token.vue";
+import CreditsContent from "../components/CreditsContent.vue";
 import { factionName } from "../data/factions";
 import { isAdminEmail } from "./admin";
 import InfoModal from "./InfoModal.vue";
@@ -387,7 +393,7 @@ function lobbyPresenceStatus(
 
 export default Vue.extend({
   name: "HostedLobby",
-  components: { Token, InfoModal },
+  components: { Token, InfoModal, CreditsContent },
   props: {
     client: { type: Object, required: true },
     session: { type: Object, required: true },
@@ -403,6 +409,7 @@ export default Vue.extend({
       gamesChannel: null as any,
       showReleaseNotes: false,
       showNicknameModal: false,
+      showCredits: false,
       myNickname: "" as string,
       nicknameInput: "" as string,
       nicknameSaving: false,
