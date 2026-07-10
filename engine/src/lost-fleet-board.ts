@@ -39,15 +39,43 @@ function lostFleetSectorTiles(nbPlayers: number): MapTile[] {
   return [s1, s2, s3, s4, s5, s6, s7, s8, s9, s10];
 }
 
+/** The 4 original numbered sectors eligible for the center under §H1's "official rules" restriction. */
+const CENTER_ELIGIBLE_SECTOR_NAMES = ["1", "2", "3", "4"];
+
+/**
+ * §H1 "official rules": randomly draw the center sector(s) from sectors 1-4 only (1 center at 2p/3p,
+ * 2 adjacent centers at 4p - see `lostFleetSectorCenters`'s doc comment for which indices are the
+ * center), then shuffle everything else normally for the remaining outer positions.
+ */
+function officialCenterTileOrder(nbPlayers: number, rng: seedrandom.prng): MapTile[] {
+  const allTiles = lostFleetSectorTiles(nbPlayers);
+  const centerPool = allTiles.filter((t) => CENTER_ELIGIBLE_SECTOR_NAMES.includes(t.name));
+  const rest = allTiles.filter((t) => !CENTER_ELIGIBLE_SECTOR_NAMES.includes(t.name));
+  const numCenters = nbPlayers === 4 ? 2 : 1;
+
+  const shuffledCenterPool = shuffleSeed.shuffle(centerPool, rng());
+  const chosenCenters = shuffledCenterPool.slice(0, numCenters);
+  const leftoverCenterPoolTiles = shuffledCenterPool.slice(numCenters);
+  const outerTiles = shuffleSeed.shuffle([...rest, ...leftoverCenterPoolTiles], rng());
+
+  return [...chosenCenters, ...outerTiles];
+}
+
 /** Step 1: place the (rotated) Space Sector tiles onto the shifted Lost Fleet centers. Also returns the
  * per-sector placement (tile name/rotation/center) so callers can populate a `MapConfiguration`-shaped
  * record (e.g. `SpaceMap.placement`) for sector-suffix coordinate parsing and rotation. */
 function generateSectorGrid(
   nbPlayers: number,
-  rng: seedrandom.prng
+  rng: seedrandom.prng,
+  officialCenterSectors = false
 ): { grid: Grid<GaiaHex>; sectors: SectorInMapConfiguration[] } {
   const centers = lostFleetSectorCenters(nbPlayers);
-  const tiles = shuffleSeed.shuffle(lostFleetSectorTiles(nbPlayers), rng());
+  // `officialCenterSectors` defaults to false and this branch is untouched from before the option
+  // existed, so every seed generated prior to this option (and every seed generated with the
+  // checkbox left off) keeps producing the exact same board.
+  const tiles = officialCenterSectors
+    ? officialCenterTileOrder(nbPlayers, rng)
+    : shuffleSeed.shuffle(lostFleetSectorTiles(nbPlayers), rng());
 
   const sectors: SectorInMapConfiguration[] = [];
   const grids = tiles.map((tile, i) => {
@@ -201,10 +229,10 @@ const MAX_LAYOUT_ATTEMPTS = 50;
  * Rerolls (re-deriving the RNG from the seed) until the German-rules adjacency check passes, the same
  * guarantee the base game's `SpaceMap` constructor provides via its own `isValid()` retry loop.
  */
-export function generateLostFleetBoard(nbPlayers: number, seed: string): LostFleetBoard {
+export function generateLostFleetBoard(nbPlayers: number, seed: string, officialCenterSectors = false): LostFleetBoard {
   for (let attempt = 0; attempt < MAX_LAYOUT_ATTEMPTS; attempt++) {
     const rng = seedrandom(attempt === 0 ? seed : `${seed}-retry${attempt}`);
-    const { grid, sectors } = generateSectorGrid(nbPlayers, rng);
+    const { grid, sectors } = generateSectorGrid(nbPlayers, rng, officialCenterSectors);
     placeInterspaceTiles(grid, nbPlayers, rng);
     placeDeepSpaceTiles(grid, nbPlayers, rng);
 

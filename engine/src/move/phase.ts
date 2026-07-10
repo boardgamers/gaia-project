@@ -226,7 +226,11 @@ function beginSetupBoardPhase(engine: Engine) {
 }
 
 function beginSetupFactionPhaseOrBan(engine: Engine) {
-  if (engine.options.auction === AuctionVariant.Silent) {
+  // `??` is the backward-compat guarantee: games created before `banPhase` existed have it
+  // `undefined` and fall back to the old rule (Silent Auction always bans) so they keep replaying
+  // identically. Games created after this flag exists always set it explicitly (true or false).
+  const banPhase = engine.options.banPhase ?? engine.options.auction === AuctionVariant.Silent;
+  if (banPhase) {
     beginSetupFactionBanPhase(engine);
   } else {
     beginSetupFactionPhase(engine);

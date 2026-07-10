@@ -39,7 +39,8 @@
       :title="button.modal.title"
       :ok-title="button.modal.okTitle || 'OK, I pick this one!'"
     >
-      <div v-html="button.modal.content"></div>
+      <component :is="button.modal.component" v-if="button.modal.component" v-bind="button.modal.props" />
+      <div v-else v-html="button.modal.content"></div>
     </b-modal>
   </div>
 </template>

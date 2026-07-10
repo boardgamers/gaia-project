@@ -572,6 +572,15 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
        (this chunk) works only at the `Grid<GaiaHex>`/geometry level and never calls `.toString()` on a
        Lost-Fleet-placed hex, so it is unaffected, but this is a hard prerequisite for any move-command
        integration later.
+    8. **RESOLVED (Gaia 17, 2026-07-09) — the "randomly pick 1/2 of Sectors 01-04 for the center"
+       restriction above is now enforced in the engine, opt-in.** Previously the engine's
+       `generateSectorGrid()` (`engine/src/lost-fleet-board.ts`) shuffled the entire tile pool
+       uniformly, so any tile (including 5-10) could land in the center — an unenforced gap, not a
+       deliberate house rule. A new `EngineOptions.officialCenterSectors` flag (default `false`, so
+       every existing/previously-generated seed keeps producing the exact same board) makes
+       `generateSectorGrid()` draw the center sector(s) from `["1","2","3","4"]` only when set,
+       exposed as an "Official center-sector rule (1-4)" checkbox in `CreateGame.vue`'s Setup Preview
+       section. See `engine/src/lost-fleet-board.spec.ts`'s `officialCenterSectors` describe block.
 - H2. Deep Space sector tiles (8 physical tiles, 2 sides each = 16 faces, each a 3-hex cluster). Hex
   contents read directly off the randomizer art (2026-06-27). Owner does NOT need the art itself
   redrawn pixel-for-pixel (own SVG style instead, per Art policy above) but DOES need this composition

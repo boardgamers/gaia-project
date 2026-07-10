@@ -15,7 +15,12 @@ export type ButtonWarning = {
 
 export type ModalButtonData = {
   title: string;
-  content: string;
+  /** Plain HTML content, rendered via v-html. Ignored when `component` is set. */
+  content?: string;
+  /** A real Vue component to render as the modal body instead of `content` - lets the body use
+   * actual icon components (SVG-rendered, can't be embedded in an HTML string). */
+  component?: unknown;
+  props?: Record<string, unknown>;
   canActivate: () => boolean;
   show: (boolean) => void;
   okTitle?: string;

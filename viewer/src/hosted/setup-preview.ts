@@ -23,9 +23,18 @@ export type RotationValidation = { valid: true } | { valid: false; error: string
  * types adjacent) before it's allowed to be locked in. Uses a scratch
  * Engine, never the live preview engine.
  */
-export function validateRotation(playerCount: number, seed: string, rotateMove: string): RotationValidation {
+export function validateRotation(
+  playerCount: number,
+  seed: string,
+  rotateMove: string,
+  officialCenterSectors = false
+): RotationValidation {
   try {
-    new Engine([`init ${playerCount} ${seed}`, rotateMove], { lostFleet: true, advancedRules: true });
+    new Engine([`init ${playerCount} ${seed}`, rotateMove], {
+      lostFleet: true,
+      advancedRules: true,
+      officialCenterSectors,
+    });
     return { valid: true };
   } catch (err) {
     return { valid: false, error: err instanceof Error ? err.message : String(err) };

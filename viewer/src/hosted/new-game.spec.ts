@@ -19,7 +19,7 @@ describe("buildCreateGameParams", () => {
     );
 
     // the probe engine must not leak its mutations (map, factionVariantVersion)
-    expect(params.p_options).to.deep.equal({ lostFleet: true, advancedRules: true, factionVariant: "standard" });
+    expect(params.p_options).to.deep.equal({ lostFleet: true, advancedRules: true, factionVariant: "standard", banPhase: false });
     expect(params.p_name).to.be.a("string").and.to.not.equal("");
     expect(params.p_seed).to.equal("fixed-seed");
     expect(params.p_setup_move).to.equal("p2 rotate");
@@ -85,7 +85,7 @@ describe("buildCreateGameParams", () => {
       "p2 rotate"
     );
 
-    expect(params1.p_options).to.deep.equal({ lostFleet: true, advancedRules: true, factionVariant: "standard" });
-    expect(params2.p_options).to.deep.equal({ lostFleet: true, advancedRules: true, factionVariant: "standard" });
+    expect(params1.p_options).to.deep.equal({ lostFleet: true, advancedRules: true, factionVariant: "standard", banPhase: false });
+    expect(params2.p_options).to.deep.equal({ lostFleet: true, advancedRules: true, factionVariant: "standard", banPhase: false });
   });
 });

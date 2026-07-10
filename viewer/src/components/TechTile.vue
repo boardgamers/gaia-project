@@ -31,7 +31,7 @@
         <Building building="m" outline-white :flat="flat" faction="gen" transform="translate(-11, 0) scale(2.2)" />
         <Resource kind="step" :count="2" transform="translate(8, 0) scale(1.3)" />
       </g>
-      <TechContent v-else-if="this.event" :event="this.event" style="pointer-events: none" />
+      <TechContent v-else-if="this.event" :event="this.event" :disabled="specialActionUsed" style="pointer-events: none" />
     </g>
   </svg>
 </template>
@@ -44,6 +44,7 @@ import Engine, {
   AdvTechTilePos,
   Expansion,
   Event,
+  Operator,
   PlayerEnum,
   Spaceship,
   SpaceshipTechTile,
@@ -57,7 +58,7 @@ import Resource from "./Resource.vue";
 import { ButtonData } from "../data";
 import { prependShortcut } from "../logic/buttons/shortcuts";
 import { spaceshipTechDisplayEvent, techTileData } from "../data/tech-tiles";
-import { techTileEventWithSource } from "@gaia-project/engine/src/tiles/techs";
+import { techTileEventSource, techTileEventWithSource } from "@gaia-project/engine/src/tiles/techs";
 import { spaceshipTechSpec } from "@gaia-project/engine/src/tiles/spaceship-techs";
 
 @Component({
@@ -163,6 +164,16 @@ export default class TechTile extends Vue {
 
   get isAdvanced() {
     return typeof this.tile === "string" && this.tile.startsWith("adv");
+  }
+
+  /** Mirrors Booster.vue's specialActionUsed: the same X-overlay for a claimed tech tile's own
+   * repeatable special action, once it's been used this round. */
+  get specialActionUsed(): boolean {
+    if (this.player === undefined || this.isSpaceshipPos(this.pos)) {
+      return false;
+    }
+    const source = techTileEventSource(this.pos as TechTilePos | AdvTechTilePos);
+    return this.engine.player(this.player).events[Operator.Activate].some((e) => e.source === source && e.activated);
   }
 
   get engine(): Engine {

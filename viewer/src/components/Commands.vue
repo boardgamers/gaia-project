@@ -9,6 +9,10 @@
         How does the auction work? <b-badge variant="info" pill>i</b-badge>
       </b-btn>
       <SilentAuctionInfo v-if="showSilentAuctionInfo" />
+      <b-btn v-if="showBanPhaseInfo" v-b-modal.ban-phase-info variant="link" size="sm" class="ml-2 silent-auction-info-button">
+        What's the ban phase? <b-badge variant="info" pill>i</b-badge>
+      </b-btn>
+      <BanPhaseInfo v-if="showBanPhaseInfo" />
       <!-- "Auto leech": lets the engine's own already-implemented decision logic
            (engine/src/auto-charge.ts) auto-resolve power-charge/decline offers instead of asking
            every time - a per-browser preference (never synced/persisted as part of game state).
@@ -52,6 +56,9 @@
         </h5>
         <b-btn v-if="showSilentAuctionInfo" v-b-modal.silent-auction-info variant="link" size="sm" class="ml-2 silent-auction-info-button">
           How does the auction work? <b-badge variant="info" pill>i</b-badge>
+        </b-btn>
+        <b-btn v-if="showBanPhaseInfo" v-b-modal.ban-phase-info variant="link" size="sm" class="ml-2 silent-auction-info-button">
+          What's the ban phase? <b-badge variant="info" pill>i</b-badge>
         </b-btn>
         <b-dropdown
           v-if="showAutoLeechSelect"
@@ -124,7 +131,7 @@
           v-for="faction in factionsToChoose.data"
           :button="{
             command: `${factionsToChoose.name} ${faction}`,
-            modal: modalDialog(factionName(faction), tooltip(faction)),
+            modal: factionInfoModal(faction),
             richText: factionPickerLabel(faction),
             shortcuts: [factionShortcut(faction)],
           }"
@@ -143,7 +150,7 @@
           v-for="faction in factionToBan.data"
           :button="{
             command: `${factionToBan.name} ${faction}`,
-            modal: modalDialog(factionName(faction), tooltip(faction), 'OK, I ban this one!'),
+            modal: factionInfoModal(faction, 'OK, I ban this one!'),
             richText: factionPickerLabel(faction),
             shortcuts: [factionShortcut(faction)],
           }"
@@ -217,6 +224,8 @@ import Engine, {
 } from "@gaia-project/engine";
 import MoveButton from "./MoveButton.vue";
 import SilentAuctionInfo from "./SilentAuctionInfo.vue";
+import BanPhaseInfo from "./BanPhaseInfo.vue";
+import FactionInfoCard from "./FactionInfoCard.vue";
 import {
   ButtonData,
   GameContext,
@@ -226,7 +235,7 @@ import {
   SpecialActionIncome,
   WarningsPreference
 } from "../data";
-import { factionDesc, factionName, factionShortcut } from "../data/factions";
+import { factionName, factionShortcut } from "../data/factions";
 import { FactionCustomization } from "@gaia-project/engine/src/engine";
 import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
 import { enabledButtonWarnings, isWarningEnabled } from "../data/warnings";
@@ -258,14 +267,15 @@ export type EmitCommandParams = { disappear?: boolean; times?: number; warnings?
     },
   },
   methods: {
-    tooltip(faction: Faction) {
-      return factionDesc(faction, factionVariantBoard(this.factionCustomization, faction)?.board, this.engine.expansions);
-    },
-
-    modalDialog(title: string, msg: string, okTitle?: string): ModalButtonData {
+    factionInfoModal(faction: Faction, okTitle?: string): ModalButtonData {
       return {
-        title: title,
-        content: msg,
+        title: factionName(faction),
+        component: FactionInfoCard,
+        props: {
+          faction,
+          variant: factionVariantBoard(this.factionCustomization, faction)?.board,
+          expansion: this.engine.expansions,
+        },
         okTitle,
         show(s: boolean) {
           show = s;
@@ -286,7 +296,7 @@ export type EmitCommandParams = { disappear?: boolean; times?: number; warnings?
         command: `${command.name} ${faction}`,
         label: "Random",
         shortcuts: ["r"],
-        modal: this.modalDialog(factionName(faction), this.tooltip(faction)),
+        modal: this.factionInfoModal(faction),
       };
     },
   },
@@ -296,6 +306,7 @@ export type EmitCommandParams = { disappear?: boolean; times?: number; warnings?
     MoveButton,
     Undo,
     SilentAuctionInfo,
+    BanPhaseInfo,
   },
 })
 export default class Commands extends Vue implements CommandController {
@@ -465,6 +476,12 @@ export default class Commands extends Vue implements CommandController {
         this.engine.phase === Phase.SetupFaction ||
         this.engine.phase === Phase.SetupSilentBid)
     );
+  }
+
+  // Ban's own explanation only during the ban phase itself, and only when it's not already covered
+  // by the Silent Auction walkthrough above (which explains banning as its own first step).
+  get showBanPhaseInfo(): boolean {
+    return this.engine.phase === Phase.SetupFactionBan && this.gameData.options.auction !== AuctionVariant.Silent;
   }
 
   submitSilentBid() {
@@ -1103,170 +1120,6 @@ export default class Commands extends Vue implements CommandController {
   }
 }
 
-.faction-preview {
-  padding: 1rem;
-  color: #f8fafc;
-}
-
-.faction-preview__header,
-.faction-preview__board,
-.faction-preview__lost-fleet {
-  background: rgba(10, 16, 28, 0.22);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 14px;
-  padding: 0.8rem 0.85rem;
-}
-
-.faction-preview__board,
-.faction-preview__lost-fleet {
-  margin-top: 0.7rem;
-}
-
-.faction-preview__title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-}
-
-.faction-preview__subtitle,
-.faction-preview__board-title {
-  margin-top: 0.55rem;
-  margin-bottom: 0.35rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(248, 250, 252, 0.82);
-}
-
-.faction-preview__resources {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.38rem;
-}
-
-.faction-preview__resource {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.32rem;
-  min-height: 1.9rem;
-  padding: 0.2rem 0.5rem 0.2rem 0.24rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-}
-
-.faction-preview__resource-glyph {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 1.38rem;
-  height: 1.38rem;
-  border-radius: 999px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: #0f172a;
-  background: #ffffff;
-}
-
-.faction-preview__resource-count {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #fff;
-}
-
-.faction-preview__resource--credit .faction-preview__resource-glyph {
-  background: #ffd166;
-}
-
-.faction-preview__resource--ore .faction-preview__resource-glyph {
-  background: #f4976c;
-}
-
-.faction-preview__resource--knowledge .faction-preview__resource-glyph {
-  background: #b8e1ff;
-}
-
-.faction-preview__resource--qic .faction-preview__resource-glyph {
-  background: #b388ff;
-  color: #fff;
-}
-
-.faction-preview__resource--power .faction-preview__resource-glyph,
-.faction-preview__resource--token .faction-preview__resource-glyph,
-.faction-preview__resource--brainstone .faction-preview__resource-glyph {
-  background: #dda0ff;
-}
-
-.faction-preview__resource--research .faction-preview__resource-glyph {
-  background: #8be9fd;
-  min-width: auto;
-  padding: 0 0.4rem;
-}
-
-.faction-preview__resource--generic .faction-preview__resource-glyph {
-  min-width: auto;
-  padding: 0 0.4rem;
-}
-
-.faction-preview__building-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.5rem;
-}
-
-.faction-preview__building {
-  padding: 0.55rem 0.65rem;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-}
-
-.faction-preview__building-top,
-.faction-preview__building-line {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.6rem;
-}
-
-.faction-preview__building-name,
-.faction-preview__building-stock,
-.faction-preview__building-line strong {
-  font-size: 0.78rem;
-  font-weight: 700;
-}
-
-.faction-preview__building-line {
-  margin-top: 0.22rem;
-  font-size: 0.72rem;
-  color: rgba(248, 250, 252, 0.84);
-}
-
-.faction-preview__lost-fleet ul {
-  margin: 0;
-  padding-left: 1.1rem;
-}
-
-.faction-preview__accordion {
-  margin-top: 0.7rem;
-  border-radius: 12px;
-  background: rgba(10, 16, 28, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-
-  summary {
-    cursor: pointer;
-    padding: 0.7rem 0.85rem;
-    font-weight: 700;
-    outline: none;
-  }
-}
-
-.faction-preview__accordion-body {
-  padding: 0 0.85rem 0.8rem;
-  color: rgba(248, 250, 252, 0.92);
-  line-height: 1.45;
-}
-
 .faction-picker-buttons {
   .move-button .btn {
     border-radius: 12px;
@@ -1286,8 +1139,7 @@ i.planet {
   &::before {
     content: "\25cf";
 
-    .player-info &,
-    .faction-desc & {
+    .player-info & {
       font-size: 25px;
     }
   }

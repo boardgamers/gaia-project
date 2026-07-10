@@ -142,7 +142,8 @@ export default class SpaceMap {
     seed?: string,
     mirror?: boolean,
     layout: EngineOptions["layout"] = "standard",
-    lostFleet = false
+    lostFleet = false,
+    officialCenterSectors = false
   ) {
     if (nbPlayers === undefined) {
       return;
@@ -158,7 +159,7 @@ export default class SpaceMap {
       // Variable Gameboard Layout: shifted sectors + Interspace + Deep Space, with its own
       // German-rules reroll loop -- bypasses the random-tile-shuffle/isValid() machinery below,
       // which assumes the base game's fixed sector lattice.
-      const board = generateLostFleetBoard(nbPlayers, seed);
+      const board = generateLostFleetBoard(nbPlayers, seed, officialCenterSectors);
       this.grid = board.grid;
       this.placement = { sectors: board.sectors, mirror: false };
       return;

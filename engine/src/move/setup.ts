@@ -28,7 +28,8 @@ export function moveInit(engine: Engine, players: number, seed: string) {
     seed,
     engine.options.map?.mirror ?? false,
     engine.options.layout,
-    engine.options.lostFleet
+    engine.options.lostFleet,
+    engine.options.officialCenterSectors
   );
 
   if (engine.options.map?.sectors) {

@@ -118,8 +118,22 @@ export interface EngineOptions {
   frontiers?: boolean;
   /** Lost Fleet expansion */
   lostFleet?: boolean;
+  /**
+   * Lost Fleet §H1 "official rules" map restriction: force the center sector(s) (the sector
+   * bordering everything else at 2p/3p, or both hub sectors at 4p) to be drawn from sectors 1-4
+   * only, instead of the fully random center this engine previously always generated. Defaults to
+   * false (unrestricted, matching every game generated before this option existed).
+   */
+  officialCenterSectors?: boolean;
   /** auction */
   auction?: AuctionVariant;
+  /**
+   * Independent sequential-ban round before faction selection (one forced ban per player, turn
+   * order), regardless of auction variant. Undefined (not explicitly set) falls back to the legacy
+   * rule of "Silent Auction always bans" for backward compatibility with games created before this
+   * flag existed - see `beginSetupFactionPhaseOrBan` in move/phase.ts.
+   */
+  banPhase?: boolean;
   /**  **/
   factionVariant?: FactionVariant;
   factionVariantVersion?: number;

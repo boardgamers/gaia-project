@@ -34,6 +34,36 @@ describe("Lost Fleet board assembly", () => {
       );
     });
 
+    describe("officialCenterSectors (§H1)", () => {
+      it("defaults to the exact pre-existing (unrestricted) layout when omitted", () => {
+        for (const nbPlayers of [2, 3, 4]) {
+          const withoutFlag = generateLostFleetBoard(nbPlayers, `golden-${nbPlayers}`);
+          const explicitFalse = generateLostFleetBoard(nbPlayers, `golden-${nbPlayers}`, false);
+          expect([...withoutFlag.grid.values()].map((h) => h.toJSON())).to.deep.equal(
+            [...explicitFalse.grid.values()].map((h) => h.toJSON())
+          );
+        }
+      });
+
+      it("restricts the 2p/3p center sector to sectors 1-4 across many seeds", () => {
+        for (const nbPlayers of [2, 3]) {
+          for (let i = 0; i < 15; i++) {
+            const { sectors } = generateLostFleetBoard(nbPlayers, `official-${nbPlayers}-${i}`, true);
+            expect(["1", "2", "3", "4"], `${nbPlayers}p seed ${i} center sector`).to.include(sectors[0].sector);
+          }
+        }
+      });
+
+      it("restricts both 4p hub sectors to sectors 1-4, and keeps them distinct", () => {
+        for (let i = 0; i < 15; i++) {
+          const { sectors } = generateLostFleetBoard(4, `official-4p-${i}`, true);
+          expect(["1", "2", "3", "4"], `4p seed ${i} hub A`).to.include(sectors[0].sector);
+          expect(["1", "2", "3", "4"], `4p seed ${i} hub B`).to.include(sectors[1].sector);
+          expect(sectors[0].sector, `4p seed ${i} distinct hubs`).to.not.equal(sectors[1].sector);
+        }
+      });
+    });
+
     it("should produce the right total hex count per player count, with no coordinate collisions", () => {
       for (const nbPlayers of [2, 3, 4]) {
         const { grid } = generateLostFleetBoard(nbPlayers, `seed-${nbPlayers}`);

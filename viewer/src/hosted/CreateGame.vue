@@ -59,6 +59,24 @@
               </div>
             </div>
           </div>
+          <div class="create-game-ban-phase">
+            <b-form-checkbox v-model="form.banPhase" class="create-game-inline-check mb-0">Ban phase</b-form-checkbox>
+            <button
+              type="button"
+              class="create-game-info-dot"
+              :aria-expanded="banPhaseInfoOpen ? 'true' : 'false'"
+              aria-label="About the ban phase"
+              @click="banPhaseInfoOpen = !banPhaseInfoOpen"
+            >
+              i
+            </button>
+          </div>
+          <div v-if="banPhaseInfoOpen" class="create-game-variant__detail">
+            Before factions are chosen, each player bans one faction (in turn order); banned factions can't be
+            picked, bid on, or randomly assigned to anyone for the rest of the game. The ban phase always happens
+            first, before any pick or auction step - it works with every Faction Selection option above, including
+            Standard.
+          </div>
         </section>
 
         <section v-if="!form.testGame" class="create-game-section create-game-section--full">
@@ -77,7 +95,31 @@
               <p class="create-game-help mb-0">Tap sectors to rotate them. Seed tools stay tucked away unless you need them.</p>
             </div>
           </div>
-          <SetupPreview ref="setupPreview" :player-count="form.playerCount" @update="onSetupUpdate" />
+          <div class="create-game-ban-phase mb-2">
+            <b-form-checkbox v-model="form.officialCenterSectors" class="create-game-inline-check mb-0">
+              Official center-sector rule (1-4)
+            </b-form-checkbox>
+            <button
+              type="button"
+              class="create-game-info-dot"
+              :aria-expanded="centerSectorInfoOpen ? 'true' : 'false'"
+              aria-label="About the official center-sector rule"
+              @click="centerSectorInfoOpen = !centerSectorInfoOpen"
+            >
+              i
+            </button>
+          </div>
+          <div v-if="centerSectorInfoOpen" class="create-game-variant__detail mb-2">
+            Restricts the map's center sector(s) to the 4 original numbered sectors (1-4), per the printed Lost
+            Fleet setup rule. Off (default) picks the center from any of the sectors in play, which this project
+            has used until now.
+          </div>
+          <SetupPreview
+            ref="setupPreview"
+            :player-count="form.playerCount"
+            :official-center-sectors="form.officialCenterSectors"
+            @update="onSetupUpdate"
+          />
         </section>
       </div>
 
@@ -115,6 +157,8 @@ export default Vue.extend({
       message: "",
       myNickname: "" as string,
       openAuctionInfo: {} as Record<string, boolean>,
+      banPhaseInfoOpen: false,
+      centerSectorInfoOpen: false,
       currentSeed: "" as string,
       currentRotateMove: "" as string,
       setupValid: false,
@@ -122,6 +166,8 @@ export default Vue.extend({
         playerCount: 2,
         testGame: false,
         auctionVariant: "none" as "none" | "silent",
+        banPhase: false,
+        officialCenterSectors: false,
       },
     };
   },
@@ -188,6 +234,8 @@ export default Vue.extend({
             playerCount: this.form.playerCount,
             seats,
             auctionVariant: this.form.auctionVariant,
+            banPhase: this.form.banPhase,
+            officialCenterSectors: this.form.officialCenterSectors,
             openLobby: !this.form.testGame,
           },
           this.currentSeed,
@@ -301,6 +349,13 @@ export default Vue.extend({
   font-size: 0.8rem;
   line-height: 1.3;
   color: #44506a;
+}
+
+.create-game-ban-phase {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
 }
 
 .create-game-info-dot {

@@ -11,7 +11,7 @@ import {
   Planet,
   Player,
   PowerArea,
-  Resource,
+  Reward,
   terraformingStepsRequired,
 } from "@gaia-project/engine";
 import { FactionBoardRaw } from "@gaia-project/engine/src/faction-boards";
@@ -191,46 +191,6 @@ function formatIncome(income: Event[]): string {
   return income.length == 0 ? "~" : income.join(", ");
 }
 
-function resourceBadgeHtml(type: string, count: number, label: string): string {
-  return `<span class="faction-preview__resource faction-preview__resource--${type}">
-    <span class="faction-preview__resource-glyph">${label}</span>
-    <span class="faction-preview__resource-count">${count}</span>
-  </span>`;
-}
-
-function rewardBadgeHtml(reward: { count: number; type: Resource }): string {
-  switch (reward.type) {
-    case Resource.Credit:
-      return resourceBadgeHtml("credit", reward.count, "C");
-    case Resource.Ore:
-      return resourceBadgeHtml("ore", reward.count, "O");
-    case Resource.Knowledge:
-      return resourceBadgeHtml("knowledge", reward.count, "K");
-    case Resource.Qic:
-      return resourceBadgeHtml("qic", reward.count, "Q");
-    case Resource.GainToken:
-      return resourceBadgeHtml("token", reward.count, "T");
-    case Resource.ChargePower:
-      return resourceBadgeHtml("power", reward.count, "PW");
-    case Resource.UpgradeTerraforming:
-      return resourceBadgeHtml("research", reward.count, "Terra");
-    case Resource.UpgradeNavigation:
-      return resourceBadgeHtml("research", reward.count, "Nav");
-    case Resource.UpgradeIntelligence:
-      return resourceBadgeHtml("research", reward.count, "Int");
-    case Resource.UpgradeGaiaProject:
-      return resourceBadgeHtml("research", reward.count, "Gaia");
-    case Resource.UpgradeEconomy:
-      return resourceBadgeHtml("research", reward.count, "Eco");
-    case Resource.UpgradeScience:
-      return resourceBadgeHtml("research", reward.count, "Sci");
-    case Resource.UpgradeLowest:
-      return resourceBadgeHtml("research", reward.count, "Any");
-    default:
-      return resourceBadgeHtml("generic", reward.count, reward.type.toUpperCase());
-  }
-}
-
 function buildingStockCount(building: Building): number {
   switch (building) {
     case Building.Mine:
@@ -284,68 +244,63 @@ export function buildingDesc(b: Building, faction: Faction, board: FactionBoard,
   );
 }
 
-export function factionDesc(faction: Faction, variant: FactionBoardRaw | null, expansion: Expansion) {
-  const board = factionBoard(faction, variant);
-  const startingIncome = board.income.filter((ev) => ev.operator === Operator.Once).flatMap((ev) => ev.rewards);
-  const roundIncome = board.income.filter((ev) => ev.operator === Operator.Income).flatMap((ev) => ev.rewards);
-  const buildingCards = [Building.Mine, Building.TradingStation, Building.ResearchLab, Building.Academy1, Building.Academy2, Building.PlanetaryInstitute]
-    .map((building) => {
-      const cost = board.buildings[building].cost.join(", ") || "~";
-      const income = board.buildings[building].income.map((row) => formatIncome(row)).join(" / ") || "~";
-      return `<div class="faction-preview__building">
-        <div class="faction-preview__building-top">
-          <span class="faction-preview__building-name">${buildingName(building, faction)}</span>
-          <span class="faction-preview__building-stock">x${buildingStockCount(building)}</span>
-        </div>
-        <div class="faction-preview__building-line"><span>Cost</span><strong>${cost}</strong></div>
-        <div class="faction-preview__building-line"><span>Income</span><strong>${income}</strong></div>
-      </div>`;
-    })
-    .join("");
-  const lostFleetChanges = lostFleetNotes(faction, expansion);
+export const FACTION_INFO_BUILDINGS = [
+  Building.Mine,
+  Building.TradingStation,
+  Building.ResearchLab,
+  Building.Academy1,
+  Building.Academy2,
+  Building.PlanetaryInstitute,
+];
 
+export type FactionInfoBuilding = {
+  building: Building;
+  name: string;
+  stock: number;
+  cost: Reward[];
+  income: Event[][];
+};
+
+export type FactionInfoData = {
+  faction: Faction;
+  name: string;
+  color: string;
+  textColor: string;
+  startingResources: Reward[];
+  power: { area1: number; area2: number; brainstone: boolean };
+  roundIncome: Reward[];
+  buildings: FactionInfoBuilding[];
+  lostFleetChanges: string[];
+  ability: string;
+  pi: string;
+};
+
+/** Structured faction-info data (starting resources, round income, board, abilities) for
+ * `FactionInfoCard.vue` to render with real icon components - the data-only successor to the old
+ * HTML-string `factionDesc()`. Drops nothing that the old popup showed. */
+export function factionInfoData(faction: Faction, variant: FactionBoardRaw | null, expansion: Expansion): FactionInfoData {
+  const board = factionBoard(faction, variant);
   const data = factionData[faction];
 
-  return `
-  <div class="faction-desc faction-preview" style="background-color: ${factionColor(faction)}; color: ${planetFill(
-    factionPiecePlanet(faction)
-  )};">
-    <div class="faction-preview__header">
-      <div class="faction-preview__title">${data.name}</div>
-      <div class="faction-preview__subtitle">Starting resources</div>
-      <div class="faction-preview__resources">
-        ${startingIncome.map((reward) => rewardBadgeHtml(reward)).join("")}
-        ${resourceBadgeHtml("power", board.power.area1, "I")}
-        ${resourceBadgeHtml("power", board.power.area2, "II")}
-        ${board.brainstone === PowerArea.Area1 ? resourceBadgeHtml("brainstone", 1, "B") : ""}
-      </div>
-      <div class="faction-preview__subtitle">Round income</div>
-      <div class="faction-preview__resources">
-        ${roundIncome.map((reward) => rewardBadgeHtml(reward)).join("")}
-      </div>
-    </div>
-    <div class="faction-preview__board">
-      <div class="faction-preview__board-title">Faction board</div>
-      <div class="faction-preview__building-grid">${buildingCards}</div>
-    </div>
-    ${
-      lostFleetChanges.length > 0
-        ? `<div class="faction-preview__lost-fleet">
-            <div class="faction-preview__board-title">Lost Fleet changes</div>
-            <ul>${lostFleetChanges.map((line) => `<li>${line}</li>`).join("")}</ul>
-          </div>`
-        : ""
-    }
-    <details class="faction-preview__accordion">
-      <summary>Faction ability</summary>
-      <div class="faction-preview__accordion-body">${data.ability}</div>
-    </details>
-    <details class="faction-preview__accordion">
-      <summary>Planetary Institute ability</summary>
-      <div class="faction-preview__accordion-body">${data.PI}</div>
-    </details>
-  </div>
-  `;
+  return {
+    faction,
+    name: data.name,
+    color: factionColor(faction),
+    textColor: planetFill(factionPiecePlanet(faction)),
+    startingResources: board.income.filter((ev) => ev.operator === Operator.Once).flatMap((ev) => ev.rewards),
+    power: { area1: board.power.area1, area2: board.power.area2, brainstone: board.brainstone === PowerArea.Area1 },
+    roundIncome: board.income.filter((ev) => ev.operator === Operator.Income).flatMap((ev) => ev.rewards),
+    buildings: FACTION_INFO_BUILDINGS.map((building) => ({
+      building,
+      name: buildingName(building, faction),
+      stock: buildingStockCount(building),
+      cost: board.buildings[building].cost,
+      income: board.buildings[building].income,
+    })),
+    lostFleetChanges: lostFleetNotes(faction, expansion),
+    ability: data.ability,
+    pi: data.PI,
+  };
 }
 
 export function factionName(faction: Faction) {

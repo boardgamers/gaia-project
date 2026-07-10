@@ -4,6 +4,8 @@ export type NewGameForm = {
   playerCount: number;
   seats: { userId?: string | null; name?: string }[];
   auctionVariant: AuctionVariantOption;
+  banPhase?: boolean;
+  officialCenterSectors?: boolean;
   openLobby: boolean;
 };
 
@@ -29,11 +31,11 @@ export const AUCTION_VARIANT_OPTIONS: {
   {
     value: "silent",
     label: "Silent Auction",
-    summary: "Ban, pick, then submit private VP bids.",
+    summary: "Pick, then submit private VP bids.",
     description:
-      "Everyone bans one faction (in turn order), then picks one faction each, then every player privately " +
-      "submits a max-VP bid for every picked faction. An ascending-auction algorithm then assigns each player " +
-      "the faction that maximizes their own value.",
+      "Everyone picks one faction each, then every player privately submits a max-VP bid for every picked " +
+      "faction. An ascending-auction algorithm then assigns each player the faction that maximizes their own " +
+      "value. Turn on the Ban phase below to have everyone ban a faction first, same as any other variant.",
   },
 ];
 
@@ -105,6 +107,11 @@ export function buildCreateGameParams(form: NewGameForm, seed: string, rotateMov
     advancedRules: true,
     factionVariant: "standard",
     ...(auction ? { auction } : {}),
+    // Always explicit (not conditionally omitted) so the checkbox has full control even for Silent
+    // Auction - the engine's `banPhase ?? auction === Silent` fallback is only meant to preserve
+    // *pre-existing* stored games that predate this option, never to override a fresh choice here.
+    banPhase: !!form.banPhase,
+    ...(form.officialCenterSectors ? { officialCenterSectors: true } : {}),
   };
   const probe = new Engine(
     [`init ${form.playerCount} ${seed}`, rotateMove],

@@ -83,13 +83,14 @@
           <li><a href="https://www.boardgamers.space/page/elo">How Elo works</a></li>
         </ul>
       </div>
-      <div v-else v-html="factionTooltip"></div>
+      <FactionInfoCard v-else :faction="rule" :variant="factionVariant" :expansion="engine.expansions" />
     </div>
   </b-modal>
 </template>
 
 <script lang="ts">
-import { factionDesc, factionName } from "../data/factions";
+import { factionName } from "../data/factions";
+import { FactionBoardRaw } from "@gaia-project/engine/src/faction-boards";
 
 import { Component, Prop, Vue } from "vue-property-decorator";
 import Engine, { Expansion, Faction, factionVariantBoard, hasExpansion } from "@gaia-project/engine";
@@ -97,10 +98,11 @@ import { finalScoringFields, finalScoringItems } from "../logic/final-scoring-ru
 import { factionColor, factionPiecePlanet, planetFill } from "../graphics/utils";
 import { tradeHeaders, tradeRows } from "../logic/trade-rewards";
 import RichTextView from "./Resources/RichTextView.vue";
+import FactionInfoCard from "./FactionInfoCard.vue";
 
 type Rule = Faction | "rules" | "scoring" | "trade";
 @Component({
-  components: { RichTextView },
+  components: { RichTextView, FactionInfoCard },
 })
 export default class Rules extends Vue {
   @Prop()
@@ -157,12 +159,10 @@ export default class Rules extends Vue {
     return planetFill(factionPiecePlanet(rule as Faction));
   }
 
-  get factionTooltip(): string {
+  get factionVariant(): FactionBoardRaw | null {
     const faction = this.rule as Faction;
-
     const player = this.engine.players.find((p) => p.faction == faction);
-    const variant = player?.variant?.board ?? factionVariantBoard(this.engine.factionCustomization, faction)?.board;
-    return factionDesc(faction, variant, this.engine.expansions);
+    return player?.variant?.board ?? factionVariantBoard(this.engine.factionCustomization, faction)?.board ?? null;
   }
 }
 </script>

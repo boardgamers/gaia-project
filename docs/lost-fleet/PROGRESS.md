@@ -7,7 +7,7 @@
 > anything else, including the **Testing — required going forward** section it points to — both
 > are standing process, not optional. Then ask the user "what next?" and use the **Next actions**
 > section below to guide them.
-> Last updated: **2026-07-09**.
+> Last updated: **2026-07-10**.
 
 ## Working agreements (read every session, not optional)
 
@@ -3843,6 +3843,70 @@ buttons`/`LostFleetShips` failures documented at #81/#82 (confirmed still pre-ex
     - Engine unaffected this round; viewer 122/122 in the touched suites (`Lobby.spec.ts` 24/24,
       full `hosted/*.spec.ts` 120/120 — overlapping counts since Lobby.spec.ts is part of that
       glob).
+96. ✅ **"Gaia 17" owner feature batch (2026-07-10), all 5 items coded and tested:**
+    - **Ban phase decoupled from Silent Auction.** New independent `EngineOptions.banPhase?: boolean`
+      (`engine/src/engine.ts`); the single gate that used to hard-couple banning to
+      `AuctionVariant.Silent` (`beginSetupFactionPhaseOrBan`, `engine/src/move/phase.ts`) now reads
+      `engine.options.banPhase ?? engine.options.auction === AuctionVariant.Silent` — the `??`
+      preserves old stored games' behavior exactly (they have no `banPhase` key, so they keep
+      auto-banning under Silent Auction), while every new game creation call always sets `banPhase`
+      explicitly, so the new checkbox has full control. `CreateGame.vue` gained a "Ban phase" checkbox
+      (+ info dot) in the Faction Selection section, independent of the auction-variant grid; Silent
+      Auction's own description no longer claims banning is bundled in. New `BanPhaseInfo.vue` +
+      `Commands.vue`'s `showBanPhaseInfo` give in-game ban-phase help when it's active without Silent
+      Auction. 3 new engine specs (`engine/src/ban-phase.spec.ts`) pin all 3 cases (explicit on/off,
+      legacy unset). **627/627 engine tests pass** (624 baseline + 3).
+    - **§H1 "official rules" center-sector restriction, opt-in.** The rulebook says the map's center
+      sector(s) must be drawn from Sectors 01-04 only; the engine's `generateSectorGrid()`
+      (`engine/src/lost-fleet-board.ts`) previously shuffled the whole tile pool uniformly, an
+      unenforced gap, not a house rule. New `EngineOptions.officialCenterSectors?: boolean` (default
+      `false`, so the existing/default shuffle path is byte-for-byte unchanged — verified with a
+      golden-seed regression test) threads through `SpaceMap`'s constructor and `moveInit`; when true,
+      `generateSectorGrid()` draws the center position(s) (1 at 2p/3p, 2 adjacent hubs at 4p) from a
+      `["1","2","3","4"]`-only pool before shuffling the rest. `CreateGame.vue` gained an "Official
+      center-sector rule (1-4)" checkbox in the Setup Preview section, live-reflected in the preview
+      board (`SetupPreview.vue` new prop + watcher); `setup-preview.ts`'s rotation-validation probe
+      threads the same flag. `RULES_CLARIFICATIONS.md` §H1 note 8 records this as resolved.
+    - **"Manage users" (list + delete registered users) — code was already complete, deployment
+      blocked.** `AdminUsers.vue` and `supabase/functions/admin-users/index.ts` (list w/ seat/game/push
+      counts, delete w/ self-delete guard and soft-delete) were already fully written per #81/#82's
+      notes; confirmed via `list_edge_functions` that `admin-users` is still not deployed to
+      `mitawjpdxkheascdiffz`. Attempted `deploy_edge_function` this session — blocked by the same "MCP
+      tool call requires approval" issue #81 hit for `apply_migration`; retried after the MCP
+      connection cycled mid-session, still blocked. **Still needs a manual
+      `supabase functions deploy admin-users`** (or a session where the MCP approval goes through)
+      before "Manage users" is live — no code changes needed.
+    - **Faction-info popup redesigned with real icon components.** The popup was a `factionDesc()`
+      HTML string (hand-built text badges) rendered via `v-html`; icons are Vue components and can't
+      live inside an HTML string. `ModalButtonData` (`viewer/src/data/index.ts`) gained an optional
+      `component`/`props` pair alongside `content`, and `MoveButton.vue` renders it via
+      `<component :is>` when set (every other existing `v-html` modal caller is untouched).
+      `factionDesc()` became a data-only `factionInfoData()` (`viewer/src/data/factions.ts`) consumed
+      by a new `FactionInfoCard.vue`, which renders starting resources / round income through the
+      app's existing `richTextRewards()` + `<RichTextView>` pipeline (the same real `<Resource>` icons
+      used everywhere else, not new bespoke ones) and a new `FactionBoardPreview.vue` — a static
+      building-slot board (real `<Building>` icons, no buildings "placed") annotated with the same
+      starting-resource icons directly on the board, per the owner's explicit ask. Nothing from the
+      old popup was dropped (verified field-by-field: name, starting resources, round income, all 6
+      building cards' cost/income/stock, Lost Fleet changes when present, faction + PI ability text).
+      Both real call sites migrated (`Commands.vue`'s faction-picker/ban buttons, `Rules.vue`'s
+      always-available faction reference); dead `.faction-preview__*` CSS removed. New
+      `FactionInfoCard.spec.ts` (2 specs) plus a live Playwright pass against the self-contained
+      viewer (`?lostFleet=1`) confirmed correct rendering with zero console errors for both a
+      base-game faction (Terrans) and a Lost Fleet one (Darkanians, confirming the Lost Fleet-changes
+      section still appears).
+    - **Special-action "used" X-overlay extended to claimed tech tiles.** Base game's `BoardAction.vue`
+      already draws this X directly; the shared `SpecialAction.vue` octagon already has an identical
+      `disabled`-gated overlay that most other special-action sources (faction-innate specials,
+      Booster tiles, Lost Fleet ship actions) already wire up correctly. The one real gap:
+      `TechTile.vue` never computed or passed a used/disabled state for a claimed Standard/Advanced
+      Tech tile's own repeatable special action (including Lost Fleet's Advanced Tech tiles). Fixed by
+      mirroring `Booster.vue`'s exact pattern — a new `specialActionUsed` getter (via
+      `techTileEventSource(pos)` + `player.events[Operator.Activate]`) passed as `TechContent`'s
+      already-existing `disabled` prop.
+    - Full regression pass: **engine 627/627**, **viewer 400/432** (32 pre-existing failures confirmed
+      unrelated via `git stash` — same `Chart`/`lost-fleet buttons`/`LostFleetShips`/`Resource Counter`
+      set #81/#82 already flagged as needing a dedicated bisect session, untouched by this batch).
 
 ## Still MISSING — only one art-only item left
 
@@ -4240,6 +4304,12 @@ section originally said Chunk 2 must also carry the _full_ `planets.ts` terrafor
    exact shape for adv-tech/federation/booster/scoring enum members when those chunks come up.
 
 ## Next actions
+
+**Blocked from #96 (2026-07-10 "Gaia 17" session) — same pattern as #81 below:** the `admin-users`
+edge function is fully coded (list + delete, see #84) but deploying it via the Supabase MCP
+(`deploy_edge_function`) is blocked by "MCP tool call requires approval," retried across an MCP
+reconnect mid-session with no change. Needs either a manual `supabase functions deploy admin-users`
+(owner action, ~2 minutes) or a session where the MCP approval actually goes through.
 
 **Blocked from #81 (2026-07-09 session):** migration `0024_profile_nicknames.sql` (the
 personal-info-exposure nickname fix) is written, reviewed, and unit-tested but was **not applied**

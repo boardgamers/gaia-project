@@ -43,6 +43,9 @@ export default class SetupPreview extends Vue {
   @Prop({ required: true })
   playerCount: number;
 
+  @Prop({ default: false })
+  officialCenterSectors: boolean;
+
   seed: string = randomSeed();
   seedInput = "";
   history: string[] = [];
@@ -81,8 +84,16 @@ export default class SetupPreview extends Vue {
     this.setSeed(randomSeed());
   }
 
+  @Watch("officialCenterSectors")
+  onOfficialCenterSectorsChanged() {
+    this.rebuild();
+  }
+
   private rebuild() {
-    const engine = new Engine([`init ${this.playerCount} ${this.seed}`], { lostFleet: true });
+    const engine = new Engine([`init ${this.playerCount} ${this.seed}`], {
+      lostFleet: true,
+      officialCenterSectors: this.officialCenterSectors,
+    });
     this.nestedStore.commit("receiveData", engine);
     this.armClickToRotate();
     this.emitState();
@@ -137,7 +148,7 @@ export default class SetupPreview extends Vue {
 
   private emitState() {
     const rotateMove = this.rotateMove();
-    const result = validateRotation(this.playerCount, this.seed, rotateMove);
+    const result = validateRotation(this.playerCount, this.seed, rotateMove, this.officialCenterSectors);
     this.error = result.valid ? null : result.error;
     this.$emit("update", { seed: this.seed, rotateMove, valid: result.valid });
   }
