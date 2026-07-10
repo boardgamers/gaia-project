@@ -1331,11 +1331,11 @@ vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec
         **`supabase/migrations/0005_drop_stale_create_game_overload.sql`** (`drop function if exists
 
     public.create_game(text, text, int, jsonb, jsonb, int)`), applied immediately after; `pg_proc` now shows exactly one`create_game`(7-arg), and the advisor listing matches the pre-#54
-    baseline shape (one`create_game`entry, same acknowledged intentionally-callable-RPC set
-    documented in`BACKEND.md`). 0004's misleading comment about "same identity/oid" was also
-    corrected in place to point at this finding. \*\*Lesson for future migrations that widen an
-    existing function's argument list: always verify via `pg_proc`/the advisor that the old
-    signature didn't survive as an orphaned overload — don't assume `CREATE OR REPLACE`unifies
+baseline shape (one`create_game`entry, same acknowledged intentionally-callable-RPC set
+documented in`BACKEND.md`). 0004's misleading comment about "same identity/oid" was also
+corrected in place to point at this finding. \*\*Lesson for future migrations that widen an
+existing function's argument list: always verify via `pg_proc`/the advisor that the old
+signature didn't survive as an orphaned overload — don't assume `CREATE OR REPLACE`unifies
     them just because it worked for same-arity changes before.\*\*
 
             - **Tests:**`viewer/src/hosted/setup-preview.spec.ts`(pure`buildRotateMove`/
@@ -3904,6 +3904,25 @@ buttons`/`LostFleetShips` failures documented at #81/#82 (confirmed still pre-ex
   open-source engine/viewer (MIT License), nothing about Gaia Project/Lost Fleet's own creators. Also
   removed the Credits item from the in-game (`HostedBar.vue`) settings menu - it's a lobby-only
   (`Lobby.vue`) setting now. Regression pass: **viewer 409/439** (same pre-existing 30 failures).
+- **#86 (2026-07-10): Fixed clicking a game in the lobby doing nothing on desktop (mouse-only bug).**
+  Owner report: "on desktop can't seem to click on a game to enter it, no problem on mobile." Root
+  cause: `Lobby.vue`'s swipe-to-delete gesture (admin only) calls `setPointerCapture()` on
+  `.game-swipe` (an ancestor of the game row's `<a>`) on **every** `pointerdown`, not just real
+  drags. Per the Pointer Events spec, once an element captures a pointer, that pointer's subsequent
+  events - including the compatibility `click` event - are retargeted to the _capturing_ element
+  instead of whatever was actually hit-tested. Since the `<a class="game-bar__link">` is a
+  descendant of the capturing `.game-swipe` div, a plain click's dispatch path no longer passes
+  through the anchor at all once capture is set - silently breaking both its native href navigation
+  and its own `@click` handler. This only bit desktop because mouse users only ever click, never
+  swipe, so there was nothing to legitimately capture for a "mouse" pointer in the first place; touch
+  taps happened to keep working (browsers don't retarget clicks the same way for touch-originated
+  capture, or the swipe gesture genuinely needs the capture there). Fixed by making `startSwipe()`
+  bail out immediately for `event.pointerType === "mouse"`, before ever calling
+  `setPointerCapture()` - touch/pen swiping is untouched. Added a regression spec in `Lobby.spec.ts`
+  that calls `startSwipe()` directly with a mock `setPointerCapture` that throws if invoked for a
+  mouse pointerdown (confirmed it fails without the fix, passes with it) and confirms a touch
+  pointerdown still starts the swipe normally. Full regression pass: **viewer 409/439** (same
+  pre-existing ~30 failures, confirmed unrelated).
 
 ## Still MISSING — only one art-only item left
 

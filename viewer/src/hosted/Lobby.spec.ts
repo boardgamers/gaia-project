@@ -305,6 +305,39 @@ describe("Lobby", () => {
     expect((wrapper.vm as any).swipeOffset("g-mine")).to.equal(-88);
   });
 
+  it("never starts the swipe-capture flow for a mouse pointerdown - only real touch/pen swipes (desktop click bug)", async () => {
+    const { client } = makeClient(sampleGames);
+    const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    const setPointerCapture = () => {
+      throw new Error("setPointerCapture must not be called for a mouse pointerdown");
+    };
+
+    // A desktop mouse click must be a no-op for the swipe machinery: setPointerCapture() on an
+    // ancestor of the <a> retargets the click event away from the anchor, silently breaking both
+    // its native href navigation and its own @click handler.
+    (wrapper.vm as any).startSwipe("g-mine", {
+      pointerType: "mouse",
+      clientX: 10,
+      target: document.createElement("div"),
+      currentTarget: { setPointerCapture },
+    });
+    expect((wrapper.vm as any).swipeGameId).to.equal("");
+
+    // Touch/pen swipes are unaffected - the gesture still works as before.
+    let captured = false;
+    (wrapper.vm as any).startSwipe("g-mine", {
+      pointerType: "touch",
+      clientX: 10,
+      target: document.createElement("div"),
+      currentTarget: { setPointerCapture: () => (captured = true) },
+    });
+    expect((wrapper.vm as any).swipeGameId).to.equal("g-mine");
+    expect(captured).to.equal(true);
+  });
+
   it("shows no admin-only controls at all for a non-admin", async () => {
     const { client } = makeClient(
       [

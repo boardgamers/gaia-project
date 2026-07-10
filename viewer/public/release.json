@@ -1,7 +1,20 @@
 {
-  "version": "5.19.1",
+  "version": "5.19.2",
   "releasedAt": "2026-07-10",
   "entries": [
+    {
+      "version": "5.19.2",
+      "releasedAt": "2026-07-10",
+      "kind": "update",
+      "title": "Fix desktop game-click bug",
+      "impact": "",
+      "changes": [
+        "Fixed clicking a game in the lobby doing nothing on desktop (mouse) - it always worked on mobile/touch"
+      ],
+      "userChanges": [
+        "Fixed clicking a game in the lobby doing nothing on desktop (mouse) - it always worked on mobile/touch"
+      ]
+    },
     {
       "version": "5.19.1",
       "releasedAt": "2026-07-10",

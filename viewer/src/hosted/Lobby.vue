@@ -785,7 +785,18 @@ export default Vue.extend({
       return this.revealedGameId === gameId ? -SWIPE_ACTION_WIDTH : 0;
     },
     startSwipe(gameId: string, event: PointerEvent) {
-      if (!this.isAdmin || (event.target as HTMLElement | null)?.closest(".game-swipe__delete")) {
+      // Mouse clicks must never enter the swipe-capture flow at all: setPointerCapture() on
+      // .game-swipe (an ancestor of the game-bar__link <a>) retargets that pointer's subsequent
+      // events - including the click event - to the capturing element instead of the <a>. That
+      // silently breaks both the <a>'s native href navigation AND its own @click handler, since
+      // the click's dispatch path no longer passes through the anchor at all. Desktop mouse users
+      // only ever click, never swipe, so there's nothing to capture for "mouse" - only real
+      // touch/pen swipes need this.
+      if (
+        !this.isAdmin ||
+        event.pointerType === "mouse" ||
+        (event.target as HTMLElement | null)?.closest(".game-swipe__delete")
+      ) {
         return;
       }
       this.swipeGameId = gameId;
