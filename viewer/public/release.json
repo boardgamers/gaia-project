@@ -1,7 +1,20 @@
 {
-  "version": "5.20.0",
+  "version": "5.20.1",
   "releasedAt": "2026-07-10",
   "entries": [
+    {
+      "version": "5.20.1",
+      "releasedAt": "2026-07-10",
+      "kind": "update",
+      "title": "Faction window: more per-faction detail",
+      "impact": "",
+      "changes": [
+        "The faction pick/ban window now notes the Lantids Planetary Institute's player-count variants, that Taklons move their Brainstone to the Gaia area when exploring, and the Lantids/Ivits Lost Fleet starting-stat changes"
+      ],
+      "userChanges": [
+        "The faction pick/ban window now notes the Lantids Planetary Institute's player-count variants, that Taklons move their Brainstone to the Gaia area when exploring, and the Lantids/Ivits Lost Fleet starting-stat changes"
+      ]
+    },
     {
       "version": "5.20.0",
       "releasedAt": "2026-07-10",
