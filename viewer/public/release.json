@@ -1,7 +1,20 @@
 {
-  "version": "5.20.3",
+  "version": "5.20.4",
   "releasedAt": "2026-07-10",
   "entries": [
+    {
+      "version": "5.20.4",
+      "releasedAt": "2026-07-10",
+      "kind": "update",
+      "title": "Lantids PI player-count detail with icons",
+      "impact": "",
+      "changes": [
+        "The faction window now shows the Lantids Planetary Institute's player-count adjustments under Lost Fleet changes, using in-game reward icons"
+      ],
+      "userChanges": [
+        "The faction window now shows the Lantids Planetary Institute's player-count adjustments under Lost Fleet changes, using in-game reward icons"
+      ]
+    },
     {
       "version": "5.20.3",
       "releasedAt": "2026-07-10",
