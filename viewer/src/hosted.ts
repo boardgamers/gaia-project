@@ -3,6 +3,7 @@ import AdminUsers from "./hosted/AdminUsers.vue";
 import { fetchMyApprovalStatus } from "./hosted/approval";
 import Game from "./components/Game.vue";
 import CreateGame from "./hosted/CreateGame.vue";
+import ChatNotesPanel from "./hosted/ChatNotesPanel.vue";
 import HostedBar from "./hosted/HostedBar.vue";
 import { HostedGameHost, seatToLock } from "./hosted/host";
 import Lobby from "./hosted/Lobby.vue";
@@ -105,6 +106,11 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
   isPushEnabled().then((enabled) => {
     bar.pushEnabled = enabled;
   });
+
+  // Own top-level mount (not folded into `bar`/HostedBar) - it's a fixed-position floating
+  // toggle + panel, positioned independently of the rest of the chrome, so it doesn't need to
+  // share HostedBar's layout or store.
+  mountChild(root, ChatNotesPanel, { client, gameId, userId: session.user.id });
 
   let mySeats: number[] = [];
 

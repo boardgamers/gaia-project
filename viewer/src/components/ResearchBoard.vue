@@ -6,7 +6,7 @@
       :x="(fields.length - 1 - index) * 60"
       :key="field"
     />
-    <text y="198" x="180" style="font-size: 12px; text-anchor: middle">Charge 3 power</text>
+    <text y="198" x="180" class="charge-note" style="font-size: 12px; text-anchor: middle">Charge 3 power</text>
     <!-- The Scoring Board Extension's 7th Advanced Tech tile + the round scoring tiles, in their
          own column right after the 6 tracks - aligned with the adv-tech row (same y=79 as
          ResearchTrack.vue's own adv-tech tile), with the round scoring tiles just under it, and
@@ -79,7 +79,13 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { Expansion, hasExpansion, ResearchField, ScoringBoardExtensionSide, BoardAction as BoardActionEnum } from "@gaia-project/engine";
+import {
+  Expansion,
+  hasExpansion,
+  ResearchField,
+  ScoringBoardExtensionSide,
+  BoardAction as BoardActionEnum,
+} from "@gaia-project/engine";
 import ResearchTrack from "./ResearchTrack.vue";
 import TechTile from "./TechTile.vue";
 import BoardAction from "./BoardAction.vue";
@@ -179,5 +185,18 @@ svg.research-board {
   font-size: 9px;
   font-weight: 700;
   text-anchor: middle;
+}
+
+// These two labels have no painted shape behind them - just the transparent svg canvas - so in
+// dark mode the whole-page invert-filter's "re-invert svg back to normal" trick doesn't help: the
+// text renders in its normal (black) color while what's actually behind it is the true page
+// background (dark gray), which is invisible. Everywhere else in the research board, text sits on
+// a painted, also-re-inverted shape (a research-track circle, a tech-tile's colored border) so it
+// stays readable without an override.
+:root[data-theme="dark"] {
+  .charge-note,
+  .extension-label {
+    fill: white;
+  }
 }
 </style>

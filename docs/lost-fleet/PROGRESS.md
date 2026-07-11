@@ -7,7 +7,7 @@
 > anything else, including the **Testing — required going forward** section it points to — both
 > are standing process, not optional. Then ask the user "what next?" and use the **Next actions**
 > section below to guide them.
-> Last updated: **2026-07-10**.
+> Last updated: **2026-07-11**.
 
 ## Working agreements (read every session, not optional)
 
@@ -1257,112 +1257,113 @@ vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts' 'src/logic/**/*.spec
     on the map to rotate them live (no arming step), then lock in. Faction selection stayed out of
     scope, as specified — `SetupFaction` still happens later, unaffected.
 
-                - **Engine: confirmed unchanged**, as expected — `new Engine(["init N seed"], { lostFleet: true })`
-                  already resolves the entire random setup synchronously (`applyRandomBoardSetup`), and
-                  `Command.RotateSectors` already existed (`moveRotateSectors`, engine/src/move/setup.ts). One
-                  new regression test added: `engine/src/map.spec.ts`'s Lost Fleet block now has "should throw
-                  the German-rules assert via moveRotateSectors when a rotation puts two matching planet types
-                  adjacent" — found by brute-force search (not guessed) that `init 2 lost-fleet-space-map` +
-                  `p2 rotate 0x0 3` trips the assert; this exact repro is reused by both the viewer's
-                  `validateRotation` unit test and the `SetupPreview.vue` component test, so all three layers
-                  agree on one concrete counterexample. **Engine suite: 521/521** (was 490 per this file's
-                  stale count; the real baseline had already grown via sessions not yet reflected here — no
-                  regressions either way).
-                - **New `viewer/src/hosted/SetupPreview.vue` + `SetupPreviewBoard.vue`.** `SetupPreview.vue`
-                  mounts its OWN nested Vue app (`makeStore()` + a plain `new Vue({ store, render })`) into a
-                  `ref`'d div, mirroring `launcher.ts`'s `launch()` / `hosted.ts`'s `mountChild()` pattern —
-                  required because `Lobby.vue` itself has no `$store` (it's mounted store-less via
-                  `mountChild()`). `SetupPreviewBoard.vue` composes `SpaceMap` + the research/scoring/
-                  board-action SVG + `LostFleetShips` + `LostFleetTerraformingBoard`, mirroring `Game.vue`'s
-                  map/board composition (Game.vue:9-34) without the player-board/Commands parts that assume
-                  factions already exist. Click-to-rotate reuses the existing mechanism directly against the
-                  nested store (`highlightHexes({ hexes: new Map(), backgroundLight: true, selectAnyHex: true })`
-                  once + a permanent `subscribeAction` on `"hexClick"` committing `"rotate"`) instead of the
-                  button-chain machinery in `logic/buttons/setup.ts` — no arming step, every click rotates live.
-                  Seed reroll/history/direct-entry/copy and a "Reset rotations" button (`receiveData` again,
-                  which already clears `context.rotation`) are all wired. Lock-in mirrors
-                  `logic/buttons/setup.ts:114-119`'s exact mod-6/filter-zero logic (factored into a pure
-                  `viewer/src/hosted/setup-preview.ts` — `buildRotateMove`/`validateRotation` — so it's unit
-                  tested without a DOM) and validates against a scratch `advancedRules: true` Engine before
-                  emitting `lock-in`, catching the German-rules assert with an inline message instead of
-                  throwing uncaught.
-                - **Real bug found and fixed via manual browser verification, not just component tests:**
-                  planet/resource/tech colors are CSS custom properties (`--terra`, `--asteroid`, etc.,
-                  `stylesheets/planets.css`) scoped to the `.gaia-viewer-game` class, which only `Game.vue`'s
-                  own root applies. `SetupPreviewBoard.vue`'s tree never had that ancestor class, so every
-                  planet rendered as flat black — caught by screenshotting the dev server with Playwright
-                  (jsdom-based component tests never render actual CSS custom-property resolution, so they
-                  missed this). Fixed by adding `class="gaia-viewer-game"` to `SetupPreviewBoard.vue`'s root
-                  div; re-verified with a fresh screenshot showing correct planet-type colors matching the
-                  existing self-contained viewer exactly.
-                - **`viewer/src/hosted/new-game.ts`:** `NewGameForm` drops `lostFleet` (always true now, no
-                  toggle). `buildCreateGameParams(form, seed, rotateMove)` no longer mints its own seed — it
-                  takes the already-locked-in seed + rotate move from `SetupPreview`, sets
-                  `options = { lostFleet: true, advancedRules: true, factionVariant: "standard" }` (the
-                  `advancedRules` flag is new and required so replay re-enters `Phase.SetupBoard`), builds the
-                  probe as `init ...` + the rotate move applied, and reads `p_current_seat` AFTER that move
-                  (previously it read straight off `init`, which would have been wrong once `advancedRules`
-                  entered `Phase.SetupBoard` first). Adds `p_setup_move` to the RPC params. The pre-existing
-                  `buildCreateGameParams` test living in `host.spec.ts` was moved to a new dedicated
-                  `viewer/src/hosted/new-game.spec.ts` (none existed before) and extended to prove
-                  `p_current_seat` reflects the post-rotation seat, not the bare-init seat.
-                - **`viewer/src/hosted/Lobby.vue`:** removed the "Lost Fleet expansion" checkbox entirely;
-                  `SetupPreview` is mounted under the player-count select, its `@lock-in` populates
-                  `lockedSeed`/`lockedRotateMove` (cleared again if the player count changes, since a seed's
-                  draws are player-count-dependent), and "Create game" stays disabled until locked in. The
-                  seat-email/test-game flow below is unchanged.
-                - **`supabase/migrations/0004_setup_move.sql`:** extends `create_game` (again, `create or
+                    - **Engine: confirmed unchanged**, as expected — `new Engine(["init N seed"], { lostFleet: true })`
+                      already resolves the entire random setup synchronously (`applyRandomBoardSetup`), and
+                      `Command.RotateSectors` already existed (`moveRotateSectors`, engine/src/move/setup.ts). One
+                      new regression test added: `engine/src/map.spec.ts`'s Lost Fleet block now has "should throw
+                      the German-rules assert via moveRotateSectors when a rotation puts two matching planet types
+                      adjacent" — found by brute-force search (not guessed) that `init 2 lost-fleet-space-map` +
+                      `p2 rotate 0x0 3` trips the assert; this exact repro is reused by both the viewer's
+                      `validateRotation` unit test and the `SetupPreview.vue` component test, so all three layers
+                      agree on one concrete counterexample. **Engine suite: 521/521** (was 490 per this file's
+                      stale count; the real baseline had already grown via sessions not yet reflected here — no
+                      regressions either way).
+                    - **New `viewer/src/hosted/SetupPreview.vue` + `SetupPreviewBoard.vue`.** `SetupPreview.vue`
+                      mounts its OWN nested Vue app (`makeStore()` + a plain `new Vue({ store, render })`) into a
+                      `ref`'d div, mirroring `launcher.ts`'s `launch()` / `hosted.ts`'s `mountChild()` pattern —
+                      required because `Lobby.vue` itself has no `$store` (it's mounted store-less via
+                      `mountChild()`). `SetupPreviewBoard.vue` composes `SpaceMap` + the research/scoring/
+                      board-action SVG + `LostFleetShips` + `LostFleetTerraformingBoard`, mirroring `Game.vue`'s
+                      map/board composition (Game.vue:9-34) without the player-board/Commands parts that assume
+                      factions already exist. Click-to-rotate reuses the existing mechanism directly against the
+                      nested store (`highlightHexes({ hexes: new Map(), backgroundLight: true, selectAnyHex: true })`
+                      once + a permanent `subscribeAction` on `"hexClick"` committing `"rotate"`) instead of the
+                      button-chain machinery in `logic/buttons/setup.ts` — no arming step, every click rotates live.
+                      Seed reroll/history/direct-entry/copy and a "Reset rotations" button (`receiveData` again,
+                      which already clears `context.rotation`) are all wired. Lock-in mirrors
+                      `logic/buttons/setup.ts:114-119`'s exact mod-6/filter-zero logic (factored into a pure
+                      `viewer/src/hosted/setup-preview.ts` — `buildRotateMove`/`validateRotation` — so it's unit
+                      tested without a DOM) and validates against a scratch `advancedRules: true` Engine before
+                      emitting `lock-in`, catching the German-rules assert with an inline message instead of
+                      throwing uncaught.
+                    - **Real bug found and fixed via manual browser verification, not just component tests:**
+                      planet/resource/tech colors are CSS custom properties (`--terra`, `--asteroid`, etc.,
+                      `stylesheets/planets.css`) scoped to the `.gaia-viewer-game` class, which only `Game.vue`'s
+                      own root applies. `SetupPreviewBoard.vue`'s tree never had that ancestor class, so every
+                      planet rendered as flat black — caught by screenshotting the dev server with Playwright
+                      (jsdom-based component tests never render actual CSS custom-property resolution, so they
+                      missed this). Fixed by adding `class="gaia-viewer-game"` to `SetupPreviewBoard.vue`'s root
+                      div; re-verified with a fresh screenshot showing correct planet-type colors matching the
+                      existing self-contained viewer exactly.
+                    - **`viewer/src/hosted/new-game.ts`:** `NewGameForm` drops `lostFleet` (always true now, no
+                      toggle). `buildCreateGameParams(form, seed, rotateMove)` no longer mints its own seed — it
+                      takes the already-locked-in seed + rotate move from `SetupPreview`, sets
+                      `options = { lostFleet: true, advancedRules: true, factionVariant: "standard" }` (the
+                      `advancedRules` flag is new and required so replay re-enters `Phase.SetupBoard`), builds the
+                      probe as `init ...` + the rotate move applied, and reads `p_current_seat` AFTER that move
+                      (previously it read straight off `init`, which would have been wrong once `advancedRules`
+                      entered `Phase.SetupBoard` first). Adds `p_setup_move` to the RPC params. The pre-existing
+                      `buildCreateGameParams` test living in `host.spec.ts` was moved to a new dedicated
+                      `viewer/src/hosted/new-game.spec.ts` (none existed before) and extended to prove
+                      `p_current_seat` reflects the post-rotation seat, not the bare-init seat.
+                    - **`viewer/src/hosted/Lobby.vue`:** removed the "Lost Fleet expansion" checkbox entirely;
+                      `SetupPreview` is mounted under the player-count select, its `@lock-in` populates
+                      `lockedSeed`/`lockedRotateMove` (cleared again if the player count changes, since a seed's
+                      draws are player-count-dependent), and "Create game" stays disabled until locked in. The
+                      seat-email/test-game flow below is unchanged.
+                    - **`supabase/migrations/0004_setup_move.sql`:** extends `create_game` (again, `create or
 
-            replace`, third time after 0001→0003) with a trailing `p_setup_move text default null`param;
+                replace`, third time after 0001→0003) with a trailing `p_setup_move text default null`param;
 
-        when non-null/non-empty it inserts the`moves`row for`seq = 1`, `seat = p_player_count - 1` (matching`beginSetupBoardPhase`'s "last player" convention), and bumps `games.move_count`to
-        1 in the same transaction so the next real`commit_turn`call correctly expects`seq = 2` instead of colliding with the row just inserted.
-        **Applied to the live`gaia-lost-fleet`Supabase project (2026-07-02), on explicit owner
-        request, and one real bug found + fixed in the process:** 0004's original comment assumed
-        `CREATE OR REPLACE FUNCTION`with a trailing default parameter reuses the old function's
-        identity/oid (true for 0001→0002→0003, which never changed the argument list) — this time it
-        didn't. Querying`pg_proc`after applying 0004 showed **two distinct`create_game`entries**
-        (6-arg,`pronargdefaults=0`; 7-arg, `pronargdefaults=1`), and the security advisor confirmed
-        both were separately callable by `authenticated`. Supabase-js's `.rpc()`calls with named
-        parameters, so this app's own calls (always including`p_setup_move`) only ever resolved to
-        the new overload — no player-facing bug — but the stale 6-arg overload stayed live and
-        callable, skipping the setup-move insert entirely (the exact "stuck game" failure mode 0004's
-        comment warned about, reachable by any caller of the old signature). Fixed with
-        **`supabase/migrations/0005_drop_stale_create_game_overload.sql`** (`drop function if exists
+            when non-null/non-empty it inserts the`moves`row for`seq = 1`, `seat = p_player_count - 1` (matching`beginSetupBoardPhase`'s "last player" convention), and bumps `games.move_count`to
+            1 in the same transaction so the next real`commit_turn`call correctly expects`seq = 2` instead of colliding with the row just inserted.
+            **Applied to the live`gaia-lost-fleet`Supabase project (2026-07-02), on explicit owner
+            request, and one real bug found + fixed in the process:** 0004's original comment assumed
+            `CREATE OR REPLACE FUNCTION`with a trailing default parameter reuses the old function's
+            identity/oid (true for 0001→0002→0003, which never changed the argument list) — this time it
+            didn't. Querying`pg_proc`after applying 0004 showed **two distinct`create_game`entries**
+            (6-arg,`pronargdefaults=0`; 7-arg, `pronargdefaults=1`), and the security advisor confirmed
+            both were separately callable by `authenticated`. Supabase-js's `.rpc()`calls with named
+            parameters, so this app's own calls (always including`p_setup_move`) only ever resolved to
+            the new overload — no player-facing bug — but the stale 6-arg overload stayed live and
+            callable, skipping the setup-move insert entirely (the exact "stuck game" failure mode 0004's
+            comment warned about, reachable by any caller of the old signature). Fixed with
+            **`supabase/migrations/0005_drop_stale_create_game_overload.sql`** (`drop function if exists
 
-    public.create_game(text, text, int, jsonb, jsonb, int)`), applied immediately after; `pg_proc` now shows exactly one`create_game`(7-arg), and the advisor listing matches the pre-#54
-baseline shape (one`create_game`entry, same acknowledged intentionally-callable-RPC set
-documented in`BACKEND.md`). 0004's misleading comment about "same identity/oid" was also
-corrected in place to point at this finding. \*\*Lesson for future migrations that widen an
-existing function's argument list: always verify via `pg_proc`/the advisor that the old
-signature didn't survive as an orphaned overload — don't assume `CREATE OR REPLACE`unifies
+        public.create_game(text, text, int, jsonb, jsonb, int)`), applied immediately after; `pg_proc` now shows exactly one`create_game`(7-arg), and the advisor listing matches the pre-#54
+
+    baseline shape (one`create_game`entry, same acknowledged intentionally-callable-RPC set
+    documented in`BACKEND.md`). 0004's misleading comment about "same identity/oid" was also
+    corrected in place to point at this finding. \*\*Lesson for future migrations that widen an
+    existing function's argument list: always verify via `pg_proc`/the advisor that the old
+    signature didn't survive as an orphaned overload — don't assume `CREATE OR REPLACE`unifies
     them just because it worked for same-arity changes before.\*\*
 
-            - **Tests:**`viewer/src/hosted/setup-preview.spec.ts`(pure`buildRotateMove`/
-              `validateRotation`unit tests, mod-6 wrap + zero-filter + the shared German-rules repro),
-              `viewer/src/hosted/new-game.spec.ts`(new file,`buildCreateGameParams`'s new signature),
-              `viewer/src/hosted/SetupPreview.spec.ts`(new, render-path: full setup renders with real
-              components, a hex click rotates its sector exactly once — verified via the CSS`rotate()` transform through 6 clicks back to a visually-equivalent 360°, reroll changes the seed,
-              changing player count resets to a fresh seed + correct ship count, the invalid-rotation case
-              disables lock-in with the German-rules message visible, and a valid lock-in emits`{ seed,
+                - **Tests:**`viewer/src/hosted/setup-preview.spec.ts`(pure`buildRotateMove`/
+                  `validateRotation`unit tests, mod-6 wrap + zero-filter + the shared German-rules repro),
+                  `viewer/src/hosted/new-game.spec.ts`(new file,`buildCreateGameParams`'s new signature),
+                  `viewer/src/hosted/SetupPreview.spec.ts`(new, render-path: full setup renders with real
+                  components, a hex click rotates its sector exactly once — verified via the CSS`rotate()` transform through 6 clicks back to a visually-equivalent 360°, reroll changes the seed,
+                  changing player count resets to a fresh seed + correct ship count, the invalid-rotation case
+                  disables lock-in with the German-rules message visible, and a valid lock-in emits`{ seed,
 
-        rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; net +13 after
+            rotateMove }`). **Viewer suite: 232/232** (was 219 per this file's last count; net +13 after
 
-    also relocating the one pre-existing `buildCreateGameParams`test out of`host.spec.ts`).
+        also relocating the one pre-existing `buildCreateGameParams`test out of`host.spec.ts`).
 
-        - **Manual verification, done via the dev server + a temporary harness (not committed) driving
-          real Chromium via Playwright:** 2p/3p/4p all render every tile category with real art;
-          clicking sectors rotates them live with no reload (confirmed via the actual CSS `rotate()`
-          value); the intentionally-conflicting seed/rotation (`lost-fleet-space-map`+ 3× rotate on
-          the origin sector) is caught before lock-in with the message visible and the lock-in button
-          disabled; screenshots compared side-by-side against the existing`?lostFleet=1` self-contained viewer confirmed identical planet-type coloring after the CSS-class fix above.
-          The end-to-end "created game's board matches what was locked in" check (comparing against a
-          live Supabase-backed game immediately after creation) was **not done** — this environment has
-          no credentials for the live`gaia-lost-fleet` Supabase project's viewer-facing auth (Google/
-          magic-link sign-in), only Supabase project-management access (used to apply 0004/0005 above,
-          see that entry for the overload bug those applies caught). A natural next step for whoever
-          has real sign-in credentials: create a game through the real Lobby flow end-to-end and confirm
-          a rotated sector's on-screen orientation matches between the preview and the live game.
+            - **Manual verification, done via the dev server + a temporary harness (not committed) driving
+              real Chromium via Playwright:** 2p/3p/4p all render every tile category with real art;
+              clicking sectors rotates them live with no reload (confirmed via the actual CSS `rotate()`
+              value); the intentionally-conflicting seed/rotation (`lost-fleet-space-map`+ 3× rotate on
+              the origin sector) is caught before lock-in with the message visible and the lock-in button
+              disabled; screenshots compared side-by-side against the existing`?lostFleet=1` self-contained viewer confirmed identical planet-type coloring after the CSS-class fix above.
+              The end-to-end "created game's board matches what was locked in" check (comparing against a
+              live Supabase-backed game immediately after creation) was **not done** — this environment has
+              no credentials for the live`gaia-lost-fleet` Supabase project's viewer-facing auth (Google/
+              magic-link sign-in), only Supabase project-management access (used to apply 0004/0005 above,
+              see that entry for the overload bug those applies caught). A natural next step for whoever
+              has real sign-in credentials: create a game through the real Lobby flow end-to-end and confirm
+              a rotated sector's on-screen orientation matches between the preview and the live game.
 
 55. ✅ **Nine owner-reported bugs/polish items, CODED & TESTED** (done 2026-07-02). A batch of
     gameplay-correctness and viewer-polish fixes reported directly by the owner after playing a real
@@ -4320,6 +4321,83 @@ section originally said Chunk 2 must also carry the _full_ `planets.ts` terrafor
    exact shape for adv-tech/federation/booster/scoring enum members when those chunks come up.
 
 ## Next actions
+
+**Done from #98 (2026-07-11, "Gaia 21" session), on `claude/gaia-21-mobile-ux-gxm7eb`:**
+
+- **In-game chat + private notes (new feature).** New `ChatNotesPanel.vue`: a floating toggle
+  (bottom-right, unread-badge dot) opens a two-tab panel - Chat (default) and Notes - as a
+  collapsible docked strip on desktop or a full-screen overlay with a top-left back arrow on
+  mobile (owner's explicit choice over a bottom sheet, to avoid gesture conflicts with the map's
+  own pinch/pan/scroll handling, which this app has a long bug history with). Chat is per-game,
+  visible to players AND spectators alike (new `game_chat_messages` table, RLS gated on the same
+  `is_approved()` bar as the game itself, live via Supabase Realtime); Notes are private per
+  (game, user) (`game_notes` table, `user_id = auth.uid()`-only RLS), autosaved 1.5s after typing
+  stops. Author name comes from the existing app-wide nickname (`profiles.nickname` via
+  `fetchMyNickname`), not a per-seat display name, so spectators without a seat still get a name.
+  Mounted as its own top-level Vue instance in `hosted.ts`'s `launchGame()`, independent of
+  `HostedBar`/the game's own store. New migration `0032_game_chat_and_notes.sql` + component spec
+  (`ChatNotesPanel.spec.ts`, 5 tests, all passing) - **not yet applied to the live Supabase project**
+  (blocked on "MCP tool call requires approval," same recurring pattern as #81/#96 - needs either a
+  manual `supabase db push`/dashboard apply, or a session where the MCP approval actually goes
+  through).
+- **Dark mode contrast bugs fixed.** Root cause of the 7th advanced-tech-tile (and other tech
+  tiles) rendering with inverted/near-invisible colors: `TechTile.vue`'s root is itself an `<svg>`,
+  nested inside `ResearchBoard.vue`'s/`ResearchTrack.vue`'s own root `<svg>` - the whole-page
+  dark-mode `filter: invert()` hack's "re-invert media back to normal" rule matched `svg`
+  unscoped, so nested tech-tile svgs got a second, unwanted re-invert on top of their
+  already-corrected parent (odd vs. even total inversions). Fixed by scoping that rule to
+  `svg:not(svg svg)` (`frontend.scss`). Separately, "Charge 3 power" and the scoring-extension
+  label (`ResearchBoard.vue`) are plain hardcoded-black text with no painted shape behind them (just
+  the transparent svg canvas), so the invert-cancel trick doesn't help them - added explicit
+  `:root[data-theme="dark"] { fill: white }` overrides for just those two (not a blanket rule, to
+  avoid overriding text that already sits correctly on a painted, also-canceled background
+  elsewhere on the board). Also changed the dark-mode background from pure black to a softer dark
+  gray (`#e3e3e1` pre-invert → `#1c1c1e` rendered) per the owner's request. **Not an exhaustive
+  audit** - other nested-svg-in-svg or floating-text spots elsewhere in the board may have the same
+  latent bug class; only the two spots the owner flagged were fixed and verified via
+  `ResearchBoard.spec.ts`/`TechTile.spec.ts` (still passing).
+- **Lobby "last turn summary" now shows lobby joins.** `join_open_game_seat` (migration
+  `0029_join_event_summary.sql`) now writes `"<name> joined the game"` + `now()` directly into the
+  same `latest_move_summary`/`latest_move_committed_at` cache columns `commit_turn` already uses
+  (0019/0026) - safe to overwrite unconditionally since no moves exist yet while a game is still
+  `open`. `Lobby.vue`'s `summaryForGame`/`moveAge` previously hard-nulled both while
+  `status === "open"`; relaxed to show the cached summary if one exists (join events only - there's
+  still no move-log fallback pre-active). `Lobby.spec.ts` (27/27) still passes.
+- **Self-serve test-game deletion.** New `delete_my_test_game(p_game_id)` RPC (migration
+  `0030_delete_my_test_game.sql`) - immediate hard-delete, deliberately conservative: only the
+  game's creator, and only while every claimed seat still belongs to them (the moment a second real
+  user has joined, it's a real game and must go through `abandon_game`/admin `delete_game`
+  instead). Wired to a plain always-visible "Delete" button next to the existing "Test game" tag in
+  the lobby row (not the admin-only swipe-to-delete gesture, which is also explicitly disabled for
+  mouse pointers) - works identically via click (desktop) or tap (mobile) for any player, answering
+  the "how does it work on desktop" question directly.
+- **Idle test games auto-delete after a week.** New `prune_idle_test_games()` (migration
+  `0031_prune_idle_test_games.sql`), same opportunistic-pruning pattern as `prune_abandoned_games`
+  (no pg_cron, nudged by any lobby visit - wired into `Lobby.vue`'s `refresh()` alongside it).
+  "Test game" here uses the same conservative bar as `delete_my_test_game`: every claimed seat
+  belongs to a single user; a real multiplayer game is never touched regardless of idle time.
+  Idle = `latest_move_committed_at` (or `created_at` if never moved) older than 7 days.
+- **Migrations 0029-0032 are written and unit-tested but NOT YET APPLIED to the live Supabase
+  project** (`mitawjpdxkheascdiffz`) - blocked on "MCP tool call requires approval" both before and
+  after an MCP reconnect mid-session, same recurring pattern as #81/#96. Needs a manual
+  `supabase db push` (owner action) or a session where the MCP approval actually goes through.
+- **Investigated, not fixed - the mobile sticky-bar "floats on plain scroll (no pinch)" report from
+  a spectator.** Confirmed this is NOT the previously-fixed pinch-zoom bug (`Commands.vue` and
+  `PremoveBar.vue` both already carry the identical VisualViewport counter-transform fix - re-read
+  both `mounted()` hooks to confirm). Owner confirmed the repro is plain one-finger scroll, no
+  pinch - which points at iOS Safari's classic "address-bar hide/show jitters a `position: fixed`
+  bottom bar" problem, a different bug than the one already fixed. **Deliberately left unfixed
+  this session**: no real iOS device available in this environment to verify a candidate fix
+  against, and this exact area has a long history (see #66/#73/#90 and others above) of
+  regressions from changes that looked correct but weren't verified on-device. Needs on-device
+  testing before attempting.
+- **Investigated, no fix needed - real 0-seat spectators mounting the full interactive move-buttons
+  bar (`canPlay` returns `true` unconditionally when no seat is locked).** Confirmed this is
+  intentional, documented, and already tested design (`host.ts`'s `seatToLock` doc comment,
+  `host.spec.ts`'s "does not lock users with no seats" test): `commit_turn` re-checks seat
+  ownership server-side (`raise exception 'seat % is not yours'`), so an unlocked spectator UI can
+  never actually commit a move regardless of what the client renders - a UX rough edge (clicking a
+  button that will silently fail server-side), not a security hole. Not changed.
 
 **Done from #97 (2026-07-10, "Gaia 18" session):** a large UI/UX batch, in three commits on
 `claude/gaia-18-ui-improvements-0dv0pi`:

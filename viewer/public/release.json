@@ -1,7 +1,31 @@
 {
-  "version": "5.20.7",
-  "releasedAt": "2026-07-10",
+  "version": "5.21.0",
+  "releasedAt": "2026-07-11",
   "entries": [
+    {
+      "version": "5.21.0",
+      "releasedAt": "2026-07-11",
+      "kind": "update",
+      "title": "Gaia 21: mobile UX + dark mode + chat/notes",
+      "impact": "",
+      "changes": [
+        "Added an in-game chat and private notes panel - a floating icon opens a collapsible chat/notes panel (desktop) or full-screen view (mobile), with its own chat visible to players and spectators, and private per-game notes only you can see",
+        "The lobby's activity line now shows when someone joins an open-lobby game (e.g. \"Luke joined the game\")",
+        "Players can now delete their own solo test games immediately from the lobby",
+        "Idle test games are now automatically cleaned up after a week",
+        "Dark mode's background is now a softer dark gray instead of pure black",
+        "Fixed a dark-mode bug where the 7th advanced tech tile and other tech tiles rendered with inverted (near-invisible) colors, caused by a nested-svg-in-svg double-inversion in the whole-page dark-mode filter",
+        "Fixed dark-mode text (Charge 3 power label, scoring-extension label) staying hardcoded black and disappearing against the dark background",
+        "Investigated the mobile sticky-bar float-on-scroll report for spectators; confirmed the known pinch-zoom bug is already fixed in both Commands.vue and PremoveBar.vue, and confirmed the canPlay-unlocked-for-spectators behavior is intentional and server-enforced safe, not a bug"
+      ],
+      "userChanges": [
+        "Added an in-game chat and private notes panel - a floating icon opens a collapsible chat/notes panel (desktop) or full-screen view (mobile), with its own chat visible to players and spectators, and private per-game notes only you can see",
+        "The lobby's activity line now shows when someone joins an open-lobby game (e.g. \"Luke joined the game\")",
+        "Players can now delete their own solo test games immediately from the lobby",
+        "Idle test games are now automatically cleaned up after a week",
+        "Dark mode's background is now a softer dark gray instead of pure black"
+      ]
+    },
     {
       "version": "5.20.7",
       "releasedAt": "2026-07-10",
@@ -160,9 +184,7 @@
       "kind": "fix",
       "title": "Lobby crash hotfix",
       "impact": "",
-      "changes": [
-        "Fixed a crash in the lobby's game-loading code (rpc().catch is not a function)"
-      ],
+      "changes": ["Fixed a crash in the lobby's game-loading code (rpc().catch is not a function)"],
       "userChanges": []
     },
     {
@@ -265,9 +287,7 @@
         "Open-lobby games now show a green X/Y seats-joined badge where the round number goes, instead of an empty slot.",
         "Move age no longer disappears if the client clock is even slightly behind the server's."
       ],
-      "userChanges": [
-        "Open lobby games show a seats-joined badge"
-      ]
+      "userChanges": ["Open lobby games show a seats-joined badge"]
     },
     {
       "version": "5.16.0",
@@ -298,12 +318,8 @@
       "kind": "update",
       "title": "Private access control",
       "impact": "",
-      "changes": [
-        "New accounts start unapproved and see no game data until approved from Settings > Manage users"
-      ],
-      "userChanges": [
-        "New accounts need admin approval before they can see any games"
-      ]
+      "changes": ["New accounts start unapproved and see no game data until approved from Settings > Manage users"],
+      "userChanges": ["New accounts need admin approval before they can see any games"]
     },
     {
       "version": "5.14.8",
@@ -340,9 +356,7 @@
         "The lobby now opens on public tables first, and open-table visibility is backed by the latest SQL policy update.",
         "The duplicate top turn banner is gone, and full setup previews use the main game layout so maps load more reliably."
       ],
-      "userChanges": [
-        "Lobby now shows public tables first"
-      ]
+      "userChanges": ["Lobby now shows public tables first"]
     },
     {
       "version": "5.14.5",
@@ -375,21 +389,15 @@
         "Open lobby tables now show one join action with joined player names instead of a full seat-by-seat button list.",
         "Setup previews now load the map and board art more reliably on the full-page lobby screen."
       ],
-      "userChanges": [
-        "Open lobby tables show one join button with joined player names"
-      ]
+      "userChanges": ["Open lobby tables show one join button with joined player names"]
     },
     {
       "version": "5.14.2",
       "releasedAt": "2026-07-08",
       "kind": "feature",
       "title": "Full-page lobby previews",
-      "changes": [
-        "Open lobby tables now open on their own page with compact seat controls above the setup preview."
-      ],
-      "userChanges": [
-        "Open lobby tables now open on their own page with seat controls"
-      ]
+      "changes": ["Open lobby tables now open on their own page with compact seat controls above the setup preview."],
+      "userChanges": ["Open lobby tables now open on their own page with seat controls"]
     },
     {
       "version": "5.14.1",
@@ -439,18 +447,14 @@
         "Desktop devices still get turn alerts even while the game is open.",
         "Mobile and installed PWA sessions keep duplicate-alert suppression while you are actively playing."
       ],
-      "userChanges": [
-        "Turn notifications now work correctly on both desktop and mobile"
-      ]
+      "userChanges": ["Turn notifications now work correctly on both desktop and mobile"]
     },
     {
       "version": "5.13.1",
       "releasedAt": "2026-07-07",
       "kind": "fix",
       "title": "Correct fourth exploration reward",
-      "changes": [
-        "The fourth spaceship exploration slot in 4-player Lost Fleet games now charges exactly 3 power."
-      ],
+      "changes": ["The fourth spaceship exploration slot in 4-player Lost Fleet games now charges exactly 3 power."],
       "userChanges": []
     },
     {
@@ -458,12 +462,8 @@
       "releasedAt": "2026-07-07",
       "kind": "feature",
       "title": "In-app update prompt",
-      "changes": [
-        "Hosted tabs can detect when a newer version was deployed and prompt you to reload into it."
-      ],
-      "userChanges": [
-        "The app can now prompt you to reload when a new version is available"
-      ]
+      "changes": ["Hosted tabs can detect when a newer version was deployed and prompt you to reload into it."],
+      "userChanges": ["The app can now prompt you to reload when a new version is available"]
     }
   ]
 }

@@ -84,11 +84,21 @@ body {
 // dark mode to an existing light-only app without a full color-system rewrite.
 :root[data-theme="dark"] {
   filter: invert(1) hue-rotate(180deg);
-  background: #fff;
+  // Inverts to a dark gray (#1c1c1e) rather than pure black - filters compose on the *rendered*
+  // page, so the pre-invert value here must be that target color's own invert (255-28=227 etc.).
+  background: #e3e3e1;
 
+  // Re-inverted back to "normal" (cancels the root invert above) so photographic/vector art still
+  // reads correctly instead of looking like a photo negative. Scoped to `:not(svg svg)` - a nested
+  // `<svg>` (e.g. TechTile.vue's own `<svg class="techTile">` embedded inside ResearchBoard.vue's/
+  // ResearchTrack.vue's root `<svg>`) would otherwise ALSO match a bare `svg` selector and get a
+  // second re-invert on top of its already-normal-looking parent, landing back on genuinely
+  // inverted colors (odd number of total inversions) while everything around it looks normal
+  // (even) - the reported "7th advanced tech tile" contrast bug. Only the outermost `<svg>` in any
+  // nesting chain needs the re-invert; nested ones inherit the already-corrected look for free.
   img,
-  svg,
-  video {
+  video,
+  svg:not(svg svg) {
     filter: invert(1) hue-rotate(180deg);
   }
 }

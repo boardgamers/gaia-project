@@ -224,6 +224,15 @@
                   >
                   <span v-if="isTestGame(game)" class="game-bar__tag">Test game</span>
                   <span v-if="game.abandoned_at" class="game-bar__tag game-bar__tag--abandoned">Abandoned</span>
+                  <button
+                    v-if="isTestGame(game) && game.created_by === myUserId"
+                    type="button"
+                    class="game-bar__delete-test-game"
+                    title="Delete this test game (immediate, no other players are in it)"
+                    @click.stop.prevent="deleteMyTestGame(game)"
+                  >
+                    Delete
+                  </button>
                 </span>
                 <span v-if="summaryForGame(game)" class="game-bar__summary text-muted small">
                   <span v-if="moveAge(game)" class="game-bar__age">{{ moveAge(game) }}</span>
@@ -592,6 +601,7 @@ export default Vue.extend({
         // returned by .rpc() is only thenable (implements .then()), not a real Promise - calling
         // .catch() directly on it throws synchronously instead of catching a rejection.
         Promise.resolve((this.client as any).rpc("prune_abandoned_games")).catch(() => undefined);
+        Promise.resolve((this.client as any).rpc("prune_idle_test_games")).catch(() => undefined);
         // Race against a timeout too, not just try/catch: a genuinely hung request (dead
         // connection, no response ever) never rejects on its own, so try/catch alone still leaves
         // `loading` stuck forever on a bad network.
@@ -761,12 +771,15 @@ export default Vue.extend({
     },
     summaryForGame(game: any): string | null {
       if (game.status === "open") {
-        return null;
+        // Only a join event (join_open_game_seat writes latest_move_summary directly - see
+        // 0029_join_event_summary.sql) is expected here; there's no move-log fallback to try
+        // since commit_turn never runs before the game goes active.
+        return game.latest_move_summary || null;
       }
       return game.latest_move_summary || game._fallback_latest_move_summary || null;
     },
     moveAge(game: any): string | null {
-      if (game.status === "open") {
+      if (game.status === "open" && !game.latest_move_summary) {
         return null;
       }
       return formatMoveAge(this.lastMoveTimestamp(game));
@@ -834,6 +847,17 @@ export default Vue.extend({
         this.message = `Could not delete the game: ${error.message}`;
       } else {
         this.revealedGameId = "";
+        await this.refresh();
+      }
+    },
+    async deleteMyTestGame(game: any) {
+      if (!window.confirm(`Delete "${game.name || "this test game"}"? This cannot be undone.`)) {
+        return;
+      }
+      const { error } = await (this.client as any).rpc("delete_my_test_game", { p_game_id: game.id });
+      if (error) {
+        this.message = `Could not delete the game: ${error.message}`;
+      } else {
         await this.refresh();
       }
     },
@@ -1192,6 +1216,21 @@ export default Vue.extend({
     background: #f8d7da;
     color: #842029;
   }
+}
+
+// A plain always-visible button rather than reusing the admin-only swipe-to-delete gesture (which
+// is also explicitly disabled for mouse pointers, see startSwipe) - this needs to work the same on
+// desktop click and mobile tap for any player, not just the admin.
+.game-bar__delete-test-game {
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.08rem 0.5rem;
+  background: #f8d7da;
+  color: #842029;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.2;
 }
 
 .game-bar__players {
