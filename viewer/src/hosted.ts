@@ -5,6 +5,7 @@ import Game from "./components/Game.vue";
 import CreateGame from "./hosted/CreateGame.vue";
 import ChatNotesPanel from "./hosted/ChatNotesPanel.vue";
 import HostedBar from "./hosted/HostedBar.vue";
+import LobbyChatPanel from "./hosted/LobbyChatPanel.vue";
 import { HostedGameHost, seatToLock } from "./hosted/host";
 import Lobby from "./hosted/Lobby.vue";
 import OpenLobbyGame from "./hosted/OpenLobbyGame.vue";
@@ -358,5 +359,8 @@ export default async function launchHosted(selector = "#app"): Promise<void> {
     mountChild(root, CreateGame, { client, session });
   } else {
     mountChild(root, Lobby, { client, session });
+    // Lobby-only (not mounted inside a game, unlike ChatNotesPanel above) - a single global chat
+    // room, separate from any one game's own chat.
+    mountChild(root, LobbyChatPanel, { client, userId: session.user.id });
   }
 }

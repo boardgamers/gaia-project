@@ -4350,6 +4350,26 @@ section originally said Chunk 2 must also carry the _full_ `planets.ts` terrafor
 
 ## Next actions
 
+**Done from #98 3rd follow-up (2026-07-11, same "Gaia 21" session/branch): global Lobby Chat.**
+New `lobby_chat_messages` table (migration `0035_lobby_chat.sql`) - a single global room, full
+history saved forever (unlike `game_chat_messages`, no `game_id` - not scoped to any one game),
+same `is_approved()` visibility bar. New `LobbyChatPanel.vue`, deliberately a separate component
+rather than a generalized/shared base with `ChatNotesPanel.vue` (their tabs/notes/per-game concepts
+don't overlap enough to be worth the abstraction) but mirroring its exact shell - floating toggle
+(left side this time, to stay visually distinct from the per-game chat's right-side one), desktop
+dock / mobile full overlay, unread badge (own `lobby-chat-last-read` localStorage key). Each message
+shows author name, send time (`formatTime`: bare time if today, `"Jul 11, 3:42 PM"` style
+otherwise), and a live online/offline dot reusing the existing presence system - added a new
+context-agnostic `isOnline(state, userId)` helper to `presence.ts` alongside the existing
+game-scoped `presenceStatus`, since a chat message's sender isn't tied to any one game the way a
+lobby row's "X of Y seats" indicator is. Paginated per the owner's choice: initial load caps at the
+200 most recent messages, older ones load in 200-row batches on scroll-up (`loadOlder()`,
+scroll-position preserved by recording `scrollHeight`/`scrollTop` before prepending and restoring
+the equivalent offset after). Mounted once, lobby-screen-only (not inside a game) in `hosted.ts`'s
+non-game branch, right after the `Lobby` mount. New `LobbyChatPanel.spec.ts` (6/6 passing). Full
+`pnpm test` baseline: 401 passing (up from 392)/30 failing, same known pre-existing flaky range
+(30-33) as before this session - not a regression.
+
 **Done from #98 2nd follow-up (2026-07-11, same "Gaia 21" session/branch): per-game chat mute.**
 New `game_chat_mutes` table (migration `0034_game_chat_mutes.sql`) - a row's mere existence means
 "muted" for that (game, user) pair, so a brand new game/user pair is unmuted by default with no

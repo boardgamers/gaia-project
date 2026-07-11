@@ -61,6 +61,13 @@ export function subscribePresence(client: SupabaseClient, onState: (state: Prese
   return () => client.removeChannel(channel);
 }
 
+/** Simple "is this user around at all right now" check, context-agnostic (unlike `presenceStatus`
+ * below, which distinguishes "focused on this exact game" from "present somewhere else") - for UI
+ * that just wants an online/offline dot per user, e.g. the Lobby Chat message list. */
+export function isOnline(state: PresenceState, userId: string): boolean {
+  return (state[userId]?.length ?? 0) > 0;
+}
+
 export type PresenceStatus = "green" | "yellow" | "grey";
 
 /** How recently `last_active_at` (players table, refreshed every ~20s while a tab is open, see
