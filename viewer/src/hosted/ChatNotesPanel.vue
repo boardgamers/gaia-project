@@ -4,6 +4,7 @@
       type="button"
       class="chat-notes__toggle"
       :class="{ 'chat-notes__toggle--unread': hasUnread }"
+      :style="{ bottom: toggleBottomOffset + 'px' }"
       @click="openPanel(tab)"
       :aria-label="open ? 'Close chat and notes' : 'Open chat and notes'"
     >
@@ -115,6 +116,15 @@ export default Vue.extend({
       notesStatus: "",
       muted: false,
       unreadSince: 0,
+      // Dynamic clearance for the floating toggle above the mobile sticky action/premove bar
+      // (Commands.vue/PremoveBar.vue) - its height varies (content, auto-leech dropdown open,
+      // etc.), so a fixed offset previously either overlapped it or left an ugly fixed gap on
+      // desktop where no such bar exists at all. Measured directly off the live DOM element
+      // instead of guessing, since ChatNotesPanel is a separate Vue root and can't receive
+      // Commands.vue's own `sticky-bar-height` event (that only reaches Game.vue's tree).
+      toggleBottomOffset: 24,
+      stickyBarObserver: null as ResizeObserver | null,
+      stickyBarPoll: null as ReturnType<typeof setInterval> | null,
       channel: null as any,
       notesSaveTimer: null as ReturnType<typeof setTimeout> | null,
     };
@@ -135,8 +145,13 @@ export default Vue.extend({
     await this.loadNotes();
     await this.loadMuted();
     this.subscribeChat();
+    this.startStickyBarWatch();
   },
   beforeDestroy() {
+    this.stickyBarObserver?.disconnect();
+    if (this.stickyBarPoll) {
+      clearInterval(this.stickyBarPoll);
+    }
     if (this.channel) {
       this.client.removeChannel(this.channel);
     }
@@ -145,6 +160,40 @@ export default Vue.extend({
     }
   },
   methods: {
+    // Finds whichever mobile sticky bar (if any) is currently rendered - Commands.vue's on-turn
+    // bar or PremoveBar.vue's off-turn one - and keeps `toggleBottomOffset` a fixed gap above its
+    // real, live height. A ResizeObserver catches height changes (e.g. the auto-leech dropdown
+    // opening) once an element is found; a coarse poll re-runs the query itself, since the bar can
+    // mount/unmount entirely outside this component's own tree at arbitrary times (turn changes,
+    // round start) with nothing here to react to otherwise.
+    startStickyBarWatch() {
+      if (typeof document === "undefined" || typeof ResizeObserver === "undefined") {
+        return;
+      }
+      const STICKY_BAR_SELECTOR = "#move-buttons.mobile-sticky-actions, .premove-bar--sticky-mobile";
+      let observedEl: Element | null = null;
+      this.stickyBarObserver = new ResizeObserver(() => this.updateStickyOffset(STICKY_BAR_SELECTOR));
+      const recheck = () => {
+        const el = document.querySelector(STICKY_BAR_SELECTOR);
+        if (el !== observedEl) {
+          if (observedEl) {
+            this.stickyBarObserver!.unobserve(observedEl);
+          }
+          observedEl = el;
+          if (el) {
+            this.stickyBarObserver!.observe(el);
+          }
+        }
+        this.updateStickyOffset(STICKY_BAR_SELECTOR);
+      };
+      recheck();
+      this.stickyBarPoll = setInterval(recheck, 500);
+    },
+    updateStickyOffset(selector: string) {
+      const el = document.querySelector(selector) as HTMLElement | null;
+      const barHeight = el ? el.getBoundingClientRect().height : 0;
+      this.toggleBottomOffset = barHeight > 0 ? barHeight + 12 : 24;
+    },
     lastReadKey(): string {
       return `chat-last-read-${this.gameId}`;
     },
@@ -266,16 +315,6 @@ export default Vue.extend({
     closePanel() {
       this.open = false;
     },
-    // Called from HostedBar's own top-bar button on mobile (see hosted.ts, which wires the two
-    // separately-mounted components together directly) - this component's own floating toggle is
-    // desktop-only (see the `.chat-notes__toggle` media query below).
-    togglePanel() {
-      if (this.open) {
-        this.closePanel();
-      } else {
-        this.openPanel(this.tab);
-      }
-    },
     switchTab(tab: Tab) {
       this.tab = tab;
       if (tab === "chat") {
@@ -291,7 +330,8 @@ export default Vue.extend({
 .chat-notes__toggle {
   position: fixed;
   right: 1rem;
-  bottom: 1.5rem;
+  // `bottom` is set inline (see `toggleBottomOffset`) - dynamically measured off the live sticky
+  // bar element so it always clears it regardless of that bar's current height, on every viewport.
   z-index: 1040;
   width: 3rem;
   height: 3rem;
@@ -304,15 +344,7 @@ export default Vue.extend({
   display: flex;
   align-items: center;
   justify-content: center;
-
-  // Desktop only - overlapped the mobile sticky action/premove bar at the bottom (see
-  // Commands.vue/PremoveBar.vue) no matter how far up it was nudged, since that bar's own height
-  // varies. On mobile the toggle instead lives in HostedBar's top-bar icon row, alongside the
-  // push-notification bell and settings gear (see HostedBar.vue + hosted.ts, which wires the two
-  // separately-mounted components together).
-  @media (max-width: 767px) {
-    display: none;
-  }
+  transition: bottom 0.15s ease-out;
 }
 
 .chat-notes__badge {
@@ -435,6 +467,9 @@ export default Vue.extend({
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
+  // Messenger-style: a handful of messages hug the bottom of the box instead of sitting stranded
+  // at the top of a mostly-empty scroll area.
+  justify-content: flex-end;
 }
 
 .chat-notes__empty {

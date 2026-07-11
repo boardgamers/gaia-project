@@ -67,14 +67,12 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
     gameWrapperEl.style.display = "";
   });
 
-  // Its own top-level mount (not folded into `bar`/HostedBar) - the panel itself is a
-  // fixed-position floating toggle + overlay on desktop, positioned independently of the rest of
-  // the chrome, so it doesn't need to share HostedBar's layout or store. On mobile its own toggle
-  // hides itself (see ChatNotesPanel.vue) in favor of a button inside HostedBar's own top-bar icon
-  // row (below) - mountChild's outer wrapper's $children[0] is the actual component instance,
-  // needed here so HostedBar can drive it directly across these two separate Vue trees.
-  const chatNotesRoot = mountChild(root, ChatNotesPanel, { client, gameId, userId: session.user.id });
-  const chatNotes = chatNotesRoot.$children[0] as any;
+  // Its own top-level mount (not folded into `bar`/HostedBar) - a fixed-position floating toggle +
+  // overlay/dock, positioned independently of the rest of the chrome on every viewport (it
+  // measures the mobile sticky action/premove bar's own live height itself to avoid overlapping
+  // it - see ChatNotesPanel.vue's `startStickyBarWatch`), so it doesn't need to share HostedBar's
+  // layout or store.
+  mountChild(root, ChatNotesPanel, { client, gameId, userId: session.user.id });
 
   const bar = new Vue({
     store: emitter.store,
@@ -84,7 +82,6 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
       pushBusy: false,
       pushEnabled: false,
       abandoned: false,
-      chatUnread: false,
     },
     render(h) {
       return h(HostedBar, {
@@ -110,16 +107,12 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
               bar.abandoned = true;
             }
           },
-          "toggle-chat": () => chatNotes.togglePanel(),
         },
       });
     },
   }).$mount(barEl) as any;
   isPushEnabled().then((enabled) => {
     bar.pushEnabled = enabled;
-  });
-  chatNotes.$watch("hasUnread", (unread: boolean) => {
-    bar.chatUnread = unread;
   });
 
   let mySeats: number[] = [];
@@ -358,9 +351,21 @@ export default async function launchHosted(selector = "#app"): Promise<void> {
   } else if (params.has("create")) {
     mountChild(root, CreateGame, { client, session });
   } else {
-    mountChild(root, Lobby, { client, session });
+    const lobbyRoot = mountChild(root, Lobby, { client, session });
+    const lobby = lobbyRoot.$children[0] as any;
     // Lobby-only (not mounted inside a game, unlike ChatNotesPanel above) - a single global chat
     // room, separate from any one game's own chat.
-    mountChild(root, LobbyChatPanel, { client, userId: session.user.id });
+    const lobbyChatRoot = mountChild(root, LobbyChatPanel, { client, userId: session.user.id });
+    const lobbyChat = lobbyChatRoot.$children[0] as any;
+    // Share Lobby.vue's own presence tracking (created() already calls trackPresence there) rather
+    // than having LobbyChatPanel open a second Realtime Presence channel on the same "presence:app"
+    // topic - two separate join requests for the identical topic/key-less read is an unnecessary
+    // duplicate at best and, depending on how the client's channel dedup behaves, a plausible source
+    // of a stale/never-synced roster at worst. Direct instance wiring, same pattern `bar`/`chatNotes`
+    // already use in launchGame() above.
+    lobbyChat.presenceState = lobby.presenceState;
+    lobby.$watch("presenceState", (state: unknown) => {
+      lobbyChat.presenceState = state;
+    });
   }
 }

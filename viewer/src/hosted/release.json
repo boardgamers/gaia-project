@@ -1,7 +1,28 @@
 {
-  "version": "5.22.0",
+  "version": "5.23.0",
   "releasedAt": "2026-07-11",
   "entries": [
+    {
+      "version": "5.23.0",
+      "releasedAt": "2026-07-11",
+      "kind": "update",
+      "title": "Chat polish + presence fix",
+      "impact": "",
+      "changes": [
+        "Chat messages now anchor to the bottom of the window like a normal messenger app, and your own messages are visually distinct (indented, colored) from others' in both chats",
+        "Fixed your own online status sometimes showing as offline/grey while you were actively using the site",
+        "The Lobby Chat button moved to the right side, matching the in-game chat button",
+        "The in-game chat button is back to floating in the bottom-right corner (on mobile too), now positioned to never overlap the sticky action bar",
+        "The notification bell button in a game is now clearly styled as a pressable button"
+      ],
+      "userChanges": [
+        "Chat messages now anchor to the bottom of the window like a normal messenger app, and your own messages are visually distinct (indented, colored) from others' in both chats",
+        "Fixed your own online status sometimes showing as offline/grey while you were actively using the site",
+        "The Lobby Chat button moved to the right side, matching the in-game chat button",
+        "The in-game chat button is back to floating in the bottom-right corner (on mobile too), now positioned to never overlap the sticky action bar",
+        "The notification bell button in a game is now clearly styled as a pressable button"
+      ]
+    },
     {
       "version": "5.22.0",
       "releasedAt": "2026-07-11",

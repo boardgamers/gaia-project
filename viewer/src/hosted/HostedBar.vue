@@ -20,24 +20,13 @@
       style="top: 0; right: 0.5rem; bottom: 0"
     >
       <b-button
-        size="sm"
-        variant="outline-secondary"
-        class="hosted-bar__chat-toggle"
-        v-b-tooltip.hover
-        title="Chat and notes"
-        @click="$emit('toggle-chat')"
-      >
-        <span aria-hidden="true">&#128172;</span>
-        <span v-if="chatUnread" class="hosted-bar__chat-badge"></span>
-        <span class="sr-only">Chat and notes</span>
-      </b-button>
-      <b-button
         v-if="pushEnabled"
         size="sm"
         variant="success"
+        class="hosted-bar__push-toggle"
         :disabled="pushBusy"
         v-b-tooltip.hover
-        title="This device is registered for turn notifications. Enable it separately on any other device you play from. Click to turn off."
+        title="Notifications are on for this device. Click to turn off."
         @click="$emit('disable-push')"
       >
         &#128276;
@@ -46,9 +35,10 @@
         v-else
         size="sm"
         variant="outline-secondary"
+        class="hosted-bar__push-toggle"
         :disabled="pushBusy"
         v-b-tooltip.hover
-        title="Enable turn notifications on this device"
+        title="Click to enable turn notifications on this device"
         @click="$emit('enable-push')"
       >
         &#128276;
@@ -82,7 +72,6 @@ export default Vue.extend({
     pushBusy: { type: Boolean, default: false },
     pushEnabled: { type: Boolean, default: false },
     abandoned: { type: Boolean, default: false },
-    chatUnread: { type: Boolean, default: false },
   },
   data() {
     return {
@@ -124,27 +113,22 @@ export default Vue.extend({
   padding-right: 0.45rem;
 }
 
-// Desktop already has ChatNotesPanel.vue's own floating bottom-right toggle - this top-bar copy is
-// mobile-only, where that floating toggle overlapped the mobile sticky action/premove bar (see
-// ChatNotesPanel.vue's own media query, which hides it there instead).
-.hosted-bar__chat-toggle {
-  display: none;
-  position: relative;
+// The push-notification bell wasn't obviously clickable - in particular the "enabled" (green,
+// solid-fill) state reads as a passive status badge more than an actionable toggle, and the
+// "disabled" (outline-secondary) state's thin gray border nearly disappears against the bar's
+// light background. A visible border + real shadow on both states, plus a hover/active press
+// effect, makes it unambiguously a button regardless of which state it's in.
+.hosted-bar__push-toggle {
+  border-width: 1px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 
-  @media (max-width: 767px) {
-    display: inline-flex;
+  &:hover:not(:disabled) {
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.35);
   }
-}
 
-.hosted-bar__chat-badge {
-  position: absolute;
-  top: 0.1rem;
-  right: 0.1rem;
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background: #dc3545;
-  border: 1px solid #fff;
+  &:active:not(:disabled) {
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
 }
 
 .hosted-bar__turn-order {

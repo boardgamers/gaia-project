@@ -25,7 +25,12 @@
         <p v-if="!hasMore && messages.length === 0" class="lobby-chat__empty text-muted">
           No messages yet - say hello.
         </p>
-        <div v-for="msg in messages" :key="msg.id" class="lobby-chat__message">
+        <div
+          v-for="msg in messages"
+          :key="msg.id"
+          class="lobby-chat__message"
+          :class="{ 'lobby-chat__message--own': msg.user_id === userId }"
+        >
           <span class="lobby-chat__meta">
             <span
               class="lobby-chat__presence"
@@ -54,7 +59,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { fetchMyNickname } from "./profile";
-import { isOnline as isUserOnline, PresenceState, subscribePresence } from "./presence";
+import { isOnline as isUserOnline, PresenceState } from "./presence";
 
 interface LobbyChatMessage {
   id: number;
@@ -86,9 +91,11 @@ export default Vue.extend({
       unreadSince: 0,
       hasMore: true,
       loadingOlder: false,
+      // Set directly from outside (hosted.ts) rather than tracked here - see that file's comment
+      // for why this shares Lobby.vue's own presence tracking instead of opening a second Realtime
+      // Presence channel on the same topic.
       presenceState: {} as PresenceState,
       channel: null as any,
-      stopPresence: null as (() => void) | null,
     };
   },
   computed: {
@@ -105,16 +112,10 @@ export default Vue.extend({
     this.authorName = (await fetchMyNickname(this.client, this.userId)) || "Player";
     await this.loadInitialMessages();
     this.subscribeChat();
-    this.stopPresence = subscribePresence(this.client, (state) => {
-      this.presenceState = state;
-    });
   },
   beforeDestroy() {
     if (this.channel) {
       this.client.removeChannel(this.channel);
-    }
-    if (this.stopPresence) {
-      this.stopPresence();
     }
   },
   methods: {
@@ -250,7 +251,7 @@ export default Vue.extend({
 // tabs/notes concepts don't apply here at all.
 .lobby-chat__toggle {
   position: fixed;
-  left: 1rem;
+  right: 1rem;
   bottom: 1.5rem;
   z-index: 1040;
   width: 3rem;
@@ -265,9 +266,8 @@ export default Vue.extend({
   align-items: center;
   justify-content: center;
 
-  // Left side, unlike ChatNotesPanel's right-side toggle - this only ever appears on the lobby
-  // screen (no per-game sticky action bar to clash with there), but keeping it on the opposite
-  // side from the per-game chat toggle avoids any visual confusion between the two.
+  // Right side, matching ChatNotesPanel's per-game chat toggle (owner request) - no conflict since
+  // this one only ever appears on the lobby screen, never alongside the per-game one.
 }
 
 .lobby-chat__badge {
@@ -284,21 +284,21 @@ export default Vue.extend({
 .lobby-chat__panel {
   position: fixed;
   top: 0;
-  left: 0;
+  right: 0;
   bottom: 0;
   width: 360px;
   max-width: 100vw;
   background: var(--bs-body-bg, #fff);
-  border-right: 1px solid rgba(0, 0, 0, 0.15);
-  box-shadow: 4px 0 16px rgba(0, 0, 0, 0.25);
+  border-left: 1px solid rgba(0, 0, 0, 0.15);
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.25);
   z-index: 1050;
   display: flex;
   flex-direction: column;
 
   @media (max-width: 767px) {
-    right: 0;
+    left: 0;
     width: 100vw;
-    border-right: none;
+    border-left: none;
   }
 }
 
@@ -346,6 +346,11 @@ export default Vue.extend({
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
+  // Messenger-style: content hugs the BOTTOM of the scroll area, so a handful of messages sit near
+  // the composer instead of stranded at the top of a mostly-empty box. `justify-content: flex-end`
+  // on a scrollable flex container still scrolls correctly once content overflows - only the
+  // "content shorter than container" case changes.
+  justify-content: flex-end;
 }
 
 .lobby-chat__load-older {
@@ -366,6 +371,17 @@ export default Vue.extend({
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
+  max-width: 85%;
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.6rem;
+  background: rgba(0, 0, 0, 0.06);
+
+  // Own messages get indented to the right + a distinct color, matching ChatNotesPanel's own
+  // per-game chat convention, so it's obvious at a glance which messages are yours.
+  &--own {
+    align-self: flex-end;
+    background: rgba(47, 111, 237, 0.18);
+  }
 }
 
 .lobby-chat__meta {

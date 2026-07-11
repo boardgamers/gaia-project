@@ -91,6 +91,24 @@ describe("LobbyChatPanel", () => {
     expect(wrapper.find(".lobby-chat__presence--offline").exists()).to.equal(true);
   });
 
+  it("marks the current user's own messages distinctly from others'", async () => {
+    const client = makeClient({
+      messages: [
+        makeMessage({ id: 1, user_id: "user-1", body: "mine" }),
+        makeMessage({ id: 2, user_id: "user-2", body: "theirs" }),
+      ],
+    });
+    const wrapper = mount(LobbyChatPanel as any, {
+      propsData: { client, userId: "user-1" },
+    });
+    await tick(wrapper);
+    await wrapper.find(".lobby-chat__toggle").trigger("click");
+    await tick(wrapper);
+    const own = wrapper.findAll(".lobby-chat__message--own");
+    expect(own.length).to.equal(1);
+    expect(own.at(0).text()).to.include("mine");
+  });
+
   it("sends a message via lobby_chat_messages.insert with no game_id", async () => {
     const client = makeClient({ nickname: "Luke" });
     const wrapper = mount(LobbyChatPanel as any, {

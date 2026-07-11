@@ -4350,6 +4350,53 @@ section originally said Chunk 2 must also carry the _full_ `planets.ts` terrafor
 
 ## Next actions
 
+**Done from #98 4th follow-up (2026-07-11, same "Gaia 21" session/branch), owner feedback on both
+chats:**
+
+- **Messages now anchor to the bottom** (`justify-content: flex-end` on both
+  `.chat-notes__messages` and `.lobby-chat__messages`) - messenger-style, so a handful of messages
+  sit near the composer instead of stranded at the top of an empty box.
+- **Lobby Chat gained the same own-vs-other message distinction ChatNotesPanel already had**
+  (`.lobby-chat__message--own`: right-aligned + tinted background) - it simply hadn't been ported
+  over when `LobbyChatPanel.vue` was built.
+- **Lobby Chat's toggle moved to the right side**, matching the per-game chat's toggle (was
+  deliberately put on the left last session to visually distinguish the two - owner preferred
+  consistency instead).
+- **Root-caused and fixed the "shows grey/offline when actually online" presence bug.**
+  `LobbyChatPanel.vue` was opening a SECOND Realtime Presence channel (`subscribePresence`) on the
+  exact same `"presence:app"` topic Lobby.vue's own `trackPresence` call already joins - two
+  separate channel-subscribe calls to the identical topic from the same client is an unnecessary
+  duplicate at best, and a plausible source of a never-(re)synced roster for the second joiner at
+  worst. Fixed by removing LobbyChatPanel's own presence subscription entirely and instead sharing
+  Lobby.vue's already-working `presenceState` directly: `hosted.ts` now captures both mounted
+  component instances (`mountChild(...).​$children[0]`, same technique as the `bar`/`chatNotes`
+  wiring from the 2nd follow-up below) and does `lobbyChat.presenceState = lobby.presenceState` +
+  `lobby.$watch("presenceState", ...)` to keep it live - single source of truth, reusing state
+  already proven correct elsewhere in the lobby's own game-bar dots, rather than a second
+  independent (and seemingly not reliably syncing) subscription.
+- **In-game chat toggle floats bottom-right on every viewport again** (reverting the mobile-only
+  "move it into HostedBar's top bar" decision from the previous follow-up, per explicit owner
+  request) - fixed the ACTUAL overlap this time instead of routing around it: `ChatNotesPanel.vue`
+  now measures the live mobile sticky action/premove bar element directly off the DOM
+  (`document.querySelector("#move-buttons.mobile-sticky-actions, .premove-bar--sticky-mobile")`,
+  `startStickyBarWatch()`) and keeps its own `toggleBottomOffset` a fixed 12px above that bar's
+  _real, current_ height via ResizeObserver + a 500ms poll (poll needed because the bar itself
+  mounts/unmounts entirely outside this component's own Vue tree at arbitrary times - turn
+  changes, round start - with nothing here to react to otherwise). Falls back to 24px (matching
+  the old fixed desktop offset) when no such bar is present at all. This removes the entire
+  HostedBar-top-bar detour added last follow-up: `chatUnread` prop, `.hosted-bar__chat-toggle`,
+  and `hosted.ts`'s `toggle-chat`/`hasUnread` cross-instance wiring are all gone again.
+- **In-game push-notification bell now looks like a real, pressable button** - it was a flat
+  `outline-secondary` bootstrap button whose border nearly disappeared against the bar's light
+  background (and whose "enabled" `success`-variant solid-green state read more like a passive
+  status badge than a toggle). Added a visible border + shadow + hover/press feedback
+  (`.hosted-bar__push-toggle`) to both states. Tooltip copy also rewritten to lead with "Click to
+  ..." for both states.
+- All of the above verified via `ChatNotesPanel.spec.ts` (8/8), `LobbyChatPanel.spec.ts` (7/7, +1
+  new "marks the current user's own messages distinctly" case), and `HostedBar.spec.ts` (4/4) -
+  full `pnpm test` baseline: 402 passing (up from 401)/30 failing, same known pre-existing flaky
+  range as before this session.
+
 **Done from #98 3rd follow-up (2026-07-11, same "Gaia 21" session/branch): global Lobby Chat.**
 New `lobby_chat_messages` table (migration `0035_lobby_chat.sql`) - a single global room, full
 history saved forever (unlike `game_chat_messages`, no `game_id` - not scoped to any one game),
