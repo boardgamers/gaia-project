@@ -364,6 +364,18 @@ svg.lost-fleet-ship {
   height: auto;
   display: block;
 
+  // Desktop only, per the owner's brief - matches the base-game power/QIC action octagons
+  // (BoardAction.vue) at the same viewport: measured live (a 3-player desktop layout), the ship
+  // action octagon rendered ~34.6px wide against the base game's ~30.6px, a 0.884 ratio. Shrinking
+  // the whole ship SVG's own width (rather than a transform, which would leave the grid cell's
+  // reserved height unchanged and an empty gap below) scales every element on the board - art,
+  // labels, action tiles - uniformly together, since the SVG's own aspect ratio keeps height in
+  // proportion automatically. Mobile keeps the existing full-width 100%.
+  @media (min-width: 768px) {
+    width: 88%;
+    margin: 0 auto;
+  }
+
   .lost-fleet-ship__marker-bg {
     fill: #efe6c4;
     stroke: #d8c57c;

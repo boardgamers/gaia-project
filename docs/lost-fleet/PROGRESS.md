@@ -4350,6 +4350,82 @@ section originally said Chunk 2 must also carry the _full_ `planets.ts` terrafor
 
 ## Next actions
 
+**Done 2026-07-11 follow-up: ship boards were still leaving a resize-dependent whitespace gap.**
+The fix just below put the ship boards in their own Bootstrap row, sharing it with the Commands
+column - but a *separate* row only starts once BOTH columns of the row above it (map + research)
+finish, so whenever the map (independently resizing, different aspect ratio) ended up taller than
+the research board, a gap opened up between the research board's actual bottom edge and the ships
+above them, that grew/shrank as the window resized. Fixed by nesting `<LostFleetShips>` directly
+inside the research board's own `col-md-5` div, right after the `<svg class="scoring-research-
+board">`, in normal document flow (not a separate row) - it now always hugs the research board's
+real rendered height at any width, confirmed live (8px gap, just the intended `mt-2` margin, at both
+1400px and 900px viewport widths despite the map/research height gap flipping between them).
+Mobile is unaffected (same map -> research -> ships -> commands visual order as before, since the
+wrapped mobile row already rendered research immediately before this point). `Game.spec.ts`'s
+ship-board-placement test rewritten again for this structure (asserts the ships sit in the DOM
+immediately after the research board SVG, inside the same column, rather than sharing a row with
+the buttons - the buttons keep their own col-md-7 narrowing independent of this).
+
+**Done 2026-07-11 (desktop-only): Lost Fleet layout pass - chat/lobby side panels, ship-board
+scale, button-row placement.** Owner feedback on the desktop game layout, four changes, all
+desktop-only (mobile untouched):
+
+- **ChatNotesPanel no longer overlaps the game.** Its content/behavior is untouched (owner's
+  explicit "keep it as is") - it's still `position: fixed`, so it still floats over whatever's
+  underneath rather than participating in layout. Fixed by watching its own `open` state from
+  `hosted.ts` and toggling a `chat-notes-open` class on `#app`, which reserves its 360px width via
+  `padding-right` (desktop-only media query, `frontend.scss`) so the game area shrinks out of the
+  way instead. Same pattern set up for a `game-nav-open` class (see below).
+- **New collapsible left-side main menu** (`GameNavPanel.vue`, mirrors ChatNotesPanel's own
+  floating-toggle-on-the-opposite-edge shell): Active / Lobby / Finished tabs, a lightweight direct
+  `games`-table query (not a reuse of Lobby.vue itself - it carries a lot of unrelated chrome with
+  no place here). Clicking an active/finished game swaps the game in place with no page reload;
+  open-lobby rows and "+ New game" still do a real navigation (join/create already have their own
+  dedicated flows). New `GameNavPanel.spec.ts` (4/4 passing).
+- **In-app game switching, no reload.** `hosted.ts`'s `launchGame` (one-shot, built to run exactly
+  once per real page load) split into `mountGameInstance` (mounts one game's whole chrome - bar,
+  engine tree, chat/notes - into a slot, returns a `dispose()` that unsubscribes every Supabase
+  realtime channel, clears the seat-heartbeat interval, and removes the resync
+  `visibilitychange` listener) and a new `launchGame` orchestrator that owns `GameNavPanel`, tears
+  down + remounts via `mountGameInstance` on `select-game`, and drives the URL with
+  `history.pushState` (+ a `popstate` handler, falling back to a real reload only if the user backs
+  out of `?game=` entirely - there's nothing to swap to there). Switches are serialized through a
+  promise chain so a rapid double-click can't overlap two in-flight mounts against the same slot.
+- **Ship boards scaled to match base-game power-action icons.** Measured live in a browser preview:
+  a ship action octagon rendered ~34.6px wide against the base game's ~30.6px at the same viewport
+  (3-player desktop) - a 0.884 ratio. `LostFleetShips.vue`'s `svg.lost-fleet-ship` now sets
+  `width: 88%` (desktop-only media query, centered) instead of the transform route, since shrinking
+  the SVG's own width keeps height in proportion automatically (no leftover gap a `transform: scale`
+  would leave behind) and scales the whole board - art, labels, action tiles - uniformly together.
+  Re-measured after the change: 30.14px vs. the base game's 30.58px, within 1.5%.
+- **Commands/premove buttons no longer stretch under the research track.** They used to be a
+  separate full-width `col-12` row below the map+research row, so on desktop they visually spanned
+  under both columns even though only the map-width portion made sense. Now Lost Fleet games (`
+  commandsColumnClass` in `Game.vue`) share one row with the ship boards: the buttons column is
+  `col-md-7 order-md-1` (matching the map's own width), ship boards keep `col-md-5 order-md-2` (now
+  with no `offset-md-7`, since it naturally follows the buttons column instead of standing alone) -
+  mobile keeps its existing stacked order/full width via the non-`-md` order classes. Verified
+  live: buttons measured 831px under an 843.5px map, ships 615px under a 602.5px research board.
+  `Game.spec.ts`'s ship-board-width test rewritten for the new shared-row structure (still passing,
+  now also asserting the buttons column and ship-board column share one row parent).
+- **Confirmed, no change needed:** the Lobby already auto-updates without a refresh when a move
+  lands elsewhere - `Lobby.vue` subscribes via Supabase Realtime to the `games` table, and
+  `commit_turn` (migration `0019_lobby_latest_move_summary.sql`) writes `latest_move_summary` onto
+  that same row on every move, which is what actually triggers the realtime update.
+- **Not visually verified**: the three hosted-mode-only pieces (chat overlap fix, the new left
+  menu, in-app game switching) need a real signed-in session to render at all - this environment has
+  no login credentials for the live Supabase project, so verification here was via `tsc --noEmit`
+  (clean), the existing `pnpm test` suite (no new failures - confirmed the one pre-existing
+  `LostFleetShips.spec.ts` failure and the one pre-existing `Lobby.spec.ts` changelog-string failure
+  both reproduce identically on a clean `git stash`, i.e. not regressions), and the new
+  `GameNavPanel.spec.ts`. The two non-hosted pieces (ship-board scale, button-row placement) WERE
+  verified live in a real browser preview against a self-contained `?lostFleet=1` game, with pixel
+  measurements above. **Flagging for the owner to sanity-check the hosted-mode pieces on the real
+  deploy before treating them as done**, especially the in-app switch teardown logic (realtime
+  channel/timer/listener cleanup) - that class of bug (a leaked subscription, a duplicate
+  `visibilitychange` listener) wouldn't show up as a compile or lint error, only as symptoms during
+  actual multi-game use (e.g. stale seat heartbeats, a resync firing twice).
+
 **Done from #98 8th follow-up (2026-07-11, same "Gaia 21" session/branch): mobile auto-leech
 dropdown vs. chat toggle overlap.** Both live in the same bottom-right corner of the screen on
 narrow viewports: the auto-leech dropdown sits `ml-auto` (pushed right) inside the mobile sticky

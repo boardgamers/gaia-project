@@ -399,7 +399,7 @@ describe("Game", () => {
     vm.$destroy();
   });
 
-  it("narrows the Lost Fleet ship-board row to the research-board sidebar's own width from md upward, without touching its mobile-default column class", () => {
+  it("nests the ship boards directly under the research board (same column, normal document flow) and narrows the buttons row to the map's own width", () => {
     const engine = new Engine(["init 2 lf-ship-board-width"], { lostFleet: true });
     engine.players.forEach((pl, index) => {
       pl.faction = [Faction.Terrans, Faction.Lantids][index];
@@ -412,13 +412,21 @@ describe("Game", () => {
     vm.$mount();
     document.body.appendChild(vm.$el);
 
-    const shipsCol = vm.$el.querySelector(".lost-fleet-ships")?.closest(".col-12");
-    expect(shipsCol, "expected the ship-board wrapper to still carry the mobile-default col-12").to.not.equal(null);
-    // Same fraction/offset as the research-board sidebar's own `col-md-5` above it - this (not any
-    // change to LostFleetShips.vue's own unconditional 2-column grid CSS, which stays shared with
-    // mobile) is what fixes the abnormally large desktop ship boards.
-    expect(shipsCol.classList.contains("col-md-5")).to.equal(true);
-    expect(shipsCol.classList.contains("offset-md-7")).to.equal(true);
+    // Stacked directly below the research board SVG in the same col-md-5 div (not a separate
+    // Bootstrap row) so it hugs the power/QIC action row's actual bottom edge at every viewport
+    // width, instead of waiting for a shared row to clear the taller of the map/research columns
+    // above it (which left a resize-dependent gap whenever the map ended up taller).
+    const researchCol = vm.$el.querySelector(".scoring-research-board")?.closest(".col-md-5");
+    expect(researchCol, "expected a col-md-5 wrapping the research board").to.not.equal(null);
+    const ships = researchCol.querySelector(".lost-fleet-ships");
+    expect(ships, "expected the ship boards inside the research board's own column").to.not.equal(null);
+    expect(ships.previousElementSibling?.classList.contains("scoring-research-board")).to.equal(true);
+
+    // The buttons column still narrows to the map's own width on desktop - now with nothing sharing
+    // its row (the ship boards moved above), so the remaining col-md-5 space is simply left blank.
+    const commandsCol = vm.$el.querySelector("#move")?.closest(".col-12");
+    expect(commandsCol, "expected the buttons wrapper to carry col-12").to.not.equal(null);
+    expect(commandsCol.classList.contains("col-md-7")).to.equal(true);
 
     vm.$el.remove();
     vm.$destroy();

@@ -102,3 +102,20 @@ body {
     filter: invert(1) hue-rotate(180deg);
   }
 }
+
+// Reserves space for ChatNotesPanel.vue's floating chat/notes dock (desktop only - it's already a
+// full-screen overlay on mobile, no reservation needed or wanted there) and GameNavPanel.vue's
+// floating left menu, so the game area shrinks out of the way instead of being covered by either
+// fixed-position panel. Class toggled from hosted.ts by watching each panel's own `open` state;
+// width literals here must match each panel's own `.chat-notes__panel`/`.game-nav__panel` CSS.
+@media (min-width: 768px) {
+  #app.chat-notes-open {
+    padding-right: 360px;
+    transition: padding-right 0.15s ease-out;
+  }
+
+  #app.game-nav-open {
+    padding-left: 320px;
+    transition: padding-left 0.15s ease-out;
+  }
+}

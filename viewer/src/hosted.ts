@@ -4,6 +4,7 @@ import { fetchMyApprovalStatus } from "./hosted/approval";
 import Game from "./components/Game.vue";
 import CreateGame from "./hosted/CreateGame.vue";
 import ChatNotesPanel from "./hosted/ChatNotesPanel.vue";
+import GameNavPanel from "./hosted/GameNavPanel.vue";
 import HostedBar from "./hosted/HostedBar.vue";
 import LobbyChatPanel from "./hosted/LobbyChatPanel.vue";
 import { HostedGameHost, seatToLock } from "./hosted/host";
@@ -37,7 +38,23 @@ function mountChild(parent: Element, component: any, props: Record<string, unkno
   return new Vue({ render: (h) => h(component, { props }) }).$mount(el);
 }
 
-async function launchGame(root: Element, client: SupabaseClient, session: any, gameId: string): Promise<void> {
+/**
+ * Mounts one game's whole chrome (top bar, engine/board tree, chat+notes) into `slot`, and returns
+ * a `dispose()` that tears every bit of it back down again: Vue instances, Supabase realtime
+ * channels, the seat-heartbeat interval, and the resync `visibilitychange` listener. Originally this
+ * was `launchGame` itself, built to run exactly once per real page load with the browser tab's own
+ * teardown doing the cleanup - the left-menu in-app game switch (GameNavPanel.vue, `launchGame`
+ * below) needs to call it again without a reload, so every subscription/timer/listener it opens now
+ * has to be closeable instead of leaking into the next game.
+ */
+async function mountGameInstance(
+  root: Element,
+  slot: Element,
+  client: SupabaseClient,
+  session: any,
+  gameId: string
+): Promise<() => void> {
+  const cleanups: Array<() => void> = [];
   const barEl = document.createElement("div");
   // Vue's initial `$mount(selector)` replaces the target element outright (attributes
   // and inline styles included), so hiding "#hosted-game" itself is a no-op once
@@ -53,9 +70,9 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
   const loadingEl = document.createElement("div");
   loadingEl.className = "text-muted text-center py-5";
   loadingEl.textContent = "Loading game…";
-  root.appendChild(barEl);
-  root.appendChild(loadingEl);
-  root.appendChild(gameWrapperEl);
+  slot.appendChild(barEl);
+  slot.appendChild(loadingEl);
+  slot.appendChild(gameWrapperEl);
 
   // Created before `bar` so HostedBar.vue can embed <TurnOrder /> (PROGRESS.md Gaia 10) sharing
   // the SAME store as the Game tree below - TurnOrder
@@ -72,19 +89,30 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
   // measures the mobile sticky action/premove bar's own live height itself to avoid overlapping
   // it - see ChatNotesPanel.vue's `startStickyBarWatch`), so it doesn't need to share HostedBar's
   // layout or store.
-  const chatNotesRoot = mountChild(root, ChatNotesPanel, { client, gameId, userId: session.user.id });
+  const chatNotesRoot = mountChild(slot, ChatNotesPanel, { client, gameId, userId: session.user.id });
   const chatNotes = chatNotesRoot.$children[0] as any;
+  // ChatNotesPanel.vue's own content/behavior is untouched (owner's explicit "keep it as is") - its
+  // panel is `position: fixed`, so it floats OVER whatever's underneath rather than participating in
+  // layout. Toggling a class on the page root and reserving the same width via CSS padding (see
+  // frontend.scss's `#app.chat-notes-open`, desktop-only) makes the game area itself shrink out of
+  // the way instead, so the two no longer overlap.
+  const chatOpenUnwatch = chatNotes.$watch("open", (open: boolean) => {
+    root.classList.toggle("chat-notes-open", open);
+  });
+  root.classList.remove("chat-notes-open");
+  cleanups.push(chatOpenUnwatch, () => root.classList.remove("chat-notes-open"));
   // Feed the game's own presence roster (already tracked below via `trackPresence(..., {type:
   // "game", gameId}, ...)`, which lands in `emitter.store.state.presence`) into the chat's
   // per-message status dots, instead of ChatNotesPanel opening its own second Presence channel -
   // same reasoning as LobbyChatPanel's own presence fix (see PROGRESS.md).
   chatNotes.presenceState = emitter.store.state.presence;
-  emitter.store.watch(
+  const unwatchPresence = emitter.store.watch(
     (state: any) => state.presence,
     (presence: unknown) => {
       chatNotes.presenceState = presence;
     }
   );
+  cleanups.push(unwatchPresence);
 
   const bar = new Vue({
     store: emitter.store,
@@ -180,6 +208,19 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
     }
   );
 
+  const disposeMounted = () => {
+    for (const fn of cleanups.splice(0).reverse()) {
+      try {
+        fn();
+      } catch {
+        // best-effort teardown - a failure here shouldn't block switching away from this game.
+      }
+    }
+    bar.$destroy();
+    chatNotesRoot.$destroy();
+    emitter.app.$destroy();
+  };
+
   try {
     await host.load();
   } catch (err) {
@@ -188,9 +229,9 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
     const alert = document.createElement("div");
     alert.className = "alert alert-danger m-3";
     alert.textContent = `Could not load this game: ${message}`;
-    root.insertBefore(alert, barEl);
+    slot.insertBefore(alert, barEl);
     console.error("[hosted] game load failed", err);
-    return;
+    return disposeMounted;
   }
 
   mySeats = host.mySeats(session.user.id, session.user.email);
@@ -201,7 +242,10 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
   // gameId exists, so it's started here too rather than earlier.
   emitter.emit("seatUsers", Object.fromEntries(host.players.map((p) => [p.seat, p.user_id])));
   emitter.emit("seatLastActive", Object.fromEntries(host.players.map((p) => [p.seat, p.last_active_at ?? null])));
-  trackPresence(client, session.user.id, { type: "game", gameId }, (state) => emitter.emit("presence", state));
+  const stopTrackingPresence = trackPresence(client, session.user.id, { type: "game", gameId }, (state) =>
+    emitter.emit("presence", state)
+  );
+  cleanups.push(stopTrackingPresence);
 
   // Seat locking happens inside onState via seatToLock (launcher.ts "player"
   // -> store.state.player -> Game.vue's canPlay): a user with SOME seats is
@@ -242,11 +286,12 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
     }
   };
   pushAutoCharge();
-  emitter.store.subscribe(({ type, payload }: { type: string; payload: any }) => {
+  const unsubAutoCharge = emitter.store.subscribe(({ type, payload }: { type: string; payload: any }) => {
     if (type === "preferences" && payload && "autoChargePower" in payload) {
       pushAutoCharge();
     }
   });
+  cleanups.push(unsubAutoCharge);
 
   // host.resync()'s own promise was previously left unawaited/uncaught at both call sites below -
   // a resync attempted right as a backgrounded tab/PWA resumes (or a realtime channel reconnects)
@@ -265,7 +310,7 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
   // The first SUBSCRIBED fires right after load and would be a redundant
   // resync; only catch up on RE-subscribes (dropped connection recovered).
   let subscribedOnce = false;
-  subscribeMoves(
+  const stopSubscribingMoves = subscribeMoves(
     client,
     gameId,
     (row) => host.applyRemoteMove(row),
@@ -276,6 +321,7 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
       subscribedOnce = true;
     }
   );
+  cleanups.push(stopSubscribingMoves);
 
   // Heartbeat (Gaia 9, PROGRESS.md) - lets the server-side `notify` function tell "has the game
   // open right now" apart from "merely subscribed to realtime," so it can skip the redundant push
@@ -295,14 +341,80 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
     }
   };
   markSeatsActive();
-  setInterval(markSeatsActive, 20_000);
+  const heartbeatInterval = setInterval(markSeatsActive, 20_000);
+  cleanups.push(() => clearInterval(heartbeatInterval));
 
-  document.addEventListener("visibilitychange", () => {
+  const visibilityListener = () => {
     if (document.visibilityState === "visible") {
       resyncWithRetry();
       markSeatsActive();
     }
+  };
+  document.addEventListener("visibilitychange", visibilityListener);
+  cleanups.push(() => document.removeEventListener("visibilitychange", visibilityListener));
+
+  return disposeMounted;
+}
+
+/**
+ * Owns the in-game left menu (GameNavPanel.vue) and the currently-mounted game instance, so
+ * clicking one of your other games there swaps the board in place instead of a full page reload:
+ * tear down the old `mountGameInstance` (realtime channels, timers, Vue trees) via its returned
+ * `dispose()`, wipe the slot, mount the new gameId, and update the URL with `pushState` (browser
+ * back/forward wired via `popstate` below) rather than `location.assign`, which would defeat the
+ * whole point by reloading the page. Switches are serialized through `switchChain` so a rapid
+ * double-click can't overlap two in-flight `mountGameInstance` calls against the same slot.
+ */
+async function launchGame(root: Element, client: SupabaseClient, session: any, initialGameId: string): Promise<void> {
+  const slot = document.createElement("div");
+  root.appendChild(slot);
+
+  const navRoot = mountChild(root, GameNavPanel, { client, session });
+  const nav = navRoot.$children[0] as any;
+  nav.$watch("open", (open: boolean) => root.classList.toggle("game-nav-open", open));
+
+  let currentGameId = initialGameId;
+  let dispose: (() => void) | null = null;
+  let switchChain: Promise<void> = Promise.resolve();
+
+  const swapTo = (gameId: string) => {
+    switchChain = switchChain.then(async () => {
+      if (dispose) {
+        dispose();
+        dispose = null;
+      }
+      slot.innerHTML = "";
+      currentGameId = gameId;
+      nav.currentGameId = gameId;
+      dispose = await mountGameInstance(root, slot, client, session, gameId);
+    });
+    return switchChain;
+  };
+
+  nav.currentGameId = currentGameId;
+  nav.$on("select-game", (gameId: string) => {
+    if (gameId === currentGameId) {
+      return;
+    }
+    history.pushState({}, "", `?game=${gameId}`);
+    swapTo(gameId);
   });
+
+  // Browser back/forward after an in-app switch (pushState above) - `location.search` is already
+  // updated by the time `popstate` fires, so just read it back. Backing all the way out of `?game=`
+  // entirely (e.g. to the lobby) isn't something this in-app switcher routes - only a fresh load
+  // does - so fall back to a real reload for just that case rather than leaving a stale game
+  // mounted under a URL that no longer says so.
+  window.addEventListener("popstate", () => {
+    const gameId = new URLSearchParams(window.location.search).get("game");
+    if (!gameId) {
+      window.location.reload();
+    } else if (gameId !== currentGameId) {
+      swapTo(gameId);
+    }
+  });
+
+  await swapTo(initialGameId);
 }
 
 export default async function launchHosted(selector = "#app"): Promise<void> {

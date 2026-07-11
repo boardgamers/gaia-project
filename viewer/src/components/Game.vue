@@ -50,25 +50,26 @@
               :action="action"
             />
           </svg>
+          <!-- Stacked directly below the research board in normal document flow (same column,
+               not a separate Bootstrap row) so it hugs the power/QIC action row's actual bottom
+               edge at every viewport width - a separate row below would only start once BOTH
+               columns of the row above finished, so whenever the map (a different aspect ratio,
+               independently resizing) ended up taller than the research board, a resize-dependent
+               gap opened up above the ships with nothing anchoring them to the research board
+               specifically. Mobile is unaffected: research board and ships already rendered in
+               this order (map, then research, then ships) once the row above wraps. -->
+          <LostFleetShips v-if="engine.options.lostFleet" class="mt-2" />
         </div>
-      </div>
-      <div class="row mt-2" v-if="engine.options.lostFleet">
-        <!-- Mobile (below the col-md breakpoint) keeps its existing plain full-width `col-12` -
-             untouched from before this change. From md upward, `col-md-5 offset-md-7` (the exact
-             same fraction/offset as the research-board sidebar's own `col-md-5` above) narrows this
-             to sit directly under that sidebar instead of spanning the whole row - which is also
-             what was making the ship boards render abnormally large on desktop: they were scaling
-             their unconditional 2-column grid (LostFleetShips.vue's own CSS, shared with mobile and
-             deliberately left untouched here) up to the *entire* row's width instead of just the
-             sidebar's ~5/12 share of it. -->
-        <LostFleetShips class="col-12 col-md-5 offset-md-7" />
       </div>
       <div class="row mt-2">
         <!-- Turn Order used to live in this row (col-md-4, order-flipped against this column on
              mobile) - it's now a banner at the very top of the page instead (Game.vue's
-             turn-order-banner, PROGRESS.md Gaia 9), so this column is the row's only content and
-             just takes the full width on every viewport. -->
-        <div class="col-12">
+             turn-order-banner, PROGRESS.md Gaia 9). On desktop, a Lost Fleet game narrows this
+             column to match the map's own `col-md-7` (`commandsColumnClass`) instead of stretching
+             full-width under the research track too - the ship boards live in the research column
+             above now (see the map+research row), not here, so this row's remaining col-md-5 is
+             simply left empty on desktop. -->
+        <div :class="commandsColumnClass">
           <div v-if="premoveMode" class="alert alert-info premove-banner">
             <strong>{{ premoveEditSeq !== null ? "EDITING PREMOVE" : "PREMOVE" }}</strong> — plays automatically on
             your turn.
@@ -462,6 +463,13 @@ export default class Game extends Vue {
 
   get orderedPlayers(): Player[] {
     return orderedPlayers(this.engine);
+  }
+
+  // Lost Fleet only, desktop only (see the template comment by its usage) - narrows the buttons
+  // column to match the map's own col-md-7 and orders it ahead of the ship boards, instead of the
+  // plain full-width col-12 every other game mode still uses.
+  get commandsColumnClass(): string[] {
+    return this.engine.options.lostFleet ? ["order-2", "order-md-1", "col-12", "col-md-7"] : ["col-12"];
   }
 
   get canPlay() {
