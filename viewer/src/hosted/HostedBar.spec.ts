@@ -1,8 +1,24 @@
 import Engine from "@gaia-project/engine";
-import { render } from "@testing-library/vue";
+import { fireEvent, render } from "@testing-library/vue";
 import { expect } from "chai";
 import { makeStore } from "../store";
 import HostedBar from "./HostedBar.vue";
+
+function mockDesktopViewport(matches: boolean) {
+  const previous = window.matchMedia;
+  (window as any).matchMedia = (query: string) => ({
+    media: query,
+    matches,
+    addListener: () => undefined,
+    removeListener: () => undefined,
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+    dispatchEvent: () => false,
+  });
+  return () => {
+    (window as any).matchMedia = previous;
+  };
+}
 
 describe("HostedBar", () => {
   it("renders Turn Order for an ongoing game without a duplicate turn-status badge", () => {
@@ -50,5 +66,50 @@ describe("HostedBar", () => {
     const { queryByText } = render(HostedBar, { props: { finished: false }, store });
 
     expect(queryByText("Credits")).to.equal(null);
+  });
+
+  it("shows chat/game-menu panel toggles only on desktop, never on mobile", async () => {
+    const engine = new Engine(["init 2 hosted-bar-desktop", "p1 faction terrans", "p2 faction hadsch-hallas"]);
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const restoreDesktop = mockDesktopViewport(true);
+    const desktop = render(HostedBar, {
+      props: { finished: false, chatPanelOpen: true, gameNavPanelOpen: false },
+      store,
+    });
+    expect(desktop.queryByText("Hide chat panel")).to.not.equal(null);
+    expect(desktop.queryByText("Show game menu panel")).to.not.equal(null);
+    desktop.unmount();
+    restoreDesktop();
+
+    const restoreMobile = mockDesktopViewport(false);
+    const mobile = render(HostedBar, {
+      props: { finished: false, chatPanelOpen: true, gameNavPanelOpen: false },
+      store,
+    });
+    expect(mobile.queryByText(/chat panel/)).to.equal(null);
+    expect(mobile.queryByText(/game menu panel/)).to.equal(null);
+    mobile.unmount();
+    restoreMobile();
+  });
+
+  it("emits toggle-chat-panel and toggle-game-nav-panel when their settings items are clicked", async () => {
+    const engine = new Engine(["init 2 hosted-bar-toggle-events", "p1 faction terrans", "p2 faction hadsch-hallas"]);
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const restoreDesktop = mockDesktopViewport(true);
+    const { getByText, emitted } = render(HostedBar, {
+      props: { finished: false, chatPanelOpen: true, gameNavPanelOpen: true },
+      store,
+    });
+
+    await fireEvent.click(getByText("Hide chat panel"));
+    await fireEvent.click(getByText("Hide game menu panel"));
+
+    expect(emitted()["toggle-chat-panel"]).to.have.lengthOf(1);
+    expect(emitted()["toggle-game-nav-panel"]).to.have.lengthOf(1);
+    restoreDesktop();
   });
 });

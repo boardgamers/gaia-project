@@ -51,6 +51,15 @@
         <b-dropdown-item-button @click="toggleDarkMode">{{
           isDarkMode ? "Light mode" : "Dark mode"
         }}</b-dropdown-item-button>
+        <template v-if="isDesktop">
+          <b-dropdown-divider></b-dropdown-divider>
+          <b-dropdown-item-button @click="$emit('toggle-chat-panel')">{{
+            chatPanelOpen ? "Hide chat panel" : "Show chat panel"
+          }}</b-dropdown-item-button>
+          <b-dropdown-item-button @click="$emit('toggle-game-nav-panel')">{{
+            gameNavPanelOpen ? "Hide game menu panel" : "Show game menu panel"
+          }}</b-dropdown-item-button>
+        </template>
         <b-dropdown-divider></b-dropdown-divider>
         <b-dropdown-item-button v-if="!abandoned" @click="confirmAbandon">Abandon game</b-dropdown-item-button>
       </b-dropdown>
@@ -62,6 +71,7 @@
 import Vue from "vue";
 import TurnOrder from "../components/TurnOrder.vue";
 import { getTheme, toggleTheme } from "./theme";
+import { isDesktopViewport, watchDesktopViewport } from "./viewport";
 
 export default Vue.extend({
   name: "HostedBar",
@@ -72,11 +82,33 @@ export default Vue.extend({
     pushBusy: { type: Boolean, default: false },
     pushEnabled: { type: Boolean, default: false },
     abandoned: { type: Boolean, default: false },
+    // Reflect ChatNotesPanel.vue's/GameNavPanel.vue's own `open` state so the menu item's label
+    // ("Hide"/"Show") stays accurate - hosted.ts watches those panels' instances directly and
+    // updates these props, same pattern as `gameName`/`finished` above.
+    chatPanelOpen: { type: Boolean, default: false },
+    gameNavPanelOpen: { type: Boolean, default: false },
   },
   data() {
     return {
       isDarkMode: getTheme() === "dark",
+      // Only desktop has docked, default-open side panels worth a settings-menu switch - mobile's
+      // panels are always closed behind their own floating toggles, so a switch for them would
+      // control a state mobile users never see. Re-evaluated on every breakpoint crossing so
+      // resizing the browser window doesn't leave a stale entry showing.
+      isDesktop: isDesktopViewport(),
+      viewportUnwatch: null as (() => void) | null,
     };
+  },
+  mounted() {
+    this.viewportUnwatch = watchDesktopViewport((isDesktop) => {
+      this.isDesktop = isDesktop;
+    });
+  },
+  beforeDestroy() {
+    if (this.viewportUnwatch) {
+      this.viewportUnwatch();
+      this.viewportUnwatch = null;
+    }
   },
   methods: {
     toggleDarkMode() {

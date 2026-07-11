@@ -1,9 +1,10 @@
 <template>
   <div class="game-nav gaia-viewer-game">
     <button
+      v-if="!isDesktop"
       type="button"
       class="game-nav__toggle"
-      @click="open = !open"
+      @click="toggleOpen"
       :aria-label="open ? 'Close game menu' : 'Open game menu'"
     >
       <span aria-hidden="true">&#9776;</span>
@@ -12,7 +13,7 @@
     <div v-if="open" class="game-nav__panel">
       <div class="game-nav__header">
         <a href="?create=1" class="btn btn-primary btn-sm">+ New game</a>
-        <button type="button" class="game-nav__close" @click="open = false" aria-label="Close">&times;</button>
+        <button type="button" class="game-nav__close" @click="setOpen(false)" aria-label="Close">&times;</button>
       </div>
 
       <div class="game-nav__tabs" role="tablist" aria-label="Game status tabs">
@@ -69,6 +70,27 @@
 
 <script lang="ts">
 import Vue from "vue";
+import { isDesktopViewport, watchDesktopViewport } from "./viewport";
+
+const OPEN_PREF_KEY = "game-nav-panel-open";
+
+// Desktop-only preference (owner request: docked side panels default open on desktop, with a
+// settings-menu switch to turn them off; mobile never reads or writes this - it always starts
+// closed behind its own floating toggle, see `isDesktop` below). Defaults to open (true) so a
+// desktop user who never touched the setting still gets the docked panel.
+function loadOpenPreference(): boolean {
+  if (typeof window === "undefined") {
+    return true;
+  }
+  const stored = window.localStorage.getItem(OPEN_PREF_KEY);
+  return stored === null ? true : stored === "1";
+}
+
+function saveOpenPreference(open: boolean): void {
+  if (typeof window !== "undefined") {
+    window.localStorage.setItem(OPEN_PREF_KEY, open ? "1" : "0");
+  }
+}
 
 /** Collapsible left-side main menu (owner's brief: "browse my games, lobby active games, finished
  * games... basically just be that main menu"), mirroring ChatNotesPanel.vue's own floating-toggle
@@ -77,7 +99,16 @@ import Vue from "vue";
  * credits, nickname modal, admin delete-swipe) that has no place in an in-game side menu. Clicking
  * an active/finished game emits `select-game` so hosted.ts can swap the game in place (no reload);
  * open-lobby rows and "+ New game" still do a real navigation (join/create both have their own
- * dedicated flows, no need to reproduce them here). */
+ * dedicated flows, no need to reproduce them here).
+ *
+ * Desktop vs. mobile are genuinely different UIs here, not just a CSS reflow: on desktop this is a
+ * docked panel that defaults open and is toggled from HostedBar.vue's settings menu (`toggleOpen`,
+ * called externally via the mounted instance - same "hold the instance, assign into it" pattern
+ * `hosted.ts` already uses); on mobile it's always closed until the floating `☰` toggle is tapped,
+ * opening as a full-screen overlay, with no settings-menu entry at all (there's nothing to toggle -
+ * it's never "on" by default). `isDesktop` is re-evaluated on every breakpoint crossing
+ * (`watchDesktopViewport`) so resizing a browser window or rotating a tablet doesn't leave it
+ * stuck in the wrong mode. */
 export default Vue.extend({
   name: "GameNavPanel",
   props: {
@@ -85,12 +116,15 @@ export default Vue.extend({
     session: { type: Object, required: true },
   },
   data() {
+    const isDesktop = isDesktopViewport();
     return {
-      open: false,
+      isDesktop,
+      open: isDesktop && loadOpenPreference(),
       tab: "active" as "active" | "open" | "finished",
       games: [] as any[],
       loading: true,
       gamesChannel: null as any,
+      viewportUnwatch: null as (() => void) | null,
       // Not a prop - hosted.ts sets this directly on the mounted instance whenever the in-app game
       // switch lands (same "hold the instance, assign into it" pattern already used for
       // `chatNotes.presenceState` in launchGame), since there's no parent template re-passing it.
@@ -108,14 +142,10 @@ export default Vue.extend({
       return this.sortGames((this.games as any[]).filter((game) => game.status === "open"));
     },
     myActiveGames(): any[] {
-      return this.sortGames(
-        (this.games as any[]).filter((game) => game.status === "active" && this.isMyGame(game))
-      );
+      return this.sortGames((this.games as any[]).filter((game) => game.status === "active" && this.isMyGame(game)));
     },
     myFinishedGames(): any[] {
-      return this.sortGames(
-        (this.games as any[]).filter((game) => game.status === "finished" && this.isMyGame(game))
-      );
+      return this.sortGames((this.games as any[]).filter((game) => game.status === "finished" && this.isMyGame(game)));
     },
     visibleGames(): any[] {
       if (this.tab === "open") {
@@ -133,14 +163,31 @@ export default Vue.extend({
   created() {
     this.refresh();
     this.subscribeGames();
+    this.viewportUnwatch = watchDesktopViewport((isDesktop) => {
+      this.isDesktop = isDesktop;
+      this.open = isDesktop && loadOpenPreference();
+    });
   },
   beforeDestroy() {
     if (this.gamesChannel) {
       (this.client as any).removeChannel(this.gamesChannel);
       this.gamesChannel = null;
     }
+    if (this.viewportUnwatch) {
+      this.viewportUnwatch();
+      this.viewportUnwatch = null;
+    }
   },
   methods: {
+    setOpen(open: boolean) {
+      this.open = open;
+      if (this.isDesktop) {
+        saveOpenPreference(open);
+      }
+    },
+    toggleOpen() {
+      this.setOpen(!this.open);
+    },
     async refresh() {
       this.loading = true;
       const { data, error } = await (this.client as any)
@@ -198,11 +245,23 @@ export default Vue.extend({
       // normal `?preview=` join flow, which has its own dedicated screen this menu doesn't
       // reproduce. A modifier-clicked link (open in new tab, etc.) must still behave like a real
       // link, so only intercept a plain left click.
-      if (this.tab === "open" || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      if (
+        this.tab === "open" ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      ) {
         return;
       }
       event.preventDefault();
-      this.open = false;
+      // Mobile's panel is a full-screen overlay - picking a game must close it to reveal the
+      // board underneath. Desktop's docked panel stays open (it doesn't cover anything), matching
+      // a typical persistent app-shell side menu.
+      if (!this.isDesktop) {
+        this.setOpen(false);
+      }
       this.$emit("select-game", game.id);
     },
   },

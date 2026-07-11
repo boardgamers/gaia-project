@@ -52,7 +52,8 @@ async function mountGameInstance(
   slot: Element,
   client: SupabaseClient,
   session: any,
-  gameId: string
+  gameId: string,
+  nav: any
 ): Promise<() => void> {
   const cleanups: Array<() => void> = [];
   const barEl = document.createElement("div");
@@ -98,9 +99,18 @@ async function mountGameInstance(
   // the way instead, so the two no longer overlap.
   const chatOpenUnwatch = chatNotes.$watch("open", (open: boolean) => {
     root.classList.toggle("chat-notes-open", open);
+    bar.chatPanelOpen = open;
   });
   root.classList.remove("chat-notes-open");
   cleanups.push(chatOpenUnwatch, () => root.classList.remove("chat-notes-open"));
+  // GameNavPanel.vue (`nav`) is mounted once at the `launchGame` level, not per-game like `bar`
+  // above (it needs to survive an in-app game switch) - HostedBar.vue's settings-menu label still
+  // needs its live `open` state on every re-mounted `bar`, so watch it here and clean up on
+  // dispose rather than leaving a watcher from a torn-down `bar` still firing.
+  const gameNavOpenUnwatch = nav.$watch("open", (open: boolean) => {
+    bar.gameNavPanelOpen = open;
+  });
+  cleanups.push(gameNavOpenUnwatch);
   // Feed the game's own presence roster (already tracked below via `trackPresence(..., {type:
   // "game", gameId}, ...)`, which lands in `emitter.store.state.presence`) into the chat's
   // per-message status dots, instead of ChatNotesPanel opening its own second Presence channel -
@@ -122,6 +132,8 @@ async function mountGameInstance(
       pushBusy: false,
       pushEnabled: false,
       abandoned: false,
+      chatPanelOpen: chatNotes.open,
+      gameNavPanelOpen: nav.open,
     },
     render(h) {
       return h(HostedBar, {
@@ -147,6 +159,8 @@ async function mountGameInstance(
               bar.abandoned = true;
             }
           },
+          "toggle-chat-panel": () => chatNotes.toggleOpen(),
+          "toggle-game-nav-panel": () => nav.toggleOpen(),
         },
       });
     },
@@ -386,7 +400,7 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, i
       slot.innerHTML = "";
       currentGameId = gameId;
       nav.currentGameId = gameId;
-      dispose = await mountGameInstance(root, slot, client, session, gameId);
+      dispose = await mountGameInstance(root, slot, client, session, gameId, nav);
     });
     return switchChain;
   };

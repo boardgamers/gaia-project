@@ -12,3 +12,29 @@ export function setViewportZoomLocked(locked: boolean): void {
     meta.setAttribute("content", locked ? ZOOM_LOCKED : ZOOM_DEFAULT);
   }
 }
+
+// Matches frontend.scss's `@media (min-width: 768px)` / every component's own `(max-width:
+// 767px)` mobile breakpoint - kept as a single source of truth so a real desktop/mobile *layout*
+// decision (docked-and-default-open side panels vs. floating-toggle overlays) can be made in JS,
+// not just CSS. Never returns true outside a browser (SSR/tests without matchMedia) - "assume
+// mobile" is the safe default for anything that only differs by adding a desktop-only affordance.
+const DESKTOP_MEDIA_QUERY = "(min-width: 768px)";
+
+export function isDesktopViewport(): boolean {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    return false;
+  }
+  return window.matchMedia(DESKTOP_MEDIA_QUERY).matches;
+}
+
+// Fires `callback` only when the viewport actually crosses the desktop/mobile breakpoint (window
+// resize, tablet rotation) - not on every resize event. Returns an unsubscribe function.
+export function watchDesktopViewport(callback: (isDesktop: boolean) => void): () => void {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    return () => undefined;
+  }
+  const mql = window.matchMedia(DESKTOP_MEDIA_QUERY);
+  const listener = (event: MediaQueryListEvent) => callback(event.matches);
+  mql.addEventListener("change", listener);
+  return () => mql.removeEventListener("change", listener);
+}

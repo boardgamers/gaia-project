@@ -7,7 +7,7 @@
 > anything else, including the **Testing — required going forward** section it points to — both
 > are standing process, not optional. Then ask the user "what next?" and use the **Next actions**
 > section below to guide them.
-> Last updated: **2026-07-11** (revert of default-open panels/settings toggles, #98).
+> Last updated: **2026-07-11** (desktop-only side panels redone with a real viewport split, #99).
 
 ## Working agreements (read every session, not optional)
 
@@ -3965,6 +3965,28 @@ e83a1ba`) rather than patching forward, restoring the pre-change floating-toggle
     `update-viewer-release.js`). If desktop-only side panels are wanted again, they need to be
     built so mobile's `ChatNotesPanel`/`GameNavPanel` are untouched and no settings toggle is
     exposed for something mobile users never see.
+99. ✅ **Redid the desktop-only side panels properly (2026-07-11, same day), this time with a real
+    viewport split instead of shared component state.** New `viewport.ts` exports
+    `isDesktopViewport()`/`watchDesktopViewport()`, a JS-level check matching the existing
+    `min-width: 768px` CSS breakpoint (frontend.scss's `#app.chat-notes-open`/`#app.game-nav-open`
+    reservation already used that number). `ChatNotesPanel.vue` and `GameNavPanel.vue` each read it
+    at mount and re-read it on every breakpoint crossing: **desktop** gets a docked panel that
+    defaults open (a per-panel `localStorage` preference, `chat-notes-panel-open`/
+    `game-nav-panel-open`), no floating toggle bubble/hamburger (closed instead via each panel's own
+    header `×`), and stays open after picking a game from the nav list (nothing to cover on a docked
+    panel). **Mobile is untouched**: always starts closed, only the floating toggle opens it as a
+    full-screen overlay, picking a game still auto-closes it, and it never reads/writes the
+    `localStorage` preference. `HostedBar.vue`'s settings menu gets two new desktop-only items
+    ("Hide/Show chat panel", "Hide/Show game menu panel", labels driven by `chatPanelOpen`/
+    `gameNavPanelOpen` props hosted.ts keeps in sync via `$watch`) that call each panel's new
+    `toggleOpen()` directly on the mounted instance (GameNavPanel.vue's instance now threaded
+    through `mountGameInstance`'s new `nav` parameter, since it's mounted once at the `launchGame`
+    level and outlives any one game's `HostedBar`) - the items are absent entirely on mobile, not
+    just hidden, since `HostedBar` independently checks `isDesktop` itself. 10 new specs (3
+    `GameNavPanel`, 2 `ChatNotesPanel`, 2 `HostedBar`, 3 new `viewport.spec.ts`) cover both
+    breakpoints with a shared `matchMedia` mock helper; full suite at 425/425 passing viewer specs
+    (up from 415 baseline) plus the same 31-34 pre-existing/flaky engine-test failures confirmed
+    unrelated in #98. Released as v5.27.0.
 
 ## Still MISSING — only one art-only item left
 

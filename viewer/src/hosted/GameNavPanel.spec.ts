@@ -6,8 +6,29 @@ import GameNavPanel from "./GameNavPanel.vue";
 
 Vue.use(BootstrapVue);
 
+function mockDesktopViewport(matches: boolean) {
+  const previous = window.matchMedia;
+  (window as any).matchMedia = (query: string) => ({
+    media: query,
+    matches,
+    addListener: () => undefined,
+    removeListener: () => undefined,
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+    dispatchEvent: () => false,
+  });
+  return () => {
+    (window as any).matchMedia = previous;
+  };
+}
+
 describe("GameNavPanel", () => {
   const session = { user: { id: "user-me", email: "me@example.com" } } as any;
+  const OPEN_PREF_KEY = "game-nav-panel-open";
+
+  afterEach(() => {
+    window.localStorage.removeItem(OPEN_PREF_KEY);
+  });
 
   function makeClient(games: any[]) {
     let removedChannel: any = null;
@@ -46,7 +67,10 @@ describe("GameNavPanel", () => {
       current_seat: 0,
       created_at: "2026-07-01T00:00:00Z",
       latest_move_committed_at: "2026-07-01T00:00:00Z",
-      players: [{ seat: 0, user_id: "user-me" }, { seat: 1, user_id: "user-other" }],
+      players: [
+        { seat: 0, user_id: "user-me" },
+        { seat: 1, user_id: "user-other" },
+      ],
       ...overrides,
     };
   }
@@ -102,5 +126,70 @@ describe("GameNavPanel", () => {
     await Vue.nextTick();
     wrapper.destroy();
     expect(client.removedChannel).to.not.equal(null);
+  });
+
+  it("defaults to open with no floating toggle on desktop, closed with a toggle on mobile", async () => {
+    const restoreDesktop = mockDesktopViewport(true);
+    const desktopWrapper = mount(GameNavPanel as any, { propsData: { client: makeClient([]), session } });
+    await Vue.nextTick();
+    expect((desktopWrapper.vm as any).open).to.equal(true);
+    expect(desktopWrapper.find("button.game-nav__toggle").exists()).to.equal(false);
+    desktopWrapper.destroy();
+    restoreDesktop();
+
+    const restoreMobile = mockDesktopViewport(false);
+    const mobileWrapper = mount(GameNavPanel as any, { propsData: { client: makeClient([]), session } });
+    await Vue.nextTick();
+    expect((mobileWrapper.vm as any).open).to.equal(false);
+    expect(mobileWrapper.find("button.game-nav__toggle").exists()).to.equal(true);
+    mobileWrapper.destroy();
+    restoreMobile();
+  });
+
+  it("persists the closed preference on desktop and honors it on the next mount, but never applies it on mobile", async () => {
+    const restoreDesktop = mockDesktopViewport(true);
+    const wrapper = mount(GameNavPanel as any, { propsData: { client: makeClient([]), session } });
+    await Vue.nextTick();
+    (wrapper.vm as any).setOpen(false);
+    await Vue.nextTick();
+    expect(window.localStorage.getItem(OPEN_PREF_KEY)).to.equal("0");
+    wrapper.destroy();
+
+    const reopened = mount(GameNavPanel as any, { propsData: { client: makeClient([]), session } });
+    await Vue.nextTick();
+    expect((reopened.vm as any).open).to.equal(false);
+    reopened.destroy();
+    restoreDesktop();
+
+    const restoreMobile = mockDesktopViewport(false);
+    const mobileWrapper = mount(GameNavPanel as any, { propsData: { client: makeClient([]), session } });
+    await Vue.nextTick();
+    expect((mobileWrapper.vm as any).open).to.equal(false);
+    mobileWrapper.destroy();
+    restoreMobile();
+  });
+
+  it("keeps the desktop panel open after selecting a game, but closes it on mobile", async () => {
+    const games = [game({ id: "my-turn", current_seat: 0 })];
+
+    const restoreDesktop = mockDesktopViewport(true);
+    const desktopWrapper = mount(GameNavPanel as any, { propsData: { client: makeClient(games), session } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+    await desktopWrapper.find("a.game-nav__row").trigger("click");
+    expect((desktopWrapper.vm as any).open).to.equal(true);
+    desktopWrapper.destroy();
+    restoreDesktop();
+
+    const restoreMobile = mockDesktopViewport(false);
+    const mobileWrapper = mount(GameNavPanel as any, { propsData: { client: makeClient(games), session } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+    (mobileWrapper.vm as any).open = true;
+    await Vue.nextTick();
+    await mobileWrapper.find("a.game-nav__row").trigger("click");
+    expect((mobileWrapper.vm as any).open).to.equal(false);
+    mobileWrapper.destroy();
+    restoreMobile();
   });
 });

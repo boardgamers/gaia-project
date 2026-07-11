@@ -1,7 +1,21 @@
 {
-  "version": "5.26.1",
+  "version": "5.27.0",
   "releasedAt": "2026-07-11",
   "entries": [
+    {
+      "version": "5.27.0",
+      "releasedAt": "2026-07-11",
+      "kind": "update",
+      "title": "Desktop side panels: docked, default-open, settings toggle",
+      "impact": "",
+      "changes": [
+        "On desktop, the chat and main-menu side panels are now docked next to the board and open by default, with a Settings-menu switch to hide either one",
+        "Split GameNavPanel.vue/ChatNotesPanel.vue/HostedBar.vue's panel behavior by a real JS viewport check (viewport.ts's isDesktopViewport/watchDesktopViewport, matching the existing 768px CSS breakpoint) instead of shared component state - mobile keeps its original floating-toggle/closed-by-default/no-settings-entry behavior untouched, desktop gets a per-panel localStorage open/closed preference and two new HostedBar settings-menu items that call each panel's toggleOpen()"
+      ],
+      "userChanges": [
+        "On desktop, the chat and main-menu side panels are now docked next to the board and open by default, with a Settings-menu switch to hide either one"
+      ]
+    },
     {
       "version": "5.26.1",
       "releasedAt": "2026-07-11",

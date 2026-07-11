@@ -1,6 +1,7 @@
 <template>
   <div class="chat-notes gaia-viewer-game">
     <button
+      v-if="!isDesktop"
       type="button"
       class="chat-notes__toggle"
       :class="{ 'chat-notes__toggle--unread': hasUnread }"
@@ -90,6 +91,7 @@ import Vue from "vue";
 import { fetchMyNickname } from "./profile";
 import { isOnline as isUserOnline, PresenceState } from "./presence";
 import { formatChatTime } from "./chat-time";
+import { isDesktopViewport, watchDesktopViewport } from "./viewport";
 
 interface ChatMessage {
   id: number;
@@ -104,9 +106,34 @@ type Tab = "chat" | "notes";
 
 const NOTES_SAVE_DEBOUNCE_MS = 1500;
 
+const OPEN_PREF_KEY = "chat-notes-panel-open";
+
+// Desktop-only preference, mirroring GameNavPanel.vue's own (see its doc comment) - mobile never
+// reads or writes this, it always starts closed behind the floating bubble.
+function loadOpenPreference(): boolean {
+  if (typeof window === "undefined") {
+    return true;
+  }
+  const stored = window.localStorage.getItem(OPEN_PREF_KEY);
+  return stored === null ? true : stored === "1";
+}
+
+function saveOpenPreference(open: boolean): void {
+  if (typeof window !== "undefined") {
+    window.localStorage.setItem(OPEN_PREF_KEY, open ? "1" : "0");
+  }
+}
+
 /** Per-game chat (visible to every approved user, players and spectators alike) plus private,
  * per-user notes - a floating toggle that opens a collapsible side panel on desktop or a
- * full-screen overlay on mobile (see the scoped media queries below), matching the owner's brief. */
+ * full-screen overlay on mobile (see the scoped media queries below), matching the owner's brief.
+ *
+ * Desktop and mobile are genuinely different UIs, not just a CSS reflow (see GameNavPanel.vue's
+ * doc comment for the same split on the opposite edge): on desktop this panel is docked and
+ * defaults open, toggled from HostedBar.vue's settings menu (`toggleOpen`, called externally via
+ * the mounted instance); on mobile there is no settings entry at all, only the floating bubble
+ * toggle below, and it always starts closed. `isDesktop` re-evaluates on every breakpoint
+ * crossing via `watchDesktopViewport`. */
 export default Vue.extend({
   name: "ChatNotesPanel",
   props: {
@@ -115,8 +142,10 @@ export default Vue.extend({
     userId: { type: String, required: true },
   },
   data() {
+    const isDesktop = isDesktopViewport();
     return {
-      open: false,
+      isDesktop,
+      open: isDesktop && loadOpenPreference(),
       tab: "chat" as Tab,
       messages: [] as ChatMessage[],
       draft: "",
@@ -142,6 +171,7 @@ export default Vue.extend({
       stickyBarPoll: null as ReturnType<typeof setInterval> | null,
       channel: null as any,
       notesSaveTimer: null as ReturnType<typeof setTimeout> | null,
+      viewportUnwatch: null as (() => void) | null,
     };
   },
   computed: {
@@ -161,8 +191,16 @@ export default Vue.extend({
     await this.loadMuted();
     this.subscribeChat();
     this.startStickyBarWatch();
+    this.viewportUnwatch = watchDesktopViewport((isDesktop) => {
+      this.isDesktop = isDesktop;
+      this.open = isDesktop && loadOpenPreference();
+    });
   },
   beforeDestroy() {
+    if (this.viewportUnwatch) {
+      this.viewportUnwatch();
+      this.viewportUnwatch = null;
+    }
     this.stickyBarObserver?.disconnect();
     if (this.stickyBarPoll) {
       clearInterval(this.stickyBarPoll);
@@ -327,12 +365,25 @@ export default Vue.extend({
         window.alert(`Could not update mute setting: ${error.message}`);
       }
     },
+    setOpen(open: boolean) {
+      this.open = open;
+      if (this.isDesktop) {
+        saveOpenPreference(open);
+      }
+    },
+    toggleOpen() {
+      if (this.open) {
+        this.closePanel();
+      } else {
+        this.openPanel(this.tab);
+      }
+    },
     openPanel(tab: Tab) {
-      this.open = true;
+      this.setOpen(true);
       this.switchTab(tab);
     },
     closePanel() {
-      this.open = false;
+      this.setOpen(false);
     },
     switchTab(tab: Tab) {
       this.tab = tab;

@@ -2,6 +2,22 @@ import { expect } from "chai";
 import { mount } from "@vue/test-utils";
 import ChatNotesPanel from "./ChatNotesPanel.vue";
 
+function mockDesktopViewport(matches: boolean) {
+  const previous = window.matchMedia;
+  (window as any).matchMedia = (query: string) => ({
+    media: query,
+    matches,
+    addListener: () => undefined,
+    removeListener: () => undefined,
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+    dispatchEvent: () => false,
+  });
+  return () => {
+    (window as any).matchMedia = previous;
+  };
+}
+
 describe("ChatNotesPanel", () => {
   function makeClient(opts: { messages?: any[]; nickname?: string; noteBody?: string; muted?: boolean } = {}) {
     const messages = opts.messages ?? [];
@@ -264,4 +280,57 @@ describe("ChatNotesPanel", () => {
   async function Vue_nextTick(wrapper: any) {
     await wrapper.vm.$nextTick();
   }
+
+  it("defaults to open with no floating toggle on desktop, closed with a toggle on mobile", async () => {
+    const restoreDesktop = mockDesktopViewport(true);
+    const desktopWrapper = mount(ChatNotesPanel as any, {
+      propsData: { client: makeClient(), gameId: "game-1", userId: "user-1" },
+    });
+    await Vue_nextTick(desktopWrapper);
+    expect((desktopWrapper.vm as any).open).to.equal(true);
+    expect(desktopWrapper.find(".chat-notes__panel").exists()).to.equal(true);
+    expect(desktopWrapper.find(".chat-notes__toggle").exists()).to.equal(false);
+    desktopWrapper.destroy();
+    restoreDesktop();
+
+    const restoreMobile = mockDesktopViewport(false);
+    const mobileWrapper = mount(ChatNotesPanel as any, {
+      propsData: { client: makeClient(), gameId: "game-1", userId: "user-1" },
+    });
+    await Vue_nextTick(mobileWrapper);
+    expect((mobileWrapper.vm as any).open).to.equal(false);
+    expect(mobileWrapper.find(".chat-notes__toggle").exists()).to.equal(true);
+    mobileWrapper.destroy();
+    restoreMobile();
+  });
+
+  it("persists the closed preference on desktop and honors it on the next mount, but never applies it on mobile", async () => {
+    const restoreDesktop = mockDesktopViewport(true);
+    const wrapper = mount(ChatNotesPanel as any, {
+      propsData: { client: makeClient(), gameId: "game-1", userId: "user-1" },
+    });
+    await Vue_nextTick(wrapper);
+    (wrapper.vm as any).toggleOpen();
+    await Vue_nextTick(wrapper);
+    expect((wrapper.vm as any).open).to.equal(false);
+    expect(window.localStorage.getItem("chat-notes-panel-open")).to.equal("0");
+    wrapper.destroy();
+
+    const reopened = mount(ChatNotesPanel as any, {
+      propsData: { client: makeClient(), gameId: "game-1", userId: "user-1" },
+    });
+    await Vue_nextTick(reopened);
+    expect((reopened.vm as any).open).to.equal(false);
+    reopened.destroy();
+    restoreDesktop();
+
+    const restoreMobile = mockDesktopViewport(false);
+    const mobileWrapper = mount(ChatNotesPanel as any, {
+      propsData: { client: makeClient(), gameId: "game-1", userId: "user-1" },
+    });
+    await Vue_nextTick(mobileWrapper);
+    expect((mobileWrapper.vm as any).open).to.equal(false);
+    mobileWrapper.destroy();
+    restoreMobile();
+  });
 });
