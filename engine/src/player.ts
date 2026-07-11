@@ -926,6 +926,8 @@ export default class Player extends EventEmitter {
         Phase.RoundGaia
       );
     }
+    // Reset in lockstep with gaiaformersInGaia (see its own comment) so it never drifts.
+    this.data.gaiaformersUsedForOther = 0;
   }
 
   buildingValue(
@@ -1137,7 +1139,12 @@ export default class Player extends EventEmitter {
       case Condition.HighestResearchLevel:
         return Math.max(...Object.values(this.data.research));
       case Condition.GaiaFormer:
-        return this.data.gaiaformers - this.data.gaiaformersInGaia - this.data.gaiaformersUsedForAsteroid;
+        return (
+          this.data.gaiaformers -
+          this.data.gaiaformersInGaia -
+          this.data.gaiaformersUsedForAsteroid +
+          this.data.gaiaformersUsedForOther
+        );
       case Condition.Asteroid:
         return this.ownedPlanets.filter((hex) => hex.data.planet === Planet.Asteroid).length;
       case Condition.DeepSpaceSector:

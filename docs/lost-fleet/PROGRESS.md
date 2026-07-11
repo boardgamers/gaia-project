@@ -3925,6 +3925,34 @@ buttons`/`LostFleetShips` failures documented at #81/#82 (confirmed still pre-ex
   pointerdown still starts the swipe normally. Full regression pass: **viewer 409/439** (same
   pre-existing ~30 failures, confirmed unrelated).
 
+97. ✅ **Baltaks + §G3 "former" booster VP bug, reported via Discord by Babbuc49 (2026-07-11):**
+    booster copper-signal game — a Baltaks player converted a Gaiaformer to Q.I.C. via their "1gf ->
+    1q" free action, then passed holding the LostFleetFormer booster ("3 VP per Gaiaformer") and
+    got 0 credit for it. Root cause: `PlayerData.gainReward`'s `Resource.GaiaFormer` case wrote any
+    spent-Gaiaformer count into `gaiaformersInGaia` (a field meaning "currently sitting in the gaia
+    area, not yet mined"), which `Condition.GaiaFormer` scoring subtracts — so any use of that free
+    action silently reduced the booster's count, contradicting the owner-confirmed ruling
+    (`RULES_CLARIFICATIONS.md` §G3: only asteroid-consumed Gaiaformers are excluded). Investigating
+    the direct fix (giving the spend its own counter, subtracted from availability like
+    `gaiaformersUsedForAsteroid`) surfaced a second, separate, pre-existing bug: the same
+    conflation let a single physical Gaiaformer be reused for that free action every round, because
+    `Player.gaiaPhaseEnd()` unconditionally zeroes `gaiaformersInGaia` each round (refunding
+    "spent" Gaiaformers for reuse) — several other engine-spec fixtures (`federation.spec.ts`'s
+    `game3`/`game5`, `engine.spec.ts`'s `slowMotionMoves`) turned out to depend on that exploit to
+    replay. Per this file's CLAUDE.md warning about the reverted Terraform Standard Tech fix (never
+    change what a stored move history replays into), fixed the reported VP bug **without touching
+    availability/`canPay` at all**: new `PlayerData.gaiaformersUsedForOther` mirrors every spend
+    into `gaiaformersInGaia` (so payment/availability math is byte-for-byte unchanged) and is reset
+    in lockstep inside `Player.gaiaPhaseEnd()`, so it never drifts across rounds; `Condition.
+    GaiaFormer` scoring adds it back. Zero risk to existing replays (real or fixture) since nothing
+    about payment/build-eligibility changed. **630/630 engine tests pass** (627 baseline + 3 new:
+    a booster-scoring regression confirming the QIC-converted Gaiaformer still counts, and 2
+    updated assertions on the existing Baltaks free-action spec pinning the new
+    `gaiaformersUsedForOther` bookkeeping). The double-spend-every-round bug itself is left
+    unfixed/out of scope (deliberately, per the above) — worth a follow-up if it matters in
+    practice, but low priority since it only ever benefits the player converting the Gaiaformer,
+    never costs anyone else anything.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

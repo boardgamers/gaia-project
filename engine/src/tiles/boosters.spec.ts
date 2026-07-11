@@ -260,6 +260,23 @@ describe("boosters", () => {
     expect(player.data.victoryPoints).to.equal(beforeVp + 6);
   });
 
+  it("should still score a Gaiaformer converted to Q.I.C. (e.g. via Baltaks' free action) from the Lost Fleet former booster", () => {
+    // Owner-confirmed ruling only excludes Gaiaformers used to colonize an asteroid; a Gaiaformer
+    // spent on Baltaks' "1gf -> 1q" free action still counts toward the pass bonus.
+    const engine = createLostFleetBoosterEngine();
+    const player = engine.player(PlayerEnum.Player1);
+    player.getRoundBooster(Booster.LostFleetFormer);
+
+    player.data.gaiaformers = 2;
+    player.data.gaiaformersInGaia = 1;
+    player.data.gaiaformersUsedForOther = 1;
+
+    const beforeVp = player.data.victoryPoints;
+    player.receivePassIncome();
+
+    expect(player.data.victoryPoints).to.equal(beforeVp + 6);
+  });
+
   it("should score 1 VP per distinct colonized planet type from the Lost Fleet planet booster", () => {
     const engine = createLostFleetBoosterEngine();
     const player = engine.player(PlayerEnum.Player1);
