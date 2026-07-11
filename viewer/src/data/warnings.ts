@@ -8,6 +8,7 @@ export enum WarningKey {
   itarsNotBurned = "itars-not-burned",
   taklonsNotBurned = "taklons-not-burned",
   taklonsBrainstoneArea3 = "taklons-brainstone-area3",
+  autoLeechVpRisk = "auto-leech-vp-risk",
   cannotBeDisabled = "-",
 }
 

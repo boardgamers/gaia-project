@@ -4350,6 +4350,31 @@ section originally said Chunk 2 must also carry the _full_ `planets.ts` terrafor
 
 ## Next actions
 
+**Done from #98 7th follow-up (2026-07-11, same "Gaia 21" session/branch): auto-leech VP-risk
+warning on Pass.** Owner's initial premise ("leech VP cost has a 'last player to pass' exception")
+turned out not to match the engine - `leech.ts`'s VP cost (`Math.max(maxLeech - 1, 0)`) has no such
+exception, and `RULES_CLARIFICATIONS.md` doesn't document one either. Clarified with the owner via
+AskUserQuestion before writing anything; the real, engine-confirmed mechanic is different but
+serves the same underlying concern: `auto-charge.ts`'s `askOrDeclineForPassedPlayer` only protects
+an already-passed player from a costly auto-leech during the LAST ROUND or when the charge would
+go to waste before their next income - outside those cases (i.e. any earlier round, while other
+players still have moves left), a numeric auto-leech threshold of 2+ will silently auto-accept a
+VP-costing offer with no further confirmation. New `autoLeechRiskWarning(engine, player,
+autoChargePreference)` (`viewer/src/logic/buttons/pass.ts`, exported standalone - takes the raw
+preference string rather than a `CommandController` specifically so it's directly unit-testable
+without mocking that whole interface) wired into the existing `passWarning()`/dismissible-warning
+system (`WarningKey.autoLeechVpRisk`, same per-key-dismiss mechanism as the other pass-time
+warnings). Needed a new `CommandController.autoChargePreference(): string` interface method
+(implemented in `Commands.vue`) since the viewer's auto-leech preference is deliberately never
+synced onto `engine.player(...).settings.autoChargePower` except transiently at the moment an
+auto-decide actually runs (see `auto-decide.ts`'s own doc comment) - reading the raw
+`$store.state.preferences.autoChargePower` directly was the only reliable source. New
+`pass.spec.ts` (7/7 passing, real `Engine` instances rather than mocks, mutating `engine.round`/
+`engine.passedPlayers`/`player.dropped` directly since those are plain public fields). Full
+`pnpm test` baseline: 410-412 passing (viewer test counts continue to vary run-to-run per prior
+sessions' notes)/30-32 failing, same known pre-existing flaky range - confirmed none of the
+failures are in `pass.spec.ts` or touch this change.
+
 **Done from #98 6th follow-up (2026-07-11, same "Gaia 21" session/branch): online-players popup +
 notification game names.**
 

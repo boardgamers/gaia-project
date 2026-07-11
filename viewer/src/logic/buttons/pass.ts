@@ -14,6 +14,7 @@ import { ButtonData, ButtonWarning, WarningWithKey } from "../../data";
 import { boosterData } from "../../data/boosters";
 import { translateResources } from "../../data/resources";
 import { WarningKey } from "../../data/warnings";
+import { parseAutoChargePreference } from "../auto-decide";
 import { CommandController } from "./types";
 import { autoClickButton, confirmationButton, symbolButton, textButton } from "./utils";
 import { chargeIncomeWarning, passWarningButton, rewardWarnings } from "./warnings";
@@ -39,11 +40,48 @@ export function endTurnWarning(player: Player): ButtonWarning | null {
   return null;
 }
 
-function passWarning(engine: Engine, player: Player): ButtonWarning | null {
+// A passed player's auto-leech isn't protected from VP cost for the rest of the round unless it's
+// the last round, or the charge would go to waste before their next income - see
+// `askOrDeclineForPassedPlayer` in engine/src/auto-charge.ts. Outside those cases, whatever numeric
+// threshold the local user's auto-leech preference is set to (2-5) will silently accept a leech
+// that costs VP, without ever asking - a real, easy-to-miss way to bleed points after passing.
+// Warn about it here rather than only in the engine, since it's the viewer-only preference
+// (never part of engine/game state) that actually creates the risk. Not shown at all once no other
+// active player remains to still trigger a leech offer this round (i.e. this player would be the
+// last to pass), or on the last round (already safe per the engine rule above).
+export function autoLeechRiskWarning(
+  engine: Engine,
+  player: Player,
+  autoChargePreference: string
+): WarningWithKey | null {
+  if (engine.isLastRound) {
+    return null;
+  }
+  const threshold = parseAutoChargePreference(autoChargePreference);
+  if (typeof threshold !== "number" || threshold < 2) {
+    return null;
+  }
+  const stillActive = engine.players.some(
+    (p) => p.player !== player.player && !p.dropped && !(engine.passedPlayers ?? []).includes(p.player)
+  );
+  if (!stillActive) {
+    return null;
+  }
+  return {
+    disableKey: WarningKey.autoLeechVpRisk,
+    message: `Auto-leech is set to accept leeches up to ${threshold} power, which can cost Victory Points - other players still have turns this round, so this could happen before you act again.`,
+  };
+}
+
+function passWarning(engine: Engine, player: Player, controller: CommandController): ButtonWarning | null {
   const warnings: WarningWithKey[] = [];
   const endTurn = endTurnWarning(player);
   if (endTurn != null) {
     warnings.push(...endTurn.body);
+  }
+  const autoLeechRisk = autoLeechRiskWarning(engine, player, controller.autoChargePreference());
+  if (autoLeechRisk != null) {
+    warnings.push(autoLeechRisk);
   }
   if (engine.round > 0) {
     for (const e of player.events[Operator.Activate].filter((e) => !e.activated)) {
@@ -116,7 +154,7 @@ export function passButton(
   player: Player,
   command: AvailableCommand<Command.Pass | Command.ChooseRoundBooster>
 ): ButtonData {
-  const warning = passWarning(engine, player);
+  const warning = passWarning(engine, player, controller);
 
   // need a Pass confirmation if it's the last round, where Command = Pass but no Boosters
   if (command.data.boosters.length === 0) {

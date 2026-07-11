@@ -5,11 +5,23 @@
         <span v-if="init">Pick the number of players</span>
         <RichTextView :content="statusLine" />
       </h5>
-      <b-btn v-if="showSilentAuctionInfo" v-b-modal.silent-auction-info variant="link" size="sm" class="ml-2 silent-auction-info-button">
+      <b-btn
+        v-if="showSilentAuctionInfo"
+        v-b-modal.silent-auction-info
+        variant="link"
+        size="sm"
+        class="ml-2 silent-auction-info-button"
+      >
         How does the auction work? <b-badge variant="info" pill>i</b-badge>
       </b-btn>
       <SilentAuctionInfo v-if="showSilentAuctionInfo" />
-      <b-btn v-if="showBanPhaseInfo" v-b-modal.ban-phase-info variant="link" size="sm" class="ml-2 silent-auction-info-button">
+      <b-btn
+        v-if="showBanPhaseInfo"
+        v-b-modal.ban-phase-info
+        variant="link"
+        size="sm"
+        class="ml-2 silent-auction-info-button"
+      >
         What's the ban phase? <b-badge variant="info" pill>i</b-badge>
       </b-btn>
       <BanPhaseInfo v-if="showBanPhaseInfo" />
@@ -54,10 +66,22 @@
         <h5 class="mb-0">
           <RichTextView :content="statusLine" />
         </h5>
-        <b-btn v-if="showSilentAuctionInfo" v-b-modal.silent-auction-info variant="link" size="sm" class="ml-2 silent-auction-info-button">
+        <b-btn
+          v-if="showSilentAuctionInfo"
+          v-b-modal.silent-auction-info
+          variant="link"
+          size="sm"
+          class="ml-2 silent-auction-info-button"
+        >
           How does the auction work? <b-badge variant="info" pill>i</b-badge>
         </b-btn>
-        <b-btn v-if="showBanPhaseInfo" v-b-modal.ban-phase-info variant="link" size="sm" class="ml-2 silent-auction-info-button">
+        <b-btn
+          v-if="showBanPhaseInfo"
+          v-b-modal.ban-phase-info
+          variant="link"
+          size="sm"
+          class="ml-2 silent-auction-info-button"
+        >
           What's the ban phase? <b-badge variant="info" pill>i</b-badge>
         </b-btn>
         <b-dropdown
@@ -73,9 +97,9 @@
           title="Auto leech: automatically accept or decline power-charge offers up to this amount, instead of asking every time"
         >
           <template #button-content>
-          <span class="auto-leech-dot" :class="autoChargePowerActive ? 'active' : 'inactive'"></span>
-          {{ autoChargePowerShortLabel }}
-        </template>
+            <span class="auto-leech-dot" :class="autoChargePowerActive ? 'active' : 'inactive'"></span>
+            {{ autoChargePowerShortLabel }}
+          </template>
           <b-dropdown-item
             v-for="opt in autoChargePowerOptions"
             :key="opt.value"
@@ -160,8 +184,8 @@
       </div>
       <div v-if="isSilentBidding" class="silent-bid-form">
         <p class="text-muted small">
-          Privately enter the most VP you're willing to lose to win each faction. Submit once and everyone's bids
-          will be resolved automatically once all players have submitted.
+          Privately enter the most VP you're willing to lose to win each faction. Submit once and everyone's bids will
+          be resolved automatically once all players have submitted.
         </p>
         <div v-for="pos in silentBidCommand.data.bids" :key="pos.faction" class="d-flex align-items-center mb-2">
           <span class="silent-bid-faction mr-2">
@@ -233,7 +257,7 @@ import {
   HighlightHex,
   ModalButtonData,
   SpecialActionIncome,
-  WarningsPreference
+  WarningsPreference,
 } from "../data";
 import { factionName, factionShortcut } from "../data/factions";
 import { FactionCustomization } from "@gaia-project/engine/src/engine";
@@ -531,11 +555,7 @@ export default class Commands extends Vue implements CommandController {
    * showStickyMobileBar, so it doesn't show before there's anything to leech from. */
   get showAutoLeechSelect(): boolean {
     return (
-      !this.init &&
-      !this.isChoosingFaction &&
-      !this.isBanningFaction &&
-      !this.isSilentBidding &&
-      this.engine.round >= 1
+      !this.init && !this.isChoosingFaction && !this.isBanningFaction && !this.isSilentBidding && this.engine.round >= 1
     );
   }
 
@@ -609,12 +629,10 @@ export default class Commands extends Vue implements CommandController {
       this.$emit("command", command);
     } else {
       //decline ignores what's on the the stack (e.g. 'decline up' instead of 'up decline')
-      const commands: string[] = command.startsWith(Command.Decline) ? [command] : [...this.commandChain.filter((c) => c), command];
-      this.$emit(
-        "command",
-        `${this.playerSlug} ${commands.join(" ")}`,
-        warnings
-      );
+      const commands: string[] = command.startsWith(Command.Decline)
+        ? [command]
+        : [...this.commandChain.filter((c) => c), command];
+      this.$emit("command", `${this.playerSlug} ${commands.join(" ")}`, warnings);
     }
   }
 
@@ -654,6 +672,10 @@ export default class Commands extends Vue implements CommandController {
 
   isWarningEnabled(disableKey: string): boolean {
     return isWarningEnabled(disableKey, this.$store.state.preferences);
+  }
+
+  autoChargePreference(): string {
+    return String(this.$store.state.preferences.autoChargePower ?? "ask");
   }
 
   enabledButtonWarnings(button: ButtonData): string[] {
@@ -874,7 +896,12 @@ export default class Commands extends Vue implements CommandController {
     this.$store.commit("highlightTechs", techs);
   }
 
-  subscribe(action: string, button: ButtonData, callback: (payload: any) => any, filter: (payload: any) => boolean = null) {
+  subscribe(
+    action: string,
+    button: ButtonData,
+    callback: (payload: any) => any,
+    filter: (payload: any) => boolean = null
+  ) {
     action = "" + action;
 
     this.unsubscribe(button);
@@ -890,13 +917,22 @@ export default class Commands extends Vue implements CommandController {
     this.$store.commit("activeButton", buttonData);
   }
 
-  subscribeHexClick(button: ButtonData, callback: (hex: GaiaHex, highlight: HighlightHex) => void, filter?: (hex: GaiaHex) => boolean) {
+  subscribeHexClick(
+    button: ButtonData,
+    callback: (hex: GaiaHex, highlight: HighlightHex) => void,
+    filter?: (hex: GaiaHex) => boolean
+  ) {
     const heightFilter = () => {
       return this.buttonChain.length == button.parents;
     };
-    this.subscribe("hexClick", button, (payload) => {
-      callback(payload.hex, payload.highlight);
-    }, payload => (filter ? filter(payload.hex) : true) && heightFilter());
+    this.subscribe(
+      "hexClick",
+      button,
+      (payload) => {
+        callback(payload.hex, payload.highlight);
+      },
+      (payload) => (filter ? filter(payload.hex) : true) && heightFilter()
+    );
   }
 
   subscribeFinal(action: string, button: ButtonData) {
@@ -910,7 +946,7 @@ export default class Commands extends Vue implements CommandController {
     button.subscription?.();
     button.subscription = null;
     button.onShowTriggered = false;
-    button.buttons?.forEach(b => this.unsubscribe(b));
+    button.buttons?.forEach((b) => this.unsubscribe(b));
   }
 
   async handleButtonClick(button: ButtonData) {
@@ -976,9 +1012,11 @@ export default class Commands extends Vue implements CommandController {
   }
 
   private shouldShowModal(button: ButtonData) {
-    return this.enabledButtonWarnings(button).length > 0
-      && !this.isActiveButton(button)
-      && this.warningPreference === WarningsPreference.ModalDialog;
+    return (
+      this.enabledButtonWarnings(button).length > 0 &&
+      !this.isActiveButton(button) &&
+      this.warningPreference === WarningsPreference.ModalDialog
+    );
   }
 
   get warningPreference(): WarningsPreference {
