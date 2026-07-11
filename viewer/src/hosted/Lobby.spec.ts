@@ -990,6 +990,52 @@ describe("Lobby", () => {
     expect(presenceDots.at(1).classes()).to.contain("game-bar__presence--yellow");
   });
 
+  it("clicking the online-count indicator reveals who's online, labeling the current user as You", async () => {
+    const game = {
+      id: "g-online-popup",
+      name: "Presence game",
+      created_by: "user-admin",
+      player_count: 2,
+      options: {},
+      status: "active",
+      current_seat: 0,
+      current_round: 1,
+      latest_move_summary: "Terrans up int.",
+      players: [
+        {
+          seat: 0,
+          invited_email: "alice@example.com",
+          user_id: "user-admin",
+          display_name: "Alice",
+          faction: "terrans",
+          score: 20,
+        },
+        {
+          seat: 1,
+          invited_email: "bob@example.com",
+          user_id: "user-other",
+          display_name: "Bob",
+          faction: "nevlas",
+          score: 21,
+        },
+      ],
+    };
+    const { client, setPresenceState } = makeClient([game], []);
+    setPresenceState({
+      "user-admin": [{ context: { type: "lobby" }, focused: true }],
+      "user-other": [{ context: { type: "game", gameId: "other-game" }, focused: true }],
+    });
+    const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    expect(wrapper.find(".lobby-online-popup").exists()).to.equal(false);
+    await wrapper.find(".lobby-online").trigger("click");
+    expect(wrapper.find(".lobby-online-popup").exists()).to.equal(true);
+    expect(wrapper.text()).to.include("You");
+    expect(wrapper.text()).to.include("Bob");
+  });
+
   it("shows a My games empty state when the user is not in any listed game", async () => {
     const { client } = makeClient([
       {

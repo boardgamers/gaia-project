@@ -66,8 +66,20 @@ export function currentTurnPlayer(game: GameRow): PlayerRow | undefined {
   return game.players.find((p) => p.seat === game.current_seat);
 }
 
-export function gameLabel(game: GameRow): string {
-  return game.name || "your Lost Fleet game";
+// Most games never get a custom name (create-game defaults it blank), so the old flat
+// "your Lost Fleet game" fallback made every such game's notifications read identically -
+// useless for telling "which game" a push was actually about. Fall back to the OTHER seated
+// players' names instead (excluding whoever this label is being shown to), which is almost
+// always distinguishing in practice.
+export function gameLabel(game: GameRow, excludeUserId?: string): string {
+  if (game.name) {
+    return game.name;
+  }
+  const otherNames = game.players
+    .filter((p) => p.user_id !== excludeUserId)
+    .map((p) => p.display_name)
+    .filter((name) => !!name);
+  return otherNames.length > 0 ? `your game with ${otherNames.join(", ")}` : "your Lost Fleet game";
 }
 
 export function buildNotifications(
@@ -94,8 +106,8 @@ export function buildNotifications(
       .filter((p) => p.user_id !== null && p.user_id !== chatMessage.senderId && !mutedUserIds.has(p.user_id))
       .map((p) => ({
         userId: p.user_id!,
-        title: "The Lost Fleet",
-        body: `${chatMessage.authorName} in ${gameLabel(game)}: ${preview}`,
+        title: "GP: Fight Club",
+        body: `${chatMessage.authorName} in ${gameLabel(game, p.user_id!)}: ${preview}`,
         tag: `chat-${game.id}`,
         kind: "message" as const,
       }));
@@ -107,8 +119,8 @@ export function buildNotifications(
       .filter((p) => p.user_id !== null && p.user_id !== game.created_by)
       .map((p) => ({
         userId: p.user_id!,
-        title: "The Lost Fleet",
-        body: `You've been invited to ${gameLabel(game)}.`,
+        title: "GP: Fight Club",
+        body: `You've been invited to ${gameLabel(game, p.user_id!)}.`,
         tag: `invite-${game.id}`,
         kind: "invite" as const,
       }));
@@ -118,8 +130,8 @@ export function buildNotifications(
       .filter((p) => p.user_id !== null)
       .map((p) => ({
         userId: p.user_id!,
-        title: "The Lost Fleet",
-        body: `${gameLabel(game)} is finished - come see the final scores.`,
+        title: "GP: Fight Club",
+        body: `${gameLabel(game, p.user_id!)} is finished - come see the final scores.`,
         tag: `finished-${game.id}`,
         kind: "finished" as const,
       }));
@@ -131,8 +143,8 @@ export function buildNotifications(
   return [
     {
       userId: current.user_id,
-      title: "The Lost Fleet",
-      body: `Your turn in ${gameLabel(game)}.`,
+      title: "GP: Fight Club",
+      body: `Your turn in ${gameLabel(game, current.user_id)}.`,
       tag: `turn-${game.id}`,
       kind: "turn",
     },

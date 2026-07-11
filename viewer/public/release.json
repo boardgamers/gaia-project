@@ -1,7 +1,22 @@
 {
-  "version": "5.23.1",
+  "version": "5.24.0",
   "releasedAt": "2026-07-11",
   "entries": [
+    {
+      "version": "5.24.0",
+      "releasedAt": "2026-07-11",
+      "kind": "update",
+      "title": "Online-players popup + notification game names",
+      "impact": "",
+      "changes": [
+        "Tapping the online-player count in the lobby now shows a popup of who's currently online. On mobile, it now sits at the far right of its row",
+        "Push notifications for whose turn it is, invites, and finished games now identify which game more reliably - unnamed games now show the other players' names instead of a generic message"
+      ],
+      "userChanges": [
+        "Tapping the online-player count in the lobby now shows a popup of who's currently online. On mobile, it now sits at the far right of its row",
+        "Push notifications for whose turn it is, invites, and finished games now identify which game more reliably - unnamed games now show the other players' names instead of a generic message"
+      ]
+    },
     {
       "version": "5.23.1",
       "releasedAt": "2026-07-11",

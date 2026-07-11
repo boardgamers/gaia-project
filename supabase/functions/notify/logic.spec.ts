@@ -2,6 +2,7 @@ import { strict as assert } from "assert";
 
 import {
   buildNotifications,
+  gameLabel,
   GameRow,
   PlayerRow,
   RECENTLY_ACTIVE_MS,
@@ -168,5 +169,36 @@ describe("notify logic", () => {
 
     assert.equal(notifications.length, 1);
     assert.equal(notifications[0].userId, "user-2");
+  });
+
+  it("falls back to the other players' names when a game has no custom name", () => {
+    const luke = makePlayer({ seat: 0, user_id: "user-1", display_name: "Luke" });
+    const sarah = makePlayer({ seat: 1, user_id: "user-2", display_name: "Sarah" });
+    const game = makeGame({ name: "", players: [luke, sarah] });
+
+    assert.equal(gameLabel(game, "user-1"), "your game with Sarah");
+    assert.equal(gameLabel(game, "user-2"), "your game with Luke");
+  });
+
+  it("prefers a game's custom name over the player-names fallback", () => {
+    const game = makeGame({ name: "Friday Night Game" });
+    assert.equal(gameLabel(game, game.players[0].user_id!), "Friday Night Game");
+  });
+
+  it("uses the generic fallback when no other player has a display name either", () => {
+    const game = makeGame({ name: "", players: [makePlayer({ user_id: "user-1", display_name: "" })] });
+    assert.equal(gameLabel(game, "user-1"), "your Lost Fleet game");
+  });
+
+  it("labels the turn notification with the other players, distinguishing unnamed games", () => {
+    const current = makePlayer({ seat: 0, user_id: "user-1", display_name: "Luke" });
+    const other = makePlayer({ seat: 1, user_id: "user-2", display_name: "Sarah" });
+    const game = makeGame({ name: "", current_seat: 0, last_committed_by: "user-2", players: [current, other] });
+
+    const notifications = buildNotifications("update", game, false);
+
+    assert.equal(notifications.length, 1);
+    assert.equal(notifications[0].title, "GP: Fight Club");
+    assert.equal(notifications[0].body, "Your turn in your game with Sarah.");
   });
 });

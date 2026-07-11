@@ -4350,6 +4350,35 @@ section originally said Chunk 2 must also carry the _full_ `planets.ts` terrafor
 
 ## Next actions
 
+**Done from #98 6th follow-up (2026-07-11, same "Gaia 21" session/branch): online-players popup +
+notification game names.**
+
+- **Lobby's online-count indicator**: now sits flush right within its row on mobile
+  (`.lobby-online-wrap { margin-left: auto }`, that row's own default flex otherwise packs
+  everything to the start) and is now a clickable button that opens a small popup listing who's
+  online by name (`onlinePlayerNames` computed - built from whatever `display_name`s are already
+  loaded across every game's `players[]`, since there's no separate "all users" directory RPC and
+  didn't need one; labels the viewer's own entry "You"). Dismissed the same way the existing
+  swipe-reveal-delete UI already was (extended `onDocumentPointerDown`'s outside-click check).
+  1 new `Lobby.spec.ts` case (28/28 passing).
+- **Push notifications now reliably say which game.** `gameLabel(game)` already existed and was
+  already being called in every notification body - the bug was its fallback: most games never
+  get a custom name (create-game defaults it blank), so `game.name || "your Lost Fleet game"` made
+  every unnamed game's notifications read identically, defeating the whole point. Changed the
+  fallback to name the OTHER seated players instead (`gameLabel(game, excludeUserId)`, e.g. "your
+  game with Sarah") - almost always distinguishing in practice, and each of the 4 call sites now
+  passes the actual recipient's own user id to exclude from that list (so you don't see your own
+  name in your own notification). Also found and fixed a genuinely stale rebrand: every
+  notification's `title` was still hardcoded `"The Lost Fleet"` despite #97's changelog claiming
+  "push notification title" was rebranded to "GP: Fight Club" - it evidently never actually
+  touched this file. **This lives in `supabase/functions/notify/` (a Deno edge function, not a SQL
+  migration) - needs `supabase functions deploy notify` to actually go live, a different mechanism
+  than the migrations this session's other fixes needed.** 5 new `logic.spec.ts` cases (14/14
+  passing).
+- Full `pnpm test` baseline (viewer only - the edge function's own tests run separately via
+  `engine/node_modules/.bin/ts-node`, see the 5th follow-up's testing note above): 405 passing (up
+  from 404)/30 failing, same known flaky range.
+
 **Done from #98 5th follow-up (2026-07-11, same "Gaia 21" session/branch): in-game chat parity
 with Lobby Chat.** ChatNotesPanel.vue gained the same per-message timestamp and online/offline
 status dot LobbyChatPanel.vue already had - extracted the shared `formatTime` logic into a new

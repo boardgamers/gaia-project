@@ -163,9 +163,23 @@
       </div>
       <div class="lobby-toolbar__actions">
         <a href="?create=1" class="btn btn-primary">+ New game</a>
-        <span class="lobby-online d-md-none" :title="`${onlineCount} online`">
-          <span class="lobby-online__dot"></span>
-          {{ onlineCount }} online
+        <span class="lobby-online-wrap d-md-none">
+          <button
+            type="button"
+            class="lobby-online"
+            :title="`${onlineCount} online - click to see who`"
+            @click="showOnlinePlayers = !showOnlinePlayers"
+          >
+            <span class="lobby-online__dot"></span>
+            {{ onlineCount }} online
+          </button>
+          <div v-if="showOnlinePlayers" class="lobby-online-popup">
+            <strong class="lobby-online-popup__title">Online now</strong>
+            <p v-if="onlinePlayerNames.length === 0" class="text-muted small mb-0">Nobody else is online right now.</p>
+            <ul v-else class="lobby-online-popup__list">
+              <li v-for="name in onlinePlayerNames" :key="name">{{ name }}</li>
+            </ul>
+          </div>
         </span>
       </div>
     </div>
@@ -478,6 +492,7 @@ export default Vue.extend({
       documentPointerDownHandler: null as ((event: PointerEvent) => void) | null,
       stopPresenceTracking: null as (() => void) | null,
       presenceState: {} as PresenceState,
+      showOnlinePlayers: false,
       isDarkMode: getTheme() === "dark",
     };
   },
@@ -536,6 +551,23 @@ export default Vue.extend({
     onlineCount(): number {
       return Object.keys(this.presenceState).filter((userId) => (this.presenceState[userId] ?? []).length > 0).length;
     },
+    // Names come from whatever's already loaded in `games[].players[].display_name` - no separate
+    // "all users" directory RPC exists (or is needed), and every currently-online user has almost
+    // certainly appeared in at least one game's player list by the time they're online at all.
+    onlinePlayerNames(): string[] {
+      const names = new Map<string, string>();
+      for (const game of this.games as any[]) {
+        for (const player of game.players ?? []) {
+          if (player.user_id && player.display_name) {
+            names.set(player.user_id, player.display_name);
+          }
+        }
+      }
+      return Object.keys(this.presenceState)
+        .filter((userId) => (this.presenceState[userId] ?? []).length > 0)
+        .map((userId) => (userId === this.myUserId ? "You" : names.get(userId) || "A player"))
+        .sort((a, b) => a.localeCompare(b));
+    },
     emptyStateText(): string {
       if (this.loadFailed) {
         return this.message || "Could not load games.";
@@ -590,6 +622,9 @@ export default Vue.extend({
     onDocumentPointerDown(event: PointerEvent) {
       if (!(event.target as HTMLElement | null)?.closest?.(".game-swipe")) {
         this.revealedGameId = "";
+      }
+      if (!(event.target as HTMLElement | null)?.closest?.(".lobby-online-wrap")) {
+        this.showOnlinePlayers = false;
       }
     },
     async refresh() {
@@ -925,6 +960,13 @@ export default Vue.extend({
   padding-right: 0.45rem;
 }
 
+.lobby-online-wrap {
+  position: relative;
+  // Pushes the indicator to the far right of `.lobby-toolbar__actions` on mobile (that row's
+  // default flex packs its children to the start otherwise) - owner request.
+  margin-left: auto;
+}
+
 .lobby-online {
   display: inline-flex;
   align-items: center;
@@ -932,6 +974,40 @@ export default Vue.extend({
   font-size: 0.78rem;
   font-weight: 600;
   color: #495057;
+  border: 0;
+  background: transparent;
+  padding: 0.2rem 0.3rem;
+}
+
+.lobby-online-popup {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.35rem;
+  min-width: 10rem;
+  max-width: 14rem;
+  background: var(--bs-body-bg, #fff);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 0.4rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  padding: 0.5rem 0.65rem;
+  z-index: 1060;
+}
+
+.lobby-online-popup__title {
+  display: block;
+  font-size: 0.75rem;
+  margin-bottom: 0.3rem;
+}
+
+.lobby-online-popup__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
 }
 
 .lobby-online__dot {
