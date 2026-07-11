@@ -7,7 +7,7 @@
 > anything else, including the **Testing — required going forward** section it points to — both
 > are standing process, not optional. Then ask the user "what next?" and use the **Next actions**
 > section below to guide them.
-> Last updated: **2026-07-11**.
+> Last updated: **2026-07-11** (revert of default-open panels/settings toggles, #98).
 
 ## Working agreements (read every session, not optional)
 
@@ -3952,6 +3952,19 @@ GaiaFormer` scoring adds it back. Zero risk to existing replays (real or fixture
     unfixed/out of scope (deliberately, per the above) — worth a follow-up if it matters in
     practice, but low priority since it only ever benefits the player converting the Gaiaformer,
     never costs anyone else anything.
+98. ✅ **Reverted the "default-open panels + iOS-style settings toggles" change (2026-07-11, same
+    day)**: the owner reported the chat and main-menu side panels are desktop-only, but the change
+    (commits `e83a1ba`/`e98fd22`, v5.27.0) touched shared components (`ChatNotesPanel.vue`,
+    `GameNavPanel.vue`, `Lobby.vue`) used on mobile too, and added settings-menu toggles for
+    panels that don't apply there. Reverted both commits outright (`git revert --no-edit e98fd22
+e83a1ba`) rather than patching forward, restoring the pre-change floating-toggle behavior and
+    removing `SettingsToggle.vue`/`GameBar.vue`/`settings-notice.ts`. All `ChatNotesPanel`/
+    `GameNavPanel`/`HostedBar`/`Lobby` specs pass post-revert; the 33 pre-existing engine-test
+    failures (`final-scoring`, `taklons-leech`, etc.) were confirmed present on `master` too via a
+    throwaway worktree, so unrelated to this revert. Released as v5.26.1 (patch, changelog via
+    `update-viewer-release.js`). If desktop-only side panels are wanted again, they need to be
+    built so mobile's `ChatNotesPanel`/`GameNavPanel` are untouched and no settings toggle is
+    exposed for something mobile users never see.
 
 ## Still MISSING — only one art-only item left
 
@@ -4352,7 +4365,7 @@ section originally said Chunk 2 must also carry the _full_ `planets.ts` terrafor
 
 **Done 2026-07-11 follow-up: ship boards were still leaving a resize-dependent whitespace gap.**
 The fix just below put the ship boards in their own Bootstrap row, sharing it with the Commands
-column - but a *separate* row only starts once BOTH columns of the row above it (map + research)
+column - but a _separate_ row only starts once BOTH columns of the row above it (map + research)
 finish, so whenever the map (independently resizing, different aspect ratio) ended up taller than
 the research board, a gap opened up between the research board's actual bottom edge and the ships
 above them, that grew/shrank as the window resized. Fixed by nesting `<LostFleetShips>` directly
@@ -4401,7 +4414,7 @@ desktop-only (mobile untouched):
 - **Commands/premove buttons no longer stretch under the research track.** They used to be a
   separate full-width `col-12` row below the map+research row, so on desktop they visually spanned
   under both columns even though only the map-width portion made sense. Now Lost Fleet games (`
-  commandsColumnClass` in `Game.vue`) share one row with the ship boards: the buttons column is
+commandsColumnClass` in `Game.vue`) share one row with the ship boards: the buttons column is
   `col-md-7 order-md-1` (matching the map's own width), ship boards keep `col-md-5 order-md-2` (now
   with no `offset-md-7`, since it naturally follows the buttons column instead of standing alone) -
   mobile keeps its existing stacked order/full width via the non-`-md` order classes. Verified
