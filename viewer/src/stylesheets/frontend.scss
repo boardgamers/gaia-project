@@ -88,6 +88,17 @@ body {
   // page, so the pre-invert value here must be that target color's own invert (255-28=227 etc.).
   background: #e3e3e1;
 
+  // Bootstrap sets `body { background-color: #fff }` unconditionally, which paints straight over
+  // this element's own background before the filter above ever gets a chance to matter (body's
+  // opaque white simply covers it) - the whole page was inverting from white->black instead of
+  // from this intended #e3e3e1->dark-gray, i.e. pure black instead of dark gray. Repeating the
+  // same pre-invert value here (not `inherit` - `body`'s own rule has higher specificity than a
+  // plain `background-color: inherit` on `body`, keeping their cascade order intact is simpler
+  // than fighting it) closes that gap.
+  body {
+    background-color: #e3e3e1;
+  }
+
   // Re-inverted back to "normal" (cancels the root invert above) so photographic/vector art still
   // reads correctly instead of looking like a photo negative. Scoped to `:not(svg svg)` - a nested
   // `<svg>` (e.g. TechTile.vue's own `<svg class="techTile">` embedded inside ResearchBoard.vue's/

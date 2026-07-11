@@ -3,8 +3,8 @@ import AdminUsers from "./hosted/AdminUsers.vue";
 import { fetchMyApprovalStatus } from "./hosted/approval";
 import Game from "./components/Game.vue";
 import CreateGame from "./hosted/CreateGame.vue";
-import ChatNotesPanel from "./hosted/ChatNotesPanel.vue";
-import GameNavPanel from "./hosted/GameNavPanel.vue";
+import ChatNotesPanel, { saveChatOpenPreference } from "./hosted/ChatNotesPanel.vue";
+import GameNavPanel, { saveGameNavOpenPreference } from "./hosted/GameNavPanel.vue";
 import HostedBar from "./hosted/HostedBar.vue";
 import LobbyChatPanel from "./hosted/LobbyChatPanel.vue";
 import { HostedGameHost, seatToLock } from "./hosted/host";
@@ -52,7 +52,8 @@ async function mountGameInstance(
   slot: Element,
   client: SupabaseClient,
   session: any,
-  gameId: string
+  gameId: string,
+  nav: any
 ): Promise<() => void> {
   const cleanups: Array<() => void> = [];
   const barEl = document.createElement("div");
@@ -106,10 +107,16 @@ async function mountGameInstance(
   // per-message status dots, instead of ChatNotesPanel opening its own second Presence channel -
   // same reasoning as LobbyChatPanel's own presence fix (see PROGRESS.md).
   chatNotes.presenceState = emitter.store.state.presence;
+  // GameNavPanel.vue's game rows want the exact same cross-user roster (same shared
+  // "presence:app" channel, so `emitter.store.state.presence` already carries every game's
+  // presence, not just this one - see trackPresence's own doc comment) for their green/yellow/
+  // grey dots, same reasoning as chatNotes just above.
+  nav.presenceState = emitter.store.state.presence;
   const unwatchPresence = emitter.store.watch(
     (state: any) => state.presence,
     (presence: unknown) => {
       chatNotes.presenceState = presence;
+      nav.presenceState = presence;
     }
   );
   cleanups.push(unwatchPresence);
@@ -122,6 +129,13 @@ async function mountGameInstance(
       pushBusy: false,
       pushEnabled: false,
       abandoned: false,
+      // Mirrors GameNavPanel.vue's own persisted `open` state (read fresh here since `nav` -
+      // unlike `bar` - survives across game switches) so the settings-menu item's label reflects
+      // reality on every fresh mount, e.g. after a switch.
+      gameNavOpen: !!nav.open,
+      // Mirrors ChatNotesPanel.vue's own `open` state - kept in sync below via a watcher, since
+      // `chatOpen` can also change from the panel's own in-panel close button, not just this menu.
+      chatOpen: !!chatNotes.open,
     },
     render(h) {
       return h(HostedBar, {
@@ -147,10 +161,30 @@ async function mountGameInstance(
               bar.abandoned = true;
             }
           },
+          // Global, persisted preference (owner request - "not to be a per game specific
+          // setting"), so this both flips the live panel AND writes the localStorage flag that
+          // GameNavPanel.vue reads from on its next mount (a fresh page load, or the next game
+          // this session switches to - `bar` itself is recreated per switch, `nav` is not).
+          "toggle-game-nav": () => {
+            nav.open = !nav.open;
+            saveGameNavOpenPreference(nav.open);
+            bar.gameNavOpen = nav.open;
+          },
+          // Same idea as "toggle-game-nav" above, for ChatNotesPanel.vue's own persisted `open`
+          // state - `bar.chatOpen` itself is kept live via the watcher just below, this only needs
+          // to flip the source of truth.
+          "toggle-chat": () => {
+            chatNotes.open = !chatNotes.open;
+            saveChatOpenPreference(chatNotes.open);
+          },
         },
       });
     },
   }).$mount(barEl) as any;
+  const chatOpenForBarUnwatch = chatNotes.$watch("open", (open: boolean) => {
+    bar.chatOpen = open;
+  });
+  cleanups.push(chatOpenForBarUnwatch);
   isPushEnabled().then((enabled) => {
     bar.pushEnabled = enabled;
   });
@@ -386,7 +420,7 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, i
       slot.innerHTML = "";
       currentGameId = gameId;
       nav.currentGameId = gameId;
-      dispose = await mountGameInstance(root, slot, client, session, gameId);
+      dispose = await mountGameInstance(root, slot, client, session, gameId, nav);
     });
     return switchChain;
   };

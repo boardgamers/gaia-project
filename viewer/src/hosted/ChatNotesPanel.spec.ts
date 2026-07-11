@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { mount } from "@vue/test-utils";
-import ChatNotesPanel from "./ChatNotesPanel.vue";
+import ChatNotesPanel, { loadChatOpenPreference, saveChatOpenPreference } from "./ChatNotesPanel.vue";
 
 describe("ChatNotesPanel", () => {
   function makeClient(opts: { messages?: any[]; nickname?: string; noteBody?: string; muted?: boolean } = {}) {
@@ -95,13 +95,37 @@ describe("ChatNotesPanel", () => {
     window.localStorage.clear();
   });
 
-  it("starts closed with a floating toggle button", async () => {
+  async function tick(wrapper: any) {
+    await wrapper.vm.$nextTick();
+  }
+
+  it("defaults open on a desktop-width viewport (jsdom's own default) with no stored preference", async () => {
     const wrapper = mount(ChatNotesPanel as any, {
       propsData: { client: makeClient(), gameId: "game-1", userId: "user-1" },
     });
-    await Vue_nextTick(wrapper);
+    await tick(wrapper);
+    expect((wrapper.vm as any).open).to.equal(true);
+    expect(wrapper.find(".chat-notes__panel").exists()).to.equal(true);
+  });
+
+  it("a saved closed preference is honored on mount", async () => {
+    saveChatOpenPreference(false);
+    const wrapper = mount(ChatNotesPanel as any, {
+      propsData: { client: makeClient(), gameId: "game-1", userId: "user-1" },
+    });
+    await tick(wrapper);
+    expect((wrapper.vm as any).open).to.equal(false);
     expect(wrapper.find(".chat-notes__panel").exists()).to.equal(false);
-    expect(wrapper.find(".chat-notes__toggle").exists()).to.equal(true);
+  });
+
+  it("closing the panel persists the preference for the next mount", async () => {
+    const wrapper = mount(ChatNotesPanel as any, {
+      propsData: { client: makeClient(), gameId: "game-1", userId: "user-1" },
+    });
+    await tick(wrapper);
+    await wrapper.find(".chat-notes__close").trigger("click");
+    expect((wrapper.vm as any).open).to.equal(false);
+    expect(loadChatOpenPreference()).to.equal(false);
   });
 
   it("opens to the chat tab by default and lists loaded messages", async () => {
@@ -120,10 +144,8 @@ describe("ChatNotesPanel", () => {
     const wrapper = mount(ChatNotesPanel as any, {
       propsData: { client, gameId: "game-1", userId: "user-1" },
     });
-    await Vue_nextTick(wrapper);
-    await wrapper.find(".chat-notes__toggle").trigger("click");
-    await Vue_nextTick(wrapper);
-    expect(wrapper.find(".chat-notes__panel").exists()).to.equal(true);
+    await tick(wrapper);
+    await tick(wrapper);
     expect(wrapper.find(".chat-notes__tab--active").text()).to.equal("Chat");
     expect(wrapper.text()).to.include("Luke");
     expect(wrapper.text()).to.include("hey");
@@ -145,9 +167,8 @@ describe("ChatNotesPanel", () => {
     const wrapper = mount(ChatNotesPanel as any, {
       propsData: { client, gameId: "game-1", userId: "user-1" },
     });
-    await Vue_nextTick(wrapper);
-    await wrapper.find(".chat-notes__toggle").trigger("click");
-    await Vue_nextTick(wrapper);
+    await tick(wrapper);
+    await tick(wrapper);
     expect(wrapper.find(".chat-notes__time").exists()).to.equal(true);
     expect(wrapper.find(".chat-notes__presence--offline").exists()).to.equal(true);
   });
@@ -168,10 +189,9 @@ describe("ChatNotesPanel", () => {
     const wrapper = mount(ChatNotesPanel as any, {
       propsData: { client, gameId: "game-1", userId: "user-1" },
     });
-    await Vue_nextTick(wrapper);
+    await tick(wrapper);
     (wrapper.vm as any).presenceState = { "user-2": [{ context: { type: "lobby" }, focused: true }] };
-    await wrapper.find(".chat-notes__toggle").trigger("click");
-    await Vue_nextTick(wrapper);
+    await tick(wrapper);
     expect(wrapper.find(".chat-notes__presence--online").exists()).to.equal(true);
   });
 
@@ -180,11 +200,10 @@ describe("ChatNotesPanel", () => {
     const wrapper = mount(ChatNotesPanel as any, {
       propsData: { client, gameId: "game-1", userId: "user-1" },
     });
-    await Vue_nextTick(wrapper);
-    await wrapper.find(".chat-notes__toggle").trigger("click");
+    await tick(wrapper);
     await wrapper.find(".chat-notes__composer textarea").setValue("gg");
     await wrapper.find(".chat-notes__composer").trigger("submit");
-    await Vue_nextTick(wrapper);
+    await tick(wrapper);
     expect(client.inserted).to.deep.equal([{ game_id: "game-1", user_id: "user-1", author_name: "Luke", body: "gg" }]);
   });
 
@@ -193,31 +212,12 @@ describe("ChatNotesPanel", () => {
     const wrapper = mount(ChatNotesPanel as any, {
       propsData: { client, gameId: "game-1", userId: "user-1" },
     });
-    await Vue_nextTick(wrapper);
-    await wrapper.find(".chat-notes__toggle").trigger("click");
+    await tick(wrapper);
     await wrapper.findAll(".chat-notes__tab").at(1).trigger("click");
-    await Vue_nextTick(wrapper);
+    await tick(wrapper);
     expect((wrapper.find(".chat-notes__notes-textarea").element as HTMLTextAreaElement).value).to.equal(
       "remember to build a mine"
     );
-  });
-
-  it("shows the unread badge for a new message that arrived while the panel is closed", async () => {
-    const client = makeClient();
-    const wrapper = mount(ChatNotesPanel as any, {
-      propsData: { client, gameId: "game-1", userId: "user-1" },
-    });
-    await Vue_nextTick(wrapper);
-    (wrapper.vm as any).messages.push({
-      id: 2,
-      game_id: "game-1",
-      user_id: "user-2",
-      author_name: "Luke",
-      body: "hi",
-      created_at: new Date().toISOString(),
-    });
-    await Vue_nextTick(wrapper);
-    expect(wrapper.find(".chat-notes__badge").exists()).to.equal(true);
   });
 
   it("defaults to unmuted and shows the receiving-notifications label", async () => {
@@ -225,9 +225,8 @@ describe("ChatNotesPanel", () => {
     const wrapper = mount(ChatNotesPanel as any, {
       propsData: { client, gameId: "game-1", userId: "user-1" },
     });
-    await Vue_nextTick(wrapper);
-    await wrapper.find(".chat-notes__toggle").trigger("click");
-    await Vue_nextTick(wrapper);
+    await tick(wrapper);
+    await tick(wrapper);
     expect(wrapper.text()).to.include("Receiving push notifications");
   });
 
@@ -236,14 +235,13 @@ describe("ChatNotesPanel", () => {
     const wrapper = mount(ChatNotesPanel as any, {
       propsData: { client, gameId: "game-1", userId: "user-1" },
     });
-    await Vue_nextTick(wrapper);
-    await Vue_nextTick(wrapper);
-    await wrapper.find(".chat-notes__toggle").trigger("click");
-    await Vue_nextTick(wrapper);
+    await tick(wrapper);
+    await tick(wrapper);
+    await tick(wrapper);
     expect(wrapper.text()).to.include("Muted");
 
     await wrapper.find(".chat-notes__mute-toggle").trigger("click");
-    await Vue_nextTick(wrapper);
+    await tick(wrapper);
     expect(client.muted).to.equal(false);
     expect(wrapper.text()).to.include("Receiving push notifications");
   });
@@ -253,15 +251,10 @@ describe("ChatNotesPanel", () => {
     const wrapper = mount(ChatNotesPanel as any, {
       propsData: { client, gameId: "game-1", userId: "user-1" },
     });
-    await Vue_nextTick(wrapper);
-    await wrapper.find(".chat-notes__toggle").trigger("click");
+    await tick(wrapper);
     await wrapper.find(".chat-notes__mute-toggle").trigger("click");
-    await Vue_nextTick(wrapper);
+    await tick(wrapper);
     expect(client.muted).to.equal(true);
     expect(wrapper.text()).to.include("Muted");
   });
-
-  async function Vue_nextTick(wrapper: any) {
-    await wrapper.vm.$nextTick();
-  }
 });

@@ -1,17 +1,5 @@
 <template>
   <div class="chat-notes gaia-viewer-game">
-    <button
-      type="button"
-      class="chat-notes__toggle"
-      :class="{ 'chat-notes__toggle--unread': hasUnread }"
-      :style="{ bottom: toggleBottomOffset + 'px' }"
-      @click="openPanel(tab)"
-      :aria-label="open ? 'Close chat and notes' : 'Open chat and notes'"
-    >
-      <span aria-hidden="true">&#128172;</span>
-      <span v-if="hasUnread" class="chat-notes__badge"></span>
-    </button>
-
     <div v-if="open" class="chat-notes__panel">
       <div class="chat-notes__header">
         <button type="button" class="chat-notes__back" @click="closePanel" aria-label="Back to game">&larr;</button>
@@ -105,8 +93,12 @@ type Tab = "chat" | "notes";
 const NOTES_SAVE_DEBOUNCE_MS = 1500;
 
 /** Per-game chat (visible to every approved user, players and spectators alike) plus private,
- * per-user notes - a floating toggle that opens a collapsible side panel on desktop or a
- * full-screen overlay on mobile (see the scoped media queries below), matching the owner's brief. */
+ * per-user notes - a docked side panel on desktop or a full-screen overlay on mobile (see the
+ * scoped media queries below). Owner request: on by default, toggled off/on from the settings
+ * menu (a persisted global preference, `loadChatOpenPreference`/`saveChatOpenPreference` below) -
+ * no floating toggle button of its own anymore (hosted.ts's HostedBar settings dropdown drives
+ * `open` from outside, same cross-instance pattern as GameNavPanel.vue's own settings toggle). The
+ * in-panel back/close buttons still work too, for a quick dismiss without opening settings. */
 export default Vue.extend({
   name: "ChatNotesPanel",
   props: {
@@ -116,7 +108,7 @@ export default Vue.extend({
   },
   data() {
     return {
-      open: false,
+      open: loadChatOpenPreference(),
       tab: "chat" as Tab,
       messages: [] as ChatMessage[],
       draft: "",
@@ -124,49 +116,24 @@ export default Vue.extend({
       notesBody: "",
       notesStatus: "",
       muted: false,
-      unreadSince: 0,
       // Set directly from outside (hosted.ts, via emitter.store.watch) rather than tracked here -
       // this game already tracks its own presence (hosted.ts's own `trackPresence(..., {type:
       // "game", gameId}, ...)` call feeds the shared Vuex store's `state.presence`), so reading
       // that directly avoids opening yet another Realtime Presence channel (see LobbyChatPanel's
       // own history of exactly that bug, PROGRESS.md).
       presenceState: {} as PresenceState,
-      // Dynamic clearance for the floating toggle above the mobile sticky action/premove bar
-      // (Commands.vue/PremoveBar.vue) - its height varies (content, auto-leech dropdown open,
-      // etc.), so a fixed offset previously either overlapped it or left an ugly fixed gap on
-      // desktop where no such bar exists at all. Measured directly off the live DOM element
-      // instead of guessing, since ChatNotesPanel is a separate Vue root and can't receive
-      // Commands.vue's own `sticky-bar-height` event (that only reaches Game.vue's tree).
-      toggleBottomOffset: 24,
-      stickyBarObserver: null as ResizeObserver | null,
-      stickyBarPoll: null as ReturnType<typeof setInterval> | null,
       channel: null as any,
       notesSaveTimer: null as ReturnType<typeof setTimeout> | null,
     };
   },
-  computed: {
-    hasUnread(): boolean {
-      if (this.open && this.tab === "chat") {
-        return false;
-      }
-      const last = this.messages[this.messages.length - 1];
-      return !!last && new Date(last.created_at).getTime() > this.unreadSince;
-    },
-  },
   async mounted() {
-    this.unreadSince = this.loadLastRead();
     this.authorName = (await fetchMyNickname(this.client, this.userId)) || "Player";
     await this.loadMessages();
     await this.loadNotes();
     await this.loadMuted();
     this.subscribeChat();
-    this.startStickyBarWatch();
   },
   beforeDestroy() {
-    this.stickyBarObserver?.disconnect();
-    if (this.stickyBarPoll) {
-      clearInterval(this.stickyBarPoll);
-    }
     if (this.channel) {
       this.client.removeChannel(this.channel);
     }
@@ -179,57 +146,6 @@ export default Vue.extend({
       return isUserOnline(this.presenceState, userId);
     },
     formatTime: formatChatTime,
-    // Finds whichever mobile sticky bar (if any) is currently rendered - Commands.vue's on-turn
-    // bar or PremoveBar.vue's off-turn one - and keeps `toggleBottomOffset` a fixed gap above its
-    // real, live height. A ResizeObserver catches height changes (e.g. the auto-leech dropdown
-    // opening) once an element is found; a coarse poll re-runs the query itself, since the bar can
-    // mount/unmount entirely outside this component's own tree at arbitrary times (turn changes,
-    // round start) with nothing here to react to otherwise.
-    startStickyBarWatch() {
-      if (typeof document === "undefined" || typeof ResizeObserver === "undefined") {
-        return;
-      }
-      const STICKY_BAR_SELECTOR = "#move-buttons.mobile-sticky-actions, .premove-bar--sticky-mobile";
-      let observedEl: Element | null = null;
-      this.stickyBarObserver = new ResizeObserver(() => this.updateStickyOffset(STICKY_BAR_SELECTOR));
-      const recheck = () => {
-        const el = document.querySelector(STICKY_BAR_SELECTOR);
-        if (el !== observedEl) {
-          if (observedEl) {
-            this.stickyBarObserver!.unobserve(observedEl);
-          }
-          observedEl = el;
-          if (el) {
-            this.stickyBarObserver!.observe(el);
-          }
-        }
-        this.updateStickyOffset(STICKY_BAR_SELECTOR);
-      };
-      recheck();
-      this.stickyBarPoll = setInterval(recheck, 500);
-    },
-    updateStickyOffset(selector: string) {
-      const el = document.querySelector(selector) as HTMLElement | null;
-      const barHeight = el ? el.getBoundingClientRect().height : 0;
-      this.toggleBottomOffset = barHeight > 0 ? barHeight + 12 : 24;
-    },
-    lastReadKey(): string {
-      return `chat-last-read-${this.gameId}`;
-    },
-    loadLastRead(): number {
-      if (typeof window === "undefined") {
-        return 0;
-      }
-      const stored = window.localStorage.getItem(this.lastReadKey());
-      return stored ? Number(stored) : 0;
-    },
-    markRead() {
-      const now = Date.now();
-      this.unreadSince = now;
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem(this.lastReadKey(), String(now));
-      }
-    },
     async loadMessages() {
       const { data, error } = await (this.client as any)
         .from("game_chat_messages")
@@ -327,55 +243,46 @@ export default Vue.extend({
         window.alert(`Could not update mute setting: ${error.message}`);
       }
     },
-    openPanel(tab: Tab) {
-      this.open = true;
-      this.switchTab(tab);
-    },
     closePanel() {
       this.open = false;
+      saveChatOpenPreference(false);
     },
     switchTab(tab: Tab) {
       this.tab = tab;
       if (tab === "chat") {
-        this.markRead();
         this.$nextTick(() => this.scrollToBottom());
       }
     },
   },
 });
+
+const CHAT_OPEN_KEY = "gp-fight-club-chat-open";
+
+/** On by default on desktop (owner request); mobile still defaults closed - a fixed 360px-wide
+ * panel doesn't work on a phone-width viewport, and this one becomes a full-screen overlay there
+ * (see the scoped `@media (max-width: 767px)` below), which would otherwise cover the board the
+ * instant a phone user opened the app. */
+function isDesktopViewport(): boolean {
+  return typeof window !== "undefined" && window.innerWidth >= 768;
+}
+
+export function loadChatOpenPreference(): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+  const stored = window.localStorage.getItem(CHAT_OPEN_KEY);
+  return stored === null ? isDesktopViewport() : stored === "true";
+}
+
+export function saveChatOpenPreference(open: boolean): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.localStorage.setItem(CHAT_OPEN_KEY, open ? "true" : "false");
+}
 </script>
 
 <style lang="scss" scoped>
-.chat-notes__toggle {
-  position: fixed;
-  right: 1rem;
-  // `bottom` is set inline (see `toggleBottomOffset`) - dynamically measured off the live sticky
-  // bar element so it always clears it regardless of that bar's current height, on every viewport.
-  z-index: 1040;
-  width: 3rem;
-  height: 3rem;
-  border-radius: 50%;
-  border: 0;
-  background: #2f6fed;
-  color: #fff;
-  font-size: 1.35rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: bottom 0.15s ease-out;
-}
-
-.chat-notes__badge {
-  position: absolute;
-  top: 0.15rem;
-  right: 0.15rem;
-  width: 0.6rem;
-  height: 0.6rem;
-  border-radius: 50%;
-  background: #dc3545;
-  border: 2px solid #fff;
-}
 
 .chat-notes__panel {
   position: fixed;
@@ -470,13 +377,27 @@ export default Vue.extend({
   padding: 0.3rem 0.6rem 0;
 }
 
+// Was borderless/transparent with muted text - read as a passive status label rather than
+// something pressable. Same treatment as HostedBar.vue's push-notification bell (`.hosted-bar__
+// push-toggle`): a visible border, real background, and hover/press feedback so it's unambiguously
+// a button in both the muted and unmuted state.
 .chat-notes__mute-toggle {
-  border: 0;
-  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 999px;
+  background: var(--bs-body-bg, #fff);
   color: inherit;
-  opacity: 0.65;
   font-size: 0.72rem;
-  padding: 0.15rem 0.3rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+
+  &:hover {
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.25);
+  }
+
+  &:active {
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
 }
 
 .chat-notes__messages {
