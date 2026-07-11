@@ -4350,6 +4350,23 @@ section originally said Chunk 2 must also carry the _full_ `planets.ts` terrafor
 
 ## Next actions
 
+**Done from #98 5th follow-up (2026-07-11, same "Gaia 21" session/branch): in-game chat parity
+with Lobby Chat.** ChatNotesPanel.vue gained the same per-message timestamp and online/offline
+status dot LobbyChatPanel.vue already had - extracted the shared `formatTime` logic into a new
+`chat-time.ts` (`formatChatTime`) rather than duplicating it a third time. Presence is fed from
+the game's OWN already-tracked roster (`hosted.ts`'s existing `trackPresence(..., {type: "game",
+gameId}, ...)` call already lands in the shared Vuex store's `state.presence`) via
+`emitter.store.watch(...)`, rather than ChatNotesPanel opening a second Realtime Presence channel
+
+- the exact bug class the previous follow-up's presence fix (below) had just found and fixed in
+  LobbyChatPanel, so this was written correctly the first time instead of repeating it. Also
+  confirmed (no code change needed): `game_chat_messages`' RLS already lets ANY approved user post
+  to ANY game's chat regardless of whether they're seated in it (`is_approved()` only, no seat/
+  game-membership check - see 0032's own comment, "spectators too" was the original brief) - the
+  owner's "other players outside of the game can also write in it" ask was already satisfied by
+  existing behavior, just needed confirming. 2 new `ChatNotesPanel.spec.ts` cases (10/10 passing).
+  Full `pnpm test` baseline: 404 passing (up from 402)/30 failing, same known flaky range.
+
 **Done from #98 4th follow-up (2026-07-11, same "Gaia 21" session/branch), owner feedback on both
 chats:**
 

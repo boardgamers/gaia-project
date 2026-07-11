@@ -129,6 +129,52 @@ describe("ChatNotesPanel", () => {
     expect(wrapper.text()).to.include("hey");
   });
 
+  it("shows a send-time and an offline status dot per message by default", async () => {
+    const client = makeClient({
+      messages: [
+        {
+          id: 1,
+          game_id: "game-1",
+          user_id: "user-2",
+          author_name: "Luke",
+          body: "hey",
+          created_at: new Date().toISOString(),
+        },
+      ],
+    });
+    const wrapper = mount(ChatNotesPanel as any, {
+      propsData: { client, gameId: "game-1", userId: "user-1" },
+    });
+    await Vue_nextTick(wrapper);
+    await wrapper.find(".chat-notes__toggle").trigger("click");
+    await Vue_nextTick(wrapper);
+    expect(wrapper.find(".chat-notes__time").exists()).to.equal(true);
+    expect(wrapper.find(".chat-notes__presence--offline").exists()).to.equal(true);
+  });
+
+  it("shows an online status dot when presenceState has an entry for that sender", async () => {
+    const client = makeClient({
+      messages: [
+        {
+          id: 1,
+          game_id: "game-1",
+          user_id: "user-2",
+          author_name: "Luke",
+          body: "hey",
+          created_at: new Date().toISOString(),
+        },
+      ],
+    });
+    const wrapper = mount(ChatNotesPanel as any, {
+      propsData: { client, gameId: "game-1", userId: "user-1" },
+    });
+    await Vue_nextTick(wrapper);
+    (wrapper.vm as any).presenceState = { "user-2": [{ context: { type: "lobby" }, focused: true }] };
+    await wrapper.find(".chat-notes__toggle").trigger("click");
+    await Vue_nextTick(wrapper);
+    expect(wrapper.find(".chat-notes__presence--online").exists()).to.equal(true);
+  });
+
   it("sends a message via game_chat_messages.insert with the caller's nickname", async () => {
     const client = makeClient({ nickname: "Luke" });
     const wrapper = mount(ChatNotesPanel as any, {

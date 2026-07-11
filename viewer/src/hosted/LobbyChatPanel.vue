@@ -60,6 +60,7 @@
 import Vue from "vue";
 import { fetchMyNickname } from "./profile";
 import { isOnline as isUserOnline, PresenceState } from "./presence";
+import { formatChatTime } from "./chat-time";
 
 interface LobbyChatMessage {
   id: number;
@@ -122,16 +123,7 @@ export default Vue.extend({
     isOnline(userId: string): boolean {
       return isUserOnline(this.presenceState, userId);
     },
-    formatTime(iso: string): string {
-      const date = new Date(iso);
-      const now = new Date();
-      const sameDay =
-        date.getFullYear() === now.getFullYear() &&
-        date.getMonth() === now.getMonth() &&
-        date.getDate() === now.getDate();
-      const time = date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
-      return sameDay ? time : `${date.toLocaleDateString(undefined, { month: "short", day: "numeric" })}, ${time}`;
-    },
+    formatTime: formatChatTime,
     loadLastRead(): number {
       if (typeof window === "undefined") {
         return 0;

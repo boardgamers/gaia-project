@@ -50,7 +50,14 @@
             class="chat-notes__message"
             :class="{ 'chat-notes__message--own': msg.user_id === userId }"
           >
-            <span class="chat-notes__author">{{ msg.author_name }}</span>
+            <span class="chat-notes__meta">
+              <span
+                class="chat-notes__presence"
+                :class="`chat-notes__presence--${isOnline(msg.user_id) ? 'online' : 'offline'}`"
+              ></span>
+              <span class="chat-notes__author">{{ msg.author_name }}</span>
+              <span class="chat-notes__time">{{ formatTime(msg.created_at) }}</span>
+            </span>
             <span class="chat-notes__body">{{ msg.body }}</span>
           </div>
         </div>
@@ -81,6 +88,8 @@
 <script lang="ts">
 import Vue from "vue";
 import { fetchMyNickname } from "./profile";
+import { isOnline as isUserOnline, PresenceState } from "./presence";
+import { formatChatTime } from "./chat-time";
 
 interface ChatMessage {
   id: number;
@@ -116,6 +125,12 @@ export default Vue.extend({
       notesStatus: "",
       muted: false,
       unreadSince: 0,
+      // Set directly from outside (hosted.ts, via emitter.store.watch) rather than tracked here -
+      // this game already tracks its own presence (hosted.ts's own `trackPresence(..., {type:
+      // "game", gameId}, ...)` call feeds the shared Vuex store's `state.presence`), so reading
+      // that directly avoids opening yet another Realtime Presence channel (see LobbyChatPanel's
+      // own history of exactly that bug, PROGRESS.md).
+      presenceState: {} as PresenceState,
       // Dynamic clearance for the floating toggle above the mobile sticky action/premove bar
       // (Commands.vue/PremoveBar.vue) - its height varies (content, auto-leech dropdown open,
       // etc.), so a fixed offset previously either overlapped it or left an ugly fixed gap on
@@ -160,6 +175,10 @@ export default Vue.extend({
     }
   },
   methods: {
+    isOnline(userId: string): boolean {
+      return isUserOnline(this.presenceState, userId);
+    },
+    formatTime: formatChatTime,
     // Finds whichever mobile sticky bar (if any) is currently rendered - Commands.vue's on-turn
     // bar or PremoveBar.vue's off-turn one - and keeps `toggleBottomOffset` a fixed gap above its
     // real, live height. A ResizeObserver catches height changes (e.g. the auto-leech dropdown
@@ -488,11 +507,35 @@ export default Vue.extend({
   }
 }
 
-.chat-notes__author {
-  display: block;
+.chat-notes__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.7rem;
-  font-weight: 700;
   opacity: 0.7;
+}
+
+.chat-notes__presence {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &--online {
+    background: #28a745;
+  }
+
+  &--offline {
+    background: #adb5bd;
+  }
+}
+
+.chat-notes__author {
+  font-weight: 700;
+}
+
+.chat-notes__time {
+  opacity: 0.8;
 }
 
 .chat-notes__body {

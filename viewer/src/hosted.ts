@@ -72,7 +72,19 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
   // measures the mobile sticky action/premove bar's own live height itself to avoid overlapping
   // it - see ChatNotesPanel.vue's `startStickyBarWatch`), so it doesn't need to share HostedBar's
   // layout or store.
-  mountChild(root, ChatNotesPanel, { client, gameId, userId: session.user.id });
+  const chatNotesRoot = mountChild(root, ChatNotesPanel, { client, gameId, userId: session.user.id });
+  const chatNotes = chatNotesRoot.$children[0] as any;
+  // Feed the game's own presence roster (already tracked below via `trackPresence(..., {type:
+  // "game", gameId}, ...)`, which lands in `emitter.store.state.presence`) into the chat's
+  // per-message status dots, instead of ChatNotesPanel opening its own second Presence channel -
+  // same reasoning as LobbyChatPanel's own presence fix (see PROGRESS.md).
+  chatNotes.presenceState = emitter.store.state.presence;
+  emitter.store.watch(
+    (state: any) => state.presence,
+    (presence: unknown) => {
+      chatNotes.presenceState = presence;
+    }
+  );
 
   const bar = new Vue({
     store: emitter.store,
