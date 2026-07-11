@@ -2,7 +2,6 @@ import BootstrapVue from "bootstrap-vue";
 import { expect } from "chai";
 import Vue from "vue";
 import { mount } from "@vue/test-utils";
-import { playerBarTitle } from "./game-bar";
 import Lobby from "./Lobby.vue";
 import release from "./release.json";
 
@@ -698,7 +697,7 @@ describe("Lobby", () => {
     expect(wrapper.text()).to.contain("boardgamers.space");
   });
 
-  it("defaults to My games, while Lobby, Active, and Finished keep their own sections", async () => {
+  it("defaults to Lobby, while My games, Active, and Finished keep their own sections", async () => {
     const { client } = makeClient(membershipGames, [
       { game_id: "g-open", seq: 1, move: "p3 rotate", committed_at: "2026-07-08T09:00:00Z" },
       { game_id: "g-mine", seq: 7, move: "terrans up int.", committed_at: "2026-07-08T11:05:00Z" },
@@ -714,24 +713,23 @@ describe("Lobby", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
-    // Owner request - returning to the main screen should always land on My games, not Lobby.
     let titles = wrapper.findAll(".game-bar__title").wrappers.map((node) => node.text());
-    expect(titles).to.deep.equal(["My gameStandard"]);
+    expect(titles).to.deep.equal(["Open tableStandard"]);
+    expect(wrapper.findAll(".game-bar__seats").wrappers.map((node) => node.text())).to.deep.equal(["1/3"]);
     let summaries = wrapper.findAll(".game-bar__summary").wrappers.map((node) => node.text());
-    expect(summaries).to.deep.equal(["55m ago Terrans up int."]);
+    expect(summaries).to.deep.equal([]);
 
-    const openTab = wrapper
+    const mineTab = wrapper
       .findAll("button")
-      .filter((b) => b.text().includes("Lobby"))
+      .filter((b) => b.text().includes("My games"))
       .at(0);
-    await openTab.trigger("click");
+    await mineTab.trigger("click");
     await Vue.nextTick();
 
     titles = wrapper.findAll(".game-bar__title").wrappers.map((node) => node.text());
-    expect(titles).to.deep.equal(["Open tableStandard"]);
-    expect(wrapper.findAll(".game-bar__seats").wrappers.map((node) => node.text())).to.deep.equal(["1/3"]);
+    expect(titles).to.deep.equal(["My gameStandard"]);
     summaries = wrapper.findAll(".game-bar__summary").wrappers.map((node) => node.text());
-    expect(summaries).to.deep.equal([]);
+    expect(summaries).to.deep.equal(["55m ago Terrans up int."]);
 
     const activeTab = wrapper
       .findAll("button")
@@ -1036,9 +1034,6 @@ describe("Lobby", () => {
     expect(wrapper.find(".lobby-online-popup").exists()).to.equal(true);
     expect(wrapper.text()).to.include("You");
     expect(wrapper.text()).to.include("Bob");
-    // Owner request - the online-count indicator was desktop-hidden (`d-md-none`) when it was
-    // mobile-only; now shown on every viewport.
-    expect(wrapper.find(".lobby-online-wrap").classes()).to.not.include("d-md-none");
   });
 
   it("shows a My games empty state when the user is not in any listed game", async () => {
@@ -1236,11 +1231,11 @@ describe("Lobby", () => {
   });
 
   it("never falls back to showing a player's email in the game bar tooltip", () => {
-    // playerBarTitle now lives in game-bar.ts (shared with GameNavPanel.vue via GameBar.vue) -
-    // called directly rather than through a Lobby.vue instance method.
+    const { client } = makeClient(sampleGames);
+    const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
     const player = { display_name: "", invited_email: "secret@example.com", score: 5, faction: "terrans" };
 
-    const title = playerBarTitle(player);
+    const title = (wrapper.vm as any).playerBarTitle({}, player);
 
     expect(title).to.not.contain("secret@example.com");
     expect(title).to.contain("Unknown player");

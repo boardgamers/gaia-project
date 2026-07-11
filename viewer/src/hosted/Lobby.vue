@@ -26,12 +26,10 @@
           variant="outline-secondary"
           toggle-class="lobby-icon-button"
           menu-class="lobby-settings-menu"
-          @shown="onSettingsOpened"
         >
           <template #button-content>
             <span aria-hidden="true">&#9881;</span>
             <span class="sr-only">Settings</span>
-            <span v-if="showNewSettingsBadge" class="lobby-icon-button__badge" aria-hidden="true"></span>
           </template>
           <template v-if="isAdmin">
             <b-dropdown-header>Admin only</b-dropdown-header>
@@ -39,7 +37,9 @@
             <b-dropdown-divider></b-dropdown-divider>
           </template>
           <b-dropdown-item-button @click="openNicknameModal">Edit nickname</b-dropdown-item-button>
-          <SettingsToggle label="Dark mode" :checked="isDarkMode" @change="toggleDarkMode" />
+          <b-dropdown-item-button @click="toggleDarkMode">{{
+            isDarkMode ? "Light mode" : "Dark mode"
+          }}</b-dropdown-item-button>
           <b-dropdown-item-button @click="showCredits = true">Credits</b-dropdown-item-button>
           <b-dropdown-item-button @click="signOut">Sign out</b-dropdown-item-button>
         </b-dropdown>
@@ -163,7 +163,7 @@
       </div>
       <div class="lobby-toolbar__actions">
         <a href="?create=1" class="btn btn-primary">+ New game</a>
-        <span class="lobby-online-wrap">
+        <span class="lobby-online-wrap d-md-none">
           <button
             type="button"
             class="lobby-online"
@@ -213,13 +213,78 @@
           :class="{ 'game-bar--my-turn': isMyTurn(game) }"
           :style="{ transform: `translateX(${swipeOffset(game.id)}px)` }"
         >
-          <GameBar
-            :game="game"
-            :presence-state="presenceState"
-            :my-user-id="myUserId"
-            @click.native="handleGameClick(game.id, $event)"
-            @delete-test-game="deleteMyTestGame"
-          />
+          <a
+            :href="game.status === 'open' ? `?preview=${game.id}` : `?game=${game.id}`"
+            class="text-body text-decoration-none flex-grow-1 game-bar__link"
+            @click="handleGameClick(game.id, $event)"
+          >
+            <span class="game-bar__identity">
+              <span class="game-bar__round-slot">
+                <span v-if="game.current_round != null" class="game-bar__round">R{{ game.current_round }}</span>
+                <span
+                  v-else-if="game.status === 'open'"
+                  class="game-bar__seats"
+                  :title="`${claimedSeats(game)} of ${game.player_count} seats joined`"
+                  >{{ claimedSeats(game) }}/{{ game.player_count }}</span
+                >
+              </span>
+              <span class="game-bar__copy">
+                <span class="game-bar__title">
+                  <strong>{{ game.name || "Unnamed game" }}</strong>
+                  <span v-if="auctionLabel(game)" class="game-bar__tag">{{ auctionLabel(game) }}</span>
+                  <span v-if="game.options && game.options.banPhase" class="game-bar__tag">Ban Phase</span>
+                  <span v-if="game.options && game.options.officialCenterSectors" class="game-bar__tag"
+                    >Sector 1-4</span
+                  >
+                  <span v-if="isTestGame(game)" class="game-bar__tag">Test game</span>
+                  <span v-if="game.abandoned_at" class="game-bar__tag game-bar__tag--abandoned">Abandoned</span>
+                  <button
+                    v-if="isTestGame(game) && game.created_by === myUserId"
+                    type="button"
+                    class="game-bar__delete-test-game"
+                    title="Delete this test game (immediate, no other players are in it)"
+                    @click.stop.prevent="deleteMyTestGame(game)"
+                  >
+                    Delete
+                  </button>
+                </span>
+                <span v-if="summaryForGame(game)" class="game-bar__summary text-muted small">
+                  <span v-if="moveAge(game)" class="game-bar__age">{{ moveAge(game) }}</span>
+                  {{ summaryForGame(game) }}
+                </span>
+              </span>
+            </span>
+            <span
+              v-if="playersWithSummary(game).length > 0"
+              class="game-bar__players gaia-viewer-game"
+              :class="{ 'game-bar__players--stacked': playersWithSummary(game).length >= 3 }"
+            >
+              <span v-for="(row, rowIndex) in playerRows(game)" :key="`row-${rowIndex}`" class="game-bar__player-row">
+                <span
+                  v-for="(player, index) in row"
+                  :key="player.seat"
+                  class="game-bar__player"
+                  :style="{ zIndex: String(row.length - index) }"
+                  :title="playerBarTitle(game, player)"
+                >
+                  <span class="game-bar__avatar">
+                    <svg viewBox="-22 -22 44 44"><Token :faction="player.faction" /></svg>
+                    <span class="game-bar__initial">{{ factionInitial(player) }}</span>
+                    <span
+                      class="game-bar__presence"
+                      :class="`game-bar__presence--${playerPresence(game, player)}`"
+                    ></span>
+                    <span
+                      class="game-bar__score"
+                      :class="{ 'game-bar__score--active': player.seat === game.current_seat }"
+                    >
+                      {{ player.score != null ? player.score : "-" }}
+                    </span>
+                  </span>
+                </span>
+              </span>
+            </span>
+          </a>
         </b-list-group-item>
       </div>
     </div>
@@ -228,18 +293,15 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { PresenceState, trackPresence } from "./presence";
+import { presenceStatus, PresenceState, trackPresence } from "./presence";
 import { disablePushNotifications, enablePushNotifications, isPushEnabled } from "./push";
+import Token from "../components/Token.vue";
 import CreditsContent from "../components/CreditsContent.vue";
 import { factionName } from "../data/factions";
 import { isAdminEmail } from "./admin";
-import GameBar from "./GameBar.vue";
-import { isMyGame as isMyGameShared, isMyTurn as isMyTurnShared, sortGames as sortGamesShared } from "./game-bar";
 import InfoModal from "./InfoModal.vue";
 import { fetchMyNickname, setMyNickname } from "./profile";
 import releaseData from "./release.json";
-import SettingsToggle from "./SettingsToggle.vue";
-import { hasUnseenSettings, markSettingsSeen } from "./settings-notice";
 import { getTheme, toggleTheme } from "./theme";
 
 const SWIPE_ACTION_WIDTH = 88;
@@ -350,6 +412,31 @@ function compactMoveSummary(move: string): string | null {
   return detail ? `${actor} ${detail}` : null;
 }
 
+function formatMoveAge(value: string | null | undefined): string | null {
+  if (!value) {
+    return null;
+  }
+  const rawMs = Date.now() - new Date(value).getTime();
+  if (!Number.isFinite(rawMs)) {
+    return null;
+  }
+  // A slightly-behind client clock (or a move committed within the same second as this render)
+  // can make the delta briefly negative - clamp to 0 ("just now") instead of hiding the age
+  // entirely, which previously made the whole age display vanish for any client with even a few
+  // seconds of clock skew relative to the server.
+  const ms = Math.max(0, rawMs);
+  const minutes = Math.floor(ms / 60_000);
+  if (minutes < 60) {
+    return `${Math.max(1, minutes)}m ago`;
+  }
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) {
+    return `${hours}h ago`;
+  }
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
 type ReleaseEntry = {
   version: string;
   releasedAt: string;
@@ -365,9 +452,18 @@ type ReleaseEntry = {
   userChanges?: string[];
 };
 
+function lobbyPresenceStatus(
+  state: PresenceState,
+  userId: string | null,
+  gameId: string,
+  lastActiveAt: string | null
+): "green" | "yellow" | "grey" {
+  return presenceStatus(state, userId, gameId, lastActiveAt);
+}
+
 export default Vue.extend({
   name: "HostedLobby",
-  components: { GameBar, InfoModal, CreditsContent, SettingsToggle },
+  components: { Token, InfoModal, CreditsContent },
   props: {
     client: { type: Object, required: true },
     session: { type: Object, required: true },
@@ -388,7 +484,7 @@ export default Vue.extend({
       myNickname: "" as string,
       nicknameInput: "" as string,
       nicknameSaving: false,
-      activeTab: "mine" as "mine" | "open" | "active" | "finished",
+      activeTab: "open" as "mine" | "open" | "active" | "finished",
       revealedGameId: "" as string,
       swipeGameId: "" as string,
       swipeStartX: 0,
@@ -398,11 +494,6 @@ export default Vue.extend({
       presenceState: {} as PresenceState,
       showOnlinePlayers: false,
       isDarkMode: getTheme() === "dark",
-      // A small badge on the gear icon the first time a new settings option ships after this was
-      // last opened (owner request: "prompted... once they have seen it once... should not fire
-      // again") - shares the one flag HostedBar.vue's own settings gear uses (settings-notice.ts),
-      // since opening either counts as "seen the settings menu."
-      showNewSettingsBadge: hasUnseenSettings(),
     };
   },
   computed: {
@@ -508,9 +599,7 @@ export default Vue.extend({
     isPushEnabled().then((enabled) => {
       this.pushEnabled = enabled;
     });
-    // Owner request - returning to the main screen (including via HostedBar's "back to lobby"
-    // link) should always land on My games, not the open-lobby list.
-    this.activeTab = "mine";
+    this.activeTab = "open";
     if (typeof document !== "undefined") {
       this.documentPointerDownHandler = (event: PointerEvent) => this.onDocumentPointerDown(event);
       document.addEventListener("pointerdown", this.documentPointerDownHandler, true);
@@ -622,18 +711,116 @@ export default Vue.extend({
         .subscribe();
       this.gamesChannel = channel;
     },
-    // Delegates to game-bar.ts's shared, no-`this` implementations (also used by GameBar.vue's own
-    // rendering and GameNavPanel.vue's list filtering) - kept as thin methods here rather than
-    // changed at every call site, since the template and the tab computeds above already call
-    // `this.isMyTurn(game)`/`this.isMyGame(game)` directly.
     isMyGame(game: any): boolean {
-      return isMyGameShared(game, this.myUserId, this.userEmail);
+      if (game.created_by === this.myUserId) {
+        return true;
+      }
+      const email = this.userEmail.toLowerCase();
+      return (game.players ?? []).some(
+        (player: any) => player.user_id === this.myUserId || (player.invited_email ?? "").toLowerCase() === email
+      );
+    },
+    playerAtSeat(game: any, seat: number | null): any {
+      return (game.players ?? []).find((p: any) => p.seat === seat);
     },
     isMyTurn(game: any): boolean {
-      return isMyTurnShared(game, this.myUserId, this.userEmail);
+      if (game.status !== "active" || game.current_seat == null) {
+        return false;
+      }
+      const seat = this.playerAtSeat(game, game.current_seat);
+      if (!seat) {
+        return false;
+      }
+      const email = this.userEmail.toLowerCase();
+      return seat.user_id === this.myUserId || (seat.invited_email ?? "").toLowerCase() === email;
     },
+    lastMoveTimestamp(game: any): string | null {
+      return game.latest_move_committed_at ?? game._latest_move_created_at ?? null;
+    },
+    lastMoveTime(game: any): number {
+      const value = this.lastMoveTimestamp(game);
+      return value ? new Date(value).getTime() : 0;
+    },
+    // Ordering (owner request): your-turn games first, then by most-recent-move-first; finished
+    // games sort separately by most-recently-finished first, using the same "last move" timestamp
+    // as a finish-time proxy. Both non-finished tiers and the finished tier all sort the same
+    // direction (newest activity first) - only "is it my turn" ever takes priority over recency.
     sortGames(games: any[]): any[] {
-      return sortGamesShared(games, this.myUserId, this.userEmail);
+      return [...games].sort((a, b) => {
+        const aFinished = a.status === "finished";
+        const bFinished = b.status === "finished";
+        if (aFinished !== bFinished) {
+          return aFinished ? 1 : -1;
+        }
+        if (aFinished) {
+          return this.lastMoveTime(b) - this.lastMoveTime(a);
+        }
+        const aTurn = this.isMyTurn(a);
+        const bTurn = this.isMyTurn(b);
+        if (aTurn !== bTurn) {
+          return aTurn ? -1 : 1;
+        }
+        return this.lastMoveTime(b) - this.lastMoveTime(a);
+      });
+    },
+    playersWithSummary(game: any): any[] {
+      return (game.players ?? [])
+        .filter((p: any) => !!p.faction)
+        .slice()
+        .sort((a: any, b: any) => a.seat - b.seat);
+    },
+    playerRows(game: any): any[][] {
+      const players = this.playersWithSummary(game);
+      return players.length >= 3 ? [players.slice(0, 2), players.slice(2, 4)] : [players];
+    },
+    factionInitial(player: any): string {
+      return player.faction ? player.faction.substr(0, 1).toUpperCase() : "";
+    },
+    playerBarTitle(game: any, player: any): string {
+      const name = player.display_name || "Unknown player";
+      const vp = player.score != null ? `${player.score} VP` : "no score yet";
+      return `${name} - ${factionName(player.faction)} - ${vp}`;
+    },
+    playerPresence(game: any, player: any): "green" | "yellow" | "grey" {
+      return lobbyPresenceStatus(this.presenceState, player.user_id ?? null, game.id, player.last_active_at ?? null);
+    },
+    isTestGame(game: any): boolean {
+      if (game.status === "open") {
+        return false;
+      }
+      const players = game.players ?? [];
+      const userIds = players.map((p: any) => p.user_id).filter((id: string | null) => !!id);
+      return userIds.length > 0 && new Set(userIds).size < players.length;
+    },
+    auctionLabel(game: any): string {
+      switch (game.options?.auction) {
+        case "silent":
+          return "Silent Auction";
+        case "choose-bid":
+          return "Choose, Then Bid";
+        case "bid-while-choosing":
+          return "Bid While Choosing";
+        default:
+          return "Standard";
+      }
+    },
+    summaryForGame(game: any): string | null {
+      if (game.status === "open") {
+        // Only a join event (join_open_game_seat writes latest_move_summary directly - see
+        // 0029_join_event_summary.sql) is expected here; there's no move-log fallback to try
+        // since commit_turn never runs before the game goes active.
+        return game.latest_move_summary || null;
+      }
+      return game.latest_move_summary || game._fallback_latest_move_summary || null;
+    },
+    moveAge(game: any): string | null {
+      if (game.status === "open" && !game.latest_move_summary) {
+        return null;
+      }
+      return formatMoveAge(this.lastMoveTimestamp(game));
+    },
+    claimedSeats(game: any): number {
+      return (game.players ?? []).filter((player: any) => !!player.user_id).length;
     },
     swipeOffset(gameId: string): number {
       if (!this.isAdmin) {
@@ -724,10 +911,6 @@ export default Vue.extend({
     toggleDarkMode() {
       this.isDarkMode = toggleTheme() === "dark";
     },
-    onSettingsOpened() {
-      markSettingsSeen();
-      this.showNewSettingsBadge = false;
-    },
     async signOut() {
       await (this.client as any).auth.signOut();
       window.location.reload();
@@ -772,34 +955,9 @@ export default Vue.extend({
 }
 
 .lobby-icon-button {
-  position: relative;
   min-width: 2.2rem;
   padding-left: 0.45rem;
   padding-right: 0.45rem;
-}
-
-.lobby-icon-button__badge {
-  position: absolute;
-  top: 0.1rem;
-  right: 0.1rem;
-  width: 0.55rem;
-  height: 0.55rem;
-  border-radius: 50%;
-  background: #dc3545;
-  border: 2px solid #fff;
-  animation: lobby-settings-pulse 1.8s infinite;
-}
-
-@keyframes lobby-settings-pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.6);
-  }
-  70% {
-    box-shadow: 0 0 0 5px rgba(220, 53, 69, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
-  }
 }
 
 .lobby-online-wrap {
@@ -1016,9 +1174,240 @@ export default Vue.extend({
   font-weight: 700;
 }
 
-// `.game-bar`/`.game-bar--my-turn` (the pulse) and every `.game-bar__*` rule now live in
-// GameBar.vue's own global (unscoped) stylesheet - moved there, not duplicated, since this file's
-// `<style scoped>` can't reach GameBar.vue's own rendered markup (see that file's comment).
+.game-bar {
+  min-height: 4.25rem;
+  transition: transform 0.16s ease-out;
+}
+
+.game-bar--my-turn {
+  animation: game-bar-my-turn-pulse 2s infinite;
+}
+
+// `inset`, not an outward ring: this bar's direct parent (.game-swipe, for the swipe-to-delete
+// interaction) has `overflow: hidden`, which silently clipped an earlier outward box-shadow ring
+// to nothing - the class/animation was applying correctly the whole time, it just had nowhere
+// visible to render. An inset shadow stays within the bar's own box, so it can't be clipped.
+@keyframes game-bar-my-turn-pulse {
+  0% {
+    box-shadow: inset 0 0 0 0 rgba(var(--highlighted-rgb, 32, 204, 68), 0.65);
+  }
+  50% {
+    box-shadow: inset 0 0 0 3px rgba(var(--highlighted-rgb, 32, 204, 68), 0.65);
+  }
+  100% {
+    box-shadow: inset 0 0 0 0 rgba(var(--highlighted-rgb, 32, 204, 68), 0.65);
+  }
+}
+
+.game-bar__link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  min-height: 100%;
+}
+
+.game-bar__identity {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.game-bar__round-slot {
+  width: 2.35rem;
+  flex-shrink: 0;
+}
+
+.game-bar__round {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #495057;
+  background: #e9ecef;
+  border-radius: 0.25rem;
+  padding: 0.1rem 0.4rem;
+}
+
+// Same slot/shape as .game-bar__round (open games have no round yet, so that slot was just
+// empty) - shows claimed/total seats instead, in the same green used for "it's this seat's turn"
+// elsewhere in this bar (.game-bar__score--active), so a glance at the left edge tells you
+// "in progress, round N" vs "still filling up, X of Y joined" consistently.
+.game-bar__seats {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  background: #28a745;
+  border-radius: 0.25rem;
+  padding: 0.1rem 0.4rem;
+}
+
+.game-bar__title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.game-bar__copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.05rem;
+  min-width: 0;
+}
+
+.game-bar__summary {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.game-bar__age {
+  margin-right: 0.35rem;
+  font-weight: 700;
+  color: #6c757d;
+}
+
+.game-bar__tag {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.2rem;
+  padding: 0.08rem 0.42rem;
+  border-radius: 999px;
+  background: #eef3f8;
+  color: #55657a;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+
+  &--abandoned {
+    background: #f8d7da;
+    color: #842029;
+  }
+}
+
+// A plain always-visible button rather than reusing the admin-only swipe-to-delete gesture (which
+// is also explicitly disabled for mouse pointers, see startSwipe) - this needs to work the same on
+// desktop click and mobile tap for any player, not just the admin.
+.game-bar__delete-test-game {
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.08rem 0.5rem;
+  background: #f8d7da;
+  color: #842029;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.game-bar__players {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.18rem;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.game-bar__player-row {
+  display: flex;
+  align-items: center;
+}
+
+.game-bar__player {
+  display: flex;
+  align-items: center;
+  padding: 0.1rem;
+  position: relative;
+
+  & + & {
+    margin-left: 0.35rem;
+  }
+}
+
+.game-bar__players--stacked {
+  min-width: 3.35rem;
+}
+
+.game-bar__avatar {
+  position: relative;
+  display: inline-flex;
+  width: 1.9rem;
+  height: 1.9rem;
+
+  svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+}
+
+.game-bar__initial {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.85), 0 0 3px rgba(0, 0, 0, 0.85);
+  pointer-events: none;
+}
+
+.game-bar__score {
+  position: absolute;
+  bottom: -0.3rem;
+  right: -0.2rem;
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  background: #495057;
+  border-radius: 0.6rem;
+  padding: 0.15rem 0.25rem;
+  min-width: 0.9rem;
+  max-width: 1.5rem;
+  text-align: center;
+  white-space: nowrap;
+  box-shadow: 0 0 0 1px #fff;
+  z-index: 1;
+
+  &--active {
+    background: #28a745;
+  }
+}
+
+.game-bar__presence {
+  position: absolute;
+  top: -0.08rem;
+  right: -0.02rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  border: 1px solid #fff;
+  box-shadow: 0 0 0 1px rgba(73, 80, 87, 0.12);
+
+  &--green {
+    background: #28a745;
+  }
+
+  &--yellow {
+    background: #f1c40f;
+  }
+
+  &--grey {
+    background: #95a5a6;
+  }
+}
 
 @media (max-width: 767px) {
   .lobby-header,
@@ -1033,6 +1422,14 @@ export default Vue.extend({
 
   .lobby-tabs {
     align-self: flex-start;
+  }
+
+  .game-bar__title {
+    white-space: normal;
+  }
+
+  .game-bar__summary {
+    white-space: normal;
   }
 }
 </style>

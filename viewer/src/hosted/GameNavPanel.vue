@@ -1,9 +1,18 @@
 <template>
   <div class="game-nav gaia-viewer-game">
+    <button
+      type="button"
+      class="game-nav__toggle"
+      @click="open = !open"
+      :aria-label="open ? 'Close game menu' : 'Open game menu'"
+    >
+      <span aria-hidden="true">&#9776;</span>
+    </button>
+
     <div v-if="open" class="game-nav__panel">
       <div class="game-nav__header">
         <a href="?create=1" class="btn btn-primary btn-sm">+ New game</a>
-        <button type="button" class="game-nav__close" @click="close" aria-label="Close">&times;</button>
+        <button type="button" class="game-nav__close" @click="open = false" aria-label="Close">&times;</button>
       </div>
 
       <div class="game-nav__tabs" role="tablist" aria-label="Game status tabs">
@@ -33,66 +42,55 @@
         </button>
       </div>
 
-      <b-list-group v-if="loading || visibleGames.length === 0" class="game-nav__list">
-        <b-list-group-item v-if="loading">Loading games...</b-list-group-item>
-        <b-list-group-item v-else>{{ emptyText }}</b-list-group-item>
-      </b-list-group>
-      <b-list-group v-else class="game-nav__list">
-        <b-list-group-item
-          v-for="game in visibleGames"
-          :key="game.id"
-          class="game-bar"
-          :class="{ 'game-bar--my-turn': isMyTurn(game), 'game-nav__row--current': game.id === currentGameId }"
-        >
-          <GameBar
-            :game="game"
-            :presence-state="presenceState"
-            :my-user-id="myUserId"
-            @click.native="onRowClick(game, $event)"
-            @delete-test-game="deleteMyTestGame"
-          />
-        </b-list-group-item>
-      </b-list-group>
+      <div class="game-nav__list">
+        <p v-if="loading" class="text-muted small px-2">Loading games...</p>
+        <p v-else-if="visibleGames.length === 0" class="text-muted small px-2">{{ emptyText }}</p>
+        <template v-else>
+          <a
+            v-for="game in visibleGames"
+            :key="game.id"
+            :href="tab === 'open' ? `?preview=${game.id}` : `?game=${game.id}`"
+            class="game-nav__row"
+            :class="{ 'game-nav__row--turn': isMyTurn(game), 'game-nav__row--current': game.id === currentGameId }"
+            @click="onRowClick(game, $event)"
+          >
+            <span class="game-nav__row-name">{{ game.name || "Unnamed game" }}</span>
+            <span class="game-nav__row-meta text-muted small">
+              <template v-if="game.status === 'open'">{{ claimedSeats(game) }}/{{ game.player_count }} seats</template>
+              <template v-else-if="game.current_round != null">Round {{ game.current_round }}</template>
+              <span v-if="isMyTurn(game)" class="game-nav__row-turn-dot" title="Your turn"></span>
+            </span>
+          </a>
+        </template>
+      </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
-import GameBar from "./GameBar.vue";
-import { isMyGame, isMyTurn, sortGames } from "./game-bar";
-import { PresenceState } from "./presence";
 
 /** Collapsible left-side main menu (owner's brief: "browse my games, lobby active games, finished
- * games... basically just be that main menu"), and a global on/off preference toggled from the
- * settings menu (HostedBar.vue) rather than its own floating button - see `open`'s doc comment.
- * Deliberately a light, standalone query rather than reusing Lobby.vue wholesale - Lobby.vue
- * carries a lot of unrelated chrome (release notes, credits, nickname modal, admin delete-swipe)
- * that has no place in an in-game side menu. Every row renders through the same GameBar.vue
- * component Lobby.vue itself uses (owner request: the two must look and behave identically, and a
- * change to one must apply to both). Clicking an active/finished game emits `select-game` so
- * hosted.ts can swap the game in place (no reload); open-lobby rows and "+ New game" still do a
- * real navigation (join/create both have their own dedicated flows, no need to reproduce them
- * here). */
+ * games... basically just be that main menu"), mirroring ChatNotesPanel.vue's own floating-toggle
+ * + docked-panel shell on the opposite edge. Deliberately a light, standalone query rather than
+ * reusing Lobby.vue wholesale - Lobby.vue carries a lot of unrelated chrome (release notes,
+ * credits, nickname modal, admin delete-swipe) that has no place in an in-game side menu. Clicking
+ * an active/finished game emits `select-game` so hosted.ts can swap the game in place (no reload);
+ * open-lobby rows and "+ New game" still do a real navigation (join/create both have their own
+ * dedicated flows, no need to reproduce them here). */
 export default Vue.extend({
   name: "GameNavPanel",
-  components: { GameBar },
   props: {
     client: { type: Object, required: true },
     session: { type: Object, required: true },
   },
   data() {
     return {
-      // A persisted, global preference (owner request - "not to be a per game specific setting"),
-      // not per-session UI state: read from localStorage at mount, toggled only from HostedBar.vue's
-      // settings menu (`hosted.ts` calls `nav.open = !nav.open` and persists it), so it stays
-      // consistently on/off across every game and every future visit instead of resetting.
-      open: loadGameNavOpenPreference(),
+      open: false,
       tab: "active" as "active" | "open" | "finished",
       games: [] as any[],
       loading: true,
       gamesChannel: null as any,
-      presenceState: {} as PresenceState,
       // Not a prop - hosted.ts sets this directly on the mounted instance whenever the in-app game
       // switch lands (same "hold the instance, assign into it" pattern already used for
       // `chatNotes.presenceState` in launchGame), since there's no parent template re-passing it.
@@ -104,29 +102,19 @@ export default Vue.extend({
       return (this.session as any).user?.id ?? "";
     },
     userEmail(): string {
-      return (this.session as any).user?.email ?? "";
+      return ((this.session as any).user?.email ?? "").toLowerCase();
     },
     openGames(): any[] {
-      return sortGames(
-        (this.games as any[]).filter((game) => game.status === "open"),
-        this.myUserId,
-        this.userEmail
-      );
+      return this.sortGames((this.games as any[]).filter((game) => game.status === "open"));
     },
     myActiveGames(): any[] {
-      return sortGames(
-        (this.games as any[]).filter((game) => game.status === "active" && isMyGame(game, this.myUserId, this.userEmail)),
-        this.myUserId,
-        this.userEmail
+      return this.sortGames(
+        (this.games as any[]).filter((game) => game.status === "active" && this.isMyGame(game))
       );
     },
     myFinishedGames(): any[] {
-      return sortGames(
-        (this.games as any[]).filter(
-          (game) => game.status === "finished" && isMyGame(game, this.myUserId, this.userEmail)
-        ),
-        this.myUserId,
-        this.userEmail
+      return this.sortGames(
+        (this.games as any[]).filter((game) => game.status === "finished" && this.isMyGame(game))
       );
     },
     visibleGames(): any[] {
@@ -153,13 +141,6 @@ export default Vue.extend({
     }
   },
   methods: {
-    isMyTurn(game: any): boolean {
-      return isMyTurn(game, this.myUserId, this.userEmail);
-    },
-    close() {
-      this.open = false;
-      saveGameNavOpenPreference(false);
-    },
     async refresh() {
       this.loading = true;
       const { data, error } = await (this.client as any)
@@ -178,14 +159,39 @@ export default Vue.extend({
         .on("postgres_changes", { event: "*", schema: "public", table: "players" }, () => this.refresh())
         .subscribe();
     },
-    async deleteMyTestGame(game: any) {
-      if (!window.confirm(`Delete "${game.name || "this test game"}"? This cannot be undone.`)) {
-        return;
+    isMyGame(game: any): boolean {
+      if (game.created_by === this.myUserId) {
+        return true;
       }
-      const { error } = await (this.client as any).rpc("delete_my_test_game", { p_game_id: game.id });
-      if (!error) {
-        await this.refresh();
+      return (game.players ?? []).some(
+        (player: any) =>
+          player.user_id === this.myUserId || (player.invited_email ?? "").toLowerCase() === this.userEmail
+      );
+    },
+    isMyTurn(game: any): boolean {
+      if (game.status !== "active" || game.current_seat == null) {
+        return false;
       }
+      const seat = (game.players ?? []).find((p: any) => p.seat === game.current_seat);
+      if (!seat) {
+        return false;
+      }
+      return seat.user_id === this.myUserId || (seat.invited_email ?? "").toLowerCase() === this.userEmail;
+    },
+    claimedSeats(game: any): number {
+      return (game.players ?? []).filter((p: any) => p.user_id != null).length;
+    },
+    sortGames(games: any[]): any[] {
+      return [...games].sort((a, b) => {
+        const aTurn = this.isMyTurn(a);
+        const bTurn = this.isMyTurn(b);
+        if (aTurn !== bTurn) {
+          return aTurn ? -1 : 1;
+        }
+        const aTime = a.latest_move_committed_at ?? a.created_at ?? "";
+        const bTime = b.latest_move_committed_at ?? b.created_at ?? "";
+        return aTime < bTime ? 1 : aTime > bTime ? -1 : 0;
+      });
     },
     onRowClick(game: any, event: MouseEvent) {
       // Active/finished games swap in place (no reload) - open-lobby rows still go through the
@@ -196,38 +202,32 @@ export default Vue.extend({
         return;
       }
       event.preventDefault();
+      this.open = false;
       this.$emit("select-game", game.id);
     },
   },
 });
-
-const GAME_NAV_OPEN_KEY = "gp-fight-club-game-nav-open";
-
-/** On by default on desktop (owner request); mobile still defaults closed - this becomes a
- * full-screen overlay there (see the scoped `@media (max-width: 767px)` below), which would
- * otherwise cover the board the instant a phone user opened the app. Same reasoning/pattern as
- * ChatNotesPanel.vue's own `loadChatOpenPreference`. */
-function isDesktopViewport(): boolean {
-  return typeof window !== "undefined" && window.innerWidth >= 768;
-}
-
-export function loadGameNavOpenPreference(): boolean {
-  if (typeof window === "undefined") {
-    return false;
-  }
-  const stored = window.localStorage.getItem(GAME_NAV_OPEN_KEY);
-  return stored === null ? isDesktopViewport() : stored === "true";
-}
-
-export function saveGameNavOpenPreference(open: boolean): void {
-  if (typeof window === "undefined") {
-    return;
-  }
-  window.localStorage.setItem(GAME_NAV_OPEN_KEY, open ? "true" : "false");
-}
 </script>
 
 <style lang="scss" scoped>
+.game-nav__toggle {
+  position: fixed;
+  left: 1rem;
+  bottom: 24px;
+  z-index: 1040;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  border: 0;
+  background: #2f6fed;
+  color: #fff;
+  font-size: 1.35rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .game-nav__panel {
   position: fixed;
   top: 0;
@@ -300,13 +300,49 @@ export function saveGameNavOpenPreference(open: boolean): void {
   padding: 0.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.3rem;
 }
 
-// GameBar.vue's own global `.game-bar`/`.game-bar--my-turn` styling handles everything else about
-// how a row looks - this is only the one thing specific to being IN this menu (which game you're
-// currently looking at).
-.game-nav__row--current {
-  outline: 2px solid rgba(47, 111, 237, 0.5);
+.game-nav__row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.4rem 0.55rem;
+  border-radius: 0.4rem;
+  background: rgba(0, 0, 0, 0.04);
+  color: inherit;
+  text-decoration: none;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.08);
+  }
+
+  &--turn {
+    background: rgba(47, 111, 237, 0.12);
+  }
+
+  &--current {
+    outline: 2px solid rgba(47, 111, 237, 0.5);
+  }
+}
+
+.game-nav__row-name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.game-nav__row-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.game-nav__row-turn-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: #2f6fed;
 }
 </style>
