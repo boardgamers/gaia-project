@@ -7,7 +7,7 @@
 > anything else, including the **Testing — required going forward** section it points to — both
 > are standing process, not optional. Then ask the user "what next?" and use the **Next actions**
 > section below to guide them.
-> Last updated: **2026-07-11** (desktop-only side panels redone with a real viewport split, #99).
+> Last updated: **2026-07-11** (main menu made fully desktop-only + shared GameBar rows, #100).
 
 ## Working agreements (read every session, not optional)
 
@@ -3987,6 +3987,32 @@ e83a1ba`) rather than patching forward, restoring the pre-change floating-toggle
     breakpoints with a shared `matchMedia` mock helper; full suite at 425/425 passing viewer specs
     (up from 415 baseline) plus the same 31-34 pre-existing/flaky engine-test failures confirmed
     unrelated in #98. Released as v5.27.0.
+100.  ✅ **Main menu (left panel) made fully desktop-only, and its rows made feature-complete to match
+      Lobby's own list (2026-07-11, same day).** Two owner asks in one pass: (1) mobile should not have
+      the main menu at all - not a hidden panel, not a floating toggle, nothing, since #99 had only
+      made it default-_closed_ on mobile while still rendering a `☰` button and full-screen overlay
+      there; (2) the desktop panel's rows were cut off - no player avatars at all, and only a bare
+      name/round, unlike Lobby.vue's rich `.game-bar` rows (avatars, scores, presence dots, last-move
+      summary, tags). Fixed both together: `GameNavPanel.vue`'s template root is now `v-if="isDesktop"`
+      (nothing rendered on mobile - the old `.game-nav__toggle` button is deleted entirely, not just
+      conditionally hidden), and reintroduced the `GameBar.vue`/`game-bar.ts` shared-component split
+      that #93's era briefly had before it got swept into the `e83a1ba` revert (#98) - pure, no-`this`
+      row logic (`isMyTurn`/`isMyGame`/`sortGames`/`summaryForGame`/`playerPresence`/etc.) lives in
+      `game-bar.ts`, and the presentational row markup + its global `.game-bar*` CSS lives in
+      `GameBar.vue`, used identically by both `Lobby.vue` (which lost ~250 lines of now-duplicate
+      inline markup/logic/CSS) and `GameNavPanel.vue` - a change to one now always applies to both, by
+      construction. `GameNavPanel.vue`'s docked panel widened 320px→420px (`frontend.scss`'s
+      `#app.game-nav-open` reservation updated to match) plus a `.game-nav__row .game-bar__title/
+__summary { white-space: normal }` override, so a row's name/summary/up-to-4-stacked-avatars
+      never truncates regardless of the panel's fixed width (GameBar.vue's own wrap rule only kicks in
+      below a phone-width _window_, which this panel isn't tied to). `GameNavPanel.vue` now feeds
+      `presenceState` the same way `ChatNotesPanel.vue` already did (`hosted.ts`'s `nav.presenceState
+= emitter.store.state.presence` + a store watcher), needed for GameBar's presence dots. Also
+      fixed a `bar`-used-before-declared eslint error the reordering surfaced by moving `bar`'s
+      declaration earlier in `mountGameInstance`. New `GameBar.spec.ts` (6 specs) plus a rewritten
+      `GameNavPanel.spec.ts` (desktop-only rendering, GameBar-row assertions, no more mobile branches
+      since there's nothing left to test there); Lobby's existing game-bar specs all still pass
+      unchanged against the shared component. Released as v5.28.0.
 
 ## Still MISSING — only one art-only item left
 

@@ -92,38 +92,11 @@ async function mountGameInstance(
   // layout or store.
   const chatNotesRoot = mountChild(slot, ChatNotesPanel, { client, gameId, userId: session.user.id });
   const chatNotes = chatNotesRoot.$children[0] as any;
-  // ChatNotesPanel.vue's own content/behavior is untouched (owner's explicit "keep it as is") - its
-  // panel is `position: fixed`, so it floats OVER whatever's underneath rather than participating in
-  // layout. Toggling a class on the page root and reserving the same width via CSS padding (see
-  // frontend.scss's `#app.chat-notes-open`, desktop-only) makes the game area itself shrink out of
-  // the way instead, so the two no longer overlap.
-  const chatOpenUnwatch = chatNotes.$watch("open", (open: boolean) => {
-    root.classList.toggle("chat-notes-open", open);
-    bar.chatPanelOpen = open;
-  });
-  root.classList.remove("chat-notes-open");
-  cleanups.push(chatOpenUnwatch, () => root.classList.remove("chat-notes-open"));
-  // GameNavPanel.vue (`nav`) is mounted once at the `launchGame` level, not per-game like `bar`
-  // above (it needs to survive an in-app game switch) - HostedBar.vue's settings-menu label still
-  // needs its live `open` state on every re-mounted `bar`, so watch it here and clean up on
-  // dispose rather than leaving a watcher from a torn-down `bar` still firing.
-  const gameNavOpenUnwatch = nav.$watch("open", (open: boolean) => {
-    bar.gameNavPanelOpen = open;
-  });
-  cleanups.push(gameNavOpenUnwatch);
-  // Feed the game's own presence roster (already tracked below via `trackPresence(..., {type:
-  // "game", gameId}, ...)`, which lands in `emitter.store.state.presence`) into the chat's
-  // per-message status dots, instead of ChatNotesPanel opening its own second Presence channel -
-  // same reasoning as LobbyChatPanel's own presence fix (see PROGRESS.md).
-  chatNotes.presenceState = emitter.store.state.presence;
-  const unwatchPresence = emitter.store.watch(
-    (state: any) => state.presence,
-    (presence: unknown) => {
-      chatNotes.presenceState = presence;
-    }
-  );
-  cleanups.push(unwatchPresence);
 
+  // Declared here (before its watchers below, which reference it) rather than in its previous
+  // spot further down - HostedBar.vue's settings-menu labels (`chatPanelOpen`/`gameNavPanelOpen`)
+  // need to be kept live from `chatNotes`'/`nav`'s own `open` state, and a watcher can't reference
+  // `bar` before it exists.
   const bar = new Vue({
     store: emitter.store,
     data: {
@@ -168,6 +141,42 @@ async function mountGameInstance(
   isPushEnabled().then((enabled) => {
     bar.pushEnabled = enabled;
   });
+
+  // ChatNotesPanel.vue's own content/behavior is untouched (owner's explicit "keep it as is") - its
+  // panel is `position: fixed`, so it floats OVER whatever's underneath rather than participating in
+  // layout. Toggling a class on the page root and reserving the same width via CSS padding (see
+  // frontend.scss's `#app.chat-notes-open`, desktop-only) makes the game area itself shrink out of
+  // the way instead, so the two no longer overlap.
+  const chatOpenUnwatch = chatNotes.$watch("open", (open: boolean) => {
+    root.classList.toggle("chat-notes-open", open);
+    bar.chatPanelOpen = open;
+  });
+  root.classList.remove("chat-notes-open");
+  cleanups.push(chatOpenUnwatch, () => root.classList.remove("chat-notes-open"));
+  // GameNavPanel.vue (`nav`) is mounted once at the `launchGame` level, not per-game like `bar`
+  // above (it needs to survive an in-app game switch) - HostedBar.vue's settings-menu label still
+  // needs its live `open` state on every re-mounted `bar`, so watch it here and clean up on
+  // dispose rather than leaving a watcher from a torn-down `bar` still firing.
+  const gameNavOpenUnwatch = nav.$watch("open", (open: boolean) => {
+    bar.gameNavPanelOpen = open;
+  });
+  cleanups.push(gameNavOpenUnwatch);
+  // Feed the game's own presence roster (already tracked below via `trackPresence(..., {type:
+  // "game", gameId}, ...)`, which lands in `emitter.store.state.presence`) into the chat's
+  // per-message status dots, instead of ChatNotesPanel opening its own second Presence channel -
+  // same reasoning as LobbyChatPanel's own presence fix (see PROGRESS.md).
+  chatNotes.presenceState = emitter.store.state.presence;
+  // GameNavPanel.vue's GameBar.vue rows show the same presence dots as Lobby.vue's own list - fed
+  // the same way, for the same reason (see the comment just above).
+  nav.presenceState = emitter.store.state.presence;
+  const unwatchPresence = emitter.store.watch(
+    (state: any) => state.presence,
+    (presence: unknown) => {
+      chatNotes.presenceState = presence;
+      nav.presenceState = presence;
+    }
+  );
+  cleanups.push(unwatchPresence);
 
   let mySeats: number[] = [];
 

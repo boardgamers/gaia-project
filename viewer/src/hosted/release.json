@@ -1,7 +1,21 @@
 {
-  "version": "5.27.0",
+  "version": "5.28.0",
   "releasedAt": "2026-07-11",
   "entries": [
+    {
+      "version": "5.28.0",
+      "releasedAt": "2026-07-11",
+      "kind": "update",
+      "title": "Desktop main menu shows full game info; mobile no longer has it",
+      "impact": "",
+      "changes": [
+        "The left-side main menu (browse/switch games) is now desktop-only - mobile no longer shows it at all, not even a toggle. On desktop, each game row now shows the same full info as the main game list: player avatars, scores, and the last move, with a wider panel so nothing gets cut off",
+        "Reintroduced a shared GameBar.vue presentational component + game-bar.ts pure-logic module (used by both Lobby.vue and GameNavPanel.vue, so the two can never drift apart) and widened GameNavPanel.vue's docked panel from 320px to 420px (plus a wrap-not-truncate override) so a GameBar row's title/summary/avatars never truncate. GameNavPanel.vue's template root is now v-if=\"isDesktop\" - it renders nothing at all on mobile, removing the floating hamburger toggle entirely"
+      ],
+      "userChanges": [
+        "The left-side main menu (browse/switch games) is now desktop-only - mobile no longer shows it at all, not even a toggle. On desktop, each game row now shows the same full info as the main game list: player avatars, scores, and the last move, with a wider panel so nothing gets cut off"
+      ]
+    },
     {
       "version": "5.27.0",
       "releasedAt": "2026-07-11",

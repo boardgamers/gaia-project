@@ -75,16 +75,25 @@ describe("GameNavPanel", () => {
     };
   }
 
-  async function openPanel(games: any[]) {
+  // GameNavPanel is desktop-only (renders nothing at all on mobile - see the component doc
+  // comment) - every test that needs the panel's actual content mounted has to mock desktop.
+  async function mountDesktop(games: any[]) {
+    const restore = mockDesktopViewport(true);
     const wrapper = mount(GameNavPanel as any, {
       propsData: { client: makeClient(games), session },
     });
     await Vue.nextTick();
     await Vue.nextTick();
-    (wrapper.vm as any).open = true;
-    await Vue.nextTick();
-    return wrapper;
+    return { wrapper, restore };
   }
+
+  it("renders nothing at all on mobile, not even a toggle", async () => {
+    const wrapper = mount(GameNavPanel as any, { propsData: { client: makeClient([]), session } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+    expect(wrapper.html()).to.equal("");
+    wrapper.destroy();
+  });
 
   it("sorts my active games with my-turn first, filters out other players' games and open/finished games", async () => {
     const games = [
@@ -94,102 +103,89 @@ describe("GameNavPanel", () => {
       game({ id: "waiting", current_seat: 1 }),
       game({ id: "my-turn", current_seat: 0 }),
     ];
-    const wrapper = await openPanel(games);
+    const { wrapper, restore } = await mountDesktop(games);
     const vm = wrapper.vm as any;
     expect(vm.myActiveGames.map((g: any) => g.id)).to.deep.equal(["my-turn", "waiting"]);
+    wrapper.destroy();
+    restore();
   });
 
-  it("emits select-game and closes the panel when an active-game row is clicked, without navigating", async () => {
+  it("renders each row through the shared GameBar.vue (name, round, and player avatars all present)", async () => {
+    const games = [
+      game({
+        id: "my-turn",
+        current_seat: 0,
+        players: [
+          { seat: 0, user_id: "user-me", faction: "terrans", score: 12 },
+          { seat: 1, user_id: "user-other", faction: "xenos", score: 9 },
+        ],
+      }),
+    ];
+    const { wrapper, restore } = await mountDesktop(games);
+    expect(wrapper.find(".game-bar__title").text()).to.include("Test game");
+    expect(wrapper.find(".game-bar__round").text()).to.equal("R1");
+    expect(wrapper.findAll(".game-bar__avatar")).to.have.lengthOf(2);
+    wrapper.destroy();
+    restore();
+  });
+
+  it("emits select-game when an active-game row is clicked, without navigating, and stays open", async () => {
     const games = [game({ id: "my-turn", current_seat: 0 })];
-    const wrapper = await openPanel(games);
-    const row = wrapper.find("a.game-nav__row");
+    const { wrapper, restore } = await mountDesktop(games);
+    const row = wrapper.find("a.game-bar__link");
     expect(row.exists()).to.equal(true);
     await row.trigger("click");
     expect(wrapper.emitted("select-game")).to.deep.equal([["my-turn"]]);
-    expect((wrapper.vm as any).open).to.equal(false);
+    // Docked desktop panel doesn't cover the board, so selecting a game leaves it open (unlike
+    // the mobile full-screen overlay this used to also be).
+    expect((wrapper.vm as any).open).to.equal(true);
+    wrapper.destroy();
+    restore();
   });
 
   it("does not intercept clicks on open-lobby rows - they keep their real ?preview= navigation", async () => {
     const games = [game({ id: "open-game", status: "open", players: [] })];
-    const wrapper = await openPanel(games);
+    const { wrapper, restore } = await mountDesktop(games);
     (wrapper.vm as any).tab = "open";
     await Vue.nextTick();
-    const row = wrapper.find("a.game-nav__row");
+    const row = wrapper.find("a.game-bar__link");
     expect(row.attributes("href")).to.equal("?preview=open-game");
     await row.trigger("click");
     expect(wrapper.emitted("select-game")).to.equal(undefined);
+    wrapper.destroy();
+    restore();
   });
 
   it("removes the realtime channel on destroy", async () => {
-    const client = makeClient([]);
-    const wrapper = mount(GameNavPanel as any, { propsData: { client, session } });
-    await Vue.nextTick();
+    const { wrapper, restore } = await mountDesktop([]);
+    const client = (wrapper.vm as any).client;
     wrapper.destroy();
     expect(client.removedChannel).to.not.equal(null);
+    restore();
   });
 
-  it("defaults to open with no floating toggle on desktop, closed with a toggle on mobile", async () => {
-    const restoreDesktop = mockDesktopViewport(true);
-    const desktopWrapper = mount(GameNavPanel as any, { propsData: { client: makeClient([]), session } });
-    await Vue.nextTick();
+  it("defaults to open on desktop, renders nothing (no open state to check) on mobile", async () => {
+    const { wrapper: desktopWrapper, restore: restoreDesktop } = await mountDesktop([]);
     expect((desktopWrapper.vm as any).open).to.equal(true);
-    expect(desktopWrapper.find("button.game-nav__toggle").exists()).to.equal(false);
     desktopWrapper.destroy();
     restoreDesktop();
 
-    const restoreMobile = mockDesktopViewport(false);
     const mobileWrapper = mount(GameNavPanel as any, { propsData: { client: makeClient([]), session } });
     await Vue.nextTick();
-    expect((mobileWrapper.vm as any).open).to.equal(false);
-    expect(mobileWrapper.find("button.game-nav__toggle").exists()).to.equal(true);
+    expect(mobileWrapper.html()).to.equal("");
     mobileWrapper.destroy();
-    restoreMobile();
   });
 
-  it("persists the closed preference on desktop and honors it on the next mount, but never applies it on mobile", async () => {
-    const restoreDesktop = mockDesktopViewport(true);
-    const wrapper = mount(GameNavPanel as any, { propsData: { client: makeClient([]), session } });
-    await Vue.nextTick();
+  it("persists the closed preference on desktop and honors it on the next mount", async () => {
+    const { wrapper, restore } = await mountDesktop([]);
     (wrapper.vm as any).setOpen(false);
     await Vue.nextTick();
     expect(window.localStorage.getItem(OPEN_PREF_KEY)).to.equal("0");
     wrapper.destroy();
 
-    const reopened = mount(GameNavPanel as any, { propsData: { client: makeClient([]), session } });
-    await Vue.nextTick();
+    const { wrapper: reopened } = await mountDesktop([]);
     expect((reopened.vm as any).open).to.equal(false);
     reopened.destroy();
-    restoreDesktop();
-
-    const restoreMobile = mockDesktopViewport(false);
-    const mobileWrapper = mount(GameNavPanel as any, { propsData: { client: makeClient([]), session } });
-    await Vue.nextTick();
-    expect((mobileWrapper.vm as any).open).to.equal(false);
-    mobileWrapper.destroy();
-    restoreMobile();
-  });
-
-  it("keeps the desktop panel open after selecting a game, but closes it on mobile", async () => {
-    const games = [game({ id: "my-turn", current_seat: 0 })];
-
-    const restoreDesktop = mockDesktopViewport(true);
-    const desktopWrapper = mount(GameNavPanel as any, { propsData: { client: makeClient(games), session } });
-    await Vue.nextTick();
-    await Vue.nextTick();
-    await desktopWrapper.find("a.game-nav__row").trigger("click");
-    expect((desktopWrapper.vm as any).open).to.equal(true);
-    desktopWrapper.destroy();
-    restoreDesktop();
-
-    const restoreMobile = mockDesktopViewport(false);
-    const mobileWrapper = mount(GameNavPanel as any, { propsData: { client: makeClient(games), session } });
-    await Vue.nextTick();
-    await Vue.nextTick();
-    (mobileWrapper.vm as any).open = true;
-    await Vue.nextTick();
-    await mobileWrapper.find("a.game-nav__row").trigger("click");
-    expect((mobileWrapper.vm as any).open).to.equal(false);
-    mobileWrapper.destroy();
-    restoreMobile();
+    restore();
   });
 });
