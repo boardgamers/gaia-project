@@ -99,6 +99,17 @@ export default class PlayerData extends EventEmitter {
   gaiaformersInGaia = 0;
   /** number of gaiaformers permanently consumed to colonize an asteroid (Lost Fleet) */
   gaiaformersUsedForAsteroid = 0;
+  /**
+   * Of the current gaiaformersInGaia total, how much got there by spending an already-owned
+   * Gaiaformer on something other than actually starting a Gaia project (e.g. Baltaks' "GaiaFormer
+   * -> Q.I.C." free action costing "1gf" - see gainReward's Resource.GaiaFormer case). Tracked
+   * purely so the §G3 "former" booster's pass bonus can add it back: the owner-confirmed ruling
+   * (RULES_CLARIFICATIONS.md G3) counts Gaiaformers "on Faction board or deployed" and excludes
+   * only ones used to colonize an asteroid, NOT ones spent this way. Deliberately does NOT affect
+   * availability/canPay - reset in lockstep with gaiaformersInGaia in Player.gaiaPhaseEnd(), so it
+   * never drifts, and left otherwise unused so it can't change replay behavior of existing games.
+   */
+  gaiaformersUsedForOther = 0;
   terraformCostDiscount = 0;
   tradeBonus = 0;
   tradeDiscount = 0;
@@ -165,6 +176,7 @@ export default class PlayerData extends EventEmitter {
       gaiaformers: this.gaiaformers,
       gaiaformersInGaia: this.gaiaformersInGaia,
       gaiaformersUsedForAsteroid: this.gaiaformersUsedForAsteroid,
+      gaiaformersUsedForOther: this.gaiaformersUsedForOther,
       terraformCostDiscount: this.terraformCostDiscount,
       tiles: this.tiles,
       satellites: this.satellites,
@@ -339,7 +351,16 @@ export default class PlayerData extends EventEmitter {
         this.tradeShips += count;
         break;
       case Resource.GaiaFormer:
-        count > 0 ? (this.gaiaformers += count) : (this.gaiaformersInGaia -= count);
+        if (count > 0) {
+          this.gaiaformers += count;
+        } else {
+          // Spending an already-owned Gaiaformer (e.g. Baltaks' "1gf" free-action cost) reuses
+          // gaiaformersInGaia for availability bookkeeping (unchanged from before, to avoid
+          // altering canPay/replay behavior) - gaiaformersUsedForOther mirrors the same delta so
+          // the §G3 booster's scoring can add it back. See the gaiaformersUsedForOther comment.
+          this.gaiaformersInGaia -= count;
+          this.gaiaformersUsedForOther -= count;
+        }
         break;
       case Resource.MoveGaiaFormerFromGaiaAreaToArea1:
         this.gaiaformersInGaia -= count;
