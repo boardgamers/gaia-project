@@ -1,7 +1,8 @@
-// Turn/invite/finish push notifications (BACKEND.md §6, §J4 as amended).
+// Turn/invite/finish/chat push notifications (BACKEND.md §6, §J4 as amended).
 //
 // Called by the pg_net trigger on the games table with {type, game_id}
-// (type "insert" = game created, "update" = current_seat/status changed).
+// (type "insert" = game created, "update" = current_seat/status changed), or by the trigger on
+// game_chat_messages with {type: "chat", game_id, sender_id, author_name, body}.
 // Reads everything it needs (game, players, subscriptions, VAPID keys) with
 // the service role - it never runs the game engine.
 //
@@ -24,8 +25,11 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") {
     return new Response("method not allowed", { status: 405 });
   }
-  const { type, game_id } = await req.json();
-  if (!game_id || (type !== "insert" && type !== "update")) {
+  const { type, game_id, sender_id, author_name, body: chatBody } = await req.json();
+  if (!game_id || (type !== "insert" && type !== "update" && type !== "chat")) {
+    return new Response("bad request", { status: 400 });
+  }
+  if (type === "chat" && (!sender_id || !author_name || !chatBody)) {
     return new Response("bad request", { status: 400 });
   }
 
@@ -54,13 +58,20 @@ Deno.serve(async (req) => {
     hasQueuedPremove = (count ?? 0) > 0;
   }
 
-  const notifications = buildNotifications(type, game as GameRow, hasQueuedPremove);
+  const chatMessage =
+    type === "chat"
+      ? { senderId: sender_id as string, authorName: author_name as string, body: chatBody as string }
+      : undefined;
+  const notifications = buildNotifications(type, game as GameRow, hasQueuedPremove, chatMessage);
   if (notifications.length === 0) {
     return new Response(JSON.stringify({ sent: 0 }), { status: 200 });
   }
   const turnPlayer = notifications.some((notification) => notification.kind === "turn")
     ? currentTurnPlayer(game as GameRow)
     : undefined;
+  const playerByUserId = new Map(
+    (game as GameRow).players.filter((p) => p.user_id).map((p) => [p.user_id as string, p])
+  );
 
   const userIds = [...new Set(notifications.map((n) => n.userId))];
   const { data: subscriptions, error: subsError } = await supabase
@@ -89,10 +100,17 @@ Deno.serve(async (req) => {
       url: `${siteUrl}/?game=${game_id}`,
     });
     for (const sub of (subscriptions ?? []).filter((s: SubscriptionRow) => s.user_id === notification.userId)) {
-      // Desktop subscriptions are intentionally "more sensitive": if it's your turn, they still
-      // get the push even while the game is already open. Mobile/PWA subscriptions keep the old
-      // suppression behavior to avoid duplicate alerts while actively playing there.
-      if (notification.kind === "turn" && turnPlayer && shouldSkipTurnPushForSubscription(turnPlayer, sub)) {
+      // Desktop subscriptions are intentionally "more sensitive": if it's your turn (or someone
+      // just chatted), they still get the push even while the game is already open. Mobile/PWA
+      // subscriptions keep the old suppression behavior to avoid duplicate alerts while actively
+      // playing there - each recipient's OWN player row (not just the current turn player) decides
+      // this for "message" notifications, since any seated player can receive a chat push.
+      const recipient = notification.kind === "turn" ? turnPlayer : playerByUserId.get(notification.userId);
+      if (
+        (notification.kind === "turn" || notification.kind === "message") &&
+        recipient &&
+        shouldSkipTurnPushForSubscription(recipient, sub)
+      ) {
         continue;
       }
       try {

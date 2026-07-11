@@ -20,6 +20,18 @@
       style="top: 0; right: 0.5rem; bottom: 0"
     >
       <b-button
+        size="sm"
+        variant="outline-secondary"
+        class="hosted-bar__chat-toggle"
+        v-b-tooltip.hover
+        title="Chat and notes"
+        @click="$emit('toggle-chat')"
+      >
+        <span aria-hidden="true">&#128172;</span>
+        <span v-if="chatUnread" class="hosted-bar__chat-badge"></span>
+        <span class="sr-only">Chat and notes</span>
+      </b-button>
+      <b-button
         v-if="pushEnabled"
         size="sm"
         variant="success"
@@ -70,6 +82,7 @@ export default Vue.extend({
     pushBusy: { type: Boolean, default: false },
     pushEnabled: { type: Boolean, default: false },
     abandoned: { type: Boolean, default: false },
+    chatUnread: { type: Boolean, default: false },
   },
   data() {
     return {
@@ -109,6 +122,29 @@ export default Vue.extend({
   min-width: 2.2rem;
   padding-left: 0.45rem;
   padding-right: 0.45rem;
+}
+
+// Desktop already has ChatNotesPanel.vue's own floating bottom-right toggle - this top-bar copy is
+// mobile-only, where that floating toggle overlapped the mobile sticky action/premove bar (see
+// ChatNotesPanel.vue's own media query, which hides it there instead).
+.hosted-bar__chat-toggle {
+  display: none;
+  position: relative;
+
+  @media (max-width: 767px) {
+    display: inline-flex;
+  }
+}
+
+.hosted-bar__chat-badge {
+  position: absolute;
+  top: 0.1rem;
+  right: 0.1rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: #dc3545;
+  border: 1px solid #fff;
 }
 
 .hosted-bar__turn-order {

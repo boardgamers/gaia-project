@@ -233,6 +233,16 @@ export default Vue.extend({
     closePanel() {
       this.open = false;
     },
+    // Called from HostedBar's own top-bar button on mobile (see hosted.ts, which wires the two
+    // separately-mounted components together directly) - this component's own floating toggle is
+    // desktop-only (see the `.chat-notes__toggle` media query below).
+    togglePanel() {
+      if (this.open) {
+        this.closePanel();
+      } else {
+        this.openPanel(this.tab);
+      }
+    },
     switchTab(tab: Tab) {
       this.tab = tab;
       if (tab === "chat") {
@@ -262,10 +272,13 @@ export default Vue.extend({
   align-items: center;
   justify-content: center;
 
-  // Clears the mobile sticky action/premove bar (see Commands.vue/PremoveBar.vue) so the toggle
-  // never sits underneath it.
+  // Desktop only - overlapped the mobile sticky action/premove bar at the bottom (see
+  // Commands.vue/PremoveBar.vue) no matter how far up it was nudged, since that bar's own height
+  // varies. On mobile the toggle instead lives in HostedBar's top-bar icon row, alongside the
+  // push-notification bell and settings gear (see HostedBar.vue + hosted.ts, which wires the two
+  // separately-mounted components together).
   @media (max-width: 767px) {
-    bottom: 5.5rem;
+    display: none;
   }
 }
 

@@ -1,7 +1,22 @@
 {
-  "version": "5.21.0",
+  "version": "5.21.1",
   "releasedAt": "2026-07-11",
   "entries": [
+    {
+      "version": "5.21.1",
+      "releasedAt": "2026-07-11",
+      "kind": "update",
+      "title": "Chat notifications + mobile layout fix",
+      "impact": "",
+      "changes": [
+        "New chat messages now send a push notification to the other players in that game",
+        "On mobile, the chat/notes button moved to the top bar (next to the notification bell and settings gear) so it no longer overlaps the sticky action bar at the bottom"
+      ],
+      "userChanges": [
+        "New chat messages now send a push notification to the other players in that game",
+        "On mobile, the chat/notes button moved to the top bar (next to the notification bell and settings gear) so it no longer overlaps the sticky action bar at the bottom"
+      ]
+    },
     {
       "version": "5.21.0",
       "releasedAt": "2026-07-11",

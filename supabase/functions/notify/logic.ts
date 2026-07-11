@@ -30,8 +30,16 @@ export type Notification = {
   title: string;
   body: string;
   tag: string;
-  kind: "invite" | "turn" | "finished";
+  kind: "invite" | "turn" | "finished" | "message";
 };
+
+export type ChatMessagePayload = {
+  senderId: string;
+  authorName: string;
+  body: string;
+};
+
+const CHAT_PREVIEW_MAX_LENGTH = 80;
 
 // Comfortably larger than the client's own heartbeat interval (viewer/src/hosted.ts, ~20s while
 // the tab is open and visible) so ordinary network/timer jitter never produces a false "they have
@@ -62,7 +70,32 @@ export function gameLabel(game: GameRow): string {
   return game.name || "your Lost Fleet game";
 }
 
-export function buildNotifications(type: string, game: GameRow, hasQueuedPremove: boolean): Notification[] {
+export function buildNotifications(
+  type: string,
+  game: GameRow,
+  hasQueuedPremove: boolean,
+  chatMessage?: ChatMessagePayload
+): Notification[] {
+  if (type === "chat") {
+    if (!chatMessage) {
+      return [];
+    }
+    const preview =
+      chatMessage.body.length > CHAT_PREVIEW_MAX_LENGTH
+        ? `${chatMessage.body.slice(0, CHAT_PREVIEW_MAX_LENGTH - 3)}...`
+        : chatMessage.body;
+    // Every other seated player, same recipient set as a turn notification - spectators aren't
+    // tracked anywhere durable enough to target (push_subscriptions is per-user, not per-game).
+    return game.players
+      .filter((p) => p.user_id !== null && p.user_id !== chatMessage.senderId)
+      .map((p) => ({
+        userId: p.user_id!,
+        title: "The Lost Fleet",
+        body: `${chatMessage.authorName} in ${gameLabel(game)}: ${preview}`,
+        tag: `chat-${game.id}`,
+        kind: "message" as const,
+      }));
+  }
   if (type === "insert") {
     // Invite pushes reach only friends who already have an account + a
     // subscribed device; everyone else gets the link out-of-band.

@@ -3944,7 +3944,7 @@ buttons`/`LostFleetShips` failures documented at #81/#82 (confirmed still pre-ex
     availability/`canPay` at all**: new `PlayerData.gaiaformersUsedForOther` mirrors every spend
     into `gaiaformersInGaia` (so payment/availability math is byte-for-byte unchanged) and is reset
     in lockstep inside `Player.gaiaPhaseEnd()`, so it never drifts across rounds; `Condition.
-    GaiaFormer` scoring adds it back. Zero risk to existing replays (real or fixture) since nothing
+GaiaFormer` scoring adds it back. Zero risk to existing replays (real or fixture) since nothing
     about payment/build-eligibility changed. **630/630 engine tests pass** (627 baseline + 3 new:
     a booster-scoring regression confirming the QIC-converted Gaiaformer still counts, and 2
     updated assertions on the existing Baltaks free-action spec pinning the new
@@ -4349,6 +4349,44 @@ section originally said Chunk 2 must also carry the _full_ `planets.ts` terrafor
    exact shape for adv-tech/federation/booster/scoring enum members when those chunks come up.
 
 ## Next actions
+
+**Done from #98 follow-up (2026-07-11, same "Gaia 21" session/branch), owner feedback on the new
+chat/notes feature:**
+
+- **Push notifications for new chat messages.** New `notify_chat_message()` trigger on
+  `game_chat_messages` insert (migration `0033_notify_chat_message.sql`), same pg_net -> `notify`
+  edge function pattern as the existing games insert/update triggers (0001). `supabase/functions/
+notify/logic.ts` gained a `"message"` notification kind (`buildNotifications` now takes an
+  optional `ChatMessagePayload`) - notifies every other seated player (not the sender) with
+  `"<name> in <game>: <preview>"`, truncated to 80 chars, same "skip if that recipient's own
+  mobile session already has the game open" suppression `shouldSkipTurnPushForSubscription`
+  already did for turn notifications, now generalized per-recipient rather than hardcoded to the
+  current turn player. 3 new `logic.spec.ts` cases (8/8 passing, run via
+  `engine/node_modules/.bin/ts-node` since this workspace has no root-level `ts-node`/`deno`
+  installed - see the "Testing" note below on how these were actually run this session).
+- **Chat/notes toggle moved off the mobile sticky bar.** The floating bottom-right toggle
+  (`ChatNotesPanel.vue`) overlapped the mobile sticky action/premove bar no matter how far up it
+  was nudged, since that bar's own height varies by content. Fixed by making the floating toggle
+  **desktop-only** (`display: none` under 767px) and adding a matching button to `HostedBar.vue`'s
+  own top-bar icon row instead - alongside the push-notification bell and settings gear - visible
+  **only** on mobile (mirror-image media queries). Since `ChatNotesPanel` and `HostedBar`/`bar` are
+  two _separately mounted_ Vue root instances in `hosted.ts`'s `launchGame()` (not parent/child),
+  they're wired directly rather than via a new event-bus abstraction: `mountChild()`'s return value
+  exposes the real component instance at `.$children[0]`, so `hosted.ts` calls
+  `chatNotes.togglePanel()` from HostedBar's `toggle-chat` event, and mirrors `chatNotes`'s
+  `hasUnread` computed into `bar.chatUnread` via a cross-instance `chatNotes.$watch(...)` (plain
+  Vue instance API, works on any instance you hold a reference to, not just `this`). No new pattern
+  introduced - reuses the exact same "hold both instances in the same closure, wire by direct
+  calls" shape `bar`'s own `enable-push`/`abandon-game` handlers already use for calling back into
+  `host`/`client`.
+- **Testing note:** `supabase/functions/notify/*.spec.ts` are plain TS (no Deno-specific imports in
+  the test or `logic.ts` files, only `index.ts` uses `Deno.serve`/`npm:`/`jsr:` specifiers), but
+  this workspace has neither a root `ts-node`/`mocha` install nor a `deno` binary - `npx mocha`
+  fetches a fresh `mocha` from npm but that one can't resolve `ts-node` either. Worked around by
+  pointing at `engine/node_modules/.bin/ts-node` (the engine package already depends on it) via
+  `npx --prefix engine mocha -r engine/node_modules/ts-node/register supabase/functions/notify/
+logic.spec.ts` - worth wiring a proper `npm test` script for `supabase/functions/notify/` if this
+  file sees more work, rather than re-deriving this invocation each time.
 
 **Done from #98 (2026-07-11, "Gaia 21" session), on `claude/gaia-21-mobile-ux-gxm7eb`:**
 

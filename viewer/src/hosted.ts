@@ -66,6 +66,15 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
     gameWrapperEl.style.display = "";
   });
 
+  // Its own top-level mount (not folded into `bar`/HostedBar) - the panel itself is a
+  // fixed-position floating toggle + overlay on desktop, positioned independently of the rest of
+  // the chrome, so it doesn't need to share HostedBar's layout or store. On mobile its own toggle
+  // hides itself (see ChatNotesPanel.vue) in favor of a button inside HostedBar's own top-bar icon
+  // row (below) - mountChild's outer wrapper's $children[0] is the actual component instance,
+  // needed here so HostedBar can drive it directly across these two separate Vue trees.
+  const chatNotesRoot = mountChild(root, ChatNotesPanel, { client, gameId, userId: session.user.id });
+  const chatNotes = chatNotesRoot.$children[0] as any;
+
   const bar = new Vue({
     store: emitter.store,
     data: {
@@ -74,6 +83,7 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
       pushBusy: false,
       pushEnabled: false,
       abandoned: false,
+      chatUnread: false,
     },
     render(h) {
       return h(HostedBar, {
@@ -99,6 +109,7 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
               bar.abandoned = true;
             }
           },
+          "toggle-chat": () => chatNotes.togglePanel(),
         },
       });
     },
@@ -106,11 +117,9 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, g
   isPushEnabled().then((enabled) => {
     bar.pushEnabled = enabled;
   });
-
-  // Own top-level mount (not folded into `bar`/HostedBar) - it's a fixed-position floating
-  // toggle + panel, positioned independently of the rest of the chrome, so it doesn't need to
-  // share HostedBar's layout or store.
-  mountChild(root, ChatNotesPanel, { client, gameId, userId: session.user.id });
+  chatNotes.$watch("hasUnread", (unread: boolean) => {
+    bar.chatUnread = unread;
+  });
 
   let mySeats: number[] = [];
 

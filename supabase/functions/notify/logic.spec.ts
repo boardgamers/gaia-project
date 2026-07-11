@@ -80,10 +80,7 @@ describe("notify logic", () => {
   it("treats legacy subscriptions with no stored user agent as mobile-safe while active", () => {
     const activePlayer = makePlayer({ last_active_at: new Date(Date.now() - 1_000).toISOString() });
 
-    assert.equal(
-      shouldSkipTurnPushForSubscription(activePlayer, makeSubscription({ user_agent: null })),
-      true
-    );
+    assert.equal(shouldSkipTurnPushForSubscription(activePlayer, makeSubscription({ user_agent: null })), true);
   });
 
   it("never suppresses stale subscriptions once the active heartbeat has expired", () => {
@@ -101,5 +98,42 @@ describe("notify logic", () => {
       ),
       false
     );
+  });
+
+  it("notifies every other seated player of a new chat message, not the sender", () => {
+    const sender = makePlayer({ seat: 0, user_id: "user-1" });
+    const other = makePlayer({ seat: 1, user_id: "user-2" });
+    const unclaimed = makePlayer({ seat: 2, user_id: null });
+    const game = makeGame({ players: [sender, other, unclaimed] });
+
+    const notifications = buildNotifications("chat", game, false, {
+      senderId: "user-1",
+      authorName: "Luke",
+      body: "gg",
+    });
+
+    assert.equal(notifications.length, 1);
+    assert.equal(notifications[0].userId, "user-2");
+    assert.equal(notifications[0].kind, "message");
+    assert.equal(notifications[0].body, "Luke in Test game: gg");
+    assert.equal(notifications[0].tag, `chat-${game.id}`);
+  });
+
+  it("truncates a long chat message preview", () => {
+    const game = makeGame({ players: [makePlayer({ user_id: "user-2" })] });
+    const longBody = "a".repeat(120);
+
+    const notifications = buildNotifications("chat", game, false, {
+      senderId: "someone-else",
+      authorName: "Luke",
+      body: longBody,
+    });
+
+    assert.equal(notifications.length, 1);
+    assert.equal(notifications[0].body, `Luke in Test game: ${"a".repeat(77)}...`);
+  });
+
+  it("builds no chat notifications without a chat message payload", () => {
+    assert.deepEqual(buildNotifications("chat", makeGame(), false), []);
   });
 });
