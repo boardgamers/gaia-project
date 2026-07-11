@@ -74,7 +74,8 @@ export function buildNotifications(
   type: string,
   game: GameRow,
   hasQueuedPremove: boolean,
-  chatMessage?: ChatMessagePayload
+  chatMessage?: ChatMessagePayload,
+  mutedUserIds: ReadonlySet<string> = new Set()
 ): Notification[] {
   if (type === "chat") {
     if (!chatMessage) {
@@ -86,8 +87,11 @@ export function buildNotifications(
         : chatMessage.body;
     // Every other seated player, same recipient set as a turn notification - spectators aren't
     // tracked anywhere durable enough to target (push_subscriptions is per-user, not per-game).
+    // Anyone who's muted this specific game's chat (game_chat_mutes) is excluded entirely - a
+    // mute is a hard opt-out, not just a suppression like the "recently active" mobile check
+    // below, so it applies regardless of subscription type/activity.
     return game.players
-      .filter((p) => p.user_id !== null && p.user_id !== chatMessage.senderId)
+      .filter((p) => p.user_id !== null && p.user_id !== chatMessage.senderId && !mutedUserIds.has(p.user_id))
       .map((p) => ({
         userId: p.user_id!,
         title: "The Lost Fleet",

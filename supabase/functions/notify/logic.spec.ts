@@ -136,4 +136,37 @@ describe("notify logic", () => {
   it("builds no chat notifications without a chat message payload", () => {
     assert.deepEqual(buildNotifications("chat", makeGame(), false), []);
   });
+
+  it("excludes a recipient who has muted this game's chat", () => {
+    const sender = makePlayer({ seat: 0, user_id: "user-1" });
+    const mutedPlayer = makePlayer({ seat: 1, user_id: "user-2" });
+    const unmutedPlayer = makePlayer({ seat: 2, user_id: "user-3" });
+    const game = makeGame({ players: [sender, mutedPlayer, unmutedPlayer] });
+
+    const notifications = buildNotifications(
+      "chat",
+      game,
+      false,
+      { senderId: "user-1", authorName: "Luke", body: "gg" },
+      new Set(["user-2"])
+    );
+
+    assert.equal(notifications.length, 1);
+    assert.equal(notifications[0].userId, "user-3");
+  });
+
+  it("defaults to notifying everyone when no muted set is passed", () => {
+    const sender = makePlayer({ seat: 0, user_id: "user-1" });
+    const other = makePlayer({ seat: 1, user_id: "user-2" });
+    const game = makeGame({ players: [sender, other] });
+
+    const notifications = buildNotifications("chat", game, false, {
+      senderId: "user-1",
+      authorName: "Luke",
+      body: "gg",
+    });
+
+    assert.equal(notifications.length, 1);
+    assert.equal(notifications[0].userId, "user-2");
+  });
 });

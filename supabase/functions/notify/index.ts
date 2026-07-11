@@ -62,7 +62,14 @@ Deno.serve(async (req) => {
     type === "chat"
       ? { senderId: sender_id as string, authorName: author_name as string, body: chatBody as string }
       : undefined;
-  const notifications = buildNotifications(type, game as GameRow, hasQueuedPremove, chatMessage);
+
+  let mutedUserIds = new Set<string>();
+  if (type === "chat") {
+    const { data: mutes } = await supabase.from("game_chat_mutes").select("user_id").eq("game_id", game_id);
+    mutedUserIds = new Set((mutes ?? []).map((m: { user_id: string }) => m.user_id));
+  }
+
+  const notifications = buildNotifications(type, game as GameRow, hasQueuedPremove, chatMessage, mutedUserIds);
   if (notifications.length === 0) {
     return new Response(JSON.stringify({ sent: 0 }), { status: 200 });
   }

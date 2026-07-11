@@ -4350,6 +4350,21 @@ section originally said Chunk 2 must also carry the _full_ `planets.ts` terrafor
 
 ## Next actions
 
+**Done from #98 2nd follow-up (2026-07-11, same "Gaia 21" session/branch): per-game chat mute.**
+New `game_chat_mutes` table (migration `0034_game_chat_mutes.sql`) - a row's mere existence means
+"muted" for that (game, user) pair, so a brand new game/user pair is unmuted by default with no
+seed row needed, matching the owner's explicit "default should be to receive". Own-row-only RLS,
+same shape as `game_notes`. `buildNotifications` (notify/logic.ts) gained an optional
+`mutedUserIds: ReadonlySet<string>` 5th param, filtering muted recipients out of "message"
+notifications only (a mute is a hard opt-out, unlike the existing "recently active on mobile"
+soft-suppression, so it applies regardless of subscription type); `index.ts` fetches
+`game_chat_mutes` rows for the game only when `type === "chat"`. `ChatNotesPanel.vue` gained a
+small toggle button at the top of the Chat tab ("🔔 Receiving push notifications" /
+"🔕 Muted..."), optimistic-update-then-insert/delete against `game_chat_mutes`. 2 new
+`logic.spec.ts` cases (10/10 passing) + 3 new `ChatNotesPanel.spec.ts` cases (8/8 passing, needed
+an extra `$nextTick()` over the other cases since `loadMuted()` is one more sequential `await` in
+`mounted()` than the notes-loading tests needed to flush).
+
 **Done from #98 follow-up (2026-07-11, same "Gaia 21" session/branch), owner feedback on the new
 chat/notes feature:**
 

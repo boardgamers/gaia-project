@@ -36,6 +36,11 @@
       </div>
 
       <div v-if="tab === 'chat'" class="chat-notes__chat">
+        <div class="chat-notes__chat-toolbar">
+          <button type="button" class="chat-notes__mute-toggle" @click="toggleMute">
+            {{ muted ? "🔕 Muted - not receiving push notifications" : "🔔 Receiving push notifications" }}
+          </button>
+        </div>
         <div class="chat-notes__messages" ref="messageList">
           <p v-if="messages.length === 0" class="chat-notes__empty text-muted">No messages yet - say hello.</p>
           <div
@@ -108,6 +113,7 @@ export default Vue.extend({
       authorName: "Player",
       notesBody: "",
       notesStatus: "",
+      muted: false,
       unreadSince: 0,
       channel: null as any,
       notesSaveTimer: null as ReturnType<typeof setTimeout> | null,
@@ -127,6 +133,7 @@ export default Vue.extend({
     this.authorName = (await fetchMyNickname(this.client, this.userId)) || "Player";
     await this.loadMessages();
     await this.loadNotes();
+    await this.loadMuted();
     this.subscribeChat();
   },
   beforeDestroy() {
@@ -225,6 +232,32 @@ export default Vue.extend({
         updated_at: new Date().toISOString(),
       });
       this.notesStatus = error ? "Could not save" : "Saved";
+    },
+    async loadMuted() {
+      // A row's mere existence means "muted" (see 0034_game_chat_mutes.sql) - default is unmuted,
+      // i.e. no row, since a brand new game/user pair has never muted anything.
+      const { data } = await (this.client as any)
+        .from("game_chat_mutes")
+        .select("game_id")
+        .eq("game_id", this.gameId)
+        .eq("user_id", this.userId)
+        .maybeSingle();
+      this.muted = !!data;
+    },
+    async toggleMute() {
+      const next = !this.muted;
+      this.muted = next; // optimistic - this is a low-stakes preference, not worth a loading state
+      const { error } = next
+        ? await (this.client as any).from("game_chat_mutes").insert({ game_id: this.gameId, user_id: this.userId })
+        : await (this.client as any)
+            .from("game_chat_mutes")
+            .delete()
+            .eq("game_id", this.gameId)
+            .eq("user_id", this.userId);
+      if (error) {
+        this.muted = !next;
+        window.alert(`Could not update mute setting: ${error.message}`);
+      }
     },
     openPanel(tab: Tab) {
       this.open = true;
@@ -378,6 +411,21 @@ export default Vue.extend({
   flex-direction: column;
   flex: 1;
   min-height: 0;
+}
+
+.chat-notes__chat-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.3rem 0.6rem 0;
+}
+
+.chat-notes__mute-toggle {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  opacity: 0.65;
+  font-size: 0.72rem;
+  padding: 0.15rem 0.3rem;
 }
 
 .chat-notes__messages {

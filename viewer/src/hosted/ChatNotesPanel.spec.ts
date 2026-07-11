@@ -3,10 +3,11 @@ import { mount } from "@vue/test-utils";
 import ChatNotesPanel from "./ChatNotesPanel.vue";
 
 describe("ChatNotesPanel", () => {
-  function makeClient(opts: { messages?: any[]; nickname?: string; noteBody?: string } = {}) {
+  function makeClient(opts: { messages?: any[]; nickname?: string; noteBody?: string; muted?: boolean } = {}) {
     const messages = opts.messages ?? [];
     const inserted: any[] = [];
     const upserts: any[] = [];
+    let muted = opts.muted ?? false;
     const channel = {
       on: () => channel,
       subscribe: () => channel,
@@ -14,7 +15,33 @@ describe("ChatNotesPanel", () => {
     return {
       inserted,
       upserts,
+      get muted() {
+        return muted;
+      },
       from: (table: string) => {
+        if (table === "game_chat_mutes") {
+          return {
+            select: () => ({
+              eq: () => ({
+                eq: () => ({
+                  maybeSingle: async () => ({ data: muted ? { game_id: "game-1" } : null, error: null }),
+                }),
+              }),
+            }),
+            insert: async () => {
+              muted = true;
+              return { data: null, error: null };
+            },
+            delete: () => ({
+              eq: () => ({
+                eq: async () => {
+                  muted = false;
+                  return { data: null, error: null };
+                },
+              }),
+            }),
+          };
+        }
         if (table === "game_chat_messages") {
           return {
             select: () => ({
@@ -145,6 +172,47 @@ describe("ChatNotesPanel", () => {
     });
     await Vue_nextTick(wrapper);
     expect(wrapper.find(".chat-notes__badge").exists()).to.equal(true);
+  });
+
+  it("defaults to unmuted and shows the receiving-notifications label", async () => {
+    const client = makeClient();
+    const wrapper = mount(ChatNotesPanel as any, {
+      propsData: { client, gameId: "game-1", userId: "user-1" },
+    });
+    await Vue_nextTick(wrapper);
+    await wrapper.find(".chat-notes__toggle").trigger("click");
+    await Vue_nextTick(wrapper);
+    expect(wrapper.text()).to.include("Receiving push notifications");
+  });
+
+  it("loads an existing mute and lets the user unmute", async () => {
+    const client = makeClient({ muted: true });
+    const wrapper = mount(ChatNotesPanel as any, {
+      propsData: { client, gameId: "game-1", userId: "user-1" },
+    });
+    await Vue_nextTick(wrapper);
+    await Vue_nextTick(wrapper);
+    await wrapper.find(".chat-notes__toggle").trigger("click");
+    await Vue_nextTick(wrapper);
+    expect(wrapper.text()).to.include("Muted");
+
+    await wrapper.find(".chat-notes__mute-toggle").trigger("click");
+    await Vue_nextTick(wrapper);
+    expect(client.muted).to.equal(false);
+    expect(wrapper.text()).to.include("Receiving push notifications");
+  });
+
+  it("mutes on click and persists it via game_chat_mutes.insert", async () => {
+    const client = makeClient();
+    const wrapper = mount(ChatNotesPanel as any, {
+      propsData: { client, gameId: "game-1", userId: "user-1" },
+    });
+    await Vue_nextTick(wrapper);
+    await wrapper.find(".chat-notes__toggle").trigger("click");
+    await wrapper.find(".chat-notes__mute-toggle").trigger("click");
+    await Vue_nextTick(wrapper);
+    expect(client.muted).to.equal(true);
+    expect(wrapper.text()).to.include("Muted");
   });
 
   async function Vue_nextTick(wrapper: any) {
