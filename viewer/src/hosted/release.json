@@ -1,24 +1,7 @@
 {
-  "version": "5.27.0",
+  "version": "5.26.0",
   "releasedAt": "2026-07-11",
   "entries": [
-    {
-      "version": "5.27.0",
-      "releasedAt": "2026-07-11",
-      "kind": "update",
-      "title": "Chat/game menu default-open, iOS-style settings toggles",
-      "impact": "",
-      "changes": [
-        "Chat and the left game menu now start open by default on desktop, with a settings-menu switch to turn either off",
-        "Settings now use real iPhone-style toggle switches (dark mode, chat panel, game menu) instead of text that changes label",
-        "A small badge now appears on the settings gear when there's a new setting to check out, and disappears for good once you've opened it"
-      ],
-      "userChanges": [
-        "Chat and the left game menu now start open by default on desktop, with a settings-menu switch to turn either off",
-        "Settings now use real iPhone-style toggle switches (dark mode, chat panel, game menu) instead of text that changes label",
-        "A small badge now appears on the settings gear when there's a new setting to check out, and disappears for good once you've opened it"
-      ]
-    },
     {
       "version": "5.26.0",
       "releasedAt": "2026-07-11",
