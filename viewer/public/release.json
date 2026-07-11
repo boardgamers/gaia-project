@@ -1,7 +1,16 @@
 {
-  "version": "5.25.0",
+  "version": "5.25.1",
   "releasedAt": "2026-07-11",
   "entries": [
+    {
+      "version": "5.25.1",
+      "releasedAt": "2026-07-11",
+      "kind": "update",
+      "title": "Fix mobile auto-leech/chat overlap",
+      "impact": "",
+      "changes": ["Fixed the auto-leech dropdown overlapping the floating chat button on mobile"],
+      "userChanges": ["Fixed the auto-leech dropdown overlapping the floating chat button on mobile"]
+    },
     {
       "version": "5.25.0",
       "releasedAt": "2026-07-11",

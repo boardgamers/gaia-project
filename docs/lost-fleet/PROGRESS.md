@@ -4350,6 +4350,22 @@ section originally said Chunk 2 must also carry the _full_ `planets.ts` terrafor
 
 ## Next actions
 
+**Done from #98 8th follow-up (2026-07-11, same "Gaia 21" session/branch): mobile auto-leech
+dropdown vs. chat toggle overlap.** Both live in the same bottom-right corner of the screen on
+narrow viewports: the auto-leech dropdown sits `ml-auto` (pushed right) inside the mobile sticky
+bar's own dark header row, and its popup opens `dropup`; ChatNotesPanel.vue's floating chat toggle
+sits fixed just above that same bar, also hugging the right edge (`right: 1rem`, ~3rem wide).
+Fixed by reserving that ~4rem-wide corner via `padding-right: calc(4rem + env(safe-area-inset-
+right))` on `.sticky-bar-title` (mobile media query only) so the auto-leech button (and thus its
+popup's anchor point) sits to the left of the chat toggle's column entirely, rather than trying to
+out-z-index or reposition the toggle itself. Also raised the opened dropdown menu's own z-index
+(1050, `.auto-leech-select ::v-deep(.dropdown-menu)`) above the chat toggle's (1040) as a defensive
+second layer, since Bootstrap's default dropdown-menu z-index (1000) sits below both the sticky
+bar (1030) and the chat toggle regardless. `Commands.spec.ts` (17/17) still passes; not visually
+verified on a real device (no phone available in this environment - flagging per this app's own
+established caution around unverified sticky-bar CSS changes, see PROGRESS.md's `#2` task/prior
+sessions' notes on this exact class of risk).
+
 **Done from #98 7th follow-up (2026-07-11, same "Gaia 21" session/branch): auto-leech VP-risk
 warning on Pass.** Owner's initial premise ("leech VP cost has a 'last player to pass' exception")
 turned out not to match the engine - `leech.ts`'s VP cost (`Math.max(maxLeech - 1, 0)`) has no such

@@ -1337,6 +1337,14 @@ $mobile-sticky-actions-max-height: 40vh;
     }
   }
 
+  // Bootstrap's default dropdown-menu z-index (1000) sits below both this sticky bar (1030) and
+  // ChatNotesPanel.vue's floating chat toggle (1040) - belt-and-suspenders alongside the
+  // padding-right reservation above, in case the opened menu's own width still reaches the chat
+  // toggle's corner on a narrow viewport, it should render on top of it, not tangled underneath.
+  .auto-leech-select ::v-deep(.dropdown-menu) {
+    z-index: 1050;
+  }
+
   .btn-outline-secondary {
     color: #f3f5fa;
     border-color: rgba(255, 255, 255, 0.3);
@@ -1422,6 +1430,13 @@ $mobile-sticky-actions-max-height: 40vh;
 
     .sticky-bar-title {
       display: flex !important;
+      // ChatNotesPanel.vue's floating chat toggle sits fixed at `right: 1rem`, ~3rem wide, so its
+      // footprint covers roughly the rightmost 4rem of the viewport. The auto-leech dropdown here
+      // is `ml-auto` (pushed as far right as this row allows) and its popup menu opens `dropup` -
+      // without this, both the button and its opened menu land in that same corner, overlapping the
+      // chat toggle. Reserving that space up front (padding, not the toggle's own z-index/position)
+      // keeps the two apart regardless of the dropdown's open/closed state.
+      padding-right: calc(4rem + env(safe-area-inset-right));
     }
   }
 
