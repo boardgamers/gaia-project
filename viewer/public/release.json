@@ -1,15 +1,38 @@
 {
-  "version": "5.25.1",
+  "version": "5.26.0",
   "releasedAt": "2026-07-11",
   "entries": [
+    {
+      "version": "5.26.0",
+      "releasedAt": "2026-07-11",
+      "kind": "update",
+      "title": "Desktop layout: game menu, chat fix, ship-board sizing",
+      "impact": "",
+      "changes": [
+        "Added a collapsible menu on the left (desktop) to browse your active, lobby, and finished games and switch between them instantly, no page reload",
+        "The chat/notes panel no longer covers the game board on desktop - the board now shrinks to make room for it",
+        "Lost Fleet ship boards are now sized to match the base game's action icons instead of rendering oversized",
+        "Action buttons now sit directly under the map on desktop instead of stretching under the research track too"
+      ],
+      "userChanges": [
+        "Added a collapsible menu on the left (desktop) to browse your active, lobby, and finished games and switch between them instantly, no page reload",
+        "The chat/notes panel no longer covers the game board on desktop - the board now shrinks to make room for it",
+        "Lost Fleet ship boards are now sized to match the base game's action icons instead of rendering oversized",
+        "Action buttons now sit directly under the map on desktop instead of stretching under the research track too"
+      ]
+    },
     {
       "version": "5.25.1",
       "releasedAt": "2026-07-11",
       "kind": "update",
       "title": "Fix mobile auto-leech/chat overlap",
       "impact": "",
-      "changes": ["Fixed the auto-leech dropdown overlapping the floating chat button on mobile"],
-      "userChanges": ["Fixed the auto-leech dropdown overlapping the floating chat button on mobile"]
+      "changes": [
+        "Fixed the auto-leech dropdown overlapping the floating chat button on mobile"
+      ],
+      "userChanges": [
+        "Fixed the auto-leech dropdown overlapping the floating chat button on mobile"
+      ]
     },
     {
       "version": "5.25.0",
@@ -45,8 +68,12 @@
       "kind": "update",
       "title": "In-game chat parity with Lobby Chat",
       "impact": "",
-      "changes": ["In-game chat now shows a timestamp and each sender's online/offline status, matching Lobby Chat"],
-      "userChanges": ["In-game chat now shows a timestamp and each sender's online/offline status, matching Lobby Chat"]
+      "changes": [
+        "In-game chat now shows a timestamp and each sender's online/offline status, matching Lobby Chat"
+      ],
+      "userChanges": [
+        "In-game chat now shows a timestamp and each sender's online/offline status, matching Lobby Chat"
+      ]
     },
     {
       "version": "5.23.0",
@@ -292,7 +319,9 @@
       "kind": "fix",
       "title": "Lobby crash hotfix",
       "impact": "",
-      "changes": ["Fixed a crash in the lobby's game-loading code (rpc().catch is not a function)"],
+      "changes": [
+        "Fixed a crash in the lobby's game-loading code (rpc().catch is not a function)"
+      ],
       "userChanges": []
     },
     {
@@ -395,7 +424,9 @@
         "Open-lobby games now show a green X/Y seats-joined badge where the round number goes, instead of an empty slot.",
         "Move age no longer disappears if the client clock is even slightly behind the server's."
       ],
-      "userChanges": ["Open lobby games show a seats-joined badge"]
+      "userChanges": [
+        "Open lobby games show a seats-joined badge"
+      ]
     },
     {
       "version": "5.16.0",
@@ -426,8 +457,12 @@
       "kind": "update",
       "title": "Private access control",
       "impact": "",
-      "changes": ["New accounts start unapproved and see no game data until approved from Settings > Manage users"],
-      "userChanges": ["New accounts need admin approval before they can see any games"]
+      "changes": [
+        "New accounts start unapproved and see no game data until approved from Settings > Manage users"
+      ],
+      "userChanges": [
+        "New accounts need admin approval before they can see any games"
+      ]
     },
     {
       "version": "5.14.8",
@@ -464,7 +499,9 @@
         "The lobby now opens on public tables first, and open-table visibility is backed by the latest SQL policy update.",
         "The duplicate top turn banner is gone, and full setup previews use the main game layout so maps load more reliably."
       ],
-      "userChanges": ["Lobby now shows public tables first"]
+      "userChanges": [
+        "Lobby now shows public tables first"
+      ]
     },
     {
       "version": "5.14.5",
@@ -497,15 +534,21 @@
         "Open lobby tables now show one join action with joined player names instead of a full seat-by-seat button list.",
         "Setup previews now load the map and board art more reliably on the full-page lobby screen."
       ],
-      "userChanges": ["Open lobby tables show one join button with joined player names"]
+      "userChanges": [
+        "Open lobby tables show one join button with joined player names"
+      ]
     },
     {
       "version": "5.14.2",
       "releasedAt": "2026-07-08",
       "kind": "feature",
       "title": "Full-page lobby previews",
-      "changes": ["Open lobby tables now open on their own page with compact seat controls above the setup preview."],
-      "userChanges": ["Open lobby tables now open on their own page with seat controls"]
+      "changes": [
+        "Open lobby tables now open on their own page with compact seat controls above the setup preview."
+      ],
+      "userChanges": [
+        "Open lobby tables now open on their own page with seat controls"
+      ]
     },
     {
       "version": "5.14.1",
@@ -555,14 +598,18 @@
         "Desktop devices still get turn alerts even while the game is open.",
         "Mobile and installed PWA sessions keep duplicate-alert suppression while you are actively playing."
       ],
-      "userChanges": ["Turn notifications now work correctly on both desktop and mobile"]
+      "userChanges": [
+        "Turn notifications now work correctly on both desktop and mobile"
+      ]
     },
     {
       "version": "5.13.1",
       "releasedAt": "2026-07-07",
       "kind": "fix",
       "title": "Correct fourth exploration reward",
-      "changes": ["The fourth spaceship exploration slot in 4-player Lost Fleet games now charges exactly 3 power."],
+      "changes": [
+        "The fourth spaceship exploration slot in 4-player Lost Fleet games now charges exactly 3 power."
+      ],
       "userChanges": []
     },
     {
@@ -570,8 +617,12 @@
       "releasedAt": "2026-07-07",
       "kind": "feature",
       "title": "In-app update prompt",
-      "changes": ["Hosted tabs can detect when a newer version was deployed and prompt you to reload into it."],
-      "userChanges": ["The app can now prompt you to reload when a new version is available"]
+      "changes": [
+        "Hosted tabs can detect when a newer version was deployed and prompt you to reload into it."
+      ],
+      "userChanges": [
+        "The app can now prompt you to reload when a new version is available"
+      ]
     }
   ]
 }
