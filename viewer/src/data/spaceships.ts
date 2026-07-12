@@ -23,6 +23,18 @@ export const spaceshipMarkers: Record<Spaceship, string> = {
 };
 
 /**
+ * Full ship names spelled out on the board header, chosen so each name's first letter is the ship's
+ * marker letter (see {@link spaceshipMarkers}): the color hex renders that first letter and the rest
+ * of the name is written out after it. "T F Mars" shows as "Mars" so its "M" marker leads the word.
+ */
+export const spaceshipDisplayNames: Record<Spaceship, string> = {
+  [Spaceship.Twilight]: "Twilight",
+  [Spaceship.Rebellion]: "Rebellion",
+  [Spaceship.TFMars]: "Mars",
+  [Spaceship.Eclipse]: "Eclipse",
+};
+
+/**
  * Per-ship identity colors, taken from each spaceship's name-plate background on rulebook page 7:
  * Twilight is purple, Rebellion brown, T F Mars grey, Eclipse yellow/gold. Used to fill both the
  * map hex marker (SpaceHex.vue) and the ship board's marker circle (LostFleetShips.vue) so a

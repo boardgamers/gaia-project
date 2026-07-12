@@ -43,9 +43,9 @@ describe("LostFleetShips", () => {
     // ships with a Standard Tech slot show a real TechTile rendering icons, not the old text fallback
     expect(container.querySelectorAll('[data-section="tech"] svg.techTile').length).to.equal(3);
 
-    // the ship name text was dropped - the single-letter marker circle is enough, freeing the
-    // header row for 5 same-size circles (marker + 4 exploration slots) in a row
-    expect(container.querySelectorAll(".lost-fleet-ship__name").length).to.equal(0);
+    // each ship spells out its name beside the marker hex (the hex holds the first letter), so
+    // there is one name element per ship in play (4 at 4p)
+    expect(container.querySelectorAll(".lost-fleet-ship__name").length).to.equal(4);
 
     // Twilight carries the seeded artifact tokens (one per player at 4p)
     expect(engine.tiles.artifacts.length).to.equal(4);
@@ -109,7 +109,7 @@ describe("LostFleetShips", () => {
     expect(ship.getAttribute("viewBox")).to.equal("0 0 291 76");
   });
 
-  it("lays the ship marker + 4 exploration slots out as 5 evenly-spaced circles in a single row", () => {
+  it("lays the 4 exploration slots out evenly spaced in a single row after the marker + ship name", () => {
     const engine = new Engine(["init 2 lost-fleet-ships-spec"], { lostFleet: true });
     const store = makeStore();
     store.commit("receiveData", engine);
@@ -126,14 +126,17 @@ describe("LostFleetShips", () => {
     expect(new Set(xs).size).to.equal(4);
     expect(ys.size).to.equal(1);
 
-    // evenly spaced 20 apart, same spacing as the gap from the marker circle (cx=9) to slot 1 -
-    // i.e. 5 same-size circles (marker + 4 slots) in one evenly-spaced row, no per-slot ordinal
-    // number (removed - the power-charge badge is the only number shown per slot).
+    // the 4 slots stay evenly spaced 20 apart; they now begin past the spelled-out ship name (the
+    // marker hex holds the first letter), so the first slot sits well right of the marker (x=9)
+    // rather than at a fixed 20-apart offset from it.
     const sortedXs = xs.slice().sort((a, b) => a - b);
     for (let i = 1; i < sortedXs.length; i++) {
       expect(sortedXs[i] - sortedXs[i - 1]).to.equal(20);
     }
-    expect(sortedXs[0] - 9).to.equal(20);
+    expect(sortedXs[0]).to.be.greaterThan(29);
+    // the ship name is spelled out beside the marker: marker "T" + rest "WILIGHT"
+    expect(twilight.querySelector(".lost-fleet-ship__marker").textContent).to.equal("T");
+    expect(twilight.querySelector(".lost-fleet-ship__name").textContent).to.equal("WILIGHT");
     slots.forEach((slot) => {
       expect(slot.querySelector(".lost-fleet-ship__slot-ordinal")).to.equal(null);
     });

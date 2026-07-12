@@ -1,7 +1,23 @@
 {
-  "version": "5.29.0",
+  "version": "5.29.1",
   "releasedAt": "2026-07-12",
   "entries": [
+    {
+      "version": "5.29.1",
+      "releasedAt": "2026-07-12",
+      "kind": "update",
+      "title": "Ship board names + centered map letters",
+      "impact": "",
+      "changes": [
+        "Lost Fleet ship boards now spell out each ship's name (Twilight, Rebellion, Mars, Eclipse) starting from its colored letter hex",
+        "The ship-board marker is now a colored hexagon matching the map, and each board has a little more breathing room between its rows",
+        "Removed the redundant IS-label from spaceship map hexes and switched the map/board ship letters to a cross-browser baseline-shift so they stay centered on iOS Safari"
+      ],
+      "userChanges": [
+        "Lost Fleet ship boards now spell out each ship's name (Twilight, Rebellion, Mars, Eclipse) starting from its colored letter hex",
+        "The ship-board marker is now a colored hexagon matching the map, and each board has a little more breathing room between its rows"
+      ]
+    },
     {
       "version": "5.29.0",
       "releasedAt": "2026-07-12",

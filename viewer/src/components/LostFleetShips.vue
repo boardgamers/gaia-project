@@ -17,7 +17,11 @@
       <g class="lost-fleet-ship__header">
         <g v-b-tooltip.hover.nofade :title="shipLabel(ship)">
           <polygon :points="markerHexPoints" class="lost-fleet-ship__marker-bg" :style="{ fill: shipColor(ship) }" />
-          <text x="9" y="9" class="lost-fleet-ship__marker">{{ shipMarker(ship) }}</text>
+          <!-- y + dy=0.34em baseline-shift centers the glyph the same in every browser (iOS Safari
+               renders `dominant-baseline: central` off). The hex holds the name's first letter, and
+               the rest of the name is spelled out beside it so the board reads as e.g. [R]EBELLION. -->
+          <text x="9" y="9" dy="0.34em" class="lost-fleet-ship__marker">{{ shipMarker(ship) }}</text>
+          <text x="18.5" y="9" dy="0.34em" class="lost-fleet-ship__name">{{ shipNameRest(ship) }}</text>
         </g>
 
         <g
@@ -25,7 +29,7 @@
           :key="slot.index"
           class="lost-fleet-ship__slot"
           :data-slot="slot.index"
-          :transform="`translate(${9 + slot.index * 20}, 9)`"
+          :transform="`translate(${slotX(ship, slot.index)}, 9)`"
           v-b-tooltip.hover.nofade
           :title="slotTitle(slot)"
         >
@@ -45,7 +49,7 @@
         :key="action.type"
         :class="['lost-fleet-ship__action', action.type, { used: actionUser(ship, action.type) != null }]"
         :data-action="action.type"
-        :transform="`translate(${29 + i * 54}, 44)`"
+        :transform="`translate(${29 + i * 54}, 48)`"
         v-b-tooltip.hover.nofade
         :title="actionTooltip(ship, action)"
       >
@@ -217,6 +221,7 @@ import {
   extraCosts as extraCostsFn,
   isMineBubble as isMineBubbleFn,
   spaceshipColors,
+  spaceshipDisplayNames,
   spaceshipLabels,
   spaceshipMarkers,
 } from "../data/spaceships";
@@ -281,6 +286,23 @@ export default class LostFleetShips extends Vue {
 
   shipMarker(ship: Spaceship): string {
     return spaceshipMarkers[ship];
+  }
+
+  /** The ship name minus its first letter (the marker hex draws that), uppercased: e.g. "EBELLION". */
+  shipNameRest(ship: Spaceship): string {
+    return spaceshipDisplayNames[ship].slice(1).toUpperCase();
+  }
+
+  /**
+   * X of the given exploration slot's center. The header row now leads with the marker hex + spelled
+   * out name (starting at x≈18.5), so the four slots start just past the (per-ship, variable-length)
+   * name rather than at a fixed x - keeping each board compact while never reaching the Federation
+   * tile (x≈172). ~7.6 units per name letter approximates the 11px uppercase advance incl. the 0.6px
+   * letter-spacing; +13 clears the last letter and the first slot's own radius.
+   */
+  slotX(ship: Spaceship, index: number): number {
+    const firstSlot = 18.5 + this.shipNameRest(ship).length * 7.6 + 13;
+    return firstSlot + (index - 1) * 20;
   }
 
   shipColor(ship: Spaceship): string {
@@ -416,7 +438,18 @@ svg.lost-fleet-ship {
     font-weight: 800;
     fill: #17161a;
     text-anchor: middle;
-    dominant-baseline: central;
+    pointer-events: none;
+  }
+
+  // The spelled-out ship name that follows the marker hex. Anchored at the name's start (the hex is
+  // its first letter), moderately bold with a little letter-spacing so it reads as a word without
+  // growing wide enough to push the exploration slots into the Federation tile.
+  .lost-fleet-ship__name {
+    font-size: 11px;
+    font-weight: 700;
+    fill: #17161a;
+    text-anchor: start;
+    letter-spacing: 0.6px;
     pointer-events: none;
   }
 

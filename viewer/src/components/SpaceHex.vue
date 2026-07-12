@@ -52,7 +52,9 @@
         {{ hex.data.sector[0] === "s" ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector) }}
       </text>
       <g v-if="lostFleetSpaceship" class="lost-fleet-spaceship">
-        <text class="lost-fleet-spaceship__label">{{ lostFleetSpaceshipLabel }}</text>
+        <!-- y=0 + dy=0.34em (a baseline shift) centers the uppercase glyph vertically the same in
+             every browser - unlike `dominant-baseline: central`, which iOS Safari renders off. -->
+        <text class="lost-fleet-spaceship__label" y="0" dy="0.34em">{{ lostFleetSpaceshipLabel }}</text>
       </g>
       <Planet
         v-if="showPlanet"
@@ -756,7 +758,6 @@ svg {
     &__label {
       fill: #17161a;
       text-anchor: middle;
-      dominant-baseline: central;
       font-size: 0.9px;
       font-weight: 800;
     }
