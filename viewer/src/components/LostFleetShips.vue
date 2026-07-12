@@ -5,7 +5,7 @@
       :key="ship"
       class="lost-fleet-ship"
       :data-ship="ship"
-      viewBox="0 -16 291 68"
+      viewBox="0 -16 291 72"
       style="overflow: visible"
     >
       <!-- The board is a rounded card outlined in the ship's color. Its name and the player
@@ -16,7 +16,7 @@
         x="1.25"
         y="0"
         width="288.5"
-        height="50"
+        height="54"
         rx="7"
         ry="7"
         class="lost-fleet-ship__card"
@@ -29,7 +29,7 @@
         :key="action.type"
         :class="['lost-fleet-ship__action', action.type, { used: actionUser(ship, action.type) != null }]"
         :data-action="action.type"
-        :transform="`translate(${29 + i * 54}, 25)`"
+        :transform="`translate(${29 + i * 54}, 27)`"
         v-b-tooltip.hover.nofade
         :title="actionTooltip(ship, action)"
       >
@@ -118,10 +118,11 @@
         </g>
       </g>
 
-      <!-- the Federation token still up for grabs on this ship (base-game token art), scaled down a
-           touch (0.8) and centered in the shorter card so the board can be more compact now that the
-           name/slots have moved out to the tabs. -->
-      <g data-section="federation" transform="translate(173, 5) scale(0.8)">
+      <!-- the Federation token still up for grabs on this ship (base-game token art). The action
+           octagons, this Federation tile, and the Tech tile are all vertically centered on the same
+           line (y=27), each scaled to leave clear top/bottom padding inside the card. FederationTile
+           is a 50-unit box centered at its own (0,0); translate y 7 + 25*0.8 = 27. -->
+      <g data-section="federation" transform="translate(173, 7) scale(0.8)">
         <FederationTile
           v-if="shipFederation(ship)"
           :rewardsOverride="federationDisplayRewards(shipFederation(ship))"
@@ -135,30 +136,36 @@
         </g>
       </g>
 
-      <!-- the Standard Tech tile seeded on this ship (Twilight has artifacts instead), centered in
-           the card beside the Federation tile. -->
-      <g v-if="hasTechSlot(ship)" data-section="tech" transform="translate(223, 6) scale(0.82)">
+      <!-- the Standard Tech tile seeded on this ship (Twilight has artifacts instead). TechTile is a
+           60-unit box centered at its own (0,0); scaled 0.72 so it fits the card height with padding
+           (was 0.82, which overshot the bottom border), and translate y 5.4 + 30*0.72 = 27 so its
+           middle lines up with the Federation tile and action octagons. -->
+      <g v-if="hasTechSlot(ship)" data-section="tech" transform="translate(228, 5.4) scale(0.72)">
         <TechTile :pos="ship" x="0" y="0" />
       </g>
       <!-- Twilight has no Standard Tech slot (see `hasTechSlot` above) - this artifact grid fills the
-           same right-hand slot instead, a 2-column grid sized to fit the shorter card (up to 4
-           artifacts = player count at 4p, so 2 rows). -->
+           same right-hand slot instead, a 2-column grid centered vertically on the same y=27 line as
+           the tiles (up to 4 artifacts = player count at 4p, so 2 rows). -->
       <g v-else data-section="artifacts">
         <g
           v-for="(artifact, i) in remainingArtifacts"
           :key="artifact"
           :data-artifact="artifact"
-          :transform="`translate(${224 + (i % 2) * 26}, ${5 + Math.floor(i / 2) * 23})`"
+          :transform="`translate(${226 + (i % 2) * 26}, ${4.5 + Math.floor(i / 2) * 23})`"
         >
           <ArtifactIcon :artifact="artifact" :size="22" />
         </g>
       </g>
 
-      <!-- Left tab: the ship name, sitting like a folder tab on the card's top-left border, filled
-           in the ship color (dark text, which reads better than white on the lighter ship colors). -->
+      <!-- Left tab: the ship name, sitting like a folder tab on the card's top-left border, filled in
+           the ship color. The first letter sits in a white hexagon badge (echoing the map hex) so it
+           reads as the ship's identity even on the colored tab; the rest of the name follows in dark
+           text (dark reads better than white on the lighter ship colors). -->
       <g class="lost-fleet-ship__tab" v-b-tooltip.hover.nofade :title="shipLabel(ship)">
         <path :d="nameTabPath(ship)" :style="{ fill: shipColor(ship) }" class="lost-fleet-ship__tab-shape" />
-        <text :x="nameTabCenterX(ship)" y="-7" dy="3.1" class="lost-fleet-ship__name">{{ shipFullName(ship) }}</text>
+        <polygon :points="nameHexPoints" class="lost-fleet-ship__name-hex" />
+        <text x="17" y="-7" dy="3.1" class="lost-fleet-ship__name-letter">{{ shipFirstLetter(ship) }}</text>
+        <text x="27" y="-7" dy="3.1" class="lost-fleet-ship__name-rest">{{ shipNameRest(ship) }}</text>
       </g>
 
       <!-- Right tab: the 4 exploration/player slots, its negative space filled in the ship color and
@@ -224,6 +231,7 @@ import {
   spaceshipLabels,
 } from "../data/spaceships";
 import { factionPiecePlanet } from "../graphics/utils";
+import { corners } from "../graphics/hex";
 import ArtifactIcon from "./ArtifactIcon.vue";
 import Building from "./Building.vue";
 import Condition from "./Condition.vue";
@@ -274,14 +282,26 @@ export default class LostFleetShips extends Vue {
     return spaceshipColors[ship];
   }
 
-  /** Full uppercase ship name shown in the left tab, e.g. "REBELLION" ("T F Mars" -> "MARS"). */
+  /** Full uppercase ship name, e.g. "REBELLION" ("T F Mars" -> "MARS"). */
   shipFullName(ship: Spaceship): string {
     return spaceshipDisplayNames[ship].toUpperCase();
   }
 
-  /** Width of the left (name) tab, sized to the ship name (~6.4 units per uppercase letter + padding). */
-  private nameTabWidth(ship: Spaceship): number {
-    return Math.max(42, this.shipFullName(ship).length * 6.4 + 18);
+  /** First letter of the name (drawn inside the white hex badge in the left tab). */
+  shipFirstLetter(ship: Spaceship): string {
+    return this.shipFullName(ship).charAt(0);
+  }
+
+  /** The rest of the name after the first letter (drawn as text beside the hex badge). */
+  shipNameRest(ship: Spaceship): string {
+    return this.shipFullName(ship).slice(1);
+  }
+
+  /** The white first-letter hex badge, centered at (17, -7) in the left tab (~6.5-unit radius). */
+  get nameHexPoints(): string {
+    return corners(6.5)
+      .map((p) => `${p.x + 17},${p.y - 7}`)
+      .join(" ");
   }
 
   /** Rounded-top "folder tab" outline: flat bottom on the card's top border, rounded top corners. */
@@ -294,12 +314,10 @@ export default class LostFleetShips extends Vue {
     } L${x1},${bot} Z`;
   }
 
+  /** Left tab spans from x=6 to past the hex badge (ends ~x24) + the rest-of-name text (~5.6/char). */
   nameTabPath(ship: Spaceship): string {
-    return this.tabPath(6, 6 + this.nameTabWidth(ship));
-  }
-
-  nameTabCenterX(ship: Spaceship): number {
-    return 6 + this.nameTabWidth(ship) / 2;
+    const x1 = 27 + this.shipNameRest(ship).length * 5.6 + 5;
+    return this.tabPath(6, Math.max(46, x1));
   }
 
   /** Right (slots) tab is a fixed width, sized to hold the 4 slots and pinned near the right edge. */
@@ -439,13 +457,29 @@ svg.lost-fleet-ship {
     stroke-width: 0.6;
   }
 
-  // The ship name, centered in the left tab. Dark reads better than white on the lighter ship
-  // colors (grey / gold), so it stays dark on every tab for consistency.
-  .lost-fleet-ship__name {
+  // The white first-letter hex badge in the left tab, with a thin dark outline so it stays crisp on
+  // the lighter ship colors (grey / gold).
+  .lost-fleet-ship__name-hex {
+    fill: #fff;
+    stroke: #172e62;
+    stroke-width: 0.6;
+  }
+
+  // The first letter (inside the white hex) and the rest of the name (on the colored tab). Both dark
+  // - dark reads better than white on the lighter ship colors.
+  .lost-fleet-ship__name-letter {
+    font-size: 9px;
+    font-weight: 800;
+    fill: #17161a;
+    text-anchor: middle;
+    pointer-events: none;
+  }
+
+  .lost-fleet-ship__name-rest {
     font-size: 9px;
     font-weight: 700;
     fill: #17161a;
-    text-anchor: middle;
+    text-anchor: start;
     letter-spacing: 0.4px;
     pointer-events: none;
   }

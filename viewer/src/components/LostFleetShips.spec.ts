@@ -45,7 +45,7 @@ describe("LostFleetShips", () => {
 
     // each ship spells out its name beside the marker hex (the hex holds the first letter), so
     // there is one name element per ship in play (4 at 4p)
-    expect(container.querySelectorAll(".lost-fleet-ship__name").length).to.equal(4);
+    expect(container.querySelectorAll(".lost-fleet-ship__name-rest").length).to.equal(4);
 
     // Twilight carries the seeded artifact tokens (one per player at 4p)
     expect(engine.tiles.artifacts.length).to.equal(4);
@@ -106,7 +106,7 @@ describe("LostFleetShips", () => {
     const ship = container.querySelector("svg.lost-fleet-ship");
     expect(ship.hasAttribute("width")).to.equal(false);
     expect(ship.hasAttribute("height")).to.equal(false);
-    expect(ship.getAttribute("viewBox")).to.equal("0 -16 291 68");
+    expect(ship.getAttribute("viewBox")).to.equal("0 -16 291 72");
   });
 
   it("lays the 4 exploration slots out evenly spaced in the right-hand tab", () => {
@@ -131,8 +131,9 @@ describe("LostFleetShips", () => {
     for (let i = 1; i < sortedXs.length; i++) {
       expect(sortedXs[i] - sortedXs[i - 1]).to.equal(15);
     }
-    // the ship name is spelled out in full in the left tab
-    expect(twilight.querySelector(".lost-fleet-ship__name").textContent).to.equal("TWILIGHT");
+    // the ship name is spelled out in the left tab: a first-letter hex badge + the rest of the name
+    expect(twilight.querySelector(".lost-fleet-ship__name-letter").textContent).to.equal("T");
+    expect(twilight.querySelector(".lost-fleet-ship__name-rest").textContent).to.equal("WILIGHT");
     slots.forEach((slot) => {
       expect(slot.querySelector(".lost-fleet-ship__slot-ordinal")).to.equal(null);
     });
@@ -192,10 +193,10 @@ describe("LostFleetShips", () => {
     const avgX = centers.reduce((s, c) => s + c.x, 0) / centers.length;
     const avgY = centers.reduce((s, c) => s + c.y, 0) / centers.length;
     expect(avgX).to.be.closeTo(248, 5);
-    expect(avgY).to.be.closeTo(27.5, 5);
+    expect(avgY).to.be.closeTo(27, 5);
 
     for (const c of centers) {
-      expect(c.y + iconHalfSize).to.be.at.most(52);
+      expect(c.y + iconHalfSize).to.be.at.most(56);
     }
   });
 
