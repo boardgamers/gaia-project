@@ -82,9 +82,9 @@ export default class ArtifactIcon extends Vue {
   // 25 tall, centered on the origin, so the token renders ~1.28x as wide as it is tall.
   readonly rxOut = 15.5;
   readonly ryOut = 12;
-  readonly rxIn = 11.4;
-  readonly ryIn = 9.3;
-  readonly iconScale = 0.6;
+  readonly rxIn = 12.5;
+  readonly ryIn = 10.1;
+  readonly iconScale = 0.62;
 
   get viewBox(): string {
     return "-16 -12.5 32 25";
