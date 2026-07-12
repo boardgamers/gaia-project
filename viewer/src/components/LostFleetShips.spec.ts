@@ -106,7 +106,7 @@ describe("LostFleetShips", () => {
     const ship = container.querySelector("svg.lost-fleet-ship");
     expect(ship.hasAttribute("width")).to.equal(false);
     expect(ship.hasAttribute("height")).to.equal(false);
-    expect(ship.getAttribute("viewBox")).to.equal("0 -16 291 72");
+    expect(ship.getAttribute("viewBox")).to.equal("0 -16 291 74");
   });
 
   it("lays the 4 exploration slots out evenly spaced in the right-hand tab", () => {

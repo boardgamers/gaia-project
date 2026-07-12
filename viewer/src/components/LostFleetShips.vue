@@ -5,7 +5,7 @@
       :key="ship"
       class="lost-fleet-ship"
       :data-ship="ship"
-      viewBox="0 -16 291 72"
+      viewBox="0 -16 291 74"
       style="overflow: visible"
     >
       <!-- The board is a rounded card outlined in the ship's color. Its name and the player
@@ -16,11 +16,11 @@
         x="1.25"
         y="0"
         width="288.5"
-        height="54"
+        height="56"
         rx="7"
         ry="7"
         class="lost-fleet-ship__card"
-        :style="{ stroke: shipColor(ship) }"
+        :style="{ fill: shipColor(ship), stroke: shipColor(ship) }"
       />
 
       <!-- the ship's 3 board actions, rendered exactly like the base game's BoardAction row -->
@@ -29,7 +29,7 @@
         :key="action.type"
         :class="['lost-fleet-ship__action', action.type, { used: actionUser(ship, action.type) != null }]"
         :data-action="action.type"
-        :transform="`translate(${29 + i * 54}, 27)`"
+        :transform="`translate(${29 + i * 54}, 28)`"
         v-b-tooltip.hover.nofade
         :title="actionTooltip(ship, action)"
       >
@@ -119,10 +119,11 @@
       </g>
 
       <!-- the Federation token still up for grabs on this ship (base-game token art). The action
-           octagons, this Federation tile, and the Tech tile are all vertically centered on the same
-           line (y=27), each scaled to leave clear top/bottom padding inside the card. FederationTile
-           is a 50-unit box centered at its own (0,0); translate y 7 + 25*0.8 = 27. -->
-      <g data-section="federation" transform="translate(173, 7) scale(0.8)">
+           octagons, this Federation tile and the Tech tile are all vertically centered on the card's
+           middle. FederationTile is a 50-unit box centered at its own (0,0); its drop-shadow extends
+           downward, so it is nudged ~3 units above the geometric center (translate y=5) so the token
+           itself reads as centered rather than sitting low. -->
+      <g data-section="federation" transform="translate(173, 5) scale(0.8)">
         <FederationTile
           v-if="shipFederation(ship)"
           :rewardsOverride="federationDisplayRewards(shipFederation(ship))"
@@ -138,9 +139,9 @@
 
       <!-- the Standard Tech tile seeded on this ship (Twilight has artifacts instead). TechTile is a
            60-unit box centered at its own (0,0); scaled 0.72 so it fits the card height with padding
-           (was 0.82, which overshot the bottom border), and translate y 5.4 + 30*0.72 = 27 so its
-           middle lines up with the Federation tile and action octagons. -->
-      <g v-if="hasTechSlot(ship)" data-section="tech" transform="translate(228, 5.4) scale(0.72)">
+           (was 0.82, which overshot the bottom border), and translate y 6.4 + 30*0.72 = 28 so its
+           middle lines up with the action octagons. -->
+      <g v-if="hasTechSlot(ship)" data-section="tech" transform="translate(228, 6.4) scale(0.72)">
         <TechTile :pos="ship" x="0" y="0" />
       </g>
       <!-- Twilight has no Standard Tech slot (see `hasTechSlot` above) - this artifact grid fills the
@@ -151,7 +152,7 @@
           v-for="(artifact, i) in remainingArtifacts"
           :key="artifact"
           :data-artifact="artifact"
-          :transform="`translate(${226 + (i % 2) * 26}, ${4.5 + Math.floor(i / 2) * 23})`"
+          :transform="`translate(${226 + (i % 2) * 26}, ${5.5 + Math.floor(i / 2) * 23})`"
         >
           <ArtifactIcon :artifact="artifact" :size="22" />
         </g>
@@ -164,8 +165,8 @@
       <g class="lost-fleet-ship__tab" v-b-tooltip.hover.nofade :title="shipLabel(ship)">
         <path :d="nameTabPath(ship)" :style="{ fill: shipColor(ship) }" class="lost-fleet-ship__tab-shape" />
         <polygon :points="nameHexPoints" class="lost-fleet-ship__name-hex" />
-        <text x="17" y="-7" dy="3.1" class="lost-fleet-ship__name-letter">{{ shipFirstLetter(ship) }}</text>
-        <text x="27" y="-7" dy="3.1" class="lost-fleet-ship__name-rest">{{ shipNameRest(ship) }}</text>
+        <text x="15" y="-7" dy="3.1" class="lost-fleet-ship__name-letter">{{ shipFirstLetter(ship) }}</text>
+        <text x="21" y="-7" dy="3.1" class="lost-fleet-ship__name-rest">{{ shipNameRest(ship) }}</text>
       </g>
 
       <!-- Right tab: the 4 exploration/player slots, its negative space filled in the ship color and
@@ -297,10 +298,10 @@ export default class LostFleetShips extends Vue {
     return this.shipFullName(ship).slice(1);
   }
 
-  /** The white first-letter hex badge, centered at (17, -7) in the left tab (~6.5-unit radius). */
+  /** The white first-letter hex badge, centered at (15, -7) in the left tab (~5.8-unit radius). */
   get nameHexPoints(): string {
-    return corners(6.5)
-      .map((p) => `${p.x + 17},${p.y - 7}`)
+    return corners(5.8)
+      .map((p) => `${p.x + 15},${p.y - 7}`)
       .join(" ");
   }
 
@@ -314,20 +315,20 @@ export default class LostFleetShips extends Vue {
     } L${x1},${bot} Z`;
   }
 
-  /** Left tab spans from x=6 to past the hex badge (ends ~x24) + the rest-of-name text (~5.6/char). */
+  /** Left tab spans from x=6 to past the hex badge + the rest-of-name text (~5.6 units/char). */
   nameTabPath(ship: Spaceship): string {
-    const x1 = 27 + this.shipNameRest(ship).length * 5.6 + 5;
-    return this.tabPath(6, Math.max(46, x1));
+    const x1 = 21 + this.shipNameRest(ship).length * 5.6 + 5;
+    return this.tabPath(6, Math.max(42, x1));
   }
 
-  /** Right (slots) tab is a fixed width, sized to hold the 4 slots and pinned near the right edge. */
+  /** Right (slots) tab hugs the 4 slots (9 units of padding each side) near the right edge. */
   get slotsTabPath(): string {
-    return this.tabPath(204, 284);
+    return this.tabPath(217, 280);
   }
 
   /** X of the given exploration slot's center within the right tab (index 1-4). */
   slotTabX(index: number): number {
-    return 221 + (index - 1) * 15;
+    return 226 + (index - 1) * 15;
   }
 
   shipActions(ship: Spaceship) {
@@ -444,17 +445,15 @@ svg.lost-fleet-ship {
     margin: 0 auto;
   }
 
-  // The board card outline, in the ship's color (stroke set per-ship inline).
+  // The whole board card, filled in the ship's color (fill + stroke set per-ship inline).
   .lost-fleet-ship__card {
-    fill: none;
     stroke-width: 2.5;
   }
 
-  // The two tabs (name + slots) that sit on the card's top border; fill is set per-ship inline, with
-  // a slightly darker same-color edge so the tab reads as a distinct shape against the card border.
+  // The two tabs (name + slots) that sit on the card's top border; fill is set per-ship inline,
+  // no outline so they merge seamlessly into the same-colored card.
   .lost-fleet-ship__tab-shape {
-    stroke: rgba(0, 0, 0, 0.25);
-    stroke-width: 0.6;
+    stroke: none;
   }
 
   // The white first-letter hex badge in the left tab, with a thin dark outline so it stays crisp on
