@@ -20,6 +20,17 @@
       xlink:href="#space-hex"
       :class="['space-hex-power-ring', playerPlanet(powerRingPlayer)]"
     />
+    <!-- Lost Fleet spaceship hex: fill the entire hex with the ship's identity color (rulebook
+         page 7 - Twilight purple / Rebellion brown / T F Mars grey / Eclipse yellow). Drawn here,
+         outside the `contentRotation` counter-rotation below, so the hexagon stays aligned to the
+         cell's own outline; the upright letter lives in the counter-rotated group instead. -->
+    <use
+      v-if="lostFleetSpaceship"
+      xlink:href="#space-hex"
+      class="lost-fleet-spaceship__hex"
+      :data-ship="lostFleetSpaceship"
+      :style="{ fill: lostFleetSpaceshipColor }"
+    />
     <!-- Content that must stay upright regardless of the whole-board `contentRotation` screen-fit
          rotation (numbers, labels, buildings, gaiaformers, ships) - counter-rotated here so it
          doesn't inherit that purely-cosmetic tilt. This deliberately does NOT cancel out any
@@ -41,7 +52,6 @@
         {{ hex.data.sector[0] === "s" ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector) }}
       </text>
       <g v-if="lostFleetSpaceship" class="lost-fleet-spaceship">
-        <circle class="lost-fleet-spaceship__core" r="0.42" />
         <text class="lost-fleet-spaceship__label">{{ lostFleetSpaceshipLabel }}</text>
       </g>
       <Planet
@@ -135,6 +145,7 @@ import { Ship } from "@gaia-project/engine/src/enums";
 import { MapMode, MapModeType } from "../data/actions";
 import { isFree } from "../logic/buttons/utils";
 import { splitCostBonus } from "../data/resources";
+import { spaceshipColors } from "../data/spaceships";
 import { max } from "lodash";
 import { factionPiecePlanet } from "../graphics/utils";
 
@@ -181,7 +192,7 @@ export default class SpaceHex extends Vue {
   }
 
   radiusTransform(index: number, scale: number): string {
-    return `scale(${scale}) ${radiusTranslate(.63 / scale, index, 7)}`;
+    return `scale(${scale}) ${radiusTranslate(0.63 / scale, index, 7)}`;
   }
 
   get hexCorners() {
@@ -198,7 +209,7 @@ export default class SpaceHex extends Vue {
 
   get ships(): Ship[] {
     let firstHidden = false;
-    return shipsInHex(this.hex.toString(), this.engine).filter(s => {
+    return shipsInHex(this.hex.toString(), this.engine).filter((s) => {
       if (firstHidden) {
         return true;
       }
@@ -224,18 +235,19 @@ export default class SpaceHex extends Vue {
       return null;
     }
 
-    return this.highlightedHexes?.get(hex)?.warnings
-      ?.filter(w => tooltip || isWarningEnabled(w.disableKey, this.$store.state.preferences))
+    return this.highlightedHexes
+      ?.get(hex)
+      ?.warnings?.filter((w) => tooltip || isWarningEnabled(w.disableKey, this.$store.state.preferences))
       ?.map((w) => w.message)
       ?.join(", ");
   }
 
   get highlightBuilding(): BuildingOverride | null {
-    return this.buildingOverride(this.hex, h => h.building);
+    return this.buildingOverride(this.hex, (h) => h.building);
   }
 
   get hideBuilding(): BuildingOverride | null {
-    return this.buildingOverride(this.hex, h => h.hideBuilding);
+    return this.buildingOverride(this.hex, (h) => h.hideBuilding);
   }
 
   buildingOverride(hex: GaiaHex, prop: (h: HighlightHex) => BuildingEnum | null): BuildingOverride | null {
@@ -337,16 +349,17 @@ export default class SpaceHex extends Vue {
   }
 
   get planetMapMode(): boolean {
-    return this.mapModes.filter(m => m.planet === this.planet).length > 0;
+    return this.mapModes.filter((m) => m.planet === this.planet).length > 0;
   }
 
   private playerMapMode(type: MapModeType): MapMode | null {
-    return this.mapModes.find(mode => mode.type === type);
+    return this.mapModes.find((mode) => mode.type === type);
   }
 
   get federationLines(): FederationLine[] {
-    return this.powerHighlightClass ? [] :
-      this.hex.federations.flatMap(player => playerFederationLines(this.map.grid, this.hex, this.player(player)));
+    return this.powerHighlightClass
+      ? []
+      : this.hex.federations.flatMap((player) => playerFederationLines(this.map.grid, this.hex, this.player(player)));
   }
 
   get showPlanet(): boolean {
@@ -371,6 +384,10 @@ export default class SpaceHex extends Vue {
 
   get lostFleetSpaceshipLabel(): string {
     return this.lostFleetSpaceship ? this.lostFleetSpaceshipLabels[this.lostFleetSpaceship] : "";
+  }
+
+  get lostFleetSpaceshipColor(): string {
+    return this.lostFleetSpaceship ? spaceshipColors[this.lostFleetSpaceship] : "";
   }
 
   // Deep Space tiles no longer render a per-hex badge here - SpaceMap.vue renders one big
@@ -426,12 +443,17 @@ export default class SpaceHex extends Vue {
   get mapModeHighlight(): PlayerEnum | null {
     if (this.planet === "e") {
       const sec = this.playerMapMode(MapModeType.sectors);
-      if (sec && this.player(sec.player).data.occupied.some((hex) => hex.colonizedBy(sec.player) && hex.data.sector === this.hex.data.sector)) {
+      if (
+        sec &&
+        this.player(sec.player).data.occupied.some(
+          (hex) => hex.colonizedBy(sec.player) && hex.data.sector === this.hex.data.sector
+        )
+      ) {
         return sec.player;
       }
 
       const fed = this.playerMapMode(MapModeType.federations);
-      if (fed && this.hex.federations.some(f => f === fed.player)) {
+      if (fed && this.hex.federations.some((f) => f === fed.player)) {
         return fed.player;
       }
     }
@@ -460,7 +482,9 @@ export default class SpaceHex extends Vue {
   private leechHighlightClass(mode: MapMode) {
     const hex = this.hex;
     const p = mode.player;
-    const maxLeech = max(leechPlanets(this.map, p, hex).map(lp => this.player(p).buildingValue(lp.hex, { building: lp.building })));
+    const maxLeech = max(
+      leechPlanets(this.map, p, hex).map((lp) => this.player(p).buildingValue(lp.hex, { building: lp.building }))
+    );
     if (maxLeech) {
       const otherPlayers = upgradableBuildingsOfOtherPlayers(this.engine, hex, p);
       if (otherPlayers) {
@@ -523,9 +547,9 @@ export default class SpaceHex extends Vue {
     const messages: string[] = [];
     const highlightHex = this.highlightedHexes?.get(hex);
     if (c) {
-      messages.push(highlightHex?.building
-        ? `Build ${buildingData[highlightHex.building].name} for ${c}`
-        : `Cost: ${c}`);
+      messages.push(
+        highlightHex?.building ? `Build ${buildingData[highlightHex.building].name} for ${c}` : `Cost: ${c}`
+      );
     }
     if (highlightHex?.tradeCost) {
       messages.push(`Trade Cost: ${highlightHex.tradeCost}`);
@@ -554,25 +578,23 @@ export default class SpaceHex extends Vue {
         buildings.push(buildingLabel(this.player(data.additionalMine), BuildingEnum.Mine));
       }
     } else if (this.ships) {
-      ships = this.ships.map(s => {
+      ships = this.ships.map((s) => {
         const faction = this.player(s.player).faction;
-        return (`${buildingName(s.type, faction)} (${factionName(faction)})`);
+        return `${buildingName(s.type, faction)} (${factionName(faction)})`;
       });
     }
-    buildings.push(...hex.customPosts.map(p => buildingLabel(this.player(p), BuildingEnum.CustomsPost)));
-    buildings.push(...hex.tradeTokens.map(p => `Traded: ${factionName(this.player(p).faction)}`));
+    buildings.push(...hex.customPosts.map((p) => buildingLabel(this.player(p), BuildingEnum.CustomsPost)));
+    buildings.push(...hex.tradeTokens.map((p) => `Traded: ${factionName(this.player(p).faction)}`));
     const w = this.warning(hex, true);
     if (w) {
       messages.push(`Warning: ${w}`);
     }
     const coord = `Coordinates: ${hex}`;
     const sector = `Sector type: ${this.sectorTypeLabel}`;
-    const spaceship = this.lostFleetSpaceship ? `Lost Fleet spaceship: ${this.lostFleetSpaceshipNames[this.lostFleetSpaceship]}` : null;
-    return [coord, sector, spaceship, planet]
-      .concat(buildings)
-      .concat(ships)
-      .concat(messages)
-      .join(" ");
+    const spaceship = this.lostFleetSpaceship
+      ? `Lost Fleet spaceship: ${this.lostFleetSpaceshipNames[this.lostFleetSpaceship]}`
+      : null;
+    return [coord, sector, spaceship, planet].concat(buildings).concat(ships).concat(messages).join(" ");
   }
 }
 </script>
@@ -720,21 +742,23 @@ svg {
     }
   }
 
+  // The whole-hex ship-color fill (see template). `fill` is set per-ship inline via
+  // spaceshipColors; pointer-events off so it never intercepts the hex's own click.
+  .lost-fleet-spaceship__hex {
+    stroke: #172e62;
+    stroke-width: 0.03;
+    pointer-events: none;
+  }
+
   .lost-fleet-spaceship {
     pointer-events: none;
 
-    &__core {
-      fill: #efe6c4;
-      stroke: #172e62;
-      stroke-width: 0.05;
-    }
-
     &__label {
-      fill: #172e62;
+      fill: #17161a;
       text-anchor: middle;
       dominant-baseline: central;
-      font-size: 0.45px;
-      font-weight: 700;
+      font-size: 0.9px;
+      font-weight: 800;
     }
   }
 }

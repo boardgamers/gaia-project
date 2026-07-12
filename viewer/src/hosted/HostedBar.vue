@@ -4,7 +4,7 @@
     style="gap: 0.75rem; flex-wrap: nowrap; padding-right: 3rem"
   >
     <span class="hosted-bar__title text-truncate">
-      <a href="?lobby=1" aria-label="Back to lobby" class="hosted-bar__back">&larr;</a>
+      <a href="?lobby=1&amp;tab=mine" aria-label="Back to my games" class="hosted-bar__back">&larr;</a>
       <strong class="ml-2">{{ gameName || "Unnamed game" }}</strong>
     </span>
     <template v-if="finished">

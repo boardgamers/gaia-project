@@ -132,7 +132,7 @@
           type="button"
           class="lobby-tab"
           :class="{ 'lobby-tab--active': activeTab === 'mine' }"
-          @click="activeTab = 'mine'"
+          @click="setActiveTab('mine')"
         >
           My games <span class="lobby-tab__count">{{ myGames.length }}</span>
         </button>
@@ -140,7 +140,7 @@
           type="button"
           class="lobby-tab"
           :class="{ 'lobby-tab--active': activeTab === 'open' }"
-          @click="activeTab = 'open'"
+          @click="setActiveTab('open')"
         >
           Lobby <span class="lobby-tab__count">{{ openGames.length }}</span>
         </button>
@@ -148,7 +148,7 @@
           type="button"
           class="lobby-tab"
           :class="{ 'lobby-tab--active': activeTab === 'active' }"
-          @click="activeTab = 'active'"
+          @click="setActiveTab('active')"
         >
           Active <span class="lobby-tab__count">{{ activeGames.length }}</span>
         </button>
@@ -156,7 +156,7 @@
           type="button"
           class="lobby-tab"
           :class="{ 'lobby-tab--active': activeTab === 'finished' }"
-          @click="activeTab = 'finished'"
+          @click="setActiveTab('finished')"
         >
           Finished <span class="lobby-tab__count">{{ finishedGames.length }}</span>
         </button>
@@ -515,7 +515,12 @@ export default Vue.extend({
     isPushEnabled().then((enabled) => {
       this.pushEnabled = enabled;
     });
-    this.activeTab = "open";
+    // Default to the Lobby tab, but honour an explicit `?tab=` so backing out of a game (the
+    // hosted bar's back arrow links to `?lobby=1&tab=mine`) - and an OS/browser swipe-back that
+    // returns to the lobby's own history entry - land on the tab the player was last on rather
+    // than always resetting to Lobby.
+    const requestedTab = this.readTabFromUrl();
+    this.activeTab = requestedTab ?? "open";
     if (typeof document !== "undefined") {
       this.documentPointerDownHandler = (event: PointerEvent) => this.onDocumentPointerDown(event);
       document.addEventListener("pointerdown", this.documentPointerDownHandler, true);
@@ -535,6 +540,23 @@ export default Vue.extend({
     }
   },
   methods: {
+    readTabFromUrl(): "mine" | "open" | "active" | "finished" | null {
+      if (typeof window === "undefined") {
+        return null;
+      }
+      const tab = new URLSearchParams(window.location.search).get("tab");
+      return tab === "mine" || tab === "open" || tab === "active" || tab === "finished" ? tab : null;
+    },
+    setActiveTab(tab: "mine" | "open" | "active" | "finished") {
+      this.activeTab = tab;
+      // Reflect the tab in the URL (without adding a history entry) so a subsequent OS/browser
+      // swipe-back into this lobby entry restores the same tab instead of resetting to Lobby.
+      if (typeof window !== "undefined" && window.history && typeof window.history.replaceState === "function") {
+        const params = new URLSearchParams(window.location.search);
+        params.set("tab", tab);
+        window.history.replaceState(window.history.state, "", `?${params.toString()}`);
+      }
+    },
     onDocumentPointerDown(event: PointerEvent) {
       if (!(event.target as HTMLElement | null)?.closest?.(".game-swipe")) {
         this.revealedGameId = "";

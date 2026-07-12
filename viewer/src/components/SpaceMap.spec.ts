@@ -1,4 +1,11 @@
-import Engine, { Building, classifySectorId, Faction, GaiaHex, LostFleetSectorType, Planet } from "@gaia-project/engine";
+import Engine, {
+  Building,
+  classifySectorId,
+  Faction,
+  GaiaHex,
+  LostFleetSectorType,
+  Planet,
+} from "@gaia-project/engine";
 import { render } from "@testing-library/vue";
 import { expect } from "chai";
 import fs from "fs";
@@ -86,15 +93,19 @@ describe("SpaceMap", () => {
       expect(label.textContent.trim()).to.match(/^\d+$/);
     });
     expect(container.querySelectorAll("g.space-hex-cell .lost-fleet-spaceship").length).to.equal(spaceshipHexCount);
-    // per-hex ship marker matches the ship board's own minimal circle+letter treatment (same
-    // #efe6c4/#172e62 colors) - no separate orbit ring or "Ship" caption pill on top of it
+    // per-hex ship marker fills the whole hex with the ship's identity color (rulebook page 7:
+    // Twilight purple / Rebellion brown / T F Mars grey / Eclipse yellow) plus a single bold,
+    // centered letter - no separate orbit ring or "Ship" caption pill on top of it
     const mapShipMarker = container.querySelector("g.space-hex-cell .lost-fleet-spaceship");
     if (mapShipMarker) {
       expect(mapShipMarker.querySelector(".lost-fleet-spaceship__orbit")).to.equal(null);
       expect(mapShipMarker.querySelector(".lost-fleet-spaceship__pill")).to.equal(null);
-      expect(mapShipMarker.querySelectorAll("circle").length).to.equal(1);
       expect(mapShipMarker.querySelectorAll("text").length).to.equal(1);
       expect(mapShipMarker.querySelector("text").textContent).to.match(/^[TRME]$/);
+      // the ship color fills the whole hex via a hex-shaped <use>, not a small circle
+      const cell = mapShipMarker.closest("g.space-hex-cell");
+      expect(cell.querySelector(".lost-fleet-spaceship__hex")).to.not.equal(null);
+      expect(cell.querySelectorAll(".lost-fleet-spaceship circle").length).to.equal(0);
     }
 
     // the Lost Fleet legend (Interspace/Deep Space/Ship swatches) was removed entirely

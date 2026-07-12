@@ -18,6 +18,7 @@ import {
   registerServiceWorker,
   registerServiceWorkerNavigationListener,
 } from "./hosted/push";
+import { startHostedInstallPrompt } from "./hosted/install-prompt";
 import { trackPresence } from "./hosted/presence";
 import SignIn from "./hosted/SignIn.vue";
 import { createSupabaseBackend, getSupabaseClient, subscribeMoves, SupabaseClient } from "./hosted/supabase-client";
@@ -442,6 +443,10 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, i
 
 export default async function launchHosted(selector = "#app"): Promise<void> {
   initTheme();
+  // Register the mobile-install prompt at the very start of boot so its `beforeinstallprompt`
+  // listener is in place before Chromium fires that event. No-op on desktop, when already running
+  // as an installed PWA, or during a recent dismissal's cooldown (see install-prompt.ts).
+  startHostedInstallPrompt();
   const root = document.querySelector(selector);
   if (!root) {
     throw new Error(`no element matches ${selector}`);

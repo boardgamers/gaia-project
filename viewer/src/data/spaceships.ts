@@ -22,6 +22,23 @@ export const spaceshipMarkers: Record<Spaceship, string> = {
   [Spaceship.Eclipse]: "E",
 };
 
+/**
+ * Per-ship identity colors, taken from each spaceship's name-plate background on rulebook page 7:
+ * Twilight is purple, Rebellion brown, T F Mars grey, Eclipse yellow/gold. Used to fill both the
+ * map hex marker (SpaceHex.vue) and the ship board's marker circle (LostFleetShips.vue) so a
+ * ship's color alone identifies it. Rebellion is nudged to a clearer brown so it stays distinct
+ * from T F Mars's grey.
+ */
+export const spaceshipColors: Record<Spaceship, string> = {
+  [Spaceship.Twilight]: "#9872a2",
+  [Spaceship.Rebellion]: "#a97c50",
+  [Spaceship.TFMars]: "#bfc5cf",
+  [Spaceship.Eclipse]: "#d1c792",
+};
+
+/** Dark, bold marker letter that reads with strong contrast on every {@link spaceshipColors} fill. */
+export const spaceshipMarkerTextColor = "#17161a";
+
 export type ActionOverlay = {
   building?: BuildingEnum;
   planet?: Planet;

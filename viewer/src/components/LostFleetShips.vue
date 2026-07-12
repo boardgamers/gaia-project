@@ -14,8 +14,8 @@
            and slot; only the power-charge cost (or claiming player's token) needs to show per slot. -->
       <g class="lost-fleet-ship__header">
         <g v-b-tooltip.hover.nofade :title="shipLabel(ship)">
-          <circle cx="9" cy="9" r="8" class="lost-fleet-ship__marker-bg" />
-          <text x="9" y="12" class="lost-fleet-ship__marker">{{ shipMarker(ship) }}</text>
+          <circle cx="9" cy="9" r="8" class="lost-fleet-ship__marker-bg" :style="{ fill: shipColor(ship) }" />
+          <text x="9" y="9" class="lost-fleet-ship__marker">{{ shipMarker(ship) }}</text>
         </g>
 
         <g
@@ -196,7 +196,13 @@ import Engine, {
   SpaceshipFederation,
 } from "@gaia-project/engine";
 import { Player as PlayerEnum } from "@gaia-project/engine/src/enums";
-import { EXPLORATION_CHARGE_TRACK, spaceshipActionEffects, spaceshipBoards, SpaceshipActionType, shipsInPlay } from "@gaia-project/engine/src/spaceships";
+import {
+  EXPLORATION_CHARGE_TRACK,
+  spaceshipActionEffects,
+  spaceshipBoards,
+  SpaceshipActionType,
+  shipsInPlay,
+} from "@gaia-project/engine/src/spaceships";
 import { spaceshipFederationSpec } from "@gaia-project/engine/src/tiles/spaceship-federations";
 import { spaceshipFederationDisplayRewards } from "../data/federations";
 import {
@@ -208,6 +214,7 @@ import {
   costKind as costKindFn,
   extraCosts as extraCostsFn,
   isMineBubble as isMineBubbleFn,
+  spaceshipColors,
   spaceshipLabels,
   spaceshipMarkers,
 } from "../data/spaceships";
@@ -260,6 +267,10 @@ export default class LostFleetShips extends Vue {
 
   shipMarker(ship: Spaceship): string {
     return spaceshipMarkers[ship];
+  }
+
+  shipColor(ship: Spaceship): string {
+    return spaceshipColors[ship];
   }
 
   shipActions(ship: Spaceship) {
@@ -377,16 +388,17 @@ svg.lost-fleet-ship {
   }
 
   .lost-fleet-ship__marker-bg {
-    fill: #efe6c4;
-    stroke: #d8c57c;
+    // fill is set per-ship inline (spaceshipColors); keep only the shared outline here.
+    stroke: #172e62;
     stroke-width: 1;
   }
 
   .lost-fleet-ship__marker {
-    font-size: 10px;
-    font-weight: 700;
-    fill: #172e62;
+    font-size: 11px;
+    font-weight: 800;
+    fill: #17161a;
     text-anchor: middle;
+    dominant-baseline: central;
     pointer-events: none;
   }
 
