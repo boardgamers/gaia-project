@@ -1,7 +1,20 @@
 {
-  "version": "5.30.1",
+  "version": "5.30.2",
   "releasedAt": "2026-07-12",
   "entries": [
+    {
+      "version": "5.30.2",
+      "releasedAt": "2026-07-12",
+      "kind": "update",
+      "title": "Bigger artifact tokens",
+      "impact": "",
+      "changes": [
+        "Enlarged the Lost Fleet artifact tokens to fill more of the ship slot and added a '3' marker to the level-3 research-tracks token"
+      ],
+      "userChanges": [
+        "Enlarged the Lost Fleet artifact tokens to fill more of the ship slot and added a '3' marker to the level-3 research-tracks token"
+      ]
+    },
     {
       "version": "5.30.1",
       "releasedAt": "2026-07-12",
