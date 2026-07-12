@@ -5,44 +5,23 @@
       :key="ship"
       class="lost-fleet-ship"
       :data-ship="ship"
-      viewBox="0 0 291 76"
-      :style="{ overflow: 'visible', boxShadow: `0 0 0 2.5px ${shipColor(ship)}` }"
+      viewBox="0 -16 291 68"
+      style="overflow: visible"
     >
-      <!-- header, single row: ship marker hex + the 4 exploration-slot circles, 5 markers total
-           evenly spaced (20 apart, matching the marker's own diameter) - no ship name text and no
-           slot-ordinal number, since the marker letter + circle position already identify the ship
-           and slot; only the power-charge cost (or claiming player's token) needs to show per slot.
-           The marker itself is a color-filled hex (matching the ship's map-hex treatment) rather
-           than a circle, so it reads as "this ship" the same way the board does on the map. -->
-      <g class="lost-fleet-ship__header">
-        <g v-b-tooltip.hover.nofade :title="shipLabel(ship)">
-          <polygon :points="markerHexPoints" class="lost-fleet-ship__marker-bg" :style="{ fill: shipColor(ship) }" />
-          <!-- y + a plain-number dy (user units, ≈0.35 * the 11px font) centers the glyph the same
-               in every browser; avoids `dy="…em"` (mobile WebKit drops the em unit) and
-               `dominant-baseline` (iOS Safari renders it off). The hex holds the name's first letter
-               and the rest is spelled out beside it, so the board reads as e.g. [R]EBELLION. -->
-          <text x="9" y="9" dy="3.85" class="lost-fleet-ship__marker">{{ shipMarker(ship) }}</text>
-          <text x="18.5" y="9" dy="3.85" class="lost-fleet-ship__name">{{ shipNameRest(ship) }}</text>
-        </g>
-
-        <g
-          v-for="slot in explorationSlots(ship)"
-          :key="slot.index"
-          class="lost-fleet-ship__slot"
-          :data-slot="slot.index"
-          :transform="`translate(${slotX(ship, slot.index)}, 9)`"
-          v-b-tooltip.hover.nofade
-          :title="slotTitle(slot)"
-        >
-          <circle r="8" class="lost-fleet-ship__slot-bg" />
-          <template v-if="!slot.player">
-            <!-- same charge/power badge used everywhere else (Resource kind="pw"), just scaled down;
-                 the free (0-power) slot shows no number at all - a bare circle reads as "free". -->
-            <Resource v-if="slot.cost > 0" kind="pw" :count="slot.cost" transform="translate(0, 2) scale(0.5)" />
-          </template>
-          <Token v-else :faction="slot.player.faction" transform="translate(0, 1) scale(0.34)" />
-        </g>
-      </g>
+      <!-- The board is a rounded card outlined in the ship's color. Its name and the player
+           (exploration) slots live in two tabs that sit on top of this card's top edge (drawn last,
+           below), which frees the card interior for just the action row + Federation/Tech tiles and
+           lets the whole board be shorter than when those lived inside it. -->
+      <rect
+        x="1.25"
+        y="0"
+        width="288.5"
+        height="50"
+        rx="7"
+        ry="7"
+        class="lost-fleet-ship__card"
+        :style="{ stroke: shipColor(ship) }"
+      />
 
       <!-- the ship's 3 board actions, rendered exactly like the base game's BoardAction row -->
       <g
@@ -50,7 +29,7 @@
         :key="action.type"
         :class="['lost-fleet-ship__action', action.type, { used: actionUser(ship, action.type) != null }]"
         :data-action="action.type"
-        :transform="`translate(${29 + i * 54}, 48)`"
+        :transform="`translate(${29 + i * 54}, 25)`"
         v-b-tooltip.hover.nofade
         :title="actionTooltip(ship, action)"
       >
@@ -139,49 +118,68 @@
         </g>
       </g>
 
-      <!-- the Federation token still up for grabs on this ship (base-game token art) - nudged up
-           from y=15 to y=8 so its rendered bottom (its "shadow-1" drop-shadow filter inflates its
-           visual footprint well past its raw 50-unit height) actually lines up with the action
-           octagons' bottom edge instead of visibly overshooting past it - measured empirically via
-           getBoundingClientRect() on a live render, not just the raw un-shadowed geometry. -->
-      <g data-section="federation">
+      <!-- the Federation token still up for grabs on this ship (base-game token art), scaled down a
+           touch (0.8) and centered in the shorter card so the board can be more compact now that the
+           name/slots have moved out to the tabs. -->
+      <g data-section="federation" transform="translate(173, 5) scale(0.8)">
         <FederationTile
           v-if="shipFederation(ship)"
           :rewardsOverride="federationDisplayRewards(shipFederation(ship))"
           :spaceship-federation="shipFederation(ship)"
-          x="172"
-          y="8"
+          x="0"
+          y="0"
           filter="url(#shadow-1)"
         />
         <g v-else v-b-tooltip.hover.click :title="federationTooltip(ship)">
-          <FederationTile :used="true" x="172" y="8" />
+          <FederationTile :used="true" x="0" y="0" />
         </g>
       </g>
 
-      <!-- the Standard Tech tile seeded on this ship (Twilight has artifacts instead) - nudged down
-           from translate(*, 11) to translate(*, 14) so its rendered bottom lines up with the action
-           octagons' bottom edge instead of sitting visibly short of it (measured empirically, same
-           as the Federation tile above). -->
-      <g v-if="hasTechSlot(ship)" data-section="tech" transform="translate(225, 14) scale(0.9)">
+      <!-- the Standard Tech tile seeded on this ship (Twilight has artifacts instead), centered in
+           the card beside the Federation tile. -->
+      <g v-if="hasTechSlot(ship)" data-section="tech" transform="translate(223, 6) scale(0.82)">
         <TechTile :pos="ship" x="0" y="0" />
       </g>
-      <!-- Twilight has no Standard Tech slot (see `hasTechSlot` above) - this artifact grid fills
-           the exact same slot instead, bottom-aligned with the action octagons like that slot,
-           and with bigger icons (28, up from 24) per owner feedback - measured empirically via
-           getBoundingClientRect() against the action octagons' bottom edge, same as the
-           Federation/Tech tweaks above. The 30-unit grid repeat (up from 26) keeps the bigger
-           28-wide icons from overlapping each other. With up to 4 artifact slots (= player count,
-           max 4p), the lowest row's icons bottom out at 39+28=67, still inside the ship's own
-           76-tall viewBox. -->
+      <!-- Twilight has no Standard Tech slot (see `hasTechSlot` above) - this artifact grid fills the
+           same right-hand slot instead, a 2-column grid sized to fit the shorter card (up to 4
+           artifacts = player count at 4p, so 2 rows). -->
       <g v-else data-section="artifacts">
         <g
           v-for="(artifact, i) in remainingArtifacts"
           :key="artifact"
           :data-artifact="artifact"
-          :transform="`translate(${222 + (i % 2) * 30}, ${9 + Math.floor(i / 2) * 30})`"
+          :transform="`translate(${224 + (i % 2) * 26}, ${5 + Math.floor(i / 2) * 23})`"
         >
-          <!-- size=28 < the 30-unit grid repeat above, so consecutive icons no longer overlap. -->
-          <ArtifactIcon :artifact="artifact" :size="28" />
+          <ArtifactIcon :artifact="artifact" :size="22" />
+        </g>
+      </g>
+
+      <!-- Left tab: the ship name, sitting like a folder tab on the card's top-left border, filled
+           in the ship color (dark text, which reads better than white on the lighter ship colors). -->
+      <g class="lost-fleet-ship__tab" v-b-tooltip.hover.nofade :title="shipLabel(ship)">
+        <path :d="nameTabPath(ship)" :style="{ fill: shipColor(ship) }" class="lost-fleet-ship__tab-shape" />
+        <text :x="nameTabCenterX(ship)" y="-7" dy="3.1" class="lost-fleet-ship__name">{{ shipFullName(ship) }}</text>
+      </g>
+
+      <!-- Right tab: the 4 exploration/player slots, its negative space filled in the ship color and
+           the slot circles (charge-power icons, or a claiming player's token) sitting on top. -->
+      <g class="lost-fleet-ship__tab">
+        <path :d="slotsTabPath" :style="{ fill: shipColor(ship) }" class="lost-fleet-ship__tab-shape" />
+        <g
+          v-for="slot in explorationSlots(ship)"
+          :key="slot.index"
+          class="lost-fleet-ship__slot"
+          :data-slot="slot.index"
+          :transform="`translate(${slotTabX(slot.index)}, -7)`"
+          v-b-tooltip.hover.nofade
+          :title="slotTitle(slot)"
+        >
+          <circle r="6" class="lost-fleet-ship__slot-bg" />
+          <template v-if="!slot.player">
+            <!-- the free (0-power) slot shows no number at all - a bare circle reads as "free". -->
+            <Resource v-if="slot.cost > 0" kind="pw" :count="slot.cost" transform="translate(0, 1.5) scale(0.38)" />
+          </template>
+          <Token v-else :faction="slot.player.faction" transform="translate(0, 0.7) scale(0.26)" />
         </g>
       </g>
     </svg>
@@ -224,10 +222,8 @@ import {
   spaceshipColors,
   spaceshipDisplayNames,
   spaceshipLabels,
-  spaceshipMarkers,
 } from "../data/spaceships";
 import { factionPiecePlanet } from "../graphics/utils";
-import { corners } from "../graphics/hex";
 import ArtifactIcon from "./ArtifactIcon.vue";
 import Building from "./Building.vue";
 import Condition from "./Condition.vue";
@@ -270,44 +266,50 @@ export default class LostFleetShips extends Vue {
     return this.engine.tiles.artifacts ?? [];
   }
 
-  /**
-   * The ship-marker hexagon, same shape as a map hex (`corners()`), sized to the old marker
-   * circle's radius (8) and centered at (9, 9) so it drops into the header row's first slot
-   * without shifting the exploration circles that follow it.
-   */
-  get markerHexPoints(): string {
-    return corners(8)
-      .map((p) => `${p.x + 9},${p.y + 9}`)
-      .join(" ");
-  }
-
   shipLabel(ship: Spaceship): string {
     return spaceshipLabels[ship];
   }
 
-  shipMarker(ship: Spaceship): string {
-    return spaceshipMarkers[ship];
-  }
-
-  /** The ship name minus its first letter (the marker hex draws that), uppercased: e.g. "EBELLION". */
-  shipNameRest(ship: Spaceship): string {
-    return spaceshipDisplayNames[ship].slice(1).toUpperCase();
-  }
-
-  /**
-   * X of the given exploration slot's center. The header row now leads with the marker hex + spelled
-   * out name (starting at x≈18.5), so the four slots start just past the (per-ship, variable-length)
-   * name rather than at a fixed x - keeping each board compact while never reaching the Federation
-   * tile (x≈172). ~7.6 units per name letter approximates the 11px uppercase advance incl. the 0.6px
-   * letter-spacing; +13 clears the last letter and the first slot's own radius.
-   */
-  slotX(ship: Spaceship, index: number): number {
-    const firstSlot = 18.5 + this.shipNameRest(ship).length * 7.6 + 13;
-    return firstSlot + (index - 1) * 20;
-  }
-
   shipColor(ship: Spaceship): string {
     return spaceshipColors[ship];
+  }
+
+  /** Full uppercase ship name shown in the left tab, e.g. "REBELLION" ("T F Mars" -> "MARS"). */
+  shipFullName(ship: Spaceship): string {
+    return spaceshipDisplayNames[ship].toUpperCase();
+  }
+
+  /** Width of the left (name) tab, sized to the ship name (~6.4 units per uppercase letter + padding). */
+  private nameTabWidth(ship: Spaceship): number {
+    return Math.max(42, this.shipFullName(ship).length * 6.4 + 18);
+  }
+
+  /** Rounded-top "folder tab" outline: flat bottom on the card's top border, rounded top corners. */
+  private tabPath(x0: number, x1: number): string {
+    const r = 6;
+    const top = -15;
+    const bot = 1;
+    return `M${x0},${bot} L${x0},${top + r} Q${x0},${top} ${x0 + r},${top} L${x1 - r},${top} Q${x1},${top} ${x1},${
+      top + r
+    } L${x1},${bot} Z`;
+  }
+
+  nameTabPath(ship: Spaceship): string {
+    return this.tabPath(6, 6 + this.nameTabWidth(ship));
+  }
+
+  nameTabCenterX(ship: Spaceship): number {
+    return 6 + this.nameTabWidth(ship) / 2;
+  }
+
+  /** Right (slots) tab is a fixed width, sized to hold the 4 slots and pinned near the right edge. */
+  get slotsTabPath(): string {
+    return this.tabPath(204, 284);
+  }
+
+  /** X of the given exploration slot's center within the right tab (index 1-4). */
+  slotTabX(index: number): number {
+    return 221 + (index - 1) * 15;
   }
 
   shipActions(ship: Spaceship) {
@@ -411,10 +413,6 @@ svg.lost-fleet-ship {
   width: 100%;
   height: auto;
   display: block;
-  // Rounds the per-ship color ring (a `box-shadow` set inline in the ship's color, see template) so
-  // each board reads as its own card. box-shadow adds no layout box, so this changes nothing about
-  // how compactly the 2-column grid packs.
-  border-radius: 6px;
 
   // Desktop only, per the owner's brief - matches the base-game power/QIC action octagons
   // (BoardAction.vue) at the same viewport: measured live (a 3-player desktop layout), the ship
@@ -428,29 +426,27 @@ svg.lost-fleet-ship {
     margin: 0 auto;
   }
 
-  .lost-fleet-ship__marker-bg {
-    // fill is set per-ship inline (spaceshipColors); keep only the shared outline here.
-    stroke: #172e62;
-    stroke-width: 1;
+  // The board card outline, in the ship's color (stroke set per-ship inline).
+  .lost-fleet-ship__card {
+    fill: none;
+    stroke-width: 2.5;
   }
 
-  .lost-fleet-ship__marker {
-    font-size: 11px;
-    font-weight: 800;
-    fill: #17161a;
-    text-anchor: middle;
-    pointer-events: none;
+  // The two tabs (name + slots) that sit on the card's top border; fill is set per-ship inline, with
+  // a slightly darker same-color edge so the tab reads as a distinct shape against the card border.
+  .lost-fleet-ship__tab-shape {
+    stroke: rgba(0, 0, 0, 0.25);
+    stroke-width: 0.6;
   }
 
-  // The spelled-out ship name that follows the marker hex. Anchored at the name's start (the hex is
-  // its first letter), moderately bold with a little letter-spacing so it reads as a word without
-  // growing wide enough to push the exploration slots into the Federation tile.
+  // The ship name, centered in the left tab. Dark reads better than white on the lighter ship
+  // colors (grey / gold), so it stays dark on every tab for consistency.
   .lost-fleet-ship__name {
-    font-size: 11px;
+    font-size: 9px;
     font-weight: 700;
     fill: #17161a;
-    text-anchor: start;
-    letter-spacing: 0.6px;
+    text-anchor: middle;
+    letter-spacing: 0.4px;
     pointer-events: none;
   }
 

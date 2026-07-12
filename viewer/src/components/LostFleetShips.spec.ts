@@ -106,10 +106,10 @@ describe("LostFleetShips", () => {
     const ship = container.querySelector("svg.lost-fleet-ship");
     expect(ship.hasAttribute("width")).to.equal(false);
     expect(ship.hasAttribute("height")).to.equal(false);
-    expect(ship.getAttribute("viewBox")).to.equal("0 0 291 76");
+    expect(ship.getAttribute("viewBox")).to.equal("0 -16 291 68");
   });
 
-  it("lays the 4 exploration slots out evenly spaced in a single row after the marker + ship name", () => {
+  it("lays the 4 exploration slots out evenly spaced in the right-hand tab", () => {
     const engine = new Engine(["init 2 lost-fleet-ships-spec"], { lostFleet: true });
     const store = makeStore();
     store.commit("receiveData", engine);
@@ -121,22 +121,18 @@ describe("LostFleetShips", () => {
     // 4 distinct x positions (one per column) but a single shared y position (one row)
     const transforms = slots.map((s) => s.getAttribute("transform"));
     expect(new Set(transforms).size).to.equal(4);
-    const xs = [...transforms.map((t) => Number(t.match(/translate\(([\d.]+),/)[1]))];
-    const ys = new Set(transforms.map((t) => t.match(/,\s*([\d.]+)\)/)[1]));
+    const xs = [...transforms.map((t) => Number(t.match(/translate\((-?[\d.]+),/)[1]))];
+    const ys = new Set(transforms.map((t) => t.match(/,\s*(-?[\d.]+)\)/)[1]));
     expect(new Set(xs).size).to.equal(4);
     expect(ys.size).to.equal(1);
 
-    // the 4 slots stay evenly spaced 20 apart; they now begin past the spelled-out ship name (the
-    // marker hex holds the first letter), so the first slot sits well right of the marker (x=9)
-    // rather than at a fixed 20-apart offset from it.
+    // the 4 slots sit in the right-hand tab, evenly spaced 15 apart
     const sortedXs = xs.slice().sort((a, b) => a - b);
     for (let i = 1; i < sortedXs.length; i++) {
-      expect(sortedXs[i] - sortedXs[i - 1]).to.equal(20);
+      expect(sortedXs[i] - sortedXs[i - 1]).to.equal(15);
     }
-    expect(sortedXs[0]).to.be.greaterThan(29);
-    // the ship name is spelled out beside the marker: marker "T" + rest "WILIGHT"
-    expect(twilight.querySelector(".lost-fleet-ship__marker").textContent).to.equal("T");
-    expect(twilight.querySelector(".lost-fleet-ship__name").textContent).to.equal("WILIGHT");
+    // the ship name is spelled out in full in the left tab
+    expect(twilight.querySelector(".lost-fleet-ship__name").textContent).to.equal("TWILIGHT");
     slots.forEach((slot) => {
       expect(slot.querySelector(".lost-fleet-ship__slot-ordinal")).to.equal(null);
     });
@@ -183,29 +179,27 @@ describe("LostFleetShips", () => {
     const artifactGroups = twilight.querySelectorAll("[data-artifact]");
     expect(artifactGroups.length).to.equal(4);
 
-    // ArtifactIcon is rendered at size=28 here (down from its native 30, so the 30-unit grid
-    // repeat below no longer overlaps consecutive icons) - a self-contained nested <svg> whose
-    // visual center sits 14 (half of 28) screen units right/down of whatever translate positions
-    // it. Every icon's true on-screen center must land in roughly the same region the other 3
-    // ships' Standard Tech tile occupies, bottom-aligned with the action octagons like that slot
-    // (see the template comment by this grid), and no icon may render past the ship's own 76-tall
-    // viewBox (the reported "bleeds into the bottom" bug).
-    const iconHalfSize = 14;
+    // ArtifactIcon is rendered at size=22 here (fits the shorter card), as a self-contained nested
+    // <svg> whose visual center sits 11 (half of 22) screen units right/down of whatever translate
+    // positions it. Every icon's center must land in roughly the same right-hand region the other 3
+    // ships' Standard Tech tile occupies, and no icon may render past the ship's own viewBox bottom
+    // (-16 + 68 = 52) - the reported "bleeds into the bottom" bug.
+    const iconHalfSize = 11;
     const centers = Array.from(artifactGroups).map((g) => {
       const [, x, y] = g.getAttribute("transform")!.match(/translate\(([\d.]+),\s*([\d.]+)\)/)!;
       return { x: Number(x) + iconHalfSize, y: Number(y) + iconHalfSize };
     });
     const avgX = centers.reduce((s, c) => s + c.x, 0) / centers.length;
     const avgY = centers.reduce((s, c) => s + c.y, 0) / centers.length;
-    expect(avgX).to.be.closeTo(251, 5);
-    expect(avgY).to.be.closeTo(38, 5);
+    expect(avgX).to.be.closeTo(248, 5);
+    expect(avgY).to.be.closeTo(27.5, 5);
 
     for (const c of centers) {
-      expect(c.y + iconHalfSize).to.be.at.most(76);
+      expect(c.y + iconHalfSize).to.be.at.most(52);
     }
   });
 
-  it("does not let Twilight's artifact icons overlap each other (a 28-wide icon in a 30-unit grid repeat)", () => {
+  it("does not let Twilight's artifact icons overlap each other (a 22-wide icon in a 23-unit grid repeat)", () => {
     const engine = new Engine(["init 4 lost-fleet-ships-spec"], { lostFleet: true });
     const store = makeStore();
     store.commit("receiveData", engine);
@@ -216,8 +210,8 @@ describe("LostFleetShips", () => {
 
     expect(icons.length).to.equal(4);
     for (const icon of Array.from(icons)) {
-      expect(icon.getAttribute("width")).to.equal("28");
-      expect(icon.getAttribute("height")).to.equal("28");
+      expect(icon.getAttribute("width")).to.equal("22");
+      expect(icon.getAttribute("height")).to.equal("22");
     }
   });
 
