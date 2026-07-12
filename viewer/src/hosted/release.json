@@ -1,7 +1,20 @@
 {
-  "version": "5.30.0",
+  "version": "5.30.1",
   "releasedAt": "2026-07-12",
   "entries": [
+    {
+      "version": "5.30.1",
+      "releasedAt": "2026-07-12",
+      "kind": "update",
+      "title": "Artifact token redesign",
+      "impact": "",
+      "changes": [
+        "Redesigned the Lost Fleet artifact tokens as gold sunburst ovals with a white center, sized to fill the ship slot"
+      ],
+      "userChanges": [
+        "Redesigned the Lost Fleet artifact tokens as gold sunburst ovals with a white center, sized to fill the ship slot"
+      ]
+    },
     {
       "version": "5.30.0",
       "releasedAt": "2026-07-12",
