@@ -1,7 +1,20 @@
 {
-  "version": "5.29.2",
+  "version": "5.30.0",
   "releasedAt": "2026-07-12",
   "entries": [
+    {
+      "version": "5.30.0",
+      "releasedAt": "2026-07-12",
+      "kind": "update",
+      "title": "Lost Fleet ship board redesign",
+      "impact": "",
+      "changes": [
+        "Redesigned the Lost Fleet ship boards: each ship's name and its player exploration slots now sit in tabs on top of the board, the whole board is filled in the ship's color, and the Federation/Tech tiles line up neatly with the action row"
+      ],
+      "userChanges": [
+        "Redesigned the Lost Fleet ship boards: each ship's name and its player exploration slots now sit in tabs on top of the board, the whole board is filled in the ship's color, and the Federation/Tech tiles line up neatly with the action row"
+      ]
+    },
     {
       "version": "5.29.2",
       "releasedAt": "2026-07-12",
