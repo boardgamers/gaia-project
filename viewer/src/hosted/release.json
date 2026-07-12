@@ -1,7 +1,25 @@
 {
-  "version": "5.28.0",
-  "releasedAt": "2026-07-11",
+  "version": "5.29.0",
+  "releasedAt": "2026-07-12",
   "entries": [
+    {
+      "version": "5.29.0",
+      "releasedAt": "2026-07-12",
+      "kind": "update",
+      "title": "Ship colors, back-to-my-games, mobile install prompt",
+      "impact": "",
+      "changes": [
+        "Backing out of a game now returns to your My games tab instead of the Lobby tab",
+        "Lost Fleet spaceships now show each ship's own color (Twilight purple, Rebellion brown, T F Mars grey, Eclipse yellow) on both the map hexes and the ship boards, with a matching color border around each ship board",
+        "On a phone browser you're now prompted to install the app to your home screen (iOS and Android)",
+        "Dropped the redundant IS-label and the free-slot 0 from Lost Fleet ship hexes/boards; corrected a stale exploration charge-track test value"
+      ],
+      "userChanges": [
+        "Backing out of a game now returns to your My games tab instead of the Lobby tab",
+        "Lost Fleet spaceships now show each ship's own color (Twilight purple, Rebellion brown, T F Mars grey, Eclipse yellow) on both the map hexes and the ship boards, with a matching color border around each ship board",
+        "On a phone browser you're now prompted to install the app to your home screen (iOS and Android)"
+      ]
+    },
     {
       "version": "5.28.0",
       "releasedAt": "2026-07-11",

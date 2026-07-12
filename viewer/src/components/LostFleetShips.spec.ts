@@ -137,11 +137,12 @@ describe("LostFleetShips", () => {
     slots.forEach((slot) => {
       expect(slot.querySelector(".lost-fleet-ship__slot-ordinal")).to.equal(null);
     });
-    // costs come from EXPLORATION_CHARGE_TRACK = [0, 2, 2, 4]; the 0-cost slot is a bare number,
-    // non-zero slots show the same charge/power badge (Resource kind="pw") used everywhere else
-    expect(slots[0].querySelector(".lost-fleet-ship__slot-cost").textContent).to.equal("0");
+    // costs come from EXPLORATION_CHARGE_TRACK = [0, 2, 2, 3]; the free (0-cost) slot shows no
+    // number at all, non-zero slots show the same charge/power badge (Resource kind="pw") used
+    // everywhere else
+    expect(slots[0].querySelector(".lost-fleet-ship__slot-cost")).to.equal(null);
     expect(slots[0].querySelector("image")).to.equal(null);
-    expect(slots.slice(1).map((s) => s.querySelector("g.resource text").textContent)).to.deep.equal(["2", "2", "4"]);
+    expect(slots.slice(1).map((s) => s.querySelector("g.resource text").textContent)).to.deep.equal(["2", "2", "3"]);
     expect(slots[1].querySelector("image")).to.not.equal(null);
   });
 
@@ -225,7 +226,9 @@ describe("LostFleetShips", () => {
     const { container } = render(LostFleetShips, { store });
     const eclipse = container.querySelector(`svg.lost-fleet-ship[data-ship="${Spaceship.Eclipse}"]`);
 
-    const mineBubbleCircle = eclipse.querySelector('[data-action="credit"] .lost-fleet-ship__action-overlay circle.planet-fill.a');
+    const mineBubbleCircle = eclipse.querySelector(
+      '[data-action="credit"] .lost-fleet-ship__action-overlay circle.planet-fill.a'
+    );
     expect(mineBubbleCircle).to.not.equal(null);
     expect(mineBubbleCircle.getAttribute("r")).to.equal("10");
 

@@ -65,10 +65,16 @@ describe("SpaceMap", () => {
       (hex) => classifySectorId(hex.data.sector) === LostFleetSectorType.DeepSpace
     ).length;
     const spaceshipHexCount = [...engine.map.grid.values()].filter((hex) => hex.data.spaceship !== undefined).length;
+    // Spaceship hexes are themselves Interspace hexes, but their "IS…" sector-badge label is
+    // suppressed (the ship color + letter already identify them), so only non-ship interspace
+    // hexes render a badge.
+    const interspaceBadgeCount = [...engine.map.grid.values()].filter(
+      (hex) => classifySectorId(hex.data.sector) === LostFleetSectorType.Interspace && hex.data.spaceship === undefined
+    ).length;
 
     expect(interspaceHexCount).to.be.greaterThan(0);
     expect(deepSpaceHexCount).to.be.greaterThan(0);
-    expect(container.querySelectorAll('[data-sector-type="interspace"]').length).to.equal(interspaceHexCount);
+    expect(container.querySelectorAll('[data-sector-type="interspace"]').length).to.equal(interspaceBadgeCount);
     // Deep Space labels: one per physical 3-hex tile, not one per hex - so strictly fewer label
     // elements than deep-space hexes (assuming every DS tile has all 3 of its hexes on the board).
     // Rendered directly by SpaceMap.vue now (a `.sector-name`-styled <text>, not a per-hex badge

@@ -6,15 +6,17 @@
       class="lost-fleet-ship"
       :data-ship="ship"
       viewBox="0 0 291 76"
-      style="overflow: visible"
+      :style="{ overflow: 'visible', boxShadow: `0 0 0 2.5px ${shipColor(ship)}` }"
     >
-      <!-- header, single row: ship marker circle + the 4 exploration-slot circles, 5 circles total
+      <!-- header, single row: ship marker hex + the 4 exploration-slot circles, 5 markers total
            evenly spaced (20 apart, matching the marker's own diameter) - no ship name text and no
            slot-ordinal number, since the marker letter + circle position already identify the ship
-           and slot; only the power-charge cost (or claiming player's token) needs to show per slot. -->
+           and slot; only the power-charge cost (or claiming player's token) needs to show per slot.
+           The marker itself is a color-filled hex (matching the ship's map-hex treatment) rather
+           than a circle, so it reads as "this ship" the same way the board does on the map. -->
       <g class="lost-fleet-ship__header">
         <g v-b-tooltip.hover.nofade :title="shipLabel(ship)">
-          <circle cx="9" cy="9" r="8" class="lost-fleet-ship__marker-bg" :style="{ fill: shipColor(ship) }" />
+          <polygon :points="markerHexPoints" class="lost-fleet-ship__marker-bg" :style="{ fill: shipColor(ship) }" />
           <text x="9" y="9" class="lost-fleet-ship__marker">{{ shipMarker(ship) }}</text>
         </g>
 
@@ -29,9 +31,9 @@
         >
           <circle r="8" class="lost-fleet-ship__slot-bg" />
           <template v-if="!slot.player">
-            <!-- same charge/power badge used everywhere else (Resource kind="pw"), just scaled down -->
+            <!-- same charge/power badge used everywhere else (Resource kind="pw"), just scaled down;
+                 the free (0-power) slot shows no number at all - a bare circle reads as "free". -->
             <Resource v-if="slot.cost > 0" kind="pw" :count="slot.cost" transform="translate(0, 2) scale(0.5)" />
-            <text v-else x="0" y="6.5" class="lost-fleet-ship__slot-cost">0</text>
           </template>
           <Token v-else :faction="slot.player.faction" transform="translate(0, 1) scale(0.34)" />
         </g>
@@ -219,6 +221,7 @@ import {
   spaceshipMarkers,
 } from "../data/spaceships";
 import { factionPiecePlanet } from "../graphics/utils";
+import { corners } from "../graphics/hex";
 import ArtifactIcon from "./ArtifactIcon.vue";
 import Building from "./Building.vue";
 import Condition from "./Condition.vue";
@@ -259,6 +262,17 @@ export default class LostFleetShips extends Vue {
 
   get remainingArtifacts(): ArtifactToken[] {
     return this.engine.tiles.artifacts ?? [];
+  }
+
+  /**
+   * The ship-marker hexagon, same shape as a map hex (`corners()`), sized to the old marker
+   * circle's radius (8) and centered at (9, 9) so it drops into the header row's first slot
+   * without shifting the exploration circles that follow it.
+   */
+  get markerHexPoints(): string {
+    return corners(8)
+      .map((p) => `${p.x + 9},${p.y + 9}`)
+      .join(" ");
   }
 
   shipLabel(ship: Spaceship): string {
@@ -374,6 +388,10 @@ svg.lost-fleet-ship {
   width: 100%;
   height: auto;
   display: block;
+  // Rounds the per-ship color ring (a `box-shadow` set inline in the ship's color, see template) so
+  // each board reads as its own card. box-shadow adds no layout box, so this changes nothing about
+  // how compactly the 2-column grid packs.
+  border-radius: 6px;
 
   // Desktop only, per the owner's brief - matches the base-game power/QIC action octagons
   // (BoardAction.vue) at the same viewport: measured live (a 3-player desktop layout), the ship
@@ -406,13 +424,6 @@ svg.lost-fleet-ship {
     fill: #eef2f8;
     stroke: #b8c2d4;
     stroke-width: 1;
-  }
-
-  .lost-fleet-ship__slot-cost {
-    font-size: 7.5px;
-    fill: #5f6773;
-    text-anchor: middle;
-    pointer-events: none;
   }
 
   .lost-fleet-ship__cost {

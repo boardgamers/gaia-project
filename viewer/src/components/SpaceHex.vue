@@ -40,7 +40,7 @@
          tile would. -->
     <g :transform="`rotate(${-contentRotation})`">
       <g
-        v-if="lostFleetSectorBadge"
+        v-if="lostFleetSectorBadge && !lostFleetSpaceship"
         :class="['lost-fleet-sector-badge', `lost-fleet-sector-badge--${lostFleetSectorBadge.kind}`]"
         :data-sector-type="lostFleetSectorBadge.kind"
         transform="translate(-0.84,-0.79)"
