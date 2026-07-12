@@ -1,13 +1,26 @@
 <template>
-  <svg viewBox="-13 -13 26 26" :width="size" :height="size" style="overflow: visible">
+  <svg :viewBox="viewBox" :width="width" :height="size" style="overflow: visible">
     <!-- .click alongside .hover: on real touch devices, a first tap doesn't always synthesize the
          mouseenter that .hover-only tooltips rely on (a well-known WebKit/mobile quirk - see
          launcher.ts's touchstart-arm workaround for the general case), and this artifact icon is
          commonly the very first thing a player taps in a session, before that workaround has a
          chance to help. A real click/tap always fires, so it's a hover-independent guarantee. -->
     <g class="lost-fleet-ship__artifact" v-b-tooltip.hover.click :title="tooltip">
-      <circle r="12" class="lost-fleet-ship__artifact-bg" />
-      <g transform="scale(0.55)">
+      <!-- Gold sunburst ring: a thick gold band (outer ellipse) with white radial "rays" drawn over
+           it, then a white oval center on top so the rays only read on the band - an inset sunburst
+           just in the border. The whole token is an oval (wider than tall) that fills its slot. -->
+      <ellipse :rx="rxOut" :ry="ryOut" class="lost-fleet-ship__artifact-gold" />
+      <line
+        v-for="(ray, r) in rays"
+        :key="'ray' + r"
+        :x1="ray.x1"
+        :y1="ray.y1"
+        :x2="ray.x2"
+        :y2="ray.y2"
+        class="lost-fleet-ship__artifact-ray"
+      />
+      <ellipse :rx="rxIn" :ry="ryIn" class="lost-fleet-ship__artifact-center" />
+      <g :transform="`scale(${iconScale})`">
         <!-- x=-15 used to put the "+" past the artifact circle's own left edge (measured via a real
              render: text center -15 with a ~16-wide glyph spans to -23, past the circle's -21.8
              boundary in this same pre-scale coordinate system) and left a large gap before the
@@ -49,7 +62,11 @@ import Condition from "./Condition.vue";
 import Resource from "./Resource.vue";
 
 /** A single Artifact token, rendered as a self-contained icon - reused on the Twilight ship board
- * strip (LostFleetShips.vue) and as an icon-only button (RichTextView.vue's "artifactToken" case). */
+ * strip (LostFleetShips.vue) and as an icon-only button (RichTextView.vue's "artifactToken" case).
+ *
+ * It's an oval (wider than tall): the `size` prop is the height, and the width is derived from it
+ * via the viewBox's aspect ratio, so a caller only ever picks one number. The border is a thick
+ * gold band with white radial rays (an inset sunburst) and the center is white. */
 @Component({
   components: { Condition, Resource },
 })
@@ -57,8 +74,45 @@ export default class ArtifactIcon extends Vue {
   @Prop()
   artifact: ArtifactToken;
 
+  // Height of the icon; width is derived from it (the token is an oval, wider than tall).
   @Prop({ default: 30 })
   size: number;
+
+  // The oval's geometry, in the SVG's own (viewBox) coordinate system. The viewBox is 32 wide by
+  // 25 tall, centered on the origin, so the token renders ~1.28x as wide as it is tall.
+  readonly rxOut = 15.5;
+  readonly ryOut = 12;
+  readonly rxIn = 11.4;
+  readonly ryIn = 9.3;
+  readonly iconScale = 0.6;
+
+  get viewBox(): string {
+    return "-16 -12.5 32 25";
+  }
+
+  /** Rendered width (px). The token is an oval; height is `size`, width follows the 32:25 viewBox. */
+  get width(): number {
+    return Math.round((this.size * 32) / 25);
+  }
+
+  /** White radial rays drawn over the gold band - each runs from the white center's edge out to the
+   * outer edge, so it only shows on the border. Evenly spaced around the oval for a sunburst. */
+  get rays(): Array<{ x1: number; y1: number; x2: number; y2: number }> {
+    const count = 22;
+    const rays = [];
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * 2 * Math.PI;
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      rays.push({
+        x1: +(this.rxIn * cos).toFixed(2),
+        y1: +(this.ryIn * sin).toFixed(2),
+        x2: +(this.rxOut * cos).toFixed(2),
+        y2: +(this.ryOut * sin).toFixed(2),
+      });
+    }
+    return rays;
+  }
 
   get display(): { rewards: Reward[]; condition?: ConditionEnum; planet?: Planet; track?: ResearchField } {
     return artifactDisplay(this.artifact);
@@ -78,10 +132,27 @@ export default class ArtifactIcon extends Vue {
 
 <style lang="scss">
 g.lost-fleet-ship__artifact {
-  .lost-fleet-ship__artifact-bg {
-    fill: #efe6c4;
+  // The thick gold border band. A radial gradient (light gold in, deeper gold out) gives it depth;
+  // the white rays and white center oval are drawn on top of it.
+  .lost-fleet-ship__artifact-gold {
+    fill: #e8b73a;
+    stroke: #a9781a;
+    stroke-width: 0.8;
+  }
+
+  // White "sun ray" stripes across the gold band.
+  .lost-fleet-ship__artifact-ray {
+    stroke: #fffdf3;
+    stroke-width: 1.3;
+    stroke-linecap: round;
+    opacity: 0.9;
+  }
+
+  // The white oval center the iconography sits on.
+  .lost-fleet-ship__artifact-center {
+    fill: #ffffff;
     stroke: #d8c57c;
-    stroke-width: 1;
+    stroke-width: 0.6;
   }
 
   // Same "+" income marker as TechContent.vue's ongoing-income tech tiles (e.g. Tech6's "+k,c"),

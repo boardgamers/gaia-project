@@ -181,14 +181,16 @@ describe("LostFleetShips", () => {
     expect(artifactGroups.length).to.equal(4);
 
     // ArtifactIcon is rendered at size=22 here (fits the shorter card), as a self-contained nested
-    // <svg> whose visual center sits 11 (half of 22) screen units right/down of whatever translate
-    // positions it. Every icon's center must land in roughly the same right-hand region the other 3
-    // ships' Standard Tech tile occupies, and no icon may render past the ship's own viewBox bottom
-    // (-16 + 68 = 52) - the reported "bleeds into the bottom" bug.
-    const iconHalfSize = 11;
+    // <svg>. The token is an oval, 28 wide x 22 tall, so its visual center sits 14 screen units
+    // right and 11 down of whatever translate positions it. Every icon's center must land in roughly
+    // the same right-hand region the other 3 ships' Standard Tech tile occupies, and no icon may
+    // render past the ship's own viewBox bottom (-16 + 68 = 52) - the reported "bleeds into the
+    // bottom" bug.
+    const iconHalfWidth = 14;
+    const iconHalfHeight = 11;
     const centers = Array.from(artifactGroups).map((g) => {
       const [, x, y] = g.getAttribute("transform")!.match(/translate\(([\d.]+),\s*([\d.]+)\)/)!;
-      return { x: Number(x) + iconHalfSize, y: Number(y) + iconHalfSize };
+      return { x: Number(x) + iconHalfWidth, y: Number(y) + iconHalfHeight };
     });
     const avgX = centers.reduce((s, c) => s + c.x, 0) / centers.length;
     const avgY = centers.reduce((s, c) => s + c.y, 0) / centers.length;
@@ -196,11 +198,11 @@ describe("LostFleetShips", () => {
     expect(avgY).to.be.closeTo(27, 5);
 
     for (const c of centers) {
-      expect(c.y + iconHalfSize).to.be.at.most(56);
+      expect(c.y + iconHalfHeight).to.be.at.most(56);
     }
   });
 
-  it("does not let Twilight's artifact icons overlap each other (a 22-wide icon in a 23-unit grid repeat)", () => {
+  it("does not let Twilight's artifact icons overlap each other (a 28-wide oval in a 30-unit grid repeat)", () => {
     const engine = new Engine(["init 4 lost-fleet-ships-spec"], { lostFleet: true });
     const store = makeStore();
     store.commit("receiveData", engine);
@@ -211,7 +213,7 @@ describe("LostFleetShips", () => {
 
     expect(icons.length).to.equal(4);
     for (const icon of Array.from(icons)) {
-      expect(icon.getAttribute("width")).to.equal("22");
+      expect(icon.getAttribute("width")).to.equal("28");
       expect(icon.getAttribute("height")).to.equal("22");
     }
   });

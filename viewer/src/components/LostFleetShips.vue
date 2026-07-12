@@ -146,13 +146,16 @@
       </g>
       <!-- Twilight has no Standard Tech slot (see `hasTechSlot` above) - this artifact grid fills the
            same right-hand slot instead, a 2-column grid centered vertically on the same y=27 line as
-           the tiles (up to 4 artifacts = player count at 4p, so 2 rows). -->
+           the tiles (up to 4 artifacts = player count at 4p, so 2 rows). The tokens are ovals (wider
+           than tall) at size=22, i.e. 28 wide x 22 tall, so the columns are spaced 30 apart and the
+           two columns (centers 233 / 263) still land in the tech-tile region without bleeding past
+           the card's right/bottom edges. -->
       <g v-else data-section="artifacts">
         <g
           v-for="(artifact, i) in remainingArtifacts"
           :key="artifact"
           :data-artifact="artifact"
-          :transform="`translate(${226 + (i % 2) * 26}, ${5.5 + Math.floor(i / 2) * 23})`"
+          :transform="`translate(${219 + (i % 2) * 30}, ${5.5 + Math.floor(i / 2) * 23})`"
         >
           <ArtifactIcon :artifact="artifact" :size="22" />
         </g>
@@ -505,12 +508,6 @@ svg.lost-fleet-ship {
       stroke: black;
       stroke-width: 0.5;
     }
-  }
-
-  .lost-fleet-ship__artifact-bg {
-    fill: #efe6c4;
-    stroke: #d8c57c;
-    stroke-width: 1;
   }
 }
 </style>
