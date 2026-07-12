@@ -20,7 +20,10 @@
         class="lost-fleet-ship__artifact-ray"
       />
       <ellipse :rx="rxIn" :ry="ryIn" class="lost-fleet-ship__artifact-center" />
-      <g :transform="`scale(${iconScale})`">
+      <!-- The iconography, scaled to fit the inner oval, then shifted up by `contentOffsetY` so the
+           tokens whose art hangs low (a condition or planet drawn below the reward) sit centered in
+           the (short) oval instead of bleeding past its bottom edge. -->
+      <g :transform="`scale(${iconScale}) translate(0, ${contentOffsetY})`">
         <!-- x=-15 used to put the "+" past the artifact circle's own left edge (measured via a real
              render: text center -15 with a ~16-wide glyph spans to -23, past the circle's -21.8
              boundary in this same pre-scale coordinate system) and left a large gap before the
@@ -46,6 +49,9 @@
           :color="trackColor"
           transform="translate(0, 10) scale(0.8)"
         />
+        <!-- "3" badge for the ResearchTracks token ("3 VP for each Research Area at level 3 or
+             higher") - sits on the second row, just right of the advance-research track icon. -->
+        <text v-if="display.minLevel" v-text="display.minLevel" class="lost-fleet-ship__artifact-level" x="14" y="10" />
         <circle v-if="display.planet" r="6" :class="['planet-fill', display.planet]" transform="translate(0, 11)" />
       </g>
     </g>
@@ -78,21 +84,36 @@ export default class ArtifactIcon extends Vue {
   @Prop({ default: 30 })
   size: number;
 
-  // The oval's geometry, in the SVG's own (viewBox) coordinate system. The viewBox is 32 wide by
-  // 25 tall, centered on the origin, so the token renders ~1.28x as wide as it is tall.
-  readonly rxOut = 15.5;
+  // The oval's geometry, in the SVG's own (viewBox) coordinate system. The viewBox is 36 wide by
+  // 25 tall, centered on the origin, so the token renders ~1.44x as wide as it is tall - a wider
+  // oval than before, filling the extra horizontal room in the ship's artifact slot.
+  readonly rxOut = 17.5;
   readonly ryOut = 12;
-  readonly rxIn = 13.4;
+  readonly rxIn = 15.4;
   readonly ryIn = 10.9;
-  readonly iconScale = 0.65;
+  readonly iconScale = 0.6;
 
   get viewBox(): string {
-    return "-16 -12.5 32 25";
+    return "-18 -12.5 36 25";
   }
 
-  /** Rendered width (px). The token is an oval; height is `size`, width follows the 32:25 viewBox. */
+  /** Rendered width (px). The token is an oval; height is `size`, width follows the 36:25 viewBox. */
   get width(): number {
-    return Math.round((this.size * 32) / 25);
+    return Math.round((this.size * 36) / 25);
+  }
+
+  /** Upward shift (in pre-scale content units) that re-centers bottom-heavy tokens in the oval:
+   * tokens with a condition icon below the reward hang lowest, planet tokens a little less, and
+   * plain reward / ongoing-income tokens are already vertically balanced. Keeps the tallest art
+   * (the deep-space condition, reaching ~y20 pre-scale) inside the oval's short vertical axis. */
+  get contentOffsetY(): number {
+    if (this.display.condition && !this.display.ongoingIncome) {
+      return -2.5;
+    }
+    if (this.display.planet) {
+      return -1.5;
+    }
+    return 0;
   }
 
   /** White radial rays drawn over the gold band - each runs from the white center's edge out to the
@@ -153,6 +174,19 @@ g.lost-fleet-ship__artifact {
     fill: #ffffff;
     stroke: #d8c57c;
     stroke-width: 0.6;
+  }
+
+  // The "3" level badge (ResearchTracks token), sitting beside the track icon on the lower row.
+  .lost-fleet-ship__artifact-level {
+    font-size: 11px;
+    font-weight: 800;
+    fill: #17161a;
+    stroke: #fff;
+    stroke-width: 1.4px;
+    paint-order: stroke;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
   }
 
   // Same "+" income marker as TechContent.vue's ongoing-income tech tiles (e.g. Tech6's "+k,c"),

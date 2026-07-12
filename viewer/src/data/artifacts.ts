@@ -8,6 +8,9 @@ const artifactDisplaySpec: {
     planet?: Planet;
     track?: ResearchField;
     ongoingIncome?: boolean;
+    // Minimum research-track level this token scores from (only ResearchTracks: "3 VP for each
+    // Research Area at level 3 or higher"). Rendered as a small "3" badge beside the track icon.
+    minLevel?: number;
   };
 } = {
   // The only one of the 13 artifact tokens that's an ongoing (per income phase) gain rather than
@@ -25,8 +28,12 @@ const artifactDisplaySpec: {
   [ArtifactToken.Protoplanet]: { rewards: "7vp", planet: Planet.Protoplanet },
   // Scales with the Science track specifically (move/artifacts.ts's applyArtifactToken()) - colored
   // with that track's own color so it doesn't look identical to the track-agnostic ResearchTracks token below.
-  [ArtifactToken.ResearchLevel]: { rewards: "3vp", condition: ConditionEnum.AdvanceResearch, track: ResearchField.Science },
-  [ArtifactToken.ResearchTracks]: { rewards: "3vp", condition: ConditionEnum.AdvanceResearch },
+  [ArtifactToken.ResearchLevel]: {
+    rewards: "3vp",
+    condition: ConditionEnum.AdvanceResearch,
+    track: ResearchField.Science,
+  },
+  [ArtifactToken.ResearchTracks]: { rewards: "3vp", condition: ConditionEnum.AdvanceResearch, minLevel: 3 },
   [ArtifactToken.Federation]: { rewards: "fed" },
   // Mimics ResearchLevel above (advance-a-track icon, colored by that track) instead of the
   // GaiaFormer resource icon - a gaiaformer token doesn't communicate "level up this track" any
@@ -44,14 +51,13 @@ const artifactDisplaySpec: {
   [ArtifactToken.DeepSpace]: { rewards: "3vp", condition: ConditionEnum.DeepSpaceSector },
 };
 
-export function artifactDisplay(
-  artifact: ArtifactToken
-): {
+export function artifactDisplay(artifact: ArtifactToken): {
   rewards: Reward[];
   condition?: ConditionEnum;
   planet?: Planet;
   track?: ResearchField;
   ongoingIncome?: boolean;
+  minLevel?: number;
 } {
   const spec = artifactDisplaySpec[artifact];
   return {
@@ -60,5 +66,6 @@ export function artifactDisplay(
     planet: spec.planet,
     track: spec.track,
     ongoingIncome: spec.ongoingIncome,
+    minLevel: spec.minLevel,
   };
 }

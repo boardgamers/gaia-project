@@ -29,4 +29,18 @@ describe("ArtifactIcon", () => {
     expect(container.querySelector(".lost-fleet-ship__artifact-plus")).to.equal(null);
     expect(container.querySelector(".token-area-badge")).to.equal(null);
   });
+
+  it("shows a '3' level badge on the ResearchTracks token (3 VP per Research Area at level 3+)", () => {
+    const { container } = render(ArtifactIcon, { props: { artifact: ArtifactToken.ResearchTracks } });
+
+    const badge = container.querySelector(".lost-fleet-ship__artifact-level");
+    expect(badge).to.not.equal(null);
+    expect(badge.textContent).to.equal("3");
+  });
+
+  it("does not show the level badge on the plain ResearchLevel token", () => {
+    const { container } = render(ArtifactIcon, { props: { artifact: ArtifactToken.ResearchLevel } });
+
+    expect(container.querySelector(".lost-fleet-ship__artifact-level")).to.equal(null);
+  });
 });
