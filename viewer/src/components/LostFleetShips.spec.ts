@@ -181,12 +181,12 @@ describe("LostFleetShips", () => {
     expect(artifactGroups.length).to.equal(4);
 
     // ArtifactIcon is rendered at size=24 here (fits the shorter card), as a self-contained nested
-    // <svg>. The token is an oval, 35 wide x 24 tall, so its visual center sits 17.5 screen units
-    // right and 12 down of whatever translate positions it. Every icon's center must land in roughly
-    // the same right-hand region the other 3 ships' Standard Tech tile occupies, and no icon may
-    // render past the ship's own viewBox bottom (-16 + 68 = 52) - the reported "bleeds into the
-    // bottom" bug.
-    const iconHalfWidth = 17.5;
+    // <svg>. The token is an oval, 32 wide x 24 tall, so its visual center sits 16 screen units
+    // right and 12 down of whatever translate positions it. The left column starts right of the
+    // Federation tile (which ends at x=213) and the grid stays inside the card, so the icons' centers
+    // land just right of the other 3 ships' Standard Tech tile region, and no icon may render past
+    // the ship's own viewBox bottom (-16 + 68 = 52) - the reported "bleeds into the bottom" bug.
+    const iconHalfWidth = 16;
     const iconHalfHeight = 12;
     const centers = Array.from(artifactGroups).map((g) => {
       const [, x, y] = g.getAttribute("transform")!.match(/translate\(([\d.]+),\s*([\d.]+)\)/)!;
@@ -194,7 +194,11 @@ describe("LostFleetShips", () => {
     });
     const avgX = centers.reduce((s, c) => s + c.x, 0) / centers.length;
     const avgY = centers.reduce((s, c) => s + c.y, 0) / centers.length;
-    expect(avgX).to.be.closeTo(248, 5);
+    // left column left edge is 217 (clears the Federation tile at x=173..213)
+    for (const c of centers) {
+      expect(c.x - iconHalfWidth).to.be.at.least(214);
+    }
+    expect(avgX).to.be.closeTo(251, 5);
     expect(avgY).to.be.closeTo(27, 5);
 
     for (const c of centers) {
@@ -202,7 +206,7 @@ describe("LostFleetShips", () => {
     }
   });
 
-  it("does not let Twilight's artifact icons overlap each other (a 35-wide oval in a 42-unit grid repeat)", () => {
+  it("does not let Twilight's artifact icons overlap each other (a 32-wide oval in a 37-unit grid repeat)", () => {
     const engine = new Engine(["init 4 lost-fleet-ships-spec"], { lostFleet: true });
     const store = makeStore();
     store.commit("receiveData", engine);
@@ -213,7 +217,7 @@ describe("LostFleetShips", () => {
 
     expect(icons.length).to.equal(4);
     for (const icon of Array.from(icons)) {
-      expect(icon.getAttribute("width")).to.equal("35");
+      expect(icon.getAttribute("width")).to.equal("32");
       expect(icon.getAttribute("height")).to.equal("24");
     }
   });

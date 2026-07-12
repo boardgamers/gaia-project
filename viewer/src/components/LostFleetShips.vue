@@ -147,15 +147,16 @@
       <!-- Twilight has no Standard Tech slot (see `hasTechSlot` above) - this artifact grid fills the
            same right-hand slot instead, a 2-column grid centered vertically on the same y=27 line as
            the tiles (up to 4 artifacts = player count at 4p, so 2 rows). The tokens are ovals (wider
-           than tall) at size=24, i.e. 35 wide x 24 tall, spread to use the room out to the card's
-           right edge: columns 42 apart (left edges 208 / 250, right edge 285), rows 27 apart, all
-           still inside the card without bleeding past its right or bottom border. -->
+           than tall) at size=24, i.e. 32 wide x 24 tall. The left column starts at x=217 so it clears
+           the Federation tile (which spans x=173..213), and the columns sit 37 apart (left edges
+           217 / 254, right edge 286) so the right column stays inside the card's right border; rows
+           are 27 apart and stay above the bottom border. -->
       <g v-else data-section="artifacts">
         <g
           v-for="(artifact, i) in remainingArtifacts"
           :key="artifact"
           :data-artifact="artifact"
-          :transform="`translate(${208 + (i % 2) * 42}, ${3 + Math.floor(i / 2) * 27})`"
+          :transform="`translate(${217 + (i % 2) * 37}, ${3 + Math.floor(i / 2) * 27})`"
         >
           <ArtifactIcon :artifact="artifact" :size="24" />
         </g>

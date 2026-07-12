@@ -84,22 +84,23 @@ export default class ArtifactIcon extends Vue {
   @Prop({ default: 30 })
   size: number;
 
-  // The oval's geometry, in the SVG's own (viewBox) coordinate system. The viewBox is 36 wide by
-  // 25 tall, centered on the origin, so the token renders ~1.44x as wide as it is tall - a wider
-  // oval than before, filling the extra horizontal room in the ship's artifact slot.
-  readonly rxOut = 17.5;
+  // The oval's geometry, in the SVG's own (viewBox) coordinate system. The viewBox is 33 wide by
+  // 25 tall, centered on the origin, so the token renders ~1.32x as wide as it is tall - a wider
+  // oval than a circle, but narrow enough that two columns clear the Federation tile on the left
+  // and the card's right edge on the right.
+  readonly rxOut = 16;
   readonly ryOut = 12;
-  readonly rxIn = 15.4;
+  readonly rxIn = 13.9;
   readonly ryIn = 10.9;
   readonly iconScale = 0.6;
 
   get viewBox(): string {
-    return "-18 -12.5 36 25";
+    return "-16.5 -12.5 33 25";
   }
 
-  /** Rendered width (px). The token is an oval; height is `size`, width follows the 36:25 viewBox. */
+  /** Rendered width (px). The token is an oval; height is `size`, width follows the 33:25 viewBox. */
   get width(): number {
-    return Math.round((this.size * 36) / 25);
+    return Math.round((this.size * 33) / 25);
   }
 
   /** Upward shift (in pre-scale content units) that re-centers bottom-heavy tokens in the oval:
