@@ -1,17 +1,9 @@
 <template>
-  <!-- .click alongside .hover: on real touch devices, a first tap doesn't always synthesize the
-       mouseenter that .hover-only tooltips rely on (a well-known WebKit/mobile quirk - see
-       launcher.ts's touchstart-arm workaround for the general case), and this Federation tile is
-       commonly the very first thing a player taps in a session, before that workaround has a
-       chance to help. A real click/tap always fires, so it's a hover-independent guarantee. -->
-  <svg
-    viewBox="-25 -25 50 50"
-    width="50"
-    height="50"
-    style="overflow: visible"
-    v-b-tooltip.hover.click
-    :title="tooltip"
-  >
+  <!-- .click only, no .hover: a hover trigger races its own show/hide against the global
+       "close whatever tooltip is open" click handler in launcher.ts (see that file's comment),
+       which is what caused tooltips to flash-and-vanish or get left open after tapping elsewhere.
+       .click is also hover-independent by construction, so it works identically on touch and mouse. -->
+  <svg viewBox="-25 -25 50 50" width="50" height="50" style="overflow: visible" v-b-tooltip.click :title="tooltip">
     <g :class="['federationTile', { disabled }]">
       <image xlink:href="../assets/conditions/federation.svg" :height=739/636*50 v-if="!disabled" style="color: #247B0A"
       width=50 x=-25 y=-25 :filter=filter /> <image xlink:href="../assets/conditions/federation-used.svg"

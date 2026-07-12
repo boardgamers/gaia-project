@@ -1,11 +1,11 @@
 <template>
   <svg :viewBox="viewBox" :width="width" :height="size" style="overflow: visible">
-    <!-- .click alongside .hover: on real touch devices, a first tap doesn't always synthesize the
-         mouseenter that .hover-only tooltips rely on (a well-known WebKit/mobile quirk - see
-         launcher.ts's touchstart-arm workaround for the general case), and this artifact icon is
-         commonly the very first thing a player taps in a session, before that workaround has a
-         chance to help. A real click/tap always fires, so it's a hover-independent guarantee. -->
-    <g class="lost-fleet-ship__artifact" v-b-tooltip.hover.click :title="tooltip">
+    <!-- .click only, no .hover: a hover trigger races its own show/hide against the global
+         "close whatever tooltip is open" click handler in launcher.ts (see that file's comment),
+         which is what caused tooltips to flash-and-vanish or get left open after tapping
+         elsewhere. .click is also hover-independent by construction, so it works identically on
+         touch and mouse (no first-tap-swallowed quirk to guard against). -->
+    <g class="lost-fleet-ship__artifact" v-b-tooltip.click :title="tooltip">
       <!-- Gold sunburst ring: a thick gold band (outer ellipse) with white radial "rays" drawn over
            it, then a white oval center on top so the rays only read on the band - an inset sunburst
            just in the border. The whole token is an oval (wider than tall) that fills its slot. -->

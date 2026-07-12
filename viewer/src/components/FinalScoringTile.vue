@@ -1,5 +1,5 @@
 <template>
-  <g :class="['finalScoringTile', { highlighted }]" v-b-tooltip.hover :title="tooltip">
+  <g :class="['finalScoringTile', { highlighted }]" v-b-tooltip.click :title="tooltip">
     <rect x="1" y="1" width="75" height="55" />
     <text class="title" x="5" y="12">{{ content }}</text>
     <Token
@@ -75,7 +75,8 @@ export default class FinalScoringTile extends Vue {
   }
 
   get mapModeType(): { type: MapModeType; player: Player }[] {
-    const m = (type: MapModeType) => this.players.filter(p => p.faction != "automa").map(player => ({ type, player }));
+    const m = (type: MapModeType) =>
+      this.players.filter((p) => p.faction != "automa").map((player) => ({ type, player }));
     switch (this.tile) {
       case FinalTile.Sector:
         return m(MapModeType.sectors);
@@ -87,7 +88,7 @@ export default class FinalScoringTile extends Vue {
   }
 
   toggleMapMode(mode: MapModeType, player: Player) {
-    this.$store.commit("toggleMapMode", { type: mode, player: player.player  } as MapMode);
+    this.$store.commit("toggleMapMode", { type: mode, player: player.player } as MapMode);
   }
 
   get content() {

@@ -30,10 +30,11 @@
         :class="['lost-fleet-ship__action', action.type, { used: actionUser(ship, action.type) != null }]"
         :data-action="action.type"
         :transform="`translate(${29 + i * 54}, 28)`"
-        v-b-tooltip.hover.nofade
+        v-b-tooltip.click
         :title="actionTooltip(ship, action)"
       >
         <SpecialAction
+          :class="{ faded: actionUser(ship, action.type) != null }"
           :action="actionIncome(ship, action.type)"
           :planet="actionPlanet(ship, action.type)"
           :board="true"
@@ -112,10 +113,7 @@
             :transform="`translate(0, ${13 + j * 12}) scale(0.75)`"
           />
         </g>
-        <g v-if="actionUser(ship, action.type) != null">
-          <line y1="-11" y2="11" x1="-11" x2="11" stroke="#333" stroke-width="5" transform="translate(0, -5)" />
-          <line y1="11" y2="-11" x1="-11" x2="11" stroke="#333" stroke-width="5" transform="translate(0, -5)" />
-        </g>
+        <UsedActionMark v-if="actionUser(ship, action.type) != null" transform="translate(0, -5)" />
       </g>
 
       <!-- the Federation token still up for grabs on this ship (base-game token art). The action
@@ -132,7 +130,7 @@
           y="0"
           filter="url(#shadow-1)"
         />
-        <g v-else v-b-tooltip.hover.click :title="federationTooltip(ship)">
+        <g v-else v-b-tooltip.click :title="federationTooltip(ship)">
           <FederationTile :used="true" x="0" y="0" />
         </g>
       </g>
@@ -166,7 +164,7 @@
            the ship color. The first letter sits in a white hexagon badge (echoing the map hex) so it
            reads as the ship's identity even on the colored tab; the rest of the name follows in dark
            text (dark reads better than white on the lighter ship colors). -->
-      <g class="lost-fleet-ship__tab" v-b-tooltip.hover.nofade :title="shipLabel(ship)">
+      <g class="lost-fleet-ship__tab" v-b-tooltip.click :title="shipLabel(ship)">
         <path :d="nameTabPath(ship)" :style="{ fill: shipColor(ship) }" class="lost-fleet-ship__tab-shape" />
         <polygon :points="nameHexPoints" class="lost-fleet-ship__name-hex" />
         <text x="15" y="-7" dy="3.1" class="lost-fleet-ship__name-letter">{{ shipFirstLetter(ship) }}</text>
@@ -183,7 +181,7 @@
           class="lost-fleet-ship__slot"
           :data-slot="slot.index"
           :transform="`translate(${slotTabX(slot.index)}, -7)`"
-          v-b-tooltip.hover.nofade
+          v-b-tooltip.click
           :title="slotTitle(slot)"
         >
           <circle r="6" class="lost-fleet-ship__slot-bg" />
@@ -245,6 +243,7 @@ import Resource from "./Resource.vue";
 import SpecialAction from "./SpecialAction.vue";
 import TechTile from "./TechTile.vue";
 import Token from "./Token.vue";
+import UsedActionMark from "./UsedActionMark.vue";
 
 @Component({
   components: {
@@ -256,6 +255,7 @@ import Token from "./Token.vue";
     SpecialAction,
     TechTile,
     Token,
+    UsedActionMark,
   },
 })
 export default class LostFleetShips extends Vue {
@@ -496,10 +496,6 @@ svg.lost-fleet-ship {
   .lost-fleet-ship__cost {
     fill: white !important;
     font-size: 12px;
-  }
-
-  .lost-fleet-ship__action.used {
-    opacity: 0.7;
   }
 
   .lost-fleet-ship__action-overlay {

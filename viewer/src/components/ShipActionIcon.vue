@@ -1,7 +1,15 @@
 <template>
   <svg viewBox="-27 -32 54 54" width="54" height="54" style="overflow: visible">
-    <g :class="['lost-fleet-ship__action', type, { used: isUsed }]" v-b-tooltip.hover.html :title="tooltip">
-      <SpecialAction :action="actionIncome" :planet="actionPlanet" :board="true" x="-23" y="-28" width="46" />
+    <g :class="['lost-fleet-ship__action', type]" v-b-tooltip.click.html :title="tooltip">
+      <SpecialAction
+        :class="{ faded: isUsed }"
+        :action="actionIncome"
+        :planet="actionPlanet"
+        :board="true"
+        x="-23"
+        y="-28"
+        width="46"
+      />
       <g v-if="overlay" class="lost-fleet-ship__action-overlay" transform="translate(0, -5)">
         <template v-if="isMineBubble(overlay)">
           <!-- same bubble language as Condition.vue's "mg" (mine on Gaia) VP icon, just bigger and asteroid-colored;
@@ -60,10 +68,7 @@
           :transform="`translate(0, ${13 + j * 12}) scale(0.75)`"
         />
       </g>
-      <g v-if="isUsed">
-        <line y1="-11" y2="11" x1="-11" x2="11" stroke="#333" stroke-width="5" transform="translate(0, -5)" />
-        <line y1="11" y2="-11" x1="-11" x2="11" stroke="#333" stroke-width="5" transform="translate(0, -5)" />
-      </g>
+      <UsedActionMark v-if="isUsed" transform="translate(0, -5)" />
     </g>
   </svg>
 </template>
@@ -88,12 +93,13 @@ import Building from "./Building.vue";
 import Condition from "./Condition.vue";
 import Resource from "./Resource.vue";
 import SpecialAction from "./SpecialAction.vue";
+import UsedActionMark from "./UsedActionMark.vue";
 
 /** A single ship board action, rendered as a self-contained icon (cost badge + effect octagon) -
  * the same visual language as the base game's BoardAction, reused both on the read-only ship board
  * strip (LostFleetShips.vue) and as an icon-only button (RichTextView.vue's "spaceshipAction" case). */
 @Component({
-  components: { Building, Condition, Resource, SpecialAction },
+  components: { Building, Condition, Resource, SpecialAction, UsedActionMark },
 })
 export default class ShipActionIcon extends Vue {
   @Prop()
@@ -156,10 +162,6 @@ export default class ShipActionIcon extends Vue {
 
 <style lang="scss">
 g.lost-fleet-ship__action {
-  &.used {
-    opacity: 0.7;
-  }
-
   .lost-fleet-ship__cost {
     fill: white !important;
     font-size: 12px;

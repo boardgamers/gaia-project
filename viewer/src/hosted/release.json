@@ -1,7 +1,19 @@
 {
-  "version": "5.30.3",
+  "version": "5.30.4",
   "releasedAt": "2026-07-12",
   "entries": [
+    {
+      "version": "5.30.4",
+      "releasedAt": "2026-07-12",
+      "kind": "fix",
+      "title": "Tooltip and used-action fixes",
+      "impact": "",
+      "changes": [
+        "Fixed board/ship tooltips flashing shut or staying open when clicking elsewhere",
+        "Fixed the used ship-action X mark not matching the base game's used-action X"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.30.3",
       "releasedAt": "2026-07-12",

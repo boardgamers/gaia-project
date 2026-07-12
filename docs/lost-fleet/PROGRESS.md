@@ -7,7 +7,7 @@
 > anything else, including the **Testing — required going forward** section it points to — both
 > are standing process, not optional. Then ask the user "what next?" and use the **Next actions**
 > section below to guide them.
-> Last updated: **2026-07-11** (main menu made fully desktop-only + shared GameBar rows, #100).
+> Last updated: **2026-07-12** (tooltip flash/stuck-open fix + shared used-X mark, #101).
 
 ## Working agreements (read every session, not optional)
 
@@ -4013,6 +4013,39 @@ __summary { white-space: normal }` override, so a row's name/summary/up-to-4-sta
       `GameNavPanel.spec.ts` (desktop-only rendering, GameBar-row assertions, no more mobile branches
       since there's nothing left to test there); Lobby's existing game-bar specs all still pass
       unchanged against the shared component. Released as v5.28.0.
+
+101.  ✅ **"Gaia 23" (2026-07-12): tooltip flash/stuck-open root-caused and fixed for real, plus
+      ship-action used-X now reuses BoardAction's own mark.** The owner had asked for the board-piece
+      tooltip bug (research track flashing/vanishing, ship board leaving several tooltips open at
+      once) three times before, across sessions that each patched one narrow symptom (`.nofade` on
+      some elements, `.click` on others, a capture-phase `bv::hide::tooltip` listener) without ever
+      converging - the underlying problem was that `.hover`-triggered tooltips race their own
+      mouseenter/mouseleave show/hide against that global click listener, and different components
+      had accumulated different, inconsistent subsets of the band-aid modifiers. Root fix: dropped
+      `.hover` entirely (no more races to patch) on every board-piece tooltip - `TechTile`,
+      `ResearchTile`, `ResearchBoard`'s Scoring Extension tile, `Booster`, `FederationTile`,
+      `ArtifactIcon`, `ShipActionIcon`, all 4 `LostFleetShips` tooltip spots, `BoardAction`,
+      `SpecialAction`, `ScoringTile`, `FinalScoringTile` - now uniformly `v-b-tooltip.click[.html]`,
+      relying solely on the existing launcher.ts capture-listener to close "the other" tooltip before
+      a new click's own toggle runs. Verified live via Playwright (self-contained viewer, real
+      browser, no mocks): clicking each of research tile / booster / ship action / board action in
+      sequence shows exactly one tooltip at a time every time, clicking blank space closes it, and
+      sampling a research tile's tooltip every 100ms for 1.5s after a click showed it fade in once and
+      stay at steady opacity the whole time (no flash-then-vanish). Separately, the "used" ship-action
+      X didn't match the base game's board-action X: `ShipActionIcon.vue` and `LostFleetShips.vue`
+      each independently redrew their own X (`transform="translate(0,-5)"`) inside a `g.used {
+ opacity: 0.7 }` wrapper that also diluted the X itself, while `BoardAction.vue`'s only dims the
+      `SpecialAction` icon (via a global `.faded { opacity: 0.8 }` class) and leaves its sibling X at
+      full opacity. New `UsedActionMark.vue` (just the two `<line>`s) is now the single source of that
+      mark, used by all three call sites; the two ship components now also reuse the same `.faded`
+      class on their `<SpecialAction>` instead of their own opacity rule. Verified via a Playwright
+      screenshot diff against a hand-built engine state (one used board action, one used ship action,
+      loaded through Wrapper.vue's existing "Load JSON" dialog since a full state this size overflows
+      the dev server's URL-length limit): both X marks now sample near-black at their crossing point
+      (previously the ship one sampled a diluted `rgb(135,127,138)` against its blue octagon).
+      `LostFleetShips.spec.ts`'s existing `used`-class/2-lines assertions still pass unchanged. Full
+      `pnpm test`: 440 passing/31 failing both before and after (identical failing-test names,
+      confirmed via `git stash` on the same run - all pre-existing, none touch these components).
 
 ## Still MISSING — only one art-only item left
 

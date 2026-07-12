@@ -1,5 +1,5 @@
 <template>
-  <g :transform="`translate(0, ${y})`" v-b-tooltip.hover.html.left :title="tooltip" :class="field">
+  <g :transform="`translate(0, ${y})`" v-b-tooltip.click.html.left :title="tooltip" :class="field">
     <rect
       x="2"
       y="2"
@@ -111,8 +111,8 @@ export default class ResearchTile extends Vue {
   }
 
   resourceY(index: number): number {
-    const range = this.smallRange((this.resources)[0].type);
-    return (this.height / 3) * 2 + 3 + this.resourceOffset + (range ? (index - .4) * 10 : 0);
+    const range = this.smallRange(this.resources[0].type);
+    return (this.height / 3) * 2 + 3 + this.resourceOffset + (range ? (index - 0.4) * 10 : 0);
   }
 
   scale(resource: ResourceEnum): number {
@@ -120,8 +120,10 @@ export default class ResearchTile extends Vue {
   }
 
   smallRange(resource: ResourceEnum): boolean {
-    return (resource === ResourceEnum.ShipRange || resource === ResourceEnum.Range)
-      && hasExpansion(this.engine.expansions, Expansion.Frontiers);
+    return (
+      (resource === ResourceEnum.ShipRange || resource === ResourceEnum.Range) &&
+      hasExpansion(this.engine.expansions, Expansion.Frontiers)
+    );
   }
 
   tokenX(index: PlayerEnum) {
@@ -145,7 +147,7 @@ export default class ResearchTile extends Vue {
   get resources() {
     const events = researchEventsWithCounters(this.engine, this.field, this.level);
     const rewards = events
-      .filter(e => e.spec !== "3pw" && e.condition === Condition.None)
+      .filter((e) => e.spec !== "3pw" && e.condition === Condition.None)
       .flatMap((ev) => ev.rewards);
     if (events[0] && events[0].operator === Operator.Income) {
       rewards.unshift(plusReward);

@@ -2,7 +2,7 @@
   <svg
     :class="['techTile', pos, { highlighted, covered, advanced: isAdvanced }]"
     v-if="this.count"
-    v-b-tooltip.hover.html
+    v-b-tooltip.click.html
     :title="tooltip"
     @click="onClick"
     width="60"
@@ -31,7 +31,12 @@
         <Building building="m" outline-white :flat="flat" faction="gen" transform="translate(-11, 0) scale(2.2)" />
         <Resource kind="step" :count="2" transform="translate(8, 0) scale(1.3)" />
       </g>
-      <TechContent v-else-if="this.event" :event="this.event" :disabled="specialActionUsed" style="pointer-events: none" />
+      <TechContent
+        v-else-if="this.event"
+        :event="this.event"
+        :disabled="specialActionUsed"
+        style="pointer-events: none"
+      />
     </g>
   </svg>
 </template>
@@ -189,7 +194,9 @@ export default class TechTile extends Vue {
       return null;
     }
 
-    const desc = this.isSpaceshipTile(this.tile) ? spaceshipTechSpec[this.tile] : eventDesc(this.event, this.engine.expansions);
+    const desc = this.isSpaceshipTile(this.tile)
+      ? spaceshipTechSpec[this.tile]
+      : eventDesc(this.event, this.engine.expansions);
     const s = techTileData(this.tile).shortcut;
     return this.shortcut && s.length == 1 ? prependShortcut(s, desc) : desc;
   }

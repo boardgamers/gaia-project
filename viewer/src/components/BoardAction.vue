@@ -3,7 +3,7 @@
     <g
       :transform="transform"
       :class="['boardAction', kind, { highlighted, recent, warning }]"
-      v-b-tooltip.hover.html
+      v-b-tooltip.click.html
       :title="button.tooltip"
     >
       <SpecialAction
@@ -38,10 +38,7 @@
           {{ costNumber }}
         </text>
       </g>
-      <g v-if="faded">
-        <line y1="-11" y2="11" x1="-11" x2="11" stroke="#333" stroke-width="5" />
-        <line y1="11" y2="-11" x1="-11" x2="11" stroke="#333" stroke-width="5" />
-      </g>
+      <UsedActionMark v-if="faded" />
     </g>
   </svg>
 </template>
@@ -54,10 +51,12 @@ import Engine, {
   boardActions,
   Command,
   Planet,
-  PlayerEnum, Reward,
+  PlayerEnum,
+  Reward,
 } from "@gaia-project/engine";
 import Resource from "./Resource.vue";
 import SpecialAction from "./SpecialAction.vue";
+import UsedActionMark from "./UsedActionMark.vue";
 import { boardActionButton } from "../logic/buttons/actions";
 import { enabledButtonWarnings } from "../data/warnings";
 import { factionPiecePlanet } from "../graphics/utils";
@@ -66,6 +65,7 @@ import { factionPiecePlanet } from "../graphics/utils";
   components: {
     Resource,
     SpecialAction,
+    UsedActionMark,
   },
 })
 export default class BoardAction extends Vue {

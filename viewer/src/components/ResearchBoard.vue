@@ -14,7 +14,7 @@
          occupy in the side ScoringBoard panel (and later the map's bottom-right corner) before it
          moved here, directly beneath the round scoring tiles it's grouped with. -->
     <g v-if="isLostFleet" :transform="`translate(${fields.length * 60}, 0)`">
-      <g v-if="hasScoringExtension" v-b-tooltip.hover :title="extensionTooltip">
+      <g v-if="hasScoringExtension" v-b-tooltip.click :title="extensionTooltip">
         <text x="30" y="40" class="extension-label">{{ gateOnShips ? "3 explorations" : "25 vp" }}</text>
         <g transform="translate(30, 79) scale(0.95)">
           <TechTile pos="adv-ext" x="-30" y="-30" />
