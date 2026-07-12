@@ -1,7 +1,16 @@
 {
-  "version": "5.30.2",
+  "version": "5.30.3",
   "releasedAt": "2026-07-12",
   "entries": [
+    {
+      "version": "5.30.3",
+      "releasedAt": "2026-07-12",
+      "kind": "fix",
+      "title": "Fix artifact/Federation overlap",
+      "impact": "",
+      "changes": ["Fixed the Lost Fleet artifact tokens overlapping the ship's Federation tile"],
+      "userChanges": []
+    },
     {
       "version": "5.30.2",
       "releasedAt": "2026-07-12",
