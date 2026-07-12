@@ -52,9 +52,11 @@
         {{ hex.data.sector[0] === "s" ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector) }}
       </text>
       <g v-if="lostFleetSpaceship" class="lost-fleet-spaceship">
-        <!-- y=0 + dy=0.34em (a baseline shift) centers the uppercase glyph vertically the same in
-             every browser - unlike `dominant-baseline: central`, which iOS Safari renders off. -->
-        <text class="lost-fleet-spaceship__label" y="0" dy="0.34em">{{ lostFleetSpaceshipLabel }}</text>
+        <!-- y=0 + a plain-number dy (user units, ≈0.35 * font-size) centers the uppercase glyph the
+             same in every browser. This deliberately avoids `dy="…em"` (mobile WebKit drops the em
+             unit, leaving the letter on the baseline / high in the hex) and `dominant-baseline`
+             (iOS Safari renders it off) - the same proven mechanism the `.sector-name` labels use. -->
+        <text class="lost-fleet-spaceship__label" y="0" dy="0.315">{{ lostFleetSpaceshipLabel }}</text>
       </g>
       <Planet
         v-if="showPlanet"

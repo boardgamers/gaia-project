@@ -1,7 +1,18 @@
 {
-  "version": "5.29.1",
+  "version": "5.29.2",
   "releasedAt": "2026-07-12",
   "entries": [
+    {
+      "version": "5.29.2",
+      "releasedAt": "2026-07-12",
+      "kind": "fix",
+      "title": "Center ship letters on mobile",
+      "impact": "",
+      "changes": [
+        "Center the Lost Fleet ship letters with a plain-number dy instead of an em-based one, which mobile WebKit dropped and left the letters off-center on the map and ship boards"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.29.1",
       "releasedAt": "2026-07-12",

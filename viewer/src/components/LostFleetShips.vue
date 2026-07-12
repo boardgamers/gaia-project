@@ -17,11 +17,12 @@
       <g class="lost-fleet-ship__header">
         <g v-b-tooltip.hover.nofade :title="shipLabel(ship)">
           <polygon :points="markerHexPoints" class="lost-fleet-ship__marker-bg" :style="{ fill: shipColor(ship) }" />
-          <!-- y + dy=0.34em baseline-shift centers the glyph the same in every browser (iOS Safari
-               renders `dominant-baseline: central` off). The hex holds the name's first letter, and
-               the rest of the name is spelled out beside it so the board reads as e.g. [R]EBELLION. -->
-          <text x="9" y="9" dy="0.34em" class="lost-fleet-ship__marker">{{ shipMarker(ship) }}</text>
-          <text x="18.5" y="9" dy="0.34em" class="lost-fleet-ship__name">{{ shipNameRest(ship) }}</text>
+          <!-- y + a plain-number dy (user units, ≈0.35 * the 11px font) centers the glyph the same
+               in every browser; avoids `dy="…em"` (mobile WebKit drops the em unit) and
+               `dominant-baseline` (iOS Safari renders it off). The hex holds the name's first letter
+               and the rest is spelled out beside it, so the board reads as e.g. [R]EBELLION. -->
+          <text x="9" y="9" dy="3.85" class="lost-fleet-ship__marker">{{ shipMarker(ship) }}</text>
+          <text x="18.5" y="9" dy="3.85" class="lost-fleet-ship__name">{{ shipNameRest(ship) }}</text>
         </g>
 
         <g
