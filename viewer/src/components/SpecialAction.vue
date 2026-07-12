@@ -2,7 +2,7 @@
   <svg viewBox="-25 -25 50 50" width="50" height="50" style="overflow: visible">
     <g
       :class="['specialAction', { highlighted: isHighlighted, disabled, board, recent, warning }]"
-      v-b-tooltip.click.html
+      v-b-tooltip.nofade.html="tooltipTriggerConfig()"
       :title="button ? button.tooltip : null"
     >
       <polygon
@@ -32,6 +32,7 @@ import Engine, { Event, Planet, Player } from "@gaia-project/engine";
 import { ButtonData } from "../data";
 import { specialActionButton } from "../logic/buttons/actions";
 import { enabledButtonWarnings } from "../data/warnings";
+import { tooltipTriggerConfig } from "../logic/tooltip";
 
 @Component
 export default class SpecialAction extends Vue {
@@ -95,6 +96,8 @@ export default class SpecialAction extends Vue {
   get isHighlighted() {
     return this.highlighted || this._highlighted;
   }
+
+  tooltipTriggerConfig = tooltipTriggerConfig;
 }
 </script>
 

@@ -275,6 +275,7 @@ import StickyResourceBar from "./StickyResourceBar.vue";
 import { richText, RichText, richTextPlanet } from "../graphics/rich-text";
 import { chargePowerToPay } from "../logic/utils";
 import { factionColor } from "../graphics/utils";
+import { supportsHoverTooltips } from "../logic/tooltip";
 
 let show = false;
 
@@ -885,7 +886,7 @@ export default class Commands extends Vue implements CommandController {
   }
 
   supportsHover(): boolean {
-    return window.matchMedia("(hover: hover)").matches;
+    return supportsHoverTooltips();
   }
 
   highlightResearchTiles(tiles: string[]) {

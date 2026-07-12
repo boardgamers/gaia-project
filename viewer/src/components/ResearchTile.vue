@@ -1,5 +1,10 @@
 <template>
-  <g :transform="`translate(0, ${y})`" v-b-tooltip.click.html.left :title="tooltip" :class="field">
+  <g
+    :transform="`translate(0, ${y})`"
+    v-b-tooltip.nofade.html.left="tooltipTriggerConfig()"
+    :title="tooltip"
+    :class="field"
+  >
     <rect
       x="2"
       y="2"
@@ -76,6 +81,7 @@ import Planet from "./Planet.vue";
 import Resource from "./Resource.vue";
 import { ButtonData } from "../data";
 import { plusReward } from "../logic/utils";
+import { tooltipTriggerConfig } from "../logic/tooltip";
 
 @Component<ResearchTile>({
   components: {
@@ -223,6 +229,8 @@ export default class ResearchTile extends Vue {
   get engine(): Engine {
     return this.$store.state.data;
   }
+
+  tooltipTriggerConfig = tooltipTriggerConfig;
 }
 </script>
 

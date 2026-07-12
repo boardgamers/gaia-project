@@ -30,7 +30,7 @@
         :class="['lost-fleet-ship__action', action.type, { used: actionUser(ship, action.type) != null }]"
         :data-action="action.type"
         :transform="`translate(${29 + i * 54}, 28)`"
-        v-b-tooltip.click
+        v-b-tooltip.nofade="tooltipTriggerConfig()"
         :title="actionTooltip(ship, action)"
       >
         <SpecialAction
@@ -130,7 +130,7 @@
           y="0"
           filter="url(#shadow-1)"
         />
-        <g v-else v-b-tooltip.click :title="federationTooltip(ship)">
+        <g v-else v-b-tooltip.nofade="tooltipTriggerConfig()" :title="federationTooltip(ship)">
           <FederationTile :used="true" x="0" y="0" />
         </g>
       </g>
@@ -164,7 +164,7 @@
            the ship color. The first letter sits in a white hexagon badge (echoing the map hex) so it
            reads as the ship's identity even on the colored tab; the rest of the name follows in dark
            text (dark reads better than white on the lighter ship colors). -->
-      <g class="lost-fleet-ship__tab" v-b-tooltip.click :title="shipLabel(ship)">
+      <g class="lost-fleet-ship__tab" v-b-tooltip.nofade="tooltipTriggerConfig()" :title="shipLabel(ship)">
         <path :d="nameTabPath(ship)" :style="{ fill: shipColor(ship) }" class="lost-fleet-ship__tab-shape" />
         <polygon :points="nameHexPoints" class="lost-fleet-ship__name-hex" />
         <text x="15" y="-7" dy="3.1" class="lost-fleet-ship__name-letter">{{ shipFirstLetter(ship) }}</text>
@@ -181,7 +181,7 @@
           class="lost-fleet-ship__slot"
           :data-slot="slot.index"
           :transform="`translate(${slotTabX(slot.index)}, -7)`"
-          v-b-tooltip.click
+          v-b-tooltip.nofade="tooltipTriggerConfig()"
           :title="slotTitle(slot)"
         >
           <circle r="6" class="lost-fleet-ship__slot-bg" />
@@ -244,6 +244,7 @@ import SpecialAction from "./SpecialAction.vue";
 import TechTile from "./TechTile.vue";
 import Token from "./Token.vue";
 import UsedActionMark from "./UsedActionMark.vue";
+import { tooltipTriggerConfig } from "../logic/tooltip";
 
 @Component({
   components: {
@@ -419,6 +420,8 @@ export default class LostFleetShips extends Vue {
     }
     return `Slot ${slot.index}: open (charge ${slot.cost} power)`;
   }
+
+  tooltipTriggerConfig = tooltipTriggerConfig;
 }
 </script>
 

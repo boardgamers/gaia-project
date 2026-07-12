@@ -1,7 +1,16 @@
 {
-  "version": "5.30.4",
+  "version": "5.30.5",
   "releasedAt": "2026-07-12",
   "entries": [
+    {
+      "version": "5.30.5",
+      "releasedAt": "2026-07-12",
+      "kind": "fix",
+      "title": "Tooltip hover/click refinement",
+      "impact": "",
+      "changes": ["Restored hover-to-preview tooltips on desktop mice, keeping tap-to-toggle on touch devices"],
+      "userChanges": []
+    },
     {
       "version": "5.30.4",
       "releasedAt": "2026-07-12",

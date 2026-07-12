@@ -1,5 +1,5 @@
 <template>
-  <g :class="['scoringTile', { highlighted, faded }]" v-b-tooltip.click :title="tooltip">
+  <g :class="['scoringTile', { highlighted, faded }]" v-b-tooltip.nofade="tooltipTriggerConfig()" :title="tooltip">
     <rect x="1" y="1" width="75" height="40" rx="2" ry="2" stroke="none" fill="white" />
     <text class="title" x="58" y="36">R{{ round }}</text>
     <Resource :kind="reward.type" :count="reward.count" transform="translate(63.7, 13.1) scale(1.5)" />
@@ -34,6 +34,7 @@ import Condition from "./Condition.vue";
 import Resource from "./Resource.vue";
 import Operator from "./Operator.vue";
 import { roundScoringEvents } from "@gaia-project/engine/src/tiles/scoring";
+import { tooltipTriggerConfig } from "../logic/tooltip";
 
 @Component<ScoringTile>({
   components: {
@@ -73,6 +74,8 @@ export default class ScoringTile extends Vue {
   get faded() {
     return this.engine.round > this.round || this.engine.phase === Phase.EndGame;
   }
+
+  tooltipTriggerConfig = tooltipTriggerConfig;
 }
 </script>
 

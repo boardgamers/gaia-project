@@ -4034,7 +4034,7 @@ __summary { white-space: normal }` override, so a row's name/summary/up-to-4-sta
       stay at steady opacity the whole time (no flash-then-vanish). Separately, the "used" ship-action
       X didn't match the base game's board-action X: `ShipActionIcon.vue` and `LostFleetShips.vue`
       each independently redrew their own X (`transform="translate(0,-5)"`) inside a `g.used {
- opacity: 0.7 }` wrapper that also diluted the X itself, while `BoardAction.vue`'s only dims the
+opacity: 0.7 }` wrapper that also diluted the X itself, while `BoardAction.vue`'s only dims the
       `SpecialAction` icon (via a global `.faded { opacity: 0.8 }` class) and leaves its sibling X at
       full opacity. New `UsedActionMark.vue` (just the two `<line>`s) is now the single source of that
       mark, used by all three call sites; the two ship components now also reuse the same `.faded`
@@ -4046,6 +4046,26 @@ __summary { white-space: normal }` override, so a row's name/summary/up-to-4-sta
       `LostFleetShips.spec.ts`'s existing `used`-class/2-lines assertions still pass unchanged. Full
       `pnpm test`: 440 passing/31 failing both before and after (identical failing-test names,
       confirmed via `git stash` on the same run - all pre-existing, none touch these components).
+
+           **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
+           pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
+           desktop mice, which was never the actual bug - only touch devices raced hover against the
+           click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
+           `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
+           `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
+           shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
+           `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
+           directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
+           `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
+           config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
+           on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
+           desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
+           is what actually closed that race originally. Verified live via Playwright with two device
+           profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
+           tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
+           context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
+           a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
+           still 440 passing/31 failing, same pre-existing set.
 
 ## Still MISSING — only one art-only item left
 

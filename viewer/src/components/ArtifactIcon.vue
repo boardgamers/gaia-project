@@ -1,11 +1,11 @@
 <template>
   <svg :viewBox="viewBox" :width="width" :height="size" style="overflow: visible">
-    <!-- .click only, no .hover: a hover trigger races its own show/hide against the global
-         "close whatever tooltip is open" click handler in launcher.ts (see that file's comment),
-         which is what caused tooltips to flash-and-vanish or get left open after tapping
-         elsewhere. .click is also hover-independent by construction, so it works identically on
-         touch and mouse (no first-tap-swallowed quirk to guard against). -->
-    <g class="lost-fleet-ship__artifact" v-b-tooltip.click :title="tooltip">
+    <!-- Hover on devices that support it, click-to-toggle on touch-only devices
+         (tooltipTriggerConfig) - a hover trigger on a touch device races its own show/hide
+         against the global "close whatever tooltip is open" click handler in launcher.ts (see
+         that file's comment), which is what caused tooltips to flash-and-vanish or get left open
+         after tapping elsewhere. -->
+    <g class="lost-fleet-ship__artifact" v-b-tooltip.nofade="tooltipTriggerConfig()" :title="tooltip">
       <!-- Gold sunburst ring: a thick gold band (outer ellipse) with white radial "rays" drawn over
            it, then a white oval center on top so the rays only read on the band - an inset sunburst
            just in the border. The whole token is an oval (wider than tall) that fills its slot. -->
@@ -66,6 +66,7 @@ import { artifactTokenSpec } from "@gaia-project/engine/src/tiles/artifacts";
 import { artifactDisplay } from "../data/artifacts";
 import Condition from "./Condition.vue";
 import Resource from "./Resource.vue";
+import { tooltipTriggerConfig } from "../logic/tooltip";
 
 /** A single Artifact token, rendered as a self-contained icon - reused on the Twilight ship board
  * strip (LostFleetShips.vue) and as an icon-only button (RichTextView.vue's "artifactToken" case).
@@ -149,6 +150,8 @@ export default class ArtifactIcon extends Vue {
   get tooltip(): string {
     return artifactTokenSpec[this.artifact];
   }
+
+  tooltipTriggerConfig = tooltipTriggerConfig;
 }
 </script>
 

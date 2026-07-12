@@ -2,7 +2,7 @@
   <svg
     :class="['techTile', pos, { highlighted, covered, advanced: isAdvanced }]"
     v-if="this.count"
-    v-b-tooltip.click.html
+    v-b-tooltip.nofade.html="tooltipTriggerConfig()"
     :title="tooltip"
     @click="onClick"
     width="60"
@@ -65,6 +65,7 @@ import { prependShortcut } from "../logic/buttons/shortcuts";
 import { spaceshipTechDisplayEvent, techTileData } from "../data/tech-tiles";
 import { techTileEventSource, techTileEventWithSource } from "@gaia-project/engine/src/tiles/techs";
 import { spaceshipTechSpec } from "@gaia-project/engine/src/tiles/spaceship-techs";
+import { tooltipTriggerConfig } from "../logic/tooltip";
 
 @Component({
   components: {
@@ -208,6 +209,8 @@ export default class TechTile extends Vue {
   isSpaceshipTile(tile: TechTileEnum | AdvTechTile | SpaceshipTechTile): tile is SpaceshipTechTile {
     return Object.values(SpaceshipTechTile).includes(tile as SpaceshipTechTile);
   }
+
+  tooltipTriggerConfig = tooltipTriggerConfig;
 }
 </script>
 

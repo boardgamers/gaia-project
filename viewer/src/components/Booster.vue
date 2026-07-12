@@ -1,7 +1,7 @@
 <template>
   <svg
     :class="['booster', { highlighted, disabled }]"
-    v-b-tooltip.click
+    v-b-tooltip.nofade="tooltipTriggerConfig()"
     :title="tooltip"
     width="60"
     height="120"
@@ -37,6 +37,7 @@ import Engine, { Event, Booster as BoosterEnum } from "@gaia-project/engine";
 import { eventDesc } from "../data/event";
 import TechContent from "./TechContent.vue";
 import { boosterEvents } from "@gaia-project/engine/src/tiles/boosters";
+import { tooltipTriggerConfig } from "../logic/tooltip";
 
 @Component<Booster>({
   components: {
@@ -81,6 +82,8 @@ export default class Booster extends Vue {
   get tooltip() {
     return `- ${eventDesc(this.event1, this.engine.expansions)}\n- ${eventDesc(this.event2, this.engine.expansions)}`;
   }
+
+  tooltipTriggerConfig = tooltipTriggerConfig;
 }
 </script>
 

@@ -1,6 +1,6 @@
 <template>
   <svg viewBox="-27 -32 54 54" width="54" height="54" style="overflow: visible">
-    <g :class="['lost-fleet-ship__action', type]" v-b-tooltip.click.html :title="tooltip">
+    <g :class="['lost-fleet-ship__action', type]" v-b-tooltip.nofade.html="tooltipTriggerConfig()" :title="tooltip">
       <SpecialAction
         :class="{ faded: isUsed }"
         :action="actionIncome"
@@ -94,6 +94,7 @@ import Condition from "./Condition.vue";
 import Resource from "./Resource.vue";
 import SpecialAction from "./SpecialAction.vue";
 import UsedActionMark from "./UsedActionMark.vue";
+import { tooltipTriggerConfig } from "../logic/tooltip";
 
 /** A single ship board action, rendered as a self-contained icon (cost badge + effect octagon) -
  * the same visual language as the base game's BoardAction, reused both on the read-only ship board
@@ -157,6 +158,7 @@ export default class ShipActionIcon extends Vue {
   costFill = costFill;
   extraCosts = extraCosts;
   costBadgeTransform = costBadgeTransform;
+  tooltipTriggerConfig = tooltipTriggerConfig;
 }
 </script>
 

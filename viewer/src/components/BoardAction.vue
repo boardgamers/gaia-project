@@ -3,7 +3,7 @@
     <g
       :transform="transform"
       :class="['boardAction', kind, { highlighted, recent, warning }]"
-      v-b-tooltip.click.html
+      v-b-tooltip.nofade.html="tooltipTriggerConfig()"
       :title="button.tooltip"
     >
       <SpecialAction
@@ -60,6 +60,7 @@ import UsedActionMark from "./UsedActionMark.vue";
 import { boardActionButton } from "../logic/buttons/actions";
 import { enabledButtonWarnings } from "../data/warnings";
 import { factionPiecePlanet } from "../graphics/utils";
+import { tooltipTriggerConfig } from "../logic/tooltip";
 
 @Component<BoardAction>({
   components: {
@@ -130,6 +131,7 @@ export default class BoardAction extends Vue {
   }
 
   boardActions = boardActions;
+  tooltipTriggerConfig = tooltipTriggerConfig;
 }
 </script>
 

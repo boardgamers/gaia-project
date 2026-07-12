@@ -1,9 +1,16 @@
 <template>
-  <!-- .click only, no .hover: a hover trigger races its own show/hide against the global
-       "close whatever tooltip is open" click handler in launcher.ts (see that file's comment),
-       which is what caused tooltips to flash-and-vanish or get left open after tapping elsewhere.
-       .click is also hover-independent by construction, so it works identically on touch and mouse. -->
-  <svg viewBox="-25 -25 50 50" width="50" height="50" style="overflow: visible" v-b-tooltip.click :title="tooltip">
+  <!-- Hover on devices that support it, click-to-toggle on touch-only devices (tooltipTriggerConfig) -
+       a hover trigger on a touch device races its own show/hide against the global "close whatever
+       tooltip is open" click handler in launcher.ts (see that file's comment), which is what caused
+       tooltips to flash-and-vanish or get left open after tapping elsewhere. -->
+  <svg
+    viewBox="-25 -25 50 50"
+    width="50"
+    height="50"
+    style="overflow: visible"
+    v-b-tooltip.nofade="tooltipTriggerConfig()"
+    :title="tooltip"
+  >
     <g :class="['federationTile', { disabled }]">
       <image xlink:href="../assets/conditions/federation.svg" :height=739/636*50 v-if="!disabled" style="color: #247B0A"
       width=50 x=-25 y=-25 :filter=filter /> <image xlink:href="../assets/conditions/federation-used.svg"
@@ -73,6 +80,7 @@ import { Federation as FederationEnum, Reward, SpaceshipFederation } from "@gaia
 import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
 import { spaceshipFederationSpec } from "@gaia-project/engine/src/tiles/spaceship-federations";
 import Building from "./Building.vue";
+import { tooltipTriggerConfig } from "../logic/tooltip";
 
 @Component({
   components: { Building },
@@ -122,6 +130,8 @@ export default class FederationTile extends Vue {
   get disabled() {
     return this.used || this.federation === FederationEnum.Fed1;
   }
+
+  tooltipTriggerConfig = tooltipTriggerConfig;
 }
 </script>
 

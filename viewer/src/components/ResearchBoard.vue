@@ -14,7 +14,7 @@
          occupy in the side ScoringBoard panel (and later the map's bottom-right corner) before it
          moved here, directly beneath the round scoring tiles it's grouped with. -->
     <g v-if="isLostFleet" :transform="`translate(${fields.length * 60}, 0)`">
-      <g v-if="hasScoringExtension" v-b-tooltip.click :title="extensionTooltip">
+      <g v-if="hasScoringExtension" v-b-tooltip.nofade="tooltipTriggerConfig()" :title="extensionTooltip">
         <text x="30" y="40" class="extension-label">{{ gateOnShips ? "3 explorations" : "25 vp" }}</text>
         <g transform="translate(30, 79) scale(0.95)">
           <TechTile pos="adv-ext" x="-30" y="-30" />
@@ -92,6 +92,7 @@ import BoardAction from "./BoardAction.vue";
 import ScoringTile from "./ScoringTile.vue";
 import FinalScoringTile from "./FinalScoringTile.vue";
 import { BOTTOM_SCORING_TILE_Y, researchBoardHeight } from "../logic/utils";
+import { tooltipTriggerConfig } from "../logic/tooltip";
 
 // Extra width for the 7th (Scoring Board Extension + round scoring tiles + final scoring) column,
 // Lost Fleet only - the space final scoring used to occupy in the side ScoringBoard panel (and
@@ -164,6 +165,7 @@ const FINAL_SCORING_GAP_BELOW_ROUND_TILES = 40;
     scoringTileY(i: number): number {
       return SCORING_TILE_Y[i - 1];
     },
+    tooltipTriggerConfig,
   },
   components: {
     ResearchTrack,
