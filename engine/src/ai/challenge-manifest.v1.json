@@ -1,0 +1,4116 @@
+{
+  "challenge": {
+    "fixedTurnOrder": [
+      0,
+      1
+    ],
+    "id": "lost-fleet-xenos-hadsch-hallas-lf-mrj5exuu-c680",
+    "options": {
+      "advancedRules": false,
+      "banPhase": false,
+      "customBoardSetup": false,
+      "factionVariant": "standard",
+      "factionVariantVersion": 0,
+      "flexibleFederations": false,
+      "frontiers": false,
+      "layout": "standard",
+      "lostFleet": true,
+      "noFedCheck": false,
+      "officialCenterSectors": false,
+      "randomFactions": false
+    },
+    "playerCount": 2,
+    "schemas": {
+      "challenge": "gaia-ai-challenge/v1",
+      "engine": "gaia-engine-state/v1",
+      "feature": "gaia-ai-features/v1",
+      "manifest": "gaia-ai-challenge-manifest/v1",
+      "model": "gaia-ai-model/v1"
+    },
+    "scriptedPrefix": [
+      "init 2 lf-mrj5exuu-c680",
+      "p1 faction xenos",
+      "p2 faction hadsch-hallas"
+    ],
+    "scriptedPrefixScope": "initialization-and-faction-choice-only",
+    "seats": [
+      {
+        "faction": "xenos",
+        "player": 0,
+        "playerId": "p1",
+        "seat": 0
+      },
+      {
+        "faction": "hadsch-hallas",
+        "player": 1,
+        "playerId": "p2",
+        "seat": 1
+      }
+    ],
+    "seed": "lf-mrj5exuu-c680",
+    "strategicSetupDecisions": [
+      "starting-buildings",
+      "round-boosters"
+    ],
+    "version": "1.0.0"
+  },
+  "engine": {
+    "newTurn": true,
+    "phaseAfterScriptedPrefix": "setupBuilding",
+    "playerToMoveAfterScriptedPrefix": 0,
+    "roundAfterScriptedPrefix": 0,
+    "seatsAfterScriptedPrefix": [
+      {
+        "faction": "xenos",
+        "player": 0
+      },
+      {
+        "faction": "hadsch-hallas",
+        "player": 1
+      }
+    ],
+    "setupBuildingTurnOrder": [
+      1,
+      1,
+      0,
+      0
+    ],
+    "stateSchemaVersion": "gaia-engine-state/v1",
+    "version": "4.8.51"
+  },
+  "map": {
+    "hexes": [
+      {
+        "adjacent": [
+          "1A1",
+          "1A11",
+          "1B0",
+          "DS13_0",
+          "DS13_2"
+        ],
+        "hasPlanet": true,
+        "id": "1A0",
+        "planet": "o",
+        "q": 6,
+        "r": -5,
+        "s": -1,
+        "sectorId": "1",
+        "sectorKey": "1",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "1A0",
+          "1A2",
+          "1B0",
+          "1B1",
+          "6A8",
+          "DS13_0"
+        ],
+        "hasPlanet": false,
+        "id": "1A1",
+        "planet": "e",
+        "q": 5,
+        "r": -4,
+        "s": -1,
+        "sectorId": "1",
+        "sectorKey": "1",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "1A11",
+          "1A9",
+          "1B5"
+        ],
+        "hasPlanet": false,
+        "id": "1A10",
+        "planet": "e",
+        "q": 6,
+        "r": -7,
+        "s": 1,
+        "sectorId": "1",
+        "sectorKey": "1",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "1A0",
+          "1A10",
+          "1B0",
+          "1B5"
+        ],
+        "hasPlanet": true,
+        "id": "1A11",
+        "planet": "v",
+        "q": 6,
+        "r": -6,
+        "s": 0,
+        "sectorId": "1",
+        "sectorKey": "1",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "1A1",
+          "1A3",
+          "1B1",
+          "6A7",
+          "6A8",
+          "IS5"
+        ],
+        "hasPlanet": false,
+        "id": "1A2",
+        "planet": "e",
+        "q": 4,
+        "r": -3,
+        "s": -1,
+        "sectorId": "1",
+        "sectorKey": "1",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "1A2",
+          "1A4",
+          "1B1",
+          "1B2",
+          "5A10",
+          "IS5"
+        ],
+        "hasPlanet": true,
+        "id": "1A3",
+        "planet": "d",
+        "q": 3,
+        "r": -3,
+        "s": 0,
+        "sectorId": "1",
+        "sectorKey": "1",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "1A3",
+          "1A5",
+          "1B2",
+          "5A10",
+          "5A9",
+          "IS4"
+        ],
+        "hasPlanet": false,
+        "id": "1A4",
+        "planet": "e",
+        "q": 2,
+        "r": -3,
+        "s": 1,
+        "sectorId": "1",
+        "sectorKey": "1",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "1A4",
+          "1A6",
+          "1B2",
+          "1B3",
+          "2A0",
+          "IS4"
+        ],
+        "hasPlanet": false,
+        "id": "1A5",
+        "planet": "e",
+        "q": 2,
+        "r": -4,
+        "s": 2,
+        "sectorId": "1",
+        "sectorKey": "1",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "1A5",
+          "1A7",
+          "1B3",
+          "2A0",
+          "2A11",
+          "DS11_0"
+        ],
+        "hasPlanet": false,
+        "id": "1A6",
+        "planet": "e",
+        "q": 2,
+        "r": -5,
+        "s": 3,
+        "sectorId": "1",
+        "sectorKey": "1",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "1A6",
+          "1A8",
+          "1B3",
+          "1B4",
+          "DS11_0",
+          "DS11_2"
+        ],
+        "hasPlanet": false,
+        "id": "1A7",
+        "planet": "e",
+        "q": 3,
+        "r": -6,
+        "s": 3,
+        "sectorId": "1",
+        "sectorKey": "1",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "1A7",
+          "1A9",
+          "1B4",
+          "DS11_2"
+        ],
+        "hasPlanet": false,
+        "id": "1A8",
+        "planet": "e",
+        "q": 4,
+        "r": -7,
+        "s": 3,
+        "sectorId": "1",
+        "sectorKey": "1",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "1A10",
+          "1A8",
+          "1B4",
+          "1B5"
+        ],
+        "hasPlanet": true,
+        "id": "1A9",
+        "planet": "m",
+        "q": 5,
+        "r": -7,
+        "s": 2,
+        "sectorId": "1",
+        "sectorKey": "1",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "1A0",
+          "1A1",
+          "1A11",
+          "1B1",
+          "1B5",
+          "1C"
+        ],
+        "hasPlanet": false,
+        "id": "1B0",
+        "planet": "e",
+        "q": 5,
+        "r": -5,
+        "s": 0,
+        "sectorId": "1",
+        "sectorKey": "1",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "1A1",
+          "1A2",
+          "1A3",
+          "1B0",
+          "1B2",
+          "1C"
+        ],
+        "hasPlanet": false,
+        "id": "1B1",
+        "planet": "e",
+        "q": 4,
+        "r": -4,
+        "s": 0,
+        "sectorId": "1",
+        "sectorKey": "1",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "1A3",
+          "1A4",
+          "1A5",
+          "1B1",
+          "1B3",
+          "1C"
+        ],
+        "hasPlanet": true,
+        "id": "1B2",
+        "planet": "s",
+        "q": 3,
+        "r": -4,
+        "s": 1,
+        "sectorId": "1",
+        "sectorKey": "1",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "1A5",
+          "1A6",
+          "1A7",
+          "1B2",
+          "1B4",
+          "1C"
+        ],
+        "hasPlanet": false,
+        "id": "1B3",
+        "planet": "e",
+        "q": 3,
+        "r": -5,
+        "s": 2,
+        "sectorId": "1",
+        "sectorKey": "1",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "1A7",
+          "1A8",
+          "1A9",
+          "1B3",
+          "1B5",
+          "1C"
+        ],
+        "hasPlanet": true,
+        "id": "1B4",
+        "planet": "r",
+        "q": 4,
+        "r": -6,
+        "s": 2,
+        "sectorId": "1",
+        "sectorKey": "1",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "1A10",
+          "1A11",
+          "1A9",
+          "1B0",
+          "1B4",
+          "1C"
+        ],
+        "hasPlanet": false,
+        "id": "1B5",
+        "planet": "e",
+        "q": 5,
+        "r": -6,
+        "s": 1,
+        "sectorId": "1",
+        "sectorKey": "1",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "1B0",
+          "1B1",
+          "1B2",
+          "1B3",
+          "1B4",
+          "1B5"
+        ],
+        "hasPlanet": false,
+        "id": "1C",
+        "planet": "e",
+        "q": 4,
+        "r": -5,
+        "s": 1,
+        "sectorId": "1",
+        "sectorKey": "1",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "1A5",
+          "1A6",
+          "2A1",
+          "2A11",
+          "2B0",
+          "IS4"
+        ],
+        "hasPlanet": false,
+        "id": "2A0",
+        "planet": "e",
+        "q": 1,
+        "r": -4,
+        "s": 3,
+        "sectorId": "2",
+        "sectorKey": "2",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "2A0",
+          "2A2",
+          "2B0",
+          "2B1",
+          "5A8",
+          "IS4"
+        ],
+        "hasPlanet": true,
+        "id": "2A1",
+        "planet": "m",
+        "q": 0,
+        "r": -3,
+        "s": 3,
+        "sectorId": "2",
+        "sectorKey": "2",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "2A11",
+          "2A9",
+          "2B5",
+          "DS11_0",
+          "DS11_1"
+        ],
+        "hasPlanet": false,
+        "id": "2A10",
+        "planet": "e",
+        "q": 1,
+        "r": -6,
+        "s": 5,
+        "sectorId": "2",
+        "sectorKey": "2",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "1A6",
+          "2A0",
+          "2A10",
+          "2B0",
+          "2B5",
+          "DS11_0"
+        ],
+        "hasPlanet": true,
+        "id": "2A11",
+        "planet": "d",
+        "q": 1,
+        "r": -5,
+        "s": 4,
+        "sectorId": "2",
+        "sectorKey": "2",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "2A1",
+          "2A3",
+          "2B1",
+          "5A7",
+          "5A8",
+          "IS3"
+        ],
+        "hasPlanet": false,
+        "id": "2A2",
+        "planet": "e",
+        "q": -1,
+        "r": -2,
+        "s": 3,
+        "sectorId": "2",
+        "sectorKey": "2",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "2A2",
+          "2A4",
+          "2B1",
+          "2B2",
+          "3A10",
+          "IS3"
+        ],
+        "hasPlanet": true,
+        "id": "2A3",
+        "planet": "o",
+        "q": -2,
+        "r": -2,
+        "s": 4,
+        "sectorId": "2",
+        "sectorKey": "2",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "2A3",
+          "2A5",
+          "2B2",
+          "3A10",
+          "3A9",
+          "DS15_0"
+        ],
+        "hasPlanet": false,
+        "id": "2A4",
+        "planet": "e",
+        "q": -3,
+        "r": -2,
+        "s": 5,
+        "sectorId": "2",
+        "sectorKey": "2",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "2A4",
+          "2A6",
+          "2B2",
+          "2B3",
+          "DS15_0",
+          "DS15_2"
+        ],
+        "hasPlanet": false,
+        "id": "2A5",
+        "planet": "e",
+        "q": -3,
+        "r": -3,
+        "s": 6,
+        "sectorId": "2",
+        "sectorKey": "2",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "2A5",
+          "2A7",
+          "2B3",
+          "DS15_2"
+        ],
+        "hasPlanet": false,
+        "id": "2A6",
+        "planet": "e",
+        "q": -3,
+        "r": -4,
+        "s": 7,
+        "sectorId": "2",
+        "sectorKey": "2",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "2A6",
+          "2A8",
+          "2B3",
+          "2B4"
+        ],
+        "hasPlanet": true,
+        "id": "2A7",
+        "planet": "v",
+        "q": -2,
+        "r": -5,
+        "s": 7,
+        "sectorId": "2",
+        "sectorKey": "2",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "2A7",
+          "2A9",
+          "2B4"
+        ],
+        "hasPlanet": true,
+        "id": "2A8",
+        "planet": "t",
+        "q": -1,
+        "r": -6,
+        "s": 7,
+        "sectorId": "2",
+        "sectorKey": "2",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "2A10",
+          "2A8",
+          "2B4",
+          "2B5"
+        ],
+        "hasPlanet": false,
+        "id": "2A9",
+        "planet": "e",
+        "q": 0,
+        "r": -6,
+        "s": 6,
+        "sectorId": "2",
+        "sectorKey": "2",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "2A0",
+          "2A1",
+          "2A11",
+          "2B1",
+          "2B5",
+          "2C"
+        ],
+        "hasPlanet": false,
+        "id": "2B0",
+        "planet": "e",
+        "q": 0,
+        "r": -4,
+        "s": 4,
+        "sectorId": "2",
+        "sectorKey": "2",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "2A1",
+          "2A2",
+          "2A3",
+          "2B0",
+          "2B2",
+          "2C"
+        ],
+        "hasPlanet": false,
+        "id": "2B1",
+        "planet": "e",
+        "q": -1,
+        "r": -3,
+        "s": 4,
+        "sectorId": "2",
+        "sectorKey": "2",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "2A3",
+          "2A4",
+          "2A5",
+          "2B1",
+          "2B3",
+          "2C"
+        ],
+        "hasPlanet": true,
+        "id": "2B2",
+        "planet": "s",
+        "q": -2,
+        "r": -3,
+        "s": 5,
+        "sectorId": "2",
+        "sectorKey": "2",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "2A5",
+          "2A6",
+          "2A7",
+          "2B2",
+          "2B4",
+          "2C"
+        ],
+        "hasPlanet": false,
+        "id": "2B3",
+        "planet": "e",
+        "q": -2,
+        "r": -4,
+        "s": 6,
+        "sectorId": "2",
+        "sectorKey": "2",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "2A7",
+          "2A8",
+          "2A9",
+          "2B3",
+          "2B5",
+          "2C"
+        ],
+        "hasPlanet": false,
+        "id": "2B4",
+        "planet": "e",
+        "q": -1,
+        "r": -5,
+        "s": 6,
+        "sectorId": "2",
+        "sectorKey": "2",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "2A10",
+          "2A11",
+          "2A9",
+          "2B0",
+          "2B4",
+          "2C"
+        ],
+        "hasPlanet": true,
+        "id": "2B5",
+        "planet": "i",
+        "q": 0,
+        "r": -5,
+        "s": 5,
+        "sectorId": "2",
+        "sectorKey": "2",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "2B0",
+          "2B1",
+          "2B2",
+          "2B3",
+          "2B4",
+          "2B5"
+        ],
+        "hasPlanet": false,
+        "id": "2C",
+        "planet": "e",
+        "q": -1,
+        "r": -4,
+        "s": 5,
+        "sectorId": "2",
+        "sectorKey": "2",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "3A1",
+          "3A11",
+          "3B0",
+          "5A5",
+          "5A6",
+          "IS2"
+        ],
+        "hasPlanet": true,
+        "id": "3A0",
+        "planet": "d",
+        "q": -3,
+        "r": 1,
+        "s": 2,
+        "sectorId": "3",
+        "sectorKey": "3",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "3A0",
+          "3A2",
+          "3B0",
+          "3B1",
+          "7A8",
+          "IS2"
+        ],
+        "hasPlanet": true,
+        "id": "3A1",
+        "planet": "r",
+        "q": -4,
+        "r": 2,
+        "s": 2,
+        "sectorId": "3",
+        "sectorKey": "3",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "2A3",
+          "2A4",
+          "3A11",
+          "3A9",
+          "3B5",
+          "IS3"
+        ],
+        "hasPlanet": false,
+        "id": "3A10",
+        "planet": "e",
+        "q": -3,
+        "r": -1,
+        "s": 4,
+        "sectorId": "3",
+        "sectorKey": "3",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "3A0",
+          "3A10",
+          "3B0",
+          "3B5",
+          "5A6",
+          "IS3"
+        ],
+        "hasPlanet": false,
+        "id": "3A11",
+        "planet": "e",
+        "q": -3,
+        "r": 0,
+        "s": 3,
+        "sectorId": "3",
+        "sectorKey": "3",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "3A1",
+          "3A3",
+          "3B1",
+          "7A7",
+          "7A8",
+          "DS12_0"
+        ],
+        "hasPlanet": false,
+        "id": "3A2",
+        "planet": "e",
+        "q": -5,
+        "r": 3,
+        "s": 2,
+        "sectorId": "3",
+        "sectorKey": "3",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "3A2",
+          "3A4",
+          "3B1",
+          "3B2",
+          "DS12_0",
+          "DS12_2"
+        ],
+        "hasPlanet": false,
+        "id": "3A3",
+        "planet": "e",
+        "q": -6,
+        "r": 3,
+        "s": 3,
+        "sectorId": "3",
+        "sectorKey": "3",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "3A3",
+          "3A5",
+          "3B2",
+          "DS12_2"
+        ],
+        "hasPlanet": false,
+        "id": "3A4",
+        "planet": "e",
+        "q": -7,
+        "r": 3,
+        "s": 4,
+        "sectorId": "3",
+        "sectorKey": "3",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "3A4",
+          "3A6",
+          "3B2",
+          "3B3"
+        ],
+        "hasPlanet": false,
+        "id": "3A5",
+        "planet": "e",
+        "q": -7,
+        "r": 2,
+        "s": 5,
+        "sectorId": "3",
+        "sectorKey": "3",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "3A5",
+          "3A7",
+          "3B3"
+        ],
+        "hasPlanet": true,
+        "id": "3A6",
+        "planet": "m",
+        "q": -7,
+        "r": 1,
+        "s": 6,
+        "sectorId": "3",
+        "sectorKey": "3",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "3A6",
+          "3A8",
+          "3B3",
+          "3B4"
+        ],
+        "hasPlanet": false,
+        "id": "3A7",
+        "planet": "e",
+        "q": -6,
+        "r": 0,
+        "s": 6,
+        "sectorId": "3",
+        "sectorKey": "3",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "3A7",
+          "3A9",
+          "3B4",
+          "DS15_0",
+          "DS15_1"
+        ],
+        "hasPlanet": false,
+        "id": "3A8",
+        "planet": "e",
+        "q": -5,
+        "r": -1,
+        "s": 6,
+        "sectorId": "3",
+        "sectorKey": "3",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "2A4",
+          "3A10",
+          "3A8",
+          "3B4",
+          "3B5",
+          "DS15_0"
+        ],
+        "hasPlanet": true,
+        "id": "3A9",
+        "planet": "t",
+        "q": -4,
+        "r": -1,
+        "s": 5,
+        "sectorId": "3",
+        "sectorKey": "3",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "3A0",
+          "3A1",
+          "3A11",
+          "3B1",
+          "3B5",
+          "3C"
+        ],
+        "hasPlanet": false,
+        "id": "3B0",
+        "planet": "e",
+        "q": -4,
+        "r": 1,
+        "s": 3,
+        "sectorId": "3",
+        "sectorKey": "3",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "3A1",
+          "3A2",
+          "3A3",
+          "3B0",
+          "3B2",
+          "3C"
+        ],
+        "hasPlanet": false,
+        "id": "3B1",
+        "planet": "e",
+        "q": -5,
+        "r": 2,
+        "s": 3,
+        "sectorId": "3",
+        "sectorKey": "3",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "3A3",
+          "3A4",
+          "3A5",
+          "3B1",
+          "3B3",
+          "3C"
+        ],
+        "hasPlanet": true,
+        "id": "3B2",
+        "planet": "g",
+        "q": -6,
+        "r": 2,
+        "s": 4,
+        "sectorId": "3",
+        "sectorKey": "3",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "3A5",
+          "3A6",
+          "3A7",
+          "3B2",
+          "3B4",
+          "3C"
+        ],
+        "hasPlanet": false,
+        "id": "3B3",
+        "planet": "e",
+        "q": -6,
+        "r": 1,
+        "s": 5,
+        "sectorId": "3",
+        "sectorKey": "3",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "3A7",
+          "3A8",
+          "3A9",
+          "3B3",
+          "3B5",
+          "3C"
+        ],
+        "hasPlanet": false,
+        "id": "3B4",
+        "planet": "e",
+        "q": -5,
+        "r": 0,
+        "s": 5,
+        "sectorId": "3",
+        "sectorKey": "3",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "3A10",
+          "3A11",
+          "3A9",
+          "3B0",
+          "3B4",
+          "3C"
+        ],
+        "hasPlanet": true,
+        "id": "3B5",
+        "planet": "i",
+        "q": -4,
+        "r": 0,
+        "s": 4,
+        "sectorId": "3",
+        "sectorKey": "3",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "3B0",
+          "3B1",
+          "3B2",
+          "3B3",
+          "3B4",
+          "3B5"
+        ],
+        "hasPlanet": false,
+        "id": "3C",
+        "planet": "e",
+        "q": -5,
+        "r": 1,
+        "s": 4,
+        "sectorId": "3",
+        "sectorKey": "3",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "4A1",
+          "4A11",
+          "4B0",
+          "DS16_2"
+        ],
+        "hasPlanet": false,
+        "id": "4A0",
+        "planet": "e",
+        "q": 3,
+        "r": 4,
+        "s": -7,
+        "sectorId": "4",
+        "sectorKey": "4",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "4A0",
+          "4A2",
+          "4B0",
+          "4B1"
+        ],
+        "hasPlanet": false,
+        "id": "4A1",
+        "planet": "e",
+        "q": 2,
+        "r": 5,
+        "s": -7,
+        "sectorId": "4",
+        "sectorKey": "4",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "4A11",
+          "4A9",
+          "4B5",
+          "6A3",
+          "6A4",
+          "DS16_0"
+        ],
+        "hasPlanet": true,
+        "id": "4A10",
+        "planet": "t",
+        "q": 3,
+        "r": 2,
+        "s": -5,
+        "sectorId": "4",
+        "sectorKey": "4",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "4A0",
+          "4A10",
+          "4B0",
+          "4B5",
+          "DS16_0",
+          "DS16_2"
+        ],
+        "hasPlanet": false,
+        "id": "4A11",
+        "planet": "e",
+        "q": 3,
+        "r": 3,
+        "s": -6,
+        "sectorId": "4",
+        "sectorKey": "4",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "4A1",
+          "4A3",
+          "4B1"
+        ],
+        "hasPlanet": true,
+        "id": "4A2",
+        "planet": "r",
+        "q": 1,
+        "r": 6,
+        "s": -7,
+        "sectorId": "4",
+        "sectorKey": "4",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "4A2",
+          "4A4",
+          "4B1",
+          "4B2"
+        ],
+        "hasPlanet": false,
+        "id": "4A3",
+        "planet": "e",
+        "q": 0,
+        "r": 6,
+        "s": -6,
+        "sectorId": "4",
+        "sectorKey": "4",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "4A3",
+          "4A5",
+          "4B2",
+          "DS14_0",
+          "DS14_1"
+        ],
+        "hasPlanet": false,
+        "id": "4A4",
+        "planet": "e",
+        "q": -1,
+        "r": 6,
+        "s": -5,
+        "sectorId": "4",
+        "sectorKey": "4",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "4A4",
+          "4A6",
+          "4B2",
+          "4B3",
+          "7A0",
+          "DS14_0"
+        ],
+        "hasPlanet": false,
+        "id": "4A5",
+        "planet": "e",
+        "q": -1,
+        "r": 5,
+        "s": -4,
+        "sectorId": "4",
+        "sectorKey": "4",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "4A5",
+          "4A7",
+          "4B3",
+          "7A0",
+          "7A11",
+          "IS1"
+        ],
+        "hasPlanet": false,
+        "id": "4A6",
+        "planet": "e",
+        "q": -1,
+        "r": 4,
+        "s": -3,
+        "sectorId": "4",
+        "sectorKey": "4",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "4A6",
+          "4A8",
+          "4B3",
+          "4B4",
+          "5A2",
+          "IS1"
+        ],
+        "hasPlanet": true,
+        "id": "4A7",
+        "planet": "i",
+        "q": 0,
+        "r": 3,
+        "s": -3,
+        "sectorId": "4",
+        "sectorKey": "4",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "4A7",
+          "4A9",
+          "4B4",
+          "5A1",
+          "5A2",
+          "IS0"
+        ],
+        "hasPlanet": false,
+        "id": "4A8",
+        "planet": "e",
+        "q": 1,
+        "r": 2,
+        "s": -3,
+        "sectorId": "4",
+        "sectorKey": "4",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "4A10",
+          "4A8",
+          "4B4",
+          "4B5",
+          "6A4",
+          "IS0"
+        ],
+        "hasPlanet": false,
+        "id": "4A9",
+        "planet": "e",
+        "q": 2,
+        "r": 2,
+        "s": -4,
+        "sectorId": "4",
+        "sectorKey": "4",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "4A0",
+          "4A1",
+          "4A11",
+          "4B1",
+          "4B5",
+          "4C"
+        ],
+        "hasPlanet": false,
+        "id": "4B0",
+        "planet": "e",
+        "q": 2,
+        "r": 4,
+        "s": -6,
+        "sectorId": "4",
+        "sectorKey": "4",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "4A1",
+          "4A2",
+          "4A3",
+          "4B0",
+          "4B2",
+          "4C"
+        ],
+        "hasPlanet": true,
+        "id": "4B1",
+        "planet": "s",
+        "q": 1,
+        "r": 5,
+        "s": -6,
+        "sectorId": "4",
+        "sectorKey": "4",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "4A3",
+          "4A4",
+          "4A5",
+          "4B1",
+          "4B3",
+          "4C"
+        ],
+        "hasPlanet": false,
+        "id": "4B2",
+        "planet": "e",
+        "q": 0,
+        "r": 5,
+        "s": -5,
+        "sectorId": "4",
+        "sectorKey": "4",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "4A5",
+          "4A6",
+          "4A7",
+          "4B2",
+          "4B4",
+          "4C"
+        ],
+        "hasPlanet": true,
+        "id": "4B3",
+        "planet": "v",
+        "q": 0,
+        "r": 4,
+        "s": -4,
+        "sectorId": "4",
+        "sectorKey": "4",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "4A7",
+          "4A8",
+          "4A9",
+          "4B3",
+          "4B5",
+          "4C"
+        ],
+        "hasPlanet": false,
+        "id": "4B4",
+        "planet": "e",
+        "q": 1,
+        "r": 3,
+        "s": -4,
+        "sectorId": "4",
+        "sectorKey": "4",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "4A10",
+          "4A11",
+          "4A9",
+          "4B0",
+          "4B4",
+          "4C"
+        ],
+        "hasPlanet": true,
+        "id": "4B5",
+        "planet": "o",
+        "q": 2,
+        "r": 3,
+        "s": -5,
+        "sectorId": "4",
+        "sectorKey": "4",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "4B0",
+          "4B1",
+          "4B2",
+          "4B3",
+          "4B4",
+          "4B5"
+        ],
+        "hasPlanet": false,
+        "id": "4C",
+        "planet": "e",
+        "q": 1,
+        "r": 4,
+        "s": -5,
+        "sectorId": "4",
+        "sectorKey": "4",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "5A1",
+          "5A11",
+          "5B0",
+          "6A5",
+          "6A6",
+          "IS0"
+        ],
+        "hasPlanet": false,
+        "id": "5A0",
+        "planet": "e",
+        "q": 2,
+        "r": 0,
+        "s": -2,
+        "sectorId": "5B",
+        "sectorKey": "5B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "4A8",
+          "5A0",
+          "5A2",
+          "5B0",
+          "5B1",
+          "IS0"
+        ],
+        "hasPlanet": true,
+        "id": "5A1",
+        "planet": "v",
+        "q": 1,
+        "r": 1,
+        "s": -2,
+        "sectorId": "5B",
+        "sectorKey": "5B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "1A3",
+          "1A4",
+          "5A11",
+          "5A9",
+          "5B5",
+          "IS5"
+        ],
+        "hasPlanet": false,
+        "id": "5A10",
+        "planet": "e",
+        "q": 2,
+        "r": -2,
+        "s": 0,
+        "sectorId": "5B",
+        "sectorKey": "5B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "5A0",
+          "5A10",
+          "5B0",
+          "5B5",
+          "6A6",
+          "IS5"
+        ],
+        "hasPlanet": false,
+        "id": "5A11",
+        "planet": "e",
+        "q": 2,
+        "r": -1,
+        "s": -1,
+        "sectorId": "5B",
+        "sectorKey": "5B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "4A7",
+          "4A8",
+          "5A1",
+          "5A3",
+          "5B1",
+          "IS1"
+        ],
+        "hasPlanet": false,
+        "id": "5A2",
+        "planet": "e",
+        "q": 0,
+        "r": 2,
+        "s": -2,
+        "sectorId": "5B",
+        "sectorKey": "5B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "5A2",
+          "5A4",
+          "5B1",
+          "5B2",
+          "7A10",
+          "IS1"
+        ],
+        "hasPlanet": false,
+        "id": "5A3",
+        "planet": "e",
+        "q": -1,
+        "r": 2,
+        "s": -1,
+        "sectorId": "5B",
+        "sectorKey": "5B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "5A3",
+          "5A5",
+          "5B2",
+          "7A10",
+          "7A9",
+          "IS2"
+        ],
+        "hasPlanet": false,
+        "id": "5A4",
+        "planet": "e",
+        "q": -2,
+        "r": 2,
+        "s": 0,
+        "sectorId": "5B",
+        "sectorKey": "5B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "3A0",
+          "5A4",
+          "5A6",
+          "5B2",
+          "5B3",
+          "IS2"
+        ],
+        "hasPlanet": false,
+        "id": "5A5",
+        "planet": "e",
+        "q": -2,
+        "r": 1,
+        "s": 1,
+        "sectorId": "5B",
+        "sectorKey": "5B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "3A0",
+          "3A11",
+          "5A5",
+          "5A7",
+          "5B3",
+          "IS3"
+        ],
+        "hasPlanet": true,
+        "id": "5A6",
+        "planet": "i",
+        "q": -2,
+        "r": 0,
+        "s": 2,
+        "sectorId": "5B",
+        "sectorKey": "5B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "2A2",
+          "5A6",
+          "5A8",
+          "5B3",
+          "5B4",
+          "IS3"
+        ],
+        "hasPlanet": false,
+        "id": "5A7",
+        "planet": "e",
+        "q": -1,
+        "r": -1,
+        "s": 2,
+        "sectorId": "5B",
+        "sectorKey": "5B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "2A1",
+          "2A2",
+          "5A7",
+          "5A9",
+          "5B4",
+          "IS4"
+        ],
+        "hasPlanet": true,
+        "id": "5A8",
+        "planet": "m",
+        "q": 0,
+        "r": -2,
+        "s": 2,
+        "sectorId": "5B",
+        "sectorKey": "5B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "1A4",
+          "5A10",
+          "5A8",
+          "5B4",
+          "5B5",
+          "IS4"
+        ],
+        "hasPlanet": true,
+        "id": "5A9",
+        "planet": "o",
+        "q": 1,
+        "r": -2,
+        "s": 1,
+        "sectorId": "5B",
+        "sectorKey": "5B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "5A0",
+          "5A1",
+          "5A11",
+          "5B1",
+          "5B5",
+          "5C"
+        ],
+        "hasPlanet": false,
+        "id": "5B0",
+        "planet": "e",
+        "q": 1,
+        "r": 0,
+        "s": -1,
+        "sectorId": "5B",
+        "sectorKey": "5B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "5A1",
+          "5A2",
+          "5A3",
+          "5B0",
+          "5B2",
+          "5C"
+        ],
+        "hasPlanet": false,
+        "id": "5B1",
+        "planet": "e",
+        "q": 0,
+        "r": 1,
+        "s": -1,
+        "sectorId": "5B",
+        "sectorKey": "5B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "5A3",
+          "5A4",
+          "5A5",
+          "5B1",
+          "5B3",
+          "5C"
+        ],
+        "hasPlanet": true,
+        "id": "5B2",
+        "planet": "g",
+        "q": -1,
+        "r": 1,
+        "s": 0,
+        "sectorId": "5B",
+        "sectorKey": "5B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "5A5",
+          "5A6",
+          "5A7",
+          "5B2",
+          "5B4",
+          "5C"
+        ],
+        "hasPlanet": false,
+        "id": "5B3",
+        "planet": "e",
+        "q": -1,
+        "r": 0,
+        "s": 1,
+        "sectorId": "5B",
+        "sectorKey": "5B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "5A7",
+          "5A8",
+          "5A9",
+          "5B3",
+          "5B5",
+          "5C"
+        ],
+        "hasPlanet": false,
+        "id": "5B4",
+        "planet": "e",
+        "q": 0,
+        "r": -1,
+        "s": 1,
+        "sectorId": "5B",
+        "sectorKey": "5B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "5A10",
+          "5A11",
+          "5A9",
+          "5B0",
+          "5B4",
+          "5C"
+        ],
+        "hasPlanet": false,
+        "id": "5B5",
+        "planet": "e",
+        "q": 1,
+        "r": -1,
+        "s": 0,
+        "sectorId": "5B",
+        "sectorKey": "5B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "5B0",
+          "5B1",
+          "5B2",
+          "5B3",
+          "5B4",
+          "5B5"
+        ],
+        "hasPlanet": false,
+        "id": "5C",
+        "planet": "e",
+        "q": 0,
+        "r": 0,
+        "s": 0,
+        "sectorId": "5B",
+        "sectorKey": "5B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "6A1",
+          "6A11",
+          "6B0"
+        ],
+        "hasPlanet": false,
+        "id": "6A0",
+        "planet": "e",
+        "q": 7,
+        "r": -1,
+        "s": -6,
+        "sectorId": "6B",
+        "sectorKey": "6B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "6A0",
+          "6A2",
+          "6B0",
+          "6B1"
+        ],
+        "hasPlanet": true,
+        "id": "6A1",
+        "planet": "m",
+        "q": 6,
+        "r": 0,
+        "s": -6,
+        "sectorId": "6B",
+        "sectorKey": "6B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "6A11",
+          "6A9",
+          "6B5",
+          "DS13_1"
+        ],
+        "hasPlanet": false,
+        "id": "6A10",
+        "planet": "e",
+        "q": 7,
+        "r": -3,
+        "s": -4,
+        "sectorId": "6B",
+        "sectorKey": "6B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "6A0",
+          "6A10",
+          "6B0",
+          "6B5"
+        ],
+        "hasPlanet": false,
+        "id": "6A11",
+        "planet": "e",
+        "q": 7,
+        "r": -2,
+        "s": -5,
+        "sectorId": "6B",
+        "sectorKey": "6B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "6A1",
+          "6A3",
+          "6B1",
+          "DS16_0",
+          "DS16_1"
+        ],
+        "hasPlanet": false,
+        "id": "6A2",
+        "planet": "e",
+        "q": 5,
+        "r": 1,
+        "s": -6,
+        "sectorId": "6B",
+        "sectorKey": "6B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "4A10",
+          "6A2",
+          "6A4",
+          "6B1",
+          "6B2",
+          "DS16_0"
+        ],
+        "hasPlanet": false,
+        "id": "6A3",
+        "planet": "e",
+        "q": 4,
+        "r": 1,
+        "s": -5,
+        "sectorId": "6B",
+        "sectorKey": "6B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "4A10",
+          "4A9",
+          "6A3",
+          "6A5",
+          "6B2",
+          "IS0"
+        ],
+        "hasPlanet": true,
+        "id": "6A4",
+        "planet": "d",
+        "q": 3,
+        "r": 1,
+        "s": -4,
+        "sectorId": "6B",
+        "sectorKey": "6B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "5A0",
+          "6A4",
+          "6A6",
+          "6B2",
+          "6B3",
+          "IS0"
+        ],
+        "hasPlanet": true,
+        "id": "6A5",
+        "planet": "m",
+        "q": 3,
+        "r": 0,
+        "s": -3,
+        "sectorId": "6B",
+        "sectorKey": "6B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "5A0",
+          "5A11",
+          "6A5",
+          "6A7",
+          "6B3",
+          "IS5"
+        ],
+        "hasPlanet": false,
+        "id": "6A6",
+        "planet": "e",
+        "q": 3,
+        "r": -1,
+        "s": -2,
+        "sectorId": "6B",
+        "sectorKey": "6B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "1A2",
+          "6A6",
+          "6A8",
+          "6B3",
+          "6B4",
+          "IS5"
+        ],
+        "hasPlanet": false,
+        "id": "6A7",
+        "planet": "e",
+        "q": 4,
+        "r": -2,
+        "s": -2,
+        "sectorId": "6B",
+        "sectorKey": "6B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "1A1",
+          "1A2",
+          "6A7",
+          "6A9",
+          "6B4",
+          "DS13_0"
+        ],
+        "hasPlanet": false,
+        "id": "6A8",
+        "planet": "e",
+        "q": 5,
+        "r": -3,
+        "s": -2,
+        "sectorId": "6B",
+        "sectorKey": "6B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "6A10",
+          "6A8",
+          "6B4",
+          "6B5",
+          "DS13_0",
+          "DS13_1"
+        ],
+        "hasPlanet": false,
+        "id": "6A9",
+        "planet": "e",
+        "q": 6,
+        "r": -3,
+        "s": -3,
+        "sectorId": "6B",
+        "sectorKey": "6B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "6A0",
+          "6A1",
+          "6A11",
+          "6B1",
+          "6B5",
+          "6C"
+        ],
+        "hasPlanet": false,
+        "id": "6B0",
+        "planet": "e",
+        "q": 6,
+        "r": -1,
+        "s": -5,
+        "sectorId": "6B",
+        "sectorKey": "6B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "6A1",
+          "6A2",
+          "6A3",
+          "6B0",
+          "6B2",
+          "6C"
+        ],
+        "hasPlanet": true,
+        "id": "6B1",
+        "planet": "r",
+        "q": 5,
+        "r": 0,
+        "s": -5,
+        "sectorId": "6B",
+        "sectorKey": "6B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "6A3",
+          "6A4",
+          "6A5",
+          "6B1",
+          "6B3",
+          "6C"
+        ],
+        "hasPlanet": false,
+        "id": "6B2",
+        "planet": "e",
+        "q": 4,
+        "r": 0,
+        "s": -4,
+        "sectorId": "6B",
+        "sectorKey": "6B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "6A5",
+          "6A6",
+          "6A7",
+          "6B2",
+          "6B4",
+          "6C"
+        ],
+        "hasPlanet": true,
+        "id": "6B3",
+        "planet": "g",
+        "q": 4,
+        "r": -1,
+        "s": -3,
+        "sectorId": "6B",
+        "sectorKey": "6B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "6A7",
+          "6A8",
+          "6A9",
+          "6B3",
+          "6B5",
+          "6C"
+        ],
+        "hasPlanet": false,
+        "id": "6B4",
+        "planet": "e",
+        "q": 5,
+        "r": -2,
+        "s": -3,
+        "sectorId": "6B",
+        "sectorKey": "6B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "6A10",
+          "6A11",
+          "6A9",
+          "6B0",
+          "6B4",
+          "6C"
+        ],
+        "hasPlanet": false,
+        "id": "6B5",
+        "planet": "e",
+        "q": 6,
+        "r": -2,
+        "s": -4,
+        "sectorId": "6B",
+        "sectorKey": "6B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "6B0",
+          "6B1",
+          "6B2",
+          "6B3",
+          "6B4",
+          "6B5"
+        ],
+        "hasPlanet": false,
+        "id": "6C",
+        "planet": "e",
+        "q": 5,
+        "r": -1,
+        "s": -4,
+        "sectorId": "6B",
+        "sectorKey": "6B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "4A5",
+          "4A6",
+          "7A1",
+          "7A11",
+          "7B0",
+          "DS14_0"
+        ],
+        "hasPlanet": true,
+        "id": "7A0",
+        "planet": "m",
+        "q": -2,
+        "r": 5,
+        "s": -3,
+        "sectorId": "7B",
+        "sectorKey": "7B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "7A0",
+          "7A2",
+          "7B0",
+          "7B1",
+          "DS14_0",
+          "DS14_2"
+        ],
+        "hasPlanet": false,
+        "id": "7A1",
+        "planet": "e",
+        "q": -3,
+        "r": 6,
+        "s": -3,
+        "sectorId": "7B",
+        "sectorKey": "7B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "5A3",
+          "5A4",
+          "7A11",
+          "7A9",
+          "7B5",
+          "IS1"
+        ],
+        "hasPlanet": false,
+        "id": "7A10",
+        "planet": "e",
+        "q": -2,
+        "r": 3,
+        "s": -1,
+        "sectorId": "7B",
+        "sectorKey": "7B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "4A6",
+          "7A0",
+          "7A10",
+          "7B0",
+          "7B5",
+          "IS1"
+        ],
+        "hasPlanet": false,
+        "id": "7A11",
+        "planet": "e",
+        "q": -2,
+        "r": 4,
+        "s": -2,
+        "sectorId": "7B",
+        "sectorKey": "7B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "7A1",
+          "7A3",
+          "7B1",
+          "DS14_2"
+        ],
+        "hasPlanet": false,
+        "id": "7A2",
+        "planet": "e",
+        "q": -4,
+        "r": 7,
+        "s": -3,
+        "sectorId": "7B",
+        "sectorKey": "7B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "7A2",
+          "7A4",
+          "7B1",
+          "7B2"
+        ],
+        "hasPlanet": false,
+        "id": "7A3",
+        "planet": "e",
+        "q": -5,
+        "r": 7,
+        "s": -2,
+        "sectorId": "7B",
+        "sectorKey": "7B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "7A3",
+          "7A5",
+          "7B2"
+        ],
+        "hasPlanet": false,
+        "id": "7A4",
+        "planet": "e",
+        "q": -6,
+        "r": 7,
+        "s": -1,
+        "sectorId": "7B",
+        "sectorKey": "7B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "7A4",
+          "7A6",
+          "7B2",
+          "7B3"
+        ],
+        "hasPlanet": false,
+        "id": "7A5",
+        "planet": "e",
+        "q": -6,
+        "r": 6,
+        "s": 0,
+        "sectorId": "7B",
+        "sectorKey": "7B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "7A5",
+          "7A7",
+          "7B3",
+          "DS12_0",
+          "DS12_1"
+        ],
+        "hasPlanet": false,
+        "id": "7A6",
+        "planet": "e",
+        "q": -6,
+        "r": 5,
+        "s": 1,
+        "sectorId": "7B",
+        "sectorKey": "7B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "3A2",
+          "7A6",
+          "7A8",
+          "7B3",
+          "7B4",
+          "DS12_0"
+        ],
+        "hasPlanet": false,
+        "id": "7A7",
+        "planet": "e",
+        "q": -5,
+        "r": 4,
+        "s": 1,
+        "sectorId": "7B",
+        "sectorKey": "7B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "3A1",
+          "3A2",
+          "7A7",
+          "7A9",
+          "7B4",
+          "IS2"
+        ],
+        "hasPlanet": true,
+        "id": "7A8",
+        "planet": "t",
+        "q": -4,
+        "r": 3,
+        "s": 1,
+        "sectorId": "7B",
+        "sectorKey": "7B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "5A4",
+          "7A10",
+          "7A8",
+          "7B4",
+          "7B5",
+          "IS2"
+        ],
+        "hasPlanet": false,
+        "id": "7A9",
+        "planet": "e",
+        "q": -3,
+        "r": 3,
+        "s": 0,
+        "sectorId": "7B",
+        "sectorKey": "7B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "7A0",
+          "7A1",
+          "7A11",
+          "7B1",
+          "7B5",
+          "7C"
+        ],
+        "hasPlanet": false,
+        "id": "7B0",
+        "planet": "e",
+        "q": -3,
+        "r": 5,
+        "s": -2,
+        "sectorId": "7B",
+        "sectorKey": "7B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "7A1",
+          "7A2",
+          "7A3",
+          "7B0",
+          "7B2",
+          "7C"
+        ],
+        "hasPlanet": true,
+        "id": "7B1",
+        "planet": "g",
+        "q": -4,
+        "r": 6,
+        "s": -2,
+        "sectorId": "7B",
+        "sectorKey": "7B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "7A3",
+          "7A4",
+          "7A5",
+          "7B1",
+          "7B3",
+          "7C"
+        ],
+        "hasPlanet": false,
+        "id": "7B2",
+        "planet": "e",
+        "q": -5,
+        "r": 6,
+        "s": -1,
+        "sectorId": "7B",
+        "sectorKey": "7B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "7A5",
+          "7A6",
+          "7A7",
+          "7B2",
+          "7B4",
+          "7C"
+        ],
+        "hasPlanet": true,
+        "id": "7B3",
+        "planet": "s",
+        "q": -5,
+        "r": 5,
+        "s": 0,
+        "sectorId": "7B",
+        "sectorKey": "7B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "7A7",
+          "7A8",
+          "7A9",
+          "7B3",
+          "7B5",
+          "7C"
+        ],
+        "hasPlanet": false,
+        "id": "7B4",
+        "planet": "e",
+        "q": -4,
+        "r": 4,
+        "s": 0,
+        "sectorId": "7B",
+        "sectorKey": "7B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "7A10",
+          "7A11",
+          "7A9",
+          "7B0",
+          "7B4",
+          "7C"
+        ],
+        "hasPlanet": true,
+        "id": "7B5",
+        "planet": "g",
+        "q": -3,
+        "r": 4,
+        "s": -1,
+        "sectorId": "7B",
+        "sectorKey": "7B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "7B0",
+          "7B1",
+          "7B2",
+          "7B3",
+          "7B4",
+          "7B5"
+        ],
+        "hasPlanet": false,
+        "id": "7C",
+        "planet": "e",
+        "q": -4,
+        "r": 5,
+        "s": -1,
+        "sectorId": "7B",
+        "sectorKey": "7B",
+        "sectorType": "space",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "1A6",
+          "1A7",
+          "2A10",
+          "2A11",
+          "DS11_1",
+          "DS11_2"
+        ],
+        "hasPlanet": true,
+        "id": "DS11_0",
+        "planet": "p",
+        "q": 2,
+        "r": -6,
+        "s": 4,
+        "sectorId": "DS11_0",
+        "sectorKey": "DS11",
+        "sectorType": "deepSpace",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "2A10",
+          "DS11_0",
+          "DS11_2"
+        ],
+        "hasPlanet": true,
+        "id": "DS11_1",
+        "planet": "a",
+        "q": 2,
+        "r": -7,
+        "s": 5,
+        "sectorId": "DS11_1",
+        "sectorKey": "DS11",
+        "sectorType": "deepSpace",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "1A7",
+          "1A8",
+          "DS11_0",
+          "DS11_1"
+        ],
+        "hasPlanet": false,
+        "id": "DS11_2",
+        "planet": "e",
+        "q": 3,
+        "r": -7,
+        "s": 4,
+        "sectorId": "DS11_2",
+        "sectorKey": "DS11",
+        "sectorType": "deepSpace",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "3A2",
+          "3A3",
+          "7A6",
+          "7A7",
+          "DS12_1",
+          "DS12_2"
+        ],
+        "hasPlanet": true,
+        "id": "DS12_0",
+        "planet": "a",
+        "q": -6,
+        "r": 4,
+        "s": 2,
+        "sectorId": "DS12_0",
+        "sectorKey": "DS12",
+        "sectorType": "deepSpace",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "7A6",
+          "DS12_0",
+          "DS12_2"
+        ],
+        "hasPlanet": false,
+        "id": "DS12_1",
+        "planet": "e",
+        "q": -7,
+        "r": 5,
+        "s": 2,
+        "sectorId": "DS12_1",
+        "sectorKey": "DS12",
+        "sectorType": "deepSpace",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "3A3",
+          "3A4",
+          "DS12_0",
+          "DS12_1"
+        ],
+        "hasPlanet": false,
+        "id": "DS12_2",
+        "planet": "e",
+        "q": -7,
+        "r": 4,
+        "s": 3,
+        "sectorId": "DS12_2",
+        "sectorKey": "DS12",
+        "sectorType": "deepSpace",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "1A0",
+          "1A1",
+          "6A8",
+          "6A9",
+          "DS13_1",
+          "DS13_2"
+        ],
+        "hasPlanet": false,
+        "id": "DS13_0",
+        "planet": "e",
+        "q": 6,
+        "r": -4,
+        "s": -2,
+        "sectorId": "DS13_0",
+        "sectorKey": "DS13",
+        "sectorType": "deepSpace",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "6A10",
+          "6A9",
+          "DS13_0",
+          "DS13_2"
+        ],
+        "hasPlanet": false,
+        "id": "DS13_1",
+        "planet": "e",
+        "q": 7,
+        "r": -4,
+        "s": -3,
+        "sectorId": "DS13_1",
+        "sectorKey": "DS13",
+        "sectorType": "deepSpace",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "1A0",
+          "DS13_0",
+          "DS13_1"
+        ],
+        "hasPlanet": true,
+        "id": "DS13_2",
+        "planet": "a",
+        "q": 7,
+        "r": -5,
+        "s": -2,
+        "sectorId": "DS13_2",
+        "sectorKey": "DS13",
+        "sectorType": "deepSpace",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "4A4",
+          "4A5",
+          "7A0",
+          "7A1",
+          "DS14_1",
+          "DS14_2"
+        ],
+        "hasPlanet": false,
+        "id": "DS14_0",
+        "planet": "e",
+        "q": -2,
+        "r": 6,
+        "s": -4,
+        "sectorId": "DS14_0",
+        "sectorKey": "DS14",
+        "sectorType": "deepSpace",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "4A4",
+          "DS14_0",
+          "DS14_2"
+        ],
+        "hasPlanet": false,
+        "id": "DS14_1",
+        "planet": "e",
+        "q": -2,
+        "r": 7,
+        "s": -5,
+        "sectorId": "DS14_1",
+        "sectorKey": "DS14",
+        "sectorType": "deepSpace",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "7A1",
+          "7A2",
+          "DS14_0",
+          "DS14_1"
+        ],
+        "hasPlanet": true,
+        "id": "DS14_2",
+        "planet": "a",
+        "q": -3,
+        "r": 7,
+        "s": -4,
+        "sectorId": "DS14_2",
+        "sectorKey": "DS14",
+        "sectorType": "deepSpace",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "2A4",
+          "2A5",
+          "3A8",
+          "3A9",
+          "DS15_1",
+          "DS15_2"
+        ],
+        "hasPlanet": true,
+        "id": "DS15_0",
+        "planet": "p",
+        "q": -4,
+        "r": -2,
+        "s": 6,
+        "sectorId": "DS15_0",
+        "sectorKey": "DS15",
+        "sectorType": "deepSpace",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "3A8",
+          "DS15_0",
+          "DS15_2"
+        ],
+        "hasPlanet": false,
+        "id": "DS15_1",
+        "planet": "e",
+        "q": -5,
+        "r": -2,
+        "s": 7,
+        "sectorId": "DS15_1",
+        "sectorKey": "DS15",
+        "sectorType": "deepSpace",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "2A5",
+          "2A6",
+          "DS15_0",
+          "DS15_1"
+        ],
+        "hasPlanet": false,
+        "id": "DS15_2",
+        "planet": "e",
+        "q": -4,
+        "r": -3,
+        "s": 7,
+        "sectorId": "DS15_2",
+        "sectorKey": "DS15",
+        "sectorType": "deepSpace",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "4A10",
+          "4A11",
+          "6A2",
+          "6A3",
+          "DS16_1",
+          "DS16_2"
+        ],
+        "hasPlanet": false,
+        "id": "DS16_0",
+        "planet": "e",
+        "q": 4,
+        "r": 2,
+        "s": -6,
+        "sectorId": "DS16_0",
+        "sectorKey": "DS16",
+        "sectorType": "deepSpace",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "6A2",
+          "DS16_0",
+          "DS16_2"
+        ],
+        "hasPlanet": false,
+        "id": "DS16_1",
+        "planet": "e",
+        "q": 5,
+        "r": 2,
+        "s": -7,
+        "sectorId": "DS16_1",
+        "sectorKey": "DS16",
+        "sectorType": "deepSpace",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "4A0",
+          "4A11",
+          "DS16_0",
+          "DS16_1"
+        ],
+        "hasPlanet": true,
+        "id": "DS16_2",
+        "planet": "p",
+        "q": 4,
+        "r": 3,
+        "s": -7,
+        "sectorId": "DS16_2",
+        "sectorKey": "DS16",
+        "sectorType": "deepSpace",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "4A8",
+          "4A9",
+          "5A0",
+          "5A1",
+          "6A4",
+          "6A5"
+        ],
+        "hasPlanet": false,
+        "id": "IS0",
+        "planet": "e",
+        "q": 2,
+        "r": 1,
+        "s": -3,
+        "sectorId": "IS0",
+        "sectorKey": null,
+        "sectorType": "interspace",
+        "spaceship": "tfmars"
+      },
+      {
+        "adjacent": [
+          "4A6",
+          "4A7",
+          "5A2",
+          "5A3",
+          "7A10",
+          "7A11"
+        ],
+        "hasPlanet": true,
+        "id": "IS1",
+        "planet": "p",
+        "q": -1,
+        "r": 3,
+        "s": -2,
+        "sectorId": "IS1",
+        "sectorKey": null,
+        "sectorType": "interspace",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "3A0",
+          "3A1",
+          "5A4",
+          "5A5",
+          "7A8",
+          "7A9"
+        ],
+        "hasPlanet": false,
+        "id": "IS2",
+        "planet": "e",
+        "q": -3,
+        "r": 2,
+        "s": 1,
+        "sectorId": "IS2",
+        "sectorKey": null,
+        "sectorType": "interspace",
+        "spaceship": "eclipse"
+      },
+      {
+        "adjacent": [
+          "2A2",
+          "2A3",
+          "3A10",
+          "3A11",
+          "5A6",
+          "5A7"
+        ],
+        "hasPlanet": true,
+        "id": "IS3",
+        "planet": "a",
+        "q": -2,
+        "r": -1,
+        "s": 3,
+        "sectorId": "IS3",
+        "sectorKey": null,
+        "sectorType": "interspace",
+        "spaceship": null
+      },
+      {
+        "adjacent": [
+          "1A4",
+          "1A5",
+          "2A0",
+          "2A1",
+          "5A8",
+          "5A9"
+        ],
+        "hasPlanet": false,
+        "id": "IS4",
+        "planet": "e",
+        "q": 1,
+        "r": -3,
+        "s": 2,
+        "sectorId": "IS4",
+        "sectorKey": null,
+        "sectorType": "interspace",
+        "spaceship": "twilight"
+      },
+      {
+        "adjacent": [
+          "1A2",
+          "1A3",
+          "5A10",
+          "5A11",
+          "6A6",
+          "6A7"
+        ],
+        "hasPlanet": true,
+        "id": "IS5",
+        "planet": "a",
+        "q": 3,
+        "r": -2,
+        "s": -1,
+        "sectorId": "IS5",
+        "sectorKey": null,
+        "sectorType": "interspace",
+        "spaceship": null
+      }
+    ],
+    "mirror": false,
+    "objectives": {
+      "deepSpace": {
+        "sectorIds": [
+          "DS11",
+          "DS12",
+          "DS13",
+          "DS14",
+          "DS15",
+          "DS16"
+        ],
+        "sectorType": "deepSpace"
+      },
+      "space": {
+        "sectorIds": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5B",
+          "6B",
+          "7B"
+        ],
+        "sectorType": "space"
+      }
+    },
+    "placements": [
+      {
+        "center": {
+          "q": 0,
+          "r": 0,
+          "s": 0
+        },
+        "rotation": 3,
+        "sector": "5B"
+      },
+      {
+        "center": {
+          "q": 5,
+          "r": -1,
+          "s": -4
+        },
+        "rotation": 0,
+        "sector": "6B"
+      },
+      {
+        "center": {
+          "q": 1,
+          "r": 4,
+          "s": -5
+        },
+        "rotation": 5,
+        "sector": "4"
+      },
+      {
+        "center": {
+          "q": -4,
+          "r": 5,
+          "s": -1
+        },
+        "rotation": 1,
+        "sector": "7B"
+      },
+      {
+        "center": {
+          "q": -5,
+          "r": 1,
+          "s": 4
+        },
+        "rotation": 3,
+        "sector": "3"
+      },
+      {
+        "center": {
+          "q": -1,
+          "r": -4,
+          "s": 5
+        },
+        "rotation": 4,
+        "sector": "2"
+      },
+      {
+        "center": {
+          "q": 4,
+          "r": -5,
+          "s": 1
+        },
+        "rotation": 3,
+        "sector": "1"
+      }
+    ]
+  },
+  "schemaVersion": "gaia-ai-challenge-manifest/v1",
+  "setup": {
+    "artifacts": [
+      {
+        "effect": "Immediately gain 3 credits + 3 ore.",
+        "id": "artifact-credit",
+        "rewardSpec": "3c,3o",
+        "slot": 1
+      },
+      {
+        "effect": "Ongoing: gain an extra 2 power every income phase, placed directly in Area III.",
+        "id": "artifact-power",
+        "rewardSpec": "+2ta3",
+        "slot": 2
+      }
+    ],
+    "boosters": [
+      {
+        "effects": [
+          {
+            "condition": "~",
+            "operator": "+",
+            "rewards": [
+              {
+                "count": 2,
+                "type": "pw"
+              }
+            ],
+            "spec": "+2pw"
+          },
+          {
+            "condition": "~",
+            "operator": "=>",
+            "rewards": [
+              {
+                "count": 3,
+                "type": "range"
+              }
+            ],
+            "spec": "=> range+3"
+          }
+        ],
+        "id": "booster5"
+      },
+      {
+        "effects": [
+          {
+            "condition": "~",
+            "operator": "+",
+            "rewards": [
+              {
+                "count": 1,
+                "type": "o"
+              }
+            ],
+            "spec": "+o"
+          },
+          {
+            "condition": "ts",
+            "operator": "|",
+            "rewards": [
+              {
+                "count": 2,
+                "type": "vp"
+              }
+            ],
+            "spec": "ts | 2vp"
+          }
+        ],
+        "id": "booster7"
+      },
+      {
+        "effects": [
+          {
+            "condition": "~",
+            "operator": "+",
+            "rewards": [
+              {
+                "count": 1,
+                "type": "k"
+              }
+            ],
+            "spec": "+k"
+          },
+          {
+            "condition": "lab",
+            "operator": "|",
+            "rewards": [
+              {
+                "count": 3,
+                "type": "vp"
+              }
+            ],
+            "spec": "lab | 3vp"
+          }
+        ],
+        "id": "booster8"
+      },
+      {
+        "effects": [
+          {
+            "condition": "~",
+            "operator": "+",
+            "rewards": [
+              {
+                "count": 4,
+                "type": "pw"
+              }
+            ],
+            "spec": "+4pw"
+          },
+          {
+            "condition": "PA",
+            "operator": "|",
+            "rewards": [
+              {
+                "count": 4,
+                "type": "vp"
+              }
+            ],
+            "spec": "PA | 4vp"
+          }
+        ],
+        "id": "booster9"
+      },
+      {
+        "effects": [
+          {
+            "condition": "~",
+            "operator": "+",
+            "rewards": [
+              {
+                "count": 4,
+                "type": "c"
+              }
+            ],
+            "spec": "+4c"
+          },
+          {
+            "condition": "g",
+            "operator": "|",
+            "rewards": [
+              {
+                "count": 1,
+                "type": "vp"
+              }
+            ],
+            "spec": "g | vp"
+          }
+        ],
+        "id": "booster10"
+      }
+    ],
+    "federations": {
+      "supply": [
+        {
+          "count": 3,
+          "id": "fed1",
+          "rewards": [
+            {
+              "count": 12,
+              "type": "vp"
+            }
+          ]
+        },
+        {
+          "count": 3,
+          "id": "fed2",
+          "rewards": [
+            {
+              "count": 8,
+              "type": "vp"
+            },
+            {
+              "count": 1,
+              "type": "q"
+            }
+          ]
+        },
+        {
+          "count": 3,
+          "id": "fed3",
+          "rewards": [
+            {
+              "count": 8,
+              "type": "vp"
+            },
+            {
+              "count": 2,
+              "type": "t"
+            }
+          ]
+        },
+        {
+          "count": 3,
+          "id": "fed4",
+          "rewards": [
+            {
+              "count": 7,
+              "type": "vp"
+            },
+            {
+              "count": 2,
+              "type": "o"
+            }
+          ]
+        },
+        {
+          "count": 3,
+          "id": "fed5",
+          "rewards": [
+            {
+              "count": 7,
+              "type": "vp"
+            },
+            {
+              "count": 6,
+              "type": "c"
+            }
+          ]
+        },
+        {
+          "count": 2,
+          "id": "fed6",
+          "rewards": [
+            {
+              "count": 6,
+              "type": "vp"
+            },
+            {
+              "count": 2,
+              "type": "k"
+            }
+          ]
+        }
+      ],
+      "terraformingFederation": "fed6"
+    },
+    "finalScoring": {
+      "objectives": {
+        "deepSpace": {
+          "condition": "ds",
+          "id": "deepSpaceSector",
+          "neutralPlayer": 3,
+          "selected": false
+        },
+        "space": {
+          "condition": "s",
+          "id": "sector",
+          "neutralPlayer": 6,
+          "selected": true
+        }
+      },
+      "selected": [
+        {
+          "condition": "s",
+          "id": "sector",
+          "neutralPlayer": 6,
+          "position": 1,
+          "selected": true
+        },
+        {
+          "condition": "g",
+          "id": "gaia",
+          "neutralPlayer": 4,
+          "position": 2,
+          "selected": true
+        }
+      ]
+    },
+    "lostFleet": {
+      "economySide": {
+        "id": "pw",
+        "level3Effects": [
+          {
+            "condition": "~",
+            "operator": "+",
+            "rewards": [
+              {
+                "count": 2,
+                "type": "c"
+              },
+              {
+                "count": 1,
+                "type": "o"
+              },
+              {
+                "count": 3,
+                "type": "pw"
+              }
+            ],
+            "spec": "+2c,1o,3pw"
+          },
+          {
+            "condition": "~",
+            "operator": ">",
+            "rewards": [
+              {
+                "count": 3,
+                "type": "pw"
+              }
+            ],
+            "spec": "3pw"
+          }
+        ],
+        "level4Effects": [
+          {
+            "condition": "~",
+            "operator": "+",
+            "rewards": [
+              {
+                "count": 2,
+                "type": "c"
+              },
+              {
+                "count": 2,
+                "type": "o"
+              },
+              {
+                "count": 2,
+                "type": "pw"
+              }
+            ],
+            "spec": "+2c,2o,2pw"
+          }
+        ]
+      },
+      "scoringExtensionSide": "vp",
+      "terraformingRow": [
+        "v",
+        "t",
+        "i",
+        "o",
+        "d",
+        "s",
+        "r"
+      ]
+    },
+    "roundScoring": [
+      {
+        "effects": [
+          {
+            "condition": "ts",
+            "operator": ">>",
+            "rewards": [
+              {
+                "count": 3,
+                "type": "vp"
+              }
+            ],
+            "spec": "ts >> 3vp"
+          }
+        ],
+        "id": "score8",
+        "round": 1
+      },
+      {
+        "effects": [
+          {
+            "condition": "mg",
+            "operator": ">>",
+            "rewards": [
+              {
+                "count": 3,
+                "type": "vp"
+              }
+            ],
+            "spec": "mg >> 3vp"
+          }
+        ],
+        "id": "score9",
+        "round": 2
+      },
+      {
+        "effects": [
+          {
+            "condition": "step",
+            "operator": ">>",
+            "rewards": [
+              {
+                "count": 2,
+                "type": "vp"
+              }
+            ],
+            "spec": "step >> 2vp"
+          }
+        ],
+        "id": "score1",
+        "round": 3
+      },
+      {
+        "effects": [
+          {
+            "condition": "newsector",
+            "operator": ">>",
+            "rewards": [
+              {
+                "count": 3,
+                "type": "vp"
+              }
+            ],
+            "spec": "newsector >> 3vp"
+          }
+        ],
+        "id": "lfsector3",
+        "round": 4
+      },
+      {
+        "effects": [
+          {
+            "condition": "PA",
+            "operator": ">>",
+            "rewards": [
+              {
+                "count": 5,
+                "type": "vp"
+              }
+            ],
+            "spec": "PA >> 5vp"
+          }
+        ],
+        "id": "score10",
+        "round": 5
+      },
+      {
+        "effects": [
+          {
+            "condition": "mg",
+            "operator": ">>",
+            "rewards": [
+              {
+                "count": 4,
+                "type": "vp"
+              }
+            ],
+            "spec": "mg >> 4vp"
+          }
+        ],
+        "id": "score6",
+        "round": 6
+      }
+    ],
+    "spaceships": [
+      {
+        "actions": [
+          {
+            "cost": "3q",
+            "effect": "Re-score (re-trigger) a Federation token you already own",
+            "type": "qic"
+          },
+          {
+            "cost": "3pw,2o",
+            "effect": "Build a Research Lab",
+            "type": "power"
+          },
+          {
+            "cost": "1k",
+            "effect": "+3 range for Build a Mine, Gaiaforming, or Exploring a spaceship",
+            "type": "knowledge"
+          }
+        ],
+        "coordinate": "IS4",
+        "federation": {
+          "effect": "Once: receive a Build a Mine action with up to 3 free terraforming steps without paying the build cost; Q.I.C.s may still increase range.",
+          "id": "ship-fed-terraform"
+        },
+        "id": "twilight",
+        "shuttleSlots": [
+          {
+            "charge": 0,
+            "slot": 1
+          },
+          {
+            "charge": 2,
+            "slot": 2
+          },
+          {
+            "charge": 2,
+            "slot": 3
+          },
+          {
+            "charge": 3,
+            "slot": 4
+          }
+        ],
+        "technology": null
+      },
+      {
+        "actions": [
+          {
+            "cost": "2q",
+            "effect": "Gain 2 VP plus 1 VP per Tech tile owned",
+            "type": "qic"
+          },
+          {
+            "cost": "2pw",
+            "effect": "Instant Gaiaforming: convert a transdim planet in range into a Gaia planet",
+            "type": "power"
+          },
+          {
+            "cost": "3c",
+            "effect": "Terraform 1 step and build a mine",
+            "type": "credit"
+          }
+        ],
+        "coordinate": "IS0",
+        "federation": {
+          "effect": "Once: receive a Build a Mine action of limitless range without paying the build cost; ore still pays for terraforming, Q.I.C. still required for Gaia planets.",
+          "id": "ship-fed-range"
+        },
+        "id": "tfmars",
+        "shuttleSlots": [
+          {
+            "charge": 0,
+            "slot": 1
+          },
+          {
+            "charge": 2,
+            "slot": 2
+          },
+          {
+            "charge": 2,
+            "slot": 3
+          },
+          {
+            "charge": 3,
+            "slot": 4
+          }
+        ],
+        "technology": {
+          "copies": 2,
+          "effect": "Once: receive a Build a Mine action with up to 2 free terraforming steps and without paying the cost for that mine. You may spend additional ore for a 3rd terraforming step, and Q.I.C.s to increase range.",
+          "id": "ship-tech-terraform"
+        }
+      },
+      {
+        "actions": [
+          {
+            "cost": "2q",
+            "effect": "Gain 2 VP plus 1 VP per planet type colonized",
+            "type": "qic"
+          },
+          {
+            "cost": "3pw,2k",
+            "effect": "Advance 1 level on any Research track",
+            "type": "power"
+          },
+          {
+            "cost": "6c",
+            "effect": "Place a free Mine on an Asteroid in range",
+            "type": "credit"
+          }
+        ],
+        "coordinate": "IS2",
+        "federation": {
+          "effect": "Once: receive 1 Tech tile of choice (same rules as Upgrade Existing Structures).",
+          "id": "ship-fed-tech"
+        },
+        "id": "eclipse",
+        "shuttleSlots": [
+          {
+            "charge": 0,
+            "slot": 1
+          },
+          {
+            "charge": 2,
+            "slot": 2
+          },
+          {
+            "charge": 2,
+            "slot": 3
+          },
+          {
+            "charge": 3,
+            "slot": 4
+          }
+        ],
+        "technology": {
+          "copies": 2,
+          "effect": "Your basic range increases by 1 for the rest of the game, as long as the tile is not covered by an Advanced Tech tile.",
+          "id": "ship-tech-range"
+        }
+      }
+    ],
+    "technology": {
+      "advanced": [
+        {
+          "copies": 1,
+          "effects": [
+            {
+              "condition": "m",
+              "operator": ">",
+              "rewards": [
+                {
+                  "count": 2,
+                  "type": "vp"
+                }
+              ],
+              "spec": "m > 2vp"
+            }
+          ],
+          "id": "advtech4",
+          "position": "adv-terra"
+        },
+        {
+          "copies": 1,
+          "effects": [
+            {
+              "condition": "ast",
+              "operator": "|",
+              "rewards": [
+                {
+                  "count": 2,
+                  "type": "vp"
+                }
+              ],
+              "spec": "ast | 2vp"
+            }
+          ],
+          "id": "advtech-asteroidpass",
+          "position": "adv-nav"
+        },
+        {
+          "copies": 1,
+          "effects": [
+            {
+              "condition": "~",
+              "operator": "=>",
+              "rewards": [
+                {
+                  "count": 3,
+                  "type": "k"
+                }
+              ],
+              "spec": "=> 3k"
+            }
+          ],
+          "id": "advtech13",
+          "position": "adv-int"
+        },
+        {
+          "copies": 1,
+          "effects": [
+            {
+              "condition": "~",
+              "operator": "=>",
+              "rewards": [
+                {
+                  "count": 1,
+                  "type": "q"
+                },
+                {
+                  "count": 5,
+                  "type": "c"
+                }
+              ],
+              "spec": "=> q,5c"
+            }
+          ],
+          "id": "advtech3",
+          "position": "adv-gaia"
+        },
+        {
+          "copies": 1,
+          "effects": [
+            {
+              "condition": "ts",
+              "operator": ">",
+              "rewards": [
+                {
+                  "count": 4,
+                  "type": "vp"
+                }
+              ],
+              "spec": "ts > 4vp"
+            }
+          ],
+          "id": "advtech9",
+          "position": "adv-eco"
+        },
+        {
+          "copies": 1,
+          "effects": [
+            {
+              "condition": "s",
+              "operator": ">",
+              "rewards": [
+                {
+                  "count": 2,
+                  "type": "vp"
+                }
+              ],
+              "spec": "s > 2vp"
+            }
+          ],
+          "id": "advtech10",
+          "position": "adv-sci"
+        },
+        {
+          "copies": 1,
+          "effects": [
+            {
+              "condition": "shipq",
+              "operator": ">>",
+              "rewards": [
+                {
+                  "count": 4,
+                  "type": "vp"
+                }
+              ],
+              "spec": "shipq >> 4vp"
+            }
+          ],
+          "id": "advtech-qaction",
+          "position": "adv-ext"
+        }
+      ],
+      "standard": [
+        {
+          "copies": 2,
+          "effects": [
+            {
+              "condition": "~",
+              "operator": "+",
+              "rewards": [
+                {
+                  "count": 4,
+                  "type": "c"
+                }
+              ],
+              "spec": "+4c"
+            }
+          ],
+          "id": "tech8",
+          "position": "terra"
+        },
+        {
+          "copies": 2,
+          "effects": [
+            {
+              "condition": "~",
+              "operator": ">",
+              "rewards": [
+                {
+                  "count": 1,
+                  "type": "o"
+                },
+                {
+                  "count": 1,
+                  "type": "q"
+                }
+              ],
+              "spec": "o,q"
+            }
+          ],
+          "id": "tech1",
+          "position": "nav"
+        },
+        {
+          "copies": 2,
+          "effects": [
+            {
+              "condition": "~",
+              "operator": "=>",
+              "rewards": [
+                {
+                  "count": 4,
+                  "type": "pw"
+                }
+              ],
+              "spec": "=> 4pw"
+            }
+          ],
+          "id": "tech9",
+          "position": "int"
+        },
+        {
+          "copies": 2,
+          "effects": [
+            {
+              "condition": "~",
+              "operator": "PA->4pw",
+              "rewards": [],
+              "spec": "PA->4pw"
+            }
+          ],
+          "id": "tech3",
+          "position": "gaia"
+        },
+        {
+          "copies": 2,
+          "effects": [
+            {
+              "condition": "~",
+              "operator": "+",
+              "rewards": [
+                {
+                  "count": 1,
+                  "type": "o"
+                },
+                {
+                  "count": 1,
+                  "type": "pw"
+                }
+              ],
+              "spec": "+o,pw"
+            }
+          ],
+          "id": "tech5",
+          "position": "eco"
+        },
+        {
+          "copies": 2,
+          "effects": [
+            {
+              "condition": "~",
+              "operator": ">",
+              "rewards": [
+                {
+                  "count": 7,
+                  "type": "vp"
+                }
+              ],
+              "spec": "7vp"
+            }
+          ],
+          "id": "tech4",
+          "position": "sci"
+        },
+        {
+          "copies": 2,
+          "effects": [
+            {
+              "condition": "pt",
+              "operator": ">",
+              "rewards": [
+                {
+                  "count": 1,
+                  "type": "k"
+                }
+              ],
+              "spec": "pt > k"
+            }
+          ],
+          "id": "tech2",
+          "position": "free1"
+        },
+        {
+          "copies": 2,
+          "effects": [
+            {
+              "condition": "~",
+              "operator": "+",
+              "rewards": [
+                {
+                  "count": 1,
+                  "type": "k"
+                },
+                {
+                  "count": 1,
+                  "type": "c"
+                }
+              ],
+              "spec": "+k,c"
+            }
+          ],
+          "id": "tech6",
+          "position": "free2"
+        },
+        {
+          "copies": 2,
+          "effects": [
+            {
+              "condition": "mg",
+              "operator": ">>",
+              "rewards": [
+                {
+                  "count": 3,
+                  "type": "vp"
+                }
+              ],
+              "spec": "mg >> 3vp"
+            }
+          ],
+          "id": "tech7",
+          "position": "free3"
+        }
+      ]
+    }
+  }
+}
