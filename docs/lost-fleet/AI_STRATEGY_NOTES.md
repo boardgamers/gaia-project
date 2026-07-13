@@ -58,7 +58,10 @@ how much it matters**. So write tips accordingly:
 ## 1. General / whole-game principles
 
 Tempo, economy-vs-VP, engine-building curve, when to pivot from building to scoring, resource
-efficiency, etc.
+efficiency, etc. When noting economy tips, describe **projected position** (income + board presence +
+expansion room + leech/gaia/tech potential), **not** "climb the Economy track" — see plan §7.2 — and
+prefer FEAT/WEIGHT over rules. Round-1-economy emphasis is a strong *motivation*, not a strict rule:
+good board presence or denying a key planet can beat pure income.
 
 | # | Tip / heuristic | When it applies | Conf | Encode as | Notes |
 |---|---|---|---|---|---|

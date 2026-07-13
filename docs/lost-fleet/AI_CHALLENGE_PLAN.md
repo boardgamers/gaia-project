@@ -425,6 +425,34 @@ from move one.
 
 ---
 
+### 7.2 "Economy" is projected position, not the Economy track
+
+Round 1 is almost pure engine-building: early VP is tiny next to the compounding value of a strong
+economy into round 2+. The AI should be strongly motivated to build that economy — two cautions on
+*how* that's encoded:
+
+- **It's emergent from the value target, not a round-1 rule.** Because the value net is trained on the
+  **final score margin** (§6.3), not per-round points, it *learns* that round-1 economic investments
+  pay off by round 6 — so it values them without any "round 1 = economy" rule. Train value on the end
+  result and the motivation appears on its own; a hard round-specific rule would only make it rigid
+  ("shouldn't be that strict"). Reinforce it cheaply, if at all, with a **projected-economy feature**
+  (a prior), never a rule.
+- **Economy is multi-dimensional — do NOT proxy it with "Economy track level."** That naive proxy is
+  exactly the brittle heuristic that makes an AI always climb Econ and ignore stronger paths. Measure
+  the real thing: **projected resource income & production per round + board presence (planets,
+  quality, expansion room) + leech/gaia potential + tech position.** Then "strong board presence" and
+  "denied the opponent a key planet" are valued on the same footing as income — board presence via
+  the positional part of the feature + the value net; denial via margin (§6.8). The AI trades "climb a
+  track" against "grab/deny a planet" by their effect on projected position and final margin, and
+  correctly picks the planet when it's worth more. That *is* the "not always the Econ track" behavior,
+  automatic under a sound value function — the only way to break it is to over-encode a single track.
+
+**Fixed-seed bonus:** round 1 on this board is largely *solved* by the opening book (§6.1) — the best
+economic path into round 2 (weighing income vs board presence vs denial) is precomputed by deep
+search, so the AI plays it optimally from move one instead of approximating it with a heuristic.
+
+---
+
 ## 8. UI & flow wiring (reusing what exists)
 
 Existing seams we build on:
