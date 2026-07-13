@@ -55,26 +55,34 @@ production workflow and cross-month transfer.
 
 ---
 
-## 2. The fixed setup (TO BE FILLED IN BY THE OWNER)
+## 2. The fixed setup (LOCKED)
 
-The challenge is defined by these values. They are inputs to both the challenge definition and the
-seed-locked training target.
+The first challenge's setup, supplied by the owner and validated against the engine:
 
 ```
-Seed:               <string or number>
-Base or Lost Fleet: <base | lostFleet>
-Player count:       <2 | 3 | 4>
-Options:            <standard board/factions, no auction, advancedRules off — or specify>
+Seed:               lf-mrj5exuu-c680   (validated — boots a legal Lost Fleet 2p game)
+Base or Lost Fleet: Lost Fleet
+Player count:       2
+Options:            factionVariant "standard", no auction, advancedRules off
 
-Turn/setup order + faction per seat (ORDER MATTERS — it fixes turn order):
-  Seat 1 (first pick):  <faction>
-  Seat 2:               <faction>
-  Seat 3:               <faction>   (3-4p)
-  Seat 4:               <faction>   (4p)
+Turn/setup order + faction per seat (ORDER = turn order):
+  Seat 1 (first player):  Xenos          ← DEFAULT (owner's listed order); say the word to flip
+  Seat 2:                 Hadsch Hallas
 
-Human's seat:  <which seat the human controls; the rest are AI>
-               OR: "human may pick any of {factions}; AI takes the remaining seats"
+Human's seat:  human may pick EITHER faction; the AI plays the other
+               (one seed-locked self-play net plays both seats — free, see "Free replayability")
 ```
+
+**This board, decoded from the engine** (round-scoring, final-scoring, boosters, ships) — full detail
++ strategic read in `AI_STRATEGY_NOTES.md` §11:
+- Round scoring: **R1** 3 VP/Trading Station · **R2** 3 VP/mine-on-Gaia · **R3** 2 VP/terraform-step ·
+  **R4** 3 VP/first-mine-in-a-new-sector (Lost Fleet) · **R5** 5 VP/PI-or-Academy · **R6** 4 VP/mine-on-Gaia.
+- Final scoring: **most sectors** + **most Gaia planets**.
+- Lost Fleet: 3 ships (2 shuttles), ship techs {tfmars, eclipse}, ship feds {twilight, tfmars, eclipse},
+  2 artifact tokens.
+- **Central tension:** the board is Gaia-heavy (two mine-on-Gaia rounds + the Gaia final) *and*
+  expansion-heavy (new-sector round + Sector final); neither Xenos nor Hadsch Hallas is a native
+  gaiaformer, so gaiaforming investment vs wide expansion is the defining trade-off to solve.
 
 Notes:
 - **Order = turn order.** Gaia's initial turn order derives from setup pick order, so the listed

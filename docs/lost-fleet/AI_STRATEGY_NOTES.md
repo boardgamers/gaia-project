@@ -76,27 +76,44 @@ good board presence or denying a key planet can beat pure income.
 General notes per faction. (For the monthly challenge only the two chosen factions matter, but keep
 general notes here so they're reused across months.) Duplicate the small table per faction.
 
-### Faction: _______________
-- **Core engine / plan:**
-- **Strong on which round-scoring tiles:**
-- **Strong on which final-scoring conditions:**
-- **Key timings / thresholds:**
-- **Common traps:**
+> **Note on abilities.** These faction abilities are **already implemented in the engine** (base-game
+> factions + the Lost Fleet free actions). So the AI automatically *has* them via legal-move
+> enumeration and *learns* to use them through self-play — nothing here is a rule to hard-code. What
+> these notes capture is the strategic **usage/weighting** (soft), and they flag the ability-related
+> state the net's features must *see* (§7.4 completeness) so it can time them.
+
+### Faction: Xenos  (engine-accurate)
+- **Core engine / plan:** wide expansion; extra starting mine; forms federations cheaply (PI counts as
+  power 4); QIC-rich.
+- **Abilities:** start income `3k,4o,15c,q,up-int` (free Intelligence/AI step at start), mine income
+  `+o,k`; **PI income `+4pw,+q`** and PI counts as power 4 for federations; **Lost Fleet free action
+  `OreToPowerTokenArea3`: 1 ore → 1 power token straight into bowl 3.**
+- **Strong on:** this board's R1 (TS), R4 (new sector), Sector final — wide-expansion fits Xenos.
+- **Key timings:** PI early (the +4pw+q and cheap feds); grab sectors before HH.
+- **Common traps:** NOT a native gaiaformer — this board's two mine-on-Gaia rounds + Gaia final demand
+  deliberate gaiaforming; don't neglect it.
 
 | # | Tip | When | Conf | Encode as | Notes |
 |---|---|---|---|---|---|
-| | | | | | |
+| 1 | Use ore→bowl3 to fund a power action instead of burning | ore spare + a bowl-3 power action is wanted | M | FEAT | LF Xenos free action; cheaper than burn (§7.5) |
+| 2 | Lean into sector spread (Sector final + R4 new-sector) | this board | M | FEAT+WEIGHT | Xenos strength; race it (§7.1) |
 
-### Faction: _______________
-- **Core engine / plan:**
-- **Strong on which round-scoring tiles:**
-- **Strong on which final-scoring conditions:**
-- **Key timings / thresholds:**
-- **Common traps:**
+### Faction: Hadsch Hallas  (engine-accurate)
+- **Core engine / plan:** economic powerhouse; credits fund everything (terraform, range, buildings);
+  highly flexible.
+- **Abilities:** start income `3k,4o,15c,q,up-eco` (free Economy step), mine income `+o,k,3c` — the
+  **extra +3 credits**; **PI free actions (once PI built): `4c→1q`, `3c→1o`, `4c→1k`** (convert gold
+  into QIC / ore / knowledge).
+- **Usage — soft, not a rule:** the credit→QIC conversion is *often* used late to top up QIC (range/
+  tech/actions), but that's a tendency; early credit→ore/knowledge can be right when it unblocks a
+  build or tech now. Encode as FEAT (credit surplus + what the conversion unblocks), never a hard
+  "only late / only QIC" rule.
+- **Common traps:** hoarding credits without converting; building PI too late to use the conversions.
 
 | # | Tip | When | Conf | Encode as | Notes |
 |---|---|---|---|---|---|
-| | | | | | |
+| 1 | Convert credits→QIC late for range/tech/actions | late, credit surplus, QIC needed | M | FEAT (credit-surplus→conversion) | soft tendency — NOT "only late/only QIC" |
+| 2 | Convert credits→ore/knowledge early to unblock a build/tech | when it enables a higher-value action now | M | FEAT | the explicit "not a hard rule" case |
 
 ---
 
@@ -222,16 +239,34 @@ opportunity, so don't inflate them into "always block."
 Fill a fresh copy of this block **for each month's specific seed/factions/turn order**. These are
 the setup-specific reads that don't generalize.
 
-### Challenge: _______________  (month / seed)
-- **Seed / factions / turn order:**
-- **Key round & final tiles this game, and what they reward:**
-- **The big contested prizes on this board and who's favored:**
-- **Opening plan for each faction (fills / feeds the opening book):**
-- **Known strong lines / traps specific to this setup:**
+### Challenge: `lf-mrj5exuu-c680`  (2p Lost Fleet — Xenos vs Hadsch Hallas)
+- **Seed / factions / turn order:** seed `lf-mrj5exuu-c680`; 2p Lost Fleet; Seat 1 **Xenos** (first
+  player), Seat 2 **Hadsch Hallas** (default order — confirm/flip); human picks either, AI plays the
+  other. Validated: boots a legal game.
+- **Round scoring (decoded from engine):**
+  - **R1** `score8` — 3 VP per **Trading Station** built
+  - **R2** `score9` — 3 VP per **mine built on a Gaia planet**
+  - **R3** `score1` — 2 VP per **terraforming step**
+  - **R4** `lfsector3` — 3 VP the **first time you build a mine in a new Space/Deep-Space sector** (LF)
+  - **R5** `score10` — 5 VP per **Planetary Institute / Academy** built
+  - **R6** `score6` — 4 VP per **mine on a Gaia planet**
+- **Final scoring:** F1 `sector` = **most sectors colonized** · F2 `gaia` = **most Gaia planets**
+- **Boosters in box:** booster5, booster7, booster8, booster9, booster10
+- **Lost Fleet ships:** ship techs {tfmars, eclipse}; ship feds {twilight, tfmars, eclipse}; 2 artifact
+  tokens. Only 2 shuttles for 3 ships — choose carefully (§9, §13e).
+- **The big read:** **Gaia-heavy** (R2 + R6 mine-on-Gaia + F2 Gaia final) *and* **expansion-heavy**
+  (R4 new-sector + F1 Sector final), with R3 rewarding terraforming and R5 rewarding big buildings.
+  Neither Xenos nor HH is a native gaiaformer, so **gaiaforming investment vs wide expansion is the
+  central trade-off to solve.** Xenos naturally hits sector spread (F1/R4) + TS (R1) + cheap feds; HH
+  funds terraform/gaiaform/expansion via credits (and up-eco start).
+- **Opening plan for each faction (fills / feeds the opening book):** _to fill_
+- **Known strong lines / traps specific to this setup:** _to fill_
 
 | # | Seed-specific tip | When | Conf | Encode as | Notes |
 |---|---|---|---|---|---|
-| 1 | | | | | |
+| 1 | Invest in gaiaforming — two mine-on-Gaia rounds (R2,R6) + Gaia final | whole game | M-H | FEAT+WEIGHT | central to this board; neither faction is native |
+| 2 | Race sector spread (F1 + R4 new-sector) | expansion phase | M | FEAT (tempo) | contested (§7.1); Xenos favored |
+| 3 | Value the R5 (PI/Academy = 5 VP) window | round 5 timing | M | FEAT | time a big-building for R5 |
 
 ---
 
