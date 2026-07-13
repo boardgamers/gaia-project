@@ -302,6 +302,36 @@ leech potential, hex blocking/adjacency, seat/turn-order position.
 A **human-readable strategy doc** (for maintainers) is separate from these machine-usable encodings
 and does not feed the model.
 
+### 7.1 Contested races & tempo (e.g. racing for an advanced tech tile)
+
+Scarce singletons — advanced tech tiles (one copy each, gated by research level + a federation
+token), federation tiles, the Lost Planet, the round booster you want, key blocking hexes — are
+**races**: whoever reaches the prerequisites first claims the prize and removes it from everyone
+else's options. The AI must recognize a race, track how far every faction is from the prize, and
+avoid moves that surrender its lead.
+
+**This is handled emergently by net + MCTS — no bespoke race-tracking code required:**
+- MCTS with opponent modeling (max-n) literally simulates the opponents racing for the same tile.
+  "Keep track of everyone else's path toward it" *is* the search tree exploring their best
+  responses — including them rushing the prerequisites and taking the tile in the branches where the
+  AI delays.
+- The value net (with the score-margin target, §6.3) learns that being ahead in a race is winning,
+  because in self-play the games where it secured the tile scored higher. A move that surrenders the
+  tempo lead therefore *evaluates worse*, so the AI avoids it — exactly the "don't fall out of the
+  lead" behavior. It falls out of the objective; it is not hand-coded.
+
+**Caveat + cheap fix:** races span many turns, which stresses search horizon and credit assignment,
+so pure search alone can be shaky. Make it sharp and robust with an explicit **tempo feature**
+(a §7 "what to look at"): for each contested scarce asset, compute *moves-until-I-can-claim-it* vs
+*moves-until-each-opponent-can*, yielding a per-asset **lead/deficit** signal. This hands the net the
+race arithmetic instead of forcing it to rediscover the counting from raw state, so it plays the race
+precisely even at modest search depth. Board-general and reused every month; applies to all contested
+singletons, not just advanced tech.
+
+**Fixed-seed bonus:** because the opening is the same tree every game, the opening book (§6.1)
+*pre-solves* the early race optimally — the AI plays the fastest correct line to a contested prize
+from move one.
+
 ---
 
 ## 8. UI & flow wiring (reusing what exists)
