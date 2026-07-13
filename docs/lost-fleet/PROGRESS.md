@@ -5071,8 +5071,11 @@ quick-test` 152/152; `npm test` 152/154, the 2 failures pre-existing/unrelated, 
    the `engine/src/ai/` module layout, cheap strength boosters (opening book, transposition table,
    score-margin value, etc.), how strategy knowledge folds in as features (not hard rules), monthly
    reuse + cross-month transfer, UI/Supabase wiring, and milestones M0–M8. **Nothing is implemented
-   yet**; the immediate next code step is M0/M1 (strength-measurement harness + Tier-0 heuristic bot),
-   and the owner still needs to supply the concrete seed + two factions + first player (plan §2).
+   yet**; the immediate next code step is M0/M1 (strength-measurement harness + Tier-0 heuristic bot).
+   **First challenge setup LOCKED** (plan §2, 2026-07-13): seed `lf-mrj5exuu-c680`, 2p Lost Fleet,
+   Xenos (seat 1, default) vs Hadsch Hallas, human picks either faction — validated to boot a legal
+   game; the board's round/final scoring + both factions' abilities are decoded into
+   `AI_STRATEGY_NOTES.md` §11/§2. (Turn order defaulted to Xenos-first, pending owner confirm/flip.)
 
 Confirm with the user before starting any of the above.
 

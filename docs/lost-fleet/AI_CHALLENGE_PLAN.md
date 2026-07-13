@@ -1,7 +1,20 @@
 # AI Challenge Plan — a seed-locked "beat the AI" monthly game
 
-> **Status:** design / brainstorming spec. Nothing here is built yet. This document is the
-> hand-off artifact for further review and implementation.
+> **Status — HANDOFF (2026-07-13).** Design spec is **complete** and the first challenge's setup is
+> **LOCKED** (§2: seed `lf-mrj5exuu-c680`, 2p Lost Fleet, Xenos vs Hadsch Hallas, validated to boot).
+> **No code is implemented yet** — this is a design/handoff artifact for a future implementation
+> session and/or external (ChatGPT) review. Next code step: milestone **M0/M1** (§9).
+>
+> **Two companion docs (both on `master`):**
+> - this file — `AI_CHALLENGE_PLAN.md` (architecture, approach, strength boosters, wiring, milestones);
+> - `AI_STRATEGY_NOTES.md` — the human-strategy intake (fill-in), incl. **the decoded board for this
+>   seed** and the Xenos / Hadsch Hallas ability notes (its §11 and §2), plus community-sourced tips (§13).
+>
+> **Document map:** §1 goal · §2 the locked setup · §3 measured feasibility · §4 module layout ·
+> §5 approach + monthly reuse · §6 strength boosters · §7 how strategy folds in + the per-decision
+> playbook (§7.1 contested races, §7.2 economy, §7.3 federations, §7.4 pass/overcharge/completeness,
+> §7.5 burning power, §7.6 opponent-leech ordering) · §8 UI/Supabase wiring · §9 milestones ·
+> §10 open questions · §11 references.
 
 ---
 
@@ -29,6 +42,12 @@ Before you analyze anything:
 
 The goal we are optimizing for: **the strongest possible AI opponent for ONE specific, fixed game
 setup**, so humans have a genuinely hard "beat the AI" monthly challenge.
+
+**Review artifacts:** this file plus its companion `docs/lost-fleet/AI_STRATEGY_NOTES.md` (both on
+`master`). The setup is locked in §2 and validated; **nothing is coded yet**, so review the *design*,
+the *feature list* (§6–§7), the *milestones* (§9), and the *open questions* (§10) — and push back
+hard. The single biggest unknowns that only code resolves: engine simulation speed (§3 clone cost),
+state-representation completeness (§7.4), and the free-action branching (§10).
 
 ---
 
@@ -538,9 +557,14 @@ selectively, and this is another "sometimes, not always" that must stay conditio
 
 - **Justified only when the enabled action beats the burn's loss.** Burning is lossy (~half the
   tokens are discarded), so it pays only when the power action gives something you really need — e.g.
-  **credits/ore at or near zero** — or when it **denies** the opponent a power action they clearly
-  need (a §7.1 race / §6.8 denial: burn to take it *before* they can). Value/search computes the
-  threshold; do **not** hand-code "burn whenever you can" (wasteful) or "never burn."
+  **credits/ore at or near zero** — or as **denial** (a §7.1 race / §6.8: burn to take it *before* the
+  opponent). Value/search computes the threshold; do **not** hand-code "burn whenever you can"
+  (wasteful) or "never burn."
+- **Denial precondition — don't burn to race a ghost.** Burning to grab a power action *before the
+  opponent* only has value if the opponent can actually take it **soon**: either they **already have
+  the bowl-3 power ready**, OR **your own upcoming move will charge them** into range (§7.6). If
+  neither holds, there is no one to deny — do not burn; it's pure waste. This needs the opponent
+  power/build model (§6.8) and visibility of the opponent's bowls (§7.4).
 - **Prefer reaching bowl 3 naturally.** If the opponent is about to build where you can **leech**,
   you'll charge for free — so don't burn. This needs the **opponent-build predictor** (§6.8): a
   feature for **expected natural charge from the opponent's likely next builds** tells the AI whether
