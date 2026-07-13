@@ -180,6 +180,11 @@ factions. Note the strong lines and the contested/tempo bits (cross-reference §
 Since it's 2p, we can model the human and best-respond. List common **mistakes / habits** real
 players make (on this kind of seed) that the AI can punish. Tag these **HUMAN**.
 
+Also list **telegraphed plans** humans commit to and the **cheapest move that thwarts each** (its cost
+to you vs damage to them) — this feeds the opportunistic-denial behavior (plan §6.8). Note: margin
+scoring already decides *whether* a thwart is worth taking; these notes only help the AI *see* the
+opportunity, so don't inflate them into "always block."
+
 | # | Human tendency / mistake | How the AI exploits it | Conf | Notes |
 |---|---|---|---|---|
 | 1 | _(example)_ humans under-leech early to save VP | build to force big leech decisions on them | L | verify against real games |

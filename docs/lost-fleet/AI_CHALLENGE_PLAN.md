@@ -321,6 +321,34 @@ multiplayer:
 Net effect: 2p lets you *drop* multiplayer complexity (max-n, kingmaking, per-player value) **and**
 run deeper, cleaner search with a lower-variance net — stronger AI for less effort.
 
+### 6.8 Opportunistic denial (cheap thwarting) — without spite
+
+Desired behavior: predict what the human is going for, take **cheap** chances to thwart it — even a
+slightly suboptimal move — but never spite-block at real cost to yourself. This falls out of two
+things already in the plan, combined:
+
+- **The margin/zero-sum value (§6.7) sets the threshold automatically.** margin = my score −
+  opponent score, so a move that costs me 2 to deny the opponent 5 is **+3 margin** (search takes
+  it); costing me 5 to deny 3 is **−2 margin** (search rejects it). The exact "cheap thwart yes /
+  costly spite no" line *is* the margin calculation — not a hand-tuned threshold.
+  - **Do NOT add a separate "hurt the opponent" bonus.** Margin already counts opponent losses; an
+    extra denial reward double-counts and produces an over-blocking, spiteful AI. Let margin own the
+    cost/benefit; this *is* the "don't ruin it for yourself" guardrail, and it's automatic as long as
+    denial isn't over-encoded.
+- **The opponent model (§6.7) makes the AI *see* what to deny.** Search only blocks a plan whose
+  payoff it can see; if the human's target is beyond the search horizon, a cheap block is missed. A
+  **human-move predictor** ("the human is heading for X") lets the AI evaluate "cheaply deny X"
+  without searching all the way to X, and a **threat/denial feature** (§7-style: the opponent's
+  likely plan + the cost-to-me vs damage-to-them of the cheapest interfering move) makes it sharp.
+
+**Why this needs the human model specifically:** self-play trains against a *strong, flexible*
+opponent that rarely telegraphs a fat, deniable single-track plan — so a purely self-play AI tends to
+*under*-value denial against humans. Humans commit to predictable plans that *can* be cheaply
+thwarted; the human-game flywheel (§5.4 #4) teaches the AI to notice and punish that. Much of "cheap
+thwarting" is simply winning the §7.1 contested-resource races (block the hex they need, grab the
+per-round action first, take the tile they're racing for); the new part is predicting the *softer,
+non-obvious* targets.
+
 ---
 
 ## 7. Where strategy knowledge lives (and how it "folds in")
