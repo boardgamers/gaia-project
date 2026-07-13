@@ -23,6 +23,21 @@ how much it matters**. So write tips accordingly:
   priors and get ablation-tested (run the AI with the tip on vs off; keep it only if it helps).
 - **Note contested/tempo tips specially** (§8) — those feed the race/contention feature.
 
+### Two special cases: openings and "must-not-do" moves
+
+- **Opening moves ("moves to yearn for").** Because the seed/factions/turn order are fixed, the
+  opening is *solved offline* by the opening book (plan §6.1), not guessed. So write opening tips as
+  **PRIOR** (move-ordering hints): they make the book's search converge faster and cover off-book
+  positions, but **the book overrules them.** General opening folklore is board-agnostic and this
+  specific board may reward something different — you *want* the solver free to find that. Almost
+  never encode an opening as a hard rule.
+- **"Must-not-do" moves.** Ask: *can you construct any position where the move is correct?*
+  - **No, provably never** (e.g. passing up a strictly-free scoring action, wasting a QIC for
+    nothing) → **AVOID** (hard prune). Effect is *speed, not strength* — use sparingly, only when
+    certain.
+  - **Yes, somewhere** ("usually don't over-expand / neglect power") → **FEAT + WEIGHT** (negative),
+    learnable and overridable. Most "must-nots" are really this kind. When in doubt, make it soft.
+
 ### Encoding legend (put one of these in the "Encode as" column)
 
 | Tag | Meaning | Where it lands in code |
