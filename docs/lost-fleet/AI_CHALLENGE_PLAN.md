@@ -86,8 +86,9 @@ Notes:
   of `ChooseFaction` (and any forced setup) move lines**. Deterministic replay (an enforced engine
   invariant) guarantees the same starting position every time.
 
-**Recommended format: 2-player (human vs one AI).** For a *strongest-possible-AI* skill leaderboard,
-2p is the best choice on every axis:
+**Chosen format: 2-player (human vs one AI)** — committed. For a *strongest-possible-AI* skill
+leaderboard, 2p is the best choice on every axis, and it makes the game a clean zero-sum problem we
+exploit hard in §6.7:
 - **Strongest AI per unit of compute** — games are ~half the length (~53 vs ~111 turns, §3),
   self-play is ~2× faster, and 2p search/value is far cleaner than the multiplayer case, which
   brings kingmaking and the hard max-n opponent-cooperation problem. Fewer opponents → a better AI.
@@ -278,9 +279,10 @@ Train the value head to predict **score margin**, not win/loss (KataGo-style). A
 coasts once ahead; a margin-maximizing net keeps pressing for every point — exactly right for a
 **margin-scored** "beat the AI" challenge. Cheap target change, large behavioral difference.
 
-### 6.4 Per-player value vector (proper max-n for 3–4p)
-Predict every seat's outcome, not a single scalar. Correct multiplayer formulation; just a wider
-output head. Fixes kingmaking / threat-misvaluation that 2p-style values get wrong.
+### 6.4 Per-player value vector (multiplayer only — NOT used in the 2p challenge)
+Predict every seat's outcome, not a single scalar — the correct formulation *if* you ever add a 3–4p
+variety challenge. **For the committed 2p format this is superseded by §6.7** (a single margin scalar
++ negamax is cleaner and stronger). Keep this only for a future multiplayer variant.
 
 ### 6.5 Auxiliary training heads
 Also predict ownership / future scoring (KataGo-style). Buys strength and sample-efficiency for
@@ -291,6 +293,33 @@ little cost by forcing a richer representation. Training-only.
 
 **Does NOT apply:** board-symmetry data augmentation (a classic cheap AlphaGo trick) — the board is
 one fixed *asymmetric* layout, so there are no symmetric equivalents to augment with. Skip it.
+
+### 6.7 Two-player is a clean zero-sum game — exploit it (the biggest 2p-only lever)
+
+Committing to 2p + **margin** scoring (§1) makes this a genuine **two-player zero-sum game**:
+my margin = −opponent's margin. That unlocks strength levers unavailable (or much weaker) in
+multiplayer:
+
+- **Single-scalar, low-variance value + negamax.** The value head predicts one number (expected
+  margin) with a clean negamax backup instead of a per-player vector + max-n → lower variance, faster
+  training, stronger net. (Supersedes §6.4.)
+- **Alpha-beta / minimax search.** Zero-sum 2p admits alpha-beta pruning (impossible to apply cleanly
+  under multiplayer max-n). Complement MCTS with it — or use deep exact search near the end — for far
+  greater effective depth at the same budget.
+- **A much deeper opening book (§6.1).** One opponent → a far narrower opening tree, so the fixed-seed
+  book pre-solves *much* more of the game for the same storage/compute.
+- **Exact late-game solving.** Late 2p positions have few branches; the last round or two of a
+  fixed-seed game may be **exactly solvable** by full search → perfect endgame play that directly
+  maximizes the scoring margin (squeezing the final points). Infeasible in 4p.
+- **Clean best-response / human exploitation.** With exactly one opponent to model, the human-game
+  flywheel (§5.4 #4) feeds a single **human-move predictor**, and you can compute a **best response**
+  to it — a policy tuned to punish the mistakes real humans make on this seed, not just Nash-strong.
+  This makes the AI specifically hard for *humans* to beat.
+- **More valuable pondering (§6.2).** Only one opponent's move to anticipate; predict it and
+  pre-search the reply precisely.
+
+Net effect: 2p lets you *drop* multiplayer complexity (max-n, kingmaking, per-player value) **and**
+run deeper, cleaner search with a lower-variance net — stronger AI for less effort.
 
 ---
 
@@ -317,7 +346,10 @@ by round), final-scoring affinity, terrain/color reachability, booster/tech-tile
 leech potential, hex blocking/adjacency, seat/turn-order position.
 
 A **human-readable strategy doc** (for maintainers) is separate from these machine-usable encodings
-and does not feed the model.
+and does not feed the model. That doc lives at **`docs/lost-fleet/AI_STRATEGY_NOTES.md`** — a
+fill-in intake of human play knowledge, organized so each tip maps to a concrete encoding (feature /
+policy prior / eval weight / rollout bias / rare hard-avoid). A developer translates its entries into
+the `ai/` code; the file itself is never read by the model.
 
 ### 7.1 Contested & limited-availability resources (races and tempo)
 
