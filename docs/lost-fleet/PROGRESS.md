@@ -5061,6 +5061,19 @@ quick-test` 152/152; `npm test` 152/154, the 2 failures pre-existing/unrelated, 
      fully offline yet).
    - **Phase 3 (multi-round queue depth)** — genuinely optional.
 
+6. **AI opponent — seed-locked "beat the AI" monthly challenge (DESIGN STAGE, not built)** — a full
+   design spec exists in **`docs/lost-fleet/AI_CHALLENGE_PLAN.md`** and a fill-in strategy intake in
+   **`docs/lost-fleet/AI_STRATEGY_NOTES.md`** (added 2026-07-13). Goal: a 2-player, fixed
+   seed/factions/turn-order challenge where a human picks a faction and tries to out-score (by margin)
+   a strongest-possible AI opponent. Approach: a seed-specialized AlphaZero-style net + live MCTS,
+   trained offline, reusing the existing `engine/src/fuzz/` headless self-play harness; served
+   client-side in a Web Worker with Supabase leaderboard + replay-based verification. The plan covers
+   the `engine/src/ai/` module layout, cheap strength boosters (opening book, transposition table,
+   score-margin value, etc.), how strategy knowledge folds in as features (not hard rules), monthly
+   reuse + cross-month transfer, UI/Supabase wiring, and milestones M0–M8. **Nothing is implemented
+   yet**; the immediate next code step is M0/M1 (strength-measurement harness + Tier-0 heuristic bot),
+   and the owner still needs to supply the concrete seed + two factions + first player (plan §2).
+
 Confirm with the user before starting any of the above.
 
 ## Canonical files (trust order)

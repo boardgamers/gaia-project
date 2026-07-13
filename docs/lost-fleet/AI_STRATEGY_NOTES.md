@@ -243,3 +243,57 @@ vs off over N seeded games; keep it only if it measurably helps (plan §7).
 | # | Tip to test | Hypothesis | Status |
 |---|---|---|---|
 | 1 | | | untested |
+
+---
+
+## 13. Community-sourced general strategy (captured from forums/guides)
+
+Captured from public Gaia Project / Lost Fleet strategy guides and community discussion (see the
+Sources note at the bottom). **Treat these as priors to ablation-test, not truths** — they are
+board-agnostic folklore, and per §0 the fixed board may reward otherwise. **Faction/ship "tier"
+claims are LOW confidence and must NOT be hard-coded** — use as weak priors at most; the whole point
+of the seed-locked value model is to find the truth for *this* setup.
+
+### 13a. Setup evaluation & faction selection
+| # | Tip | Conf | Encode as | Notes |
+|---|---|---|---|---|
+| 1 | Gaia is setup-driven: evaluate board + tech tiles + round & final scoring + boosters **and opponents' picks** *before* choosing a faction; pick the one the setup favors | H | FEAT | validates the whole faction-value approach (plan §5) |
+| 2 | Community "often-strong" factions: Taklons, Itars, Ivits, Lantids; beginner-friendly: Terrans, Xenos, Hadsch Hallas | L | PRIOR (weak) | board-dependent folklore — do NOT hard-code; a weak prior at most |
+
+### 13b. Game arc, tempo, engine
+| # | Tip | Conf | Encode as | Notes |
+|---|---|---|---|---|
+| 1 | Rounds 1–3 build economy + expand to ~3–4 planets; rounds 4–6 form federations + take tech tiles; late game pivot to round-goal/endgame scoring | M | WEIGHT / emergent | matches plan §7.2 |
+| 2 | Secure the Planetary Institute early (R1–2) when it unlocks the faction's power | M | FEAT+WEIGHT | conditional per faction |
+| 3 | "Always Be Charging" — settle near opponents to leech power | M | FEAT (leech potential) | balance against overcharge (§7.4) and against feeding opponents leech (§7.6) |
+
+### 13c. Federations & research tracks
+| # | Tip | Conf | Encode as | Notes |
+|---|---|---|---|---|
+| 1 | Aim for 3+ federations; power-7 efficiency + tight satellite placement is critical | H | FEAT (fed-efficiency) | matches §7.3 |
+| 2 | Commit fully to 2–3 research tracks; don't spread thin across all 5 | H | FEAT+WEIGHT | |
+| 3 | Advance ~2 tracks to L4+ for endgame scaling; endgame research VP can reach 30–40 | M-H | WEIGHT | emergent under final-margin value |
+| 4 | With a resource surplus in R5–6, prioritize research to close gaps; grabbing extra L3 milestones each adds endgame VP | M | FEAT | mild tension with "only 2–3 tracks" — it's about milestone thresholds |
+
+### 13d. Advanced tech, boosters, power
+| # | Tip | Conf | Encode as | Notes |
+|---|---|---|---|---|
+| 1 | Advanced tech tiles are ~15 pts each — prioritize them over chasing every final objective | M-H | FEAT+WEIGHT | validates the §7.1 adv-tech race |
+| 2 | Economic boosters early, VP boosters late | M | FEAT (booster value by round) | |
+| 3 | Pass early to grab the best booster + first player — but only once you've met the round's goals | H | FEAT (pass-tempo) | matches the bounded §7.4 |
+| 4 | L2→L3 power lets you charge 3; manage burn/charge cycles (esp. Itars/Taklons) | mech | — | mechanical context for §7.4/§7.5 |
+
+### 13e. Lost Fleet–specific
+| # | Tip | Conf | Encode as | Notes |
+|---|---|---|---|---|
+| 1 | You can't explore every ship (2 shuttles / 3 ships in 2p; 3 / 4 otherwise) and exploring costs 5 VP (7 for one faction) — choose which ships carefully | H | FEAT (explore cost/benefit) | real VP-now vs actions/fed-token/tech-later tradeoff; contested (§7.1) |
+| 2 | Starting close to the ships you need matters (range-gated like mines) | M | FEAT (ship reachability) | feeds setup/faction eval |
+| 3 | Each ship holds 1 info + 1 power + 1 credit/knowledge action, 1 fleet skill tile, 1 fleet federation token; the explorer may take a fleet action, a fleet tech tile (instead of a normal one), or a fleet fed token when forming a fed | mech | — | mechanical context |
+| 4 | Artifacts are strong and generally underrated; bought with power tokens | M | FEAT+WEIGHT | limited/contested (§7.1) |
+| 5 | Ships add flexibility to the rigid base game (e.g. 3 credits→terraform step; 1 knowledge→+3 range) — best for factions with spare credits/knowledge | M | FEAT | |
+| 6 | Community opinion: Twilight ship strongest, then Rebellion | L | PRIOR (weak) | board-dependent — do NOT hard-code |
+
+> **Sources (captured 2026-07):** victoryconditions.com Gaia Project factions guide; officialgamerules.org
+> Gaia Project strategy; BoardGameGeek & Board Game Arena Lost Fleet threads; namu.wiki Lost Fleet
+> page; Board Game Quest Lost Fleet review. Community folklore — verify by ablation (§12), don't trust
+> blindly.
