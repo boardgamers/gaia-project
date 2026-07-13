@@ -7,7 +7,7 @@
 > anything else, including the **Testing — required going forward** section it points to — both
 > are standing process, not optional. Then ask the user "what next?" and use the **Next actions**
 > section below to guide them.
-> Last updated: **2026-07-12** (tooltip flash/stuck-open fix + shared used-X mark, #101).
+> Last updated: **2026-07-13** (AI Phase 1.3 hardening + Phase 1.4 handoff).
 
 ## Working agreements (read every session, not optional)
 
@@ -4047,25 +4047,25 @@ opacity: 0.7 }` wrapper that also diluted the X itself, while `BoardAction.vue`'
       `pnpm test`: 440 passing/31 failing both before and after (identical failing-test names,
       confirmed via `git stash` on the same run - all pre-existing, none touch these components).
 
-           **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
-           pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
-           desktop mice, which was never the actual bug - only touch devices raced hover against the
-           click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
-           `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
-           `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
-           shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
-           `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
-           directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
-           `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
-           config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
-           on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
-           desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
-           is what actually closed that race originally. Verified live via Playwright with two device
-           profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
-           tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
-           context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
-           a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
-           still 440 passing/31 failing, same pre-existing set.
+                       **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
+                       pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
+                       desktop mice, which was never the actual bug - only touch devices raced hover against the
+                       click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
+                       `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
+                       `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
+                       shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
+                       `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
+                       directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
+                       `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
+                       config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
+                       on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
+                       desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
+                       is what actually closed that race originally. Verified live via Playwright with two device
+                       profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
+                       tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
+                       context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
+                       a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
+                       still 440 passing/31 failing, same pre-existing set.
 
 ## Still MISSING — only one art-only item left
 
@@ -5052,6 +5052,7 @@ quick-test` 152/152; `npm test` 152/154, the 2 failures pre-existing/unrelated, 
 5. **Premove (see "Done so far" #66-#67 and `docs/lost-fleet/PREMOVE_PLAN.md`)** — Phase 0 (spike),
    Phase 1 (MVP: schema, RPCs, client fast-path, UI), and Phase 2 (offline auto-leech) are all DONE
    in code, schema, and tests. Still open:
+
    - **Deploy `resolve-automation`** (owner action — needs the Supabase CLI + an access token this
      session didn't have; the function, including Phase 2's RoundLeech branch, is written and
      unit-tested, just not live) and seed `app_config['resolve_automation']` (same bootstrap step
@@ -5073,18 +5074,31 @@ quick-test` 152/152; `npm test` 152/154, the 2 failures pre-existing/unrelated, 
    the `engine/src/ai/` module layout, cheap strength boosters (opening book, transposition table,
    score-margin value, etc.), how strategy knowledge folds in as features (not hard rules), monthly
    reuse + cross-month transfer, UI/Supabase wiring, and milestones M0–M8. **Offline Phases 0, 1.1,
-   1.2, and 1.3 are implemented locally and awaiting owner review (2026-07-13); nothing has been
-   committed, pushed, deployed, or imported by a production path.** Phase 1.3 adds the exhaustive,
-   weight-free resource-conversion/Pareto planner under `engine/src/ai/resources/`; its focused suite
-   is 14/14, the complete offline AI suite is 40/40, and the required engine suite is 670 passing / 4
-   pending. Phase 1.4 committed-turn macro construction and every later phase remain unstarted and
-   require fresh owner authorization. External review found that action/turn semantics,
+   1.2, and 1.3 are complete on `agent/phase-1-3-resource-planner` (2026-07-13), with no production
+   import path.** Phase 1.3 adds the exhaustive,
+   weight-free resource-conversion/Pareto planner under `engine/src/ai/resources/`; its 2026-07-13
+   hardening pass now completes the untouched locked Round-1 state in a measured 46.11s (the
+   pre-hardening run was still in reachability at 120.04s) with 36,159 reachable states, a
+   9,985-state frontier, 45 candidate frontiers, and maximum depth 30. Cached immutable-state
+   canonical/exact material, deterministic necessary-condition dominance buckets, and a proved
+   scalar-payment translation fast path preserve the full componentwise predicate; there is still
+   no cap, timeout, weight, or heuristic pruning. The locked completion/key/replay regression passes
+   across constructor replay, `Engine.slowMotion`, and hydration with digest
+   `b4e266ef95ca8cc34cfd1cde4380a782ff01f4802a077d49ac9686924e222850`.
+   The focused suite is 15/15, the complete offline AI suite is 41/41, and the required engine suite
+   is 671 passing / 4 pending. The exact counters, proof, baselines, and next-session scope are
+   consolidated in `AI_PHASE_1_4_HANDOFF.md`. Phase 1.4 committed-turn macro construction is now
+   the next owner-selected Claude handoff; every later phase remains unstarted. External review found that action/turn semantics,
    deterministic canonical state, resource-
    conversion planning, federation enumeration, performance assumptions, neural policy encoding,
    training evaluation, and client-side anti-cheat all need correction before ordinary MCTS/net work.
-   The immediate next code step is **owner review of Phase 1.3**, not Phase 1.4. Because real hosted
-   games are currently active and every `master` push deploys production, shared engine semantics,
-   viewer paths, and Supabase remain explicitly frozen until their later gated phases.
+   The owner also locked the later runtime policy: maximum local AI uses the same fixed high
+   simulation workload on every supported device, never silently downgrades for weak hardware, and
+   rejects incapable devices. The target devices are the owner's RTX 3060 desktop and iPhone 16 Pro
+   Max; the later Web Worker UI must show real progress, ETA, and heartbeat/background-suspension
+   status. This is documentation only and is not Phase 1.4 implementation. Because real hosted games
+   are currently active and every `master` push deploys production, shared engine semantics, viewer
+   paths, and Supabase remain explicitly frozen until their later gated phases.
    **First challenge setup LOCKED** (plan §2, 2026-07-13): seed `lf-mrj5exuu-c680`, 2p Lost Fleet,
    Xenos (seat 1, default) vs Hadsch Hallas, human picks either faction — validated to boot a legal
    game; the board's round/final scoring + both factions' abilities are decoded into

@@ -192,6 +192,26 @@ credits, ore, knowledge, Q.I.C., victory points, Area I, Area II, Area III, Gaia
 available Gaiaformers, with at least one strict improvement. Candidate payment frontiers apply the
 same rule under the same candidate key.
 
+Phase 1.3 hardening keeps those semantics but removes the locked-state hot path. Exact-context and
+canonical-state material are cached per immutable projected state; active Pareto rows use
+deterministic exact-context/credit/ore/knowledge/Q.I.C. buckets as necessary-condition filters and
+still pass the complete ten-dimensional predicate before pruning. Scalar candidate payments
+(credit, ore, knowledge, Q.I.C., and victory points only) use the proof that subtracting the same
+vector from a subset of an existing Pareto frontier cannot create a new dominance relationship;
+power, burn, token-movement, brainstone, and Gaiaformer cases retain the full frontier algorithm.
+The worklist also uses an index cursor instead of shifting the queue. None of these mechanisms is a
+depth limit, timeout, weight, beam, or heuristic prune.
+
+The untouched locked Round-1 state now has a deterministic completion regression: 36,159 reachable
+states/plans, a 9,985-state frontier, 45 affordable candidate frontiers, maximum conversion depth
+30, 85,126 exact-state merges, 56,139 Pareto-prune diagnostics, 111 ranged aliases, and no lossy
+cycle prune. Its full state/plan/frontier/candidate/payment-key digest is
+`b4e266ef95ca8cc34cfd1cde4380a782ff01f4802a077d49ac9686924e222850`, checked across constructor
+replay, `Engine.slowMotion`, and hydration. A final local descriptive profile completed in 46.11s
+(27.21s reachability, 1.10s result assembly, 14.24s candidate construction, 3.55s payment
+frontiers); the pre-hardening run was still in reachability after 120.04s. Timings are reported in
+`result.profile` and are never used for termination or pruning.
+
 After a main candidate is replayed internally, Phase 1.3 proceeds only if the engine exposes the
 narrow `AfterMove` set `Spend`/`Burn`/`EndTurn`; forced follow-ups remain Phase 1.4 work. Ordinary
 resource conversions are deferred because an ordinary non-pass action guarantees the same player a
@@ -205,6 +225,16 @@ the conversion instead of applying this canonicalization.
 Phase 1.4 alone will combine conversion plans, a main choice, forced follow-ups, after-action choices,
 and `end` into a committed turn line. Committed-line macros, search, evaluation, training, and neural
 features remain deferred to later owner-approved phases.
+
+The complete next-session contract, preserved hashes/counts, Phase 1.3 before/after profile, proof
+obligations, Phase 1.4 corpus gate, and stop conditions are consolidated in
+`docs/lost-fleet/AI_PHASE_1_4_HANDOFF.md`.
+
+The later player-facing maximum AI has an owner-locked local-runtime policy: one unchanged
+model/book and fixed high simulation workload for every supported device, no time-based early exit,
+and no silent low-device downgrade. Incapable devices are unsupported. That policy, plus truthful
+search progress/ETA/heartbeat requirements, belongs to the later viewer-integration phase and must
+not be implemented as part of Phase 1.4.
 
 ## Future shared-engine correction: maintenance-window checklist
 

@@ -156,6 +156,46 @@ export interface ConversionPlannerDiagnostics {
   unavailableEffects: string[];
 }
 
+/** Deterministic work counters for profiling the exhaustive offline planner. */
+export interface ResourceConversionPlannerCounters {
+  statesGenerated: number;
+  statesAccepted: number;
+  activeFrontierSize: number;
+  maximumActiveFrontierSize: number;
+  transitionsConsidered: number;
+  exactStateMerges: number;
+  paretoPrunes: number;
+  lossyCyclePrunes: number;
+  dominanceComparisons: number;
+  exactContextComputations: number;
+  stateKeyComputations: number;
+  planKeyComputations: number;
+  resourceCycleGraphReconstructions: number;
+  candidateStatesExpanded: number;
+  paymentResultsGenerated: number;
+}
+
+/** Descriptive timings only. They are never consulted to terminate or prune planning. */
+export interface ResourceConversionPlannerTimings {
+  setupMs: number;
+  reachabilityMs: number;
+  resultAssemblyMs: number;
+  candidateConstructionMs: number;
+  paymentFrontiersMs: number;
+  totalMs: number;
+}
+
+export interface ResourceConversionPlannerProfile {
+  counters: ResourceConversionPlannerCounters;
+  timings: ResourceConversionPlannerTimings;
+}
+
+export interface ResourceConversionPlannerProgress {
+  counters: ResourceConversionPlannerCounters;
+  largestConversionDepth: number;
+  elapsedMs: number;
+}
+
 export interface ResourceConversionPlanningResult {
   sourceStateKey: CanonicalConversionStateKey;
   timing: ConversionTimingContext;
@@ -165,6 +205,7 @@ export interface ResourceConversionPlanningResult {
   candidates: CandidateConversionPlans[];
   diagnostics: ConversionPlannerDiagnostics;
   largestConversionDepth: number;
+  profile: ResourceConversionPlannerProfile;
 }
 
 export interface DeferredAfterActionPlan {
@@ -195,4 +236,8 @@ export interface AfterActionConversionResult {
 export interface ResourceConversionPlannerOptions {
   /** Optional Phase 1.2 candidate filter. Keys not legal in a reached state simply have no result. */
   mainCandidates?: readonly AtomicDecisionCandidate[];
+  /** Optional offline profiler callback. It observes work and never changes planner semantics. */
+  onProgress?: (progress: ResourceConversionPlannerProgress) => void;
+  /** Deterministic transition interval for `onProgress`; defaults to 100,000. */
+  progressEveryTransitions?: number;
 }

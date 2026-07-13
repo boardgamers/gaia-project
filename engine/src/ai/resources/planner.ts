@@ -1,4 +1,5 @@
 import { createHash } from "crypto";
+import { performance } from "perf_hooks";
 import { possibleFreeActions } from "../../available/actions";
 import { AtomicDecisionCandidate, ResourceAmount } from "../actions/types";
 import {
@@ -24,6 +25,7 @@ import {
   ParetoFrontierResult,
   PaymentResult,
   ProjectedConversionState,
+  ResourceConversionPlannerCounters,
   ResourceConversionPlannerOptions,
   ResourceConversionPlanningResult,
 } from "./types";
@@ -202,11 +204,7 @@ function projectState(
       onBoard,
       usedForAsteroid: data.gaiaformersUsedForAsteroid,
       usedForOther: data.gaiaformersUsedForOther,
-      available:
-        data.gaiaformers -
-        data.gaiaformersInGaia -
-        onBoard -
-        data.gaiaformersUsedForAsteroid,
+      available: data.gaiaformers - data.gaiaformersInGaia - onBoard - data.gaiaformersUsedForAsteroid,
     },
     tokenModifier: data.tokenModifier,
     terraformCostDiscount: data.terraformCostDiscount,
@@ -221,11 +219,14 @@ function projectState(
   };
 }
 
-function emptyPlan(state: ProjectedConversionState): OrderedConversionPlan {
-  const stateKey = canonicalConversionStateKey(state);
+function emptyPlan(
+  state: ProjectedConversionState,
+  stateKey = canonicalConversionStateKey(state),
+  planKey: typeof canonicalConversionPlanKey = canonicalConversionPlanKey
+): OrderedConversionPlan {
   return {
     schemaVersion: CONVERSION_PLAN_SCHEMA,
-    key: canonicalConversionPlanKey({ sourceStateKey: stateKey, destinationStateKey: stateKey, timing: state.timing }),
+    key: planKey({ sourceStateKey: stateKey, destinationStateKey: stateKey, timing: state.timing }),
     timing: state.timing,
     sourceStateKey: stateKey,
     destinationStateKey: stateKey,
@@ -268,27 +269,183 @@ function exactDimensions(state: ProjectedConversionState): unknown {
   };
 }
 
-/** Strict, weight-free dominance under one board/action/timing context. */
-export function conversionStateDominates(
-  left: ProjectedConversionState,
-  right: ProjectedConversionState
-): boolean {
-  if (stableCandidateJson(exactDimensions(left)) !== stableCandidateJson(exactDimensions(right))) {
+interface DominanceMaterial {
+  exactKey: string;
+  monotone: readonly number[];
+}
+
+function dominanceMaterial(state: ProjectedConversionState): DominanceMaterial {
+  return {
+    exactKey: stableCandidateJson(exactDimensions(state)),
+    monotone: [
+      state.credits,
+      state.ores,
+      state.knowledge,
+      state.qics,
+      state.victoryPoints,
+      state.power.area1,
+      state.power.area2,
+      state.power.area3,
+      state.power.gaia,
+      state.gaiaformers.available,
+    ],
+  };
+}
+
+function materialDominates(left: DominanceMaterial, right: DominanceMaterial): boolean {
+  if (left.exactKey !== right.exactKey) {
     return false;
   }
-  const pairs: Array<[number, number]> = [
-    [left.credits, right.credits],
-    [left.ores, right.ores],
-    [left.knowledge, right.knowledge],
-    [left.qics, right.qics],
-    [left.victoryPoints, right.victoryPoints],
-    [left.power.area1, right.power.area1],
-    [left.power.area2, right.power.area2],
-    [left.power.area3, right.power.area3],
-    [left.power.gaia, right.power.gaia],
-    [left.gaiaformers.available, right.gaiaformers.available],
-  ];
-  return pairs.every(([a, b]) => a >= b) && pairs.some(([a, b]) => a > b);
+  let strict = false;
+  for (let index = 0; index < left.monotone.length; index += 1) {
+    if (left.monotone[index] < right.monotone[index]) {
+      return false;
+    }
+    strict = strict || left.monotone[index] > right.monotone[index];
+  }
+  return strict;
+}
+
+interface DominanceIndexEntry<T extends object> {
+  item: T;
+  state: ProjectedConversionState;
+  order: number;
+  active: boolean;
+}
+
+/**
+ * Exact-context plus credit/ore/knowledge/QIC buckets are a necessary-condition filter only.
+ * Every returned relationship still passes the complete ten-dimensional strict predicate.
+ */
+class DominanceFrontierIndex<T extends object> {
+  private readonly buckets = new Map<
+    string,
+    Map<number, Map<number, Map<number, Map<number, Array<DominanceIndexEntry<T>>>>>>
+  >();
+  private readonly entries = new Map<T, DominanceIndexEntry<T>>();
+  private nextOrder = 0;
+
+  constructor(
+    private readonly materialFor: (state: ProjectedConversionState) => DominanceMaterial,
+    private readonly dominates: (left: ProjectedConversionState, right: ProjectedConversionState) => boolean
+  ) {}
+
+  add(item: T, state: ProjectedConversionState): void {
+    const entry: DominanceIndexEntry<T> = {
+      item,
+      state,
+      order: this.nextOrder,
+      active: true,
+    };
+    this.nextOrder += 1;
+    this.entries.set(item, entry);
+    const exact = this.materialFor(state).exactKey;
+    const byCredit =
+      this.buckets.get(exact) ??
+      new Map<number, Map<number, Map<number, Map<number, Array<DominanceIndexEntry<T>>>>>>();
+    const byOre =
+      byCredit.get(state.credits) ?? new Map<number, Map<number, Map<number, Array<DominanceIndexEntry<T>>>>>();
+    const byKnowledge = byOre.get(state.ores) ?? new Map<number, Map<number, Array<DominanceIndexEntry<T>>>>();
+    const byQic = byKnowledge.get(state.knowledge) ?? new Map<number, Array<DominanceIndexEntry<T>>>();
+    const entries = byQic.get(state.qics) ?? [];
+    entries.push(entry);
+    byQic.set(state.qics, entries);
+    byKnowledge.set(state.knowledge, byQic);
+    byOre.set(state.ores, byKnowledge);
+    byCredit.set(state.credits, byOre);
+    this.buckets.set(exact, byCredit);
+  }
+
+  remove(item: T): void {
+    const entry = this.entries.get(item);
+    if (entry) {
+      entry.active = false;
+    }
+  }
+
+  findDominator(state: ProjectedConversionState): T | undefined {
+    let best: DominanceIndexEntry<T> | undefined;
+    for (const entry of this.candidates(state, "dominator")) {
+      if (this.dominates(entry.state, state) && (!best || entry.order < best.order)) {
+        best = entry;
+      }
+    }
+    return best?.item;
+  }
+
+  findDominated(state: ProjectedConversionState): T[] {
+    return this.candidates(state, "dominated")
+      .filter((entry) => this.dominates(state, entry.state))
+      .sort((left, right) => left.order - right.order)
+      .map((entry) => entry.item);
+  }
+
+  private candidates(
+    state: ProjectedConversionState,
+    direction: "dominator" | "dominated"
+  ): Array<DominanceIndexEntry<T>> {
+    const byCredit = this.buckets.get(this.materialFor(state).exactKey);
+    if (!byCredit) {
+      return [];
+    }
+    const result: Array<DominanceIndexEntry<T>> = [];
+    for (const [credits, byOre] of byCredit) {
+      if (direction === "dominator" ? credits < state.credits : credits > state.credits) {
+        continue;
+      }
+      for (const [ores, byKnowledge] of byOre) {
+        if (direction === "dominator" ? ores < state.ores : ores > state.ores) {
+          continue;
+        }
+        for (const [knowledge, byQic] of byKnowledge) {
+          if (direction === "dominator" ? knowledge < state.knowledge : knowledge > state.knowledge) {
+            continue;
+          }
+          for (const [qics, entries] of byQic) {
+            if (direction === "dominator" ? qics < state.qics : qics > state.qics) {
+              continue;
+            }
+            for (const entry of entries) {
+              if (entry.active && this.remainingDimensionsPossible(entry.state, state, direction)) {
+                result.push(entry);
+              }
+            }
+          }
+        }
+      }
+    }
+    return result;
+  }
+
+  private remainingDimensionsPossible(
+    entry: ProjectedConversionState,
+    target: ProjectedConversionState,
+    direction: "dominator" | "dominated"
+  ): boolean {
+    if (direction === "dominator") {
+      return (
+        entry.victoryPoints >= target.victoryPoints &&
+        entry.power.area1 >= target.power.area1 &&
+        entry.power.area2 >= target.power.area2 &&
+        entry.power.area3 >= target.power.area3 &&
+        entry.power.gaia >= target.power.gaia &&
+        entry.gaiaformers.available >= target.gaiaformers.available
+      );
+    }
+    return (
+      entry.victoryPoints <= target.victoryPoints &&
+      entry.power.area1 <= target.power.area1 &&
+      entry.power.area2 <= target.power.area2 &&
+      entry.power.area3 <= target.power.area3 &&
+      entry.power.gaia <= target.power.gaia &&
+      entry.gaiaformers.available <= target.gaiaformers.available
+    );
+  }
+}
+
+/** Strict, weight-free dominance under one board/action/timing context. */
+export function conversionStateDominates(left: ProjectedConversionState, right: ProjectedConversionState): boolean {
+  return materialDominates(dominanceMaterial(left), dominanceMaterial(right));
 }
 
 function isConversion(candidate: AtomicDecisionCandidate): boolean {
@@ -296,12 +453,7 @@ function isConversion(candidate: AtomicDecisionCandidate): boolean {
 }
 
 function isMainCandidate(candidate: AtomicDecisionCandidate): boolean {
-  return ![
-    Command.Spend,
-    Command.BurnPower,
-    Command.BrainStone,
-    Command.EndTurn,
-  ].includes(candidate.command);
+  return ![Command.Spend, Command.BurnPower, Command.BrainStone, Command.EndTurn].includes(candidate.command);
 }
 
 function conversionFamilyKey(candidate: AtomicDecisionCandidate): string {
@@ -402,9 +554,7 @@ function resourceCycle(steps: ExecutableConversionStep[]): Resource[] {
 }
 
 function sortedCandidates(candidates: AtomicDecisionCandidate[]): AtomicDecisionCandidate[] {
-  return [...candidates].sort(
-    (a, b) => a.moveFragment.localeCompare(b.moveFragment) || a.key.localeCompare(b.key)
-  );
+  return [...candidates].sort((a, b) => a.moveFragment.localeCompare(b.moveFragment) || a.key.localeCompare(b.key));
 }
 
 function applyProjectedState(engine: Engine, state: ProjectedConversionState): void {
@@ -457,11 +607,9 @@ function conversionCatalogue(
   applyProjectedState(engine, abundant);
   const player = engine.player(engine.playerToMove);
   const offered = sortedCandidates(
-    expandInternallySuppliedAtomicCommands(
-      engine,
-      subphase,
-      possibleFreeActions(player)
-    ).candidates.filter(isConversion)
+    expandInternallySuppliedAtomicCommands(engine, subphase, possibleFreeActions(player)).candidates.filter(
+      isConversion
+    )
   );
   return {
     units: offered.filter(isUnitConversion),
@@ -471,8 +619,14 @@ function conversionCatalogue(
 
 function sameStepMultiset(left: OrderedConversionPlan, rightSteps: ExecutableConversionStep[]): boolean {
   return (
-    left.steps.map((step) => step.familyKey).sort().join("\0") ===
-    rightSteps.map((step) => step.familyKey).sort().join("\0")
+    left.steps
+      .map((step) => step.familyKey)
+      .sort()
+      .join("\0") ===
+    rightSteps
+      .map((step) => step.familyKey)
+      .sort()
+      .join("\0")
   );
 }
 
@@ -575,8 +729,8 @@ function spendPowerBranches(
   amount: number
 ): Array<{ state: ProjectedConversionState; brainstoneChoice: PowerArea | "discard" | null }> {
   const state = branch.state;
-  const spendable = Math.floor(state.power.area3 * state.tokenModifier) +
-    (state.power.brainstone === PowerArea.Area3 ? 3 : 0);
+  const spendable =
+    Math.floor(state.power.area3 * state.tokenModifier) + (state.power.brainstone === PowerArea.Area3 ? 3 : 0);
   if (spendable < amount) {
     return [];
   }
@@ -674,17 +828,18 @@ function moveTokenBranches(
   });
 }
 
-function deduplicatePaymentBranches<T extends { state: ProjectedConversionState }>(branches: T[]): T[] {
+function deduplicatePaymentBranches<T extends { state: ProjectedConversionState }>(
+  branches: T[],
+  stateKey: typeof canonicalConversionStateKey = canonicalConversionStateKey
+): T[] {
   const seen = new Map<string, T>();
   for (const branch of branches) {
-    const key = canonicalConversionStateKey(branch.state);
+    const key = stateKey(branch.state);
     if (!seen.has(key)) {
       seen.set(key, branch);
     }
   }
-  return Array.from(seen.values()).sort((a, b) =>
-    canonicalConversionStateKey(a.state).localeCompare(canonicalConversionStateKey(b.state))
-  );
+  return Array.from(seen.values()).sort((a, b) => stateKey(a.state).localeCompare(stateKey(b.state)));
 }
 
 function addConversionReward(
@@ -742,7 +897,8 @@ function addConversionReward(
 
 function conversionTransitions(
   state: ProjectedConversionState,
-  candidate: AtomicDecisionCandidate
+  candidate: AtomicDecisionCandidate,
+  stateKey: typeof canonicalConversionStateKey = canonicalConversionStateKey
 ): Array<{
   state: ProjectedConversionState;
   stepFragments: string[];
@@ -756,18 +912,21 @@ function conversionTransitions(
   for (const reward of candidate.resources.reward) {
     branches = branches.map((branch) => addConversionReward(branch, reward));
   }
-  return deduplicatePaymentBranches(branches).map((branch) => ({
+  return deduplicatePaymentBranches(branches, stateKey).map((branch) => ({
     state: branch.state,
     stepFragments: [
       candidate.moveFragment,
-      ...(branch.brainstoneChoice
-        ? [`${Command.BrainStone} ${branch.brainstoneChoice}`]
-        : []),
+      ...(branch.brainstoneChoice ? [`${Command.BrainStone} ${branch.brainstoneChoice}`] : []),
     ],
   }));
 }
 
-function paymentResults(candidate: AtomicDecisionCandidate, plan: OrderedConversionPlan, state: ProjectedConversionState): PaymentResult[] {
+function paymentResults(
+  candidate: AtomicDecisionCandidate,
+  plan: OrderedConversionPlan,
+  state: ProjectedConversionState,
+  stateKey: typeof canonicalConversionStateKey = canonicalConversionStateKey
+): PaymentResult[] {
   let branches: Array<{ state: ProjectedConversionState; brainstoneChoice: PowerArea | "discard" | null }> = [
     { state: cloneState(state), brainstoneChoice: null },
   ];
@@ -775,10 +934,8 @@ function paymentResults(candidate: AtomicDecisionCandidate, plan: OrderedConvers
     branches = addPaymentResource(branches, cost);
   }
   return branches.map((branch) => {
-    const postPaymentStateKey = canonicalConversionStateKey(branch.state);
-    const brainstoneFragment = branch.brainstoneChoice
-      ? [`${Command.BrainStone} ${branch.brainstoneChoice}`]
-      : [];
+    const postPaymentStateKey = stateKey(branch.state);
+    const brainstoneFragment = branch.brainstoneChoice ? [`${Command.BrainStone} ${branch.brainstoneChoice}`] : [];
     return {
       candidateKey: candidate.key,
       conversionPlanKey: plan.key,
@@ -792,33 +949,40 @@ function paymentResults(candidate: AtomicDecisionCandidate, plan: OrderedConvers
   });
 }
 
-function paymentFrontier(payments: PaymentResult[]): ParetoFrontierResult<PaymentResult> {
+function paymentFrontier(
+  payments: PaymentResult[],
+  dominates: typeof conversionStateDominates = conversionStateDominates,
+  materialFor: (state: ProjectedConversionState) => DominanceMaterial = dominanceMaterial,
+  translationPreserving = false
+): ParetoFrontierResult<PaymentResult> {
   const byState = new Map<string, PaymentResult>();
-  for (const payment of [...payments].sort((a, b) =>
-    a.moveFragments.join(". ").localeCompare(b.moveFragments.join(". "))
-  )) {
-    if (!byState.has(payment.postPaymentStateKey)) {
+  const fragmentKeys = new Map<string, string>();
+  for (const payment of payments) {
+    const fragmentKey = payment.moveFragments.join(". ");
+    const existingKey = fragmentKeys.get(payment.postPaymentStateKey);
+    if (existingKey === undefined || fragmentKey.localeCompare(existingKey) < 0) {
       byState.set(payment.postPaymentStateKey, payment);
+      fragmentKeys.set(payment.postPaymentStateKey, fragmentKey);
     }
   }
   const unique = Array.from(byState.values()).sort((a, b) =>
     a.postPaymentStateKey.localeCompare(b.postPaymentStateKey)
   );
+  if (translationPreserving) {
+    return { frontier: unique, dominated: [] };
+  }
   let frontier: PaymentResult[] = [];
+  const index = new DominanceFrontierIndex<PaymentResult>(materialFor, dominates);
   const dominated: ParetoFrontierResult<PaymentResult>["dominated"] = [];
   for (const payment of unique) {
-    const dominator = frontier.find((other) =>
-      conversionStateDominates(other.postPaymentState, payment.postPaymentState)
-    );
+    const dominator = index.findDominator(payment.postPaymentState);
     if (dominator) {
       dominated.push({
         dominatedKey: payment.postPaymentStateKey,
         dominatingKey: dominator.postPaymentStateKey,
       });
     } else {
-      const newlyDominated = frontier.filter((other) =>
-        conversionStateDominates(payment.postPaymentState, other.postPaymentState)
-      );
+      const newlyDominated = index.findDominated(payment.postPaymentState);
       for (const other of newlyDominated) {
         dominated.push({
           dominatedKey: other.postPaymentStateKey,
@@ -826,8 +990,12 @@ function paymentFrontier(payments: PaymentResult[]): ParetoFrontierResult<Paymen
         });
       }
       const removed = new Set(newlyDominated.map((entry) => entry.postPaymentStateKey));
+      for (const other of newlyDominated) {
+        index.remove(other);
+      }
       frontier = frontier.filter((entry) => !removed.has(entry.postPaymentStateKey));
       frontier.push(payment);
+      index.add(payment, payment.postPaymentState);
     }
   }
   frontier.sort((a, b) => a.postPaymentStateKey.localeCompare(b.postPaymentStateKey));
@@ -835,6 +1003,17 @@ function paymentFrontier(payments: PaymentResult[]): ParetoFrontierResult<Paymen
     (a, b) => a.dominatedKey.localeCompare(b.dominatedKey) || a.dominatingKey.localeCompare(b.dominatingKey)
   );
   return { frontier, dominated };
+}
+
+function hasTranslationPreservingPayment(candidate: AtomicDecisionCandidate): boolean {
+  const translationResources = new Set<Resource>([
+    Resource.Credit,
+    Resource.Ore,
+    Resource.Knowledge,
+    Resource.Qic,
+    Resource.VictoryPoint,
+  ]);
+  return candidate.resources.cost.every((amount) => translationResources.has(amount.resource));
 }
 
 function assertSupportedSource(source: Engine): void {
@@ -859,16 +1038,72 @@ function planForTiming(
   timing: ConversionTimingContext,
   options: ResourceConversionPlannerOptions
 ): ResourceConversionPlanningResult {
+  const startedAt = performance.now();
+  const counters: ResourceConversionPlannerCounters = {
+    statesGenerated: 0,
+    statesAccepted: 0,
+    activeFrontierSize: 0,
+    maximumActiveFrontierSize: 0,
+    transitionsConsidered: 0,
+    exactStateMerges: 0,
+    paretoPrunes: 0,
+    lossyCyclePrunes: 0,
+    dominanceComparisons: 0,
+    exactContextComputations: 0,
+    stateKeyComputations: 0,
+    planKeyComputations: 0,
+    resourceCycleGraphReconstructions: 0,
+    candidateStatesExpanded: 0,
+    paymentResultsGenerated: 0,
+  };
+  const stateKeyCache = new WeakMap<ProjectedConversionState, CanonicalConversionStateKey>();
+  const computeStateKey: typeof canonicalConversionStateKey = (state) => {
+    const cached = stateKeyCache.get(state);
+    if (cached) {
+      return cached;
+    }
+    counters.stateKeyComputations += 1;
+    const key = canonicalConversionStateKey(state);
+    stateKeyCache.set(state, key);
+    return key;
+  };
+  const computePlanKey: typeof canonicalConversionPlanKey = (plan) => {
+    counters.planKeyComputations += 1;
+    return canonicalConversionPlanKey(plan);
+  };
+  const dominanceCache = new WeakMap<ProjectedConversionState, DominanceMaterial>();
+  const materialFor = (state: ProjectedConversionState): DominanceMaterial => {
+    const cached = dominanceCache.get(state);
+    if (cached) {
+      return cached;
+    }
+    counters.exactContextComputations += 1;
+    const material = dominanceMaterial(state);
+    dominanceCache.set(state, material);
+    return material;
+  };
+  const dominates: typeof conversionStateDominates = (left, right) => {
+    counters.dominanceComparisons += 1;
+    return materialDominates(materialFor(left), materialFor(right));
+  };
+  const progressEvery = options.progressEveryTransitions ?? 100_000;
+  if (!Number.isInteger(progressEvery) || progressEvery <= 0) {
+    throw new ResourceConversionPlannerError(
+      "unsupported-state",
+      `progressEveryTransitions must be a positive integer, got ${progressEvery}`
+    );
+  }
   const sourceHash = canonicalStateHash(source);
   const actor = source.playerToMove;
   const rights = conversionRights(source, actor);
   const contextKey = stateContextKey(sourceHash, timing);
   const rootEngine = replayPrefix(source, baseFragments);
   const rootState = projectState(rootEngine, contextKey, timing, rights);
-  const rootPlan = emptyPlan(rootState);
+  const rootStateKey = computeStateKey(rootState);
+  const rootPlan = emptyPlan(rootState, rootStateKey, computePlanKey);
   const root: ReachabilityNode = {
     state: rootState,
-    stateKey: canonicalConversionStateKey(rootState),
+    stateKey: rootStateKey,
     plan: rootPlan,
     lineageStates: [rootState],
   };
@@ -876,6 +1111,8 @@ function planForTiming(
   const queue: ReachabilityNode[] = [root];
   let activeFrontier: ReachabilityNode[] = [root];
   const activeStateKeys = new Set<CanonicalConversionStateKey>([root.stateKey]);
+  const frontierIndex = new DominanceFrontierIndex<ReachabilityNode>(materialFor, dominates);
+  frontierIndex.add(root, root.state);
   const availabilityEngine = Engine.fromData(JSON.parse(JSON.stringify(rootEngine)));
   const catalogue = conversionCatalogue(availabilityEngine, rootState, timing.subphase);
   const diagnostics: ConversionPlannerDiagnostics = {
@@ -886,11 +1123,12 @@ function planForTiming(
     unavailableEffects: [],
   };
   for (const alias of catalogue.aliases) {
-    const unit = alias.command === Command.BurnPower
-      ? catalogue.units.find((candidate) => candidate.command === Command.BurnPower)
-      : catalogue.units.find(
-          (candidate) => candidate.command === Command.Spend && normalizedFlow(candidate) === normalizedFlow(alias)
-        );
+    const unit =
+      alias.command === Command.BurnPower
+        ? catalogue.units.find((candidate) => candidate.command === Command.BurnPower)
+        : catalogue.units.find(
+            (candidate) => candidate.command === Command.Spend && normalizedFlow(candidate) === normalizedFlow(alias)
+          );
     if (!unit) {
       throw new ResourceConversionPlannerError(
         "invalid-plan",
@@ -907,22 +1145,41 @@ function planForTiming(
     ? new Map(options.mainCandidates.map((candidate) => [candidate.key, candidate]))
     : null;
   let largestConversionDepth = 0;
+  counters.statesAccepted = 1;
+  counters.activeFrontierSize = 1;
+  counters.maximumActiveFrontierSize = 1;
+  const setupFinishedAt = performance.now();
+  const emitProgress = () => {
+    if (!options.onProgress) {
+      return;
+    }
+    counters.activeFrontierSize = activeFrontier.length;
+    options.onProgress({
+      counters: { ...counters },
+      largestConversionDepth,
+      elapsedMs: performance.now() - startedAt,
+    });
+  };
 
-  while (queue.length > 0) {
-    const node = queue.shift() as ReachabilityNode;
+  let queueIndex = 0;
+  while (queueIndex < queue.length) {
+    const node = queue[queueIndex];
+    queueIndex += 1;
     if (!activeStateKeys.has(node.stateKey)) {
       continue;
     }
     const unitConversions = catalogue.units;
     for (const conversion of unitConversions) {
+      counters.transitionsConsidered += 1;
       if (conversion.resources.effects.length > 0) {
         diagnostics.unavailableEffects.push(...conversion.resources.effects);
       }
-      const resolvedNodes = conversionTransitions(node.state, conversion);
+      const resolvedNodes = conversionTransitions(node.state, conversion, computeStateKey);
+      counters.statesGenerated += resolvedNodes.length;
       for (const resolved of resolvedNodes) {
         const stepFragments = resolved.stepFragments;
         const state = resolved.state;
-        const stateKey = canonicalConversionStateKey(state);
+        const stateKey = computeStateKey(state);
         const step: ExecutableConversionStep = {
           kind: conversion.command === Command.BurnPower ? "burn" : "spend",
           familyKey: conversionFamilyKey(conversion),
@@ -936,13 +1193,14 @@ function planForTiming(
         };
         const steps = [...node.plan.steps, step];
         const moveFragments = [...node.plan.moveFragments, ...stepFragments];
+        counters.resourceCycleGraphReconstructions += 1;
         const cycle = resourceCycle(steps);
-        const dominatedAncestor = cycle.length > 0
-          ? node.lineageStates.find((ancestor) => conversionStateDominates(ancestor, state))
-          : undefined;
+        const dominatedAncestor =
+          cycle.length > 0 ? node.lineageStates.find((ancestor) => dominates(ancestor, state)) : undefined;
         if (dominatedAncestor) {
+          counters.lossyCyclePrunes += 1;
           diagnostics.lossyCycles.push({
-            ancestorStateKey: canonicalConversionStateKey(dominatedAncestor),
+            ancestorStateKey: computeStateKey(dominatedAncestor),
             discardedStateKey: stateKey,
             moveFragments,
             resourceCycle: cycle,
@@ -950,10 +1208,9 @@ function planForTiming(
           });
           continue;
         }
-        const dominatingNode = activeFrontier.find((entry) =>
-          conversionStateDominates(entry.state, state)
-        );
+        const dominatingNode = frontierIndex.findDominator(state);
         if (dominatingNode) {
+          counters.paretoPrunes += 1;
           diagnostics.paretoPruned.push({
             discardedStateKey: stateKey,
             dominatingStateKey: dominatingNode.stateKey,
@@ -964,23 +1221,22 @@ function planForTiming(
         }
         const existing = nodes.get(stateKey);
         if (existing) {
+          counters.exactStateMerges += 1;
           diagnostics.merges.push({
             destinationStateKey: stateKey,
             keptPlanKey: existing.plan.key,
             keptMoveFragments: existing.plan.moveFragments,
             mergedMoveFragments: moveFragments,
-            reason: sameStepMultiset(existing.plan, steps)
-              ? "commutative-order"
-              : "equivalent-executable-sequence",
+            reason: sameStepMultiset(existing.plan, steps) ? "commutative-order" : "equivalent-executable-sequence",
           });
           continue;
         }
-        const newlyDominated = activeFrontier.filter((entry) =>
-          conversionStateDominates(state, entry.state)
-        );
+        const newlyDominated = frontierIndex.findDominated(state);
         if (newlyDominated.length > 0) {
+          counters.paretoPrunes += newlyDominated.length;
           for (const dominated of newlyDominated) {
             activeStateKeys.delete(dominated.stateKey);
+            frontierIndex.remove(dominated);
             diagnostics.paretoPruned.push({
               discardedStateKey: dominated.stateKey,
               dominatingStateKey: stateKey,
@@ -993,7 +1249,7 @@ function planForTiming(
         }
         const plan: OrderedConversionPlan = {
           schemaVersion: CONVERSION_PLAN_SCHEMA,
-          key: canonicalConversionPlanKey({
+          key: computePlanKey({
             sourceStateKey: root.stateKey,
             destinationStateKey: stateKey,
             timing,
@@ -1012,12 +1268,21 @@ function planForTiming(
         };
         nodes.set(stateKey, child);
         activeFrontier.push(child);
+        frontierIndex.add(child, child.state);
         activeStateKeys.add(stateKey);
         queue.push(child);
+        counters.statesAccepted += 1;
+        counters.activeFrontierSize = activeFrontier.length;
+        counters.maximumActiveFrontierSize = Math.max(counters.maximumActiveFrontierSize, activeFrontier.length);
         largestConversionDepth = Math.max(largestConversionDepth, steps.length);
+      }
+      if (counters.transitionsConsidered % progressEvery === 0) {
+        emitProgress();
       }
     }
   }
+
+  const reachabilityFinishedAt = performance.now();
 
   diagnostics.unavailableEffects = Array.from(new Set(diagnostics.unavailableEffects)).sort();
   diagnostics.aliases = Array.from(
@@ -1025,23 +1290,26 @@ function planForTiming(
       diagnostics.aliases.map((entry) => [`${entry.moveFragment}\0${entry.canonicalUnitFragment}`, entry])
     ).values()
   ).sort((a, b) => a.moveFragment.localeCompare(b.moveFragment));
-  diagnostics.merges.sort((a, b) =>
-    a.destinationStateKey.localeCompare(b.destinationStateKey) ||
-    a.mergedMoveFragments.join(". ").localeCompare(b.mergedMoveFragments.join(". "))
+  diagnostics.merges.sort(
+    (a, b) =>
+      a.destinationStateKey.localeCompare(b.destinationStateKey) ||
+      a.mergedMoveFragments.join(". ").localeCompare(b.mergedMoveFragments.join(". "))
   );
-  diagnostics.lossyCycles.sort((a, b) =>
-    a.discardedStateKey.localeCompare(b.discardedStateKey) ||
-    a.moveFragments.join(". ").localeCompare(b.moveFragments.join(". "))
+  diagnostics.lossyCycles.sort(
+    (a, b) =>
+      a.discardedStateKey.localeCompare(b.discardedStateKey) ||
+      a.moveFragments.join(". ").localeCompare(b.moveFragments.join(". "))
   );
-  diagnostics.paretoPruned.sort((a, b) =>
-    a.discardedStateKey.localeCompare(b.discardedStateKey) ||
-    a.moveFragments.join(". ").localeCompare(b.moveFragments.join(". "))
+  diagnostics.paretoPruned.sort(
+    (a, b) =>
+      a.discardedStateKey.localeCompare(b.discardedStateKey) ||
+      a.moveFragments.join(". ").localeCompare(b.moveFragments.join(". "))
   );
   const reachable = Array.from(nodes.values()).sort((a, b) => a.stateKey.localeCompare(b.stateKey));
   const reachableStateFrontier: ParetoFrontierResult<ProjectedConversionState> = {
     frontier: activeFrontier
       .map((entry) => entry.state)
-      .sort((a, b) => canonicalConversionStateKey(a).localeCompare(canonicalConversionStateKey(b))),
+      .sort((a, b) => computeStateKey(a).localeCompare(computeStateKey(b))),
     dominated: Array.from(
       new Map(
         diagnostics.paretoPruned.map((entry) => [
@@ -1049,15 +1317,13 @@ function planForTiming(
           { dominatedKey: entry.discardedStateKey, dominatingKey: entry.dominatingStateKey },
         ])
       ).values()
-    ).sort(
-      (a, b) => a.dominatedKey.localeCompare(b.dominatedKey) || a.dominatingKey.localeCompare(b.dominatingKey)
-    ),
+    ).sort((a, b) => a.dominatedKey.localeCompare(b.dominatedKey) || a.dominatingKey.localeCompare(b.dominatingKey)),
   };
-  const frontierKeys = new Set(
-    reachableStateFrontier.frontier.map((state) => canonicalConversionStateKey(state))
-  );
+  const frontierKeys = new Set(reachableStateFrontier.frontier.map((state) => computeStateKey(state)));
+  const resultAssemblyFinishedAt = performance.now();
   const candidates = new Map<string, CandidateAccumulator>();
   for (const node of reachable.filter((entry) => frontierKeys.has(entry.stateKey))) {
+    counters.candidateStatesExpanded += 1;
     applyProjectedState(availabilityEngine, node.state);
     const expansion = expandInternallyReplayedAtomicDecision(availabilityEngine, timing.subphase);
     for (const candidate of sortedCandidates(expansion.candidates).filter(isMainCandidate)) {
@@ -1071,17 +1337,28 @@ function planForTiming(
         payments: [],
       };
       accumulator.plans.set(node.plan.key, node.plan);
-      accumulator.payments.push(...paymentResults(canonicalCandidate, node.plan, node.state));
+      const payments = paymentResults(canonicalCandidate, node.plan, node.state, computeStateKey);
+      counters.paymentResultsGenerated += payments.length;
+      accumulator.payments.push(...payments);
       candidates.set(candidate.key, accumulator);
     }
   }
+  const candidateConstructionFinishedAt = performance.now();
+  const paymentFrontiersStartedAt = performance.now();
   const candidateResults: CandidateConversionPlans[] = Array.from(candidates.values())
     .map((entry) => ({
       candidate: entry.candidate,
       plans: Array.from(entry.plans.values()).sort((a, b) => a.key.localeCompare(b.key)),
-      payments: paymentFrontier(entry.payments),
+      payments: paymentFrontier(
+        entry.payments,
+        dominates,
+        materialFor,
+        hasTranslationPreservingPayment(entry.candidate)
+      ),
     }))
     .sort((a, b) => a.candidate.key.localeCompare(b.candidate.key));
+  const finishedAt = performance.now();
+  counters.activeFrontierSize = activeFrontier.length;
   return {
     sourceStateKey: root.stateKey,
     timing,
@@ -1091,6 +1368,17 @@ function planForTiming(
     candidates: candidateResults,
     diagnostics,
     largestConversionDepth,
+    profile: {
+      counters,
+      timings: {
+        setupMs: setupFinishedAt - startedAt,
+        reachabilityMs: reachabilityFinishedAt - setupFinishedAt,
+        resultAssemblyMs: resultAssemblyFinishedAt - reachabilityFinishedAt,
+        candidateConstructionMs: candidateConstructionFinishedAt - resultAssemblyFinishedAt,
+        paymentFrontiersMs: finishedAt - paymentFrontiersStartedAt,
+        totalMs: finishedAt - startedAt,
+      },
+    },
   };
 }
 
@@ -1110,8 +1398,7 @@ export function planResourceConversions(
 
 function leechCapacity(state: ProjectedConversionState): number {
   const brainstone = state.power.brainstone;
-  const brainstoneCapacity =
-    brainstone === PowerArea.Area1 ? 2 : brainstone === PowerArea.Area2 ? 1 : 0;
+  const brainstoneCapacity = brainstone === PowerArea.Area1 ? 2 : brainstone === PowerArea.Area2 ? 1 : 0;
   return state.power.area1 * 2 + state.power.area2 + brainstoneCapacity;
 }
 
@@ -1125,9 +1412,7 @@ function resolveMainActionPrefixes(
     priorMoveFragments: prefix,
     subphase: SubPhase.AfterMove,
   });
-  const brainstone = sortedCandidates(
-    expansion.candidates.filter((entry) => entry.command === Command.BrainStone)
-  );
+  const brainstone = sortedCandidates(expansion.candidates.filter((entry) => entry.command === Command.BrainStone));
   if (brainstone.length === 0) {
     return [prefix];
   }
@@ -1160,16 +1445,20 @@ export function planAfterActionConversions(
       planning: null,
     };
   }
-  const pre = conversionPlan ?? emptyPlan(projectState(
-    source,
-    stateContextKey(canonicalStateHash(source), {
-      kind: "pre-action",
-      phase: Phase.RoundMove,
-      subphase: SubPhase.BeforeMove,
-    }),
-    { kind: "pre-action", phase: Phase.RoundMove, subphase: SubPhase.BeforeMove },
-    conversionRights(source, source.playerToMove)
-  ));
+  const pre =
+    conversionPlan ??
+    emptyPlan(
+      projectState(
+        source,
+        stateContextKey(canonicalStateHash(source), {
+          kind: "pre-action",
+          phase: Phase.RoundMove,
+          subphase: SubPhase.BeforeMove,
+        }),
+        { kind: "pre-action", phase: Phase.RoundMove, subphase: SubPhase.BeforeMove },
+        conversionRights(source, source.playerToMove)
+      )
+    );
   const prefixes = resolveMainActionPrefixes(source, pre, mainCandidate);
   if (prefixes.length !== 1) {
     return {
@@ -1230,10 +1519,7 @@ export function planAfterActionConversions(
       });
       continue;
     }
-    const lastBowlIndex = plan.steps.reduce(
-      (index, step, current) => (step.changesPowerBowls ? current : index),
-      -1
-    );
+    const lastBowlIndex = plan.steps.reduce((index, step, current) => (step.changesPowerBowls ? current : index), -1);
     if (lastBowlIndex >= 0 && after > before) {
       const trailing = plan.steps.slice(lastBowlIndex + 1);
       if (trailing.length > 0) {

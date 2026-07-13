@@ -6,11 +6,7 @@ import { Building, Command, Phase, Player, PowerArea, Resource, Round, SubPhase 
 import { expandAtomicDecisions } from "../actions/expand";
 import { AtomicDecisionCandidate } from "../actions/types";
 import { canonicalConversionPlanKey, canonicalConversionStateKey } from "./canonical-key";
-import {
-  planAfterActionConversions,
-  planResourceConversions,
-  ResourceConversionPlannerError,
-} from "./planner";
+import { planAfterActionConversions, planResourceConversions, ResourceConversionPlannerError } from "./planner";
 import { LOST_FLEET_CHALLENGE, challengeEngineOptions } from "../challenge";
 
 function hydrate(engine: Engine): Engine {
@@ -95,6 +91,24 @@ function walletKey(state: {
   ].join("/");
 }
 
+function planningResultKeyDigest(result: ReturnType<typeof planResourceConversions>): string {
+  const keyMaterial = {
+    sourceStateKey: result.sourceStateKey,
+    states: result.reachableStates.map(canonicalConversionStateKey).sort(),
+    plans: result.reachablePlans.map((plan) => plan.key).sort(),
+    frontier: result.stateFrontier.frontier.map(canonicalConversionStateKey).sort(),
+    candidates: result.candidates.map((entry) => ({
+      candidateKey: entry.candidate.key,
+      plans: entry.plans.map((plan) => plan.key).sort(),
+      paymentFrontier: entry.payments.frontier
+        .map((payment) => [payment.postPaymentStateKey, payment.conversionPlanKey])
+        .sort(),
+      paymentDominated: entry.payments.dominated.map((payment) => [payment.dominatedKey, payment.dominatingKey]).sort(),
+    })),
+  };
+  return createHash("sha256").update(JSON.stringify(keyMaterial)).digest("hex");
+}
+
 function bruteForceBaseConversions(initial: {
   credits: number;
   ores: number;
@@ -103,8 +117,7 @@ function bruteForceBaseConversions(initial: {
   area1: number;
 }): string[] {
   type Wallet = typeof initial;
-  const key = (state: Wallet) =>
-    [state.credits, state.ores, state.knowledge, state.qics, state.area1, 0, 0].join("/");
+  const key = (state: Wallet) => [state.credits, state.ores, state.knowledge, state.qics, state.area1, 0, 0].join("/");
   const seen = new Map<string, Wallet>([[key(initial), initial]]);
   const queue: Wallet[] = [initial];
   while (queue.length > 0) {
@@ -151,8 +164,8 @@ describe("Phase 1.3 offline resource-conversion planner", () => {
   it("models Xenos ore-to-Area-III and replays its executable fragment", () => {
     const source = smallWallet(lockedRoundOneEngine(), { ores: 1 });
     const result = planResourceConversions(source);
-    const plan = result.reachablePlans.find((entry) =>
-      entry.moveFragments.length === 1 && entry.moveFragments[0] === "spend 1o for 1ta3"
+    const plan = result.reachablePlans.find(
+      (entry) => entry.moveFragments.length === 1 && entry.moveFragments[0] === "spend 1o for 1ta3"
     );
     expect(plan).not.to.equal(undefined);
     const destination = result.reachableStates.find(
@@ -174,7 +187,9 @@ describe("Phase 1.3 offline resource-conversion planner", () => {
 
     const after = hydrate(before);
     after.player(after.playerToMove).data.buildings[Building.PlanetaryInstitute] = 1;
-    after.players.forEach((player) => { player.federationCache = null; });
+    after.players.forEach((player) => {
+      player.federationCache = null;
+    });
     after.clearAvailableCommands();
     const afterResult = planResourceConversions(after);
     expect(afterResult.reachablePlans.some((plan) => plan.moveFragments.includes("spend 4c for 1q"))).to.equal(true);
@@ -189,14 +204,22 @@ describe("Phase 1.3 offline resource-conversion planner", () => {
 
     const result = planResourceConversions(source, { mainCandidates: [target] });
     expect(result.largestConversionDepth).to.equal(8);
-    expect(result.stateFrontier.frontier.some((state) => state.power.area2 === 8 && state.power.area3 === 0)).to.equal(true);
-    expect(result.stateFrontier.frontier.some((state) => state.power.area2 === 0 && state.power.area3 === 4)).to.equal(true);
+    expect(result.stateFrontier.frontier.some((state) => state.power.area2 === 8 && state.power.area3 === 0)).to.equal(
+      true
+    );
+    expect(result.stateFrontier.frontier.some((state) => state.power.area2 === 0 && state.power.area3 === 4)).to.equal(
+      true
+    );
     const candidate = result.candidates.find((entry) => entry.candidate.key === target.key);
     expect(candidate).not.to.equal(undefined);
-    expect(candidate.plans.some((plan) => plan.steps.filter((step) => step.kind === "burn").length === 4)).to.equal(true);
-    expect(candidate.payments.frontier.some((payment) =>
-      payment.postPaymentState.power.area1 === 4 && payment.postPaymentState.power.area3 === 0
-    )).to.equal(true);
+    expect(candidate.plans.some((plan) => plan.steps.filter((step) => step.kind === "burn").length === 4)).to.equal(
+      true
+    );
+    expect(
+      candidate.payments.frontier.some(
+        (payment) => payment.postPaymentState.power.area1 === 4 && payment.postPaymentState.power.area3 === 0
+      )
+    ).to.equal(true);
   });
 
   it("reaches depths above two without a depth cap and canonicalizes ranged aliases", () => {
@@ -204,12 +227,16 @@ describe("Phase 1.3 offline resource-conversion planner", () => {
     const result = planResourceConversions(source);
 
     expect(result.largestConversionDepth).to.be.at.least(3);
-    expect(result.reachablePlans.some((plan) =>
-      plan.steps.filter((step) => step.moveFragments[0] === "spend 1o for 1ta3").length === 3
-    )).to.equal(true);
-    expect(result.diagnostics.aliases.some((entry) =>
-      entry.moveFragment === "spend 2o for 2ta3" && entry.canonicalUnitFragment === "spend 1o for 1ta3"
-    )).to.equal(true);
+    expect(
+      result.reachablePlans.some(
+        (plan) => plan.steps.filter((step) => step.moveFragments[0] === "spend 1o for 1ta3").length === 3
+      )
+    ).to.equal(true);
+    expect(
+      result.diagnostics.aliases.some(
+        (entry) => entry.moveFragment === "spend 2o for 2ta3" && entry.canonicalUnitFragment === "spend 1o for 1ta3"
+      )
+    ).to.equal(true);
   });
 
   it("keeps brainstone payment branches distinct and replays brainstone burn exactly", () => {
@@ -218,9 +245,9 @@ describe("Phase 1.3 offline resource-conversion planner", () => {
     const spend = planResourceConversions(spendSource);
     const qicStates = spend.reachablePlans
       .filter((plan) => plan.moveFragments[0] === "spend 4pw for 1q")
-      .map((plan) => spend.reachableStates.find((state) =>
-        canonicalConversionStateKey(state) === plan.destinationStateKey
-      ));
+      .map((plan) =>
+        spend.reachableStates.find((state) => canonicalConversionStateKey(state) === plan.destinationStateKey)
+      );
     expect(qicStates.some((state) => state.power.brainstone === PowerArea.Area1)).to.equal(true);
     expect(qicStates.some((state) => state.power.brainstone === PowerArea.Area3)).to.equal(true);
     expect(spend.reachablePlans.some((plan) => plan.moveFragments.includes("brainstone area1"))).to.equal(true);
@@ -229,9 +256,11 @@ describe("Phase 1.3 offline resource-conversion planner", () => {
     const burnSource = smallWallet(lockedRoundOneEngine(), { area2: 1 });
     burnSource.player(burnSource.playerToMove).data.brainstone = PowerArea.Area2;
     const burn = planResourceConversions(burnSource);
-    const burnPlan = burn.reachablePlans.find((plan) => plan.moveFragments.length === 1 && plan.moveFragments[0] === "burn 1");
-    const destination = burn.reachableStates.find((state) =>
-      canonicalConversionStateKey(state) === burnPlan.destinationStateKey
+    const burnPlan = burn.reachablePlans.find(
+      (plan) => plan.moveFragments.length === 1 && plan.moveFragments[0] === "burn 1"
+    );
+    const destination = burn.reachableStates.find(
+      (state) => canonicalConversionStateKey(state) === burnPlan.destinationStateKey
     );
     expect(destination.power.brainstone).to.equal(PowerArea.Area3);
     expect(destination.power.area2).to.equal(0);
@@ -244,19 +273,22 @@ describe("Phase 1.3 offline resource-conversion planner", () => {
   it("merges commutative orders into one semantic state and plan key", () => {
     const source = smallWallet(hadschHallasTurn(), { knowledge: 1, qics: 1 });
     const result = planResourceConversions(source);
-    const merge = result.diagnostics.merges.find((entry) =>
-      entry.reason === "commutative-order" &&
-      entry.keptMoveFragments.includes("spend 1k for 1c") &&
-      entry.mergedMoveFragments.includes("spend 1q for 1o")
+    const merge = result.diagnostics.merges.find(
+      (entry) =>
+        entry.reason === "commutative-order" &&
+        entry.keptMoveFragments.includes("spend 1k for 1c") &&
+        entry.mergedMoveFragments.includes("spend 1q for 1o")
     );
     expect(merge).not.to.equal(undefined);
     const plan = result.reachablePlans.find((entry) => entry.key === merge.keptPlanKey);
     expect(plan.destinationStateKey).to.equal(merge.destinationStateKey);
-    expect(canonicalConversionPlanKey({
-      sourceStateKey: plan.sourceStateKey,
-      destinationStateKey: plan.destinationStateKey,
-      timing: plan.timing,
-    })).to.equal(plan.key);
+    expect(
+      canonicalConversionPlanKey({
+        sourceStateKey: plan.sourceStateKey,
+        destinationStateKey: plan.destinationStateKey,
+        timing: plan.timing,
+      })
+    ).to.equal(plan.key);
   });
 
   it("detects Hadsch Halla lossy cycles and preserves every nondominated outcome", () => {
@@ -266,14 +298,24 @@ describe("Phase 1.3 offline resource-conversion planner", () => {
     const result = planResourceConversions(source);
 
     expect(result.diagnostics.lossyCycles.length).to.be.greaterThan(0);
-    expect(result.diagnostics.lossyCycles.some((cycle) =>
-      cycle.resourceCycle.includes(Resource.Credit) && cycle.resourceCycle.includes(Resource.Ore)
-    )).to.equal(true);
+    expect(
+      result.diagnostics.lossyCycles.some(
+        (cycle) => cycle.resourceCycle.includes(Resource.Credit) && cycle.resourceCycle.includes(Resource.Ore)
+      )
+    ).to.equal(true);
     expect(result.stateFrontier.frontier.some((state) => state.credits === 4)).to.equal(true);
-    expect(result.reachableStates.some((state) =>
-      state.credits === 1 && state.qics === 0 && state.ores === 0 && state.knowledge === 0 &&
-      state.power.area1 === 0 && state.power.area2 === 0 && state.power.area3 === 0
-    )).to.equal(false);
+    expect(
+      result.reachableStates.some(
+        (state) =>
+          state.credits === 1 &&
+          state.qics === 0 &&
+          state.ores === 0 &&
+          state.knowledge === 0 &&
+          state.power.area1 === 0 &&
+          state.power.area2 === 0 &&
+          state.power.area3 === 0
+      )
+    ).to.equal(false);
   });
 
   it("models final-round conversions without assigning resource values", () => {
@@ -282,7 +324,9 @@ describe("Phase 1.3 offline resource-conversion planner", () => {
     const result = planResourceConversions(source);
 
     expect(result.reachableStates.every((state) => state.finalRound)).to.equal(true);
-    expect(result.reachableStates.some((state) => state.qics === 0 && state.ores === 0 && state.credits === 1)).to.equal(true);
+    expect(
+      result.reachableStates.some((state) => state.qics === 0 && state.ores === 0 && state.credits === 1)
+    ).to.equal(true);
   });
 
   it("retains post-action bowl opening before leech and defers ordinary conversions", () => {
@@ -291,15 +335,18 @@ describe("Phase 1.3 offline resource-conversion planner", () => {
     const result = planAfterActionConversions(source, main);
 
     expect(result.status).to.equal("planned");
-    expect(result.retained.some((entry) =>
-      entry.reason === "opens-power-bowl-capacity-before-leech" &&
-      entry.leechCapacityAfter > entry.leechCapacityBefore &&
-      entry.plan.moveFragments.includes("spend 1o for 1ta3") &&
-      entry.plan.moveFragments.includes("spend 1pw for 1c")
-    )).to.equal(true);
-    expect(result.deferred.some((entry) =>
-      entry.reason === "ordinary-resources-unobservable-before-next-before-move"
-    )).to.equal(true);
+    expect(
+      result.retained.some(
+        (entry) =>
+          entry.reason === "opens-power-bowl-capacity-before-leech" &&
+          entry.leechCapacityAfter > entry.leechCapacityBefore &&
+          entry.plan.moveFragments.includes("spend 1o for 1ta3") &&
+          entry.plan.moveFragments.includes("spend 1pw for 1c")
+      )
+    ).to.equal(true);
+    expect(
+      result.deferred.some((entry) => entry.reason === "ordinary-resources-unobservable-before-next-before-move")
+    ).to.equal(true);
   });
 
   it("keeps state and plan keys stable across replay, slow motion, hydration, and object ordering", () => {
@@ -307,30 +354,111 @@ describe("Phase 1.3 offline resource-conversion planner", () => {
     const constructorReplay = new Engine(base.moveHistory, challengeEngineOptions(), base.version);
     const slowMotion = Engine.slowMotion(base.moveHistory, challengeEngineOptions(), base.version);
     const hydration = hydrate(base);
-    const sources = [base, constructorReplay, slowMotion, hydration].map((engine) =>
-      smallWallet(engine, { ores: 1 })
-    );
+    const sources = [base, constructorReplay, slowMotion, hydration].map((engine) => smallWallet(engine, { ores: 1 }));
     const results = sources.map((engine) => planResourceConversions(engine));
-    const stateKeys = results.map((result) =>
-      result.reachableStates.map(canonicalConversionStateKey).sort()
-    );
+    const stateKeys = results.map((result) => result.reachableStates.map(canonicalConversionStateKey).sort());
     const planKeys = results.map((result) => result.reachablePlans.map((plan) => plan.key).sort());
     expect(stateKeys.slice(1).every((keys) => JSON.stringify(keys) === JSON.stringify(stateKeys[0]))).to.equal(true);
     expect(planKeys.slice(1).every((keys) => JSON.stringify(keys) === JSON.stringify(planKeys[0]))).to.equal(true);
 
     const reordered = JSON.parse(JSON.stringify(results[0].reachableStates[0]));
     reordered.conversionRights.reverse();
-    expect(canonicalConversionStateKey(reordered)).to.equal(
-      canonicalConversionStateKey(results[0].reachableStates[0])
-    );
+    expect(canonicalConversionStateKey(reordered)).to.equal(canonicalConversionStateKey(results[0].reachableStates[0]));
+  });
+
+  it("completes the untouched locked state with stable exhaustive keys and executable unit fragments", function () {
+    this.timeout(10 * 60 * 1000);
+    const base = lockedRoundOneEngine();
+    const sources = [
+      base,
+      new Engine(base.moveHistory, challengeEngineOptions(), base.version),
+      Engine.slowMotion(base.moveHistory, challengeEngineOptions(), base.version),
+      hydrate(base),
+    ];
+    const expectedDigest = "b4e266ef95ca8cc34cfd1cde4380a782ff01f4802a077d49ac9686924e222850";
+
+    for (let sourceIndex = 0; sourceIndex < sources.length; sourceIndex += 1) {
+      const result = planResourceConversions(sources[sourceIndex]);
+      expect(result.reachableStates).to.have.length(36_159);
+      expect(result.reachablePlans).to.have.length(36_159);
+      expect(result.stateFrontier.frontier).to.have.length(9_985);
+      expect(result.candidates).to.have.length(45);
+      expect(result.largestConversionDepth).to.equal(30);
+      expect(result.diagnostics.merges).to.have.length(85_126);
+      expect(result.diagnostics.lossyCycles).to.have.length(0);
+      expect(result.diagnostics.paretoPruned).to.have.length(56_139);
+      expect(result.diagnostics.aliases).to.have.length(111);
+      expect(result.profile.counters.statesGenerated).to.equal(151_249);
+      expect(result.profile.counters.statesAccepted).to.equal(36_159);
+      expect(result.profile.counters.transitionsConsidered).to.equal(254_360);
+      expect(result.profile.counters.activeFrontierSize).to.equal(9_985);
+      expect(result.profile.counters.candidateStatesExpanded).to.equal(9_985);
+      expect(result.profile.counters.paymentResultsGenerated).to.equal(130_532);
+      expect(planningResultKeyDigest(result)).to.equal(expectedDigest);
+
+      if (sourceIndex === 0) {
+        const states = new Map(result.reachableStates.map((state) => [canonicalConversionStateKey(state), state]));
+        const representatives = new Map<string, (typeof result.reachablePlans)[number]>();
+        for (const plan of result.reachablePlans) {
+          const step = plan.steps[plan.steps.length - 1];
+          if (step) {
+            const signature = `${step.familyKey}\0${step.moveFragments.join(". ")}`;
+            representatives.set(signature, plan);
+          }
+        }
+        const representativeFragments = new Set(
+          Array.from(representatives.values()).map((plan) => plan.steps[plan.steps.length - 1].moveFragments[0])
+        );
+        for (const alias of result.diagnostics.aliases) {
+          expect(representativeFragments.has(alias.canonicalUnitFragment), alias.canonicalUnitFragment).to.equal(true);
+        }
+        for (const plan of representatives.values()) {
+          const replay = hydrate(base);
+          replay.move(`${actorPrefix(replay)} ${plan.moveFragments.join(". ")}`);
+          const destination = states.get(plan.destinationStateKey);
+          const data = replay.player(replay.playerToMove).data;
+          expect({
+            credits: data.credits,
+            ores: data.ores,
+            knowledge: data.knowledge,
+            qics: data.qics,
+            victoryPoints: data.victoryPoints,
+            area1: data.power.area1,
+            area2: data.power.area2,
+            area3: data.power.area3,
+            gaia: data.power.gaia,
+            brainstone: data.brainstone,
+          }).to.deep.equal({
+            credits: destination.credits,
+            ores: destination.ores,
+            knowledge: destination.knowledge,
+            qics: destination.qics,
+            victoryPoints: destination.victoryPoints,
+            area1: destination.power.area1,
+            area2: destination.power.area2,
+            area3: destination.power.area3,
+            gaia: destination.power.gaia,
+            brainstone: destination.power.brainstone,
+          });
+        }
+      }
+    }
   });
 
   it("rejects unsupported faction-picking variants and incomplete external states", () => {
     const variants = [
-      (engine: Engine) => { engine.options.randomFactions = true; },
-      (engine: Engine) => { engine.options.banPhase = true; },
-      (engine: Engine) => { engine.options.auction = AuctionVariant.ChooseBid; },
-      (engine: Engine) => { engine.silentAuctionBids = [{ player: Player.Player1, bids: [0, 0] }] as any; },
+      (engine: Engine) => {
+        engine.options.randomFactions = true;
+      },
+      (engine: Engine) => {
+        engine.options.banPhase = true;
+      },
+      (engine: Engine) => {
+        engine.options.auction = AuctionVariant.ChooseBid;
+      },
+      (engine: Engine) => {
+        engine.silentAuctionBids = [{ player: Player.Player1, bids: [0, 0] }] as any;
+      },
     ];
     for (const mutate of variants) {
       const source = smallWallet(lockedRoundOneEngine(), {});
@@ -353,7 +481,12 @@ describe("Phase 1.3 offline resource-conversion planner", () => {
     const before = expandAtomicDecisions(source).candidates;
     expect(before).to.have.length(62);
     const digest = createHash("sha256")
-      .update(before.map((candidate) => candidate.key).sort().join("\n"))
+      .update(
+        before
+          .map((candidate) => candidate.key)
+          .sort()
+          .join("\n")
+      )
       .digest("hex");
     expect(digest).to.equal("a28eb3d03e2b51e1bea28170b92f5e99991f41c76b1b1c8a2193a97a0ee704d9");
     for (const candidate of before) {

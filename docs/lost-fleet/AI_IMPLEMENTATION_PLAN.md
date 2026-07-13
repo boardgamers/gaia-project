@@ -11,6 +11,10 @@
 > AI work must be additive, unreachable from existing production entry points, and must not change
 > shared engine semantics, existing hosted-game tables/RPCs/triggers, or current viewer behavior.
 >
+> **Current implementation status (2026-07-13):** Phases 0, 1.1, 1.2, and 1.3 are complete on
+> `agent/phase-1-3-resource-planner`. Phase 1.4 is the next isolated slice; use
+> `AI_PHASE_1_4_HANDOFF.md` for its measured baselines, exact gates, and starter scope.
+>
 > **First challenge:** seed `lf-mrj5exuu-c680`, 2-player Lost Fleet, Xenos seat 1 versus Hadsch
 > Hallas seat 2; the human may play either faction. The final ranked configuration is one fixed,
 > deterministic AI version per faction/difficulty leaderboard.
@@ -115,7 +119,10 @@ state API. Do not use `Engine.fromData()` on arbitrary incomplete states.
 - Alpha-beta: restricted to exact/bounded late-game subspaces after Phase 3 proves them tractable.
 - Transpositions: enabled only after canonical hashing and replay/legal-set parity pass.
 - Tree reuse: retain the selected subtree after every actual move.
-- Ranked search uses a fixed simulation count. Wall-clock search and variable pondering are practice
+- Maximum local search uses one fixed, high simulation count. It never stops early or silently
+  substitutes a weaker model/search budget because a device is slow. Faster supported devices
+  finish the same configured work sooner; incapable devices fail an explicit capability gate.
+  Wall-clock search and variable pondering, if ever offered, are separate non-comparable practice
   features only.
 
 ### 1.4 Value target
@@ -156,16 +163,16 @@ cheap and bit-reproducible.
 
 Measurements below were taken on the current machine after warm-up. They are baselines, not promises:
 
-| Measurement | Result |
-|---|---:|
-| 20 full random 2p Lost Fleet fuzz games | 188.7 ms/game average |
-| Committed lines per game | 56.15 average |
-| Full replay | 28.6 ms/game; 0.44 ms/line |
-| JSON clone at legal locked-faction R1 state | 0.65 ms; 24,213 bytes |
-| JSON clone at completed state | 0.78 ms; ~31 KB |
-| Emitted JS clone | 0.66 ms (no material speedup) |
+| Measurement                                             |                                            Result |
+| ------------------------------------------------------- | ------------------------------------------------: |
+| 20 full random 2p Lost Fleet fuzz games                 |                             188.7 ms/game average |
+| Committed lines per game                                |                                     56.15 average |
+| Full replay                                             |                        28.6 ms/game; 0.44 ms/line |
+| JSON clone at legal locked-faction R1 state             |                             0.65 ms; 24,213 bytes |
+| JSON clone at completed state                           |                                   0.78 ms; ~31 KB |
+| Emitted JS clone                                        |                     0.66 ms (no material speedup) |
 | `generateAvailableCommands()` across 179 sampled states | 0.27 ms median; 0.53 ms p95; 1.98 ms observed max |
-| Concrete choices in one legal locked-faction R1 state | 66 total; 32 conversion/burn choices |
+| Concrete choices in one legal locked-faction R1 state   |              66 total; 32 conversion/burn choices |
 
 Implications:
 
@@ -787,17 +794,23 @@ rendering changes and follow the standing render-test/visual-verification rules.
 2. Put local inference/search in a dedicated Web Worker.
 3. Load model/book assets by content hash and reject version mismatch.
 4. Lock human/AI seats only inside challenge mode.
-5. Use fixed simulations for reproducible practice; show progress/cancel controls.
+5. Use the owner-approved maximum local configuration: fixed high simulations with no device-speed
+   downgrade. Show genuine completed/target simulations, positions evaluated, elapsed time, moving
+   ETA range, and a worker heartbeat/last-update status.
 6. Keep client results explicitly **unranked** until Phase 8 authority exists.
-7. Add performance fallbacks: lower practice budgets, no-network heuristic/search bot, and graceful
-   worker failure. Never silently substitute a weaker AI in ranked mode.
+7. Add an explicit capability gate and graceful worker failure. If a device cannot run the full
+   maximum configuration, mark it unsupported; do not silently lower the model or search budget.
+   Detect hidden/background suspension and distinguish it from a dead worker. A screen-wake request
+   may be offered where supported.
 
 ### Exit gate
 
 - Existing self-contained and hosted flows are byte/behaviorally unaffected outside the new route.
 - Full engine/viewer suites and production builds pass.
-- Real browser verification covers both faction choices, worker cancellation, reload, and model
-  version failure.
+- Real browser verification covers both faction choices, worker cancellation, reload, model
+  version failure, truthful progress/ETA/heartbeat, and background suspension.
+- Benchmark the full unchanged workload on the owner's Ryzen 5 5600G / RTX 3060 12GB / 16GB
+  desktop and iPhone 16 Pro Max. Phone support must not weaken the desktop configuration.
 - No Supabase ranked submission is exposed.
 
 ---
@@ -922,36 +935,29 @@ live games.
 
 This plan is deliberately split for token/context efficiency and reviewability.
 
-| Session | Scope | Stop condition |
-|---|---|---|
-| Current | Write/review this plan only | Documentation diff reviewed; no runtime change |
-| AI-1 | Phase 0 safety, challenge definition/manifest, benchmarks | Phase 0 gate; owner review |
-| AI-2 | Phase 1.1 canonical state/hash | Hash/property tests pass |
-| AI-3 | Phase 1.2 typed decision expander | Locked command corpus complete |
-| AI-4 | Phase 1.3 conversion planner | Brute-force/Pareto tests pass |
-| AI-5 | Phase 1.4 macro builder + corpus campaign | 1,000-state gate passes |
-| AI-6 | Greedy/heuristic bots + evaluator | Inspectable baselines complete |
-| AI-7 | MCTS/Gumbel search + strength harness | Phase 2 gate/measurements |
-| AI-8 | Federation planner + exact R6 solver | Exactness/coverage documented |
-| AI-9 | State-keyed book | Reproducible book + fallback |
-| AI-10 | Neural schemas/PyTorch/ONNX stack | Phase 4 gate |
-| AI-11+ | Self-play iterations, each with one measured objective | Champion gate per iteration |
-| Later | Adversarial hardening, practice UI, backend, rollout | Each phase gate separately |
+| Session       | Scope                                                     | Stop condition                 |
+| ------------- | --------------------------------------------------------- | ------------------------------ |
+| Plan          | Reviewed execution plan                                   | Done                           |
+| AI-1          | Phase 0 safety, challenge definition/manifest, benchmarks | Done                           |
+| AI-2          | Phase 1.1 canonical state/hash                            | Done                           |
+| AI-3          | Phase 1.2 typed decision expander                         | Done                           |
+| AI-4          | Phase 1.3 conversion planner + locked-state hardening     | Done                           |
+| **AI-5 next** | **Phase 1.4 macro builder + corpus campaign**             | **1,000-state gate passes**    |
+| AI-6          | Greedy/heuristic bots + evaluator                         | Inspectable baselines complete |
+| AI-7          | MCTS/Gumbel search + strength harness                     | Phase 2 gate/measurements      |
+| AI-8          | Federation planner + exact R6 solver                      | Exactness/coverage documented  |
+| AI-9          | State-keyed book                                          | Reproducible book + fallback   |
+| AI-10         | Neural schemas/PyTorch/ONNX stack                         | Phase 4 gate                   |
+| AI-11+        | Self-play iterations, each with one measured objective    | Champion gate per iteration    |
+| Later         | Adversarial hardening, practice UI, backend, rollout      | Each phase gate separately     |
 
 Do not compress AI-1 through AI-5 into one session. The action/search foundation is the highest-risk
 part, and each slice produces evidence that may change the next design.
 
-### Fresh-session starter prompt for AI-1
+### Fresh-session starter prompt
 
-```text
-Work in C:\Users\okimm\Documents\Projects\gaia-lost-fleet.
-Read AGENTS.md, then docs/lost-fleet/PROGRESS.md Working agreements and Testing section, then
-docs/lost-fleet/AI_IMPLEMENTATION_PLAN.md in full. Implement Phase 0 only. Real hosted games are
-currently active: do not change existing engine semantics/serialization/moves/availability, viewer,
-Supabase, production entry points, or exports. Keep all AI code offline and unimported. Run engine
-tests with --reporter min, update the Phase 0 measurements/handoff, show the diff, and stop for owner
-review. Do not begin Phase 1 and do not push runtime changes without explicit approval.
-```
+The current ready-to-paste AI-5 prompt and complete Phase 1.3 evidence live in
+`docs/lost-fleet/AI_PHASE_1_4_HANDOFF.md`. Do not reuse the obsolete AI-1 prompt.
 
 ---
 
@@ -959,21 +965,21 @@ review. Do not begin Phase 1 and do not push runtime changes without explicit ap
 
 Every later phase must preserve the applicable rows:
 
-| Risk | Required verification |
-|---|---|
-| Existing live-game behavior | No import/runtime path until integration; full existing suites |
-| Replay determinism | Constructor vs host-style vs search transition parity |
-| State hash | Cache/log invariant; future-relevant counterfactual sensitivity |
-| Legal completeness | Available data -> canonical candidates -> successful application |
-| Conversion pruning | Brute-force equivalence on bounded cases; no arbitrary cap |
-| Federation planning | Reduced-case brute force + current-engine legality validation |
-| Search correctness | Tiny-game/reference trees; actor-switch/leech tests; exact endgames |
-| Value orientation | Seat swap/sign tests and terminal exact-margin tests |
-| Network legality | Mask/candidate-key parity; no illegal policy mass |
-| Training progress | Paired faction evaluation + protected off-book corpus |
-| Browser inference | ONNX parity, latency, worker failure/cancel tests |
-| Ranked integrity | Server-authoritative moves, pinned hashes, transactional sequence |
-| Production isolation | Challenge-only feature flag/schema/functions; rollback by disable |
+| Risk                        | Required verification                                               |
+| --------------------------- | ------------------------------------------------------------------- |
+| Existing live-game behavior | No import/runtime path until integration; full existing suites      |
+| Replay determinism          | Constructor vs host-style vs search transition parity               |
+| State hash                  | Cache/log invariant; future-relevant counterfactual sensitivity     |
+| Legal completeness          | Available data -> canonical candidates -> successful application    |
+| Conversion pruning          | Brute-force equivalence on bounded cases; no arbitrary cap          |
+| Federation planning         | Reduced-case brute force + current-engine legality validation       |
+| Search correctness          | Tiny-game/reference trees; actor-switch/leech tests; exact endgames |
+| Value orientation           | Seat swap/sign tests and terminal exact-margin tests                |
+| Network legality            | Mask/candidate-key parity; no illegal policy mass                   |
+| Training progress           | Paired faction evaluation + protected off-book corpus               |
+| Browser inference           | ONNX parity, latency, worker failure/cancel tests                   |
+| Ranked integrity            | Server-authoritative moves, pinned hashes, transactional sequence   |
+| Production isolation        | Challenge-only feature flag/schema/functions; rollback by disable   |
 
 ---
 
@@ -981,11 +987,16 @@ Every later phase must preserve the applicable rows:
 
 Append decisions here rather than silently changing the architecture.
 
-| Date | Phase | Decision/result | Evidence |
-|---|---|---|---|
-| 2026-07-13 | Plan review | Keep net-guided search as final target; build/promote from search-only Expert Iteration baseline | External code/design audit |
-| 2026-07-13 | Performance | Do not implement undo up front; clone ~0.65–0.78 ms and command generation reached ~1.98 ms | Local warm-process benchmark |
-| 2026-07-13 | Search model | Complete committed move line is the initial tree edge | Engine transient serialization + host/fuzzer flow |
-| 2026-07-13 | Policy | Use variable legal-candidate scorer, not fixed action universe | Structured nested actions + conversion/federation branching |
-| 2026-07-13 | Ranked security | Server authority/state-bound receipts required; end replay alone is insufficient | Client can submit arbitrary legal weak AI moves |
-| 2026-07-13 | Production | Documentation now; Phase 0 in a fresh session; no runtime change during current live games | Production `master` auto-deploy constraint |
+| Date       | Phase           | Decision/result                                                                                                 | Evidence                                                                                       |
+| ---------- | --------------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| 2026-07-13 | Plan review     | Keep net-guided search as final target; build/promote from search-only Expert Iteration baseline                | External code/design audit                                                                     |
+| 2026-07-13 | Performance     | Do not implement undo up front; clone ~0.65–0.78 ms and command generation reached ~1.98 ms                     | Local warm-process benchmark                                                                   |
+| 2026-07-13 | Search model    | Complete committed move line is the initial tree edge                                                           | Engine transient serialization + host/fuzzer flow                                              |
+| 2026-07-13 | Policy          | Use variable legal-candidate scorer, not fixed action universe                                                  | Structured nested actions + conversion/federation branching                                    |
+| 2026-07-13 | Ranked security | Server authority/state-bound receipts required; end replay alone is insufficient                                | Client can submit arbitrary legal weak AI moves                                                |
+| 2026-07-13 | Production      | Documentation now; Phase 0 in a fresh session; no runtime change during current live games                      | Production `master` auto-deploy constraint                                                     |
+| 2026-07-13 | Phase 0         | Locked manifest/benchmark foundation complete; semantic SHA `ce3bdd…51e`                                        | 3 focused tests + fresh byte/golden check                                                      |
+| 2026-07-13 | Phase 1.1       | Canonical future-relevant state/hash complete                                                                   | 12 focused tests; constructor/slow-motion/hydration parity                                     |
+| 2026-07-13 | Phase 1.2       | Typed atomic expander complete; 62 locked candidates                                                            | 10 focused tests; digest `a28eb3…04d9`                                                         |
+| 2026-07-13 | Phase 1.3       | Exhaustive conversion planner hardened; 36,159 states, 9,985 frontier, 45 candidates, depth 30                  | 15 focused tests; locked digest `b4e266…850`; full engine 671/4                                |
+| 2026-07-13 | Local runtime   | Maximum mode uses one fixed high simulation workload; no device-driven downgrade; incapable devices unsupported | Owner decision; target desktop + iPhone 16 Pro Max; later UI needs real progress/ETA/heartbeat |
