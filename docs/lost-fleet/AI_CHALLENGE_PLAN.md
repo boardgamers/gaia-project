@@ -48,6 +48,11 @@ a single machine). Every design choice below exploits this.
 **Chosen AI strength target:** a trained neural network **plus live MCTS** (AlphaZero-style),
 specialized to the one fixed setup, with additional cheap strength boosters (§6).
 
+**This is a recurring monthly challenge.** The architecture is built once and reused for every new
+seed; only the challenge definition, the trained weights, and the opening book are regenerated each
+month, and prior months' models/data warm-start and strengthen later ones. See §5.4 for the monthly
+production workflow and cross-month transfer.
+
 ---
 
 ## 2. The fixed setup (TO BE FILLED IN BY THE OWNER)
@@ -187,6 +192,51 @@ from wherever the human actually took the game, so any move is answered by fresh
 exploration in §5.1 ensures unusual-but-good human lines aren't off-distribution surprises; bad
 human moves land in positions the AI is winning comfortably anyway.
 
+### 5.4 Monthly production & cross-month improvement
+
+This is a **monthly** challenge, so the architecture is built once and reused every month.
+Separate three kinds of thing:
+
+- **Reusable / write-once (seed-agnostic):** the entire `ai/` module (features, evaluate, policy,
+  mcts, net architecture, selfplay, bot), the training pipeline, tuned MCTS hyperparameters, the
+  strength-measurement harness, the UI challenge framework, and the Supabase verification/
+  leaderboard plumbing. None of this changes month to month.
+- **Per-challenge / regenerated monthly:** the challenge definition (seed + factions + turn order),
+  the trained **weights file**, and the **opening book** (100% seed-specific — never reused). Plus a
+  per-challenge leaderboard.
+- **Accumulating across months:** a general **base net**, the self-play corpus feeding it, and the
+  **human-game corpus** the challenge itself produces.
+
+So spinning up month N+1 = fill in a new challenge definition + run the (unchanged) pipeline to
+produce new weights + a new book. **The code does not change.**
+
+**Can previous months' data/model improve next month's? Yes — four mechanisms:**
+
+1. **Warm-start / fine-tuning (biggest practical win).** Don't train each month from scratch.
+   Initialize the new seed's net from prior weights and fine-tune on the new seed's self-play — you
+   *re-specialize* instead of re-learning Gaia. Turns each month's training from days into hours and
+   gives stronger starting play.
+2. **Base model + monthly specialist.** Keep one persistent **base net** trained on the union of all
+   past self-play (general Gaia strength). Each month, fork it and fine-tune to the specific seed.
+   As the base grows, every month's starting point is stronger — a compounding effect.
+3. **Reused features / hyperparameters / recipe.** Feature set, network shape, MCTS constants,
+   training schedule — all carried over unchanged.
+4. **Human-game flywheel (the compounding advantage).** Every month's challenge generates real human
+   games on that seed. Accumulated, they train a **human-move predictor** (focus search on what
+   humans actually do), calibrate the value net in human-reachable positions, and serve as
+   evaluation. The challenge literally produces the data that makes future AIs better at beating
+   *humans specifically*.
+
+**Data-reuse nuance (be precise):** raw self-play *games* from month A are on board A, so they are
+**not** direct training data for month B's *specialized head* — but they are exactly the fuel for the
+general **base net** (#2). Per-seed fine-tuning always uses fresh self-play on the new board; old
+self-play lives on in the base model. Human games (#4) transfer across months because the skill they
+teach (modeling human deviation) is board-general.
+
+**Caveat — negative transfer:** warm-starting from *last month's over-specialized* net can carry
+that board's quirks into the new one. Prefer warm-starting from the **general base**, or fine-tune
+with enough new self-play to wash out stale specifics. The opening book never transfers.
+
 ---
 
 ## 6. Cheap strength boosters (stack on top of net + MCTS)
@@ -318,6 +368,11 @@ keeping client-side search as a "practice / hard mode."
 Perf escape hatch: if MCTS is starved by clone cost (§3), implement incremental undo / copy-on-write
 in the engine before scaling sims.
 
+**M8 — monthly production loop (§5.4).** Once M0–M7 work for the first seed, factor the per-challenge
+artifacts (definition, weights, book, leaderboard) apart from the reusable machinery, stand up the
+persistent **base net**, and wire warm-start fine-tuning + the human-game corpus so each new month is
+cheap to produce and stronger than the last.
+
 ---
 
 ## 10. Open questions / for further brainstorming
@@ -332,6 +387,8 @@ in the engine before scaling sims.
   learned human-move predictor to focus search, or overkill?
 - Leaderboard anti-cheat: full re-verification vs spot-check vs server-authoritative AI seats.
 - Whether to invest in the incremental-undo engine change up front.
+- Cross-month transfer (§5.4): warm-start from last month's specialist vs from a general base net —
+  how to avoid negative transfer, and how much the human-game flywheel actually helps in practice.
 
 ---
 
