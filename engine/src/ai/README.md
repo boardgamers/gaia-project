@@ -1,19 +1,22 @@
-# Lost Fleet AI: Phase 0 foundation
+# Lost Fleet AI: offline foundation through Phase 1.3
 
 This directory is an offline-only foundation for the fixed Lost Fleet AI challenge. It is deliberately
 not exported from `engine/index.ts` and must not be imported by the viewer, hosted-game code, Supabase,
 or another production entry point.
 
-Phase 0 contains only:
+The directory currently contains:
 
 - a versioned static challenge definition;
 - a manifest generator that boots the real engine and projects the initialized challenge setup;
 - a reproducible benchmark harness;
-- golden and smoke tests for those offline tools.
+- a committed-state canonical projection and hash;
+- typed atomic decision expansion and canonical candidate keys;
+- an exhaustive resource-conversion planner with executable plans and Pareto frontiers;
+- golden, smoke, parity, and applicability tests for those offline tools.
 
-It does not contain candidate expansion, search, evaluation, bots, feature encoding, models, hosted
-routes, or production feature flags. Starting buildings and round boosters are intentionally not part
-of the scripted challenge prefix: both remain strategic decisions.
+It does not contain committed-turn macro construction, search, evaluation, bots, feature encoding,
+models, hosted routes, or production feature flags. Starting buildings and round boosters are
+intentionally not part of the scripted challenge prefix: both remain strategic decisions.
 
 ## Safety invariants
 
@@ -85,9 +88,123 @@ Excluded or normalized fields:
 - semantically unordered collections are sorted in the projection (`tiles.artifacts`,
   `lostFleetCost3Planets`, `artifactPlanetTypes`, `usedTinkeringTiles`, hex membership lists).
 
-Deferred:
+## Phase 1.2: typed atomic decision expansion
 
-- candidate-key parity remains out of scope until candidate expansion exists.
+`actions/expand.ts` regenerates legal commands on a clone of a supported Phase 1.1 committed state
+and projects every executable `.data` option into the explicit discriminated union in
+`actions/types.ts`. A caller may supply already-selected command fragments to expose the next
+chained prompt; the committed root is still validated first, and Phase 1.2 never selects or plans
+the prefix itself.
+
+Every candidate carries:
+
+- a SHA-256 canonical key over command, actor, phase/subphase, and normalized structured target;
+- typed building, coordinate, research, tile, booster, spaceship, artifact, and Federation IDs as
+  applicable;
+- fixed cost/reward vectors plus explicit deferred/conditional effect specs;
+- range, terraforming, and satellite metadata where applicable;
+- engine warnings and an executable move fragment.
+
+Covered command families:
+
+- standard setup: faction choice, starting buildings, round boosters;
+- income and leech: income ordering, charge, decline;
+- normal turns: build/upgrade, board and special actions, ranged free actions, burn, research,
+  Federation geometry x tile, pass, and end-turn;
+- Lost Fleet: explore, spaceship board actions, Examine Artifact, artifact choice, instant
+  Gaiaforming, and ship-Federation reward branches;
+- chained choices: Tech/cover, research, Federation/rescore, Lost Planet, bonus mine/building,
+  artifact, Gaiaforming, brainstone, PI swap, Tinkering tile, and Power Ring targets.
+
+Intentional semantic deduplication is always reported in `deduplications`:
+
+- byte-for-byte equivalent semantic options become one candidate with occurrence count;
+- `Decline` is one executable choice even when its compatibility payload lists multiple leech
+  offers, because the move executor ignores an offer argument.
+
+Explicit rejections:
+
+- every Phase 1.1 unsupported/incomplete state, including auction, silent-auction, ban, and random
+  faction-picking flows;
+- non-`standard` faction-board variants;
+- `DeadEnd`, because it is an undo signal rather than an executable candidate;
+- custom Federation fallback commands with no enumerated geometry;
+- custom setup/rotation, bidding/ban commands, initialization, and Frontiers ship movement, which
+  are outside the locked challenge boundary;
+- any offered executable command with an empty option set or unfamiliar command branch.
+
+## Phase 1.3: resource-conversion planning
+
+`resources/planner.ts` accepts the same Phase 1.1 committed-state boundary and uses Phase 1.2 typed
+candidates as its only executable action input. It is offline-only. The small additive internal
+hooks in `actions/expand.ts` project typed candidates from an internally replayed Phase 1.3 resource
+node or a caller-supplied set of production free-conversion commands; the existing committed-source
+Phase 1.2 API and outputs are unchanged.
+
+The graph uses an explicit `ProjectedConversionState` rather than engine object identity. It binds
+every projection to the canonical committed source/action timing context and includes:
+
+- credits, ore, knowledge, Q.I.C., and victory points;
+- all four power bowls and exact brainstone placement;
+- Gaiaformer total, Gaia-area, on-board, asteroid-used, other-used, and available counts;
+- token modifier, terraform discount, temporary range/steps, satellites, and Frontiers trade
+  counters;
+- actor, faction, round/final-round marker, Planetary Institute state, timing, and the sorted set of
+  conversion rights.
+
+Supported normal-round conversion families are the eight base conversions (power to Q.I.C./ore/
+knowledge/credit, Q.I.C. to ore, knowledge/ore to credit, ore to an Area-I token), power burn, and:
+
+- Hadsch Halla after its PI: credits to Q.I.C./ore/knowledge;
+- Nevlas: Area-III token to Gaia plus knowledge, and after its PI the three convenience power
+  conversions; `tokenModifier` is applied exactly to power spending;
+- Baltaks: Gaiaformer to Q.I.C., preserving the engine's Gaiaformer bookkeeping;
+- Taklons: its three-power-to-three-credit convenience conversion, including brainstone choices;
+- Lost Fleet Xenos: ore to a new Area-III token.
+
+Terrans' and Itars' Gaia-phase conversions are intentionally excluded: Phase 1.3 plans main-action
+affordability in `RoundMove`, not `RoundGaia`. An unfamiliar offered cost/reward resource fails
+explicitly rather than being silently ignored.
+
+Reachability is a semantic worklist with no depth or time cap. Production availability supplies one
+typed unit candidate for each applicable family; ranged `Spend` multipliers and `burn N` are exact
+aliases for repeated unit fragments and are reported in `diagnostics.aliases`. Every new unit
+transition is projected explicitly, including resource caps, bowl movement, brainstone branches,
+Gaia-token movement, Gaiaformer use, and faction token modifiers. Plans retain their ordered,
+replayable fragments even though their canonical key depends only on source, destination, and
+timing.
+
+Intentional graph canonicalization is fully reported:
+
+- different orders with the same step multiset and semantic destination are
+  `commutative-order` merges;
+- other executable sequences with the same destination are `equivalent-executable-sequence`
+  merges;
+- ranged conversion/burn aliases are canonicalized to repeated unit fragments;
+- resource-dependency cycles are cut only when the resulting state is componentwise dominated by
+  an ancestor; every such cut records the resource cycle, fragments, ancestor, and discarded key;
+- other componentwise dominated transitions are recorded in `paretoPruned`.
+
+There are no resource weights. Dominance requires an identical source/action/timing context,
+brainstone placement, raw Gaiaformer bookkeeping, modifier/temporary/faction-specific state, and
+conversion rights. Only then may one state dominate another by being no smaller in every one of:
+credits, ore, knowledge, Q.I.C., victory points, Area I, Area II, Area III, Gaia-area power, and
+available Gaiaformers, with at least one strict improvement. Candidate payment frontiers apply the
+same rule under the same candidate key.
+
+After a main candidate is replayed internally, Phase 1.3 proceeds only if the engine exposes the
+narrow `AfterMove` set `Spend`/`Burn`/`EndTurn`; forced follow-ups remain Phase 1.4 work. Ordinary
+resource conversions are deferred because an ordinary non-pass action guarantees the same player a
+future `BeforeMove` conversion window before their next main action/pass, and opponents cannot
+observe or consume those ordinary resources. Power-bowl prefixes are retained only when they
+strictly increase charge capacity before intervening leech; trailing non-bowl suffixes are deferred.
+Burns or other bowl changes that do not increase capacity are canonicalized to wait. The result and
+timing types also carry an explicit deferral-proof flag; a context without that proof must retain
+the conversion instead of applying this canonicalization.
+
+Phase 1.4 alone will combine conversion plans, a main choice, forced follow-ups, after-action choices,
+and `end` into a committed turn line. Committed-line macros, search, evaluation, training, and neural
+features remain deferred to later owner-approved phases.
 
 ## Future shared-engine correction: maintenance-window checklist
 

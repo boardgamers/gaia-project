@@ -1,11 +1,16 @@
 # AI Challenge Plan — a seed-locked "beat the AI" monthly game
 
-> **Status — HANDOFF (2026-07-13).** Design spec is **complete** and the first challenge's setup is
-> **LOCKED** (§2: seed `lf-mrj5exuu-c680`, 2p Lost Fleet, Xenos vs Hadsch Hallas, validated to boot).
-> **No code is implemented yet** — this is a design/handoff artifact for a future implementation
-> session and/or external (ChatGPT) review. Next code step: milestone **M0/M1** (§9).
+> **Status — CONCEPT RECORD, EXTERNALLY REVIEWED (2026-07-13).** The first challenge's setup is
+> **LOCKED** (§2: seed `lf-mrj5exuu-c680`, 2p Lost Fleet, Xenos vs Hadsch Hallas, validated to boot),
+> but the implementation assumptions and milestone order in this document have now been audited
+> against the real code. **Use `AI_IMPLEMENTATION_PLAN.md` as the authoritative execution plan.**
+> It corrects the search-node/action model, determinism and federation assumptions, performance
+> interpretation, neural encoding, training gates, and ranked anti-cheat design. This file remains
+> the concept/brainstorming history; where the two conflict, the implementation plan wins.
 >
-> **Two companion docs (both on `master`):**
+> **Three companion docs in this worktree:**
+> - `AI_IMPLEMENTATION_PLAN.md` — **authoritative** phased execution, safety gates, acceptance tests,
+>   and session boundaries;
 > - this file — `AI_CHALLENGE_PLAN.md` (architecture, approach, strength boosters, wiring, milestones);
 > - `AI_STRATEGY_NOTES.md` — the human-strategy intake (fill-in), incl. **the decoded board for this
 >   seed** and the Xenos / Hadsch Hallas ability notes (its §11 and §2), plus community-sourced tips (§13).

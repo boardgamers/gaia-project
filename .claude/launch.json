@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "viewer",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "viewer", "run", "serve"],
+      "port": 8080
+    }
+  ]
+}
