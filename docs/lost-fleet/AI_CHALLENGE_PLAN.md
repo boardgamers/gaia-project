@@ -501,7 +501,10 @@ Two subtle behaviors — and the meta-lesson they teach.
   first position next round → first pick of the next booster and first grab of contested per-round
   claim actions (power / QIC / ship / adv-tech). So passing *before* spending every action or resource
   is sometimes best — it's really a §7.1 race: passing first *wins* the race for next round's booster
-  and claims. To get it right:
+  and claims. **But it is rare in strong play** — only when the actions/resources you'd forgo are
+  worth *less* than the tempo; with a full hand of useful actions, do **not** pass. The pass-tempo
+  feature must be weighed *against* the value of your remaining actions; the danger is a prior that
+  over-values passing, so bias Pass neither way and let the value comparison decide. To get it right:
   - Treat **Pass as a first-class move** the search evaluates whenever legal — do **not** bake in the
     common "spend everything, then pass" default (that bias is exactly what makes bots miss this; the
     fuzzer's growing pass-weight is for termination only).
@@ -519,6 +522,25 @@ Two subtle behaviors — and the meta-lesson they teach.
   A net that can't see the bowls can't learn overcharge; one that can't see pass order can't learn
   pass-tempo. Walk every strategic factor in this doc and `AI_STRATEGY_NOTES.md` and confirm each is
   visible in the net's input — **most AI blind spots are missing input features, not weak search.**
+
+### 7.5 Burning power: to enable/deny a power action — but prefer natural leech
+
+Pros deliberately **burn power** to reach bowl 3 and take a power action (ore/credits/etc.) — but
+selectively, and this is another "sometimes, not always" that must stay conditional (never a rule):
+
+- **Justified only when the enabled action beats the burn's loss.** Burning is lossy (~half the
+  tokens are discarded), so it pays only when the power action gives something you really need — e.g.
+  **credits/ore at or near zero** — or when it **denies** the opponent a power action they clearly
+  need (a §7.1 race / §6.8 denial: burn to take it *before* they can). Value/search computes the
+  threshold; do **not** hand-code "burn whenever you can" (wasteful) or "never burn."
+- **Prefer reaching bowl 3 naturally.** If the opponent is about to build where you can **leech**,
+  you'll charge for free — so don't burn. This needs the **opponent-build predictor** (§6.8): a
+  feature for **expected natural charge from the opponent's likely next builds** tells the AI whether
+  to wait for leech or burn now. Burn only when you *can't* wait (e.g. the opponent can already take
+  the action this turn).
+- Encode as FEAT/WEIGHT, never AVOID/always. Requires seeing bowl state + resource levels + the
+  opponent's build options (state-completeness, §7.4) — otherwise the AI can't tell "burn now" from
+  "wait for leech" and misfires both ways.
 
 ---
 
