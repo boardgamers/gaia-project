@@ -149,7 +149,9 @@ Leech (charge vs decline) decisions, brainstone handling, gaiaforming timing, po
 | # | Tip | When | Conf | Encode as | Notes |
 |---|---|---|---|---|---|
 | 1 | _(example)_ Decline a small leech if the VP cost outweighs the charge this round | low bowls, early | L | FEAT+WEIGHT | engine already has auto-charge; this tunes it |
-| 2 | | | | | |
+| 2 | _(example — replace)_ Don't accept leech / pick a booster that makes you overcharge | bowls full or income will fill them | M | FEAT (wasted-charge) | paying VP for nothing |
+| 3 | _(example — replace)_ Consider passing early for first player next round | first booster / a per-round claim action worth more than your remaining actions | M | FEAT (pass-tempo) + PRIOR | don't reflexively spend everything first; keep power for next-round power actions |
+| 4 | | | | | |
 
 ---
 

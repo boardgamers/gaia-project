@@ -273,6 +273,8 @@ is saved for the midgame. Exists *only because* the setup is fixed.
   wall-clock currently wasted).
 - **Tune MCTS constants** (PUCT `c`, Dirichlet noise, temperature schedule) via self-play.
 - **Raise the simulation count** — the blunt lever; affordable when pondering + no human wait.
+- **Adaptive time/compute allocation** — spend more simulations on pivotal, high-variance decisions
+  (federations, big forks, contested claims) and fewer on obvious ones.
 
 ### 6.3 Score-margin value target (make it relentless)
 Train the value head to predict **score margin**, not win/loss (KataGo-style). A win/loss net
@@ -491,6 +493,33 @@ potential** feature (how close a cheap fed is; how many feds the board can event
 places buildings to be connectable and doesn't strand power). Early-game feds on the fixed board are
 shaped by the opening book (§6.1); fed tiles are contested singletons handled by §7.1.
 
+### 7.4 Pass timing, overcharge, and state-representation completeness
+
+Two subtle behaviors — and the meta-lesson they teach.
+
+- **Pass early for tempo (don't reflexively use every action first).** The first player to pass takes
+  first position next round → first pick of the next booster and first grab of contested per-round
+  claim actions (power / QIC / ship / adv-tech). So passing *before* spending every action or resource
+  is sometimes best — it's really a §7.1 race: passing first *wins* the race for next round's booster
+  and claims. To get it right:
+  - Treat **Pass as a first-class move** the search evaluates whenever legal — do **not** bake in the
+    common "spend everything, then pass" default (that bias is exactly what makes bots miss this; the
+    fuzzer's growing pass-weight is for termination only).
+  - Add a **pass-tempo feature**: if I pass now, do I get first player, and what is that first pick
+    worth (booster + which contested claims)? Plus keep power for next round's power actions rather
+    than dumping it — the net weighs "saved power for claims" vs "spend now."
+- **Avoid overcharging power.** Charging when bowls are already full (or will be filled by income)
+  wastes it, so accepting leech (which costs VP) to overcharge is paying VP for nothing, and an
+  overcharging booster is wasted. Usually avoid — but *soft* (faction/tempo exceptions), so encode a
+  **wasted-charge feature** (charge lost to full bowls, incl. incoming income) as FEAT/WEIGHT, never
+  AVOID. The engine's auto-charge (`auto-decide.ts`) already decides leech; the bot's choice should be
+  value-driven and see this waste.
+- **Meta-lesson — audit state/feature completeness.** Both behaviors are only learnable if the AI's
+  representation *includes* the relevant state: **power-bowl contents, pass status, turn/pass order.**
+  A net that can't see the bowls can't learn overcharge; one that can't see pass order can't learn
+  pass-tempo. Walk every strategic factor in this doc and `AI_STRATEGY_NOTES.md` and confirm each is
+  visible in the net's input — **most AI blind spots are missing input features, not weak search.**
+
 ---
 
 ## 8. UI & flow wiring (reusing what exists)
@@ -578,6 +607,12 @@ cheap to produce and stronger than the last.
 - Whether to invest in the incremental-undo engine change up front.
 - Cross-month transfer (§5.4): warm-start from last month's specialist vs from a general base net —
   how to avoid negative transfer, and how much the human-game flywheel actually helps in practice.
+- **Free-action / resource-conversion combinatorics** (Spend / BurnPower / QIC / brainstone / Gaia)
+  blow up per-turn branching; how to prune to *useful* conversions or fold them into the action they
+  enable without hiding a good line (the fuzzer just caps conversions — a real bot needs smarter
+  handling).
+- **State-representation completeness audit** (§7.4): systematically check every strategic factor is
+  visible in the net's input before blaming search for a blind spot.
 
 ---
 
