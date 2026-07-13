@@ -153,7 +153,8 @@ Leech (charge vs decline) decisions, brainstone handling, gaiaforming timing, po
 | 3 | _(example — replace)_ Consider passing early for first player next round | RARE — only when few useful actions/resources left and the first booster / a per-round claim beats them | M | FEAT (pass-tempo) + PRIOR | don't reflexively spend everything first; with a full hand, don't pass; keep power for next-round power actions |
 | 4 | _(example — replace)_ Burn power to take a power action you need or to deny one the opponent needs | credits/ore near zero, or opponent about to grab it; and natural leech won't get you there in time | M | FEAT+WEIGHT | burning is lossy (~half) — selective, never "always burn" |
 | 5 | _(example — replace)_ Prefer natural leech over burning — wait if the opponent will build where you can charge | opponent likely to build adjacent soon | M | FEAT (expected-natural-charge) | needs opponent-build prediction (§6.8) |
-| 6 | | | | | |
+| 6 | _(example — replace)_ Order queued moves so leech-granting builds come last | multiple moves queued and the opponent could use/burn the charge this round | M | FEAT (opponent-leech-cost) + PRIOR | conditional — don't delay a build you need now (plan §7.6) |
+| 7 | | | | | |
 
 ---
 

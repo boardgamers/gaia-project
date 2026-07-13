@@ -542,6 +542,26 @@ selectively, and this is another "sometimes, not always" that must stay conditio
   opponent's build options (state-completeness, §7.4) — otherwise the AI can't tell "burn now" from
   "wait for leech" and misfires both ways.
 
+### 7.6 Deny/delay opponent leech via move ordering
+
+The mirror of §7.5: building adjacent to an opponent lets *them* charge power. Giving them a big
+charge early (e.g. 4 power — a full bowl-3 fill — or enough in bowl 2 that they can burn to reach a
+power action) hands them *timely* resources. So when several moves are queued, **order them so the
+leech-granting builds come as late as possible**, denying the opponent usable power.
+
+- **The cost is already in margin.** The opponent's power gain is your loss, so the value net counts
+  it. What remains is a *sequencing* problem — the search explores orderings of your moves and prefers
+  the one that leaks the least usable charge, with the value net evaluating the resulting states
+  (opponent power + what it enables).
+- **Cheap feature:** an **opponent-leech-cost** signal per move — how much charge it grants and *how
+  usable it is to them right now* (convertible to a power action they want, directly or via burn this
+  round?). The flip side of §7.5's expected-natural-charge; needs the same opponent power/build model
+  (§6.8). A move-ordering **prior** can also try low-leech orderings first.
+- **Conditional, not a rule.** Don't delay a build you need now just to avoid leech — the value
+  function trades "my tempo from building now" vs "the opponent's power gain." "As long as possible"
+  means *when the ordering is otherwise free or the leech is costly*, not always.
+- Needs to see opponent bowls + what a charge enables them (state-completeness, §7.4).
+
 ---
 
 ## 8. UI & flow wiring (reusing what exists)
