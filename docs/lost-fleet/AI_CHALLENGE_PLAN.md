@@ -86,6 +86,23 @@ Notes:
   of `ChooseFaction` (and any forced setup) move lines**. Deterministic replay (an enforced engine
   invariant) guarantees the same starting position every time.
 
+**Recommended format: 2-player (human vs one AI).** For a *strongest-possible-AI* skill leaderboard,
+2p is the best choice on every axis:
+- **Strongest AI per unit of compute** — games are ~half the length (~53 vs ~111 turns, §3),
+  self-play is ~2× faster, and 2p search/value is far cleaner than the multiplayer case, which
+  brings kingmaking and the hard max-n opponent-cooperation problem. Fewer opponents → a better AI.
+- **Purest, fairest test** — a clean head-to-head; no third-party AI whose interactions randomly help
+  or hurt the human (that variance is bad for a skill leaderboard).
+- **Cheapest to make deterministic and verify** (one AI seat, fewer moves), and fastest to iterate.
+- 3-player is a reasonable occasional variety; **4-player is the worst fit** (maximum variance, fuzzy
+  "did I beat it", weakest AI per unit of compute).
+
+**Free replayability:** seed-locked self-play trains *one* net that plays *every* seat, so letting the
+human pick **either** of the two factions (AI takes the other) costs no extra training — two ways to
+play each monthly challenge. The challenge: 2p, fixed seed, two pre-chosen factions + fixed turn
+order, human picks either faction and tries to out-score the AI, ranked by **margin**, easy/hard tiers
+via AI search depth.
+
 ---
 
 ## 3. Feasibility findings from the current codebase (measured this session)
@@ -302,31 +319,45 @@ leech potential, hex blocking/adjacency, seat/turn-order position.
 A **human-readable strategy doc** (for maintainers) is separate from these machine-usable encodings
 and does not feed the model.
 
-### 7.1 Contested races & tempo (e.g. racing for an advanced tech tile)
+### 7.1 Contested & limited-availability resources (races and tempo)
 
-Scarce singletons — advanced tech tiles (one copy each, gated by research level + a federation
-token), federation tiles, the Lost Planet, the round booster you want, key blocking hexes — are
-**races**: whoever reaches the prerequisites first claims the prize and removes it from everyone
-else's options. The AI must recognize a race, track how far every faction is from the prize, and
-avoid moves that surrender its lead.
+Gaia is full of **contested, limited-availability resources**, many of them powerful. They come in
+two kinds, both races:
+
+- **One-time claims (whole-game race):** advanced tech tiles (one copy each, gated by research level
+  + a federation token), federation tiles (limited stacks, can be exhausted), Lost Fleet **expansion
+  federations**, **artifact tokens** (limited, seeded), the Lost Planet, key blocking hexes. Once
+  taken, gone forever.
+- **Per-round shared actions (within-round race):** the board **power actions**, the **QIC/green
+  actions**, and Lost Fleet **ship actions**. Any player may take them, but each is available only
+  *once per round*, so within a round it's a sprint to grab the one you want before a rival does —
+  and it hinges on **turn order this round** (can you reach it on your turn before an opponent reaches
+  it on theirs, with the resources ready?).
+
+Whoever reaches the prerequisites first claims the prize and denies it to everyone else. The AI must
+recognize the race, track how close every faction is, and avoid moves that surrender its lead.
 
 **This is handled emergently by net + MCTS — no bespoke race-tracking code required:**
-- MCTS with opponent modeling (max-n) literally simulates the opponents racing for the same tile.
+- MCTS with opponent modeling (max-n) literally simulates the opponents racing for the same prize.
   "Keep track of everyone else's path toward it" *is* the search tree exploring their best
-  responses — including them rushing the prerequisites and taking the tile in the branches where the
-  AI delays.
+  responses — including them rushing the prerequisites and taking it in the branches where the AI
+  delays.
 - The value net (with the score-margin target, §6.3) learns that being ahead in a race is winning,
-  because in self-play the games where it secured the tile scored higher. A move that surrenders the
+  because in self-play the games where it secured the prize scored higher. A move that surrenders the
   tempo lead therefore *evaluates worse*, so the AI avoids it — exactly the "don't fall out of the
   lead" behavior. It falls out of the objective; it is not hand-coded.
 
 **Caveat + cheap fix:** races span many turns, which stresses search horizon and credit assignment,
-so pure search alone can be shaky. Make it sharp and robust with an explicit **tempo feature**
-(a §7 "what to look at"): for each contested scarce asset, compute *moves-until-I-can-claim-it* vs
-*moves-until-each-opponent-can*, yielding a per-asset **lead/deficit** signal. This hands the net the
-race arithmetic instead of forcing it to rediscover the counting from raw state, so it plays the race
-precisely even at modest search depth. Board-general and reused every month; applies to all contested
-singletons, not just advanced tech.
+so pure search alone can be shaky. Make it sharp and robust with an explicit **contention feature**
+(a §7 "what to look at"), covering both kinds:
+- *One-time claims:* for each contested asset, *moves-until-I-can-claim-it* vs
+  *moves-until-each-opponent-can* → a per-asset **lead/deficit** signal.
+- *Per-round shared actions:* current **availability** + whether I can **afford/reach** it before
+  each opponent given **this round's turn order**.
+
+This hands the net the race arithmetic instead of forcing it to rediscover the counting from raw
+state, so it plays every race precisely even at modest search depth. Board-general and reused every
+month; applies to the whole contested-resource family, not just advanced tech.
 
 **Fixed-seed bonus:** because the opening is the same tree every game, the opening book (§6.1)
 *pre-solves* the early race optimally — the AI plays the fastest correct line to a contested prize
