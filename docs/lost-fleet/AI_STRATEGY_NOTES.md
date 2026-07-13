@@ -167,6 +167,23 @@ any **thresholds** (e.g. "needs level-4 track + a fed token by round 3 to beat a
 
 ---
 
+### Federations (formation & timing) — feeds plan §7.3
+
+Note your rules of thumb for *when* to form (early fed-tile boost + unlocking the fed token vs
+efficiency), *what* to include (hit the threshold with minimal overshoot & satellites; avoid
+overloading 1-power mines), and the *exceptions* (a satellite/federation final-scoring tile flips the
+satellite cost; sometimes upgrading a building already in a fed is still right). Encode as FEAT/WEIGHT,
+never hard rules — see §0. The engine enumerates candidate feds, so these notes tune *choice + timing*,
+not the connection math.
+
+| # | Federation tip | When / condition | Conf | Encode as | Notes |
+|---|---|---|---|---|---|
+| 1 | _(example — replace)_ Aim for ~7 power with the fewest satellites | default | M | FEAT (fed-efficiency) | overshoot wastes tokens/buildings |
+| 2 | _(example — replace)_ Don't sink all power tokens into fed 1 | always | M | FEAT+WEIGHT | keep economy for later feds |
+| 3 | | | | | |
+
+---
+
 ## 9. Lost Fleet–specific (if the challenge uses Lost Fleet)
 
 Ships, exploration, artifact tokens, expansion federations, Examine Artifact, the new expansion

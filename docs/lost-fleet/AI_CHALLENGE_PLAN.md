@@ -453,6 +453,46 @@ search, so the AI plays it optimally from move one instead of approximating it w
 
 ---
 
+### 7.3 Federation planning (look-ahead + combinatorial optimization)
+
+Forming federations is one of the deepest planning problems in the game: you plan several turns ahead
+to connect buildings into a group of ≥7 power value (the threshold; faction abilities can modify it),
+choosing *which* buildings and *how many satellites* (each satellite spends a power token, permanently
+shrinking your power economy). The competing factors:
+- form **early** for the fed-tile boost (resources/tech/mines/VP) and to unlock the fed token that
+  gates advanced tech (§7.1) — vs form **efficiently** (least waste);
+- hit the threshold with **minimal overshoot** (~7 power) and **fewest satellites**;
+- but a **final-scoring tile rewarding satellites/federations** partly flips the satellite "cost" —
+  though even then, don't spend all your tokens on fed 1 and cripple the rest of the game;
+- don't stuff a fed with many 1-power **mines** (more buildings + satellites, and later upgrading them
+  adds power the formed fed can't use);
+- yet "**never upgrade a building already in a fed**" must NOT be a hard rule — sometimes the upgrade's
+  own income/tech/scoring value warrants it.
+
+**The one genuinely new hard part — already solved by the engine.** Choosing the buildings + satellites
+is a minimum-satellite connection (Steiner-tree-like) optimization. The engine **already enumerates
+candidate federations**: `Command.FormFederation` offers `command.data.federations` (computed candidate
+hex-sets) + a fed-tile choice. Search picks among *bounded candidates* and decides *when*, instead of
+solving the connection problem at every node — keeping fed branching tractable.
+
+**The rest is soft/emergent under the value-on-final-margin net (not hard rules):**
+- *7-power / few satellites* → a **fed-efficiency** preference the net learns (overshoot + wasted
+  tokens lower the final margin).
+- *satellite-scoring final tile* → the net sees the final-scoring feature (§4) and flips the satellite
+  sign, while still balancing token economy across the whole game so it won't cripple itself.
+- *don't overload mines; "upgrading a fed building is usually a no-go, sometimes right"* → the net
+  values an upgrade for its *own* benefits (income/tech/scoring) minus the now-redundant fed-power
+  (worth nothing), so it skips fed-power-only upgrades and takes the ones whose other value pays off.
+  The exceptions are automatic — encode as FEAT/WEIGHT, **never** AVOID.
+
+**Cheap features for the long horizon (§7 "what to look at"):** a **federation-efficiency** feature
+(power over threshold, satellite token cost, buildings committed) and a **federation-readiness/
+potential** feature (how close a cheap fed is; how many feds the board can eventually yield — so the AI
+places buildings to be connectable and doesn't strand power). Early-game feds on the fixed board are
+shaped by the opening book (§6.1); fed tiles are contested singletons handled by §7.1.
+
+---
+
 ## 8. UI & flow wiring (reusing what exists)
 
 Existing seams we build on:
