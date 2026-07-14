@@ -1,7 +1,18 @@
 {
-  "version": "5.30.5",
-  "releasedAt": "2026-07-12",
+  "version": "5.30.6",
+  "releasedAt": "2026-07-14",
   "entries": [
+    {
+      "version": "5.30.6",
+      "releasedAt": "2026-07-14",
+      "kind": "fix",
+      "title": "Advanced log crash fix",
+      "impact": "",
+      "changes": [
+        "Fixed the Advanced Log panel (and its show/hide toggles) failing to render for any move whose federation token name ended in \"-tech\" (e.g. Lost Fleet's ship-fed-tech) combined with a power-usage suffix"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.30.5",
       "releasedAt": "2026-07-12",
