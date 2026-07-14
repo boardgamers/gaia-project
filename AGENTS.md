@@ -13,15 +13,48 @@ This repo is the active Lost Fleet worktree for this project.
   deliberately left untouched for most of this project's history, so an old local clone of it can
   be missing a huge amount of work that has long existed on the feature branches.
 - Note: `master` is the Vercel production deploy target — every push goes live immediately.
+- An explicit owner handoff may instead name a phase branch and forbid `master`. Follow that
+  task-specific branch instruction over this default; do not switch, pull, commit, or push merely
+  as part of startup unless the task authorizes it.
 
-## Read Order
+## Context-Efficient Read Routing
 
-1. `docs/lost-fleet/PROGRESS.md` — read its **Working agreements** section first; it's a standing
-   instruction, not optional.
-2. `docs/lost-fleet/RULES_CLARIFICATIONS.md`
-3. `docs/lost-fleet/COMPONENTS.md`
-4. `docs/lost-fleet/PERFORMANCE.md` before touching viewer rendering
-5. Recent commits on this branch
+Always start with:
+
+1. `git status --short --branch` and the recent commits on the current branch.
+2. `docs/lost-fleet/PROGRESS.md`'s **Working agreements**, **Current task index**, and the current
+   policy/commands at the start of **Testing — required going forward**. Stop at its labeled
+   historical rerun log; do **not** read the project history cover to cover.
+3. The files to be changed, their direct imports/callers, and the focused tests that establish their
+   contract.
+
+Load additional documents only when the task touches their subject:
+
+- `RULES_CLARIFICATIONS.md` for game-rule interpretation or shared engine legality/scoring work.
+- `COMPONENTS.md` for component inventory, shared-engine architecture, or viewer integration.
+- `PERFORMANCE.md` before viewer rendering/performance work.
+- For offline AI work, read `docs/lost-fleet/AI_CURRENT.md` first. It is the canonical compact
+  session contract and names the relevant README/plan sections and source API surfaces. Enumerate
+  `engine/src/ai/` with `rg --files`, then inspect only the requested phase's files and dependencies.
+
+Explicit owner instructions still override this routing. Handoff authors should name exact sections
+and source files rather than saying to read large documents or directories completely.
+
+## Token Economy
+
+- Target no more than about 4,000 lines / 200 KB of startup context. This is a routing target, not a
+  correctness cap: if more is genuinely needed, explain the dependency or uncertainty before
+  loading it.
+- Use `rg` for headings, exports, symbols, and filenames, then read scoped ranges. Read a file over
+  500 lines completely only when editing it or when its whole contract is directly under review.
+- Never print a complete generated manifest, corpus fixture, long test log, or repository-wide diff
+  into the conversation. Prefer counts, hashes, `git diff --stat`, and focused hunks.
+- Do not reread material already loaded in the same logical task or preserved in a compaction
+  summary. Follow links only when the current source leaves a real ambiguity.
+- Keep one current source of truth for status and measurements. Historical handoffs stay immutable;
+  link to them instead of copying their contents into each new handoff.
+- Follow `PROGRESS.md`'s risk-based testing cadence. One final full suite after source freeze is more
+  useful than overlapping or premature exhaustive runs.
 
 ## What Is Already In Place
 
@@ -49,8 +82,9 @@ This repo is the active Lost Fleet worktree for this project.
 
 ## Open Work
 
-See `docs/lost-fleet/PROGRESS.md`'s "Next actions" section for the current prioritized list —
-confirm with the user before starting any item.
+See `docs/lost-fleet/PROGRESS.md`'s "Current task index" first. Treat the much larger "Next actions"
+section as a searchable historical ledger. Confirm before selecting an item when the user has not
+already supplied a concrete task.
 
 ## Safety Rules
 

@@ -944,36 +944,58 @@ live games.
 
 This plan is deliberately split for token/context efficiency and reviewability.
 
-| Session       | Scope                                                     | Stop condition                 |
-| ------------- | --------------------------------------------------------- | ------------------------------ |
-| Plan          | Reviewed execution plan                                   | Done                           |
-| AI-1          | Phase 0 safety, challenge definition/manifest, benchmarks | Done                           |
-| AI-2          | Phase 1.1 canonical state/hash                            | Done                           |
-| AI-3          | Phase 1.2 typed decision expander                         | Done                           |
-| AI-4          | Phase 1.3 conversion planner + locked-state hardening     | Done                           |
-| AI-5          | Phase 1.4 macro builder + corpus campaign                 | Done                           |
-| **AI-6 next** | **Greedy/heuristic bots + evaluator**                     | Inspectable baselines complete |
-| AI-7          | MCTS/Gumbel search + strength harness                     | Phase 2 gate/measurements      |
-| AI-8          | Federation planner + exact R6 solver                      | Exactness/coverage documented  |
-| AI-9          | State-keyed book                                          | Reproducible book + fallback   |
-| AI-10         | Neural schemas/PyTorch/ONNX stack                         | Phase 4 gate                   |
-| AI-11+        | Self-play iterations, each with one measured objective    | Champion gate per iteration    |
-| Later         | Adversarial hardening, practice UI, backend, rollout      | Each phase gate separately     |
+### Lean context contract
+
+This document is a reference, not a mandatory cover-to-cover read for every phase. A new AI session
+should load:
+
+1. `AGENTS.md` and the routed sections of `PROGRESS.md` named there;
+2. `AI_CURRENT.md`, the canonical compact session contract;
+3. only the plan sections and stable README sections cited by that contract;
+4. only the source API surfaces named there, expanding through direct dependencies as needed.
+
+Historical phase handoffs are evidence archives. Read a named result/contract section when consuming
+that phase, not the whole archive. Likewise, enumerate `engine/src/ai/` first and follow the relevant
+dependency path; never require every AI file to be read merely because it exists.
+
+| Session       | Scope                                                     | Stop condition                |
+| ------------- | --------------------------------------------------------- | ----------------------------- |
+| Plan          | Reviewed execution plan                                   | Done                          |
+| AI-1          | Phase 0 safety, challenge definition/manifest, benchmarks | Done                          |
+| AI-2          | Phase 1.1 canonical state/hash                            | Done                          |
+| AI-3          | Phase 1.2 typed decision expander                         | Done                          |
+| AI-4          | Phase 1.3 conversion planner + locked-state hardening     | Done                          |
+| AI-5          | Phase 1.4 macro builder + corpus campaign                 | Done                          |
+| AI-6          | Greedy/heuristic bots + evaluator                         | Done                          |
+| **AI-7 next** | **MCTS/Gumbel search + strength harness**                 | Phase 2 gate/measurements     |
+| AI-8          | Federation planner + exact R6 solver                      | Exactness/coverage documented |
+| AI-9          | State-keyed book                                          | Reproducible book + fallback  |
+| AI-10         | Neural schemas/PyTorch/ONNX stack                         | Phase 4 gate                  |
+| AI-11+        | Self-play iterations, each with one measured objective    | Champion gate per iteration   |
+| Later         | Adversarial hardening, practice UI, backend, rollout      | Each phase gate separately    |
 
 Do not compress AI-1 through AI-5 into one session. The action/search foundation is the highest-risk
 part, and each slice produces evidence that may change the next design.
 
 ### Fresh-session starter prompt
 
-AI-5 is complete; its evidence lives in `docs/lost-fleet/AI_PHASE_1_4_HANDOFF.md` ("Phase 1.4
-result"). AI-6 needs a fresh owner-approved handoff before any session starts it; do not reuse the
-obsolete AI-1 or AI-5 prompts.
+AI-6 is complete; the non-neural baselines and measured paired results are documented in
+`engine/src/ai/README.md` and the decision log below. AI-7 needs fresh owner approval; its exact lean
+startup, scope, preserved gates, source API surfaces, and verification cadence are consolidated in
+`AI_CURRENT.md`. Do not reuse the obsolete AI-1, AI-5, or AI-6 prompts or expand that compact
+contract into a blanket read-everything instruction.
 
 ---
 
 ## 15. Global verification matrix
 
 Every later phase must preserve the applicable rows:
+
+Apply these rows with the risk-based cadence in `PROGRESS.md`: focused checks during development,
+then each applicable expensive gate once after source freeze. The full engine command already
+contains the offline AI tests, so a second complete-AI run on identical source is diagnostic rather
+than mandatory. Do not repeat an asserted digest/hash with a parallel ad hoc comparison unless the
+assertion itself is under investigation.
 
 | Risk                        | Required verification                                               |
 | --------------------------- | ------------------------------------------------------------------- |
@@ -1013,3 +1035,6 @@ Append decisions here rather than silently changing the architecture.
 | 2026-07-14 | Phase 1.4       | Committed-turn macro builder complete: stable `macro-v1` keys over semantic choice only; locked Round-1 branch stats 52 macros/32 mains before vs 45 candidates and 130,532 seed pairs after conversion integration; every emitted macro validated by fresh-clone host-style replay                                                | Focused suite + locked digests `972a1e…9096`; corpus campaign                                  |
 | 2026-07-14 | Phase 1.4       | Custom (hand-picked hex set) federations are descoped by owner: the AI forms only engine-enumerated satellite-path federations; a custom-only fallback offer is deliberately excluded and recorded (`excludedCustomFederationTiles`), never aborting a state or read as "no federation", and is not a gap awaiting a later feature | Owner decision + live macro-game campaign (11/1,039 states hit the fallback)                   |
 | 2026-07-14 | Phase 1.4       | Replay-path hash differences confined to the base-003 federationCache staleness class (serialization drops the cache's `custom` flag) are counted and mask-verified, not concealed and not "fixed" in shared engine code                                                                                                           | Cache-masked canonical comparison in the corpus campaign                                       |
+| 2026-07-14 | Phase 2 / AI-6  | Added offline random, immediate greedy, and deterministic inspectable heuristic bots. All choose only Phase 1.4 committed macros, apply host-style, and use one fixed seat-0 frame; terminal value is the exact final score margin. The heuristic exposes 28 independently ablatable named terms and implements no search.         | 12 focused; 68 offline AI; full engine 698/4; production-isolation audit                       |
+| 2026-07-14 | Phase 2 / AI-6  | Locked paired results: greedy vs random scored 68-51 and 46-20 from greedy's faction perspectives (paired +43, mean +21.5, 2-0); heuristic vs greedy scored 49-67 and 48-66 from heuristic's perspectives (paired -36, mean -18, 0-2). The heuristic is retained as a transparent coverage baseline, not promoted over greedy.     | Deterministic swapped-faction self-play from the locked challenge prefix                       |
+| 2026-07-14 | Phase 2 / AI-6  | Baseline self-play defers conversion integration by default because the locked rich state has 130,532 exact seed pairs. This is an explicit play-policy choice; callers can enable the existing exact axes, and no cap, timeout, depth bound, sequence bound, or beam was added to macro generation or conversion planning.        | Existing Phase 1.3/1.4 locked suites and digests preserved                                     |

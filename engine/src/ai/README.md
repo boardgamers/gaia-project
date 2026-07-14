@@ -1,4 +1,4 @@
-# Lost Fleet AI: offline foundation through Phase 1.4
+# Lost Fleet AI: offline foundation through Phase 2 baselines
 
 This directory is an offline-only foundation for the fixed Lost Fleet AI challenge. It is deliberately
 not exported from `engine/index.ts` and must not be imported by the viewer, hosted-game code, Supabase,
@@ -13,11 +13,22 @@ The directory currently contains:
 - typed atomic decision expansion and canonical candidate keys;
 - an exhaustive resource-conversion planner with executable plans and Pareto frontiers;
 - a committed-turn macro builder with stable macro keys and a macro-driven corpus campaign;
+- random, greedy, and inspectable heuristic committed-macro bots;
+- a fixed-seat evaluation report with independently ablatable strategic features;
+- paired full-game baseline self-play;
 - golden, smoke, parity, and applicability tests for those offline tools.
 
-It does not contain search, evaluation, bots, feature encoding, models, hosted routes, or production
-feature flags. Starting buildings and round boosters are intentionally not part of the scripted
-challenge prefix: both remain strategic decisions.
+It does not contain search, federation solving, the Round-6 solver, opening books, neural feature
+encoding, models, training, Web Workers, hosted routes, or production feature flags. Starting
+buildings and round boosters are intentionally not part of the scripted challenge prefix: both
+remain strategic decisions.
+
+## Lean session entry point
+
+Start every new AI phase from `docs/lost-fleet/AI_CURRENT.md`. It is the single current session
+contract and names the exact README sections, plan sections, source API surfaces, and gates to load.
+This README owns stable module semantics; it is not a second handoff and should not be read cover to
+cover by default. Historical sections remain authoritative only when their layer is in scope.
 
 ## Safety invariants
 
@@ -304,17 +315,66 @@ flag, and current engine behavior genuinely reads it) are counted as
 on those states macro parity is checked on hash-independent semantic content. Any other
 divergence fails the campaign.
 
-Search, evaluation, training, and neural features remain deferred to later owner-approved phases.
+## Phase 2 / AI-6: non-neural evaluation baselines
+
+The Phase 2 baseline path remains wholly offline and consumes only
+`buildCommittedTurnMacros(...)` output:
+
+- `bots/random.ts` samples uniformly from the committed macro set with a reproducible seed. It is a
+  legality/smoke baseline, not the old fuzz command sampler.
+- `bots/greedy.ts` applies every candidate host-style and selects by immediate score/resource value.
+  An EndGame destination always returns the exact fixed-frame final margin.
+- `evaluation.ts` exposes 28 stable feature names, default weights, raw seat values, seat-0-minus-
+  seat-1 margins, and per-feature weighted contributions. `disabledFeatures` independently zeros
+  any named term; `weights` permits explicit ablations/tuning without changing extraction. The
+  features cover current score/resources, income by resource and remaining income phases, building
+  supply/uncovered income, round timing, separate Space/Deep-Space progress, Gaia pipeline,
+  research 3/5 races and Advanced-Tech prerequisites, standard-Tech cover cost, shared power/ship
+  actions, booster/pass order, power-bowl capacity, exact edge-level leech charge/VP cost, Trading
+  Station discount/opponent offer, federation state/options, Lost Planet, exploration, artifacts,
+  ship tech/federation rewards, current final-scoring projection, and exact leftover conversion.
+- `bots/heuristic.ts` applies every committed macro, evaluates the destination plus the exact edge
+  marginals, and deterministically selects the highest fixed-frame value for seat 0 or the lowest
+  same value for seat 1. It never negates utility per edge and constructs no search tree.
+- `testing/self-play.ts` re-applies every chosen line to a fresh hydrated engine, requires
+  `newTurn`, verifies the recorded destination hash/actor, and plays paired faction assignments to
+  EndGame without manual commands. Its 800-line check is only a loud full-game termination guard;
+  macro generation and conversion planning remain exact and uncapped.
+
+The baseline play policy defaults conversion integration off because the pristine locked wallet has
+130,532 exact seed pairs. A caller may enable either Phase 1.4 conversion axis; when enabled the
+existing planner/builder runs to its complete fixpoint with no depth, sequence, beam, or time cap.
+
+Locked deterministic paired measurements (A as Xenos/B as Hadsch Hallas, then swapped):
+
+- greedy vs random: `68-51` (+17) and `20-46` (+26 for greedy as Hadsch Hallas), paired margin
+  `+43`, mean `+21.5`, record 2-0;
+- heuristic vs greedy: `49-67` (-18) and `66-48` (-18 for heuristic as Hadsch Hallas), paired margin
+  `-36`, mean `-18`, record 0-2.
+
+Verification at the AI-6 handoff: 12/12 focused, 68/68 complete offline AI, and 698 passing / 4
+pending in the complete engine suite. Engine 4.8.51, Phase 0 semantic SHA
+`ce3bdd7322860484dfae771320b9f12967d0677b908f91cdc682d9c4427bf51e`, the Phase 1.2 62-candidate
+digest `a28eb3d03e2b51e1bea28170b92f5e99991f41c76b1b1c8a2193a97a0ee704d9`, the Phase 1.3 36,159 /
+9,985 / 45 / depth-30 digest `b4e266ef95ca8cc34cfd1cde4380a782ff01f4802a077d49ac9686924e222850`,
+and the Phase 1.4 52-macro / 32-main digest
+`972a1e9b062ebcda5a96e2242039bbc29eee83934c9eb41e175a493bb1009096` all remain locked.
+
+The second result is retained as evidence, not hidden or promoted: the first inspectable heuristic
+is a coverage/ablation baseline and future teacher candidate, but its default hand weights require
+calibration before it can be treated as stronger than greedy. Phase 2 has no single-line promotion
+claim. Search, MCTS/PUCT/Gumbel, tree reuse, transpositions, and learned opponent models remain
+absent and deferred to AI-7 or later owner-approved phases.
 
 The complete next-session contract, preserved hashes/counts, Phase 1.3 before/after profile, proof
-obligations, Phase 1.4 corpus gate, and stop conditions are consolidated in
+obligations, Phase 1.4 corpus gate, and inherited stop conditions are consolidated in
 `docs/lost-fleet/AI_PHASE_1_4_HANDOFF.md`.
 
 The later player-facing maximum AI has an owner-locked local-runtime policy: one unchanged
 model/book and fixed high simulation workload for every supported device, no time-based early exit,
 and no silent low-device downgrade. Incapable devices are unsupported. That policy, plus truthful
-search progress/ETA/heartbeat requirements, belongs to the later viewer-integration phase and must
-not be implemented as part of Phase 1.4.
+search progress/ETA/heartbeat requirements, belongs to the later viewer-integration phase and is
+not implemented by the offline Phase 2 baselines.
 
 ## Future shared-engine correction: maintenance-window checklist
 

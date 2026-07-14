@@ -1,13 +1,11 @@
 # Lost Fleet — Progress & Next-Session Handoff
 
-> **New session? Start here.** This file is the running state of the project. Read it, then read
-> `RULES_CLARIFICATIONS.md` (the value ledger) and `COMPONENTS.md` (the inventory/status). If the
-> task touches viewer rendering/perf, also read `PERFORMANCE.md` first — it has hard-measured
-> findings that should not be rediscovered. Read **Working agreements** below before doing
-> anything else, including the **Testing — required going forward** section it points to — both
-> are standing process, not optional. Then ask the user "what next?" and use the **Next actions**
-> section below to guide them.
-> Last updated: **2026-07-14** (AI Phase 1.4 committed-turn macro builder + corpus campaign).
+> **New session? Start here, selectively.** Read **Working agreements**, **Current task index**, and
+> the current policy/commands at the start of **Testing — required going forward**; stop at its
+> labeled historical rerun log. Do not load this 5,000-line history cover to cover. Read the other
+> ledgers and historical handoffs only when the task touches their subject, following `AGENTS.md`.
+> If the user supplied a concrete task, proceed with it rather than asking "what next?".
+> Last updated: **2026-07-15** (AI-6 complete; lean context and test routing added).
 
 ## Working agreements (read every session, not optional)
 
@@ -26,6 +24,15 @@ release.json`) has two audiences and they must not blur together: a "What's new"
    always go through `node scripts/update-viewer-release.js <bump> "<title>" "user:<change>" "dev:
 <change>" ...`, which refuses untagged input and won't let a fix slip into the user-facing tab.
    Keep `userChanges` bullets short and in plain language — players don't want to read much.
+
+## Current task index
+
+- **Offline AI:** Phase 2 / AI-6 is complete on `claude/gaia-phase-1-4-yjb6qo` and awaiting owner
+  review. AI-7 search is next only after a fresh owner-approved scope. Its complete compact startup
+  contract is `AI_CURRENT.md`; do not reconstruct it from this historical ledger.
+- **Other Lost Fleet work:** follow a concrete owner request. The large **Next actions** section is a
+  historical ledger with many completed entries; search it for a named topic instead of reading it
+  sequentially.
 
 ## What this project is
 
@@ -4087,6 +4094,32 @@ engine (raw `mocha`) and the viewer (`vue-cli-service test:unit` forwards `--rep
 want full spec output when running locally) — just append `--reporter min` to the command
 invoked in a session.
 
+### Risk-based cadence (standing instruction, 2026-07-15)
+
+Use the smallest gate that can falsify the current change, then run the broader gate once after the
+source is stable:
+
+1. **Inner loop:** focused tests for touched behavior, then focused type/lint checks. Do not run an
+   exhaustive corpus or full repository suite after every edit.
+2. **Phase/source freeze:** run each applicable locked digest/golden campaign and the full engine
+   suite once, after the last source change and before owner review or merge.
+3. **No overlapping duplicate:** the full three-glob engine command includes `src/ai/**`. Do not
+   additionally rerun the complete offline-AI suite on the same source merely to restate a subgroup
+   count; run it separately only to isolate a failure or when the owner explicitly requests an
+   independent measurement.
+4. **No docs-only rerun:** documentation-only edits require Markdown/whitespace/diff checks, not
+   engine or viewer suites.
+5. **No duplicate proof:** when a focused or full test already asserts a locked byte hash, semantic
+   hash, digest, or counter, cite that test result instead of rerunning an equivalent ad hoc script.
+6. **Risk routing:** rerun expensive planner/corpus gates when their implementation, inputs,
+   serialization, canonical state, macro construction, or shared engine behavior changes. Pure
+   evaluator/reporting changes use evaluator/bot tests until the single final full-suite gate.
+
+If source changes after the phase/source-freeze run, the source is no longer frozen: rerun the
+directly affected gates, and rerun the full suite before handoff when the change can affect shared
+behavior or any locked campaign. Plan the freeze late enough to avoid reflexively running the same
+17-minute campaign twice.
+
 Real test commands (don't use raw `mocha -r ts-node/register` for the viewer — it hits stricter
 TS resolution than the real webpack-based path and gives false failures; use the actual scripts):
 
@@ -4098,6 +4131,8 @@ TS resolution than the real webpack-based path and gives false failures; use the
 - Viewer: `cd viewer && npx vue-cli-service test:unit --timeout 4000 --reporter min 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'`
   (this is what `pnpm test` runs, plus `--reporter min` — uses `mochapack`/webpack, required for
   files that touch engine types). **257 tests passing as of 2026-07-03** (see #59).
+
+### Historical rerun log (reference only; do not read during routine startup)
 
 **Latest full rerun after #56:** engine **548/548** (531 baseline from #55 + 17 new: 5
 `faction-boards/lantids.spec.ts`, 12 `research-tracks.spec.ts`; no regressions). Viewer last
@@ -5105,8 +5140,22 @@ quick-test` 152/152; `npm test` 152/154, the 2 failures pre-existing/unrelated, 
    `custom` flag; replay-path hash differences confined to that class are counted after a
    cache-masked comparison). See
    `AI_PHASE_1_4_HANDOFF.md` for measured results and `engine/src/ai/README.md` for semantics.
-   Every later phase (AI-6+: bots, evaluator, search, federation planner, book, neural, UI,
-   backend) remains unstarted. External review found that action/turn semantics,
+   **Phase 2 / AI-6 non-neural baselines are DONE (2026-07-14, same offline branch):**
+   `engine/src/ai/evaluation.ts` provides a deterministic fixed-seat report over 28 independently
+   ablatable strategic terms, plus exact terminal margin; `engine/src/ai/bots/` contains seeded
+   random, immediate greedy, and one-ply inspectable heuristic committed-macro bots; and
+   `engine/src/ai/testing/self-play.ts` verifies every selected line by fresh-clone host-style
+   application and plays swapped-faction pairs to EndGame. Locked results were greedy vs random
+   68-51 and 46-20 from greedy's perspectives (paired +43, mean +21.5, 2-0), and heuristic vs
+   greedy 49-67 and 48-66 from heuristic's perspectives (paired -36, mean -18, 0-2). The heuristic
+   result is deliberately retained as a transparent calibration risk rather than promoted on an
+   unpaired or favorable line. Baseline play defaults the expensive conversion-integration axes
+   off as an explicit play-policy choice; the existing planner/builder remain exact and uncapped
+   whenever enabled. The AI-6 focused suite is 12/12, complete offline AI is 68/68, and the full
+   engine suite is 698 passing / 4 pending. No search, production import/export, shared engine,
+   viewer, Supabase, deployment, or flag path was added. Every later phase (AI-7+: search,
+   federation planner, book, neural, UI, backend) remains unstarted. External review found that
+   action/turn semantics,
    deterministic canonical state, resource-
    conversion planning, federation enumeration, performance assumptions, neural policy encoding,
    training evaluation, and client-side anti-cheat all need correction before ordinary MCTS/net work.
