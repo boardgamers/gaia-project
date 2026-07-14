@@ -57,6 +57,19 @@ describe("Advanced log details", () => {
         "terrans tech rebellion (1 ore, 3 knowledge)."
       );
     });
+
+    it('a federation token ending in "-tech" should not be misread as a tech command', () => {
+      // Regression test: the Lost Fleet federation token "ship-fed-tech" ends in "-tech" - a
+      // hyphen is a non-word char, so \b still matches right there - and engine.ts appends a
+      // " using areaX: N" power-usage suffix straight after it, so this used to be misread as a
+      // "tech using" tile-position command and throw (no tile is positioned at "using").
+      expect(() =>
+        replaceMove(data, parsedMove("xenos federation 1A0,1A1 ship-fed-tech using area1: 3. tech terra."))
+      ).to.not.throw();
+      expect(
+        replaceMove(data, parsedMove("xenos federation 1A0,1A1 ship-fed-tech using area1: 3. tech terra.")).move
+      ).to.equal("xenos federation 1A0,1A1 ship-fed-tech using area1: 3. tech terra (o,q).");
+    });
   });
 
   describe("changes", () => {

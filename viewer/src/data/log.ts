@@ -56,19 +56,31 @@ export function replaceMove(data: Engine, move: ParsedMove): ParsedMove {
 
   return {
     commands: move.commands,
-    move: move.move.replace(/\b(tech|cover) [a-z0-9-]+|fed[0-9]+|booster[0-9]+/g, (match) => {
-      if (match.startsWith("booster")) {
-        return addDetails(match, boosterData[match].name);
-      } else if (match.startsWith("fed")) {
-        return addDetails(match, federationRewards(match as Federation).join(","));
-      } else if (match.startsWith("cover")) {
-        const pos = match.substr("cover ".length) as TechTilePos;
-        return addDetails(match, replaceTech(data, pos));
-      } else {
-        const pos = match.substr("tech ".length) as AnyTechTilePos;
-        return addDetails(match, replaceTech(data, pos));
+    move: move.move.replace(
+      /\b(tech|cover) [a-z0-9-]+|fed[0-9]+|booster[0-9]+/g,
+      (match, _group, offset: number, full: string) => {
+        // The Lost Fleet federation token "ship-fed-tech" ends in "-tech", and a hyphen is a
+        // non-word char, so \b still fires right there - a "using areaX: N" power-usage suffix
+        // straight after it (engine.ts's `${move} using ${powerUsage}`) reads as a bogus
+        // "tech using" tile-position command and replaceTech throws (data.tiles.techs["using"] is
+        // undefined). A real tech/cover command is never preceded by a hyphen, so use that to skip
+        // the false match instead of misparsing it.
+        if ((match.startsWith("tech") || match.startsWith("cover")) && full[offset - 1] === "-") {
+          return match;
+        }
+        if (match.startsWith("booster")) {
+          return addDetails(match, boosterData[match].name);
+        } else if (match.startsWith("fed")) {
+          return addDetails(match, federationRewards(match as Federation).join(","));
+        } else if (match.startsWith("cover")) {
+          const pos = match.substr("cover ".length) as TechTilePos;
+          return addDetails(match, replaceTech(data, pos));
+        } else {
+          const pos = match.substr("tech ".length) as AnyTechTilePos;
+          return addDetails(match, replaceTech(data, pos));
+        }
       }
-    }),
+    ),
   };
 }
 
