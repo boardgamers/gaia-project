@@ -260,12 +260,15 @@ source plus executable fragments.
   (`dead-end-follow-up`), mirroring the fuzzer's ban-and-retry rule. Committed leech decisions are
   separate subsequent edges built from the committed leech state through the same generic path as
   setup, income, and Gaia decisions.
-- **Unsupported custom federations are never silently "no federation".** When the engine offers a
-  federation only through its custom fallback (`federations: []` with a truthy cache `custom`
-  flag), the raw command still fails Phase 1.2, and the macro layer strips it while surfacing
-  `unsupportedCustomFederationTiles` as a first-class incompleteness marker (the planner reports
-  the same condition per frontier wallet in `diagnostics.unsupportedCustomFederations`). The Phase
-  3 federation planner is the closure for this gap.
+- **Custom federations are out of scope by design; never read as "no federation".** The AI forms
+  only the engine's enumerated federations — the ones the engine already proposes with a real
+  satellite path — and picks among those. When the engine offers a federation ONLY through its
+  custom (hand-picked hex set) fallback (`federations: []`), there is no enumerable geometry and
+  no satellite-path federation available at that state, so the AI simply forms no federation that
+  turn: the fallback command is dropped (Phase 1.2 rejects it anyway) and the dropped tiles are
+  recorded in `excludedCustomFederationTiles` for offline audit, so the skip is deliberate and
+  visible rather than silent. This is a permanent scoping decision (owner, 2026-07-14), not a gap
+  awaiting a later custom-federation feature.
 - **Conversion integration is a two-axis option.** `conversionIntegration` seeds one line per
   nondominated (conversion prefix, main candidate) pair from the complete Phase 1.3 result —
   including candidates only affordable after conversions — and `afterConversionIntegration`

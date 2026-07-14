@@ -1121,7 +1121,6 @@ function planForTiming(
     aliases: [],
     paretoPruned: [],
     unavailableEffects: [],
-    unsupportedCustomFederations: [],
   };
   for (const alias of catalogue.aliases) {
     const unit =
@@ -1326,23 +1325,18 @@ function planForTiming(
   for (const node of reachable.filter((entry) => frontierKeys.has(entry.stateKey))) {
     counters.candidateStatesExpanded += 1;
     applyProjectedState(availabilityEngine, node.state);
-    // A wallet change can flip the federation heuristic into its custom fallback (federations
-    // with no enumerable geometry). Phase 1.2 rejects that raw command, so it is stripped here
-    // and surfaced as an explicit incompleteness diagnostic instead of aborting the whole
-    // planning run or being silently read as "no federation". States without the fallback take
-    // the byte-identical Phase 1.3 path.
+    // Custom (hand-picked hex set) federations are deliberately out of scope (owner decision
+    // 2026-07-14): the AI only ever forms one of the engine's enumerated federations, the ones
+    // with a real satellite path. A wallet change can flip the heuristic into its custom-only
+    // fallback (`federations: []`), which has no enumerable geometry and which Phase 1.2 rejects;
+    // that command is dropped here so the run does not crash, and nothing enumerable is lost
+    // because a custom-only offer means the heuristic found no satellite-path federation at this
+    // wallet at all. States without the fallback take the byte-identical Phase 1.3 path.
     const offeredCommands =
       availabilityEngine.availableCommands ?? availabilityEngine.generateAvailableCommands(timing.subphase);
     const customOnlyFederations = offeredCommands.filter(
       (command) => command.name === Command.FormFederation && command.data.federations.length === 0
     );
-    for (const command of customOnlyFederations) {
-      diagnostics.unsupportedCustomFederations.push({
-        stateKey: node.stateKey,
-        tiles: (command as { data: { tiles: unknown[] } }).data.tiles.map((tile) => String(tile)).sort(),
-        reason: "custom-federation-fallback-has-no-enumerable-geometry",
-      });
-    }
     const expansion =
       customOnlyFederations.length === 0
         ? expandInternallyReplayedAtomicDecision(availabilityEngine, timing.subphase)
@@ -1384,9 +1378,6 @@ function planForTiming(
     .sort((a, b) => a.candidate.key.localeCompare(b.candidate.key));
   const finishedAt = performance.now();
   counters.activeFrontierSize = activeFrontier.length;
-  diagnostics.unsupportedCustomFederations.sort(
-    (a, b) => a.stateKey.localeCompare(b.stateKey) || a.tiles.join(",").localeCompare(b.tiles.join(","))
-  );
   return {
     sourceStateKey: root.stateKey,
     timing,

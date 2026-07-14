@@ -404,7 +404,7 @@ describe("Phase 1.4 committed-turn macro builder", function () {
     }
   });
 
-  it("never treats an unsupported custom-federation fallback as no federation", () => {
+  it("excludes the custom-federation fallback rather than reading it as no federation", () => {
     const source = lockedRoundOneEngine();
     source.availableCommands = [
       {
@@ -414,13 +414,14 @@ describe("Phase 1.4 committed-turn macro builder", function () {
       },
     ];
 
-    // The custom-only fallback (`federations: []` with a truthy cache `custom` flag) has no
-    // enumerable geometry. The macro set must surface it as an explicit incompleteness marker;
-    // Phase 1.2 itself keeps rejecting the raw command, so nothing can silently read the fallback
-    // as "no federation".
+    // Custom (hand-picked hex set) federations are deliberately out of scope, so when the engine
+    // offers a federation ONLY via that fallback (`federations: []`) the AI forms no federation
+    // this turn and drops the offer — but the drop is recorded for audit, not silent, and the
+    // macro set is never left with a spurious FormFederation macro. Phase 1.2 keeps rejecting the
+    // raw command outright.
     const macroSet = buildCommittedTurnMacros(source, { conversionIntegration: false });
-    expect(macroSet.unsupportedCustomFederationTiles).to.deep.equal([Federation.Fed2]);
-    expect(macroSet.statistics.unsupportedCustomFederationCount).to.equal(1);
+    expect(macroSet.excludedCustomFederationTiles).to.deep.equal([Federation.Fed2]);
+    expect(macroSet.statistics.excludedCustomFederationCount).to.equal(1);
     expect(macroSet.macros.map((macro) => macro.mainCommand)).to.not.include(Command.FormFederation);
 
     expect(() => expandAtomicDecisions(source))
@@ -429,8 +430,8 @@ describe("Phase 1.4 committed-turn macro builder", function () {
 
     const supported = lockedRoundOneEngine();
     const supportedSet = buildCommittedTurnMacros(supported, { conversionIntegration: false });
-    expect(supportedSet.unsupportedCustomFederationTiles).to.deep.equal([]);
-    expect(supportedSet.statistics.unsupportedCustomFederationCount).to.equal(0);
+    expect(supportedSet.excludedCustomFederationTiles).to.deep.equal([]);
+    expect(supportedSet.statistics.excludedCustomFederationCount).to.equal(0);
   });
 
   it("builds income-ordering macros through the generic committed decision path", () => {

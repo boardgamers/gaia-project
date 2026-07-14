@@ -157,9 +157,9 @@ describe("Phase 1.4 macro corpus campaign", function () {
     ]);
     expect(campaign.branchStatistics.off.states).to.equal(campaign.states);
     expect(campaign.branchStatistics.off.totalMacros).to.be.greaterThan(campaign.states);
-    // Both engine-reality findings must have been exercised and surfaced, never silently skipped:
-    // the custom-federation fallback marker and the documented federationCache replay divergence.
-    expect(campaign.unsupportedCustomFederationStates).to.be.greaterThan(0);
+    // The deliberately excluded custom-federation fallback and the documented federationCache
+    // replay divergence must both have been exercised and recorded, never silently skipped.
+    expect(campaign.excludedCustomFederationStates).to.be.greaterThan(0);
     expect(campaign.federationCacheHashDivergences).to.be.greaterThan(0);
   });
 });

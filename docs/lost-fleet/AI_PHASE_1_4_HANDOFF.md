@@ -37,8 +37,9 @@ commit `8b9ee84b`), offline-only under `engine/src/ai/` and `engine/scripts/ai/`
     coercion (`!!`), byte-identical for every live boolean and making hydrated mid-game caches
     hashable instead of a projection crash;
   - `resources/planner.ts` gained `planAfterActionConversionsForLine` (exact-prefix variant of
-    `planAfterActionConversions`, shared implementation) and, with `resources/types.ts`, the
-    `diagnostics.unsupportedCustomFederations` surfacing described below.
+    `planAfterActionConversions`, shared implementation) and drops the engine's custom-only
+    FormFederation fallback at conversion-reached wallets (custom federations are out of scope; see
+    the finding below).
 
 ### Locked branch statistics (before/after conversion integration, locked Round-1 state)
 
@@ -67,14 +68,16 @@ are outside the locked Xenos/Hadsch-Hallas boundary.
 
 ### Engine-reality findings (surfaced, not concealed; no shared-engine change)
 
-1. **Custom-federation fallback in real play.** Macro-sampled Xenos/HH games reach states where
-   the engine offers a federation only through its custom fallback (`federations: []`,
-   `federationCache.custom`), which Phase 1.2 rejects by contract. The macro layer strips the
-   un-enumerable offer and surfaces `unsupportedCustomFederationTiles` on the macro set (11 of the
-   1,039 corpus states); the planner reports the same condition per frontier wallet in
-   `diagnostics.unsupportedCustomFederations` when a conversion-reached wallet flips the
-   heuristic. Nothing reads the fallback as "no federation"; the Phase 3 exact federation planner
-   closes the gap.
+1. **Custom-federation fallback in real play (deliberately excluded).** Macro-sampled Xenos/HH
+   games reach states where the engine offers a federation only through its custom (hand-picked
+   hex set) fallback (`federations: []`, `federationCache.custom`), which Phase 1.2 rejects by
+   contract. Per owner decision (2026-07-14) custom federations are out of scope: the AI forms
+   only the engine's enumerated satellite-path federations, so when only the custom fallback is
+   offered it forms no federation that turn. The macro layer drops the un-enumerable offer and
+   records the dropped tiles in `excludedCustomFederationTiles` (11 of the 1,039 corpus states) so
+   the exclusion is audited, not silent. A custom-only offer means the heuristic found no
+   satellite-path federation at that wallet, so nothing enumerable is lost. This is not a gap
+   awaiting a later custom-federation feature.
 2. **federationCache replay divergence (base-003 class).** `Player.toJSON()` drops the cache's
    boolean `custom` flag while current engine behavior reads it, so a live `custom: true` state
    and its serialized counterpart are genuinely different states; Phase 1.1 hashes the cache on
@@ -114,13 +117,13 @@ no depth cap, timeout, weight, beam, or heuristic prune was added anywhere.
 
 ### Remaining risks carried to later phases (nothing open blocks Phase 1.4)
 
-| #   | Item                                                                           | Owner phase                             | Notes                                                                                                                                                                                           |
-| --- | ------------------------------------------------------------------------------ | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Exact/bounded federation planner to replace the engine's custom fallback       | Phase 3 (AI-8)                          | Phase 1.4 already surfaces `unsupportedCustomFederationTiles`; the planner enumerates the geometry the fallback cannot.                                                                         |
-| 2   | Shared-engine fix for the base-003 `federationCache.custom` serialization drop | Phase 3 / maintenance window            | Requires the §"maintenance-window checklist" in `engine/src/ai/README.md`; not authorized during the live-game freeze. Phase 1.4 counts and mask-verifies the divergence rather than hiding it. |
-| 3   | Brainstone / PISwap / Tinkering follow-up families                             | later, if the challenge factions change | Outside the locked Xenos/Hadsch-Hallas boundary, so not exercised; the builder already routes them through the same generic path if they ever appear.                                           |
-| 4   | AfterMove-integration wall-clock on resource-rich wallets                      | AI-6/AI-7 search budgeting              | Split onto the `afterConversionIntegration` axis; the eventual search layer decides when to pay for it. No cap was added.                                                                       |
-| 5   | Phase 1.3 regression tests recommended by the #68 race-condition audit         | still open (pre-existing)               | Unrelated to Phase 1.4; noted so it is not lost.                                                                                                                                                |
+| #   | Item                                                                           | Owner phase                             | Notes                                                                                                                                                                                                                                                                                                                                           |
+| --- | ------------------------------------------------------------------------------ | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Custom (hand-picked hex set) federations                                       | none — descoped by owner (2026-07-14)   | The AI forms only engine-enumerated satellite-path federations; the custom-only fallback is deliberately excluded and recorded (`excludedCustomFederationTiles`), not a gap. A Phase 3 federation planner, if built, would still select among engine-enumerated federations, not construct custom hex sets — confirm scope when Phase 3 starts. |
+| 2   | Shared-engine fix for the base-003 `federationCache.custom` serialization drop | Phase 3 / maintenance window            | Requires the §"maintenance-window checklist" in `engine/src/ai/README.md`; not authorized during the live-game freeze. Phase 1.4 counts and mask-verifies the divergence rather than hiding it.                                                                                                                                                 |
+| 3   | Brainstone / PISwap / Tinkering follow-up families                             | later, if the challenge factions change | Outside the locked Xenos/Hadsch-Hallas boundary, so not exercised; the builder already routes them through the same generic path if they ever appear.                                                                                                                                                                                           |
+| 4   | AfterMove-integration wall-clock on resource-rich wallets                      | AI-6/AI-7 search budgeting              | Split onto the `afterConversionIntegration` axis; the eventual search layer decides when to pay for it. No cap was added.                                                                                                                                                                                                                       |
+| 5   | Phase 1.3 regression tests recommended by the #68 race-condition audit         | still open (pre-existing)               | Unrelated to Phase 1.4; noted so it is not lost.                                                                                                                                                                                                                                                                                                |
 
 ## Production boundary
 

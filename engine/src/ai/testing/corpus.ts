@@ -316,8 +316,8 @@ export interface MacroCorpusCampaignResult {
   phasesCovered: string[];
   roundsCovered: number[];
   leechStates: number;
-  /** States whose macro set carries the explicit unsupported-custom-federation marker. */
-  unsupportedCustomFederationStates: number;
+  /** States where a federation was formable only via the deliberately excluded custom fallback. */
+  excludedCustomFederationStates: number;
   /** Rejected-line diagnostics aggregated by reason; rejection is the required DeadEnd handling. */
   rejectedLineReasons: Record<string, number>;
   branchStatistics: { off: MacroBranchAggregate; on: MacroBranchAggregate };
@@ -352,7 +352,7 @@ export function runMacroCorpusCampaign(options: MacroCorpusCampaignOptions): Mac
     phasesCovered: [],
     roundsCovered: [],
     leechStates: 0,
-    unsupportedCustomFederationStates: 0,
+    excludedCustomFederationStates: 0,
     rejectedLineReasons: {},
     branchStatistics: { off: emptyAggregate(), on: emptyAggregate() },
   };
@@ -376,8 +376,8 @@ export function runMacroCorpusCampaign(options: MacroCorpusCampaignOptions): Mac
         for (const rejectedLine of macroSet.rejected) {
           result.rejectedLineReasons[rejectedLine.reason] = (result.rejectedLineReasons[rejectedLine.reason] ?? 0) + 1;
         }
-        if (macroSet.unsupportedCustomFederationTiles.length > 0) {
-          result.unsupportedCustomFederationStates += 1;
+        if (macroSet.excludedCustomFederationTiles.length > 0) {
+          result.excludedCustomFederationStates += 1;
         }
 
         const hydrated = hydrate(engine);

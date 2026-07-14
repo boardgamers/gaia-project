@@ -148,25 +148,12 @@ export interface ParetoPruneDiagnostic {
   reason: "componentwise-dominated-transition";
 }
 
-export interface UnsupportedCustomFederationDiagnostic {
-  /** Conversion state whose wallet made the engine offer only the custom-federation fallback. */
-  stateKey: CanonicalConversionStateKey;
-  tiles: string[];
-  reason: "custom-federation-fallback-has-no-enumerable-geometry";
-}
-
 export interface ConversionPlannerDiagnostics {
   merges: ConversionMergeDiagnostic[];
   lossyCycles: LossyCycleDiagnostic[];
   aliases: ConversionAliasDiagnostic[];
   paretoPruned: ParetoPruneDiagnostic[];
   unavailableEffects: string[];
-  /**
-   * Frontier states where a FormFederation command carried no enumerable geometry (the engine's
-   * custom fallback). The candidate result is explicitly incomplete for these tiles at these
-   * wallets; nothing here is silently treated as "no federation".
-   */
-  unsupportedCustomFederations: UnsupportedCustomFederationDiagnostic[];
 }
 
 /** Deterministic work counters for profiling the exhaustive offline planner. */

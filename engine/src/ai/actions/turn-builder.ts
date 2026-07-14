@@ -102,8 +102,8 @@ export interface MacroBranchStatistics {
   forcedFollowUpKeyCount: number;
   rejectedLineCount: number;
   deduplicationCount: number;
-  /** Count of federation tiles reachable only through the unsupported custom fallback. */
-  unsupportedCustomFederationCount: number;
+  /** Count of federation tiles offered only through the deliberately excluded custom fallback. */
+  excludedCustomFederationCount: number;
 }
 
 export interface CommittedTurnMacroSet {
@@ -117,13 +117,13 @@ export interface CommittedTurnMacroSet {
   rejected: RejectedMacroLine[];
   deduplications: MacroDeduplication[];
   /**
-   * Federation tiles the engine offered ONLY through its custom (un-enumerated geometry)
-   * fallback at this state. The macro set is explicitly incomplete when this is non-empty: a real
-   * player may still form one of these federations by hand-picking hexes, which no offline layer
-   * can enumerate until the Phase 3 federation planner exists. Consumers must treat this as a
-   * first-class incompleteness marker; it is never silently dropped.
+   * Federation tiles the engine offered at this state ONLY through its custom (hand-picked hex
+   * set) fallback, which is deliberately out of scope: the AI forms only engine-enumerated
+   * federations (those with a satellite path). A non-empty list means "a federation was formable
+   * only by hand-picking hexes here, and the AI intentionally skipped it" — recorded for offline
+   * audit so the exclusion is not silent, not a gap awaiting a later custom-federation feature.
    */
-  unsupportedCustomFederationTiles: string[];
+  excludedCustomFederationTiles: string[];
   statistics: MacroBranchStatistics;
 }
 
@@ -339,11 +339,14 @@ export function buildCommittedTurnMacros(
   }
   const actorPrefix = source.player(actor).faction ?? `p${actor + 1}`;
 
-  // The custom-federation fallback (`federations: []` with a truthy cache `custom` flag) has no
-  // enumerable geometry, so Phase 1.2 rejects it outright. The macro layer must not let that make
-  // whole states unusable, and it must never silently treat the fallback as "no federation":
-  // the offer is stripped from expansion and surfaced as an explicit incompleteness marker.
-  const unsupportedCustomFederationTiles: string[] = [];
+  // Custom (hand-picked hex set) federations are deliberately out of scope (owner decision
+  // 2026-07-14): the AI only ever forms one of the engine's enumerated federations, the ones with
+  // a real satellite path. When the engine offers a federation ONLY through its custom fallback
+  // (`federations: []`), there is no enumerable geometry to form and no satellite-path federation
+  // available at this state, so the AI simply does not form a federation this turn. That fallback
+  // command is dropped from expansion (Phase 1.2 rejects it anyway) rather than making the whole
+  // state unusable; the dropped tiles are recorded for offline audit so the skip is not silent.
+  const excludedCustomFederationTiles: string[] = [];
   let expansion: ReturnType<typeof expandAtomicDecisions>;
   if (source.phase === Phase.RoundMove) {
     const probe = hydrate(source);
@@ -357,10 +360,10 @@ export function buildCommittedTurnMacros(
     } else {
       for (const command of customOnly) {
         for (const tile of command.data.tiles) {
-          unsupportedCustomFederationTiles.push(String(tile));
+          excludedCustomFederationTiles.push(String(tile));
         }
       }
-      unsupportedCustomFederationTiles.sort();
+      excludedCustomFederationTiles.sort();
       expansion = expandInternallySuppliedAtomicCommands(
         probe,
         SubPhase.BeforeMove,
@@ -387,14 +390,6 @@ export function buildCommittedTurnMacros(
       // the root (13 of the locked state's 45 candidate frontiers) are exactly what integration
       // must expose. Any caller filter is applied to the complete candidate set afterwards.
       const planning = planResourceConversions(source);
-      for (const diagnostic of planning.diagnostics.unsupportedCustomFederations) {
-        for (const tile of diagnostic.tiles) {
-          if (!unsupportedCustomFederationTiles.includes(tile)) {
-            unsupportedCustomFederationTiles.push(tile);
-          }
-        }
-      }
-      unsupportedCustomFederationTiles.sort();
       const allowedKeys = options.mainCandidateKeys ? new Set(options.mainCandidateKeys) : null;
       for (const entry of planning.candidates) {
         const main = entry.candidate;
@@ -700,7 +695,7 @@ export function buildCommittedTurnMacros(
     forcedFollowUpKeyCount: new Set(sortedMacros.flatMap((macro) => macro.forcedFollowUpKeys)).size,
     rejectedLineCount: rejected.length,
     deduplicationCount: deduplications.length,
-    unsupportedCustomFederationCount: unsupportedCustomFederationTiles.length,
+    excludedCustomFederationCount: excludedCustomFederationTiles.length,
   };
 
   return {
@@ -718,7 +713,7 @@ export function buildCommittedTurnMacros(
       (a, b) =>
         a.key.localeCompare(b.key) || a.mergedMoveFragments.join(". ").localeCompare(b.mergedMoveFragments.join(". "))
     ),
-    unsupportedCustomFederationTiles,
+    excludedCustomFederationTiles,
     statistics,
   };
 }
