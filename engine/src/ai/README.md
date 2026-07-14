@@ -1,4 +1,4 @@
-# Lost Fleet AI: offline foundation through Phase 1.3
+# Lost Fleet AI: offline foundation through Phase 1.4
 
 This directory is an offline-only foundation for the fixed Lost Fleet AI challenge. It is deliberately
 not exported from `engine/index.ts` and must not be imported by the viewer, hosted-game code, Supabase,
@@ -12,11 +12,12 @@ The directory currently contains:
 - a committed-state canonical projection and hash;
 - typed atomic decision expansion and canonical candidate keys;
 - an exhaustive resource-conversion planner with executable plans and Pareto frontiers;
+- a committed-turn macro builder with stable macro keys and a macro-driven corpus campaign;
 - golden, smoke, parity, and applicability tests for those offline tools.
 
-It does not contain committed-turn macro construction, search, evaluation, bots, feature encoding,
-models, hosted routes, or production feature flags. Starting buildings and round boosters are
-intentionally not part of the scripted challenge prefix: both remain strategic decisions.
+It does not contain search, evaluation, bots, feature encoding, models, hosted routes, or production
+feature flags. Starting buildings and round boosters are intentionally not part of the scripted
+challenge prefix: both remain strategic decisions.
 
 ## Safety invariants
 
@@ -66,7 +67,12 @@ Included state families:
 - every player's faction / variant / resource / power / research / building / ship / exploration /
   federation / artifact / event state;
 - `player.federationCache`, intentionally included despite the name because current engine behavior
-  can diverge when that cache is stale.
+  can diverge when that cache is stale. Its boolean `custom` flag is projected through the same
+  truthy coercion the engine itself applies (`!!custom`), because `Player.toJSON()` drops the flag:
+  the projection stays byte-identical for every live boolean value, hydrated mid-game caches become
+  hashable instead of crashing the projection, and a live `custom: true` cache still hashes
+  differently from its serialized counterpart on purpose — that pair genuinely behaves differently
+  in the current engine (the base-003 staleness class).
 
 Excluded or normalized fields:
 
@@ -222,9 +228,80 @@ Burns or other bowl changes that do not increase capacity are canonicalized to w
 timing types also carry an explicit deferral-proof flag; a context without that proof must retain
 the conversion instead of applying this canonicalization.
 
-Phase 1.4 alone will combine conversion plans, a main choice, forced follow-ups, after-action choices,
-and `end` into a committed turn line. Committed-line macros, search, evaluation, training, and neural
-features remain deferred to later owner-approved phases.
+## Phase 1.4: committed-turn macro construction
+
+`actions/turn-builder.ts` builds every complete committed-turn macro from one supported committed
+snapshot, replaying each candidate line against a fresh clone with the production commit rule
+(`copy.move(line)`, commit only when `copy.newTurn`, exactly like `viewer/src/hosted/host.ts`,
+`self-contained.ts`, and the fuzzer driver). A macro contains an optional Phase 1.3 conversion
+prefix, exactly one Phase 1.2 main action, every forced follow-up, meaningful follow-up choices as
+distinct branches, retained AfterMove bowl-opening conversions, and `end` when the engine requires
+it. Transient engine states are never serialized: a line is only ever represented by its committed
+source plus executable fragments.
+
+- **Macro keys** (`macro-v1:` + SHA-256) hash the semantic choice only: source canonical hash,
+  actor, the Phase 1.3 destination wallet key of a non-empty conversion prefix (null otherwise),
+  the Phase 1.2 main-candidate key, the candidate keys chosen at meaningful (more than one option)
+  follow-up decisions in order, and the wallet key of a retained AfterMove conversion suffix.
+  Forced one-choice follow-ups are recorded for audit but never branch and never enter the key,
+  so a macro built through the conversion-integrated route and the same macro built without it
+  carry identical keys, and equivalent conversion prefixes cannot mint duplicate macros (Phase 1.3
+  already canonicalizes one plan per destination wallet).
+- **Decision walk.** Non-committed lines re-expand the engine's own follow-up offer through the
+  Phase 1.2 projector: one candidate means a forced spine step; several mean one branch per
+  candidate. The narrow `Spend`/`Burn`/`EndTurn` window is never branched per conversion; with
+  after-conversion integration enabled it becomes plain `end` (defer everything, proof per Phase
+  1.3) plus one branch per retained bowl-opening plan from
+  `planAfterActionConversionsForLine`, cached per distinct (main candidate, post-main wallet).
+- **Every emitted macro was applied to a fresh clone and ended committed**, with its canonical
+  destination hash, next actor, leech interruption (`destination.leechPending`), pass order, and
+  EndGame flag recorded. Lines whose required chained decision comes back as the engine's
+  `DeadEnd` undo signal are rejected before exposure and reported in `rejected`
+  (`dead-end-follow-up`), mirroring the fuzzer's ban-and-retry rule. Committed leech decisions are
+  separate subsequent edges built from the committed leech state through the same generic path as
+  setup, income, and Gaia decisions.
+- **Unsupported custom federations are never silently "no federation".** When the engine offers a
+  federation only through its custom fallback (`federations: []` with a truthy cache `custom`
+  flag), the raw command still fails Phase 1.2, and the macro layer strips it while surfacing
+  `unsupportedCustomFederationTiles` as a first-class incompleteness marker (the planner reports
+  the same condition per frontier wallet in `diagnostics.unsupportedCustomFederations`). The Phase
+  3 federation planner is the closure for this gap.
+- **Conversion integration is a two-axis option.** `conversionIntegration` seeds one line per
+  nondominated (conversion prefix, main candidate) pair from the complete Phase 1.3 result —
+  including candidates only affordable after conversions — and `afterConversionIntegration`
+  controls the AfterMove bowl-opening axis separately. Both are exact and uncapped whenever they
+  run; wall-clock cost is wallet-dependent and measured, not capped (see the measured numbers
+  below), so statistics runs state explicitly which axes were enabled.
+
+Measured locked Round-1 branch statistics (the before/after conversion-integration gate):
+
+- before integration: 52 committed macros over 32 root main candidates, zero rejections, macro
+  key/destination digest `972a1e9b062ebcda5a96e2242039bbc29eee83934c9eb41e175a493bb1009096`;
+- after integration (seed level, from the locked Phase 1.3 result): 45 candidate frontiers,
+  130,532 (conversion prefix, main candidate) seed pairs, of which 130,500 carry a non-empty
+  prefix (the 32 empty-prefix seeds are exactly the root-affordable mains); per-candidate prefix
+  counts span 5 to 9,985 with median 2,134. Fully emitting all ~130k lines validates each by
+  replay and is a measured multi-hour offline job on this state, so the focused suite locks the
+  seed-pair counts and emits complete integrated macro sets on smaller wallets instead.
+- Exhaustive planning cost is wallet-dependent: measured `planResourceConversions` runs span
+  0.01 s (lean mid-game wallets) through ~80 s (pristine Round-1) to 738 s (a power-rich Round-6
+  state), and the pristine-wallet AfterMove axis exceeds practical wall-clock entirely. Scheduling
+  which turns a sampled player converts on is a play-policy choice and is reported with every
+  statistic; the planner itself never gets a depth cap, timeout, weight, or beam.
+
+`testing/corpus.ts` drives complete macro-sampled games from the locked challenge prefix
+(host-style commit chain) and runs the Phase 1.4 corpus campaign: every committed state is checked
+for the hash (canonical hash + serialize/parse hydration), legal (typed expansion, unique sorted
+macro keys, no exposed DeadEnd/non-committed line), apply (fresh-clone replay of macros incl. the
+sampled one, destination hash equality), and replay (constructor replay hash + macro-key parity on
+a deterministic subsample) property families. Replay-path hash differences confined to the
+documented base-003 federationCache staleness class (Player.toJSON() drops the cache's `custom`
+flag, and current engine behavior genuinely reads it) are counted as
+`federationCacheHashDivergences` after a cache-masked byte comparison proves nothing else differs;
+on those states macro parity is checked on hash-independent semantic content. Any other
+divergence fails the campaign.
+
+Search, evaluation, training, and neural features remain deferred to later owner-approved phases.
 
 The complete next-session contract, preserved hashes/counts, Phase 1.3 before/after profile, proof
 obligations, Phase 1.4 corpus gate, and stop conditions are consolidated in

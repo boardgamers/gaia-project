@@ -259,11 +259,13 @@ export function projectCanonicalState(engine: Engine): CanonicalState {
     },
     tiles: {
       boosters: Booster.values(engine.expansions).filter((booster) => !!engine.tiles.boosters[booster]),
-      techs: [...TechTilePos.values(engine.expansions), ...AdvTechTilePos.values(engine.expansions)].map((position) => ({
-        position,
-        tile: engine.tiles.techs[position]?.tile ?? null,
-        count: engine.tiles.techs[position]?.count ?? null,
-      })),
+      techs: [...TechTilePos.values(engine.expansions), ...AdvTechTilePos.values(engine.expansions)].map(
+        (position) => ({
+          position,
+          tile: engine.tiles.techs[position]?.tile ?? null,
+          count: engine.tiles.techs[position]?.count ?? null,
+        })
+      ),
       roundScoring: [...engine.tiles.scorings.round],
       finalScoring: [...engine.tiles.scorings.final],
       federations: Federation.values(engine.expansions).map((tile) => ({
@@ -295,25 +297,23 @@ export function projectCanonicalState(engine: Engine): CanonicalState {
             })),
           }
         : null,
-      hexes: [...engine.map.grid.values()]
-        .sort(compareHexes)
-        .map((hex) => ({
-          id: hex.toString(),
-          q: hex.q,
-          r: hex.r,
-          s: hex.s,
-          planet: hex.data.planet,
-          sector: hex.data.sector,
-          building: hex.data.building ?? null,
-          player: normalizeNullableNumber(hex.data.player),
-          federations: sortNumbers(hex.data.federations ?? []),
-          tradeTokens: sortNumbers(hex.data.tradeTokens ?? []),
-          customPosts: sortNumbers(hex.data.customPosts ?? []),
-          additionalMine: normalizeNullableNumber(hex.data.additionalMine),
-          powerRing: normalizeNullableNumber(hex.data.powerRing),
-          spaceship: hex.data.spaceship ?? null,
-          sectorCenter: hex.data.sectorCenter ? projectPoint(hex.data.sectorCenter) : null,
-        })),
+      hexes: [...engine.map.grid.values()].sort(compareHexes).map((hex) => ({
+        id: hex.toString(),
+        q: hex.q,
+        r: hex.r,
+        s: hex.s,
+        planet: hex.data.planet,
+        sector: hex.data.sector,
+        building: hex.data.building ?? null,
+        player: normalizeNullableNumber(hex.data.player),
+        federations: sortNumbers(hex.data.federations ?? []),
+        tradeTokens: sortNumbers(hex.data.tradeTokens ?? []),
+        customPosts: sortNumbers(hex.data.customPosts ?? []),
+        additionalMine: normalizeNullableNumber(hex.data.additionalMine),
+        powerRing: normalizeNullableNumber(hex.data.powerRing),
+        spaceship: hex.data.spaceship ?? null,
+        sectorCenter: hex.data.sectorCenter ? projectPoint(hex.data.sectorCenter) : null,
+      })),
     },
     players: engine.players.map((player) => ({
       player: player.player,
@@ -411,7 +411,15 @@ export function projectCanonicalState(engine: Engine): CanonicalState {
       federationCache: player.federationCache
         ? {
             availableSatellites: player.federationCache.availableSatellites,
-            custom: player.federationCache.custom,
+            // Player.toJSON() drops the boolean `custom` flag, so a hydrated cache carries
+            // `undefined` here while the engine consumes it as falsy (available/federations.ts,
+            // `possibleFeds.length > 0 || p.federationCache.custom`). Projecting the same truthy
+            // coercion keeps the hash byte-identical for every live boolean value and makes
+            // hydrated mid-game caches hashable instead of a projection crash. A live `custom:
+            // true` cache still hashes differently from its hydrated `false` counterpart on
+            // purpose: that pair genuinely behaves differently in the current engine (the
+            // base-003 federation-cache staleness class).
+            custom: !!player.federationCache.custom,
             federations: player.federationCache.federations.map((federation) => ({
               hexes: federation.hexes.map((hex) => hex.toString()),
               satellites: federation.satellites,
@@ -483,7 +491,10 @@ function assertCanonicalStateSupported(engine: Engine) {
   if (!engine.map.placement) {
     throw new CanonicalStateError("canonical state requires map.placement to be present");
   }
-  if (engine.options.lostFleet && (!engine.lostFleetTerraformingRow || !engine.scoringExtensionSide || !engine.lostFleetEconomySide)) {
+  if (
+    engine.options.lostFleet &&
+    (!engine.lostFleetTerraformingRow || !engine.scoringExtensionSide || !engine.lostFleetEconomySide)
+  ) {
     throw new CanonicalStateError("canonical Lost Fleet state requires persisted setup randomization fields");
   }
 
@@ -548,10 +559,7 @@ function sortNumbers(values: number[]): number[] {
   return [...values].sort((a, b) => a - b);
 }
 
-function compareHexes(
-  left: { q: number; r: number; s: number },
-  right: { q: number; r: number; s: number }
-): number {
+function compareHexes(left: { q: number; r: number; s: number }, right: { q: number; r: number; s: number }): number {
   return left.q - right.q || left.r - right.r || left.s - right.s;
 }
 

@@ -1,8 +1,126 @@
 # Lost Fleet AI — Phase 1.4 handoff
 
-> **Status:** Phases 0, 1.1, 1.2, and 1.3 are complete. The next authorized implementation slice
-> is Phase 1.4 only: committed-turn macro construction and its corpus campaign. Do not start search,
-> evaluation, federation solving, neural features, training, viewer integration, or backend work.
+> **Status (2026-07-14): PHASE 1.4 COMPLETE.** Phases 0, 1.1, 1.2, 1.3, and 1.4 are done; the
+> measured Phase 1.4 results are in the "Phase 1.4 result" section below. The next authorized
+> slice is AI-6 (greedy/heuristic bots + evaluator, plan §6) and requires fresh owner approval.
+> Do not start search, evaluation, federation solving, neural features, training, viewer
+> integration, or backend work without that approval. The original Phase 1.4 contract below is
+> retained unchanged as the record of what this phase had to satisfy.
+
+## Phase 1.4 result (2026-07-14)
+
+Implemented on `claude/gaia-phase-1-4-yjb6qo` (built from `agent/phase-1-3-resource-planner`
+commit `8b9ee84b`), offline-only under `engine/src/ai/` and `engine/scripts/ai/`.
+
+### Delivered
+
+- `engine/src/ai/actions/turn-builder.ts` + `turn-builder.spec.ts` (12 focused tests): committed-
+  turn macro construction. Every macro is built and validated by replaying its complete line
+  against a fresh clone of the committed source with the production commit rule (one `move()`,
+  commit only on `newTurn` — the same rule as `viewer/src/hosted/host.ts`, `self-contained.ts`,
+  and the fuzzer). Macro keys (`macro-v1:` + SHA-256) hash the semantic choice only: source
+  canonical hash, actor, Phase 1.3 conversion-destination wallet key (null for no prefix), Phase
+  1.2 main-candidate key, chosen candidate keys at meaningful follow-up decisions in order, and
+  the retained AfterMove conversion destination key. Forced one-choice follow-ups stay on the
+  spine, never branch, and never enter the key; the conversion-integrated and conversion-free
+  construction routes produce identical keys for the shared macros, and equivalent conversion
+  prefixes cannot duplicate macros because Phase 1.3 already canonicalizes one plan per
+  destination wallet. `DeadEnd` follow-ups reject the line before exposure
+  (`rejected[].reason === "dead-end-follow-up"`); committed leech choices are separate subsequent
+  edges built from the committed leech state. Setup, income, Gaia, and leech decisions flow
+  through the same generic committed-decision path.
+- `engine/src/ai/testing/corpus.ts` + `corpus.spec.ts` (3 focused tests) and
+  `engine/scripts/ai/corpus-campaign.ts`: macro-sampled full games from the locked prefix
+  (host-style commit chain) and the corpus campaign.
+- Additive, output-preserving extensions to earlier phases (verified by the preserved suites):
+  - `canonical-state.ts` projects `federationCache.custom` through the engine's own truthy
+    coercion (`!!`), byte-identical for every live boolean and making hydrated mid-game caches
+    hashable instead of a projection crash;
+  - `resources/planner.ts` gained `planAfterActionConversionsForLine` (exact-prefix variant of
+    `planAfterActionConversions`, shared implementation) and, with `resources/types.ts`, the
+    `diagnostics.unsupportedCustomFederations` surfacing described below.
+
+### Locked branch statistics (before/after conversion integration, locked Round-1 state)
+
+- Before: 52 committed macros over 32 root main candidates, zero rejections, macro
+  key/destination digest `972a1e9b062ebcda5a96e2242039bbc29eee83934c9eb41e175a493bb1009096`.
+- After (seed level, from the locked Phase 1.3 result): 45 candidate frontiers; 130,532
+  (conversion prefix, main candidate) seed pairs; 130,500 with a non-empty prefix; the 32
+  empty-prefix seeds are exactly the root-affordable mains; per-candidate prefix counts 5 min /
+  2,134 median / 9,985 max. Emitting all ~130k lines is a measured multi-hour offline job (each
+  line is replay-validated), so the focused suite locks the exact seed-pair counts and emits
+  complete integrated macro sets on smaller wallets; an integrated turn on a real mid-game state
+  is exercised end-to-end in the corpus spec.
+
+### Corpus campaign (locked challenge, macro-sampled games, integration off)
+
+18 complete games, every game reached `EndGame`; 1,039 committed corpus states; per state:
+canonical hash + serialize/parse hydration parity, typed expansion with unique sorted macro keys,
+every emitted macro fresh-clone validated, sampled macro re-applied host-style with destination
+hash + next-actor equality, constructor replay of the accumulated history hash-checked (all 1,039)
+with full macro parity on 155 deep-check states. 106 committed leech-decision states; rounds 0–6
+and phases setupBuilding/setupBooster/roundMove/roundLeech covered; 20,834 macros built (1–400
+per state); 132 rejected lines, all `dead-end-follow-up`; zero deduplications; wall time 653 s
+under load. ChooseIncome and PlaceLostPlanet never occur naturally in these trajectories and have
+explicit synthetic coverage in the focused suite (as in Phase 1.2); BrainStone/PISwap/Tinkering
+are outside the locked Xenos/Hadsch-Hallas boundary.
+
+### Engine-reality findings (surfaced, not concealed; no shared-engine change)
+
+1. **Custom-federation fallback in real play.** Macro-sampled Xenos/HH games reach states where
+   the engine offers a federation only through its custom fallback (`federations: []`,
+   `federationCache.custom`), which Phase 1.2 rejects by contract. The macro layer strips the
+   un-enumerable offer and surfaces `unsupportedCustomFederationTiles` on the macro set (11 of the
+   1,039 corpus states); the planner reports the same condition per frontier wallet in
+   `diagnostics.unsupportedCustomFederations` when a conversion-reached wallet flips the
+   heuristic. Nothing reads the fallback as "no federation"; the Phase 3 exact federation planner
+   closes the gap.
+2. **federationCache replay divergence (base-003 class).** `Player.toJSON()` drops the cache's
+   boolean `custom` flag while current engine behavior reads it, so a live `custom: true` state
+   and its serialized counterpart are genuinely different states; Phase 1.1 hashes the cache on
+   purpose. 39 of 1,039 corpus states show replay-path hash differences, every one proven by a
+   cache-masked byte comparison to be confined to this class and counted
+   (`federationCacheHashDivergences`); macro parity on those states is checked on
+   hash-independent semantic content and holds. Any divergence outside the masked cache fails the
+   campaign. The shared-engine fix remains a Phase 3/maintenance-window item.
+
+### Verification results (2026-07-14)
+
+- Phase 1.4 focused: `turn-builder.spec.ts` 12 passing; `corpus.spec.ts` 3 passing.
+- Preserved focused suites: Phase 1.3 `planner.spec.ts` 15, Phase 1.2 `expand.spec.ts` 10, Phase
+  1.1 `canonical-state.spec.ts` 12, Phase 0 `challenge-manifest.spec.ts` 3 + `benchmark.spec.ts` 1
+  = 41 passing (unchanged), confirming the Phase 1.2 62-candidate digest `a28eb3…04d9`, the Phase
+  1.3 locked result 36,159 / 9,985 / 45 / depth 30 digest `b4e266…850`, and the Phase 1.1 corpus
+  hashes all still hold after the additive `canonical-state.ts`/`planner.ts`/`types.ts` edits.
+- Complete offline AI suite (`src/ai/**/*.spec.ts`): 56 passing (41 + 12 + 3).
+- Complete engine suite (`src/**/*.spec.ts` `src/*.spec.ts` `*.spec.ts`): 686 passing, 4 pending
+  (671 + 15 new; the 4 pending are the pre-existing engine pendings).
+- `npx tsc --noEmit`: clean. Focused ESLint on every changed/added TS file: clean.
+- Fresh Phase 0 manifest: byte-identical to `challenge-manifest.v1.json` (81,991 bytes, byte SHA
+  `3c872d…449e`), semantic SHA `ce3bdd…51e`, engine version 4.8.51 — all unchanged.
+- `git diff --check`: clean. Final-newline/trailing-whitespace checks on new files: clean.
+- Production isolation: no `engine/index.ts`, viewer, or Supabase path imports `engine/src/ai/`;
+  every new AI file imports only engine internals and other `engine/src/ai/` modules.
+
+### Measured planning cost (descriptive, no caps added)
+
+Exhaustive conversion planning is wallet-dependent: 0.01–12 s on typical mid-game wallets, ~80 s
+on the pristine locked Round-1 wallet, 738 s on a measured power-rich Round-6 state, and the
+pristine-wallet AfterMove axis exceeds practical wall-clock entirely (one complete fixpoint per
+distinct post-main wallet). `conversionIntegration` and `afterConversionIntegration` therefore
+stay separately selectable — exact and uncapped whenever enabled — and every statistic states
+which axes ran. Scheduling which turns a sampled player converts on is a play-policy choice;
+no depth cap, timeout, weight, beam, or heuristic prune was added anywhere.
+
+### Remaining risks carried to later phases (nothing open blocks Phase 1.4)
+
+| #   | Item                                                                           | Owner phase                             | Notes                                                                                                                                                                                           |
+| --- | ------------------------------------------------------------------------------ | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Exact/bounded federation planner to replace the engine's custom fallback       | Phase 3 (AI-8)                          | Phase 1.4 already surfaces `unsupportedCustomFederationTiles`; the planner enumerates the geometry the fallback cannot.                                                                         |
+| 2   | Shared-engine fix for the base-003 `federationCache.custom` serialization drop | Phase 3 / maintenance window            | Requires the §"maintenance-window checklist" in `engine/src/ai/README.md`; not authorized during the live-game freeze. Phase 1.4 counts and mask-verifies the divergence rather than hiding it. |
+| 3   | Brainstone / PISwap / Tinkering follow-up families                             | later, if the challenge factions change | Outside the locked Xenos/Hadsch-Hallas boundary, so not exercised; the builder already routes them through the same generic path if they ever appear.                                           |
+| 4   | AfterMove-integration wall-clock on resource-rich wallets                      | AI-6/AI-7 search budgeting              | Split onto the `afterConversionIntegration` axis; the eventual search layer decides when to pay for it. No cap was added.                                                                       |
+| 5   | Phase 1.3 regression tests recommended by the #68 race-condition audit         | still open (pre-existing)               | Unrelated to Phase 1.4; noted so it is not lost.                                                                                                                                                |
 
 ## Production boundary
 
@@ -270,7 +388,7 @@ Report exact changed files, macro representation and completeness argument, corp
 branch statistics, every verification count/hash, production-isolation evidence, remaining risks,
 PASS/FAIL for every Phase 1.4/AI-5 criterion, and exact `git status`. Stop for owner review.
 
-## Ready-to-paste Claude Code prompt
+## Ready-to-paste Claude Code prompt (HISTORICAL — Phase 1.4 is complete; do not reuse)
 
 ```text
 You are taking over Phase 1.4 of the Gaia Lost Fleet AI project in:

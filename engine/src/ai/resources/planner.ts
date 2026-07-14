@@ -1121,6 +1121,7 @@ function planForTiming(
     aliases: [],
     paretoPruned: [],
     unavailableEffects: [],
+    unsupportedCustomFederations: [],
   };
   for (const alias of catalogue.aliases) {
     const unit =
@@ -1325,7 +1326,31 @@ function planForTiming(
   for (const node of reachable.filter((entry) => frontierKeys.has(entry.stateKey))) {
     counters.candidateStatesExpanded += 1;
     applyProjectedState(availabilityEngine, node.state);
-    const expansion = expandInternallyReplayedAtomicDecision(availabilityEngine, timing.subphase);
+    // A wallet change can flip the federation heuristic into its custom fallback (federations
+    // with no enumerable geometry). Phase 1.2 rejects that raw command, so it is stripped here
+    // and surfaced as an explicit incompleteness diagnostic instead of aborting the whole
+    // planning run or being silently read as "no federation". States without the fallback take
+    // the byte-identical Phase 1.3 path.
+    const offeredCommands =
+      availabilityEngine.availableCommands ?? availabilityEngine.generateAvailableCommands(timing.subphase);
+    const customOnlyFederations = offeredCommands.filter(
+      (command) => command.name === Command.FormFederation && command.data.federations.length === 0
+    );
+    for (const command of customOnlyFederations) {
+      diagnostics.unsupportedCustomFederations.push({
+        stateKey: node.stateKey,
+        tiles: (command as { data: { tiles: unknown[] } }).data.tiles.map((tile) => String(tile)).sort(),
+        reason: "custom-federation-fallback-has-no-enumerable-geometry",
+      });
+    }
+    const expansion =
+      customOnlyFederations.length === 0
+        ? expandInternallyReplayedAtomicDecision(availabilityEngine, timing.subphase)
+        : expandInternallySuppliedAtomicCommands(
+            availabilityEngine,
+            timing.subphase,
+            offeredCommands.filter((command) => !customOnlyFederations.includes(command))
+          );
     for (const candidate of sortedCandidates(expansion.candidates).filter(isMainCandidate)) {
       if (candidateFilter && !candidateFilter.has(candidate.key)) {
         continue;
@@ -1359,6 +1384,9 @@ function planForTiming(
     .sort((a, b) => a.candidate.key.localeCompare(b.candidate.key));
   const finishedAt = performance.now();
   counters.activeFrontierSize = activeFrontier.length;
+  diagnostics.unsupportedCustomFederations.sort(
+    (a, b) => a.stateKey.localeCompare(b.stateKey) || a.tiles.join(",").localeCompare(b.tiles.join(","))
+  );
   return {
     sourceStateKey: root.stateKey,
     timing,
@@ -1470,7 +1498,41 @@ export function planAfterActionConversions(
       planning: null,
     };
   }
-  const prefix = prefixes[0];
+  return planNarrowAfterActionWindow(source, mainCandidate, prefixes[0]);
+}
+
+/**
+ * Phase 1.4 line-builder variant of `planAfterActionConversions`: the caller supplies the exact
+ * executable prefix it has already validated from the committed source (an optional conversion
+ * plan, exactly one non-pass main action, any main-payment brainstone choice, and every already
+ * chosen forced/meaningful follow-up). The retained/deferred semantics are byte-identical to
+ * `planAfterActionConversions`; only prefix resolution differs, so multi-branch main-payment
+ * brainstone lines no longer have to be rejected as "not-applicable".
+ */
+export function planAfterActionConversionsForLine(
+  source: Engine,
+  mainCandidate: AtomicDecisionCandidate,
+  lineFragments: readonly string[]
+): AfterActionConversionResult {
+  assertSupportedSource(source);
+  if (mainCandidate.command === Command.Pass) {
+    return {
+      status: "not-applicable",
+      reason: "Passing has no AfterMove free-conversion window",
+      mainCandidate,
+      retained: [],
+      deferred: [],
+      planning: null,
+    };
+  }
+  return planNarrowAfterActionWindow(source, mainCandidate, [...lineFragments]);
+}
+
+function planNarrowAfterActionWindow(
+  source: Engine,
+  mainCandidate: AtomicDecisionCandidate,
+  prefix: string[]
+): AfterActionConversionResult {
   const expansion = expandAtomicDecisions(source, {
     priorMoveFragments: prefix,
     subphase: SubPhase.AfterMove,

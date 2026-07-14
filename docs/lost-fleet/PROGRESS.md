@@ -7,7 +7,7 @@
 > anything else, including the **Testing — required going forward** section it points to — both
 > are standing process, not optional. Then ask the user "what next?" and use the **Next actions**
 > section below to guide them.
-> Last updated: **2026-07-13** (AI Phase 1.3 hardening + Phase 1.4 handoff).
+> Last updated: **2026-07-14** (AI Phase 1.4 committed-turn macro builder + corpus campaign).
 
 ## Working agreements (read every session, not optional)
 
@@ -4047,25 +4047,25 @@ opacity: 0.7 }` wrapper that also diluted the X itself, while `BoardAction.vue`'
       `pnpm test`: 440 passing/31 failing both before and after (identical failing-test names,
       confirmed via `git stash` on the same run - all pre-existing, none touch these components).
 
-                       **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
-                       pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
-                       desktop mice, which was never the actual bug - only touch devices raced hover against the
-                       click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
-                       `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
-                       `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
-                       shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
-                       `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
-                       directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
-                       `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
-                       config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
-                       on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
-                       desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
-                       is what actually closed that race originally. Verified live via Playwright with two device
-                       profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
-                       tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
-                       context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
-                       a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
-                       still 440 passing/31 failing, same pre-existing set.
+                             **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
+                             pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
+                             desktop mice, which was never the actual bug - only touch devices raced hover against the
+                             click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
+                             `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
+                             `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
+                             shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
+                             `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
+                             directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
+                             `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
+                             config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
+                             on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
+                             desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
+                             is what actually closed that race originally. Verified live via Playwright with two device
+                             profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
+                             tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
+                             context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
+                             a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
+                             still 440 passing/31 failing, same pre-existing set.
 
 ## Still MISSING — only one art-only item left
 
@@ -5087,8 +5087,24 @@ quick-test` 152/152; `npm test` 152/154, the 2 failures pre-existing/unrelated, 
    `b4e266ef95ca8cc34cfd1cde4380a782ff01f4802a077d49ac9686924e222850`.
    The focused suite is 15/15, the complete offline AI suite is 41/41, and the required engine suite
    is 671 passing / 4 pending. The exact counters, proof, baselines, and next-session scope are
-   consolidated in `AI_PHASE_1_4_HANDOFF.md`. Phase 1.4 committed-turn macro construction is now
-   the next owner-selected Claude handoff; every later phase remains unstarted. External review found that action/turn semantics,
+   consolidated in `AI_PHASE_1_4_HANDOFF.md`. **Phase 1.4 committed-turn macro construction is
+   DONE (2026-07-14, `claude/gaia-phase-1-4-yjb6qo`):** `engine/src/ai/actions/turn-builder.ts`
+   builds complete committed-turn macros (optional exact conversion prefix, one Phase 1.2 main
+   action, forced follow-ups on the spine, meaningful choices as branches, retained AfterMove
+   bowl-openers, `end`), validates every macro by fresh-clone host-style replay, and keys each by
+   its semantic choice only; leech interruptions are separate committed edges. Locked Round-1
+   branch statistics: 52 macros/32 mains before conversion integration, 45 candidates and 130,532
+   (prefix, candidate) seed pairs after. A macro-driven corpus campaign
+   (`engine/src/ai/testing/corpus.ts`, spec + `engine/scripts/ai/corpus-campaign.ts`) plays full
+   sampled games from the locked setup to EndGame and validated 1,000+ diverse committed states
+   for hash/legal/apply/replay properties. Two engine-reality findings are surfaced explicitly
+   rather than hidden: the custom-federation fallback (no enumerable geometry — recorded as a
+   first-class incompleteness marker until Phase 3's federation planner) and the base-003
+   federationCache staleness class (serialization drops the cache's `custom` flag; replay-path
+   hash differences confined to that class are counted after a cache-masked comparison). See
+   `AI_PHASE_1_4_HANDOFF.md` for measured results and `engine/src/ai/README.md` for semantics.
+   Every later phase (AI-6+: bots, evaluator, search, federation planner, book, neural, UI,
+   backend) remains unstarted. External review found that action/turn semantics,
    deterministic canonical state, resource-
    conversion planning, federation enumeration, performance assumptions, neural policy encoding,
    training evaluation, and client-side anti-cheat all need correction before ordinary MCTS/net work.
