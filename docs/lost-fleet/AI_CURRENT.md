@@ -373,6 +373,49 @@ Round-6 score from 72 to 76, spent four of seven stranded knowledge on Terraform
 research/endgame VP from 16 to 20. This is the current AI-7 plan default. It is a genuine local gain,
 not an exact Round-6 solver, paired campaign, or competent-play claim; 110 remains well below 150–160.
 
+## AI-7 offline economy-plan layer and the engine-building bottleneck (2026-07-15)
+
+The recommended compatible-income / action-budget economic plan is implemented as
+`strategy/economy-plan.ts` and wired into `StrategyPlanMacroBot` behind `economyPlanning` (default
+`false`, bot schema v3→v4, nullable `economy` report field). It is committed at
+`3501c22` on `claude/gaia-phase-1-4-yjb6qo`. The layer scores each macro against the plan's
+`roundActionBudget` (the next up-to-three action cost bundles, not one prerequisite) with inspectable
+terms: bundle-combination coverage, plan income coverage, cap-waste, stranded-surplus, wasteful-spend,
+and a resource-preserving Pass. Default-off reproduces the frozen `110-60` diagnostic exactly.
+
+The retained enabled arm is the multi-action budget: one non-promotional diagnostic (plan bot Xenos
+vs greedy Hadsch) scored `110-50` with **Federation VP 0→8** and **stranded ore 15→9** at equal
+absolute score — a healthier composition, not a promotion.
+
+Four separate attempts to raise the **absolute** score from the evaluation layer each failed or
+regressed, and they triangulate on one cause:
+
+- income-normalized greedy value: `45–72`, no productivity repair (prior AI-7 note);
+- plan-relative income coverage: inert — the mine-spread budget is ore-only and ore income is already
+  adequate, so there is nothing to fix;
+- a plan-independent operating-income floor (credits/knowledge) at weight 10: **regressed to `95`**,
+  still built zero Trading Stations, and hoarded 23 credits;
+- a late-game anti-hoard correction (claw back the frozen `resource-stock` over-valuation of held
+  convertible resources toward their true 3:1 endgame worth): **regressed to `103`**.
+
+Root cause (now well-evidenced, not a guess): the ceiling is **upstream in opening-plan selection**,
+not in economy evaluation. For Xenos, `opening-plans.ts` ranks **mine-spread** top (+0.35 modifier), so
+the bot builds ~8 mines and **one** non-mine building, ends with **0 Trading Stations / Labs / PI** and
+**0 credit income**, and is therefore credit-locked into single-action rounds (observed 1-action rounds
+2 and 5). Because the engine is that thin, the bot genuinely has **no higher-scoring late action** than
+holding resources for 3:1 conversion — which is exactly why the anti-hoard correction _loses_ points:
+it forces marginal spends worth less than the conversion it replaces. A transition evaluator can only
+reweight macros the bot already generates and takes; it cannot manufacture the TS/Lab the bot never
+adopts. The frozen `resource-stock` weights (ore 0.8, knowledge 1.0) plus `endgame-leftover-conversion`
+(0.85) do over-price late held resources, but correcting that is only useful once better scoring
+actions exist to spend on.
+
+Recommended next bounded AI-7 task (revised): make the bot **build a real engine** — address the
+mine-spread dominance and the undervaluation of income buildings in `opening-plans.ts` so Xenos reaches
+a Trading Station / Lab / PI with nonzero credit+knowledge income before rounds 3–5. This touches plan
+ranking (VP-weight territory the owner flagged), so confirm scope before starting. Do **not** pursue
+further economy-evaluation weight terms for absolute score; that avenue is exhausted for this setup.
+
 ## Claude handoff: strategic implementation map
 
 This section is the compact handoff view. `STRATEGY_DOCTRINE.md` remains the canonical strategy
