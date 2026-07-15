@@ -46,11 +46,14 @@
 ## Repository and production state
 
 - Working branch: `claude/gaia-phase-1-4-yjb6qo`.
+- Published AI-7 handoff checkpoint: `5d3d8e758ca9f42480beb4e42939cb8c92fa9c27` (`Add AI-7
+strategic planning and diagnostics`). It is pushed to the identically named `origin` branch; the
+  worktree was clean when this metadata follow-up began.
 - Local/remote tip at AI-7 start: `16e0f0ae6cc0e4e1ba02d3083e461a0da6972008` (`Add AI-6 baselines
 and lean handoff`). The older expected `7c92029e...` base in the owner prompt was one commit behind;
   no history was discarded. `origin/master` was separately at `23caf5cca85c03b5d4016bfb817be05ee55e783f`.
-- The AI-7 implementation and compact documentation are uncommitted in the shared worktree; `git
-status` is authoritative. Preserve all changes exactly.
+- Start from the published branch checkpoint, then treat `git status` as authoritative and preserve
+  any later local changes exactly.
 - `master` is the Vercel production deploy branch. Do not work on, merge to, or push it.
 - Keep AI-7 offline under `engine/src/ai/`. Do not add production imports/exports or modify shared
   engine behavior, viewer code, Supabase, deployment configuration, hosted data, or feature flags.
@@ -415,9 +418,9 @@ rule, coordinate label, paired campaign, or AI-8 Federation/endgame solver.
 
 Claude should start with `AGENTS.md`, this file, `STRATEGY_DOCTRINE.md`,
 `strategy/knowledge.ts`, `strategy/opening-plans.ts`, `strategy/research-plan.ts`,
-`bots/strategy-plan.ts`, and their focused specs. Preserve the dirty AI-7 worktree on
-`claude/gaia-phase-1-4-yjb6qo`; do not switch, pull, commit, push, deploy, or touch `master` unless the
-owner supplies new authority.
+`bots/strategy-plan.ts`, and their focused specs. Continue from the published AI-7 checkpoint on
+`claude/gaia-phase-1-4-yjb6qo`; preserve any later dirty worktree and do not switch, pull, commit,
+push, deploy, or touch `master` unless the owner supplies new authority.
 
 ## AI-7 non-goals
 
