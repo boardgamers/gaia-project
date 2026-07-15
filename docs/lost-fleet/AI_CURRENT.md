@@ -410,11 +410,39 @@ adopts. The frozen `resource-stock` weights (ore 0.8, knowledge 1.0) plus `endga
 (0.85) do over-price late held resources, but correcting that is only useful once better scoring
 actions exist to spend on.
 
-Recommended next bounded AI-7 task (revised): make the bot **build a real engine** — address the
-mine-spread dominance and the undervaluation of income buildings in `opening-plans.ts` so Xenos reaches
-a Trading Station / Lab / PI with nonzero credit+knowledge income before rounds 3–5. This touches plan
-ranking (VP-weight territory the owner flagged), so confirm scope before starting. Do **not** pursue
-further economy-evaluation weight terms for absolute score; that avenue is exhausted for this setup.
+Three further attempts confirmed the diagnosis and sharpened it from "engine selection" to
+"multi-turn planning":
+
+- a cost-gated cheap-Trading-Station opening reward (only the ~3-credit adjacent variant, never the
+  6-credit isolated one; ablatable): **inert** — the move trace shows the bot already builds one
+  Trading Station on 1B2, then upgrades that same piece TS→Lab→Academy (MV 17/27/32), so it ends
+  with **0 Trading Stations and 0 credit income**. It is not failing to build a TS; it consumes its
+  only one for the research line;
+- a "retain credit engine" guard penalising a transition that collapses existing credit income to
+  ~zero (ablatable): **regressed to `102`** and _still_ ended with 0 Trading Stations. Any Lab/Academy
+  is built by upgrading a Trading Station, so keeping a credit engine while climbing research needs a
+  **second** income building the bot never builds (and which may need a second cheap opponent-adjacent
+  spot on this board);
+- every combination with the economy layer regressed further (`92–100`).
+
+Sharpened conclusion (owner-confirmed): the frozen `110` line — rush research to the Academy for
+Intelligence-5 (~20 research/endgame VP) and take one-off credit from the Eclipse ship action — is a
+**robust local optimum on this seed**, and it is defended by a real structural limit, not a missing
+weight. `StrategyPlanMacroBot` is **1-ply**: it scores one macro at a time and cannot represent
+"upgrade away credit income this round, then restore sensible income next round" — form a
+credit-paying Federation, or claim the credit power action first thing next round given bowl-3 power.
+That is a sequencing/lookahead requirement. Myopic evaluator terms can only fake it with an
+instantaneous penalty/reward, which is why all seven attempts either did nothing or forced a worse
+immediate trade. The AI-7 PUCT search is the right mechanism for such lookahead but scores worse
+(`43–84`) at feasible budgets. Single-seed relative results are also not valid promotion evidence.
+
+Recommended next AI-7 direction: stop tuning the myopic bot for absolute score on this seed — that
+avenue is exhausted. The real feature is an explicit **multi-turn income/restoration plan**: allow an
+upgrade that breaks the economy for an action or two only when a concrete restoration path is reserved
+(a formable credit-Federation, or sufficient bowl-3 power for the credit power action next round), and
+validate it with paired campaigns across multiple seeds, not one diagnostic game. Do **not** add more
+economy-evaluation weight terms for absolute score. The committed default-off economy layer (Federation
+channel 0→8, ore stranding 15→9 at equal score) stands as the retained deliverable.
 
 ## Claude handoff: strategic implementation map
 
