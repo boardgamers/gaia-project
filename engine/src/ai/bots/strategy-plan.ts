@@ -1,7 +1,14 @@
 import Engine from "../../engine";
-import { Command, Player, ResearchField } from "../../enums";
+import { Building, Command, Player, ResearchField, Resource } from "../../enums";
+import PlayerInstance from "../../player";
 import { CommittedTurnMacro } from "../actions/turn-builder";
 import { evaluateHeuristic, HeuristicEvaluationOptions, HeuristicEvaluationReport } from "../evaluation";
+import {
+  EconomyPlanTransitionReport,
+  EconomyReserveBundle,
+  economyPlanApplies,
+  evaluateEconomyPlanTransition,
+} from "../strategy/economy-plan";
 import {
   assessOpeningPlan,
   evaluateOpeningPlanTransition,
@@ -29,7 +36,7 @@ import {
 import { applyMacroHostStyle, buildBotMacroSet, chooseFixedFrame } from "./common";
 import { MacroBot, MacroBotBuildOptions, MacroBotSelection } from "./types";
 
-export const STRATEGY_PLAN_BOT_SCHEMA = "gaia-ai-strategy-plan-bot/v3" as const;
+export const STRATEGY_PLAN_BOT_SCHEMA = "gaia-ai-strategy-plan-bot/v4" as const;
 
 export interface StrategyPlanMacroBotOptions extends MacroBotBuildOptions {
   evaluation?: Omit<HeuristicEvaluationOptions, "transition">;
@@ -39,6 +46,13 @@ export interface StrategyPlanMacroBotOptions extends MacroBotBuildOptions {
   productivePassPenalty?: number;
   /** Diagnostic only: gate Advanced Tech goals on a Federation formable this exact turn. */
   federationFeasibilityGate?: boolean;
+  /**
+   * Opt-in compatible-income / action-budget economic plan. When enabled it scores each macro
+   * against the active plan's reserved cost bundle (combination coverage, cap waste, stranded
+   * surplus, wasteful spend, resource-preserving Pass). Default false preserves the frozen policy
+   * exactly.
+   */
+  economyPlanning?: boolean;
 }
 
 export interface StrategyPlanSelectionReport {
@@ -51,6 +65,7 @@ export interface StrategyPlanSelectionReport {
   planCandidates: readonly (OpeningPlanAssessment | ResearchPlanAssessment)[];
   transition: OpeningPlanTransitionReport | ResearchPlanTransitionReport | null;
   tempo: StrategyTempoTransitionReport | null;
+  economy: EconomyPlanTransitionReport | null;
 }
 
 interface EvaluatedMacro {
@@ -59,6 +74,7 @@ interface EvaluatedMacro {
   heuristic: HeuristicEvaluationReport;
   transition: OpeningPlanTransitionReport | ResearchPlanTransitionReport | null;
   tempo: StrategyTempoTransitionReport | null;
+  economy: EconomyPlanTransitionReport | null;
   value: number;
 }
 
@@ -67,6 +83,90 @@ interface PlanDecision {
   researchTarget: ResearchField | null;
   reason: string;
   candidates: readonly (OpeningPlanAssessment | ResearchPlanAssessment)[];
+}
+
+function emptyBundle(): EconomyReserveBundle {
+  return { credits: 0, ores: 0, knowledge: 0, qics: 0 };
+}
+
+function addBuildingCost(bundle: EconomyReserveBundle, player: PlayerInstance, building: Building): void {
+  for (const cost of player.board.cost(building, false)) {
+    switch (cost.type) {
+      case Resource.Credit:
+        bundle.credits += cost.count;
+        break;
+      case Resource.Ore:
+        bundle.ores += cost.count;
+        break;
+      case Resource.Knowledge:
+        bundle.knowledge += cost.count;
+        break;
+      case Resource.Qic:
+        bundle.qics += cost.count;
+        break;
+    }
+  }
+}
+
+function availableAcademy(player: PlayerInstance): Building {
+  return player.data.buildings[Building.Academy1] < player.maxBuildings(Building.Academy1)
+    ? Building.Academy1
+    : Building.Academy2;
+}
+
+/** The plan's remaining building chain from the current stage, in build order. */
+function openingChain(player: PlayerInstance, plan: OpeningPlanId): Building[] {
+  const buildings = player.data.buildings;
+  if (plan === "academy-engine") {
+    if (buildings[Building.Academy1] + buildings[Building.Academy2] > 0) {
+      return [];
+    }
+    if (buildings[Building.ResearchLab] > 0) {
+      return [availableAcademy(player)];
+    }
+    if (buildings[Building.TradingStation] > 0) {
+      return [Building.ResearchLab, availableAcademy(player)];
+    }
+    return [Building.TradingStation, Building.ResearchLab, availableAcademy(player)];
+  }
+  if (plan === "planetary-institute-engine") {
+    if (buildings[Building.PlanetaryInstitute] > 0) {
+      return [];
+    }
+    if (buildings[Building.TradingStation] > 0) {
+      return [Building.PlanetaryInstitute];
+    }
+    return [Building.TradingStation, Building.PlanetaryInstitute];
+  }
+  const target = Math.min(5, player.maxBuildings(Building.Mine));
+  const remaining = Math.max(0, Math.min(3, target - buildings[Building.Mine]));
+  return new Array<Building>(remaining).fill(Building.Mine);
+}
+
+/**
+ * The action budget for the current round: the summed cost bundle of the plan's next few meaningful
+ * actions, not just the single immediate prerequisite. Coverage and stranded-surplus are measured
+ * against this so the economy is judged compatible with executing a whole round, which is what the
+ * diagnosed zero-action middle rounds lacked. An absent plan yields an empty budget.
+ */
+export function roundActionBudget(
+  engine: Engine,
+  actor: Player,
+  plan: OpeningPlanId | ResearchPlanId | null,
+  researchTarget: ResearchField | null
+): EconomyReserveBundle {
+  const bundle = emptyBundle();
+  const player = engine.player(actor);
+  if (plan && plan !== RESEARCH_PLAN_ID) {
+    for (const building of openingChain(player, plan as OpeningPlanId)) {
+      addBuildingCost(bundle, player, building);
+    }
+  } else if (plan === RESEARCH_PLAN_ID && researchTarget) {
+    const level = player.data.research[researchTarget];
+    const steps = Math.max(1, Math.min(2, 5 - level));
+    bundle.knowledge = 4 * steps;
+  }
+  return bundle;
 }
 
 /**
@@ -209,7 +309,7 @@ export class StrategyPlanMacroBot implements MacroBot<StrategyPlanSelectionRepor
         ...this.options.evaluation,
         transition: { source: engine, macro },
       });
-      return { macro, destination, heuristic, transition: null, tempo: null, value: heuristic.value };
+      return { macro, destination, heuristic, transition: null, tempo: null, economy: null, value: heuristic.value };
     });
 
     if (decision.plan && decision.plan !== RESEARCH_PLAN_ID) {
@@ -303,6 +403,34 @@ export class StrategyPlanMacroBot implements MacroBot<StrategyPlanSelectionRepor
       }
     }
 
+    if (this.options.economyPlanning && economyPlanApplies(engine)) {
+      const bundle = roundActionBudget(engine, actor, decision.plan, decision.researchTarget);
+      const productiveAlternative = evaluated.some(
+        (candidate) =>
+          evaluateEconomyPlanTransition(
+            engine,
+            candidate.destination,
+            actor,
+            candidate.macro.mainCommand,
+            bundle,
+            false
+          ).durableProgress
+      );
+      const orientation = actor === Player.Player1 ? 1 : -1;
+      for (let index = 0; index < evaluated.length; index += 1) {
+        const economy = evaluateEconomyPlanTransition(
+          engine,
+          evaluated[index].destination,
+          actor,
+          evaluated[index].macro.mainCommand,
+          bundle,
+          productiveAlternative
+        );
+        evaluated[index].economy = economy;
+        evaluated[index].value += orientation * economy.score;
+      }
+    }
+
     const best = chooseFixedFrame(actor, evaluated);
     return {
       bot: this.name,
@@ -318,6 +446,7 @@ export class StrategyPlanMacroBot implements MacroBot<StrategyPlanSelectionRepor
         planCandidates: decision.candidates,
         transition: best.transition,
         tempo: best.tempo,
+        economy: best.economy,
       },
     };
   }
