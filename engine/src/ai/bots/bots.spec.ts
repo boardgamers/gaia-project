@@ -35,6 +35,11 @@ describe("Phase 2 committed-macro baseline bots", function () {
     expect(applyMacroHostStyle(engine, selection.macro).newTurn).to.equal(true);
   });
 
+  it("keeps the frozen greedy bot default and exposes income normalization as an opt-in policy", () => {
+    expect(new GreedyMacroBot().name).to.equal("greedy-macro");
+    expect(new GreedyMacroBot({ valueMode: "income-normalized" }).name).to.equal("income-normalized-greedy-macro");
+  });
+
   it("heuristic selection is deterministic, inspectable, and committed", () => {
     const engine = challengeSetup();
     const bot = new HeuristicMacroBot();
@@ -77,6 +82,18 @@ describe("Phase 2 committed-macro baseline bots", function () {
       expect(paired.aAsHadschHallas.seat1Bot).to.equal(paired.botA);
       expect(paired.aMargins).to.have.length(2);
       expect(paired.pairedMarginMean).to.equal((paired.aMargins[0] + paired.aMargins[1]) / 2);
+      for (const game of [paired.aAsXenos, paired.aAsHadschHallas]) {
+        expect(game.fullGameReport.players.map((player) => player.score.finalScore)).to.deep.equal([
+          game.finalSeat0Score,
+          game.finalSeat1Score,
+        ]);
+        for (const player of game.fullGameReport.players) {
+          expect(player.rounds.map((round) => round.round)).to.deep.equal([1, 2, 3, 4, 5, 6]);
+          expect(player.rounds.map((round) => round.rawScoreAfterRound)).to.have.length(6);
+          expect(player.totalPasses).to.equal(6);
+          expect(player.score.accountedFinalScore).to.equal(player.score.finalScore);
+        }
+      }
     }
     expect({
       aAsXenos: [greedyRandom.aAsXenos.finalSeat0Score, greedyRandom.aAsXenos.finalSeat1Score],
@@ -98,10 +115,10 @@ describe("Phase 2 committed-macro baseline bots", function () {
       aMargins: heuristicGreedy.aMargins,
       lines: [heuristicGreedy.aAsXenos.committedLines, heuristicGreedy.aAsHadschHallas.committedLines],
     }).to.deep.equal({
-      aAsXenos: [49, 67],
-      aAsHadschHallas: [66, 48],
-      aMargins: [-18, -18],
-      lines: [36, 31],
+      aAsXenos: [52, 77],
+      aAsHadschHallas: [72, 38],
+      aMargins: [-25, -34],
+      lines: [33, 43],
     });
   });
 });

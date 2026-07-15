@@ -1,4 +1,4 @@
-# Lost Fleet AI: offline foundation through Phase 2 baselines
+# Lost Fleet AI: offline foundation through Phase 2 search
 
 This directory is an offline-only foundation for the fixed Lost Fleet AI challenge. It is deliberately
 not exported from `engine/index.ts` and must not be imported by the viewer, hosted-game code, Supabase,
@@ -15,13 +15,17 @@ The directory currently contains:
 - a committed-turn macro builder with stable macro keys and a macro-driven corpus campaign;
 - random, greedy, and inspectable heuristic committed-macro bots;
 - a fixed-seat evaluation report with independently ablatable strategic features;
-- paired full-game baseline self-play;
+- a canonical strategy doctrine and a setup-only, inspectable placement-opportunity prior;
+- a source-indexed strategy registry and persistent Academy/PI/Mine-spread opening-plan candidate;
+- deterministic fixed-frame PUCT plus seeded Gumbel/sequential-halving search;
+- an inspectable heuristic-softmax prior, tree reuse, guarded transpositions, and search diagnostics;
+- paired full-game baseline/search strength harnesses and curated setup/Round-1–6 positions;
 - golden, smoke, parity, and applicability tests for those offline tools.
 
-It does not contain search, federation solving, the Round-6 solver, opening books, neural feature
-encoding, models, training, Web Workers, hosted routes, or production feature flags. Starting
-buildings and round boosters are intentionally not part of the scripted challenge prefix: both
-remain strategic decisions.
+It does not contain federation solving, the Round-6 solver, opening books, neural feature encoding,
+models, training, Web Workers, hosted routes, or production feature flags. Starting buildings and
+round boosters are intentionally not part of the scripted challenge prefix: both remain strategic
+decisions.
 
 ## Lean session entry point
 
@@ -29,6 +33,11 @@ Start every new AI phase from `docs/lost-fleet/AI_CURRENT.md`. It is the single 
 contract and names the exact README sections, plan sections, source API surfaces, and gates to load.
 This README owns stable module semantics; it is not a second handoff and should not be read cover to
 cover by default. Historical sections remain authoritative only when their layer is in scope.
+
+Before changing strategic evaluation or planning, read `STRATEGY_DOCTRINE.md` completely. It owns
+the general expert/forum synthesis, evidence confidence, anti-overfitting rules, plan archetypes,
+and AI-7 implementation order. Exact challenge coordinates remain regression evidence, not policy.
+`strategy/knowledge.ts` is the corresponding machine-checkable source/principle/application map.
 
 ## Safety invariants
 
@@ -48,11 +57,13 @@ Run from `engine/`:
 ```text
 npx ts-node scripts/ai/generate-challenge-manifest.ts
 npx ts-node scripts/ai/benchmark.ts --warmup 5 --iterations 50 --random-games 1
+npx ts-node src/ai/testing/strength-campaign.ts # historical measured arms; do not rerun routinely
 ```
 
-Both commands write JSON to standard output by default. `--output <path>` is available for an explicit
-offline artifact path. The benchmark also accepts `--random-warmup`, `--memory-clones`, and
-`--skip-random-games`.
+All three commands write JSON to standard output by default. `--output <path>` is available for an
+explicit manifest/benchmark artifact path. The benchmark also accepts `--random-warmup`,
+`--memory-clones`, and `--skip-random-games`; the strength campaign intentionally has one checked-in
+fixed configuration.
 
 ## Phase 1.1: canonical committed-state projection
 
@@ -366,15 +377,163 @@ calibration before it can be treated as stronger than greedy. Phase 2 has no sin
 claim. Search, MCTS/PUCT/Gumbel, tree reuse, transpositions, and learned opponent models remain
 absent and deferred to AI-7 or later owner-approved phases.
 
-The complete next-session contract, preserved hashes/counts, Phase 1.3 before/after profile, proof
-obligations, Phase 1.4 corpus gate, and inherited stop conditions are consolidated in
-`docs/lost-fleet/AI_PHASE_1_4_HANDOFF.md`.
+The complete current-session contract and inherited stop conditions are consolidated in
+`docs/lost-fleet/AI_CURRENT.md`.
 
 The later player-facing maximum AI has an owner-locked local-runtime policy: one unchanged
 model/book and fixed high simulation workload for every supported device, no time-based early exit,
 and no silent low-device downgrade. Incapable devices are unsupported. That policy, plus truthful
 search progress/ETA/heartbeat requirements, belongs to the later viewer-integration phase and is
 not implemented by the offline Phase 2 baselines.
+
+## Phase 2 / AI-7: offline search baseline
+
+`search/core.ts` is a domain-generic, deterministic minimax MCTS/PUCT implementation. Values stay in
+one seat-0 frame: actor 0 maximizes and actor 1 minimizes without edge negation. A simulation expands
+at most one new node, backs up the same fixed-frame value, and is conserved in per-call visit deltas.
+Canonical action keys order all ties. `gumbel-sequential-halving` is a separately selectable root
+allocator with an explicit seed and feasible fixed-budget candidate count; plain `puct` remains the
+default and independently measurable. `puctValueScale` explicitly divides fixed-frame Q before the
+dimensionless exploration bonus is added; its default of one preserves the frozen raw-Q baseline.
+`rootReuseVisitPolicy` independently retains promoted-subtree moments (the default) or resets all
+reachable visit/value moments while preserving expanded structure. Reuse diagnostics distinguish
+visits available before promotion from visits actually retained.
+
+`search/engine-domain.ts` makes one Phase 1.4 committed macro the only engine search edge. Every
+destination is applied on a fresh hydrated engine and checked against its recorded hash and next
+actor. Non-terminal leaves use the state-only AI-6 heuristic so canonical transposition values are
+path-independent; terminal leaves use exact final margin. The inspectable prior is a temperature-8
+softmax of actual-actor-oriented heuristic values with a 5% uniform mixture. Its optional
+`greedyMix` performs a probability-level blend with an immediate-greedy softmax; zero is the default
+and exactly preserves the frozen heuristic-only prior. The separate `leafGreedyMix` performs the
+same bounded value-level blend in non-terminal leaf Q; terminal utility is never blended. Its default
+is also zero. Search pins and reports both macro conversion axes; they default off while the existing
+planner remains exact and uncapped when explicitly enabled.
+
+`bots/search.ts` exposes `SearchMacroBot`, `SearchMacroBotOptions`, and `SearchMacroEvaluation`.
+Diagnostics separate deterministic search facts from wall-clock performance and include root visits,
+prior/value/spread, principal variation, expansions, tree reuse, and transposition hits. The bot
+retains the selected child and reconciles the next observed committed state against its descendants.
+Transpositions default off; when enabled, the engine adapter must prove equal canonical hash,
+state-only value, actor/terminal status, and complete legal macro set before sharing a node.
+
+`testing/strength.ts` exposes paired fixed-faction strength games/campaigns plus seven deterministic
+committed probes spanning setup and rounds 1–6. It records candidate margins/records, fixed simulation
+counts, raw final scores for both factions in every game, expansions/edges, latency, reuse, and
+guarded-DAG telemetry. The frozen eight-simulation campaign found:
+
+- plain PUCT vs greedy: margins `[-12, -18]`, mean `-15`, record 0–2;
+- plain PUCT vs heuristic: `[+10, +16]`, mean `+13`, record 2–0;
+- four-seed Gumbel vs greedy: `[-16, -39, -6, -17, -14, -14, +14, -36]`, mean `-16`, record 1–7;
+- four-seed Gumbel vs heuristic: `[-10, -1, +11, +30, -1, -9, -6, -8]`, mean `+0.75`, record 2–6.
+
+Tree reuse occurred on 31/37 and 32/34 plain-PUCT selections and 418/435 four-seed Gumbel
+selections. On the common-seed Gumbel DAG ablation, 90 guarded hits/parity checks produced the same
+game margins and selected curated actions as the tree variant, with no demonstrated latency benefit.
+The implementation gate is complete, but the strength-promotion gate is not: no AI-7 bot is promoted
+over greedy, and AI-8 must not begin until an AI-7 follow-up clears that gate.
+
+Final AI-7 verification: 12/12 focused; complete engine 710 passing / 4 pending; TypeScript,
+changed-file ESLint, diff/whitespace, and production-isolation audits clean. The first full-suite
+attempt was externally terminated with Windows status `0x40010004` and no Mocha failure; the exact
+recovery command completed successfully.
+
+The focused AI-7 calibration kept Gumbel/transpositions ablated and compared budgets 1/2/4/8/16 on
+the seven curated positions. A 50/50 greedy/heuristic prior changed 0/35 choices relative to the
+heuristic-only prior; both arms matched greedy on only 1, 1, 1, 2, and 1 positions respectively.
+Unvisited-edge Q starts at the full raw heuristic value while the exploration bonus is only about
+`1.25 × prior`, so a prior-only blend cannot overcome the measured heuristic gaps. Early traces
+found two mine-over-trading-station evaluator divergences and one retained-subtree research choice
+that fresh search replaced with Pass. No trace reached EndGame, so no final-score result was produced.
+Completed-game harness results always include both raw seat scores. Calibration verification was
+13/13 focused and 711 passing / 4 pending in the complete engine suite; TypeScript and ESLint passed.
+
+The next bounded calibration made Q units explicit and moved the evaluator blend into both prior and
+non-terminal leaf value. At budgets 1/2/4/8/16, the predeclared scale-16, 75%-greedy candidate matched
+greedy on 3/3/3/5/5 of seven curated positions, versus 1/1/1/2/1 for the frozen arm. On two fixed
+32-line stateful traces it differed from a fresh tree only once; resetting promoted-subtree moments
+differed four times and retained no old visits, so the campaign candidate keeps the default retain
+policy. The exact one-pair, eight-simulation campaign configuration is checked into
+`testing/strength-campaign.ts` behind `--scaled-greedy-75-candidate` before measurement.
+
+That campaign ran once after source freeze. Versus greedy, the candidate scored raw games `65-72`
+and `56-84` from its Xenos and Hadsch Hallas assignments: margins `[-7, +28]`, paired mean `+10.5`,
+record 1-1. Versus heuristic it scored `73-43` and `49-67`: margins `[+30, +18]`, mean `+24`, record
+2-0. Mean search latency was 2,042 ms/selection versus greedy and 2,127 ms versus heuristic. This is
+the leading search-only arm on paired margin, not a statistically clear final claim: it has one
+deterministic pair per opponent and lost the Xenos/greedy game. The measured arm must not be rerun or
+retuned; AI-7 remains open for broader predeclared strength evidence.
+
+`docs/lost-fleet/AI_CURRENT.md` grants continuing autonomy for offline AI-7 iteration. An agent may
+predeclare, source-freeze, and run one comparable paired campaign per evidence-backed candidate
+without an owner checkpoint. It must not rerun/cherry-pick failed seeds, start AI-8, change shared or
+production code, or commit/push/deploy under that authority.
+
+`testing/full-game-report.ts` adds exact inspectable absolute-score/productivity reporting to both
+baseline and search games. It uses only committed macro observations and the engine's existing
+advanced log. Every player report includes raw score after rounds 1–6; Round-tile, Federation,
+research-track/endgame, both final-scoring, other immediate, resource-conversion, and bid VP;
+ordinary action counts/types and Pass turn by round; and final buildings/research/resources. Round
+and final totals are reconciled exactly, with a loud error on unattributed VP.
+
+The productivity investigation found that baseline players took only 1–9 ordinary actions over six
+rounds, often passing immediately with capped wallets; all four diagnostic players scored zero
+Federation and research-track/endgame VP. `greedyStateValue` therefore has an independently opt-in
+`income-normalized` mode, but its measured 45–72 scores did not improve productivity and it is not a
+candidate. The default remains the frozen immediate-greedy baseline.
+
+Search additionally exposes `nonTerminalPassValuePenalty`, default zero. It applies an actor-relative
+opportunity cost to non-terminal Pass leaf/prior values only; exact terminal utility is unchanged.
+The predeclared value-4 arm selected no Pass at any of 35 curated budget/position probes. In its one
+allowed fresh-seed campaign it beat greedy 2-0 (`76-57`, `72-70`) but remained absolutely weak; the
+retained 72, 76, and 77 VP reports still showed zero-action middle rounds and no
+Federation/research endgame scoring. It is an AI-7 diagnostic improvement, not a promoted champion.
+
+`setup-placement.ts` adds an owner-labelled, setup-only placement prior. It grades distance-one,
+two, and three access to spaceships, the opponent home colour, Gaia planets, Asteroids, one-step
+terrain colours, and nearby planet density. Spaceship value combines its fixed action board with
+the tech and Federation reward actually seeded on it. `setup-placement-opportunity` reports every
+component independently and becomes zero after setup; on the locked challenge it changes the four
+previously tied Xenos first-Mine choices to the expert-confirmed order
+`3A0 > 6A4 > 1A3 > 2A11`.
+
+`STRATEGY_DOCTRINE.md` consolidates the owner's general guidance and the expansion/base-game forum
+review into implementable plan archetypes. `strategy/knowledge.ts` currently maps 20 sources to 37
+deduplicated principles, including contradictions and rejected universal rules; traceability tests
+require every retained principle to have an explicit AI disposition.
+
+`strategy/opening-plans.ts` implements the first general application: inspectable Academy, PI, and
+Mine-spread assessments with prerequisites, exact next-building reserves, progress, affordability,
+round-scoring/faction context, and transition penalties for reserve damage or productive Passes.
+`StrategyPlanMacroBot` retains the selected plan through rounds 1–2 and reports selection, retention,
+completion, abort, and material-switch reasons. It does not script coordinates or move sequences and
+does not change the frozen heuristic baseline.
+
+Its first diagnostic game was deliberately not a campaign: as Xenos against greedy Hadsch Hallas it
+scored `74-61`, took 14 ordinary actions, built Academy 2 and eight Mines, explored two ships, and
+earned 12 Federation VP. Zero actions in rounds 3–5 and zero research-track/endgame VP remain, so the
+opening layer alone was not a promotion candidate.
+
+`strategy/research-plan.ts` implements the evidence-backed continuation for rounds 3–6. It ranks
+research targets from the actual seeded Advanced Tech event, current infrastructure/track position,
+green-Federation readiness, remaining uses, four-knowledge affordability, and small faction-context
+modifiers. It retains the target, rewards focused research plus Standard/Advanced Tech and
+Federation-readiness progress, protects four knowledge from unrelated spending, and penalizes Pass
+only when a productive transition exists. Advanced Tech utility is derived from the tile's actual
+rewards/operator/current condition count and remaining rounds; there is no fixed tile tier or track
+order.
+
+The one final diagnostic—not a paired campaign—improved Xenos from 74 to 107 VP and from 14 to 21
+ordinary actions. Rounds 3–5 changed from `[0,0,0]` actions to `[5,4,4]`, and research/endgame VP
+changed from 0 to 16; final research was AI 5, Terraforming 3, Science 2. This is evidence for the
+planning mechanism, not competent play: 107 remains well below the owner-supplied 150–160 target.
+
+Keeping that same plan active in round 6 is the retained follow-up: Xenos spent four stranded
+knowledge to reach Terraforming 4, increasing the diagnostic to 110 VP, 22 actions, and 20
+research/endgame VP. `strategy/tempo.ts` also exposes an optional measurable-productivity Pass guard,
+and research assessments expose an optional same-turn Federation feasibility context. Both are off
+by default: Pass values 4/8 scored 99/105 and the Federation gate scored 94, so none replaced the
+validated policy. Removed final-scoring/reachability experiments scored 103/88.
 
 ## Future shared-engine correction: maintenance-window checklist
 

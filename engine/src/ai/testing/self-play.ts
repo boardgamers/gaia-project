@@ -4,6 +4,7 @@ import { challengeEngineOptions, LOST_FLEET_CHALLENGE } from "../challenge";
 import { terminalUtility } from "../evaluation";
 import { applyMacroHostStyle, MacroBotError } from "../bots/common";
 import { MacroBot } from "../bots/types";
+import { FullGameReport, FullGameReportCollector } from "./full-game-report";
 
 export const BASELINE_SELF_PLAY_SCHEMA = "gaia-ai-baseline-self-play/v1" as const;
 
@@ -18,6 +19,7 @@ export interface BaselineGameResult {
   finalSeat1Score: number;
   finalMargin: number;
   moveHistory: string[];
+  fullGameReport: FullGameReport;
   finalEngine: Engine;
 }
 
@@ -39,6 +41,7 @@ export type BotFactory = (seat: Player, gameLabel: string) => MacroBot;
 
 export function playBaselineGame(seat0Bot: MacroBot, seat1Bot: MacroBot, maxCommittedLines = 800): BaselineGameResult {
   let engine = new Engine([...LOST_FLEET_CHALLENGE.scriptedPrefix], challengeEngineOptions());
+  const reportCollector = new FullGameReportCollector(engine);
   let committedLines = 0;
   while (!engine.ended) {
     if (committedLines >= maxCommittedLines) {
@@ -55,7 +58,9 @@ export function playBaselineGame(seat0Bot: MacroBot, seat1Bot: MacroBot, maxComm
     ) {
       throw new MacroBotError(`${bot.name} selected a macro outside its Phase 1.4 committed set`);
     }
-    engine = applyMacroHostStyle(engine, selection.macro);
+    const source = engine;
+    engine = applyMacroHostStyle(source, selection.macro);
+    reportCollector.record(source, selection.macro, engine);
     committedLines += 1;
   }
   const finalSeat0Score = engine.player(Player.Player1).data.victoryPoints;
@@ -71,6 +76,7 @@ export function playBaselineGame(seat0Bot: MacroBot, seat1Bot: MacroBot, maxComm
     finalSeat1Score,
     finalMargin: terminalUtility(engine),
     moveHistory: [...engine.moveHistory],
+    fullGameReport: reportCollector.finish(engine),
     finalEngine: engine,
   };
 }

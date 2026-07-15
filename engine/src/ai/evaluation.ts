@@ -22,6 +22,7 @@ import { boosterEvents } from "../tiles/boosters";
 import { finalScoringNeutralPlayer, finalScorings, roundScoringEvents } from "../tiles/scoring";
 import { isAdvanced, isSpaceshipTechTile } from "../tiles/techs";
 import { CommittedTurnMacro } from "./actions/turn-builder";
+import { scoreSetupMinePlacement, scoreSetupPlacements } from "./setup-placement";
 
 export const HEURISTIC_EVALUATION_SCHEMA = "gaia-ai-heuristic-evaluation/v1" as const;
 
@@ -39,6 +40,7 @@ export const HEURISTIC_FEATURES = [
   "projected-income-qic",
   "projected-income-power",
   "building-supply-uncovered-income",
+  "setup-placement-opportunity",
   "round-tile-timing",
   "space-sector-progress",
   "deep-space-sector-progress",
@@ -108,6 +110,7 @@ export const DEFAULT_HEURISTIC_WEIGHTS: Readonly<Record<HeuristicFeature, number
   "projected-income-qic": 1.2,
   "projected-income-power": 0.13,
   "building-supply-uncovered-income": 0.55,
+  "setup-placement-opportunity": 1,
   "round-tile-timing": 0.7,
   "space-sector-progress": 1.25,
   "deep-space-sector-progress": 1.5,
@@ -206,6 +209,46 @@ function buildingSupplyAndIncome(player: Player): number {
     (tradingStationsLeft > 0 ? 0.4 : -0.8) +
     (labsLeft > 0 ? 0.3 : -0.6);
   return placed + supplyFlexibility;
+}
+
+function setupPlacementOpportunity(
+  engine: Engine,
+  transition?: HeuristicEvaluationOptions["transition"]
+): FeatureMeasurement {
+  if (engine.round > 0) {
+    return { seats: [0, 0] };
+  }
+  const placementScores = players(engine).map((player) => scoreSetupPlacements(engine, player));
+  const seats: [number, number] = [placementScores[0].total, placementScores[1].total];
+  if (
+    !transition ||
+    transition.source.phase !== Phase.SetupBuilding ||
+    transition.macro.mainCommand !== Command.Build
+  ) {
+    return { seats };
+  }
+
+  const actor = transition.macro.actor;
+  const priorCoordinates = new Set(transition.source.player(actor).data.occupied.map((hex) => hex.toString()));
+  const placed = engine.player(actor).data.occupied.find((hex) => !priorCoordinates.has(hex.toString()));
+  if (!placed) {
+    return { seats };
+  }
+  const score = scoreSetupMinePlacement(engine, engine.player(actor), placed.toString());
+  return {
+    seats,
+    details: {
+      actor,
+      coordinates: placed.toString(),
+      shipAccess: score.shipAccess,
+      opponentColorAccess: score.opponentColorAccess,
+      gaiaAccess: score.gaiaAccess,
+      asteroidAccess: score.asteroidAccess,
+      oneStepColorAccess: score.oneStepColorAccess,
+      nearbyPlanetDensity: score.nearbyPlanetDensity,
+      placementTotal: score.total,
+    },
+  };
 }
 
 function conditionPotential(player: Player, condition: Condition): number {
@@ -569,6 +612,8 @@ function featureMeasurement(
       };
     case "building-supply-uncovered-income":
       return { seats: paired(engine, buildingSupplyAndIncome) };
+    case "setup-placement-opportunity":
+      return setupPlacementOpportunity(engine, transition);
     case "round-tile-timing":
       return { seats: paired(engine, (player) => scoringTilePotential(player, engine)) };
     case "space-sector-progress":

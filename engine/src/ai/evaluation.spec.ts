@@ -67,6 +67,37 @@ describe("Phase 2 inspectable heuristic evaluation", () => {
     expect(JSON.stringify(engine)).to.equal(before);
   });
 
+  it("applies the owner-labelled Xenos starting-Mine ranking and reports its components", () => {
+    const source = new Engine([...LOST_FLEET_CHALLENGE.scriptedPrefix], challengeEngineOptions());
+    const ranked = buildCommittedTurnMacros(source, { conversionIntegration: false })
+      .macros.map((macro) => {
+        const destination = applyMacroHostStyle(source, macro);
+        const report = evaluateHeuristic(destination, { transition: { source, macro } });
+        const placement = report.features.find((feature) => feature.feature === "setup-placement-opportunity");
+        return {
+          coordinates: macro.moveFragments[0].split(" ").pop(),
+          value: report.value,
+          placement,
+        };
+      })
+      .sort((left, right) => right.value - left.value);
+
+    expect(ranked.map((entry) => entry.coordinates)).to.deep.equal(["3A0", "6A4", "1A3", "2A11"]);
+    expect(ranked[0].placement.details.coordinates).to.equal("3A0");
+    expect(ranked[0].placement.details.shipAccess).to.be.greaterThan(0);
+    expect(ranked[0].placement.details.gaiaAccess).to.be.greaterThan(0);
+    expect(ranked[0].placement.details.asteroidAccess).to.be.greaterThan(0);
+    expect(ranked[0].placement.details.nearbyPlanetDensity).to.be.greaterThan(0);
+  });
+
+  it("limits the setup-placement prior to setup rather than leaking it into ordinary turns", () => {
+    const report = evaluateHeuristic(lockedRoundOneEngine());
+    const placement = report.features.find((feature) => feature.feature === "setup-placement-opportunity");
+    expect(placement.seat0).to.equal(0);
+    expect(placement.seat1).to.equal(0);
+    expect(placement.contribution).to.equal(0);
+  });
+
   it("ablates every feature independently without changing any other term", () => {
     const engine = lockedRoundOneEngine();
     const baseline = evaluateHeuristic(engine);

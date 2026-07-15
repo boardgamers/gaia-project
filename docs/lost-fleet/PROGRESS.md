@@ -27,9 +27,21 @@ release.json`) has two audiences and they must not blur together: a "What's new"
 
 ## Current task index
 
-- **Offline AI:** Phase 2 / AI-6 is complete on `claude/gaia-phase-1-4-yjb6qo` and awaiting owner
-  review. AI-7 search is next only after a fresh owner-approved scope. Its complete compact startup
-  contract is `AI_CURRENT.md`; do not reconstruct it from this historical ledger.
+- **Offline AI:** AI-7 remains open on `claude/gaia-phase-1-4-yjb6qo`. Exact reporting diagnosed
+  repeated immediate Passes, only 1–9 ordinary actions, capped unused wallets, and raw scores far
+  below competent play. A fresh Pass-opportunity candidate improved activity and beat greedy 2-0
+  (`76-57`, `72-70`), but retained candidate scores of 72, 76, and 77 are still weak, so it is not
+  promoted. An owner-labelled setup prior now resolves the previous four-way Xenos placement tie to
+  the confirmed `3A0 > 6A4 > 1A3 > 2A11`; that order is a fixture, not policy. General owner/forum
+  strategy is consolidated in `engine/src/ai/STRATEGY_DOCTRINE.md` and a checked registry maps 20
+  sources to 37 principles/applications. The Academy/PI/Mine-spread opening layer and the persistent,
+  setup-aware research/Advanced Tech continuation are now implemented. The bounded diagnostic
+  improved Xenos from 74 to 107 VP, ordinary actions from 14 to 21, rounds 3–5 from `[0,0,0]` to
+  `[5,4,4]` actions, and research/endgame VP from 0 to 16. Extending the retained path through round
+  6 then improved the default to 110 VP, 22 actions, and 20 research/endgame VP. Several broader
+  scoring/reachability/Pass/Federation gates scored 88–105 and were removed or left opt-in. Continue
+  with a compatible-income/action-budget economic plan; do not rerun measured campaigns or start AI-8.
+  `AI_CURRENT.md` records the full diagnosis, measurements, next evidence, and stop conditions.
 - **Other Lost Fleet work:** follow a concrete owner request. The large **Next actions** section is a
   historical ledger with many completed entries; search it for a named topic instead of reading it
   sequentially.

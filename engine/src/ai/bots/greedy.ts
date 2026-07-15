@@ -1,8 +1,15 @@
 import Engine from "../../engine";
-import { Player, PowerArea } from "../../enums";
+import { Phase, Player, PowerArea, Resource } from "../../enums";
 import { projectedEndgameResourceVictoryPoints, terminalUtility } from "../evaluation";
 import { applyMacroHostStyle, buildBotMacroSet, chooseFixedFrame } from "./common";
 import { MacroBot, MacroBotBuildOptions, MacroBotSelection } from "./types";
+
+export type GreedyValueMode = "immediate" | "income-normalized";
+
+export interface GreedyMacroBotOptions extends MacroBotBuildOptions {
+  /** The default preserves the frozen AI-6 baseline exactly. */
+  valueMode?: GreedyValueMode;
+}
 
 export interface GreedyEvaluation {
   terminal: boolean;
@@ -30,18 +37,54 @@ function playerResourceValue(engine: Engine, seat: Player): number {
   );
 }
 
-export function greedyStateValue(engine: Engine): number {
+function remainingIncomePhases(engine: Engine): number {
+  if (engine.phase === Phase.EndGame) {
+    return 0;
+  }
+  if (engine.round <= 0) {
+    return 6;
+  }
+  if (engine.phase === Phase.RoundStart || engine.phase === Phase.RoundIncome) {
+    return Math.max(7 - engine.round, 0);
+  }
+  return Math.max(6 - engine.round, 0);
+}
+
+function playerProjectedIncomeValue(engine: Engine, seat: Player): number {
+  const player = engine.player(seat);
+  const phases = remainingIncomePhases(engine);
+  return (
+    player.resourceIncome(Resource.Credit) * 0.2 * phases +
+    player.resourceIncome(Resource.Ore) * 0.75 * phases +
+    player.resourceIncome(Resource.Knowledge) * 0.9 * phases +
+    player.resourceIncome(Resource.Qic) * 1.1 * phases +
+    player.resourceIncome(Resource.ChargePower) * 0.12 * phases +
+    player.resourceIncome(Resource.GainToken) * 0.1 * phases +
+    player.resourceIncome(Resource.GainTokenArea3) * 0.25 * phases
+  );
+}
+
+export function greedyStateValue(engine: Engine, mode: GreedyValueMode = "immediate"): number {
   if (engine.ended) {
     return terminalUtility(engine);
   }
   const scoreMargin =
     engine.player(Player.Player1).data.victoryPoints - engine.player(Player.Player2).data.victoryPoints;
-  return scoreMargin + playerResourceValue(engine, Player.Player1) - playerResourceValue(engine, Player.Player2);
+  const projectedIncomeMargin =
+    mode === "income-normalized"
+      ? playerProjectedIncomeValue(engine, Player.Player1) - playerProjectedIncomeValue(engine, Player.Player2)
+      : 0;
+  return (
+    scoreMargin +
+    playerResourceValue(engine, Player.Player1) -
+    playerResourceValue(engine, Player.Player2) +
+    projectedIncomeMargin
+  );
 }
 
-function greedyEvaluation(source: Engine, destination: Engine): GreedyEvaluation {
-  const sourceValue = greedyStateValue(source);
-  const value = greedyStateValue(destination);
+function greedyEvaluation(source: Engine, destination: Engine, mode: GreedyValueMode): GreedyEvaluation {
+  const sourceValue = greedyStateValue(source, mode);
+  const value = greedyStateValue(destination, mode);
   const scoreMargin =
     destination.player(Player.Player1).data.victoryPoints - destination.player(Player.Player2).data.victoryPoints;
   const resourceMargin =
@@ -58,15 +101,17 @@ function greedyEvaluation(source: Engine, destination: Engine): GreedyEvaluation
 
 /** One-ply immediate score/resource baseline; it performs no search or opponent modeling. */
 export class GreedyMacroBot implements MacroBot<GreedyEvaluation> {
-  readonly name = "greedy-macro";
+  readonly name: string;
 
-  constructor(private readonly options: MacroBotBuildOptions = {}) {}
+  constructor(private readonly options: GreedyMacroBotOptions = {}) {
+    this.name = options.valueMode === "income-normalized" ? "income-normalized-greedy-macro" : "greedy-macro";
+  }
 
   select(engine: Engine): MacroBotSelection<GreedyEvaluation> {
     const macroSet = buildBotMacroSet(engine, this.options.macroBuildOptions);
     const candidates = macroSet.macros.map((macro) => {
       const destination = applyMacroHostStyle(engine, macro);
-      const evaluation = greedyEvaluation(engine, destination);
+      const evaluation = greedyEvaluation(engine, destination, this.options.valueMode ?? "immediate");
       return { macro, destination, evaluation, value: evaluation.value };
     });
     const best = chooseFixedFrame(macroSet.actor, candidates);
