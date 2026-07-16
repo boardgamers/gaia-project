@@ -11,6 +11,10 @@
 > AI work must be additive, unreachable from existing production entry points, and must not change
 > shared engine semantics, existing hosted-game tables/RPCs/triggers, or current viewer behavior.
 >
+> **Current implementation status (2026-07-15):** Phases 0, 1.1, 1.2, 1.3, 1.4, and AI-6 are
+> complete. AI-7 search is implemented but has not cleared its strength gate; focused calibration
+> and continuing offline execution authority are recorded in `AI_CURRENT.md`. AI-8 is unstarted.
+>
 > **First challenge:** seed `lf-mrj5exuu-c680`, 2-player Lost Fleet, Xenos seat 1 versus Hadsch
 > Hallas seat 2; the human may play either faction. The final ranked configuration is one fixed,
 > deterministic AI version per faction/difficulty leaderboard.
@@ -115,7 +119,10 @@ state API. Do not use `Engine.fromData()` on arbitrary incomplete states.
 - Alpha-beta: restricted to exact/bounded late-game subspaces after Phase 3 proves them tractable.
 - Transpositions: enabled only after canonical hashing and replay/legal-set parity pass.
 - Tree reuse: retain the selected subtree after every actual move.
-- Ranked search uses a fixed simulation count. Wall-clock search and variable pondering are practice
+- Maximum local search uses one fixed, high simulation count. It never stops early or silently
+  substitutes a weaker model/search budget because a device is slow. Faster supported devices
+  finish the same configured work sooner; incapable devices fail an explicit capability gate.
+  Wall-clock search and variable pondering, if ever offered, are separate non-comparable practice
   features only.
 
 ### 1.4 Value target
@@ -156,16 +163,16 @@ cheap and bit-reproducible.
 
 Measurements below were taken on the current machine after warm-up. They are baselines, not promises:
 
-| Measurement | Result |
-|---|---:|
-| 20 full random 2p Lost Fleet fuzz games | 188.7 ms/game average |
-| Committed lines per game | 56.15 average |
-| Full replay | 28.6 ms/game; 0.44 ms/line |
-| JSON clone at legal locked-faction R1 state | 0.65 ms; 24,213 bytes |
-| JSON clone at completed state | 0.78 ms; ~31 KB |
-| Emitted JS clone | 0.66 ms (no material speedup) |
+| Measurement                                             |                                            Result |
+| ------------------------------------------------------- | ------------------------------------------------: |
+| 20 full random 2p Lost Fleet fuzz games                 |                             188.7 ms/game average |
+| Committed lines per game                                |                                     56.15 average |
+| Full replay                                             |                        28.6 ms/game; 0.44 ms/line |
+| JSON clone at legal locked-faction R1 state             |                             0.65 ms; 24,213 bytes |
+| JSON clone at completed state                           |                                   0.78 ms; ~31 KB |
+| Emitted JS clone                                        |                     0.66 ms (no material speedup) |
 | `generateAvailableCommands()` across 179 sampled states | 0.27 ms median; 0.53 ms p95; 1.98 ms observed max |
-| Concrete choices in one legal locked-faction R1 state | 66 total; 32 conversion/burn choices |
+| Concrete choices in one legal locked-faction R1 state   |              66 total; 32 conversion/burn choices |
 
 Implications:
 
@@ -514,6 +521,14 @@ Do not cancel the neural phases if the stated goal remains strongest possible.
 
 ### 7.1 Federation planner
 
+> **Owner scope note (2026-07-14):** custom (hand-picked hex set) federations are out of scope. The
+> AI forms only the federations the engine already enumerates with a satellite path, and picks the
+> best among those; when the engine offers only its custom fallback, the AI forms no federation that
+> turn (Phase 1.4 records this as `excludedCustomFederationTiles`). Reassess whether an AI-side
+> federation planner is needed at all before building one; if built, it selects among
+> engine-enumerated federations rather than constructing custom hex sets. Confirm with the owner
+> when Phase 3 (AI-8) starts.
+
 The current engine's heuristic is not an exact solver and may expose only a custom fallback. Build an
 AI-side exact or bounded-exact planner that:
 
@@ -787,17 +802,23 @@ rendering changes and follow the standing render-test/visual-verification rules.
 2. Put local inference/search in a dedicated Web Worker.
 3. Load model/book assets by content hash and reject version mismatch.
 4. Lock human/AI seats only inside challenge mode.
-5. Use fixed simulations for reproducible practice; show progress/cancel controls.
+5. Use the owner-approved maximum local configuration: fixed high simulations with no device-speed
+   downgrade. Show genuine completed/target simulations, positions evaluated, elapsed time, moving
+   ETA range, and a worker heartbeat/last-update status.
 6. Keep client results explicitly **unranked** until Phase 8 authority exists.
-7. Add performance fallbacks: lower practice budgets, no-network heuristic/search bot, and graceful
-   worker failure. Never silently substitute a weaker AI in ranked mode.
+7. Add an explicit capability gate and graceful worker failure. If a device cannot run the full
+   maximum configuration, mark it unsupported; do not silently lower the model or search budget.
+   Detect hidden/background suspension and distinguish it from a dead worker. A screen-wake request
+   may be offered where supported.
 
 ### Exit gate
 
 - Existing self-contained and hosted flows are byte/behaviorally unaffected outside the new route.
 - Full engine/viewer suites and production builds pass.
-- Real browser verification covers both faction choices, worker cancellation, reload, and model
-  version failure.
+- Real browser verification covers both faction choices, worker cancellation, reload, model
+  version failure, truthful progress/ETA/heartbeat, and background suspension.
+- Benchmark the full unchanged workload on the owner's Ryzen 5 5600G / RTX 3060 12GB / 16GB
+  desktop and iPhone 16 Pro Max. Phone support must not weaken the desktop configuration.
 - No Supabase ranked submission is exposed.
 
 ---
@@ -922,36 +943,47 @@ live games.
 
 This plan is deliberately split for token/context efficiency and reviewability.
 
-| Session | Scope | Stop condition |
-|---|---|---|
-| Current | Write/review this plan only | Documentation diff reviewed; no runtime change |
-| AI-1 | Phase 0 safety, challenge definition/manifest, benchmarks | Phase 0 gate; owner review |
-| AI-2 | Phase 1.1 canonical state/hash | Hash/property tests pass |
-| AI-3 | Phase 1.2 typed decision expander | Locked command corpus complete |
-| AI-4 | Phase 1.3 conversion planner | Brute-force/Pareto tests pass |
-| AI-5 | Phase 1.4 macro builder + corpus campaign | 1,000-state gate passes |
-| AI-6 | Greedy/heuristic bots + evaluator | Inspectable baselines complete |
-| AI-7 | MCTS/Gumbel search + strength harness | Phase 2 gate/measurements |
-| AI-8 | Federation planner + exact R6 solver | Exactness/coverage documented |
-| AI-9 | State-keyed book | Reproducible book + fallback |
-| AI-10 | Neural schemas/PyTorch/ONNX stack | Phase 4 gate |
-| AI-11+ | Self-play iterations, each with one measured objective | Champion gate per iteration |
-| Later | Adversarial hardening, practice UI, backend, rollout | Each phase gate separately |
+### Lean context contract
+
+This document is a reference, not a mandatory cover-to-cover read for every phase. A new AI session
+should load:
+
+1. `AGENTS.md` and the routed sections of `PROGRESS.md` named there;
+2. `AI_CURRENT.md`, the canonical compact session contract;
+3. only the plan sections and stable README sections cited by that contract;
+4. only the source API surfaces named there, expanding through direct dependencies as needed.
+
+Historical phase handoffs are evidence archives. Read a named result/contract section when consuming
+that phase, not the whole archive. Likewise, enumerate `engine/src/ai/` first and follow the relevant
+dependency path; never require every AI file to be read merely because it exists.
+
+| Session       | Scope                                                     | Stop condition                |
+| ------------- | --------------------------------------------------------- | ----------------------------- |
+| Plan          | Reviewed execution plan                                   | Done                          |
+| AI-1          | Phase 0 safety, challenge definition/manifest, benchmarks | Done                          |
+| AI-2          | Phase 1.1 canonical state/hash                            | Done                          |
+| AI-3          | Phase 1.2 typed decision expander                         | Done                          |
+| AI-4          | Phase 1.3 conversion planner + locked-state hardening     | Done                          |
+| AI-5          | Phase 1.4 macro builder + corpus campaign                 | Done                          |
+| AI-6          | Greedy/heuristic bots + evaluator                         | Done                          |
+| **AI-7 next** | **MCTS/Gumbel search + strength harness**                 | Phase 2 gate/measurements     |
+| AI-8          | Federation planner + exact R6 solver                      | Exactness/coverage documented |
+| AI-9          | State-keyed book                                          | Reproducible book + fallback  |
+| AI-10         | Neural schemas/PyTorch/ONNX stack                         | Phase 4 gate                  |
+| AI-11+        | Self-play iterations, each with one measured objective    | Champion gate per iteration   |
+| Later         | Adversarial hardening, practice UI, backend, rollout      | Each phase gate separately    |
 
 Do not compress AI-1 through AI-5 into one session. The action/search foundation is the highest-risk
 part, and each slice produces evidence that may change the next design.
 
-### Fresh-session starter prompt for AI-1
+### Fresh-session starter prompt
 
-```text
-Work in C:\Users\okimm\Documents\Projects\gaia-lost-fleet.
-Read AGENTS.md, then docs/lost-fleet/PROGRESS.md Working agreements and Testing section, then
-docs/lost-fleet/AI_IMPLEMENTATION_PLAN.md in full. Implement Phase 0 only. Real hosted games are
-currently active: do not change existing engine semantics/serialization/moves/availability, viewer,
-Supabase, production entry points, or exports. Keep all AI code offline and unimported. Run engine
-tests with --reporter min, update the Phase 0 measurements/handoff, show the diff, and stop for owner
-review. Do not begin Phase 1 and do not push runtime changes without explicit approval.
-```
+AI-7 remains open; its implementation, measurements, next search-scaling hypothesis, continuing
+offline execution authority, preserved gates, source API surfaces, and verification cadence are
+consolidated in `AI_CURRENT.md`. A fresh session may continue bounded AI-7 calibration and run one
+predeclared campaign per frozen candidate without an owner checkpoint. Do not start AI-8, reuse the
+obsolete AI-1/AI-5/AI-6 prompts, or expand the compact contract into a blanket read-everything
+instruction.
 
 ---
 
@@ -959,21 +991,27 @@ review. Do not begin Phase 1 and do not push runtime changes without explicit ap
 
 Every later phase must preserve the applicable rows:
 
-| Risk | Required verification |
-|---|---|
-| Existing live-game behavior | No import/runtime path until integration; full existing suites |
-| Replay determinism | Constructor vs host-style vs search transition parity |
-| State hash | Cache/log invariant; future-relevant counterfactual sensitivity |
-| Legal completeness | Available data -> canonical candidates -> successful application |
-| Conversion pruning | Brute-force equivalence on bounded cases; no arbitrary cap |
-| Federation planning | Reduced-case brute force + current-engine legality validation |
-| Search correctness | Tiny-game/reference trees; actor-switch/leech tests; exact endgames |
-| Value orientation | Seat swap/sign tests and terminal exact-margin tests |
-| Network legality | Mask/candidate-key parity; no illegal policy mass |
-| Training progress | Paired faction evaluation + protected off-book corpus |
-| Browser inference | ONNX parity, latency, worker failure/cancel tests |
-| Ranked integrity | Server-authoritative moves, pinned hashes, transactional sequence |
-| Production isolation | Challenge-only feature flag/schema/functions; rollback by disable |
+Apply these rows with the risk-based cadence in `PROGRESS.md`: focused checks during development,
+then each applicable expensive gate once after source freeze. The full engine command already
+contains the offline AI tests, so a second complete-AI run on identical source is diagnostic rather
+than mandatory. Do not repeat an asserted digest/hash with a parallel ad hoc comparison unless the
+assertion itself is under investigation.
+
+| Risk                        | Required verification                                               |
+| --------------------------- | ------------------------------------------------------------------- |
+| Existing live-game behavior | No import/runtime path until integration; full existing suites      |
+| Replay determinism          | Constructor vs host-style vs search transition parity               |
+| State hash                  | Cache/log invariant; future-relevant counterfactual sensitivity     |
+| Legal completeness          | Available data -> canonical candidates -> successful application    |
+| Conversion pruning          | Brute-force equivalence on bounded cases; no arbitrary cap          |
+| Federation planning         | Reduced-case brute force + current-engine legality validation       |
+| Search correctness          | Tiny-game/reference trees; actor-switch/leech tests; exact endgames |
+| Value orientation           | Seat swap/sign tests and terminal exact-margin tests                |
+| Network legality            | Mask/candidate-key parity; no illegal policy mass                   |
+| Training progress           | Paired faction evaluation + protected off-book corpus               |
+| Browser inference           | ONNX parity, latency, worker failure/cancel tests                   |
+| Ranked integrity            | Server-authoritative moves, pinned hashes, transactional sequence   |
+| Production isolation        | Challenge-only feature flag/schema/functions; rollback by disable   |
 
 ---
 
@@ -981,11 +1019,35 @@ Every later phase must preserve the applicable rows:
 
 Append decisions here rather than silently changing the architecture.
 
-| Date | Phase | Decision/result | Evidence |
-|---|---|---|---|
-| 2026-07-13 | Plan review | Keep net-guided search as final target; build/promote from search-only Expert Iteration baseline | External code/design audit |
-| 2026-07-13 | Performance | Do not implement undo up front; clone ~0.65–0.78 ms and command generation reached ~1.98 ms | Local warm-process benchmark |
-| 2026-07-13 | Search model | Complete committed move line is the initial tree edge | Engine transient serialization + host/fuzzer flow |
-| 2026-07-13 | Policy | Use variable legal-candidate scorer, not fixed action universe | Structured nested actions + conversion/federation branching |
-| 2026-07-13 | Ranked security | Server authority/state-bound receipts required; end replay alone is insufficient | Client can submit arbitrary legal weak AI moves |
-| 2026-07-13 | Production | Documentation now; Phase 0 in a fresh session; no runtime change during current live games | Production `master` auto-deploy constraint |
+| Date       | Phase           | Decision/result                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Evidence                                                                                                |
+| ---------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| 2026-07-13 | Plan review     | Keep net-guided search as final target; build/promote from search-only Expert Iteration baseline                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | External code/design audit                                                                              |
+| 2026-07-13 | Performance     | Do not implement undo up front; clone ~0.65–0.78 ms and command generation reached ~1.98 ms                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Local warm-process benchmark                                                                            |
+| 2026-07-13 | Search model    | Complete committed move line is the initial tree edge                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Engine transient serialization + host/fuzzer flow                                                       |
+| 2026-07-13 | Policy          | Use variable legal-candidate scorer, not fixed action universe                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Structured nested actions + conversion/federation branching                                             |
+| 2026-07-13 | Ranked security | Server authority/state-bound receipts required; end replay alone is insufficient                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Client can submit arbitrary legal weak AI moves                                                         |
+| 2026-07-13 | Production      | Documentation now; Phase 0 in a fresh session; no runtime change during current live games                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Production `master` auto-deploy constraint                                                              |
+| 2026-07-13 | Phase 0         | Locked manifest/benchmark foundation complete; semantic SHA `ce3bdd…51e`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | 3 focused tests + fresh byte/golden check                                                               |
+| 2026-07-13 | Phase 1.1       | Canonical future-relevant state/hash complete                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | 12 focused tests; constructor/slow-motion/hydration parity                                              |
+| 2026-07-13 | Phase 1.2       | Typed atomic expander complete; 62 locked candidates                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | 10 focused tests; digest `a28eb3…04d9`                                                                  |
+| 2026-07-13 | Phase 1.3       | Exhaustive conversion planner hardened; 36,159 states, 9,985 frontier, 45 candidates, depth 30                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | 15 focused tests; locked digest `b4e266…850`; full engine 671/4                                         |
+| 2026-07-13 | Local runtime   | Maximum mode uses one fixed high simulation workload; no device-driven downgrade; incapable devices unsupported                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Owner decision; target desktop + iPhone 16 Pro Max; later UI needs real progress/ETA/heartbeat          |
+| 2026-07-14 | Phase 1.4       | Committed-turn macro builder complete: stable `macro-v1` keys over semantic choice only; locked Round-1 branch stats 52 macros/32 mains before vs 45 candidates and 130,532 seed pairs after conversion integration; every emitted macro validated by fresh-clone host-style replay                                                                                                                                                                                                                                                                                                                                             | Focused suite + locked digests `972a1e…9096`; corpus campaign                                           |
+| 2026-07-14 | Phase 1.4       | Custom (hand-picked hex set) federations are descoped by owner: the AI forms only engine-enumerated satellite-path federations; a custom-only fallback offer is deliberately excluded and recorded (`excludedCustomFederationTiles`), never aborting a state or read as "no federation", and is not a gap awaiting a later feature                                                                                                                                                                                                                                                                                              | Owner decision + live macro-game campaign (11/1,039 states hit the fallback)                            |
+| 2026-07-14 | Phase 1.4       | Replay-path hash differences confined to the base-003 federationCache staleness class (serialization drops the cache's `custom` flag) are counted and mask-verified, not concealed and not "fixed" in shared engine code                                                                                                                                                                                                                                                                                                                                                                                                        | Cache-masked canonical comparison in the corpus campaign                                                |
+| 2026-07-14 | Phase 2 / AI-6  | Added offline random, immediate greedy, and deterministic inspectable heuristic bots. All choose only Phase 1.4 committed macros, apply host-style, and use one fixed seat-0 frame; terminal value is the exact final score margin. The heuristic exposes 28 independently ablatable named terms and implements no search.                                                                                                                                                                                                                                                                                                      | 12 focused; 68 offline AI; full engine 698/4; production-isolation audit                                |
+| 2026-07-14 | Phase 2 / AI-6  | Locked paired results: greedy vs random scored 68-51 and 46-20 from greedy's faction perspectives (paired +43, mean +21.5, 2-0); heuristic vs greedy scored 49-67 and 48-66 from heuristic's perspectives (paired -36, mean -18, 0-2). The heuristic is retained as a transparent coverage baseline, not promoted over greedy.                                                                                                                                                                                                                                                                                                  | Deterministic swapped-faction self-play from the locked challenge prefix                                |
+| 2026-07-14 | Phase 2 / AI-6  | Baseline self-play defers conversion integration by default because the locked rich state has 130,532 exact seed pairs. This is an explicit play-policy choice; callers can enable the existing exact axes, and no cap, timeout, depth bound, sequence bound, or beam was added to macro generation or conversion planning.                                                                                                                                                                                                                                                                                                     | Existing Phase 1.3/1.4 locked suites and digests preserved                                              |
+| 2026-07-15 | Phase 2 / AI-7  | Added deterministic fixed-frame minimax PUCT over committed macros, an inspectable state-only heuristic-softmax prior, seeded Gumbel/sequential-halving root allocation, selected-subtree reuse, guarded/ablatable transpositions, deterministic/performance diagnostics, reference trees, and paired/curated strength harnesses. Transpositions default off and require canonical key, actor/terminal, value, and complete legal-macro parity before sharing.                                                                                                                                                                  | 12 focused; full engine 710/4; TypeScript/ESLint/isolation clean                                        |
+| 2026-07-15 | Phase 2 / AI-7  | Frozen eight-simulation measurement did not clear promotion: plain PUCT was -15 mean (0-2) vs greedy and +13 (2-0) vs heuristic; four-seed Gumbel was -16 (1-7) vs greedy and +0.75 (2-6) vs heuristic. Tree reuse was frequent. The common-seed DAG ablation produced 90 guarded hits with identical margins/curated choices and no demonstrated latency benefit. Keep AI-7 open; do not start AI-8.                                                                                                                                                                                                                           | One paired campaign with common seeds and setup/Round-1–6 probes                                        |
+| 2026-07-15 | Phase 2 / AI-7  | A focused plain-PUCT calibration added an ablatable probability-level greedy/heuristic prior blend, preserving the frozen default at `greedyMix=0`. The 50/50 blend changed 0/35 choices across seven curated positions at budgets 1/2/4/8/16. Raw heuristic Q initialization dominated the prior; two first material divergences were mine-over-trading-station evaluator choices, and a third stateful research choice was specific to retained subtree visits. Do not campaign this blend.                                                                                                                                   | Truncated divergence traces; curated fixed-budget grid; 13 focused; full engine 711/4                   |
+| 2026-07-15 | Phase 2 / AI-7  | Removed the routine owner checkpoint for offline AI-7 iteration. Agents may autonomously choose an evidence-backed candidate, predeclare one comparable paired design, freeze/verify source, run it once, record raw scores, and continue with a new bounded hypothesis after failure. AI-8, shared/production changes, and commit/push/deploy remain separate authority boundaries.                                                                                                                                                                                                                                            | Explicit owner direction in the focused calibration follow-up                                           |
+| 2026-07-15 | Phase 2 / AI-7  | Added explicit PUCT Q scaling, a state-only greedy/heuristic leaf-value blend, and an independently ablatable promoted-subtree moment reset. Scale 16 with a 75% greedy leaf/prior mix matched greedy on 5/7 curated positions at budgets 8 and 16; retained moments produced one stateful/fresh difference versus four for reset. Predeclared the retained eight-simulation candidate before paired measurement.                                                                                                                                                                                                               | Fixed-budget curated grid; two-seat 32-line reuse traces; checked-in campaign arm                       |
+| 2026-07-15 | Phase 2 / AI-7  | The predeclared scale-16/greedy-75 retained arm became the paired-margin search leader: vs greedy `[-7,+28]`, mean `+10.5`, record 1-1; vs heuristic `[+30,+18]`, mean `+24`, record 2-0. All raw scores and fixed-budget costs were recorded. Keep AI-7 open: one deterministic pair and the Xenos/greedy loss are not the statistically clear Phase 2 exit gate. Do not rerun or retune this measured arm.                                                                                                                                                                                                                    | One frozen eight-simulation paired campaign after 16 focused + full engine 714/4 verification           |
+| 2026-07-15 | Phase 2 / AI-7  | Added exact full-game absolute-score/productivity reporting. Baseline diagnosis found only 1–9 ordinary actions over six rounds, repeated immediate Passes, capped unused wallets, and zero Federation/research-endgame VP. An income-normalized greedy ablation stayed at 45–72 and was rejected.                                                                                                                                                                                                                                                                                                                              | Exact round/final reconciliation; paired baseline diagnostics                                           |
+| 2026-07-15 | Phase 2 / AI-7  | Added an ablatable non-terminal Pass opportunity cost, default zero with terminal utility exact. A value-4 arm selected zero Passes in 35 curated searches and was predeclared with a fresh seed. It beat greedy 2-0 (`76-57`, `72-70`), but retained candidate scores of 72, 76, and 77 remained far below competent play. Keep AI-7 open and target infrastructure/research/Federation productivity next.                                                                                                                                                                                                                     | 16 focused; full engine 717/4; one isolated campaign                                                    |
+| 2026-07-15 | Phase 2 / AI-7  | Began an owner-labelled decision-packet loop instead of blind campaign iteration. The first inspectable setup-only prior grades distance to ships, opponent colour, Gaia, Asteroids, one-step colours, and planet density, including the actual seeded ship rewards. It changes an exact four-way evaluator tie into the confirmed Xenos order `3A0 > 6A4 > 1A3 > 2A11`. This corrects one decision but is not claimed as full-game strength.                                                                                                                                                                                   | Exact before/after root values; 33 focused evaluator/bot/search tests; no campaign                      |
+| 2026-07-15 | Phase 2 / AI-7  | Consolidated owner expertise, recurring BoardGameGeek principles, official Lost Fleet context, disputed claims, and anti-overfitting rules in `engine/src/ai/STRATEGY_DOCTRINE.md`. Strategic knowledge will enter the AI as inspectable plan archetypes with prerequisites, reserves, feasibility, progress, aborts, and fallbacks—not coordinate scripts or permanent tiers. Implement Academy/PI/Mine-spread plans first and require qualitative productivity evidence before another campaign.                                                                                                                              | Owner labels; cited source ledger; existing full-game absolute-score diagnosis                          |
+| 2026-07-15 | Phase 2 / AI-7  | Added a checked strategy registry mapping 20 public/owner sources to 37 deduplicated principles and explicit applications or rejections. Implemented the first persistent opening-plan candidate for Academy, PI, and Mine spread with exact next-building reserves, progress/affordability, contextual plan selection, switch reasons, and productive-Pass handling. A single diagnostic improved local development but remained weak: Xenos `74-61`, 14 actions, Academy 2, eight Mines, one Federation/12 VP, yet zero actions in rounds 3–5 and zero research endgame VP. Extend planning into midgame before any campaign. | 9 focused strategy tests; TypeScript/ESLint clean; one non-promotional diagnostic                       |
+| 2026-07-15 | Phase 2 / AI-7  | Added a persistent rounds 3–5 research/Advanced Tech continuation. It ranks tracks from the seeded tile's actual reward/trigger/current-board/remaining-use value, track position, Federation readiness, affordability, and small faction context; reserves four knowledge; reports progress/abort/switch/Pass terms; and uses no fixed track order or tile tier. In the one final diagnostic, Xenos improved from 74 to 107 VP and 14 to 21 actions, filled rounds 3–5 with `[5,4,4]` actions, and earned 16 research/endgame VP. This is material but remains below the 150–160 benchmark, so AI-7 stays open.                | 10 focused opening/research tests; TypeScript/ESLint clean; one non-promotional diagnostic; no campaign |
+| 2026-07-15 | Phase 2 / AI-7  | Audited scoring/reachability, productive-Pass, and same-turn Federation interactions. Their diagnostics scored 103, 88, 105/99, and 94, so the first two were removed and the latter two remain opt-in/off by default. The retained change extends the validated research path through round 6: it spends four stranded knowledge, raises research/endgame VP 16→20, actions 21→22, raw Round-6 score 72→76, and final score 107→110. Keep AI-7 open and address compatible economic income/action budgets next.                                                                                                                | 11 focused research/tempo tests; TypeScript/ESLint clean; development diagnostics only; no campaign     |

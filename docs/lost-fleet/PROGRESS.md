@@ -1,13 +1,11 @@
 # Lost Fleet — Progress & Next-Session Handoff
 
-> **New session? Start here.** This file is the running state of the project. Read it, then read
-> `RULES_CLARIFICATIONS.md` (the value ledger) and `COMPONENTS.md` (the inventory/status). If the
-> task touches viewer rendering/perf, also read `PERFORMANCE.md` first — it has hard-measured
-> findings that should not be rediscovered. Read **Working agreements** below before doing
-> anything else, including the **Testing — required going forward** section it points to — both
-> are standing process, not optional. Then ask the user "what next?" and use the **Next actions**
-> section below to guide them.
-> Last updated: **2026-07-12** (tooltip flash/stuck-open fix + shared used-X mark, #101).
+> **New session? Start here, selectively.** Read **Working agreements**, **Current task index**, and
+> the current policy/commands at the start of **Testing — required going forward**; stop at its
+> labeled historical rerun log. Do not load this 5,000-line history cover to cover. Read the other
+> ledgers and historical handoffs only when the task touches their subject, following `AGENTS.md`.
+> If the user supplied a concrete task, proceed with it rather than asking "what next?".
+> Last updated: **2026-07-15** (AI-6 complete; lean context and test routing added).
 
 ## Working agreements (read every session, not optional)
 
@@ -26,6 +24,27 @@ release.json`) has two audiences and they must not blur together: a "What's new"
    always go through `node scripts/update-viewer-release.js <bump> "<title>" "user:<change>" "dev:
 <change>" ...`, which refuses untagged input and won't let a fix slip into the user-facing tab.
    Keep `userChanges` bullets short and in plain language — players don't want to read much.
+
+## Current task index
+
+- **Offline AI:** AI-7 remains open on `claude/gaia-phase-1-4-yjb6qo`. Exact reporting diagnosed
+  repeated immediate Passes, only 1–9 ordinary actions, capped unused wallets, and raw scores far
+  below competent play. A fresh Pass-opportunity candidate improved activity and beat greedy 2-0
+  (`76-57`, `72-70`), but retained candidate scores of 72, 76, and 77 are still weak, so it is not
+  promoted. An owner-labelled setup prior now resolves the previous four-way Xenos placement tie to
+  the confirmed `3A0 > 6A4 > 1A3 > 2A11`; that order is a fixture, not policy. General owner/forum
+  strategy is consolidated in `engine/src/ai/STRATEGY_DOCTRINE.md` and a checked registry maps 20
+  sources to 37 principles/applications. The Academy/PI/Mine-spread opening layer and the persistent,
+  setup-aware research/Advanced Tech continuation are now implemented. The bounded diagnostic
+  improved Xenos from 74 to 107 VP, ordinary actions from 14 to 21, rounds 3–5 from `[0,0,0]` to
+  `[5,4,4]` actions, and research/endgame VP from 0 to 16. Extending the retained path through round
+  6 then improved the default to 110 VP, 22 actions, and 20 research/endgame VP. Several broader
+  scoring/reachability/Pass/Federation gates scored 88–105 and were removed or left opt-in. Continue
+  with a compatible-income/action-budget economic plan; do not rerun measured campaigns or start AI-8.
+  `AI_CURRENT.md` records the full diagnosis, measurements, next evidence, and stop conditions.
+- **Other Lost Fleet work:** follow a concrete owner request. The large **Next actions** section is a
+  historical ledger with many completed entries; search it for a named topic instead of reading it
+  sequentially.
 
 ## What this project is
 
@@ -4047,25 +4066,25 @@ opacity: 0.7 }` wrapper that also diluted the X itself, while `BoardAction.vue`'
       `pnpm test`: 440 passing/31 failing both before and after (identical failing-test names,
       confirmed via `git stash` on the same run - all pre-existing, none touch these components).
 
-           **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
-           pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
-           desktop mice, which was never the actual bug - only touch devices raced hover against the
-           click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
-           `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
-           `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
-           shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
-           `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
-           directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
-           `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
-           config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
-           on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
-           desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
-           is what actually closed that race originally. Verified live via Playwright with two device
-           profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
-           tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
-           context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
-           a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
-           still 440 passing/31 failing, same pre-existing set.
+                                   **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
+                                   pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
+                                   desktop mice, which was never the actual bug - only touch devices raced hover against the
+                                   click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
+                                   `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
+                                   `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
+                                   shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
+                                   `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
+                                   directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
+                                   `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
+                                   config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
+                                   on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
+                                   desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
+                                   is what actually closed that race originally. Verified live via Playwright with two device
+                                   profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
+                                   tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
+                                   context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
+                                   a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
+                                   still 440 passing/31 failing, same pre-existing set.
 
 ## Still MISSING — only one art-only item left
 
@@ -4087,6 +4106,32 @@ engine (raw `mocha`) and the viewer (`vue-cli-service test:unit` forwards `--rep
 want full spec output when running locally) — just append `--reporter min` to the command
 invoked in a session.
 
+### Risk-based cadence (standing instruction, 2026-07-15)
+
+Use the smallest gate that can falsify the current change, then run the broader gate once after the
+source is stable:
+
+1. **Inner loop:** focused tests for touched behavior, then focused type/lint checks. Do not run an
+   exhaustive corpus or full repository suite after every edit.
+2. **Phase/source freeze:** run each applicable locked digest/golden campaign and the full engine
+   suite once, after the last source change and before owner review or merge.
+3. **No overlapping duplicate:** the full three-glob engine command includes `src/ai/**`. Do not
+   additionally rerun the complete offline-AI suite on the same source merely to restate a subgroup
+   count; run it separately only to isolate a failure or when the owner explicitly requests an
+   independent measurement.
+4. **No docs-only rerun:** documentation-only edits require Markdown/whitespace/diff checks, not
+   engine or viewer suites.
+5. **No duplicate proof:** when a focused or full test already asserts a locked byte hash, semantic
+   hash, digest, or counter, cite that test result instead of rerunning an equivalent ad hoc script.
+6. **Risk routing:** rerun expensive planner/corpus gates when their implementation, inputs,
+   serialization, canonical state, macro construction, or shared engine behavior changes. Pure
+   evaluator/reporting changes use evaluator/bot tests until the single final full-suite gate.
+
+If source changes after the phase/source-freeze run, the source is no longer frozen: rerun the
+directly affected gates, and rerun the full suite before handoff when the change can affect shared
+behavior or any locked campaign. Plan the freeze late enough to avoid reflexively running the same
+17-minute campaign twice.
+
 Real test commands (don't use raw `mocha -r ts-node/register` for the viewer — it hits stricter
 TS resolution than the real webpack-based path and gives false failures; use the actual scripts):
 
@@ -4098,6 +4143,8 @@ TS resolution than the real webpack-based path and gives false failures; use the
 - Viewer: `cd viewer && npx vue-cli-service test:unit --timeout 4000 --reporter min 'src/**/*.spec.ts' 'src/logic/**/*.spec.ts'`
   (this is what `pnpm test` runs, plus `--reporter min` — uses `mochapack`/webpack, required for
   files that touch engine types). **257 tests passing as of 2026-07-03** (see #59).
+
+### Historical rerun log (reference only; do not read during routine startup)
 
 **Latest full rerun after #56:** engine **548/548** (531 baseline from #55 + 17 new: 5
 `faction-boards/lantids.spec.ts`, 12 `research-tracks.spec.ts`; no regressions). Viewer last
@@ -5052,6 +5099,7 @@ quick-test` 152/152; `npm test` 152/154, the 2 failures pre-existing/unrelated, 
 5. **Premove (see "Done so far" #66-#67 and `docs/lost-fleet/PREMOVE_PLAN.md`)** — Phase 0 (spike),
    Phase 1 (MVP: schema, RPCs, client fast-path, UI), and Phase 2 (offline auto-leech) are all DONE
    in code, schema, and tests. Still open:
+
    - **Deploy `resolve-automation`** (owner action — needs the Supabase CLI + an access token this
      session didn't have; the function, including Phase 2's RoundLeech branch, is written and
      unit-tested, just not live) and seed `app_config['resolve_automation']` (same bootstrap step
@@ -5061,17 +5109,75 @@ quick-test` 152/152; `npm test` 152/154, the 2 failures pre-existing/unrelated, 
      fully offline yet).
    - **Phase 3 (multi-round queue depth)** — genuinely optional.
 
-6. **AI opponent — seed-locked "beat the AI" monthly challenge (DESIGN STAGE, not built)** — a full
-   design spec exists in **`docs/lost-fleet/AI_CHALLENGE_PLAN.md`** and a fill-in strategy intake in
-   **`docs/lost-fleet/AI_STRATEGY_NOTES.md`** (added 2026-07-13). Goal: a 2-player, fixed
+6. **AI opponent — seed-locked "beat the AI" monthly challenge (DESIGN STAGE, not built)** — the
+   **authoritative reviewed execution plan** is now
+   **`docs/lost-fleet/AI_IMPLEMENTATION_PLAN.md`**; the original concept/brainstorming record remains
+   in **`docs/lost-fleet/AI_CHALLENGE_PLAN.md`**, and the fill-in strategy intake remains
+   **`docs/lost-fleet/AI_STRATEGY_NOTES.md`** (added/reviewed 2026-07-13). Goal: a 2-player, fixed
    seed/factions/turn-order challenge where a human picks a faction and tries to out-score (by margin)
    a strongest-possible AI opponent. Approach: a seed-specialized AlphaZero-style net + live MCTS,
    trained offline, reusing the existing `engine/src/fuzz/` headless self-play harness; served
    client-side in a Web Worker with Supabase leaderboard + replay-based verification. The plan covers
    the `engine/src/ai/` module layout, cheap strength boosters (opening book, transposition table,
    score-margin value, etc.), how strategy knowledge folds in as features (not hard rules), monthly
-   reuse + cross-month transfer, UI/Supabase wiring, and milestones M0–M8. **Nothing is implemented
-   yet**; the immediate next code step is M0/M1 (strength-measurement harness + Tier-0 heuristic bot).
+   reuse + cross-month transfer, UI/Supabase wiring, and milestones M0–M8. **Offline Phases 0, 1.1,
+   1.2, and 1.3 are complete on `agent/phase-1-3-resource-planner` (2026-07-13), with no production
+   import path.** Phase 1.3 adds the exhaustive,
+   weight-free resource-conversion/Pareto planner under `engine/src/ai/resources/`; its 2026-07-13
+   hardening pass now completes the untouched locked Round-1 state in a measured 46.11s (the
+   pre-hardening run was still in reachability at 120.04s) with 36,159 reachable states, a
+   9,985-state frontier, 45 candidate frontiers, and maximum depth 30. Cached immutable-state
+   canonical/exact material, deterministic necessary-condition dominance buckets, and a proved
+   scalar-payment translation fast path preserve the full componentwise predicate; there is still
+   no cap, timeout, weight, or heuristic pruning. The locked completion/key/replay regression passes
+   across constructor replay, `Engine.slowMotion`, and hydration with digest
+   `b4e266ef95ca8cc34cfd1cde4380a782ff01f4802a077d49ac9686924e222850`.
+   The focused suite is 15/15, the complete offline AI suite is 41/41, and the required engine suite
+   is 671 passing / 4 pending. The exact counters, proof, baselines, and next-session scope are
+   consolidated in `AI_PHASE_1_4_HANDOFF.md`. **Phase 1.4 committed-turn macro construction is
+   DONE (2026-07-14, `claude/gaia-phase-1-4-yjb6qo`):** `engine/src/ai/actions/turn-builder.ts`
+   builds complete committed-turn macros (optional exact conversion prefix, one Phase 1.2 main
+   action, forced follow-ups on the spine, meaningful choices as branches, retained AfterMove
+   bowl-openers, `end`), validates every macro by fresh-clone host-style replay, and keys each by
+   its semantic choice only; leech interruptions are separate committed edges. Locked Round-1
+   branch statistics: 52 macros/32 mains before conversion integration, 45 candidates and 130,532
+   (prefix, candidate) seed pairs after. A macro-driven corpus campaign
+   (`engine/src/ai/testing/corpus.ts`, spec + `engine/scripts/ai/corpus-campaign.ts`) plays full
+   sampled games from the locked setup to EndGame and validated 1,000+ diverse committed states
+   for hash/legal/apply/replay properties. Two engine realities are handled explicitly rather than
+   hidden: custom (hand-picked hex set) federations are descoped by owner decision — the AI forms
+   only the engine's enumerated satellite-path federations, and a custom-only fallback offer is
+   deliberately excluded and recorded (`excludedCustomFederationTiles`), not a gap awaiting a later
+   feature — and the base-003 federationCache staleness class (serialization drops the cache's
+   `custom` flag; replay-path hash differences confined to that class are counted after a
+   cache-masked comparison). See
+   `AI_PHASE_1_4_HANDOFF.md` for measured results and `engine/src/ai/README.md` for semantics.
+   **Phase 2 / AI-6 non-neural baselines are DONE (2026-07-14, same offline branch):**
+   `engine/src/ai/evaluation.ts` provides a deterministic fixed-seat report over 28 independently
+   ablatable strategic terms, plus exact terminal margin; `engine/src/ai/bots/` contains seeded
+   random, immediate greedy, and one-ply inspectable heuristic committed-macro bots; and
+   `engine/src/ai/testing/self-play.ts` verifies every selected line by fresh-clone host-style
+   application and plays swapped-faction pairs to EndGame. Locked results were greedy vs random
+   68-51 and 46-20 from greedy's perspectives (paired +43, mean +21.5, 2-0), and heuristic vs
+   greedy 49-67 and 48-66 from heuristic's perspectives (paired -36, mean -18, 0-2). The heuristic
+   result is deliberately retained as a transparent calibration risk rather than promoted on an
+   unpaired or favorable line. Baseline play defaults the expensive conversion-integration axes
+   off as an explicit play-policy choice; the existing planner/builder remain exact and uncapped
+   whenever enabled. The AI-6 focused suite is 12/12, complete offline AI is 68/68, and the full
+   engine suite is 698 passing / 4 pending. No search, production import/export, shared engine,
+   viewer, Supabase, deployment, or flag path was added. Every later phase (AI-7+: search,
+   federation planner, book, neural, UI, backend) remains unstarted. External review found that
+   action/turn semantics,
+   deterministic canonical state, resource-
+   conversion planning, federation enumeration, performance assumptions, neural policy encoding,
+   training evaluation, and client-side anti-cheat all need correction before ordinary MCTS/net work.
+   The owner also locked the later runtime policy: maximum local AI uses the same fixed high
+   simulation workload on every supported device, never silently downgrades for weak hardware, and
+   rejects incapable devices. The target devices are the owner's RTX 3060 desktop and iPhone 16 Pro
+   Max; the later Web Worker UI must show real progress, ETA, and heartbeat/background-suspension
+   status. This is documentation only and is not Phase 1.4 implementation. Because real hosted games
+   are currently active and every `master` push deploys production, shared engine semantics, viewer
+   paths, and Supabase remain explicitly frozen until their later gated phases.
    **First challenge setup LOCKED** (plan §2, 2026-07-13): seed `lf-mrj5exuu-c680`, 2p Lost Fleet,
    Xenos (seat 1, default) vs Hadsch Hallas, human picks either faction — validated to boot a legal
    game; the board's round/final scoring + both factions' abilities are decoded into
