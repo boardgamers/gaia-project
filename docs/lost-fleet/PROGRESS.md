@@ -5,7 +5,7 @@
 > labeled historical rerun log. Do not load this 5,000-line history cover to cover. Read the other
 > ledgers and historical handoffs only when the task touches their subject, following `AGENTS.md`.
 > If the user supplied a concrete task, proceed with it rather than asking "what next?".
-> Last updated: **2026-07-15** (AI-6 complete; lean context and test routing added).
+> Last updated: **2026-07-17** (offline pass-and-play added; AI task index unchanged).
 
 ## Working agreements (read every session, not optional)
 
@@ -4066,25 +4066,59 @@ opacity: 0.7 }` wrapper that also diluted the X itself, while `BoardAction.vue`'
       `pnpm test`: 440 passing/31 failing both before and after (identical failing-test names,
       confirmed via `git stash` on the same run - all pre-existing, none touch these components).
 
-                                   **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
-                                   pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
-                                   desktop mice, which was never the actual bug - only touch devices raced hover against the
-                                   click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
-                                   `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
-                                   `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
-                                   shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
-                                   `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
-                                   directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
-                                   `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
-                                   config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
-                                   on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
-                                   desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
-                                   is what actually closed that race originally. Verified live via Playwright with two device
-                                   profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
-                                   tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
-                                   context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
-                                   a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
-                                   still 440 passing/31 failing, same pre-existing set.
+                                         **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
+                                         pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
+                                         desktop mice, which was never the actual bug - only touch devices raced hover against the
+                                         click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
+                                         `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
+                                         `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
+                                         shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
+                                         `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
+                                         directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
+                                         `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
+                                         config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
+                                         on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
+                                         desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
+                                         is what actually closed that race originally. Verified live via Playwright with two device
+                                         profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
+                                         tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
+                                         context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
+                                         a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
+                                         still 440 passing/31 failing, same pre-existing set.
+
+102.  ✅ **Offline pass-and-play with automatic local recovery and airplane-mode launch
+      (2026-07-17, v5.31.0).** The viewer now has a dedicated `?offline=1` hot-seat mode, linked from
+      both the hosted lobby and sign-in screen. It remains deliberately separate from ordinary
+      self-contained test/scenario URLs and from Supabase-hosted games. `offline-game.ts` keeps one
+      versioned, synchronous `localStorage` record per browser profile: the last fully committed
+      engine snapshot plus the cumulative unfinished move, if a player closes the app partway
+      through a turn. Restore retains the committed baseline while rendering the unfinished move,
+      so the next command cannot duplicate the already-entered part of the turn. Storage errors are
+      surfaced in the green offline banner but never interrupt gameplay; Export/Load backup remains
+      available for a separate manual copy. The same banner shows save time and cache readiness, and
+      `Wrapper.vue` adds a guarded New offline game dialog for 2–5 players, Lost Fleet, Frontiers,
+      advanced rotation, random factions, and an optional seed.
+
+      The production build now runs `generate-offline-service-worker.js`, which hashes and precaches
+      every emitted non-source-map asset (40 URLs / about 3 MB in the verification build). Hashed app
+      assets are cache-first; navigations and the release probe stay network-first. If the installed
+      PWA opens its normal lobby start URL while the origin is unreachable, `sw.js` redirects it to
+      `?offline=1` and serves the cached shell, even when `navigator.onLine` incorrectly reports
+      `true`. Push notification handling remains in the same service worker. `main.ts` registers the
+      service worker/install prompt for every route, and a manifest shortcut opens the offline game.
+      The unavoidable web constraint is documented in-app and in `viewer/README.md`: the first visit
+      must happen online; wait for **App available offline** and preferably add the app to the phone's
+      home screen before flying.
+
+      Verification used the production build in a phone-sized real Chrome session: start an offline
+      game, commit a faction move, reload and restore the next-player state, then stop the web server
+      completely and open the installed-PWA `?lobby=1` address. The service worker redirected to
+      `?offline=1`, restored the same move log and next player, and showed no page overlay or console
+      errors. Focused storage/unfinished-turn, self-contained, sign-in, and lobby specs: **38/38**.
+      Full viewer run: **472 passing / 29 pre-existing failures** — the exact known
+      `lost-fleet buttons` / `Chart` / `Resource Counter` set already documented by #81/#82/#101,
+      with no failure in any changed offline, launcher, lobby, sign-in, or service-worker path.
+      Production build succeeded and generated all 40 precache URLs.
 
 ## Still MISSING — only one art-only item left
 
@@ -4326,6 +4360,10 @@ effects are already known regardless of count.
 > log + Realtime. The analysis below stays because it's accurate for the DEFAULT self-contained
 > URLs (which intentionally still behave this way) and because it documents the hooks the
 > hosted mode is built on.
+>
+> **SUPERSEDED 2026-07-17 for offline hot-seat play** — `?offline=1` now automatically persists one
+> local game (including an unfinished turn) and restores it after reload/close. Other self-contained
+> demo/scenario/state URLs still intentionally keep the no-persistence behavior described below.
 
 Two things the user noticed while testing that are **expected at this build stage, not bugs**:
 

@@ -19,6 +19,26 @@ And open localhost:8080 in the browser.
 
 You can change [src/self-contained.ts](src/self-contained.ts) to change the initial setup: number of players, factions...
 
+## Offline pass-and-play
+
+The hosted viewer can run one hot-seat game entirely on a single phone:
+
+1. While online, open the app and choose **Offline game** (or open `?offline=1`).
+2. Wait until the green banner says **App available offline**. On a phone, add Fight Club to the
+   home screen for the most reliable way to launch it later.
+3. Choose **New offline game**, configure the player count and expansions, then pass the phone
+   around normally.
+4. In airplane mode, open the installed app or the offline-game bookmark. The normal installed-app
+   lobby address automatically falls back to the saved offline game when the server cannot be
+   reached.
+
+The first visit must be online so the browser can download and cache the web app. After that, the
+app shell and game assets are cached, while the latest game state is saved synchronously in this
+browser profile after every command. A refresh, accidental close, or phone restart resumes the same
+game, including a turn that was only partly entered. Browser/site-data deletion also deletes the
+local save, so use **Export backup** when a separate recoverable copy matters. Hosted multiplayer
+games remain server-backed and are not copied into offline mode.
+
 ## Include in other projects
 
 For now there are three ways to include the viewer:

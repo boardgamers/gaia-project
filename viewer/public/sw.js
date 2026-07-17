@@ -1,13 +1,109 @@
-/* Service worker for turn notifications (Web Push). Kept intentionally
- * minimal: no offline caching, only push display + click-through, so it can
- * never serve a stale build of the game. */
+/* Service worker for the installable app, offline hot-seat play, and Web Push.
+ * The production build replaces the config block below with every emitted app asset and a
+ * content-derived cache version. Development keeps a small valid fallback list. */
 
-self.addEventListener("install", () => {
-  self.skipWaiting();
+/* __GAIA_PRECACHE_CONFIG_START__ */
+const PRECACHE_CONFIG = {
+  version: "development",
+  urls: ["/", "/index.html", "/manifest.json", "/favicon.png", "/?lobby=1", "/?offline=1"],
+};
+/* __GAIA_PRECACHE_CONFIG_END__ */
+
+const APP_CACHE_PREFIX = "gaia-fight-club-app-";
+const APP_CACHE = `${APP_CACHE_PREFIX}${PRECACHE_CONFIG.version}`;
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches
+      .open(APP_CACHE)
+      .then((cache) => cache.addAll(PRECACHE_CONFIG.urls))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches
+      .keys()
+      .then((names) =>
+        Promise.all(
+          names
+            .filter((name) => name.startsWith(APP_CACHE_PREFIX) && name !== APP_CACHE)
+            .map((name) => caches.delete(name))
+        )
+      )
+      .then(() => self.clients.claim())
+  );
+});
+
+async function networkFirstNavigation(request) {
+  const cache = await caches.open(APP_CACHE);
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      await cache.put("/index.html", response.clone());
+    }
+    return response;
+  } catch (_error) {
+    const url = new URL(request.url);
+    // Installed PWAs start at the lobby. When that navigation itself proves the network is down,
+    // route to the local game even if navigator.onLine incorrectly still says `true`.
+    if (url.pathname === "/" && (url.search === "" || url.searchParams.has("lobby"))) {
+      return Response.redirect(`${url.origin}/?offline=1`, 302);
+    }
+    return (await cache.match("/index.html")) || (await cache.match("/")) || Response.error();
+  }
+}
+
+async function cacheFirstAsset(request) {
+  const cache = await caches.open(APP_CACHE);
+  const cached = await cache.match(request, { ignoreSearch: true });
+  if (cached) {
+    return cached;
+  }
+
+  const response = await fetch(request);
+  if (response.ok && response.type === "basic") {
+    await cache.put(request, response.clone());
+  }
+  return response;
+}
+
+async function networkFirstResource(request) {
+  const cache = await caches.open(APP_CACHE);
+  try {
+    const response = await fetch(request);
+    if (response.ok && response.type === "basic") {
+      await cache.put(new URL(request.url).pathname, response.clone());
+    }
+    return response;
+  } catch (_error) {
+    return (await cache.match(request, { ignoreSearch: true })) || Response.error();
+  }
+}
+
+self.addEventListener("fetch", (event) => {
+  const request = event.request;
+  if (request.method !== "GET") {
+    return;
+  }
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin || url.pathname === "/sw.js") {
+    return;
+  }
+
+  if (request.mode === "navigate") {
+    event.respondWith(networkFirstNavigation(request));
+    return;
+  }
+
+  // The changelog is the app's update probe, so prefer the network while retaining an offline copy.
+  if (url.pathname === "/release.json") {
+    event.respondWith(networkFirstResource(request));
+    return;
+  }
+
+  event.respondWith(cacheFirstAsset(request));
 });
 
 self.addEventListener("push", (event) => {

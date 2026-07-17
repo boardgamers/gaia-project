@@ -4,6 +4,15 @@ import Game from "./components/Game.vue";
 import Wrapper from "./components/Wrapper.vue";
 import launch from "./launcher";
 import { autoDecideChargePower, parseAutoChargePreference } from "./logic/auto-decide";
+import {
+  announceOfflineGameSave,
+  isNewOfflineGame,
+  isOfflineGameMode,
+  readOfflineGame,
+  requestPersistentOfflineStorage,
+  restoreOfflineGame,
+  writeOfflineGame,
+} from "./offline-game";
 import { LoadFromJson, LoadFromJsonType } from "./store";
 import { loadScenarioEngine, parseScenarioFromQuery } from "./self-contained-scenarios";
 import { loadEngineFromData, parseLoadFromQuery } from "./self-contained-state";
@@ -92,22 +101,78 @@ function launchSelfContained(selector = "#app", debug = true) {
   // Optional loadType and stopMove are supported for state URLs.
   const search = typeof window !== "undefined" ? window.location.search : "";
   const { moves, options, players, seed } = parseSelfContainedSetup(search, process.env);
+  const offlineMode = isOfflineGameMode(search);
+  const startingNewOfflineGame = offlineMode && isNewOfflineGame(search);
   console.log("self-contained game setup:", { players, seed, ...options });
 
+  if (offlineMode) {
+    requestPersistentOfflineStorage().catch(() => undefined);
+  }
+
   let engine: Engine;
+  let initialDisplayEngine: Engine;
+  let restoredPendingMove = "";
+  let restoredOfflineSave = false;
+  let rewriteRestoredSave = false;
   try {
     const initialLoad = parseLoadFromQuery(search);
     const scenarioId = parseScenarioFromQuery(search);
-    engine = initialLoad
-      ? loadEngineFromData(initialLoad)
-      : scenarioId
-      ? loadScenarioEngine(scenarioId)
-      : new Engine([`init ${players} ${seed}`, ...moves], options);
+    const stored = offlineMode && !startingNewOfflineGame && !initialLoad && !scenarioId ? readOfflineGame() : null;
+
+    if (stored?.error) {
+      console.warn(stored.error);
+    }
+
+    if (stored?.save) {
+      const restored = restoreOfflineGame(stored.save);
+      engine = restored.engine;
+      initialDisplayEngine = restored.displayEngine;
+      restoredPendingMove = restored.pendingMove;
+      restoredOfflineSave = true;
+      rewriteRestoredSave = !!restored.warning || restored.pendingMove !== (stored.save.pendingMove ?? "");
+      if (restored.warning) {
+        console.warn(restored.warning);
+      }
+    } else {
+      engine = initialLoad
+        ? loadEngineFromData(initialLoad)
+        : scenarioId
+        ? loadScenarioEngine(scenarioId)
+        : new Engine([`init ${players} ${seed}`, ...moves], options);
+      initialDisplayEngine = engine;
+    }
   } catch (error) {
     console.error("could not load state from URL, falling back to fresh self-contained setup", error);
     engine = new Engine([`init ${players} ${seed}`, ...moves], options);
+    initialDisplayEngine = engine;
   }
   engine.generateAvailableCommandsIfNeeded();
+  if (initialDisplayEngine !== engine) {
+    initialDisplayEngine.generateAvailableCommandsIfNeeded();
+  }
+
+  const persistOfflineGame = (pendingMove = "") => {
+    if (!offlineMode) {
+      return;
+    }
+    const result = writeOfflineGame(engine, pendingMove);
+    announceOfflineGameSave(result);
+    if (result.error) {
+      console.error(result.error);
+    }
+  };
+
+  if (offlineMode && (!restoredOfflineSave || rewriteRestoredSave)) {
+    persistOfflineGame(restoredPendingMove);
+  }
+
+  // `new=1` is a one-shot marker. Keeping the stable setup parameters in the URL is useful for
+  // export/debugging, but a refresh must resume the save rather than replace it with another game.
+  if (startingNewOfflineGame && typeof window !== "undefined") {
+    const cleanUrl = new URL(window.location.href);
+    cleanUrl.searchParams.delete("new");
+    window.history.replaceState({}, "", cleanUrl.toString());
+  }
 
   const unsub = emitter.store.subscribeAction(({ payload, type }) => {
     if (type === "loadFromJSON") {
@@ -120,6 +185,7 @@ function launchSelfContained(selector = "#app", debug = true) {
         stopMove: p.stopMove,
       });
       engine.generateAvailableCommandsIfNeeded();
+      persistOfflineGame();
       emitter.emit("state", JSON.parse(JSON.stringify(engine)));
     }
   });
@@ -145,10 +211,12 @@ function launchSelfContained(selector = "#app", debug = true) {
       }
     }
 
+    persistOfflineGame(copy.newTurn ? "" : move);
+
     emitter.emit("state", JSON.parse(JSON.stringify(copy)));
   });
 
-  emitter.emit("state", JSON.parse(JSON.stringify(engine)));
+  emitter.emit("state", JSON.parse(JSON.stringify(initialDisplayEngine)));
 }
 
 export default launchSelfContained;

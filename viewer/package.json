@@ -1,6 +1,6 @@
 {
   "name": "@gaia-project/viewer",
-  "version": "5.30.6",
+  "version": "5.31.0",
   "description": "Functions to visualize the map and boards for gaia project inside html canvas",
   "contributors": [
     "coyotte508",
@@ -13,7 +13,7 @@
   },
   "scripts": {
     "serve": "vue-cli-service serve --port 8080",
-    "build": "vue-cli-service build",
+    "build": "vue-cli-service build && node scripts/generate-offline-service-worker.js",
     "fix-package": "ts-node scripts/fix-package-imports.ts",
     "lint": "vue-cli-service lint",
     "package": "vue-cli-service build --target lib src/wrapper.ts",

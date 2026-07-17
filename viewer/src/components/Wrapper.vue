@@ -1,6 +1,55 @@
 <template>
   <div>
+    <div v-if="offlineMode" class="offline-game-banner">
+      <div class="offline-game-banner__copy">
+        <div class="offline-game-banner__title">Offline pass-and-play</div>
+        <div class="offline-game-banner__status">
+          <span>{{ offlineConnectivityText }}</span>
+          <span aria-hidden="true">&middot;</span>
+          <span>{{ offlineCacheText }}</span>
+          <span aria-hidden="true">&middot;</span>
+          <span :class="{ 'text-danger': !!offlineSaveError }">{{ offlineSaveText }}</span>
+        </div>
+        <div class="offline-game-banner__hint">
+          <span v-if="offlineOnline">
+            Before flying, wait for <strong>App available offline</strong> and add Fight Club to your home screen.
+          </span>
+          <span v-else>Airplane mode is active.</span>
+          Pass this phone around; every move is saved here and resumes automatically.
+        </div>
+      </div>
+      <div class="offline-game-banner__actions">
+        <b-button size="sm" variant="success" @click="openNewOfflineGame">New game</b-button>
+        <a v-if="offlineOnline" class="btn btn-sm btn-outline-secondary" href="?lobby=1">Online lobby</a>
+      </div>
+    </div>
     <Game />
+    <b-modal
+      v-model="offlineNewGameModalShow"
+      title="New offline game"
+      ok-title="Start new game"
+      ok-variant="primary"
+      @ok="startNewOfflineGame"
+    >
+      <b-alert show variant="warning" class="small">
+        Starting replaces the offline game currently saved on this device. Use <strong>Export backup</strong> first if
+        you want to keep a separate copy.
+      </b-alert>
+      <b-form-group label="Players" label-for="offline-new-players">
+        <b-form-select id="offline-new-players" v-model.number="offlineNewPlayers" :options="offlinePlayerOptions" />
+      </b-form-group>
+      <b-form-group
+        label="Seed (optional)"
+        label-for="offline-new-seed"
+        description="Leave blank for a new random setup."
+      >
+        <b-form-input id="offline-new-seed" v-model.trim="offlineNewSeed" autocomplete="off" />
+      </b-form-group>
+      <b-form-checkbox v-model="offlineNewLostFleet">Lost Fleet</b-form-checkbox>
+      <b-form-checkbox v-model="offlineNewFrontiers">Frontiers</b-form-checkbox>
+      <b-form-checkbox v-model="offlineNewAdvancedRules">Advanced sector rotation rules</b-form-checkbox>
+      <b-form-checkbox v-model="offlineNewRandomFactions">Random factions</b-form-checkbox>
+    </b-modal>
     <b-modal v-model="modalShow" size="lg" @ok="handleOK" :title="modalTitle">
       <b-container fluid>
         <b-row class="my-1" v-if="modalMode === 'load'">
@@ -26,22 +75,14 @@
       <p class="text-muted mb-3">
         Load a curated Lost Fleet state directly in the viewer, or open a short bookmarkable URL for it.
       </p>
-      <div
-        v-for="scenario in scenarios"
-        :key="scenario.id"
-        class="scenario-entry"
-      >
+      <div v-for="scenario in scenarios" :key="scenario.id" class="scenario-entry">
         <div class="scenario-entry__body">
           <div class="scenario-entry__copy">
             <div class="scenario-entry__title">{{ scenario.label }}</div>
             <div class="scenario-entry__description">{{ scenario.description }}</div>
             <div class="scenario-entry__meta">{{ scenario.id }}</div>
             <div class="scenario-entry__tags">
-              <span
-                v-for="tag in scenario.tags"
-                :key="`${scenario.id}-${tag}`"
-                class="scenario-entry__tag"
-              >
+              <span v-for="tag in scenario.tags" :key="`${scenario.id}-${tag}`" class="scenario-entry__tag">
                 {{ tag }}
               </span>
             </div>
@@ -52,14 +93,13 @@
           </div>
         </div>
       </div>
-      <p class="text-muted mb-0">
-        Use <strong>Share URL</strong> for custom positions you build yourself.
-      </p>
+      <p class="text-muted mb-0">Use <strong>Share URL</strong> for custom positions you build yourself.</p>
     </b-modal>
     <div class="d-flex align-content-stretch">
-      <b-button @click="openScenarios">Test Scenarios</b-button>
-      <b-button @click="openLoad">Load</b-button>
-      <b-button @click="openExport">Export</b-button>
+      <b-button v-if="offlineMode" variant="primary" @click="openNewOfflineGame">New offline game</b-button>
+      <b-button v-if="!offlineMode" @click="openScenarios">Test Scenarios</b-button>
+      <b-button @click="openLoad">{{ offlineMode ? "Load backup" : "Load" }}</b-button>
+      <b-button @click="openExport">{{ offlineMode ? "Export backup" : "Export" }}</b-button>
       <b-button @click="openShareUrl">Share URL</b-button>
       <b-btn variant="info" size="sm" @click="startReplay" v-if="!replayData">Replay</b-btn>
       <div v-else class="d-flex align-items-center">
@@ -93,6 +133,7 @@ import Game from "./Game.vue";
 import { LoadFromJson, LoadFromJsonType } from "../store";
 import { buildScenarioUrl, loadScenarioEngineData, selfContainedScenarios } from "../self-contained-scenarios";
 import { buildStateUrl } from "../self-contained-state";
+import { isNewOfflineGame, isOfflineGameMode, OFFLINE_GAME_SAVED_EVENT, readOfflineGame } from "../offline-game";
 
 @Component({
   components: { Game },
@@ -101,11 +142,56 @@ export default class Wrapper extends Vue {
   modalMode: "load" | "export" | "share" = "load";
   modalShow = false;
   scenarioModalShow = false;
+  offlineMode = typeof window !== "undefined" && isOfflineGameMode(window.location.search);
+  offlineStartedWithSave =
+    typeof window !== "undefined" && isOfflineGameMode(window.location.search) && !!readOfflineGame().save;
+  offlineStartingFresh = typeof window !== "undefined" && isNewOfflineGame(window.location.search);
+  offlineNewGameModalShow = false;
+  offlineNewPlayers = 3;
+  offlineNewSeed = "";
+  offlineNewLostFleet = false;
+  offlineNewFrontiers = false;
+  offlineNewAdvancedRules = false;
+  offlineNewRandomFactions = false;
+  offlinePlayerOptions = [2, 3, 4, 5].map((value) => ({ value, text: String(value) }));
+  offlineOnline = typeof navigator === "undefined" || navigator.onLine !== false;
+  offlineCacheReady = false;
+  offlineCacheUnsupported = false;
+  offlineSavedAt =
+    typeof window !== "undefined" && isOfflineGameMode(window.location.search)
+      ? readOfflineGame().save?.savedAt ?? ""
+      : "";
+  offlineSaveError = "";
   loadType = LoadFromJsonType.load;
   stopMove = "";
   text = "";
   replayData: { stard: number; end: number; current: number } | null = null;
   scenarios = selfContainedScenarios;
+
+  get offlineConnectivityText() {
+    return this.offlineOnline ? "Online" : "No network - playing locally";
+  }
+
+  get offlineCacheText() {
+    if (this.offlineCacheReady) {
+      return "App available offline";
+    }
+    if (this.offlineCacheUnsupported) {
+      return "Keep this page open for offline use";
+    }
+    return "Preparing app for offline use";
+  }
+
+  get offlineSaveText() {
+    if (this.offlineSaveError) {
+      return this.offlineSaveError;
+    }
+    if (!this.offlineSavedAt) {
+      return "Waiting for first local save";
+    }
+    const time = new Date(this.offlineSavedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return `Saved locally at ${time}`;
+  }
 
   get modalTitle() {
     switch (this.modalMode) {
@@ -126,13 +212,50 @@ export default class Wrapper extends Vue {
     this.$store.dispatch("loadFromJSON", {
       engineData: JSON.parse(this.text),
       type: this.loadType,
-      stopMove: this.stopMove
+      stopMove: this.stopMove,
     } as LoadFromJson);
   }
 
   openLoad() {
     this.modalMode = "load";
     this.modalShow = true;
+  }
+
+  openNewOfflineGame() {
+    const engine = this.$store.state.data;
+    const playerCount = engine?.players?.length;
+    this.offlineNewPlayers = playerCount >= 2 && playerCount <= 5 ? playerCount : 3;
+    this.offlineNewSeed = "";
+    this.offlineNewLostFleet = !!engine?.options?.lostFleet;
+    this.offlineNewFrontiers = !!engine?.options?.frontiers;
+    this.offlineNewAdvancedRules = !!engine?.options?.advancedRules;
+    this.offlineNewRandomFactions = !!engine?.options?.randomFactions;
+    this.offlineNewGameModalShow = true;
+  }
+
+  startNewOfflineGame() {
+    const url = new URL(window.location.href);
+    url.search = "";
+    url.searchParams.set("offline", "1");
+    url.searchParams.set("new", "1");
+    url.searchParams.set("players", String(this.offlineNewPlayers));
+    url.searchParams.set(
+      "seed",
+      this.offlineNewSeed || `offline-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
+    );
+    if (this.offlineNewLostFleet) {
+      url.searchParams.set("lostFleet", "1");
+    }
+    if (this.offlineNewFrontiers) {
+      url.searchParams.set("frontiers", "1");
+    }
+    if (this.offlineNewAdvancedRules) {
+      url.searchParams.set("advancedRules", "1");
+    }
+    if (this.offlineNewRandomFactions) {
+      url.searchParams.set("randomFactions", "1");
+    }
+    window.location.assign(url.toString());
   }
 
   openScenarios() {
@@ -184,12 +307,90 @@ export default class Wrapper extends Vue {
       }
     });
     this.$on("hook:beforeDestroy", unsub);
+
+    if (!this.offlineMode) {
+      return;
+    }
+
+    const connectivityListener = () => {
+      this.offlineOnline = navigator.onLine !== false;
+    };
+    const saveListener = (event: Event) => {
+      const detail = (event as CustomEvent).detail ?? {};
+      this.offlineSavedAt = detail.savedAt ?? this.offlineSavedAt;
+      this.offlineSaveError = detail.error ?? "";
+    };
+    window.addEventListener("online", connectivityListener);
+    window.addEventListener("offline", connectivityListener);
+    window.addEventListener(OFFLINE_GAME_SAVED_EVENT, saveListener);
+    this.$on("hook:beforeDestroy", () => {
+      window.removeEventListener("online", connectivityListener);
+      window.removeEventListener("offline", connectivityListener);
+      window.removeEventListener(OFFLINE_GAME_SAVED_EVENT, saveListener);
+    });
+
+    if (!this.offlineStartedWithSave && !this.offlineStartingFresh) {
+      this.$nextTick(() => this.openNewOfflineGame());
+    }
+
+    if (!("serviceWorker" in navigator)) {
+      this.offlineCacheUnsupported = true;
+      return;
+    }
+    navigator.serviceWorker.ready
+      .then(() => {
+        this.offlineCacheReady = true;
+      })
+      .catch(() => {
+        this.offlineCacheUnsupported = true;
+      });
   }
 }
 </script>
 <style lang="scss" scoped>
 .btn {
   margin: 0.3rem;
+}
+
+.offline-game-banner {
+  align-items: center;
+  background: #eef8f1;
+  border: 1px solid #a8d5b4;
+  border-radius: 0.65rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  padding: 0.7rem 0.85rem;
+}
+
+.offline-game-banner__copy {
+  min-width: 0;
+}
+
+.offline-game-banner__actions {
+  align-items: center;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.offline-game-banner__title {
+  color: #1f5f32;
+  font-weight: 700;
+}
+
+.offline-game-banner__status {
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  gap: 0.35rem;
+  margin-top: 0.12rem;
+}
+
+.offline-game-banner__hint {
+  color: #4a5d50;
+  font-size: 0.78rem;
+  margin-top: 0.2rem;
 }
 
 .scenario-entry {
@@ -254,6 +455,15 @@ export default class Wrapper extends Vue {
 }
 
 @media (max-width: 767px) {
+  .offline-game-banner {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .offline-game-banner__actions {
+    width: 100%;
+  }
+
   .scenario-entry__body {
     flex-direction: column;
   }

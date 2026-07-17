@@ -1,7 +1,10 @@
 {
   "name": "GP: Fight Club",
   "short_name": "Fight Club",
+  "description": "Gaia Project multiplayer and offline pass-and-play",
+  "id": "/",
   "start_url": "/?lobby=1",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#333366",
@@ -10,6 +13,21 @@
       "src": "/favicon.png",
       "sizes": "any",
       "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Offline game",
+      "short_name": "Offline",
+      "description": "Resume pass-and-play on this device",
+      "url": "/?offline=1",
+      "icons": [
+        {
+          "src": "/favicon.png",
+          "sizes": "any",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }

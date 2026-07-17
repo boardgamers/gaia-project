@@ -1125,13 +1125,14 @@ describe("Lobby", () => {
     expect(wrapper.text()).to.contain("Test game");
   });
 
-  it("shows the New game link for a non-admin too", async () => {
+  it("shows online and offline new-game links for a non-admin too", async () => {
     const { client } = makeClient([]);
     const wrapper = mount(Lobby, { propsData: { client, session: otherSession } });
     await Vue.nextTick();
     await Vue.nextTick();
 
     expect(wrapper.find('a[href="?create=1"]').exists()).to.equal(true);
+    expect(wrapper.find('a[href="?offline=1"]').exists()).to.equal(true);
   });
 
   it("refreshes the lobby when a games-table realtime event arrives", async () => {

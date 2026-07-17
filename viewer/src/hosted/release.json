@@ -1,7 +1,24 @@
 {
-  "version": "5.30.6",
-  "releasedAt": "2026-07-14",
+  "version": "5.31.0",
+  "releasedAt": "2026-07-17",
   "entries": [
+    {
+      "version": "5.31.0",
+      "releasedAt": "2026-07-17",
+      "kind": "update",
+      "title": "Offline pass-and-play",
+      "impact": "",
+      "changes": [
+        "Added offline pass-and-play on one phone, with automatic local saves and resume after closing the app.",
+        "After one online visit, the installed app can reopen the saved game in airplane mode.",
+        "Production builds now precache every required viewer asset with a versioned service worker while keeping hosted navigation network-first.",
+        "Offline saves preserve both the last committed state and any unfinished turn, and fail without interrupting play when browser storage is unavailable."
+      ],
+      "userChanges": [
+        "Added offline pass-and-play on one phone, with automatic local saves and resume after closing the app.",
+        "After one online visit, the installed app can reopen the saved game in airplane mode."
+      ]
+    },
     {
       "version": "5.30.6",
       "releasedAt": "2026-07-14",
