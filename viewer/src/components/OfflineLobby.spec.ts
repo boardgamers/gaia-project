@@ -61,4 +61,14 @@ describe("OfflineLobby", () => {
 
     wrapper.destroy();
   });
+
+  it("offers a link to move each game to the online lobby while online", async () => {
+    const wrapper = mount(OfflineLobby, { propsData: { storage } });
+    await Vue.nextTick();
+
+    expect(wrapper.find(`a[href="?importOffline=${ids[0]}"]`).exists()).to.equal(true);
+    expect(wrapper.find(`a[href="?importOffline=${ids[1]}"]`).exists()).to.equal(true);
+
+    wrapper.destroy();
+  });
 });

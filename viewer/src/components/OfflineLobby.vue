@@ -30,6 +30,13 @@
     <div v-else class="offline-lobby__games">
       <b-list-group-item v-for="game in games" :key="game.id" class="game-bar offline-lobby__game">
         <GameBar :game="game" :game-href="gameHref(game.id)" my-user-id="" />
+        <a
+          v-if="online"
+          class="btn btn-sm btn-outline-primary offline-lobby__move-online"
+          :href="`?importOffline=${encodeURIComponent(game.id)}`"
+        >
+          Move online
+        </a>
         <b-button
           size="sm"
           variant="outline-danger"
@@ -150,6 +157,7 @@ export default Vue.extend({
   padding-right: 0.65rem;
 }
 
+.offline-lobby__move-online,
 .offline-lobby__delete {
   flex: 0 0 auto;
 }
@@ -173,6 +181,7 @@ export default Vue.extend({
     flex-direction: column;
   }
 
+  .offline-lobby__move-online,
   .offline-lobby__delete {
     align-self: flex-end;
   }

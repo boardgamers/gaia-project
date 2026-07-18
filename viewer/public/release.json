@@ -1,7 +1,22 @@
 {
-  "version": "5.32.0",
-  "releasedAt": "2026-07-17",
+  "version": "5.33.0",
+  "releasedAt": "2026-07-18",
   "entries": [
+    {
+      "version": "5.33.0",
+      "releasedAt": "2026-07-18",
+      "kind": "update",
+      "title": "Move offline games to the online lobby",
+      "impact": "",
+      "changes": [
+        "Move an offline pass-and-play game to the online lobby, assigning each seat to a registered player.",
+        "Fixed the offline game library's seed derivation, which always read a nonexistent field and returned an empty string.",
+        "Added import_offline_game RPC (migration 0036) to bulk-import an offline save's full move history into a new hosted game."
+      ],
+      "userChanges": [
+        "Move an offline pass-and-play game to the online lobby, assigning each seat to a registered player."
+      ]
+    },
     {
       "version": "5.32.0",
       "releasedAt": "2026-07-17",

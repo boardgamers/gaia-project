@@ -13,8 +13,8 @@ startHostedInstallPrompt();
 registerServiceWorker().catch(() => undefined);
 registerServiceWorkerNavigationListener();
 
-// ?game=<uuid> / ?lobby=1 / ?preview=<uuid> / ?create=1 / ?users=1 boot the Supabase-hosted multiplayer
-// mode; every other URL with query params keeps the existing self-contained
+// ?game=<uuid> / ?lobby=1 / ?preview=<uuid> / ?create=1 / ?users=1 / ?importOffline=<offlineGameId>
+// boot the Supabase-hosted multiplayer mode; every other URL with query params keeps the existing self-contained
 // behavior (demo, scenarios, state-share links, e.g.
 // ?players=2&seed=..&lostFleet=1) untouched. The bare production URL (no
 // query string at all) now defaults to the hosted lobby/login, since that's
@@ -40,6 +40,7 @@ if ((params.has("offline") || offlineLobbyFallback) && params.get("game")) {
   params.has("preview") ||
   params.has("create") ||
   params.has("users") ||
+  params.has("importOffline") ||
   params.toString() === ""
 ) {
   launchHosted("#app");

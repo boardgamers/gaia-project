@@ -251,6 +251,18 @@ export function listOfflineGames(storage: Storage | null = browserOfflineStorage
   return { games, error: warnings.length ? warnings.join(" ") : null };
 }
 
+/**
+ * The engine keeps no top-level `seed` field, and `SpaceMap.toJSON()` deliberately drops its own
+ * runtime `.seed` too (see engine.ts's `lostFleetTerraformingRow` comment - recomputing a serialized
+ * map's seed lazily broke §J3 determinism once already) - the only place a seed survives a
+ * `JSON.stringify` round trip is as plain text in the stored "init <players> <seed>" line itself
+ * (moveHistory[0], never replayed again once restored via Engine.fromData).
+ */
+function seedFromInitLine(initLine: unknown): string {
+  const parts = String(initLine ?? "").split(/\s+/);
+  return parts.length > 2 ? parts.slice(2).join(" ") : "";
+}
+
 /* Hosted GameBar intentionally consumes database-shaped snake_case fields. */
 /* eslint-disable @typescript-eslint/camelcase */
 export function offlineGameListRow(game: StoredOfflineGame): OfflineGameListRow {
@@ -261,7 +273,7 @@ export function offlineGameListRow(game: StoredOfflineGame): OfflineGameListRow 
   return {
     id: game.id,
     name: game.name,
-    seed: String(data.seed ?? ""),
+    seed: seedFromInitLine(history[0]),
     player_count: players.length,
     options: data.options ?? {},
     status: data.ended || data.phase === "endGame" ? "finished" : "active",

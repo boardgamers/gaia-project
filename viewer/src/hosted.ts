@@ -6,6 +6,7 @@ import CreateGame from "./hosted/CreateGame.vue";
 import ChatNotesPanel from "./hosted/ChatNotesPanel.vue";
 import GameNavPanel from "./hosted/GameNavPanel.vue";
 import HostedBar from "./hosted/HostedBar.vue";
+import ImportOfflineGame from "./hosted/ImportOfflineGame.vue";
 import LobbyChatPanel from "./hosted/LobbyChatPanel.vue";
 import { HostedGameHost, seatToLock } from "./hosted/host";
 import Lobby from "./hosted/Lobby.vue";
@@ -486,6 +487,8 @@ export default async function launchHosted(selector = "#app"): Promise<void> {
     mountChild(root, AdminUsers, { client, session });
   } else if (params.has("create")) {
     mountChild(root, CreateGame, { client, session });
+  } else if (params.has("importOffline")) {
+    mountChild(root, ImportOfflineGame, { client, session, offlineGameId: params.get("importOffline") });
   } else {
     const lobbyRoot = mountChild(root, Lobby, { client, session });
     const lobby = lobbyRoot.$children[0] as any;

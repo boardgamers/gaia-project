@@ -6,6 +6,7 @@ import {
   deleteStoredOfflineGame,
   isOfflineGameMode,
   listOfflineGames,
+  offlineGameListRow,
   OFFLINE_GAME_LIBRARY_KEY,
   OFFLINE_GAME_STORAGE_KEY,
   readOfflineGame,
@@ -141,5 +142,20 @@ describe("offline hot-seat games", () => {
     const result = writeOfflineGame(engine, "", rejecting);
     expect(result.save).to.equal(null);
     expect(result.error).to.contain("quota exceeded");
+  });
+
+  it("recovers the real seed from the stored init line, not a nonexistent engine field", () => {
+    // The engine has no top-level `seed` field, and SpaceMap.toJSON() deliberately drops its own
+    // runtime `.seed` too - the only place a seed survives a JSON round trip is as plain text in
+    // moveHistory[0] ("init <players> <seed>").
+    const storage = new MemoryStorage();
+    const engine = new Engine(["init 3 my-test-seed"], {});
+    engine.generateAvailableCommandsIfNeeded();
+    const stored = createStoredOfflineGame(engine, "Seed Check", storage, Date.now(), "seed-check");
+    if (!stored.save) {
+      throw new Error(stored.error ?? "setup failed");
+    }
+
+    expect(offlineGameListRow(stored.save).seed).to.equal("my-test-seed");
   });
 });
