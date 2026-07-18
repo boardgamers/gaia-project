@@ -1,7 +1,18 @@
 {
-  "version": "5.34.0",
+  "version": "5.34.1",
   "releasedAt": "2026-07-18",
   "entries": [
+    {
+      "version": "5.34.1",
+      "releasedAt": "2026-07-18",
+      "kind": "fix",
+      "title": "Crashed-Gaiaformer marker cleanup",
+      "impact": "",
+      "changes": [
+        "The crashed-on-an-Asteroid Gaiaformer marker now reuses the same X mark as a used power/special action (scaled to fit), instead of a separate bespoke one."
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.34.0",
       "releasedAt": "2026-07-18",

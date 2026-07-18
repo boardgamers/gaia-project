@@ -68,11 +68,8 @@
       </g>
       <!-- Lost Fleet §E2: a Gaiaformer consumed to colonize an Asteroid never appears on the map (it's
            gone for good), unlike one placed on Gaia/a transdim/Protoplanet - so mark its board slot
-           with a big X, or it looks identical to any other "in use somewhere on the map" slot. -->
-      <g v-if="isAsteroidConsumed(i)" class="asteroid-consumed-mark">
-        <line y1="-.7" y2=".7" x1="-.7" x2=".7" stroke="#c00" stroke-width="4" />
-        <line y1=".7" y2="-.7" x1="-.7" x2=".7" stroke="#c00" stroke-width="4" />
-      </g>
+           with the same "used" X as a power/special action, scaled down to fit this circle. -->
+      <UsedActionMark v-if="isAsteroidConsumed(i)" class="asteroid-consumed-mark" transform="scale(0.05)" />
     </g>
     <!--    not displayed because military is not implemented yet-->
     <!--    <g v-if="isShip" transform="translate(7.5,0)" v-b-tooltip="destroyedTooltip">-->
@@ -102,12 +99,14 @@ import { buildingName } from "../../data/building";
 import { radiusTranslate } from "../../logic/utils";
 import Planet from "../Planet.vue";
 import Building from "../Building.vue";
+import UsedActionMark from "../UsedActionMark.vue";
 
 @Component({
   components: {
     Planet,
     Building,
     Resource,
+    UsedActionMark,
   },
 })
 export default class BuildingGroup extends Vue {
