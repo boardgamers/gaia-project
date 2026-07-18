@@ -30,9 +30,7 @@ function isSeatOwnershipError(err: unknown): boolean {
 /** A move line is "<player> <command> <args...>", possibly several joined by ". " - true if any of
  * them is a pass (§8/§10.7: a manual pass always clears the seat's queue, regardless of mode). */
 function isPassMove(move: string): boolean {
-  return move
-    .split(". ")
-    .some((part) => part.trim().split(/\s+/)[1] === "pass");
+  return move.split(". ").some((part) => part.trim().split(/\s+/)[1] === "pass");
 }
 
 /**
@@ -73,15 +71,24 @@ export function engineOptions(game: GameRow): Record<string, unknown> {
 
 /**
  * Which seat to lock the local UI to (the launcher's "player" event):
- * - `null` = no lock (hot-seat) when the user owns every seat (test games) —
- *   or none (RLS keeps strangers out entirely, and commit_turn re-checks
- *   seat ownership server-side, so an unlocked UI can never commit).
+ * - `null` = no lock (hot-seat) only when the user owns every seat (test games).
+ * - `-1` (an out-of-range placeholder seat, same one the pre-load window in
+ *   hosted.ts uses) for a user who owns NO seats at all — a spectator. RLS and
+ *   commit_turn's server-side seat-ownership check mean a spectator could never
+ *   actually commit a move, but leaving the UI unlocked for them still exposed
+ *   every control (build/upgrade/pass/etc.) as if they could act, which reads as
+ *   "I can play on someone else's behalf." `Game.vue`'s `canPlay` already treats
+ *   any negative seat as unplayable, so this reuses that path instead of adding
+ *   a new one.
  * - Otherwise the user's seat that must act now, falling back to their first
  *   seat while an opponent (or an unowned seat) is on turn. Driven by
  *   `playerToMove`, so leech interrupts unlock the right seat (§J2).
  */
 export function seatToLock(mySeats: number[], playerCount: number, playerToMove: number | undefined): number | null {
-  if (mySeats.length === 0 || mySeats.length >= playerCount) {
+  if (mySeats.length === 0) {
+    return playerCount > 0 ? -1 : null;
+  }
+  if (mySeats.length >= playerCount) {
     return null;
   }
   return playerToMove !== undefined && mySeats.includes(playerToMove) ? playerToMove : mySeats[0];
@@ -548,7 +555,10 @@ export class HostedGameHost {
   }
 
   private async resyncNow(): Promise<void> {
-    const [game, moves] = await Promise.all([this.backend.fetchGame(this.gameId), this.backend.fetchMoves(this.gameId)]);
+    const [game, moves] = await Promise.all([
+      this.backend.fetchGame(this.gameId),
+      this.backend.fetchMoves(this.gameId),
+    ]);
     const ordered = [...moves].sort((a, b) => a.seq - b.seq);
     await this.repairMoveCountIfNeeded(game, ordered);
 

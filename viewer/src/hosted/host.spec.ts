@@ -54,8 +54,24 @@ function lostFleetGameRow(): GameRow {
 
 function playerRows(): PlayerRow[] {
   return [
-    { game_id: "game-1", seat: 0, invited_email: "alice@example.com", user_id: "user-alice", display_name: "Alice", faction: null, score: null },
-    { game_id: "game-1", seat: 1, invited_email: "bob@example.com", user_id: null, display_name: "Bob", faction: null, score: null },
+    {
+      game_id: "game-1",
+      seat: 0,
+      invited_email: "alice@example.com",
+      user_id: "user-alice",
+      display_name: "Alice",
+      faction: null,
+      score: null,
+    },
+    {
+      game_id: "game-1",
+      seat: 1,
+      invited_email: "bob@example.com",
+      user_id: null,
+      display_name: "Bob",
+      faction: null,
+      score: null,
+    },
   ];
 }
 
@@ -235,8 +251,12 @@ describe("seat locking rule", () => {
     expect(seatToLock([0, 1, 2], 3, 2)).to.equal(null);
   });
 
-  it("does not lock users with no seats (commit_turn rejects them server-side)", () => {
-    expect(seatToLock([], 2, 0)).to.equal(null);
+  it("locks a spectator (no owned seats) to an unplayable placeholder seat", () => {
+    expect(seatToLock([], 2, 0)).to.equal(-1);
+  });
+
+  it("does not lock at all when there are no seats to own yet (game not loaded)", () => {
+    expect(seatToLock([], 0, undefined)).to.equal(null);
   });
 });
 

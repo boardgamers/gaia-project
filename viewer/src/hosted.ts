@@ -179,13 +179,15 @@ async function mountGameInstance(
   // to every connected viewer: `host.load()` below can emit its first "state" (and thus flip the
   // game visible via the "ready" listener above) before `mySeats` is known (it's only computed
   // once `load()` resolves, at "mySeats = host.mySeats(...)" below). Until then, `onState`'s
-  // `seatToLock([], ...)` returns null, so no "player" event fires and `$store.state.player` stays
-  // its default `null` - which Game.vue's `canPlay` deliberately treats as "no lock, anyone may
-  // act" for local hot-seat play. In hosted play that default is wrong for this brief window: it
-  // makes every viewer's `canPlay` true until the real per-seat lock arrives. Locking to an
-  // impossible seat index up front makes `canPlay` false for everyone (including the true active
-  // player, briefly) until `host.emitCurrentState()` re-locks with the real seat below - a strictly
-  // safer default for hosted play than exposing the active player's picker to onlookers.
+  // `seatToLock([], playerCount, ...)` would run with `playerCount` still 0 (game not loaded yet)
+  // and return `null`, leaving `$store.state.player` at its default `null` - which Game.vue's
+  // `canPlay` deliberately treats as "no lock, anyone may act" for local hot-seat play. In hosted
+  // play that default is wrong for this brief window: it makes every viewer's `canPlay` true until
+  // the real per-seat lock arrives. Locking to an impossible seat index up front makes `canPlay`
+  // false for everyone (including the true active player, briefly) until `host.emitCurrentState()`
+  // re-locks with the real seat below - a strictly safer default for hosted play than exposing the
+  // active player's picker to onlookers. (`seatToLock` also locks true spectators - zero owned
+  // seats once the game HAS loaded - to this same placeholder seat; see its own doc comment.)
   emitter.emit("player", { index: -1 });
 
   const host = new HostedGameHost(

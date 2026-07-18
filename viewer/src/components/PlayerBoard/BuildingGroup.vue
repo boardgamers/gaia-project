@@ -66,6 +66,13 @@
         <line y1="-.1" y2=".1" x1="-.1" x2=".1" stroke="#333" stroke-width="2" />
         <line y1=".1" y2="-.1" x1="-.1" x2=".1" stroke="#333" stroke-width="2" />
       </g>
+      <!-- Lost Fleet §E2: a Gaiaformer consumed to colonize an Asteroid never appears on the map (it's
+           gone for good), unlike one placed on Gaia/a transdim/Protoplanet - so mark its board slot
+           with a big X, or it looks identical to any other "in use somewhere on the map" slot. -->
+      <g v-if="isAsteroidConsumed(i)" class="asteroid-consumed-mark">
+        <line y1="-.7" y2=".7" x1="-.7" x2=".7" stroke="#c00" stroke-width="4" />
+        <line y1=".7" y2="-.7" x1="-.7" x2=".7" stroke="#c00" stroke-width="4" />
+      </g>
     </g>
     <!--    not displayed because military is not implemented yet-->
     <!--    <g v-if="isShip" transform="translate(7.5,0)" v-b-tooltip="destroyedTooltip">-->
@@ -187,7 +194,8 @@ export default class BuildingGroup extends Vue {
     const income =
       building === BuildingEnum.GaiaFormer || isShip(building) ? null : this.resources(i, true).join(", ") || "~";
     const rows = [
-      buildingName(building, this.faction) + (this.isDeployed(i) ? " (deployed)" : ""),
+      buildingName(building, this.faction) +
+        (this.isDeployed(i) ? " (deployed)" : this.isAsteroidConsumed(i) ? " (crashed on an Asteroid)" : ""),
       `Cost: ${cost}${isolatedCost}`,
       income,
       `Power Value: ${this.player.buildingValue(null, { building })}`,
@@ -254,6 +262,13 @@ export default class BuildingGroup extends Vue {
 
   isDeployed(i: number): boolean {
     return i < this.deployed;
+  }
+
+  isAsteroidConsumed(i: number): boolean {
+    if (this.building !== BuildingEnum.GaiaFormer) {
+      return false;
+    }
+    return i >= this.placed + this.gaia && i < this.placed + this.gaia + this.asteroidConsumed;
   }
 
   recentlyBuilt(i: number): boolean {

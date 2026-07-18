@@ -1,7 +1,24 @@
 {
-  "version": "5.33.0",
+  "version": "5.34.0",
   "releasedAt": "2026-07-18",
   "entries": [
+    {
+      "version": "5.34.0",
+      "releasedAt": "2026-07-18",
+      "kind": "update",
+      "title": "Couponing changes",
+      "impact": "",
+      "changes": [
+        "Official center-sector rule (1-4) is now on by default in setup (still an option to turn off).",
+        "Gaiaformers permanently used to colonize an Asteroid are now marked with a red X on the player board, distinct from ones placed on the map.",
+        "Xenos no longer get the redundant base ore-to-power-token (Area I) free action once the Lost Fleet expansion's strictly-better ore-to-power (Area III) action is available.",
+        "Spectators (no owned seats) are now locked out of every move control instead of the UI looking like they could act on other players' behalf."
+      ],
+      "userChanges": [
+        "Official center-sector rule (1-4) is now on by default in setup (still an option to turn off).",
+        "Gaiaformers permanently used to colonize an Asteroid are now marked with a red X on the player board, distinct from ones placed on the map."
+      ]
+    },
     {
       "version": "5.33.0",
       "releasedAt": "2026-07-18",

@@ -71,8 +71,8 @@
              simply left empty on desktop. -->
         <div :class="commandsColumnClass">
           <div v-if="premoveMode" class="alert alert-info premove-banner">
-            <strong>{{ premoveEditSeq !== null ? "EDITING PREMOVE" : "PREMOVE" }}</strong> — plays automatically on
-            your turn.
+            <strong>{{ premoveEditSeq !== null ? "EDITING PREMOVE" : "PREMOVE" }}</strong> — plays automatically on your
+            turn.
             <div class="small" v-if="!premoveReady">Build the move you want, then end the turn to queue it.</div>
             <div class="small text-warning" v-if="premoveEditDownstreamCount > 0">
               This will also discard the {{ premoveEditDownstreamCount }} premove{{
@@ -100,8 +100,8 @@
             v-else-if="turnPlayer && !ended && premoveOffered && !premoveExplainerDismissed"
             class="text-muted small"
           >
-            Premoves play automatically when your turn comes, even if you're offline. If the board changed and your
-            move is no longer legal, it's skipped and we'll notify you.
+            Premoves play automatically when your turn comes, even if you're offline. If the board changed and your move
+            is no longer legal, it's skipped and we'll notify you.
             <button type="button" class="btn btn-link btn-sm p-0" @click="dismissPremoveExplainer">Got it</button>
           </div>
           <div v-if="showPremoveBar && !premoveMode" class="mt-2">
@@ -422,12 +422,7 @@ export default class Game extends Vue {
   }
 
   get showOffTurnAutoLeechFab(): boolean {
-    return (
-      !this.canPlay &&
-      !this.ended &&
-      this.engine.round >= Round.Round1 &&
-      this.myLockedSeat !== undefined
-    );
+    return !this.canPlay && !this.ended && this.engine.round >= Round.Round1 && this.myLockedSeat !== undefined;
   }
 
   get offTurnAutoLeechBottomOffset(): number {
@@ -529,9 +524,11 @@ export default class Game extends Vue {
    * Premove (PREMOVE_PLAN.md). The seat this session would premove for: exactly the seat
    * `seatToLock` (host.ts) already resolved into `$store.state.player.index` - whichever of this
    * user's owned seats must act next, falling back to their first owned seat while someone else is
-   * on turn. A user who owns ALL seats (test game) or none at all never gets a lock at all
-   * (`state.player` stays null), so `premoveOffered` below is automatically false for both - no
-   * extra plumbing needed to satisfy "suppress where it makes no sense" (PREMOVE_PLAN.md §7.7).
+   * on turn. A user who owns ALL seats (test game) never gets a lock at all (`state.player` stays
+   * null); a spectator who owns none gets locked to the out-of-range placeholder seat `-1` instead
+   * (see `seatToLock`'s doc comment) - the bounds check below excludes both, so `premoveOffered` is
+   * automatically false for both - no extra plumbing needed to satisfy "suppress where it makes no
+   * sense" (PREMOVE_PLAN.md §7.7).
    */
   get myLockedSeat(): number | undefined {
     const index = this.$store.state.player?.index;
@@ -594,7 +591,9 @@ export default class Game extends Vue {
 
   get premovePlayedNoticeSuffix(): string {
     const notice = this.premovePlayedNotice;
-    return notice?.rank && notice.totalRanks && notice.totalRanks > 1 ? ` (priority ${notice.rank} of ${notice.totalRanks})` : "";
+    return notice?.rank && notice.totalRanks && notice.totalRanks > 1
+      ? ` (priority ${notice.rank} of ${notice.totalRanks})`
+      : "";
   }
 
   dismissPremovePlayedNotice() {
@@ -861,5 +860,4 @@ export default class Game extends Vue {
     margin-right: -0.5rem;
   }
 }
-
 </style>

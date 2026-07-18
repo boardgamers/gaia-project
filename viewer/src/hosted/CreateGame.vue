@@ -225,7 +225,7 @@ export default Vue.extend({
         testGame: false,
         auctionVariant: (offline ? "silent" : "none") as import("./new-game").AuctionVariantOption,
         banPhase: offline,
-        officialCenterSectors: false,
+        officialCenterSectors: true,
       },
     };
   },

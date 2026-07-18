@@ -5,8 +5,9 @@
 > labeled historical rerun log. Do not load this 5,000-line history cover to cover. Read the other
 > ledgers and historical handoffs only when the task touches their subject, following `AGENTS.md`.
 > If the user supplied a concrete task, proceed with it rather than asking "what next?".
-> Last updated: **2026-07-18** ("move offline game to online lobby" shipped, see "Done so far" #103;
-> AI task index unchanged).
+> Last updated: **2026-07-18** (four owner-reported "couponing changes" #104 shipped: center-sector
+> default, Xenos redundant free action, spectator move-lock, Gaiaformer asteroid-crash marker, on top
+> of "move offline game to online lobby" #103; AI task index unchanged).
 
 ## Working agreements (read every session, not optional)
 
@@ -4067,25 +4068,25 @@ opacity: 0.7 }` wrapper that also diluted the X itself, while `BoardAction.vue`'
       `pnpm test`: 440 passing/31 failing both before and after (identical failing-test names,
       confirmed via `git stash` on the same run - all pre-existing, none touch these components).
 
-                                                     **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
-                                                     pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
-                                                     desktop mice, which was never the actual bug - only touch devices raced hover against the
-                                                     click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
-                                                     `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
-                                                     `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
-                                                     shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
-                                                     `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
-                                                     directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
-                                                     `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
-                                                     config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
-                                                     on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
-                                                     desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
-                                                     is what actually closed that race originally. Verified live via Playwright with two device
-                                                     profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
-                                                     tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
-                                                     context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
-                                                     a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
-                                                     still 440 passing/31 failing, same pre-existing set.
+                                                           **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
+                                                           pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
+                                                           desktop mice, which was never the actual bug - only touch devices raced hover against the
+                                                           click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
+                                                           `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
+                                                           `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
+                                                           shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
+                                                           `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
+                                                           directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
+                                                           `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
+                                                           config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
+                                                           on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
+                                                           desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
+                                                           is what actually closed that race originally. Verified live via Playwright with two device
+                                                           profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
+                                                           tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
+                                                           context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
+                                                           a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
+                                                           still 440 passing/31 failing, same pre-existing set.
 
 102.  ✅ **Offline pass-and-play with automatic local recovery and airplane-mode launch
       (2026-07-17, v5.31.0).** The viewer now has a dedicated `?offline=1` hot-seat mode, linked from
@@ -4187,8 +4188,8 @@ opacity: 0.7 }` wrapper that also diluted the X itself, while `BoardAction.vue`'
             holds the engine's own canonical, annotated move text (e.g. `"p2 faction nevlas (0/0/0/0 ⇒
 
       2/4/0/0)"`, not the raw pre-annotation text a player typed) and confirmed the engine happily
-      re-parses that same annotated text as fresh `.move()`input — so storing it verbatim into the
-      new hosted game's`moves` rows is safe and needs no un-annotation step.
+re-parses that same annotated text as fresh `.move()`input — so storing it verbatim into the
+new hosted game's`moves` rows is safe and needs no un-annotation step.
 
             New/changed tests: `import-offline-game.spec.ts` (5), `ImportOfflineGame.spec.ts` (4),
             `offline-game.spec.ts` (+1 regression), `OfflineLobby.spec.ts` (+1). Focused run: all green,
@@ -4212,6 +4213,35 @@ opacity: 0.7 }` wrapper that also diluted the X itself, while `BoardAction.vue`'
             registered accounts still can't be moved online (every seat needs an existing registered
             player assigned before the RPC will accept it) — no "invite by email, claim later" path exists
             for an import yet.
+
+104.  ✅ **Four owner-reported "couponing changes" (2026-07-18, v5.34.0).** (1) The Official
+      center-sector rule (1-4) is now `true` by default in `CreateGame.vue`'s form (it remains an
+      opt-out checkbox, unchanged in `SetupPreview.vue`/`setup-preview.ts`). (2) Xenos's base
+      ore-to-power-token-in-Area-I free action (`FreeAction.OreToToken`, `1o -> 1t`) is now removed
+      from their available free actions once the Lost Fleet expansion is on, since their Lost
+      Fleet `1o -> 1ta3` action (§I4) charges the token directly into Area III and so always
+      dominates it — added `ConversionPool.remove()` (`engine/src/actions.ts`) and call it from
+      Xenos's `freeActionChoice` handler (`engine/src/faction-boards/xenos.ts`) before pushing
+      `freeActionsXenos`. (3) Spectators (a hosted-game viewer holding zero seats) were being left
+      fully unlocked once `mySeats` resolved to `[]` — `seatToLock` (`hosted/host.ts`) used to treat
+      "owns 0 seats" the same as "owns every seat" (both returned `null`, meaning "no lock, anyone
+      may act" per `Game.vue`'s `canPlay`) — so every move control rendered as if the spectator
+      could act, even though `commit_turn` would still reject the actual submission server-side.
+      `seatToLock` now locks a genuine spectator (`mySeats.length === 0` but `playerCount > 0`) to
+      the same out-of-range placeholder seat (`-1`) that `hosted.ts` already uses during its
+      pre-load race window, so `canPlay`/`myLockedSeat` correctly treat them as unable to act; only
+      `mySeats.length === 0 && playerCount === 0` (game not loaded yet) still returns `null`. (4) A
+      Gaiaformer permanently consumed to colonize an Asteroid (`player.data.gaiaformersUsedForAsteroid`,
+      already tracked and wired through as `BuildingGroup.vue`'s `asteroidConsumed` prop per §E2) was
+      visually indistinguishable on the player board from one merely placed on the map (Gaia/
+      transdim/Protoplanet) — both left the board slot blank. Added a red X mark
+      (`.asteroid-consumed-mark`) drawn over any slot in the `[placed+gaia, placed+gaia+asteroidConsumed)`
+      range, plus a "(crashed on an Asteroid)" tooltip suffix. Updated/added specs:
+      `engine/src/faction-boards/xenos.spec.ts` (unchanged, already covered #2), `viewer/src/hosted/
+host.spec.ts` (seat-locking rule cases for the new spectator/not-yet-loaded split), `viewer/src/
+components/PlayerBoard/BuildingGroup.spec.ts` (X-mark presence/absence). Engine and viewer
+      targeted suites green; see the Testing section for the full-suite policy before trusting this
+      without rerunning it.
 
 ## Still MISSING — only one art-only item left
 

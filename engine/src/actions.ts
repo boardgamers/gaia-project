@@ -58,6 +58,11 @@ export class ConversionPool {
   push(table: ConversionTable, player: Player) {
     this.actions.push(...freeActionData(Object.keys(table).map((k) => Number(k)) as FreeAction[], player));
   }
+
+  remove(action: FreeAction) {
+    const conversion = freeActionConversions[action];
+    this.actions = this.actions.filter((act) => !(act.cost === conversion.cost && act.income === conversion.income));
+  }
 }
 
 export const freeActions: ConversionTable = {

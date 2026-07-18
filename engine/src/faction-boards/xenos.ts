@@ -1,4 +1,4 @@
-import { ConversionPool, freeActionsXenos } from "../actions";
+import { ConversionPool, FreeAction, freeActionsXenos } from "../actions";
 import { Building, Expansion, Faction, hasExpansion } from "../enums";
 import Player from "../player";
 import { FactionBoardVariants } from "./types";
@@ -15,6 +15,8 @@ const xenos: FactionBoardVariants = {
     handlers: {
       freeActionChoice: (player: Player, pool: ConversionPool) => {
         if (hasExpansion(player.expansions, Expansion.LostFleet)) {
+          // Strictly better than the base ore->power-token-in-area-1 action, which is redundant now.
+          pool.remove(FreeAction.OreToToken);
           pool.push(freeActionsXenos, player);
         }
       },
