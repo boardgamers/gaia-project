@@ -162,7 +162,7 @@
         </button>
       </div>
       <div class="lobby-toolbar__actions">
-        <a href="?offline=1" class="btn btn-outline-success">Offline game</a>
+        <a href="?offline=1" class="btn btn-outline-success">Offline games</a>
         <a href="?create=1" class="btn btn-primary">+ New game</a>
         <span class="lobby-online-wrap d-md-none">
           <button

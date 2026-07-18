@@ -145,4 +145,24 @@ describe("CreateGame", () => {
 
     expect((wrapper.vm as any).myDisplayName).to.equal("Host");
   });
+
+  it("reuses the setup preview and faction options offline without test, lobby, or invite controls", async () => {
+    const wrapper = mount(CreateGame, {
+      propsData: { offline: true },
+      stubs: { SetupPreview: true },
+    });
+    await Vue.nextTick();
+
+    expect(wrapper.text()).to.include("New offline game");
+    expect(wrapper.text()).to.include("Every seat plays on this device");
+    expect(wrapper.text()).to.include("Setup Preview");
+    expect(wrapper.text()).to.include("Silent Auction");
+    expect(wrapper.text()).to.include("Ban phase");
+    expect(wrapper.text()).to.not.include("Test game");
+    expect(wrapper.text()).to.not.include("Open lobby");
+    expect(wrapper.text()).to.not.include("Direct invite");
+    expect((wrapper.vm as any).form.auctionVariant).to.equal("silent");
+    expect((wrapper.vm as any).form.banPhase).to.equal(true);
+    expect(wrapper.find('a[href="?offline=1"]').exists()).to.equal(true);
+  });
 });

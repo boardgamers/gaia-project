@@ -1,13 +1,18 @@
-import Engine from "@gaia-project/engine";
+import Engine, { AuctionVariant } from "@gaia-project/engine";
 import { expect } from "chai";
 import fs from "fs";
 import {
-  isNewOfflineGame,
+  createStoredOfflineGame,
+  deleteStoredOfflineGame,
   isOfflineGameMode,
+  listOfflineGames,
+  OFFLINE_GAME_LIBRARY_KEY,
   OFFLINE_GAME_STORAGE_KEY,
   readOfflineGame,
+  readStoredOfflineGame,
   restoreOfflineGame,
   writeOfflineGame,
+  writeStoredOfflineGame,
 } from "./offline-game";
 
 class MemoryStorage implements Storage {
@@ -47,11 +52,9 @@ function requireSave(storage: Storage) {
 }
 
 describe("offline hot-seat games", () => {
-  it("recognizes only the explicit offline/new-game URL markers", () => {
+  it("recognizes only the explicit offline URL marker", () => {
     expect(isOfflineGameMode("?offline=1&players=3")).to.equal(true);
     expect(isOfflineGameMode("?players=3")).to.equal(false);
-    expect(isNewOfflineGame("?offline=1&new=1")).to.equal(true);
-    expect(isNewOfflineGame("?offline=1&new=0")).to.equal(false);
   });
 
   it("round-trips a complete engine through one versioned local record", () => {
@@ -67,6 +70,41 @@ describe("offline hot-seat games", () => {
     expect(read.save?.savedAt).to.equal("2026-07-17T10:30:00.000Z");
     const restored = restoreOfflineGame(requireSave(storage));
     expect(JSON.parse(JSON.stringify(restored.engine))).to.deep.equal(JSON.parse(JSON.stringify(engine)));
+  });
+
+  it("migrates the original single save into the multi-game offline library", () => {
+    const storage = new MemoryStorage();
+    const engine = new Engine(["init 2 offline-legacy"], { lostFleet: true });
+    writeOfflineGame(engine, "", storage, Date.UTC(2026, 6, 17, 10, 30));
+
+    const library = listOfflineGames(storage);
+
+    expect(library.error).to.equal(null);
+    expect(library.games).to.have.length(1);
+    expect(library.games[0].name).to.equal("Imported offline game");
+    expect(library.games[0].engineData.moveHistory).to.deep.equal(engine.moveHistory);
+    expect(storage.getItem(OFFLINE_GAME_LIBRARY_KEY)).to.not.equal(null);
+    expect(readOfflineGame(storage).save?.engineData.moveHistory).to.deep.equal(engine.moveHistory);
+  });
+
+  it("creates, independently updates, lists, and deletes multiple offline games", () => {
+    const storage = new MemoryStorage();
+    const alpha = new Engine(["init 2 offline-alpha"], { lostFleet: true });
+    const beta = new Engine(["init 3 offline-beta"], { auction: AuctionVariant.Silent, banPhase: true });
+
+    expect(createStoredOfflineGame(alpha, "Alpha", storage, Date.UTC(2026, 6, 17, 10), "alpha").error).to.equal(null);
+    expect(createStoredOfflineGame(beta, "Beta", storage, Date.UTC(2026, 6, 17, 11), "beta").error).to.equal(null);
+    expect(listOfflineGames(storage).games.map((game) => game.name)).to.deep.equal(["Beta", "Alpha"]);
+
+    const updated = writeStoredOfflineGame("alpha", alpha, "p1 faction terrans", storage, Date.UTC(2026, 6, 17, 12));
+    expect(updated.error).to.equal(null);
+    expect(readStoredOfflineGame("alpha", storage).save?.pendingMove).to.equal("p1 faction terrans");
+    expect(readStoredOfflineGame("beta", storage).save?.pendingMove).to.equal(undefined);
+    expect(listOfflineGames(storage).games.map((game) => game.name)).to.deep.equal(["Alpha", "Beta"]);
+
+    expect(deleteStoredOfflineGame("beta", storage)).to.deep.equal({ deleted: true, error: null });
+    expect(listOfflineGames(storage).games.map((game) => game.name)).to.deep.equal(["Alpha"]);
+    expect(readStoredOfflineGame("beta", storage).save).to.equal(null);
   });
 
   it("restores an unfinished turn for display while retaining the committed baseline", () => {

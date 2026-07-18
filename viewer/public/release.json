@@ -1,7 +1,23 @@
 {
-  "version": "5.31.0",
+  "version": "5.32.0",
   "releasedAt": "2026-07-17",
   "entries": [
+    {
+      "version": "5.32.0",
+      "releasedAt": "2026-07-17",
+      "kind": "update",
+      "title": "Offline game library",
+      "impact": "",
+      "changes": [
+        "Keep and resume multiple local pass-and-play games from a new offline lobby.",
+        "Create offline games with the full setup preview and faction-pick options, with Silent Auction and Ban selected by default.",
+        "Offline games now use independent versioned local records, automatically import the previous single-game save, and never create open-lobby or direct-invite seats."
+      ],
+      "userChanges": [
+        "Keep and resume multiple local pass-and-play games from a new offline lobby.",
+        "Create offline games with the full setup preview and faction-pick options, with Silent Auction and Ban selected by default."
+      ]
+    },
     {
       "version": "5.31.0",
       "releasedAt": "2026-07-17",

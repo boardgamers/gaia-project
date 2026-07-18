@@ -94,11 +94,15 @@ export default Vue.extend({
   components: { Token },
   props: {
     game: { type: Object, required: true },
+    gameHref: { type: String, default: "" },
     presenceState: { type: Object, default: () => ({}) },
     myUserId: { type: String, required: true },
   },
   computed: {
     href(): string {
+      if (this.gameHref) {
+        return this.gameHref;
+      }
       return this.game.status === "open" ? `?preview=${this.game.id}` : `?game=${this.game.id}`;
     },
     claimedSeatsCount(): number {

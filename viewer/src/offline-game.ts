@@ -2,8 +2,11 @@ import Engine from "@gaia-project/engine";
 
 export const OFFLINE_GAME_STORAGE_KEY = "gaia-offline-game-v1";
 export const OFFLINE_GAME_SAVED_EVENT = "gaia-offline-game-saved";
+export const OFFLINE_GAME_LIBRARY_KEY = "gaia-offline-games-v1";
 
 const OFFLINE_GAME_SAVE_VERSION = 1;
+const OFFLINE_GAME_RECORD_PREFIX = "gaia-offline-game-v2:";
+const LEGACY_OFFLINE_GAME_ID = "imported-offline-game";
 
 export type OfflineGameSave = {
   version: 1;
@@ -24,6 +27,54 @@ export type OfflineGameWriteResult = {
   error: string | null;
 };
 
+export type StoredOfflineGame = OfflineGameSave & {
+  id: string;
+  name: string;
+  createdAt: string;
+};
+
+export type OfflineGameLibraryResult = {
+  games: StoredOfflineGame[];
+  error: string | null;
+};
+
+export type StoredOfflineGameWriteResult = {
+  save: StoredOfflineGame | null;
+  error: string | null;
+};
+
+export type OfflineGameDeleteResult = {
+  deleted: boolean;
+  error: string | null;
+};
+
+export type OfflineGameListRow = {
+  id: string;
+  name: string;
+  seed: string;
+  player_count: number;
+  options: Record<string, unknown>;
+  status: "active" | "finished";
+  current_seat: number | null;
+  move_count: number;
+  current_round: number | null;
+  latest_move_summary: string | null;
+  latest_move_committed_at: string;
+  players: Array<{
+    seat: number;
+    user_id: null;
+    invited_email: string;
+    display_name: string;
+    faction: string | null;
+    score: number | null;
+  }>;
+};
+
+type OfflineGameIndex = {
+  version: 1;
+  gameIds: string[];
+};
+
 export type RestoredOfflineGame = {
   /** Stable baseline used when the next cumulative command is submitted. */
   engine: Engine;
@@ -41,9 +92,8 @@ export function isOfflineGameMode(search = ""): boolean {
   return new URLSearchParams(search).has("offline");
 }
 
-export function isNewOfflineGame(search = ""): boolean {
-  const value = new URLSearchParams(search).get("new");
-  return value === "" || /^(1|true|yes|on)$/i.test(value ?? "");
+export function offlineGameIdFromSearch(search = ""): string | null {
+  return new URLSearchParams(search).get("game");
 }
 
 export function browserOfflineStorage(): Storage | null {
@@ -67,6 +117,42 @@ function isOfflineGameSave(value: any): value is OfflineGameSave {
   );
 }
 
+function isStoredOfflineGame(value: any): value is StoredOfflineGame {
+  return (
+    isOfflineGameSave(value) &&
+    typeof value.id === "string" &&
+    typeof value.name === "string" &&
+    typeof value.createdAt === "string"
+  );
+}
+
+function isOfflineGameIndex(value: any): value is OfflineGameIndex {
+  return (
+    value?.version === 1 && Array.isArray(value.gameIds) && value.gameIds.every((id: unknown) => typeof id === "string")
+  );
+}
+
+function validOfflineGameId(id: string): boolean {
+  return /^[a-z0-9][a-z0-9-]{0,79}$/i.test(id);
+}
+
+function offlineGameRecordKey(id: string): string {
+  return `${OFFLINE_GAME_RECORD_PREFIX}${id}`;
+}
+
+function makeOfflineGameId(now: number): string {
+  return `offline-${now.toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function serializeOfflineGame(engine: Engine, pendingMove: string, now: number): OfflineGameSave {
+  return {
+    version: OFFLINE_GAME_SAVE_VERSION,
+    savedAt: new Date(now).toISOString(),
+    engineData: JSON.parse(JSON.stringify(engine)),
+    ...(pendingMove ? { pendingMove } : {}),
+  };
+}
+
 export function readOfflineGame(storage: Storage | null = browserOfflineStorage()): OfflineGameReadResult {
   if (!storage) {
     return { save: null, error: "Local storage is unavailable in this browser." };
@@ -87,6 +173,214 @@ export function readOfflineGame(storage: Storage | null = browserOfflineStorage(
   }
 }
 
+function ensureOfflineGameIndex(storage: Storage): { index: OfflineGameIndex | null; error: string | null } {
+  try {
+    const raw = storage.getItem(OFFLINE_GAME_LIBRARY_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (!isOfflineGameIndex(parsed)) {
+        return { index: null, error: "The offline game library has an unsupported format." };
+      }
+      return { index: parsed, error: null };
+    }
+
+    const index: OfflineGameIndex = { version: 1, gameIds: [] };
+    const legacy = readOfflineGame(storage);
+    if (legacy.save) {
+      const imported: StoredOfflineGame = {
+        ...legacy.save,
+        id: LEGACY_OFFLINE_GAME_ID,
+        name: "Imported offline game",
+        createdAt: legacy.save.savedAt,
+      };
+      storage.setItem(offlineGameRecordKey(imported.id), JSON.stringify(imported));
+      index.gameIds.push(imported.id);
+    }
+    storage.setItem(OFFLINE_GAME_LIBRARY_KEY, JSON.stringify(index));
+    return { index, error: legacy.error };
+  } catch (error) {
+    return { index: null, error: `The offline game library could not be read: ${errorMessage(error)}` };
+  }
+}
+
+export function readStoredOfflineGame(
+  gameId: string,
+  storage: Storage | null = browserOfflineStorage()
+): { save: StoredOfflineGame | null; error: string | null } {
+  if (!storage) {
+    return { save: null, error: "Local storage is unavailable in this browser." };
+  }
+  if (!validOfflineGameId(gameId)) {
+    return { save: null, error: "The offline game id is invalid." };
+  }
+  try {
+    const raw = storage.getItem(offlineGameRecordKey(gameId));
+    if (!raw) {
+      return { save: null, error: "That offline game is not stored on this device." };
+    }
+    const parsed = JSON.parse(raw);
+    if (!isStoredOfflineGame(parsed) || parsed.id !== gameId) {
+      return { save: null, error: "The saved offline game has an unsupported format." };
+    }
+    return { save: parsed, error: null };
+  } catch (error) {
+    return { save: null, error: `The saved offline game could not be read: ${errorMessage(error)}` };
+  }
+}
+
+export function listOfflineGames(storage: Storage | null = browserOfflineStorage()): OfflineGameLibraryResult {
+  if (!storage) {
+    return { games: [], error: "Local storage is unavailable in this browser." };
+  }
+  const library = ensureOfflineGameIndex(storage);
+  if (!library.index) {
+    return { games: [], error: library.error };
+  }
+
+  const games: StoredOfflineGame[] = [];
+  const warnings = library.error ? [library.error] : [];
+  for (const gameId of library.index.gameIds) {
+    const stored = readStoredOfflineGame(gameId, storage);
+    if (stored.save) {
+      games.push(stored.save);
+    } else if (stored.error) {
+      warnings.push(stored.error);
+    }
+  }
+  games.sort((a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime());
+  return { games, error: warnings.length ? warnings.join(" ") : null };
+}
+
+/* Hosted GameBar intentionally consumes database-shaped snake_case fields. */
+/* eslint-disable @typescript-eslint/camelcase */
+export function offlineGameListRow(game: StoredOfflineGame): OfflineGameListRow {
+  const data = game.engineData ?? {};
+  const players = Array.isArray(data.players) ? data.players : [];
+  const history = Array.isArray(data.moveHistory) ? data.moveHistory : [];
+  const lastMove = history.length > 1 ? String(history[history.length - 1]).replace(/\.$/, "") : null;
+  return {
+    id: game.id,
+    name: game.name,
+    seed: String(data.seed ?? ""),
+    player_count: players.length,
+    options: data.options ?? {},
+    status: data.ended || data.phase === "endGame" ? "finished" : "active",
+    current_seat: Number.isInteger(data.currentPlayer) ? data.currentPlayer : null,
+    move_count: history.length,
+    current_round: Number.isInteger(data.round) && data.round > 0 ? data.round : null,
+    latest_move_summary: lastMove,
+    latest_move_committed_at: game.savedAt,
+    players: players.map((player: any, seat: number) => ({
+      seat,
+      user_id: null,
+      invited_email: "",
+      display_name: `Player ${seat + 1}`,
+      faction: player?.faction ?? null,
+      score: Number.isFinite(player?.data?.victoryPoints) ? player.data.victoryPoints : null,
+    })),
+  };
+}
+/* eslint-enable @typescript-eslint/camelcase */
+
+export function createStoredOfflineGame(
+  engine: Engine,
+  name: string,
+  storage: Storage | null = browserOfflineStorage(),
+  now = Date.now(),
+  gameId = makeOfflineGameId(now)
+): StoredOfflineGameWriteResult {
+  if (!storage) {
+    return { save: null, error: "Local storage is unavailable in this browser." };
+  }
+  if (!validOfflineGameId(gameId)) {
+    return { save: null, error: "The offline game id is invalid." };
+  }
+
+  const library = ensureOfflineGameIndex(storage);
+  if (!library.index) {
+    return { save: null, error: library.error };
+  }
+  if (library.index.gameIds.includes(gameId)) {
+    return { save: null, error: "An offline game with that id already exists." };
+  }
+
+  const state = serializeOfflineGame(engine, "", now);
+  const save: StoredOfflineGame = {
+    ...state,
+    id: gameId,
+    name: name.trim() || "Offline game",
+    createdAt: state.savedAt,
+  };
+  try {
+    storage.setItem(offlineGameRecordKey(gameId), JSON.stringify(save));
+    const nextIndex: OfflineGameIndex = { ...library.index, gameIds: [gameId, ...library.index.gameIds] };
+    storage.setItem(OFFLINE_GAME_LIBRARY_KEY, JSON.stringify(nextIndex));
+    return { save, error: library.error };
+  } catch (error) {
+    try {
+      storage.removeItem(offlineGameRecordKey(gameId));
+    } catch (_rollbackError) {
+      // The index was not updated, so an unlisted record is harmless even if rollback is blocked.
+    }
+    return { save: null, error: `The offline game could not be created: ${errorMessage(error)}` };
+  }
+}
+
+export function writeStoredOfflineGame(
+  gameId: string,
+  engine: Engine,
+  pendingMove = "",
+  storage: Storage | null = browserOfflineStorage(),
+  now = Date.now()
+): StoredOfflineGameWriteResult {
+  if (!storage) {
+    return { save: null, error: "Local storage is unavailable in this browser." };
+  }
+  const current = readStoredOfflineGame(gameId, storage);
+  if (!current.save) {
+    return { save: null, error: current.error };
+  }
+
+  const save: StoredOfflineGame = {
+    ...current.save,
+    ...serializeOfflineGame(engine, pendingMove, now),
+  };
+  try {
+    storage.setItem(offlineGameRecordKey(gameId), JSON.stringify(save));
+    return { save, error: null };
+  } catch (error) {
+    return { save: null, error: `The offline game could not be saved: ${errorMessage(error)}` };
+  }
+}
+
+export function deleteStoredOfflineGame(
+  gameId: string,
+  storage: Storage | null = browserOfflineStorage()
+): OfflineGameDeleteResult {
+  if (!storage) {
+    return { deleted: false, error: "Local storage is unavailable in this browser." };
+  }
+  const library = ensureOfflineGameIndex(storage);
+  if (!library.index) {
+    return { deleted: false, error: library.error };
+  }
+  if (!library.index.gameIds.includes(gameId)) {
+    return { deleted: false, error: "That offline game is not stored on this device." };
+  }
+
+  try {
+    const nextIndex: OfflineGameIndex = {
+      ...library.index,
+      gameIds: library.index.gameIds.filter((id) => id !== gameId),
+    };
+    storage.setItem(OFFLINE_GAME_LIBRARY_KEY, JSON.stringify(nextIndex));
+    storage.removeItem(offlineGameRecordKey(gameId));
+    return { deleted: true, error: null };
+  } catch (error) {
+    return { deleted: false, error: `The offline game could not be deleted: ${errorMessage(error)}` };
+  }
+}
+
 /**
  * Synchronously writes one small, atomic localStorage record. A finished Gaia game is currently
  * about 140 KB, comfortably below normal browser quotas; synchronous storage is intentional here
@@ -103,12 +397,7 @@ export function writeOfflineGame(
   }
 
   try {
-    const save: OfflineGameSave = {
-      version: OFFLINE_GAME_SAVE_VERSION,
-      savedAt: new Date(now).toISOString(),
-      engineData: JSON.parse(JSON.stringify(engine)),
-      ...(pendingMove ? { pendingMove } : {}),
-    };
+    const save = serializeOfflineGame(engine, pendingMove, now);
     storage.setItem(OFFLINE_GAME_STORAGE_KEY, JSON.stringify(save));
     return { save, error: null };
   } catch (error) {

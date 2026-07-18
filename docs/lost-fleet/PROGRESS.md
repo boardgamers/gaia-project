@@ -5,7 +5,7 @@
 > labeled historical rerun log. Do not load this 5,000-line history cover to cover. Read the other
 > ledgers and historical handoffs only when the task touches their subject, following `AGENTS.md`.
 > If the user supplied a concrete task, proceed with it rather than asking "what next?".
-> Last updated: **2026-07-17** (offline pass-and-play added; AI task index unchanged).
+> Last updated: **2026-07-17** (offline game library and shared setup flow shipped; AI task index unchanged).
 
 ## Working agreements (read every session, not optional)
 
@@ -4119,6 +4119,30 @@ opacity: 0.7 }` wrapper that also diluted the X itself, while `BoardAction.vue`'
       `lost-fleet buttons` / `Chart` / `Resource Counter` set already documented by #81/#82/#101,
       with no failure in any changed offline, launcher, lobby, sign-in, or service-worker path.
       Production build succeeded and generated all 40 precache URLs.
+
+      **Same-session follow-up (2026-07-17, v5.32.0):** `?offline=1` is now a real local lobby rather
+      than a one-game launcher. It can list, resume, and delete any number of independently saved
+      pass-and-play games; each row links to its own `?offline=1&game=<id>` record, and the previous
+      v5.31.0 single-game save is imported automatically without deleting the legacy copy. Move
+      persistence still writes only the selected game, including its cumulative unfinished move.
+
+      Offline creation now reuses the hosted `CreateGame.vue` flow, including the same 2–4 player
+      controls, all four faction-selection methods, Lost Fleet setup preview, sector rotation, seed
+      tools, ban phase, and official center-sector option. Silent Auction and Ban are selected by
+      default. The offline variant deliberately omits test-game, open-lobby, direct-invite, and
+      invitation controls, creates no Supabase rows or seats, and returns to the local lobby. A
+      missing or invalid local game ID redirects safely to the lobby instead of overwriting another
+      game.
+
+      Production-browser verification created separate 2-player and 3-player games, showed both in
+      the lobby with their Silent Auction/Ban tags, and resumed the correct faction-ban state. With
+      the HTTP server stopped and browser networking disabled, the service worker reopened the
+      lobby, resumed an existing game, rendered the complete setup preview, and created a third game
+      entirely offline with no console/page errors. Focused storage, routing, lobby, shared-create,
+      and game-row specs: **27/27**; changed source lint passed. A detailed full-suite rerun enumerated
+      exactly the same **29 pre-existing** `lost-fleet buttons` / `Chart` / `Resource Counter`
+      failures and no changed-path failure. The v5.32.0 production build succeeded and generated all
+      40 precache URLs (`bad2cdf0cf85f3dc`).
 
 ## Still MISSING — only one art-only item left
 

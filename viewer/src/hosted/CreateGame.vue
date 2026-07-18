@@ -1,8 +1,8 @@
 <template>
   <div class="container py-3 py-md-4" style="max-width: 46rem">
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <h3 class="mb-0">New game</h3>
-      <a href="?lobby=1" class="btn btn-outline-secondary btn-sm">Back to lobby</a>
+      <h3 class="mb-0">{{ offline ? "New offline game" : "New game" }}</h3>
+      <a :href="offline ? '?offline=1' : '?lobby=1'" class="btn btn-outline-secondary btn-sm">Back to lobby</a>
     </div>
     <b-alert :show="!!message" variant="info" dismissible @dismissed="message = ''">{{ message }}</b-alert>
 
@@ -10,7 +10,13 @@
       <div class="create-game-grid">
         <section class="create-game-section">
           <div class="create-game-section__label">Players</div>
-          <p class="create-game-help mb-2">Pick seat count, then switch on hot-seat test mode if needed.</p>
+          <p class="create-game-help mb-2">
+            {{
+              offline
+                ? "Every seat plays on this device."
+                : "Pick seat count, then switch on hot-seat test mode if needed."
+            }}
+          </p>
           <div class="create-game-count-row">
             <b-button-group class="create-game-count-buttons">
               <b-button
@@ -22,7 +28,9 @@
                 {{ count }}
               </b-button>
             </b-button-group>
-            <b-form-checkbox v-model="form.testGame" class="create-game-inline-check mb-0">Test game</b-form-checkbox>
+            <b-form-checkbox v-if="!offline" v-model="form.testGame" class="create-game-inline-check mb-0">
+              Test game
+            </b-form-checkbox>
           </div>
         </section>
 
@@ -68,7 +76,7 @@
           </div>
         </section>
 
-        <section v-if="!form.testGame" class="create-game-section create-game-section--full">
+        <section v-if="!offline && !form.testGame" class="create-game-section create-game-section--full">
           <div class="create-game-section__label mb-1">Invites</div>
           <b-button-group class="mb-2">
             <b-button
@@ -174,9 +182,11 @@
 </template>
 
 <script lang="ts">
+import Engine from "@gaia-project/engine";
 import Vue from "vue";
 import InfoModal from "./InfoModal.vue";
 import { AUCTION_VARIANT_OPTIONS, buildCreateGameParams } from "./new-game";
+import { createStoredOfflineGame } from "../offline-game";
 import { fetchMyNickname } from "./profile";
 import SetupPreview from "./SetupPreview.vue";
 
@@ -193,10 +203,12 @@ export default Vue.extend({
   name: "HostedCreateGame",
   components: { SetupPreview, InfoModal },
   props: {
-    client: { type: Object, required: true },
-    session: { type: Object, required: true },
+    client: { type: Object, default: null },
+    session: { type: Object, default: null },
+    offline: { type: Boolean, default: false },
   },
   data() {
+    const offline = !!(this as any).offline;
     return {
       creating: false,
       message: "",
@@ -211,13 +223,16 @@ export default Vue.extend({
       form: {
         playerCount: 2,
         testGame: false,
-        auctionVariant: "none" as import("./new-game").AuctionVariantOption,
-        banPhase: false,
+        auctionVariant: (offline ? "silent" : "none") as import("./new-game").AuctionVariantOption,
+        banPhase: offline,
         officialCenterSectors: false,
       },
     };
   },
   created() {
+    if (this.offline) {
+      return;
+    }
     fetchMyNickname(this.client as any, this.myUserId).then((nickname) => {
       this.myNickname = nickname;
     });
@@ -241,13 +256,14 @@ export default Vue.extend({
       if (!this.currentSeed || !this.setupValid) {
         return false;
       }
-      if (!this.form.testGame && this.inviteMode === "direct") {
+      if (!this.offline && !this.form.testGame && this.inviteMode === "direct") {
         return this.selectedInvitees.length === this.form.playerCount - 1;
       }
       return true;
     },
     blockedReason(): string {
       if (
+        !this.offline &&
         !this.form.testGame &&
         this.inviteMode === "direct" &&
         this.selectedInvitees.length !== this.form.playerCount - 1
@@ -299,8 +315,10 @@ export default Vue.extend({
       this.creating = true;
       this.message = "";
       try {
-        const directInvite = !this.form.testGame && this.inviteMode === "direct";
-        const seats = this.form.testGame
+        const directInvite = !this.offline && !this.form.testGame && this.inviteMode === "direct";
+        const seats = this.offline
+          ? Array.from({ length: this.form.playerCount }, (_, i) => ({ userId: null, name: `Player ${i + 1}` }))
+          : this.form.testGame
           ? Array.from({ length: this.form.playerCount }, (_, i) => ({
               userId: this.myUserId,
               name: `Player ${i + 1}`,
@@ -320,11 +338,24 @@ export default Vue.extend({
             auctionVariant: this.form.auctionVariant,
             banPhase: this.form.banPhase,
             officialCenterSectors: this.form.officialCenterSectors,
-            openLobby: !this.form.testGame && !directInvite,
+            openLobby: !this.offline && !this.form.testGame && !directInvite,
           },
           this.currentSeed,
           this.currentRotateMove
         );
+        if (this.offline) {
+          const engine = new Engine(
+            [`init ${params.p_player_count} ${params.p_seed}`, params.p_setup_move],
+            params.p_options
+          );
+          engine.generateAvailableCommandsIfNeeded();
+          const stored = createStoredOfflineGame(engine, params.p_name);
+          if (!stored.save) {
+            throw new Error(stored.error ?? "The game could not be stored on this device.");
+          }
+          window.location.search = `?offline=1&game=${encodeURIComponent(stored.save.id)}`;
+          return;
+        }
         const { data, error } = await (this.client as any).rpc("create_game", params);
         if (error) {
           throw new Error(error.message);

@@ -21,23 +21,24 @@ You can change [src/self-contained.ts](src/self-contained.ts) to change the init
 
 ## Offline pass-and-play
 
-The hosted viewer can run one hot-seat game entirely on a single phone:
+The hosted viewer can run multiple hot-seat games entirely on a single phone:
 
-1. While online, open the app and choose **Offline game** (or open `?offline=1`).
+1. While online, open the app and choose **Offline games** (or open `?offline=1`).
 2. Wait until the green banner says **App available offline**. On a phone, add Fight Club to the
    home screen for the most reliable way to launch it later.
-3. Choose **New offline game**, configure the player count and expansions, then pass the phone
-   around normally.
-4. In airplane mode, open the installed app or the offline-game bookmark. The normal installed-app
-   lobby address automatically falls back to the saved offline game when the server cannot be
-   reached.
+3. Choose **New game**. Offline creation uses the same Lost Fleet setup preview, sector rotation,
+   player count, faction-selection, ban-phase, and official center-sector controls as online creation,
+   without lobby seats or invitations. It defaults to **Silent Auction** with the **Ban phase** enabled.
+4. Create as many local games as needed and choose one from the offline lobby before passing the
+   phone around. In airplane mode, opening the installed app falls back to this local lobby.
 
 The first visit must be online so the browser can download and cache the web app. After that, the
-app shell and game assets are cached, while the latest game state is saved synchronously in this
+app shell and game assets are cached, while each game's latest state is saved synchronously in this
 browser profile after every command. A refresh, accidental close, or phone restart resumes the same
-game, including a turn that was only partly entered. Browser/site-data deletion also deletes the
-local save, so use **Export backup** when a separate recoverable copy matters. Hosted multiplayer
-games remain server-backed and are not copied into offline mode.
+game, including a turn that was only partly entered. The original single-game save from v5.31.0 is
+automatically imported into the offline lobby. Browser/site-data deletion also deletes the local
+library, so use **Export backup** when a separate recoverable copy matters. Hosted multiplayer games
+remain server-backed and are not copied into offline mode.
 
 ## Include in other projects
 

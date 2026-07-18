@@ -17,9 +17,9 @@
   ],
   "shortcuts": [
     {
-      "name": "Offline game",
+      "name": "Offline games",
       "short_name": "Offline",
-      "description": "Resume pass-and-play on this device",
+      "description": "Open the local pass-and-play game library",
       "url": "/?offline=1",
       "icons": [
         {

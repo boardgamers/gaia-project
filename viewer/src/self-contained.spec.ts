@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { parseSelfContainedSetup } from "./self-contained";
 import { buildStateUrl, loadEngineFromData, parseLoadFromQuery } from "./self-contained-state";
-import Engine from "@gaia-project/engine";
+import Engine, { AuctionVariant, Phase } from "@gaia-project/engine";
 import { LoadFromJsonType } from "./store";
 
 describe("self-contained setup", () => {
@@ -26,6 +26,23 @@ describe("self-contained setup", () => {
     expect(setup.options.frontiers).to.equal(false);
   });
 
+  it("defaults offline games to Silent Auction with a ban phase and allows an explicit override", () => {
+    const offline = parseSelfContainedSetup("?offline=1&players=3&seed=offline-defaults");
+
+    expect(offline.options.auction).to.equal(AuctionVariant.Silent);
+    expect(offline.options.banPhase).to.equal(true);
+    const engine = new Engine([`init ${offline.players} ${offline.seed}`], offline.options);
+    expect(engine.phase).to.equal(Phase.SetupFactionBan);
+
+    const standard = parseSelfContainedSetup("?offline=1&auction=none&banPhase=0");
+    expect(standard.options.auction).to.equal(undefined);
+    expect(standard.options.banPhase).to.equal(false);
+
+    const ordinaryTestGame = parseSelfContainedSetup("?players=3");
+    expect(ordinaryTestGame.options.auction).to.equal(undefined);
+    expect(ordinaryTestGame.options.banPhase).to.equal(undefined);
+  });
+
   it("parses an encoded state URL and restores the exact exported game", () => {
     const engine = new Engine(["init 2 lf-share-url"], { lostFleet: true });
     engine.generateAvailableCommandsIfNeeded();
@@ -41,14 +58,7 @@ describe("self-contained setup", () => {
   });
 
   it("supports stopMove with a shared state URL by replaying to an earlier move", () => {
-    const engine = new Engine(
-      [
-        "init 2 lf-share-stop",
-        "p1 faction terrans",
-        "p2 faction xenos",
-      ],
-      { lostFleet: true }
-    );
+    const engine = new Engine(["init 2 lf-share-stop", "p1 faction terrans", "p2 faction xenos"], { lostFleet: true });
 
     const stopMove = engine.moveHistory[2];
     const url = buildStateUrl("https://example.com/viewer", engine, LoadFromJsonType.strictReplay, stopMove);

@@ -64,6 +64,18 @@ describe("GameBar", () => {
     expect(wrapper.emitted("delete-test-game")).to.deep.equal([[testGame]]);
   });
 
+  it("uses an explicit game href for non-hosted game lists", () => {
+    const wrapper = mount(GameBar, {
+      propsData: {
+        game: game({ id: "offline-one" }),
+        gameHref: "?offline=1&game=offline-one",
+        myUserId: "",
+      },
+    });
+
+    expect(wrapper.find("a").attributes("href")).to.equal("?offline=1&game=offline-one");
+  });
+
   it("does not show a Delete button for a test game owned by someone else", () => {
     const testGame = game({
       created_by: "user-other",

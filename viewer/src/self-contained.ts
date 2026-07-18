@@ -6,12 +6,12 @@ import launch from "./launcher";
 import { autoDecideChargePower, parseAutoChargePreference } from "./logic/auto-decide";
 import {
   announceOfflineGameSave,
-  isNewOfflineGame,
   isOfflineGameMode,
-  readOfflineGame,
+  offlineGameIdFromSearch,
+  readStoredOfflineGame,
   requestPersistentOfflineStorage,
   restoreOfflineGame,
-  writeOfflineGame,
+  writeStoredOfflineGame,
 } from "./offline-game";
 import { LoadFromJson, LoadFromJsonType } from "./store";
 import { loadScenarioEngine, parseScenarioFromQuery } from "./self-contained-scenarios";
@@ -26,6 +26,7 @@ export type SelfContainedSetup = {
   options: {
     layout: Layout | undefined;
     auction: AuctionVariant | undefined;
+    banPhase: boolean | undefined;
     factionVariant: FactionVariant;
     randomFactions: boolean;
     advancedRules: boolean;
@@ -54,13 +55,14 @@ function parseFlagValue(value?: string | null): boolean | undefined {
 export function parseSelfContainedSetup(search = "", env: SelfContainedEnv = process.env): SelfContainedSetup {
   const params = new URLSearchParams(search);
   const str = (key: string, envValue?: string) => params.get(key) ?? envValue;
-  const flag = (key: string, envValue?: string): boolean => {
+  const optionalFlag = (key: string, envValue?: string): boolean | undefined => {
     const paramValue = params.get(key);
     if (paramValue !== null) {
       return parseFlagValue(paramValue) ?? false;
     }
-    return parseFlagValue(envValue) ?? false;
+    return parseFlagValue(envValue);
   };
+  const flag = (key: string, envValue?: string): boolean => optionalFlag(key, envValue) ?? false;
 
   let players = Number(str("players", env.VUE_APP_players) ?? 3);
   if (!Number.isInteger(players) || players < 2 || players > 5) {
@@ -68,13 +70,25 @@ export function parseSelfContainedSetup(search = "", env: SelfContainedEnv = pro
     players = 3;
   }
 
+  const auctionValue = str("auction", env.VUE_APP_auction);
+  const auction =
+    auctionValue === "none" || auctionValue === ""
+      ? undefined
+      : auctionValue != null
+      ? (auctionValue as AuctionVariant)
+      : params.has("offline")
+      ? AuctionVariant.Silent
+      : undefined;
+  const banPhase = optionalFlag("banPhase", env.VUE_APP_banPhase) ?? (params.has("offline") ? true : undefined);
+
   return {
     players,
     seed: str("seed", env.VUE_APP_seed) ?? Math.floor(Math.random() * 10000),
     moves: env.VUE_APP_moves ? JSON.parse(env.VUE_APP_moves) : [],
     options: {
       layout: (str("layout", env.VUE_APP_layout) ?? undefined) as Layout,
-      auction: (str("auction", env.VUE_APP_auction) ?? undefined) as AuctionVariant,
+      auction,
+      banPhase,
       factionVariant: (str("factionVariant", env.VUE_APP_factionVariant) ?? "standard") as FactionVariant,
       randomFactions: flag("randomFactions", env.VUE_APP_randomFactions),
       advancedRules: flag("advancedRules") || flag("rotateSectors", env.VUE_APP_rotateSectors),
@@ -92,7 +106,7 @@ function launchSelfContained(selector = "#app", debug = true) {
   // needed) — e.g. ?players=4&seed=42&factionVariant=beta&frontiers=1
   // Query params take precedence over the VUE_APP_* build-time env vars.
   // Supported: players (2-5), seed, layout (standard|balanced|xshape),
-  // auction (choose-bid|bid-while-choosing),
+  // auction (none|silent|choose-bid|bid-while-choosing), banPhase,
   // factionVariant (standard|more-balanced|beta), and the flags
   // randomFactions, advancedRules (alias rotateSectors), customBoardSetup,
   // frontiers, lostFleet. Alternatively, ?state=<base64url-json> boots
@@ -102,11 +116,15 @@ function launchSelfContained(selector = "#app", debug = true) {
   const search = typeof window !== "undefined" ? window.location.search : "";
   const { moves, options, players, seed } = parseSelfContainedSetup(search, process.env);
   const offlineMode = isOfflineGameMode(search);
-  const startingNewOfflineGame = offlineMode && isNewOfflineGame(search);
+  const offlineGameId = offlineMode ? offlineGameIdFromSearch(search) : null;
   console.log("self-contained game setup:", { players, seed, ...options });
 
   if (offlineMode) {
     requestPersistentOfflineStorage().catch(() => undefined);
+    if (!offlineGameId && typeof window !== "undefined") {
+      window.location.replace("?offline=1");
+      return;
+    }
   }
 
   let engine: Engine;
@@ -117,10 +135,18 @@ function launchSelfContained(selector = "#app", debug = true) {
   try {
     const initialLoad = parseLoadFromQuery(search);
     const scenarioId = parseScenarioFromQuery(search);
-    const stored = offlineMode && !startingNewOfflineGame && !initialLoad && !scenarioId ? readOfflineGame() : null;
+    const stored =
+      offlineMode && offlineGameId && !initialLoad && !scenarioId ? readStoredOfflineGame(offlineGameId) : null;
 
     if (stored?.error) {
       console.warn(stored.error);
+    }
+
+    if (offlineMode && !initialLoad && !scenarioId && !stored?.save) {
+      if (typeof window !== "undefined") {
+        window.location.replace("?offline=1");
+      }
+      return;
     }
 
     if (stored?.save) {
@@ -142,6 +168,13 @@ function launchSelfContained(selector = "#app", debug = true) {
       initialDisplayEngine = engine;
     }
   } catch (error) {
+    if (offlineMode) {
+      console.error("could not restore offline game", error);
+      if (typeof window !== "undefined") {
+        window.location.replace("?offline=1");
+      }
+      return;
+    }
     console.error("could not load state from URL, falling back to fresh self-contained setup", error);
     engine = new Engine([`init ${players} ${seed}`, ...moves], options);
     initialDisplayEngine = engine;
@@ -152,10 +185,10 @@ function launchSelfContained(selector = "#app", debug = true) {
   }
 
   const persistOfflineGame = (pendingMove = "") => {
-    if (!offlineMode) {
+    if (!offlineMode || !offlineGameId) {
       return;
     }
-    const result = writeOfflineGame(engine, pendingMove);
+    const result = writeStoredOfflineGame(offlineGameId, engine, pendingMove);
     announceOfflineGameSave(result);
     if (result.error) {
       console.error(result.error);
@@ -164,14 +197,6 @@ function launchSelfContained(selector = "#app", debug = true) {
 
   if (offlineMode && (!restoredOfflineSave || rewriteRestoredSave)) {
     persistOfflineGame(restoredPendingMove);
-  }
-
-  // `new=1` is a one-shot marker. Keeping the stable setup parameters in the URL is useful for
-  // export/debugging, but a refresh must resume the save rather than replace it with another game.
-  if (startingNewOfflineGame && typeof window !== "undefined") {
-    const cleanUrl = new URL(window.location.href);
-    cleanUrl.searchParams.delete("new");
-    window.history.replaceState({}, "", cleanUrl.toString());
   }
 
   const unsub = emitter.store.subscribeAction(({ payload, type }) => {

@@ -2,6 +2,7 @@ import launchHosted from "./hosted";
 import { startHostedInstallPrompt } from "./hosted/install-prompt";
 import { registerServiceWorker, registerServiceWorkerNavigationListener } from "./hosted/push";
 import launch from "./launcher";
+import launchOffline from "./offline";
 import launchSelfContained from "./self-contained";
 
 console.log(process.env);
@@ -29,8 +30,10 @@ if (offlineLobbyFallback && typeof window !== "undefined") {
   window.history.replaceState({}, "", offlineUrl.toString());
 }
 
-if (params.has("offline") || offlineLobbyFallback) {
+if ((params.has("offline") || offlineLobbyFallback) && params.get("game")) {
   launchSelfContained();
+} else if (params.has("offline") || offlineLobbyFallback) {
+  launchOffline();
 } else if (
   params.get("game") ||
   params.has("lobby") ||
