@@ -1082,7 +1082,9 @@ export default class Player extends EventEmitter {
       case Condition.None:
         return 1;
       case Condition.Mine:
-        return this.data.buildings[Building.Mine] + this.data.lostPlanet;
+        // Asteroid/Protoplanet-themed Artifact tokens also count as a mine, same as the Lost Planet
+        // (RULES_CLARIFICATIONS.md §G6), even though no mine is physically placed for either.
+        return this.data.buildings[Building.Mine] + this.data.lostPlanet + this.data.artifactPlanetTypes.length;
       case Condition.TradingStation:
         return this.data.buildings[Building.TradingStation];
       case Condition.ResearchLab:
@@ -1115,7 +1117,9 @@ export default class Player extends EventEmitter {
         // for the base game (no Deep Space hexes exist there).
         return uniq(
           this.data.occupied
-            .filter((hex) => hex.colonizedBy(this.player) && classifySectorId(hex.data.sector) === LostFleetSectorType.Space)
+            .filter(
+              (hex) => hex.colonizedBy(this.player) && classifySectorId(hex.data.sector) === LostFleetSectorType.Space
+            )
             .map((hex) => hex.data.sector)
         ).length;
       case Condition.Structure:
@@ -1146,7 +1150,11 @@ export default class Player extends EventEmitter {
           this.data.gaiaformersUsedForOther
         );
       case Condition.Asteroid:
-        return this.ownedPlanets.filter((hex) => hex.data.planet === Planet.Asteroid).length;
+        // Include the Asteroid-themed Artifact token's virtual mine (§G6) alongside real owned Asteroid hexes.
+        return (
+          this.ownedPlanets.filter((hex) => hex.data.planet === Planet.Asteroid).length +
+          this.data.artifactPlanetTypes.filter((planet) => planet === Planet.Asteroid).length
+        );
       case Condition.DeepSpaceSector:
         return colonizedDeepSpaceSectorCount(this.ownedPlanets);
       case Condition.PlanetaryInstituteAcademyDistance: {

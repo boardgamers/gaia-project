@@ -1,7 +1,18 @@
 {
-  "version": "5.34.1",
-  "releasedAt": "2026-07-18",
+  "version": "5.34.2",
+  "releasedAt": "2026-07-19",
   "entries": [
+    {
+      "version": "5.34.2",
+      "releasedAt": "2026-07-19",
+      "kind": "fix",
+      "title": "Artifact mine-counting fix",
+      "impact": "",
+      "changes": [
+        "The 7 VP Asteroid/Protoplanet Artifact tokens now correctly count as an extra mine for mine-counting scoring (adv tech tiles like VP-per-mine, VP-per-Asteroid, and the most-Asteroids final scoring tile), matching how the Lost Planet already counted."
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.34.1",
       "releasedAt": "2026-07-18",

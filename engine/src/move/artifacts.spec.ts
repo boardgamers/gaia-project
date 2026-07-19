@@ -6,6 +6,7 @@ import {
   ArtifactToken,
   Building,
   Command,
+  Condition,
   Faction,
   Federation,
   Phase,
@@ -345,6 +346,36 @@ describe("Artifact token effects (RULES_CLARIFICATIONS.md §G6)", () => {
 
     // 7 VP from the artifact itself + 3 VP from the "new planet type" round scoring bonus
     expect(player.data.victoryPoints).to.equal(beforeVp + 7 + 3);
+  });
+
+  it("Asteroid: counts as an extra mine for mine-counting scoring (e.g. adv tech's VP-per-mine), same as the Lost Planet (RULES_CLARIFICATIONS.md §G6)", () => {
+    const engine = createLostFleetRoundMoveEngine(3);
+    const player = engine.player(PlayerEnum.Player1);
+    engine.tiles.artifacts = [ArtifactToken.Asteroid];
+
+    const beforeMines = player.eventConditionCount(Condition.Mine);
+    const beforeAsteroids = player.eventConditionCount(Condition.Asteroid);
+
+    const command = availableArtifactTokenCommand(engine, PlayerEnum.Player1);
+    moveChooseArtifactToken(engine, command, PlayerEnum.Player1, ArtifactToken.Asteroid);
+
+    expect(player.eventConditionCount(Condition.Mine)).to.equal(beforeMines + 1);
+    expect(player.eventConditionCount(Condition.Asteroid)).to.equal(beforeAsteroids + 1);
+  });
+
+  it("Protoplanet: counts as an extra mine for mine-counting scoring, but not for the Asteroid-specific count", () => {
+    const engine = createLostFleetRoundMoveEngine(3);
+    const player = engine.player(PlayerEnum.Player1);
+    engine.tiles.artifacts = [ArtifactToken.Protoplanet];
+
+    const beforeMines = player.eventConditionCount(Condition.Mine);
+    const beforeAsteroids = player.eventConditionCount(Condition.Asteroid);
+
+    const command = availableArtifactTokenCommand(engine, PlayerEnum.Player1);
+    moveChooseArtifactToken(engine, command, PlayerEnum.Player1, ArtifactToken.Protoplanet);
+
+    expect(player.eventConditionCount(Condition.Mine)).to.equal(beforeMines + 1);
+    expect(player.eventConditionCount(Condition.Asteroid)).to.equal(beforeAsteroids);
   });
 
   it("Protoplanet: does not re-trigger the planet3 round scoring bonus if already colonized via a mine", () => {

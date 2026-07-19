@@ -183,7 +183,9 @@ describe("Player", () => {
 
     it("should grant Darkanians 2 credits and 1 knowledge only for the first colonization in each Space/Deep Space sector", () => {
       const map = new SpaceMap(2, "darkanians-sector-reward", false, "standard", true);
-      const colonizableHexes = [...map.grid.values()].filter((hex) => hex.data.planet !== Planet.Empty && !hex.data.building);
+      const colonizableHexes = [...map.grid.values()].filter(
+        (hex) => hex.data.planet !== Planet.Empty && !hex.data.building
+      );
       const spaceGroups = new Map<string, GaiaHex[]>();
       const deepSpaceGroups = new Map<string, GaiaHex[]>();
 
@@ -200,14 +202,18 @@ describe("Player", () => {
 
       const sameSpaceSectorGroups = [...spaceGroups.values()].filter((group) => group.length >= 2);
       const prePiSector = sameSpaceSectorGroups[0];
-      const rewardedSpaceSector = sameSpaceSectorGroups.find((group) => group[0].data.sector !== prePiSector[0].data.sector);
+      const rewardedSpaceSector = sameSpaceSectorGroups.find(
+        (group) => group[0].data.sector !== prePiSector[0].data.sector
+      );
       const deepSpaceSector = [...deepSpaceGroups.values()].find((group) => group.length >= 2);
       const interspaceHex = colonizableHexes.find(
         (hex) => classifySectorId(hex.data.sector) === LostFleetSectorType.Interspace
       );
 
       expect(prePiSector, "need a Space sector with at least 2 colonizable hexes").to.not.equal(undefined);
-      expect(rewardedSpaceSector, "need a second Space sector with at least 2 colonizable hexes").to.not.equal(undefined);
+      expect(rewardedSpaceSector, "need a second Space sector with at least 2 colonizable hexes").to.not.equal(
+        undefined
+      );
       expect(deepSpaceSector, "need a Deep Space tile with at least 2 colonizable hexes").to.not.equal(undefined);
       expect(interspaceHex, "need a colonizable Interspace hex").to.not.equal(undefined);
 
@@ -256,15 +262,42 @@ describe("Player", () => {
       player.faction = Faction.Terrans;
 
       player.data.occupied.push(
-        new GaiaHex(0, 0, { sector: "s1", planet: Planet.Asteroid, player: PlayerEnum.Player1, building: Building.Mine }),
+        new GaiaHex(0, 0, {
+          sector: "s1",
+          planet: Planet.Asteroid,
+          player: PlayerEnum.Player1,
+          building: Building.Mine,
+        }),
         new GaiaHex(1, -1, {
           sector: "s2",
           planet: Planet.Asteroid,
           player: PlayerEnum.Player1,
           building: Building.TradingStation,
         }),
-        new GaiaHex(2, -2, { sector: "s3", planet: Planet.Protoplanet, player: PlayerEnum.Player1, building: Building.Mine })
+        new GaiaHex(2, -2, {
+          sector: "s3",
+          planet: Planet.Protoplanet,
+          player: PlayerEnum.Player1,
+          building: Building.Mine,
+        })
       );
+
+      expect(player.finalCount(FinalTile.Asteroid)).to.equal(2);
+    });
+
+    it("should count the Asteroid-themed Artifact token's virtual mine alongside real owned Asteroids (RULES_CLARIFICATIONS.md §G6)", () => {
+      const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
+      player.faction = Faction.Terrans;
+
+      player.data.occupied.push(
+        new GaiaHex(0, 0, {
+          sector: "s1",
+          planet: Planet.Asteroid,
+          player: PlayerEnum.Player1,
+          building: Building.Mine,
+        })
+      );
+      player.data.artifactPlanetTypes.push(Planet.Asteroid);
 
       expect(player.finalCount(FinalTile.Asteroid)).to.equal(2);
     });
@@ -369,7 +402,12 @@ describe("Player", () => {
       player.faction = Faction.Terrans;
 
       player.data.occupied.push(
-        new GaiaHex(0, 0, { sector: "s1", planet: Planet.Terra, player: PlayerEnum.Player1, building: Building.Academy1 })
+        new GaiaHex(0, 0, {
+          sector: "s1",
+          planet: Planet.Terra,
+          player: PlayerEnum.Player1,
+          building: Building.Academy1,
+        })
       );
 
       expect(player.finalCount(FinalTile.PlanetaryInstituteAcademyDistance)).to.equal(0);
