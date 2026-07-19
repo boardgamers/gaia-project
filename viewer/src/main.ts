@@ -3,6 +3,7 @@ import { startHostedInstallPrompt } from "./hosted/install-prompt";
 import { registerServiceWorker, registerServiceWorkerNavigationListener } from "./hosted/push";
 import launch from "./launcher";
 import launchOffline from "./offline";
+import { shouldFallBackToOffline } from "./route-decision";
 import launchSelfContained from "./self-contained";
 
 console.log(process.env);
@@ -21,7 +22,7 @@ registerServiceWorkerNavigationListener();
 // the primary entry point.
 const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
 const offlineLobbyFallback =
-  typeof navigator !== "undefined" && navigator.onLine === false && (params.toString() === "" || params.has("lobby"));
+  typeof navigator !== "undefined" && shouldFallBackToOffline(params.toString(), navigator.onLine);
 
 if (offlineLobbyFallback && typeof window !== "undefined") {
   const offlineUrl = new URL(window.location.href);

@@ -5,10 +5,10 @@
 > labeled historical rerun log. Do not load this 5,000-line history cover to cover. Read the other
 > ledgers and historical handoffs only when the task touches their subject, following `AGENTS.md`.
 > If the user supplied a concrete task, proceed with it rather than asking "what next?".
-> Last updated: **2026-07-19** (#105 shipped: the 7 VP Asteroid/Protoplanet Artifact tokens now
-> correctly count as an extra mine for `Condition.Mine`/`Condition.Asteroid` scoring, same as the
-> Lost Planet, on top of 2026-07-18's four owner-reported "couponing changes" #104; AI task index
-> unchanged).
+> Last updated: **2026-07-19** (#106 shipped: fixed a pinned-URL/PWA `?lobby=1` load getting stuck
+> bouncing back to the offline lobby with no escape via the "Online lobby" link, on top of #105's
+> Artifact mine-counting fix and 2026-07-18's four owner-reported "couponing changes" #104; AI task
+> index unchanged).
 
 ## Working agreements (read every session, not optional)
 
@@ -4069,25 +4069,25 @@ opacity: 0.7 }` wrapper that also diluted the X itself, while `BoardAction.vue`'
       `pnpm test`: 440 passing/31 failing both before and after (identical failing-test names,
       confirmed via `git stash` on the same run - all pre-existing, none touch these components).
 
-                                                                 **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
-                                                                 pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
-                                                                 desktop mice, which was never the actual bug - only touch devices raced hover against the
-                                                                 click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
-                                                                 `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
-                                                                 `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
-                                                                 shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
-                                                                 `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
-                                                                 directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
-                                                                 `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
-                                                                 config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
-                                                                 on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
-                                                                 desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
-                                                                 is what actually closed that race originally. Verified live via Playwright with two device
-                                                                 profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
-                                                                 tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
-                                                                 context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
-                                                                 a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
-                                                                 still 440 passing/31 failing, same pre-existing set.
+                                                                       **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
+                                                                       pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
+                                                                       desktop mice, which was never the actual bug - only touch devices raced hover against the
+                                                                       click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
+                                                                       `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
+                                                                       `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
+                                                                       shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
+                                                                       `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
+                                                                       directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
+                                                                       `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
+                                                                       config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
+                                                                       on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
+                                                                       desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
+                                                                       is what actually closed that race originally. Verified live via Playwright with two device
+                                                                       profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
+                                                                       tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
+                                                                       context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
+                                                                       a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
+                                                                       still 440 passing/31 failing, same pre-existing set.
 
 102.  ✅ **Offline pass-and-play with automatic local recovery and airplane-mode launch
       (2026-07-17, v5.31.0).** The viewer now has a dedicated `?offline=1` hot-seat mode, linked from
@@ -4261,6 +4261,28 @@ components/PlayerBoard/BuildingGroup.spec.ts` (X-mark presence/absence). Engine 
       658/658 engine tests pass, `tsc --noEmit` clean. Changelog entry added via
       `update-viewer-release.js` (dev-only, no user-facing wording — see changelog discipline in
       Working agreements).
+106.  ✅ **Pinned/PWA URL trapped in offline lobby, fixed (2026-07-19, v5.34.3), user-reported (Fadi).**
+      Report: using the pinned URL always landed directly in the offline lobby, and clicking "Online
+      lobby" did nothing. Root cause: the PWA manifest's `start_url` is `/?lobby=1`
+      (`viewer/public/manifest.json`) — the exact same URL the in-app "Online lobby" link
+      (`OfflineLobby.vue`) also navigates to. `main.ts`'s `offlineLobbyFallback` (added with #102's
+      offline pass-and-play) treated `params.has("lobby")` the same as a truly bare/ambient page load
+      when deciding whether to silently rewrite the URL to `?offline=1` — so a `navigator.onLine`
+      value stuck reporting `false` (a well-known unreliable API, already flagged for the opposite
+      misreport in #102's `sw.js` redirect) meant _every_ load of the pinned URL, and every click of
+      "Online lobby," re-triggered the same fallback and bounced straight back to the offline lobby,
+      with no way to leave via the UI. Fixed by only falling back on a genuinely ambient load (no
+      params at all) — an explicit `?lobby=1` navigation is never second-guessed. Extracted the
+      decision into a new pure, tested module (`viewer/src/route-decision.ts`,
+      `shouldFallBackToOffline`) rather than leaving it as an inline, untestable condition in
+      `main.ts`, since `main.ts` itself has module-level side effects that make it impractical to
+      exercise directly in a unit test. New `route-decision.spec.ts` (5 cases: bare+offline,
+      bare+online, bare+onLine-undefined, `?lobby=1`+offline, `?game=x`+offline). Verified no
+      regression via a true clean-baseline diff (`git stash -u`): 487 passing/31 failing before this
+      change, 492 passing/31 failing after (the +5 are the new tests; the 31 failures are the same
+      pre-existing set documented at #102/#103) — same failure count both before and after. Production
+      build (`vue-cli-service build`) succeeds. Changelog entry added via `update-viewer-release.js`
+      (user-facing, since this is a real reported bug affecting real usage).
 
 ## Still MISSING — only one art-only item left
 

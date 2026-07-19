@@ -1,7 +1,21 @@
 {
-  "version": "5.34.2",
+  "version": "5.34.3",
   "releasedAt": "2026-07-19",
   "entries": [
+    {
+      "version": "5.34.3",
+      "releasedAt": "2026-07-19",
+      "kind": "update",
+      "title": "Fix pinned/PWA URL trapping in offline lobby",
+      "impact": "",
+      "changes": [
+        "Fixed a bug where the pinned home-screen shortcut (and the in-app \"Online lobby\" link) could get stuck bouncing back to the offline lobby instead of opening the online lobby",
+        "main.ts's offlineLobbyFallback no longer treats an explicit ?lobby=1 navigation (the PWA manifest's start_url and the in-app Online lobby link) as ambiguous with a genuinely ambient bare-URL load; a stuck navigator.onLine=false no longer traps the user in the offline lobby with no way out. Extracted the decision into a new pure/tested module, viewer/src/route-decision.ts"
+      ],
+      "userChanges": [
+        "Fixed a bug where the pinned home-screen shortcut (and the in-app \"Online lobby\" link) could get stuck bouncing back to the offline lobby instead of opening the online lobby"
+      ]
+    },
     {
       "version": "5.34.2",
       "releasedAt": "2026-07-19",
