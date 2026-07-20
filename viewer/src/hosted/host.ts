@@ -629,7 +629,11 @@ export class HostedGameHost {
     }
     const seat = this.engine.playerToMove;
     const autoChargePower = this.autoDecide.getAutoChargePower();
-    if (autoChargePower !== "ask" && this.autoDecide.isMySeat(seat)) {
+    // Call this even when the preference is "ask": autoDecideChargePower still auto-resolves the
+    // engine's always-safe deterministic leech decisions (a passed player's pointless last-round
+    // charge) so nobody has to wait on them, while any genuine leech is still left for a manual
+    // decision. See logic/auto-decide.ts's doc comment.
+    if (this.autoDecide.isMySeat(seat)) {
       const move = autoDecideChargePower(this.clone(), autoChargePower, this.autoDecide.isMySeat);
       if (move) {
         // Not `submitMove` - see applyAndCommit's own doc comment on why that would deadlock here.

@@ -1,4 +1,4 @@
-import Engine, { Command } from "@gaia-project/engine";
+import Engine, { Command, Round } from "@gaia-project/engine";
 import { expect } from "chai";
 import { autoDecideChargePower } from "./auto-decide";
 
@@ -34,6 +34,40 @@ describe("autoDecideChargePower", () => {
     expect(engine.availableCommands.some((c) => c.name === Command.ChargePower || c.name === Command.Decline)).to.equal(
       true
     );
+  });
+
+  it("auto-resolves a passed player's leech in the last round even under the default 'ask' (no wait)", () => {
+    const engine = engineWithPendingLeech();
+    const seat = engine.playerToMove;
+    // The exact reported scenario: this seat has already passed, and it's the last round - charging
+    // can never help (power is unusable at game end, extra charges only cost VP), so the engine
+    // treats it as a non-decision. It must NOT sit as a pending turn everyone has to wait on.
+    (engine as any).round = Round.LastRound;
+    engine.passedPlayers = [seat];
+    const before = engine.moveHistory.length;
+
+    const result = autoDecideChargePower(engine, "ask");
+
+    // Before the fix, "ask" short-circuited before autoMove ran, so this returned null and the
+    // passed player stayed a pending leech turn. Now it's resolved automatically.
+    expect(result).to.be.a("string");
+    expect(engine.moveHistory.length).to.be.greaterThan(before);
+    expect(engine.availableCommands.some((c) => c.name === Command.ChargePower || c.name === Command.Decline)).to.equal(
+      false
+    );
+  });
+
+  it("still asks a NON-passed player's leech in the last round under 'ask' (only passed players auto-resolve)", () => {
+    const engine = engineWithPendingLeech();
+    // Last round, but this seat has NOT passed - a real leech decision the human still owns.
+    (engine as any).round = Round.LastRound;
+    const before = engine.moveHistory.length;
+
+    const result = autoDecideChargePower(engine, "ask");
+
+    expect(result).to.equal(null);
+    expect(engine.moveHistory.length).to.equal(before);
+    expect(engine.availableCommands.some((c) => c.name === Command.ChargePower)).to.equal(true);
   });
 
   it("does nothing when the pending seat is not eligible (not one of the local user's seats)", () => {
@@ -76,9 +110,7 @@ describe("autoDecideChargePower", () => {
 
   it("auto-accepts a leech within the chosen power threshold", () => {
     const engine = engineWithPendingLeech();
-    const offer = engine.availableCommands.find(
-      (c) => c.name === Command.ChargePower
-    ) as any;
+    const offer = engine.availableCommands.find((c) => c.name === Command.ChargePower) as any;
     const maxCharge = Math.max(...offer.data.offers.map((o: any) => Number(/(\d+)pw/.exec(o.offer)[1])));
 
     const result = autoDecideChargePower(engine, maxCharge as any);

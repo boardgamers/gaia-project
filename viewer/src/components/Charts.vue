@@ -53,10 +53,6 @@
               </template>
             </b-dropdown>
           </div>
-          <div class="stats-window__spacer" />
-          <div class="stats-window__field stats-window__field--compact">
-            <b-form-checkbox switch size="sm" v-model="compact" @change="loadChart">Compact</b-form-checkbox>
-          </div>
         </div>
         <div id="tooltip" />
         <div class="stats-window__surface">
@@ -117,7 +113,6 @@ type Table = { title: string; header: any[]; items: any[]; descriptions: any[] }
 })
 export default class Charts extends Vue {
   private setup: ChartSetup;
-  private compact = false;
   private chartSelect: ChartSelect = null;
   private chartType: ChartType | null;
   private chartKinds: ChartKindDisplay[][] = [];
@@ -133,7 +128,8 @@ export default class Charts extends Vue {
   // chart-factory.ts/table.ts (which still build the underlying data both views used to share)
   // keep formatting for that branch.
   get chartStyle() {
-    return { type: "table", compact: this.compact, label: "" } as const;
+    // Statistics is always shown compact now (the toggle was removed - owner request).
+    return { type: "table", compact: true, label: "" } as const;
   }
 
   get selects(): ChartSelect[] {
@@ -163,9 +159,6 @@ export default class Charts extends Vue {
   }
 
   mounted() {
-    // Always default to the compact layout (owner request) - previously only auto-enabled on
-    // narrow (<500px) viewports.
-    this.compact = true;
     this.selectSelect(ChartGroup.vp);
   }
 
@@ -176,6 +169,13 @@ export default class Charts extends Vue {
   selectSelect(s: ChartSelect) {
     if (this.chartSelect != s) {
       this.chartSelect = s;
+      // Always open a newly-chosen view on its all-players "Overview" (owner report: picking a view
+      // sometimes "did nothing"). Without this, a per-player/over-time Details selection from the
+      // previous view would carry over - so the new view opened on a single player's drill-down
+      // (e.g. "Victory Points of Gleens") instead of the overview, which looks blank when that
+      // leftover player has little data for the new metric. The Details dropdown visibly resets to
+      // Overview too.
+      this.chartKind = barChartKind;
       this.selectType(this.setup.types(s)?.[0] ?? null, true);
     }
   }
@@ -257,11 +257,6 @@ export default class Charts extends Vue {
     gap: 0.25rem;
   }
 
-  .stats-window__field--compact {
-    justify-content: flex-end;
-    padding-bottom: 0.25rem;
-  }
-
   .stats-window__label {
     font-size: 0.7rem;
     font-weight: 700;
@@ -274,10 +269,6 @@ export default class Charts extends Vue {
   .stats-window__dropdown-toggle {
     min-width: 9rem;
     text-align: left;
-  }
-
-  .stats-window__spacer {
-    flex: 1 1 auto;
   }
 
   .stats-window__surface {

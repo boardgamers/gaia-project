@@ -1,8 +1,10 @@
 import Engine, { AuctionVariant } from "@gaia-project/engine";
 import { render } from "@testing-library/vue";
+import { mount } from "@vue/test-utils";
 import BootstrapVue from "bootstrap-vue";
 import { expect } from "chai";
 import Vue from "vue";
+import endedGame from "../logic/charts/testdata/ended-game/test-case.json";
 import { makeStore } from "../store";
 import Charts from "./Charts.vue";
 
@@ -72,5 +74,42 @@ describe("Charts", () => {
     expect(tabLinks[1].classList.contains("active"), "Silent Auction tab should not be active by default").to.equal(
       false
     );
+  });
+
+  it("opens every newly-picked view on its all-players Overview, even after drilling into one player", async () => {
+    const engine = new Engine((endedGame as any).moveHistory, (endedGame as any).options, null, true);
+    const store = makeStore();
+    store.commit("receiveData", engine);
+    const wrapper = mount(Charts, { store });
+    await Vue.nextTick();
+    const vm: any = wrapper.vm;
+
+    vm.selectSelect("Buildings");
+    await Vue.nextTick();
+    // Drill into a single player's breakdown (the per-player Details group).
+    const singlePlayerKind = vm.chartKinds[1][0].kind;
+    vm.selectKind(singlePlayerKind);
+    await Vue.nextTick();
+    expect(vm.table.title).to.not.contain("all players");
+
+    // Switching the view must reset the Details back to the all-players Overview, not carry the
+    // single-player drill-down over into the new view.
+    vm.selectSelect("Planets");
+    await Vue.nextTick();
+    expect(vm.chartKind).to.equal("bar");
+    expect(vm.table.title).to.contain("all players");
+
+    wrapper.destroy();
+  });
+
+  it("no longer renders a Compact toggle (statistics is always compact)", async () => {
+    const engine = new Engine(["init 2 djfjjv4k", "p1 faction terrans", "p2 faction itars"]);
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(Charts, { store });
+    await Vue.nextTick();
+
+    expect(container.textContent).to.not.contain("Compact");
   });
 });

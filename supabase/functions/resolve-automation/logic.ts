@@ -207,13 +207,17 @@ export async function resolveOneAutomatedTurn(
 
 /**
  * Phase 2: a pending charge/leech decision (Phase.RoundLeech) for `seat`. Reads that seat's stored
- * auto_charge preference; 'ask' (the default) is a no-op - wait for a human, leaving any queued
- * premove untouched behind the leech. Otherwise resolves exactly ONE auto-charge turn via a single
- * `engine.autoMove()` call (never loop it here: looping and committing a multi-turn ". "-joined
- * string as one `moves` row would break the one-row-per-turn / seq invariant - see
- * PREMOVE_PLAN.md's finding #8 in the RoundLeech section of §4c). If more leech remains for this
- * same seat afterward, the commit's own current_seat "change" (it may stay the same seat - see
- * host.ts's tempCurrentPlayer handling) re-fires the trigger for another invocation.
+ * auto_charge preference and resolves exactly ONE auto-charge turn via a single `engine.autoMove()`
+ * call (never loop it here: looping and committing a multi-turn ". "-joined string as one `moves`
+ * row would break the one-row-per-turn / seq invariant - see PREMOVE_PLAN.md's finding #8 in the
+ * RoundLeech section of §4c). If more leech remains for this same seat afterward, the commit's own
+ * current_seat "change" (it may stay the same seat - see host.ts's tempCurrentPlayer handling)
+ * re-fires the trigger for another invocation.
+ *
+ * We run autoMove even for the 'ask' (default) preference: the engine still auto-resolves its
+ * always-safe deterministic decisions there - chiefly a passed player's pointless charge in the
+ * last round, which otherwise sat as a pending turn nobody was around to clear. A genuine leech an
+ * 'ask' user must decide by hand produces nothing here and stays a 'leech-ask' no-op.
  */
 async function resolveLeech(
   engineModule: EngineModule,
@@ -226,9 +230,6 @@ async function resolveLeech(
   const { Engine, Phase, parseAutoChargePreference } = engineModule;
 
   const pref = await backend.fetchAutoCharge(gameId, seat);
-  if (pref === "ask") {
-    return { outcome: "leech-ask" };
-  }
 
   const initLine = `init ${game.player_count} ${game.seed}`;
   const clone = new Engine([initLine, ...ordered.map((m) => m.move)], engineOptions(game));
@@ -237,9 +238,10 @@ async function resolveLeech(
 
   const produced = clone.autoMove();
   if (!produced || !clone.newTurn) {
-    // Defensive - shouldn't normally happen (autoMove only returns true after completing a turn),
-    // but leave the game state alone rather than guess if the engine ever surprises us here.
-    return { outcome: "leech-auto-decide-produced-nothing" };
+    // Nothing auto-decided. For an 'ask' user that's the normal "this is a real leech, wait for a
+    // human" case; for an opted-in user it's the defensive "autoMove only returns true after a full
+    // turn, so this shouldn't happen" case. Either way, leave the game state untouched.
+    return pref === "ask" ? { outcome: "leech-ask" } : { outcome: "leech-auto-decide-produced-nothing" };
   }
 
   const move = clone.moveHistory[clone.moveHistory.length - 1];

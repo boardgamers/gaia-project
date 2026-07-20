@@ -11,8 +11,17 @@ import { AutoCharge } from "@gaia-project/engine/src/player";
  * whichever seat is currently due to act, as long as that seat passes `isEligibleSeat` (in hosted
  * mode: one of the local user's own seats - never decide on a stranger's behalf), and lets
  * `autoMove()` chain through as many auto-decidable leech interrupts as apply. Stops the moment a
- * real decision is needed, the current seat isn't eligible, or the preference is "ask" (the
- * default - nothing auto-decides unless a user opts in).
+ * real decision is needed or the current seat isn't eligible.
+ *
+ * We deliberately run `autoMove()` even when the preference is "ask" (the default). "Ask" is NOT
+ * "auto-decide nothing": the engine's charge rules include a handful of decisions that are never a
+ * real choice regardless of preference - chiefly a player who has already PASSED being offered a
+ * charge in the LAST round, where the power can never be spent and any charge beyond the first only
+ * costs VP (engine/src/auto-charge.ts's `askOrDeclineForPassedPlayer`). `autoMove()` resolves exactly
+ * those (recording an ordinary decline/charge move - fully replay-safe, nothing about the move
+ * sequence changes), and returns false for any genuine leech, which an "ask" user still decides by
+ * hand. Without this, a passed player in round 6 was pointlessly made a pending turn everyone had to
+ * wait on.
  *
  * Mutates `engine` directly (via `Engine.autoMove()`) - callers that must go through their own
  * commit/broadcast pipeline (e.g. hosted mode's Supabase-backed commit) should call this on a
@@ -35,10 +44,6 @@ export function autoDecideChargePower(
   autoChargePower: AutoCharge,
   isEligibleSeat: (seat: number) => boolean = () => true
 ): string | null {
-  if (autoChargePower === "ask") {
-    return null;
-  }
-
   const before = engine.moveHistory.length;
   let iterations = 0;
   while (engine.playerToMove !== undefined && isEligibleSeat(engine.playerToMove) && iterations++ < 20) {
