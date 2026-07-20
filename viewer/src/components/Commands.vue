@@ -274,6 +274,7 @@ import RichTextView from "./Resources/RichTextView.vue";
 import StickyResourceBar from "./StickyResourceBar.vue";
 import { richText, RichText, richTextPlanet } from "../graphics/rich-text";
 import { chargePowerToPay } from "../logic/utils";
+import { zoomCompensationTransform } from "../logic/zoom-compensation";
 import { factionColor } from "../graphics/utils";
 import { supportsHoverTooltips } from "../logic/tooltip";
 
@@ -804,43 +805,21 @@ export default class Commands extends Vue implements CommandController {
     // ResizeObserver below (covers #move-buttons first becoming the fixed sticky bar, e.g. once
     // round 1 starts, which isn't itself a visualViewport event).
     const vv = window.visualViewport;
+    // All the branching (is it the fixed layout? is the page actually zoomed - tolerance, NOT an
+    // exact `scale === 1`, so a post-pinch scale residue can't strand a stale offset and float the
+    // bar? is the offset a no-op?) lives in the unit-tested `zoomCompensationTransform` helper.
     const updateZoomTransform = () => {
       if (!moveButtons || !vv) {
         return;
       }
-      // Only the narrow/mobile sticky layout is ever `position: fixed` - on wider viewports
-      // #move-buttons renders normally in-flow, where this counter-transform doesn't apply.
-      if (!this.showStickyMobileBar) {
-        moveButtons.style.transform = "";
-        return;
-      }
-      const scale = vv.scale || 1;
-      // Only ever compensate for genuine pinch-zoom (scale !== 1). `vv.offsetTop`/`vv.height` also
-      // shift transiently at scale === 1 - iOS's address bar hiding/showing during an ordinary
-      // scroll, and elastic overscroll bounce at the very top/bottom of the page - both fire
-      // `visualViewport` resize/scroll events with a nonzero offset despite no real zoom. Applying
-      // `translate(x, y) scale(1)` in that case is exactly the bug: the fixed bar visibly detaches
-      // and floats mid-screen on scroll, or "elastic jumps" at the scroll extremes. Gating on scale
-      // alone (not also x/y) keeps the bar genuinely fixed whenever the user isn't actually zoomed.
-      if (scale === 1) {
-        moveButtons.style.transform = "";
-        return;
-      }
-      const x = vv.offsetLeft;
-      const y = vv.offsetTop + vv.height - window.innerHeight;
-      // Any non-"none" transform on this element - even a no-op identity one - makes it a new
-      // CSS containing block for `position: fixed` descendants (spec behavior, not a bug), which
-      // broke the auto-leech dropdown's `positionFixed: true` Popper menu: Popper computed its
-      // position assuming true viewport-relative fixed positioning, but the browser then rendered
-      // it relative to *this* (transformed) ancestor instead, landing the menu mid-page and
-      // clipped down to a sliver. Only set a real transform while actually zoomed/panned (the
-      // no-op identity case is by far the common one, so skip it entirely rather than applying
-      // "translate(0px, 0px) scale(1)").
-      if (x === 0 && y === 0) {
-        moveButtons.style.transform = "";
-        return;
-      }
-      moveButtons.style.transform = `translate(${x}px, ${y}px) scale(${1 / scale})`;
+      moveButtons.style.transform = zoomCompensationTransform({
+        isStickyMobile: this.showStickyMobileBar,
+        scale: vv.scale || 1,
+        offsetLeft: vv.offsetLeft,
+        offsetTop: vv.offsetTop,
+        height: vv.height,
+        innerHeight: window.innerHeight,
+      });
     };
 
     if (moveButtons && typeof ResizeObserver !== "undefined") {
