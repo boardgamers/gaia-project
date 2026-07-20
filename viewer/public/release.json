@@ -1,7 +1,29 @@
 {
-  "version": "5.34.3",
-  "releasedAt": "2026-07-19",
+  "version": "5.35.0",
+  "releasedAt": "2026-07-20",
   "entries": [
+    {
+      "version": "5.35.0",
+      "releasedAt": "2026-07-20",
+      "kind": "update",
+      "title": "Live games, offline lobby refresh, and statistics polish",
+      "impact": "",
+      "changes": [
+        "A pulsing “Live” badge now shows under a game's name when everyone in a game you're in is online at the same time.",
+        "The offline games screen was redesigned to match the online lobby, its storage notes moved into an info button, and it now opens from the settings menu.",
+        "The statistics “Building” category is now named “Protoplanets”.",
+        "Statistics are always shown in the compact layout now (the Compact toggle was removed).",
+        "Statistics: the “Gleens” victory-point column now only appears when Gleens is actually in the game instead of always showing as an empty column.",
+        "Statistics: choosing a view now always opens its all-players overview, instead of sometimes carrying over a previous single-player drill-down and appearing to do nothing.",
+        "A player who has passed in the last round no longer creates a power-charge decision everyone has to wait on - the always-safe auto-decline now runs even under the default 'ask' preference, across the hosted client, offline play, and the server automation."
+      ],
+      "userChanges": [
+        "A pulsing “Live” badge now shows under a game's name when everyone in a game you're in is online at the same time.",
+        "The offline games screen was redesigned to match the online lobby, its storage notes moved into an info button, and it now opens from the settings menu.",
+        "The statistics “Building” category is now named “Protoplanets”.",
+        "Statistics are always shown in the compact layout now (the Compact toggle was removed)."
+      ]
+    },
     {
       "version": "5.34.3",
       "releasedAt": "2026-07-19",
