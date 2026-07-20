@@ -1,7 +1,21 @@
 {
-  "version": "5.35.0",
+  "version": "5.35.1",
   "releasedAt": "2026-07-20",
   "entries": [
+    {
+      "version": "5.35.1",
+      "releasedAt": "2026-07-20",
+      "kind": "update",
+      "title": "My games filter fix and in-game Live badge",
+      "impact": "",
+      "changes": [
+        "My games no longer showed a game after it finished (it should only appear under Finished)",
+        "The in-game top banner now shows the same pulsing “Live” badge under the game's name when everyone in the game is online at once"
+      ],
+      "userChanges": [
+        "The in-game top banner now shows the same pulsing “Live” badge under the game's name when everyone in the game is online at once"
+      ]
+    },
     {
       "version": "5.35.0",
       "releasedAt": "2026-07-20",

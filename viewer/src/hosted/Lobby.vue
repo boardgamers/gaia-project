@@ -452,7 +452,7 @@ export default Vue.extend({
       return this.sortGames((this.games as any[]).filter((game) => game.status === "active" && !this.isMyGame(game)));
     },
     myGames(): any[] {
-      return this.sortGames((this.games as any[]).filter((game) => this.isMyGame(game)));
+      return this.sortGames((this.games as any[]).filter((game) => this.isMyGame(game) && game.status !== "finished"));
     },
     finishedGames(): any[] {
       return this.sortGames((this.games as any[]).filter((game) => game.status === "finished"));

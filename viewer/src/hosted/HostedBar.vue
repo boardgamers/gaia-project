@@ -5,7 +5,10 @@
   >
     <span class="hosted-bar__title text-truncate">
       <a href="?lobby=1&amp;tab=mine" aria-label="Back to my games" class="hosted-bar__back">&larr;</a>
-      <strong class="ml-2">{{ gameName || "Unnamed game" }}</strong>
+      <span class="d-flex flex-column ml-2 hosted-bar__name-col">
+        <strong class="text-truncate">{{ gameName || "Unnamed game" }}</strong>
+        <span v-if="isLive" class="game-bar__live"> <span class="game-bar__live-dot"></span>Live </span>
+      </span>
     </span>
     <template v-if="finished">
       <b-badge variant="secondary">Game finished</b-badge>
@@ -79,6 +82,11 @@ export default Vue.extend({
   props: {
     gameName: { type: String, default: "" },
     finished: { type: Boolean, default: false },
+    // "Live" = every player in this game is online right now (see GameBar.vue's `isLive`, the
+    // reference implementation this mirrors for the lobby's own game list) - computed in hosted.ts
+    // from the same presence roster/player list, since HostedBar has no direct store access to
+    // `host.players` itself.
+    isLive: { type: Boolean, default: false },
     pushBusy: { type: Boolean, default: false },
     pushEnabled: { type: Boolean, default: false },
     abandoned: { type: Boolean, default: false },
@@ -137,6 +145,10 @@ export default Vue.extend({
 
 .hosted-bar__back {
   text-decoration: none;
+}
+
+.hosted-bar__name-col {
+  min-width: 0;
 }
 
 ::v-deep(.hosted-bar__settings-toggle) {

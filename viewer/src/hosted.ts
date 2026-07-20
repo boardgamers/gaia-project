@@ -13,7 +13,7 @@ import Lobby from "./hosted/Lobby.vue";
 import OpenLobbyGame from "./hosted/OpenLobbyGame.vue";
 import PendingApproval from "./hosted/PendingApproval.vue";
 import { disablePushNotifications, enablePushNotifications, isPushEnabled } from "./hosted/push";
-import { trackPresence } from "./hosted/presence";
+import { isOnline, trackPresence } from "./hosted/presence";
 import SignIn from "./hosted/SignIn.vue";
 import { createSupabaseBackend, getSupabaseClient, subscribeMoves, SupabaseClient } from "./hosted/supabase-client";
 import { initTheme } from "./hosted/theme";
@@ -97,6 +97,7 @@ async function mountGameInstance(
     data: {
       gameName: "",
       finished: false,
+      isLive: false,
       pushBusy: false,
       pushEnabled: false,
       abandoned: false,
@@ -169,6 +170,7 @@ async function mountGameInstance(
     (presence: unknown) => {
       chatNotes.presenceState = presence;
       nav.presenceState = presence;
+      updateBarLive();
     }
   );
   cleanups.push(unwatchPresence);
@@ -199,6 +201,7 @@ async function mountGameInstance(
         bar.gameName = host.game?.name ?? "";
         bar.finished = data.phase === "endGame";
         bar.abandoned = !!host.game?.abandoned_at;
+        updateBarLive();
         const turnSeat = data.playerToMove;
         const playerCount = host.game?.player_count ?? 0;
         // Re-lock on every state so a user playing several (but not all) seats
@@ -228,6 +231,26 @@ async function mountGameInstance(
     }
   );
 
+  // Top-bar "Live" badge (mirrors GameBar.vue's `isLive`, the lobby's own reference
+  // implementation): every player seated in this specific game is online right now. Recomputed on
+  // every engine state change (game may finish) and every presence update (below); `host.players`
+  // isn't populated until `host.load()` resolves, so the first real call happens after that.
+  const updateBarLive = () => {
+    const game = host.game;
+    const players = host.players;
+    if (!game || game.status !== "active" || players.length < 2) {
+      bar.isLive = false;
+      return;
+    }
+    const iAmPlaying = players.some((p) => p.user_id === session.user.id);
+    if (!iAmPlaying) {
+      bar.isLive = false;
+      return;
+    }
+    const presence = emitter.store.state.presence;
+    bar.isLive = players.every((p) => !!p.user_id && isOnline(presence, p.user_id));
+  };
+
   const disposeMounted = () => {
     for (const fn of cleanups.splice(0).reverse()) {
       try {
@@ -255,6 +278,7 @@ async function mountGameInstance(
   }
 
   mySeats = host.mySeats(session.user.id, session.user.email);
+  updateBarLive();
 
   // Presence (PROGRESS.md Gaia 9) - the seat->user_id map (for matching a seat's turn-order dot to
   // its presence entry) is only known once host.players is populated by load() above; the presence

@@ -4069,25 +4069,25 @@ opacity: 0.7 }` wrapper that also diluted the X itself, while `BoardAction.vue`'
       `pnpm test`: 440 passing/31 failing both before and after (identical failing-test names,
       confirmed via `git stash` on the same run - all pre-existing, none touch these components).
 
-                                                                       **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
-                                                                       pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
-                                                                       desktop mice, which was never the actual bug - only touch devices raced hover against the
-                                                                       click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
-                                                                       `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
-                                                                       `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
-                                                                       shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
-                                                                       `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
-                                                                       directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
-                                                                       `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
-                                                                       config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
-                                                                       on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
-                                                                       desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
-                                                                       is what actually closed that race originally. Verified live via Playwright with two device
-                                                                       profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
-                                                                       tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
-                                                                       context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
-                                                                       a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
-                                                                       still 440 passing/31 failing, same pre-existing set.
+                                                                             **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
+                                                                             pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
+                                                                             desktop mice, which was never the actual bug - only touch devices raced hover against the
+                                                                             click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
+                                                                             `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
+                                                                             `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
+                                                                             shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
+                                                                             `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
+                                                                             directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
+                                                                             `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
+                                                                             config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
+                                                                             on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
+                                                                             desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
+                                                                             is what actually closed that race originally. Verified live via Playwright with two device
+                                                                             profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
+                                                                             tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
+                                                                             context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
+                                                                             a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
+                                                                             still 440 passing/31 failing, same pre-existing set.
 
 102.  ✅ **Offline pass-and-play with automatic local recovery and airplane-mode launch
       (2026-07-17, v5.31.0).** The viewer now has a dedicated `?offline=1` hot-seat mode, linked from
@@ -4283,6 +4283,28 @@ components/PlayerBoard/BuildingGroup.spec.ts` (X-mark presence/absence). Engine 
       pre-existing set documented at #102/#103) — same failure count both before and after. Production
       build (`vue-cli-service build`) succeeds. Changelog entry added via `update-viewer-release.js`
       (user-facing, since this is a real reported bug affecting real usage).
+107.  ✅ **"My games" no longer leaks finished games; in-game top banner gets its own "Live" badge
+      (2026-07-20, v5.35.1), user-reported.** Two related fixes: (1) `Lobby.vue`'s `myGames` computed
+      (line ~454) filtered only on `isMyGame(game)`, with no status check at all — unlike `activeGames`
+      and `finishedGames`, which are each already status-gated — so a finished game the user had
+      played still showed under "My games" instead of only under "Finished". Fixed by adding a
+      `game.status !== "finished"` guard. New regression test in `Lobby.spec.ts` (a finished game
+      owned by the test's admin user, which the existing `g-finished` fixture never covered — that one
+      belongs to `user-other`). (2) The in-game top banner (`HostedBar.vue`, mounted by `hosted.ts`)
+      had no equivalent of the lobby's own pulsing "Live" badge (`GameBar.vue`'s `isLive`, shipped
+      #106/v5.35.0) even though the same presence roster was already flowing into the same Vuex store
+      (`emitter.store.state.presence`) — it just wasn't read by `HostedBar.vue`. Added an `isLive` prop
+      to `HostedBar.vue` (same markup/global CSS classes as `GameBar.vue`'s badge, so no duplicated
+      styling) and a `updateBarLive()` helper in `hosted.ts` that mirrors `GameBar.vue`'s `isLive` logic
+      (active game, ≥2 seated players, current user among them, every player's `user_id` online per
+      presence) — recomputed on every engine state change (game may finish) and every presence update,
+      with an explicit first call once `host.players` is populated after `host.load()`. New
+      `HostedBar.spec.ts` case asserts the badge shows/hides with the prop. Verified via a clean-
+      baseline diff (`git stash`): 458 passing/31 failing before, 460 passing/31 failing after (same
+      pre-existing failure set as #102/#103/#106) — no regressions. Production build
+      (`vue-cli-service build`) succeeds. Changelog: the Live-badge parity is `user:` (a real, visible
+      new indicator); the My-games filter fix is `dev:` (bug fix, not a new feature) — both added via
+      `update-viewer-release.js` (v5.35.1).
 
 ## Still MISSING — only one art-only item left
 

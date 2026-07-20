@@ -756,6 +756,56 @@ describe("Lobby", () => {
     expect(summaries).to.deep.equal(["2d ago Nevlas form fed."]);
   });
 
+  it("excludes a finished game the current user played from My games, showing it only under Finished", async () => {
+    const myFinishedGame = {
+      id: "g-mine-finished",
+      name: "My finished game",
+      created_by: "user-admin",
+      player_count: 2,
+      options: {},
+      status: "finished",
+      current_seat: null,
+      latest_move_summary: "Terrans pass booster3.",
+      players: [
+        {
+          seat: 0,
+          invited_email: "kim.pham.nguyen2@gmail.com",
+          user_id: "user-admin",
+          display_name: "Admin",
+          faction: "terrans",
+          score: 20,
+        },
+      ],
+    };
+    const { client } = makeClient([...membershipGames, myFinishedGame]);
+    const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    const mineTab = wrapper
+      .findAll("button")
+      .filter((b) => b.text().includes("My games"))
+      .at(0);
+    await mineTab.trigger("click");
+    await Vue.nextTick();
+
+    let titles = wrapper.findAll(".game-bar__title").wrappers.map((node) => node.text());
+    expect(
+      titles.some((t) => t.includes("My finished game")),
+      "a finished game should not appear under My games"
+    ).to.equal(false);
+
+    const finishedTab = wrapper
+      .findAll("button")
+      .filter((b) => b.text().includes("Finished"))
+      .at(0);
+    await finishedTab.trigger("click");
+    await Vue.nextTick();
+
+    titles = wrapper.findAll(".game-bar__title").wrappers.map((node) => node.text());
+    expect(titles.some((t) => t.includes("My finished game"))).to.equal(true);
+  });
+
   it("orders games your-turn first, then by most-recent-move (not longest-waiting)", async () => {
     const games = [
       {

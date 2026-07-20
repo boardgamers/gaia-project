@@ -94,6 +94,20 @@ describe("HostedBar", () => {
     restoreMobile();
   });
 
+  it("shows a Live badge under the game name when isLive is true, and hides it otherwise", () => {
+    const engine = new Engine(["init 2 hosted-bar-live", "p1 faction terrans", "p2 faction hadsch-hallas"]);
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const withLive = render(HostedBar, { props: { finished: false, isLive: true }, store });
+    expect(withLive.getByText("Live")).to.not.equal(null);
+    withLive.unmount();
+
+    const withoutLive = render(HostedBar, { props: { finished: false, isLive: false }, store });
+    expect(withoutLive.queryByText("Live")).to.equal(null);
+    withoutLive.unmount();
+  });
+
   it("emits toggle-chat-panel and toggle-game-nav-panel when their settings items are clicked", async () => {
     const engine = new Engine(["init 2 hosted-bar-toggle-events", "p1 faction terrans", "p2 faction hadsch-hallas"]);
     const store = makeStore();
