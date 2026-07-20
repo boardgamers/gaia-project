@@ -1,7 +1,18 @@
 {
-  "version": "5.35.1",
+  "version": "5.35.2",
   "releasedAt": "2026-07-20",
   "entries": [
+    {
+      "version": "5.35.2",
+      "releasedAt": "2026-07-20",
+      "kind": "fix",
+      "title": "Sticky action bar float fix",
+      "impact": "",
+      "changes": [
+        "Fixed the mobile action bar floating mid-screen on scroll after an accidental pinch-zoom - a leftover visual-viewport scale residue was mistaken for a live zoom and kept offsetting the fixed bar until a full reload."
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.35.1",
       "releasedAt": "2026-07-20",
