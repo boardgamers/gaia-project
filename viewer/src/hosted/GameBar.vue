@@ -28,6 +28,7 @@
             Delete
           </button>
         </span>
+        <span v-if="isLive" class="game-bar__live"> <span class="game-bar__live-dot"></span>Live </span>
         <span v-if="summary" class="game-bar__summary text-muted small">
           <span v-if="age" class="game-bar__age">{{ age }}</span>
           {{ summary }}
@@ -64,7 +65,7 @@
 <script lang="ts">
 import Vue from "vue";
 import Token from "../components/Token.vue";
-import { PresenceState } from "./presence";
+import { isOnline, PresenceState } from "./presence";
 import {
   auctionLabel,
   claimedSeats,
@@ -125,6 +126,24 @@ export default Vue.extend({
     },
     playerRowsList(): any[][] {
       return playerRows(this.game);
+    },
+    // "Live" = every player in a game I'm in is online right now, so a real-time session is
+    // possible. Only meaningful for an in-progress game with at least two seated players, and only
+    // for games I'm actually in (matches the owner's "all players I'm in a game with, at once").
+    // Offline lobby passes an empty presenceState, so this is always false there.
+    isLive(): boolean {
+      if (this.game.status !== "active") {
+        return false;
+      }
+      const players = this.playersWithSummaryList;
+      if (players.length < 2) {
+        return false;
+      }
+      const iAmPlaying = !!this.myUserId && players.some((p: any) => p.user_id === this.myUserId);
+      if (!iAmPlaying) {
+        return false;
+      }
+      return players.every((p: any) => p.user_id && isOnline(this.presenceState as PresenceState, p.user_id));
     },
   },
   methods: {
@@ -238,6 +257,43 @@ export default Vue.extend({
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+// The "Live" indicator is its own row directly under the game name (it lives inside the flex-column
+// `.game-bar__copy`, so it only ever grows THAT column). The players/avatars column is centered on
+// the bar independently (see `.game-bar__link` / `.game-bar__players`) and keeps its own position -
+// this row never reflows the avatars.
+.game-bar__live {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  align-self: flex-start;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #1a7a34;
+}
+
+.game-bar__live-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: #28a745;
+  box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.65);
+  animation: game-bar-live-pulse 1.8s infinite;
+}
+
+@keyframes game-bar-live-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 0.4rem rgba(40, 167, 69, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+  }
 }
 
 .game-bar__age {

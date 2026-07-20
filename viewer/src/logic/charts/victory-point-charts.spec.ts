@@ -14,7 +14,9 @@ import { victoryPointSources } from "./victory-point-charts";
 // real (authoritative) victoryPoints correctly kept it.
 describe("victoryPointSources QIC bucket", () => {
   it("always includes BoardAction.Qic2, even under Lost Fleet (rescoring a Federation tile always tags it that way)", () => {
-    const qicBucket = victoryPointSources((tile) => `final${tile}`, Expansion.LostFleet).find((s) => s.label === "QIC");
+    const qicBucket = victoryPointSources((tile) => `final${tile}`, Expansion.LostFleet, []).find(
+      (s) => s.label === "QIC"
+    );
 
     expect(qicBucket.types).to.include(BoardAction.Qic2);
   });
@@ -27,10 +29,15 @@ describe("victoryPointSources QIC bucket", () => {
     // Simulate the rescore's effect directly on advancedLog, the same way move/federation.ts's
     // hardcoded `BoardAction.Qic2` source tag would - deliberately not routed through a real
     // Twilight-QIC move, since this test is about the stats bucket, not the move pipeline.
-    engine.advancedLog.push({ player: PlayerEnum.Player1, changes: { [BoardAction.Qic2]: { [Resource.VictoryPoint]: 7 } } });
+    engine.advancedLog.push({
+      player: PlayerEnum.Player1,
+      changes: { [BoardAction.Qic2]: { [Resource.VictoryPoint]: 7 } },
+    });
     player.data.victoryPoints += 7;
 
-    const qicBucket = victoryPointSources((tile) => `final${tile}`, Expansion.LostFleet).find((s) => s.label === "QIC");
+    const qicBucket = victoryPointSources((tile) => `final${tile}`, Expansion.LostFleet, []).find(
+      (s) => s.label === "QIC"
+    );
     const extractChange = (_p: PlayerEnum, source: string, resource: string, _round: number, change: number) =>
       resource === Resource.VictoryPoint && qicBucket.types.includes(source as BoardAction) ? change : 0;
 

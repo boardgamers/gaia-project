@@ -5,15 +5,29 @@
         <div class="stats-window__toolbar">
           <div class="stats-window__field" v-if="setup != null">
             <label class="stats-window__label">View</label>
-            <b-dropdown size="sm" variant="outline-secondary" toggle-class="stats-window__dropdown-toggle" :text="chartSelect || 'Choose…'">
-              <b-dropdown-item v-for="s in selects" :key="`select-${s}`" @click="selectSelect(s)" :active="s === chartSelect"
+            <b-dropdown
+              size="sm"
+              variant="outline-secondary"
+              toggle-class="stats-window__dropdown-toggle"
+              :text="chartSelect || 'Choose…'"
+            >
+              <b-dropdown-item
+                v-for="s in selects"
+                :key="`select-${s}`"
+                @click="selectSelect(s)"
+                :active="s === chartSelect"
                 >{{ s }}
               </b-dropdown-item>
             </b-dropdown>
           </div>
           <div class="stats-window__field" v-if="types.length > 0">
             <label class="stats-window__label">Breakdown</label>
-            <b-dropdown size="sm" variant="outline-secondary" toggle-class="stats-window__dropdown-toggle" :text="chartType || 'Choose…'">
+            <b-dropdown
+              size="sm"
+              variant="outline-secondary"
+              toggle-class="stats-window__dropdown-toggle"
+              :text="chartType || 'Choose…'"
+            >
               <b-dropdown-item v-for="i in types" :key="`type-${i}`" @click="selectType(i)" :active="i === chartType"
                 >{{ i }}
               </b-dropdown-item>
@@ -21,7 +35,12 @@
           </div>
           <div class="stats-window__field" v-if="chartKinds.length > 0">
             <label class="stats-window__label">Details</label>
-            <b-dropdown size="sm" variant="outline-secondary" toggle-class="stats-window__dropdown-toggle" :text="chartKindLabel">
+            <b-dropdown
+              size="sm"
+              variant="outline-secondary"
+              toggle-class="stats-window__dropdown-toggle"
+              :text="chartKindLabel"
+            >
               <template v-for="(group, index) in chartKinds">
                 <b-dropdown-divider v-if="index > 0" :key="`divider-${index}`" />
                 <b-dropdown-item
@@ -73,16 +92,23 @@
 </template>
 
 <script lang="ts">
-import {Component, Vue} from "vue-property-decorator";
-import {ChartGroup, ChartSelect, ChartType} from "../logic/charts/charts";
+import { Component, Vue } from "vue-property-decorator";
+import { ChartGroup, ChartSelect, ChartType } from "../logic/charts/charts";
 import PlayerCircle from "./PlayerCircle.vue";
 import BuildingImage from "./Building.vue";
 import SpecialAction from "./SpecialAction.vue";
 import SilentAuctionLog from "./SilentAuctionLog.vue";
-import Engine, {PlayerEnum} from "@gaia-project/engine";
-import type {ChartConfiguration} from "chart.js";
-import {barChartKind, ChartKind, ChartKindDisplay, ChartSetup, lineChartKind, TableMeta,} from "../logic/charts/chart-factory";
-import {tableHeader, tableItems} from "../logic/charts/table";
+import Engine, { PlayerEnum } from "@gaia-project/engine";
+import type { ChartConfiguration } from "chart.js";
+import {
+  barChartKind,
+  ChartKind,
+  ChartKindDisplay,
+  ChartSetup,
+  lineChartKind,
+  TableMeta,
+} from "../logic/charts/chart-factory";
+import { tableHeader, tableItems } from "../logic/charts/table";
 
 type Table = { title: string; header: any[]; items: any[]; descriptions: any[] };
 
@@ -137,7 +163,9 @@ export default class Charts extends Vue {
   }
 
   mounted() {
-    this.compact = window.innerWidth < 500;
+    // Always default to the compact layout (owner request) - previously only auto-enabled on
+    // narrow (<500px) viewports.
+    this.compact = true;
     this.selectSelect(ChartGroup.vp);
   }
 

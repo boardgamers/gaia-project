@@ -36,6 +36,8 @@
             <b-dropdown-item href="?users=1">Manage users</b-dropdown-item>
             <b-dropdown-divider></b-dropdown-divider>
           </template>
+          <b-dropdown-item href="?offline=1">Offline games</b-dropdown-item>
+          <b-dropdown-divider></b-dropdown-divider>
           <b-dropdown-item-button @click="openNicknameModal">Edit nickname</b-dropdown-item-button>
           <b-dropdown-item-button @click="toggleDarkMode">{{
             isDarkMode ? "Light mode" : "Dark mode"
@@ -162,7 +164,6 @@
         </button>
       </div>
       <div class="lobby-toolbar__actions">
-        <a href="?offline=1" class="btn btn-outline-success">Offline games</a>
         <a href="?create=1" class="btn btn-primary">+ New game</a>
         <span class="lobby-online-wrap d-md-none">
           <button

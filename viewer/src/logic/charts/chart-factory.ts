@@ -183,13 +183,14 @@ function vpChartFactoryEntries(
   advTechTiles: Map<AdvTechTile, string>,
   data: Engine,
   boosters: Booster[],
-  roundScoringNames: string[] | null
+  roundScoringNames: string[] | null,
+  factions: Faction[]
 ): ChartFactory<any>[] {
   return [
     vpChartFactory(
       vpChartType,
       "Victory Points",
-      victoryPointSources(finalTileName, data.expansions),
+      victoryPointSources(finalTileName, data.expansions, factions),
       roundScoringNames
     ),
     vpChartFactory(
@@ -248,7 +249,8 @@ export class ChartSetup {
       vpAdvTechTiles,
       engine,
       vpBoosters,
-      roundScoringNames
+      roundScoringNames,
+      factions
     ).concat(
       createSimpleSourceFactories(
         nonVpAdvTechTiles,

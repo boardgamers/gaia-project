@@ -6,7 +6,6 @@
       "--volcanic",
       "--res-power",
       "--tech-tile",
-      "--desert",
       "--titanium",
       "--oxide",
       "--specialAction",
@@ -45,7 +44,6 @@
     "Bid",
     "Charge",
     "Base Tech",
-    "Gleens",
     "Round",
     "Booster",
     "QIC",
@@ -53,7 +51,7 @@
     "Gaia",
     "Advanced Tech",
     "Federation",
-    "Building",
+    "Protoplanets",
     "Spaceship",
     "Artifacts",
     "Structures in federations",
@@ -63,19 +61,19 @@
   "datasets": [
     {
       "label": "Geoden (57)",
-      "data": [10, 0, -12, 0, 0, 10, 0, 0, 0, 0, 0, 6, 0, 0, 0, 18, 18, 7]
+      "data": [10, 0, -12, 0, 10, 0, 0, 0, 0, 0, 6, 0, 0, 0, 18, 18, 7]
     },
     {
       "label": "Itars (19)",
-      "data": [10, 0, -2, 0, 0, 5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5]
+      "data": [10, 0, -2, 0, 5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5]
     },
     {
       "label": "Taklons (19)",
-      "data": [10, 0, -9, 0, 0, 5, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9]
+      "data": [10, 0, -9, 0, 5, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9]
     },
     {
       "label": "Lantids (16)",
-      "data": [10, 0, -5, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6]
+      "data": [10, 0, -5, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6]
     }
   ]
 }

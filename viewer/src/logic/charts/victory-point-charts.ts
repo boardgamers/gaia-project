@@ -141,7 +141,8 @@ function finalScoringProjection(finalTile: number): (engine: Engine, pl: Player)
 export const roundScoring = "Round";
 export const victoryPointSources = (
   finalTileName: (tile: number) => string,
-  expansion: Expansion
+  expansion: Expansion,
+  factions: Faction[]
 ): VictoryPointSource[] => {
   const sources: VictoryPointSource[] = [
     {
@@ -245,8 +246,11 @@ export const victoryPointSources = (
       color: colorCodes.federation.color,
     },
     {
+      // This source only ever captures the Lost Fleet Protoplanet mine bonus (+6 VP) - the only VP
+      // tagged directly to Command.Build - so it's named for what it actually is rather than the
+      // generic "Building" (owner request).
       types: [Command.Build],
-      label: "Building",
+      label: "Protoplanets",
       description: "Protoplanet mine bonus (+6 VP)",
       color: "--protoplanet",
     },
@@ -311,7 +315,10 @@ export const victoryPointSources = (
       }
     );
   }
-  return sources;
+  // The Gleens VP source only ever scores for a Gleens player, so drop its (always-empty) column
+  // unless Gleens is actually in the game (owner request). Statistics mode passes every faction, so
+  // it stays there.
+  return factions.includes(Faction.Gleens) ? sources : sources.filter((s) => s.label !== "Gleens");
 };
 
 function advancedTechTileTypes(e: Engine, tile: AdvTechTile): AdvTechTilePos[] {
