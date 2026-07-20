@@ -269,13 +269,19 @@ export function lostFleetSectorKey(hex: GaiaHex): string | undefined {
   return type === LostFleetSectorType.DeepSpace ? hex.data.sector.replace(/_\d+$/, "") : hex.data.sector;
 }
 
-/** True if `hex` is the first hex among `occupied` that belongs to its Lost Fleet sector (see `lostFleetSectorKey`). */
+/**
+ * True if `hex` is the first *colonized planet* among `occupied` that belongs to its Lost Fleet
+ * sector (see `lostFleetSectorKey`). Space Stations sit on empty space hexes and do NOT colonize a
+ * sector (gaia-hex.ts `colonizedBy`; RULES_CLARIFICATIONS §G3's "sector with ≥1 planet colonized"),
+ * so they're ignored here — putting a Space Station in an otherwise-empty sector leaves it "new", and
+ * a mine later placed on a planet there still triggers the sector3 tile / Darkanians' PI bonus.
+ */
 export function isNewLostFleetSector(occupied: readonly GaiaHex[], hex: GaiaHex): boolean {
   const key = lostFleetSectorKey(hex);
   if (key === undefined) {
     return false;
   }
-  return !occupied.some((other) => other !== hex && lostFleetSectorKey(other) === key);
+  return !occupied.some((other) => other !== hex && other.hasPlanet() && lostFleetSectorKey(other) === key);
 }
 
 /**

@@ -19,6 +19,11 @@ function hex(sector: string): GaiaHex {
   return new GaiaHex(0, 0, { planet: Planet.Terra, sector });
 }
 
+// A Space Station hex: an empty space hex (no planet), as `hasPlanet()` returns false for it.
+function spaceHex(sector: string): GaiaHex {
+  return new GaiaHex(0, 0, { planet: Planet.Empty, sector });
+}
+
 function key(c: CubeCoordinates): string {
   return `${c.q}x${c.r}`;
 }
@@ -210,6 +215,21 @@ describe("Lost Fleet map layout", () => {
       const b = hex("IS3");
       expect(isNewLostFleetSector([a], a)).to.be.false;
       expect(isNewLostFleetSector([a, b], b)).to.be.false;
+    });
+
+    it("should ignore a Space Station (empty space hex) already in the sector", () => {
+      // A Space Station sits on a Planet.Empty hex and does not colonize the sector, so a mine
+      // placed on a planet in that same sector still counts as the first colonization.
+      const station = spaceHex("5A");
+      const mine = hex("5A");
+      expect(isNewLostFleetSector([station, mine], mine)).to.be.true;
+    });
+
+    it("should still count a colonized planet already in the sector", () => {
+      const station = spaceHex("5A");
+      const existingMine = hex("5A");
+      const newMine = hex("5A");
+      expect(isNewLostFleetSector([station, existingMine, newMine], newMine)).to.be.false;
     });
   });
 });
