@@ -17,6 +17,15 @@ export function pushSupported(): boolean {
   return "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
 }
 
+/** This device's IANA timezone (e.g. "America/New_York"), or null if the browser won't report it. */
+function localTimeZone(): string | null {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Whether this device already has a live push subscription - checked entirely browser-side
  * (Notification.permission + an actual PushManager subscription), no Supabase round trip needed.
@@ -103,6 +112,8 @@ export async function enablePushNotifications(client: SupabaseClient, userId: st
       p256dh: json.keys.p256dh,
       auth: json.keys.auth,
       user_agent: navigator.userAgent,
+      // IANA timezone for the turn-reminder sweep's quiet-hours gate (so it won't nudge at 3am).
+      tz: localTimeZone(),
     },
     { onConflict: "endpoint" }
   );

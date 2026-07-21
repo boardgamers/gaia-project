@@ -235,6 +235,20 @@ RLS enabled on all three tables. One membership predicate, used everywhere
   while mobile/PWA subscriptions keep the old "already open" suppression behavior.
 - Known cosmetic wart, accepted for v1: a leech chain produces a couple of rapid turn-change
   pushes. Fine for a friend group; debounce later if it annoys.
+- **Recurring turn reminders** (migration `20260721000000_turn_reminders`): the one-shot "Your turn"
+  push only fires the instant the seat changes. A separate hourly `pg_cron` job re-invokes `notify`
+  with `{type:'reminder_sweep'}` (same `app_config['notify']` URL/key pattern as the trigger, so
+  still no hardcoded secrets and still a no-op until seeded). The sweep finds every active game whose
+  current player has let their turn sit idle past **12h** and re-sends **"Still your turn in
+  <game>"** (same `turn-<id>` tag so the OS replaces rather than stacks). It re-nudges every 12h,
+  **capped at 3 per turn**, and never during the recipient's **local night** (only while their local
+  hour is in `[8, 22)`; a nudge due at night is deferred to the next daytime sweep). Per-turn state
+  lives in new `games.last_turn_reminder_at` / `games.turn_reminder_count` columns; the count resets
+  implicitly once the player moves (any reminder stamped before `latest_move_committed_at` is treated
+  as belonging to the previous turn — no `commit_turn` change needed). Quiet hours use a new
+  per-device `push_subscriptions.tz` (IANA zone captured at subscribe time); a player with no known
+  timezone is never suppressed, and a player with no subscribed device is skipped entirely (never
+  stamped). The pure per-game decision is `notify/logic.ts::planTurnReminder`; `index.ts` does the IO.
 
 ## 7. Viewer integration
 

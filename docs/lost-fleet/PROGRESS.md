@@ -5,9 +5,11 @@
 > labeled historical rerun log. Do not load this 5,000-line history cover to cover. Read the other
 > ledgers and historical handoffs only when the task touches their subject, following `AGENTS.md`.
 > If the user supplied a concrete task, proceed with it rather than asking "what next?".
-> Last updated: **2026-07-19** (#106 shipped: fixed a pinned-URL/PWA `?lobby=1` load getting stuck
-> bouncing back to the offline lobby with no escape via the "Online lobby" link, on top of #105's
-> Artifact mine-counting fix and 2026-07-18's four owner-reported "couponing changes" #104; AI task
+> Last updated: **2026-07-21** ("Done so far" #108 built: recurring 12h "still your turn" reminders
+> via an hourly pg_cron sweep of the `notify` Edge Function, capped at 3 per turn and quiet during the
+> recipient's local night — code/migration/tests landed, live DB apply + pg_cron schedule still
+> pending. Prior: #106 fixed a pinned-URL/PWA `?lobby=1` load getting stuck bouncing back to the
+> offline lobby; #105 Artifact mine-counting fix; #104 four owner-reported "couponing changes". AI task
 > index unchanged).
 
 ## Working agreements (read every session, not optional)
@@ -4305,6 +4307,29 @@ components/PlayerBoard/BuildingGroup.spec.ts` (X-mark presence/absence). Engine 
       (`vue-cli-service build`) succeeds. Changelog: the Live-badge parity is `user:` (a real, visible
       new indicator); the My-games filter fix is `dev:` (bug fix, not a new feature) — both added via
       `update-viewer-release.js` (v5.35.1).
+108.  ✅ **Recurring "still your turn" reminders (2026-07-21, owner-requested).** The one-shot turn
+      push only fired the instant it became your turn; there was no follow-up if you never moved. Added
+      an hourly `pg_cron` sweep that re-invokes the existing `notify` Edge Function with
+      `{type:'reminder_sweep'}` (migration `20260721000000_turn_reminders`, same `app_config['notify']`
+      URL/key pattern as the trigger — no hardcoded secrets, silent no-op until seeded). The sweep
+      re-sends **"Still your turn in <game>"** (same `turn-<id>` tag so the OS replaces rather than
+      stacks) to the current player of any active game whose turn has been idle past **12h**, repeating
+      **every 12h, capped at 3 per turn**, and **never during the recipient's local night** (only while
+      their local hour is in `[8, 22)`; a nudge due at night is deferred to the next daytime sweep, per
+      the owner's "don't remind at 3am" note). New columns `games.last_turn_reminder_at` /
+      `games.turn_reminder_count` hold per-turn state; the count resets implicitly once the player moves
+      (any reminder stamped before `latest_move_committed_at` counts as a previous turn's — no
+      `commit_turn` change). Quiet hours use a new per-device `push_subscriptions.tz` (IANA zone
+      captured at subscribe time in `viewer/src/hosted/push.ts`); unknown-tz players are never
+      suppressed and players with no subscribed device are skipped without stamping. Pure decision in
+      `notify/logic.ts::planTurnReminder`, IO (candidate query, push, stamping) in `notify/index.ts`
+      (push-send machinery refactored into shared `buildAppServer`/`pushToSubscription` helpers). 16 new
+      `logic.spec.ts` cases (**30/30** passing via the engine-mocha invocation noted in this doc's
+      testing note); existing `push.spec.ts` still **3/3** and the viewer build compiles the `tz` change.
+      **Not yet applied to the live DB / deployed** — pushing `supabase/functions/**` auto-deploys the
+      (backward-compatible, dormant) `notify` change to prod, but the migration + `pg_cron` schedule
+      still need an explicit apply step, and `app_config['notify']` must already be seeded for the sweep
+      to fire.
 
 ## Still MISSING — only one art-only item left
 

@@ -17,23 +17,35 @@ import {
   buildNotifications,
   currentTurnPlayer,
   GameRow,
+  planTurnReminder,
   shouldSkipTurnPushForSubscription,
   SubscriptionRow,
+  TURN_REMINDER_AFTER_MS,
 } from "./logic.ts";
+
+// deno-lint-ignore no-explicit-any
+type SupabaseClient = any;
+// deno-lint-ignore no-explicit-any
+type AppServer = any;
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") {
     return new Response("method not allowed", { status: 405 });
   }
   const { type, game_id, sender_id, author_name, body: chatBody } = await req.json();
+
+  const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+  if (type === "reminder_sweep") {
+    return await runReminderSweep(supabase);
+  }
+
   if (!game_id || (type !== "insert" && type !== "update" && type !== "chat")) {
     return new Response("bad request", { status: 400 });
   }
   if (type === "chat" && (!sender_id || !author_name || !chatBody)) {
     return new Response("bad request", { status: 400 });
   }
-
-  const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
   const [{ data: cfg, error: cfgError }, { data: game, error: gameError }] = await Promise.all([
     supabase.from("app_config").select("value").eq("key", "vapid").single(),
@@ -90,12 +102,7 @@ Deno.serve(async (req) => {
     return new Response("subscriptions unavailable", { status: 500 });
   }
 
-  const vapidKeys = await webpush.importVapidKeys(cfg.value.keys, { extractable: false });
-  const appServer = await webpush.ApplicationServer.new({
-    contactInformation: cfg.value.subject,
-    vapidKeys,
-  });
-  const siteUrl: string = (cfg.value.site_url ?? "").replace(/\/$/, "");
+  const { appServer, siteUrl } = await buildAppServer(cfg.value);
 
   let sent = 0;
   const gone: string[] = [];
@@ -120,19 +127,8 @@ Deno.serve(async (req) => {
       ) {
         continue;
       }
-      try {
-        const subscriber = appServer.subscribe({
-          endpoint: sub.endpoint,
-          keys: { p256dh: sub.p256dh, auth: sub.auth },
-        });
-        await subscriber.pushTextMessage(payload, {});
+      if (await pushToSubscription(appServer, sub, payload, gone)) {
         sent++;
-      } catch (err) {
-        if (err instanceof webpush.PushMessageError && err.isGone()) {
-          gone.push(sub.id);
-        } else {
-          console.error(`push to ${sub.endpoint} failed:`, err instanceof Error ? err.message : err);
-        }
       }
     }
   }
@@ -146,3 +142,138 @@ Deno.serve(async (req) => {
     headers: { "Content-Type": "application/json" },
   });
 });
+
+// deno-lint-ignore no-explicit-any
+async function buildAppServer(cfg: any): Promise<{ appServer: AppServer; siteUrl: string }> {
+  const vapidKeys = await webpush.importVapidKeys(cfg.keys, { extractable: false });
+  const appServer = await webpush.ApplicationServer.new({
+    contactInformation: cfg.subject,
+    vapidKeys,
+  });
+  return { appServer, siteUrl: (cfg.site_url ?? "").replace(/\/$/, "") };
+}
+
+// Sends one push, returning whether it landed. A subscription the push service reports as "gone"
+// (410) is collected in `gone` for deletion by the caller.
+async function pushToSubscription(
+  appServer: AppServer,
+  sub: SubscriptionRow,
+  payload: string,
+  gone: string[]
+): Promise<boolean> {
+  try {
+    const subscriber = appServer.subscribe({
+      endpoint: sub.endpoint,
+      keys: { p256dh: sub.p256dh, auth: sub.auth },
+    });
+    await subscriber.pushTextMessage(payload, {});
+    return true;
+  } catch (err) {
+    if (err instanceof webpush.PushMessageError && err.isGone()) {
+      gone.push(sub.id);
+    } else {
+      console.error(`push to ${sub.endpoint} failed:`, err instanceof Error ? err.message : err);
+    }
+    return false;
+  }
+}
+
+// Hourly pg_cron entry point (migration 20260721_turn_reminders): finds every active game whose
+// current player has let their turn go idle past the reminder threshold and re-nudges them, subject
+// to the per-turn cap and their local quiet hours (planTurnReminder). Loads its own config/state
+// with the service role - it never runs the game engine.
+async function runReminderSweep(supabase: SupabaseClient): Promise<Response> {
+  const { data: cfg, error: cfgError } = await supabase.from("app_config").select("value").eq("key", "vapid").single();
+  if (cfgError || !cfg) {
+    console.error("vapid config missing:", cfgError?.message);
+    return new Response("vapid config missing", { status: 500 });
+  }
+
+  const cutoff = new Date(Date.now() - TURN_REMINDER_AFTER_MS).toISOString();
+  const { data: games, error: gamesError } = await supabase
+    .from("games")
+    .select("*, players(*)")
+    .eq("status", "active")
+    .not("current_seat", "is", null)
+    .not("latest_move_committed_at", "is", null)
+    .lt("latest_move_committed_at", cutoff);
+  if (gamesError) {
+    console.error("could not load candidate games:", gamesError.message);
+    return new Response("games unavailable", { status: 500 });
+  }
+  if (!games || games.length === 0) {
+    return new Response(JSON.stringify({ swept: 0, reminded: 0, sent: 0 }), { status: 200 });
+  }
+
+  // The current player of each candidate game, and everything needed to decide/deliver a reminder.
+  const currentPlayers = (games as GameRow[])
+    .map((game) => ({ game, player: currentTurnPlayer(game) }))
+    .filter((entry) => entry.player?.user_id);
+  const userIds = [...new Set(currentPlayers.map((entry) => entry.player!.user_id as string))];
+  const gameIds = currentPlayers.map((entry) => entry.game.id);
+
+  const [{ data: subscriptions }, { data: premoves }] = await Promise.all([
+    supabase.from("push_subscriptions").select("id,user_id,endpoint,p256dh,auth,user_agent,tz").in("user_id", userIds),
+    supabase.from("premoves").select("game_id,seat").in("game_id", gameIds),
+  ]);
+  const subsByUser = new Map<string, SubscriptionRow[]>();
+  for (const sub of (subscriptions ?? []) as SubscriptionRow[]) {
+    const list = subsByUser.get(sub.user_id) ?? [];
+    list.push(sub);
+    subsByUser.set(sub.user_id, list);
+  }
+  const premoveSeats = new Set(
+    ((premoves ?? []) as { game_id: string; seat: number }[]).map((p) => `${p.game_id}:${p.seat}`)
+  );
+
+  const { appServer, siteUrl } = await buildAppServer(cfg.value);
+
+  let sent = 0;
+  let reminded = 0;
+  const gone: string[] = [];
+  for (const { game } of currentPlayers) {
+    const currentPlayerSubs = subsByUser.get(currentTurnPlayer(game)!.user_id as string) ?? [];
+    // "If notifications enabled": no subscribed device means nothing to remind - skip without
+    // stamping so the game isn't churned every hour for a player who's opted out.
+    if (currentPlayerSubs.length === 0) {
+      continue;
+    }
+    const hasQueuedPremove = premoveSeats.has(`${game.id}:${game.current_seat}`);
+    const decision = planTurnReminder(game, currentPlayerSubs, hasQueuedPremove);
+    if (!decision) {
+      continue;
+    }
+    const payload = JSON.stringify({
+      title: decision.notification.title,
+      body: decision.notification.body,
+      tag: decision.notification.tag,
+      url: `${siteUrl}/?game=${game.id}`,
+    });
+    const recipient = currentTurnPlayer(game)!;
+    for (const sub of currentPlayerSubs) {
+      if (shouldSkipTurnPushForSubscription(recipient, sub)) {
+        continue;
+      }
+      if (await pushToSubscription(appServer, sub, payload, gone)) {
+        sent++;
+      }
+    }
+    // Stamp the game whenever the reminder was due, even if every device was skipped/unreachable:
+    // the cap and 12h cadence should advance so a player with no live device doesn't get swept
+    // every single hour forever.
+    reminded++;
+    await supabase
+      .from("games")
+      .update({ last_turn_reminder_at: new Date().toISOString(), turn_reminder_count: decision.reminderCount })
+      .eq("id", game.id);
+  }
+
+  if (gone.length > 0) {
+    await supabase.from("push_subscriptions").delete().in("id", gone);
+  }
+
+  return new Response(JSON.stringify({ swept: games.length, reminded, sent, deleted: gone.length }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
+}

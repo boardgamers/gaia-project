@@ -4,10 +4,15 @@ import {
   buildNotifications,
   gameLabel,
   GameRow,
+  isWithinReminderHours,
+  localHourInZone,
+  MAX_TURN_REMINDERS,
+  planTurnReminder,
   PlayerRow,
   RECENTLY_ACTIVE_MS,
   shouldSkipTurnPushForSubscription,
   SubscriptionRow,
+  TURN_REMINDER_AFTER_MS,
 } from "./logic";
 
 function makePlayer(overrides: Partial<PlayerRow> = {}): PlayerRow {
@@ -200,5 +205,132 @@ describe("notify logic", () => {
     assert.equal(notifications.length, 1);
     assert.equal(notifications[0].title, "GP: Fight Club");
     assert.equal(notifications[0].body, "Your turn in your game with Sarah.");
+  });
+});
+
+describe("turn reminders", () => {
+  // Noon UTC - a "daytime" instant. UTC has no DST, so localHourInZone("UTC") is deterministic.
+  const NOON = Date.UTC(2026, 0, 15, 12, 0, 0);
+  const THREE_AM = Date.UTC(2026, 0, 15, 3, 0, 0);
+  const staleMoveIso = (now: number) => new Date(now - TURN_REMINDER_AFTER_MS - 60_000).toISOString();
+
+  describe("localHourInZone", () => {
+    it("returns the UTC hour for the UTC zone", () => {
+      assert.equal(localHourInZone("UTC", NOON), 12);
+      assert.equal(localHourInZone("UTC", THREE_AM), 3);
+    });
+
+    it("returns null for a missing or unusable zone", () => {
+      assert.equal(localHourInZone(null, NOON), null);
+      assert.equal(localHourInZone(undefined, NOON), null);
+      assert.equal(localHourInZone("Not/AZone", NOON), null);
+    });
+  });
+
+  describe("isWithinReminderHours", () => {
+    it("allows sending when no subscription reports a timezone", () => {
+      assert.equal(isWithinReminderHours([], NOON), true);
+      assert.equal(isWithinReminderHours([makeSubscription({ tz: null })], THREE_AM), true);
+    });
+
+    it("suppresses when it's the middle of the night in the only known zone", () => {
+      assert.equal(isWithinReminderHours([makeSubscription({ tz: "UTC" })], THREE_AM), false);
+    });
+
+    it("allows when it's daytime in the known zone", () => {
+      assert.equal(isWithinReminderHours([makeSubscription({ tz: "UTC" })], NOON), true);
+    });
+
+    it("allows when any one of a player's devices is in a daytime zone", () => {
+      const subs = [
+        makeSubscription({ id: "s1", tz: "UTC" }), // 03:00 - night
+        makeSubscription({ id: "s2", tz: "Asia/Tokyo" }), // 12:00 - day
+      ];
+      assert.equal(isWithinReminderHours(subs, THREE_AM), true);
+    });
+  });
+
+  describe("planTurnReminder", () => {
+    const reminderGame = (overrides: Partial<GameRow> = {}, now = NOON): GameRow =>
+      makeGame({
+        latest_move_committed_at: staleMoveIso(now),
+        turn_reminder_count: 0,
+        last_turn_reminder_at: null,
+        ...overrides,
+      });
+
+    it("reminds the current player of a turn idle past the threshold", () => {
+      const decision = planTurnReminder(reminderGame(), [], false, NOON);
+
+      assert.ok(decision);
+      assert.equal(decision!.userId, "user-1");
+      assert.equal(decision!.gameId, "game-1");
+      assert.equal(decision!.reminderCount, 1);
+      assert.equal(decision!.notification.body, "Still your turn in Test game.");
+      assert.equal(decision!.notification.tag, "turn-game-1"); // same tag as the original turn push
+    });
+
+    it("does not remind before the turn has been idle 12h", () => {
+      const freshMove = new Date(NOON - TURN_REMINDER_AFTER_MS + 60_000).toISOString();
+      assert.equal(planTurnReminder(reminderGame({ latest_move_committed_at: freshMove }), [], false, NOON), null);
+    });
+
+    it("does not remind when the current player already moved this turn", () => {
+      assert.equal(planTurnReminder(reminderGame({ last_committed_by: "user-1" }), [], false, NOON), null);
+    });
+
+    it("does not remind when a premove is queued", () => {
+      assert.equal(planTurnReminder(reminderGame(), [], true, NOON), null);
+    });
+
+    it("does not remind during the recipient's local night", () => {
+      const subs = [makeSubscription({ tz: "UTC" })];
+      assert.equal(planTurnReminder(reminderGame({}, THREE_AM), subs, false, THREE_AM), null);
+    });
+
+    it("stops reminding once the per-turn cap is reached", () => {
+      const capped = reminderGame({
+        turn_reminder_count: MAX_TURN_REMINDERS,
+        // stamped after the turn started, so it counts against this turn
+        last_turn_reminder_at: new Date(NOON - 60_000).toISOString(),
+      });
+      assert.equal(planTurnReminder(capped, [], false, NOON), null);
+    });
+
+    it("throttles to one reminder per 12h within a turn", () => {
+      const recentlyReminded = reminderGame({
+        turn_reminder_count: 1,
+        last_turn_reminder_at: new Date(NOON - 60_000).toISOString(), // 1 min ago
+      });
+      assert.equal(planTurnReminder(recentlyReminded, [], false, NOON), null);
+    });
+
+    it("ignores a reminder count left over from a previous turn", () => {
+      // Player moved since (turn started at staleMoveIso), but the stale count/stamp predate it.
+      const priorTurn = reminderGame({
+        turn_reminder_count: MAX_TURN_REMINDERS,
+        last_turn_reminder_at: new Date(NOON - TURN_REMINDER_AFTER_MS - 120_000).toISOString(),
+      });
+      const decision = planTurnReminder(priorTurn, [], false, NOON);
+
+      assert.ok(decision);
+      assert.equal(decision!.reminderCount, 1); // reset - this is the first reminder of the new turn
+    });
+
+    it("sends the next reminder once 12h have passed since the last one this turn", () => {
+      const dueAgain = reminderGame({
+        turn_reminder_count: 1,
+        last_turn_reminder_at: new Date(NOON - TURN_REMINDER_AFTER_MS - 60_000).toISOString(),
+      });
+      const decision = planTurnReminder(dueAgain, [], false, NOON);
+
+      assert.ok(decision);
+      assert.equal(decision!.reminderCount, 2);
+    });
+
+    it("does not remind a finished game or one with no current seat", () => {
+      assert.equal(planTurnReminder(reminderGame({ status: "finished" }), [], false, NOON), null);
+      assert.equal(planTurnReminder(reminderGame({ current_seat: null }), [], false, NOON), null);
+    });
   });
 });
