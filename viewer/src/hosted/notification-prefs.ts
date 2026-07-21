@@ -19,13 +19,13 @@ export type NotificationPrefs = {
 };
 
 // Must match DEFAULT_NOTIFICATION_PREFS in the notify function so an unsaved user behaves identically
-// whether the UI or the server is deciding: every category on, reminders opt-in (off), quiet 22-08.
+// whether the UI or the server is deciding: every category on, the 12h reminder on (opt-out), quiet 22-08.
 export const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
   turn_pushes: true,
   chat_pushes: true,
   invite_pushes: true,
   finished_pushes: true,
-  reminders_enabled: false,
+  reminders_enabled: true,
   reminder_interval_hours: 12,
   reminder_max_count: 3,
   quiet_hours_enabled: true,

@@ -253,8 +253,8 @@ RLS enabled on all three tables. One membership predicate, used everywhere
   `notification_prefs` row (RLS own-row; the notify function reads it with the service role) is the
   single, account-wide control set — applied to every game and every device, edited from the bell
   button's settings modal (`NotificationSettings.vue`). A **missing row = defaults**
-  (`DEFAULT_NOTIFICATION_PREFS`): every category on, but **`reminders_enabled` defaults false**, so the
-  recurring reminder above is opt-in. Fields: per-category toggles (`turn`/`chat`/`invite`/`finished`),
+  (`DEFAULT_NOTIFICATION_PREFS`): every category on, and **`reminders_enabled` defaults true** — the
+  recurring 12h reminder is on by default and users opt out. Fields: per-category toggles (`turn`/`chat`/`invite`/`finished`),
   `reminders_enabled` + `reminder_interval_hours` (12/24/48) + `reminder_max_count`, `quiet_hours_enabled`
   - `quiet_start_hour`/`quiet_end_hour` (a midnight-wrapping window, replacing the old fixed 8am–10pm),
     and `snooze_until` (suppresses **all** pushes until it passes). The trigger path gates each one-shot

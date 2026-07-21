@@ -1,7 +1,21 @@
 {
-  "version": "5.35.2",
-  "releasedAt": "2026-07-20",
+  "version": "5.36.0",
+  "releasedAt": "2026-07-21",
   "entries": [
+    {
+      "version": "5.36.0",
+      "releasedAt": "2026-07-21",
+      "kind": "update",
+      "title": "Notification settings",
+      "impact": "",
+      "changes": [
+        "Tap the bell for new notification settings - turn reminders (on by default, every 12h if you haven't moved), quiet hours so you're not pinged overnight, per-type toggles, and snooze; all shared across your games",
+        "Global per-account notification_prefs honored by the notify function - reminders default on (opt-out), configurable interval/cap, adjustable timezone-aware quiet hours, and snooze/pause-all"
+      ],
+      "userChanges": [
+        "Tap the bell for new notification settings - turn reminders (on by default, every 12h if you haven't moved), quiet hours so you're not pinged overnight, per-type toggles, and snooze; all shared across your games"
+      ]
+    },
     {
       "version": "5.35.2",
       "releasedAt": "2026-07-20",

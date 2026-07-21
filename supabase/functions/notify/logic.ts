@@ -190,7 +190,7 @@ export type NotificationPrefs = {
   chat_pushes: boolean;
   invite_pushes: boolean;
   finished_pushes: boolean;
-  reminders_enabled: boolean; // the recurring 12h re-nudge - OPT-IN (default off)
+  reminders_enabled: boolean; // the recurring re-nudge - on by default, opt-out in settings
   reminder_interval_hours: number; // how often to re-nudge (12 / 24 / 48)
   reminder_max_count: number; // how many reminders per turn before giving up
   quiet_hours_enabled: boolean;
@@ -204,7 +204,7 @@ export const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
   chat_pushes: true,
   invite_pushes: true,
   finished_pushes: true,
-  reminders_enabled: false,
+  reminders_enabled: true, // on by default; users opt OUT in the settings modal
   reminder_interval_hours: 12,
   reminder_max_count: 3,
   quiet_hours_enabled: true,

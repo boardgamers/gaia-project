@@ -226,12 +226,12 @@ describe("notify logic", () => {
 describe("notification preferences", () => {
   it("fills defaults for a missing/partial row", () => {
     assert.deepEqual(resolvePrefs(null), DEFAULT_NOTIFICATION_PREFS);
-    assert.equal(resolvePrefs({ reminders_enabled: true }).reminders_enabled, true);
-    assert.equal(resolvePrefs({ reminders_enabled: true }).turn_pushes, true); // default preserved
+    assert.equal(resolvePrefs({ reminders_enabled: false }).reminders_enabled, false); // explicit override wins
+    assert.equal(resolvePrefs({ reminders_enabled: false }).turn_pushes, true); // default preserved
   });
 
-  it("reminders are opt-in (off) by default", () => {
-    assert.equal(DEFAULT_NOTIFICATION_PREFS.reminders_enabled, false);
+  it("reminders are on by default (opt-out)", () => {
+    assert.equal(DEFAULT_NOTIFICATION_PREFS.reminders_enabled, true);
     assert.equal(DEFAULT_NOTIFICATION_PREFS.turn_pushes, true);
   });
 
@@ -351,7 +351,7 @@ describe("turn reminders", () => {
       assert.equal(decision!.notification.tag, "turn-game-1"); // same tag as the original turn push
     });
 
-    it("does nothing unless the player opted into reminders", () => {
+    it("does nothing when the player has turned reminders off", () => {
       assert.equal(planTurnReminder(reminderGame(), [], false, prefs({ reminders_enabled: false }), NOON), null);
     });
 
