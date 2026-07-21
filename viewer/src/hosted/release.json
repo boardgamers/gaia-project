@@ -1,7 +1,22 @@
 {
-  "version": "5.36.9",
+  "version": "5.36.10",
   "releasedAt": "2026-07-21",
   "entries": [
+    {
+      "version": "5.36.10",
+      "releasedAt": "2026-07-21",
+      "kind": "update",
+      "title": "Presence dot foreground accuracy + game-entrant notice",
+      "impact": "",
+      "changes": [
+        "The green online dot now means a player is actually looking at the game - on desktop the tab must be focused and in the foreground (not just left open behind another window), and it updates instantly when you switch away or back.",
+        "When another player opens a game you're already in, a dismissible notice now appears just under the top banner telling you they entered."
+      ],
+      "userChanges": [
+        "The green online dot now means a player is actually looking at the game - on desktop the tab must be focused and in the foreground (not just left open behind another window), and it updates instantly when you switch away or back.",
+        "When another player opens a game you're already in, a dismissible notice now appears just under the top banner telling you they entered."
+      ]
+    },
     {
       "version": "5.36.9",
       "releasedAt": "2026-07-21",
