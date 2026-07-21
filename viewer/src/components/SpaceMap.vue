@@ -289,7 +289,7 @@ export default class SpaceMap extends Vue {
    */
   get wheelScale(): number {
     if (this.isLostFleet && this.engine.players.length === 2) {
-      return 0.45;
+      return 0.4;
     }
     return WHEEL_SCALE_REFERENCE;
   }
@@ -342,11 +342,15 @@ export default class SpaceMap extends Vue {
       // no hexes (e.g. map not generated yet) - keep the old base-game frame
       return { left: -13, top: -11.5, right: 13, bottom: 12.5 };
     }
-    const hexPad = 1.3;
-    const tightLeft = minX - hexPad;
-    const tightRight = maxX + hexPad;
-    const top = minY - hexPad;
-    const bottom = maxY + hexPad;
+    // The compact 2p Lost Fleet board can safely use a slimmer horizontal frame. Together with its
+    // slightly smaller wheel, this recovers enough scale for the map to stay at least as large after
+    // adding the requested mobile page gutter.
+    const horizontalHexPad = this.isLostFleet && this.engine.players.length === 2 ? 1.15 : 1.3;
+    const verticalHexPad = 1.3;
+    const tightLeft = minX - horizontalHexPad;
+    const tightRight = maxX + horizontalHexPad;
+    const top = minY - verticalHexPad;
+    const bottom = maxY + verticalHexPad;
 
     // A hex's own edge sits `hexRadius` (1 unit) away from its center in every direction, so (a)
     // a hex just below a band's cutoff can still poke its top edge up into that band - query the
@@ -367,6 +371,13 @@ export default class SpaceMap extends Vue {
     const rightWidth = this.terraformingColors.length > 0 ? RIGHT_SWATCH_WIDTH : this.showCharts ? RIGHT_ICON_WIDTH : 0;
     const rightLimitTop = bandMaxX(points, top, RIGHT_BAND_HEIGHT + hexRadius) + hexRadius + CLEARANCE + rightWidth;
     const right = rightWidth > 0 ? Math.max(tightRight, rightLimitTop) : tightRight;
+
+    if (this.isLostFleet && this.engine.players.length === 2) {
+      // The 2p hex field is symmetric around x=0. Frame the wheel/UI constraints symmetrically too,
+      // so the board stays visually centered instead of carrying a one-sided wheel gutter.
+      const halfWidth = Math.max(Math.abs(left), Math.abs(right));
+      return { left: -halfWidth, top, right: halfWidth, bottom };
+    }
 
     return { left, top, right, bottom };
   }

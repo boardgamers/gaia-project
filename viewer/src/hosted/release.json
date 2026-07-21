@@ -1,7 +1,21 @@
 {
-  "version": "5.36.7",
+  "version": "5.36.8",
   "releasedAt": "2026-07-21",
   "entries": [
+    {
+      "version": "5.36.8",
+      "releasedAt": "2026-07-21",
+      "kind": "update",
+      "title": "Mobile Lost Fleet board spacing",
+      "impact": "",
+      "changes": [
+        "Mobile Lost Fleet boards now keep a slim edge margin, and the centered 2-player map uses more of the available width.",
+        "Fixed the research and ship boards overlapping on iPhone-sized screens."
+      ],
+      "userChanges": [
+        "Mobile Lost Fleet boards now keep a slim edge margin, and the centered 2-player map uses more of the available width."
+      ]
+    },
     {
       "version": "5.36.7",
       "releasedAt": "2026-07-21",

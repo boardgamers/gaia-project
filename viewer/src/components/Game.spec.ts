@@ -401,6 +401,8 @@ describe("Game", () => {
     expect(minX).to.equal(-50);
     expect(canvasWidth).to.equal(450);
     expect(canvasHeight).to.equal(474);
+    expect(svg.getAttribute("width")).to.equal("450");
+    expect(svg.getAttribute("height")).to.equal("474");
     expect(svg.querySelector(".research-actions-panel")).to.not.equal(null);
     expect(svg.closest(".game-board-layout")).to.not.equal(null);
 
@@ -427,6 +429,7 @@ describe("Game", () => {
     // above it (which left a resize-dependent gap whenever the map ended up taller).
     const researchCol = vm.$el.querySelector(".scoring-research-board")?.closest(".col-md-5");
     expect(researchCol, "expected a col-md-5 wrapping the research board").to.not.equal(null);
+    expect(researchCol.classList.contains("game-board-side-column")).to.equal(true);
     const ships = researchCol.querySelector(".lost-fleet-ships");
     expect(ships, "expected the ship boards inside the research board's own column").to.not.equal(null);
     expect(ships.previousElementSibling?.classList.contains("scoring-research-board")).to.equal(true);

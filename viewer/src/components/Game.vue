@@ -30,13 +30,18 @@
         v-if="hasMap"
       >
         <SpaceMap :class="['mb-1', 'space-map', 'col-md-7']" />
-        <div class="col-md-5">
+        <div class="col-md-5 game-board-side-column">
           <!-- For Lost Fleet, ResearchBoard itself grows a 7th column (Scoring Board Extension +
                round scoring tiles - see ResearchBoard.vue) in the space ScoringBoard's final
                scoring used to occupy here, before final scoring moved onto the map itself
                (SpaceMap.vue's bottom-right corner) - so ScoringBoard only renders for the base
                game here. -->
-          <svg class="scoring-research-board" :viewBox="researchBoardCanvasViewBox">
+          <svg
+            class="scoring-research-board"
+            :viewBox="researchBoardCanvasViewBox"
+            :width="researchBoardCanvasWidth"
+            :height="researchBoardCanvasHeight"
+          >
             <rect
               aria-hidden="true"
               class="research-actions-panel"
@@ -888,8 +893,11 @@ export default class Game extends Vue {
 
   width: 100%;
   display: block;
-  // this is needed for Safari
-  height: intrinsic;
+  height: auto;
+}
+
+.game-board-side-column {
+  min-width: 0;
 }
 
 .research-actions-panel {
@@ -909,13 +917,28 @@ export default class Game extends Vue {
     flex-wrap: wrap;
   }
 
-  // The launcher wraps the game in Bootstrap's container-fluid (15px on either side). Boards are
-  // the one part of the mobile UI where every pixel materially improves legibility, so let this
-  // row alone span the full viewport while all controls and prose retain their normal gutters.
+  // The launcher wraps the game in Bootstrap's container-fluid (15px on either side). Give the
+  // boards most of that width back while retaining a deliberate 2px edge gutter, so their rounded
+  // outlines do not feel glued to the phone bezel.
   .row.no-gutters.game-board-layout {
-    width: calc(100% + 30px);
-    margin-right: -15px;
-    margin-left: -15px;
+    width: calc(100% + 26px);
+    margin-right: -13px;
+    margin-left: -13px;
+  }
+
+  // A concrete intrinsic size on the research SVG plus a non-shrinking vertical flex stack keeps
+  // Safari from laying out the ship grid before the research board's painted height has resolved.
+  // That was the source of the iPhone-only overlap between the two boards.
+  .game-board-side-column {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .game-board-side-column > .scoring-research-board,
+  .game-board-side-column > .lost-fleet-ships {
+    flex: 0 0 auto;
   }
 
   .gaia-viewer-game .game-board-layout .scoring-research-board {

@@ -271,6 +271,11 @@ describe("SpaceMap", () => {
         const overlapsY = p.y + 1 > wheelBox.top && p.y - 1 < wheelBox.bottom;
         expect(overlapsX && overlapsY, `${players}p wheel overlaps hex at (${p.x}, ${p.y})`).to.equal(false);
       }
+
+      if (players === 2) {
+        expect(x, "2p map should have equal left/right framing").to.be.closeTo(-(x + w), 1e-9);
+        expect(w, "2p map viewBox should stay compact enough to maximize phone scale").to.be.lessThan(26.8);
+      }
     }
   });
 
