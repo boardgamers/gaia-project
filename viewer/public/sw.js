@@ -116,6 +116,13 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // iOS aggressively retains Home Screen artwork. If it asks for the versioned touch icon again,
+  // prefer the network so the service-worker cache cannot mask the new artwork behind the old URL.
+  if (url.pathname === "/apple-touch-icon.png") {
+    event.respondWith(networkFirstResource(request));
+    return;
+  }
+
   event.respondWith(cacheFirstAsset(request));
 });
 
@@ -130,7 +137,7 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(title, {
       body: data.body || "",
-      icon: "/icon-192.png",
+      icon: "/icon-192.png?v=5.36.4",
       badge: "/notification-badge.png",
       tag: data.tag || undefined,
       data: { url: data.url || "/?lobby=1" },
