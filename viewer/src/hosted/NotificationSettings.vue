@@ -43,9 +43,15 @@
               <button type="button" class="notif-link" @click="clearSnooze">Resume now</button>
             </div>
             <div v-else class="notif-pills">
-              <button type="button" class="notif-pill" @click="snooze(1)">1 hour</button>
-              <button type="button" class="notif-pill" @click="snooze(8)">8 hours</button>
-              <button type="button" class="notif-pill" @click="snooze(24)">Til tomorrow</button>
+              <button
+                v-for="opt in snoozeOptions"
+                :key="opt.days"
+                type="button"
+                class="notif-pill"
+                @click="snoozeDays(opt.days)"
+              >
+                {{ opt.label }}
+              </button>
             </div>
           </section>
 
@@ -177,6 +183,12 @@ export default Vue.extend({
         { value: 24, text: "24 hours" },
         { value: 48, text: "48 hours" },
       ],
+      snoozeOptions: [
+        { label: "1 day", days: 1 },
+        { label: "3 days", days: 3 },
+        { label: "1 week", days: 7 },
+        { label: "2 weeks", days: 14 },
+      ],
     };
   },
   computed: {
@@ -187,10 +199,11 @@ export default Vue.extend({
       if (!this.prefs.snooze_until) {
         return "";
       }
-      return new Date(this.prefs.snooze_until).toLocaleString([], {
+      // Days-to-weeks scale, so show the date (weekday + month + day), not a time of day.
+      return new Date(this.prefs.snooze_until).toLocaleDateString([], {
         weekday: "short",
-        hour: "numeric",
-        minute: "2-digit",
+        month: "short",
+        day: "numeric",
       });
     },
   },
@@ -244,8 +257,8 @@ export default Vue.extend({
       const error = await saveNotificationPrefs(this.client as SupabaseClient, this.userId, this.prefs);
       this.saveError = error ?? "";
     },
-    async snooze(hours: number) {
-      this.prefs.snooze_until = snoozeFromNow(hours);
+    async snoozeDays(days: number) {
+      this.prefs.snooze_until = snoozeFromNow(days * 24);
       await this.save();
     },
     async clearSnooze() {

@@ -1,7 +1,20 @@
 {
-  "version": "5.36.1",
+  "version": "5.36.2",
   "releasedAt": "2026-07-21",
   "entries": [
+    {
+      "version": "5.36.2",
+      "releasedAt": "2026-07-21",
+      "kind": "update",
+      "title": "Snooze in days",
+      "impact": "",
+      "changes": [
+        "Pause everything now offers 1 day / 3 days / 1 week / 2 weeks instead of hours - handier for a real break"
+      ],
+      "userChanges": [
+        "Pause everything now offers 1 day / 3 days / 1 week / 2 weeks instead of hours - handier for a real break"
+      ]
+    },
     {
       "version": "5.36.1",
       "releasedAt": "2026-07-21",
