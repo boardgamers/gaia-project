@@ -8,14 +8,17 @@
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=5.36.4" />
     <meta name="color-scheme" content="light dark" />
-    <meta name="theme-color" content="#ffffff" />
+    <meta name="theme-color" content="#1c2027" />
     <script>
-      // Apply the persisted choice before CSS and Vue mount, avoiding a bright flash for players
-      // who explicitly selected dark mode. Keep this tiny bootstrap in sync with hosted/theme.ts.
+      // Apply dark-by-default or the persisted choice before CSS and Vue mount, avoiding a theme
+      // flash. Keep this tiny bootstrap in sync with hosted/theme.ts.
       (function () {
-        var theme = "light";
+        var theme = "dark";
         try {
-          theme = window.localStorage.getItem("gp-fight-club-theme") === "dark" ? "dark" : "light";
+          var storedTheme = window.localStorage.getItem("gp-fight-club-theme");
+          if (storedTheme === "light" || storedTheme === "dark") {
+            theme = storedTheme;
+          }
         } catch (_) {
           // Storage is optional in privacy-restricted contexts.
         }

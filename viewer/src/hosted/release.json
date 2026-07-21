@@ -1,7 +1,20 @@
 {
-  "version": "5.36.5",
+  "version": "5.36.6",
   "releasedAt": "2026-07-21",
   "entries": [
+    {
+      "version": "5.36.6",
+      "releasedAt": "2026-07-21",
+      "kind": "update",
+      "title": "Dark mode by default",
+      "impact": "",
+      "changes": [
+        "Dark mode is now the default for everyone who has not explicitly chosen a theme; saved Light mode choices remain respected."
+      ],
+      "userChanges": [
+        "Dark mode is now the default for everyone who has not explicitly chosen a theme; saved Light mode choices remain respected."
+      ]
+    },
     {
       "version": "5.36.5",
       "releasedAt": "2026-07-21",

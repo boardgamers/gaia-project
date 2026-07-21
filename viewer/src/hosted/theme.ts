@@ -1,6 +1,7 @@
 export type Theme = "light" | "dark";
 
 const STORAGE_KEY = "gp-fight-club-theme";
+const DEFAULT_THEME: Theme = "dark";
 const THEME_COLORS: Record<Theme, string> = {
   light: "#ffffff",
   dark: "#1c2027",
@@ -11,7 +12,8 @@ function storedTheme(): Theme | null {
     return null;
   }
   try {
-    return window.localStorage.getItem(STORAGE_KEY) === "dark" ? "dark" : null;
+    const value = window.localStorage.getItem(STORAGE_KEY);
+    return value === "light" || value === "dark" ? value : null;
   } catch {
     // Storage can be unavailable in hardened/private browser contexts. The theme still works for
     // the current page; it just cannot be remembered for the next load.
@@ -20,17 +22,21 @@ function storedTheme(): Theme | null {
 }
 
 export function getTheme(): Theme {
-  // Theme selection remains explicit: existing players keep the mode they chose in-app, while a
-  // first visit stays in the familiar light theme regardless of the device setting.
+  // Existing players keep their explicit choice; everyone else starts in the purpose-designed
+  // dark theme regardless of the device setting.
   const stored = storedTheme();
   if (stored) {
     return stored;
   }
   // DOM state is also the in-session fallback when localStorage is unavailable, so the toggle can
   // still move in both directions in hardened/private browser contexts.
-  return typeof document !== "undefined" && document.documentElement.getAttribute("data-theme") === "dark"
-    ? "dark"
-    : "light";
+  if (typeof document !== "undefined") {
+    const liveTheme = document.documentElement.getAttribute("data-theme");
+    if (liveTheme === "light" || liveTheme === "dark") {
+      return liveTheme;
+    }
+  }
+  return DEFAULT_THEME;
 }
 
 export function applyTheme(theme: Theme, persist = true): void {
