@@ -171,24 +171,93 @@ export function shouldSkipTurnPushForSubscription(
 }
 
 // ---------------------------------------------------------------------------
-// Recurring "still your turn" reminders (the reminder sweep).
+// Recurring "still your turn" reminders (the reminder sweep) + global notification preferences.
 //
 // The one-shot turn push (buildNotifications above) fires only the instant it becomes your turn.
-// The sweep re-nudges a player who still hasn't moved: every 12h, capped, and never during their
-// local night. It's driven by an hourly pg_cron job that re-invokes this Edge Function with
-// {type: "reminder_sweep"} (migration 20260721_turn_reminders); planTurnReminder is the pure
-// per-game decision, index.ts does the IO (candidate query, push, and stamping the game row).
+// The sweep re-nudges a player who still hasn't moved - but only if they've opted in, on their
+// chosen interval (12/24/48h), capped, and outside their configurable quiet hours. It's driven by
+// an hourly pg_cron job that re-invokes this Edge Function with {type: "reminder_sweep"} (migration
+// 20260721_turn_reminders); planTurnReminder is the pure per-game decision, index.ts does the IO
+// (loading prefs, the candidate query, the push, and stamping the game row). All notification types
+// are further gated per-user by NotificationPrefs (category toggles + snooze).
 // ---------------------------------------------------------------------------
 
-export const TURN_REMINDER_AFTER_MS = 12 * 60 * 60 * 1000;
-// Cap: at most this many reminders per turn (so ~36h of nudging after the last move, then silence
-// so a genuinely abandoned game stops pinging).
-export const MAX_TURN_REMINDERS = 3;
-// Quiet hours in the recipient's local time: only remind while the local hour is in
-// [REMINDER_DAY_START_HOUR, REMINDER_DAY_END_HOUR). A reminder due during the night is simply
-// deferred by the hourly sweep until the next in-window hour, never dropped.
-export const REMINDER_DAY_START_HOUR = 8;
-export const REMINDER_DAY_END_HOUR = 22;
+// Per-account (global) notification preferences - one row per user (public.notification_prefs),
+// applied by the server to every game and every device. A missing row means "defaults", so the
+// helpers below always operate on a fully-resolved NotificationPrefs (never a partial DB row).
+export type NotificationPrefs = {
+  turn_pushes: boolean; // the immediate "Your turn" push
+  chat_pushes: boolean;
+  invite_pushes: boolean;
+  finished_pushes: boolean;
+  reminders_enabled: boolean; // the recurring 12h re-nudge - OPT-IN (default off)
+  reminder_interval_hours: number; // how often to re-nudge (12 / 24 / 48)
+  reminder_max_count: number; // how many reminders per turn before giving up
+  quiet_hours_enabled: boolean;
+  quiet_start_hour: number; // local hour the nightly quiet window begins (may wrap midnight)
+  quiet_end_hour: number; // local hour it ends
+  snooze_until: string | null; // ISO timestamp; ALL pushes suppressed until then (null = not snoozed)
+};
+
+export const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
+  turn_pushes: true,
+  chat_pushes: true,
+  invite_pushes: true,
+  finished_pushes: true,
+  reminders_enabled: false,
+  reminder_interval_hours: 12,
+  reminder_max_count: 3,
+  quiet_hours_enabled: true,
+  quiet_start_hour: 22,
+  quiet_end_hour: 8,
+  snooze_until: null,
+};
+
+// The smallest interval a user can pick (the UI offers 12/24/48). The sweep's SQL candidate query
+// prefilters on this so it never drops a game a longer-interval user hasn't reached yet.
+export const MIN_REMINDER_INTERVAL_MS = 12 * 60 * 60 * 1000;
+
+// Fills defaults over a (possibly missing/partial) DB row so callers get a complete prefs object.
+export function resolvePrefs(row: Partial<NotificationPrefs> | null | undefined): NotificationPrefs {
+  return { ...DEFAULT_NOTIFICATION_PREFS, ...(row ?? {}) };
+}
+
+// All pushes are suppressed while a snooze is active.
+export function isSnoozed(prefs: NotificationPrefs, now: number = Date.now()): boolean {
+  if (!prefs.snooze_until) {
+    return false;
+  }
+  const until = new Date(prefs.snooze_until).getTime();
+  return Number.isFinite(until) && now < until;
+}
+
+function isCategoryEnabled(kind: Notification["kind"], prefs: NotificationPrefs): boolean {
+  switch (kind) {
+    case "turn":
+      return prefs.turn_pushes;
+    case "message":
+      return prefs.chat_pushes;
+    case "invite":
+      return prefs.invite_pushes;
+    case "finished":
+      return prefs.finished_pushes;
+    default:
+      return true;
+  }
+}
+
+// Trigger-path gate (index.ts): may this one-shot notification be delivered given the recipient's
+// global prefs? Snooze suppresses everything; otherwise it's the per-category toggle.
+export function isNotificationAllowed(
+  notification: Notification,
+  prefs: NotificationPrefs,
+  now: number = Date.now()
+): boolean {
+  if (isSnoozed(prefs, now)) {
+    return false;
+  }
+  return isCategoryEnabled(notification.kind, prefs);
+}
 
 // Local hour (0-23) for an IANA timezone at `now`, or null if the zone string is unusable.
 export function localHourInZone(tz: string | null | undefined, now: number): number | null {
@@ -212,17 +281,33 @@ export function localHourInZone(tz: string | null | undefined, now: number): num
   }
 }
 
-// Whether it's an OK hour to nudge, judged across all of a player's devices. If any device's
-// timezone says it's daytime we send; unknown/legacy timezones never suppress (better a possibly
-// ill-timed nudge than a reminder that can never fire).
-export function isWithinReminderHours(subscriptions: SubscriptionRow[], now: number = Date.now()): boolean {
+// Whether `hour` (0-23) falls inside the quiet window [startHour, endHour), which may wrap midnight
+// (e.g. 22..8 = 22:00 through 07:59). An empty window (start === end) is never quiet.
+export function isQuietHour(hour: number, startHour: number, endHour: number): boolean {
+  if (startHour === endHour) {
+    return false;
+  }
+  return startHour < endHour ? hour >= startHour && hour < endHour : hour >= startHour || hour < endHour;
+}
+
+// Whether it's an OK hour to nudge, judged across all of a player's devices. Quiet hours disabled ->
+// always OK. If any device's local time is outside the quiet window we send; unknown/legacy
+// timezones never suppress (better a possibly ill-timed nudge than one that can never fire).
+export function isWithinReminderHours(
+  subscriptions: SubscriptionRow[],
+  prefs: NotificationPrefs,
+  now: number = Date.now()
+): boolean {
+  if (!prefs.quiet_hours_enabled) {
+    return true;
+  }
   const zones = subscriptions.map((s) => s.tz).filter((tz): tz is string => !!tz);
   if (zones.length === 0) {
     return true;
   }
   return zones.some((tz) => {
     const hour = localHourInZone(tz, now);
-    return hour === null || (hour >= REMINDER_DAY_START_HOUR && hour < REMINDER_DAY_END_HOUR);
+    return hour === null || !isQuietHour(hour, prefs.quiet_start_hour, prefs.quiet_end_hour);
   });
 }
 
@@ -234,14 +319,19 @@ export type ReminderDecision = {
 };
 
 // Decides whether the current player of `game` should get a turn reminder right now. Pure: given
-// the same game row, the current player's subscriptions, whether they have a premove queued, and
-// the clock, it always returns the same answer. Returns null (no reminder) whenever any gate fails.
+// the same game row, the current player's subscriptions, their global prefs, whether they have a
+// premove queued, and the clock, it always returns the same answer. Returns null whenever any gate
+// fails - including when the player hasn't opted into reminders at all.
 export function planTurnReminder(
   game: GameRow,
   currentPlayerSubscriptions: SubscriptionRow[],
   hasQueuedPremove: boolean,
+  prefs: NotificationPrefs,
   now: number = Date.now()
 ): ReminderDecision | null {
+  if (!prefs.reminders_enabled || isSnoozed(prefs, now)) {
+    return null; // opt-in only, and never while snoozed
+  }
   if (game.status !== "active" || game.current_seat === null) {
     return null;
   }
@@ -252,8 +342,9 @@ export function planTurnReminder(
     return null;
   }
 
+  const intervalMs = Math.max(1, prefs.reminder_interval_hours) * 60 * 60 * 1000;
   const turnStartedAt = game.latest_move_committed_at ? new Date(game.latest_move_committed_at).getTime() : null;
-  if (turnStartedAt === null || now - turnStartedAt < TURN_REMINDER_AFTER_MS) {
+  if (turnStartedAt === null || now - turnStartedAt < intervalMs) {
     return null; // turn hasn't been idle long enough (or hasn't started with a committed move)
   }
 
@@ -262,13 +353,13 @@ export function planTurnReminder(
   // moved, so the count resets implicitly (no commit_turn bookkeeping needed).
   const remindersThisTurn =
     lastReminderAt !== null && lastReminderAt >= turnStartedAt ? game.turn_reminder_count ?? 0 : 0;
-  if (remindersThisTurn >= MAX_TURN_REMINDERS) {
+  if (remindersThisTurn >= prefs.reminder_max_count) {
     return null; // capped for this turn
   }
-  if (lastReminderAt !== null && lastReminderAt >= turnStartedAt && now - lastReminderAt < TURN_REMINDER_AFTER_MS) {
-    return null; // already reminded within the last 12h this turn
+  if (lastReminderAt !== null && lastReminderAt >= turnStartedAt && now - lastReminderAt < intervalMs) {
+    return null; // already reminded within the current interval this turn
   }
-  if (!isWithinReminderHours(currentPlayerSubscriptions, now)) {
+  if (!isWithinReminderHours(currentPlayerSubscriptions, prefs, now)) {
     return null; // recipient's local night - the next sweep will retry in a saner hour
   }
 

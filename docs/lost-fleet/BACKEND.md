@@ -249,6 +249,18 @@ RLS enabled on all three tables. One membership predicate, used everywhere
   per-device `push_subscriptions.tz` (IANA zone captured at subscribe time); a player with no known
   timezone is never suppressed, and a player with no subscribed device is skipped entirely (never
   stamped). The pure per-game decision is `notify/logic.ts::planTurnReminder`; `index.ts` does the IO.
+- **Global notification preferences** (migration `20260721010000_notification_prefs`): a per-user
+  `notification_prefs` row (RLS own-row; the notify function reads it with the service role) is the
+  single, account-wide control set — applied to every game and every device, edited from the bell
+  button's settings modal (`NotificationSettings.vue`). A **missing row = defaults**
+  (`DEFAULT_NOTIFICATION_PREFS`): every category on, but **`reminders_enabled` defaults false**, so the
+  recurring reminder above is opt-in. Fields: per-category toggles (`turn`/`chat`/`invite`/`finished`),
+  `reminders_enabled` + `reminder_interval_hours` (12/24/48) + `reminder_max_count`, `quiet_hours_enabled`
+  - `quiet_start_hour`/`quiet_end_hour` (a midnight-wrapping window, replacing the old fixed 8am–10pm),
+    and `snooze_until` (suppresses **all** pushes until it passes). The trigger path gates each one-shot
+    push by category + snooze (`isNotificationAllowed`); the sweep passes prefs into `planTurnReminder`
+    (interval/cap/quiet/snooze). Whether a _device_ is subscribed at all stays per-device
+    (`push_subscriptions`) — that's the modal's top switch; everything else is global.
 
 ## 7. Viewer integration
 

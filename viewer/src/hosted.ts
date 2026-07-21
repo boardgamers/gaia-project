@@ -8,6 +8,7 @@ import GameNavPanel from "./hosted/GameNavPanel.vue";
 import HostedBar from "./hosted/HostedBar.vue";
 import ImportOfflineGame from "./hosted/ImportOfflineGame.vue";
 import LobbyChatPanel from "./hosted/LobbyChatPanel.vue";
+import NotificationSettings from "./hosted/NotificationSettings.vue";
 import { HostedGameHost, seatToLock } from "./hosted/host";
 import Lobby from "./hosted/Lobby.vue";
 import OpenLobbyGame from "./hosted/OpenLobbyGame.vue";
@@ -97,6 +98,18 @@ async function mountGameInstance(
   // spot further down - HostedBar.vue's settings-menu labels (`chatPanelOpen`/`gameNavPanelOpen`)
   // need to be kept live from `chatNotes`'/`nav`'s own `open` state, and a watcher can't reference
   // `bar` before it exists.
+  const enablePush = async () => {
+    bar.pushBusy = true;
+    window.alert(await enablePushNotifications(client, session.user.id));
+    bar.pushEnabled = await isPushEnabled();
+    bar.pushBusy = false;
+  };
+  const disablePush = async () => {
+    bar.pushBusy = true;
+    window.alert(await disablePushNotifications(client));
+    bar.pushEnabled = await isPushEnabled();
+    bar.pushBusy = false;
+  };
   const bar = new Vue({
     store: emitter.store,
     data: {
@@ -106,37 +119,49 @@ async function mountGameInstance(
       pushBusy: false,
       pushEnabled: false,
       abandoned: false,
+      notifSettingsOpen: false,
       chatPanelOpen: chatNotes.open,
       gameNavPanelOpen: nav.open,
     },
     render(h) {
-      return h(HostedBar, {
-        props: { ...this.$data },
-        on: {
-          "enable-push": async () => {
-            bar.pushBusy = true;
-            window.alert(await enablePushNotifications(client, session.user.id));
-            bar.pushEnabled = await isPushEnabled();
-            bar.pushBusy = false;
+      // The bell now opens a settings modal (rendered as a sibling of the bar so its fixed-position
+      // backdrop floats over the game) rather than toggling the device subscription directly.
+      return h("div", [
+        h(HostedBar, {
+          props: { ...this.$data },
+          on: {
+            "open-notification-settings": () => {
+              bar.notifSettingsOpen = true;
+            },
+            "abandon-game": async () => {
+              const { error } = await client.rpc("abandon_game", { p_game_id: gameId });
+              if (error) {
+                window.alert(`Could not abandon the game: ${error.message}`);
+              } else {
+                bar.abandoned = true;
+              }
+            },
+            "toggle-chat-panel": () => chatNotes.toggleOpen(),
+            "toggle-game-nav-panel": () => nav.toggleOpen(),
           },
-          "disable-push": async () => {
-            bar.pushBusy = true;
-            window.alert(await disablePushNotifications(client));
-            bar.pushEnabled = await isPushEnabled();
-            bar.pushBusy = false;
+        }),
+        h(NotificationSettings, {
+          props: {
+            open: bar.notifSettingsOpen,
+            client,
+            userId: session.user.id,
+            pushEnabled: bar.pushEnabled,
+            pushBusy: bar.pushBusy,
           },
-          "abandon-game": async () => {
-            const { error } = await client.rpc("abandon_game", { p_game_id: gameId });
-            if (error) {
-              window.alert(`Could not abandon the game: ${error.message}`);
-            } else {
-              bar.abandoned = true;
-            }
+          on: {
+            close: () => {
+              bar.notifSettingsOpen = false;
+            },
+            "enable-push": enablePush,
+            "disable-push": disablePush,
           },
-          "toggle-chat-panel": () => chatNotes.toggleOpen(),
-          "toggle-game-nav-panel": () => nav.toggleOpen(),
-        },
-      });
+        }),
+      ]);
     },
   }).$mount(barEl) as any;
   isPushEnabled().then((enabled) => {

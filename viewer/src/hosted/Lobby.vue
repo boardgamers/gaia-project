@@ -9,13 +9,9 @@
           :variant="pushEnabled ? 'success' : 'outline-secondary'"
           :disabled="pushBusy"
           v-b-tooltip.hover
-          :title="
-            pushEnabled
-              ? 'This device is registered for turn notifications. Enable it separately on any other device you play from. Click to turn off.'
-              : 'Enable turn notifications on this device'
-          "
-          aria-label="Toggle notifications"
-          @click="pushEnabled ? disablePush() : enablePush()"
+          title="Notification settings"
+          aria-label="Notification settings"
+          @click="showNotifSettings = true"
         >
           &#128276;
         </b-button>
@@ -125,6 +121,17 @@
     <InfoModal :open="showCredits" title="Credits" @close="showCredits = false">
       <CreditsContent />
     </InfoModal>
+
+    <NotificationSettings
+      :open="showNotifSettings"
+      :client="client"
+      :user-id="myUserId"
+      :push-enabled="pushEnabled"
+      :push-busy="pushBusy"
+      @close="showNotifSettings = false"
+      @enable-push="enablePush"
+      @disable-push="disablePush"
+    />
 
     <b-alert :show="!!message" variant="info" dismissible @dismissed="message = ''">{{ message }}</b-alert>
 
@@ -252,6 +259,7 @@ import {
   summaryForGame as summaryForGameShared,
 } from "./game-bar";
 import InfoModal from "./InfoModal.vue";
+import NotificationSettings from "./NotificationSettings.vue";
 import { fetchMyNickname, setMyNickname } from "./profile";
 import releaseData from "./release.json";
 import { getTheme, toggleTheme } from "./theme";
@@ -381,7 +389,7 @@ type ReleaseEntry = {
 
 export default Vue.extend({
   name: "HostedLobby",
-  components: { GameBar, InfoModal, CreditsContent },
+  components: { GameBar, InfoModal, CreditsContent, NotificationSettings },
   props: {
     client: { type: Object, required: true },
     session: { type: Object, required: true },
@@ -399,6 +407,7 @@ export default Vue.extend({
       changelogTab: "user" as "user" | "dev",
       showNicknameModal: false,
       showCredits: false,
+      showNotifSettings: false,
       myNickname: "" as string,
       nicknameInput: "" as string,
       nicknameSaving: false,

@@ -23,26 +23,14 @@
       style="top: 0; right: 0.5rem; bottom: 0"
     >
       <b-button
-        v-if="pushEnabled"
         size="sm"
-        variant="success"
+        :variant="pushEnabled ? 'success' : 'outline-secondary'"
         class="hosted-bar__push-toggle"
         :disabled="pushBusy"
         v-b-tooltip.hover
-        title="Notifications are on for this device. Click to turn off."
-        @click="$emit('disable-push')"
-      >
-        &#128276;
-      </b-button>
-      <b-button
-        v-else
-        size="sm"
-        variant="outline-secondary"
-        class="hosted-bar__push-toggle"
-        :disabled="pushBusy"
-        v-b-tooltip.hover
-        title="Click to enable turn notifications on this device"
-        @click="$emit('enable-push')"
+        title="Notification settings"
+        aria-label="Notification settings"
+        @click="$emit('open-notification-settings')"
       >
         &#128276;
       </b-button>

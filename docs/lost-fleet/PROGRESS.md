@@ -5,12 +5,12 @@
 > labeled historical rerun log. Do not load this 5,000-line history cover to cover. Read the other
 > ledgers and historical handoffs only when the task touches their subject, following `AGENTS.md`.
 > If the user supplied a concrete task, proceed with it rather than asking "what next?".
-> Last updated: **2026-07-21** ("Done so far" #108 built: recurring 12h "still your turn" reminders
-> via an hourly pg_cron sweep of the `notify` Edge Function, capped at 3 per turn and quiet during the
-> recipient's local night — code/migration/tests landed, live DB apply + pg_cron schedule still
-> pending. Prior: #106 fixed a pinned-URL/PWA `?lobby=1` load getting stuck bouncing back to the
-> offline lobby; #105 Artifact mine-counting fix; #104 four owner-reported "couponing changes". AI task
-> index unchanged).
+> Last updated: **2026-07-21** ("Done so far" #108 + #109: recurring "still your turn" reminders via an
+> hourly pg_cron sweep of the `notify` Edge Function (#108, applied live), then made **opt-in** behind a
+> new global `notification_prefs` table + a bell-button settings modal (#109) — per-category toggles,
+> reminder interval/cap, adjustable quiet hours, and snooze; all account-global, honored server-side.
+> Migrations applied to `mitawjpdxkheascdiffz` and the function redeployed. Prior: #106 pinned-URL/PWA
+> `?lobby=1` fix; #105 Artifact mine-counting fix; #104 "couponing changes". AI task index unchanged).
 
 ## Working agreements (read every session, not optional)
 
@@ -4332,7 +4332,32 @@ components/PlayerBoard/BuildingGroup.spec.ts` (X-mark presence/absence). Engine 
       **Not yet applied to the live DB / deployed** — pushing `supabase/functions/**` auto-deploys the
       (backward-compatible, dormant) `notify` change to prod, but the migration + `pg_cron` schedule
       still need an explicit apply step, and `app_config['notify']` must already be seeded for the sweep
-      to fire.
+      to fire. **Applied 2026-07-21** (migration + `pg_cron` sweep live on `mitawjpdxkheascdiffz`,
+      function deployed; a manual `reminder_sweep` returned `200 {swept:1,reminded:0,...}`). Superseded
+      the same day by #109, which makes reminders opt-in.
+109.  ✅ **Global notification preferences + settings modal; 12h reminder is now opt-in (2026-07-21,
+      owner-requested follow-up to #108).** Owner didn't want the 12h reminder forced on everyone, and
+      wanted one place to control notifications that counts for all games (not per-game). Added a
+      per-account `notification_prefs` table (migration `20260721010000_notification_prefs`, one row per
+      user, RLS own-row) — set once, honored by the `notify` function for every game and device. A
+      **missing row = defaults**, and the default for `reminders_enabled` is **false**, so shipping this
+      immediately turns the always-on 12h reminders from #108 OFF until a user opts in (the intended
+      change). Prefs: per-category toggles (`turn`/`chat`/`invite`/`finished`), reminder on/off +
+      **interval (12/24/48h)** + **cap (1-5)**, **adjustable quiet-hours window** (was a fixed 8am-10pm;
+      now `quiet_start_hour`/`quiet_end_hour`, honored as a midnight-wrapping window via new
+      `isQuietHour`), and **snooze/pause-all** (`snooze_until` suppresses every push until it passes).
+      Device on/off stays per-device (a Web Push subscription is physically bound to one device) — that's
+      the modal's top switch; everything else is global. Server: `notify/logic.ts` gained
+      `NotificationPrefs`/`DEFAULT_NOTIFICATION_PREFS`/`resolvePrefs`/`isSnoozed`/`isNotificationAllowed`
+      and `planTurnReminder` now takes prefs; `index.ts` loads prefs (`loadPrefsByUser`) and gates both
+      the trigger path (category + snooze) and the sweep (interval/cap/quiet/snooze; SQL prefilter uses
+      the 12h `MIN_REMINDER_INTERVAL_MS` minimum). UI: new `NotificationSettings.vue` (rendered inside the
+      existing `InfoModal`) + `notification-prefs.ts` (client mirror of the type/defaults, load/save via
+      upsert); the bell in `HostedBar.vue` (in-game, wired through `hosted.ts`) and `Lobby.vue` now opens
+      the modal instead of toggling the subscription directly. **43/43** `logic.spec.ts` cases (was 30 —
+      +13 for prefs/snooze/interval/cap/adjustable-quiet); viewer build passes, `HostedBar.spec.ts` +
+      `push.spec.ts` still green, full viewer suite **503 pass / 31 pre-existing fail** (same engine/
+      scoring/rotation baseline, none in touched files). Migration applied live and function deployed.
 
 ## Still MISSING — only one art-only item left
 

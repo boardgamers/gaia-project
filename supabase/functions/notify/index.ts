@@ -17,11 +17,37 @@ import {
   buildNotifications,
   currentTurnPlayer,
   GameRow,
+  isNotificationAllowed,
+  MIN_REMINDER_INTERVAL_MS,
+  NotificationPrefs,
   planTurnReminder,
+  resolvePrefs,
   shouldSkipTurnPushForSubscription,
   SubscriptionRow,
-  TURN_REMINDER_AFTER_MS,
 } from "./logic.ts";
+
+// Columns of public.notification_prefs the notify function reads.
+const PREFS_COLUMNS =
+  "user_id,turn_pushes,chat_pushes,invite_pushes,finished_pushes,reminders_enabled," +
+  "reminder_interval_hours,reminder_max_count,quiet_hours_enabled,quiet_start_hour,quiet_end_hour,snooze_until";
+
+// Loads global prefs for the given users into a Map, resolving defaults for anyone without a row.
+async function loadPrefsByUser(supabase: SupabaseClient, userIds: string[]): Promise<Map<string, NotificationPrefs>> {
+  const byUser = new Map<string, NotificationPrefs>();
+  if (userIds.length === 0) {
+    return byUser;
+  }
+  const { data } = await supabase.from("notification_prefs").select(PREFS_COLUMNS).in("user_id", userIds);
+  for (const row of (data ?? []) as (Partial<NotificationPrefs> & { user_id: string })[]) {
+    byUser.set(row.user_id, resolvePrefs(row));
+  }
+  for (const id of userIds) {
+    if (!byUser.has(id)) {
+      byUser.set(id, resolvePrefs(null));
+    }
+  }
+  return byUser;
+}
 
 // deno-lint-ignore no-explicit-any
 type SupabaseClient = any;
@@ -102,11 +128,18 @@ Deno.serve(async (req) => {
     return new Response("subscriptions unavailable", { status: 500 });
   }
 
+  // Global per-user prefs decide whether each recipient wants this category at all (and whether
+  // they're snoozed). Missing row = defaults (every category on except opt-in reminders).
+  const prefsByUser = await loadPrefsByUser(supabase, userIds);
+
   const { appServer, siteUrl } = await buildAppServer(cfg.value);
 
   let sent = 0;
   const gone: string[] = [];
   for (const notification of notifications) {
+    if (!isNotificationAllowed(notification, prefsByUser.get(notification.userId) ?? resolvePrefs(null))) {
+      continue; // recipient turned this category off, or is snoozed
+    }
     const payload = JSON.stringify({
       title: notification.title,
       body: notification.body,
@@ -189,7 +222,9 @@ async function runReminderSweep(supabase: SupabaseClient): Promise<Response> {
     return new Response("vapid config missing", { status: 500 });
   }
 
-  const cutoff = new Date(Date.now() - TURN_REMINDER_AFTER_MS).toISOString();
+  // Prefilter on the SMALLEST interval a user can choose (12h) so a longer-interval opt-in isn't
+  // dropped here; planTurnReminder applies each user's actual interval.
+  const cutoff = new Date(Date.now() - MIN_REMINDER_INTERVAL_MS).toISOString();
   const { data: games, error: gamesError } = await supabase
     .from("games")
     .select("*, players(*)")
@@ -212,9 +247,10 @@ async function runReminderSweep(supabase: SupabaseClient): Promise<Response> {
   const userIds = [...new Set(currentPlayers.map((entry) => entry.player!.user_id as string))];
   const gameIds = currentPlayers.map((entry) => entry.game.id);
 
-  const [{ data: subscriptions }, { data: premoves }] = await Promise.all([
+  const [{ data: subscriptions }, { data: premoves }, prefsByUser] = await Promise.all([
     supabase.from("push_subscriptions").select("id,user_id,endpoint,p256dh,auth,user_agent,tz").in("user_id", userIds),
     supabase.from("premoves").select("game_id,seat").in("game_id", gameIds),
+    loadPrefsByUser(supabase, userIds),
   ]);
   const subsByUser = new Map<string, SubscriptionRow[]>();
   for (const sub of (subscriptions ?? []) as SubscriptionRow[]) {
@@ -238,8 +274,9 @@ async function runReminderSweep(supabase: SupabaseClient): Promise<Response> {
     if (currentPlayerSubs.length === 0) {
       continue;
     }
+    const prefs = prefsByUser.get(currentTurnPlayer(game)!.user_id as string) ?? resolvePrefs(null);
     const hasQueuedPremove = premoveSeats.has(`${game.id}:${game.current_seat}`);
-    const decision = planTurnReminder(game, currentPlayerSubs, hasQueuedPremove);
+    const decision = planTurnReminder(game, currentPlayerSubs, hasQueuedPremove, prefs);
     if (!decision) {
       continue;
     }

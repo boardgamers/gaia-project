@@ -2,18 +2,33 @@ import { strict as assert } from "assert";
 
 import {
   buildNotifications,
+  DEFAULT_NOTIFICATION_PREFS,
   gameLabel,
   GameRow,
+  isNotificationAllowed,
+  isQuietHour,
+  isSnoozed,
   isWithinReminderHours,
   localHourInZone,
-  MAX_TURN_REMINDERS,
+  MIN_REMINDER_INTERVAL_MS,
+  Notification,
+  NotificationPrefs,
   planTurnReminder,
   PlayerRow,
   RECENTLY_ACTIVE_MS,
+  resolvePrefs,
   shouldSkipTurnPushForSubscription,
   SubscriptionRow,
-  TURN_REMINDER_AFTER_MS,
 } from "./logic";
+
+// Reminders are opt-in; most planTurnReminder tests want them on with default cadence.
+const REMINDERS_ON: NotificationPrefs = { ...DEFAULT_NOTIFICATION_PREFS, reminders_enabled: true };
+function prefs(overrides: Partial<NotificationPrefs> = {}): NotificationPrefs {
+  return { ...REMINDERS_ON, ...overrides };
+}
+function notif(kind: Notification["kind"]): Notification {
+  return { userId: "user-1", title: "GP: Fight Club", body: "x", tag: `${kind}-game-1`, kind };
+}
 
 function makePlayer(overrides: Partial<PlayerRow> = {}): PlayerRow {
   return {
@@ -208,11 +223,63 @@ describe("notify logic", () => {
   });
 });
 
+describe("notification preferences", () => {
+  it("fills defaults for a missing/partial row", () => {
+    assert.deepEqual(resolvePrefs(null), DEFAULT_NOTIFICATION_PREFS);
+    assert.equal(resolvePrefs({ reminders_enabled: true }).reminders_enabled, true);
+    assert.equal(resolvePrefs({ reminders_enabled: true }).turn_pushes, true); // default preserved
+  });
+
+  it("reminders are opt-in (off) by default", () => {
+    assert.equal(DEFAULT_NOTIFICATION_PREFS.reminders_enabled, false);
+    assert.equal(DEFAULT_NOTIFICATION_PREFS.turn_pushes, true);
+  });
+
+  describe("isSnoozed", () => {
+    const NOW = Date.UTC(2026, 0, 15, 12, 0, 0);
+    it("is false with no snooze and true while a future snooze is active", () => {
+      assert.equal(isSnoozed(prefs({ snooze_until: null }), NOW), false);
+      assert.equal(isSnoozed(prefs({ snooze_until: new Date(NOW + 60_000).toISOString() }), NOW), true);
+      assert.equal(isSnoozed(prefs({ snooze_until: new Date(NOW - 60_000).toISOString() }), NOW), false);
+    });
+  });
+
+  describe("isNotificationAllowed", () => {
+    it("gates each category by its own toggle", () => {
+      assert.equal(isNotificationAllowed(notif("turn"), prefs({ turn_pushes: false })), false);
+      assert.equal(isNotificationAllowed(notif("message"), prefs({ chat_pushes: false })), false);
+      assert.equal(isNotificationAllowed(notif("invite"), prefs({ invite_pushes: false })), false);
+      assert.equal(isNotificationAllowed(notif("finished"), prefs({ finished_pushes: false })), false);
+      assert.equal(isNotificationAllowed(notif("turn"), prefs()), true);
+    });
+
+    it("suppresses everything while snoozed, even an enabled category", () => {
+      const snoozed = prefs({ snooze_until: new Date(Date.now() + 3_600_000).toISOString() });
+      assert.equal(isNotificationAllowed(notif("turn"), snoozed), false);
+      assert.equal(isNotificationAllowed(notif("message"), snoozed), false);
+    });
+  });
+
+  describe("isQuietHour", () => {
+    it("handles a midnight-wrapping window (22..8)", () => {
+      assert.equal(isQuietHour(23, 22, 8), true);
+      assert.equal(isQuietHour(3, 22, 8), true);
+      assert.equal(isQuietHour(8, 22, 8), false); // end is exclusive
+      assert.equal(isQuietHour(12, 22, 8), false);
+    });
+    it("handles a same-day window (1..6) and an empty window", () => {
+      assert.equal(isQuietHour(3, 1, 6), true);
+      assert.equal(isQuietHour(6, 1, 6), false);
+      assert.equal(isQuietHour(5, 9, 9), false); // start === end => never quiet
+    });
+  });
+});
+
 describe("turn reminders", () => {
   // Noon UTC - a "daytime" instant. UTC has no DST, so localHourInZone("UTC") is deterministic.
   const NOON = Date.UTC(2026, 0, 15, 12, 0, 0);
   const THREE_AM = Date.UTC(2026, 0, 15, 3, 0, 0);
-  const staleMoveIso = (now: number) => new Date(now - TURN_REMINDER_AFTER_MS - 60_000).toISOString();
+  const staleMoveIso = (now: number) => new Date(now - MIN_REMINDER_INTERVAL_MS - 60_000).toISOString();
 
   describe("localHourInZone", () => {
     it("returns the UTC hour for the UTC zone", () => {
@@ -229,16 +296,30 @@ describe("turn reminders", () => {
 
   describe("isWithinReminderHours", () => {
     it("allows sending when no subscription reports a timezone", () => {
-      assert.equal(isWithinReminderHours([], NOON), true);
-      assert.equal(isWithinReminderHours([makeSubscription({ tz: null })], THREE_AM), true);
+      assert.equal(isWithinReminderHours([], prefs(), NOON), true);
+      assert.equal(isWithinReminderHours([makeSubscription({ tz: null })], prefs(), THREE_AM), true);
     });
 
     it("suppresses when it's the middle of the night in the only known zone", () => {
-      assert.equal(isWithinReminderHours([makeSubscription({ tz: "UTC" })], THREE_AM), false);
+      assert.equal(isWithinReminderHours([makeSubscription({ tz: "UTC" })], prefs(), THREE_AM), false);
     });
 
     it("allows when it's daytime in the known zone", () => {
-      assert.equal(isWithinReminderHours([makeSubscription({ tz: "UTC" })], NOON), true);
+      assert.equal(isWithinReminderHours([makeSubscription({ tz: "UTC" })], prefs(), NOON), true);
+    });
+
+    it("never suppresses when quiet hours are disabled", () => {
+      assert.equal(
+        isWithinReminderHours([makeSubscription({ tz: "UTC" })], prefs({ quiet_hours_enabled: false }), THREE_AM),
+        true
+      );
+    });
+
+    it("honors a custom quiet window", () => {
+      // Quiet 10..14 (daytime nap): noon is now suppressed, 3am is fine.
+      const custom = prefs({ quiet_start_hour: 10, quiet_end_hour: 14 });
+      assert.equal(isWithinReminderHours([makeSubscription({ tz: "UTC" })], custom, NOON), false);
+      assert.equal(isWithinReminderHours([makeSubscription({ tz: "UTC" })], custom, THREE_AM), true);
     });
 
     it("allows when any one of a player's devices is in a daytime zone", () => {
@@ -246,7 +327,7 @@ describe("turn reminders", () => {
         makeSubscription({ id: "s1", tz: "UTC" }), // 03:00 - night
         makeSubscription({ id: "s2", tz: "Asia/Tokyo" }), // 12:00 - day
       ];
-      assert.equal(isWithinReminderHours(subs, THREE_AM), true);
+      assert.equal(isWithinReminderHours(subs, prefs(), THREE_AM), true);
     });
   });
 
@@ -260,7 +341,7 @@ describe("turn reminders", () => {
       });
 
     it("reminds the current player of a turn idle past the threshold", () => {
-      const decision = planTurnReminder(reminderGame(), [], false, NOON);
+      const decision = planTurnReminder(reminderGame(), [], false, prefs(), NOON);
 
       assert.ok(decision);
       assert.equal(decision!.userId, "user-1");
@@ -270,67 +351,90 @@ describe("turn reminders", () => {
       assert.equal(decision!.notification.tag, "turn-game-1"); // same tag as the original turn push
     });
 
-    it("does not remind before the turn has been idle 12h", () => {
-      const freshMove = new Date(NOON - TURN_REMINDER_AFTER_MS + 60_000).toISOString();
-      assert.equal(planTurnReminder(reminderGame({ latest_move_committed_at: freshMove }), [], false, NOON), null);
+    it("does nothing unless the player opted into reminders", () => {
+      assert.equal(planTurnReminder(reminderGame(), [], false, prefs({ reminders_enabled: false }), NOON), null);
+    });
+
+    it("does nothing while the player is snoozed", () => {
+      const snoozed = prefs({ snooze_until: new Date(NOON + 3_600_000).toISOString() });
+      assert.equal(planTurnReminder(reminderGame(), [], false, snoozed, NOON), null);
+    });
+
+    it("does not remind before the turn has been idle the chosen interval", () => {
+      const freshMove = new Date(NOON - MIN_REMINDER_INTERVAL_MS + 60_000).toISOString();
+      assert.equal(
+        planTurnReminder(reminderGame({ latest_move_committed_at: freshMove }), [], false, prefs(), NOON),
+        null
+      );
+    });
+
+    it("respects a longer chosen interval (24h): 13h idle is not yet due", () => {
+      // staleMoveIso is ~12h+1m old; with a 24h interval that's not enough.
+      assert.equal(planTurnReminder(reminderGame(), [], false, prefs({ reminder_interval_hours: 24 }), NOON), null);
     });
 
     it("does not remind when the current player already moved this turn", () => {
-      assert.equal(planTurnReminder(reminderGame({ last_committed_by: "user-1" }), [], false, NOON), null);
+      assert.equal(planTurnReminder(reminderGame({ last_committed_by: "user-1" }), [], false, prefs(), NOON), null);
     });
 
     it("does not remind when a premove is queued", () => {
-      assert.equal(planTurnReminder(reminderGame(), [], true, NOON), null);
+      assert.equal(planTurnReminder(reminderGame(), [], true, prefs(), NOON), null);
     });
 
     it("does not remind during the recipient's local night", () => {
       const subs = [makeSubscription({ tz: "UTC" })];
-      assert.equal(planTurnReminder(reminderGame({}, THREE_AM), subs, false, THREE_AM), null);
+      assert.equal(planTurnReminder(reminderGame({}, THREE_AM), subs, false, prefs(), THREE_AM), null);
     });
 
     it("stops reminding once the per-turn cap is reached", () => {
       const capped = reminderGame({
-        turn_reminder_count: MAX_TURN_REMINDERS,
-        // stamped after the turn started, so it counts against this turn
-        last_turn_reminder_at: new Date(NOON - 60_000).toISOString(),
+        turn_reminder_count: DEFAULT_NOTIFICATION_PREFS.reminder_max_count,
+        last_turn_reminder_at: new Date(NOON - 60_000).toISOString(), // after the turn started
       });
-      assert.equal(planTurnReminder(capped, [], false, NOON), null);
+      assert.equal(planTurnReminder(capped, [], false, prefs(), NOON), null);
     });
 
-    it("throttles to one reminder per 12h within a turn", () => {
+    it("honors a custom cap", () => {
+      const oneAndDone = reminderGame({
+        turn_reminder_count: 1,
+        last_turn_reminder_at: new Date(NOON - MIN_REMINDER_INTERVAL_MS - 60_000).toISOString(), // interval elapsed
+      });
+      assert.equal(planTurnReminder(oneAndDone, [], false, prefs({ reminder_max_count: 1 }), NOON), null);
+    });
+
+    it("throttles to one reminder per interval within a turn", () => {
       const recentlyReminded = reminderGame({
         turn_reminder_count: 1,
         last_turn_reminder_at: new Date(NOON - 60_000).toISOString(), // 1 min ago
       });
-      assert.equal(planTurnReminder(recentlyReminded, [], false, NOON), null);
+      assert.equal(planTurnReminder(recentlyReminded, [], false, prefs(), NOON), null);
     });
 
     it("ignores a reminder count left over from a previous turn", () => {
-      // Player moved since (turn started at staleMoveIso), but the stale count/stamp predate it.
       const priorTurn = reminderGame({
-        turn_reminder_count: MAX_TURN_REMINDERS,
-        last_turn_reminder_at: new Date(NOON - TURN_REMINDER_AFTER_MS - 120_000).toISOString(),
+        turn_reminder_count: DEFAULT_NOTIFICATION_PREFS.reminder_max_count,
+        last_turn_reminder_at: new Date(NOON - MIN_REMINDER_INTERVAL_MS - 120_000).toISOString(),
       });
-      const decision = planTurnReminder(priorTurn, [], false, NOON);
+      const decision = planTurnReminder(priorTurn, [], false, prefs(), NOON);
 
       assert.ok(decision);
-      assert.equal(decision!.reminderCount, 1); // reset - this is the first reminder of the new turn
+      assert.equal(decision!.reminderCount, 1); // reset - first reminder of the new turn
     });
 
-    it("sends the next reminder once 12h have passed since the last one this turn", () => {
+    it("sends the next reminder once the interval has passed since the last one this turn", () => {
       const dueAgain = reminderGame({
         turn_reminder_count: 1,
-        last_turn_reminder_at: new Date(NOON - TURN_REMINDER_AFTER_MS - 60_000).toISOString(),
+        last_turn_reminder_at: new Date(NOON - MIN_REMINDER_INTERVAL_MS - 60_000).toISOString(),
       });
-      const decision = planTurnReminder(dueAgain, [], false, NOON);
+      const decision = planTurnReminder(dueAgain, [], false, prefs(), NOON);
 
       assert.ok(decision);
       assert.equal(decision!.reminderCount, 2);
     });
 
     it("does not remind a finished game or one with no current seat", () => {
-      assert.equal(planTurnReminder(reminderGame({ status: "finished" }), [], false, NOON), null);
-      assert.equal(planTurnReminder(reminderGame({ current_seat: null }), [], false, NOON), null);
+      assert.equal(planTurnReminder(reminderGame({ status: "finished" }), [], false, prefs(), NOON), null);
+      assert.equal(planTurnReminder(reminderGame({ current_seat: null }), [], false, prefs(), NOON), null);
     });
   });
 });
