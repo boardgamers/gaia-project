@@ -4080,25 +4080,25 @@ opacity: 0.7 }` wrapper that also diluted the X itself, while `BoardAction.vue`'
       `pnpm test`: 440 passing/31 failing both before and after (identical failing-test names,
       confirmed via `git stash` on the same run - all pre-existing, none touch these components).
 
-                                                                                   **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
-                                                                                   pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
-                                                                                   desktop mice, which was never the actual bug - only touch devices raced hover against the
-                                                                                   click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
-                                                                                   `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
-                                                                                   `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
-                                                                                   shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
-                                                                                   `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
-                                                                                   directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
-                                                                                   `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
-                                                                                   config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
-                                                                                   on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
-                                                                                   desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
-                                                                                   is what actually closed that race originally. Verified live via Playwright with two device
-                                                                                   profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
-                                                                                   tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
-                                                                                   context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
-                                                                                   a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
-                                                                                   still 440 passing/31 failing, same pre-existing set.
+                                                                                         **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
+                                                                                         pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
+                                                                                         desktop mice, which was never the actual bug - only touch devices raced hover against the
+                                                                                         click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
+                                                                                         `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
+                                                                                         `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
+                                                                                         shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
+                                                                                         `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
+                                                                                         directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
+                                                                                         `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
+                                                                                         config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
+                                                                                         on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
+                                                                                         desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
+                                                                                         is what actually closed that race originally. Verified live via Playwright with two device
+                                                                                         profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
+                                                                                         tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
+                                                                                         context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
+                                                                                         a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
+                                                                                         still 440 passing/31 failing, same pre-existing set.
 
 102.  ✅ **Offline pass-and-play with automatic local recovery and airplane-mode launch
       (2026-07-17, v5.31.0).** The viewer now has a dedicated `?offline=1` hot-seat mode, linked from
@@ -4316,68 +4316,35 @@ components/PlayerBoard/BuildingGroup.spec.ts` (X-mark presence/absence). Engine 
       (`vue-cli-service build`) succeeds. Changelog: the Live-badge parity is `user:` (a real, visible
       new indicator); the My-games filter fix is `dev:` (bug fix, not a new feature) — both added via
       `update-viewer-release.js` (v5.35.1).
-108.  ✅ **Recurring "still your turn" reminders (2026-07-21, owner-requested).** The one-shot turn
-      push only fired the instant it became your turn; there was no follow-up if you never moved. Added
-      an hourly `pg_cron` sweep that re-invokes the existing `notify` Edge Function with
-      `{type:'reminder_sweep'}` (migration `20260721000000_turn_reminders`, same `app_config['notify']`
-      URL/key pattern as the trigger — no hardcoded secrets, silent no-op until seeded). The sweep
-      re-sends **"Still your turn in <game>"** (same `turn-<id>` tag so the OS replaces rather than
-      stacks) to the current player of any active game whose turn has been idle past **12h**, repeating
-      **every 12h, capped at 3 per turn**, and **never during the recipient's local night** (only while
-      their local hour is in `[8, 22)`; a nudge due at night is deferred to the next daytime sweep, per
-      the owner's "don't remind at 3am" note). New columns `games.last_turn_reminder_at` /
-      `games.turn_reminder_count` hold per-turn state; the count resets implicitly once the player moves
-      (any reminder stamped before `latest_move_committed_at` counts as a previous turn's — no
-      `commit_turn` change). Quiet hours use a new per-device `push_subscriptions.tz` (IANA zone
-      captured at subscribe time in `viewer/src/hosted/push.ts`, and **backfilled once on app/lobby
-      boot** via `backfillSubscriptionTimezone()` for devices whose subscription predates the column —
-      wired into the existing `isPushEnabled()` boot checks in `hosted.ts`/`Lobby.vue`, updating only
-      rows where `tz is null`); unknown-tz players are never suppressed and players with no subscribed
-      device are skipped without stamping. Pure decision in
-      `notify/logic.ts::planTurnReminder`, IO (candidate query, push, stamping) in `notify/index.ts`
-      (push-send machinery refactored into shared `buildAppServer`/`pushToSubscription` helpers). 16 new
-      `logic.spec.ts` cases (**30/30** passing via the engine-mocha invocation noted in this doc's
-      testing note); existing `push.spec.ts` still **3/3** and the viewer build compiles the `tz` change.
-      **Not yet applied to the live DB / deployed** — pushing `supabase/functions/**` auto-deploys the
-      (backward-compatible, dormant) `notify` change to prod, but the migration + `pg_cron` schedule
-      still need an explicit apply step, and `app_config['notify']` must already be seeded for the sweep
-      to fire. **Applied 2026-07-21** (migration + `pg_cron` sweep live on `mitawjpdxkheascdiffz`,
-      function deployed; a manual `reminder_sweep` returned `200 {swept:1,reminded:0,...}`). Extended
-      the same day by #109 (configurable prefs + settings modal).
-109.  ✅ **Global notification preferences + settings modal; 12h reminder configurable, on by default
-      (2026-07-21, owner-requested follow-up to #108).** Owner wanted one place to control
-      notifications that counts for all games (not per-game), with the reminder configurable. Added a
-      per-account `notification_prefs` table (migration `20260721010000_notification_prefs`, one row per
-      user, RLS own-row) — set once, honored by the `notify` function for every game and device. A
-      **missing row = defaults**. The reminder default flip-flopped during the session and landed **on
-      by default (opt-out)** per the owner's final call (migration `20260721020000_reminders_on_by_default`
-      sets the column default true; `DEFAULT_NOTIFICATION_PREFS.reminders_enabled = true` in the notify
-      function is what actually drives it for the majority who never open the modal, capped and
-      quiet-hours/timezone-gated as before). Prefs: per-category toggles
-      (`turn`/`chat`/`invite`/`finished`), reminder on/off +
-      **interval (12/24/48h)** + **cap (1-5)**, **adjustable quiet-hours window** (was a fixed 8am-10pm;
-      now `quiet_start_hour`/`quiet_end_hour`, honored as a midnight-wrapping window via new
-      `isQuietHour`), and **snooze/pause-all** (`snooze_until` suppresses every push until it passes).
-      Device on/off stays per-device (a Web Push subscription is physically bound to one device) — that's
-      the modal's top switch; everything else is global. Server: `notify/logic.ts` gained
-      `NotificationPrefs`/`DEFAULT_NOTIFICATION_PREFS`/`resolvePrefs`/`isSnoozed`/`isNotificationAllowed`
-      and `planTurnReminder` now takes prefs; `index.ts` loads prefs (`loadPrefsByUser`) and gates both
-      the trigger path (category + snooze) and the sweep (interval/cap/quiet/snooze; SQL prefilter uses
-      the 12h `MIN_REMINDER_INTERVAL_MS` minimum). UI: new `NotificationSettings.vue` (rendered inside the
-      existing `InfoModal`) + `notification-prefs.ts` (client mirror of the type/defaults, load/save via
-      upsert); the bell in `HostedBar.vue` (in-game, wired through `hosted.ts`) and `Lobby.vue` now opens
-      the modal instead of toggling the subscription directly. **43/43** `logic.spec.ts` cases (was 30 —
-      +13 for prefs/snooze/interval/cap/adjustable-quiet); viewer build passes, `HostedBar.spec.ts` +
-      `push.spec.ts` still green, full viewer suite **503 pass / 31 pre-existing fail** (same engine/
-      scoring/rotation baseline, none in touched files). Migration applied live and function deployed.
-      **Follow-up polish (2026-07-21, v5.36.1):** owner reported the modal flashed small-then-big on
-      open, looked plain, and the on/off felt clunky. `NotificationSettings.vue` was rebuilt as a
-      self-contained compact modal (~23rem, own backdrop, custom iOS-style CSS switches,
-      Escape-to-close, fade/rise transition); the load flash is gone because the form renders full-size
-      from defaults and populates in place; and the device subscribe/unsubscribe moved into the modal
-      with inline status via a new `push-changed` event, replacing the `window.alert` flow and removing
-      the enable/disable plumbing from `hosted.ts`/`Lobby.vue`. Light-only styling (the app's dark mode
-      is a global invert filter). Full viewer suite still **503/31**.
+108.  ✅ **Presence dot now means "actually in the game, in the foreground" + an entrant notice
+      (2026-07-21), user-requested.** Two parts. (1) **Accuracy of the green dot.** The presence
+      roster (`presence.ts`, shown on the avatar's `PlayerCircle` dot, `TurnOrder`, the lobby/in-game
+      "Live" badges, chat status dots) is a Supabase Realtime **Presence** channel — already
+      event-driven and effectively realtime (a `channel.track()` broadcasts to every subscriber in
+      ~a second, no polling; the 20s `markSeatsActive` heartbeat only feeds the _yellow_ fallback for
+      fully-disconnected users). The green ("focused on this exact game") dot was computed from the
+      Page Visibility API alone (`document.visibilityState === "visible"`), which on **desktop** is
+      too generous: a selected tab stays "visible" even when its whole window is behind another app
+      (alt-tabbed away / another window on top), and `visibilitychange` never even fires for that —
+      so a game left open behind Slack still showed green. Fixed by defining focus as
+      `document.visibilityState === "visible" && document.hasFocus()` (new `isActivelyFocused()` in
+      `presence.ts`) and re-tracking on `focus`/`blur` in addition to `visibilitychange`, so the
+      window losing/regaining OS focus flips green↔yellow **immediately** for everyone. Mobile has no
+      windowing, so `hasFocus()` tracks visibility there and it stays accurate (minimize/app-switch
+      drops both). Note on the true limit: there is no web API for "these pixels are literally on
+      top"; visible + `hasFocus()` is the standard proxy and covers every case the owner named
+      (alt-tab, another window, minimize, background tab). (2) **Entrant notice.** New
+      `GameEntryNotice.vue`, mounted by `hosted.ts` directly under the top banner (its own element
+      between `barEl` and the board), shows a dismissible "X just entered the game." line when another
+      player opens this game while you're already in it. Driven by a new `usersInGame(state, gameId)`
+      presence helper: `hosted.ts`'s existing presence watcher diffs the set of users present in this
+      game across syncs — the first sync only establishes a baseline (so the people already here,
+      including yourself, never announce), and only genuinely later arrivals fire; the current user is
+      always excluded, and the name comes from `host.players`' `display_name` (falls back to "A
+      player"). New `usersInGame` unit tests in `presence.spec.ts`. Verified via a clean-baseline diff
+      (`git stash`): 503 passing/31 failing before, 506 passing/31 failing after (same pre-existing
+      unrelated failure set — Chart/scoring/test-player snapshots — as #102/#103/#106/#107) — no
+      regressions.
 
 ## Still MISSING — only one art-only item left
 

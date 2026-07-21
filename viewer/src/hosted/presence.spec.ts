@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { presenceStatus } from "./presence";
+import { presenceStatus, usersInGame } from "./presence";
 
 describe("presenceStatus", () => {
   it("returns grey when there's no user id", () => {
@@ -34,5 +34,32 @@ describe("presenceStatus", () => {
     const state = { u1: [{ context: { type: "game" as const, gameId: "game-1" }, focused: true }] };
     const twentyMinutesAgo = new Date(Date.now() - 20 * 60_000).toISOString();
     expect(presenceStatus(state, "u1", "game-1", twentyMinutesAgo)).to.equal("green");
+  });
+});
+
+describe("usersInGame", () => {
+  it("returns the ids of users with a tab open on this exact game, regardless of focus", () => {
+    const state = {
+      focused: [{ context: { type: "game" as const, gameId: "game-1" }, focused: true }],
+      background: [{ context: { type: "game" as const, gameId: "game-1" }, focused: false }],
+      "other-game": [{ context: { type: "game" as const, gameId: "game-2" }, focused: true }],
+      "in-lobby": [{ context: { type: "lobby" as const }, focused: true }],
+    };
+    const ids = usersInGame(state, "game-1");
+    expect([...ids].sort()).to.deep.equal(["background", "focused"]);
+  });
+
+  it("counts a user with multiple tabs (this game + elsewhere) as in this game", () => {
+    const state = {
+      u1: [
+        { context: { type: "lobby" as const }, focused: false },
+        { context: { type: "game" as const, gameId: "game-1" }, focused: false },
+      ],
+    };
+    expect(usersInGame(state, "game-1").has("u1")).to.equal(true);
+  });
+
+  it("returns an empty set when nobody is in the game", () => {
+    expect(usersInGame({}, "game-1").size).to.equal(0);
   });
 });

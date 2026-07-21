@@ -4,6 +4,7 @@ import { fetchMyApprovalStatus } from "./hosted/approval";
 import Game from "./components/Game.vue";
 import CreateGame from "./hosted/CreateGame.vue";
 import ChatNotesPanel from "./hosted/ChatNotesPanel.vue";
+import GameEntryNotice from "./hosted/GameEntryNotice.vue";
 import GameNavPanel from "./hosted/GameNavPanel.vue";
 import HostedBar from "./hosted/HostedBar.vue";
 import ImportOfflineGame from "./hosted/ImportOfflineGame.vue";
@@ -14,7 +15,7 @@ import Lobby from "./hosted/Lobby.vue";
 import OpenLobbyGame from "./hosted/OpenLobbyGame.vue";
 import PendingApproval from "./hosted/PendingApproval.vue";
 import { backfillSubscriptionTimezone, isPushEnabled } from "./hosted/push";
-import { isOnline, trackPresence } from "./hosted/presence";
+import { isOnline, PresenceState, trackPresence, usersInGame } from "./hosted/presence";
 import SignIn from "./hosted/SignIn.vue";
 import { createSupabaseBackend, getSupabaseClient, subscribeMoves, SupabaseClient } from "./hosted/supabase-client";
 import { setViewportZoomLocked } from "./hosted/viewport";
@@ -52,6 +53,10 @@ async function mountGameInstance(
 ): Promise<() => void> {
   const cleanups: Array<() => void> = [];
   const barEl = document.createElement("div");
+  // Sits directly under the top banner (barEl) - a dismissible "X just entered the game" line shown
+  // when another player opens this game while you're already in it (driven by the presence watcher
+  // below). Its own element so it stays pinned under the bar, above the loading spinner/board.
+  const entryNoticeEl = document.createElement("div");
   // Vue's initial `$mount(selector)` replaces the target element outright (attributes
   // and inline styles included), so hiding "#hosted-game" itself is a no-op once
   // launch() mounts onto it - the wrapper below is never touched by that replace and
@@ -67,8 +72,11 @@ async function mountGameInstance(
   loadingEl.className = "text-muted text-center py-5";
   loadingEl.textContent = "Loading game…";
   slot.appendChild(barEl);
+  slot.appendChild(entryNoticeEl);
   slot.appendChild(loadingEl);
   slot.appendChild(gameWrapperEl);
+  const entryNoticeRoot = new Vue({ render: (h) => h(GameEntryNotice) }).$mount(entryNoticeEl) as any;
+  const entryNotice = entryNoticeRoot.$children[0] as any;
 
   // Created before `bar` so HostedBar.vue can embed <TurnOrder /> (PROGRESS.md Gaia 10) sharing
   // the SAME store as the Game tree below - TurnOrder
@@ -181,12 +189,33 @@ async function mountGameInstance(
   // GameNavPanel.vue's GameBar.vue rows show the same presence dots as Lobby.vue's own list - fed
   // the same way, for the same reason (see the comment just above).
   nav.presenceState = emitter.store.state.presence;
+  // Entrant notice: diff the set of users present in THIS game across presence syncs and announce
+  // anyone who newly appears while I'm here. `knownInGame` starts null so the very first sync
+  // (everyone already in the game when I opened it, including myself) only establishes the baseline
+  // and never announces - only genuine later arrivals fire a notice. My own id is always excluded.
+  let knownInGame: Set<string> | null = null;
+  const announceEntrants = (presence: PresenceState) => {
+    const current = usersInGame(presence, gameId);
+    if (knownInGame === null) {
+      knownInGame = current;
+      return;
+    }
+    for (const userId of current) {
+      if (userId === session.user.id || knownInGame.has(userId)) {
+        continue;
+      }
+      const name = host.players.find((p) => p.user_id === userId)?.display_name ?? "";
+      entryNotice.notifyEntered(name);
+    }
+    knownInGame = current;
+  };
   const unwatchPresence = emitter.store.watch(
     (state: any) => state.presence,
-    (presence: unknown) => {
+    (presence: any) => {
       chatNotes.presenceState = presence;
       nav.presenceState = presence;
       updateBarLive();
+      announceEntrants(presence as PresenceState);
     }
   );
   cleanups.push(unwatchPresence);
@@ -277,6 +306,7 @@ async function mountGameInstance(
     }
     bar.$destroy();
     chatNotesRoot.$destroy();
+    entryNoticeRoot.$destroy();
     emitter.app.$destroy();
   };
 

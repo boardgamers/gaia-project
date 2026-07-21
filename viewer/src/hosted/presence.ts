@@ -13,10 +13,28 @@ export type PresenceState = Record<string, PresenceMeta[]>;
 const CHANNEL_NAME = "presence:app";
 
 /**
+ * "Is this user genuinely looking at this page right now" - the signal behind the green presence
+ * dot. Page Visibility alone (`document.visibilityState`) is not enough on desktop: a tab that is
+ * the selected tab in its window still counts as "visible" even when the whole browser window is
+ * behind another application (alt-tabbed away, another window on top), and `visibilitychange`
+ * doesn't even fire for that case. Requiring `document.hasFocus()` as well means green only shows
+ * when the tab is BOTH the foreground tab AND its window currently holds OS focus - i.e. the user
+ * really is in the game, not just leaving it open behind something else. On mobile there is no
+ * windowing, so `hasFocus()` tracks visibility and this stays accurate there too (minimizing or
+ * switching apps drops both).
+ */
+function isActivelyFocused(): boolean {
+  return document.visibilityState === "visible" && document.hasFocus();
+}
+
+/**
  * Joins the shared presence channel as `userId`, tracking `context` and whether *this* tab is the
- * visible one (Page Visibility API - the same signal hosted.ts already uses for resync-on-refocus,
- * see its own `visibilitychange` listener). `onState` fires with the full cross-user roster
- * whenever anyone's presence changes, not just this tab's own.
+ * one the user is actively looking at right now (`isActivelyFocused` above - foreground tab AND
+ * window-focused, not merely open). Re-tracks immediately on every transition (tab switch, window
+ * minimize, and - crucially for the "forefront" requirement - the window gaining/losing OS focus
+ * via `focus`/`blur`), so the green/yellow flip propagates to everyone in realtime rather than on a
+ * timer. `onState` fires with the full cross-user roster whenever anyone's presence changes, not
+ * just this tab's own.
  */
 export function trackPresence(
   client: SupabaseClient,
@@ -31,9 +49,12 @@ export function trackPresence(
   const channel = client.channel(CHANNEL_NAME, { config: { presence: { key: userId }, private: true } });
 
   const track = () => {
-    channel.track({ context, focused: document.visibilityState === "visible" } as PresenceMeta);
+    channel.track({ context, focused: isActivelyFocused() } as PresenceMeta);
   };
-  const visibilityListener = () => track();
+  // `visibilitychange` catches tab switches and minimize; `focus`/`blur` catch the window losing or
+  // regaining OS focus while the tab stays selected (desktop alt-tab / another window on top) -
+  // which visibility never reports. Together they cover every "no longer in the forefront" case.
+  const retrack = () => track();
 
   channel.on("presence", { event: "sync" }, () => onState(channel.presenceState() as PresenceState));
   channel.subscribe((status: string) => {
@@ -41,10 +62,14 @@ export function trackPresence(
       track();
     }
   });
-  document.addEventListener("visibilitychange", visibilityListener);
+  document.addEventListener("visibilitychange", retrack);
+  window.addEventListener("focus", retrack);
+  window.addEventListener("blur", retrack);
 
   return () => {
-    document.removeEventListener("visibilitychange", visibilityListener);
+    document.removeEventListener("visibilitychange", retrack);
+    window.removeEventListener("focus", retrack);
+    window.removeEventListener("blur", retrack);
     client.removeChannel(channel);
   };
 }
@@ -66,6 +91,20 @@ export function subscribePresence(client: SupabaseClient, onState: (state: Prese
  * that just wants an online/offline dot per user, e.g. the Lobby Chat message list. */
 export function isOnline(state: PresenceState, userId: string): boolean {
   return (state[userId]?.length ?? 0) > 0;
+}
+
+/** The set of user ids that currently have at least one tab open on this exact game (any focus
+ * state - a backgrounded tab of the game still counts as "in the game"). Used to detect someone
+ * newly arriving in a game you're already in (hosted.ts's entrant notice) by diffing this set
+ * across presence syncs. */
+export function usersInGame(state: PresenceState, gameId: string): Set<string> {
+  const ids = new Set<string>();
+  for (const [userId, metas] of Object.entries(state)) {
+    if (metas.some((m) => m.context.type === "game" && m.context.gameId === gameId)) {
+      ids.add(userId);
+    }
+  }
+  return ids;
 }
 
 export type PresenceStatus = "green" | "yellow" | "grey";
