@@ -44,6 +44,31 @@ export async function isPushEnabled(): Promise<boolean> {
   return subscription != null;
 }
 
+/**
+ * Backfill the reminder sweep's timezone for a subscription that predates the `tz` column.
+ * Subscriptions created before turn reminders shipped have `tz = null`, and a null timezone is
+ * never quiet-hours-suppressed - so those devices would get 3am reminders until the user toggled
+ * notifications off/on. Instead, whenever a device that already has push enabled loads the app, fill
+ * in its timezone once (only while still null, so it's a single write and never fights the
+ * enable-time value). Best-effort: any failure is swallowed so it can't break app boot.
+ */
+export async function backfillSubscriptionTimezone(client: SupabaseClient): Promise<void> {
+  try {
+    if (!(await isPushEnabled())) {
+      return;
+    }
+    const registration = await navigator.serviceWorker.getRegistration();
+    const subscription = await registration?.pushManager.getSubscription();
+    const tz = localTimeZone();
+    if (!subscription || !tz) {
+      return;
+    }
+    await client.from("push_subscriptions").update({ tz }).eq("endpoint", subscription.endpoint).is("tz", null);
+  } catch {
+    // Non-critical - a device without its timezone backfilled just isn't quiet-hours-gated yet.
+  }
+}
+
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (!("serviceWorker" in navigator)) {
     return null;

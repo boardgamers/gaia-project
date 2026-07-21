@@ -231,7 +231,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { PresenceState, trackPresence } from "./presence";
-import { disablePushNotifications, enablePushNotifications, isPushEnabled } from "./push";
+import { backfillSubscriptionTimezone, disablePushNotifications, enablePushNotifications, isPushEnabled } from "./push";
 import CreditsContent from "../components/CreditsContent.vue";
 import { factionName } from "../data/factions";
 import { isAdminEmail } from "./admin";
@@ -517,6 +517,8 @@ export default Vue.extend({
     isPushEnabled().then((enabled) => {
       this.pushEnabled = enabled;
     });
+    // Backfill this device's timezone for the turn-reminder quiet-hours gate (no-op once set).
+    backfillSubscriptionTimezone(this.client as any);
     // Default to the Lobby tab, but honour an explicit `?tab=` so backing out of a game (the
     // hosted bar's back arrow links to `?lobby=1&tab=mine`) - and an OS/browser swipe-back that
     // returns to the lobby's own history entry - land on the tab the player was last on rather

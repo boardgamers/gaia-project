@@ -12,7 +12,12 @@ import { HostedGameHost, seatToLock } from "./hosted/host";
 import Lobby from "./hosted/Lobby.vue";
 import OpenLobbyGame from "./hosted/OpenLobbyGame.vue";
 import PendingApproval from "./hosted/PendingApproval.vue";
-import { disablePushNotifications, enablePushNotifications, isPushEnabled } from "./hosted/push";
+import {
+  backfillSubscriptionTimezone,
+  disablePushNotifications,
+  enablePushNotifications,
+  isPushEnabled,
+} from "./hosted/push";
 import { isOnline, trackPresence } from "./hosted/presence";
 import SignIn from "./hosted/SignIn.vue";
 import { createSupabaseBackend, getSupabaseClient, subscribeMoves, SupabaseClient } from "./hosted/supabase-client";
@@ -137,6 +142,9 @@ async function mountGameInstance(
   isPushEnabled().then((enabled) => {
     bar.pushEnabled = enabled;
   });
+  // Fill in this device's timezone for the turn-reminder quiet-hours gate if its subscription
+  // predates the tz column (no-op once set / if push is off).
+  backfillSubscriptionTimezone(client);
 
   // ChatNotesPanel.vue's own content/behavior is untouched (owner's explicit "keep it as is") - its
   // panel is `position: fixed`, so it floats OVER whatever's underneath rather than participating in

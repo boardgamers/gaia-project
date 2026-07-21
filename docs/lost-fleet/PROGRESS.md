@@ -4320,8 +4320,11 @@ components/PlayerBoard/BuildingGroup.spec.ts` (X-mark presence/absence). Engine 
       `games.turn_reminder_count` hold per-turn state; the count resets implicitly once the player moves
       (any reminder stamped before `latest_move_committed_at` counts as a previous turn's — no
       `commit_turn` change). Quiet hours use a new per-device `push_subscriptions.tz` (IANA zone
-      captured at subscribe time in `viewer/src/hosted/push.ts`); unknown-tz players are never
-      suppressed and players with no subscribed device are skipped without stamping. Pure decision in
+      captured at subscribe time in `viewer/src/hosted/push.ts`, and **backfilled once on app/lobby
+      boot** via `backfillSubscriptionTimezone()` for devices whose subscription predates the column —
+      wired into the existing `isPushEnabled()` boot checks in `hosted.ts`/`Lobby.vue`, updating only
+      rows where `tz is null`); unknown-tz players are never suppressed and players with no subscribed
+      device are skipped without stamping. Pure decision in
       `notify/logic.ts::planTurnReminder`, IO (candidate query, push, stamping) in `notify/index.ts`
       (push-send machinery refactored into shared `buildAppServer`/`pushToSubscription` helpers). 16 new
       `logic.spec.ts` cases (**30/30** passing via the engine-mocha invocation noted in this doc's
