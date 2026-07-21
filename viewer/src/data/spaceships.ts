@@ -112,11 +112,7 @@ export function costFill(cost: string): string {
   return fills[costKind(cost)] ?? "green";
 }
 
-/**
- * The cost badge normally anchors to the octagon's top-left corner. The one action with a
- * "condition" overlay (Eclipse's Power action, a wide "advance research" icon) needs its cost
- * nudged down and right instead, so the two don't overlap.
- */
+/** Every ship-action cost uses the same top-left anchor as the base-game BoardAction component. */
 export function costBadgeTransform(ship: Spaceship, type: SpaceshipActionType): string {
-  return actionOverlay(ship, type)?.condition ? "translate(-9, -14)" : "translate(-15,-15)";
+  return "translate(-15,-15)";
 }

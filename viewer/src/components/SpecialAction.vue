@@ -116,7 +116,8 @@ g {
     }
 
     &.board > polygon:not(.planet-fill) {
-      fill: var(--systemGray6);
+      fill: var(--ui-board-action);
+      stroke: var(--ui-board-action-border);
     }
 
     &.highlighted > polygon {

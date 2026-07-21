@@ -1,7 +1,23 @@
 {
-  "version": "5.36.6",
+  "version": "5.36.7",
   "releasedAt": "2026-07-21",
   "entries": [
+    {
+      "version": "5.36.7",
+      "releasedAt": "2026-07-21",
+      "kind": "update",
+      "title": "Lost Fleet board and mobile polish",
+      "impact": "",
+      "changes": [
+        "Lost Fleet research and map boards now use more mobile width, with clearer action surfaces and icon-based scoring gates.",
+        "Ship action costs now align consistently and their research icons fill the action space more clearly.",
+        "Fixed the off-turn mobile leech and chat controls overlapping."
+      ],
+      "userChanges": [
+        "Lost Fleet research and map boards now use more mobile width, with clearer action surfaces and icon-based scoring gates.",
+        "Ship action costs now align consistently and their research icons fill the action space more clearly."
+      ]
+    },
     {
       "version": "5.36.6",
       "releasedAt": "2026-07-21",

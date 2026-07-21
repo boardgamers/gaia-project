@@ -20,7 +20,13 @@
         </div>
       </div>
       <div
-        :class="['row', 'no-gutters', 'justify-content-center', engine.players.length > 2 ? 'medium-map' : 'small-map']"
+        :class="[
+          'row',
+          'no-gutters',
+          'justify-content-center',
+          'game-board-layout',
+          engine.players.length > 2 ? 'medium-map' : 'small-map',
+        ]"
         v-if="hasMap"
       >
         <SpaceMap :class="['mb-1', 'space-map', 'col-md-7']" />
@@ -30,13 +36,23 @@
                scoring used to occupy here, before final scoring moved onto the map itself
                (SpaceMap.vue's bottom-right corner) - so ScoringBoard only renders for the base
                game here. -->
-          <svg
-            class="scoring-research-board"
-            :viewBox="`-50 0 ${researchBoardWidth + (engine.options.lostFleet ? 110 : 120) + 50} ${
-              engine.options.lostFleet ? researchBoardViewHeight + 60 : 550
-            }`"
-          >
-            <ResearchBoard :height="researchBoardViewHeight" ref="researchBoard" x="-50" />
+          <svg class="scoring-research-board" :viewBox="researchBoardCanvasViewBox">
+            <rect
+              aria-hidden="true"
+              class="research-actions-panel"
+              :x="researchBoardCanvasMinX + 1"
+              y="1"
+              :width="researchBoardCanvasWidth - 2"
+              :height="researchBoardCanvasHeight - 2"
+              rx="9"
+              ry="9"
+            />
+            <ResearchBoard
+              :height="researchBoardViewHeight"
+              :width="engine.options.lostFleet ? researchBoardContentWidth : undefined"
+              ref="researchBoard"
+              x="-50"
+            />
             <ScoringBoard v-if="!engine.options.lostFleet" class="ml-4" width="90" :x="researchBoardWidth + 20" />
             <!-- Right under the 6 tracks' own bottom edge (BASE_RESEARCH_BOARD_HEIGHT, a fixed
                  5-unit gap) - NOT researchBoardViewHeight, which Lost Fleet's 7th column (round
@@ -402,6 +418,13 @@ export default class Game extends Vue {
     return ResearchField.values(this.expansions).length * 60;
   }
 
+  // Lost Fleet adds one 90-unit extension column to the six 60-unit research tracks. Giving the
+  // nested SVG its exact width avoids preserveAspectRatio letterboxing inside the outer board -
+  // that letterboxing was the main source of the empty mobile gutters around the research art.
+  get researchBoardContentWidth() {
+    return this.researchBoardWidth + (this.engine.options.lostFleet ? 90 : 0);
+  }
+
   // ResearchBoard.vue's own real content height (440, or up to 471 for Lost Fleet's round/final
   // scoring column) - declaring this instead of a stale hardcoded height keeps that nested SVG at
   // true 1:1 scale, so it always reserves enough room for however tall Lost Fleet's extra 7th
@@ -417,6 +440,30 @@ export default class Game extends Vue {
     return BASE_RESEARCH_BOARD_HEIGHT;
   }
 
+  get researchBoardCanvasMinX() {
+    return -50;
+  }
+
+  get researchBoardCanvasWidth() {
+    // Keep the base game's long-standing research + ScoringBoard framing unchanged. Lost Fleet no
+    // longer renders that side board, so its canvas can end exactly at the extension column.
+    return this.engine.options.lostFleet ? this.researchBoardContentWidth : this.researchBoardWidth + 170;
+  }
+
+  get researchBoardCanvasHeight() {
+    if (!this.engine.options.lostFleet) {
+      return 550;
+    }
+
+    // BoardAction's 50-unit icon is centered from y=420 through y=470. Keep four units of breathing
+    // room under it, while allowing a taller final-scoring column to win if one is ever introduced.
+    return Math.max(this.researchBoardViewHeight, this.baseResearchBoardHeight + 34);
+  }
+
+  get researchBoardCanvasViewBox() {
+    return `${this.researchBoardCanvasMinX} 0 ${this.researchBoardCanvasWidth} ${this.researchBoardCanvasHeight}`;
+  }
+
   get totalStickyFooterHeight() {
     return this.stickyBarHeight + this.premoveBarHeight;
   }
@@ -426,7 +473,10 @@ export default class Game extends Vue {
   }
 
   get offTurnAutoLeechBottomOffset(): number {
-    return this.premoveBarHeight > 0 ? this.premoveBarHeight + 10 : 0;
+    // ChatNotesPanel independently measures the same off-turn premove bar and uses barHeight + 12,
+    // or 24px when there is no sticky bar. Mirror that contract so the two adjacent mobile
+    // controls share a baseline instead of drifting into each other vertically.
+    return this.premoveBarHeight > 0 ? this.premoveBarHeight + 12 : 24;
   }
 
   get logPlacement(): LogPlacement {
@@ -837,8 +887,15 @@ export default class Game extends Vue {
   max-height: 600px;
 
   width: 100%;
+  display: block;
   // this is needed for Safari
   height: intrinsic;
+}
+
+.research-actions-panel {
+  fill: var(--ui-board-canvas);
+  stroke: var(--ui-board-border);
+  stroke-width: 1;
 }
 
 .medium-map,
@@ -852,12 +909,25 @@ export default class Game extends Vue {
     flex-wrap: wrap;
   }
 
-  .scoring-research-board {
-    width: calc(100% + 1rem);
+  // The launcher wraps the game in Bootstrap's container-fluid (15px on either side). Boards are
+  // the one part of the mobile UI where every pixel materially improves legibility, so let this
+  // row alone span the full viewport while all controls and prose retain their normal gutters.
+  .row.no-gutters.game-board-layout {
+    width: calc(100% + 30px);
+    margin-right: -15px;
+    margin-left: -15px;
+  }
+
+  .gaia-viewer-game .game-board-layout .scoring-research-board {
+    width: 100%;
     max-width: none;
     max-height: none;
-    margin-left: -0.5rem;
-    margin-right: -0.5rem;
+    margin-right: 0;
+    margin-left: 0;
+  }
+
+  .game-board-layout .space-map {
+    border-radius: 0.5rem;
   }
 }
 </style>

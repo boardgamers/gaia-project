@@ -241,6 +241,23 @@ describe("LostFleetShips", () => {
     expect(powerOverlay.querySelector("circle.planet-fill")).to.equal(null);
   });
 
+  it("anchors Eclipse's research-action costs at top-left and lets its effect fill the octagon", () => {
+    const engine = new Engine(["init 2 lost-fleet-ships-spec"], { lostFleet: true });
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(LostFleetShips, { store });
+    const eclipsePower = container.querySelector(
+      `svg.lost-fleet-ship[data-ship="${Spaceship.Eclipse}"] [data-action="power"]`
+    );
+
+    expect(eclipsePower).to.not.equal(null);
+    const costBadge = eclipsePower?.querySelector(".lost-fleet-ship__cost-badge");
+    const conditionOverlay = eclipsePower?.querySelector(".lost-fleet-ship__condition-overlay");
+    expect(costBadge?.getAttribute("transform")).to.equal("translate(-15,-15)");
+    expect(conditionOverlay?.getAttribute("transform")).to.equal("translate(3, 6) scale(0.85)");
+  });
+
   it("shows T F Mars's 'VP per tech tile' QIC action with the tech tile icon, not raw 'tt' text", () => {
     const engine = new Engine(["init 2 lost-fleet-ships-spec"], { lostFleet: true });
     const store = makeStore();

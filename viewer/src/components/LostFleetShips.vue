@@ -65,7 +65,11 @@
           >
             <Resource :kind="actionOverlay(ship, action.type).resource" />
           </g>
-          <g v-else-if="actionOverlay(ship, action.type).condition" transform="translate(2, 13) scale(0.48)">
+          <g
+            v-else-if="actionOverlay(ship, action.type).condition"
+            class="lost-fleet-ship__condition-overlay"
+            transform="translate(3, 6) scale(0.85)"
+          >
             <Condition :condition="actionOverlay(ship, action.type).condition" />
           </g>
           <g v-else transform="scale(0.82)">
@@ -89,7 +93,7 @@
             />
           </g>
         </g>
-        <g :transform="costBadgeTransform(ship, action.type)">
+        <g class="lost-fleet-ship__cost-badge" :transform="costBadgeTransform(ship, action.type)">
           <image v-if="costKind(action.cost) === 'pw'" xlink:href="../assets/resources/power-charge.svg" width="20"
           :height=133/345*20 transform="scale(-1,1) translate(-9, -12)" />
           <rect

@@ -15,7 +15,28 @@
          moved here, directly beneath the round scoring tiles it's grouped with. -->
     <g v-if="isLostFleet" :transform="`translate(${fields.length * 60}, 0)`">
       <g v-if="hasScoringExtension" v-b-tooltip.nofade="tooltipTriggerConfig()" :title="extensionTooltip">
-        <text x="30" y="40" class="extension-label">{{ gateOnShips ? "3 explorations" : "25 vp" }}</text>
+        <g
+          class="extension-gate"
+          :data-gate-kind="gateOnShips ? 'ships' : 'vp'"
+          transform="translate(4, 5)"
+          role="img"
+          :aria-label="extensionGateLabel"
+        >
+          <rect class="extension-gate__frame" width="52" height="38" rx="7" ry="7" />
+          <g v-if="gateOnShips" class="extension-gate__ships">
+            <text x="12" y="22" class="extension-gate__count">3</text>
+            <text x="23" y="22" class="extension-gate__multiply">×</text>
+            <g class="extension-gate__ship-icon" transform="translate(40, 19)">
+              <polygon class="extension-gate__ship-hex" points="-9,0 -4.5,-8 4.5,-8 9,0 4.5,8 -4.5,8" />
+              <path
+                class="extension-gate__ship-body"
+                d="M 0,-6.2 L 2.2,-1.7 L 6.2,0.8 L 2.1,2 L 1.2,6 L -1.2,6 L -2.1,2 L -6.2,0.8 L -2.2,-1.7 Z"
+              />
+              <circle class="extension-gate__ship-window" cy="-1.2" r="1.25" />
+            </g>
+          </g>
+          <Resource v-else class="extension-gate__vp" kind="vp" :count="25" transform="translate(26, 19) scale(1.7)" />
+        </g>
         <g transform="translate(30, 79) scale(0.95)">
           <TechTile pos="adv-ext" x="-30" y="-30" />
         </g>
@@ -91,6 +112,7 @@ import TechTile from "./TechTile.vue";
 import BoardAction from "./BoardAction.vue";
 import ScoringTile from "./ScoringTile.vue";
 import FinalScoringTile from "./FinalScoringTile.vue";
+import Resource from "./Resource.vue";
 import { BOTTOM_SCORING_TILE_Y, researchBoardHeight } from "../logic/utils";
 import { tooltipTriggerConfig } from "../logic/tooltip";
 
@@ -160,6 +182,9 @@ const FINAL_SCORING_GAP_BELOW_ROUND_TILES = 40;
         ? "Scoring Board Extension: this Advanced Tech tile requires 3 explored spaceships (plus the usual federation token and coverable tech tile)"
         : "Scoring Board Extension: this Advanced Tech tile requires 25 VP (plus the usual federation token and coverable tech tile)";
     },
+    extensionGateLabel() {
+      return this.gateOnShips ? "Requires 3 explored spaceships" : "Requires 25 victory points";
+    },
   },
   methods: {
     scoringTileY(i: number): number {
@@ -173,6 +198,7 @@ const FINAL_SCORING_GAP_BELOW_ROUND_TILES = 40;
     BoardAction,
     ScoringTile,
     FinalScoringTile,
+    Resource,
   },
 })
 export default class ResearchBoard extends Vue {}
@@ -183,14 +209,51 @@ svg.research-board {
   overflow: visible;
 }
 
-.extension-label {
-  font-size: 9px;
-  font-weight: 700;
-  text-anchor: middle;
+.extension-gate__frame {
+  fill: var(--ui-surface-raised);
+  stroke: var(--ui-board-action-border);
+  stroke-width: 1.2;
 }
 
-.charge-note,
-.extension-label {
+.extension-gate__count,
+.extension-gate__multiply {
+  fill: var(--ui-svg-neutral-text);
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+.extension-gate__count {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.extension-gate__multiply {
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.extension-gate__ship-hex {
+  fill: var(--ui-accent-soft);
+  stroke: var(--ui-link);
+  stroke-width: 1;
+}
+
+.extension-gate__ship-body {
+  fill: var(--ui-link);
+  stroke: var(--ui-surface-raised);
+  stroke-width: 0.45;
+  stroke-linejoin: round;
+}
+
+.extension-gate__ship-window {
+  fill: var(--ui-surface-raised);
+}
+
+.extension-gate__vp {
+  pointer-events: none;
+}
+
+.charge-note {
   fill: var(--ui-svg-neutral-text);
 }
 </style>

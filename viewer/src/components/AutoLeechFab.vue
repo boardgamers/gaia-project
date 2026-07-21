@@ -32,7 +32,7 @@ import Vue from "vue";
 export default Vue.extend({
   name: "AutoLeechFab",
   props: {
-    bottomOffset: { type: Number, default: 0 },
+    bottomOffset: { type: Number, default: 24 },
   },
   computed: {
     autoChargePower(): string {
@@ -74,8 +74,10 @@ export default Vue.extend({
 <style lang="scss" scoped>
 .auto-leech-fab {
   position: fixed;
-  right: calc(0.9rem + env(safe-area-inset-right));
-  bottom: calc(var(--auto-leech-bottom-offset, 0px) + 1rem + env(safe-area-inset-bottom));
+  // ChatNotesPanel's 3rem bubble occupies the rightmost 4rem on phones. Keep this pill on the same
+  // baseline but one 0.75rem gap to its left, so both controls remain independently tappable.
+  right: calc(4.75rem + env(safe-area-inset-right));
+  bottom: var(--auto-leech-bottom-offset, 24px);
   z-index: 1028;
 }
 
@@ -122,7 +124,7 @@ export default Vue.extend({
 @media (min-width: 768px) {
   .auto-leech-fab {
     right: 1.1rem;
-    bottom: calc(var(--auto-leech-bottom-offset, 0px) + 1.1rem);
+    bottom: 1.1rem;
   }
 }
 </style>

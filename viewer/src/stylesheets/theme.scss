@@ -65,6 +65,10 @@
   --ui-map-canvas: #f5f7fb;
   --ui-map-border: #c8d1df;
   --ui-map-shadow: rgba(31, 45, 82, 0.14);
+  --ui-board-canvas: #edf1f6;
+  --ui-board-border: #b8c2d0;
+  --ui-board-action: #f8fafc;
+  --ui-board-action-border: #7d899b;
   --ui-svg-neutral-text: #212529;
   --ui-map-icon-filter: none;
 
@@ -143,6 +147,10 @@
   --ui-map-canvas: #566277;
   --ui-map-border: #8190a8;
   --ui-map-shadow: rgba(0, 0, 0, 0.48);
+  --ui-board-canvas: #343d4a;
+  --ui-board-border: #64738a;
+  --ui-board-action: #4b586b;
+  --ui-board-action-border: #8796ad;
   --ui-svg-neutral-text: #f1f4f8;
   --ui-map-icon-filter: invert(1) brightness(1.45);
   --bs-body-bg: var(--ui-bg);
@@ -748,9 +756,11 @@ kbd {
 .space-map-canvas {
   box-sizing: border-box;
   background-color: var(--ui-map-canvas);
-  border: 1px solid var(--ui-map-border);
+  // Inset strokes make the table edge visible without consuming even one pixel of map width.
+  border: 0;
   border-radius: 0.75rem;
-  box-shadow: inset 0 0 0 1px var(--ui-divider-highlight), 0 4px 14px var(--ui-map-shadow);
+  box-shadow: inset 0 0 0 1px var(--ui-map-border), inset 0 0 0 2px var(--ui-divider-highlight),
+    0 4px 14px var(--ui-map-shadow);
 }
 
 :root[data-theme="dark"] .space-map .space-hex,

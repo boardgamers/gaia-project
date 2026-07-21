@@ -326,9 +326,7 @@ describe("Game", () => {
       vm.$mount();
       document.body.appendChild(vm.$el);
 
-      expect(vm.$el.querySelector(".turn-order-banner"), "hosted mode should not render its own banner").to.equal(
-        null
-      );
+      expect(vm.$el.querySelector(".turn-order-banner"), "hosted mode should not render its own banner").to.equal(null);
 
       vm.$el.remove();
       vm.$destroy();
@@ -395,6 +393,17 @@ describe("Game", () => {
     expect(researchBoard.querySelector(".techTile.adv-ext")).to.not.equal(null);
     expect(researchBoard.querySelectorAll(".scoringTile").length).to.be.greaterThan(0);
 
+    // The nested board now declares its exact 6-track + extension width and the outer canvas ends
+    // at that same edge. This prevents the preserveAspectRatio letterboxing that left wide empty
+    // gutters around the board on phones.
+    expect(researchBoard.getAttribute("width")).to.equal("450");
+    const [minX, , canvasWidth, canvasHeight] = svg.getAttribute("viewBox").split(" ").map(Number);
+    expect(minX).to.equal(-50);
+    expect(canvasWidth).to.equal(450);
+    expect(canvasHeight).to.equal(474);
+    expect(svg.querySelector(".research-actions-panel")).to.not.equal(null);
+    expect(svg.closest(".game-board-layout")).to.not.equal(null);
+
     vm.$el.remove();
     vm.$destroy();
   });
@@ -429,6 +438,17 @@ describe("Game", () => {
     expect(commandsCol.classList.contains("col-md-7")).to.equal(true);
 
     vm.$el.remove();
+    vm.$destroy();
+  });
+
+  it("aligns the off-turn auto-leech control with the mobile chat toggle above the premove bar", () => {
+    const store = makeStore();
+    const vm = new (Vue.extend(Game as any))({ store }) as any;
+
+    expect(vm.offTurnAutoLeechBottomOffset).to.equal(24);
+    vm.premoveBarHeight = 86;
+    expect(vm.offTurnAutoLeechBottomOffset).to.equal(98);
+
     vm.$destroy();
   });
 
