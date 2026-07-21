@@ -7,7 +7,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=5.36.4" />
-    <meta name="theme-color" content="#333366" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#ffffff" />
+    <script>
+      // Apply the persisted choice before CSS and Vue mount, avoiding a bright flash for players
+      // who explicitly selected dark mode. Keep this tiny bootstrap in sync with hosted/theme.ts.
+      (function () {
+        var theme = "light";
+        try {
+          theme = window.localStorage.getItem("gp-fight-club-theme") === "dark" ? "dark" : "light";
+        } catch (_) {
+          // Storage is optional in privacy-restricted contexts.
+        }
+        document.documentElement.setAttribute("data-theme", theme);
+        document.documentElement.style.colorScheme = theme;
+        document
+          .querySelector('meta[name="theme-color"]')
+          .setAttribute("content", theme === "dark" ? "#1c2027" : "#ffffff");
+      })();
+    </script>
     <meta name="description" content="Gaia Project multiplayer and offline pass-and-play" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Fight Club" />

@@ -331,7 +331,7 @@ export default Vue.extend({
 }
 
 .lobby-meta__sep {
-  color: #adb5bd;
+  color: var(--ui-text-subtle);
 }
 
 .lobby-meta__toggle-link {
@@ -339,12 +339,12 @@ export default Vue.extend({
   align-items: center;
   min-height: 1.5rem;
   padding: 0 0.2rem;
-  color: #0b5ed7;
+  color: var(--ui-link);
   text-decoration: none;
 }
 
 .lobby-meta__toggle-link:hover {
-  color: #084298;
+  color: var(--ui-link-hover);
   text-decoration: underline;
 }
 

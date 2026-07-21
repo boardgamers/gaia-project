@@ -33,15 +33,16 @@ export default Vue.extend({
   align-items: center;
   justify-content: center;
   padding: 1.25rem;
-  background: rgba(15, 23, 42, 0.42);
+  background: var(--ui-backdrop);
 }
 
 .info-modal {
   width: min(100%, 42rem);
   overflow: hidden;
-  border: 1px solid #dce6f0;
+  border: 1px solid var(--ui-border-strong);
   border-radius: 0.85rem;
-  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+  background: linear-gradient(180deg, var(--ui-surface-raised) 0%, var(--ui-surface) 100%);
+  color: var(--ui-text);
 }
 
 .info-modal__header {
@@ -50,7 +51,7 @@ export default Vue.extend({
   align-items: flex-start;
   gap: 1rem;
   padding: 1rem 1.1rem 0.85rem;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid var(--ui-border);
 }
 
 .info-modal__title {
@@ -60,14 +61,14 @@ export default Vue.extend({
 .info-modal__close {
   border: 0;
   background: transparent;
-  color: #6c757d;
+  color: var(--ui-text-muted);
   font-size: 1.5rem;
   line-height: 1;
   padding: 0;
 }
 
 .info-modal__close:hover {
-  color: #212529;
+  color: var(--ui-text);
 }
 
 .info-modal__body {
@@ -77,6 +78,6 @@ export default Vue.extend({
   overscroll-behavior: contain;
   font-size: 0.9rem;
   line-height: 1.4;
-  color: #33415c;
+  color: var(--ui-text);
 }
 </style>

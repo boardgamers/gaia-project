@@ -22,7 +22,7 @@
             v-for="j in rowSpan(event)"
             :key="`${i}-${j}`"
             :class="{ 'border-top': j == 0 }"
-            :style="`background-color: ${event.color}; color: ${event.textColor}`"
+            :style="rowStyle(event)"
             :role="event.moveIndex ? 'button' : ''"
             @click="event.moveIndex ? replayTo(event.moveIndex) : null"
           >
@@ -137,7 +137,13 @@ export default class AdvancedLog extends Vue {
   get history(): HistoryEntry[] {
     if (this.hideLog) return [];
 
-    return makeHistory(this.engine, this.$store.getters.recentMoves, this.scope == "recent", this.currentMove, this.extendedLog);
+    return makeHistory(
+      this.engine,
+      this.$store.getters.recentMoves,
+      this.scope == "recent",
+      this.currentMove,
+      this.extendedLog
+    );
   }
 
   rowSpan(entry: HistoryEntry): number {
@@ -145,7 +151,7 @@ export default class AdvancedLog extends Vue {
   }
 
   get rowHeaders(): PlayerColumn[] {
-    return this.extendedLog ? logPlayerTables(this.engine).flatMap(t => t.columns) : [];
+    return this.extendedLog ? logPlayerTables(this.engine).flatMap((t) => t.columns) : [];
   }
 
   cellStyle(c: PlayerColumn): string {
@@ -156,19 +162,37 @@ export default class AdvancedLog extends Vue {
     return parseRewardsForLog(s);
   }
 
+  rowStyle(event: HistoryEntry): Record<string, string> {
+    if (event.color.trim().toLowerCase() !== "white") {
+      return { backgroundColor: event.color, color: event.textColor };
+    }
+    // Neutral lifecycle rows are UI chrome, not game art. The log model intentionally retains its
+    // historical white/purple values for exports and chart fixtures; translate only at render time
+    // so dark mode does not produce a glaring white slab or lose the lifecycle accent.
+    return {
+      backgroundColor: "var(--ui-surface)",
+      color: event.textColor === "black" ? "var(--ui-text)" : "var(--ui-log-accent)",
+    };
+  }
+
   rowValues(entry: HistoryEntry, change: number): { value: RichText; leftBorder: boolean }[] {
     if (!this.extendedLog || change > 1) {
       return [];
     }
 
-    return entry.rows ? entry.rows.flatMap(r => r.map((value, i) => ({
-        value,
-        leftBorder: i == 0,
-      })))
-      : logPlayerTables(this.engine).flatMap(t => t.columns.map((c, i) => ({
-        value: [],
-        leftBorder: i == 0,
-      })));
+    return entry.rows
+      ? entry.rows.flatMap((r) =>
+          r.map((value, i) => ({
+            value,
+            leftBorder: i == 0,
+          }))
+        )
+      : logPlayerTables(this.engine).flatMap((t) =>
+          t.columns.map((c, i) => ({
+            value: [],
+            leftBorder: i == 0,
+          }))
+        );
   }
 }
 </script>
@@ -182,7 +206,7 @@ export default class AdvancedLog extends Vue {
 
 .major-event {
   font-weight: bold;
-  color: black;
+  color: inherit;
 }
 
 .phase-change {

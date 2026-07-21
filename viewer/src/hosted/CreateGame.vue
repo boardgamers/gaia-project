@@ -387,7 +387,7 @@ export default Vue.extend({
 }
 
 .create-game-section--preview {
-  border-top: 1px solid rgba(28, 43, 74, 0.1);
+  border-top: 1px solid var(--ui-border);
   padding-top: 0.8rem;
   margin-bottom: 6rem;
 }
@@ -397,13 +397,13 @@ export default Vue.extend({
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #5b657a;
+  color: var(--ui-text-muted);
 }
 
 .create-game-help {
   font-size: 0.82rem;
   line-height: 1.25;
-  color: #5d677d;
+  color: var(--ui-text-muted);
 }
 
 .create-game-count-row {
@@ -430,16 +430,16 @@ export default Vue.extend({
 .create-game-variant {
   position: relative;
   width: 100%;
-  border: 1px solid rgba(28, 43, 74, 0.12);
+  border: 1px solid var(--ui-border);
   border-radius: 10px;
   padding: 0;
-  background: #fff;
-  color: #2a354d;
+  background: var(--ui-surface);
+  color: var(--ui-text);
 
   &--active {
-    border-color: rgba(43, 93, 184, 0.4);
-    background: #f4f8ff;
-    box-shadow: 0 0 0 1px rgba(43, 93, 184, 0.08);
+    border-color: var(--ui-link);
+    background: var(--ui-surface-active);
+    box-shadow: 0 0 0 1px var(--ui-accent-soft);
   }
 }
 
@@ -464,7 +464,7 @@ export default Vue.extend({
   display: block;
   font-size: 0.82rem;
   line-height: 1.25;
-  color: #60708d;
+  color: var(--ui-text-muted);
 }
 
 .create-game-variant__info {
@@ -478,19 +478,19 @@ export default Vue.extend({
   flex-direction: column;
   max-height: 12.5rem;
   overflow-y: auto;
-  border: 1px solid rgba(28, 43, 74, 0.12);
+  border: 1px solid var(--ui-border);
   border-radius: 10px;
-  background: #fff;
+  background: var(--ui-surface);
 }
 
 .create-game-invite-row {
   width: 100%;
   text-align: left;
   border: 0;
-  border-bottom: 1px solid rgba(28, 43, 74, 0.08);
+  border-bottom: 1px solid var(--ui-border);
   padding: 0.5rem 0.7rem;
   background: transparent;
-  color: #2a354d;
+  color: var(--ui-text);
   font-size: 0.88rem;
 
   &:last-child {
@@ -498,12 +498,12 @@ export default Vue.extend({
   }
 
   &:disabled {
-    color: #adb5bd;
+    color: var(--ui-text-subtle);
   }
 
   &--active {
-    background: #f4f8ff;
-    color: #2b5db8;
+    background: var(--ui-surface-active);
+    color: var(--ui-link);
     font-weight: 700;
   }
 }
@@ -521,10 +521,10 @@ export default Vue.extend({
   justify-content: center;
   width: 2rem;
   height: 2rem;
-  border: 1px solid rgba(28, 43, 74, 0.18);
+  border: 1px solid var(--ui-border-strong);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.85);
-  color: #4f5f7d;
+  background: var(--ui-surface-raised);
+  color: var(--ui-text-muted);
   font-size: 0.75rem;
   font-weight: 700;
   line-height: 1;
@@ -539,10 +539,10 @@ export default Vue.extend({
 }
 
 .create-game-sticky-bar__content {
-  border: 1px solid rgba(28, 43, 74, 0.1);
+  border: 1px solid var(--ui-border);
   border-radius: 18px;
-  background: linear-gradient(180deg, #ffffff 0%, #eef1f6 100%);
-  box-shadow: 0 -12px 28px rgba(20, 26, 50, 0.18), 0 -1px 0 rgba(255, 255, 255, 0.6);
+  background: linear-gradient(180deg, var(--ui-panel-gradient-start) 0%, var(--ui-panel-gradient-end) 100%);
+  box-shadow: 0 -12px 28px var(--ui-shadow), 0 -1px 0 var(--ui-divider-highlight);
   padding: 0.7rem 0.7rem calc(0.68rem + env(safe-area-inset-bottom) + 8px);
 }
 
@@ -558,13 +558,13 @@ export default Vue.extend({
 
 .create-game-sticky-button {
   border-radius: 10px;
-  box-shadow: 0 1px 2px rgba(31, 45, 82, 0.08);
+  box-shadow: 0 1px 2px var(--ui-shadow-soft);
 }
 
 .btn-secondary.create-game-sticky-button {
-  border-color: rgba(31, 45, 82, 0.14);
-  background: linear-gradient(180deg, #ffffff 0%, #e7ebf3 100%);
-  color: #33415c;
+  border-color: var(--ui-border-strong);
+  background: linear-gradient(180deg, var(--ui-keycap-gradient-start) 0%, var(--ui-keycap-gradient-end) 100%);
+  color: var(--ui-secondary-text);
 }
 
 @media (max-width: 767px) {

@@ -1,5 +1,5 @@
 <template>
-  <svg :viewBox="viewBox">
+  <svg class="space-map-canvas" :viewBox="viewBox">
     <definitions />
     <g :transform="`rotate(${mapRotationDeg})`">
       <Sector
@@ -28,7 +28,9 @@
         x="0"
         y="0"
         dy="0.35"
-      >{{ label.id }}</text>
+      >
+        {{ label.id }}
+      </text>
       <circle
         v-for="(s, i) in highlightedSectors"
         :key="i"
@@ -44,9 +46,9 @@
         bounds.top + 2.9 * wheelScaleRatio
       }) scale(${wheelScale})`"
     />
-    <image v-if="showCharts" xlink:href="../assets/other/line-chart.svg" :height=155/211*22 width="22" x="-11" y="-8"
-    v-b-modal.chart-button role="button" :transform="`translate(${bounds.right - 1.9}, ${bounds.top + 1.4}) scale(0.1)`"
-    />
+    <image v-if="showCharts" class="space-map__chart-button" xlink:href="../assets/other/line-chart.svg"
+    :height=155/211*22 width="22" x="-11" y="-8" v-b-modal.chart-button role="button"
+    :transform="`translate(${bounds.right - 1.9}, ${bounds.top + 1.4}) scale(0.1)`" />
     <rect
       v-for="(planet, i) in terraformingColors"
       :key="planet"
@@ -356,7 +358,8 @@ export default class SpaceMap extends Vue {
     const wheelWidth = (this.isLostFleet ? WHEEL_WIDTH_LOST_FLEET : WHEEL_WIDTH_BASE) * this.wheelScaleRatio;
     const wheelHeight = WHEEL_HEIGHT * this.wheelScaleRatio;
     const legendCount = this.colorLegend.length;
-    const legendBottom = legendCount > 0 ? LEGEND_TOP_OFFSET + (legendCount - 1) * LEGEND_ITEM_HEIGHT + LEGEND_ITEM_SIZE : 0;
+    const legendBottom =
+      legendCount > 0 ? LEGEND_TOP_OFFSET + (legendCount - 1) * LEGEND_ITEM_HEIGHT + LEGEND_ITEM_SIZE : 0;
     const leftBandHeight = Math.max(wheelHeight, legendBottom);
     const leftLimit = bandMinX(points, top, leftBandHeight + hexRadius) - hexRadius - CLEARANCE - wheelWidth;
     const left = Math.min(tightLeft, leftLimit);

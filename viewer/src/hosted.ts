@@ -17,7 +17,6 @@ import { backfillSubscriptionTimezone, isPushEnabled } from "./hosted/push";
 import { isOnline, trackPresence } from "./hosted/presence";
 import SignIn from "./hosted/SignIn.vue";
 import { createSupabaseBackend, getSupabaseClient, subscribeMoves, SupabaseClient } from "./hosted/supabase-client";
-import { initTheme } from "./hosted/theme";
 import { setViewportZoomLocked } from "./hosted/viewport";
 import launch from "./launcher";
 import { parseAutoChargePreference } from "./logic/auto-decide";
@@ -479,7 +478,6 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, i
 }
 
 export default async function launchHosted(selector = "#app"): Promise<void> {
-  initTheme();
   const root = document.querySelector(selector);
   if (!root) {
     throw new Error(`no element matches ${selector}`);

@@ -70,7 +70,7 @@
       </div>
       <p class="text-muted mb-0">Use <strong>Share URL</strong> for custom positions you build yourself.</p>
     </b-modal>
-    <div class="d-flex align-content-stretch">
+    <div class="d-flex flex-wrap align-content-stretch">
       <b-button v-if="offlineMode" variant="primary" href="?offline=1&create=1">New offline game</b-button>
       <b-button v-if="!offlineMode" @click="openScenarios">Test Scenarios</b-button>
       <b-button @click="openLoad">{{ offlineMode ? "Load backup" : "Load" }}</b-button>
@@ -288,8 +288,8 @@ export default class Wrapper extends Vue {
 
 .offline-game-banner {
   align-items: center;
-  background: #eef8f1;
-  border: 1px solid #a8d5b4;
+  background: var(--ui-success-bg);
+  border: 1px solid var(--ui-success-border);
   border-radius: 0.65rem;
   display: flex;
   gap: 1rem;
@@ -309,7 +309,7 @@ export default class Wrapper extends Vue {
 }
 
 .offline-game-banner__title {
-  color: #1f5f32;
+  color: var(--ui-success-text);
   font-weight: 700;
 }
 
@@ -322,13 +322,13 @@ export default class Wrapper extends Vue {
 }
 
 .offline-game-banner__hint {
-  color: #4a5d50;
+  color: var(--ui-text-muted);
   font-size: 0.78rem;
   margin-top: 0.2rem;
 }
 
 .scenario-entry {
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  border-top: 1px solid var(--ui-border);
   padding: 0.9rem 0;
 }
 
@@ -354,12 +354,12 @@ export default class Wrapper extends Vue {
 }
 
 .scenario-entry__description {
-  color: #4a4a4a;
+  color: var(--ui-text-muted);
   margin-top: 0.15rem;
 }
 
 .scenario-entry__meta {
-  color: #7a7a7a;
+  color: var(--ui-text-subtle);
   font-family: monospace;
   font-size: 0.78rem;
   margin-top: 0.35rem;
@@ -373,9 +373,10 @@ export default class Wrapper extends Vue {
 }
 
 .scenario-entry__tag {
-  background: #eef3f8;
+  background: var(--ui-secondary-bg);
+  border: 1px solid var(--ui-border);
   border-radius: 999px;
-  color: #35506d;
+  color: var(--ui-secondary-text);
   font-size: 0.72rem;
   font-weight: 600;
   padding: 0.15rem 0.55rem;

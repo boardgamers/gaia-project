@@ -152,14 +152,14 @@ export default Vue.extend({
 // effect, makes it unambiguously a button regardless of which state it's in.
 .hosted-bar__push-toggle {
   border-width: 1px !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 1px 3px var(--ui-shadow);
 
   &:hover:not(:disabled) {
-    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 1px 5px var(--ui-shadow);
   }
 
   &:active:not(:disabled) {
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+    box-shadow: inset 0 1px 3px var(--ui-shadow);
   }
 }
 

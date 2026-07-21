@@ -678,7 +678,7 @@ export default class PlayerInfo extends Vue {
   width: 2.25rem;
   height: 2.25rem;
   border-radius: 50%;
-  border: 1px solid gray;
+  border: 1px solid var(--ui-border-strong);
   margin-right: 0.25rem;
 }
 
@@ -690,12 +690,12 @@ export default class PlayerInfo extends Vue {
 
 .content {
   font-size: 1rem;
-  color: #212529;
+  color: var(--ui-text);
   pointer-events: none;
 }
 
 .player-board {
-  border: 1px solid black;
+  border: 1px solid var(--ui-border-strong);
   max-width: 700px;
   display: block;
   // margin-left: auto;

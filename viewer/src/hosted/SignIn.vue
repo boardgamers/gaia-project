@@ -72,6 +72,6 @@ export default Vue.extend({
 .sign-in-title {
   font-family: "Cinzel", "Palatino Linotype", Georgia, serif;
   font-weight: 700;
-  color: #17253d;
+  color: var(--ui-text);
 }
 </style>

@@ -31,6 +31,9 @@ describe("SpaceMap", () => {
 
     const { container } = render(SpaceMap, { store });
 
+    expect(container.querySelector("svg")?.classList.contains("space-map-canvas")).to.equal(true);
+    expect(container.querySelector(".space-map__chart-button")).to.not.equal(null);
+
     const sectors = container.querySelectorAll("g.sector");
     expect(sectors.length).to.equal(engine.map.configuration().centers.length);
 

@@ -2,10 +2,13 @@
   <g>
     <title v-if="presenceTooltip">{{ presenceTooltip }}</title>
     <circle :r="1" :style="stroke()" :class="['player-token', 'planet-fill', planet()]" />
-    <text :style="`font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(planet())}`">
+    <text
+      class="player-circle__initial"
+      :style="`font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(planet())}`"
+    >
       {{ initial() }}
     </text>
-    <text :style="`font-size: 1px; text-anchor: middle;`" y="2">{{ name() }}</text>
+    <text class="player-circle__name" :style="`font-size: 1px; text-anchor: middle;`" y="2">{{ name() }}</text>
     <!-- Presence indicator (PROGRESS.md Gaia 9) - top-left of the token, only when a caller passes
          a status (TurnOrder.vue does; other PlayerCircle usages - the solo "current player"
          placeholder, charts - leave it unset and render exactly as before). -->
@@ -131,6 +134,10 @@ export default class PlayerCircle extends Vue {
 }
 </script>
 <style lang="scss">
+.player-circle__name {
+  fill: var(--ui-text);
+}
+
 .presence-dot {
   stroke: white;
   stroke-width: 0.08px;

@@ -1,10 +1,13 @@
 import launchHosted from "./hosted";
 import { startHostedInstallPrompt } from "./hosted/install-prompt";
 import { registerServiceWorker, registerServiceWorkerNavigationListener } from "./hosted/push";
+import { initTheme } from "./hosted/theme";
 import launch from "./launcher";
 import launchOffline from "./offline";
 import { shouldFallBackToOffline } from "./route-decision";
 import launchSelfContained from "./self-contained";
+
+initTheme();
 
 console.log(process.env);
 

@@ -250,10 +250,10 @@ export default Vue.extend({
   height: 3rem;
   border-radius: 50%;
   border: 0;
-  background: #2f6fed;
-  color: #fff;
+  background: var(--ui-primary);
+  color: var(--ui-primary-text);
   font-size: 1.35rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 2px 10px var(--ui-shadow);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -269,8 +269,8 @@ export default Vue.extend({
   width: 0.6rem;
   height: 0.6rem;
   border-radius: 50%;
-  background: #dc3545;
-  border: 2px solid #fff;
+  background: var(--ui-danger);
+  border: 2px solid var(--ui-surface);
 }
 
 .lobby-chat__panel {
@@ -280,9 +280,9 @@ export default Vue.extend({
   bottom: 0;
   width: 360px;
   max-width: 100vw;
-  background: var(--bs-body-bg, #fff);
-  border-left: 1px solid rgba(0, 0, 0, 0.15);
-  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.25);
+  background: var(--ui-surface);
+  border-left: 1px solid var(--ui-border);
+  box-shadow: -4px 0 16px var(--ui-shadow);
   z-index: 1050;
   display: flex;
   flex-direction: column;
@@ -299,7 +299,7 @@ export default Vue.extend({
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.6rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  border-bottom: 1px solid var(--ui-border);
 }
 
 .lobby-chat__title {
@@ -366,13 +366,13 @@ export default Vue.extend({
   max-width: 85%;
   padding: 0.3rem 0.5rem;
   border-radius: 0.6rem;
-  background: rgba(0, 0, 0, 0.06);
+  background: var(--ui-chat-message);
 
   // Own messages get indented to the right + a distinct color, matching ChatNotesPanel's own
   // per-game chat convention, so it's obvious at a glance which messages are yours.
   &--own {
     align-self: flex-end;
-    background: rgba(47, 111, 237, 0.18);
+    background: var(--ui-chat-own);
   }
 }
 
@@ -416,7 +416,7 @@ export default Vue.extend({
   display: flex;
   gap: 0.4rem;
   padding: 0.5rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  border-top: 1px solid var(--ui-border);
 
   textarea {
     flex: 1;
@@ -424,7 +424,9 @@ export default Vue.extend({
     min-height: 2.2rem;
     max-height: 6rem;
     border-radius: 0.4rem;
-    border: 1px solid rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--ui-border-strong);
+    background: var(--ui-input-bg);
+    color: var(--ui-text);
     padding: 0.35rem 0.5rem;
   }
 
@@ -432,8 +434,8 @@ export default Vue.extend({
     border: 0;
     border-radius: 0.4rem;
     padding: 0 0.9rem;
-    background: #2f6fed;
-    color: #fff;
+    background: var(--ui-primary);
+    color: var(--ui-primary-text);
     font-weight: 600;
 
     &:disabled {

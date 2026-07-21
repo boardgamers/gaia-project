@@ -1,0 +1,774 @@
+// Semantic application colors. Game-art colors (planets, factions, resources, research tracks,
+// tiles, ships) deliberately remain in planets.css and are identical in both themes.
+:root {
+  color-scheme: light;
+
+  --ui-bg: #ffffff;
+  --ui-surface: #ffffff;
+  --ui-surface-raised: #ffffff;
+  --ui-surface-muted: #f2f4f8;
+  --ui-surface-hover: #e9eef5;
+  --ui-surface-active: #e7f1ff;
+  --ui-input-bg: #ffffff;
+  --ui-text: #212529;
+  --ui-text-muted: #667085;
+  --ui-text-subtle: #7c8798;
+  --ui-border: #d6dce6;
+  --ui-border-strong: #98a2b3;
+  --ui-link: #0b5ed7;
+  --ui-link-hover: #084298;
+  --ui-focus: #0b5ed7;
+  --ui-primary: #0b5ed7;
+  --ui-primary-hover: #0a58ca;
+  --ui-primary-text: #ffffff;
+  --ui-secondary-bg: #f7f9fc;
+  --ui-secondary-hover: #e8edf4;
+  --ui-secondary-text: #33415c;
+  --ui-success: #1f7a3e;
+  --ui-success-solid: #1f7a3e;
+  --ui-success-solid-hover: #185f31;
+  --ui-success-bg: #e8f6ec;
+  --ui-success-border: #9fceb0;
+  --ui-success-text: #185c30;
+  --ui-warning: #9a6700;
+  --ui-warning-bg: #fff4cf;
+  --ui-warning-border: #e8ca69;
+  --ui-warning-text: #664d03;
+  --ui-danger: #b42332;
+  --ui-danger-solid: #b42332;
+  --ui-danger-solid-hover: #8f1c28;
+  --ui-danger-bg: #fbe9eb;
+  --ui-danger-border: #e6a7ae;
+  --ui-danger-text: #842029;
+  --ui-info-bg: #e7f3ff;
+  --ui-info-solid: #1769a0;
+  --ui-info-border: #9ec5fe;
+  --ui-info-text: #084298;
+  --ui-backdrop: rgba(15, 23, 42, 0.42);
+  --ui-shadow: rgba(20, 26, 50, 0.18);
+  --ui-shadow-soft: rgba(31, 45, 82, 0.08);
+  --ui-divider-highlight: rgba(255, 255, 255, 0.7);
+  --ui-panel-gradient-start: #ffffff;
+  --ui-panel-gradient-end: #eef1f6;
+  --ui-keycap-gradient-start: #ffffff;
+  --ui-keycap-gradient-end: #e7ebf3;
+  --ui-banner-start: #1c2b4a;
+  --ui-banner-end: #2f4a7a;
+  --ui-banner-text: #f3f5fa;
+  --ui-banner-link: #d7e2ff;
+  --ui-accent-soft: rgba(47, 111, 237, 0.15);
+  --ui-chat-message: rgba(31, 45, 82, 0.07);
+  --ui-chat-own: rgba(47, 111, 237, 0.18);
+  --ui-table-stripe: rgba(31, 45, 82, 0.045);
+  --ui-table-hover: rgba(47, 111, 237, 0.08);
+  --ui-log-accent: #7b2cbf;
+  --ui-map-canvas: #f5f7fb;
+  --ui-map-border: #c8d1df;
+  --ui-map-shadow: rgba(31, 45, 82, 0.14);
+  --ui-svg-neutral-text: #212529;
+  --ui-map-icon-filter: none;
+
+  // Compatibility aliases for existing component styles. Bootstrap 4 itself does not expose
+  // these CSS variables, but a few newer components already reference them.
+  --bs-body-bg: var(--ui-bg);
+  --bs-body-color: var(--ui-text);
+  --primary: var(--ui-primary);
+  --warning: #ffc107;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --ui-bg: #1c2027;
+  --ui-surface: #242a33;
+  --ui-surface-raised: #2d3440;
+  --ui-surface-muted: #303844;
+  --ui-surface-hover: #37414f;
+  --ui-surface-active: #263e66;
+  --ui-input-bg: #202630;
+  --ui-text: #f1f4f8;
+  --ui-text-muted: #b1bac8;
+  --ui-text-subtle: #8f9aaa;
+  --ui-border: #465264;
+  --ui-border-strong: #65738a;
+  --ui-link: #8ab4ff;
+  --ui-link-hover: #b7d1ff;
+  --ui-focus: #8ab4ff;
+  --ui-primary: #0b5ed7;
+  --ui-primary-hover: #2876df;
+  --ui-primary-text: #ffffff;
+  --ui-secondary-bg: #343d4a;
+  --ui-secondary-hover: #414c5c;
+  --ui-secondary-text: #edf1f7;
+  --ui-success: #4fc374;
+  --ui-success-solid: #1f7a3e;
+  --ui-success-solid-hover: #286f40;
+  --ui-success-bg: #203a2a;
+  --ui-success-border: #3f8057;
+  --ui-success-text: #a8e6bb;
+  --ui-warning: #f0c45a;
+  --ui-warning-bg: #3d341f;
+  --ui-warning-border: #806d37;
+  --ui-warning-text: #f8d983;
+  --ui-danger: #ff7d88;
+  --ui-danger-solid: #b42332;
+  --ui-danger-solid-hover: #9c2734;
+  --ui-danger-bg: #43272d;
+  --ui-danger-border: #8e4a54;
+  --ui-danger-text: #ffb6bd;
+  --ui-info-bg: #20344e;
+  --ui-info-solid: #246b9d;
+  --ui-info-border: #426a99;
+  --ui-info-text: #b7d6ff;
+  --ui-backdrop: rgba(5, 8, 13, 0.7);
+  --ui-shadow: rgba(0, 0, 0, 0.45);
+  --ui-shadow-soft: rgba(0, 0, 0, 0.24);
+  --ui-divider-highlight: rgba(255, 255, 255, 0.08);
+  --ui-panel-gradient-start: #2d3440;
+  --ui-panel-gradient-end: #242a33;
+  --ui-keycap-gradient-start: #3a4452;
+  --ui-keycap-gradient-end: #303844;
+  --ui-banner-start: #243653;
+  --ui-banner-end: #304d7e;
+  --ui-banner-text: #f5f7fb;
+  --ui-banner-link: #c4d7ff;
+  --ui-accent-soft: rgba(93, 151, 255, 0.2);
+  --ui-chat-message: rgba(255, 255, 255, 0.07);
+  --ui-chat-own: rgba(72, 129, 229, 0.28);
+  --ui-table-stripe: rgba(255, 255, 255, 0.035);
+  --ui-table-hover: rgba(138, 180, 255, 0.1);
+  --ui-log-accent: #d0a6ff;
+  // A mid-slate table surface is intentional: the map hexes are already dark navy, so the
+  // transparent inter-sector gaps need a lighter material behind them to remain legible.
+  --ui-map-canvas: #566277;
+  --ui-map-border: #8190a8;
+  --ui-map-shadow: rgba(0, 0, 0, 0.48);
+  --ui-svg-neutral-text: #f1f4f8;
+  --ui-map-icon-filter: invert(1) brightness(1.45);
+  --bs-body-bg: var(--ui-bg);
+  --bs-body-color: var(--ui-text);
+  --warning: var(--ui-warning);
+}
+
+html,
+body {
+  min-height: 100%;
+  background-color: var(--ui-bg);
+  color: var(--ui-text);
+}
+
+body,
+button,
+input,
+optgroup,
+select,
+textarea {
+  color: var(--ui-text);
+}
+
+body {
+  scrollbar-color: var(--ui-border-strong) var(--ui-surface);
+}
+
+* {
+  scrollbar-color: var(--ui-border-strong) var(--ui-surface);
+}
+
+*::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--ui-surface);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--ui-border-strong);
+  border: 3px solid var(--ui-surface);
+  border-radius: 999px;
+}
+
+::selection {
+  background: var(--ui-primary);
+  color: var(--ui-primary-text);
+}
+
+a,
+.btn-link {
+  color: var(--ui-link);
+}
+
+a:hover,
+.btn-link:hover {
+  color: var(--ui-link-hover);
+}
+
+hr {
+  border-top-color: var(--ui-border);
+}
+
+.text-body,
+.text-dark {
+  color: var(--ui-text) !important;
+}
+
+.text-muted,
+.text-secondary {
+  color: var(--ui-text-muted) !important;
+}
+
+.text-danger {
+  color: var(--ui-danger) !important;
+}
+
+.text-warning {
+  color: var(--ui-warning) !important;
+}
+
+.text-success {
+  color: var(--ui-success) !important;
+}
+
+.bg-light,
+.bg-white {
+  background-color: var(--ui-surface) !important;
+}
+
+.border,
+.border-top,
+.border-right,
+.border-bottom,
+.border-left {
+  border-color: var(--ui-border) !important;
+}
+
+.btn-primary {
+  color: var(--ui-primary-text);
+  background-color: var(--ui-primary);
+  border-color: var(--ui-primary);
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:not(:disabled):not(.disabled):active,
+.show > .btn-primary.dropdown-toggle {
+  color: var(--ui-primary-text);
+  background-color: var(--ui-primary-hover);
+  border-color: var(--ui-primary-hover);
+}
+
+.btn-secondary {
+  color: var(--ui-secondary-text);
+  background-color: var(--ui-secondary-bg);
+  border-color: var(--ui-border-strong);
+}
+
+.btn-secondary:hover,
+.btn-secondary:focus,
+.btn-secondary:not(:disabled):not(.disabled):active,
+.show > .btn-secondary.dropdown-toggle {
+  color: var(--ui-text);
+  background-color: var(--ui-secondary-hover);
+  border-color: var(--ui-border-strong);
+}
+
+.btn-outline-primary {
+  color: var(--ui-link);
+  border-color: var(--ui-link);
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:not(:disabled):not(.disabled):active {
+  color: var(--ui-primary-text);
+  background-color: var(--ui-primary);
+  border-color: var(--ui-primary);
+}
+
+.btn-outline-secondary {
+  color: var(--ui-text-muted);
+  border-color: var(--ui-border-strong);
+}
+
+.btn-outline-secondary:hover,
+.btn-outline-secondary:focus,
+.btn-outline-secondary:not(:disabled):not(.disabled):active {
+  color: var(--ui-text);
+  background-color: var(--ui-secondary-hover);
+  border-color: var(--ui-border-strong);
+}
+
+.btn-success {
+  color: #fff;
+  background-color: var(--ui-success-solid);
+  border-color: var(--ui-success-solid);
+}
+
+.btn-success:hover,
+.btn-success:focus,
+.btn-success:not(:disabled):not(.disabled):active,
+.show > .btn-success.dropdown-toggle {
+  color: #fff;
+  background-color: var(--ui-success-solid-hover);
+  border-color: var(--ui-success-solid);
+}
+
+.btn-outline-success {
+  color: var(--ui-success);
+  border-color: var(--ui-success);
+}
+
+.btn-outline-success:hover,
+.btn-outline-success:focus {
+  color: #fff;
+  background-color: var(--ui-success-solid);
+  border-color: var(--ui-success-solid);
+}
+
+.btn-danger {
+  color: #fff;
+  background-color: var(--ui-danger-solid);
+  border-color: var(--ui-danger-solid);
+}
+
+.btn-danger:hover,
+.btn-danger:focus,
+.btn-danger:not(:disabled):not(.disabled):active,
+.show > .btn-danger.dropdown-toggle {
+  color: #fff;
+  background-color: var(--ui-danger-solid-hover);
+  border-color: var(--ui-danger-solid);
+}
+
+.btn-outline-danger {
+  color: var(--ui-danger);
+  border-color: var(--ui-danger);
+}
+
+.btn-outline-danger:hover,
+.btn-outline-danger:focus {
+  color: #fff;
+  background-color: var(--ui-danger-solid);
+  border-color: var(--ui-danger-solid);
+}
+
+.btn-warning {
+  color: #1c2027;
+  background-color: var(--ui-warning);
+  border-color: var(--ui-warning);
+}
+
+.btn-info {
+  color: #fff;
+  background-color: var(--ui-info-solid);
+  border-color: var(--ui-info-solid);
+}
+
+.btn-outline-info {
+  color: var(--ui-info-text);
+  border-color: var(--ui-info-border);
+}
+
+.btn-outline-info:hover,
+.btn-outline-info:focus {
+  color: #fff;
+  background-color: var(--ui-info-solid);
+  border-color: var(--ui-info-solid);
+}
+
+.btn-light {
+  color: var(--ui-text);
+  background-color: var(--ui-surface-raised);
+  border-color: var(--ui-border);
+}
+
+.btn-dark {
+  color: var(--ui-banner-text);
+  background-color: var(--ui-banner-start);
+  border-color: var(--ui-banner-start);
+}
+
+.btn:disabled,
+.btn.disabled {
+  opacity: 0.68;
+}
+
+.btn-outline-secondary:disabled,
+.btn-outline-secondary.disabled {
+  color: var(--ui-text-muted);
+  background-color: transparent;
+  border-color: var(--ui-border-strong);
+}
+
+.form-control,
+.custom-select,
+.custom-file-label,
+.input-group-text {
+  color: var(--ui-text);
+  background-color: var(--ui-input-bg);
+  border-color: var(--ui-border-strong);
+}
+
+.form-control-plaintext {
+  color: var(--ui-text);
+}
+
+.custom-file-label::after,
+.input-group-text {
+  color: var(--ui-text-muted);
+  background-color: var(--ui-surface-muted);
+  border-color: var(--ui-border-strong);
+}
+
+option {
+  color: var(--ui-text);
+  background-color: var(--ui-input-bg);
+}
+
+.form-control::placeholder,
+textarea::placeholder {
+  color: var(--ui-text-subtle);
+  opacity: 1;
+}
+
+.form-control:focus,
+.custom-select:focus {
+  color: var(--ui-text);
+  background-color: var(--ui-input-bg);
+  border-color: var(--ui-focus);
+  box-shadow: 0 0 0 0.2rem rgba(72, 129, 229, 0.28);
+}
+
+.form-control:disabled,
+.form-control[readonly],
+.custom-select:disabled {
+  color: var(--ui-text-muted);
+  background-color: var(--ui-surface-muted);
+}
+
+.custom-control-label::before {
+  background-color: var(--ui-input-bg);
+  border-color: var(--ui-border-strong);
+}
+
+.custom-control-input:checked ~ .custom-control-label::before {
+  color: #fff;
+  background-color: var(--ui-primary);
+  border-color: var(--ui-primary);
+}
+
+.custom-control-input:focus ~ .custom-control-label::before {
+  border-color: var(--ui-focus);
+  box-shadow: 0 0 0 0.2rem rgba(72, 129, 229, 0.28);
+}
+
+:root[data-theme="dark"] .custom-select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='4' height='5' viewBox='0 0 4 5'%3e%3cpath fill='%23b1bac8' d='M2 0L0 2h4zm0 5L0 3h4z'/%3e%3c/svg%3e");
+}
+
+.dropdown-menu {
+  color: var(--ui-text);
+  background-color: var(--ui-surface-raised);
+  border-color: var(--ui-border);
+  box-shadow: 0 10px 28px var(--ui-shadow);
+}
+
+.dropdown-item {
+  color: var(--ui-text);
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+  color: var(--ui-text);
+  background-color: var(--ui-surface-hover);
+}
+
+.dropdown-item.active,
+.dropdown-item:active {
+  color: var(--ui-primary-text);
+  background-color: var(--ui-primary);
+}
+
+.dropdown-item.disabled,
+.dropdown-item:disabled {
+  color: var(--ui-text-subtle);
+}
+
+.dropdown-divider {
+  border-top-color: var(--ui-border);
+}
+
+.dropdown-header {
+  color: var(--ui-text-muted);
+}
+
+.list-group-item,
+.card,
+.modal-content,
+.popover {
+  color: var(--ui-text);
+  background-color: var(--ui-surface);
+  border-color: var(--ui-border);
+}
+
+.list-group-item-action:hover,
+.list-group-item-action:focus {
+  color: var(--ui-text);
+  background-color: var(--ui-surface-hover);
+}
+
+.list-group-item.disabled,
+.list-group-item:disabled {
+  color: var(--ui-text-subtle);
+  background-color: var(--ui-surface-muted);
+}
+
+.modal-header,
+.modal-footer,
+.card-header,
+.card-footer {
+  border-color: var(--ui-border);
+}
+
+.modal-backdrop.show {
+  opacity: 0.68;
+}
+
+.modal-content {
+  box-shadow: 0 18px 48px var(--ui-shadow);
+}
+
+.close {
+  color: var(--ui-text-muted);
+  text-shadow: none;
+}
+
+.close:hover {
+  color: var(--ui-text);
+}
+
+.popover-header {
+  color: var(--ui-text);
+  background-color: var(--ui-surface-muted);
+  border-bottom-color: var(--ui-border);
+}
+
+.popover-body {
+  color: var(--ui-text);
+}
+
+.tooltip-inner {
+  color: var(--ui-text);
+  background-color: var(--ui-surface-raised);
+  border: 1px solid var(--ui-border-strong);
+  box-shadow: 0 4px 14px var(--ui-shadow);
+}
+
+.table {
+  color: var(--ui-text);
+}
+
+.table th,
+.table td,
+.table-bordered,
+.table-bordered th,
+.table-bordered td {
+  border-color: var(--ui-border);
+}
+
+.table thead th,
+.table thead td {
+  border-bottom-color: var(--ui-border-strong);
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: var(--ui-table-stripe);
+}
+
+.table-active,
+.table-active > th,
+.table-active > td,
+.table-hover .table-active:hover,
+.table-hover .table-active:hover > th,
+.table-hover .table-active:hover > td {
+  color: var(--ui-text);
+  background-color: var(--ui-surface-active);
+}
+
+.b-table-sticky-header > .table.b-table > thead > tr > th {
+  background-color: var(--ui-surface-muted);
+}
+
+.table-hover tbody tr:hover {
+  color: var(--ui-text);
+  background-color: var(--ui-table-hover);
+}
+
+.table caption {
+  color: var(--ui-text-muted);
+}
+
+.alert-info {
+  color: var(--ui-info-text);
+  background-color: var(--ui-info-bg);
+  border-color: var(--ui-info-border);
+}
+
+.alert-success {
+  color: var(--ui-success-text);
+  background-color: var(--ui-success-bg);
+  border-color: var(--ui-success-border);
+}
+
+.alert-warning {
+  color: var(--ui-warning-text);
+  background-color: var(--ui-warning-bg);
+  border-color: var(--ui-warning-border);
+}
+
+.alert-danger {
+  color: var(--ui-danger-text);
+  background-color: var(--ui-danger-bg);
+  border-color: var(--ui-danger-border);
+}
+
+.alert-light {
+  color: var(--ui-text);
+  background-color: var(--ui-surface-muted);
+  border-color: var(--ui-border);
+}
+
+.badge-light,
+.badge-secondary {
+  color: var(--ui-secondary-text);
+  background-color: var(--ui-secondary-bg);
+  border: 1px solid var(--ui-border);
+}
+
+.badge-primary {
+  color: var(--ui-primary-text);
+  background-color: var(--ui-primary);
+}
+
+.badge-success {
+  color: #fff;
+  background-color: var(--ui-success-solid);
+}
+
+.badge-danger {
+  color: #fff;
+  background-color: var(--ui-danger-solid);
+}
+
+.badge-warning {
+  color: #1c2027;
+  background-color: var(--ui-warning);
+}
+
+.badge-info {
+  color: #fff;
+  background-color: var(--ui-info-solid);
+}
+
+.nav-tabs {
+  border-bottom-color: var(--ui-border);
+}
+
+.nav-tabs .nav-link:hover,
+.nav-tabs .nav-link:focus {
+  border-color: var(--ui-border) var(--ui-border) transparent;
+}
+
+.nav-tabs .nav-link.active,
+.nav-tabs .nav-item.show .nav-link {
+  color: var(--ui-text);
+  background-color: var(--ui-surface);
+  border-color: var(--ui-border) var(--ui-border) var(--ui-surface);
+}
+
+.nav-pills .nav-link:not(.active) {
+  color: var(--ui-link);
+}
+
+.nav-pills .nav-link.active,
+.nav-pills .show > .nav-link {
+  color: var(--ui-primary-text);
+  background-color: var(--ui-primary);
+}
+
+.breadcrumb,
+.toast,
+.progress {
+  color: var(--ui-text);
+  background-color: var(--ui-surface-muted);
+  border-color: var(--ui-border);
+}
+
+.toast-header {
+  color: var(--ui-text);
+  background-color: var(--ui-surface-raised);
+  border-bottom-color: var(--ui-border);
+}
+
+.page-link {
+  color: var(--ui-link);
+  background-color: var(--ui-surface);
+  border-color: var(--ui-border);
+}
+
+.page-link:hover,
+.page-link:focus {
+  color: var(--ui-link-hover);
+  background-color: var(--ui-surface-hover);
+  border-color: var(--ui-border-strong);
+}
+
+.page-item.disabled .page-link {
+  color: var(--ui-text-subtle);
+  background-color: var(--ui-surface-muted);
+  border-color: var(--ui-border);
+}
+
+code,
+pre,
+kbd {
+  color: var(--ui-text);
+}
+
+pre,
+kbd {
+  background-color: var(--ui-surface-muted);
+}
+
+// One shared board-table surface for the real game and every setup/open-game preview. The SVG's
+// transparent inter-sector gaps reveal this material, and the border gives the otherwise-dark map
+// a clear outer edge. No per-hex nodes or reactive work are added.
+.space-map,
+.space-map-canvas {
+  box-sizing: border-box;
+  background-color: var(--ui-map-canvas);
+  border: 1px solid var(--ui-map-border);
+  border-radius: 0.75rem;
+  box-shadow: inset 0 0 0 1px var(--ui-divider-highlight), 0 4px 14px var(--ui-map-shadow);
+}
+
+:root[data-theme="dark"] .space-map .space-hex,
+:root[data-theme="dark"] .space-map-canvas .space-hex {
+  stroke: #7a879d;
+  stroke-width: 0.016;
+}
+
+:root[data-theme="dark"] .space-map .space-hex.interspace,
+:root[data-theme="dark"] .space-map-canvas .space-hex.interspace {
+  stroke: #93a1ba;
+}
+
+:root[data-theme="dark"] .space-map .space-hex.deep-space,
+:root[data-theme="dark"] .space-map-canvas .space-hex.deep-space {
+  stroke: #a2b1cf;
+}
+
+.space-map__chart-button {
+  filter: var(--ui-map-icon-filter);
+}

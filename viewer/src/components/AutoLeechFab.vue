@@ -81,10 +81,10 @@ export default Vue.extend({
 
 .auto-leech-fab__menu ::v-deep(.btn) {
   border-radius: 999px;
-  border-color: rgba(31, 45, 82, 0.14);
-  background: linear-gradient(180deg, #ffffff 0%, #e7ebf3 100%);
-  color: #33415c;
-  box-shadow: 0 10px 28px rgba(20, 26, 50, 0.18), 0 1px 2px rgba(31, 45, 82, 0.08);
+  border-color: var(--ui-border-strong);
+  background: linear-gradient(180deg, var(--ui-keycap-gradient-start) 0%, var(--ui-keycap-gradient-end) 100%);
+  color: var(--ui-secondary-text);
+  box-shadow: 0 10px 28px var(--ui-shadow), 0 1px 2px var(--ui-shadow-soft);
   padding: 0.38rem 0.7rem;
   font-size: 0.8rem;
   font-weight: 600;

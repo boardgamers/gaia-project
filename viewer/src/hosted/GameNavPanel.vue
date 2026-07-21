@@ -260,9 +260,9 @@ export default Vue.extend({
   bottom: 0;
   width: 420px;
   max-width: 100vw;
-  background: var(--bs-body-bg, #fff);
-  border-right: 1px solid rgba(0, 0, 0, 0.15);
-  box-shadow: 4px 0 16px rgba(0, 0, 0, 0.25);
+  background: var(--ui-surface);
+  border-right: 1px solid var(--ui-border);
+  box-shadow: 4px 0 16px var(--ui-shadow);
   z-index: 1050;
   display: flex;
   flex-direction: column;
@@ -274,7 +274,7 @@ export default Vue.extend({
   justify-content: space-between;
   gap: 0.5rem;
   padding: 0.5rem 0.6rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  border-bottom: 1px solid var(--ui-border);
 }
 
 .game-nav__close {
@@ -303,7 +303,7 @@ export default Vue.extend({
   opacity: 0.6;
 
   &--active {
-    background: rgba(47, 111, 237, 0.15);
+    background: var(--ui-accent-soft);
     opacity: 1;
   }
 }
@@ -332,11 +332,11 @@ export default Vue.extend({
   overflow: hidden;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.04);
+    background: var(--ui-surface-hover);
   }
 
   &--current {
-    outline: 2px solid rgba(47, 111, 237, 0.5);
+    outline: 2px solid var(--ui-link);
   }
 }
 </style>

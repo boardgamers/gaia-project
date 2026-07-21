@@ -56,7 +56,11 @@
         queued after it.
       </div>
       <div class="mt-2 premove-bar__detail-actions d-flex flex-wrap">
-        <button type="button" class="btn btn-sm btn-secondary premove-bar__mini-button mr-1 mb-1" @click="edit(selectedRow)">
+        <button
+          type="button"
+          class="btn btn-sm btn-secondary premove-bar__mini-button mr-1 mb-1"
+          @click="edit(selectedRow)"
+        >
           Edit
         </button>
         <button
@@ -77,7 +81,11 @@
         >
           Move down
         </button>
-        <button type="button" class="btn btn-sm btn-secondary premove-bar__mini-button mr-1 mb-1" @click="cancel(selectedRow)">
+        <button
+          type="button"
+          class="btn btn-sm btn-secondary premove-bar__mini-button mr-1 mb-1"
+          @click="cancel(selectedRow)"
+        >
           Cancel premove
         </button>
       </div>
@@ -96,16 +104,16 @@
         assuming that link would land. Editing a link has the same effect as breaking it, for the same reason.
       </p>
       <p>
-        <b>Priority</b> is up to 3 ranked alternatives for your <i>single</i> upcoming turn. The first one that's
-        still legal when your turn arrives is the one that plays; the rest are discarded. It's insurance - useful for
-        "pass taking booster A, or B, or C" or any contested claim (federation token, advanced tech, artifact) where
-        you want a fallback instead of a single bet. Editing one rank never affects the others.
+        <b>Priority</b> is up to 3 ranked alternatives for your <i>single</i> upcoming turn. The first one that's still
+        legal when your turn arrives is the one that plays; the rest are discarded. It's insurance - useful for "pass
+        taking booster A, or B, or C" or any contested claim (federation token, advanced tech, artifact) where you want
+        a fallback instead of a single bet. Editing one rank never affects the others.
       </p>
       <p class="text-muted small">
         Neither mode can tell "still legal" from "still a good idea" - Priority only falls through on an
-        <i>illegal</i> option, not a merely worse one. Switching between modes clears your current queue, since the
-        two interpret the queue differently. A pending charge/leech decision before your turn still needs
-        auto-charge enabled to resolve automatically while you're offline.
+        <i>illegal</i> option, not a merely worse one. Switching between modes clears your current queue, since the two
+        interpret the queue differently. A pending charge/leech decision before your turn still needs auto-charge
+        enabled to resolve automatically while you're offline.
       </p>
     </b-modal>
   </div>
@@ -258,7 +266,10 @@ export default class PremoveBar extends Vue {
 
   requestStartNew(mode: PremoveMode) {
     if (this.rows.length > 0 && this.mode !== mode) {
-      if (typeof window !== "undefined" && !window.confirm(`Switching to ${mode} mode clears your current queue. Continue?`)) {
+      if (
+        typeof window !== "undefined" &&
+        !window.confirm(`Switching to ${mode} mode clears your current queue. Continue?`)
+      ) {
         return;
       }
       this.$store.dispatch("cancelAllPremoves", { seat: this.seat });
@@ -371,16 +382,16 @@ export default class PremoveBar extends Vue {
 
 <style lang="scss">
 .premove-bar {
-  border: 1px solid var(--systemGray5, #e5e5ea);
+  border: 1px solid var(--ui-border);
   border-radius: 0.9rem;
   padding: 0.7rem 0.7rem 0.6rem;
-  background: linear-gradient(180deg, #ffffff 0%, #eef1f6 100%);
-  box-shadow: 0 8px 24px rgba(20, 26, 50, 0.12), 0 1px 2px rgba(31, 45, 82, 0.08);
+  background: linear-gradient(180deg, var(--ui-panel-gradient-start) 0%, var(--ui-panel-gradient-end) 100%);
+  box-shadow: 0 8px 24px var(--ui-shadow), 0 1px 2px var(--ui-shadow-soft);
 
   &__will-fire {
     margin-bottom: 0.35rem;
     font-weight: 600;
-    color: #33415c;
+    color: var(--ui-secondary-text);
   }
 
   &__tabs {
@@ -390,28 +401,29 @@ export default class PremoveBar extends Vue {
   }
 
   &__tab {
-    border: 1px solid rgba(28, 43, 74, 0.16);
+    border: 1px solid var(--ui-border);
     border-bottom: 0;
-    background: linear-gradient(180deg, #f9fbff 0%, #e8edf5 100%);
+    background: linear-gradient(180deg, var(--ui-keycap-gradient-start) 0%, var(--ui-keycap-gradient-end) 100%);
+    color: var(--ui-text-muted);
     border-radius: 14px 14px 0 0;
     padding: 0.28rem 0.8rem 0.32rem;
     font-size: 0.78rem;
     font-weight: 700;
     cursor: pointer;
-    box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.7), 0 8px 18px rgba(20, 26, 50, 0.08);
+    box-shadow: 0 -1px 0 var(--ui-divider-highlight), 0 8px 18px var(--ui-shadow-soft);
 
     &--active {
-      background: #1c2b4a;
-      color: white;
-      border-color: #1c2b4a;
+      background: var(--ui-banner-start);
+      color: var(--ui-banner-text);
+      border-color: var(--ui-banner-start);
     }
   }
 
   &__detail {
     margin-top: 0.5rem;
     padding: 0.4rem 0.5rem;
-    background: white;
-    border: 1px solid var(--systemGray5, #e5e5ea);
+    background: var(--ui-surface);
+    border: 1px solid var(--ui-border);
     border-radius: 0.4rem;
   }
 
@@ -442,8 +454,8 @@ export default class PremoveBar extends Vue {
       calc(0.5rem + env(safe-area-inset-left));
     border-radius: 16px 16px 0 0;
     border: 0;
-    background: linear-gradient(180deg, #ffffff 0%, #eef1f6 100%);
-    box-shadow: 0 -12px 28px rgba(20, 26, 50, 0.18), 0 -1px 0 rgba(255, 255, 255, 0.6);
+    background: linear-gradient(180deg, var(--ui-panel-gradient-start) 0%, var(--ui-panel-gradient-end) 100%);
+    box-shadow: 0 -12px 28px var(--ui-shadow), 0 -1px 0 var(--ui-divider-highlight);
 
     // Same "keycap" treatment Commands.vue applies to its own move buttons, scoped to this same
     // sticky-bar context only (so the desktop/in-flow premove card keeps plain Bootstrap buttons,
@@ -451,15 +463,15 @@ export default class PremoveBar extends Vue {
     .premove-bar__action-button,
     .premove-bar__mini-button {
       border-radius: 10px;
-      border-color: rgba(31, 45, 82, 0.14);
-      box-shadow: 0 1px 2px rgba(31, 45, 82, 0.08);
-      background: linear-gradient(180deg, #ffffff 0%, #e7ebf3 100%);
-      color: #33415c;
+      border-color: var(--ui-border-strong);
+      box-shadow: 0 1px 2px var(--ui-shadow-soft);
+      background: linear-gradient(180deg, var(--ui-keycap-gradient-start) 0%, var(--ui-keycap-gradient-end) 100%);
+      color: var(--ui-secondary-text);
       transition: transform 0.08s ease-out, box-shadow 0.08s ease-out;
 
       &:active {
         transform: scale(0.97);
-        box-shadow: inset 0 1px 2px rgba(31, 45, 82, 0.15);
+        box-shadow: inset 0 1px 2px var(--ui-shadow);
       }
     }
   }

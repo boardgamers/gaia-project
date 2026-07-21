@@ -1,7 +1,20 @@
 {
-  "version": "5.36.4",
+  "version": "5.36.5",
   "releasedAt": "2026-07-21",
   "entries": [
+    {
+      "version": "5.36.5",
+      "releasedAt": "2026-07-21",
+      "kind": "update",
+      "title": "Usable dark mode",
+      "impact": "",
+      "changes": [
+        "Dark mode now uses a purpose-designed charcoal palette with readable controls, logs, banners, and clearer map boundaries on desktop and mobile."
+      ],
+      "userChanges": [
+        "Dark mode now uses a purpose-designed charcoal palette with readable controls, logs, banners, and clearer map boundaries on desktop and mobile."
+      ]
+    },
     {
       "version": "5.36.4",
       "releasedAt": "2026-07-21",

@@ -1129,22 +1129,22 @@ export default class Commands extends Vue implements CommandController {
 
 .premove-inline-action {
   border-radius: 10px;
-  border-color: rgba(31, 45, 82, 0.14);
-  box-shadow: 0 1px 2px rgba(31, 45, 82, 0.08);
+  border-color: var(--ui-border-strong);
+  box-shadow: 0 1px 2px var(--ui-shadow-soft);
 
   &--confirm {
-    background: linear-gradient(180deg, #2f72d8 0%, #2258ad 100%);
-    border-color: rgba(34, 88, 173, 0.4);
+    background: linear-gradient(180deg, var(--ui-primary-hover) 0%, var(--ui-primary) 100%);
+    border-color: var(--ui-primary);
   }
 }
 
 .faction-picker-buttons {
   .move-button .btn {
     border-radius: 12px;
-    border-color: rgba(31, 45, 82, 0.14);
-    background: linear-gradient(180deg, #ffffff 0%, #e7ebf3 100%);
-    color: #24324b;
-    box-shadow: 0 1px 2px rgba(31, 45, 82, 0.08);
+    border-color: var(--ui-border-strong);
+    background: linear-gradient(180deg, var(--ui-keycap-gradient-start) 0%, var(--ui-keycap-gradient-end) 100%);
+    color: var(--ui-secondary-text);
+    box-shadow: 0 1px 2px var(--ui-shadow-soft);
     font-weight: 600;
   }
 
@@ -1255,7 +1255,7 @@ $mobile-sticky-actions-max-height: 40vh;
   display: none !important;
   margin-top: 0.35rem;
   padding-top: 0.3rem;
-  border-top: 1px solid rgba(28, 43, 74, 0.14);
+  border-top: 1px solid var(--ui-border);
 }
 
 // The status strip is the sheet's own dark "header" band - deliberately contrasting with the light
@@ -1272,8 +1272,8 @@ $mobile-sticky-actions-max-height: 40vh;
   margin: calc(-0.7rem) calc(-0.5rem - env(safe-area-inset-right)) 0.4rem calc(-0.5rem - env(safe-area-inset-left));
   padding: 0.65rem calc(0.7rem + env(safe-area-inset-right)) 0.35rem calc(0.7rem + env(safe-area-inset-left));
   border-radius: 16px 16px 0 0;
-  background: linear-gradient(135deg, #1c2b4a 0%, #2f4a7a 100%);
-  color: #f3f5fa;
+  background: linear-gradient(135deg, var(--ui-banner-start) 0%, var(--ui-banner-end) 100%);
+  color: var(--ui-banner-text);
 
   &::before {
     content: "";
@@ -1300,13 +1300,13 @@ $mobile-sticky-actions-max-height: 40vh;
   // outline/link styling, which reads as a muddy near-invisible smudge against a dark background -
   // recolored to sit clearly on the dark header instead, same sizing/behavior otherwise.
   .silent-auction-info-button {
-    color: #d7e2ff;
+    color: var(--ui-banner-link);
   }
 
   .auto-leech-select .btn {
     padding: 0.15rem 0.4rem;
     font-size: 0.75rem;
-    color: #f3f5fa;
+    color: var(--ui-banner-text);
     background: rgba(255, 255, 255, 0.12);
     border-color: rgba(255, 255, 255, 0.3);
 
@@ -1326,7 +1326,7 @@ $mobile-sticky-actions-max-height: 40vh;
   }
 
   .btn-outline-secondary {
-    color: #f3f5fa;
+    color: var(--ui-banner-text);
     border-color: rgba(255, 255, 255, 0.3);
     background: rgba(255, 255, 255, 0.08);
 
@@ -1367,8 +1367,8 @@ $mobile-sticky-actions-max-height: 40vh;
     padding: 0.7rem calc(0.5rem + env(safe-area-inset-right)) calc(0.45rem + env(safe-area-inset-bottom) + 8px)
       calc(0.5rem + env(safe-area-inset-left));
     border-radius: 16px 16px 0 0;
-    background: linear-gradient(180deg, #ffffff 0%, #eef1f6 100%);
-    box-shadow: 0 -12px 28px rgba(20, 26, 50, 0.18), 0 -1px 0 rgba(255, 255, 255, 0.6);
+    background: linear-gradient(180deg, var(--ui-panel-gradient-start) 0%, var(--ui-panel-gradient-end) 100%);
+    box-shadow: 0 -12px 28px var(--ui-shadow), 0 -1px 0 var(--ui-divider-highlight);
 
     // Every move-button gets a refreshed "keycap" look here (rounded corners, soft gradient/
     // shadow, a satisfying press state) instead of Bootstrap's flat default - scoped to this
@@ -1387,21 +1387,21 @@ $mobile-sticky-actions-max-height: 40vh;
 
     .move-button .btn {
       border-radius: 10px;
-      border-color: rgba(31, 45, 82, 0.14);
-      box-shadow: 0 1px 2px rgba(31, 45, 82, 0.08);
+      border-color: var(--ui-border-strong);
+      box-shadow: 0 1px 2px var(--ui-shadow-soft);
       padding-top: 0.3rem;
       padding-bottom: 0.3rem;
       transition: transform 0.08s ease-out, box-shadow 0.08s ease-out;
 
       &:active {
         transform: scale(0.97);
-        box-shadow: inset 0 1px 2px rgba(31, 45, 82, 0.15);
+        box-shadow: inset 0 1px 2px var(--ui-shadow);
       }
     }
 
     .btn-secondary:not(.active):not(.warning) {
-      background: linear-gradient(180deg, #ffffff 0%, #e7ebf3 100%);
-      color: #33415c;
+      background: linear-gradient(180deg, var(--ui-keycap-gradient-start) 0%, var(--ui-keycap-gradient-end) 100%);
+      color: var(--ui-secondary-text);
     }
 
     .sticky-resource-bar-row {

@@ -246,8 +246,8 @@ export default class Charts extends Vue {
     gap: 0.9rem;
     padding: 0.75rem 0.9rem;
     margin-bottom: 0.9rem;
-    background: var(--systemGray6, #f2f2f7);
-    border: 1px solid var(--systemGray5, #e5e5ea);
+    background: var(--ui-surface-muted);
+    border: 1px solid var(--ui-border);
     border-radius: 0.5rem;
   }
 
@@ -262,7 +262,7 @@ export default class Charts extends Vue {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: var(--systemGray1, #8e8e93);
+    color: var(--ui-text-muted);
     margin-bottom: 0;
   }
 
@@ -272,8 +272,8 @@ export default class Charts extends Vue {
   }
 
   .stats-window__surface {
-    background: white;
-    border: 1px solid var(--systemGray5, #e5e5ea);
+    background: var(--ui-surface);
+    border: 1px solid var(--ui-border);
     border-radius: 0.5rem;
     padding: 0.75rem;
   }
@@ -298,8 +298,9 @@ export default class Charts extends Vue {
 }
 
 #tooltip {
-  background-color: #000;
-  color: #fff;
+  background-color: var(--ui-surface-raised);
+  color: var(--ui-text);
+  border: 1px solid var(--ui-border-strong);
   position: absolute;
 }
 
@@ -310,13 +311,13 @@ export default class Charts extends Vue {
     caption-side: top;
     text-align: center;
     font-weight: bold;
-    color: #495057;
+    color: var(--ui-text);
   }
 
   thead th {
     position: sticky;
     top: 0;
-    background: var(--systemGray6, #f2f2f7);
+    background: var(--ui-surface-muted);
     z-index: 1;
   }
 

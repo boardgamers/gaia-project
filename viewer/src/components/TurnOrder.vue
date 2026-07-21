@@ -81,7 +81,7 @@ export default class TurnOrder extends Vue {
 
 // The top-banner placement (Game.vue) wants this to read as a header strip, not a floating card.
 .turn-order-banner {
-  background: linear-gradient(135deg, #1c2b4a 0%, #2f4a7a 100%);
+  background: linear-gradient(135deg, var(--ui-banner-start) 0%, var(--ui-banner-end) 100%);
   border-radius: 8px;
   padding: 0.4rem 0.75rem;
   display: flex;

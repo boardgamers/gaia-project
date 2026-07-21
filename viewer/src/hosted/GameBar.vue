@@ -214,8 +214,9 @@ export default Vue.extend({
   flex-shrink: 0;
   font-size: 0.75rem;
   font-weight: 700;
-  color: #495057;
-  background: #e9ecef;
+  color: var(--ui-secondary-text);
+  background: var(--ui-secondary-bg);
+  border: 1px solid var(--ui-border);
   border-radius: 0.25rem;
   padding: 0.1rem 0.4rem;
 }
@@ -272,7 +273,7 @@ export default Vue.extend({
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #1a7a34;
+  color: var(--ui-success-text);
 }
 
 .game-bar__live-dot {
@@ -299,7 +300,7 @@ export default Vue.extend({
 .game-bar__age {
   margin-right: 0.35rem;
   font-weight: 700;
-  color: #6c757d;
+  color: var(--ui-text-muted);
 }
 
 .game-bar__tag {
@@ -309,15 +310,17 @@ export default Vue.extend({
   min-height: 1.2rem;
   padding: 0.08rem 0.42rem;
   border-radius: 999px;
-  background: #eef3f8;
-  color: #55657a;
+  background: var(--ui-secondary-bg);
+  color: var(--ui-secondary-text);
+  border: 1px solid var(--ui-border);
   font-size: 0.68rem;
   font-weight: 700;
   line-height: 1;
 
   &--abandoned {
-    background: #f8d7da;
-    color: #842029;
+    background: var(--ui-danger-bg);
+    color: var(--ui-danger-text);
+    border-color: var(--ui-danger-border);
   }
 }
 
@@ -329,8 +332,9 @@ export default Vue.extend({
   border: 0;
   border-radius: 999px;
   padding: 0.08rem 0.5rem;
-  background: #f8d7da;
-  color: #842029;
+  background: var(--ui-danger-bg);
+  color: var(--ui-danger-text);
+  border: 1px solid var(--ui-danger-border);
   font-size: 0.68rem;
   font-weight: 700;
   line-height: 1.2;
@@ -405,7 +409,7 @@ export default Vue.extend({
   max-width: 1.5rem;
   text-align: center;
   white-space: nowrap;
-  box-shadow: 0 0 0 1px #fff;
+  box-shadow: 0 0 0 1px var(--ui-surface);
   z-index: 1;
 
   &--active {
@@ -420,7 +424,7 @@ export default Vue.extend({
   width: 0.5rem;
   height: 0.5rem;
   border-radius: 50%;
-  border: 1px solid #fff;
+  border: 1px solid var(--ui-surface);
   box-shadow: 0 0 0 1px rgba(73, 80, 87, 0.12);
 
   &--green {

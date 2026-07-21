@@ -834,7 +834,7 @@ export default Vue.extend({
   gap: 0.35rem;
   font-size: 0.78rem;
   font-weight: 600;
-  color: #495057;
+  color: var(--ui-text-muted);
   border: 0;
   background: transparent;
   padding: 0.2rem 0.3rem;
@@ -847,10 +847,10 @@ export default Vue.extend({
   margin-top: 0.35rem;
   min-width: 10rem;
   max-width: 14rem;
-  background: var(--bs-body-bg, #fff);
-  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: var(--ui-surface-raised);
+  border: 1px solid var(--ui-border);
   border-radius: 0.4rem;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 14px var(--ui-shadow);
   padding: 0.5rem 0.65rem;
   z-index: 1060;
 }
@@ -897,7 +897,8 @@ export default Vue.extend({
   gap: 0.3rem;
   padding: 0.22rem;
   border-radius: 999px;
-  background: #edf2f8;
+  background: var(--ui-surface-muted);
+  border: 1px solid var(--ui-border);
 }
 
 .lobby-tab {
@@ -905,13 +906,13 @@ export default Vue.extend({
   border-radius: 999px;
   padding: 0.45rem 0.8rem;
   background: transparent;
-  color: #44526a;
+  color: var(--ui-text-muted);
   font-size: 0.85rem;
   font-weight: 700;
 
   &--active {
-    background: #343a40;
-    color: #fff;
+    background: var(--ui-primary);
+    color: var(--ui-primary-text);
   }
 }
 
@@ -927,16 +928,16 @@ export default Vue.extend({
 }
 
 .lobby-meta__sep {
-  color: #adb5bd;
+  color: var(--ui-text-subtle);
 }
 
 .lobby-meta__toggle-link {
-  color: #0b5ed7;
+  color: var(--ui-link);
   text-decoration: none;
 }
 
 .lobby-meta__toggle-link:hover {
-  color: #084298;
+  color: var(--ui-link-hover);
   text-decoration: underline;
 }
 
@@ -944,7 +945,7 @@ export default Vue.extend({
   display: flex;
   gap: 0.4rem;
   margin-bottom: 0.85rem;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid var(--ui-border);
 }
 
 .release-notes__tab {
@@ -953,20 +954,20 @@ export default Vue.extend({
   padding: 0.3rem 0.1rem 0.55rem;
   font-size: 0.85rem;
   font-weight: 600;
-  color: #6c757d;
+  color: var(--ui-text-muted);
   border-bottom: 2px solid transparent;
   margin-right: 0.9rem;
 }
 
 .release-notes__tab--active {
-  color: #0b5ed7;
-  border-bottom-color: #0b5ed7;
+  color: var(--ui-link);
+  border-bottom-color: var(--ui-link);
 }
 
 .release-notes__entry + .release-notes__entry {
   margin-top: 0.85rem;
   padding-top: 0.85rem;
-  border-top: 1px solid #e9ecef;
+  border-top: 1px solid var(--ui-border);
 }
 
 .release-notes__heading {
@@ -986,15 +987,15 @@ export default Vue.extend({
   line-height: 1;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #0b5ed7;
-  background: #e7f1ff;
+  color: var(--ui-link);
+  background: var(--ui-surface-active);
   border-radius: 999px;
   padding: 0.22rem 0.45rem;
 }
 
 .release-notes__title {
   font-weight: 600;
-  color: #212529;
+  color: var(--ui-text);
 }
 
 .release-notes__impact {

@@ -28,6 +28,7 @@ describe("TurnOrder presence dots", () => {
     const { container } = render(TurnOrder, { store });
 
     expect(container.querySelectorAll(".presence-dot").length).to.equal(0);
+    expect(container.querySelectorAll(".player-circle__name").length).to.equal(2);
   });
 
   it("shows green for a seat actively focused on this exact game, grey for a seat with no presence at all", () => {

@@ -189,16 +189,8 @@ svg.research-board {
   text-anchor: middle;
 }
 
-// These two labels have no painted shape behind them - just the transparent svg canvas - so in
-// dark mode the whole-page invert-filter's "re-invert svg back to normal" trick doesn't help: the
-// text renders in its normal (black) color while what's actually behind it is the true page
-// background (dark gray), which is invisible. Everywhere else in the research board, text sits on
-// a painted, also-re-inverted shape (a research-track circle, a tech-tile's colored border) so it
-// stays readable without an override.
-:root[data-theme="dark"] {
-  .charge-note,
-  .extension-label {
-    fill: white;
-  }
+.charge-note,
+.extension-label {
+  fill: var(--ui-svg-neutral-text);
 }
 </style>

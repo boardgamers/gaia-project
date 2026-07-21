@@ -588,7 +588,8 @@ export default class FactionInfoCard extends Vue {
 
 .faction-info-card__chip {
   font-size: 0.8rem;
-  background: rgba(0, 0, 0, 0.08);
+  background: var(--ui-surface-muted);
+  border: 1px solid var(--ui-border);
   border-radius: 6px;
   padding: 0.1rem 0.4rem;
 }
@@ -608,14 +609,14 @@ export default class FactionInfoCard extends Vue {
 
 // Native <details> accordion for the ability text - one item per ability, closed by default.
 .faction-info-card__accordion {
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--ui-border);
   border-radius: 8px;
   overflow: hidden;
 }
 
 .faction-info-card__acc-item {
   & + & {
-    border-top: 1px solid rgba(0, 0, 0, 0.12);
+    border-top: 1px solid var(--ui-border);
   }
 
   .faction-info-card__text {

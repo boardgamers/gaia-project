@@ -4,7 +4,9 @@
       <div>
         <div class="text-muted small text-uppercase">Lobby game</div>
         <h3 class="mb-1">{{ gameName }}</h3>
-        <div v-if="game" class="text-muted small">{{ auctionLabel(game) }} · {{ claimedSeats(game) }}/{{ game.player_count }} joined</div>
+        <div v-if="game" class="text-muted small">
+          {{ auctionLabel(game) }} · {{ claimedSeats(game) }}/{{ game.player_count }} joined
+        </div>
       </div>
       <a href="?lobby=1" class="btn btn-outline-secondary btn-sm">Back to lobby</a>
     </div>
@@ -85,7 +87,11 @@ export default Vue.extend({
       if (showLoading) {
         this.loading = true;
       }
-      const { data, error } = await (this.client as any).from("games").select("*, players(*)").eq("id", this.gameId).maybeSingle();
+      const { data, error } = await (this.client as any)
+        .from("games")
+        .select("*, players(*)")
+        .eq("id", this.gameId)
+        .maybeSingle();
       if (error) {
         this.message = `Could not load the game: ${error.message}`;
       } else {
@@ -100,8 +106,14 @@ export default Vue.extend({
     subscribeGame() {
       this.gameChannel = (this.client as any)
         .channel(`open-game-${this.gameId}`)
-        .on("postgres_changes", { event: "*", schema: "public", table: "games", filter: `id=eq.${this.gameId}` }, () => this.refresh())
-        .on("postgres_changes", { event: "*", schema: "public", table: "players", filter: `game_id=eq.${this.gameId}` }, () => this.refresh())
+        .on("postgres_changes", { event: "*", schema: "public", table: "games", filter: `id=eq.${this.gameId}` }, () =>
+          this.refresh()
+        )
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "players", filter: `game_id=eq.${this.gameId}` },
+          () => this.refresh()
+        )
         .subscribe();
     },
     auctionLabel(game: any): string {
@@ -161,7 +173,10 @@ export default Vue.extend({
       if (seat === null) {
         return;
       }
-      const { data, error } = await (this.client as any).rpc("join_open_game_seat", { p_game_id: game.id, p_seat: seat });
+      const { data, error } = await (this.client as any).rpc("join_open_game_seat", {
+        p_game_id: game.id,
+        p_seat: seat,
+      });
       if (error) {
         this.message = `Could not join the game: ${error.message}`;
         return;
@@ -216,7 +231,7 @@ export default Vue.extend({
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #5b657a;
+  color: var(--ui-text-muted);
 }
 
 .open-lobby-page__joined-line,
@@ -236,8 +251,9 @@ export default Vue.extend({
   align-items: center;
   padding: 0.2rem 0.5rem;
   border-radius: 999px;
-  background: #eef3f8;
-  color: #55657a;
+  background: var(--ui-secondary-bg);
+  color: var(--ui-secondary-text);
+  border: 1px solid var(--ui-border);
   font-size: 0.74rem;
   font-weight: 700;
 }
@@ -247,16 +263,17 @@ export default Vue.extend({
   align-items: center;
   padding: 0.25rem 0.55rem;
   border-radius: 999px;
-  background: #f5f7fb;
-  color: #364152;
+  background: var(--ui-surface-muted);
+  color: var(--ui-text);
+  border: 1px solid var(--ui-border);
   font-size: 0.82rem;
 }
 
 .open-lobby-page__preview {
-  border: 1px solid rgba(28, 43, 74, 0.08);
+  border: 1px solid var(--ui-border);
   border-radius: 12px;
   padding: 0.65rem;
-  background: linear-gradient(180deg, #ffffff 0%, #f5f7fb 100%);
+  background: linear-gradient(180deg, var(--ui-surface-raised) 0%, var(--ui-surface) 100%);
 }
 
 @media (max-width: 767px) {
