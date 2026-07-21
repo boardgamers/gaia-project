@@ -13,12 +13,7 @@ import { HostedGameHost, seatToLock } from "./hosted/host";
 import Lobby from "./hosted/Lobby.vue";
 import OpenLobbyGame from "./hosted/OpenLobbyGame.vue";
 import PendingApproval from "./hosted/PendingApproval.vue";
-import {
-  backfillSubscriptionTimezone,
-  disablePushNotifications,
-  enablePushNotifications,
-  isPushEnabled,
-} from "./hosted/push";
+import { backfillSubscriptionTimezone, isPushEnabled } from "./hosted/push";
 import { isOnline, trackPresence } from "./hosted/presence";
 import SignIn from "./hosted/SignIn.vue";
 import { createSupabaseBackend, getSupabaseClient, subscribeMoves, SupabaseClient } from "./hosted/supabase-client";
@@ -98,18 +93,6 @@ async function mountGameInstance(
   // spot further down - HostedBar.vue's settings-menu labels (`chatPanelOpen`/`gameNavPanelOpen`)
   // need to be kept live from `chatNotes`'/`nav`'s own `open` state, and a watcher can't reference
   // `bar` before it exists.
-  const enablePush = async () => {
-    bar.pushBusy = true;
-    window.alert(await enablePushNotifications(client, session.user.id));
-    bar.pushEnabled = await isPushEnabled();
-    bar.pushBusy = false;
-  };
-  const disablePush = async () => {
-    bar.pushBusy = true;
-    window.alert(await disablePushNotifications(client));
-    bar.pushEnabled = await isPushEnabled();
-    bar.pushBusy = false;
-  };
   const bar = new Vue({
     store: emitter.store,
     data: {
@@ -151,14 +134,15 @@ async function mountGameInstance(
             client,
             userId: session.user.id,
             pushEnabled: bar.pushEnabled,
-            pushBusy: bar.pushBusy,
           },
           on: {
             close: () => {
               bar.notifSettingsOpen = false;
             },
-            "enable-push": enablePush,
-            "disable-push": disablePush,
+            // The modal owns the device subscribe/unsubscribe now; just refresh the bell state.
+            "push-changed": async () => {
+              bar.pushEnabled = await isPushEnabled();
+            },
           },
         }),
       ]);

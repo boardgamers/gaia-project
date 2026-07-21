@@ -127,10 +127,8 @@
       :client="client"
       :user-id="myUserId"
       :push-enabled="pushEnabled"
-      :push-busy="pushBusy"
       @close="showNotifSettings = false"
-      @enable-push="enablePush"
-      @disable-push="disablePush"
+      @push-changed="onPushChanged"
     />
 
     <b-alert :show="!!message" variant="info" dismissible @dismissed="message = ''">{{ message }}</b-alert>
@@ -238,7 +236,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { PresenceState, trackPresence } from "./presence";
-import { backfillSubscriptionTimezone, disablePushNotifications, enablePushNotifications, isPushEnabled } from "./push";
+import { backfillSubscriptionTimezone, isPushEnabled } from "./push";
 import CreditsContent from "../components/CreditsContent.vue";
 import { factionName } from "../data/factions";
 import { isAdminEmail } from "./admin";
@@ -766,17 +764,10 @@ export default Vue.extend({
         await this.refresh();
       }
     },
-    async enablePush() {
-      this.pushBusy = true;
-      this.message = await enablePushNotifications(this.client, (this.session as any).user.id);
+    async onPushChanged() {
+      // The settings modal owns the subscribe/unsubscribe + its own inline status; just refresh
+      // the bell's on/off colour here.
       this.pushEnabled = await isPushEnabled();
-      this.pushBusy = false;
-    },
-    async disablePush() {
-      this.pushBusy = true;
-      this.message = await disablePushNotifications(this.client);
-      this.pushEnabled = await isPushEnabled();
-      this.pushBusy = false;
     },
     toggleDarkMode() {
       this.isDarkMode = toggleTheme() === "dark";

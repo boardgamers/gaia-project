@@ -4362,6 +4362,14 @@ components/PlayerBoard/BuildingGroup.spec.ts` (X-mark presence/absence). Engine 
       +13 for prefs/snooze/interval/cap/adjustable-quiet); viewer build passes, `HostedBar.spec.ts` +
       `push.spec.ts` still green, full viewer suite **503 pass / 31 pre-existing fail** (same engine/
       scoring/rotation baseline, none in touched files). Migration applied live and function deployed.
+      **Follow-up polish (2026-07-21, v5.36.1):** owner reported the modal flashed small-then-big on
+      open, looked plain, and the on/off felt clunky. `NotificationSettings.vue` was rebuilt as a
+      self-contained compact modal (~23rem, own backdrop, custom iOS-style CSS switches,
+      Escape-to-close, fade/rise transition); the load flash is gone because the form renders full-size
+      from defaults and populates in place; and the device subscribe/unsubscribe moved into the modal
+      with inline status via a new `push-changed` event, replacing the `window.alert` flow and removing
+      the enable/disable plumbing from `hosted.ts`/`Lobby.vue`. Light-only styling (the app's dark mode
+      is a global invert filter). Full viewer suite still **503/31**.
 
 ## Still MISSING — only one art-only item left
 

@@ -1,7 +1,21 @@
 {
-  "version": "5.36.0",
+  "version": "5.36.1",
   "releasedAt": "2026-07-21",
   "entries": [
+    {
+      "version": "5.36.1",
+      "releasedAt": "2026-07-21",
+      "kind": "update",
+      "title": "Notification settings polish",
+      "impact": "",
+      "changes": [
+        "Redesigned the notification settings into a cleaner, compact window that opens smoothly (no more size jump), with nicer on/off switches and inline status instead of popup alerts",
+        "NotificationSettings.vue rebuilt as a self-contained compact modal (own backdrop, custom CSS switches, Escape-to-close); device subscribe/unsubscribe moved into the modal with inline status via a push-changed event, dropping the window.alert flow and the enable/disable plumbing in hosted.ts/Lobby.vue; form renders full-size from defaults so there's no load flash"
+      ],
+      "userChanges": [
+        "Redesigned the notification settings into a cleaner, compact window that opens smoothly (no more size jump), with nicer on/off switches and inline status instead of popup alerts"
+      ]
+    },
     {
       "version": "5.36.0",
       "releasedAt": "2026-07-21",
