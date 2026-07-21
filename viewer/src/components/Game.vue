@@ -65,7 +65,7 @@
                  tracks themselves actually end, leaving a large visible gap here otherwise. -->
             <BoardAction
               :scale="17"
-              :transform="`translate(${45 * i - 20}, ${baseResearchBoardHeight + 5})`"
+              :transform="`translate(${45 * i - 20 + boardActionRowXShift}, ${baseResearchBoardHeight + 5})`"
               v-for="(action, i) in actions"
               :key="action"
               :action="action"
@@ -246,6 +246,21 @@ import AutoLeechFab from "./AutoLeechFab.vue";
 
 const PREMOVE_EXPLAINER_DISMISSED_KEY = "premoveExplainerDismissed";
 const PREMOVE_MODE_PREFERENCE_KEY = "premoveModePreference";
+
+// The base-game power/QIC action row is drawn with BoardAction.vue, which wraps every octagon in an
+// inner `<svg viewBox="-28 -28 56 56" overflow:visible>`. That inner viewBox origin shifts the
+// painted octagon by +28 on BOTH axes relative to the `translate(x, y)` we position each one at - so
+// an octagon we translate to (x, y) actually paints centered near (x + 28, y + 28), and within that
+// inner box the octagon's own bounding box measures roughly x∈[-26, 19], y∈[-27, 19]. The Lost Fleet
+// canvas sizing + centering below have to account for where the octagons REALLY land, not for the
+// bare translate: assuming they sat exactly at (x, y) is what let the row overflow the board's bottom
+// edge into the ship boards, and left it hugging the panel's left edge.
+const BOARD_ACTION_INNER_OFFSET = 28;
+const BOARD_ACTION_OCTAGON_LEFT = -26;
+const BOARD_ACTION_OCTAGON_RIGHT = 19;
+const BOARD_ACTION_OCTAGON_BOTTOM = 19;
+const BOARD_ACTION_SPACING = 45;
+const BOARD_ACTION_BASE_X = -20;
 
 @Component<Game>({
   components: {
@@ -460,9 +475,14 @@ export default class Game extends Vue {
       return 550;
     }
 
-    // BoardAction's 50-unit icon is centered from y=420 through y=470. Keep four units of breathing
-    // room under it, while allowing a taller final-scoring column to win if one is ever introduced.
-    return Math.max(this.researchBoardViewHeight, this.baseResearchBoardHeight + 34);
+    // Reserve room for the action row's ACTUAL painted bottom edge, not its bare translate: each
+    // octagon is translated to y = baseResearchBoardHeight + 5 but (per BOARD_ACTION_INNER_OFFSET
+    // above) paints ~28 units lower, and its own box reaches ~19 units past that center - so its true
+    // bottom is baseResearchBoardHeight + 5 + 28 + 19. Keep five units of breathing room under it (the
+    // old `+ 34` assumed the octagon sat at its translate and stopped ~48 units too high, which let the
+    // row spill past the panel into the ship boards below). A taller final-scoring column still wins.
+    const actionRowBottom = this.baseResearchBoardHeight + 5 + BOARD_ACTION_INNER_OFFSET + BOARD_ACTION_OCTAGON_BOTTOM;
+    return Math.max(this.researchBoardViewHeight, Math.ceil(actionRowBottom + 5));
   }
 
   get researchBoardCanvasViewBox() {
@@ -498,6 +518,25 @@ export default class Game extends Vue {
 
   get actions(): BoardActionEnum[] {
     return BoardActionEnum.values(this.expansions);
+  }
+
+  // Horizontal shift applied to the whole action row so it sits with equal left/right margins inside
+  // the board panel. The base game keeps its long-standing left-anchored framing (a ScoringBoard fills
+  // the space to the row's right - shift 0). Lost Fleet has no side ScoringBoard, so the row would
+  // otherwise hug the panel's left edge (a wide empty gutter on the right); center it instead. The
+  // math works in the octagons' real painted coordinates (see BOARD_ACTION_INNER_OFFSET), so "centered"
+  // means the visible octagons are centered, not their bare translate anchors.
+  get boardActionRowXShift(): number {
+    if (!this.engine.options.lostFleet) {
+      return 0;
+    }
+    const n = this.actions.length;
+    const firstCenter = BOARD_ACTION_BASE_X + BOARD_ACTION_INNER_OFFSET;
+    const lastCenter = BOARD_ACTION_BASE_X + BOARD_ACTION_SPACING * (n - 1) + BOARD_ACTION_INNER_OFFSET;
+    const rowVisualMid = (firstCenter + lastCenter) / 2 + (BOARD_ACTION_OCTAGON_LEFT + BOARD_ACTION_OCTAGON_RIGHT) / 2;
+    // The +1/-2 panel insets cancel, so the panel's center is simply minX + width/2.
+    const panelCenter = this.researchBoardCanvasMinX + this.researchBoardCanvasWidth / 2;
+    return panelCenter - rowVisualMid;
   }
 
   get ended() {

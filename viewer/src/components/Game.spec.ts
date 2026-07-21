@@ -400,11 +400,32 @@ describe("Game", () => {
     const [minX, , canvasWidth, canvasHeight] = svg.getAttribute("viewBox").split(" ").map(Number);
     expect(minX).to.equal(-50);
     expect(canvasWidth).to.equal(450);
-    expect(canvasHeight).to.equal(474);
+    // The canvas reserves room for the power-action row's ACTUAL painted bottom edge. Each octagon is
+    // translated to y = 445 (baseResearchBoardHeight + 5) but BoardAction.vue's inner
+    // `viewBox="-28 -28 56 56"` shifts it +28 down and its own box reaches ~19 past that center, so its
+    // real bottom is 445 + 28 + 19 = 492; +5 breathing => 497. The earlier 474 assumed the octagon sat
+    // at its bare translate, which left the row spilling ~18px past the panel into the ship boards.
+    expect(canvasHeight).to.equal(497);
     expect(svg.getAttribute("width")).to.equal("450");
-    expect(svg.getAttribute("height")).to.equal("474");
+    expect(svg.getAttribute("height")).to.equal("497");
     expect(svg.querySelector(".research-actions-panel")).to.not.equal(null);
     expect(svg.closest(".game-board-layout")).to.not.equal(null);
+
+    // The whole action row is centered within the board panel (equal left/right margins) now that
+    // there is no side ScoringBoard to fill the space on its right. Each octagon paints +28 from its
+    // translate on both axes, so the leftmost octagon's real left edge and the rightmost's real right
+    // edge should be equidistant from the panel's own left/right edges.
+    const panelLeft = minX + 1;
+    const panelRight = minX + 1 + (canvasWidth - 2);
+    const actionGroups = [...svg.querySelectorAll("g.boardAction")];
+    expect(actionGroups.length).to.be.greaterThan(0);
+    const translateXs = actionGroups.map((g) => {
+      const m = /translate\(\s*(-?[\d.]+)/.exec(g.getAttribute("transform") || "");
+      return m ? Number(m[1]) : NaN;
+    });
+    const firstLeft = Math.min(...translateXs) + 28 - 26;
+    const lastRight = Math.max(...translateXs) + 28 + 19;
+    expect(Math.abs(firstLeft - panelLeft - (panelRight - lastRight))).to.be.lessThan(1);
 
     vm.$el.remove();
     vm.$destroy();
