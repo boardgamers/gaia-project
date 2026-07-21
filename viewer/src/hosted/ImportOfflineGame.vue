@@ -1,7 +1,7 @@
 <template>
   <div class="container py-3 py-md-4" style="max-width: 32rem">
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <h3 class="mb-0">Move to online lobby</h3>
+      <h1 class="h3 mb-0">Move to online lobby</h1>
       <a href="?offline=1" class="btn btn-outline-secondary btn-sm">Back to offline games</a>
     </div>
 

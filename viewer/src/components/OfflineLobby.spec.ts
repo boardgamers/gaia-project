@@ -3,7 +3,7 @@ import BootstrapVue from "bootstrap-vue";
 import { expect } from "chai";
 import { mount } from "@vue/test-utils";
 import Vue from "vue";
-import { createStoredOfflineGame } from "../offline-game";
+import { createStoredOfflineGame, listOfflineGames } from "../offline-game";
 import OfflineLobby from "./OfflineLobby.vue";
 
 Vue.use(BootstrapVue);
@@ -68,6 +68,23 @@ describe("OfflineLobby", () => {
 
     expect(wrapper.find(`a[href="?importOffline=${ids[0]}"]`).exists()).to.equal(true);
     expect(wrapper.find(`a[href="?importOffline=${ids[1]}"]`).exists()).to.equal(true);
+
+    wrapper.destroy();
+  });
+
+  it("offers file backups in the lobby and restores an older raw engine export", async () => {
+    const wrapper = mount(OfflineLobby, { propsData: { storage } });
+    await Vue.nextTick();
+
+    expect(wrapper.text()).to.include("Import backup");
+    expect(wrapper.findAll("button").filter((button) => button.text() === "Download backup").length).to.equal(2);
+
+    const restored = new Engine(["init 2 restored-from-file"], { lostFleet: true });
+    (wrapper.vm as any).importBackupContents(JSON.stringify(restored), "Restored fleet");
+    await Vue.nextTick();
+
+    expect(listOfflineGames(storage).games.map((game) => game.name)).to.include("Restored fleet");
+    expect(wrapper.text()).to.include("Imported “Restored fleet”.");
 
     wrapper.destroy();
   });

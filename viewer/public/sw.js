@@ -5,7 +5,20 @@
 /* __GAIA_PRECACHE_CONFIG_START__ */
 const PRECACHE_CONFIG = {
   version: "development",
-  urls: ["/", "/index.html", "/manifest.json", "/favicon.png", "/?lobby=1", "/?offline=1"],
+  urls: [
+    "/",
+    "/index.html",
+    "/manifest.json",
+    "/favicon.png",
+    "/apple-touch-icon.png",
+    "/icon-192.png",
+    "/icon-512.png",
+    "/icon-maskable-192.png",
+    "/icon-maskable-512.png",
+    "/notification-badge.png",
+    "/?lobby=1",
+    "/?offline=1",
+  ],
 };
 /* __GAIA_PRECACHE_CONFIG_END__ */
 
@@ -117,8 +130,8 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(title, {
       body: data.body || "",
-      icon: "/favicon.png",
-      badge: "/favicon.png",
+      icon: "/icon-192.png",
+      badge: "/notification-badge.png",
       tag: data.tag || undefined,
       data: { url: data.url || "/?lobby=1" },
     })

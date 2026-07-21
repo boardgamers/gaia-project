@@ -11,7 +11,7 @@ import Engine, {
 import { expect } from "chai";
 import { factionName } from "../../data/factions";
 import { CommandObject, parseCommands } from "../recent";
-import { findFirstBad, runMoveHistoryTests } from "../test-utils";
+import { createFixtureEngine, findFirstBad, runMoveHistoryTests } from "../test-utils";
 import { balanceSheetResourceName, balanceSheetResources, currentAmount } from "./balance-sheet";
 import { ChartSetup } from "./chart-factory";
 import { createTestChartConfig } from "./chart.spec";
@@ -96,7 +96,10 @@ function runResourceCounterTest(testCase: any, wantPlayer: PlayerEnum) {
     }
   }
 
-  const engine = new TestEngine(testCase.moveHistory, testCase.options, new Engine().version, true);
+  const engine = createFixtureEngine(
+    testCase,
+    (moves) => new TestEngine(moves, testCase.options, new Engine().version, true)
+  );
 
   const player = engine.player(wantPlayer);
 

@@ -1,4 +1,5 @@
 {
+  "legacyIvitsStartingPower": true,
   "types": ["Final Scoring Conditions", "Faction Specials"],
   "options": {
     "layout": "standard"

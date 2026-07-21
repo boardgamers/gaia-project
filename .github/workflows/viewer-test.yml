@@ -3,30 +3,41 @@ on:
   push:
     paths:
       - ".github/workflows/viewer-test.yml"
+      - "engine/**"
       - "viewer/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
     branches:
       - master
   pull_request:
     paths:
       - ".github/workflows/viewer-test.yml"
+      - "engine/**"
       - "viewer/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
 
-defaults:
-  run:
-    working-directory: viewer
+concurrency:
+  group: viewer-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test_and_build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
         with:
-          node-version: "14"
-      - uses: pnpm/action-setup@v1.2.1
+          version: 9.12.0
+          run_install: false
+      - uses: actions/setup-node@v4
         with:
-          version: 5.17.1
-      - run: pnpm install
-      - run: pnpm lint
-      - run: pnpm test
-      - run: pnpm build
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @gaia-project/engine build
+      - run: pnpm --filter @gaia-project/viewer test -- --reporter min
+      - run: pnpm --filter @gaia-project/viewer build

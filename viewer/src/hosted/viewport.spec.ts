@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { isDesktopViewport, watchDesktopViewport } from "./viewport";
+import { isDesktopViewport, setViewportZoomLocked, watchDesktopViewport } from "./viewport";
 
 describe("viewport desktop detection", () => {
   function mockMatchMedia(matches: boolean) {
@@ -40,6 +40,36 @@ describe("viewport desktop detection", () => {
       expect(isDesktopViewport()).to.equal(true);
     } finally {
       media.restore();
+    }
+  });
+
+  it("keeps accessibility zoom available when applying the bounded mobile viewport", () => {
+    const existing = document.querySelector('meta[name="viewport"]') as HTMLMetaElement | null;
+    const meta = existing ?? document.createElement("meta");
+    const originalContent = meta.getAttribute("content");
+    if (!existing) {
+      meta.name = "viewport";
+      document.head.appendChild(meta);
+    }
+
+    try {
+      setViewportZoomLocked(true);
+      expect(meta.content).to.include("maximum-scale=5");
+      expect(meta.content).to.include("user-scalable=yes");
+      expect(meta.content).to.not.include("user-scalable=no");
+
+      setViewportZoomLocked(false);
+      expect(meta.content).to.equal("width=device-width, initial-scale=1");
+    } finally {
+      if (existing) {
+        if (originalContent === null) {
+          meta.removeAttribute("content");
+        } else {
+          meta.content = originalContent;
+        }
+      } else {
+        meta.remove();
+      }
     }
   });
 

@@ -12,6 +12,8 @@
 > account-global, honored server-side.
 > Migrations applied to `mitawjpdxkheascdiffz` and the function redeployed. Prior: #106 pinned-URL/PWA
 > `?lobby=1` fix; #105 Artifact mine-counting fix; #104 "couponing changes". AI task index unchanged).
+> Viewer v5.36.3 additionally ships portable offline backups, accessibility fixes, complete PWA
+> artwork, a modernized green CI path, and explicit compatibility for historical Ivits chart fixtures.
 
 ## Working agreements (read every session, not optional)
 
@@ -51,6 +53,10 @@ release.json`) has two audiences and they must not blur together: a "What's new"
 - **Other Lost Fleet work:** follow a concrete owner request. The large **Next actions** section is a
   historical ledger with many completed entries; search it for a named topic instead of reading it
   sequentially.
+- **Viewer hardening:** v5.36.3 adds versioned offline-game download/import (plus legacy raw-engine
+  import), storage-protection status, accessible setup/sign-in/offline-lobby controls, zoom and
+  reduced-motion support, complete standard/maskable/notification PWA icons, a Node 22/pnpm 9
+  test-and-build workflow, and compatibility metadata for five historical Ivits chart fixtures.
 
 ## What this project is
 

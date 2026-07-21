@@ -3,8 +3,10 @@ import Engine from "@gaia-project/engine";
 export const OFFLINE_GAME_STORAGE_KEY = "gaia-offline-game-v1";
 export const OFFLINE_GAME_SAVED_EVENT = "gaia-offline-game-saved";
 export const OFFLINE_GAME_LIBRARY_KEY = "gaia-offline-games-v1";
+export const OFFLINE_GAME_BACKUP_KIND = "gaia-project-offline-game";
 
 const OFFLINE_GAME_SAVE_VERSION = 1;
+const OFFLINE_GAME_BACKUP_VERSION = 1;
 const OFFLINE_GAME_RECORD_PREFIX = "gaia-offline-game-v2:";
 const LEGACY_OFFLINE_GAME_ID = "imported-offline-game";
 
@@ -31,6 +33,13 @@ export type StoredOfflineGame = OfflineGameSave & {
   id: string;
   name: string;
   createdAt: string;
+};
+
+export type OfflineGameBackup = {
+  kind: typeof OFFLINE_GAME_BACKUP_KIND;
+  version: 1;
+  exportedAt: string;
+  game: StoredOfflineGame;
 };
 
 export type OfflineGameLibraryResult = {
@@ -151,6 +160,17 @@ function serializeOfflineGame(engine: Engine, pendingMove: string, now: number):
     engineData: JSON.parse(JSON.stringify(engine)),
     ...(pendingMove ? { pendingMove } : {}),
   };
+}
+
+/** A portable, versioned file format for moving a local game between browsers or devices. */
+export function serializeOfflineGameBackup(game: StoredOfflineGame, now = Date.now()): string {
+  const backup: OfflineGameBackup = {
+    kind: OFFLINE_GAME_BACKUP_KIND,
+    version: OFFLINE_GAME_BACKUP_VERSION,
+    exportedAt: new Date(now).toISOString(),
+    game: JSON.parse(JSON.stringify(game)),
+  };
+  return JSON.stringify(backup, null, 2);
 }
 
 export function readOfflineGame(storage: Storage | null = browserOfflineStorage()): OfflineGameReadResult {
@@ -463,6 +483,99 @@ export function restoreOfflineGame(save: OfflineGameSave): RestoredOfflineGame {
       pendingMove: "",
       warning: `The last unfinished move could not be restored and was discarded: ${errorMessage(error)}`,
     };
+  }
+}
+
+/**
+ * Imports both the versioned backup format and the raw engine JSON produced by the older in-game
+ * Export dialog. Every import receives a new id, so restoring a backup can never overwrite the
+ * source game already on this device.
+ */
+export function importOfflineGameBackup(
+  raw: string,
+  fallbackName = "Imported backup",
+  storage: Storage | null = browserOfflineStorage(),
+  now = Date.now(),
+  gameId = makeOfflineGameId(now)
+): StoredOfflineGameWriteResult {
+  if (!storage) {
+    return { save: null, error: "Local storage is unavailable in this browser." };
+  }
+  if (!validOfflineGameId(gameId)) {
+    return { save: null, error: "The offline game id is invalid." };
+  }
+
+  let parsed: any;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (_error) {
+    return { save: null, error: "That backup is not valid JSON." };
+  }
+
+  let source: OfflineGameSave;
+  let name = fallbackName;
+  let createdAt = new Date(now).toISOString();
+  if (parsed?.kind === OFFLINE_GAME_BACKUP_KIND) {
+    if (parsed.version !== OFFLINE_GAME_BACKUP_VERSION || !isStoredOfflineGame(parsed.game)) {
+      return { save: null, error: "That offline backup uses an unsupported format." };
+    }
+    source = parsed.game;
+    name = parsed.game.name;
+    createdAt = parsed.game.createdAt;
+  } else if (isStoredOfflineGame(parsed)) {
+    source = parsed;
+    name = parsed.name;
+    createdAt = parsed.createdAt;
+  } else if (isOfflineGameSave(parsed)) {
+    source = parsed;
+  } else if (parsed && Array.isArray(parsed.moveHistory)) {
+    source = {
+      version: OFFLINE_GAME_SAVE_VERSION,
+      savedAt: new Date(now).toISOString(),
+      engineData: parsed,
+    };
+  } else {
+    return { save: null, error: "That file does not contain a supported offline game backup." };
+  }
+
+  let restored: RestoredOfflineGame;
+  try {
+    restored = restoreOfflineGame(source);
+  } catch (error) {
+    return { save: null, error: `That backup could not be restored: ${errorMessage(error)}` };
+  }
+
+  const library = ensureOfflineGameIndex(storage);
+  if (!library.index) {
+    return { save: null, error: library.error };
+  }
+  if (library.index.gameIds.includes(gameId)) {
+    return { save: null, error: "An offline game with that id already exists." };
+  }
+
+  const importedAt = new Date(now).toISOString();
+  const save: StoredOfflineGame = {
+    version: OFFLINE_GAME_SAVE_VERSION,
+    id: gameId,
+    name: name.trim() || "Imported backup",
+    createdAt,
+    savedAt: importedAt,
+    engineData: JSON.parse(JSON.stringify(restored.engine)),
+    ...(restored.pendingMove ? { pendingMove: restored.pendingMove } : {}),
+  };
+
+  try {
+    storage.setItem(offlineGameRecordKey(gameId), JSON.stringify(save));
+    const nextIndex: OfflineGameIndex = { ...library.index, gameIds: [gameId, ...library.index.gameIds] };
+    storage.setItem(OFFLINE_GAME_LIBRARY_KEY, JSON.stringify(nextIndex));
+    return { save, error: library.error };
+  } catch (error) {
+    try {
+      storage.removeItem(offlineGameRecordKey(gameId));
+    } catch (_rollbackError) {
+      // The index was not updated, so an unlisted record is harmless even if rollback is blocked.
+    }
+    return { save: null, error: `The offline backup could not be imported: ${errorMessage(error)}` };
   }
 }
 

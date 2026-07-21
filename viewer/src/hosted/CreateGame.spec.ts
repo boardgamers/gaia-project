@@ -54,6 +54,27 @@ describe("CreateGame", () => {
     expect(wrapper.text()).to.include("stay open in the lobby for anyone to join");
   });
 
+  it("uses separate accessible controls for selecting and explaining each faction-selection mode", async () => {
+    const wrapper = mount(CreateGame, {
+      propsData: { client: makeClient(), session },
+      stubs: { SetupPreview: true },
+    });
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    const cards = wrapper.findAll(".create-game-variant");
+    expect(cards.length).to.be.greaterThan(1);
+    expect(wrapper.find('.create-game-variant[role="button"]').exists()).to.equal(false);
+    expect(cards.at(0).find("button button").exists()).to.equal(false);
+
+    const select = cards.at(1).find(".create-game-variant__select");
+    expect(select.attributes("aria-pressed")).to.equal("false");
+    await select.trigger("click");
+    await Vue.nextTick();
+    expect(select.attributes("aria-pressed")).to.equal("true");
+    expect(cards.at(1).find(".create-game-info-dot").attributes("aria-label")).to.match(/^About /);
+  });
+
   it("offers a direct-invite picker of other players, sorted by nickname", async () => {
     const client = makeClient();
     (client as any).rpc = async (name: string) => {
@@ -62,7 +83,10 @@ describe("CreateGame", () => {
           // list_invitable_players already orders by nickname server-side (migration
           // 0027_list_invitable_players.sql); the mock returns them pre-sorted the same way.
           data: [
+            // Supabase returns the database column name verbatim.
+            // eslint-disable-next-line @typescript-eslint/camelcase
             { user_id: "user-amy", nickname: "Amy" },
+            // eslint-disable-next-line @typescript-eslint/camelcase
             { user_id: "user-zed", nickname: "Zed" },
           ],
           error: null,

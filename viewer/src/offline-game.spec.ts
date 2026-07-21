@@ -4,6 +4,7 @@ import fs from "fs";
 import {
   createStoredOfflineGame,
   deleteStoredOfflineGame,
+  importOfflineGameBackup,
   isOfflineGameMode,
   listOfflineGames,
   offlineGameListRow,
@@ -12,6 +13,7 @@ import {
   readOfflineGame,
   readStoredOfflineGame,
   restoreOfflineGame,
+  serializeOfflineGameBackup,
   writeOfflineGame,
   writeStoredOfflineGame,
 } from "./offline-game";
@@ -106,6 +108,59 @@ describe("offline hot-seat games", () => {
     expect(deleteStoredOfflineGame("beta", storage)).to.deep.equal({ deleted: true, error: null });
     expect(listOfflineGames(storage).games.map((game) => game.name)).to.deep.equal(["Alpha"]);
     expect(readStoredOfflineGame("beta", storage).save).to.equal(null);
+  });
+
+  it("exports a versioned backup and imports it as a new game without overwriting the original", () => {
+    const storage = new MemoryStorage();
+    const engine = new Engine(["init 2 offline-backup"], { lostFleet: true });
+    const created = createStoredOfflineGame(engine, "Copper Nova", storage, Date.UTC(2026, 6, 17, 10), "backup-source");
+    if (!created.save) {
+      throw new Error(created.error ?? "Expected a stored offline game");
+    }
+    writeStoredOfflineGame(created.save.id, engine, "p1 faction terrans", storage, Date.UTC(2026, 6, 17, 11));
+    const source = readStoredOfflineGame(created.save.id, storage).save;
+    if (!source) {
+      throw new Error("Expected the source game");
+    }
+
+    const raw = serializeOfflineGameBackup(source, Date.UTC(2026, 6, 17, 12));
+    const imported = importOfflineGameBackup(raw, "ignored filename", storage, Date.UTC(2026, 6, 18, 9), "backup-copy");
+
+    expect(imported.error).to.equal(null);
+    expect(imported.save?.id).to.equal("backup-copy");
+    expect(imported.save?.name).to.equal("Copper Nova");
+    expect(imported.save?.pendingMove).to.equal(undefined);
+    expect(imported.save?.engineData.moveHistory).to.include("p1 faction terrans");
+    expect(imported.save?.savedAt).to.equal("2026-07-18T09:00:00.000Z");
+    expect(readStoredOfflineGame("backup-source", storage).save).to.not.equal(null);
+    expect(listOfflineGames(storage).games.map((game) => game.id)).to.deep.equal(["backup-copy", "backup-source"]);
+  });
+
+  it("imports raw engine JSON from the older in-game Export dialog", () => {
+    const storage = new MemoryStorage();
+    const engine = new Engine(["init 3 raw-json-backup"], { lostFleet: true });
+
+    const imported = importOfflineGameBackup(
+      JSON.stringify(engine),
+      "Friday fleet night",
+      storage,
+      Date.UTC(2026, 6, 18, 10),
+      "raw-json-copy"
+    );
+
+    expect(imported.error).to.equal(null);
+    expect(imported.save?.name).to.equal("Friday fleet night");
+    expect(imported.save?.engineData.moveHistory).to.deep.equal(engine.moveHistory);
+  });
+
+  it("rejects malformed and unsupported backups without changing the library", () => {
+    const storage = new MemoryStorage();
+
+    expect(importOfflineGameBackup("not-json", "Broken", storage).error).to.equal("That backup is not valid JSON.");
+    expect(importOfflineGameBackup(JSON.stringify({ version: 99 }), "Broken", storage).error).to.equal(
+      "That file does not contain a supported offline game backup."
+    );
+    expect(listOfflineGames(storage).games).to.have.length(0);
   });
 
   it("restores an unfinished turn for display while retaining the committed baseline", () => {

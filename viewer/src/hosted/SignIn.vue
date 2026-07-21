@@ -1,12 +1,20 @@
 <template>
   <div class="container py-5" style="max-width: 30rem">
-    <h3 class="sign-in-title">GP: Fight Club</h3>
+    <h1 class="h3 sign-in-title">GP: Fight Club</h1>
     <p class="text-muted">Sign in once on this device and you stay signed in.</p>
     <b-button block variant="primary" :disabled="busy" @click="google">Sign in with Google</b-button>
     <hr />
     <p class="text-muted small mb-1">No Google account on this email? Get a one-time sign-in link instead.</p>
     <b-form @submit.prevent="submit">
-      <b-form-input v-model="email" type="email" required placeholder="you@example.com" autocomplete="email" />
+      <label for="sign-in-email" class="mb-1">Email address</label>
+      <b-form-input
+        id="sign-in-email"
+        v-model="email"
+        type="email"
+        required
+        placeholder="you@example.com"
+        autocomplete="email"
+      />
       <b-button class="mt-2" type="submit" variant="outline-primary" :disabled="busy || !email"
         >Send sign-in link</b-button
       >

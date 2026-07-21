@@ -1,7 +1,7 @@
 <template>
   <div class="container py-3 py-md-4" style="max-width: 46rem">
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <h3 class="mb-0">{{ offline ? "New offline game" : "New game" }}</h3>
+      <h1 class="h3 mb-0">{{ offline ? "New offline game" : "New game" }}</h1>
       <a :href="offline ? '?offline=1' : '?lobby=1'" class="btn btn-outline-secondary btn-sm">Back to lobby</a>
     </div>
     <b-alert :show="!!message" variant="info" dismissible @dismissed="message = ''">{{ message }}</b-alert>
@@ -43,24 +43,24 @@
               :key="option.value"
               class="create-game-variant"
               :class="{ 'create-game-variant--active': form.auctionVariant === option.value }"
-              role="button"
-              tabindex="0"
-              @click="form.auctionVariant = option.value"
-              @keydown.enter.prevent="form.auctionVariant = option.value"
-              @keydown.space.prevent="form.auctionVariant = option.value"
             >
-              <div class="create-game-variant__title-row">
-                <strong>{{ option.label }}</strong>
-                <button
-                  type="button"
-                  class="create-game-info-dot"
-                  :aria-label="`About ${option.label}`"
-                  @click.stop="showInfo(option.label, option.description)"
-                >
-                  i
-                </button>
-              </div>
-              <div class="create-game-variant__summary">{{ option.summary }}</div>
+              <button
+                type="button"
+                class="create-game-variant__select"
+                :aria-pressed="form.auctionVariant === option.value ? 'true' : 'false'"
+                @click="form.auctionVariant = option.value"
+              >
+                <strong class="create-game-variant__title">{{ option.label }}</strong>
+                <span class="create-game-variant__summary">{{ option.summary }}</span>
+              </button>
+              <button
+                type="button"
+                class="create-game-info-dot create-game-variant__info"
+                :aria-label="`About ${option.label}`"
+                @click="showInfo(option.label, option.description)"
+              >
+                i
+              </button>
             </div>
           </div>
           <div class="create-game-ban-phase">
@@ -428,11 +428,11 @@ export default Vue.extend({
 }
 
 .create-game-variant {
+  position: relative;
   width: 100%;
-  text-align: left;
   border: 1px solid rgba(28, 43, 74, 0.12);
   border-radius: 10px;
-  padding: 0.55rem 0.65rem;
+  padding: 0;
   background: #fff;
   color: #2a354d;
 
@@ -443,18 +443,34 @@ export default Vue.extend({
   }
 }
 
-.create-game-variant__title-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
+.create-game-variant__select {
+  display: block;
+  width: 100%;
+  min-height: 100%;
+  padding: 0.65rem 3rem 0.65rem 0.65rem;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.create-game-variant__title {
+  display: block;
   margin-bottom: 0.25rem;
 }
 
 .create-game-variant__summary {
+  display: block;
   font-size: 0.82rem;
   line-height: 1.25;
   color: #60708d;
+}
+
+.create-game-variant__info {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
 }
 
 .create-game-invite-list {
@@ -503,8 +519,8 @@ export default Vue.extend({
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.2rem;
-  height: 1.2rem;
+  width: 2rem;
+  height: 2rem;
   border: 1px solid rgba(28, 43, 74, 0.18);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.85);

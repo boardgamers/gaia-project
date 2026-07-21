@@ -31,9 +31,7 @@ const spaceshipActionLabels: Record<SpaceshipActionType, string> = {
   credit: "Credit",
 };
 
-export function exploreButton(
-  command: AvailableCommand<Command.Explore>
-): ButtonData {
+export function exploreButton(command: AvailableCommand<Command.Explore>): ButtonData {
   return autoClickButton({
     label: "Explore",
     command: command.name,
@@ -63,9 +61,7 @@ export function exploreButton(
   });
 }
 
-export function spaceshipActionButton(
-  command: AvailableCommand<Command.SpaceshipAction>
-): ButtonData {
+export function spaceshipActionButton(command: AvailableCommand<Command.SpaceshipAction>): ButtonData {
   return autoClickButton({
     label: "Ship Action",
     command: command.name,
@@ -121,20 +117,20 @@ export function placePowerRingButton(
   );
 }
 
-export function examineArtifactButton(
-  command: AvailableCommand<Command.ExamineArtifact>
-): ButtonData {
+export function examineArtifactButton(command: AvailableCommand<Command.ExamineArtifact>): ButtonData {
   const button = textButton({
-    label: "Examine Artifact",
+    label: `Examine Artifact (${command.data.cost})`,
     command: command.name,
   });
-  button.richText = [richText("Examine Artifact")];
+  button.richText = [
+    richText("Examine Artifact ("),
+    richTextRewards(Reward.parse(command.data.cost), true),
+    richText(")"),
+  ];
   return button;
 }
 
-export function chooseArtifactTokenButton(
-  command: AvailableCommand<Command.ChooseArtifactToken>
-): ButtonData {
+export function chooseArtifactTokenButton(command: AvailableCommand<Command.ChooseArtifactToken>): ButtonData {
   return autoClickButton({
     label: "Choose Artifact",
     command: command.name,

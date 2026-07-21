@@ -22,7 +22,7 @@
   "scripts": {
     "prepublishOnly": "npm run test && npm run clean && tsc",
     "build": "npm run clean && tsc",
-    "clean": "rm -Rf dist",
+    "clean": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\"",
     "lint": "eslint . --ext .ts",
     "test": "mocha -r ts-node/register src/**/*.spec.ts src/*.spec.ts *.spec.ts",
     "test-single": "mocha -r ts-node/register",
