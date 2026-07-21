@@ -1,7 +1,18 @@
 {
-  "version": "5.36.8",
+  "version": "5.36.9",
   "releasedAt": "2026-07-21",
   "entries": [
+    {
+      "version": "5.36.9",
+      "releasedAt": "2026-07-21",
+      "kind": "fix",
+      "title": "Lost Fleet board layout fix",
+      "impact": "",
+      "changes": [
+        "Fixed the Lost Fleet power-action row overflowing the research board into the ship boards below, and centered it within the panel with equal left/right margins"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.36.8",
       "releasedAt": "2026-07-21",
