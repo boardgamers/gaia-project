@@ -20,24 +20,16 @@ Vue.component("Resource", Resource);
 // arms hover emulation immediately, so the very first tap on any tooltip target works.
 if (typeof document !== "undefined") {
   document.body.addEventListener("touchstart", () => undefined, true);
-
-  let lastTouchEndAt = 0;
-  let lastTouchTarget: EventTarget | null = null;
-  document.body.addEventListener(
-    "touchend",
-    (event) => {
-      const now = Date.now();
-      const target = event.target;
-      const sameTarget = target !== null && target === lastTouchTarget;
-      if (sameTarget && now - lastTouchEndAt < 350) {
-        event.preventDefault();
-      }
-      lastTouchEndAt = now;
-      lastTouchTarget = target;
-    },
-    { capture: true, passive: false }
-  );
 }
+
+// NOTE: there used to be a capture-phase `touchend` handler here that called
+// `event.preventDefault()` on any second tap of the same target within 350ms, meant to block
+// double-tap-to-zoom. It was removed because calling preventDefault() on `touchend` also cancels
+// the synthetic `click` the browser would otherwise fire, so a quick same-target re-tap silently
+// swallowed the click - intermittently breaking the lobby's game-entry `<a href="?game=">` links
+// and the in-game back `<a href="?lobby=1">` link ("most times work, sometimes don't"). Double-tap
+// zoom is already disabled globally by `body { touch-action: manipulation }` (frontend.scss),
+// which does NOT suppress clicks, so the JS handler was redundant as well as harmful.
 
 function launch(selector: string, component: VueConstructor<Vue> = Game) {
   let lastMovedAt: number = 0;
