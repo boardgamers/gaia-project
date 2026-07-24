@@ -9,22 +9,28 @@
            claimable (owner request: "for pre round 1 only show the boosters, no feds"). Both leave
            breathing room for their own drop-shadow filter's bleed (see the CSS below) so tokens never
            spill past the box's border. -->
-      <div v-if="compact" class="pool compact mb-1">
-        <div class="pool-boosters">
-          <Booster v-for="booster in boosters" :key="booster" :booster="booster" />
-        </div>
-        <div
-          v-if="!isPreRound1"
-          class="pool-federations"
-          :style="{ gridTemplateColumns: `repeat(${federationColumns}, 1fr)` }"
-        >
-          <FederationTile
-            v-for="([tile, numTiles], i) in federations"
-            :key="`${tile}-${i}`"
-            :federation="tile"
-            :numTiles="numTiles"
-            filter="url(#shadow-1)"
-          />
+      <!-- Clicking the compact booster/federation container flips it to a shared chess board (owner
+           request). ChessBoard replaces the pool contents and fills the exact same box; its own ✕
+           flips back. `chess-mode` drops the box's padding/border so the board fills edge to edge. -->
+      <div v-if="compact" class="pool compact mb-1" :class="{ 'chess-mode': showChess }">
+        <ChessBoard v-if="showChess" @close="showChess = false" />
+        <div v-else class="pool-clickable" title="Click for a chess board" @click="showChess = true">
+          <div class="pool-boosters">
+            <Booster v-for="booster in boosters" :key="booster" :booster="booster" />
+          </div>
+          <div
+            v-if="!isPreRound1"
+            class="pool-federations"
+            :style="{ gridTemplateColumns: `repeat(${federationColumns}, 1fr)` }"
+          >
+            <FederationTile
+              v-for="([tile, numTiles], i) in federations"
+              :key="`${tile}-${i}`"
+              :federation="tile"
+              :numTiles="numTiles"
+              filter="url(#shadow-1)"
+            />
+          </div>
         </div>
       </div>
       <!-- Non-compact (base game): the original single interleaved flex-wrap row, unchanged - both
@@ -49,6 +55,7 @@ import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import Booster from "./Booster.vue";
 import FederationTile from "./FederationTile.vue";
+import ChessBoard from "./ChessBoard.vue";
 import Engine, { Booster as BoosterEnum } from "@gaia-project/engine";
 import { isBeforeRound1 } from "../logic/utils";
 
@@ -66,9 +73,14 @@ import { isBeforeRound1 } from "../logic/utils";
   components: {
     Booster,
     FederationTile,
+    ChessBoard,
   },
 })
 export default class Pool extends Vue {
+  // Compact (Lost Fleet sidebar) only: whether the booster/federation container is currently
+  // showing the shared chess board instead of its tiles.
+  showChess = false;
+
   // Used by LostFleetShips' sidebar placement (Game.vue): switches to the flex/grid layout below
   // (sized to the sidebar's own narrow width) instead of the base game's fixed-size flex-wrap row.
   @Prop({ default: false, type: Boolean })
@@ -109,6 +121,17 @@ export default class Pool extends Vue {
   background-color: var(--ui-surface);
 
   flex-wrap: wrap;
+
+  // Chess mode: let the board fill the exact container space with no tile-padding/border inset.
+  &.compact.chess-mode {
+    padding: 0;
+    border: none;
+    background: transparent;
+  }
+
+  .pool-clickable {
+    cursor: pointer;
+  }
 
   &.compact {
     // Both Booster.vue and FederationTile.vue draw their own drop-shadow via the shared `shadow-1`

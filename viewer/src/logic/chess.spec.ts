@@ -1,0 +1,53 @@
+import { expect } from "chai";
+import { BoardMatrix, displaySquares, pieceGlyph, promotionRank, START_FEN } from "./chess";
+
+// A minimal stand-in for chess.js `.board()` of the opening position (rank 8 first, file a first).
+function openingMatrix(): BoardMatrix {
+  const back = (color: string) => ["r", "n", "b", "q", "k", "b", "n", "r"].map((type) => ({ type, color }));
+  const pawns = (color: string) => new Array(8).fill(null).map(() => ({ type: "p", color }));
+  const empty = () => new Array(8).fill(null);
+  return [back("b"), pawns("b"), empty(), empty(), empty(), empty(), pawns("w"), back("w")];
+}
+
+describe("chess helpers", () => {
+  it("exposes the standard opening FEN", () => {
+    expect(START_FEN.split(" ")[0]).to.equal("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+    expect(START_FEN.split(" ")[1]).to.equal("w");
+  });
+
+  describe("pieceGlyph", () => {
+    it("maps piece types to filled glyphs and empty to ''", () => {
+      expect(pieceGlyph({ type: "k", color: "w" })).to.equal("♚");
+      expect(pieceGlyph({ type: "p", color: "b" })).to.equal("♟");
+      expect(pieceGlyph(null)).to.equal("");
+    });
+  });
+
+  describe("displaySquares orientation", () => {
+    it("puts White's back rank at the bottom in White orientation", () => {
+      const cells = displaySquares(openingMatrix(), "w");
+      expect(cells).to.have.length(64);
+      expect(cells[0].square).to.equal("a8"); // top-left
+      expect(cells[0].light).to.equal(true); // a8 is a light square
+      expect(cells[4].piece).to.deep.equal({ type: "k", color: "b" }); // black king top
+      expect(cells[63].square).to.equal("h1"); // bottom-right
+      expect(cells[60].piece).to.deep.equal({ type: "k", color: "w" }); // white king bottom
+    });
+
+    it("flips both axes in Black orientation so Black sits at the bottom", () => {
+      const cells = displaySquares(openingMatrix(), "b");
+      expect(cells[0].square).to.equal("h1"); // top-left becomes h1
+      expect(cells[3].square).to.equal("e1"); // white king's file, now on the top row
+      expect(cells[3].piece).to.deep.equal({ type: "k", color: "w" }); // white king now on top
+      expect(cells[63].square).to.equal("a8");
+      expect(cells[59].piece).to.deep.equal({ type: "k", color: "b" }); // black king at bottom
+    });
+  });
+
+  describe("promotionRank", () => {
+    it("is rank 8 for White and rank 1 for Black", () => {
+      expect(promotionRank("w")).to.equal("8");
+      expect(promotionRank("b")).to.equal("1");
+    });
+  });
+});
