@@ -1,7 +1,20 @@
 {
-  "version": "5.36.15",
+  "version": "5.36.16",
   "releasedAt": "2026-07-24",
   "entries": [
+    {
+      "version": "5.36.16",
+      "releasedAt": "2026-07-24",
+      "kind": "update",
+      "title": "Sidebar boosters capped at 3/row; federations hidden pre-round-1",
+      "impact": "",
+      "changes": [
+        "Round boosters in the ship-board sidebar now cap at 3 per row (wrapping to further rows instead of shrinking to fit everyone on one row), and federation tokens are hidden from the sidebar until round 1 starts, since none can be claimed yet during setup."
+      ],
+      "userChanges": [
+        "Round boosters in the ship-board sidebar now cap at 3 per row (wrapping to further rows instead of shrinking to fit everyone on one row), and federation tokens are hidden from the sidebar until round 1 starts, since none can be claimed yet during setup."
+      ]
+    },
     {
       "version": "5.36.15",
       "releasedAt": "2026-07-24",
