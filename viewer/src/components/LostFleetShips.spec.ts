@@ -106,7 +106,7 @@ describe("LostFleetShips", () => {
     const ship = container.querySelector("svg.lost-fleet-ship");
     expect(ship.hasAttribute("width")).to.equal(false);
     expect(ship.hasAttribute("height")).to.equal(false);
-    expect(ship.getAttribute("viewBox")).to.equal("0 -20 265 78");
+    expect(ship.getAttribute("viewBox")).to.equal("0 -22 273 80");
   });
 
   it("lays the 4 exploration slots out evenly spaced in the right-hand tab", () => {
@@ -187,7 +187,7 @@ describe("LostFleetShips", () => {
     // Federation tile and the grid stays inside the card, so the icons' centers land just right of
     // the other 3 ships' Standard Tech tile region, and no icon may render past the ship's own
     // viewBox bottom (-16 + 68 = 52) - the reported "bleeds into the bottom" bug. The absolute x's
-    // here are 26 less than they used to be (LostFleetShips.vue's ACTION_COMPRESSION, tighter action
+    // here are 18 less than the original design (LostFleetShips.vue's ACTION_COMPRESSION, the action
     // spacing shifting everything from the Federation tile rightward left by that much).
     const iconHalfWidth = 16;
     const iconHalfHeight = 12;
@@ -197,11 +197,11 @@ describe("LostFleetShips", () => {
     });
     const avgX = centers.reduce((s, c) => s + c.x, 0) / centers.length;
     const avgY = centers.reduce((s, c) => s + c.y, 0) / centers.length;
-    // left column left edge is 191 (clears the Federation tile)
+    // left column left edge is 199 (clears the Federation tile)
     for (const c of centers) {
-      expect(c.x - iconHalfWidth).to.be.at.least(188);
+      expect(c.x - iconHalfWidth).to.be.at.least(196);
     }
-    expect(avgX).to.be.closeTo(225, 5);
+    expect(avgX).to.be.closeTo(233, 5);
     expect(avgY).to.be.closeTo(27, 5);
 
     for (const c of centers) {

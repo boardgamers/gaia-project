@@ -5,7 +5,7 @@
       :key="ship"
       class="lost-fleet-ship"
       :data-ship="ship"
-      :viewBox="`0 -20 ${viewBoxWidth} 78`"
+      :viewBox="`0 -22 ${viewBoxWidth} 80`"
       style="overflow: visible"
     >
       <!-- The board is a rounded card outlined in the ship's color. Its name and the player
@@ -173,8 +173,8 @@
       <g class="lost-fleet-ship__tab" v-b-tooltip.nofade="tooltipTriggerConfig()" :title="shipLabel(ship)">
         <path :d="nameTabPath(ship)" :style="{ fill: shipColor(ship) }" class="lost-fleet-ship__tab-shape" />
         <polygon :points="nameHexPoints" class="lost-fleet-ship__name-hex" />
-        <text x="15" y="-7" dy="3.1" class="lost-fleet-ship__name-letter">{{ shipFirstLetter(ship) }}</text>
-        <text x="21" y="-7" dy="3.1" class="lost-fleet-ship__name-rest">{{ shipNameRest(ship) }}</text>
+        <text x="15" y="-10" dy="3.8" class="lost-fleet-ship__name-letter">{{ shipFirstLetter(ship) }}</text>
+        <text x="25" y="-10" dy="3.8" class="lost-fleet-ship__name-rest">{{ shipNameRest(ship) }}</text>
       </g>
 
       <!-- Right tab: the 4 exploration/player slots, its negative space filled in the ship color and
@@ -193,7 +193,7 @@
           <circle :r="slotRadius" class="lost-fleet-ship__slot-bg" />
           <template v-if="!slot.player">
             <!-- the free (0-power) slot shows no number at all - a bare circle reads as "free". -->
-            <Resource v-if="slot.cost > 0" kind="pw" :count="slot.cost" transform="translate(0, 2) scale(0.5)" />
+            <Resource v-if="slot.cost > 0" kind="pw" :count="slot.cost" transform="translate(0, 2) scale(0.62)" />
           </template>
           <Token v-else :faction="slot.player.faction" transform="translate(0, 0.95) scale(0.35)" />
         </g>
@@ -252,42 +252,48 @@ import Token from "./Token.vue";
 import UsedActionMark from "./UsedActionMark.vue";
 import { tooltipTriggerConfig } from "../logic/tooltip";
 
-// The 3 action octagons' row. ACTION_SPACING=41 is deliberately tighter than the base game's own
-// power/QIC action row (BOARD_ACTION_SPACING=45 in Game.vue) - owner request: "less space between
-// each ship action" - leaving only a ~2.6-unit gap between adjacent octagons (octagon width is 38.4,
-// from SpecialAction's own width=40 prop, the SAME prop value the base game's BoardAction.vue uses -
-// see ACTION_COMPRESSION below for why that match matters). Any tighter and adjacent octagons start
-// visually touching.
+// The 3 action octagons' row. ACTION_SPACING=45 exactly matches the base game's own power/QIC action
+// row (BOARD_ACTION_SPACING=45 in Game.vue, `translate(45 * i ...)`) - owner request: "same space
+// between each ship action as the base game power actions". The octagons are already the same size
+// (SpecialAction's own width=40 prop, the SAME prop value the base game's BoardAction.vue uses, and
+// the ship SVG renders at the research board's exact px-per-unit - see ACTION_COMPRESSION and
+// Game.vue's lostFleetShipsStyle), so matching the spacing too makes the whole row pixel-identical to
+// the base-game action row.
 const ACTION_X_BASE = 29;
-const ACTION_SPACING = 41;
+const ACTION_SPACING = 45;
 
 // Everything from the Federation tile rightward (federation, tech tile, artifact grid, slots tab,
-// card width) shifts left by this same total to follow the 3rd octagon's new, closer position -
-// 2 gaps compressed from the original 54-unit spacing down to ACTION_SPACING, i.e.
-// 2 * (54 - ACTION_SPACING). Applying ONE uniform shift to all of them keeps every relative gap
-// between those elements identical to the previous (already visually verified) layout - only the
-// octagon-to-octagon gaps actually change.
+// card width) shifts left by this same total to follow the 3rd octagon's position - 2 gaps compressed
+// from the original 54-unit spacing down to ACTION_SPACING, i.e. 2 * (54 - ACTION_SPACING). Applying
+// ONE uniform shift to all of them keeps every relative gap between those elements identical to the
+// previous (already visually verified) layout - only the octagon-to-octagon gaps actually change.
 const ACTION_COMPRESSION = 2 * (54 - ACTION_SPACING);
 
-const FEDERATION_X = 173 - ACTION_COMPRESSION;
+// The Federation token nudged left of its old 173 base (owner request: "decrease distance from fed
+// tile to right-most ship action, currently too big space") - this shifts ONLY the Federation token
+// closer to the 3rd octagon; the tech tile / artifact grid stay put.
+const FEDERATION_X = 165 - ACTION_COMPRESSION;
 const TECH_X = 221.1 - ACTION_COMPRESSION;
 const ARTIFACT_X0 = 217 - ACTION_COMPRESSION;
 const CARD_WIDTH = 288.5 - ACTION_COMPRESSION;
 
 // Exploration ("player") slot geometry - owner request: bigger slots than the original r=6 design.
 // SLOT_RADIUS=8 needs SLOT_SPACING>=17 to keep a real (1-unit) gap between adjacent circles instead
-// of touching, and a taller-than-the-name-tab SLOT_TAB_TOP to keep the same ~2-unit margin the name
-// tab has above/below its own (smaller) content - see `tabPath`'s own doc comment. X positions shift
-// left by ACTION_COMPRESSION along with everything else right of the action row (see above).
+// of touching. X positions shift left by ACTION_COMPRESSION along with everything else right of the
+// action row (see above). The name tab (see `nameTabPath`) uses this same SLOT_TAB_TOP so both tabs
+// stand exactly the same height (owner request: "name of ship should be bigger so the height of that
+// tab becomes the same height as the player slots tab").
 const SLOT_RADIUS = 8;
 const SLOT_SPACING = 17;
 const SLOT_X_BASE = 223 - ACTION_COMPRESSION;
-const SLOT_TAB_TOP = -19;
+const SLOT_TAB_TOP = -21;
 const SLOT_TAB_X0 = 210 - ACTION_COMPRESSION;
 const SLOT_TAB_X1 = 286 - ACTION_COMPRESSION;
-// Vertical center of the slot circles within the taller tab (SLOT_TAB_TOP=-19 to bot=1): centered
-// with a 2-unit margin top and bottom around the SLOT_RADIUS=8 circle (extent -17..-1).
-const SLOT_Y = -9;
+// Vertical center of the slot circles within the tab (SLOT_TAB_TOP=-21 to bot=1). Raised to -11 (from
+// -9) so the SLOT_RADIUS=8 circles' bottom edge sits at y=-3 rather than -1 - that extra breathing
+// room keeps the slot row from sitting straight on top of the Standard Tech tile below it (whose top
+// edge is ~y=1.3), owner request. It still clears the tab's top border (circle top -19 vs tab -21).
+const SLOT_Y = -11;
 
 // The ship SVG's own viewBox width - the original 291 minus the same ACTION_COMPRESSION every other
 // rightward element gives up. Exported for Game.vue, which needs it to compute the ship board's exact
@@ -361,17 +367,17 @@ export default class LostFleetShips extends Vue {
     return this.shipFullName(ship).slice(1);
   }
 
-  /** The white first-letter hex badge, centered at (15, -7) in the left tab (~5.8-unit radius). */
+  /** The white first-letter hex badge, centered at (15, -10) in the taller left tab (7.5-unit radius,
+   * up from 5.8 so the bigger name reads at the tab's new player-slots-matching height). */
   get nameHexPoints(): string {
-    return corners(5.8)
-      .map((p) => `${p.x + 15},${p.y - 7}`)
+    return corners(7.5)
+      .map((p) => `${p.x + 15},${p.y - 10}`)
       .join(" ");
   }
 
   /** Rounded-top "folder tab" outline: flat bottom on the card's top border, rounded top corners.
-   * `top` defaults to the name tab's own height; the slots tab (bigger circles, owner request) passes
-   * a taller value so its bigger slots keep the same comfortable margins the name tab has. */
-  private tabPath(x0: number, x1: number, top = -15): string {
+   * `top` defaults to the shared SLOT_TAB_TOP so the name and slots tabs stand the same height. */
+  private tabPath(x0: number, x1: number, top = SLOT_TAB_TOP): string {
     const r = 6;
     const bot = 1;
     return `M${x0},${bot} L${x0},${top + r} Q${x0},${top} ${x0 + r},${top} L${x1 - r},${top} Q${x1},${top} ${x1},${
@@ -379,15 +385,16 @@ export default class LostFleetShips extends Vue {
     } L${x1},${bot} Z`;
   }
 
-  /** Left tab spans from x=6 to past the hex badge + the rest-of-name text (~5.6 units/char). */
+  /** Left tab spans from x=6 to past the hex badge (right edge ~22.5) + the rest-of-name text (~6.4
+   * units/char at the bigger 11px font). Same height as the slots tab (tabPath's SLOT_TAB_TOP default). */
   nameTabPath(ship: Spaceship): string {
-    const x1 = 21 + this.shipNameRest(ship).length * 5.6 + 5;
-    return this.tabPath(6, Math.max(42, x1));
+    const x1 = 25 + this.shipNameRest(ship).length * 6.4 + 4;
+    return this.tabPath(6, Math.max(48, x1));
   }
 
-  /** Right (slots) tab: wider and taller than the name tab (SLOT_TAB_TOP) so its bigger, more widely
-   * spaced circles (owner request: "player slots a bit bigger") keep a comfortable margin on every
-   * side - see the exploration-slot constants below for the exact numbers. */
+  /** Right (slots) tab: wider than the name tab but the same height (both use SLOT_TAB_TOP) - its
+   * bigger, more widely spaced circles keep a comfortable margin on every side, see the
+   * exploration-slot constants below for the exact numbers. */
   get slotsTabPath(): string {
     return this.tabPath(SLOT_TAB_X0, SLOT_TAB_X1, SLOT_TAB_TOP);
   }
@@ -530,7 +537,7 @@ svg.lost-fleet-ship {
   // The first letter (inside the white hex) and the rest of the name (on the colored tab). Both dark
   // - dark reads better than white on the lighter ship colors.
   .lost-fleet-ship__name-letter {
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 800;
     fill: #17161a;
     text-anchor: middle;
@@ -538,7 +545,7 @@ svg.lost-fleet-ship {
   }
 
   .lost-fleet-ship__name-rest {
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 700;
     fill: #17161a;
     text-anchor: start;
