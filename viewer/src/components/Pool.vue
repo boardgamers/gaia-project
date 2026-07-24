@@ -1,18 +1,23 @@
 <template>
   <div :class="compact ? undefined : 'container-fluid'">
     <template v-if="$store.state.data.tiles && $store.state.data.tiles.techs['gaia']">
-      <!-- Compact (sidebar) mode: boosters all on one row, sized as big as the row's width allows -
-           flex divides it evenly by however many are present (`.pool-boosters`, owner request: "as big
-           as possible while still being on just 1 row"). Federation tokens sit in a grid sized to
-           exactly 2 rows, also as big as that constraint allows - `federationColumns` computes just
-           enough columns from the live count so ceil(count / columns) never exceeds 2 (owner request).
-           Both leave breathing room for their own drop-shadow filter's bleed (see the CSS below) so
-           tokens never spill past the box's border. -->
+      <!-- Compact (sidebar) mode: boosters sit in a fixed 3-column grid, wrapping to further rows past
+           3 (`.pool-boosters`, owner clarification: "fit one row" means 3 per row, not all of them).
+           Federation tokens sit in a grid sized to exactly 2 rows, as big as that constraint allows -
+           `federationColumns` computes just enough columns from the live count so ceil(count / columns)
+           never exceeds 2 (owner request) - and are hidden entirely before round 1, when none are yet
+           claimable (owner request: "for pre round 1 only show the boosters, no feds"). Both leave
+           breathing room for their own drop-shadow filter's bleed (see the CSS below) so tokens never
+           spill past the box's border. -->
       <div v-if="compact" class="pool compact mb-1">
         <div class="pool-boosters">
           <Booster v-for="booster in boosters" :key="booster" :booster="booster" />
         </div>
-        <div class="pool-federations" :style="{ gridTemplateColumns: `repeat(${federationColumns}, 1fr)` }">
+        <div
+          v-if="!isPreRound1"
+          class="pool-federations"
+          :style="{ gridTemplateColumns: `repeat(${federationColumns}, 1fr)` }"
+        >
           <FederationTile
             v-for="([tile, numTiles], i) in federations"
             :key="`${tile}-${i}`"
@@ -44,7 +49,8 @@ import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import Booster from "./Booster.vue";
 import FederationTile from "./FederationTile.vue";
-import { Booster as BoosterEnum, Expansion } from "@gaia-project/engine";
+import Engine, { Booster as BoosterEnum } from "@gaia-project/engine";
+import { isBeforeRound1 } from "../logic/utils";
 
 @Component({
   computed: {
@@ -70,6 +76,16 @@ export default class Pool extends Vue {
 
   boosters!: string[];
   federations!: [string, number][];
+
+  get engine(): Engine {
+    return this.$store.state.data;
+  }
+
+  // Federation tokens aren't claimable until round 1 starts, so during setup the sidebar shows only
+  // the booster pool (owner request: "for pre round 1 only show the boosters, no feds").
+  get isPreRound1(): boolean {
+    return isBeforeRound1(this.engine);
+  }
 
   // The smallest column count that still keeps every federation token within 2 rows - e.g. 5 tokens
   // needs 3 columns (ceil(5/3)=2 rows), not 5 (which would fit 1 row but leave them tiny) or 2 (which
@@ -107,16 +123,16 @@ export default class Pool extends Vue {
     padding: $gap;
 
     .pool-boosters {
-      display: flex;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
       gap: $gap;
       width: 100%;
 
-      // Owner request: "as big as possible while still being on just 1 row" - flex-grow with a 0
-      // basis divides the row's width evenly across however many boosters are currently in the pool,
-      // instead of a fixed size that would either waste space (few boosters) or wrap (many).
+      // Owner clarification: "fit one row" means 3 per row, not all of them - a fixed 3-column grid
+      // wraps to further rows once there are more than 3 boosters, and (unlike flex) keeps every
+      // booster the same size regardless of how many fall in the last, possibly-partial row.
       svg.booster {
-        flex: 1 1 0;
-        min-width: 0;
+        width: 100%;
         height: auto;
       }
     }
