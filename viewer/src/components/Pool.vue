@@ -40,6 +40,7 @@
             <div
               v-if="!isPreRound1"
               class="pool-federations"
+              data-bottom-clearance="single-gap"
               :style="{ gridTemplateColumns: `repeat(${federationColumns}, 1fr)` }"
             >
               <FederationTile
@@ -565,16 +566,16 @@ export default class Pool extends Vue {
       }
     }
 
-    .pool-federations {
+    .pool-federations[data-bottom-clearance="single-gap"] {
       display: grid;
       gap: $gap;
       margin-top: $gap;
       // The federation.svg hexagon is taller than its own square box (height 739/636 of its width) and
-      // renders with overflow visible, so its bottom tip juts ~15% below the grid's last row. The
-      // container's own $gap padding-bottom alone let that tip touch the box border (owner request:
-      // "towards bottom, bigger margin so the bottom tip of the fed doesn't touch the border"), so the
-      // last row gets extra clearance beyond that padding for the tip to drop into.
-      margin-bottom: 2 * $gap;
+      // renders with overflow visible, so its bottom tip juts ~15% below the grid's last row. One
+      // extra gap, combined with the container's own bottom padding, leaves the painted tip a little
+      // more room than the boosters have above them without making the whole sidebar box needlessly
+      // tall.
+      margin-bottom: $gap;
       width: 100%;
 
       // Owner request: "adjust the size so it's as big as possible but only 2 rows" - each cell (a

@@ -30,6 +30,11 @@ describe("LostFleetNotes", () => {
     expect(wrapper.find(".lost-fleet-notes__area").exists()).to.equal(true);
   });
 
+  it("uses only the height left by the pool instead of imposing its textarea height on the ship row", () => {
+    const wrapper = mount(LostFleetNotes as any, { localVue, store: storeWith(null) });
+    expect(wrapper.attributes("data-height-policy")).to.equal("remaining");
+  });
+
   it("loads the note body from the injected backend when one is present", async () => {
     const backend: NotesBackend = {
       load: async () => "remember to build a mine",

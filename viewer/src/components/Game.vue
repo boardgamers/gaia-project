@@ -1006,8 +1006,9 @@ export default class Game extends Vue {
   }
 }
 
-// The sidebar's inner stack: Pool takes its natural height, the notes sheet grows into the rest so
-// the column bottoms out level with the ship boards (LostFleetNotes' own `flex: 1` does the growing).
+// The sidebar's inner stack: Pool takes its natural height, while LostFleetNotes starts from a zero
+// flex basis and grows into only the remaining height. That keeps the ships (not the textarea's
+// intrinsic height) in control of the row bottom in the shorter three-ship mobile layout.
 .lf-sidebar-col {
   display: flex;
   flex-direction: column;

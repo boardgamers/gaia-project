@@ -3,7 +3,7 @@
        in the Lost Fleet sidebar (see Game.vue's `.lf-sidebar-col`), so the sidebar column ends level
        with the ship boards and the note never spills below them on mobile. Tapping anywhere focuses
        the textarea (the label is pointer-events:none), so a phone pops the keyboard on the first tap. -->
-  <div class="lost-fleet-notes" @click="focusArea">
+  <div class="lost-fleet-notes" data-height-policy="remaining" @click="focusArea">
     <span class="lost-fleet-notes__label" aria-hidden="true">notes</span>
     <!-- `@keydown.stop`: the viewer's move-button/log keyboard shortcuts listen on `window`, so
          without this every letter typed here would also fire a game shortcut (and steal focus into a
@@ -126,14 +126,15 @@ export default class LostFleetNotes extends Vue {
 </script>
 
 <style lang="scss" scoped>
-.lost-fleet-notes {
+.lost-fleet-notes[data-height-policy="remaining"] {
   position: relative;
   display: flex;
   flex-direction: column;
-  // Fills the leftover height under the Pool so the sidebar column bottoms out level with the ship
-  // boards; a small floor keeps it usable when that leftover is tiny (2-3 ship game).
-  flex: 1 1 auto;
-  min-height: 3rem;
+  // Start with no intrinsic flex basis, then use exactly the height left under the Pool. Giving the
+  // textarea's natural height a flex basis made the sidebar itself set the outer row height in the
+  // three-ship mobile layout, so the note ended below the last ship board.
+  flex: 1 1 0;
+  min-height: 0;
   border-radius: 5px;
   border: 2px solid #e6d24a;
   // Warm sticky-note yellow, with a faint top-lit gradient so it reads as paper, not a flat swatch.

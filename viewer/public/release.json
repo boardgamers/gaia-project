@@ -1,7 +1,23 @@
 {
-  "version": "5.37.4",
+  "version": "5.37.5",
   "releasedAt": "2026-07-24",
   "entries": [
+    {
+      "version": "5.37.5",
+      "releasedAt": "2026-07-24",
+      "kind": "update",
+      "title": "Tighter Lost Fleet sidebar",
+      "impact": "",
+      "changes": [
+        "Tightened the booster and federation box with more balanced bottom spacing on mobile.",
+        "Kept the notes sheet level with the bottom of the last spaceship board.",
+        "Uses a zero flex basis for sidebar notes so intrinsic textarea height cannot extend the ship row."
+      ],
+      "userChanges": [
+        "Tightened the booster and federation box with more balanced bottom spacing on mobile.",
+        "Kept the notes sheet level with the bottom of the last spaceship board."
+      ]
+    },
     {
       "version": "5.37.4",
       "releasedAt": "2026-07-24",

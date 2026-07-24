@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/camelcase */
-import Engine from "@gaia-project/engine";
+import Engine, { Round } from "@gaia-project/engine";
 import { expect } from "chai";
 import { createLocalVue, mount } from "@vue/test-utils";
 import Vuex from "vuex";
@@ -45,9 +45,11 @@ function sharedBackend(initialMode: ChessPanelMode) {
   return { backend, listeners, writes };
 }
 
-function mountPool(backend: ChessBackend | null) {
+function mountPool(backend: ChessBackend | null, inGame = false) {
   const store = makeStore();
-  store.state.data = new Engine(["init 2 shared-panel-mode"], { lostFleet: true });
+  const engine = new Engine(["init 2 shared-panel-mode"], { lostFleet: true });
+  engine.round = inGame ? Round.Round1 : Round.None;
+  store.state.data = engine;
   store.commit("setChessBackend", backend);
   return mount(Pool as any, {
     localVue,
@@ -113,6 +115,12 @@ describe("compact Pool chess mode", () => {
     first.destroy();
     second.destroy();
     expect(listeners.size).to.equal(0);
+  });
+
+  it("keeps one extra tile gap below the federation grid instead of a double-height bottom margin", () => {
+    const wrapper = mountPool(null, true);
+    expect(wrapper.find(".pool-federations").attributes("data-bottom-clearance")).to.equal("single-gap");
+    wrapper.destroy();
   });
 
   it("toggles on either horizontal swipe and consumes each swipe's synthetic click", async () => {
