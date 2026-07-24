@@ -1,7 +1,20 @@
 {
-  "version": "5.36.16",
+  "version": "5.36.17",
   "releasedAt": "2026-07-24",
   "entries": [
+    {
+      "version": "5.36.17",
+      "releasedAt": "2026-07-24",
+      "kind": "update",
+      "title": "Lost Fleet ship board layout polish",
+      "impact": "",
+      "changes": [
+        "Ship action octagons now use the same spacing as the base-game power actions, the ship-name tab matches the player-slots tab height with a bigger name, the Federation token sits closer to the action row, and the in-slot power-charge icons are a touch larger"
+      ],
+      "userChanges": [
+        "Ship action octagons now use the same spacing as the base-game power actions, the ship-name tab matches the player-slots tab height with a bigger name, the Federation token sits closer to the action row, and the in-slot power-charge icons are a touch larger"
+      ]
+    },
     {
       "version": "5.36.16",
       "releasedAt": "2026-07-24",
