@@ -495,17 +495,14 @@ export default class Pool extends Vue {
     .pool-mode-dots {
       position: absolute;
       z-index: 3;
-      left: 50%;
+      right: 5px;
       bottom: 2px;
       display: flex;
       align-items: center;
       gap: 4px;
-      height: 6px;
+      height: 7px;
       margin: 0;
-      padding: 0 4px;
-      border-radius: 5px;
-      transform: translateX(-50%);
-      background: rgba(255, 255, 255, 0.58);
+      padding: 0;
     }
 
     .pool-mode-dot {
@@ -518,12 +515,11 @@ export default class Pool extends Vue {
       background: var(--ui-text-muted, #78818d);
       opacity: 0.48;
       cursor: pointer;
-      transition: width 100ms ease, opacity 100ms ease, background-color 100ms ease;
+      transition: opacity 100ms ease, background-color 100ms ease;
 
       &.active {
-        width: 11px;
         background: var(--ui-primary, #247b0a);
-        opacity: 0.9;
+        opacity: 0.95;
       }
 
       &:focus-visible {

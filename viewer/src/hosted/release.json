@@ -1,7 +1,19 @@
 {
-  "version": "5.37.7",
+  "version": "5.37.8",
   "releasedAt": "2026-07-24",
   "entries": [
+    {
+      "version": "5.37.8",
+      "releasedAt": "2026-07-24",
+      "kind": "update",
+      "title": "iPhone-style drawer dots",
+      "impact": "",
+      "changes": [
+        "The chess drawer now uses two equal circular page dots tucked into the bottom-right corner.",
+        "Removed the active indicator's pill expansion and moved the zero-layout-space control away from tile content."
+      ],
+      "userChanges": ["The chess drawer now uses two equal circular page dots tucked into the bottom-right corner."]
+    },
     {
       "version": "5.37.7",
       "releasedAt": "2026-07-24",
