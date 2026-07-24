@@ -1,7 +1,22 @@
 {
-  "version": "5.36.11",
+  "version": "5.36.12",
   "releasedAt": "2026-07-24",
   "entries": [
+    {
+      "version": "5.36.12",
+      "releasedAt": "2026-07-24",
+      "kind": "update",
+      "title": "Lost Fleet mobile layout polish",
+      "impact": "",
+      "changes": [
+        "Research board is now centered in its panel and the power/Q.I.C. action row is left-aligned instead of centered",
+        "Ship boards now stack one per row on mobile, with action icons and tech tiles sized to match the research board"
+      ],
+      "userChanges": [
+        "Research board is now centered in its panel and the power/Q.I.C. action row is left-aligned instead of centered",
+        "Ship boards now stack one per row on mobile, with action icons and tech tiles sized to match the research board"
+      ]
+    },
     {
       "version": "5.36.11",
       "releasedAt": "2026-07-24",
