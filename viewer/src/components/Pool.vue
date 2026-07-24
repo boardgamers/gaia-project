@@ -11,7 +11,8 @@
            spill past the box's border. -->
       <!-- Clicking the compact booster/federation container opens its per-game chess board. The tile
            tree stays mounted but hidden underneath an exact-size overlay, so neither the sidebar
-           layout nor tile state moves; only ChessBoard's own ✕ switches back. -->
+           layout nor tile state moves. The corner switch is absolutely positioned, so the affordance
+           is visible in both modes without taking any sidebar space. -->
       <div v-if="compact" class="pool compact mb-1">
         <div
           class="pool-clickable"
@@ -40,7 +41,19 @@
             />
           </div>
         </div>
-        <ChessBoard v-if="showChess" class="pool-chess-overlay" @close="closeChess" />
+        <ChessBoard v-if="showChess" class="pool-chess-overlay" />
+        <button
+          type="button"
+          class="pool-mode-toggle"
+          :class="{ 'showing-chess': showChess, saving: panelModeSaving }"
+          :title="panelModeToggleLabel"
+          :aria-label="panelModeToggleLabel"
+          :aria-pressed="showChess ? 'true' : 'false'"
+          :disabled="panelModeSaving"
+          @click.stop="togglePanelMode"
+        >
+          <span aria-hidden="true">{{ showChess ? "▦" : "♟" }}</span>
+        </button>
       </div>
       <!-- Non-compact (base game): the original single interleaved flex-wrap row, unchanged - both
            tile types share the same row, wrapping at their native fixed size. -->
@@ -66,6 +79,8 @@ import Booster from "./Booster.vue";
 import FederationTile from "./FederationTile.vue";
 import ChessBoard from "./ChessBoard.vue";
 import Engine, { Booster as BoosterEnum } from "@gaia-project/engine";
+import { ChessBackend, ChessPanelMode, ChessRow } from "../logic/chess-backend";
+import { localChessPanelStorageKey } from "../logic/chess";
 import { isBeforeRound1 } from "../logic/utils";
 
 @Component({
@@ -89,6 +104,8 @@ export default class Pool extends Vue {
   // Compact (Lost Fleet sidebar) only: whether the booster/federation container is currently
   // showing the shared chess board instead of its tiles.
   showChess = false;
+  panelModeSaving = false;
+  private chessUnsubscribe: (() => void) | null = null;
 
   // Used by LostFleetShips' sidebar placement (Game.vue): switches to the flex/grid layout below
   // (sized to the sidebar's own narrow width) instead of the base game's fixed-size flex-wrap row.
@@ -98,8 +115,46 @@ export default class Pool extends Vue {
   boosters!: string[];
   federations!: [string, number][];
 
+  mounted() {
+    if (!this.compact) {
+      return;
+    }
+    const backend = this.chessBackend;
+    if (!backend) {
+      this.showChess = window.localStorage.getItem(this.localPanelStorageKey) === "chess";
+      return;
+    }
+    this.chessUnsubscribe = backend.subscribe((row) => this.applyPanelRow(row));
+    backend
+      .load()
+      .then((row) => {
+        if (row) {
+          this.applyPanelRow(row);
+        }
+      })
+      .catch(() => undefined);
+  }
+
+  beforeDestroy() {
+    if (this.chessUnsubscribe) {
+      this.chessUnsubscribe();
+    }
+  }
+
   get engine(): Engine {
     return this.$store.state.data;
+  }
+
+  get chessBackend(): ChessBackend | null {
+    return this.$store.state.chessBackend ?? null;
+  }
+
+  get localPanelStorageKey(): string {
+    return localChessPanelStorageKey(typeof window === "undefined" ? "" : window.location.search);
+  }
+
+  get panelModeToggleLabel(): string {
+    return this.showChess ? "Show booster and federation tiles" : "Show shared chess board";
   }
 
   // Federation tokens aren't claimable until round 1 starts, so during setup the sidebar shows only
@@ -116,13 +171,55 @@ export default class Pool extends Vue {
   }
 
   openChess() {
-    this.showChess = true;
+    if (this.showChess) {
+      return;
+    }
     // A tile tooltip opened by the same click should not remain floating over the chess board.
     this.$root.$emit("bv::hide::tooltip");
+    this.setPanelMode("chess");
   }
 
-  closeChess() {
-    this.showChess = false;
+  togglePanelMode() {
+    this.setPanelMode(this.showChess ? "pool" : "chess");
+  }
+
+  private applyPanelRow(row: ChessRow) {
+    this.applyPanelMode(row.panel_mode);
+  }
+
+  private applyPanelMode(mode: ChessPanelMode) {
+    if (mode === "chess" && !this.showChess) {
+      this.$root.$emit("bv::hide::tooltip");
+    }
+    this.showChess = mode === "chess";
+  }
+
+  private async setPanelMode(mode: ChessPanelMode) {
+    if (this.panelModeSaving) {
+      return;
+    }
+    const previousMode: ChessPanelMode = this.showChess ? "chess" : "pool";
+    this.applyPanelMode(mode);
+
+    const backend = this.chessBackend;
+    if (!backend) {
+      window.localStorage.setItem(this.localPanelStorageKey, mode);
+      return;
+    }
+
+    this.panelModeSaving = true;
+    try {
+      await backend.setPanelMode(mode);
+    } catch (error) {
+      try {
+        const row = await backend.load();
+        row ? this.applyPanelRow(row) : this.applyPanelMode(previousMode);
+      } catch (loadError) {
+        this.applyPanelMode(previousMode);
+      }
+    } finally {
+      this.panelModeSaving = false;
+    }
   }
 }
 </script>
@@ -168,6 +265,46 @@ export default class Pool extends Vue {
       z-index: 1;
       overflow: hidden;
       border-radius: 3px;
+    }
+
+    .pool-mode-toggle {
+      position: absolute;
+      z-index: 3;
+      top: -7px;
+      // Straddle the top border without extending the narrow mobile sidebar past the viewport.
+      right: -2px;
+      display: grid;
+      place-items: center;
+      width: 25px;
+      height: 25px;
+      margin: 0;
+      padding: 0;
+      border: 2px solid var(--ui-surface);
+      border-radius: 50%;
+      background: var(--ui-primary);
+      color: var(--ui-primary-text);
+      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
+      cursor: pointer;
+      font: 700 16px/1 Georgia, serif;
+      transition: transform 100ms ease, background-color 100ms ease;
+
+      &:hover,
+      &:focus-visible {
+        background: var(--ui-primary-hover);
+        transform: scale(1.08);
+        outline: 2px solid var(--ui-primary-text);
+        outline-offset: -4px;
+      }
+
+      &.showing-chess {
+        font-family: system-ui, sans-serif;
+        font-size: 15px;
+      }
+
+      &.saving {
+        cursor: wait;
+        opacity: 0.75;
+      }
     }
 
     .pool-boosters {

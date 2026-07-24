@@ -20,13 +20,24 @@ export type Orientation = "w" | "b";
 
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const LOCAL_CHESS_KEY_PREFIX = "lf-chess-fen:";
+const LOCAL_CHESS_PANEL_KEY_PREFIX = "lf-chess-panel:";
+
+function localGameStorageSuffix(search: string): string {
+  const gameId = new URLSearchParams(search).get("game");
+  return gameId ? encodeURIComponent(gameId) : "sandbox";
+}
 
 // Offline games already have stable ids in `?offline=1&game=...`; use that id so every Gaia game
 // gets an independent pass-and-play chess position. The plain self-contained viewer has no game id,
 // so it deliberately shares one local sandbox instead.
 export function localChessStorageKey(search = ""): string {
-  const gameId = new URLSearchParams(search).get("game");
-  return `${LOCAL_CHESS_KEY_PREFIX}${gameId ? encodeURIComponent(gameId) : "sandbox"}`;
+  return `${LOCAL_CHESS_KEY_PREFIX}${localGameStorageSuffix(search)}`;
+}
+
+// The selected sidebar face is also local to one offline Gaia game. Hosted games store this on
+// their shared chess row instead, so every connected viewer receives the same mode over Realtime.
+export function localChessPanelStorageKey(search = ""): string {
+  return `${LOCAL_CHESS_PANEL_KEY_PREFIX}${localGameStorageSuffix(search)}`;
 }
 
 // Online players keep their own colour at the bottom. Offline is pass-and-play on one device, so

@@ -1,7 +1,21 @@
 {
-  "version": "5.37.0",
+  "version": "5.37.1",
   "releasedAt": "2026-07-24",
   "entries": [
+    {
+      "version": "5.37.1",
+      "releasedAt": "2026-07-24",
+      "kind": "update",
+      "title": "Shared chess panel switch",
+      "impact": "",
+      "changes": [
+        "The booster and federation sidebar now has a corner switch that changes to the chess board for everyone in the game",
+        "Synchronized each game's selected sidebar mode through the per-game chess record and Realtime"
+      ],
+      "userChanges": [
+        "The booster and federation sidebar now has a corner switch that changes to the chess board for everyone in the game"
+      ]
+    },
     {
       "version": "5.37.0",
       "releasedAt": "2026-07-24",

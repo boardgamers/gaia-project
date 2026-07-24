@@ -1,6 +1,8 @@
 <template>
   <div class="lf-chess" ref="root" @click.stop>
-    <!-- Slim status/controls bar: whose turn / result on the left, seat + close controls on the right. -->
+    <!-- Slim status/controls bar: whose turn / result on the left, seat controls on the right.
+         Pool.vue owns the always-visible corner mode switch so this bar does not spend board space
+         on a second close button. -->
     <div class="lf-chess-bar" ref="bar">
       <span class="lf-chess-status" :class="{ warn: inCheck || gameOver }">{{ statusText }}</span>
       <span class="lf-chess-controls">
@@ -27,7 +29,6 @@
             Leave
           </button>
         </template>
-        <button type="button" class="lf-chess-btn" title="Back to boosters" @click="$emit('close')">✕</button>
       </span>
     </div>
 

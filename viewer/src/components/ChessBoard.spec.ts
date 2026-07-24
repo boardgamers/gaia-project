@@ -64,7 +64,12 @@ describe("ChessBoard", () => {
 
   it("keeps an online player's own colour at the bottom and persists through the injected game backend", async () => {
     const moves: Array<[string, string]> = [];
-    const row: ChessRow = { fen: START_FEN, white_user: "user-white", black_user: "user-black" };
+    const row: ChessRow = {
+      fen: START_FEN,
+      white_user: "user-white",
+      black_user: "user-black",
+      panel_mode: "chess",
+    };
     const backend: ChessBackend = {
       gameId: "game-one",
       userId: "user-white",
@@ -77,6 +82,7 @@ describe("ChessBoard", () => {
         return after;
       },
       reset: async () => undefined,
+      setPanelMode: async () => undefined,
     };
     const wrapper = mount(ChessBoard as any, { localVue, store: storeWith(backend) });
     await flush();

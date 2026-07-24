@@ -16,6 +16,8 @@ create table public.chess_board (
   game_id    uuid primary key references public.games (id) on delete cascade,
   fen        text not null default public.chess_start_fen()
              check (length(fen) between 20 and 120 and split_part(fen, ' ', 2) in ('w', 'b')),
+  panel_mode text not null default 'pool'
+             check (panel_mode in ('pool', 'chess')),
   white_user uuid references auth.users (id) on delete set null,
   black_user uuid references auth.users (id) on delete set null,
   updated_at timestamptz not null default now(),
@@ -25,7 +27,7 @@ create table public.chess_board (
 alter table public.chess_board enable row level security;
 
 -- Approved users may spectate any hosted game, matching the existing games/moves visibility model.
--- Nobody writes the table directly; the four narrowly granted RPCs below are the only write paths.
+-- Nobody writes the table directly; the narrowly granted RPCs below are the only write paths.
 create policy chess_board_select on public.chess_board
   for select
   to authenticated
@@ -203,12 +205,50 @@ begin
 end;
 $$;
 
+-- The compact sidebar has two shared faces: the normal booster/federation pool and chess. Any
+-- participant in the Gaia game may switch the face; approved spectators receive the same value via
+-- Realtime but cannot change it.
+create or replace function public.set_chess_panel_mode(p_game_id uuid, p_mode text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := (select auth.uid());
+begin
+  if v_uid is null or not (select public.is_approved()) then
+    raise exception 'auth required';
+  end if;
+  if p_mode is null or p_mode not in ('pool', 'chess') then
+    raise exception 'bad chess panel mode %', p_mode;
+  end if;
+  if not exists (
+    select 1
+    from public.players p
+    where p.game_id = p_game_id
+      and public.is_seat_owner(p.game_id, p.seat)
+  ) then
+    raise exception 'only a player in this game can switch the chess panel';
+  end if;
+
+  insert into public.chess_board as board (game_id, panel_mode, updated_by)
+  values (p_game_id, p_mode, v_uid)
+  on conflict (game_id) do update
+    set panel_mode = excluded.panel_mode,
+        updated_at = now(),
+        updated_by = v_uid;
+end;
+$$;
+
 revoke execute on function public.chess_start_fen() from public, anon, authenticated;
 revoke execute on function public.claim_chess_color(uuid, text) from public, anon;
 revoke execute on function public.leave_chess_seat(uuid) from public, anon;
 revoke execute on function public.move_chess(uuid, text, text) from public, anon;
 revoke execute on function public.reset_chess(uuid) from public, anon;
+revoke execute on function public.set_chess_panel_mode(uuid, text) from public, anon;
 grant execute on function public.claim_chess_color(uuid, text) to authenticated;
 grant execute on function public.leave_chess_seat(uuid) to authenticated;
 grant execute on function public.move_chess(uuid, text, text) to authenticated;
 grant execute on function public.reset_chess(uuid) to authenticated;
+grant execute on function public.set_chess_panel_mode(uuid, text) to authenticated;

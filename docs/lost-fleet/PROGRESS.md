@@ -5,13 +5,15 @@
 > labeled historical rerun log. Do not load this 5,000-line history cover to cover. Read the other
 > ledgers and historical handoffs only when the task touches their subject, following `AGENTS.md`.
 > If the user supplied a concrete task, proceed with it rather than asking "what next?".
-> Last updated: **2026-07-24** (per-game sidebar chess completed on
-> `claude/chess-board-containers-gyn251`, viewer v5.37.0). The compact booster/federation pool now
-> stays mounted under an exact-size chess overlay. Hosted games use player-only colour seats,
-> per-game Realtime persistence, and server-checked turns; offline games use bundled chess rules,
-> per-game local persistence, and rotate to the next side after each move. Live Supabase hardening
-> migrations are applied to `mitawjpdxkheascdiffz`; the full viewer suite passes 567/567 and the
-> production/offline build plus desktop/mobile browser story pass. AI task index unchanged.
+> Last updated: **2026-07-24** (shared per-game sidebar chess completed on
+> `claude/chess-board-containers-gyn251`, viewer v5.37.1). The compact booster/federation pool stays
+> mounted under an exact-size chess overlay and now has a zero-layout-space corner switch whose
+> selected face is synchronized to every hosted viewer through the per-game Realtime row. Hosted
+> games use player-only colour seats, per-game persistence, and server-checked turns; offline games
+> use bundled chess rules, per-game local persistence, and rotate to the next side after each move.
+> Live Supabase migrations through `20260724162335_sync_chess_panel_mode` are applied to
+> `mitawjpdxkheascdiffz`; the full viewer suite passes 568/568 and the production/offline build plus
+> desktop/mobile browser story pass. AI task index unchanged.
 
 ## Working agreements (read every session, not optional)
 
@@ -57,9 +59,11 @@ release.json`) has two audiences and they must not blur together: a "What's new"
   test-and-build workflow, compatibility metadata for five historical Ivits chart fixtures, and
   cache-busted icon URLs plus a network-first iOS touch-icon request path.
 - **Sidebar chess:** implementation is complete on `claude/chess-board-containers-gyn251` (viewer
-  v5.37.0). The live database has the per-game table/RPC hardening and foreign-key indexes. Merge the
-  branch normally; do not recreate or reapply the three historical Claude migrations that already
-  exist in the live migration ledger.
+  v5.37.1). The live database has the per-game table/RPC hardening, foreign-key indexes, and shared
+  `pool`/`chess` panel mode. Any Gaia-game participant can switch the panel and all approved viewers
+  receive the same state over Realtime. Merge the branch normally; do not recreate or reapply the
+  historical Claude migrations or `20260724162335_sync_chess_panel_mode`, which already exist in the
+  live migration ledger.
 
 ## What this project is
 

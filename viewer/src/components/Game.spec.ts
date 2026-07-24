@@ -469,13 +469,16 @@ describe("Game", () => {
     expect(vm.$el.querySelectorAll(".pool").length, "expected exactly one Pool for a Lost Fleet game").to.equal(1);
 
     // Switching to chess overlays the same responsive box without unmounting the booster/federation
-    // source tree. Only the chess board's explicit close control switches it back.
+    // source tree. A corner switch remains visible in both modes without taking layout space.
     const poolSource = poolSidebar.querySelector(".pool-clickable");
+    const modeToggle = poolSidebar.querySelector(".pool-mode-toggle");
+    expect(modeToggle.getAttribute("aria-label")).to.equal("Show shared chess board");
     await fireEvent.click(poolSource);
     expect(poolSource.classList.contains("chess-source-hidden")).to.equal(true);
     expect(poolSidebar.querySelector(".pool-chess-overlay")).to.not.equal(null);
     expect(poolSidebar.querySelector(".pool-clickable")).to.equal(poolSource);
-    await fireEvent.click(poolSidebar.querySelector('button[title="Back to boosters"]'));
+    expect(modeToggle.getAttribute("aria-label")).to.equal("Show booster and federation tiles");
+    await fireEvent.click(modeToggle);
     expect(poolSource.classList.contains("chess-source-hidden")).to.equal(false);
     expect(poolSidebar.querySelector(".pool-chess-overlay")).to.equal(null);
 

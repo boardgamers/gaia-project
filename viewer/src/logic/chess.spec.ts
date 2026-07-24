@@ -4,6 +4,7 @@ import {
   START_FEN,
   boardOrientation,
   displaySquares,
+  localChessPanelStorageKey,
   localChessStorageKey,
   pieceGlyph,
   promotionRank,
@@ -64,6 +65,8 @@ describe("chess helpers", () => {
       expect(localChessStorageKey("?offline=1&game=offline-one")).to.equal("lf-chess-fen:offline-one");
       expect(localChessStorageKey("?offline=1&game=offline-two")).to.equal("lf-chess-fen:offline-two");
       expect(localChessStorageKey("?players=2&lostFleet=1")).to.equal("lf-chess-fen:sandbox");
+      expect(localChessPanelStorageKey("?offline=1&game=offline-one")).to.equal("lf-chess-panel:offline-one");
+      expect(localChessPanelStorageKey("?players=2&lostFleet=1")).to.equal("lf-chess-panel:sandbox");
     });
 
     it("keeps an online player's own colour down but rotates offline to the side to move", () => {
