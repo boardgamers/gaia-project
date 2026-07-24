@@ -13,7 +13,15 @@
            tree stays mounted but hidden underneath an exact-size overlay, so neither the sidebar
            layout nor tile state moves. The corner switch is absolutely positioned, so the affordance
            is visible in both modes without taking any sidebar space. -->
-      <div v-if="compact" class="pool compact mb-1">
+      <div
+        v-if="compact"
+        class="pool compact mb-1"
+        @pointerdown="onPanelPointerDown"
+        @pointerup="onPanelPointerUp"
+        @pointercancel="cancelPanelSwipe"
+        @pointerleave="cancelPanelSwipe"
+        @click.capture="onPanelClickCapture"
+      >
         <div
           class="pool-clickable"
           :class="{ 'chess-source-hidden': showChess }"
@@ -106,6 +114,9 @@ export default class Pool extends Vue {
   showChess = false;
   panelModeSaving = false;
   private chessUnsubscribe: (() => void) | null = null;
+  private panelSwipeStart: { pointerId: number; x: number; y: number } | null = null;
+  private suppressPanelClick = false;
+  private suppressPanelClickTimer: number | null = null;
 
   // Used by LostFleetShips' sidebar placement (Game.vue): switches to the flex/grid layout below
   // (sized to the sidebar's own narrow width) instead of the base game's fixed-size flex-wrap row.
@@ -138,6 +149,9 @@ export default class Pool extends Vue {
   beforeDestroy() {
     if (this.chessUnsubscribe) {
       this.chessUnsubscribe();
+    }
+    if (this.suppressPanelClickTimer !== null) {
+      window.clearTimeout(this.suppressPanelClickTimer);
     }
   }
 
@@ -181,6 +195,67 @@ export default class Pool extends Vue {
 
   togglePanelMode() {
     this.setPanelMode(this.showChess ? "pool" : "chess");
+  }
+
+  onPanelPointerDown(event: PointerEvent) {
+    const target = event.target;
+    if (
+      event.isPrimary === false ||
+      event.button > 0 ||
+      (target instanceof Element && target.closest("button, .lf-chess-overlay"))
+    ) {
+      this.panelSwipeStart = null;
+      return;
+    }
+    this.panelSwipeStart = {
+      pointerId: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+    };
+  }
+
+  onPanelPointerUp(event: PointerEvent) {
+    const start = this.panelSwipeStart;
+    this.panelSwipeStart = null;
+    if (!start || start.pointerId !== event.pointerId) {
+      return;
+    }
+    const horizontal = Math.abs(event.clientX - start.x);
+    const vertical = Math.abs(event.clientY - start.y);
+    if (horizontal < 44 || horizontal <= vertical * 1.25) {
+      return;
+    }
+
+    // The browser synthesizes a click immediately after a touch pointerup. Consume that one click
+    // so a pool->chess swipe cannot also activate the pool, and a chess->pool swipe cannot select a
+    // square as the board disappears. Either horizontal direction deliberately toggles the two-face
+    // panel; vertical gestures remain available to scroll the page.
+    this.suppressPanelClick = true;
+    if (this.suppressPanelClickTimer !== null) {
+      window.clearTimeout(this.suppressPanelClickTimer);
+    }
+    this.suppressPanelClickTimer = window.setTimeout(() => {
+      this.suppressPanelClick = false;
+      this.suppressPanelClickTimer = null;
+    }, 0);
+    this.togglePanelMode();
+  }
+
+  cancelPanelSwipe() {
+    this.panelSwipeStart = null;
+  }
+
+  onPanelClickCapture(event: MouseEvent) {
+    if (!this.suppressPanelClick) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    this.suppressPanelClick = false;
+    if (this.suppressPanelClickTimer !== null) {
+      window.clearTimeout(this.suppressPanelClickTimer);
+      this.suppressPanelClickTimer = null;
+    }
   }
 
   private applyPanelRow(row: ChessRow) {
@@ -253,6 +328,7 @@ export default class Pool extends Vue {
     // GAP-sized padding so the outermost tiles' bleed clears the border too).
     $gap: 6px;
     padding: $gap;
+    touch-action: pan-y;
 
     .chess-source-hidden {
       visibility: hidden;

@@ -17,7 +17,7 @@ export function createSupabaseChessBackend(client: SupabaseClient, gameId: strin
   const load = async (): Promise<ChessRow | null> => {
     const { data, error } = await client
       .from("chess_board")
-      .select("fen,white_user,black_user,panel_mode")
+      .select("fen,white_user,white_user_2,black_user,black_user_2,white_next_user,black_next_user,panel_mode")
       .eq("game_id", gameId)
       .maybeSingle();
     throwIfError(error);

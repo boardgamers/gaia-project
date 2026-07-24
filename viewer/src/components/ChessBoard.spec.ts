@@ -11,8 +11,8 @@ import ChessBoard from "./ChessBoard.vue";
 const localVue = createLocalVue();
 localVue.use(Vuex);
 
-function storeWith(chessBackend: ChessBackend | null) {
-  return new Vuex.Store({ state: { chessBackend } });
+function storeWith(chessBackend: ChessBackend | null, playerCount = 2) {
+  return new Vuex.Store({ state: { chessBackend, data: { players: new Array(playerCount).fill({}) } } });
 }
 
 function flush() {
@@ -67,7 +67,11 @@ describe("ChessBoard", () => {
     const row: ChessRow = {
       fen: START_FEN,
       white_user: "user-white",
+      white_user_2: null,
       black_user: "user-black",
+      black_user_2: null,
+      white_next_user: "user-white",
+      black_next_user: "user-black",
       panel_mode: "chess",
     };
     const backend: ChessBackend = {
@@ -96,6 +100,105 @@ describe("ChessBoard", () => {
     expect(moves[0][1].split(" ")[1]).to.equal("b");
     expect(wrapper.findAll(".lf-chess-square").at(0).attributes("data-square")).to.equal("a8");
     wrapper.destroy();
+  });
+
+  it("keeps both teammates oriented to their colour but only lets the designated relay member move", async () => {
+    const moves: Array<[string, string]> = [];
+    let listener: ((row: ChessRow) => void) | null = null;
+    let row: ChessRow = {
+      fen: START_FEN,
+      white_user: "user-white-one",
+      white_user_2: "user-white-two",
+      black_user: "user-black-one",
+      black_user_2: "user-black-two",
+      white_next_user: "user-white-one",
+      black_next_user: "user-black-one",
+      panel_mode: "chess",
+    };
+    const backend: ChessBackend = {
+      gameId: "game-four",
+      userId: "user-white-two",
+      load: async () => row,
+      subscribe: (next) => {
+        listener = next;
+        return () => undefined;
+      },
+      claim: async () => undefined,
+      leave: async () => undefined,
+      move: async (before, after) => {
+        moves.push([before, after]);
+        return after;
+      },
+      reset: async () => undefined,
+      setPanelMode: async () => undefined,
+    };
+    const wrapper = mount(ChessBoard as any, { localVue, store: storeWith(backend, 4) });
+    await flush();
+
+    expect(wrapper.findAll(".lf-chess-square").at(0).attributes("data-square")).to.equal("a8");
+    expect(wrapper.find(".lf-chess-status").text()).to.include("teammate's move");
+    await wrapper.find('[data-square="e2"]').trigger("click");
+    await wrapper.find('[data-square="e4"]').trigger("click");
+    expect(moves).to.have.length(0);
+
+    row = { ...row, white_next_user: "user-white-two" };
+    listener?.(row);
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find(".lf-chess-status").text()).to.include("your move");
+
+    await wrapper.find('[data-square="e2"]').trigger("click");
+    await wrapper.find('[data-square="e4"]').trigger("click");
+    await wrapper.vm.$nextTick();
+    expect(moves).to.have.length(1);
+    wrapper.destroy();
+  });
+
+  it("offers relay-team vacancies only when the Gaia player count has room", async () => {
+    const baseRow: ChessRow = {
+      fen: START_FEN,
+      white_user: "white-one",
+      white_user_2: null,
+      black_user: "black-one",
+      black_user_2: null,
+      white_next_user: "white-one",
+      black_next_user: "black-one",
+      panel_mode: "chess",
+    };
+    const backend = (load: () => Promise<ChessRow>): ChessBackend => ({
+      gameId: "game-team",
+      userId: "spectator",
+      load,
+      subscribe: () => () => undefined,
+      claim: async () => undefined,
+      leave: async () => undefined,
+      move: async (_before, after) => after,
+      reset: async () => undefined,
+      setPanelMode: async () => undefined,
+    });
+
+    const fourPlayer = mount(ChessBoard as any, {
+      localVue,
+      store: storeWith(
+        backend(async () => baseRow),
+        4
+      ),
+    });
+    await flush();
+    expect(fourPlayer.findAll(".lf-chess-controls button")).to.have.length(2);
+    expect(fourPlayer.find(".lf-chess-controls").text()).to.include("Join ♔");
+    expect(fourPlayer.find(".lf-chess-controls").text()).to.include("Join ♚");
+    fourPlayer.destroy();
+
+    const fullThreePlayer = mount(ChessBoard as any, {
+      localVue,
+      store: storeWith(
+        backend(async () => ({ ...baseRow, white_user_2: "white-two" })),
+        3
+      ),
+    });
+    await flush();
+    expect(fullThreePlayer.findAll(".lf-chess-controls button")).to.have.length(0);
+    fullThreePlayer.destroy();
   });
 
   it("opens a confirmation on long press and resets the local board only after confirmation", async () => {

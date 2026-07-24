@@ -1,7 +1,23 @@
 {
-  "version": "5.37.1",
+  "version": "5.37.2",
   "releasedAt": "2026-07-24",
   "entries": [
+    {
+      "version": "5.37.2",
+      "releasedAt": "2026-07-24",
+      "kind": "update",
+      "title": "Chess teams and swipe switching",
+      "impact": "",
+      "changes": [
+        "Three-player chess now supports a two-person relay team against one solo player, while four-player chess uses two alternating teams",
+        "Swipe left or right on the booster/chess panel to switch views; the corner button still works",
+        "Persisted both chess team rosters and the designated next mover per colour, with row-locked server enforcement for claims, moves, leaves, and resets"
+      ],
+      "userChanges": [
+        "Three-player chess now supports a two-person relay team against one solo player, while four-player chess uses two alternating teams",
+        "Swipe left or right on the booster/chess panel to switch views; the corner button still works"
+      ]
+    },
     {
       "version": "5.37.1",
       "releasedAt": "2026-07-24",

@@ -5,7 +5,11 @@ export type ChessPanelMode = "pool" | "chess";
 export interface ChessRow {
   fen: string;
   white_user: string | null;
+  white_user_2: string | null;
   black_user: string | null;
+  black_user_2: string | null;
+  white_next_user: string | null;
+  black_next_user: string | null;
   panel_mode: ChessPanelMode;
 }
 

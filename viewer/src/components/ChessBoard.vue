@@ -8,22 +8,22 @@
       <span class="lf-chess-controls">
         <template v-if="online">
           <button
-            v-if="myColor === null && whiteUser === null"
+            v-if="canJoinWhite"
             type="button"
             class="lf-chess-btn"
-            title="Play as White"
+            :title="whiteTeamSize === 0 ? 'Play as White' : 'Join the White relay team'"
             @click="claim('w')"
           >
-            Play ♔
+            {{ whiteTeamSize === 0 ? "Play ♔" : "Join ♔" }}
           </button>
           <button
-            v-if="myColor === null && blackUser === null"
+            v-if="canJoinBlack"
             type="button"
             class="lf-chess-btn dark"
-            title="Play as Black"
+            :title="blackTeamSize === 0 ? 'Play as Black' : 'Join the Black relay team'"
             @click="claim('b')"
           >
-            Play ♚
+            {{ blackTeamSize === 0 ? "Play ♚" : "Join ♚" }}
           </button>
           <button v-if="myColor !== null" type="button" class="lf-chess-btn" title="Leave your seat" @click="leaveSeat">
             Leave
@@ -125,7 +125,11 @@ export default class ChessBoard extends Vue {
 
   fen = START_FEN;
   whiteUser: string | null = null;
+  whiteUser2: string | null = null;
   blackUser: string | null = null;
+  blackUser2: string | null = null;
+  whiteNextUser: string | null = null;
+  blackNextUser: string | null = null;
   myUserId: string | null = null;
   online = false;
 
@@ -238,7 +242,11 @@ export default class ChessBoard extends Vue {
   private applyRow(row: ChessRow) {
     this.errorText = "";
     this.whiteUser = row.white_user;
+    this.whiteUser2 = row.white_user_2 ?? null;
     this.blackUser = row.black_user;
+    this.blackUser2 = row.black_user_2 ?? null;
+    this.whiteNextUser = row.white_next_user ?? null;
+    this.blackNextUser = row.black_next_user ?? null;
     this.applyFen(row.fen);
   }
 
@@ -369,7 +377,7 @@ export default class ChessBoard extends Vue {
       await this.backend.claim(color);
       await this.fetchRow();
     } catch (error) {
-      this.errorText = "Only players in this game can take a colour";
+      this.errorText = "That chess team is unavailable";
     }
   }
 
@@ -453,21 +461,72 @@ export default class ChessBoard extends Vue {
   // ---- derived ------------------------------------------------------------
 
   get myColor(): Orientation | null {
-    if (this.myUserId && this.whiteUser === this.myUserId) {
+    if (this.myUserId && (this.whiteUser === this.myUserId || this.whiteUser2 === this.myUserId)) {
       return "w";
     }
-    if (this.myUserId && this.blackUser === this.myUserId) {
+    if (this.myUserId && (this.blackUser === this.myUserId || this.blackUser2 === this.myUserId)) {
       return "b";
     }
     return null;
   }
 
-  // Which colour the local user is allowed to move: their seat online, or either side offline.
+  get gaiaPlayerCount(): number {
+    const count = this.$store.state.data?.players?.length;
+    return typeof count === "number" && count >= 2 && count <= 4 ? count : 2;
+  }
+
+  get teamCapacity(): number {
+    return this.gaiaPlayerCount >= 3 ? 2 : 1;
+  }
+
+  get whiteTeamSize(): number {
+    return Number(this.whiteUser !== null) + Number(this.whiteUser2 !== null);
+  }
+
+  get blackTeamSize(): number {
+    return Number(this.blackUser !== null) + Number(this.blackUser2 !== null);
+  }
+
+  get canJoinWhite(): boolean {
+    return (
+      this.online &&
+      this.myColor === null &&
+      this.whiteTeamSize < this.teamCapacity &&
+      this.whiteTeamSize + this.blackTeamSize < this.gaiaPlayerCount
+    );
+  }
+
+  get canJoinBlack(): boolean {
+    return (
+      this.online &&
+      this.myColor === null &&
+      this.blackTeamSize < this.teamCapacity &&
+      this.whiteTeamSize + this.blackTeamSize < this.gaiaPlayerCount
+    );
+  }
+
+  get whiteMover(): string | null {
+    return this.whiteNextUser ?? this.whiteUser ?? this.whiteUser2;
+  }
+
+  get blackMover(): string | null {
+    return this.blackNextUser ?? this.blackUser ?? this.blackUser2;
+  }
+
+  get isDesignatedMover(): boolean {
+    if (!this.myUserId || !this.myColor) {
+      return false;
+    }
+    return (this.myColor === "w" ? this.whiteMover : this.blackMover) === this.myUserId;
+  }
+
+  // Which colour the local user is allowed to move: their designated relay turn online, or either
+  // side offline. Teammates share a colour in 3-4 player games but alternate who may actually move.
   get effectiveColor(): Orientation | null {
     if (!this.online) {
       return this.chess ? this.chess.turn() : "w";
     }
-    return this.myColor;
+    return this.isDesignatedMover ? this.myColor : null;
   }
 
   get orientation(): Orientation {
@@ -527,7 +586,8 @@ export default class ChessBoard extends Vue {
     }
     if (this.myColor) {
       const mine = this.myColor === this.chess.turn();
-      return `You: ${this.myColor === "w" ? "White" : "Black"} — ${mine ? "your move" : toMove + " to move"}${check}`;
+      const turnStatus = mine ? (this.isDesignatedMover ? "your move" : "teammate's move") : toMove + " to move";
+      return `You: ${this.myColor === "w" ? "White" : "Black"} — ${turnStatus}${check}`;
     }
     return `Spectating — ${toMove} to move${check}`;
   }

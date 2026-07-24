@@ -15,7 +15,11 @@ function sharedBackend(initialMode: ChessPanelMode) {
   let row: ChessRow = {
     fen: START_FEN,
     white_user: null,
+    white_user_2: null,
     black_user: null,
+    black_user_2: null,
+    white_next_user: null,
+    black_next_user: null,
     panel_mode: initialMode,
   };
   const listeners = new Set<(next: ChessRow) => void>();
@@ -63,6 +67,18 @@ async function settle() {
   await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
+function dispatchPointer(element: Element, type: string, clientX: number, clientY: number, pointerId = 1) {
+  const event = new Event(type, { bubbles: true, cancelable: true });
+  Object.defineProperties(event, {
+    button: { value: 0 },
+    clientX: { value: clientX },
+    clientY: { value: clientY },
+    isPrimary: { value: true },
+    pointerId: { value: pointerId },
+  });
+  element.dispatchEvent(event);
+}
+
 describe("compact Pool chess mode", () => {
   afterEach(() => {
     window.localStorage.clear();
@@ -98,5 +114,47 @@ describe("compact Pool chess mode", () => {
     first.destroy();
     second.destroy();
     expect(listeners.size).to.equal(0);
+  });
+
+  it("toggles on either horizontal swipe and consumes each swipe's synthetic click", async () => {
+    const { backend, writes } = sharedBackend("pool");
+    const wrapper = mountPool(backend);
+    await settle();
+
+    const source = wrapper.find(".pool-clickable").element;
+    dispatchPointer(source, "pointerdown", 130, 30);
+    dispatchPointer(source, "pointerup", 70, 32);
+    source.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+    await settle();
+
+    expect(writes).to.deep.equal(["chess"]);
+    expect(wrapper.find(".pool-chess-overlay").exists()).to.equal(true);
+
+    const board = wrapper.find(".chess-board-stub").element;
+    dispatchPointer(board, "pointerdown", 40, 30, 2);
+    dispatchPointer(board, "pointerup", 105, 28, 2);
+    board.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+    await settle();
+
+    expect(writes).to.deep.equal(["chess", "pool"]);
+    expect(wrapper.find(".pool-chess-overlay").exists()).to.equal(false);
+    wrapper.destroy();
+  });
+
+  it("ignores short and mostly vertical gestures", async () => {
+    const { backend, writes } = sharedBackend("pool");
+    const wrapper = mountPool(backend);
+    await settle();
+    const source = wrapper.find(".pool-clickable").element;
+
+    dispatchPointer(source, "pointerdown", 100, 20);
+    dispatchPointer(source, "pointerup", 75, 22);
+    dispatchPointer(source, "pointerdown", 100, 20, 2);
+    dispatchPointer(source, "pointerup", 115, 85, 2);
+    await settle();
+
+    expect(writes).to.deep.equal([]);
+    expect(wrapper.find(".pool-chess-overlay").exists()).to.equal(false);
+    wrapper.destroy();
   });
 });

@@ -64,12 +64,23 @@ describe("Supabase chess backend", () => {
   const gameId = "11111111-1111-4111-8111-111111111111";
 
   it("loads and multicasts one current-game Realtime subscription to every board listener", async () => {
-    const row: ChessRow = { fen: "fen", white_user: "white", black_user: null, panel_mode: "pool" };
+    const row: ChessRow = {
+      fen: "fen",
+      white_user: "white",
+      white_user_2: "white-two",
+      black_user: null,
+      black_user_2: null,
+      white_next_user: "white-two",
+      black_next_user: null,
+      panel_mode: "pool",
+    };
     const { client, calls } = makeClient(row);
     const backend = createSupabaseChessBackend(client, gameId, "white");
 
     expect(await backend.load()).to.deep.equal(row);
-    expect(calls.selected).to.equal("fen,white_user,black_user,panel_mode");
+    expect(calls.selected).to.equal(
+      "fen,white_user,white_user_2,black_user,black_user_2,white_next_user,black_next_user,panel_mode"
+    );
     expect(calls.filters).to.deep.equal([["game_id", gameId]]);
 
     let receivedA: ChessRow | null = null;
