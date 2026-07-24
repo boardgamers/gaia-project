@@ -1,5 +1,13 @@
 import { expect } from "chai";
-import { BoardMatrix, displaySquares, pieceGlyph, promotionRank, START_FEN } from "./chess";
+import {
+  BoardMatrix,
+  START_FEN,
+  boardOrientation,
+  displaySquares,
+  localChessStorageKey,
+  pieceGlyph,
+  promotionRank,
+} from "./chess";
 
 // A minimal stand-in for chess.js `.board()` of the opening position (rank 8 first, file a first).
 function openingMatrix(): BoardMatrix {
@@ -48,6 +56,22 @@ describe("chess helpers", () => {
     it("is rank 8 for White and rank 1 for Black", () => {
       expect(promotionRank("w")).to.equal("8");
       expect(promotionRank("b")).to.equal("1");
+    });
+  });
+
+  describe("persistence and orientation", () => {
+    it("isolates offline chess state by Gaia game id", () => {
+      expect(localChessStorageKey("?offline=1&game=offline-one")).to.equal("lf-chess-fen:offline-one");
+      expect(localChessStorageKey("?offline=1&game=offline-two")).to.equal("lf-chess-fen:offline-two");
+      expect(localChessStorageKey("?players=2&lostFleet=1")).to.equal("lf-chess-fen:sandbox");
+    });
+
+    it("keeps an online player's own colour down but rotates offline to the side to move", () => {
+      expect(boardOrientation(true, "w", "b")).to.equal("w");
+      expect(boardOrientation(true, "b", "w")).to.equal("b");
+      expect(boardOrientation(true, null, "b")).to.equal("w");
+      expect(boardOrientation(false, null, "w")).to.equal("w");
+      expect(boardOrientation(false, null, "b")).to.equal("b");
     });
   });
 });

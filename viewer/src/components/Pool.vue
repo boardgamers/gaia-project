@@ -9,12 +9,20 @@
            claimable (owner request: "for pre round 1 only show the boosters, no feds"). Both leave
            breathing room for their own drop-shadow filter's bleed (see the CSS below) so tokens never
            spill past the box's border. -->
-      <!-- Clicking the compact booster/federation container flips it to a shared chess board (owner
-           request). ChessBoard replaces the pool contents and fills the exact same box; its own ✕
-           flips back. `chess-mode` drops the box's padding/border so the board fills edge to edge. -->
-      <div v-if="compact" class="pool compact mb-1" :class="{ 'chess-mode': showChess }">
-        <ChessBoard v-if="showChess" @close="showChess = false" />
-        <div v-else class="pool-clickable" title="Click for a chess board" @click="showChess = true">
+      <!-- Clicking the compact booster/federation container opens its per-game chess board. The tile
+           tree stays mounted but hidden underneath an exact-size overlay, so neither the sidebar
+           layout nor tile state moves; only ChessBoard's own ✕ switches back. -->
+      <div v-if="compact" class="pool compact mb-1">
+        <div
+          class="pool-clickable"
+          :class="{ 'chess-source-hidden': showChess }"
+          :aria-hidden="showChess ? 'true' : undefined"
+          title="Open the chess board"
+          role="button"
+          :tabindex="showChess ? -1 : 0"
+          @click="openChess"
+          @keydown.enter.space.prevent="openChess"
+        >
           <div class="pool-boosters">
             <Booster v-for="booster in boosters" :key="booster" :booster="booster" />
           </div>
@@ -32,6 +40,7 @@
             />
           </div>
         </div>
+        <ChessBoard v-if="showChess" class="pool-chess-overlay" @close="closeChess" />
       </div>
       <!-- Non-compact (base game): the original single interleaved flex-wrap row, unchanged - both
            tile types share the same row, wrapping at their native fixed size. -->
@@ -105,6 +114,16 @@ export default class Pool extends Vue {
   get federationColumns(): number {
     return Math.max(1, Math.ceil(this.federations.length / 2));
   }
+
+  openChess() {
+    this.showChess = true;
+    // A tile tooltip opened by the same click should not remain floating over the chess board.
+    this.$root.$emit("bv::hide::tooltip");
+  }
+
+  closeChess() {
+    this.showChess = false;
+  }
 }
 </script>
 
@@ -122,13 +141,6 @@ export default class Pool extends Vue {
 
   flex-wrap: wrap;
 
-  // Chess mode: let the board fill the exact container space with no tile-padding/border inset.
-  &.compact.chess-mode {
-    padding: 0;
-    border: none;
-    background: transparent;
-  }
-
   .pool-clickable {
     cursor: pointer;
   }
@@ -144,6 +156,19 @@ export default class Pool extends Vue {
     // GAP-sized padding so the outermost tiles' bleed clears the border too).
     $gap: 6px;
     padding: $gap;
+
+    .chess-source-hidden {
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .pool-chess-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      overflow: hidden;
+      border-radius: 3px;
+    }
 
     .pool-boosters {
       display: grid;

@@ -20,6 +20,9 @@ importers:
       chart.js:
         specifier: ^3.0.1
         version: 3.9.1
+      chess.js:
+        specifier: 0.12.1
+        version: 0.12.1
       hexagrid:
         specifier: ^2.1.1
         version: 2.1.1
@@ -1244,6 +1247,9 @@ packages:
 
   check-types@8.0.3:
     resolution: {integrity: sha512-YpeKZngUmG65rLudJ4taU7VLkOCTMhNl/u4ctNC56LQS/zJTyNH0Lrtwm1tfTsbLlwvlfsA2d1c8vCf/Kh2KwQ==}
+
+  chess.js@0.12.1:
+    resolution: {integrity: sha512-95PsuUCtoxPyQNB+29k54OWGeEEpuWXu+d+oWL/fcko5T5NhDuGxaYmoXcZ6KUnFKyUYxdLjwqRqCWZonRuoJQ==}
 
   chokidar@2.1.8:
     resolution: {integrity: sha512-ZmZUazfOzf0Nve7duiCKD23PFSCs4JPoYyccjUFF3aQkQadqBhfzhjkwBH2mNOG9cTBwhamM37EIsIkZw3nRgg==}
@@ -7153,6 +7159,8 @@ snapshots:
       get-func-name: 2.0.2
 
   check-types@8.0.3: {}
+
+  chess.js@0.12.1: {}
 
   chokidar@2.1.8(supports-color@6.1.0):
     dependencies:

@@ -1,6 +1,7 @@
 import Vue from "vue";
 import AdminUsers from "./hosted/AdminUsers.vue";
 import { fetchMyApprovalStatus } from "./hosted/approval";
+import { createSupabaseChessBackend } from "./hosted/chess-backend";
 import Game from "./components/Game.vue";
 import CreateGame from "./hosted/CreateGame.vue";
 import ChatNotesPanel from "./hosted/ChatNotesPanel.vue";
@@ -123,6 +124,10 @@ async function mountGameInstance(
       }
     },
   });
+  // ChessBoard.vue uses the same injection boundary as the notes sheet: the reusable viewer stays
+  // unaware of Supabase, while hosted mode supplies a backend already scoped to this exact game.
+  // Offline/self-contained stores leave this null and use per-game localStorage pass-and-play.
+  emitter.store.commit("setChessBackend", createSupabaseChessBackend(client, gameId, session.user.id));
 
   // Declared here (before its watchers below, which reference it) rather than in its previous
   // spot further down - HostedBar.vue's settings-menu labels (`chatPanelOpen`/`gameNavPanelOpen`)

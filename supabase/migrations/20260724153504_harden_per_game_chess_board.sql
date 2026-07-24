@@ -1,7 +1,6 @@
--- One small, fully independent chess position per hosted Gaia game. The viewer renders and
--- validates real chess with chess.js; this table persists the resulting FEN and fans moves out over
--- Realtime. Chess never enters the Gaia engine move log, so switching the sidebar panel cannot
--- disturb either game.
+-- Finalize the iterated live chess schema: scope claims to actual Gaia-game participants, prevent
+-- one account taking both colours, use least-privilege Data API grants, and validate FEN/turn
+-- transitions. The branch's earlier migration already creates this per-game table for fresh stacks.
 
 create or replace function public.chess_start_fen()
 returns text
@@ -12,20 +11,25 @@ as $$
   select 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'::text
 $$;
 
-create table public.chess_board (
-  game_id    uuid primary key references public.games (id) on delete cascade,
-  fen        text not null default public.chess_start_fen()
-             check (length(fen) between 20 and 120 and split_part(fen, ' ', 2) in ('w', 'b')),
-  white_user uuid references auth.users (id) on delete set null,
-  black_user uuid references auth.users (id) on delete set null,
-  updated_at timestamptz not null default now(),
-  updated_by uuid references auth.users (id) on delete set null
-);
+alter table public.chess_board
+  alter column fen set default public.chess_start_fen();
 
-alter table public.chess_board enable row level security;
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'chess_board_fen_check'
+      and conrelid = 'public.chess_board'::regclass
+  ) then
+    alter table public.chess_board
+      add constraint chess_board_fen_check
+      check (length(fen) between 20 and 120 and split_part(fen, ' ', 2) in ('w', 'b'));
+  end if;
+end;
+$$;
 
--- Approved users may spectate any hosted game, matching the existing games/moves visibility model.
--- Nobody writes the table directly; the four narrowly granted RPCs below are the only write paths.
+drop policy if exists chess_board_select on public.chess_board;
 create policy chess_board_select on public.chess_board
   for select
   to authenticated
@@ -35,23 +39,6 @@ revoke all on table public.chess_board from public, anon, authenticated;
 grant select on table public.chess_board to authenticated;
 grant all on table public.chess_board to service_role;
 
-do $$
-begin
-  if not exists (
-    select 1
-    from pg_publication_tables
-    where pubname = 'supabase_realtime'
-      and schemaname = 'public'
-      and tablename = 'chess_board'
-  ) then
-    alter publication supabase_realtime add table public.chess_board;
-  end if;
-end;
-$$;
-
--- Claim one free colour. Only an actual player seated in this Gaia game may claim, and one account
--- cannot occupy both chess colours. Any two participants may play in 3-4 player Gaia games; the
--- others remain spectators.
 create or replace function public.claim_chess_color(p_game_id uuid, p_color text)
 returns void
 language plpgsql
@@ -122,9 +109,6 @@ begin
 end;
 $$;
 
--- Optimistic concurrency is enforced under a row lock. Chess legality is validated by the bundled
--- chess.js client; the database additionally rejects malformed state and a move that does not hand
--- the turn to the opposite colour.
 create or replace function public.move_chess(p_game_id uuid, p_prev_fen text, p_next_fen text)
 returns text
 language plpgsql
@@ -176,8 +160,6 @@ begin
 end;
 $$;
 
--- Long-press reset keeps the two chess seats but restores the opening position. Only a seated chess
--- player may confirm it.
 create or replace function public.reset_chess(p_game_id uuid)
 returns void
 language plpgsql

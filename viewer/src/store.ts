@@ -8,6 +8,7 @@ import { FastConversionEvent, MapMode } from "./data/actions";
 import { PresenceState } from "./hosted/presence";
 import { PremoveFailureRow, PremoveMode, PremoveRow } from "./hosted/types";
 import { ExecuteBack, FastConversionTooltips } from "./logic/buttons/types";
+import { ChessBackend } from "./logic/chess-backend";
 import {
   CommandObject,
   MovesSlice,
@@ -80,6 +81,8 @@ export type State = {
    * the chat panel used before it was moved to the sidebar), so the viewer never imports Supabase
    * itself. null in self-contained/hot-seat play, where the sheet falls back to localStorage. */
   notesBackend: NotesBackend | null;
+  /** Per-game chess persistence injected by hosted.ts. null means local/offline pass-and-play. */
+  chessBackend: ChessBackend | null;
 };
 
 export type NotesBackend = {
@@ -155,6 +158,7 @@ const gaiaViewer = {
       seatLastActive: {},
       presence: {},
       notesBackend: null,
+      chessBackend: null,
     } as State;
   },
   mutations: {
@@ -290,6 +294,10 @@ const gaiaViewer = {
 
     setNotesBackend(state: State, backend: NotesBackend | null) {
       state.notesBackend = backend;
+    },
+
+    setChessBackend(state: State, backend: ChessBackend | null) {
+      state.chessBackend = backend;
     },
   },
   actions: {

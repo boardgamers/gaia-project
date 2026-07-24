@@ -1,7 +1,7 @@
 <template>
-  <div class="lf-chess" ref="root">
+  <div class="lf-chess" ref="root" @click.stop>
     <!-- Slim status/controls bar: whose turn / result on the left, seat + close controls on the right. -->
-    <div class="lf-chess-bar">
+    <div class="lf-chess-bar" ref="bar">
       <span class="lf-chess-status" :class="{ warn: inCheck || gameOver }">{{ statusText }}</span>
       <span class="lf-chess-controls">
         <template v-if="online">
@@ -35,6 +35,7 @@
     <div
       class="lf-chess-board"
       ref="board"
+      :style="boardStyle"
       @pointerdown="onPointerDown"
       @pointerup="onPointerUp"
       @pointermove="onPointerMove"
@@ -45,6 +46,8 @@
         v-for="cell in cells"
         :key="cell.square"
         class="lf-chess-square"
+        :data-square="cell.square"
+        :aria-label="cell.square"
         :class="{
           light: cell.light,
           dark: !cell.light,
@@ -97,19 +100,27 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component } from "vue-property-decorator";
-import { getSupabaseClient } from "../hosted/supabase-client";
-import { ChessInstance, loadChess } from "../logic/chess-lib";
-import { Cell, DisplaySquare, Orientation, START_FEN, displaySquares, pieceGlyph, promotionRank } from "../logic/chess";
-
-const LOCAL_KEY = "lf-chess-fen";
+import { ChessInstance, createChess } from "../logic/chess-lib";
+import { ChessBackend, ChessRow } from "../logic/chess-backend";
+import {
+  Cell,
+  DisplaySquare,
+  Orientation,
+  START_FEN,
+  boardOrientation,
+  displaySquares,
+  localChessStorageKey,
+  pieceGlyph,
+  promotionRank,
+} from "../logic/chess";
 
 @Component
 export default class ChessBoard extends Vue {
   private chess: ChessInstance | null = null;
-  private client: any = null;
   private unsubscribe: (() => void) | null = null;
   // Typed loosely: ResizeObserver isn't in this repo's TS 3.9 DOM lib.
   private resizeObserver: any = null;
+  private resizeFallback: (() => void) | null = null;
 
   fen = START_FEN;
   whiteUser: string | null = null;
@@ -125,6 +136,7 @@ export default class ChessBoard extends Vue {
   errorText = "";
 
   pieceFont = 18;
+  boardSize = 0;
 
   // long-press bookkeeping
   private pressTimer: number | null = null;
@@ -132,18 +144,26 @@ export default class ChessBoard extends Vue {
   private suppressClick = false;
 
   async mounted() {
-    const Ctor = await loadChess();
-    this.chess = new Ctor(START_FEN);
-    this.observeSize();
-    await this.connect();
+    this.chess = createChess(START_FEN);
+    this.online = this.backend !== null;
+    this.myUserId = this.backend?.userId ?? null;
+    this.$nextTick(() => this.observeSize());
+    if (this.backend) {
+      await this.connect(this.backend);
+    } else {
+      this.goOffline();
+    }
   }
 
   beforeDestroy() {
     if (this.unsubscribe) {
       this.unsubscribe();
     }
-    if (this.resizeObserver && this.$refs.board) {
+    if (this.resizeObserver) {
       this.resizeObserver.disconnect();
+    }
+    if (this.resizeFallback) {
+      window.removeEventListener("resize", this.resizeFallback);
     }
     this.clearPressTimer();
   }
@@ -151,76 +171,71 @@ export default class ChessBoard extends Vue {
   // ---- setup / sync -------------------------------------------------------
 
   private observeSize() {
-    const board = this.$refs.board as HTMLElement | undefined;
-    if (!board) {
+    const root = this.$refs.root as HTMLElement | undefined;
+    if (!root) {
       return;
     }
     const measure = () => {
-      this.pieceFont = Math.max(10, (board.clientWidth / 8) * 0.74);
+      const bar = this.$refs.bar as HTMLElement | undefined;
+      const style = window.getComputedStyle(root);
+      const horizontalPadding = parseFloat(style.paddingLeft || "0") + parseFloat(style.paddingRight || "0");
+      const verticalPadding = parseFloat(style.paddingTop || "0") + parseFloat(style.paddingBottom || "0");
+      const availableWidth = Math.max(0, root.clientWidth - horizontalPadding);
+      const availableHeight = Math.max(0, root.clientHeight - verticalPadding - (bar?.offsetHeight ?? 0) - 4);
+      const size = Math.floor(Math.min(availableWidth, availableHeight || availableWidth));
+      this.boardSize = size;
+      this.pieceFont = Math.max(10, (size / 8) * 0.74);
     };
     measure();
     const RO = (window as any).ResizeObserver;
     if (typeof RO !== "undefined") {
       this.resizeObserver = new RO(measure);
-      this.resizeObserver.observe(board);
+      this.resizeObserver.observe(root);
+    } else {
+      this.resizeFallback = measure;
+      window.addEventListener("resize", measure);
     }
   }
 
-  private async connect() {
+  private async connect(backend: ChessBackend) {
+    this.unsubscribe = backend.subscribe((row) => this.applyRow(row));
     try {
-      this.client = await getSupabaseClient();
-      const { data } = await this.client.auth.getSession();
-      this.myUserId = data?.session?.user?.id ?? null;
-      if (!this.myUserId) {
-        this.goOffline();
-        return;
-      }
-      this.online = true;
       await this.fetchRow();
-      this.subscribe();
     } catch (e) {
-      this.goOffline();
+      this.errorText = "Chess connection unavailable";
     }
   }
 
-  // No auth (self-contained / signed-out): fall back to a local, unshared sandbox where either side
-  // can be moved, so the board still works. Not persisted to the server.
+  // Self-contained/offline pass-and-play: either side can be moved, with a separate persisted board
+  // for each offline Gaia game. No Supabase client or network request is involved.
   private goOffline() {
     this.online = false;
-    const stored = window.localStorage.getItem(LOCAL_KEY);
+    const stored = window.localStorage.getItem(this.localStorageKey);
     if (stored && this.chess && this.chess.load(stored)) {
       this.fen = stored;
     }
   }
 
   private async fetchRow() {
-    const { data, error } = await this.client
-      .from("chess_board")
-      .select("fen,white_user,black_user")
-      .eq("id", "global")
-      .single();
-    if (!error && data) {
-      this.applyRow(data);
+    if (!this.backend) {
+      return;
+    }
+    const row = await this.backend.load();
+    if (row) {
+      this.applyRow(row);
     }
   }
 
-  private subscribe() {
-    const channel = this.client
-      .channel("chess_board-global")
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "chess_board", filter: "id=eq.global" },
-        (payload: { new: any }) => this.applyRow(payload.new)
-      )
-      .subscribe((status: string) => {
-        if (status === "SUBSCRIBED") {
-          this.fetchRow();
-        }
-      });
-    this.unsubscribe = () => this.client.removeChannel(channel);
+  private get backend(): ChessBackend | null {
+    return this.$store.state.chessBackend ?? null;
   }
 
-  private applyRow(row: { fen: string; white_user: string | null; black_user: string | null }) {
+  private get localStorageKey(): string {
+    return localChessStorageKey(typeof window === "undefined" ? "" : window.location.search);
+  }
+
+  private applyRow(row: ChessRow) {
+    this.errorText = "";
     this.whiteUser = row.white_user;
     this.blackUser = row.black_user;
     this.applyFen(row.fen);
@@ -321,24 +336,19 @@ export default class ChessBoard extends Vue {
     this.clearSelection();
 
     if (!this.online) {
-      window.localStorage.setItem(LOCAL_KEY, nextFen);
+      window.localStorage.setItem(this.localStorageKey, nextFen);
       return;
     }
-    this.client
-      .rpc("move_chess", { p_prev_fen: prevFen, p_next_fen: nextFen })
-      .then(({ data, error }: { data: string | null; error: any }) => {
-        if (error) {
-          // Rejected (not your move / concurrency) - snap back to the server's truth.
-          this.fetchRow();
-          return;
-        }
-        if (typeof data === "string" && data !== nextFen) {
+    this.backend
+      ?.move(prevFen, nextFen)
+      .then((storedFen) => {
+        if (storedFen !== nextFen) {
           // Someone moved first; the RPC handed back the current board.
-          this.applyFen(data);
-          this.fetchRow();
+          this.applyFen(storedFen);
+          this.fetchRow().catch(() => undefined);
         }
       })
-      .catch(() => this.fetchRow());
+      .catch(() => this.fetchRow().catch(() => undefined));
   }
 
   private clearSelection() {
@@ -349,44 +359,60 @@ export default class ChessBoard extends Vue {
 
   // ---- seats / reset ------------------------------------------------------
 
-  claim(color: Orientation) {
-    if (!this.online) {
+  async claim(color: Orientation) {
+    if (!this.backend) {
       return;
     }
-    this.client.rpc("claim_chess_color", { p_color: color }).then(() => this.fetchRow());
+    this.errorText = "";
+    try {
+      await this.backend.claim(color);
+      await this.fetchRow();
+    } catch (error) {
+      this.errorText = "Only players in this game can take a colour";
+    }
   }
 
-  leaveSeat() {
-    if (!this.online) {
+  async leaveSeat() {
+    if (!this.backend) {
       return;
     }
-    this.client.rpc("leave_chess_seat").then(() => this.fetchRow());
+    this.errorText = "";
+    try {
+      await this.backend.leave();
+      await this.fetchRow();
+    } catch (error) {
+      this.errorText = "Could not leave the chess seat";
+    }
   }
 
-  confirmReset() {
+  async confirmReset() {
     this.showResetConfirm = false;
     if (!this.online) {
       if (this.chess) {
         this.chess.load(START_FEN);
         this.fen = START_FEN;
-        window.localStorage.setItem(LOCAL_KEY, START_FEN);
+        window.localStorage.setItem(this.localStorageKey, START_FEN);
         this.clearSelection();
       }
       return;
     }
-    this.client
-      .rpc("reset_chess")
-      .then(({ error }: { error: any }) => {
-        if (error) {
-          this.errorText = "Only a seated player can reset.";
-        }
-      })
-      .catch(() => undefined);
+    if (!this.backend) {
+      return;
+    }
+    try {
+      await this.backend.reset();
+      await this.fetchRow();
+    } catch (error) {
+      this.errorText = "Only a seated player can reset";
+    }
   }
 
   // ---- long press (reset) -------------------------------------------------
 
   onPointerDown(e: PointerEvent) {
+    if (this.promotion || this.showResetConfirm) {
+      return;
+    }
     this.pressStart = { x: e.clientX, y: e.clientY };
     this.clearPressTimer();
     this.pressTimer = window.setTimeout(() => {
@@ -444,21 +470,35 @@ export default class ChessBoard extends Vue {
   }
 
   get orientation(): Orientation {
-    return this.myColor ?? "w";
+    // `chess` is an imperative library instance; `fen` is its reactive version token.
+    void this.fen;
+    return boardOrientation(this.online, this.myColor, this.chess?.turn() ?? "w");
   }
 
   get cells(): DisplaySquare[] {
     if (!this.chess) {
       return [];
     }
+    void this.fen;
     return displaySquares(this.chess.board(), this.orientation);
   }
 
+  get boardStyle(): Record<string, string> | undefined {
+    return this.boardSize > 0
+      ? {
+          width: `${this.boardSize}px`,
+          height: `${this.boardSize}px`,
+        }
+      : undefined;
+  }
+
   get inCheck(): boolean {
+    void this.fen;
     return this.chess ? this.chess.in_check() : false;
   }
 
   get gameOver(): boolean {
+    void this.fen;
     return this.chess ? this.chess.game_over() : false;
   }
 
@@ -469,6 +509,7 @@ export default class ChessBoard extends Vue {
     if (!this.chess) {
       return "Loading…";
     }
+    void this.fen;
     if (this.chess.in_checkmate()) {
       return `Checkmate — ${this.chess.turn() === "w" ? "Black" : "White"} wins`;
     }
@@ -505,6 +546,12 @@ export default class ChessBoard extends Vue {
   display: flex;
   flex-direction: column;
   width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 3px;
+  box-sizing: border-box;
+  background: var(--ui-surface, #fff);
 }
 
 .lf-chess-bar {
@@ -516,6 +563,7 @@ export default class ChessBoard extends Vue {
   line-height: 1.1;
   margin-bottom: 4px;
   min-height: 1.2em;
+  flex: 0 0 auto;
 }
 
 .lf-chess-status {
@@ -561,6 +609,10 @@ export default class ChessBoard extends Vue {
   position: relative;
   width: 100%;
   aspect-ratio: 1 / 1;
+  flex: 0 0 auto;
+  align-self: center;
+  max-width: 100%;
+  max-height: 100%;
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);

@@ -19,6 +19,21 @@ export type BoardMatrix = Cell[][];
 export type Orientation = "w" | "b";
 
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
+const LOCAL_CHESS_KEY_PREFIX = "lf-chess-fen:";
+
+// Offline games already have stable ids in `?offline=1&game=...`; use that id so every Gaia game
+// gets an independent pass-and-play chess position. The plain self-contained viewer has no game id,
+// so it deliberately shares one local sandbox instead.
+export function localChessStorageKey(search = ""): string {
+  const gameId = new URLSearchParams(search).get("game");
+  return `${LOCAL_CHESS_KEY_PREFIX}${gameId ? encodeURIComponent(gameId) : "sandbox"}`;
+}
+
+// Online players keep their own colour at the bottom. Offline is pass-and-play on one device, so
+// the board flips after every completed move to put the new side to move at the bottom.
+export function boardOrientation(online: boolean, myColor: Orientation | null, turn: Orientation): Orientation {
+  return online ? myColor ?? "w" : turn;
+}
 
 const GLYPHS: Record<string, string> = {
   k: "♚",

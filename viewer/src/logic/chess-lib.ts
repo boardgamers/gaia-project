@@ -1,10 +1,7 @@
-// chess.js is loaded at runtime from its classic-script CDN bundle rather than npm, for the same
-// reason supabase-js is (see hosted/supabase-client.ts): this repo's webpack 4 can't parse the
-// post-ES2019 syntax modern chess.js releases ship, and 0.13+ is ESM-only. Version 0.12.1 is the
-// last release that is a plain browser global (`var Chess`), so injecting it as a <script> defines
-// window.Chess with no module system involved. Version-pinned so a CDN release can't change it.
-
-const CHESS_JS_URL = "https://cdn.jsdelivr.net/npm/chess.js@0.12.1/chess.js";
+// Version 0.12.1 is intentionally pinned: it is the last small CommonJS build that this viewer's
+// webpack 4 / TypeScript 3 toolchain can consume without transpiling modern package syntax. Keeping
+// it in the viewer bundle (rather than injecting a CDN script) is also what makes the chess board
+// genuinely usable in the app's airplane-mode/offline build.
 
 // Structural typing for the slice of the chess.js API the board uses.
 export interface ChessInstance {
@@ -23,31 +20,14 @@ export interface ChessInstance {
 
 type ChessCtor = new (fen?: string) => ChessInstance;
 
-let ctorPromise: Promise<ChessCtor> | null = null;
+// chess.js 0.12.1 has no bundled TypeScript declaration, so keep its untyped CommonJS edge here and
+// expose only the narrow structural interface above to the rest of the viewer.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const chessModule: any = require("chess.js");
+// Node takes chess.js's CommonJS branch (`{ Chess }`); webpack 4 detects its legacy AMD branch and
+// receives the constructor directly. Normalize both shapes here.
+const Chess: ChessCtor = chessModule.Chess ?? chessModule.default?.Chess ?? chessModule.default ?? chessModule;
 
-// Loads chess.js once (memoised) and resolves its constructor.
-export function loadChess(): Promise<ChessCtor> {
-  if (!ctorPromise) {
-    ctorPromise = new Promise((resolve, reject) => {
-      const existing = (window as any).Chess;
-      if (existing) {
-        resolve(existing as ChessCtor);
-        return;
-      }
-      const script = document.createElement("script");
-      script.src = CHESS_JS_URL;
-      script.async = true;
-      script.onload = () => {
-        const ctor = (window as any).Chess;
-        if (!ctor) {
-          reject(new Error("chess.js loaded but window.Chess is missing"));
-          return;
-        }
-        resolve(ctor as ChessCtor);
-      };
-      script.onerror = () => reject(new Error(`could not load chess.js from ${CHESS_JS_URL}`));
-      document.head.appendChild(script);
-    });
-  }
-  return ctorPromise;
+export function createChess(fen?: string): ChessInstance {
+  return new Chess(fen);
 }

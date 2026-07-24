@@ -1,7 +1,23 @@
 {
-  "version": "5.36.18",
+  "version": "5.37.0",
   "releasedAt": "2026-07-24",
   "entries": [
+    {
+      "version": "5.37.0",
+      "releasedAt": "2026-07-24",
+      "kind": "update",
+      "title": "Per-game sidebar chess",
+      "impact": "",
+      "changes": [
+        "The Lost Fleet booster and federation sidebar now opens a fully playable chess board that keeps each Gaia game's position",
+        "Offline hot-seat chess rotates after every move; hosted players keep their own colour at the bottom and can move only their pieces",
+        "Bundled chess.js for offline play and protected hosted state with per-game database policies and server checks"
+      ],
+      "userChanges": [
+        "The Lost Fleet booster and federation sidebar now opens a fully playable chess board that keeps each Gaia game's position",
+        "Offline hot-seat chess rotates after every move; hosted players keep their own colour at the bottom and can move only their pieces"
+      ]
+    },
     {
       "version": "5.36.18",
       "releasedAt": "2026-07-24",

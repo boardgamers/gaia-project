@@ -436,7 +436,7 @@ describe("Game", () => {
     vm.$destroy();
   });
 
-  it("nests the ship boards directly under the research board (same column, normal document flow) and narrows the buttons row to the map's own width", () => {
+  it("nests the ship boards directly under the research board (same column, normal document flow) and narrows the buttons row to the map's own width", async () => {
     const engine = new Engine(["init 2 lf-ship-board-width"], { lostFleet: true });
     engine.players.forEach((pl, index) => {
       pl.faction = [Faction.Terrans, Faction.Lantids][index];
@@ -467,6 +467,17 @@ describe("Game", () => {
     const poolSidebar = shipsRow.querySelector(".lost-fleet-pool-sidebar");
     expect(poolSidebar, "expected the Pool sidebar beside the ships").to.not.equal(null);
     expect(vm.$el.querySelectorAll(".pool").length, "expected exactly one Pool for a Lost Fleet game").to.equal(1);
+
+    // Switching to chess overlays the same responsive box without unmounting the booster/federation
+    // source tree. Only the chess board's explicit close control switches it back.
+    const poolSource = poolSidebar.querySelector(".pool-clickable");
+    await fireEvent.click(poolSource);
+    expect(poolSource.classList.contains("chess-source-hidden")).to.equal(true);
+    expect(poolSidebar.querySelector(".pool-chess-overlay")).to.not.equal(null);
+    expect(poolSidebar.querySelector(".pool-clickable")).to.equal(poolSource);
+    await fireEvent.click(poolSidebar.querySelector('button[title="Back to boosters"]'));
+    expect(poolSource.classList.contains("chess-source-hidden")).to.equal(false);
+    expect(poolSidebar.querySelector(".pool-chess-overlay")).to.equal(null);
 
     // The buttons column still narrows to the map's own width on desktop - now with nothing sharing
     // its row (the ship boards moved above), so the remaining col-md-5 space is simply left blank.
