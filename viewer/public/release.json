@@ -1,7 +1,19 @@
 {
-  "version": "5.37.5",
+  "version": "5.37.6",
   "releasedAt": "2026-07-24",
   "entries": [
+    {
+      "version": "5.37.6",
+      "releasedAt": "2026-07-24",
+      "kind": "update",
+      "title": "Visible last chess move",
+      "impact": "",
+      "changes": [
+        "The chess board now highlights the previous move's two squares and draws an arrow between them.",
+        "Persists each chess move's origin and destination per Gaia game and offline game so the marker survives reloads and Realtime sync."
+      ],
+      "userChanges": ["The chess board now highlights the previous move's two squares and draws an arrow between them."]
+    },
     {
       "version": "5.37.5",
       "releasedAt": "2026-07-24",

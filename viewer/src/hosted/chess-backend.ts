@@ -78,11 +78,13 @@ export function createSupabaseChessBackend(client: SupabaseClient, gameId: strin
         }
       };
     },
-    async move(previousFen: string, nextFen: string): Promise<string> {
+    async move(previousFen: string, nextFen: string, from: string, to: string): Promise<string> {
       const { data, error } = await client.rpc("move_chess", {
         p_game_id: gameId,
         p_prev_fen: previousFen,
         p_next_fen: nextFen,
+        p_move_from: from,
+        p_move_to: to,
       });
       throwIfError(error);
       return typeof data === "string" ? data : nextFen;

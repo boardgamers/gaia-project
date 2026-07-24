@@ -5,7 +5,7 @@ import { createLocalVue, mount } from "@vue/test-utils";
 import Vuex from "vuex";
 import { ChessBackend, ChessRow } from "../logic/chess-backend";
 import { createChess } from "../logic/chess-lib";
-import { localChessStorageKey, START_FEN } from "../logic/chess";
+import { localChessLastMoveStorageKey, localChessStorageKey, START_FEN } from "../logic/chess";
 import ChessBoard from "./ChessBoard.vue";
 
 const localVue = createLocalVue();
@@ -57,6 +57,12 @@ describe("ChessBoard", () => {
 
     const stored = window.localStorage.getItem(localChessStorageKey(window.location.search)) ?? "";
     expect(stored.split(" ")[1]).to.equal("b");
+    expect(window.localStorage.getItem(localChessLastMoveStorageKey(window.location.search))).to.equal(
+      '{"from":"e2","to":"e4"}'
+    );
+    expect(wrapper.find('[data-square="e2"]').classes()).to.include("last-from");
+    expect(wrapper.find('[data-square="e4"]').classes()).to.include("last-to");
+    expect(wrapper.find(".lf-chess-last-arrow").exists()).to.equal(true);
     expect(wrapper.findAll(".lf-chess-square").at(0).attributes("data-square")).to.equal("h1");
     expect(wrapper.emitted("close")).to.equal(undefined);
     wrapper.destroy();
@@ -65,9 +71,12 @@ describe("ChessBoard", () => {
   it("restores only the current offline Gaia game's chess position", async () => {
     window.history.pushState({}, "", "/?offline=1&game=offline-one");
     window.localStorage.setItem(localChessStorageKey(window.location.search), fenAfterE4());
+    window.localStorage.setItem(localChessLastMoveStorageKey(window.location.search), '{"from":"e2","to":"e4"}');
     const first = mount(ChessBoard as any, { localVue, store: storeWith(null) });
     await flush();
     expect((first.vm as any).fen).to.equal(fenAfterE4());
+    expect(first.find('[data-square="e2"]').classes()).to.include("last-from");
+    expect(first.find('[data-square="e4"]').classes()).to.include("last-to");
     first.destroy();
 
     window.history.pushState({}, "", "/?offline=1&game=offline-two");
@@ -81,6 +90,8 @@ describe("ChessBoard", () => {
     const moves: Array<[string, string]> = [];
     const row: ChessRow = {
       fen: START_FEN,
+      last_move_from: "e7",
+      last_move_to: "e5",
       white_user: "user-white",
       white_user_2: null,
       black_user: "user-black",
@@ -94,8 +105,8 @@ describe("ChessBoard", () => {
       userId: "user-white",
       load: async () => row,
       subscribe: () => () => undefined,
-      move: async (before, after) => {
-        moves.push([before, after]);
+      move: async (before, after, from, to) => {
+        moves.push([before, after, from, to] as any);
         return after;
       },
       reset: async () => undefined,
@@ -104,6 +115,8 @@ describe("ChessBoard", () => {
     const wrapper = mount(ChessBoard as any, { localVue, store: storeWith(backend) });
     await flush();
 
+    expect(wrapper.find('[data-square="e7"]').classes()).to.include("last-from");
+    expect(wrapper.find('[data-square="e5"]').classes()).to.include("last-to");
     await wrapper.find('[data-square="e2"]').trigger("click");
     await wrapper.find('[data-square="e4"]').trigger("click");
     await wrapper.vm.$nextTick();
@@ -111,6 +124,7 @@ describe("ChessBoard", () => {
     expect(moves).to.have.length(1);
     expect(moves[0][0]).to.equal(START_FEN);
     expect(moves[0][1].split(" ")[1]).to.equal("b");
+    expect((moves[0] as any).slice(2)).to.deep.equal(["e2", "e4"]);
     expect(wrapper.findAll(".lf-chess-square").at(0).attributes("data-square")).to.equal("a8");
     wrapper.destroy();
   });
@@ -270,6 +284,8 @@ describe("ChessBoard", () => {
     await wrapper.vm.$nextTick();
     expect((wrapper.vm as any).fen).to.equal(START_FEN);
     expect(window.localStorage.getItem(localChessStorageKey(window.location.search))).to.equal(START_FEN);
+    expect(window.localStorage.getItem(localChessLastMoveStorageKey(window.location.search))).to.equal(null);
+    expect(wrapper.find(".lf-chess-last-arrow").exists()).to.equal(false);
     wrapper.destroy();
   });
 });

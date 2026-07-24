@@ -116,14 +116,20 @@ describe("Supabase chess backend", () => {
     const { client, calls } = makeClient();
     const backend = createSupabaseChessBackend(client, gameId, "white");
 
-    await backend.move("before", "after");
+    await backend.move("before", "after", "e2", "e4");
     await backend.reset();
     await backend.setPanelMode("chess");
 
     expect(calls.rpc).to.deep.equal([
       {
         name: "move_chess",
-        args: { p_game_id: gameId, p_prev_fen: "before", p_next_fen: "after" },
+        args: {
+          p_game_id: gameId,
+          p_prev_fen: "before",
+          p_next_fen: "after",
+          p_move_from: "e2",
+          p_move_to: "e4",
+        },
       },
       { name: "reset_chess", args: { p_game_id: gameId } },
       { name: "set_chess_panel_mode", args: { p_game_id: gameId, p_mode: "chess" } },

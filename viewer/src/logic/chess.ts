@@ -20,6 +20,7 @@ export type Orientation = "w" | "b";
 
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const LOCAL_CHESS_KEY_PREFIX = "lf-chess-fen:";
+const LOCAL_CHESS_LAST_MOVE_KEY_PREFIX = "lf-chess-last-move:";
 const LOCAL_CHESS_PANEL_KEY_PREFIX = "lf-chess-panel:";
 
 function localGameStorageSuffix(search: string): string {
@@ -32,6 +33,10 @@ function localGameStorageSuffix(search: string): string {
 // so it deliberately shares one local sandbox instead.
 export function localChessStorageKey(search = ""): string {
   return `${LOCAL_CHESS_KEY_PREFIX}${localGameStorageSuffix(search)}`;
+}
+
+export function localChessLastMoveStorageKey(search = ""): string {
+  return `${LOCAL_CHESS_LAST_MOVE_KEY_PREFIX}${localGameStorageSuffix(search)}`;
 }
 
 // The selected sidebar face is also local to one offline Gaia game. Hosted games store this on

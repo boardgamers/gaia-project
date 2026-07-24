@@ -37,6 +37,9 @@
         :class="{
           light: cell.light,
           dark: !cell.light,
+          'last-move': cell.square === lastMoveFrom || cell.square === lastMoveTo,
+          'last-from': cell.square === lastMoveFrom,
+          'last-to': cell.square === lastMoveTo,
           selected: cell.square === selected,
           target: legalTargets.indexOf(cell.square) !== -1,
           capture: legalTargets.indexOf(cell.square) !== -1 && cell.piece !== null,
@@ -52,6 +55,8 @@
         >
         <span v-if="legalTargets.indexOf(cell.square) !== -1 && !cell.piece" class="lf-chess-dot" />
       </div>
+
+      <div v-if="lastMoveArrowStyle" class="lf-chess-last-arrow" :style="lastMoveArrowStyle" aria-hidden="true" />
 
       <!-- Promotion picker, shown over the board when a pawn reaches the last rank. -->
       <div v-if="promotion" class="lf-chess-overlay" @click.self="promotion = null">
@@ -96,6 +101,7 @@ import {
   START_FEN,
   boardOrientation,
   displaySquares,
+  localChessLastMoveStorageKey,
   localChessStorageKey,
   pieceGlyph,
   promotionRank,
@@ -128,6 +134,8 @@ export default class ChessBoard extends Vue {
   evaluation: ChessEvaluation | null = null;
   evaluationUnavailable = false;
   evaluationResult: string | null = null;
+  lastMoveFrom: string | null = null;
+  lastMoveTo: string | null = null;
 
   pieceFont = 18;
   boardSize = 0;
@@ -256,6 +264,7 @@ export default class ChessBoard extends Vue {
     if (stored && this.chess && this.chess.load(stored)) {
       this.fen = stored;
     }
+    this.restoreOfflineLastMove();
   }
 
   private async fetchRow() {
@@ -276,6 +285,10 @@ export default class ChessBoard extends Vue {
     return localChessStorageKey(typeof window === "undefined" ? "" : window.location.search);
   }
 
+  private get localLastMoveStorageKey(): string {
+    return localChessLastMoveStorageKey(typeof window === "undefined" ? "" : window.location.search);
+  }
+
   private applyRow(row: ChessRow) {
     this.whiteUser = row.white_user;
     this.whiteUser2 = row.white_user_2 ?? null;
@@ -283,6 +296,7 @@ export default class ChessBoard extends Vue {
     this.blackUser2 = row.black_user_2 ?? null;
     this.whiteNextUser = row.white_next_user ?? null;
     this.blackNextUser = row.black_next_user ?? null;
+    this.setLastMove(row.last_move_from ?? null, row.last_move_to ?? null);
     this.applyFen(row.fen);
   }
 
@@ -378,22 +392,43 @@ export default class ChessBoard extends Vue {
     }
     const nextFen = this.chess.fen();
     this.fen = nextFen;
+    this.setLastMove(from, to);
     this.clearSelection();
 
     if (!this.online) {
       window.localStorage.setItem(this.localStorageKey, nextFen);
+      window.localStorage.setItem(this.localLastMoveStorageKey, JSON.stringify({ from, to }));
       return;
     }
     this.backend
-      ?.move(prevFen, nextFen)
+      ?.move(prevFen, nextFen, from, to)
       .then((storedFen) => {
         if (storedFen !== nextFen) {
           // Someone moved first; the RPC handed back the current board.
+          this.setLastMove(null, null);
           this.applyFen(storedFen);
           this.fetchRow().catch(() => undefined);
         }
       })
-      .catch(() => this.fetchRow().catch(() => undefined));
+      .catch(() => {
+        this.setLastMove(null, null);
+        this.fetchRow().catch(() => undefined);
+      });
+  }
+
+  private setLastMove(from: string | null, to: string | null) {
+    const valid = (square: string | null) => square !== null && /^[a-h][1-8]$/.test(square);
+    this.lastMoveFrom = valid(from) && valid(to) ? from : null;
+    this.lastMoveTo = valid(from) && valid(to) ? to : null;
+  }
+
+  private restoreOfflineLastMove() {
+    try {
+      const stored = JSON.parse(window.localStorage.getItem(this.localLastMoveStorageKey) ?? "null");
+      this.setLastMove(stored?.from ?? null, stored?.to ?? null);
+    } catch {
+      this.setLastMove(null, null);
+    }
   }
 
   private clearSelection() {
@@ -411,6 +446,8 @@ export default class ChessBoard extends Vue {
         this.chess.load(START_FEN);
         this.fen = START_FEN;
         window.localStorage.setItem(this.localStorageKey, START_FEN);
+        window.localStorage.removeItem(this.localLastMoveStorageKey);
+        this.setLastMove(null, null);
         this.clearSelection();
       }
       return;
@@ -545,6 +582,29 @@ export default class ChessBoard extends Vue {
     return this.boardSize > 0 ? { width: `${this.boardSize}px` } : undefined;
   }
 
+  get lastMoveArrowStyle(): Record<string, string> | null {
+    if (!this.lastMoveFrom || !this.lastMoveTo) {
+      return null;
+    }
+    const center = (square: string) => {
+      const file = square.charCodeAt(0) - 97;
+      const rank = Number(square.charAt(1));
+      const column = this.orientation === "w" ? file : 7 - file;
+      const row = this.orientation === "w" ? 8 - rank : rank - 1;
+      return { x: (column + 0.5) * 12.5, y: (row + 0.5) * 12.5 };
+    };
+    const from = center(this.lastMoveFrom);
+    const to = center(this.lastMoveTo);
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    return {
+      left: `${from.x}%`,
+      top: `${from.y}%`,
+      width: `${Math.sqrt(dx * dx + dy * dy)}%`,
+      transform: `translateY(-50%) rotate(${Math.atan2(dy, dx) * (180 / Math.PI)}deg)`,
+    };
+  }
+
   get evaluationWhitePercent(): number {
     return this.evaluation?.whitePercent ?? 50;
   }
@@ -666,6 +726,17 @@ export default class ChessBoard extends Vue {
   &.dark {
     background: #b58863;
   }
+  &.last-move::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: rgba(245, 225, 66, 0.32);
+    pointer-events: none;
+  }
+  &.last-to::before {
+    background: rgba(245, 225, 66, 0.44);
+  }
   &.selected {
     box-shadow: inset 0 0 0 3px #f1c40f;
   }
@@ -675,6 +746,8 @@ export default class ChessBoard extends Vue {
 }
 
 .lf-chess-piece {
+  position: relative;
+  z-index: 3;
   display: grid;
   width: 1em;
   height: 1em;
@@ -704,11 +777,37 @@ export default class ChessBoard extends Vue {
   height: 26%;
   border-radius: 50%;
   background: rgba(46, 204, 113, 0.75);
+  z-index: 3;
   pointer-events: none;
+}
+
+.lf-chess-last-arrow {
+  position: absolute;
+  z-index: 2;
+  height: 3px;
+  transform-origin: 0 50%;
+  border-radius: 2px;
+  background: rgba(36, 125, 65, 0.78);
+  box-shadow: 0 0 1px rgba(255, 255, 255, 0.75);
+  pointer-events: none;
+
+  &::after {
+    content: "";
+    position: absolute;
+    right: -1px;
+    top: 50%;
+    width: 0;
+    height: 0;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: 8px solid rgba(36, 125, 65, 0.86);
+    transform: translate(50%, -50%);
+  }
 }
 
 .lf-chess-overlay {
   position: absolute;
+  z-index: 4;
   inset: 0;
   display: flex;
   align-items: center;
