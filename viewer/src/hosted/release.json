@@ -1,7 +1,21 @@
 {
-  "version": "5.37.6",
+  "version": "5.37.7",
   "releasedAt": "2026-07-24",
   "entries": [
+    {
+      "version": "5.37.7",
+      "releasedAt": "2026-07-24",
+      "kind": "update",
+      "title": "Subtle chess drawer indicator",
+      "impact": "",
+      "changes": [
+        "Booster and federation taps no longer open chess; switch views by swiping or using the two subtle page dots.",
+        "Replaced the corner mode icon with an accessible bottom-centered two-state indicator."
+      ],
+      "userChanges": [
+        "Booster and federation taps no longer open chess; switch views by swiping or using the two subtle page dots."
+      ]
+    },
     {
       "version": "5.37.6",
       "releasedAt": "2026-07-24",

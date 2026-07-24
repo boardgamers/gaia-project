@@ -9,10 +9,9 @@
            claimable (owner request: "for pre round 1 only show the boosters, no feds"). Both leave
            breathing room for their own drop-shadow filter's bleed (see the CSS below) so tokens never
            spill past the box's border. -->
-      <!-- Clicking the compact booster/federation container opens its per-game chess board. The tile
-           tree stays mounted but hidden underneath an exact-size overlay, so neither the sidebar
-           layout nor tile state moves. The corner switch is absolutely positioned, so the affordance
-           is visible in both modes without taking any sidebar space. -->
+      <!-- The tile tree stays mounted underneath the exact-size chess face, so neither the sidebar
+           layout nor tile state moves. Two bottom page dots advertise the swipeable faces without
+           consuming layout space; tapping a tile remains exclusively its own interaction. -->
       <div
         v-if="compact"
         class="pool compact mb-1"
@@ -24,15 +23,10 @@
       >
         <div class="pool-panel-viewport" :class="{ dragging: panelSwipeActive, settling: panelSwipeSettling }">
           <div
-            class="pool-clickable pool-panel-face"
+            class="pool-tiles-face pool-panel-face"
             :class="{ interactive: !showChess && !panelSwipeActive }"
             :style="poolFaceStyle"
             :aria-hidden="showChess ? 'true' : undefined"
-            title="Open the chess board"
-            role="button"
-            :tabindex="showChess ? -1 : 0"
-            @click="openChess"
-            @keydown.enter.space.prevent="openChess"
           >
             <div class="pool-boosters">
               <Booster v-for="booster in boosters" :key="booster" :booster="booster" />
@@ -60,18 +54,21 @@
             :aria-hidden="showChess ? undefined : 'true'"
           />
         </div>
-        <button
-          type="button"
-          class="pool-mode-toggle"
-          :class="{ 'showing-chess': showChess, saving: panelModeSaving }"
-          :title="panelModeToggleLabel"
-          :aria-label="panelModeToggleLabel"
-          :aria-pressed="showChess ? 'true' : 'false'"
-          :disabled="panelModeSaving"
-          @click.stop="togglePanelMode"
-        >
-          <span aria-hidden="true">{{ showChess ? "▦" : "♟︎" }}</span>
-        </button>
+        <div class="pool-mode-dots" role="group" aria-label="Sidebar view">
+          <button
+            v-for="mode in ['pool', 'chess']"
+            :key="mode"
+            type="button"
+            class="pool-mode-dot"
+            :class="{ active: mode === (showChess ? 'chess' : 'pool') }"
+            :data-mode="mode"
+            :aria-label="mode === 'pool' ? 'Show booster and federation tiles' : 'Show shared chess board'"
+            :aria-pressed="mode === (showChess ? 'chess' : 'pool') ? 'true' : 'false'"
+            :disabled="panelModeSaving"
+            @pointerdown.stop
+            @click.stop="selectPanelMode(mode)"
+          />
+        </div>
       </div>
       <!-- Non-compact (base game): the original single interleaved flex-wrap row, unchanged - both
            tile types share the same row, wrapping at their native fixed size. -->
@@ -190,10 +187,6 @@ export default class Pool extends Vue {
     return localChessPanelStorageKey(typeof window === "undefined" ? "" : window.location.search);
   }
 
-  get panelModeToggleLabel(): string {
-    return this.showChess ? "Show booster and federation tiles" : "Show shared chess board";
-  }
-
   get poolFaceStyle(): Record<string, string> {
     return { transform: this.panelFaceTransform("pool") };
   }
@@ -215,18 +208,11 @@ export default class Pool extends Vue {
     return Math.max(1, Math.ceil(this.federations.length / 2));
   }
 
-  openChess() {
-    if (this.showChess) {
+  selectPanelMode(mode: ChessPanelMode) {
+    if (mode === (this.showChess ? "chess" : "pool")) {
       return;
     }
-    this.chessMounted = true;
-    // A tile tooltip opened by the same click should not remain floating over the chess board.
-    this.$root.$emit("bv::hide::tooltip");
-    this.setPanelMode("chess");
-  }
-
-  togglePanelMode() {
-    this.setPanelMode(this.showChess ? "pool" : "chess");
+    this.setPanelMode(mode);
   }
 
   onPanelPointerDown(event: PointerEvent) {
@@ -463,10 +449,6 @@ export default class Pool extends Vue {
 
   flex-wrap: wrap;
 
-  .pool-clickable {
-    cursor: pointer;
-  }
-
   &.compact {
     // Both Booster.vue and FederationTile.vue draw their own drop-shadow via the shared `shadow-1`
     // filter, whose region extends 20% beyond the tile's own bounding box on every side (see
@@ -510,44 +492,47 @@ export default class Pool extends Vue {
       border-radius: 3px;
     }
 
-    .pool-mode-toggle {
+    .pool-mode-dots {
       position: absolute;
       z-index: 3;
-      right: 1px;
-      bottom: 1px;
-      display: grid;
-      place-items: center;
-      width: 21px;
-      height: 21px;
+      left: 50%;
+      bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      height: 6px;
+      margin: 0;
+      padding: 0 4px;
+      border-radius: 5px;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.58);
+    }
+
+    .pool-mode-dot {
+      width: 5px;
+      height: 5px;
       margin: 0;
       padding: 0;
-      border: 1px solid var(--ui-border-strong);
-      border-radius: 2px 0 2px 0;
-      background: var(--ui-surface-muted, #e4e7eb);
-      color: var(--ui-text, #222);
-      box-shadow: none;
+      border: 0;
+      border-radius: 999px;
+      background: var(--ui-text-muted, #78818d);
+      opacity: 0.48;
       cursor: pointer;
-      font: 600 13px/1 "DejaVu Sans", "Segoe UI Symbol", sans-serif;
-      font-variant-emoji: text;
-      opacity: 0.88;
-      transition: background-color 100ms ease, opacity 100ms ease;
+      transition: width 100ms ease, opacity 100ms ease, background-color 100ms ease;
 
-      &:hover,
+      &.active {
+        width: 11px;
+        background: var(--ui-primary, #247b0a);
+        opacity: 0.9;
+      }
+
       &:focus-visible {
-        background: var(--ui-surface, #fff);
-        opacity: 1;
         outline: 2px solid var(--ui-primary);
-        outline-offset: -3px;
+        outline-offset: 2px;
       }
 
-      &.showing-chess {
-        font-family: system-ui, sans-serif;
-        font-size: 12px;
-      }
-
-      &.saving {
+      &:disabled {
         cursor: wait;
-        opacity: 0.75;
       }
     }
 

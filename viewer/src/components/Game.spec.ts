@@ -469,16 +469,21 @@ describe("Game", () => {
     expect(vm.$el.querySelectorAll(".pool").length, "expected exactly one Pool for a Lost Fleet game").to.equal(1);
 
     // Switching to chess slides a second face through the same responsive box without unmounting
-    // the booster/federation source tree. The inset corner switch remains available in both modes.
-    const poolSource = poolSidebar.querySelector(".pool-clickable");
-    const modeToggle = poolSidebar.querySelector(".pool-mode-toggle");
-    expect(modeToggle.getAttribute("aria-label")).to.equal("Show shared chess board");
+    // the booster/federation source tree. Tile taps leave that face alone; the subtle page dots
+    // remain available in both modes.
+    const poolSource = poolSidebar.querySelector(".pool-tiles-face");
     await fireEvent.click(poolSource);
+    expect(poolSource.getAttribute("aria-hidden")).to.equal(null);
+    expect(poolSidebar.querySelector(".pool-chess-overlay")).to.equal(null);
+
+    const chessDot = poolSidebar.querySelector('[data-mode="chess"]');
+    expect(chessDot.getAttribute("aria-label")).to.equal("Show shared chess board");
+    await fireEvent.click(chessDot);
     expect(poolSource.getAttribute("aria-hidden")).to.equal("true");
     expect(poolSidebar.querySelector(".pool-chess-overlay")).to.not.equal(null);
-    expect(poolSidebar.querySelector(".pool-clickable")).to.equal(poolSource);
-    expect(modeToggle.getAttribute("aria-label")).to.equal("Show booster and federation tiles");
-    await fireEvent.click(modeToggle);
+    expect(poolSidebar.querySelector(".pool-tiles-face")).to.equal(poolSource);
+    expect(chessDot.getAttribute("aria-pressed")).to.equal("true");
+    await fireEvent.click(poolSidebar.querySelector('[data-mode="pool"]'));
     expect(poolSource.getAttribute("aria-hidden")).to.equal(null);
     expect(poolSidebar.querySelector(".pool-chess-overlay")?.getAttribute("aria-hidden")).to.equal("true");
 

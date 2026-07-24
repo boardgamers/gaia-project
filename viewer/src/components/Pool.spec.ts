@@ -85,27 +85,30 @@ describe("compact Pool chess mode", () => {
     window.history.pushState({}, "", "/");
   });
 
-  it("shows an inset corner switch and mirrors every shared backend mode change", async () => {
+  it("shows subtle page dots and mirrors every shared backend mode change", async () => {
     const { backend, listeners, writes } = sharedBackend("pool");
     const first = mountPool(backend);
     const second = mountPool(backend);
     await settle();
 
     expect(listeners.size).to.equal(2);
-    const firstSource = first.find(".pool-clickable").element;
-    expect(first.find(".pool-mode-toggle").attributes("aria-label")).to.equal("Show shared chess board");
+    const firstSource = first.find(".pool-tiles-face").element;
+    expect(first.findAll(".pool-mode-dot")).to.have.length(2);
+    expect(first.find('[data-mode="pool"]').attributes("aria-pressed")).to.equal("true");
+    expect(first.find('[data-mode="chess"]').attributes("aria-label")).to.equal("Show shared chess board");
+    expect(first.find(".pool-mode-toggle").exists()).to.equal(false);
     expect(first.find(".pool-chess-overlay").exists()).to.equal(false);
 
-    await first.find(".pool-mode-toggle").trigger("click");
+    await first.find('[data-mode="chess"]').trigger("click");
     await settle();
     expect(writes).to.deep.equal(["chess"]);
     expect(first.find(".pool-chess-overlay").exists()).to.equal(true);
     expect(second.find(".pool-chess-overlay").exists()).to.equal(true);
-    expect(first.find(".pool-clickable").element).to.equal(firstSource);
-    expect(first.find(".pool-clickable").attributes("aria-hidden")).to.equal("true");
-    expect(second.find(".pool-mode-toggle").attributes("aria-label")).to.equal("Show booster and federation tiles");
+    expect(first.find(".pool-tiles-face").element).to.equal(firstSource);
+    expect(first.find(".pool-tiles-face").attributes("aria-hidden")).to.equal("true");
+    expect(second.find('[data-mode="chess"]').attributes("aria-pressed")).to.equal("true");
 
-    await second.find(".pool-mode-toggle").trigger("click");
+    await second.find('[data-mode="pool"]').trigger("click");
     await settle();
     expect(writes).to.deep.equal(["chess", "pool"]);
     expect((first.vm as any).showChess).to.equal(false);
@@ -115,6 +118,20 @@ describe("compact Pool chess mode", () => {
     first.destroy();
     second.destroy();
     expect(listeners.size).to.equal(0);
+  });
+
+  it("does not switch views when a booster or federation tile is tapped", async () => {
+    const { backend, writes } = sharedBackend("pool");
+    const wrapper = mountPool(backend, true);
+    await settle();
+
+    await wrapper.find(".booster-stub").trigger("click");
+    await wrapper.find(".federation-stub").trigger("click");
+    await settle();
+
+    expect(writes).to.deep.equal([]);
+    expect((wrapper.vm as any).showChess).to.equal(false);
+    wrapper.destroy();
   });
 
   it("keeps one extra tile gap below the federation grid instead of a double-height bottom margin", () => {
@@ -128,7 +145,7 @@ describe("compact Pool chess mode", () => {
     const wrapper = mountPool(backend);
     await settle();
 
-    const source = wrapper.find(".pool-clickable").element;
+    const source = wrapper.find(".pool-tiles-face").element;
     dispatchPointer(source, "pointerdown", 130, 30);
     dispatchPointer(source, "pointermove", 70, 32);
     dispatchPointer(source, "pointerup", 70, 32);
@@ -154,7 +171,7 @@ describe("compact Pool chess mode", () => {
     const { backend, writes } = sharedBackend("pool");
     const wrapper = mountPool(backend);
     await settle();
-    const source = wrapper.find(".pool-clickable").element;
+    const source = wrapper.find(".pool-tiles-face").element;
 
     dispatchPointer(source, "pointerdown", 120, 30);
     dispatchPointer(source, "pointermove", 82, 31);
@@ -162,7 +179,7 @@ describe("compact Pool chess mode", () => {
 
     expect(writes).to.deep.equal([]);
     expect((wrapper.vm as any).panelSwipeActive).to.equal(true);
-    expect(wrapper.find(".pool-clickable").attributes("style")).to.include("-38px");
+    expect(wrapper.find(".pool-tiles-face").attributes("style")).to.include("-38px");
     expect(wrapper.find(".pool-chess-overlay").attributes("style")).to.include("100%");
     expect(wrapper.find(".pool-chess-overlay").attributes("style")).to.include("-38px");
 
@@ -176,7 +193,7 @@ describe("compact Pool chess mode", () => {
     const { backend, writes } = sharedBackend("pool");
     const wrapper = mountPool(backend);
     await settle();
-    const source = wrapper.find(".pool-clickable").element;
+    const source = wrapper.find(".pool-tiles-face").element;
 
     dispatchPointer(source, "pointerdown", 100, 20);
     dispatchPointer(source, "pointermove", 75, 22);
