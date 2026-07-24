@@ -1,7 +1,26 @@
 {
-  "version": "5.37.3",
+  "version": "5.37.4",
   "releasedAt": "2026-07-24",
   "entries": [
+    {
+      "version": "5.37.4",
+      "releasedAt": "2026-07-24",
+      "kind": "update",
+      "title": "Cleaner automatic chess panel",
+      "impact": "",
+      "changes": [
+        "Chess now opens as a clean board with automatically randomized colours and no seat controls.",
+        "Swiping now pulls the next panel into view with your finger, and the small switch sits inside the bottom-right corner.",
+        "Fixed the clipped right edge and inconsistent oversized pawn symbols on mobile.",
+        "Assigns 1-to-4 distinct hosted participants atomically per game with stable 1v1, 2v1, or 2v2 relay teams.",
+        "Uses border-box board sizing, text-presentation chess glyphs, and gesture coordination between drawer swipes and long-press reset."
+      ],
+      "userChanges": [
+        "Chess now opens as a clean board with automatically randomized colours and no seat controls.",
+        "Swiping now pulls the next panel into view with your finger, and the small switch sits inside the bottom-right corner.",
+        "Fixed the clipped right edge and inconsistent oversized pawn symbols on mobile."
+      ]
+    },
     {
       "version": "5.37.3",
       "releasedAt": "2026-07-24",

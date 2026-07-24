@@ -25,9 +25,10 @@ describe("chess helpers", () => {
   });
 
   describe("pieceGlyph", () => {
-    it("maps piece types to filled glyphs and empty to ''", () => {
-      expect(pieceGlyph({ type: "k", color: "w" })).to.equal("♚");
-      expect(pieceGlyph({ type: "p", color: "b" })).to.equal("♟");
+    it("uses distinct text-presentation glyphs for White and Black", () => {
+      expect(pieceGlyph({ type: "k", color: "w" })).to.equal("\u2654\uFE0E");
+      expect(pieceGlyph({ type: "p", color: "w" })).to.equal("\u2659\uFE0E");
+      expect(pieceGlyph({ type: "p", color: "b" })).to.equal("\u265F\uFE0E");
       expect(pieceGlyph(null)).to.equal("");
     });
   });

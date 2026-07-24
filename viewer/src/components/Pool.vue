@@ -17,39 +17,48 @@
         v-if="compact"
         class="pool compact mb-1"
         @pointerdown="onPanelPointerDown"
+        @pointermove="onPanelPointerMove"
         @pointerup="onPanelPointerUp"
         @pointercancel="cancelPanelSwipe"
-        @pointerleave="cancelPanelSwipe"
         @click.capture="onPanelClickCapture"
       >
-        <div
-          class="pool-clickable"
-          :class="{ 'chess-source-hidden': showChess }"
-          :aria-hidden="showChess ? 'true' : undefined"
-          title="Open the chess board"
-          role="button"
-          :tabindex="showChess ? -1 : 0"
-          @click="openChess"
-          @keydown.enter.space.prevent="openChess"
-        >
-          <div class="pool-boosters">
-            <Booster v-for="booster in boosters" :key="booster" :booster="booster" />
-          </div>
+        <div class="pool-panel-viewport" :class="{ dragging: panelSwipeActive, settling: panelSwipeSettling }">
           <div
-            v-if="!isPreRound1"
-            class="pool-federations"
-            :style="{ gridTemplateColumns: `repeat(${federationColumns}, 1fr)` }"
+            class="pool-clickable pool-panel-face"
+            :class="{ interactive: !showChess && !panelSwipeActive }"
+            :style="poolFaceStyle"
+            :aria-hidden="showChess ? 'true' : undefined"
+            title="Open the chess board"
+            role="button"
+            :tabindex="showChess ? -1 : 0"
+            @click="openChess"
+            @keydown.enter.space.prevent="openChess"
           >
-            <FederationTile
-              v-for="([tile, numTiles], i) in federations"
-              :key="`${tile}-${i}`"
-              :federation="tile"
-              :numTiles="numTiles"
-              filter="url(#shadow-1)"
-            />
+            <div class="pool-boosters">
+              <Booster v-for="booster in boosters" :key="booster" :booster="booster" />
+            </div>
+            <div
+              v-if="!isPreRound1"
+              class="pool-federations"
+              :style="{ gridTemplateColumns: `repeat(${federationColumns}, 1fr)` }"
+            >
+              <FederationTile
+                v-for="([tile, numTiles], i) in federations"
+                :key="`${tile}-${i}`"
+                :federation="tile"
+                :numTiles="numTiles"
+                filter="url(#shadow-1)"
+              />
+            </div>
           </div>
+          <ChessBoard
+            v-if="chessMounted"
+            class="pool-chess-overlay pool-panel-face"
+            :class="{ interactive: showChess && !panelSwipeActive }"
+            :style="chessFaceStyle"
+            :aria-hidden="showChess ? undefined : 'true'"
+          />
         </div>
-        <ChessBoard v-if="showChess" class="pool-chess-overlay" />
         <button
           type="button"
           class="pool-mode-toggle"
@@ -60,7 +69,7 @@
           :disabled="panelModeSaving"
           @click.stop="togglePanelMode"
         >
-          <span aria-hidden="true">{{ showChess ? "▦" : "♟" }}</span>
+          <span aria-hidden="true">{{ showChess ? "▦" : "♟︎" }}</span>
         </button>
       </div>
       <!-- Non-compact (base game): the original single interleaved flex-wrap row, unchanged - both
@@ -112,9 +121,18 @@ export default class Pool extends Vue {
   // Compact (Lost Fleet sidebar) only: whether the booster/federation container is currently
   // showing the shared chess board instead of its tiles.
   showChess = false;
+  chessMounted = false;
   panelModeSaving = false;
+  panelSwipeActive = false;
+  panelSwipeSettling = false;
+  panelSwipeOffset = 0;
   private chessUnsubscribe: (() => void) | null = null;
-  private panelSwipeStart: { pointerId: number; x: number; y: number } | null = null;
+  private panelSwipeStart: { pointerId: number; x: number; y: number; width: number; element: HTMLElement } | null =
+    null;
+  private panelSwipeDirection: -1 | 0 | 1 = 0;
+  private panelSwipeOriginMode: ChessPanelMode = "pool";
+  private panelSwipeCompletes = false;
+  private panelSwipeSettleTimer: number | null = null;
   private suppressPanelClick = false;
   private suppressPanelClickTimer: number | null = null;
 
@@ -133,6 +151,7 @@ export default class Pool extends Vue {
     const backend = this.chessBackend;
     if (!backend) {
       this.showChess = window.localStorage.getItem(this.localPanelStorageKey) === "chess";
+      this.chessMounted = this.showChess;
       return;
     }
     this.chessUnsubscribe = backend.subscribe((row) => this.applyPanelRow(row));
@@ -153,6 +172,9 @@ export default class Pool extends Vue {
     if (this.suppressPanelClickTimer !== null) {
       window.clearTimeout(this.suppressPanelClickTimer);
     }
+    if (this.panelSwipeSettleTimer !== null) {
+      window.clearTimeout(this.panelSwipeSettleTimer);
+    }
   }
 
   get engine(): Engine {
@@ -169,6 +191,14 @@ export default class Pool extends Vue {
 
   get panelModeToggleLabel(): string {
     return this.showChess ? "Show booster and federation tiles" : "Show shared chess board";
+  }
+
+  get poolFaceStyle(): Record<string, string> {
+    return { transform: this.panelFaceTransform("pool") };
+  }
+
+  get chessFaceStyle(): Record<string, string> {
+    return { transform: this.panelFaceTransform("chess") };
   }
 
   // Federation tokens aren't claimable until round 1 starts, so during setup the sidebar shows only
@@ -188,6 +218,7 @@ export default class Pool extends Vue {
     if (this.showChess) {
       return;
     }
+    this.chessMounted = true;
     // A tile tooltip opened by the same click should not remain floating over the chess board.
     this.$root.$emit("bv::hide::tooltip");
     this.setPanelMode("chess");
@@ -200,6 +231,7 @@ export default class Pool extends Vue {
   onPanelPointerDown(event: PointerEvent) {
     const target = event.target;
     if (
+      this.panelModeSaving ||
       event.isPrimary === false ||
       event.button > 0 ||
       (target instanceof Element && target.closest("button, .lf-chess-overlay"))
@@ -207,11 +239,50 @@ export default class Pool extends Vue {
       this.panelSwipeStart = null;
       return;
     }
+    this.clearPanelSettle();
+    this.chessMounted = true;
+    const element = event.currentTarget as HTMLElement;
+    const width = element.clientWidth || element.getBoundingClientRect().width || 160;
     this.panelSwipeStart = {
       pointerId: event.pointerId,
       x: event.clientX,
       y: event.clientY,
+      width,
+      element,
     };
+    this.panelSwipeOriginMode = this.showChess ? "chess" : "pool";
+    this.panelSwipeDirection = 0;
+    this.panelSwipeOffset = 0;
+    this.panelSwipeActive = false;
+    if (typeof element.setPointerCapture === "function") {
+      element.setPointerCapture(event.pointerId);
+    }
+  }
+
+  onPanelPointerMove(event: PointerEvent) {
+    const start = this.panelSwipeStart;
+    if (!start || start.pointerId !== event.pointerId) {
+      return;
+    }
+    const dx = event.clientX - start.x;
+    const dy = event.clientY - start.y;
+    if (this.panelSwipeDirection === 0) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) < 7) {
+        return;
+      }
+      if (Math.abs(dx) <= Math.abs(dy) * 1.15) {
+        this.releasePanelPointer(start);
+        this.panelSwipeStart = null;
+        return;
+      }
+      this.panelSwipeDirection = dx < 0 ? -1 : 1;
+      this.panelSwipeActive = true;
+      this.$root.$emit("lf::chess-panel-swipe");
+    }
+
+    const directionalOffset = this.panelSwipeDirection < 0 ? Math.min(0, dx) : Math.max(0, dx);
+    this.panelSwipeOffset = Math.max(-start.width, Math.min(start.width, directionalOffset));
+    event.preventDefault();
   }
 
   onPanelPointerUp(event: PointerEvent) {
@@ -220,29 +291,31 @@ export default class Pool extends Vue {
     if (!start || start.pointerId !== event.pointerId) {
       return;
     }
-    const horizontal = Math.abs(event.clientX - start.x);
-    const vertical = Math.abs(event.clientY - start.y);
-    if (horizontal < 44 || horizontal <= vertical * 1.25) {
+    this.releasePanelPointer(start);
+    if (!this.panelSwipeActive || this.panelSwipeDirection === 0) {
+      this.resetPanelSwipe();
       return;
     }
 
     // The browser synthesizes a click immediately after a touch pointerup. Consume that one click
-    // so a pool->chess swipe cannot also activate the pool, and a chess->pool swipe cannot select a
-    // square as the board disappears. Either horizontal direction deliberately toggles the two-face
-    // panel; vertical gestures remain available to scroll the page.
-    this.suppressPanelClick = true;
-    if (this.suppressPanelClickTimer !== null) {
-      window.clearTimeout(this.suppressPanelClickTimer);
-    }
-    this.suppressPanelClickTimer = window.setTimeout(() => {
-      this.suppressPanelClick = false;
-      this.suppressPanelClickTimer = null;
-    }, 0);
-    this.togglePanelMode();
+    // so a drawer gesture cannot also click a tile or chess square after release.
+    this.suppressSyntheticPanelClick();
+    const threshold = Math.min(64, Math.max(36, start.width * 0.22));
+    this.settlePanelSwipe(Math.abs(this.panelSwipeOffset) >= threshold);
   }
 
   cancelPanelSwipe() {
+    const start = this.panelSwipeStart;
     this.panelSwipeStart = null;
+    if (start) {
+      this.releasePanelPointer(start);
+    }
+    if (this.panelSwipeActive) {
+      this.suppressSyntheticPanelClick();
+      this.settlePanelSwipe(false);
+    } else {
+      this.resetPanelSwipe();
+    }
   }
 
   onPanelClickCapture(event: MouseEvent) {
@@ -258,6 +331,79 @@ export default class Pool extends Vue {
     }
   }
 
+  private panelFaceTransform(face: ChessPanelMode): string {
+    if (this.panelSwipeActive) {
+      const current = this.panelSwipeOriginMode;
+      const offset = this.panelSwipeOffset;
+      const base = face === current ? 0 : -this.panelSwipeDirection * 100;
+      return `translate3d(calc(${base}% + ${offset}px), 0, 0)`;
+    }
+    if (this.panelSwipeSettling && this.panelSwipeDirection !== 0) {
+      const current = this.panelSwipeOriginMode;
+      let target = 0;
+      if (this.panelSwipeCompletes) {
+        target = face === current ? this.panelSwipeDirection * 100 : 0;
+      } else {
+        target = face === current ? 0 : -this.panelSwipeDirection * 100;
+      }
+      return `translate3d(${target}%, 0, 0)`;
+    }
+    const visible: ChessPanelMode = this.showChess ? "chess" : "pool";
+    if (face === visible) {
+      return "translate3d(0, 0, 0)";
+    }
+    return face === "pool" ? "translate3d(-100%, 0, 0)" : "translate3d(100%, 0, 0)";
+  }
+
+  private settlePanelSwipe(completes: boolean) {
+    this.panelSwipeActive = false;
+    this.panelSwipeSettling = true;
+    this.panelSwipeCompletes = completes;
+    if (completes) {
+      this.setPanelMode(this.panelSwipeOriginMode === "pool" ? "chess" : "pool");
+    }
+    this.panelSwipeSettleTimer = window.setTimeout(() => {
+      this.panelSwipeSettleTimer = null;
+      this.resetPanelSwipe();
+    }, 180);
+  }
+
+  private resetPanelSwipe() {
+    this.panelSwipeActive = false;
+    this.panelSwipeSettling = false;
+    this.panelSwipeCompletes = false;
+    this.panelSwipeOffset = 0;
+    this.panelSwipeDirection = 0;
+  }
+
+  private clearPanelSettle() {
+    if (this.panelSwipeSettleTimer !== null) {
+      window.clearTimeout(this.panelSwipeSettleTimer);
+      this.panelSwipeSettleTimer = null;
+    }
+    this.resetPanelSwipe();
+  }
+
+  private releasePanelPointer(start: { pointerId: number; element: HTMLElement }) {
+    if (
+      typeof start.element.releasePointerCapture === "function" &&
+      (!start.element.hasPointerCapture || start.element.hasPointerCapture(start.pointerId))
+    ) {
+      start.element.releasePointerCapture(start.pointerId);
+    }
+  }
+
+  private suppressSyntheticPanelClick() {
+    this.suppressPanelClick = true;
+    if (this.suppressPanelClickTimer !== null) {
+      window.clearTimeout(this.suppressPanelClickTimer);
+    }
+    this.suppressPanelClickTimer = window.setTimeout(() => {
+      this.suppressPanelClick = false;
+      this.suppressPanelClickTimer = null;
+    }, 0);
+  }
+
   private applyPanelRow(row: ChessRow) {
     this.applyPanelMode(row.panel_mode);
   }
@@ -265,6 +411,9 @@ export default class Pool extends Vue {
   private applyPanelMode(mode: ChessPanelMode) {
     if (mode === "chess" && !this.showChess) {
       this.$root.$emit("bv::hide::tooltip");
+    }
+    if (mode === "chess") {
+      this.chessMounted = true;
     }
     this.showChess = mode === "chess";
   }
@@ -329,10 +478,27 @@ export default class Pool extends Vue {
     $gap: 6px;
     padding: $gap;
     touch-action: pan-y;
+    overflow: hidden;
 
-    .chess-source-hidden {
-      visibility: hidden;
+    .pool-panel-viewport {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+
+      &.settling .pool-panel-face {
+        transition: transform 180ms ease-out;
+      }
+    }
+
+    .pool-panel-face {
+      width: 100%;
+      will-change: transform;
+      backface-visibility: hidden;
       pointer-events: none;
+
+      &.interactive {
+        pointer-events: auto;
+      }
     }
 
     .pool-chess-overlay {
@@ -346,35 +512,36 @@ export default class Pool extends Vue {
     .pool-mode-toggle {
       position: absolute;
       z-index: 3;
-      top: -7px;
-      // Straddle the top border without extending the narrow mobile sidebar past the viewport.
-      right: -2px;
+      right: 1px;
+      bottom: 1px;
       display: grid;
       place-items: center;
-      width: 25px;
-      height: 25px;
+      width: 21px;
+      height: 21px;
       margin: 0;
       padding: 0;
-      border: 2px solid var(--ui-surface);
-      border-radius: 50%;
-      background: var(--ui-primary);
-      color: var(--ui-primary-text);
-      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--ui-border-strong);
+      border-radius: 2px 0 2px 0;
+      background: var(--ui-surface-muted, #e4e7eb);
+      color: var(--ui-text, #222);
+      box-shadow: none;
       cursor: pointer;
-      font: 700 16px/1 Georgia, serif;
-      transition: transform 100ms ease, background-color 100ms ease;
+      font: 600 13px/1 "DejaVu Sans", "Segoe UI Symbol", sans-serif;
+      font-variant-emoji: text;
+      opacity: 0.88;
+      transition: background-color 100ms ease, opacity 100ms ease;
 
       &:hover,
       &:focus-visible {
-        background: var(--ui-primary-hover);
-        transform: scale(1.08);
-        outline: 2px solid var(--ui-primary-text);
-        outline-offset: -4px;
+        background: var(--ui-surface, #fff);
+        opacity: 1;
+        outline: 2px solid var(--ui-primary);
+        outline-offset: -3px;
       }
 
       &.showing-chess {
         font-family: system-ui, sans-serif;
-        font-size: 15px;
+        font-size: 12px;
       }
 
       &.saving {

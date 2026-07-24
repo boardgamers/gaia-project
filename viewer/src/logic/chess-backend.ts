@@ -1,5 +1,3 @@
-import { Orientation } from "./chess";
-
 export type ChessPanelMode = "pool" | "chess";
 
 export interface ChessRow {
@@ -25,8 +23,6 @@ export interface ChessBackend {
   readonly userId: string;
   load(): Promise<ChessRow | null>;
   subscribe(onRow: (row: ChessRow) => void): () => void;
-  claim(color: Orientation): Promise<void>;
-  leave(): Promise<void>;
   move(previousFen: string, nextFen: string): Promise<string>;
   reset(): Promise<void>;
   setPanelMode(mode: ChessPanelMode): Promise<void>;

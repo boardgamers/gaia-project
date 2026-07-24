@@ -1,63 +1,23 @@
 <template>
   <div class="lf-chess" ref="root" @click.stop>
-    <div class="lf-chess-header" ref="header">
-      <!-- Slim status/controls bar: whose turn / result on the left, seat controls on the right.
-           Pool.vue owns the always-visible corner mode switch so this bar does not spend board space
-           on a second close button. -->
-      <div class="lf-chess-bar">
-        <span class="lf-chess-status" :class="{ warn: inCheck || gameOver }">{{ statusText }}</span>
-        <span class="lf-chess-controls">
-          <template v-if="online">
-            <button
-              v-if="canJoinWhite"
-              type="button"
-              class="lf-chess-btn"
-              :title="whiteTeamSize === 0 ? 'Play as White' : 'Join the White relay team'"
-              @click="claim('w')"
-            >
-              {{ whiteTeamSize === 0 ? "Play ♔" : "Join ♔" }}
-            </button>
-            <button
-              v-if="canJoinBlack"
-              type="button"
-              class="lf-chess-btn dark"
-              :title="blackTeamSize === 0 ? 'Play as Black' : 'Join the Black relay team'"
-              @click="claim('b')"
-            >
-              {{ blackTeamSize === 0 ? "Play ♚" : "Join ♚" }}
-            </button>
-            <button
-              v-if="myColor !== null"
-              type="button"
-              class="lf-chess-btn"
-              title="Leave your seat"
-              @click="leaveSeat"
-            >
-              Leave
-            </button>
-          </template>
-        </span>
-      </div>
-
-      <!-- A horizontal meter uses the panel's spare height instead of taking width from the board.
-           The engine score stays White-relative regardless of the local board orientation. -->
-      <div
-        class="lf-chess-eval"
-        :class="{ pending: evaluation === null && !evaluationUnavailable }"
-        role="meter"
-        aria-valuemin="0"
-        aria-valuemax="100"
-        :aria-valuenow="Math.round(evaluationWhitePercent)"
-        :aria-valuetext="evaluationAriaText"
-        :title="evaluationAriaText"
-      >
-        <span class="lf-chess-eval-white" :style="{ width: evaluationWhitePercent + '%' }" />
-        <span class="lf-chess-eval-black" />
-        <span class="lf-chess-eval-score">{{ evaluationScore }}</span>
-      </div>
+    <!-- The analysis meter is deliberately text-free and reads as the board's thin top edge. -->
+    <div
+      class="lf-chess-eval"
+      ref="meter"
+      :class="{ pending: evaluation === null && !evaluationUnavailable }"
+      :style="meterStyle"
+      role="meter"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      :aria-valuenow="Math.round(evaluationWhitePercent)"
+      :aria-valuetext="evaluationAriaText"
+      :title="evaluationAriaText"
+    >
+      <span class="lf-chess-eval-white" :style="{ width: evaluationWhitePercent + '%' }" />
+      <span class="lf-chess-eval-black" />
     </div>
 
-    <!-- The board fills the container width exactly and stays square. -->
+    <!-- The board is border-box sized so all eight files remain inside the narrow sidebar. -->
     <div
       class="lf-chess-board"
       ref="board"
@@ -86,7 +46,7 @@
         <span
           v-if="cell.piece"
           class="lf-chess-piece"
-          :class="cell.piece.color === 'w' ? 'white' : 'black'"
+          :class="[cell.piece.color === 'w' ? 'white' : 'black', `piece-${cell.piece.type}`]"
           :style="{ fontSize: pieceFont + 'px' }"
           >{{ glyph(cell.piece) }}</span
         >
@@ -126,7 +86,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Watch } from "vue-property-decorator";
-import { ChessEvaluation, StockfishEvaluator, evaluationDescription, evaluationLabel } from "../logic/chess-evaluation";
+import { ChessEvaluation, StockfishEvaluator, evaluationDescription } from "../logic/chess-evaluation";
 import { ChessInstance, createChess } from "../logic/chess-lib";
 import { ChessBackend, ChessRow } from "../logic/chess-backend";
 import {
@@ -165,7 +125,6 @@ export default class ChessBoard extends Vue {
   legalTargets: string[] = [];
   promotion: { from: string; to: string; color: Orientation } | null = null;
   showResetConfirm = false;
-  errorText = "";
   evaluation: ChessEvaluation | null = null;
   evaluationUnavailable = false;
   evaluationResult: string | null = null;
@@ -180,6 +139,7 @@ export default class ChessBoard extends Vue {
 
   async mounted() {
     this.chess = createChess(START_FEN);
+    this.$root.$on("lf::chess-panel-swipe", this.cancelForPanelSwipe);
     this.online = this.backend !== null;
     this.myUserId = this.backend?.userId ?? null;
     this.$nextTick(() => this.observeSize());
@@ -192,6 +152,7 @@ export default class ChessBoard extends Vue {
   }
 
   beforeDestroy() {
+    this.$root.$off("lf::chess-panel-swipe", this.cancelForPanelSwipe);
     if (this.unsubscribe) {
       this.unsubscribe();
     }
@@ -214,13 +175,14 @@ export default class ChessBoard extends Vue {
       return;
     }
     const measure = () => {
-      const header = this.$refs.header as HTMLElement | undefined;
+      const meter = this.$refs.meter as HTMLElement | undefined;
       const style = window.getComputedStyle(root);
       const horizontalPadding = parseFloat(style.paddingLeft || "0") + parseFloat(style.paddingRight || "0");
       const verticalPadding = parseFloat(style.paddingTop || "0") + parseFloat(style.paddingBottom || "0");
       const availableWidth = Math.max(0, root.clientWidth - horizontalPadding);
-      const availableHeight = Math.max(0, root.clientHeight - verticalPadding - (header?.offsetHeight ?? 0) - 4);
-      const size = Math.floor(Math.min(availableWidth, availableHeight || availableWidth));
+      const measuredHeight = root.clientHeight - verticalPadding - (meter?.offsetHeight ?? 0) - 2;
+      const availableHeight = measuredHeight > 0 ? measuredHeight : availableWidth;
+      const size = Math.max(0, Math.floor(Math.min(availableWidth, availableHeight)));
       this.boardSize = size;
       this.pieceFont = Math.max(10, (size / 8) * 0.74);
     };
@@ -282,7 +244,7 @@ export default class ChessBoard extends Vue {
     try {
       await this.fetchRow();
     } catch (e) {
-      this.errorText = "Chess connection unavailable";
+      // Keep the compact face uncluttered if the hosted chess service is temporarily unavailable.
     }
   }
 
@@ -315,7 +277,6 @@ export default class ChessBoard extends Vue {
   }
 
   private applyRow(row: ChessRow) {
-    this.errorText = "";
     this.whiteUser = row.white_user;
     this.whiteUser2 = row.white_user_2 ?? null;
     this.blackUser = row.black_user;
@@ -441,33 +402,7 @@ export default class ChessBoard extends Vue {
     this.legalTargets = [];
   }
 
-  // ---- seats / reset ------------------------------------------------------
-
-  async claim(color: Orientation) {
-    if (!this.backend) {
-      return;
-    }
-    this.errorText = "";
-    try {
-      await this.backend.claim(color);
-      await this.fetchRow();
-    } catch (error) {
-      this.errorText = "That chess team is unavailable";
-    }
-  }
-
-  async leaveSeat() {
-    if (!this.backend) {
-      return;
-    }
-    this.errorText = "";
-    try {
-      await this.backend.leave();
-      await this.fetchRow();
-    } catch (error) {
-      this.errorText = "Could not leave the chess seat";
-    }
-  }
+  // ---- reset --------------------------------------------------------------
 
   async confirmReset() {
     this.showResetConfirm = false;
@@ -487,7 +422,7 @@ export default class ChessBoard extends Vue {
       await this.backend.reset();
       await this.fetchRow();
     } catch (error) {
-      this.errorText = "Only a seated player can reset";
+      // The board stays usable/read-only without adding an error banner above the compact board.
     }
   }
 
@@ -526,6 +461,11 @@ export default class ChessBoard extends Vue {
     this.clearPressTimer();
   }
 
+  private cancelForPanelSwipe() {
+    this.cancelLongPress();
+    this.showResetConfirm = false;
+  }
+
   private clearPressTimer() {
     if (this.pressTimer !== null) {
       window.clearTimeout(this.pressTimer);
@@ -535,49 +475,20 @@ export default class ChessBoard extends Vue {
 
   // ---- derived ------------------------------------------------------------
 
+  get isWhiteMember(): boolean {
+    return !!this.myUserId && (this.whiteUser === this.myUserId || this.whiteUser2 === this.myUserId);
+  }
+
+  get isBlackMember(): boolean {
+    return !!this.myUserId && (this.blackUser === this.myUserId || this.blackUser2 === this.myUserId);
+  }
+
   get myColor(): Orientation | null {
-    if (this.myUserId && (this.whiteUser === this.myUserId || this.whiteUser2 === this.myUserId)) {
-      return "w";
+    if (this.isWhiteMember && this.isBlackMember) {
+      void this.fen;
+      return this.chess?.turn() ?? "w";
     }
-    if (this.myUserId && (this.blackUser === this.myUserId || this.blackUser2 === this.myUserId)) {
-      return "b";
-    }
-    return null;
-  }
-
-  get gaiaPlayerCount(): number {
-    const count = this.$store.state.data?.players?.length;
-    return typeof count === "number" && count >= 2 && count <= 4 ? count : 2;
-  }
-
-  get teamCapacity(): number {
-    return this.gaiaPlayerCount >= 3 ? 2 : 1;
-  }
-
-  get whiteTeamSize(): number {
-    return Number(this.whiteUser !== null) + Number(this.whiteUser2 !== null);
-  }
-
-  get blackTeamSize(): number {
-    return Number(this.blackUser !== null) + Number(this.blackUser2 !== null);
-  }
-
-  get canJoinWhite(): boolean {
-    return (
-      this.online &&
-      this.myColor === null &&
-      this.whiteTeamSize < this.teamCapacity &&
-      this.whiteTeamSize + this.blackTeamSize < this.gaiaPlayerCount
-    );
-  }
-
-  get canJoinBlack(): boolean {
-    return (
-      this.online &&
-      this.myColor === null &&
-      this.blackTeamSize < this.teamCapacity &&
-      this.whiteTeamSize + this.blackTeamSize < this.gaiaPlayerCount
-    );
+    return this.isWhiteMember ? "w" : this.isBlackMember ? "b" : null;
   }
 
   get whiteMover(): string | null {
@@ -589,10 +500,13 @@ export default class ChessBoard extends Vue {
   }
 
   get isDesignatedMover(): boolean {
-    if (!this.myUserId || !this.myColor) {
+    if (!this.myUserId || !this.chess) {
       return false;
     }
-    return (this.myColor === "w" ? this.whiteMover : this.blackMover) === this.myUserId;
+    void this.fen;
+    const turn = this.chess.turn() as Orientation;
+    const isMember = turn === "w" ? this.isWhiteMember : this.isBlackMember;
+    return isMember && (turn === "w" ? this.whiteMover : this.blackMover) === this.myUserId;
   }
 
   // Which colour the local user is allowed to move: their designated relay turn online, or either
@@ -601,7 +515,7 @@ export default class ChessBoard extends Vue {
     if (!this.online) {
       return this.chess ? this.chess.turn() : "w";
     }
-    return this.isDesignatedMover ? this.myColor : null;
+    return this.isDesignatedMover && this.chess ? (this.chess.turn() as Orientation) : null;
   }
 
   get orientation(): Orientation {
@@ -627,18 +541,12 @@ export default class ChessBoard extends Vue {
       : undefined;
   }
 
-  get evaluationWhitePercent(): number {
-    return this.evaluation?.whitePercent ?? 50;
+  get meterStyle(): Record<string, string> | undefined {
+    return this.boardSize > 0 ? { width: `${this.boardSize}px` } : undefined;
   }
 
-  get evaluationScore(): string {
-    if (this.evaluationResult) {
-      return this.evaluationResult;
-    }
-    if (this.evaluationUnavailable) {
-      return "—";
-    }
-    return evaluationLabel(this.evaluation);
+  get evaluationWhitePercent(): number {
+    return this.evaluation?.whitePercent ?? 50;
   }
 
   get evaluationAriaText(): string {
@@ -648,44 +556,9 @@ export default class ChessBoard extends Vue {
     return evaluationDescription(this.evaluation, this.evaluationUnavailable);
   }
 
-  get inCheck(): boolean {
-    void this.fen;
-    return this.chess ? this.chess.in_check() : false;
-  }
-
   get gameOver(): boolean {
     void this.fen;
     return this.chess ? this.chess.game_over() : false;
-  }
-
-  get statusText(): string {
-    if (this.errorText) {
-      return this.errorText;
-    }
-    if (!this.chess) {
-      return "Loading…";
-    }
-    void this.fen;
-    if (this.chess.in_checkmate()) {
-      return `Checkmate — ${this.chess.turn() === "w" ? "Black" : "White"} wins`;
-    }
-    if (this.chess.in_stalemate()) {
-      return "Stalemate — draw";
-    }
-    if (this.chess.in_draw()) {
-      return "Draw";
-    }
-    const toMove = this.chess.turn() === "w" ? "White" : "Black";
-    const check = this.chess.in_check() ? " (check)" : "";
-    if (!this.online) {
-      return `Local board — ${toMove} to move${check}`;
-    }
-    if (this.myColor) {
-      const mine = this.myColor === this.chess.turn();
-      const turnStatus = mine ? (this.isDesignatedMover ? "your move" : "teammate's move") : toMove + " to move";
-      return `You: ${this.myColor === "w" ? "White" : "Black"} — ${turnStatus}${check}`;
-    }
-    return `Spectating — ${toMove} to move${check}`;
   }
 
   glyph(piece: Cell): string {
@@ -706,45 +579,10 @@ export default class ChessBoard extends Vue {
   height: 100%;
   min-width: 0;
   min-height: 0;
-  padding: 3px;
+  padding: 2px;
   box-sizing: border-box;
-  background: var(--ui-surface, #fff);
-}
-
-.lf-chess-header {
-  flex: 0 0 auto;
-  min-width: 0;
-  margin-bottom: 4px;
-}
-
-.lf-chess-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.25rem;
-  font-size: 0.7rem;
-  line-height: 1.1;
-  margin-bottom: 3px;
-  min-height: 1.2em;
-  flex: 0 0 auto;
-}
-
-.lf-chess-status {
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--ui-text, inherit);
-
-  &.warn {
-    color: var(--highlighted, #c0392b);
-    font-weight: bold;
-  }
-}
-
-.lf-chess-controls {
-  display: flex;
-  gap: 3px;
-  flex-shrink: 0;
+  background: var(--ui-surface, #fff);
 }
 
 .lf-chess-btn {
@@ -757,10 +595,6 @@ export default class ChessBoard extends Vue {
   line-height: 1.4;
   cursor: pointer;
 
-  &.dark {
-    background: #333;
-    color: #fff;
-  }
   &.danger {
     background: #c0392b;
     color: #fff;
@@ -772,11 +606,14 @@ export default class ChessBoard extends Vue {
   position: relative;
   display: flex;
   width: 100%;
-  height: 11px;
+  height: 6px;
+  flex: 0 0 6px;
+  align-self: center;
+  margin-bottom: 2px;
   box-sizing: border-box;
   overflow: hidden;
   border: 1px solid var(--ui-border-strong, #555);
-  border-radius: 2px;
+  border-radius: 2px 2px 0 0;
   background: #252525;
 
   &.pending {
@@ -797,24 +634,6 @@ export default class ChessBoard extends Vue {
   background: #252525;
 }
 
-.lf-chess-eval-score {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  min-width: 2.2rem;
-  padding: 0 3px;
-  transform: translate(-50%, -50%);
-  border-radius: 2px;
-  background: rgba(80, 80, 80, 0.92);
-  color: #fff;
-  font-size: 0.58rem;
-  font-weight: bold;
-  line-height: 9px;
-  text-align: center;
-  text-shadow: 0 1px 1px #000;
-  pointer-events: none;
-}
-
 .lf-chess-board {
   position: relative;
   width: 100%;
@@ -823,6 +642,7 @@ export default class ChessBoard extends Vue {
   align-self: center;
   max-width: 100%;
   max-height: 100%;
+  box-sizing: border-box;
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
@@ -855,8 +675,18 @@ export default class ChessBoard extends Vue {
 }
 
 .lf-chess-piece {
+  display: grid;
+  width: 1em;
+  height: 1em;
+  place-items: center;
+  font-family: "DejaVu Sans", "Noto Sans Symbols 2", "Segoe UI Symbol", "Apple Symbols", sans-serif;
+  font-variant-emoji: text;
   line-height: 1;
   pointer-events: none;
+
+  &.piece-p {
+    transform: scale(0.8);
+  }
 
   &.white {
     color: #fafafa;

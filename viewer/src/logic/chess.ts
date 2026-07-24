@@ -46,21 +46,33 @@ export function boardOrientation(online: boolean, myColor: Orientation | null, t
   return online ? myColor ?? "w" : turn;
 }
 
-const GLYPHS: Record<string, string> = {
-  k: "♚",
-  q: "♛",
-  r: "♜",
-  b: "♝",
-  n: "♞",
-  p: "♟",
+const GLYPHS: Record<string, Record<string, string>> = {
+  w: {
+    k: "♔\uFE0E",
+    q: "♕\uFE0E",
+    r: "♖\uFE0E",
+    b: "♗\uFE0E",
+    n: "♘\uFE0E",
+    p: "♙\uFE0E",
+  },
+  b: {
+    k: "♚\uFE0E",
+    q: "♛\uFE0E",
+    r: "♜\uFE0E",
+    b: "♝\uFE0E",
+    n: "♞\uFE0E",
+    p: "♟\uFE0E",
+  },
 };
 
-// The filled unicode glyph for a piece (colour is applied via CSS, not the glyph itself).
+// Use the actual White/Black Unicode sets and force text presentation (U+FE0E). In particular,
+// mobile Safari otherwise renders the filled pawn as an emoji-like black symbol even when CSS says
+// the White pieces should be white, which made a single rank appear to contain both colours.
 export function pieceGlyph(piece: Cell): string {
   if (!piece) {
     return "";
   }
-  return GLYPHS[piece.type] ?? "";
+  return GLYPHS[piece.color]?.[piece.type] ?? "";
 }
 
 // One square in screen order, with its algebraic name so clicks map straight back to chess.js.

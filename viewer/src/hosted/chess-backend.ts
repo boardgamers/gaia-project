@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/camelcase */
 // Supabase row/RPC wire names are snake_case.
 import { ChessBackend, ChessPanelMode, ChessRow } from "../logic/chess-backend";
-import { Orientation } from "../logic/chess";
 import { SupabaseClient } from "./supabase-client";
 
 function throwIfError(error: any): void {
@@ -15,13 +14,11 @@ export function createSupabaseChessBackend(client: SupabaseClient, gameId: strin
   let channel: any = null;
 
   const load = async (): Promise<ChessRow | null> => {
-    const { data, error } = await client
-      .from("chess_board")
-      .select("fen,white_user,white_user_2,black_user,black_user_2,white_next_user,black_next_user,panel_mode")
-      .eq("game_id", gameId)
-      .maybeSingle();
+    const { data, error } = await client.rpc("ensure_chess_assignment", { p_game_id: gameId });
     throwIfError(error);
-    return data ?? null;
+    // PostgREST returns a composite row as an object. Keep the array fallback for older gateways
+    // that expose a one-row composite result as a singleton array.
+    return (Array.isArray(data) ? data[0] : data) ?? null;
   };
 
   const emit = (row: ChessRow) => {
@@ -80,17 +77,6 @@ export function createSupabaseChessBackend(client: SupabaseClient, gameId: strin
           client.removeChannel(unusedChannel);
         }
       };
-    },
-    async claim(color: Orientation): Promise<void> {
-      const { error } = await client.rpc("claim_chess_color", {
-        p_game_id: gameId,
-        p_color: color,
-      });
-      throwIfError(error);
-    },
-    async leave(): Promise<void> {
-      const { error } = await client.rpc("leave_chess_seat", { p_game_id: gameId });
-      throwIfError(error);
     },
     async move(previousFen: string, nextFen: string): Promise<string> {
       const { data, error } = await client.rpc("move_chess", {

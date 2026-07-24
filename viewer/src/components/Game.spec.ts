@@ -468,19 +468,19 @@ describe("Game", () => {
     expect(poolSidebar, "expected the Pool sidebar beside the ships").to.not.equal(null);
     expect(vm.$el.querySelectorAll(".pool").length, "expected exactly one Pool for a Lost Fleet game").to.equal(1);
 
-    // Switching to chess overlays the same responsive box without unmounting the booster/federation
-    // source tree. A corner switch remains visible in both modes without taking layout space.
+    // Switching to chess slides a second face through the same responsive box without unmounting
+    // the booster/federation source tree. The inset corner switch remains available in both modes.
     const poolSource = poolSidebar.querySelector(".pool-clickable");
     const modeToggle = poolSidebar.querySelector(".pool-mode-toggle");
     expect(modeToggle.getAttribute("aria-label")).to.equal("Show shared chess board");
     await fireEvent.click(poolSource);
-    expect(poolSource.classList.contains("chess-source-hidden")).to.equal(true);
+    expect(poolSource.getAttribute("aria-hidden")).to.equal("true");
     expect(poolSidebar.querySelector(".pool-chess-overlay")).to.not.equal(null);
     expect(poolSidebar.querySelector(".pool-clickable")).to.equal(poolSource);
     expect(modeToggle.getAttribute("aria-label")).to.equal("Show booster and federation tiles");
     await fireEvent.click(modeToggle);
-    expect(poolSource.classList.contains("chess-source-hidden")).to.equal(false);
-    expect(poolSidebar.querySelector(".pool-chess-overlay")).to.equal(null);
+    expect(poolSource.getAttribute("aria-hidden")).to.equal(null);
+    expect(poolSidebar.querySelector(".pool-chess-overlay")?.getAttribute("aria-hidden")).to.equal("true");
 
     // The buttons column still narrows to the map's own width on desktop - now with nothing sharing
     // its row (the ship boards moved above), so the remaining col-md-5 space is simply left blank.

@@ -32,8 +32,6 @@ function sharedBackend(initialMode: ChessPanelMode) {
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
-    claim: async () => undefined,
-    leave: async () => undefined,
     move: async (_before, after) => after,
     reset: async () => undefined,
     async setPanelMode(mode) {
@@ -85,7 +83,7 @@ describe("compact Pool chess mode", () => {
     window.history.pushState({}, "", "/");
   });
 
-  it("shows a no-layout-space corner switch and mirrors every shared backend mode change", async () => {
+  it("shows an inset corner switch and mirrors every shared backend mode change", async () => {
     const { backend, listeners, writes } = sharedBackend("pool");
     const first = mountPool(backend);
     const second = mountPool(backend);
@@ -102,14 +100,15 @@ describe("compact Pool chess mode", () => {
     expect(first.find(".pool-chess-overlay").exists()).to.equal(true);
     expect(second.find(".pool-chess-overlay").exists()).to.equal(true);
     expect(first.find(".pool-clickable").element).to.equal(firstSource);
-    expect(first.find(".pool-clickable").classes()).to.include("chess-source-hidden");
+    expect(first.find(".pool-clickable").attributes("aria-hidden")).to.equal("true");
     expect(second.find(".pool-mode-toggle").attributes("aria-label")).to.equal("Show booster and federation tiles");
 
     await second.find(".pool-mode-toggle").trigger("click");
     await settle();
     expect(writes).to.deep.equal(["chess", "pool"]);
-    expect(first.find(".pool-chess-overlay").exists()).to.equal(false);
-    expect(second.find(".pool-chess-overlay").exists()).to.equal(false);
+    expect((first.vm as any).showChess).to.equal(false);
+    expect((second.vm as any).showChess).to.equal(false);
+    expect(first.find(".pool-chess-overlay").attributes("aria-hidden")).to.equal("true");
 
     first.destroy();
     second.destroy();
@@ -123,6 +122,7 @@ describe("compact Pool chess mode", () => {
 
     const source = wrapper.find(".pool-clickable").element;
     dispatchPointer(source, "pointerdown", 130, 30);
+    dispatchPointer(source, "pointermove", 70, 32);
     dispatchPointer(source, "pointerup", 70, 32);
     source.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
     await settle();
@@ -132,12 +132,35 @@ describe("compact Pool chess mode", () => {
 
     const board = wrapper.find(".chess-board-stub").element;
     dispatchPointer(board, "pointerdown", 40, 30, 2);
+    dispatchPointer(board, "pointermove", 105, 28, 2);
     dispatchPointer(board, "pointerup", 105, 28, 2);
     board.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
     await settle();
 
     expect(writes).to.deep.equal(["chess", "pool"]);
-    expect(wrapper.find(".pool-chess-overlay").exists()).to.equal(false);
+    expect((wrapper.vm as any).showChess).to.equal(false);
+    wrapper.destroy();
+  });
+
+  it("moves both drawer faces with the pointer before committing shared state", async () => {
+    const { backend, writes } = sharedBackend("pool");
+    const wrapper = mountPool(backend);
+    await settle();
+    const source = wrapper.find(".pool-clickable").element;
+
+    dispatchPointer(source, "pointerdown", 120, 30);
+    dispatchPointer(source, "pointermove", 82, 31);
+    await wrapper.vm.$nextTick();
+
+    expect(writes).to.deep.equal([]);
+    expect((wrapper.vm as any).panelSwipeActive).to.equal(true);
+    expect(wrapper.find(".pool-clickable").attributes("style")).to.include("-38px");
+    expect(wrapper.find(".pool-chess-overlay").attributes("style")).to.include("100%");
+    expect(wrapper.find(".pool-chess-overlay").attributes("style")).to.include("-38px");
+
+    dispatchPointer(source, "pointerup", 82, 31);
+    await settle();
+    expect(writes).to.deep.equal(["chess"]);
     wrapper.destroy();
   });
 
@@ -148,13 +171,16 @@ describe("compact Pool chess mode", () => {
     const source = wrapper.find(".pool-clickable").element;
 
     dispatchPointer(source, "pointerdown", 100, 20);
+    dispatchPointer(source, "pointermove", 75, 22);
     dispatchPointer(source, "pointerup", 75, 22);
     dispatchPointer(source, "pointerdown", 100, 20, 2);
+    dispatchPointer(source, "pointermove", 115, 85, 2);
     dispatchPointer(source, "pointerup", 115, 85, 2);
     await settle();
 
     expect(writes).to.deep.equal([]);
-    expect(wrapper.find(".pool-chess-overlay").exists()).to.equal(false);
+    expect((wrapper.vm as any).showChess).to.equal(false);
+    expect(wrapper.find(".pool-chess-overlay").attributes("aria-hidden")).to.equal("true");
     wrapper.destroy();
   });
 });

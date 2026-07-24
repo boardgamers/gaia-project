@@ -54,7 +54,10 @@ function makeClient(row: ChessRow | null = null) {
     },
     async rpc(name: string, args: Record<string, unknown>) {
       calls.rpc.push({ name, args });
-      return { data: name === "move_chess" ? args.p_next_fen : null, error: null };
+      return {
+        data: name === "move_chess" ? args.p_next_fen : name === "ensure_chess_assignment" ? row : null,
+        error: null,
+      };
     },
   };
   return { client, calls };
@@ -78,10 +81,9 @@ describe("Supabase chess backend", () => {
     const backend = createSupabaseChessBackend(client, gameId, "white");
 
     expect(await backend.load()).to.deep.equal(row);
-    expect(calls.selected).to.equal(
-      "fen,white_user,white_user_2,black_user,black_user_2,white_next_user,black_next_user,panel_mode"
-    );
-    expect(calls.filters).to.deep.equal([["game_id", gameId]]);
+    expect(calls.rpc).to.deep.equal([{ name: "ensure_chess_assignment", args: { p_game_id: gameId } }]);
+    expect(calls.selected).to.equal("");
+    expect(calls.filters).to.deep.equal([]);
 
     let receivedA: ChessRow | null = null;
     let receivedB: ChessRow | null = null;
@@ -114,20 +116,16 @@ describe("Supabase chess backend", () => {
     const { client, calls } = makeClient();
     const backend = createSupabaseChessBackend(client, gameId, "white");
 
-    await backend.claim("w");
     await backend.move("before", "after");
     await backend.reset();
-    await backend.leave();
     await backend.setPanelMode("chess");
 
     expect(calls.rpc).to.deep.equal([
-      { name: "claim_chess_color", args: { p_game_id: gameId, p_color: "w" } },
       {
         name: "move_chess",
         args: { p_game_id: gameId, p_prev_fen: "before", p_next_fen: "after" },
       },
       { name: "reset_chess", args: { p_game_id: gameId } },
-      { name: "leave_chess_seat", args: { p_game_id: gameId } },
       { name: "set_chess_panel_mode", args: { p_game_id: gameId, p_mode: "chess" } },
     ]);
   });

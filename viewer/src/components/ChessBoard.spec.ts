@@ -31,7 +31,7 @@ describe("ChessBoard", () => {
     window.history.pushState({}, "", "/");
   });
 
-  it("places a compact White-relative evaluation meter above the board", async () => {
+  it("shows only the board and a text-free White-relative evaluation edge", async () => {
     const wrapper = mount(ChessBoard as any, { localVue, store: storeWith(null) });
     await flush();
 
@@ -39,9 +39,10 @@ describe("ChessBoard", () => {
     expect(meter.exists()).to.equal(true);
     expect(meter.attributes("role")).to.equal("meter");
     expect(meter.attributes("aria-valuenow")).to.equal("50");
-    expect(wrapper.find(".lf-chess-header").element.nextElementSibling).to.equal(
-      wrapper.find(".lf-chess-board").element
-    );
+    expect(meter.text()).to.equal("");
+    expect(meter.element.nextElementSibling).to.equal(wrapper.find(".lf-chess-board").element);
+    expect(wrapper.find(".lf-chess-header").exists()).to.equal(false);
+    expect(wrapper.find(".lf-chess-controls").exists()).to.equal(false);
     wrapper.destroy();
   });
 
@@ -93,8 +94,6 @@ describe("ChessBoard", () => {
       userId: "user-white",
       load: async () => row,
       subscribe: () => () => undefined,
-      claim: async () => undefined,
-      leave: async () => undefined,
       move: async (before, after) => {
         moves.push([before, after]);
         return after;
@@ -137,8 +136,6 @@ describe("ChessBoard", () => {
         listener = next;
         return () => undefined;
       },
-      claim: async () => undefined,
-      leave: async () => undefined,
       move: async (before, after) => {
         moves.push([before, after]);
         return after;
@@ -150,7 +147,6 @@ describe("ChessBoard", () => {
     await flush();
 
     expect(wrapper.findAll(".lf-chess-square").at(0).attributes("data-square")).to.equal("a8");
-    expect(wrapper.find(".lf-chess-status").text()).to.include("teammate's move");
     await wrapper.find('[data-square="e2"]').trigger("click");
     await wrapper.find('[data-square="e4"]').trigger("click");
     expect(moves).to.have.length(0);
@@ -158,7 +154,6 @@ describe("ChessBoard", () => {
     row = { ...row, white_next_user: "user-white-two" };
     listener?.(row);
     await wrapper.vm.$nextTick();
-    expect(wrapper.find(".lf-chess-status").text()).to.include("your move");
 
     await wrapper.find('[data-square="e2"]').trigger("click");
     await wrapper.find('[data-square="e4"]').trigger("click");
@@ -167,7 +162,7 @@ describe("ChessBoard", () => {
     wrapper.destroy();
   });
 
-  it("offers relay-team vacancies only when the Gaia player count has room", async () => {
+  it("never exposes manual chess-seat controls after automatic assignment", async () => {
     const baseRow: ChessRow = {
       fen: START_FEN,
       white_user: "white-one",
@@ -183,8 +178,6 @@ describe("ChessBoard", () => {
       userId: "spectator",
       load,
       subscribe: () => () => undefined,
-      claim: async () => undefined,
-      leave: async () => undefined,
       move: async (_before, after) => after,
       reset: async () => undefined,
       setPanelMode: async () => undefined,
@@ -198,9 +191,8 @@ describe("ChessBoard", () => {
       ),
     });
     await flush();
-    expect(fourPlayer.findAll(".lf-chess-controls button")).to.have.length(2);
-    expect(fourPlayer.find(".lf-chess-controls").text()).to.include("Join ♔");
-    expect(fourPlayer.find(".lf-chess-controls").text()).to.include("Join ♚");
+    expect(fourPlayer.find(".lf-chess-controls").exists()).to.equal(false);
+    expect(fourPlayer.findAll(".lf-chess-btn")).to.have.length(0);
     fourPlayer.destroy();
 
     const fullThreePlayer = mount(ChessBoard as any, {
@@ -211,8 +203,49 @@ describe("ChessBoard", () => {
       ),
     });
     await flush();
-    expect(fullThreePlayer.findAll(".lf-chess-controls button")).to.have.length(0);
+    expect(fullThreePlayer.find(".lf-chess-controls").exists()).to.equal(false);
     fullThreePlayer.destroy();
+  });
+
+  it("lets a one-account hosted test game play both colours and rotates after each move", async () => {
+    let row: ChessRow = {
+      fen: START_FEN,
+      white_user: "solo",
+      white_user_2: null,
+      black_user: "solo",
+      black_user_2: null,
+      white_next_user: "solo",
+      black_next_user: "solo",
+      panel_mode: "chess",
+    };
+    const moves: string[] = [];
+    const backend: ChessBackend = {
+      gameId: "solo-game",
+      userId: "solo",
+      load: async () => row,
+      subscribe: () => () => undefined,
+      move: async (_before, after) => {
+        moves.push(after);
+        row = { ...row, fen: after };
+        return after;
+      },
+      reset: async () => undefined,
+      setPanelMode: async () => undefined,
+    };
+    const wrapper = mount(ChessBoard as any, { localVue, store: storeWith(backend, 4) });
+    await flush();
+
+    await wrapper.find('[data-square="e2"]').trigger("click");
+    await wrapper.find('[data-square="e4"]').trigger("click");
+    await wrapper.vm.$nextTick();
+    expect(moves).to.have.length(1);
+    expect(wrapper.findAll(".lf-chess-square").at(0).attributes("data-square")).to.equal("h1");
+
+    await wrapper.find('[data-square="e7"]').trigger("click");
+    await wrapper.find('[data-square="e5"]').trigger("click");
+    await wrapper.vm.$nextTick();
+    expect(moves).to.have.length(2);
+    wrapper.destroy();
   });
 
   it("opens a confirmation on long press and resets the local board only after confirmation", async () => {
@@ -226,6 +259,13 @@ describe("ChessBoard", () => {
     await wrapper.vm.$nextTick();
     expect(wrapper.find(".lf-chess-confirm-text").text()).to.equal("Reset the chess board?");
 
+    wrapper.vm.$root.$emit("lf::chess-panel-swipe");
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find(".lf-chess-confirm-text").exists()).to.equal(false);
+    expect((wrapper.vm as any).fen).to.equal(fenAfterE4());
+
+    (wrapper.vm as any).showResetConfirm = true;
+    await wrapper.vm.$nextTick();
     await wrapper.find(".lf-chess-confirm-actions .danger").trigger("click");
     await wrapper.vm.$nextTick();
     expect((wrapper.vm as any).fen).to.equal(START_FEN);
