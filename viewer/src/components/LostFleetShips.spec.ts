@@ -96,7 +96,7 @@ describe("LostFleetShips", () => {
     expect(container.querySelector(`svg.lost-fleet-ship[data-ship="${Spaceship.Rebellion}"]`)).to.equal(null);
   });
 
-  it("has no fixed width/height on the ship svg, so it scales to fit its 2x2 grid column", () => {
+  it("has no fixed width/height on the ship svg, so it scales to its single-column row width", () => {
     const engine = new Engine(["init 2 lost-fleet-ships-spec"], { lostFleet: true });
     const store = makeStore();
     store.commit("receiveData", engine);

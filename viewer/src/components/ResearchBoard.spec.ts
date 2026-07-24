@@ -116,6 +116,6 @@ describe("ResearchBoard", () => {
     const { container: containerWith } = render(ResearchBoard, { store: storeWith });
     const [, , widthWith] = containerWith.querySelector("svg").getAttribute("viewBox").split(" ").map(Number);
 
-    expect(widthWith).to.equal(widthWithout + 90);
+    expect(widthWith).to.equal(widthWithout + 70);
   });
 });

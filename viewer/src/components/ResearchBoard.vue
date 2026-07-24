@@ -118,8 +118,13 @@ import { tooltipTriggerConfig } from "../logic/tooltip";
 
 // Extra width for the 7th (Scoring Board Extension + round scoring tiles + final scoring) column,
 // Lost Fleet only - the space final scoring used to occupy in the side ScoringBoard panel (and
-// later the map's bottom-right corner) before it moved into this column.
-const EXTENSION_COLUMN_WIDTH = 90;
+// later the map's bottom-right corner) before it moved into this column. Sized to the column's
+// actual content (the 75-unit-wide scoring/final tiles, drawn at scale 0.9 => 68 units, starting
+// at the extension's own x origin) plus a small right margin that matches the tracks' own ~1.5-unit
+// left inset, so the board sits centered in its panel instead of leaving a wide empty gutter on the
+// right (the old 90 reserved ~22 units the content never filled). MUST stay in sync with Game.vue's
+// `researchBoardContentWidth`, which reserves the same width for this component's rendered box.
+const EXTENSION_COLUMN_WIDTH = 70;
 
 // Round scoring tiles' y-positions in the 7th column, top-aligned with the adv-tech row and spaced
 // by a uniform 38 units each - every tile is 40 native units tall, scaled to 0.9 (36 tall), leaving

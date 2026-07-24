@@ -38,9 +38,9 @@
           :action="actionIncome(ship, action.type)"
           :planet="actionPlanet(ship, action.type)"
           :board="true"
-          x="-23"
+          x="-20"
           y="-25"
-          width="46"
+          width="40"
         />
         <g v-if="actionOverlay(ship, action.type)" class="lost-fleet-ship__action-overlay" transform="translate(0, -5)">
           <template v-if="isMineBubble(actionOverlay(ship, action.type))">
@@ -139,11 +139,14 @@
         </g>
       </g>
 
-      <!-- the Standard Tech tile seeded on this ship (Twilight has artifacts instead). TechTile is a
-           60-unit box centered at its own (0,0); scaled 0.72 so it fits the card height with padding
-           (was 0.82, which overshot the bottom border), and translate y 6.4 + 30*0.72 = 28 so its
-           middle lines up with the action octagons. -->
-      <g v-if="hasTechSlot(ship)" data-section="tech" transform="translate(228, 6.4) scale(0.72)">
+      <!-- the Standard Tech tile seeded on this ship (Twilight has artifacts instead). TechTile draws
+           a 60-unit box whose visual center sits at its own local (30, 30); scaled 0.95 so it matches
+           the research board's own tech tiles (which render at that same 0.95, at the ship board's
+           research-matched scale - see the CSS width note below), and translated so its middle stays on
+           the action octagons' y=28 center line (ty + 30*0.95 = 28, tx + 30*0.95 = 249.6, the same
+           right-hand slot the 0.72 tile used to center on). At 0.95 the tile spans y ~1.3..54.7, just
+           inside the 56-unit card. -->
+      <g v-if="hasTechSlot(ship)" data-section="tech" transform="translate(221.1, -0.5) scale(0.95)">
         <TechTile :pos="ship" x="0" y="0" />
       </g>
       <!-- Twilight has no Standard Tech slot (see `hasTechSlot` above) - this artifact grid fills the
@@ -431,30 +434,28 @@ export default class LostFleetShips extends Vue {
 
 <style lang="scss">
 .lost-fleet-ships {
-  display: grid;
-  // Always 2 columns, so 4 ships land in exactly 2 rows (2 side by side, then 2 more) instead of a
-  // single horizontally-scrolling row - the 3-ship 2-player case wraps its 3rd ship onto its own
-  // second row the same way.
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.4rem;
+  // Each ship board on its own row (single-column stack), per the owner's mobile brief - this used
+  // to be a fixed 2-column grid. The board is sized (see svg.lost-fleet-ship width below) so its
+  // action octagons match the base-game power/QIC octagons and its tech tile matches the research
+  // board's tech tiles, which makes each board narrower than the full column; a single left-aligned
+  // column stacks them cleanly instead of squeezing two per row.
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
 }
 
 svg.lost-fleet-ship {
-  width: 100%;
+  // Rendered at the same px-per-unit as the research board so the ship's action octagons read at the
+  // base-game power-action size, and its Standard Tech tile matches the research board's tech tiles.
+  // Both boards fill their column at 100%, so equal px-per-unit means this SVG's width is
+  // (shipViewBoxWidth / researchBoardCanvasWidth) of the column - Game.vue computes that ratio and
+  // passes it as --lf-ship-width (the fallback keeps a sane size if the var is ever missing). Scaling
+  // via width (not a transform) carries the SVG's height along in proportion, so no dead gap opens
+  // below each board.
+  width: var(--lf-ship-width, 68%);
   height: auto;
   display: block;
-
-  // Desktop only, per the owner's brief - matches the base-game power/QIC action octagons
-  // (BoardAction.vue) at the same viewport: measured live (a 3-player desktop layout), the ship
-  // action octagon rendered ~34.6px wide against the base game's ~30.6px, a 0.884 ratio. Shrinking
-  // the whole ship SVG's own width (rather than a transform, which would leave the grid cell's
-  // reserved height unchanged and an empty gap below) scales every element on the board - art,
-  // labels, action tiles - uniformly together, since the SVG's own aspect ratio keeps height in
-  // proportion automatically. Mobile keeps the existing full-width 100%.
-  @media (min-width: 768px) {
-    width: 88%;
-    margin: 0 auto;
-  }
 
   // The whole board card, filled in the ship's color (fill + stroke set per-ship inline).
   .lost-fleet-ship__card {

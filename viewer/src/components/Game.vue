@@ -79,7 +79,7 @@
                gap opened up above the ships with nothing anchoring them to the research board
                specifically. Mobile is unaffected: research board and ships already rendered in
                this order (map, then research, then ships) once the row above wraps. -->
-          <LostFleetShips v-if="engine.options.lostFleet" class="mt-2" />
+          <LostFleetShips v-if="engine.options.lostFleet" class="mt-2" :style="lostFleetShipsStyle" />
         </div>
       </div>
       <div class="row mt-2">
@@ -257,10 +257,14 @@ const PREMOVE_MODE_PREFERENCE_KEY = "premoveModePreference";
 // edge into the ship boards, and left it hugging the panel's left edge.
 const BOARD_ACTION_INNER_OFFSET = 28;
 const BOARD_ACTION_OCTAGON_LEFT = -26;
-const BOARD_ACTION_OCTAGON_RIGHT = 19;
 const BOARD_ACTION_OCTAGON_BOTTOM = 19;
-const BOARD_ACTION_SPACING = 45;
 const BOARD_ACTION_BASE_X = -20;
+
+// Width of LostFleetShips.vue's per-ship SVG viewBox ("0 -16 291 74"). A ship board renders at the
+// research board's own px-per-unit (so its octagons/tech tiles match) by taking this fraction of the
+// column: shipViewBoxWidth / researchBoardCanvasWidth. Kept here (not read from that component) so
+// Game.vue can size the shared column; keep it in sync with that viewBox if it ever changes.
+const SHIP_BOARD_VIEWBOX_WIDTH = 291;
 
 @Component<Game>({
   components: {
@@ -438,11 +442,13 @@ export default class Game extends Vue {
     return ResearchField.values(this.expansions).length * 60;
   }
 
-  // Lost Fleet adds one 90-unit extension column to the six 60-unit research tracks. Giving the
-  // nested SVG its exact width avoids preserveAspectRatio letterboxing inside the outer board -
-  // that letterboxing was the main source of the empty mobile gutters around the research art.
+  // Lost Fleet adds one extension column (Scoring Board Extension + round/final scoring tiles) to
+  // the six 60-unit research tracks. Giving the nested SVG its exact width avoids preserveAspectRatio
+  // letterboxing inside the outer board - that letterboxing was the main source of the empty mobile
+  // gutters around the research art. The 70 here MUST match ResearchBoard.vue's EXTENSION_COLUMN_WIDTH
+  // (it's sized to the extension column's actual content so the board stays centered in its panel).
   get researchBoardContentWidth() {
-    return this.researchBoardWidth + (this.engine.options.lostFleet ? 90 : 0);
+    return this.researchBoardWidth + (this.engine.options.lostFleet ? 70 : 0);
   }
 
   // ResearchBoard.vue's own real content height (440, or up to 471 for Lost Fleet's round/final
@@ -489,6 +495,16 @@ export default class Game extends Vue {
     return `${this.researchBoardCanvasMinX} 0 ${this.researchBoardCanvasWidth} ${this.researchBoardCanvasHeight}`;
   }
 
+  // Sizes each ship board (LostFleetShips) so it renders at the research board's own px-per-unit -
+  // both live full-width in the same column, so matching px-per-unit means the ship SVG takes
+  // SHIP_BOARD_VIEWBOX_WIDTH / researchBoardCanvasWidth of the column's width. That is what makes the
+  // ship's action octagons match the base-game power-action octagons and its tech tile match the
+  // research board's tech tiles. Exposed as a CSS custom property the component's stylesheet reads.
+  get lostFleetShipsStyle(): Record<string, string> {
+    const width = (SHIP_BOARD_VIEWBOX_WIDTH / this.researchBoardCanvasWidth) * 100;
+    return { "--lf-ship-width": `${width}%` };
+  }
+
   get totalStickyFooterHeight() {
     return this.stickyBarHeight + this.premoveBarHeight;
   }
@@ -520,23 +536,22 @@ export default class Game extends Vue {
     return BoardActionEnum.values(this.expansions);
   }
 
-  // Horizontal shift applied to the whole action row so it sits with equal left/right margins inside
-  // the board panel. The base game keeps its long-standing left-anchored framing (a ScoringBoard fills
-  // the space to the row's right - shift 0). Lost Fleet has no side ScoringBoard, so the row would
-  // otherwise hug the panel's left edge (a wide empty gutter on the right); center it instead. The
-  // math works in the octagons' real painted coordinates (see BOARD_ACTION_INNER_OFFSET), so "centered"
-  // means the visible octagons are centered, not their bare translate anchors.
+  // Horizontal shift applied to the whole action row. The base game keeps its long-standing
+  // left-anchored framing (a ScoringBoard fills the space to the row's right - shift 0). Lost Fleet
+  // has no side ScoringBoard; per the owner's brief the row is left-aligned (previously it was
+  // centered, which read as floating between two gutters). We align the leftmost octagon's real
+  // painted left edge (see BOARD_ACTION_INNER_OFFSET) with the research tracks' own left content
+  // inset above it, so the whole board reads as one left-anchored block.
   get boardActionRowXShift(): number {
     if (!this.engine.options.lostFleet) {
       return 0;
     }
-    const n = this.actions.length;
-    const firstCenter = BOARD_ACTION_BASE_X + BOARD_ACTION_INNER_OFFSET;
-    const lastCenter = BOARD_ACTION_BASE_X + BOARD_ACTION_SPACING * (n - 1) + BOARD_ACTION_INNER_OFFSET;
-    const rowVisualMid = (firstCenter + lastCenter) / 2 + (BOARD_ACTION_OCTAGON_LEFT + BOARD_ACTION_OCTAGON_RIGHT) / 2;
-    // The +1/-2 panel insets cancel, so the panel's center is simply minX + width/2.
-    const panelCenter = this.researchBoardCanvasMinX + this.researchBoardCanvasWidth / 2;
-    return panelCenter - rowVisualMid;
+    // The research tracks' colored tiles begin ~2 units in from the ResearchBoard SVG's own origin
+    // (its inner viewBox 0 maps to researchBoardCanvasMinX), so target that same left edge here.
+    const trackLeftInset = 2;
+    const targetOctagonLeft = this.researchBoardCanvasMinX + trackLeftInset;
+    const firstOctagonLeft = BOARD_ACTION_BASE_X + BOARD_ACTION_INNER_OFFSET + BOARD_ACTION_OCTAGON_LEFT;
+    return targetOctagonLeft - firstOctagonLeft;
   }
 
   get ended() {
