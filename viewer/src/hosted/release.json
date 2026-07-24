@@ -1,7 +1,22 @@
 {
-  "version": "5.36.12",
+  "version": "5.36.13",
   "releasedAt": "2026-07-24",
   "entries": [
+    {
+      "version": "5.36.13",
+      "releasedAt": "2026-07-24",
+      "kind": "update",
+      "title": "Lost Fleet ship boards + booster/federation sidebar",
+      "impact": "",
+      "changes": [
+        "Round boosters and available federation tokens now sit beside the ship boards instead of their own section further down the page",
+        "Ship boards are a bit narrower and their exploration slots are bigger"
+      ],
+      "userChanges": [
+        "Round boosters and available federation tokens now sit beside the ship boards instead of their own section further down the page",
+        "Ship boards are a bit narrower and their exploration slots are bigger"
+      ]
+    },
     {
       "version": "5.36.12",
       "releasedAt": "2026-07-24",
