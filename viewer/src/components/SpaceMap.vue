@@ -111,6 +111,15 @@ const WHEEL_WIDTH_BASE = 5.5;
 const WHEEL_WIDTH_LOST_FLEET = 7;
 const WHEEL_HEIGHT = 7.9;
 
+// Local (pre-scale) content extents of FactionWheel.vue relative to its own (0,0) origin - the same
+// footprint SpaceMap.spec.ts's wheel-clearance test measures against. Lost Fleet's Asteroid/
+// Protoplanet column pushes the right edge to 6.1 (ring radius 3 + margin 2.1 + circle radius 1);
+// the bottom keeps a small margin below the Gaia/Transdim row. Used by `wheelScale` to grow the
+// rendered wheel until it just fills the frame's reserved top-left pocket without overlapping a hex.
+const WHEEL_LOCAL = { left: -4, right: 6.1, top: -4, bottom: 7.6 };
+// Matches the template's `translate(bounds.left + WHEEL_ANCHOR_OFFSET * ratio, ...)` origin offset.
+const WHEEL_ANCHOR_OFFSET = 2.9;
+
 // Rendered footprint of the top-right UI, relative to `bounds.right`: the Tinkeroids/Moweyds
 // terraforming swatches (visible pre-round-1) are wider than the chart-history icon (visible once
 // every seat has a faction) - the two are never both meant to be the binding constraint at once,
@@ -277,21 +286,72 @@ export default class SpaceMap extends Vue {
   }
 
   /**
-   * FactionWheel's render scale, relative to `WHEEL_SCALE_REFERENCE` (the scale the WHEEL_WIDTH/
-   * WHEEL_HEIGHT footprint constants were measured at). 2p Lost Fleet has no rotation that opens a
-   * natural top-left pocket (see `mapRotationDeg`'s doc comment - its board is fully 6-fold
-   * symmetric, identical bbox at every 60deg rotation), so at the reference scale it always pays
-   * the wheel's full ~5.5-unit gutter. Shrinking the wheel to 0.45 there (measured: `engine`-side
-   * brute-force search over candidate scales, see the map-rotation investigation) cuts that gutter
-   * to ~0.8 units - a 69%-size wheel in exchange for eliminating the vast majority of the reserved
-   * column - without needing a rotation change 3p/4p already get for free. 3p/4p keep the reference
-   * scale since their diagonal rotation already opens a wheel-sized pocket at full size.
+   * The left-gutter width the *frame* reserves for the wheel, expressed as a scale relative to
+   * `WHEEL_SCALE_REFERENCE`. This is fixed per player count on purpose: it - not the rendered wheel
+   * size - is what `bounds` uses to size (and, for 2p, symmetrically center) the map, so growing the
+   * rendered wheel to fill its pocket (see `wheelScale`) never shifts or shrinks the map. 2p Lost
+   * Fleet reserves a smaller gutter (0.4) because its board is fully 6-fold symmetric (see
+   * `mapRotationDeg`) - any left gutter is mirrored to the right, so an oversized reserve would eat
+   * into the whole board's scale. 3p/4p's diagonal rotation opens a natural wheel-sized pocket at the
+   * reference scale, so they reserve the full reference gutter.
+   */
+  get wheelReserveScale(): number {
+    return this.isLostFleet && this.engine.players.length === 2 ? 0.4 : WHEEL_SCALE_REFERENCE;
+  }
+
+  get wheelReserveRatio(): number {
+    return this.wheelReserveScale / WHEEL_SCALE_REFERENCE;
+  }
+
+  /**
+   * The wheel's actual render scale: the largest scale whose rendered footprint (WHEEL_LOCAL,
+   * anchored exactly as the template places it) still fits inside the frame's reserved top-left
+   * pocket without overlapping any hex (each inflated by its own 1-unit radius) or spilling past the
+   * frame. This keeps the color wheel "as big as possible" for every board while leaving the
+   * centered, same-size map (driven by `wheelReserveScale`, not this) completely untouched - the
+   * wheel just fills whatever slack the fixed reservation left over. Never returns less than
+   * `wheelReserveScale`, which fits by construction.
    */
   get wheelScale(): number {
-    if (this.isLostFleet && this.engine.players.length === 2) {
-      return 0.4;
+    if (!this.isLostFleet) {
+      return WHEEL_SCALE_REFERENCE;
     }
-    return WHEEL_SCALE_REFERENCE;
+    const b = this.bounds;
+    const points = this.rotatedPoints;
+    const reserve = this.wheelReserveScale;
+    if (points.length === 0) {
+      return reserve;
+    }
+    const fits = (s: number): boolean => {
+      const anchor = WHEEL_ANCHOR_OFFSET * (s / WHEEL_SCALE_REFERENCE);
+      const left = b.left + anchor + WHEEL_LOCAL.left * s;
+      const right = b.left + anchor + WHEEL_LOCAL.right * s;
+      const top = b.top + anchor + WHEEL_LOCAL.top * s;
+      const bottom = b.top + anchor + WHEEL_LOCAL.bottom * s;
+      if (right > b.right || bottom > b.bottom) {
+        return false;
+      }
+      for (const p of points) {
+        if (p.x + 1 > left && p.x - 1 < right && p.y + 1 > top && p.y - 1 < bottom) {
+          return false;
+        }
+      }
+      return true;
+    };
+    if (!fits(reserve)) {
+      return reserve;
+    }
+    let lo = reserve;
+    let hi = 1.2;
+    for (let i = 0; i < 40; i++) {
+      const mid = (lo + hi) / 2;
+      if (fits(mid)) {
+        lo = mid;
+      } else {
+        hi = mid;
+      }
+    }
+    return lo;
   }
 
   get wheelScaleRatio(): number {
@@ -359,8 +419,8 @@ export default class SpaceMap extends Vue {
     // plus a small extra CLEARANCE margin, not just clear the hex's bare center.
     const hexRadius = 1;
 
-    const wheelWidth = (this.isLostFleet ? WHEEL_WIDTH_LOST_FLEET : WHEEL_WIDTH_BASE) * this.wheelScaleRatio;
-    const wheelHeight = WHEEL_HEIGHT * this.wheelScaleRatio;
+    const wheelWidth = (this.isLostFleet ? WHEEL_WIDTH_LOST_FLEET : WHEEL_WIDTH_BASE) * this.wheelReserveRatio;
+    const wheelHeight = WHEEL_HEIGHT * this.wheelReserveRatio;
     const legendCount = this.colorLegend.length;
     const legendBottom =
       legendCount > 0 ? LEGEND_TOP_OFFSET + (legendCount - 1) * LEGEND_ITEM_HEIGHT + LEGEND_ITEM_SIZE : 0;
