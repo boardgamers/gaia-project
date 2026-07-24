@@ -1,7 +1,21 @@
 {
-  "version": "5.37.8",
+  "version": "5.37.9",
   "releasedAt": "2026-07-24",
   "entries": [
+    {
+      "version": "5.37.9",
+      "releasedAt": "2026-07-24",
+      "kind": "update",
+      "title": "Centered chess stack",
+      "impact": "",
+      "changes": [
+        "The chess board is now vertically centred together with compact captured-piece rows above and below it.",
+        "Derives captured material from the persisted FEN and reserves equal rows so captures never shift the board."
+      ],
+      "userChanges": [
+        "The chess board is now vertically centred together with compact captured-piece rows above and below it."
+      ]
+    },
     {
       "version": "5.37.8",
       "releasedAt": "2026-07-24",

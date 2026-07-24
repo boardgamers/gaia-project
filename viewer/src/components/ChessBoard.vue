@@ -1,88 +1,119 @@
 <template>
   <div class="lf-chess" ref="root" @click.stop>
-    <!-- The analysis meter is deliberately text-free and reads as the board's thin top edge. -->
-    <div
-      class="lf-chess-eval"
-      ref="meter"
-      :class="{ pending: evaluation === null && !evaluationUnavailable }"
-      :style="meterStyle"
-      role="meter"
-      aria-valuemin="0"
-      aria-valuemax="100"
-      :aria-valuenow="Math.round(evaluationWhitePercent)"
-      :aria-valuetext="evaluationAriaText"
-      :title="evaluationAriaText"
-    >
-      <span class="lf-chess-eval-white" :style="{ width: evaluationWhitePercent + '%' }" />
-      <span class="lf-chess-eval-black" />
-    </div>
-
-    <!-- The board is border-box sized so all eight files remain inside the narrow sidebar. -->
-    <div
-      class="lf-chess-board"
-      ref="board"
-      :style="boardStyle"
-      @pointerdown="onPointerDown"
-      @pointerup="onPointerUp"
-      @pointermove="onPointerMove"
-      @pointerleave="cancelLongPress"
-      @pointercancel="cancelLongPress"
-    >
-      <div
-        v-for="cell in cells"
-        :key="cell.square"
-        class="lf-chess-square"
-        :data-square="cell.square"
-        :aria-label="cell.square"
-        :class="{
-          light: cell.light,
-          dark: !cell.light,
-          'last-move': cell.square === lastMoveFrom || cell.square === lastMoveTo,
-          'last-from': cell.square === lastMoveFrom,
-          'last-to': cell.square === lastMoveTo,
-          selected: cell.square === selected,
-          target: legalTargets.indexOf(cell.square) !== -1,
-          capture: legalTargets.indexOf(cell.square) !== -1 && cell.piece !== null,
-        }"
-        @click="onSquareClick(cell)"
-      >
+    <!-- Centre the entire chess stack as one unit. Equal reserved capture rows prevent the board
+         jumping when the first piece is taken, and keep the board centred between both players. -->
+    <div class="lf-chess-stage" ref="stage" data-centering="full-stack">
+      <div class="lf-chess-captures top" ref="capturesTop" :style="meterStyle" aria-label="Top captured pieces">
         <span
-          v-if="cell.piece"
-          class="lf-chess-piece"
-          :class="[cell.piece.color === 'w' ? 'white' : 'black', `piece-${cell.piece.type}`]"
-          :style="{ fontSize: pieceFont + 'px' }"
-          >{{ glyph(cell.piece) }}</span
+          v-for="(piece, index) in topCapturedPieces"
+          :key="`${piece.color}-${piece.type}-${index}`"
+          class="lf-chess-captured-piece"
+          :class="piece.color === 'w' ? 'white' : 'black'"
+          aria-hidden="true"
+          >{{ glyph(piece) }}</span
         >
-        <span v-if="legalTargets.indexOf(cell.square) !== -1 && !cell.piece" class="lf-chess-dot" />
       </div>
 
-      <div v-if="lastMoveArrowStyle" class="lf-chess-last-arrow" :style="lastMoveArrowStyle" aria-hidden="true" />
+      <!-- The analysis meter is deliberately text-free and reads as the board's thin top edge. -->
+      <div
+        class="lf-chess-eval"
+        ref="meter"
+        :class="{ pending: evaluation === null && !evaluationUnavailable }"
+        :style="meterStyle"
+        role="meter"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        :aria-valuenow="Math.round(evaluationWhitePercent)"
+        :aria-valuetext="evaluationAriaText"
+        :title="evaluationAriaText"
+      >
+        <span class="lf-chess-eval-white" :style="{ width: evaluationWhitePercent + '%' }" />
+        <span class="lf-chess-eval-black" />
+      </div>
 
-      <!-- Promotion picker, shown over the board when a pawn reaches the last rank. -->
-      <div v-if="promotion" class="lf-chess-overlay" @click.self="promotion = null">
-        <div class="lf-chess-promo">
-          <button
-            v-for="p in ['q', 'r', 'b', 'n']"
-            :key="p"
-            type="button"
-            class="lf-chess-promo-btn"
-            :class="promotion.color === 'w' ? 'white' : 'black'"
-            @click="choosePromotion(p)"
+      <!-- The board is border-box sized so all eight files remain inside the narrow sidebar. -->
+      <div
+        class="lf-chess-board"
+        ref="board"
+        :style="boardStyle"
+        @pointerdown="onPointerDown"
+        @pointerup="onPointerUp"
+        @pointermove="onPointerMove"
+        @pointerleave="cancelLongPress"
+        @pointercancel="cancelLongPress"
+      >
+        <div
+          v-for="cell in cells"
+          :key="cell.square"
+          class="lf-chess-square"
+          :data-square="cell.square"
+          :aria-label="cell.square"
+          :class="{
+            light: cell.light,
+            dark: !cell.light,
+            'last-move': cell.square === lastMoveFrom || cell.square === lastMoveTo,
+            'last-from': cell.square === lastMoveFrom,
+            'last-to': cell.square === lastMoveTo,
+            selected: cell.square === selected,
+            target: legalTargets.indexOf(cell.square) !== -1,
+            capture: legalTargets.indexOf(cell.square) !== -1 && cell.piece !== null,
+          }"
+          @click="onSquareClick(cell)"
+        >
+          <span
+            v-if="cell.piece"
+            class="lf-chess-piece"
+            :class="[cell.piece.color === 'w' ? 'white' : 'black', `piece-${cell.piece.type}`]"
+            :style="{ fontSize: pieceFont + 'px' }"
+            >{{ glyph(cell.piece) }}</span
           >
-            {{ promoGlyph(p) }}
-          </button>
+          <span v-if="legalTargets.indexOf(cell.square) !== -1 && !cell.piece" class="lf-chess-dot" />
         </div>
-      </div>
 
-      <!-- Long-press reset confirmation. -->
-      <div v-if="showResetConfirm" class="lf-chess-overlay" @click.self="showResetConfirm = false">
-        <div class="lf-chess-confirm">
-          <div class="lf-chess-confirm-text">Reset the chess board?</div>
-          <div class="lf-chess-confirm-actions">
-            <button type="button" class="lf-chess-btn" @click="showResetConfirm = false">Cancel</button>
-            <button type="button" class="lf-chess-btn danger" @click="confirmReset">Reset</button>
+        <div v-if="lastMoveArrowStyle" class="lf-chess-last-arrow" :style="lastMoveArrowStyle" aria-hidden="true" />
+
+        <!-- Promotion picker, shown over the board when a pawn reaches the last rank. -->
+        <div v-if="promotion" class="lf-chess-overlay" @click.self="promotion = null">
+          <div class="lf-chess-promo">
+            <button
+              v-for="p in ['q', 'r', 'b', 'n']"
+              :key="p"
+              type="button"
+              class="lf-chess-promo-btn"
+              :class="promotion.color === 'w' ? 'white' : 'black'"
+              @click="choosePromotion(p)"
+            >
+              {{ promoGlyph(p) }}
+            </button>
           </div>
         </div>
+
+        <!-- Long-press reset confirmation. -->
+        <div v-if="showResetConfirm" class="lf-chess-overlay" @click.self="showResetConfirm = false">
+          <div class="lf-chess-confirm">
+            <div class="lf-chess-confirm-text">Reset the chess board?</div>
+            <div class="lf-chess-confirm-actions">
+              <button type="button" class="lf-chess-btn" @click="showResetConfirm = false">Cancel</button>
+              <button type="button" class="lf-chess-btn danger" @click="confirmReset">Reset</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="lf-chess-captures bottom"
+        ref="capturesBottom"
+        :style="meterStyle"
+        aria-label="Bottom captured pieces"
+      >
+        <span
+          v-for="(piece, index) in bottomCapturedPieces"
+          :key="`${piece.color}-${piece.type}-${index}`"
+          class="lf-chess-captured-piece"
+          :class="piece.color === 'w' ? 'white' : 'black'"
+          aria-hidden="true"
+          >{{ glyph(piece) }}</span
+        >
       </div>
     </div>
   </div>
@@ -98,6 +129,7 @@ import {
   Cell,
   DisplaySquare,
   Orientation,
+  ChessPiece,
   START_FEN,
   boardOrientation,
   displaySquares,
@@ -183,12 +215,22 @@ export default class ChessBoard extends Vue {
       return;
     }
     const measure = () => {
+      const stage = this.$refs.stage as HTMLElement | undefined;
       const meter = this.$refs.meter as HTMLElement | undefined;
+      const capturesTop = this.$refs.capturesTop as HTMLElement | undefined;
+      const capturesBottom = this.$refs.capturesBottom as HTMLElement | undefined;
       const style = window.getComputedStyle(root);
+      const stageStyle = stage ? window.getComputedStyle(stage) : null;
       const horizontalPadding = parseFloat(style.paddingLeft || "0") + parseFloat(style.paddingRight || "0");
       const verticalPadding = parseFloat(style.paddingTop || "0") + parseFloat(style.paddingBottom || "0");
       const availableWidth = Math.max(0, root.clientWidth - horizontalPadding);
-      const measuredHeight = root.clientHeight - verticalPadding - (meter?.offsetHeight ?? 0) - 2;
+      const stageGap = parseFloat(stageStyle?.rowGap || stageStyle?.gap || "0");
+      const fixedStackHeight =
+        (meter?.offsetHeight ?? 0) +
+        (capturesTop?.offsetHeight ?? 0) +
+        (capturesBottom?.offsetHeight ?? 0) +
+        stageGap * 3;
+      const measuredHeight = root.clientHeight - verticalPadding - fixedStackHeight;
       const availableHeight = measuredHeight > 0 ? measuredHeight : availableWidth;
       const size = Math.max(0, Math.floor(Math.min(availableWidth, availableHeight)));
       this.boardSize = size;
@@ -582,6 +624,46 @@ export default class ChessBoard extends Vue {
     return this.boardSize > 0 ? { width: `${this.boardSize}px` } : undefined;
   }
 
+  get topCapturedPieces(): ChessPiece[] {
+    return this.orientation === "w" ? this.missingPieces("w") : this.missingPieces("b");
+  }
+
+  get bottomCapturedPieces(): ChessPiece[] {
+    return this.orientation === "w" ? this.missingPieces("b") : this.missingPieces("w");
+  }
+
+  private missingPieces(color: Orientation): ChessPiece[] {
+    if (!this.chess) {
+      return [];
+    }
+    void this.fen;
+    const initial: Record<string, number> = { q: 1, r: 2, b: 2, n: 2, p: 8 };
+    const current: Record<string, number> = { q: 0, r: 0, b: 0, n: 0, p: 0 };
+    for (const row of this.chess.board()) {
+      for (const piece of row) {
+        if (piece?.color === color && current[piece.type] !== undefined) {
+          current[piece.type] += 1;
+        }
+      }
+    }
+
+    // A missing pawn may have promoted rather than been captured. Discount currently visible extra
+    // major/minor pieces so ordinary promotions do not appear in the taken-piece row as lost pawns.
+    const promotedPawns = ["q", "r", "b", "n"].reduce(
+      (total, type) => total + Math.max(0, current[type] - initial[type]),
+      0
+    );
+    const pieces: ChessPiece[] = [];
+    for (const type of ["q", "r", "b", "n", "p"]) {
+      const missing =
+        type === "p" ? Math.max(0, initial.p - current.p - promotedPawns) : Math.max(0, initial[type] - current[type]);
+      for (let index = 0; index < missing; index++) {
+        pieces.push({ type, color });
+      }
+    }
+    return pieces;
+  }
+
   get lastMoveArrowStyle(): Record<string, string> | null {
     if (!this.lastMoveFrom || !this.lastMoveTo) {
       return null;
@@ -635,6 +717,8 @@ export default class ChessBoard extends Vue {
 .lf-chess {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   height: 100%;
   min-width: 0;
@@ -643,6 +727,51 @@ export default class ChessBoard extends Vue {
   box-sizing: border-box;
   overflow: hidden;
   background: var(--ui-surface, #fff);
+}
+
+.lf-chess-stage {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  width: 100%;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.lf-chess-captures {
+  display: flex;
+  flex: 0 0 9px;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 9px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.lf-chess-captured-piece {
+  display: grid;
+  flex: 0 0 8px;
+  width: 8px;
+  height: 9px;
+  place-items: center;
+  font-family: "DejaVu Sans", "Noto Sans Symbols 2", "Segoe UI Symbol", "Apple Symbols", sans-serif;
+  font-size: 9px;
+  font-variant-emoji: text;
+  line-height: 1;
+
+  &.white {
+    color: #fafafa;
+    text-shadow: 0 0 1px #000, 0 1px 1px #000, 1px 0 1px #000, -1px 0 1px #000;
+  }
+
+  &.black {
+    color: #1b1b1b;
+    text-shadow: 0 0 1px rgba(255, 255, 255, 0.7);
+  }
 }
 
 .lf-chess-btn {
@@ -669,7 +798,7 @@ export default class ChessBoard extends Vue {
   height: 6px;
   flex: 0 0 6px;
   align-self: center;
-  margin-bottom: 2px;
+  margin-bottom: 0;
   box-sizing: border-box;
   overflow: hidden;
   border: 1px solid var(--ui-border-strong, #555);

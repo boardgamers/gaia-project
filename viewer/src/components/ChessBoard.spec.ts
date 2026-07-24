@@ -25,6 +25,14 @@ function fenAfterE4(): string {
   return chess.fen();
 }
 
+function fenAfterWhiteCapturesPawn(): string {
+  const chess = createChess(START_FEN);
+  chess.move({ from: "e2", to: "e4" });
+  chess.move({ from: "d7", to: "d5" });
+  chess.move({ from: "e4", to: "d5" });
+  return chess.fen();
+}
+
 describe("ChessBoard", () => {
   afterEach(() => {
     window.localStorage.clear();
@@ -41,8 +49,24 @@ describe("ChessBoard", () => {
     expect(meter.attributes("aria-valuenow")).to.equal("50");
     expect(meter.text()).to.equal("");
     expect(meter.element.nextElementSibling).to.equal(wrapper.find(".lf-chess-board").element);
+    expect(wrapper.find(".lf-chess-stage").attributes("data-centering")).to.equal("full-stack");
+    expect(wrapper.findAll(".lf-chess-captures")).to.have.length(2);
     expect(wrapper.find(".lf-chess-header").exists()).to.equal(false);
     expect(wrapper.find(".lf-chess-controls").exists()).to.equal(false);
+    wrapper.destroy();
+  });
+
+  it("centres the board between persistent top and bottom captured-piece rows", async () => {
+    window.history.pushState({}, "", "/?offline=1&game=offline-capture");
+    window.localStorage.setItem(localChessStorageKey(window.location.search), fenAfterWhiteCapturesPawn());
+    const wrapper = mount(ChessBoard as any, { localVue, store: storeWith(null) });
+    await flush();
+
+    // It is Black's turn, so Black is at the bottom in offline pass-and-play. White is at the top,
+    // and the black pawn White captured is therefore shown in the reserved top row.
+    expect(wrapper.findAll(".lf-chess-captures.top .lf-chess-captured-piece")).to.have.length(1);
+    expect(wrapper.find(".lf-chess-captures.top .lf-chess-captured-piece").classes()).to.include("black");
+    expect(wrapper.findAll(".lf-chess-captures.bottom .lf-chess-captured-piece")).to.have.length(0);
     wrapper.destroy();
   });
 
