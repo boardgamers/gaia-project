@@ -74,6 +74,22 @@ export default class Pool extends Vue {
   &.compact {
     padding-left: 0.35em;
     padding-right: 0.35em;
+
+    // Booster.vue is a fixed 60x120px SVG everywhere else it's used standalone, but on a player's
+    // own board (PlayerInfo.vue) it's nested inside that board's own responsive SVG at a fixed
+    // proportion of the board's width (measured: booster width is a rock-steady ~8.72% of
+    // `.player-board`'s own rendered width across every breakpoint, from mobile up through desktop's
+    // two-board-per-row layout) - so it renders far smaller there (~30-35px at typical phone widths)
+    // than the pool's own native 60px. Owner-reported: this sidebar's boosters should match that
+    // on-a-player-board size. `.player-board` doesn't share a common ancestor width with this sidebar
+    // (different Bootstrap columns, no live measurement wired between them), so this targets the same
+    // ~30-35px range with a `vw`-scaled width instead of a cross-component sync: 8vw lands at 30px at
+    // a 375px phone and 34.4px at 430px, matching the measured player-board size within a pixel or
+    // two across that range; the clamp keeps it from over/under-shooting well outside it.
+    svg.booster {
+      width: clamp(28px, 8vw, 34px);
+      height: auto;
+    }
   }
 }
 </style>

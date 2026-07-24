@@ -4080,25 +4080,25 @@ opacity: 0.7 }` wrapper that also diluted the X itself, while `BoardAction.vue`'
       `pnpm test`: 440 passing/31 failing both before and after (identical failing-test names,
       confirmed via `git stash` on the same run - all pre-existing, none touch these components).
 
-                                                                                                     **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
-                                                                                                     pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
-                                                                                                     desktop mice, which was never the actual bug - only touch devices raced hover against the
-                                                                                                     click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
-                                                                                                     `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
-                                                                                                     `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
-                                                                                                     shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
-                                                                                                     `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
-                                                                                                     directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
-                                                                                                     `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
-                                                                                                     config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
-                                                                                                     on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
-                                                                                                     desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
-                                                                                                     is what actually closed that race originally. Verified live via Playwright with two device
-                                                                                                     profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
-                                                                                                     tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
-                                                                                                     context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
-                                                                                                     a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
-                                                                                                     still 440 passing/31 failing, same pre-existing set.
+                                                                                                           **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
+                                                                                                           pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
+                                                                                                           desktop mice, which was never the actual bug - only touch devices raced hover against the
+                                                                                                           click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
+                                                                                                           `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
+                                                                                                           `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
+                                                                                                           shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
+                                                                                                           `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
+                                                                                                           directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
+                                                                                                           `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
+                                                                                                           config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
+                                                                                                           on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
+                                                                                                           desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
+                                                                                                           is what actually closed that race originally. Verified live via Playwright with two device
+                                                                                                           profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
+                                                                                                           tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
+                                                                                                           context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
+                                                                                                           a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
+                                                                                                           still 440 passing/31 failing, same pre-existing set.
 
 102.  ✅ **Offline pass-and-play with automatic local recovery and airplane-mode launch
       (2026-07-17, v5.31.0).** The viewer now has a dedicated `?offline=1` hot-seat mode, linked from
@@ -4402,6 +4402,25 @@ components/PlayerBoard/BuildingGroup.spec.ts` (X-mark presence/absence). Engine 
       the base (non-Lost-Fleet) game. `Game.spec`/`LostFleetShips.spec` updated for the new DOM
       structure/viewBox/spacing. Full viewer suite: 548 passing, same 2 pre-existing map-rotation flakes
       — no regressions.
+
+111.  ✅ **Sidebar round boosters shrunk to match a player's own board (2026-07-24), owner-reported.**
+      Follow-up to #110: the owner noticed the sidebar boosters (Booster.vue's native fixed 60x120px)
+      were visibly bigger than the SAME booster once a player takes it and it shows on their own
+      `PlayerInfo.vue` board — there it's nested inside that board's own responsive SVG at a fixed,
+      breakpoint-independent ~8.72% of the board's rendered width (measured via a live Vuex-state
+      injection across 5 breakpoints, 340-1024px: the ratio never moved). `Pool.vue`'s `.compact` style
+      now sets `svg.booster { width: clamp(28px, 8vw, 34px); height: auto; }` - `8vw` tracks that same
+      ~8.72%-of-board-width relationship closely enough in practice (no shared ancestor width exists to
+      read the real board size from directly) that measured pool-sidebar vs. player-board booster
+      widths matched within ~1px from 340-430px, the realistic phone range this whole sidebar targets;
+      the clamp caps the drift at wider viewports where a player board's own responsive scaling starts
+      pulling further ahead (measured 34px sidebar vs. 41px board at 500px). Only `.compact` boosters
+      are affected - the base game's full-width `Pool` (own boosters, `SetupPreviewBoard.vue`) is
+      untouched and still 60px, confirmed by direct measurement. This also **corrects #110's "2 boosters
+      … per row" framing**: with boosters this much smaller, 4 fit per row instead of 2, and the whole
+      sidebar box is now noticeably shorter than before. No spec changes needed (no existing test
+      asserted the old booster pixel size). Full viewer suite: 548 passing, same 2 pre-existing
+      map-rotation flakes — no regressions.
 
 ## Still MISSING — only one art-only item left
 
