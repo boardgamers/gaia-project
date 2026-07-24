@@ -295,6 +295,17 @@ const SLOT_TAB_X1 = 286 - ACTION_COMPRESSION;
 // edge is ~y=1.3), owner request. It still clears the tab's top border (circle top -19 vs tab -21).
 const SLOT_Y = -11;
 
+// Name tab horizontal padding. The white first-letter hex badge's left edge sits at x=7.5 (center 15,
+// radius 7.5). NAME_TAB_PAD is the ship-color gap left BETWEEN the tab border and the name content on
+// BOTH sides (owner request: "ship name space on both sides should be equal") - so the tab starts
+// NAME_TAB_PAD left of the hex (NAME_TAB_X0) and ends NAME_TAB_PAD right of the name's real rendered
+// right edge (measured at runtime, see `measureNameTabs` - a fixed per-char estimate can't be equal on
+// both sides because glyph widths differ wildly, e.g. I vs W). X0 stays right of the card's rounded
+// top-left corner (its fill starts at ~x=4.6 on the tab's bottom edge) so the tab never juts past it.
+const NAME_HEX_LEFT = 7.5;
+const NAME_TAB_PAD = 2.5;
+const NAME_TAB_X0 = NAME_HEX_LEFT - NAME_TAB_PAD;
+
 // The ship SVG's own viewBox width - the original 291 minus the same ACTION_COMPRESSION every other
 // rightward element gives up. Exported for Game.vue, which needs it to compute the ship board's exact
 // px-per-unit-matching CSS width (see that file's `lostFleetShipsStyle`).
@@ -323,6 +334,60 @@ export default class LostFleetShips extends Vue {
   artifactX0 = ARTIFACT_X0;
   cardWidth = CARD_WIDTH;
   viewBoxWidth = SHIP_BOARD_VIEWBOX_WIDTH;
+
+  // ship -> the name text's real rendered right edge (x), measured off the live DOM so the name tab
+  // can leave an EQUAL margin on both sides regardless of the actual glyph widths (see `nameTabPath`).
+  nameTabRights: Record<string, number> = {};
+
+  mounted() {
+    this.$nextTick(() => this.measureNameTabs());
+    // Web fonts can land after the first paint and change the text's width - re-measure once they do.
+    const fonts = typeof document !== "undefined" ? (document as any).fonts : undefined;
+    if (fonts?.ready?.then) {
+      fonts.ready.then(() => this.measureNameTabs());
+    }
+  }
+
+  updated() {
+    // Player count (and so the set of ships) can change without a remount; re-measure any name we
+    // haven't sized yet. Guarded so a no-op update never re-assigns and re-triggers render.
+    if (this.ships.some((ship) => this.nameTabRights[ship] === undefined)) {
+      this.$nextTick(() => this.measureNameTabs());
+    }
+  }
+
+  /** Measure each ship name's rendered right edge so `nameTabPath` can pad it symmetrically. getBBox
+   * isn't implemented in jsdom (unit tests) and throws before layout, so this is best-effort - the
+   * fallback estimate in `nameTabPath` covers every case where it can't run. */
+  private measureNameTabs() {
+    const root = this.$el as Element | undefined;
+    if (!root || typeof (root as Element).querySelectorAll !== "function") {
+      return;
+    }
+    const next: Record<string, number> = {};
+    let changed = false;
+    root.querySelectorAll("svg.lost-fleet-ship").forEach((svg) => {
+      const ship = svg.getAttribute("data-ship");
+      const rest = svg.querySelector(".lost-fleet-ship__name-rest") as SVGGraphicsElement | null;
+      if (!ship || !rest || typeof rest.getBBox !== "function") {
+        return;
+      }
+      try {
+        const box = rest.getBBox();
+        if (box.width > 0) {
+          next[ship] = box.x + box.width;
+          if (this.nameTabRights[ship] !== next[ship]) {
+            changed = true;
+          }
+        }
+      } catch {
+        // getBBox throws in jsdom / before layout - fall back to the estimate in nameTabPath.
+      }
+    });
+    if (changed) {
+      this.nameTabRights = { ...this.nameTabRights, ...next };
+    }
+  }
 
   get engine(): Engine {
     return this.$store.state.data;
@@ -385,11 +450,15 @@ export default class LostFleetShips extends Vue {
     } L${x1},${bot} Z`;
   }
 
-  /** Left tab spans from x=6 to past the hex badge (right edge ~22.5) + the rest-of-name text (~6.4
-   * units/char at the bigger 11px font). Same height as the slots tab (tabPath's SLOT_TAB_TOP default). */
+  /** Left tab: equal NAME_TAB_PAD margin on both sides. It starts NAME_TAB_PAD left of the hex badge
+   * (NAME_TAB_X0) and ends NAME_TAB_PAD right of the name's real rendered right edge - measured at
+   * runtime per ship (`nameTabRights`, filled by `measureNameTabs`). Before that measurement lands (or
+   * in jsdom, where getBBox is unavailable) it falls back to a deliberate OVER-estimate so the tab is
+   * never born too narrow and clipping the name. Same height as the slots tab (tabPath default top). */
   nameTabPath(ship: Spaceship): string {
-    const x1 = 25 + this.shipNameRest(ship).length * 6.4 + 4;
-    return this.tabPath(6, Math.max(48, x1));
+    const measuredRight = this.nameTabRights[ship];
+    const textRight = measuredRight ?? 25 + this.shipNameRest(ship).length * 7.6;
+    return this.tabPath(NAME_TAB_X0, textRight + NAME_TAB_PAD);
   }
 
   /** Right (slots) tab: wider than the name tab but the same height (both use SLOT_TAB_TOP) - its

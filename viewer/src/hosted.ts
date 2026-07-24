@@ -96,6 +96,34 @@ async function mountGameInstance(
   const chatNotesRoot = mountChild(slot, ChatNotesPanel, { client, gameId, userId: session.user.id });
   const chatNotes = chatNotesRoot.$children[0] as any;
 
+  // The Lost Fleet sidebar's yellow notes sheet (LostFleetNotes.vue, inside the viewer tree) reads and
+  // writes the same per-game private notes the chat panel used to own - the `game_notes` table, one
+  // row per (game, user). The viewer never touches Supabase itself; we inject this thin adapter into
+  // its store so the sheet stays in sync across the player's devices. Self-contained play has no
+  // backend and falls back to localStorage (see LostFleetNotes.vue).
+  emitter.store.commit("setNotesBackend", {
+    load: async (): Promise<string> => {
+      const { data } = await (client as any)
+        .from("game_notes")
+        .select("body")
+        .eq("game_id", gameId)
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+      return data?.body ?? "";
+    },
+    save: async (body: string): Promise<void> => {
+      const { error } = await (client as any).from("game_notes").upsert({
+        game_id: gameId,
+        user_id: session.user.id,
+        body,
+        updated_at: new Date().toISOString(),
+      });
+      if (error) {
+        throw error;
+      }
+    },
+  });
+
   // Declared here (before its watchers below, which reference it) rather than in its previous
   // spot further down - HostedBar.vue's settings-menu labels (`chatPanelOpen`/`gameNavPanelOpen`)
   // need to be kept live from `chatNotes`'/`nav`'s own `open` state, and a watcher can't reference

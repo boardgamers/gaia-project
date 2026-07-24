@@ -6,8 +6,8 @@
       class="chat-notes__toggle"
       :class="{ 'chat-notes__toggle--unread': hasUnread }"
       :style="{ bottom: toggleBottomOffset + 'px' }"
-      @click="openPanel(tab)"
-      :aria-label="open ? 'Close chat and notes' : 'Open chat and notes'"
+      @click="openPanel()"
+      :aria-label="open ? 'Close chat' : 'Open chat'"
     >
       <span aria-hidden="true">&#128172;</span>
       <span v-if="hasUnread" class="chat-notes__badge"></span>
@@ -16,28 +16,13 @@
     <div v-if="open" class="chat-notes__panel">
       <div class="chat-notes__header">
         <button type="button" class="chat-notes__back" @click="closePanel" aria-label="Back to game">&larr;</button>
-        <div class="chat-notes__tabs">
-          <button
-            type="button"
-            class="chat-notes__tab"
-            :class="{ 'chat-notes__tab--active': tab === 'chat' }"
-            @click="switchTab('chat')"
-          >
-            Chat
-          </button>
-          <button
-            type="button"
-            class="chat-notes__tab"
-            :class="{ 'chat-notes__tab--active': tab === 'notes' }"
-            @click="switchTab('notes')"
-          >
-            Notes
-          </button>
-        </div>
+        <!-- Notes moved out to the Lost Fleet sidebar's sticky sheet (LostFleetNotes.vue) - this panel
+             is chat-only now, so a plain title stands in for the old Chat/Notes tab switcher. -->
+        <div class="chat-notes__title">Chat</div>
         <button type="button" class="chat-notes__close" @click="closePanel" aria-label="Close">&times;</button>
       </div>
 
-      <div v-if="tab === 'chat'" class="chat-notes__chat">
+      <div class="chat-notes__chat">
         <div class="chat-notes__chat-toolbar">
           <button type="button" class="chat-notes__mute-toggle" @click="toggleMute">
             {{ muted ? "🔕 Muted - not receiving push notifications" : "🔔 Receiving push notifications" }}
@@ -72,16 +57,6 @@
           <button type="submit" :disabled="!draft.trim()">Send</button>
         </form>
       </div>
-
-      <div v-else class="chat-notes__notes">
-        <textarea
-          v-model="notesBody"
-          class="chat-notes__notes-textarea"
-          placeholder="Private notes for this game - only you can see these."
-          @input="scheduleSaveNotes"
-        ></textarea>
-        <span class="chat-notes__notes-status text-muted small">{{ notesStatus }}</span>
-      </div>
     </div>
   </div>
 </template>
@@ -102,10 +77,6 @@ interface ChatMessage {
   created_at: string;
 }
 
-type Tab = "chat" | "notes";
-
-const NOTES_SAVE_DEBOUNCE_MS = 1500;
-
 const OPEN_PREF_KEY = "chat-notes-panel-open";
 
 // Desktop-only preference, mirroring GameNavPanel.vue's own (see its doc comment) - mobile never
@@ -124,9 +95,11 @@ function saveOpenPreference(open: boolean): void {
   }
 }
 
-/** Per-game chat (visible to every approved user, players and spectators alike) plus private,
- * per-user notes - a floating toggle that opens a collapsible side panel on desktop or a
- * full-screen overlay on mobile (see the scoped media queries below), matching the owner's brief.
+/** Per-game chat (visible to every approved user, players and spectators alike) - a floating toggle
+ * that opens a collapsible side panel on desktop or a full-screen overlay on mobile (see the scoped
+ * media queries below), matching the owner's brief. Private per-game notes used to live here too, as
+ * a second tab, but moved to the Lost Fleet sidebar's sticky sheet (LostFleetNotes.vue); this panel
+ * is chat-only now.
  *
  * Desktop and mobile are genuinely different UIs, not just a CSS reflow (see GameNavPanel.vue's
  * doc comment for the same split on the opposite edge): on desktop this panel is docked and
@@ -146,12 +119,9 @@ export default Vue.extend({
     return {
       isDesktop,
       open: isDesktop && loadOpenPreference(),
-      tab: "chat" as Tab,
       messages: [] as ChatMessage[],
       draft: "",
       authorName: "Player",
-      notesBody: "",
-      notesStatus: "",
       muted: false,
       unreadSince: 0,
       // Set directly from outside (hosted.ts, via emitter.store.watch) rather than tracked here -
@@ -170,13 +140,12 @@ export default Vue.extend({
       stickyBarObserver: null as ResizeObserver | null,
       stickyBarPoll: null as ReturnType<typeof setInterval> | null,
       channel: null as any,
-      notesSaveTimer: null as ReturnType<typeof setTimeout> | null,
       viewportUnwatch: null as (() => void) | null,
     };
   },
   computed: {
     hasUnread(): boolean {
-      if (this.open && this.tab === "chat") {
+      if (this.open) {
         return false;
       }
       const last = this.messages[this.messages.length - 1];
@@ -187,7 +156,6 @@ export default Vue.extend({
     this.unreadSince = this.loadLastRead();
     this.authorName = (await fetchMyNickname(this.client, this.userId)) || "Player";
     await this.loadMessages();
-    await this.loadNotes();
     await this.loadMuted();
     this.subscribeChat();
     this.startStickyBarWatch();
@@ -207,9 +175,6 @@ export default Vue.extend({
     }
     if (this.channel) {
       this.client.removeChannel(this.channel);
-    }
-    if (this.notesSaveTimer) {
-      clearTimeout(this.notesSaveTimer);
     }
   },
   methods: {
@@ -314,31 +279,6 @@ export default Vue.extend({
         window.alert(`Could not send message: ${error.message}`);
       }
     },
-    async loadNotes() {
-      const { data } = await (this.client as any)
-        .from("game_notes")
-        .select("body")
-        .eq("game_id", this.gameId)
-        .eq("user_id", this.userId)
-        .maybeSingle();
-      this.notesBody = data?.body ?? "";
-    },
-    scheduleSaveNotes() {
-      this.notesStatus = "Saving...";
-      if (this.notesSaveTimer) {
-        clearTimeout(this.notesSaveTimer);
-      }
-      this.notesSaveTimer = setTimeout(() => this.saveNotes(), NOTES_SAVE_DEBOUNCE_MS);
-    },
-    async saveNotes() {
-      const { error } = await (this.client as any).from("game_notes").upsert({
-        game_id: this.gameId,
-        user_id: this.userId,
-        body: this.notesBody,
-        updated_at: new Date().toISOString(),
-      });
-      this.notesStatus = error ? "Could not save" : "Saved";
-    },
     async loadMuted() {
       // A row's mere existence means "muted" (see 0034_game_chat_mutes.sql) - default is unmuted,
       // i.e. no row, since a brand new game/user pair has never muted anything.
@@ -375,22 +315,16 @@ export default Vue.extend({
       if (this.open) {
         this.closePanel();
       } else {
-        this.openPanel(this.tab);
+        this.openPanel();
       }
     },
-    openPanel(tab: Tab) {
+    openPanel() {
       this.setOpen(true);
-      this.switchTab(tab);
+      this.markRead();
+      this.$nextTick(() => this.scrollToBottom());
     },
     closePanel() {
       this.setOpen(false);
-    },
-    switchTab(tab: Tab) {
-      this.tab = tab;
-      if (tab === "chat") {
-        this.markRead();
-        this.$nextTick(() => this.scrollToBottom());
-      }
     },
   },
 });
@@ -473,26 +407,10 @@ export default Vue.extend({
   }
 }
 
-.chat-notes__tabs {
-  display: flex;
-  gap: 0.35rem;
+.chat-notes__title {
   flex: 1;
-}
-
-.chat-notes__tab {
-  flex: 1;
-  border: 0;
-  border-radius: 999px;
+  font-weight: 700;
   padding: 0.28rem 0.5rem;
-  background: transparent;
-  font-weight: 600;
-  color: inherit;
-  opacity: 0.6;
-
-  &--active {
-    background: var(--ui-accent-soft);
-    opacity: 1;
-  }
 }
 
 .chat-notes__close {
@@ -624,27 +542,5 @@ export default Vue.extend({
       opacity: 0.5;
     }
   }
-}
-
-.chat-notes__notes {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 0.6rem;
-  gap: 0.35rem;
-}
-
-.chat-notes__notes-textarea {
-  flex: 1;
-  resize: none;
-  border-radius: 0.4rem;
-  border: 1px solid var(--ui-border-strong);
-  background: var(--ui-input-bg);
-  color: var(--ui-text);
-  padding: 0.5rem;
-}
-
-.chat-notes__notes-status {
-  align-self: flex-end;
 }
 </style>

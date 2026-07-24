@@ -90,7 +90,14 @@
                keeping its bordered box unchanged) whatever's left over. -->
           <div v-if="engine.options.lostFleet" class="lost-fleet-ships-row mt-2">
             <LostFleetShips :style="lostFleetShipsStyle" />
-            <Pool compact class="lost-fleet-pool-sidebar" />
+            <!-- Right sidebar column: the round-booster/federation Pool on top, then a yellow notes
+                 sheet that grows to fill the rest so the column bottoms out level with the ship
+                 boards (and so never runs past them on mobile - its height naturally differs with the
+                 ship count at 2 vs 3-4 players). -->
+            <div class="lost-fleet-pool-sidebar lf-sidebar-col">
+              <Pool compact />
+              <LostFleetNotes />
+            </div>
           </div>
         </div>
       </div>
@@ -244,6 +251,7 @@ import ResearchBoard from "./ResearchBoard.vue";
 import ScoringBoard from "./ScoringBoard.vue";
 import SpaceMap from "./SpaceMap.vue";
 import LostFleetShips, { SHIP_BOARD_VIEWBOX_WIDTH } from "./LostFleetShips.vue";
+import LostFleetNotes from "./LostFleetNotes.vue";
 import TurnOrder from "./TurnOrder.vue";
 import { BASE_RESEARCH_BOARD_HEIGHT, researchBoardHeight } from "../logic/utils";
 import { parseCommands } from "../logic/recent";
@@ -285,6 +293,7 @@ const BOARD_ACTION_BASE_X = -20;
     ScoringBoard,
     SpaceMap,
     LostFleetShips,
+    LostFleetNotes,
     TurnOrder,
     Rules,
     Table,
@@ -980,16 +989,33 @@ export default class Game extends Vue {
 // natural width instead of overflowing the row (Pool's flex-wrap content has an intrinsic width).
 .lost-fleet-ships-row {
   display: flex;
-  align-items: flex-start;
+  // `stretch` (not flex-start) lets the sidebar column match the ship boards' height, so the notes
+  // sheet at its bottom can grow to fill the leftover space and the column ends level with the ships.
+  align-items: stretch;
   gap: 0.25rem;
 
   > .lost-fleet-ships {
     flex: 0 0 var(--lf-ship-width, 68%);
+    // Keep the ship stack pinned to the top of its (now stretched) flex track rather than centered.
+    align-self: flex-start;
   }
 
   > .lost-fleet-pool-sidebar {
     flex: 1 1 auto;
     min-width: 0;
+  }
+}
+
+// The sidebar's inner stack: Pool takes its natural height, the notes sheet grows into the rest so
+// the column bottoms out level with the ship boards (LostFleetNotes' own `flex: 1` does the growing).
+.lf-sidebar-col {
+  display: flex;
+  flex-direction: column;
+
+  // Tighten the Pool's own bottom margin (1em in the base game) to a compact sidebar gap above the
+  // notes sheet, so the two read as one stacked column rather than two far-apart boxes.
+  > div > .pool.compact {
+    margin-bottom: 0.4rem;
   }
 }
 

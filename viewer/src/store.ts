@@ -75,6 +75,16 @@ export type State = {
   seatLastActive: Record<number, string | null>;
   /** Hosted mode only (presence.ts) - the shared cross-page roster, keyed by user id. */
   presence: PresenceState;
+  /** Load/save adapter for the Lost Fleet sidebar notes sheet (LostFleetNotes.vue). Injected by
+   * hosted.ts as a thin closure over the Supabase `game_notes` table (the same per-game private notes
+   * the chat panel used before it was moved to the sidebar), so the viewer never imports Supabase
+   * itself. null in self-contained/hot-seat play, where the sheet falls back to localStorage. */
+  notesBackend: NotesBackend | null;
+};
+
+export type NotesBackend = {
+  load: () => Promise<string>;
+  save: (body: string) => Promise<void>;
 };
 
 function indexCommands(commands, command: Command) {
@@ -144,6 +154,7 @@ const gaiaViewer = {
       seatUsers: {},
       seatLastActive: {},
       presence: {},
+      notesBackend: null,
     } as State;
   },
   mutations: {
@@ -275,6 +286,10 @@ const gaiaViewer = {
 
     presence(state: State, data: PresenceState) {
       state.presence = data;
+    },
+
+    setNotesBackend(state: State, backend: NotesBackend | null) {
+      state.notesBackend = backend;
     },
   },
   actions: {

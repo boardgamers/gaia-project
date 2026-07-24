@@ -120,7 +120,7 @@ describe("ChatNotesPanel", () => {
     expect(wrapper.find(".chat-notes__toggle").exists()).to.equal(true);
   });
 
-  it("opens to the chat tab by default and lists loaded messages", async () => {
+  it("opens the chat panel and lists loaded messages", async () => {
     const client = makeClient({
       messages: [
         {
@@ -140,7 +140,7 @@ describe("ChatNotesPanel", () => {
     await wrapper.find(".chat-notes__toggle").trigger("click");
     await Vue_nextTick(wrapper);
     expect(wrapper.find(".chat-notes__panel").exists()).to.equal(true);
-    expect(wrapper.find(".chat-notes__tab--active").text()).to.equal("Chat");
+    expect(wrapper.find(".chat-notes__title").text()).to.equal("Chat");
     expect(wrapper.text()).to.include("Luke");
     expect(wrapper.text()).to.include("hey");
   });
@@ -204,20 +204,6 @@ describe("ChatNotesPanel", () => {
     expect(client.inserted).to.deep.equal([{ game_id: "game-1", user_id: "user-1", author_name: "Luke", body: "gg" }]);
   });
 
-  it("loads existing notes and switching to the Notes tab shows them", async () => {
-    const client = makeClient({ noteBody: "remember to build a mine" });
-    const wrapper = mount(ChatNotesPanel as any, {
-      propsData: { client, gameId: "game-1", userId: "user-1" },
-    });
-    await Vue_nextTick(wrapper);
-    await wrapper.find(".chat-notes__toggle").trigger("click");
-    await wrapper.findAll(".chat-notes__tab").at(1).trigger("click");
-    await Vue_nextTick(wrapper);
-    expect((wrapper.find(".chat-notes__notes-textarea").element as HTMLTextAreaElement).value).to.equal(
-      "remember to build a mine"
-    );
-  });
-
   it("shows the unread badge for a new message that arrived while the panel is closed", async () => {
     const client = makeClient();
     const wrapper = mount(ChatNotesPanel as any, {
@@ -269,6 +255,9 @@ describe("ChatNotesPanel", () => {
     const wrapper = mount(ChatNotesPanel as any, {
       propsData: { client, gameId: "game-1", userId: "user-1" },
     });
+    // Two ticks so mounted()'s async loadMuted() settles its initial (unmuted) read before we click -
+    // otherwise it can resolve after the click and clobber the optimistic mute back to false.
+    await Vue_nextTick(wrapper);
     await Vue_nextTick(wrapper);
     await wrapper.find(".chat-notes__toggle").trigger("click");
     await wrapper.find(".chat-notes__mute-toggle").trigger("click");
