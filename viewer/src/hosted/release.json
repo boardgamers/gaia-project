@@ -1,7 +1,20 @@
 {
-  "version": "5.36.14",
+  "version": "5.36.15",
   "releasedAt": "2026-07-24",
   "entries": [
+    {
+      "version": "5.36.15",
+      "releasedAt": "2026-07-24",
+      "kind": "update",
+      "title": "Ship action hexagons match base game size; boosters/federations fill sidebar",
+      "impact": "",
+      "changes": [
+        "Ship action hexagons now exactly match the base game's power action size, with tighter spacing between actions on each ship board. Round boosters and federation tokens in the sidebar now size themselves to fill their available space as large as possible while staying within 1 row (boosters) or 2 rows (federations), without bleeding past the box border."
+      ],
+      "userChanges": [
+        "Ship action hexagons now exactly match the base game's power action size, with tighter spacing between actions on each ship board. Round boosters and federation tokens in the sidebar now size themselves to fill their available space as large as possible while staying within 1 row (boosters) or 2 rows (federations), without bleeding past the box border."
+      ]
+    },
     {
       "version": "5.36.14",
       "releasedAt": "2026-07-24",
