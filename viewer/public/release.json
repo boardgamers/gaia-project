@@ -1,7 +1,16 @@
 {
-  "version": "5.36.10",
-  "releasedAt": "2026-07-21",
+  "version": "5.36.11",
+  "releasedAt": "2026-07-24",
   "entries": [
+    {
+      "version": "5.36.11",
+      "releasedAt": "2026-07-24",
+      "kind": "update",
+      "title": "Bigger Lost Fleet faction wheel",
+      "impact": "",
+      "changes": ["The Lost Fleet faction color wheel is now as large as it can be without covering the board"],
+      "userChanges": ["The Lost Fleet faction color wheel is now as large as it can be without covering the board"]
+    },
     {
       "version": "5.36.10",
       "releasedAt": "2026-07-21",
