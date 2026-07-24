@@ -1,7 +1,22 @@
 {
-  "version": "5.36.17",
+  "version": "5.36.18",
   "releasedAt": "2026-07-24",
   "entries": [
+    {
+      "version": "5.36.18",
+      "releasedAt": "2026-07-24",
+      "kind": "update",
+      "title": "Sidebar notes sheet + equal ship-name margins",
+      "impact": "",
+      "changes": [
+        "Added a yellow notes sheet under the round-booster sidebar in Lost Fleet games (the private per-game notes, moved out of the chat button which is now chat-only); tap to type, synced across your devices",
+        "Ship-name tabs now leave equal space on both sides of the name"
+      ],
+      "userChanges": [
+        "Added a yellow notes sheet under the round-booster sidebar in Lost Fleet games (the private per-game notes, moved out of the chat button which is now chat-only); tap to type, synced across your devices",
+        "Ship-name tabs now leave equal space on both sides of the name"
+      ]
+    },
     {
       "version": "5.36.17",
       "releasedAt": "2026-07-24",
