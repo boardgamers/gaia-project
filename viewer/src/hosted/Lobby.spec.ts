@@ -644,10 +644,12 @@ describe("Lobby", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
-    // Some entry near the top is a dev-only hotfix (no user-visible content) - the default tab
-    // must not show it, proving the filter is real and not just "show the newest N entries".
-    const devOnlyEntry = release.entries.find((e) => (e.userChanges ?? []).length === 0);
-    const userFacingEntry = release.entries.find((e) => (e.userChanges ?? []).length > 0);
+    // A recent user-facing entry also has a technical developer bullet. The default tab must omit
+    // that bullet, proving it renders `userChanges` rather than the entry's full change list.
+    const userFacingEntry = release.entries
+      .slice(0, 10)
+      .find((e) => (e.userChanges ?? []).length > 0 && e.changes.some((change) => !e.userChanges.includes(change)));
+    const developerOnlyChange = userFacingEntry.changes.find((change) => !userFacingEntry.userChanges.includes(change));
 
     expect(wrapper.text()).to.contain(`Version ${release.version}`);
     expect(wrapper.text()).to.not.contain("2026-07-08");
@@ -662,8 +664,7 @@ describe("Lobby", () => {
     expect(wrapper.text()).to.contain("Changelog");
     expect(wrapper.text()).to.contain("What's new");
     expect(wrapper.text()).to.contain(userFacingEntry.userChanges[0]);
-    expect(wrapper.text()).to.not.contain(devOnlyEntry.title);
-    expect(wrapper.text()).to.not.contain(devOnlyEntry.changes[0]);
+    expect(wrapper.text()).to.not.contain(developerOnlyChange);
 
     const devTab = wrapper
       .findAll("button")
@@ -672,9 +673,9 @@ describe("Lobby", () => {
     await devTab.trigger("click");
     await Vue.nextTick();
 
-    expect(wrapper.text()).to.contain(devOnlyEntry.title);
-    expect(wrapper.text()).to.contain(devOnlyEntry.changes[0]);
-    expect(wrapper.text()).to.contain(devOnlyEntry.releasedAt);
+    expect(wrapper.text()).to.contain(userFacingEntry.title);
+    expect(wrapper.text()).to.contain(developerOnlyChange);
+    expect(wrapper.text()).to.contain(userFacingEntry.releasedAt);
   });
 
   it("opens the Credits modal (boardgamers.space / MIT-license attribution) from the settings menu", async () => {

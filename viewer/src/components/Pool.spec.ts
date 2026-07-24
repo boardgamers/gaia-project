@@ -40,6 +40,7 @@ function sharedBackend(initialMode: ChessPanelMode) {
       for (const listener of listeners) {
         listener(row);
       }
+      return row;
     },
   };
   return { backend, listeners, writes };
@@ -118,6 +119,98 @@ describe("compact Pool chess mode", () => {
     first.destroy();
     second.destroy();
     expect(listeners.size).to.equal(0);
+  });
+
+  it("does not let a slow initial four-player snapshot undo a completed swipe", async () => {
+    const staleRow: ChessRow = {
+      fen: START_FEN,
+      updated_at: "2026-07-24T19:00:00.000Z",
+      white_user: "white-one",
+      white_user_2: "white-two",
+      black_user: "black-one",
+      black_user_2: "black-two",
+      white_next_user: "white-one",
+      black_next_user: "black-one",
+      panel_mode: "pool",
+    };
+    const committedRow: ChessRow = {
+      ...staleRow,
+      updated_at: "2026-07-24T19:00:01.000Z",
+      panel_mode: "chess",
+    };
+    let resolveInitial = (_row: ChessRow) => undefined;
+    const backend: ChessBackend = {
+      gameId: "four-player-game",
+      userId: "white-one",
+      load: () => new Promise((resolve) => (resolveInitial = resolve)),
+      subscribe: () => () => undefined,
+      move: async (_before, after) => after,
+      reset: async () => undefined,
+      setPanelMode: async () => committedRow,
+    };
+    const wrapper = mountPool(backend);
+
+    const source = wrapper.find(".pool-tiles-face").element;
+    dispatchPointer(source, "pointerdown", 130, 30);
+    dispatchPointer(source, "pointermove", 70, 30);
+    dispatchPointer(source, "pointerup", 70, 30);
+    await settle();
+    expect((wrapper.vm as any).showChess).to.equal(true);
+
+    resolveInitial(staleRow);
+    await settle();
+    expect((wrapper.vm as any).showChess).to.equal(true);
+    wrapper.destroy();
+  });
+
+  it("lets a spectator switch locally without changing shared state", async () => {
+    let row: ChessRow = {
+      fen: START_FEN,
+      updated_at: "2026-07-24T19:00:00.000Z",
+      white_user: "white",
+      white_user_2: null,
+      black_user: "black",
+      black_user_2: null,
+      white_next_user: "white",
+      black_next_user: "black",
+      panel_mode: "pool",
+    };
+    const listeners = new Set<(next: ChessRow) => void>();
+    const backend: ChessBackend = {
+      gameId: "spectated-game",
+      userId: "spectator",
+      load: async () => row,
+      subscribe(listener) {
+        listeners.add(listener);
+        return () => listeners.delete(listener);
+      },
+      move: async (_before, after) => after,
+      reset: async () => undefined,
+      setPanelMode: async () => null,
+    };
+    const wrapper = mountPool(backend);
+    await settle();
+
+    const source = wrapper.find(".pool-tiles-face").element;
+    dispatchPointer(source, "pointerdown", 130, 30);
+    dispatchPointer(source, "pointermove", 70, 30);
+    dispatchPointer(source, "pointerup", 70, 30);
+    await settle();
+    expect((wrapper.vm as any).showChess).to.equal(true);
+
+    for (const listener of listeners) {
+      listener(row);
+    }
+    await wrapper.vm.$nextTick();
+    expect((wrapper.vm as any).showChess).to.equal(true);
+
+    row = { ...row, panel_mode: "pool", updated_at: "2026-07-24T19:00:01.000Z" };
+    for (const listener of listeners) {
+      listener(row);
+    }
+    await wrapper.vm.$nextTick();
+    expect((wrapper.vm as any).showChess).to.equal(false);
+    wrapper.destroy();
   });
 
   it("does not switch views when a booster or federation tile is tapped", async () => {

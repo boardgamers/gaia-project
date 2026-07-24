@@ -9,6 +9,10 @@ function throwIfError(error: any): void {
   }
 }
 
+function isPanelPermissionError(error: any): boolean {
+  return typeof error?.message === "string" && error.message.includes("only a player in this game can switch");
+}
+
 export function createSupabaseChessBackend(client: SupabaseClient, gameId: string, userId: string): ChessBackend {
   const listeners = new Set<(row: ChessRow) => void>();
   let channel: any = null;
@@ -93,12 +97,32 @@ export function createSupabaseChessBackend(client: SupabaseClient, gameId: strin
       const { error } = await client.rpc("reset_chess", { p_game_id: gameId });
       throwIfError(error);
     },
-    async setPanelMode(mode: ChessPanelMode): Promise<void> {
+    async setPanelMode(mode: ChessPanelMode): Promise<ChessRow | null> {
+      // A player can arrive through an invitation after this browser session first loaded. Reclaim
+      // that seat immediately before the membership-checked write so the first drawer swipe cannot
+      // be rejected and snap back while the normal hosted-game bootstrap is still catching up.
+      const { error: claimError } = await client.rpc("claim_my_seats", {});
+      throwIfError(claimError);
       const { error } = await client.rpc("set_chess_panel_mode", {
         p_game_id: gameId,
         p_mode: mode,
       });
+      if (isPanelPermissionError(error)) {
+        // Spectators may browse either face locally, but must not change the shared face for the
+        // seated players. Refresh/emit the shared row while Pool.vue still has its optimistic write
+        // pending so it can establish the baseline without visibly snapping back.
+        const row = await load().catch(() => null);
+        if (row) {
+          emit(row);
+        }
+        return null;
+      }
       throwIfError(error);
+      // Return the committed row. Pool.vue uses it to order this write against the initial load and
+      // the subscription's catch-up load, either of which may have started before the swipe.
+      // The write is already committed at this point, so a follow-up read failure must not make the
+      // optimistic face snap back as though the write itself failed.
+      return load().catch(() => null);
     },
   };
 }

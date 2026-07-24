@@ -1,7 +1,21 @@
 {
-  "version": "5.37.9",
+  "version": "5.37.10",
   "releasedAt": "2026-07-24",
   "entries": [
+    {
+      "version": "5.37.10",
+      "releasedAt": "2026-07-24",
+      "kind": "update",
+      "title": "Spectator chess drawer",
+      "impact": "",
+      "changes": [
+        "Spectators can now browse the booster pool and chess board locally without changing the shared view for players.",
+        "Reclaim hosted seats before panel-mode writes and order initial/catch-up snapshots against committed or local drawer changes."
+      ],
+      "userChanges": [
+        "Spectators can now browse the booster pool and chess board locally without changing the shared view for players."
+      ]
+    },
     {
       "version": "5.37.9",
       "releasedAt": "2026-07-24",

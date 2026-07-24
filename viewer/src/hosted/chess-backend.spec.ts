@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/camelcase */
 // Assertions intentionally use Supabase wire names.
 import { expect } from "chai";
-import { ChessRow } from "../logic/chess-backend";
+import { ChessPanelMode, ChessRow } from "../logic/chess-backend";
 import { createSupabaseChessBackend } from "./chess-backend";
 
 function makeClient(row: ChessRow | null = null) {
+  let currentRow = row;
   const calls = {
     selected: "",
     filters: [] as Array<[string, string]>,
@@ -54,8 +55,11 @@ function makeClient(row: ChessRow | null = null) {
     },
     async rpc(name: string, args: Record<string, unknown>) {
       calls.rpc.push({ name, args });
+      if (name === "set_chess_panel_mode" && currentRow) {
+        currentRow = { ...currentRow, panel_mode: args.p_mode as ChessPanelMode };
+      }
       return {
-        data: name === "move_chess" ? args.p_next_fen : name === "ensure_chess_assignment" ? row : null,
+        data: name === "move_chess" ? args.p_next_fen : name === "ensure_chess_assignment" ? currentRow : null,
         error: null,
       };
     },
@@ -113,12 +117,22 @@ describe("Supabase chess backend", () => {
   });
 
   it("scopes every write RPC to the current Gaia game", async () => {
-    const { client, calls } = makeClient();
+    const row: ChessRow = {
+      fen: "fen",
+      white_user: "white",
+      white_user_2: "white-two",
+      black_user: "black",
+      black_user_2: "black-two",
+      white_next_user: "white",
+      black_next_user: "black",
+      panel_mode: "pool",
+    };
+    const { client, calls } = makeClient(row);
     const backend = createSupabaseChessBackend(client, gameId, "white");
 
     await backend.move("before", "after", "e2", "e4");
     await backend.reset();
-    await backend.setPanelMode("chess");
+    expect(await backend.setPanelMode("chess")).to.deep.equal({ ...row, panel_mode: "chess" });
 
     expect(calls.rpc).to.deep.equal([
       {
@@ -132,7 +146,40 @@ describe("Supabase chess backend", () => {
         },
       },
       { name: "reset_chess", args: { p_game_id: gameId } },
+      { name: "claim_my_seats", args: {} },
       { name: "set_chess_panel_mode", args: { p_game_id: gameId, p_mode: "chess" } },
+      { name: "ensure_chess_assignment", args: { p_game_id: gameId } },
+    ]);
+  });
+
+  it("keeps a spectator panel switch local when the shared write is forbidden", async () => {
+    const row: ChessRow = {
+      fen: "fen",
+      white_user: "white",
+      white_user_2: null,
+      black_user: "black",
+      black_user_2: null,
+      white_next_user: "white",
+      black_next_user: "black",
+      panel_mode: "pool",
+    };
+    const { client, calls } = makeClient(row);
+    const rpc = client.rpc.bind(client);
+    client.rpc = async (name: string, args: Record<string, unknown>) =>
+      name === "set_chess_panel_mode"
+        ? (calls.rpc.push({ name, args }),
+          {
+            data: null,
+            error: { message: "only a player in this game can switch the chess panel" },
+          })
+        : rpc(name, args);
+    const backend = createSupabaseChessBackend(client, gameId, "spectator");
+
+    expect(await backend.setPanelMode("chess")).to.equal(null);
+    expect(calls.rpc.map((call) => call.name)).to.deep.equal([
+      "claim_my_seats",
+      "set_chess_panel_mode",
+      "ensure_chess_assignment",
     ]);
   });
 });

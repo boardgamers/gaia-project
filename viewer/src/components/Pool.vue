@@ -133,6 +133,11 @@ export default class Pool extends Vue {
   private panelSwipeSettleTimer: number | null = null;
   private suppressPanelClick = false;
   private suppressPanelClickTimer: number | null = null;
+  private panelModeIntent = 0;
+  private pendingPanelMode: ChessPanelMode | null = null;
+  private latestPanelUpdatedAt = 0;
+  private localPanelModeOverride = false;
+  private localPanelModeBaseline = 0;
 
   // Used by LostFleetShips' sidebar placement (Game.vue): switches to the flex/grid layout below
   // (sized to the sidebar's own narrow width) instead of the base game's fixed-size flex-wrap row.
@@ -153,10 +158,13 @@ export default class Pool extends Vue {
       return;
     }
     this.chessUnsubscribe = backend.subscribe((row) => this.applyPanelRow(row));
+    const loadIntent = this.panelModeIntent;
     backend
       .load()
       .then((row) => {
-        if (row) {
+        // A four-player assignment can make this first request noticeably slower. Never let its
+        // pre-swipe snapshot overwrite a newer local choice when it eventually returns.
+        if (row && loadIntent === this.panelModeIntent) {
           this.applyPanelRow(row);
         }
       })
@@ -392,6 +400,23 @@ export default class Pool extends Vue {
   }
 
   private applyPanelRow(row: ChessRow) {
+    const updatedAt = row.updated_at ? Date.parse(row.updated_at) : 0;
+    if (updatedAt && updatedAt < this.latestPanelUpdatedAt) {
+      return;
+    }
+    if (updatedAt) {
+      this.latestPanelUpdatedAt = updatedAt;
+    }
+    if (this.localPanelModeOverride && (!updatedAt || updatedAt <= this.localPanelModeBaseline)) {
+      return;
+    }
+    if (this.localPanelModeOverride) {
+      // A genuinely newer participant change supersedes a spectator's local-only view.
+      this.localPanelModeOverride = false;
+    }
+    if (this.pendingPanelMode && row.panel_mode !== this.pendingPanelMode) {
+      return;
+    }
     this.applyPanelMode(row.panel_mode);
   }
 
@@ -410,23 +435,44 @@ export default class Pool extends Vue {
       return;
     }
     const previousMode: ChessPanelMode = this.showChess ? "chess" : "pool";
+    const intent = ++this.panelModeIntent;
+    this.pendingPanelMode = mode;
     this.applyPanelMode(mode);
 
     const backend = this.chessBackend;
     if (!backend) {
       window.localStorage.setItem(this.localPanelStorageKey, mode);
+      this.pendingPanelMode = null;
       return;
     }
 
     this.panelModeSaving = true;
     try {
-      await backend.setPanelMode(mode);
+      const row = await backend.setPanelMode(mode);
+      if (intent === this.panelModeIntent) {
+        this.pendingPanelMode = null;
+        if (row) {
+          this.localPanelModeOverride = false;
+          this.applyPanelRow(row);
+        } else {
+          // A null row means the shared write was unavailable (normally because this viewer is a
+          // spectator). Keep the chosen face locally; the next newer shared row still wins.
+          this.localPanelModeOverride = true;
+          this.localPanelModeBaseline = this.latestPanelUpdatedAt;
+        }
+      }
     } catch (error) {
+      this.pendingPanelMode = null;
+      this.localPanelModeOverride = false;
       try {
         const row = await backend.load();
-        row ? this.applyPanelRow(row) : this.applyPanelMode(previousMode);
+        if (intent === this.panelModeIntent) {
+          row ? this.applyPanelRow(row) : this.applyPanelMode(previousMode);
+        }
       } catch (loadError) {
-        this.applyPanelMode(previousMode);
+        if (intent === this.panelModeIntent) {
+          this.applyPanelMode(previousMode);
+        }
       }
     } finally {
       this.panelModeSaving = false;

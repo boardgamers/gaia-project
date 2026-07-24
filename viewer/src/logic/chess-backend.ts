@@ -1,7 +1,10 @@
+/* eslint-disable @typescript-eslint/camelcase */
+// Supabase row/RPC wire names are snake_case.
 export type ChessPanelMode = "pool" | "chess";
 
 export interface ChessRow {
   fen: string;
+  updated_at?: string;
   last_move_from?: string | null;
   last_move_to?: string | null;
   white_user: string | null;
@@ -27,5 +30,5 @@ export interface ChessBackend {
   subscribe(onRow: (row: ChessRow) => void): () => void;
   move(previousFen: string, nextFen: string, from: string, to: string): Promise<string>;
   reset(): Promise<void>;
-  setPanelMode(mode: ChessPanelMode): Promise<void>;
+  setPanelMode(mode: ChessPanelMode): Promise<ChessRow | null>;
 }
