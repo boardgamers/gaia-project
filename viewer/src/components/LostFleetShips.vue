@@ -5,7 +5,7 @@
       :key="ship"
       class="lost-fleet-ship"
       :data-ship="ship"
-      viewBox="0 -20 291 78"
+      :viewBox="`0 -20 ${viewBoxWidth} 78`"
       style="overflow: visible"
     >
       <!-- The board is a rounded card outlined in the ship's color. Its name and the player
@@ -15,7 +15,7 @@
       <rect
         x="1.25"
         y="0"
-        width="288.5"
+        :width="cardWidth"
         height="56"
         rx="7"
         ry="7"
@@ -23,13 +23,15 @@
         :style="{ fill: shipColor(ship), stroke: shipColor(ship) }"
       />
 
-      <!-- the ship's 3 board actions, rendered exactly like the base game's BoardAction row -->
+      <!-- the ship's 3 board actions, rendered exactly like the base game's BoardAction row - tighter
+           spacing than the base game's own action row (owner request: "less space between each ship
+           action"), see ACTION_SPACING's own comment. -->
       <g
         v-for="(action, i) in shipActions(ship)"
         :key="action.type"
         :class="['lost-fleet-ship__action', action.type, { used: actionUser(ship, action.type) != null }]"
         :data-action="action.type"
-        :transform="`translate(${29 + i * 54}, 28)`"
+        :transform="`translate(${actionXBase + i * actionSpacing}, 28)`"
         v-b-tooltip.nofade="tooltipTriggerConfig()"
         :title="actionTooltip(ship, action)"
       >
@@ -125,7 +127,7 @@
            middle. FederationTile is a 50-unit box centered at its own (0,0); its drop-shadow extends
            downward, so it is nudged ~3 units above the geometric center (translate y=5) so the token
            itself reads as centered rather than sitting low. -->
-      <g data-section="federation" transform="translate(173, 5) scale(0.8)">
+      <g data-section="federation" :transform="`translate(${federationX}, 5) scale(0.8)`">
         <FederationTile
           v-if="shipFederation(ship)"
           :rewardsOverride="federationDisplayRewards(shipFederation(ship))"
@@ -141,27 +143,24 @@
 
       <!-- the Standard Tech tile seeded on this ship (Twilight has artifacts instead). TechTile draws
            a 60-unit box whose visual center sits at its own local (30, 30); scaled 0.95 so it matches
-           the research board's own tech tiles (which render at that same 0.95, at the ship board's
-           research-matched scale - see the CSS width note below), and translated so its middle stays on
-           the action octagons' y=28 center line (ty + 30*0.95 = 28, tx + 30*0.95 = 249.6, the same
-           right-hand slot the 0.72 tile used to center on). At 0.95 the tile spans y ~1.3..54.7, just
-           inside the 56-unit card. -->
-      <g v-if="hasTechSlot(ship)" data-section="tech" transform="translate(221.1, -0.5) scale(0.95)">
+           the research board's own tech tiles (which render at that same 0.95), and translated so its
+           middle stays on the action octagons' y=28 center line (ty + 30*0.95 = 28). At 0.95 the tile
+           spans y ~1.3..54.7, just inside the 56-unit card. -->
+      <g v-if="hasTechSlot(ship)" data-section="tech" :transform="`translate(${techX}, -0.5) scale(0.95)`">
         <TechTile :pos="ship" x="0" y="0" />
       </g>
       <!-- Twilight has no Standard Tech slot (see `hasTechSlot` above) - this artifact grid fills the
            same right-hand slot instead, a 2-column grid centered vertically on the same y=27 line as
            the tiles (up to 4 artifacts = player count at 4p, so 2 rows). The tokens are ovals (wider
-           than tall) at size=24, i.e. 32 wide x 24 tall. The left column starts at x=217 so it clears
-           the Federation tile (which spans x=173..213), and the columns sit 37 apart (left edges
-           217 / 254, right edge 286) so the right column stays inside the card's right border; rows
-           are 27 apart and stay above the bottom border. -->
+           than tall) at size=24, i.e. 32 wide x 24 tall. The left column starts at artifactX0 so it
+           clears the Federation tile, and the columns sit 37 apart so the right column stays inside the
+           card's right border; rows are 27 apart and stay above the bottom border. -->
       <g v-else data-section="artifacts">
         <g
           v-for="(artifact, i) in remainingArtifacts"
           :key="artifact"
           :data-artifact="artifact"
-          :transform="`translate(${217 + (i % 2) * 37}, ${3 + Math.floor(i / 2) * 27})`"
+          :transform="`translate(${artifactX0 + (i % 2) * 37}, ${3 + Math.floor(i / 2) * 27})`"
         >
           <ArtifactIcon :artifact="artifact" :size="24" />
         </g>
@@ -253,19 +252,47 @@ import Token from "./Token.vue";
 import UsedActionMark from "./UsedActionMark.vue";
 import { tooltipTriggerConfig } from "../logic/tooltip";
 
+// The 3 action octagons' row. ACTION_SPACING=41 is deliberately tighter than the base game's own
+// power/QIC action row (BOARD_ACTION_SPACING=45 in Game.vue) - owner request: "less space between
+// each ship action" - leaving only a ~2.6-unit gap between adjacent octagons (octagon width is 38.4,
+// from SpecialAction's own width=40 prop, the SAME prop value the base game's BoardAction.vue uses -
+// see ACTION_COMPRESSION below for why that match matters). Any tighter and adjacent octagons start
+// visually touching.
+const ACTION_X_BASE = 29;
+const ACTION_SPACING = 41;
+
+// Everything from the Federation tile rightward (federation, tech tile, artifact grid, slots tab,
+// card width) shifts left by this same total to follow the 3rd octagon's new, closer position -
+// 2 gaps compressed from the original 54-unit spacing down to ACTION_SPACING, i.e.
+// 2 * (54 - ACTION_SPACING). Applying ONE uniform shift to all of them keeps every relative gap
+// between those elements identical to the previous (already visually verified) layout - only the
+// octagon-to-octagon gaps actually change.
+const ACTION_COMPRESSION = 2 * (54 - ACTION_SPACING);
+
+const FEDERATION_X = 173 - ACTION_COMPRESSION;
+const TECH_X = 221.1 - ACTION_COMPRESSION;
+const ARTIFACT_X0 = 217 - ACTION_COMPRESSION;
+const CARD_WIDTH = 288.5 - ACTION_COMPRESSION;
+
 // Exploration ("player") slot geometry - owner request: bigger slots than the original r=6 design.
 // SLOT_RADIUS=8 needs SLOT_SPACING>=17 to keep a real (1-unit) gap between adjacent circles instead
 // of touching, and a taller-than-the-name-tab SLOT_TAB_TOP to keep the same ~2-unit margin the name
-// tab has above/below its own (smaller) content - see `tabPath`'s own doc comment.
+// tab has above/below its own (smaller) content - see `tabPath`'s own doc comment. X positions shift
+// left by ACTION_COMPRESSION along with everything else right of the action row (see above).
 const SLOT_RADIUS = 8;
 const SLOT_SPACING = 17;
-const SLOT_X_BASE = 223;
+const SLOT_X_BASE = 223 - ACTION_COMPRESSION;
 const SLOT_TAB_TOP = -19;
-const SLOT_TAB_X0 = 210;
-const SLOT_TAB_X1 = 286;
+const SLOT_TAB_X0 = 210 - ACTION_COMPRESSION;
+const SLOT_TAB_X1 = 286 - ACTION_COMPRESSION;
 // Vertical center of the slot circles within the taller tab (SLOT_TAB_TOP=-19 to bot=1): centered
 // with a 2-unit margin top and bottom around the SLOT_RADIUS=8 circle (extent -17..-1).
 const SLOT_Y = -9;
+
+// The ship SVG's own viewBox width - the original 291 minus the same ACTION_COMPRESSION every other
+// rightward element gives up. Exported for Game.vue, which needs it to compute the ship board's exact
+// px-per-unit-matching CSS width (see that file's `lostFleetShipsStyle`).
+export const SHIP_BOARD_VIEWBOX_WIDTH = 291 - ACTION_COMPRESSION;
 
 @Component({
   components: {
@@ -283,6 +310,13 @@ const SLOT_Y = -9;
 export default class LostFleetShips extends Vue {
   slotRadius = SLOT_RADIUS;
   slotY = SLOT_Y;
+  actionXBase = ACTION_X_BASE;
+  actionSpacing = ACTION_SPACING;
+  federationX = FEDERATION_X;
+  techX = TECH_X;
+  artifactX0 = ARTIFACT_X0;
+  cardWidth = CARD_WIDTH;
+  viewBoxWidth = SHIP_BOARD_VIEWBOX_WIDTH;
 
   get engine(): Engine {
     return this.$store.state.data;
@@ -465,14 +499,12 @@ export default class LostFleetShips extends Vue {
 }
 
 svg.lost-fleet-ship {
-  // Fills its (narrower, see `.lost-fleet-ships-row` in Game.vue) column, leaving a small margin
-  // before the pool sidebar starts. This used to be tuned to match the research board's own
-  // px-per-unit exactly (so the action octagons matched the base-game power/QIC octagons pixel for
-  // pixel) - narrowing the ship board to make room for the sidebar (owner request) trades a little of
-  // that exact match for the extra width; the octagons stay close to base-game size, just not
-  // pixel-identical anymore. Scaling via width (not a transform) carries the SVG's height along in
-  // proportion, so no dead gap opens below each board.
-  width: 96%;
+  // Fills 100% of `.lost-fleet-ships`, whose own width is the exact-px-per-unit-matching flex-basis
+  // (`--lf-ship-width`, see Game.vue's `lostFleetShipsStyle`) - so this SVG renders at exactly the
+  // research board's own px-per-unit, making the action octagons match the base-game power/QIC
+  // octagons pixel for pixel (owner request). Scaling via width (not a transform) carries the SVG's
+  // height along in proportion, so no dead gap opens below each board.
+  width: 100%;
   height: auto;
   display: block;
 

@@ -82,13 +82,14 @@
 
                The round boosters + available federation tokens (Pool.vue) used to live in their own
                full-width row far down the page, after every player board - owner feedback was to move
-               them up beside the ship boards instead, in the room the (now narrower) ships column
-               leaves on the right, rather than a separate section. `lost-fleet-ships-row` gives the
-               sidebar a fixed share of the width (`compact` drops Pool's page-gutter padding, which a
-               ~150px sidebar can't spare, while keeping its bordered box unchanged) and `LostFleetShips`
-               fills the rest - see that component's own width comment for the narrower-card rationale. -->
+               them up beside the ship boards instead, in the room the ship boards' own tightened-up
+               action row now leaves on the right, rather than a separate section. `lost-fleet-ships-row`
+               gives `LostFleetShips` a fixed share of the width matching its action octagons' exact
+               px-per-unit to the base game's own power/QIC octagons (`lostFleetShipsStyle`) and
+               `Pool` (`compact` drops its page-gutter padding, which a narrow sidebar can't spare, while
+               keeping its bordered box unchanged) whatever's left over. -->
           <div v-if="engine.options.lostFleet" class="lost-fleet-ships-row mt-2">
-            <LostFleetShips />
+            <LostFleetShips :style="lostFleetShipsStyle" />
             <Pool compact class="lost-fleet-pool-sidebar" />
           </div>
         </div>
@@ -242,7 +243,7 @@ import PlayerInfo from "./PlayerInfo.vue";
 import ResearchBoard from "./ResearchBoard.vue";
 import ScoringBoard from "./ScoringBoard.vue";
 import SpaceMap from "./SpaceMap.vue";
-import LostFleetShips from "./LostFleetShips.vue";
+import LostFleetShips, { SHIP_BOARD_VIEWBOX_WIDTH } from "./LostFleetShips.vue";
 import TurnOrder from "./TurnOrder.vue";
 import { BASE_RESEARCH_BOARD_HEIGHT, researchBoardHeight } from "../logic/utils";
 import { parseCommands } from "../logic/recent";
@@ -500,6 +501,18 @@ export default class Game extends Vue {
 
   get researchBoardCanvasViewBox() {
     return `${this.researchBoardCanvasMinX} 0 ${this.researchBoardCanvasWidth} ${this.researchBoardCanvasHeight}`;
+  }
+
+  // Sizes the ship board so it renders at the research board's own px-per-unit - both live full-width
+  // in the same `.lost-fleet-ships-row`, so matching px-per-unit means the ship SVG takes
+  // SHIP_BOARD_VIEWBOX_WIDTH / researchBoardCanvasWidth of the row's width. That's what makes the
+  // ship's action octagons match the base-game power-action octagons exactly (owner request), and its
+  // Standard Tech tile match the research board's tech tiles. Exposed as a CSS custom property that
+  // `.lost-fleet-ships-row > .lost-fleet-ships` (Game.vue's own stylesheet) reads as a fixed
+  // flex-basis - the Pool sidebar (`.lost-fleet-pool-sidebar`) gets whatever's left over.
+  get lostFleetShipsStyle(): Record<string, string> {
+    const width = (SHIP_BOARD_VIEWBOX_WIDTH / this.researchBoardCanvasWidth) * 100;
+    return { "--lf-ship-width": `${width}%` };
   }
 
   get totalStickyFooterHeight() {
@@ -957,25 +970,25 @@ export default class Game extends Vue {
   stroke-width: 1;
 }
 
-// Ship boards (narrower now, see LostFleetShips.vue's own width comment) sit in the left share of
-// this row; the round-booster / federation-token Pool sidebar fills the rest, replacing the empty
-// gutter that otherwise sat unused to the ships' right. `min-width: 0` on both is the standard
-// flexbox fix that lets a flex item shrink below its content's natural size instead of overflowing
-// the row (SVGs and Pool's own flex-wrap content both have an intrinsic width otherwise).
+// Ship boards sit in a FIXED-width left share of this row - `--lf-ship-width` (lostFleetShipsStyle)
+// pins it to the exact px-per-unit the research board itself renders at, so the action octagons match
+// the base-game power/QIC octagons exactly (owner request) rather than just approximately. The
+// round-booster / federation-token Pool sidebar gets whatever's left over, replacing the empty gutter
+// that otherwise sat unused to the ships' right. A small gap (owner request: "sit closer... without
+// overlapping") keeps the two visually distinct without wasting width the sidebar could use instead.
+// `min-width: 0` on the sidebar is the standard flexbox fix that lets it shrink below its content's
+// natural width instead of overflowing the row (Pool's flex-wrap content has an intrinsic width).
 .lost-fleet-ships-row {
   display: flex;
   align-items: flex-start;
-  gap: 0.5rem;
+  gap: 0.25rem;
 
   > .lost-fleet-ships {
-    flex: 1 1 auto;
-    min-width: 0;
+    flex: 0 0 var(--lf-ship-width, 68%);
   }
 
   > .lost-fleet-pool-sidebar {
-    // 40% keeps 2 boosters (60px each, needing ~124px with the compact 4px gap) fitting per row down
-    // to ~340px-wide phones - narrower than that is a vanishingly small share of real devices.
-    flex: 0 0 40%;
+    flex: 1 1 auto;
     min-width: 0;
   }
 }

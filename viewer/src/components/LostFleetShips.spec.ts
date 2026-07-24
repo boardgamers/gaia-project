@@ -106,7 +106,7 @@ describe("LostFleetShips", () => {
     const ship = container.querySelector("svg.lost-fleet-ship");
     expect(ship.hasAttribute("width")).to.equal(false);
     expect(ship.hasAttribute("height")).to.equal(false);
-    expect(ship.getAttribute("viewBox")).to.equal("0 -20 291 78");
+    expect(ship.getAttribute("viewBox")).to.equal("0 -20 265 78");
   });
 
   it("lays the 4 exploration slots out evenly spaced in the right-hand tab", () => {
@@ -184,9 +184,11 @@ describe("LostFleetShips", () => {
     // ArtifactIcon is rendered at size=24 here (fits the shorter card), as a self-contained nested
     // <svg>. The token is an oval, 32 wide x 24 tall, so its visual center sits 16 screen units
     // right and 12 down of whatever translate positions it. The left column starts right of the
-    // Federation tile (which ends at x=213) and the grid stays inside the card, so the icons' centers
-    // land just right of the other 3 ships' Standard Tech tile region, and no icon may render past
-    // the ship's own viewBox bottom (-16 + 68 = 52) - the reported "bleeds into the bottom" bug.
+    // Federation tile and the grid stays inside the card, so the icons' centers land just right of
+    // the other 3 ships' Standard Tech tile region, and no icon may render past the ship's own
+    // viewBox bottom (-16 + 68 = 52) - the reported "bleeds into the bottom" bug. The absolute x's
+    // here are 26 less than they used to be (LostFleetShips.vue's ACTION_COMPRESSION, tighter action
+    // spacing shifting everything from the Federation tile rightward left by that much).
     const iconHalfWidth = 16;
     const iconHalfHeight = 12;
     const centers = Array.from(artifactGroups).map((g) => {
@@ -195,11 +197,11 @@ describe("LostFleetShips", () => {
     });
     const avgX = centers.reduce((s, c) => s + c.x, 0) / centers.length;
     const avgY = centers.reduce((s, c) => s + c.y, 0) / centers.length;
-    // left column left edge is 217 (clears the Federation tile at x=173..213)
+    // left column left edge is 191 (clears the Federation tile)
     for (const c of centers) {
-      expect(c.x - iconHalfWidth).to.be.at.least(214);
+      expect(c.x - iconHalfWidth).to.be.at.least(188);
     }
-    expect(avgX).to.be.closeTo(251, 5);
+    expect(avgX).to.be.closeTo(225, 5);
     expect(avgY).to.be.closeTo(27, 5);
 
     for (const c of centers) {

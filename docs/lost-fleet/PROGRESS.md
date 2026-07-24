@@ -4080,25 +4080,25 @@ opacity: 0.7 }` wrapper that also diluted the X itself, while `BoardAction.vue`'
       `pnpm test`: 440 passing/31 failing both before and after (identical failing-test names,
       confirmed via `git stash` on the same run - all pre-existing, none touch these components).
 
-                                                                                                           **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
-                                                                                                           pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
-                                                                                                           desktop mice, which was never the actual bug - only touch devices raced hover against the
-                                                                                                           click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
-                                                                                                           `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
-                                                                                                           `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
-                                                                                                           shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
-                                                                                                           `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
-                                                                                                           directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
-                                                                                                           `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
-                                                                                                           config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
-                                                                                                           on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
-                                                                                                           desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
-                                                                                                           is what actually closed that race originally. Verified live via Playwright with two device
-                                                                                                           profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
-                                                                                                           tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
-                                                                                                           context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
-                                                                                                           a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
-                                                                                                           still 440 passing/31 failing, same pre-existing set.
+                                                                                                                 **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
+                                                                                                                 pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
+                                                                                                                 desktop mice, which was never the actual bug - only touch devices raced hover against the
+                                                                                                                 click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
+                                                                                                                 `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
+                                                                                                                 `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
+                                                                                                                 shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
+                                                                                                                 `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
+                                                                                                                 directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
+                                                                                                                 `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
+                                                                                                                 config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
+                                                                                                                 on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
+                                                                                                                 desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
+                                                                                                                 is what actually closed that race originally. Verified live via Playwright with two device
+                                                                                                                 profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
+                                                                                                                 tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
+                                                                                                                 context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
+                                                                                                                 a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
+                                                                                                                 still 440 passing/31 failing, same pre-existing set.
 
 102.  ✅ **Offline pass-and-play with automatic local recovery and airplane-mode launch
       (2026-07-17, v5.31.0).** The viewer now has a dedicated `?offline=1` hot-seat mode, linked from
@@ -4421,6 +4421,59 @@ components/PlayerBoard/BuildingGroup.spec.ts` (X-mark presence/absence). Engine 
       sidebar box is now noticeably shorter than before. No spec changes needed (no existing test
       asserted the old booster pixel size). Full viewer suite: 548 passing, same 2 pre-existing
       map-rotation flakes — no regressions.
+
+112.  ✅ **Exact-size ship action octagons restored, tighter action spacing, booster/federation sizing
+      redone as "fill the available space" instead of "match a fixed target" (2026-07-24),
+      owner-reported.** Follow-up to #110/#111, reversing one part of #110's trade-off and replacing
+      #111's approach entirely.
+      (1) **`LostFleetShips.vue`'s action octagons are back to an exact pixel match with the base
+      game's power/QIC octagons** (both draw `SpecialAction` with the same `width=40` prop) - #110 gave
+      this up to narrow the ship board for the sidebar. To claw back the width without losing the
+      exact match, the 3 action octagons' own spacing tightened from 54 to 41 units
+      (`ACTION_SPACING`, leaving only a ~2.6-unit gap between adjacent octagons - "less space between
+      each ship action") and every element to their right (Federation tile, Standard Tech tile,
+      artifact grid, exploration-slots tab, the card's own width, the SVG's own `viewBox`) shifts left
+      by the same `ACTION_COMPRESSION = 2 * (54 - 41) = 26` units, preserving every one of THEIR
+      relative gaps exactly as before - only the octagon-to-octagon gaps actually changed. `Game.vue`
+      brought back the exact-px-per-unit-matching mechanism this component used to export (dropped in
+      #110) as `SHIP_BOARD_VIEWBOX_WIDTH`, now built from the compressed viewBox instead of the
+      original 291 - `lostFleetShipsStyle` computes `--lf-ship-width` from it exactly like before #110,
+      and `.lost-fleet-ships-row`'s flex arrangement is reversed (ships get that FIXED width, matching
+      the research board's own px-per-unit; the Pool sidebar gets whatever's left over, not a fixed
+      40%) - confirmed via live measurement: `baseOctagon: 38, shipOctagon: 38`, an exact match, up
+      from #110's 33.5px approximation. The ships/sidebar gap also shrunk 0.5rem → 0.25rem ("sit
+      closer... without overlapping").
+      (2) **`Pool.vue`'s compact boosters/federations abandon #111's "match a fixed target size"
+      approach entirely** in favor of "fill whatever space is actually available" - the owner's
+      refined ask ("as big as possible while still being on just 1 row" / "...but only 2 rows") is a
+      different, better-defined problem than matching another component's incidental size. Split the
+      compact template into two independent containers: `.pool-boosters` is a `flex; flex-wrap: nowrap`
+      row with each `svg.booster { flex: 1 1 0; min-width: 0; height: auto; }` - CSS flexbox divides
+      the row's width evenly across however many boosters are currently in the pool, guaranteeing one
+      row at the largest size that still fits (no JS sizing math needed, and it now also fits every
+      realistic count - 5 to 8 boosters - verified across a 3p mid-game, a fresh 4p init, and a 2p
+      scenario, at both 375px and 430px). `.pool-federations` is a CSS `grid` whose column count is a
+      new computed property, `federationColumns = Math.ceil(federations.length / 2)` (floored at 1) -
+      the smallest column count that still keeps every token within 2 rows, so cells are as big as
+      that constraint allows, whatever the live count. Both are non-compact-mode-only additions - the
+      base game's original single interleaved flex-wrap row (`Booster`/`FederationTile` sharing one
+      row at native 60px/50px size) is completely untouched, confirmed unaffected by direct
+      measurement. **"Don't let fed tokens bleed over the border"**: both `Booster.vue` and
+      `FederationTile.vue` render with `overflow: visible` and draw their own drop-shadow via the
+      shared `shadow-1` filter, whose region (see `definitions/Filters.vue`) extends 20% beyond the
+      tile's own box on every side - sizing tiles to fill their row/grid with zero breathing room
+      first genuinely bled the shadow past `.pool`'s own border on the bottom edge (found via a
+      pixel-measured margin of only 2px against a ~9px potential 20%-of-tile-size bleed, then
+      confirmed visually in a zoomed screenshot) - traced to a leftover Bootstrap `pb-0` utility class
+      (`!important`) on the compact template, copied over from the original non-compact markup, that
+      was zeroing out the intended padding specifically on the bottom edge. Removing it (compact mode
+      needed none of Bootstrap's utility classes any more, having its own dedicated CSS) plus a
+      uniform 6px gap between and around every tile fixed it - re-measured at a comfortable, uniform
+      8px margin on all four sides in every scenario tested, confirmed bleed-free with a zoomed
+      before/after screenshot. `Game.spec`/`LostFleetShips.spec` updated for the new octagon-matching
+      viewBox width and shifted artifact-grid positions; no spec covered Pool.vue's internals so
+      nothing there needed updating. Full viewer suite: 548 passing, same 2 pre-existing map-rotation
+      flakes — no regressions.
 
 ## Still MISSING — only one art-only item left
 
