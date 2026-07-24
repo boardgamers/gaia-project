@@ -5,7 +5,7 @@
       :key="ship"
       class="lost-fleet-ship"
       :data-ship="ship"
-      viewBox="0 -16 291 74"
+      viewBox="0 -20 291 78"
       style="overflow: visible"
     >
       <!-- The board is a rounded card outlined in the ship's color. Its name and the player
@@ -187,16 +187,16 @@
           :key="slot.index"
           class="lost-fleet-ship__slot"
           :data-slot="slot.index"
-          :transform="`translate(${slotTabX(slot.index)}, -7)`"
+          :transform="`translate(${slotTabX(slot.index)}, ${slotY})`"
           v-b-tooltip.nofade="tooltipTriggerConfig()"
           :title="slotTitle(slot)"
         >
-          <circle r="6" class="lost-fleet-ship__slot-bg" />
+          <circle :r="slotRadius" class="lost-fleet-ship__slot-bg" />
           <template v-if="!slot.player">
             <!-- the free (0-power) slot shows no number at all - a bare circle reads as "free". -->
-            <Resource v-if="slot.cost > 0" kind="pw" :count="slot.cost" transform="translate(0, 1.5) scale(0.38)" />
+            <Resource v-if="slot.cost > 0" kind="pw" :count="slot.cost" transform="translate(0, 2) scale(0.5)" />
           </template>
-          <Token v-else :faction="slot.player.faction" transform="translate(0, 0.7) scale(0.26)" />
+          <Token v-else :faction="slot.player.faction" transform="translate(0, 0.95) scale(0.35)" />
         </g>
       </g>
     </svg>
@@ -253,6 +253,20 @@ import Token from "./Token.vue";
 import UsedActionMark from "./UsedActionMark.vue";
 import { tooltipTriggerConfig } from "../logic/tooltip";
 
+// Exploration ("player") slot geometry - owner request: bigger slots than the original r=6 design.
+// SLOT_RADIUS=8 needs SLOT_SPACING>=17 to keep a real (1-unit) gap between adjacent circles instead
+// of touching, and a taller-than-the-name-tab SLOT_TAB_TOP to keep the same ~2-unit margin the name
+// tab has above/below its own (smaller) content - see `tabPath`'s own doc comment.
+const SLOT_RADIUS = 8;
+const SLOT_SPACING = 17;
+const SLOT_X_BASE = 223;
+const SLOT_TAB_TOP = -19;
+const SLOT_TAB_X0 = 210;
+const SLOT_TAB_X1 = 286;
+// Vertical center of the slot circles within the taller tab (SLOT_TAB_TOP=-19 to bot=1): centered
+// with a 2-unit margin top and bottom around the SLOT_RADIUS=8 circle (extent -17..-1).
+const SLOT_Y = -9;
+
 @Component({
   components: {
     ArtifactIcon,
@@ -267,6 +281,9 @@ import { tooltipTriggerConfig } from "../logic/tooltip";
   },
 })
 export default class LostFleetShips extends Vue {
+  slotRadius = SLOT_RADIUS;
+  slotY = SLOT_Y;
+
   get engine(): Engine {
     return this.$store.state.data;
   }
@@ -317,10 +334,11 @@ export default class LostFleetShips extends Vue {
       .join(" ");
   }
 
-  /** Rounded-top "folder tab" outline: flat bottom on the card's top border, rounded top corners. */
-  private tabPath(x0: number, x1: number): string {
+  /** Rounded-top "folder tab" outline: flat bottom on the card's top border, rounded top corners.
+   * `top` defaults to the name tab's own height; the slots tab (bigger circles, owner request) passes
+   * a taller value so its bigger slots keep the same comfortable margins the name tab has. */
+  private tabPath(x0: number, x1: number, top = -15): string {
     const r = 6;
-    const top = -15;
     const bot = 1;
     return `M${x0},${bot} L${x0},${top + r} Q${x0},${top} ${x0 + r},${top} L${x1 - r},${top} Q${x1},${top} ${x1},${
       top + r
@@ -333,14 +351,16 @@ export default class LostFleetShips extends Vue {
     return this.tabPath(6, Math.max(42, x1));
   }
 
-  /** Right (slots) tab hugs the 4 slots (9 units of padding each side) near the right edge. */
+  /** Right (slots) tab: wider and taller than the name tab (SLOT_TAB_TOP) so its bigger, more widely
+   * spaced circles (owner request: "player slots a bit bigger") keep a comfortable margin on every
+   * side - see the exploration-slot constants below for the exact numbers. */
   get slotsTabPath(): string {
-    return this.tabPath(217, 280);
+    return this.tabPath(SLOT_TAB_X0, SLOT_TAB_X1, SLOT_TAB_TOP);
   }
 
   /** X of the given exploration slot's center within the right tab (index 1-4). */
   slotTabX(index: number): number {
-    return 226 + (index - 1) * 15;
+    return SLOT_X_BASE + (index - 1) * SLOT_SPACING;
   }
 
   shipActions(ship: Spaceship) {
@@ -435,10 +455,9 @@ export default class LostFleetShips extends Vue {
 <style lang="scss">
 .lost-fleet-ships {
   // Each ship board on its own row (single-column stack), per the owner's mobile brief - this used
-  // to be a fixed 2-column grid. The board is sized (see svg.lost-fleet-ship width below) so its
-  // action octagons match the base-game power/QIC octagons and its tech tile matches the research
-  // board's tech tiles, which makes each board narrower than the full column; a single left-aligned
-  // column stacks them cleanly instead of squeezing two per row.
+  // to be a fixed 2-column grid. A single left-aligned column stacks them cleanly instead of
+  // squeezing two per row. This is itself the left share of `.lost-fleet-ships-row` (see Game.vue),
+  // which gives the round-booster/federation-token sidebar the rest of the row's width.
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -446,14 +465,14 @@ export default class LostFleetShips extends Vue {
 }
 
 svg.lost-fleet-ship {
-  // Rendered at the same px-per-unit as the research board so the ship's action octagons read at the
-  // base-game power-action size, and its Standard Tech tile matches the research board's tech tiles.
-  // Both boards fill their column at 100%, so equal px-per-unit means this SVG's width is
-  // (shipViewBoxWidth / researchBoardCanvasWidth) of the column - Game.vue computes that ratio and
-  // passes it as --lf-ship-width (the fallback keeps a sane size if the var is ever missing). Scaling
-  // via width (not a transform) carries the SVG's height along in proportion, so no dead gap opens
-  // below each board.
-  width: var(--lf-ship-width, 68%);
+  // Fills its (narrower, see `.lost-fleet-ships-row` in Game.vue) column, leaving a small margin
+  // before the pool sidebar starts. This used to be tuned to match the research board's own
+  // px-per-unit exactly (so the action octagons matched the base-game power/QIC octagons pixel for
+  // pixel) - narrowing the ship board to make room for the sidebar (owner request) trades a little of
+  // that exact match for the extra width; the octagons stay close to base-game size, just not
+  // pixel-identical anymore. Scaling via width (not a transform) carries the SVG's height along in
+  // proportion, so no dead gap opens below each board.
+  width: 96%;
   height: auto;
   display: block;
 

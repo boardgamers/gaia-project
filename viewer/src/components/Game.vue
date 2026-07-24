@@ -78,8 +78,19 @@
                independently resizing) ended up taller than the research board, a resize-dependent
                gap opened up above the ships with nothing anchoring them to the research board
                specifically. Mobile is unaffected: research board and ships already rendered in
-               this order (map, then research, then ships) once the row above wraps. -->
-          <LostFleetShips v-if="engine.options.lostFleet" class="mt-2" :style="lostFleetShipsStyle" />
+               this order (map, then research, then ships) once the row above wraps.
+
+               The round boosters + available federation tokens (Pool.vue) used to live in their own
+               full-width row far down the page, after every player board - owner feedback was to move
+               them up beside the ship boards instead, in the room the (now narrower) ships column
+               leaves on the right, rather than a separate section. `lost-fleet-ships-row` gives the
+               sidebar a fixed share of the width (`compact` drops Pool's page-gutter padding, which a
+               ~150px sidebar can't spare, while keeping its bordered box unchanged) and `LostFleetShips`
+               fills the rest - see that component's own width comment for the narrower-card rationale. -->
+          <div v-if="engine.options.lostFleet" class="lost-fleet-ships-row mt-2">
+            <LostFleetShips />
+            <Pool compact class="lost-fleet-pool-sidebar" />
+          </div>
         </div>
       </div>
       <div class="row mt-2">
@@ -177,7 +188,9 @@
             class="col-md-6 order-6"
           />
         </template>
-        <Pool class="col-12 order-10 mt-4" />
+        <!-- Lost Fleet moved this into its own sidebar next to the ship boards (see the map+research
+             row above) - only the base game still renders it in its old full-width spot here. -->
+        <Pool v-if="!engine.options.lostFleet" class="col-12 order-10 mt-4" />
         <AdvancedLog
           class="col-12 order-last mt-4"
           :currentMove="currentMove"
@@ -259,12 +272,6 @@ const BOARD_ACTION_INNER_OFFSET = 28;
 const BOARD_ACTION_OCTAGON_LEFT = -26;
 const BOARD_ACTION_OCTAGON_BOTTOM = 19;
 const BOARD_ACTION_BASE_X = -20;
-
-// Width of LostFleetShips.vue's per-ship SVG viewBox ("0 -16 291 74"). A ship board renders at the
-// research board's own px-per-unit (so its octagons/tech tiles match) by taking this fraction of the
-// column: shipViewBoxWidth / researchBoardCanvasWidth. Kept here (not read from that component) so
-// Game.vue can size the shared column; keep it in sync with that viewBox if it ever changes.
-const SHIP_BOARD_VIEWBOX_WIDTH = 291;
 
 @Component<Game>({
   components: {
@@ -493,16 +500,6 @@ export default class Game extends Vue {
 
   get researchBoardCanvasViewBox() {
     return `${this.researchBoardCanvasMinX} 0 ${this.researchBoardCanvasWidth} ${this.researchBoardCanvasHeight}`;
-  }
-
-  // Sizes each ship board (LostFleetShips) so it renders at the research board's own px-per-unit -
-  // both live full-width in the same column, so matching px-per-unit means the ship SVG takes
-  // SHIP_BOARD_VIEWBOX_WIDTH / researchBoardCanvasWidth of the column's width. That is what makes the
-  // ship's action octagons match the base-game power-action octagons and its tech tile match the
-  // research board's tech tiles. Exposed as a CSS custom property the component's stylesheet reads.
-  get lostFleetShipsStyle(): Record<string, string> {
-    const width = (SHIP_BOARD_VIEWBOX_WIDTH / this.researchBoardCanvasWidth) * 100;
-    return { "--lf-ship-width": `${width}%` };
   }
 
   get totalStickyFooterHeight() {
@@ -960,6 +957,29 @@ export default class Game extends Vue {
   stroke-width: 1;
 }
 
+// Ship boards (narrower now, see LostFleetShips.vue's own width comment) sit in the left share of
+// this row; the round-booster / federation-token Pool sidebar fills the rest, replacing the empty
+// gutter that otherwise sat unused to the ships' right. `min-width: 0` on both is the standard
+// flexbox fix that lets a flex item shrink below its content's natural size instead of overflowing
+// the row (SVGs and Pool's own flex-wrap content both have an intrinsic width otherwise).
+.lost-fleet-ships-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+
+  > .lost-fleet-ships {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  > .lost-fleet-pool-sidebar {
+    // 40% keeps 2 boosters (60px each, needing ~124px with the compact 4px gap) fitting per row down
+    // to ~340px-wide phones - narrower than that is a vanishingly small share of real devices.
+    flex: 0 0 40%;
+    min-width: 0;
+  }
+}
+
 .medium-map,
 .small-map {
   flex-wrap: nowrap;
@@ -991,7 +1011,7 @@ export default class Game extends Vue {
   }
 
   .game-board-side-column > .scoring-research-board,
-  .game-board-side-column > .lost-fleet-ships {
+  .game-board-side-column > .lost-fleet-ships-row {
     flex: 0 0 auto;
   }
 

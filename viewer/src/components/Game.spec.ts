@@ -456,9 +456,17 @@ describe("Game", () => {
     const researchCol = vm.$el.querySelector(".scoring-research-board")?.closest(".col-md-5");
     expect(researchCol, "expected a col-md-5 wrapping the research board").to.not.equal(null);
     expect(researchCol.classList.contains("game-board-side-column")).to.equal(true);
-    const ships = researchCol.querySelector(".lost-fleet-ships");
-    expect(ships, "expected the ship boards inside the research board's own column").to.not.equal(null);
-    expect(ships.previousElementSibling?.classList.contains("scoring-research-board")).to.equal(true);
+    const shipsRow = researchCol.querySelector(".lost-fleet-ships-row");
+    expect(shipsRow, "expected the ship boards' row inside the research board's own column").to.not.equal(null);
+    expect(shipsRow.previousElementSibling?.classList.contains("scoring-research-board")).to.equal(true);
+    expect(shipsRow.querySelector(".lost-fleet-ships")).to.not.equal(null);
+
+    // The round-booster/federation-token Pool sits beside the ships in that same row (in "compact"
+    // mode - no page-gutter padding) instead of its own full-width section further down the page -
+    // exactly one Pool renders for a Lost Fleet game, and it's this sidebar one, not both.
+    const poolSidebar = shipsRow.querySelector(".lost-fleet-pool-sidebar");
+    expect(poolSidebar, "expected the Pool sidebar beside the ships").to.not.equal(null);
+    expect(vm.$el.querySelectorAll(".pool").length, "expected exactly one Pool for a Lost Fleet game").to.equal(1);
 
     // The buttons column still narrows to the map's own width on desktop - now with nothing sharing
     // its row (the ship boards moved above), so the remaining col-md-5 space is simply left blank.

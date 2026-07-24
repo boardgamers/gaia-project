@@ -106,7 +106,7 @@ describe("LostFleetShips", () => {
     const ship = container.querySelector("svg.lost-fleet-ship");
     expect(ship.hasAttribute("width")).to.equal(false);
     expect(ship.hasAttribute("height")).to.equal(false);
-    expect(ship.getAttribute("viewBox")).to.equal("0 -16 291 74");
+    expect(ship.getAttribute("viewBox")).to.equal("0 -20 291 78");
   });
 
   it("lays the 4 exploration slots out evenly spaced in the right-hand tab", () => {
@@ -126,10 +126,11 @@ describe("LostFleetShips", () => {
     expect(new Set(xs).size).to.equal(4);
     expect(ys.size).to.equal(1);
 
-    // the 4 slots sit in the right-hand tab, evenly spaced 15 apart
+    // the 4 slots sit in the right-hand tab, evenly spaced 17 apart (bigger slots than before need
+    // more spacing to avoid touching - see LostFleetShips.vue's SLOT_RADIUS/SLOT_SPACING comment)
     const sortedXs = xs.slice().sort((a, b) => a - b);
     for (let i = 1; i < sortedXs.length; i++) {
-      expect(sortedXs[i] - sortedXs[i - 1]).to.equal(15);
+      expect(sortedXs[i] - sortedXs[i - 1]).to.equal(17);
     }
     // the ship name is spelled out in the left tab: a first-letter hex badge + the rest of the name
     expect(twilight.querySelector(".lost-fleet-ship__name-letter").textContent).to.equal("T");
