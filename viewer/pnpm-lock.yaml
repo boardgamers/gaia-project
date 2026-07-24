@@ -29,6 +29,9 @@ importers:
       lodash:
         specifier: ^4.17.15
         version: 4.18.1
+      stockfish.js:
+        specifier: 10.0.2
+        version: 10.0.2
       vue:
         specifier: ^2.6.11
         version: 2.7.16
@@ -4867,6 +4870,9 @@ packages:
   stealthy-require@1.1.1:
     resolution: {integrity: sha512-ZnWpYnYugiOVEY5GkcuJK1io5V8QmNYChG62gSit9pQVGErXtrKuPC55ITaVSukmMta5qpMU7vqLt2Lnni4f/g==}
     engines: {node: '>=0.10.0'}
+
+  stockfish.js@10.0.2:
+    resolution: {integrity: sha512-treB3AYcdvRJ9SDPOyL0R2NcEAtQgG432nStfRzR4wzVELGQ6iVoeBHwvirHTfocNOTims7XNkK3SADaocsJmQ==}
 
   stop-iteration-iterator@1.1.0:
     resolution: {integrity: sha512-eLoXW/DHyl62zxY4SCaIgnRhuMr6ri4juEYARS8E6sCEqzKpOiE521Ucofdx+KnDZl5xmvGYaaKCk5FEOxJCoQ==}
@@ -11254,6 +11260,8 @@ snapshots:
   statuses@2.0.2: {}
 
   stealthy-require@1.1.1: {}
+
+  stockfish.js@10.0.2: {}
 
   stop-iteration-iterator@1.1.0:
     dependencies:

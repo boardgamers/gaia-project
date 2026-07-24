@@ -1,7 +1,21 @@
 {
-  "version": "5.37.2",
+  "version": "5.37.3",
   "releasedAt": "2026-07-24",
   "entries": [
+    {
+      "version": "5.37.3",
+      "releasedAt": "2026-07-24",
+      "kind": "update",
+      "title": "Live chess evaluation bar",
+      "impact": "",
+      "changes": [
+        "The chess board now shows a live Stockfish advantage bar above the board and updates it after every move",
+        "Bundled the compact Stockfish WebAssembly engine, license, and source pointer for single-threaded background analysis that remains available offline"
+      ],
+      "userChanges": [
+        "The chess board now shows a live Stockfish advantage bar above the board and updates it after every move"
+      ]
+    },
     {
       "version": "5.37.2",
       "releasedAt": "2026-07-24",

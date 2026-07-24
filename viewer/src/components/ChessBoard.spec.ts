@@ -31,6 +31,20 @@ describe("ChessBoard", () => {
     window.history.pushState({}, "", "/");
   });
 
+  it("places a compact White-relative evaluation meter above the board", async () => {
+    const wrapper = mount(ChessBoard as any, { localVue, store: storeWith(null) });
+    await flush();
+
+    const meter = wrapper.find(".lf-chess-eval");
+    expect(meter.exists()).to.equal(true);
+    expect(meter.attributes("role")).to.equal("meter");
+    expect(meter.attributes("aria-valuenow")).to.equal("50");
+    expect(wrapper.find(".lf-chess-header").element.nextElementSibling).to.equal(
+      wrapper.find(".lf-chess-board").element
+    );
+    wrapper.destroy();
+  });
+
   it("persists per-game offline moves, rotates to the next side, and never closes from a piece click", async () => {
     window.history.pushState({}, "", "/?offline=1&game=offline-one");
     const wrapper = mount(ChessBoard as any, { localVue, store: storeWith(null) });

@@ -5,15 +5,18 @@
 > labeled historical rerun log. Do not load this 5,000-line history cover to cover. Read the other
 > ledgers and historical handoffs only when the task touches their subject, following `AGENTS.md`.
 > If the user supplied a concrete task, proceed with it rather than asking "what next?".
-> Last updated: **2026-07-24** (shared per-game sidebar chess completed for master in viewer
-> v5.37.2). The compact booster/federation pool stays mounted under an exact-size chess overlay and
-> has both a zero-layout-space corner switch and bidirectional horizontal swiping; the selected face
-> is synchronized to every hosted viewer through the per-game Realtime row. Hosted 2-player games
-> keep one account per colour, 3-player games use a 2-v-1 relay, and 4-player games use 2-v-2 relays;
+> Last updated: **2026-07-24** (shared per-game sidebar chess plus live evaluation completed for
+> master in viewer v5.37.3). The compact booster/federation pool stays mounted under an exact-size
+> chess overlay and has both a zero-layout-space corner switch and bidirectional horizontal swiping;
+> the selected face is synchronized to every hosted viewer through the per-game Realtime row.
+> Hosted 2-player games keep one account per colour, 3-player games use a 2-v-1 relay, and 4-player
+> games use 2-v-2 relays;
 > the database rotates and enforces each colour's designated next mover. Offline games use bundled
-> chess rules, per-game local persistence, and rotate the board after each move. Live Supabase
+> chess rules, per-game local persistence, and rotate the board after each move. A compact Stockfish
+> WebAssembly worker now updates a White-relative advantage bar above every live position without
+> blocking the viewer and is included in the offline precache. Live Supabase
 > migrations through `20260724165705_chess_relay_teams` are applied to `mitawjpdxkheascdiffz`; the
-> full viewer suite passes 572/572 and the production/offline build plus desktop/mobile browser story
+> full viewer suite passes 576/576 and the production/offline build plus desktop/mobile browser story
 > pass. AI task index unchanged.
 
 ## Working agreements (read every session, not optional)
@@ -59,13 +62,15 @@ release.json`) has two audiences and they must not blur together: a "What's new"
   reduced-motion support, complete standard/maskable/notification PWA icons, a Node 22/pnpm 9
   test-and-build workflow, compatibility metadata for five historical Ivits chart fixtures, and
   cache-busted icon URLs plus a network-first iOS touch-icon request path.
-- **Sidebar chess:** implementation is complete in viewer v5.37.2. Any Gaia-game participant can
+- **Sidebar chess:** implementation is complete in viewer v5.37.3. Any Gaia-game participant can
   switch the shared `pool`/`chess` panel with its corner button or a left/right swipe, and all
   approved viewers receive the same state over Realtime. Hosted chess uses one player per colour in
   2-player games, a 2-v-1 alternating relay in 3-player games, and two alternating teams in 4-player
-  games; the live RPCs enforce the designated mover under a row lock. Do not recreate or reapply the
-  historical Claude migrations or migrations through `20260724165705_chess_relay_teams`, which
-  already exist in the live migration ledger.
+  games; the live RPCs enforce the designated mover under a row lock. The top advantage bar is
+  calculated locally with a single-threaded Stockfish WebAssembly worker after each position
+  change, so it adds no Realtime/database traffic and remains available offline. Do not recreate or
+  reapply the historical Claude migrations or migrations through
+  `20260724165705_chess_relay_teams`, which already exist in the live migration ledger.
 
 ## What this project is
 

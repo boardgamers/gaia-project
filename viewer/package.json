@@ -1,6 +1,6 @@
 {
   "name": "@gaia-project/viewer",
-  "version": "5.37.2",
+  "version": "5.37.3",
   "description": "Functions to visualize the map and boards for gaia project inside html canvas",
   "contributors": [
     "coyotte508",
@@ -44,6 +44,7 @@
     "chess.js": "0.12.1",
     "hexagrid": "^2.1.1",
     "lodash": "^4.17.15",
+    "stockfish.js": "10.0.2",
     "vue": "^2.6.11",
     "vuex": "^3.0.1"
   },

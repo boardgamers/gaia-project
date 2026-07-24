@@ -1,6 +1,34 @@
 /* eslint-disable */
 const path = require("path");
 const package = require("./package.json");
+const stockfishDir = path.dirname(require.resolve("stockfish.js/package.json"));
+
+function addStockfishAssets(config) {
+  if (!config.plugins.has("copy")) {
+    return;
+  }
+  config.plugin("copy").tap((args) => {
+    args[0].push(
+      {
+        from: path.join(stockfishDir, "stockfish.wasm.js"),
+        to: "stockfish/stockfish.wasm.js",
+      },
+      {
+        from: path.join(stockfishDir, "stockfish.wasm"),
+        to: "stockfish/stockfish.wasm",
+      },
+      {
+        from: path.join(stockfishDir, "Copying.txt"),
+        to: "stockfish/Copying.txt",
+      },
+      {
+        from: path.join(stockfishDir, "Readme.md"),
+        to: "stockfish/Readme.md",
+      }
+    );
+    return args;
+  });
+}
 
 if (process.argv.includes("lib")) {
   module.exports = {
@@ -27,6 +55,7 @@ if (process.argv.includes("lib")) {
       disableHostCheck: true,
     },
     chainWebpack: (config) => {
+      addStockfishAssets(config);
       // The installed @types/jquery (3.5.x) emits hundreds of type errors under
       // the pinned TypeScript 3.9, which makes the fork-ts-checker plugin hard-fail
       // `vue-cli-service build` even though the app transpiles and runs fine.
