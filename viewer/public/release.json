@@ -1,7 +1,20 @@
 {
-  "version": "5.36.13",
+  "version": "5.36.14",
   "releasedAt": "2026-07-24",
   "entries": [
+    {
+      "version": "5.36.14",
+      "releasedAt": "2026-07-24",
+      "kind": "update",
+      "title": "Lost Fleet sidebar boosters resized",
+      "impact": "",
+      "changes": [
+        "Round boosters in the ship-boards sidebar are now the same size as they appear on a player's own board"
+      ],
+      "userChanges": [
+        "Round boosters in the ship-boards sidebar are now the same size as they appear on a player's own board"
+      ]
+    },
     {
       "version": "5.36.13",
       "releasedAt": "2026-07-24",
