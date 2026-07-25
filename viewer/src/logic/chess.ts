@@ -51,33 +51,26 @@ export function boardOrientation(online: boolean, myColor: Orientation | null, t
   return online ? myColor ?? "w" : turn;
 }
 
-const GLYPHS: Record<string, Record<string, string>> = {
-  w: {
-    k: "♔\uFE0E",
-    q: "♕\uFE0E",
-    r: "♖\uFE0E",
-    b: "♗\uFE0E",
-    n: "♘\uFE0E",
-    p: "♙\uFE0E",
-  },
-  b: {
-    k: "♚\uFE0E",
-    q: "♛\uFE0E",
-    r: "♜\uFE0E",
-    b: "♝\uFE0E",
-    n: "♞\uFE0E",
-    p: "♟\uFE0E",
-  },
+// The Unicode "White Chess ..." characters (♔♕♖♗♘♙) are drawn as hollow outlines in most fonts, so
+// colouring them white still reads as an outline rather than a solid piece. Use the filled "Black
+// Chess ..." shapes (♚♛♜♝♞♟) for both colours and let CSS fill colour (white vs black) do the work,
+// so every piece renders as a solid silhouette. Force text presentation (U+FE0E): mobile Safari
+// otherwise renders the filled pawn as an emoji-like black symbol regardless of CSS colour, which
+// made a single rank appear to contain both colours.
+const GLYPHS: Record<string, string> = {
+  k: "♚\uFE0E",
+  q: "♛\uFE0E",
+  r: "♜\uFE0E",
+  b: "♝\uFE0E",
+  n: "♞\uFE0E",
+  p: "♟\uFE0E",
 };
 
-// Use the actual White/Black Unicode sets and force text presentation (U+FE0E). In particular,
-// mobile Safari otherwise renders the filled pawn as an emoji-like black symbol even when CSS says
-// the White pieces should be white, which made a single rank appear to contain both colours.
 export function pieceGlyph(piece: Cell): string {
   if (!piece) {
     return "";
   }
-  return GLYPHS[piece.color]?.[piece.type] ?? "";
+  return GLYPHS[piece.type] ?? "";
 }
 
 // One square in screen order, with its algebraic name so clicks map straight back to chess.js.
