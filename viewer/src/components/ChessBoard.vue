@@ -791,12 +791,12 @@ export default class ChessBoard extends Vue {
   line-height: 1;
 
   &.white {
-    color: #fafafa;
+    color: #fff;
     text-shadow: 0 0 1px #000, 0 1px 1px #000, 1px 0 1px #000, -1px 0 1px #000;
   }
 
   &.black {
-    color: #1b1b1b;
+    color: #000;
     text-shadow: 0 0 1px rgba(255, 255, 255, 0.7);
   }
 }
@@ -931,11 +931,11 @@ export default class ChessBoard extends Vue {
   }
 
   &.white {
-    color: #fafafa;
+    color: #fff;
     text-shadow: 0 0 1px #000, 0 0 1px #000, 0 1px 1px #000, 1px 0 1px #000, 0 -1px 1px #000, -1px 0 1px #000;
   }
   &.black {
-    color: #1b1b1b;
+    color: #000;
     text-shadow: 0 0 1px #000;
   }
 }
@@ -1003,12 +1003,12 @@ export default class ChessBoard extends Vue {
   cursor: pointer;
 
   &.white {
-    color: #fafafa;
+    color: #fff;
     text-shadow: 0 0 1px #000, 0 1px 1px #000, 1px 0 1px #000, -1px 0 1px #000, 0 -1px 1px #000;
     background: #777;
   }
   &.black {
-    color: #1b1b1b;
+    color: #000;
   }
 }
 
