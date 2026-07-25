@@ -14,6 +14,8 @@
         >
       </div>
 
+      <div class="lf-chess-turn" ref="turnLabel" :style="meterStyle" aria-live="polite">{{ turnLabel }}</div>
+
       <!-- The analysis meter is deliberately text-free and reads as the board's thin top edge. -->
       <div
         class="lf-chess-eval"
@@ -217,6 +219,7 @@ export default class ChessBoard extends Vue {
     const measure = () => {
       const stage = this.$refs.stage as HTMLElement | undefined;
       const meter = this.$refs.meter as HTMLElement | undefined;
+      const turnLabel = this.$refs.turnLabel as HTMLElement | undefined;
       const capturesTop = this.$refs.capturesTop as HTMLElement | undefined;
       const capturesBottom = this.$refs.capturesBottom as HTMLElement | undefined;
       const style = window.getComputedStyle(root);
@@ -227,9 +230,10 @@ export default class ChessBoard extends Vue {
       const stageGap = parseFloat(stageStyle?.rowGap || stageStyle?.gap || "0");
       const fixedStackHeight =
         (meter?.offsetHeight ?? 0) +
+        (turnLabel?.offsetHeight ?? 0) +
         (capturesTop?.offsetHeight ?? 0) +
         (capturesBottom?.offsetHeight ?? 0) +
-        stageGap * 3;
+        stageGap * 4;
       const measuredHeight = root.clientHeight - verticalPadding - fixedStackHeight;
       const availableHeight = measuredHeight > 0 ? measuredHeight : availableWidth;
       const size = Math.max(0, Math.floor(Math.min(availableWidth, availableHeight)));
@@ -588,6 +592,29 @@ export default class ChessBoard extends Vue {
     return isMember && (turn === "w" ? this.whiteMover : this.blackMover) === this.myUserId;
   }
 
+  get turnLabel(): string {
+    void this.fen;
+    const turn = (this.chess?.turn() ?? "w") as Orientation;
+    const mover = turn === "w" ? this.whiteMover : this.blackMover;
+    const nickname = this.nicknameFor(mover);
+    return nickname ? `${nickname} to move` : `${turn === "w" ? "White" : "Black"} to move`;
+  }
+
+  private nicknameFor(userId: string | null): string {
+    if (!userId) {
+      return "";
+    }
+    const seatUsers: Record<number, string | null> = this.$store.state.seatUsers ?? {};
+    const players = this.$store.state.data?.players ?? [];
+    for (const seat of Object.keys(seatUsers)) {
+      const seatIndex = Number(seat);
+      if (seatUsers[seatIndex] === userId) {
+        return String(players[seatIndex]?.name ?? "").trim();
+      }
+    }
+    return "";
+  }
+
   // Which colour the local user is allowed to move: their designated relay turn online, or either
   // side offline. Teammates share a colour in 3-4 player games but alternate who may actually move.
   get effectiveColor(): Orientation | null {
@@ -772,6 +799,19 @@ export default class ChessBoard extends Vue {
     color: #1b1b1b;
     text-shadow: 0 0 1px rgba(255, 255, 255, 0.7);
   }
+}
+
+.lf-chess-turn {
+  flex: 0 0 11px;
+  height: 11px;
+  overflow: hidden;
+  color: var(--ui-text-muted, #666);
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 11px;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .lf-chess-btn {

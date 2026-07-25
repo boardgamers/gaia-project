@@ -1,7 +1,23 @@
 {
-  "version": "5.37.10",
-  "releasedAt": "2026-07-24",
+  "version": "5.37.11",
+  "releasedAt": "2026-07-25",
   "entries": [
+    {
+      "version": "5.37.11",
+      "releasedAt": "2026-07-25",
+      "kind": "update",
+      "title": "Fresh chess games",
+      "impact": "",
+      "changes": [
+        "Chess resets now reshuffle colours and relay teams",
+        "Chess shows the next player's nickname at the top left",
+        "Reset reuses the locked automatic-assignment routine and preserves chess-team authorization"
+      ],
+      "userChanges": [
+        "Chess resets now reshuffle colours and relay teams",
+        "Chess shows the next player's nickname at the top left"
+      ]
+    },
     {
       "version": "5.37.10",
       "releasedAt": "2026-07-24",

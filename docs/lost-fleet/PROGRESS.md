@@ -68,11 +68,12 @@ release.json`) has two audiences and they must not blur together: a "What's new"
   reduced-motion support, complete standard/maskable/notification PWA icons, a Node 22/pnpm 9
   test-and-build workflow, compatibility metadata for five historical Ivits chart fixtures, and
   cache-busted icon URLs plus a network-first iOS touch-icon request path.
-- **Sidebar chess:** implementation is complete in viewer v5.37.10. Any Gaia-game participant can
+- **Sidebar chess:** implementation is complete in viewer v5.37.11. Any Gaia-game participant can
   switch the shared `pool`/`chess` drawer with its two equal bottom-right page dots or a live left/right
   swipe, and all approved viewers receive the committed state over Realtime. The chess face has no
-  status or seat controls, fits all eight files inside the existing panel, and keeps only its thin
-  text-free evaluation strip. Hosted colours are randomized once from distinct participant accounts:
+  seat controls, fits all eight files inside the existing panel, and keeps only its thin text-free
+  evaluation strip plus the compact turn label. Hosted colours are randomized from distinct
+  participant accounts:
   2-player games are 1-v-1, 3-player games use a 2-v-1 alternating relay, and 4-player games use two
   alternating teams; one-account games support pass-and-play. The live RPC enforces the designated
   mover under a row lock. Evaluation is calculated locally with a single-threaded Stockfish
@@ -89,7 +90,9 @@ release.json`) has two audiences and they must not blur together: a "What's new"
   a direction arrow that survives offline reloads and hosted Realtime synchronization. Tapping a
   booster or federation tile does not switch drawer faces. The board, analysis edge, and equal-height
   captured-piece rows are centred as one stack; the rows follow whichever colour is oriented at the
-  top and bottom.
+  top and bottom. The compact top-left turn label names the designated relay player using their Gaia
+  nickname (or the side to move offline), and a confirmed hosted long-press reset now restores the
+  opening position and reruns the locked colour/team shuffle.
 
 ## What this project is
 

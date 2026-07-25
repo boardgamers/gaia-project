@@ -11,8 +11,21 @@ import ChessBoard from "./ChessBoard.vue";
 const localVue = createLocalVue();
 localVue.use(Vuex);
 
-function storeWith(chessBackend: ChessBackend | null, playerCount = 2) {
-  return new Vuex.Store({ state: { chessBackend, data: { players: new Array(playerCount).fill({}) } } });
+function storeWith(
+  chessBackend: ChessBackend | null,
+  playerCount = 2,
+  playerNames: string[] = [],
+  seatUsers: Record<number, string | null> = {}
+) {
+  return new Vuex.Store({
+    state: {
+      chessBackend,
+      seatUsers,
+      data: {
+        players: Array.from({ length: playerCount }, (_, seat) => ({ name: playerNames[seat] ?? "" })),
+      },
+    },
+  });
 }
 
 function flush() {
@@ -53,6 +66,7 @@ describe("ChessBoard", () => {
     expect(wrapper.findAll(".lf-chess-captures")).to.have.length(2);
     expect(wrapper.find(".lf-chess-header").exists()).to.equal(false);
     expect(wrapper.find(".lf-chess-controls").exists()).to.equal(false);
+    expect(wrapper.find(".lf-chess-turn").text()).to.equal("White to move");
     wrapper.destroy();
   });
 
@@ -88,6 +102,7 @@ describe("ChessBoard", () => {
     expect(wrapper.find('[data-square="e4"]').classes()).to.include("last-to");
     expect(wrapper.find(".lf-chess-last-arrow").exists()).to.equal(true);
     expect(wrapper.findAll(".lf-chess-square").at(0).attributes("data-square")).to.equal("h1");
+    expect(wrapper.find(".lf-chess-turn").text()).to.equal("Black to move");
     expect(wrapper.emitted("close")).to.equal(undefined);
     wrapper.destroy();
   });
@@ -136,9 +151,13 @@ describe("ChessBoard", () => {
       reset: async () => undefined,
       setPanelMode: async () => undefined,
     };
-    const wrapper = mount(ChessBoard as any, { localVue, store: storeWith(backend) });
+    const wrapper = mount(ChessBoard as any, {
+      localVue,
+      store: storeWith(backend, 2, ["Alice", "Bob"], { 0: "user-white", 1: "user-black" }),
+    });
     await flush();
 
+    expect(wrapper.find(".lf-chess-turn").text()).to.equal("Alice to move");
     expect(wrapper.find('[data-square="e7"]').classes()).to.include("last-from");
     expect(wrapper.find('[data-square="e5"]').classes()).to.include("last-to");
     await wrapper.find('[data-square="e2"]').trigger("click");
@@ -150,6 +169,7 @@ describe("ChessBoard", () => {
     expect(moves[0][1].split(" ")[1]).to.equal("b");
     expect((moves[0] as any).slice(2)).to.deep.equal(["e2", "e4"]);
     expect(wrapper.findAll(".lf-chess-square").at(0).attributes("data-square")).to.equal("a8");
+    expect(wrapper.find(".lf-chess-turn").text()).to.equal("Bob to move");
     wrapper.destroy();
   });
 
@@ -181,9 +201,18 @@ describe("ChessBoard", () => {
       reset: async () => undefined,
       setPanelMode: async () => undefined,
     };
-    const wrapper = mount(ChessBoard as any, { localVue, store: storeWith(backend, 4) });
+    const wrapper = mount(ChessBoard as any, {
+      localVue,
+      store: storeWith(backend, 4, ["White One", "White Two", "Black One", "Black Two"], {
+        0: "user-white-one",
+        1: "user-white-two",
+        2: "user-black-one",
+        3: "user-black-two",
+      }),
+    });
     await flush();
 
+    expect(wrapper.find(".lf-chess-turn").text()).to.equal("White One to move");
     expect(wrapper.findAll(".lf-chess-square").at(0).attributes("data-square")).to.equal("a8");
     await wrapper.find('[data-square="e2"]').trigger("click");
     await wrapper.find('[data-square="e4"]').trigger("click");
@@ -193,6 +222,7 @@ describe("ChessBoard", () => {
     listener?.(row);
     await wrapper.vm.$nextTick();
 
+    expect(wrapper.find(".lf-chess-turn").text()).to.equal("White Two to move");
     await wrapper.find('[data-square="e2"]').trigger("click");
     await wrapper.find('[data-square="e4"]').trigger("click");
     await wrapper.vm.$nextTick();
