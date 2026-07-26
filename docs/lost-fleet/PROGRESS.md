@@ -4580,6 +4580,11 @@ new.fen` - a real move or reset, not a colour claim or panel-mode switch) that P
       reaches `master`/Vercel. **Next session: redeploy the `notify` function** (retry
       `deploy_edge_function` with `project_id: mitawjpdxkheascdiffz`, `name: "notify"`, the current
       `supabase/functions/notify/index.ts` + `logic.ts` contents) before considering this item done.
+      A later session retried this (2026-07-26, same day): both `deploy_edge_function` and even a
+      read-only `get_edge_function` check were denied with the same "MCP tool call requires
+      approval" error, confirming this isn't a transient glitch - the Supabase MCP tools are
+      blocked for this session regardless of which one is called. Still not deployed; still needs
+      a session where these tools are actually approvable.
 115.  ✅ **Renju (five-in-a-row) drawer on the research board (2026-07-26, owner request: "in the same
       way that you swipe the booster container to move to a chess game... swipe the research board to
       move to a renju game").** The research panel is now a two-face horizontal drawer, exactly like
