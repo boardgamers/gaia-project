@@ -458,7 +458,11 @@ describe("Game", () => {
     expect(researchCol.classList.contains("game-board-side-column")).to.equal(true);
     const shipsRow = researchCol.querySelector(".lost-fleet-ships-row");
     expect(shipsRow, "expected the ship boards' row inside the research board's own column").to.not.equal(null);
-    expect(shipsRow.previousElementSibling?.classList.contains("scoring-research-board")).to.equal(true);
+    // The research board now sits inside its own research/renju swipe drawer (ResearchPanel.vue),
+    // which is what precedes the ship row in that column.
+    const researchPanel = shipsRow.previousElementSibling;
+    expect(researchPanel?.classList.contains("research-panel")).to.equal(true);
+    expect(researchPanel.querySelector(".scoring-research-board")).to.not.equal(null);
     expect(shipsRow.querySelector(".lost-fleet-ships")).to.not.equal(null);
 
     // The round-booster/federation-token Pool sits beside the ships in that same row (in "compact"

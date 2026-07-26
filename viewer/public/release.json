@@ -1,7 +1,25 @@
 {
-  "version": "5.38.0",
+  "version": "5.39.0",
   "releasedAt": "2026-07-26",
   "entries": [
+    {
+      "version": "5.39.0",
+      "releasedAt": "2026-07-26",
+      "kind": "update",
+      "title": "Research board renju drawer",
+      "impact": "",
+      "changes": [
+        "Swipe the research board sideways for a shared five-in-a-row (renju) game, just like the booster panel's chess board",
+        "Renju colours and relay teams are assigned automatically; long-press the board to start a new game",
+        "New renju_board table with ensure/move/reset/panel-mode RPCs, Realtime fan-out and a locked one-stone move check",
+        "Extracted the pool drawer's swipe gesture into a shared PanelSwipe mixin now used by both drawers",
+        "Offline and unmigrated stacks fall back to per-game localStorage pass-and-play renju"
+      ],
+      "userChanges": [
+        "Swipe the research board sideways for a shared five-in-a-row (renju) game, just like the booster panel's chess board",
+        "Renju colours and relay teams are assigned automatically; long-press the board to start a new game"
+      ]
+    },
     {
       "version": "5.38.0",
       "releasedAt": "2026-07-26",

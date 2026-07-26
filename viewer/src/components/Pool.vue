@@ -88,8 +88,8 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
+import { Component, Mixins, Prop } from "vue-property-decorator";
+import PanelSwipe from "../logic/panel-swipe";
 import Booster from "./Booster.vue";
 import FederationTile from "./FederationTile.vue";
 import ChessBoard from "./ChessBoard.vue";
@@ -115,24 +115,15 @@ import { isBeforeRound1 } from "../logic/utils";
     ChessBoard,
   },
 })
-export default class Pool extends Vue {
+export default class Pool extends Mixins(PanelSwipe) {
   // Compact (Lost Fleet sidebar) only: whether the booster/federation container is currently
-  // showing the shared chess board instead of its tiles.
+  // showing the shared chess board instead of its tiles. The drawer gesture itself lives in the
+  // shared PanelSwipe mixin (logic/panel-swipe.ts), which the research board's research/renju
+  // drawer reuses; this component only supplies its two faces and how a switch is committed.
   showChess = false;
   chessMounted = false;
   panelModeSaving = false;
-  panelSwipeActive = false;
-  panelSwipeSettling = false;
-  panelSwipeOffset = 0;
   private chessUnsubscribe: (() => void) | null = null;
-  private panelSwipeStart: { pointerId: number; x: number; y: number; width: number; element: HTMLElement } | null =
-    null;
-  private panelSwipeDirection: -1 | 0 | 1 = 0;
-  private panelSwipeOriginMode: ChessPanelMode = "pool";
-  private panelSwipeCompletes = false;
-  private panelSwipeSettleTimer: number | null = null;
-  private suppressPanelClick = false;
-  private suppressPanelClickTimer: number | null = null;
   private panelModeIntent = 0;
   private pendingPanelMode: ChessPanelMode | null = null;
   private latestPanelUpdatedAt = 0;
@@ -175,12 +166,32 @@ export default class Pool extends Vue {
     if (this.chessUnsubscribe) {
       this.chessUnsubscribe();
     }
-    if (this.suppressPanelClickTimer !== null) {
-      window.clearTimeout(this.suppressPanelClickTimer);
-    }
-    if (this.panelSwipeSettleTimer !== null) {
-      window.clearTimeout(this.panelSwipeSettleTimer);
-    }
+  }
+
+  // ---- PanelSwipe contract -------------------------------------------------
+
+  get panelFaces(): [string, string] {
+    return ["pool", "chess"];
+  }
+
+  get panelVisibleFace(): string {
+    return this.showChess ? "chess" : "pool";
+  }
+
+  get panelSwipeLocked(): boolean {
+    return this.panelModeSaving;
+  }
+
+  get panelSwipeIgnoreSelector(): string {
+    return "button, .lf-chess-overlay";
+  }
+
+  panelSwipePrepare() {
+    this.chessMounted = true;
+  }
+
+  panelSwipeCommit(face: string) {
+    this.setPanelMode(face as ChessPanelMode);
   }
 
   get engine(): Engine {
@@ -221,182 +232,6 @@ export default class Pool extends Vue {
       return;
     }
     this.setPanelMode(mode);
-  }
-
-  onPanelPointerDown(event: PointerEvent) {
-    const target = event.target;
-    if (
-      this.panelModeSaving ||
-      event.isPrimary === false ||
-      event.button > 0 ||
-      (target instanceof Element && target.closest("button, .lf-chess-overlay"))
-    ) {
-      this.panelSwipeStart = null;
-      return;
-    }
-    this.clearPanelSettle();
-    this.chessMounted = true;
-    const element = event.currentTarget as HTMLElement;
-    const width = element.clientWidth || element.getBoundingClientRect().width || 160;
-    this.panelSwipeStart = {
-      pointerId: event.pointerId,
-      x: event.clientX,
-      y: event.clientY,
-      width,
-      element,
-    };
-    this.panelSwipeOriginMode = this.showChess ? "chess" : "pool";
-    this.panelSwipeDirection = 0;
-    this.panelSwipeOffset = 0;
-    this.panelSwipeActive = false;
-    if (typeof element.setPointerCapture === "function") {
-      element.setPointerCapture(event.pointerId);
-    }
-  }
-
-  onPanelPointerMove(event: PointerEvent) {
-    const start = this.panelSwipeStart;
-    if (!start || start.pointerId !== event.pointerId) {
-      return;
-    }
-    const dx = event.clientX - start.x;
-    const dy = event.clientY - start.y;
-    if (this.panelSwipeDirection === 0) {
-      if (Math.max(Math.abs(dx), Math.abs(dy)) < 7) {
-        return;
-      }
-      if (Math.abs(dx) <= Math.abs(dy) * 1.15) {
-        this.releasePanelPointer(start);
-        this.panelSwipeStart = null;
-        return;
-      }
-      this.panelSwipeDirection = dx < 0 ? -1 : 1;
-      this.panelSwipeActive = true;
-      this.$root.$emit("lf::chess-panel-swipe");
-    }
-
-    const directionalOffset = this.panelSwipeDirection < 0 ? Math.min(0, dx) : Math.max(0, dx);
-    this.panelSwipeOffset = Math.max(-start.width, Math.min(start.width, directionalOffset));
-    event.preventDefault();
-  }
-
-  onPanelPointerUp(event: PointerEvent) {
-    const start = this.panelSwipeStart;
-    this.panelSwipeStart = null;
-    if (!start || start.pointerId !== event.pointerId) {
-      return;
-    }
-    this.releasePanelPointer(start);
-    if (!this.panelSwipeActive || this.panelSwipeDirection === 0) {
-      this.resetPanelSwipe();
-      return;
-    }
-
-    // The browser synthesizes a click immediately after a touch pointerup. Consume that one click
-    // so a drawer gesture cannot also click a tile or chess square after release.
-    this.suppressSyntheticPanelClick();
-    const threshold = Math.min(64, Math.max(36, start.width * 0.22));
-    this.settlePanelSwipe(Math.abs(this.panelSwipeOffset) >= threshold);
-  }
-
-  cancelPanelSwipe() {
-    const start = this.panelSwipeStart;
-    this.panelSwipeStart = null;
-    if (start) {
-      this.releasePanelPointer(start);
-    }
-    if (this.panelSwipeActive) {
-      this.suppressSyntheticPanelClick();
-      this.settlePanelSwipe(false);
-    } else {
-      this.resetPanelSwipe();
-    }
-  }
-
-  onPanelClickCapture(event: MouseEvent) {
-    if (!this.suppressPanelClick) {
-      return;
-    }
-    event.preventDefault();
-    event.stopPropagation();
-    this.suppressPanelClick = false;
-    if (this.suppressPanelClickTimer !== null) {
-      window.clearTimeout(this.suppressPanelClickTimer);
-      this.suppressPanelClickTimer = null;
-    }
-  }
-
-  private panelFaceTransform(face: ChessPanelMode): string {
-    if (this.panelSwipeActive) {
-      const current = this.panelSwipeOriginMode;
-      const offset = this.panelSwipeOffset;
-      const base = face === current ? 0 : -this.panelSwipeDirection * 100;
-      return `translate3d(calc(${base}% + ${offset}px), 0, 0)`;
-    }
-    if (this.panelSwipeSettling && this.panelSwipeDirection !== 0) {
-      const current = this.panelSwipeOriginMode;
-      let target = 0;
-      if (this.panelSwipeCompletes) {
-        target = face === current ? this.panelSwipeDirection * 100 : 0;
-      } else {
-        target = face === current ? 0 : -this.panelSwipeDirection * 100;
-      }
-      return `translate3d(${target}%, 0, 0)`;
-    }
-    const visible: ChessPanelMode = this.showChess ? "chess" : "pool";
-    if (face === visible) {
-      return "translate3d(0, 0, 0)";
-    }
-    return face === "pool" ? "translate3d(-100%, 0, 0)" : "translate3d(100%, 0, 0)";
-  }
-
-  private settlePanelSwipe(completes: boolean) {
-    this.panelSwipeActive = false;
-    this.panelSwipeSettling = true;
-    this.panelSwipeCompletes = completes;
-    if (completes) {
-      this.setPanelMode(this.panelSwipeOriginMode === "pool" ? "chess" : "pool");
-    }
-    this.panelSwipeSettleTimer = window.setTimeout(() => {
-      this.panelSwipeSettleTimer = null;
-      this.resetPanelSwipe();
-    }, 180);
-  }
-
-  private resetPanelSwipe() {
-    this.panelSwipeActive = false;
-    this.panelSwipeSettling = false;
-    this.panelSwipeCompletes = false;
-    this.panelSwipeOffset = 0;
-    this.panelSwipeDirection = 0;
-  }
-
-  private clearPanelSettle() {
-    if (this.panelSwipeSettleTimer !== null) {
-      window.clearTimeout(this.panelSwipeSettleTimer);
-      this.panelSwipeSettleTimer = null;
-    }
-    this.resetPanelSwipe();
-  }
-
-  private releasePanelPointer(start: { pointerId: number; element: HTMLElement }) {
-    if (
-      typeof start.element.releasePointerCapture === "function" &&
-      (!start.element.hasPointerCapture || start.element.hasPointerCapture(start.pointerId))
-    ) {
-      start.element.releasePointerCapture(start.pointerId);
-    }
-  }
-
-  private suppressSyntheticPanelClick() {
-    this.suppressPanelClick = true;
-    if (this.suppressPanelClickTimer !== null) {
-      window.clearTimeout(this.suppressPanelClickTimer);
-    }
-    this.suppressPanelClickTimer = window.setTimeout(() => {
-      this.suppressPanelClick = false;
-      this.suppressPanelClickTimer = null;
-    }, 0);
   }
 
   private applyPanelRow(row: ChessRow) {

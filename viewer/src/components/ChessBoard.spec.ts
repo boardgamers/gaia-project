@@ -7,6 +7,7 @@ import { ChessBackend, ChessRow } from "../logic/chess-backend";
 import { createChess } from "../logic/chess-lib";
 import { localChessLastMoveStorageKey, localChessStorageKey, START_FEN } from "../logic/chess";
 import ChessBoard from "./ChessBoard.vue";
+import { PANEL_SWIPE_EVENT } from "../logic/panel-swipe";
 
 const localVue = createLocalVue();
 localVue.use(Vuex);
@@ -327,7 +328,7 @@ describe("ChessBoard", () => {
     await wrapper.vm.$nextTick();
     expect(wrapper.find(".lf-chess-confirm-text").text()).to.equal("Reset the chess board?");
 
-    wrapper.vm.$root.$emit("lf::chess-panel-swipe");
+    wrapper.vm.$root.$emit(PANEL_SWIPE_EVENT);
     await wrapper.vm.$nextTick();
     expect(wrapper.find(".lf-chess-confirm-text").exists()).to.equal(false);
     expect((wrapper.vm as any).fen).to.equal(fenAfterE4());

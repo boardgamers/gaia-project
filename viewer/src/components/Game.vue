@@ -36,41 +36,43 @@
                scoring used to occupy here, before final scoring moved onto the map itself
                (SpaceMap.vue's bottom-right corner) - so ScoringBoard only renders for the base
                game here. -->
-          <svg
-            class="scoring-research-board"
-            :viewBox="researchBoardCanvasViewBox"
-            :width="researchBoardCanvasWidth"
-            :height="researchBoardCanvasHeight"
-          >
-            <rect
-              aria-hidden="true"
-              class="research-actions-panel"
-              :x="researchBoardCanvasMinX + 1"
-              y="1"
-              :width="researchBoardCanvasWidth - 2"
-              :height="researchBoardCanvasHeight - 2"
-              rx="9"
-              ry="9"
-            />
-            <ResearchBoard
-              :height="researchBoardViewHeight"
-              :width="engine.options.lostFleet ? researchBoardContentWidth : undefined"
-              ref="researchBoard"
-              x="-50"
-            />
-            <ScoringBoard v-if="!engine.options.lostFleet" class="ml-4" width="90" :x="researchBoardWidth + 20" />
-            <!-- Right under the 6 tracks' own bottom edge (BASE_RESEARCH_BOARD_HEIGHT, a fixed
-                 5-unit gap) - NOT researchBoardViewHeight, which Lost Fleet's 7th column (round
-                 scoring + final scoring, positioned further right) can inflate well past where the
-                 tracks themselves actually end, leaving a large visible gap here otherwise. -->
-            <BoardAction
-              :scale="17"
-              :transform="`translate(${45 * i - 20 + boardActionRowXShift}, ${baseResearchBoardHeight + 5})`"
-              v-for="(action, i) in actions"
-              :key="action"
-              :action="action"
-            />
-          </svg>
+          <ResearchPanel>
+            <svg
+              class="scoring-research-board"
+              :viewBox="researchBoardCanvasViewBox"
+              :width="researchBoardCanvasWidth"
+              :height="researchBoardCanvasHeight"
+            >
+              <rect
+                aria-hidden="true"
+                class="research-actions-panel"
+                :x="researchBoardCanvasMinX + 1"
+                y="1"
+                :width="researchBoardCanvasWidth - 2"
+                :height="researchBoardCanvasHeight - 2"
+                rx="9"
+                ry="9"
+              />
+              <ResearchBoard
+                :height="researchBoardViewHeight"
+                :width="engine.options.lostFleet ? researchBoardContentWidth : undefined"
+                ref="researchBoard"
+                x="-50"
+              />
+              <ScoringBoard v-if="!engine.options.lostFleet" class="ml-4" width="90" :x="researchBoardWidth + 20" />
+              <!-- Right under the 6 tracks' own bottom edge (BASE_RESEARCH_BOARD_HEIGHT, a fixed
+                   5-unit gap) - NOT researchBoardViewHeight, which Lost Fleet's 7th column (round
+                   scoring + final scoring, positioned further right) can inflate well past where the
+                   tracks themselves actually end, leaving a large visible gap here otherwise. -->
+              <BoardAction
+                :scale="17"
+                :transform="`translate(${45 * i - 20 + boardActionRowXShift}, ${baseResearchBoardHeight + 5})`"
+                v-for="(action, i) in actions"
+                :key="action"
+                :action="action"
+              />
+            </svg>
+          </ResearchPanel>
           <!-- Stacked directly below the research board in normal document flow (same column,
                not a separate Bootstrap row) so it hugs the power/QIC action row's actual bottom
                edge at every viewport width - a separate row below would only start once BOTH
@@ -248,6 +250,7 @@ import Pool from "./Pool.vue";
 import Rules from "./Rules.vue";
 import PlayerInfo from "./PlayerInfo.vue";
 import ResearchBoard from "./ResearchBoard.vue";
+import ResearchPanel from "./ResearchPanel.vue";
 import ScoringBoard from "./ScoringBoard.vue";
 import SpaceMap from "./SpaceMap.vue";
 import LostFleetShips, { SHIP_BOARD_VIEWBOX_WIDTH } from "./LostFleetShips.vue";
@@ -290,6 +293,7 @@ const BOARD_ACTION_BASE_X = -20;
     PlayerInfo,
     Pool,
     ResearchBoard,
+    ResearchPanel,
     ScoringBoard,
     SpaceMap,
     LostFleetShips,
@@ -1050,7 +1054,9 @@ export default class Game extends Vue {
     align-items: stretch;
   }
 
-  .game-board-side-column > .scoring-research-board,
+  // `.research-panel` is the research board's own swipe drawer wrapper (ResearchPanel.vue), which
+  // is what actually sits in this column now - the research SVG is its first face.
+  .game-board-side-column > .research-panel,
   .game-board-side-column > .lost-fleet-ships-row {
     flex: 0 0 auto;
   }

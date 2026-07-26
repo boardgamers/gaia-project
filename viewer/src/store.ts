@@ -9,6 +9,7 @@ import { PresenceState } from "./hosted/presence";
 import { PremoveFailureRow, PremoveMode, PremoveRow } from "./hosted/types";
 import { ExecuteBack, FastConversionTooltips } from "./logic/buttons/types";
 import { ChessBackend } from "./logic/chess-backend";
+import { RenjuBackend } from "./logic/renju-backend";
 import {
   CommandObject,
   MovesSlice,
@@ -83,6 +84,8 @@ export type State = {
   notesBackend: NotesBackend | null;
   /** Per-game chess persistence injected by hosted.ts. null means local/offline pass-and-play. */
   chessBackend: ChessBackend | null;
+  /** Per-game renju (research panel drawer) persistence, same injection contract as chessBackend. */
+  renjuBackend: RenjuBackend | null;
 };
 
 export type NotesBackend = {
@@ -159,6 +162,7 @@ const gaiaViewer = {
       presence: {},
       notesBackend: null,
       chessBackend: null,
+      renjuBackend: null,
     } as State;
   },
   mutations: {
@@ -298,6 +302,10 @@ const gaiaViewer = {
 
     setChessBackend(state: State, backend: ChessBackend | null) {
       state.chessBackend = backend;
+    },
+
+    setRenjuBackend(state: State, backend: RenjuBackend | null) {
+      state.renjuBackend = backend;
     },
   },
   actions: {

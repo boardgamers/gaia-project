@@ -2,6 +2,7 @@ import Vue from "vue";
 import AdminUsers from "./hosted/AdminUsers.vue";
 import { fetchMyApprovalStatus } from "./hosted/approval";
 import { createSupabaseChessBackend } from "./hosted/chess-backend";
+import { createSupabaseRenjuBackend } from "./hosted/renju-backend";
 import Game from "./components/Game.vue";
 import CreateGame from "./hosted/CreateGame.vue";
 import ChatNotesPanel from "./hosted/ChatNotesPanel.vue";
@@ -128,6 +129,8 @@ async function mountGameInstance(
   // unaware of Supabase, while hosted mode supplies a backend already scoped to this exact game.
   // Offline/self-contained stores leave this null and use per-game localStorage pass-and-play.
   emitter.store.commit("setChessBackend", createSupabaseChessBackend(client, gameId, session.user.id));
+  // The research board's research/renju drawer uses the same injection boundary as the chess face.
+  emitter.store.commit("setRenjuBackend", createSupabaseRenjuBackend(client, gameId, session.user.id));
 
   // Declared here (before its watchers below, which reference it) rather than in its previous
   // spot further down - HostedBar.vue's settings-menu labels (`chatPanelOpen`/`gameNavPanelOpen`)

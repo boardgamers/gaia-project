@@ -127,6 +127,7 @@ import { Component, Watch } from "vue-property-decorator";
 import { ChessEvaluation, StockfishEvaluator, evaluationDescription } from "../logic/chess-evaluation";
 import { ChessInstance, createChess } from "../logic/chess-lib";
 import { ChessBackend, ChessRow } from "../logic/chess-backend";
+import { PANEL_SWIPE_EVENT } from "../logic/panel-swipe";
 import {
   Cell,
   DisplaySquare,
@@ -181,7 +182,7 @@ export default class ChessBoard extends Vue {
 
   async mounted() {
     this.chess = createChess(START_FEN);
-    this.$root.$on("lf::chess-panel-swipe", this.cancelForPanelSwipe);
+    this.$root.$on(PANEL_SWIPE_EVENT, this.cancelForPanelSwipe);
     this.online = this.backend !== null;
     this.myUserId = this.backend?.userId ?? null;
     this.$nextTick(() => this.observeSize());
@@ -194,7 +195,7 @@ export default class ChessBoard extends Vue {
   }
 
   beforeDestroy() {
-    this.$root.$off("lf::chess-panel-swipe", this.cancelForPanelSwipe);
+    this.$root.$off(PANEL_SWIPE_EVENT, this.cancelForPanelSwipe);
     if (this.unsubscribe) {
       this.unsubscribe();
     }
