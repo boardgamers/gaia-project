@@ -41,7 +41,10 @@
             v-for="game in visibleGames"
             :key="game.id"
             class="game-nav__row game-bar"
-            :class="{ 'game-bar--my-turn': isMyTurn(game), 'game-nav__row--current': game.id === currentGameId }"
+            :class="{
+              'game-bar--my-turn': isMyTurn(game) || isMyChessTurn(game),
+              'game-nav__row--current': game.id === currentGameId,
+            }"
           >
             <GameBar
               :game="game"
@@ -59,7 +62,7 @@
 <script lang="ts">
 import Vue from "vue";
 import GameBar from "./GameBar.vue";
-import { isMyGame, isMyTurn, sortGames } from "./game-bar";
+import { isMyChessTurn, isMyGame, isMyTurn, sortGames } from "./game-bar";
 import { PresenceState } from "./presence";
 import { isDesktopViewport, watchDesktopViewport } from "./viewport";
 
@@ -195,6 +198,9 @@ export default Vue.extend({
     isMyTurn(game: any): boolean {
       return isMyTurn(game, this.myUserId, this.userEmail);
     },
+    isMyChessTurn(game: any): boolean {
+      return isMyChessTurn(game, this.myUserId);
+    },
     setOpen(open: boolean) {
       this.open = open;
       if (this.isDesktop) {
@@ -208,7 +214,7 @@ export default Vue.extend({
       this.loading = true;
       const { data, error } = await (this.client as any)
         .from("games")
-        .select("*, players(*)")
+        .select("*, players(*), chess_board(*)")
         .order("created_at", { ascending: false });
       if (!error && data) {
         this.games = data;
@@ -220,6 +226,7 @@ export default Vue.extend({
         .channel("game-nav-games")
         .on("postgres_changes", { event: "*", schema: "public", table: "games" }, () => this.refresh())
         .on("postgres_changes", { event: "*", schema: "public", table: "players" }, () => this.refresh())
+        .on("postgres_changes", { event: "*", schema: "public", table: "chess_board" }, () => this.refresh())
         .subscribe();
     },
     onRowClick(game: any, event: MouseEvent) {

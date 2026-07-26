@@ -4114,25 +4114,25 @@ opacity: 0.7 }` wrapper that also diluted the X itself, while `BoardAction.vue`'
       `pnpm test`: 440 passing/31 failing both before and after (identical failing-test names,
       confirmed via `git stash` on the same run - all pre-existing, none touch these components).
 
-                                                                                                                                                                       **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
-                                                                                                                                                                       pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
-                                                                                                                                                                       desktop mice, which was never the actual bug - only touch devices raced hover against the
-                                                                                                                                                                       click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
-                                                                                                                                                                       `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
-                                                                                                                                                                       `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
-                                                                                                                                                                       shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
-                                                                                                                                                                       `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
-                                                                                                                                                                       directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
-                                                                                                                                                                       `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
-                                                                                                                                                                       config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
-                                                                                                                                                                       on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
-                                                                                                                                                                       desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
-                                                                                                                                                                       is what actually closed that race originally. Verified live via Playwright with two device
-                                                                                                                                                                       profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
-                                                                                                                                                                       tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
-                                                                                                                                                                       context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
-                                                                                                                                                                       a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
-                                                                                                                                                                       still 440 passing/31 failing, same pre-existing set.
+                                                                                                                                                                             **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
+                                                                                                                                                                             pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
+                                                                                                                                                                             desktop mice, which was never the actual bug - only touch devices raced hover against the
+                                                                                                                                                                             click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
+                                                                                                                                                                             `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
+                                                                                                                                                                             `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
+                                                                                                                                                                             shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
+                                                                                                                                                                             `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
+                                                                                                                                                                             directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
+                                                                                                                                                                             `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
+                                                                                                                                                                             config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
+                                                                                                                                                                             on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
+                                                                                                                                                                             desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
+                                                                                                                                                                             is what actually closed that race originally. Verified live via Playwright with two device
+                                                                                                                                                                             profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
+                                                                                                                                                                             tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
+                                                                                                                                                                             context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
+                                                                                                                                                                             a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
+                                                                                                                                                                             still 440 passing/31 failing, same pre-existing set.
 
 102.  ✅ **Offline pass-and-play with automatic local recovery and airplane-mode launch
       (2026-07-17, v5.31.0).** The viewer now has a dedicated `?offline=1` hot-seat mode, linked from
@@ -4531,6 +4531,53 @@ repeat(3, 1fr)` instead of a flex row - each `svg.booster` is `width: 100%; heig
       non-compact `Pool` (bottom-of-page, own boosters/feds sharing one native-size flex-wrap row) is
       untouched. Full viewer suite: 548 passing, same 2 pre-existing map-rotation flakes — no
       regressions.
+
+114.  ✅ **Chess turn now pulses the game bar and pushes a notification, matching Gaia's own "your
+      turn" treatment (2026-07-26).** Owner request: any Gaia game whose shared chess side panel is
+      awaiting _your_ move should look and feel the same as a game awaiting your Gaia turn, not just
+      spectators noticing it live in the open board. Two pieces, both piggybacking on Gaia's existing
+      turn machinery rather than inventing a parallel one:
+      - **Pulse:** `game-bar.ts` gained `chessBoardOf`/`chessMover`/`isMyChessTurn` (mirrors
+        `move_chess`'s own "who moves next" resolution: the `*_next_user` columns win for 2v2 relay
+        chess, falling back to the solo seated user). `Lobby.vue` and `GameNavPanel.vue` now embed
+        `chess_board(*)` in their `games` query, subscribe to `postgres_changes` on `chess_board` too
+        (so a live move refreshes the list), and OR `isMyChessTurn(game)` into the existing
+        `'game-bar--my-turn'` class alongside `isMyTurn(game)` - same green inset-shadow pulse
+        (`GameBar.vue`'s CSS), now for either reason.
+      - **Push notification:** new migration `20260726181703_chess_turn_notifications.sql` adds a
+        `chess_board` trigger (`notify_chess_turn`, fires only when `old.fen is distinct from
+new.fen` - a real move or reset, not a colour claim or panel-mode switch) that POSTs
+        `{type: "chess_turn", game_id}` through the same `notify` Edge Function pipeline as Gaia's
+        `games_notify_update` trigger. `notify/logic.ts` gained `ChessBoardRow`, `chessMover` (same
+        resolution as the viewer's copy), and `buildChessTurnNotification` (title "GP: Fight Club",
+        body "Your chess move in <game>.", tag `chess-<gameId>` - deliberately different from the
+        Gaia turn push's `turn-<gameId>` tag so the two don't clobber each other's OS notification,
+        kind `"turn"` so it's gated by the same `turn_pushes` preference). No "already moved" guard
+        is needed the way `buildNotifications`' Gaia path checks `last_committed_by`: the active
+        colour only ever flips to the other seat, so the resolved mover is never the player who just
+        moved. `notify/index.ts` branches on `type === "chess_turn"` to load the board and build this
+        notification instead, and the old `turnPlayer`/`recipient` split (which only ever differed in
+        name, not value, for a `"turn"` notification) was simplified to a single `playerByUserId`
+        lookup used for every kind - works identically for a Gaia turn recipient and a chess mover
+        recipient. Tests: `game-bar.ts`'s new helpers covered via a new Lobby.spec.ts case (pulses
+        green from `isMyChessTurn` alone, with the Gaia `current_seat` pointed at the _other_ seat);
+        `notify/logic.spec.ts` gained `chessMover`/`buildChessTurnNotification` cases (next-user
+        priority + solo fallback, correct recipient/tag/body, no notification when the active
+        colour's seat is unclaimed). Lobby (30/30) and GameNavPanel (8/8) suites pass; notify's own
+        suite (46/46, run via a one-off esbuild+mocha harness since this sandbox has no `deno`)
+        passes including the 3 new cases.
+      - **Deploy status:** the migration (trigger) IS applied live to `mitawjpdxkheascdiffz` -
+        confirmed via `list_migrations`. The `notify` Edge Function itself is **NOT yet redeployed**
+        with the `chess_turn`-aware code: `deploy_edge_function` failed both attempts with "MCP tool
+        call requires approval" (the same recurring blocked-approval pattern as #81/#96/#97 above -
+        not something fixable from in-session). Net effect until someone deploys it: the trigger
+        fires and POSTs `{type: "chess_turn", ...}` to the still-old deployed function, which 400s
+        on the unrecognized type - so the chess-turn push is inert (no crash, no queued/duplicated
+        events, just a silently-failing POST) until `notify`'s `index.ts`/`logic.ts` are pushed live.
+        The client-side pulse has no such dependency and works the moment this session's commit
+        reaches `master`/Vercel. **Next session: redeploy the `notify` function** (retry
+        `deploy_edge_function` with `project_id: mitawjpdxkheascdiffz`, `name: "notify"`, the current
+        `supabase/functions/notify/index.ts` + `logic.ts` contents) before considering this item done.
 
 ## Still MISSING — only one art-only item left
 

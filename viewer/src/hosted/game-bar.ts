@@ -26,6 +26,39 @@ export function isMyTurn(game: any, myUserId: string, userEmail: string): boolea
   return seat.user_id === myUserId || (seat.invited_email ?? "").toLowerCase() === email;
 }
 
+// `chess_board` is a 1:1 join (its primary key is the game's own id), but PostgREST embeds a
+// to-one relationship as an array unless it can prove uniqueness from the query shape alone - so
+// callers may see either a single object or a one-element array depending on how the embed was
+// requested. Normalize both here rather than assuming one shape at every call site.
+export function chessBoardOf(game: any): any | null {
+  const board = game.chess_board;
+  if (!board) {
+    return null;
+  }
+  return Array.isArray(board) ? board[0] ?? null : board;
+}
+
+// Mirrors move_chess's own "who moves next" resolution (supabase/migrations/
+// 20260724185341_persist_chess_last_move.sql): the *_next_user columns exist for 2v2 relay chess
+// and take priority; a solo team falls back to its single seated user.
+export function chessMover(board: any): string | null {
+  const active = (board.fen ?? "").split(" ")[1];
+  return active === "w"
+    ? board.white_next_user ?? board.white_user ?? board.white_user_2 ?? null
+    : board.black_next_user ?? board.black_user ?? board.black_user_2 ?? null;
+}
+
+// Whether it's this viewer's move in the game's shared chess board - used alongside isMyTurn to
+// decide the game bar's "your turn" pulse, since a game can need your attention for its Gaia turn,
+// its chess turn, or both.
+export function isMyChessTurn(game: any, myUserId: string): boolean {
+  const board = chessBoardOf(game);
+  if (!board || !board.fen || !myUserId) {
+    return false;
+  }
+  return chessMover(board) === myUserId;
+}
+
 export function isMyGame(game: any, myUserId: string, userEmail: string): boolean {
   if (game.created_by === myUserId) {
     return true;

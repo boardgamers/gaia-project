@@ -1,9 +1,10 @@
 // Turn/invite/finish/chat push notifications (BACKEND.md §6, §J4 as amended).
 //
 // Called by the pg_net trigger on the games table with {type, game_id}
-// (type "insert" = game created, "update" = current_seat/status changed), or by the trigger on
-// game_chat_messages with {type: "chat", game_id, sender_id, author_name, body}.
-// Reads everything it needs (game, players, subscriptions, VAPID keys) with
+// (type "insert" = game created, "update" = current_seat/status changed), by the trigger on
+// chess_board with {type: "chess_turn", game_id} (fen changed - a move or a reset), or by the
+// trigger on game_chat_messages with {type: "chat", game_id, sender_id, author_name, body}.
+// Reads everything it needs (game, players, chess board, subscriptions, VAPID keys) with
 // the service role - it never runs the game engine.
 //
 // app_config['vapid'] value shape (seeded out-of-band, never committed):
@@ -14,7 +15,9 @@ import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 import * as webpush from "jsr:@negrel/webpush@0.5.0";
 
 import {
+  buildChessTurnNotification,
   buildNotifications,
+  ChessBoardRow,
   currentTurnPlayer,
   GameRow,
   isNotificationAllowed,
@@ -66,7 +69,7 @@ Deno.serve(async (req) => {
     return await runReminderSweep(supabase);
   }
 
-  if (!game_id || (type !== "insert" && type !== "update" && type !== "chat")) {
+  if (!game_id || (type !== "insert" && type !== "update" && type !== "chat" && type !== "chess_turn")) {
     return new Response("bad request", { status: 400 });
   }
   if (type === "chat" && (!sender_id || !author_name || !chatBody)) {
@@ -86,34 +89,45 @@ Deno.serve(async (req) => {
     return new Response("game not found", { status: 404 });
   }
 
-  let hasQueuedPremove = false;
-  if (type === "update" && (game as GameRow).current_seat !== null) {
-    const { count } = await supabase
-      .from("premoves")
-      .select("seat", { count: "exact", head: true })
+  let notifications: ReturnType<typeof buildNotifications> = [];
+  if (type === "chess_turn") {
+    const { data: board, error: boardError } = await supabase
+      .from("chess_board")
+      .select("*")
       .eq("game_id", game_id)
-      .eq("seat", (game as GameRow).current_seat);
-    hasQueuedPremove = (count ?? 0) > 0;
+      .single();
+    if (boardError || !board) {
+      console.error("chess board not found:", boardError?.message);
+      return new Response("chess board not found", { status: 404 });
+    }
+    notifications = buildChessTurnNotification(board as ChessBoardRow, game as GameRow);
+  } else {
+    let hasQueuedPremove = false;
+    if (type === "update" && (game as GameRow).current_seat !== null) {
+      const { count } = await supabase
+        .from("premoves")
+        .select("seat", { count: "exact", head: true })
+        .eq("game_id", game_id)
+        .eq("seat", (game as GameRow).current_seat);
+      hasQueuedPremove = (count ?? 0) > 0;
+    }
+
+    const chatMessage =
+      type === "chat"
+        ? { senderId: sender_id as string, authorName: author_name as string, body: chatBody as string }
+        : undefined;
+
+    let mutedUserIds = new Set<string>();
+    if (type === "chat") {
+      const { data: mutes } = await supabase.from("game_chat_mutes").select("user_id").eq("game_id", game_id);
+      mutedUserIds = new Set((mutes ?? []).map((m: { user_id: string }) => m.user_id));
+    }
+
+    notifications = buildNotifications(type, game as GameRow, hasQueuedPremove, chatMessage, mutedUserIds);
   }
-
-  const chatMessage =
-    type === "chat"
-      ? { senderId: sender_id as string, authorName: author_name as string, body: chatBody as string }
-      : undefined;
-
-  let mutedUserIds = new Set<string>();
-  if (type === "chat") {
-    const { data: mutes } = await supabase.from("game_chat_mutes").select("user_id").eq("game_id", game_id);
-    mutedUserIds = new Set((mutes ?? []).map((m: { user_id: string }) => m.user_id));
-  }
-
-  const notifications = buildNotifications(type, game as GameRow, hasQueuedPremove, chatMessage, mutedUserIds);
   if (notifications.length === 0) {
     return new Response(JSON.stringify({ sent: 0 }), { status: 200 });
   }
-  const turnPlayer = notifications.some((notification) => notification.kind === "turn")
-    ? currentTurnPlayer(game as GameRow)
-    : undefined;
   const playerByUserId = new Map(
     (game as GameRow).players.filter((p) => p.user_id).map((p) => [p.user_id as string, p])
   );
@@ -147,12 +161,12 @@ Deno.serve(async (req) => {
       url: `${siteUrl}/?game=${game_id}`,
     });
     for (const sub of (subscriptions ?? []).filter((s: SubscriptionRow) => s.user_id === notification.userId)) {
-      // Desktop subscriptions are intentionally "more sensitive": if it's your turn (or someone
-      // just chatted), they still get the push even while the game is already open. Mobile/PWA
-      // subscriptions keep the old suppression behavior to avoid duplicate alerts while actively
-      // playing there - each recipient's OWN player row (not just the current turn player) decides
-      // this for "message" notifications, since any seated player can receive a chat push.
-      const recipient = notification.kind === "turn" ? turnPlayer : playerByUserId.get(notification.userId);
+      // Desktop subscriptions are intentionally "more sensitive": if it's your turn (Gaia or chess)
+      // or someone just chatted, they still get the push even while the game is already open.
+      // Mobile/PWA subscriptions keep the old suppression behavior to avoid duplicate alerts while
+      // actively playing there. The recipient's own player row always decides this - it's the same
+      // row for a "turn" notification's userId either way (Gaia's current seat or the chess mover).
+      const recipient = playerByUserId.get(notification.userId);
       if (
         (notification.kind === "turn" || notification.kind === "message") &&
         recipient &&

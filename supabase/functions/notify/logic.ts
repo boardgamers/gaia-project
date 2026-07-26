@@ -33,6 +33,17 @@ export type SubscriptionRow = {
   tz?: string | null;
 };
 
+export type ChessBoardRow = {
+  game_id: string;
+  fen: string;
+  white_user: string | null;
+  white_user_2: string | null;
+  black_user: string | null;
+  black_user_2: string | null;
+  white_next_user: string | null;
+  black_next_user: string | null;
+};
+
 export type Notification = {
   userId: string;
   title: string;
@@ -72,6 +83,38 @@ function isMobileUserAgent(userAgent: string | null | undefined): boolean {
 
 export function currentTurnPlayer(game: GameRow): PlayerRow | undefined {
   return game.players.find((p) => p.seat === game.current_seat);
+}
+
+// Mirrors move_chess's own "who moves next" resolution (supabase/migrations/
+// 20260724185341_persist_chess_last_move.sql): the *_next_user columns exist for 2v2 relay chess
+// and take priority; a solo team falls back to its single seated user.
+export function chessMover(board: ChessBoardRow): string | null {
+  const active = board.fen.split(" ")[1];
+  return active === "w"
+    ? board.white_next_user ?? board.white_user ?? board.white_user_2
+    : board.black_next_user ?? board.black_user ?? board.black_user_2;
+}
+
+// The chess-panel counterpart of buildNotifications' Gaia "turn" case, fired whenever the shared
+// chess board's active color actually changes (supabase/migrations/
+// 20260726181703_chess_turn_notifications.sql's `chess_board_notify_update` trigger). No
+// "already moved" guard is needed here the way buildNotifications checks `last_committed_by`:
+// the active color only ever flips to the *other* seat, so the resolved mover is never the player
+// who just made the move.
+export function buildChessTurnNotification(board: ChessBoardRow, game: GameRow): Notification[] {
+  const mover = chessMover(board);
+  if (!mover) {
+    return [];
+  }
+  return [
+    {
+      userId: mover,
+      title: "GP: Fight Club",
+      body: `Your chess move in ${gameLabel(game, mover)}.`,
+      tag: `chess-${game.id}`,
+      kind: "turn",
+    },
+  ];
 }
 
 // Most games never get a custom name (create-game defaults it blank), so the old flat

@@ -217,7 +217,7 @@
         </div>
         <b-list-group-item
           class="game-bar"
-          :class="{ 'game-bar--my-turn': isMyTurn(game) }"
+          :class="{ 'game-bar--my-turn': isMyTurn(game) || isMyChessTurn(game) }"
           :style="{ transform: `translateX(${swipeOffset(game.id)}px)` }"
         >
           <GameBar
@@ -245,6 +245,7 @@ import {
   auctionLabel as auctionLabelShared,
   claimedSeats as claimedSeatsShared,
   factionInitial as factionInitialShared,
+  isMyChessTurn as isMyChessTurnShared,
   isMyGame as isMyGameShared,
   isMyTurn as isMyTurnShared,
   isTestGame as isTestGameShared,
@@ -590,7 +591,10 @@ export default Vue.extend({
         // connection, no response ever) never rejects on its own, so try/catch alone still leaves
         // `loading` stuck forever on a bad network.
         const { data, error } = await Promise.race([
-          (this.client as any).from("games").select("*, players(*)").order("created_at", { ascending: false }),
+          (this.client as any)
+            .from("games")
+            .select("*, players(*), chess_board(*)")
+            .order("created_at", { ascending: false }),
           new Promise<never>((_resolve, reject) =>
             setTimeout(() => reject(new Error("Timed out - check your connection")), 15000)
           ),
@@ -657,6 +661,7 @@ export default Vue.extend({
         .channel("lobby-games")
         .on("postgres_changes", { event: "*", schema: "public", table: "games" }, () => this.refresh())
         .on("postgres_changes", { event: "*", schema: "public", table: "players" }, () => this.refresh())
+        .on("postgres_changes", { event: "*", schema: "public", table: "chess_board" }, () => this.refresh())
         .subscribe();
       this.gamesChannel = channel;
     },
@@ -668,6 +673,9 @@ export default Vue.extend({
     },
     isMyTurn(game: any): boolean {
       return isMyTurnShared(game, this.myUserId, this.userEmail);
+    },
+    isMyChessTurn(game: any): boolean {
+      return isMyChessTurnShared(game, this.myUserId);
     },
     sortGames(games: any[]): any[] {
       return sortGamesShared(games, this.myUserId, this.userEmail);

@@ -1,7 +1,10 @@
 import { strict as assert } from "assert";
 
 import {
+  buildChessTurnNotification,
   buildNotifications,
+  chessMover,
+  ChessBoardRow,
   DEFAULT_NOTIFICATION_PREFS,
   gameLabel,
   GameRow,
@@ -50,6 +53,20 @@ function makeGame(overrides: Partial<GameRow> = {}): GameRow {
     created_by: "creator-1",
     last_committed_by: "other-user",
     players: [makePlayer()],
+    ...overrides,
+  };
+}
+
+function makeBoard(overrides: Partial<ChessBoardRow> = {}): ChessBoardRow {
+  return {
+    game_id: "game-1",
+    fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+    white_user: "white-1",
+    white_user_2: null,
+    black_user: "black-1",
+    black_user_2: null,
+    white_next_user: null,
+    black_next_user: null,
     ...overrides,
   };
 }
@@ -220,6 +237,35 @@ describe("notify logic", () => {
     assert.equal(notifications.length, 1);
     assert.equal(notifications[0].title, "GP: Fight Club");
     assert.equal(notifications[0].body, "Your turn in your game with Sarah.");
+  });
+
+  describe("chess turn notifications", () => {
+    it("resolves the mover from the active color's *_next_user, falling back to the seated user", () => {
+      assert.equal(chessMover(makeBoard()), "white-1");
+      assert.equal(
+        chessMover(makeBoard({ fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1" })),
+        "black-1"
+      );
+      assert.equal(chessMover(makeBoard({ white_next_user: "relay-white-2" })), "relay-white-2");
+    });
+
+    it("builds a turn-kind notification for the resolved mover, tagged separately from the Gaia turn push", () => {
+      const white = makePlayer({ seat: 0, user_id: "white-1", display_name: "Luke" });
+      const black = makePlayer({ seat: 1, user_id: "black-1", display_name: "Sarah" });
+      const game = makeGame({ name: "", players: [white, black] });
+
+      const notifications = buildChessTurnNotification(makeBoard(), game);
+
+      assert.equal(notifications.length, 1);
+      assert.equal(notifications[0].userId, "white-1");
+      assert.equal(notifications[0].kind, "turn");
+      assert.equal(notifications[0].body, "Your chess move in your game with Sarah.");
+      assert.equal(notifications[0].tag, "chess-game-1");
+    });
+
+    it("builds no notification when the active color has no claimed player yet", () => {
+      assert.deepEqual(buildChessTurnNotification(makeBoard({ white_user: null }), makeGame()), []);
+    });
   });
 });
 
