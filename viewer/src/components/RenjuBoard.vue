@@ -527,8 +527,12 @@ export default class RenjuBoard extends Vue {
 .lf-renju-board {
   width: 100%;
   height: 100%;
-  // The long press must not be hijacked as a scroll, exactly as on the chess face.
-  touch-action: none;
+  // `pan-y`, NOT the chess face's `none`: this board fills the entire research panel, so a finger
+  // landing anywhere on it must still scroll the page (owner report). Vertical drags stay with the
+  // browser; horizontal ones are left to the drawer's own gesture, matching `.research-panel`. A
+  // long press still works because it needs a stationary finger, which never starts a scroll - and
+  // if a scroll does begin, the resulting pointercancel cancels the press, which is what we want.
+  touch-action: pan-y;
   user-select: none;
 }
 

@@ -1,7 +1,18 @@
 {
-  "version": "5.39.0",
+  "version": "5.39.1",
   "releasedAt": "2026-07-26",
   "entries": [
+    {
+      "version": "5.39.1",
+      "releasedAt": "2026-07-26",
+      "kind": "fix",
+      "title": "Renju board scrolling",
+      "impact": "",
+      "changes": [
+        "The renju face no longer sets touch-action none, so a finger landing on the board still scrolls the page vertically"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.39.0",
       "releasedAt": "2026-07-26",
