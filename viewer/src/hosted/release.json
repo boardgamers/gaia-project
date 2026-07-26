@@ -1,7 +1,21 @@
 {
-  "version": "5.37.11",
-  "releasedAt": "2026-07-25",
+  "version": "5.38.0",
+  "releasedAt": "2026-07-26",
   "entries": [
+    {
+      "version": "5.38.0",
+      "releasedAt": "2026-07-26",
+      "kind": "update",
+      "title": "Chess turn pulse and notifications",
+      "impact": "",
+      "changes": [
+        "The game bar now pulses green and can push a notification when it's your move in a game's shared chess board, matching how a Gaia turn already works",
+        "Lobby.vue and GameNavPanel.vue embed chess_board(*) and subscribe to its realtime changes; a new chess_board_notify_update trigger and chess_turn notification type were added to the notify Edge Function pipeline"
+      ],
+      "userChanges": [
+        "The game bar now pulses green and can push a notification when it's your move in a game's shared chess board, matching how a Gaia turn already works"
+      ]
+    },
     {
       "version": "5.37.11",
       "releasedAt": "2026-07-25",
