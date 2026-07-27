@@ -273,4 +273,23 @@ describe("LostFleetShips", () => {
     expect(qicAction.querySelector("image"), "expected the tech tile Resource icon (an <image>)").to.not.equal(null);
     expect(qicAction.textContent).to.not.contain("tt");
   });
+
+  it("swipes the existing ship stack to a lazily mounted Ultimate tic-tac-toe face", async () => {
+    const engine = new Engine(["init 2 lost-fleet-ships-ultimate"], { lostFleet: true });
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(LostFleetShips, { store });
+    expect(container.querySelectorAll(".lost-fleet-ships__mode-dot").length).to.equal(2);
+    expect(container.querySelector(".lf-ultimate-board")).to.equal(null);
+
+    const ultimateDot = container.querySelector<HTMLButtonElement>('[data-mode="ultimate"]');
+    ultimateDot?.click();
+    await Vue.nextTick();
+
+    expect(container.querySelectorAll(".lf-ultimate-cell").length).to.equal(81);
+    expect(container.querySelector(".lost-fleet-ships__boards")?.getAttribute("aria-hidden")).to.equal("true");
+    expect(ultimateDot?.getAttribute("aria-pressed")).to.equal("true");
+    window.localStorage.clear();
+  });
 });

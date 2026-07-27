@@ -84,6 +84,11 @@ release.json`) has two audiences and they must not blur together: a "What's new"
   account - not shared over Realtime. Anything below describing a switch as shared/committed state
   is history. Their "your move" pushes are also separate notification categories from Gaia's, and
   both go silent once the Gaia game is finished.
+- **Ship-board Ultimate tic-tac-toe:** implemented in viewer v5.42.0 (#119). The Lost Fleet ship
+  stack now swipes to a complete 81-cell Ultimate tic-tac-toe board with offline pass-and-play,
+  local advantage analysis, exact route/free-placement rules, and long-press reset. Hosted games
+  share the position over Realtime through live migration
+  `20260727205531_shared_ultimate_tic_tac_toe.sql`; the visible drawer face remains per-viewer.
 - **Sidebar chess:** implementation is complete in viewer v5.37.11. Any Gaia-game participant can
   switch the shared `pool`/`chess` drawer with its two equal bottom-right page dots or a live left/right
   swipe, and all approved viewers receive the committed state over Realtime. The chess face has no
@@ -4791,6 +4796,29 @@ definer`; `renju_board_notify_update` is the only non-internal trigger on the ta
         new `NotificationSettings.spec.ts` (3 cases); `Pool.spec.ts`/`ResearchPanel.spec.ts` traded
         their shared-mode tests for per-viewer and persistence ones. `notify/logic.spec.ts` **55
         passing** (50 before, +5). Lint output is byte-identical to the clean tree.
+
+119.  ✅ **Ultimate tic-tac-toe in the Lost Fleet ship-board drawer (2026-07-27, viewer v5.42.0,
+      owner request).** `LostFleetShips.vue` keeps the existing ship stack as its normal-flow face
+      and adds a lazy-mounted second face using the same page-dot/swipe interaction as the other
+      minigames. The new board implements all 81 cells, forced routing from the chosen inner cell,
+      free placement when the destination board is won/full, mini-board ownership, meta-board
+      victory, final draw, valid-board highlighting, last-move highlighting, won/drawn overlays,
+      turn/winner text, and long-press reset.
+
+      - **Offline and evaluation:** self-contained games use tolerant per-game `localStorage`
+        pass-and-play state. A bounded, fully local alpha-beta evaluator updates the thin X/O
+        advantage strip without network traffic.
+      - **Hosted state:** migration `20260727205531_shared_ultimate_tic_tac_toe.sql` is applied and
+        live. `ultimate_ttt_board` has RLS, an approved-viewer SELECT policy, Realtime publication,
+        randomized 1-4-account X/O relay assignment, row-locked optimistic concurrency, and
+        independent server validation of the turn, changed cell, forced destination, decided
+        boards, finished game, and designated mover. The drawer face itself stays local per viewer.
+      - **Verification:** the production build is clean and regenerated the offline service worker.
+        The viewer suite is **666 passing / 2 failing**; both failures are the same documented
+        map-rotation flakes present before this feature. Eleven new focused cases cover the rules,
+        persistence, evaluation, board UI, reset, and drawer mount. Browser checks at desktop and
+        mobile widths confirmed the square responsive board, all 81 cells, valid-board routing, and
+        last-move marker.
 
 ## Still MISSING — only one art-only item left
 

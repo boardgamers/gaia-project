@@ -10,6 +10,7 @@ import { PremoveFailureRow, PremoveMode, PremoveRow } from "./hosted/types";
 import { ExecuteBack, FastConversionTooltips } from "./logic/buttons/types";
 import { ChessBackend } from "./logic/chess-backend";
 import { RenjuBackend } from "./logic/renju-backend";
+import { UltimateTicTacToeBackend } from "./logic/ultimate-tic-tac-toe-backend";
 import {
   CommandObject,
   MovesSlice,
@@ -86,6 +87,8 @@ export type State = {
   chessBackend: ChessBackend | null;
   /** Per-game renju (research panel drawer) persistence, same injection contract as chessBackend. */
   renjuBackend: RenjuBackend | null;
+  /** Per-game Ultimate tic-tac-toe persistence for the ship-board drawer. */
+  ultimateTicTacToeBackend: UltimateTicTacToeBackend | null;
 };
 
 export type NotesBackend = {
@@ -163,6 +166,7 @@ const gaiaViewer = {
       notesBackend: null,
       chessBackend: null,
       renjuBackend: null,
+      ultimateTicTacToeBackend: null,
     } as State;
   },
   mutations: {
@@ -306,6 +310,10 @@ const gaiaViewer = {
 
     setRenjuBackend(state: State, backend: RenjuBackend | null) {
       state.renjuBackend = backend;
+    },
+
+    setUltimateTicTacToeBackend(state: State, backend: UltimateTicTacToeBackend | null) {
+      state.ultimateTicTacToeBackend = backend;
     },
   },
   actions: {

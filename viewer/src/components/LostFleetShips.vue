@@ -1,13 +1,28 @@
 <template>
-  <div v-if="isLostFleet" class="lost-fleet-ships">
-    <svg
-      v-for="ship in ships"
-      :key="ship"
-      class="lost-fleet-ship"
-      :data-ship="ship"
-      :viewBox="`0 -22 ${viewBoxWidth} 80`"
-      style="overflow: visible"
-    >
+  <div
+    v-if="isLostFleet"
+    class="lost-fleet-ships"
+    @pointerdown="onPanelPointerDown"
+    @pointermove="onPanelPointerMove"
+    @pointerup="onPanelPointerUp"
+    @pointercancel="cancelPanelSwipe"
+    @click.capture="onPanelClickCapture"
+  >
+    <div class="lost-fleet-ships__viewport" :class="{ dragging: panelSwipeActive, settling: panelSwipeSettling }">
+      <div
+        class="lost-fleet-ships__face lost-fleet-ships__boards"
+        :class="{ interactive: !showUltimate && !panelSwipeActive }"
+        :style="shipsFaceStyle"
+        :aria-hidden="showUltimate ? 'true' : undefined"
+      >
+        <svg
+          v-for="ship in ships"
+          :key="ship"
+          class="lost-fleet-ship"
+          :data-ship="ship"
+          :viewBox="`0 -22 ${viewBoxWidth} 80`"
+          style="overflow: visible"
+        >
       <!-- The board is a rounded card outlined in the ship's color. Its name and the player
            (exploration) slots live in two tabs that sit on top of this card's top edge (drawn last,
            below), which frees the card interior for just the action row + Federation/Tech tiles and
@@ -198,13 +213,35 @@
           <Token v-else :faction="slot.player.faction" transform="translate(0, 0.95) scale(0.35)" />
         </g>
       </g>
-    </svg>
+        </svg>
+      </div>
+      <UltimateTicTacToeBoard
+        v-if="ultimateMounted"
+        class="lost-fleet-ships__face lost-fleet-ships__ultimate"
+        :class="{ interactive: showUltimate && !panelSwipeActive }"
+        :style="ultimateFaceStyle"
+        :aria-hidden="showUltimate ? undefined : 'true'"
+      />
+    </div>
+    <div class="lost-fleet-ships__mode-dots" role="group" aria-label="Ship panel view">
+      <button
+        v-for="mode in modes"
+        :key="mode"
+        type="button"
+        class="lost-fleet-ships__mode-dot"
+        :class="{ active: mode === panelVisibleFace }"
+        :data-mode="mode"
+        :aria-label="mode === 'ships' ? 'Show spaceship boards' : 'Show Ultimate tic-tac-toe'"
+        :aria-pressed="mode === panelVisibleFace ? 'true' : 'false'"
+        @pointerdown.stop
+        @click.stop="selectPanelMode(mode)"
+      />
+    </div>
   </div>
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import { Component } from "vue-property-decorator";
+import { Component, Mixins } from "vue-property-decorator";
 import Engine, {
   ArtifactToken,
   Condition as ConditionEnum,
@@ -250,7 +287,11 @@ import SpecialAction from "./SpecialAction.vue";
 import TechTile from "./TechTile.vue";
 import Token from "./Token.vue";
 import UsedActionMark from "./UsedActionMark.vue";
+import UltimateTicTacToeBoard from "./UltimateTicTacToeBoard.vue";
 import { tooltipTriggerConfig } from "../logic/tooltip";
+import PanelSwipe from "../logic/panel-swipe";
+import { UltimatePanelMode, UltimateTicTacToeBackend } from "../logic/ultimate-tic-tac-toe-backend";
+import { localUltimatePanelStorageKey } from "../logic/ultimate-tic-tac-toe";
 
 // The 3 action octagons' row. ACTION_SPACING=45 exactly matches the base game's own power/QIC action
 // row (BOARD_ACTION_SPACING=45 in Game.vue, `translate(45 * i ...)`) - owner request: "same space
@@ -321,10 +362,11 @@ export const SHIP_BOARD_VIEWBOX_WIDTH = 291 - ACTION_COMPRESSION;
     SpecialAction,
     TechTile,
     Token,
+    UltimateTicTacToeBoard,
     UsedActionMark,
   },
 })
-export default class LostFleetShips extends Vue {
+export default class LostFleetShips extends Mixins(PanelSwipe) {
   slotRadius = SLOT_RADIUS;
   slotY = SLOT_Y;
   actionXBase = ACTION_X_BASE;
@@ -338,8 +380,12 @@ export default class LostFleetShips extends Vue {
   // ship -> the name text's real rendered right edge (x), measured off the live DOM so the name tab
   // can leave an EQUAL margin on both sides regardless of the actual glyph widths (see `nameTabPath`).
   nameTabRights: Record<string, number> = {};
+  showUltimate = false;
+  ultimateMounted = false;
 
   mounted() {
+    this.showUltimate = window.localStorage.getItem(this.localPanelStorageKey) === "ultimate";
+    this.ultimateMounted = this.showUltimate;
     this.$nextTick(() => this.measureNameTabs());
     // Web fonts can land after the first paint and change the text's width - re-measure once they do.
     const fonts = typeof document !== "undefined" ? (document as any).fonts : undefined;
@@ -354,6 +400,66 @@ export default class LostFleetShips extends Vue {
     if (this.ships.some((ship) => this.nameTabRights[ship] === undefined)) {
       this.$nextTick(() => this.measureNameTabs());
     }
+  }
+
+  // ---- two-face ship drawer ----------------------------------------------
+
+  get panelFaces(): [string, string] {
+    return ["ships", "ultimate"];
+  }
+
+  get panelVisibleFace(): string {
+    return this.showUltimate ? "ultimate" : "ships";
+  }
+
+  get panelSwipeIgnoreSelector(): string {
+    return ".lf-ultimate-overlay";
+  }
+
+  panelSwipePrepare() {
+    this.ultimateMounted = true;
+  }
+
+  panelSwipeCommit(face: string) {
+    this.setPanelMode(face as UltimatePanelMode);
+  }
+
+  get modes(): UltimatePanelMode[] {
+    return ["ships", "ultimate"];
+  }
+
+  get ultimateBackend(): UltimateTicTacToeBackend | null {
+    return this.$store.state.ultimateTicTacToeBackend ?? null;
+  }
+
+  get localPanelStorageKey(): string {
+    const search = typeof window === "undefined" ? "" : window.location.search;
+    return localUltimatePanelStorageKey(search, this.ultimateBackend?.userId ?? null);
+  }
+
+  get shipsFaceStyle(): Record<string, string> {
+    return { transform: this.panelFaceTransform("ships") };
+  }
+
+  get ultimateFaceStyle(): Record<string, string> {
+    return { transform: this.panelFaceTransform("ultimate") };
+  }
+
+  selectPanelMode(mode: UltimatePanelMode) {
+    if (mode !== this.panelVisibleFace) {
+      this.setPanelMode(mode);
+    }
+  }
+
+  private setPanelMode(mode: UltimatePanelMode) {
+    if (mode === "ultimate" && !this.showUltimate) {
+      this.$root.$emit("bv::hide::tooltip");
+    }
+    if (mode === "ultimate") {
+      this.ultimateMounted = true;
+    }
+    this.showUltimate = mode === "ultimate";
+    window.localStorage.setItem(this.localPanelStorageKey, mode);
   }
 
   /** Measure each ship name's rendered right edge so `nameTabPath` can pad it symmetrically. getBBox
@@ -564,14 +670,84 @@ export default class LostFleetShips extends Vue {
 
 <style lang="scss">
 .lost-fleet-ships {
-  // Each ship board on its own row (single-column stack), per the owner's mobile brief - this used
-  // to be a fixed 2-column grid. A single left-aligned column stacks them cleanly instead of
-  // squeezing two per row. This is itself the left share of `.lost-fleet-ships-row` (see Game.vue),
-  // which gives the round-booster/federation-token sidebar the rest of the row's width.
+  position: relative;
+  min-width: 0;
+  touch-action: pan-y pinch-zoom;
+}
+
+.lost-fleet-ships__viewport {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+
+  &.settling .lost-fleet-ships__face {
+    transition: transform 180ms ease-out;
+  }
+}
+
+.lost-fleet-ships__face {
+  width: 100%;
+  will-change: transform;
+  backface-visibility: hidden;
+  pointer-events: none;
+
+  &.interactive {
+    pointer-events: auto;
+  }
+}
+
+.lost-fleet-ships__boards {
+  // Each ship board stays in the existing single-column stack. Keeping this face in normal flow
+  // means it remains the sole height authority for the drawer and the Pool/notes column beside it.
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 0.5rem;
+}
+
+.lost-fleet-ships__ultimate {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  overflow: hidden;
+  border: 2px solid var(--ui-border-strong);
+  border-radius: 5px;
+}
+
+.lost-fleet-ships__mode-dots {
+  position: absolute;
+  z-index: 3;
+  right: 5px;
+  bottom: 3px;
+  display: flex;
+  height: 7px;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+}
+
+.lost-fleet-ships__mode-dot {
+  width: 5px;
+  height: 5px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ui-text-muted, #78818d);
+  opacity: 0.48;
+  cursor: pointer;
+  transition: opacity 100ms ease, background-color 100ms ease;
+
+  &.active {
+    background: var(--ui-primary, #247b0a);
+    opacity: 0.95;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ui-primary);
+    outline-offset: 2px;
+  }
 }
 
 svg.lost-fleet-ship {

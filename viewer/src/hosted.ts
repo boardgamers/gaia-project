@@ -3,6 +3,7 @@ import AdminUsers from "./hosted/AdminUsers.vue";
 import { fetchMyApprovalStatus } from "./hosted/approval";
 import { createSupabaseChessBackend } from "./hosted/chess-backend";
 import { createSupabaseRenjuBackend } from "./hosted/renju-backend";
+import { createSupabaseUltimateTicTacToeBackend } from "./hosted/ultimate-tic-tac-toe-backend";
 import Game from "./components/Game.vue";
 import CreateGame from "./hosted/CreateGame.vue";
 import ChatNotesPanel from "./hosted/ChatNotesPanel.vue";
@@ -131,6 +132,11 @@ async function mountGameInstance(
   emitter.store.commit("setChessBackend", createSupabaseChessBackend(client, gameId, session.user.id));
   // The research board's research/renju drawer uses the same injection boundary as the chess face.
   emitter.store.commit("setRenjuBackend", createSupabaseRenjuBackend(client, gameId, session.user.id));
+  // The ship-board drawer follows the same shared-online / local-offline boundary.
+  emitter.store.commit(
+    "setUltimateTicTacToeBackend",
+    createSupabaseUltimateTicTacToeBackend(client, gameId, session.user.id)
+  );
 
   // Declared here (before its watchers below, which reference it) rather than in its previous
   // spot further down - HostedBar.vue's settings-menu labels (`chatPanelOpen`/`gameNavPanelOpen`)
