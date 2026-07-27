@@ -631,12 +631,11 @@ export default class RenjuBoard extends Vue {
 .lf-renju-board {
   width: 100%;
   height: 100%;
-  // `pan-y`, NOT the chess face's `none`: this board fills the entire research panel, so a finger
-  // landing anywhere on it must still scroll the page (owner report). Vertical drags stay with the
-  // browser; horizontal ones are left to the drawer's own gesture, matching `.research-panel`. A
-  // long press still works because it needs a stationary finger, which never starts a scroll - and
-  // if a scroll does begin, the resulting pointercancel cancels the press, which is what we want.
-  touch-action: pan-y;
+  // This board fills the entire research panel, so a finger landing anywhere on it must still
+  // scroll the page vertically (owner report), while a two-finger gesture must retain native pinch
+  // zoom. Horizontal one-finger drags remain available to the drawer. A long press still works
+  // because it needs a stationary finger; any scroll or pinch produces pointercancel as intended.
+  touch-action: pan-y pinch-zoom;
   user-select: none;
 }
 

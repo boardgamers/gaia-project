@@ -150,8 +150,9 @@ export default class ResearchPanel extends Mixins(PanelSwipe) {
 <style lang="scss" scoped>
 .research-panel {
   position: relative;
-  // Vertical scrolling stays with the page; horizontal drags belong to the drawer.
-  touch-action: pan-y;
+  // Vertical scrolling stays with the page; horizontal drags belong to the drawer. Pinch zoom
+  // remains native even when the gesture starts anywhere on this panel.
+  touch-action: pan-y pinch-zoom;
 }
 
 .research-panel-viewport {

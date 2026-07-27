@@ -254,7 +254,8 @@ export default class Pool extends Mixins(PanelSwipe) {
     // GAP-sized padding so the outermost tiles' bleed clears the border too).
     $gap: 6px;
     padding: $gap;
-    touch-action: pan-y;
+    // Keep vertical page scrolling and native pinch zoom available over both drawer faces.
+    touch-action: pan-y pinch-zoom;
     overflow: hidden;
 
     .pool-panel-viewport {

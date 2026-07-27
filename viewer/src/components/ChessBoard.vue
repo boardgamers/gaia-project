@@ -879,7 +879,9 @@ export default class ChessBoard extends Vue {
   border: 2px solid var(--ui-border-strong, #555);
   border-radius: 3px;
   overflow: hidden;
-  touch-action: none; // let long-press work without the browser hijacking it as a scroll
+  // A one-finger gesture stays with the board so long-press remains reliable; two fingers retain
+  // native page zoom instead of this interactive surface becoming a pinch-zoom dead zone.
+  touch-action: pinch-zoom;
   user-select: none;
 }
 
