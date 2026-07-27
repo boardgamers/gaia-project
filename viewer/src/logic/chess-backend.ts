@@ -1,5 +1,8 @@
 /* eslint-disable @typescript-eslint/camelcase */
 // Supabase row/RPC wire names are snake_case.
+
+/** Which face of the sidebar drawer a viewer is looking at. Local to that viewer - see
+ * logic/chess.ts::localChessPanelStorageKey - so it is deliberately NOT part of ChessRow. */
 export type ChessPanelMode = "pool" | "chess";
 
 export interface ChessRow {
@@ -13,7 +16,6 @@ export interface ChessRow {
   black_user_2: string | null;
   white_next_user: string | null;
   black_next_user: string | null;
-  panel_mode: ChessPanelMode;
 }
 
 /**
@@ -30,5 +32,4 @@ export interface ChessBackend {
   subscribe(onRow: (row: ChessRow) => void): () => void;
   move(previousFen: string, nextFen: string, from: string, to: string): Promise<string>;
   reset(): Promise<void>;
-  setPanelMode(mode: ChessPanelMode): Promise<ChessRow | null>;
 }

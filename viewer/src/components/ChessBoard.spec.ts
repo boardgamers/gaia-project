@@ -138,7 +138,6 @@ describe("ChessBoard", () => {
       black_user_2: null,
       white_next_user: "user-white",
       black_next_user: "user-black",
-      panel_mode: "chess",
     };
     const backend: ChessBackend = {
       gameId: "game-one",
@@ -150,7 +149,6 @@ describe("ChessBoard", () => {
         return after;
       },
       reset: async () => undefined,
-      setPanelMode: async () => undefined,
     };
     const wrapper = mount(ChessBoard as any, {
       localVue,
@@ -185,7 +183,6 @@ describe("ChessBoard", () => {
       black_user_2: "user-black-two",
       white_next_user: "user-white-one",
       black_next_user: "user-black-one",
-      panel_mode: "chess",
     };
     const backend: ChessBackend = {
       gameId: "game-four",
@@ -200,7 +197,6 @@ describe("ChessBoard", () => {
         return after;
       },
       reset: async () => undefined,
-      setPanelMode: async () => undefined,
     };
     const wrapper = mount(ChessBoard as any, {
       localVue,
@@ -240,7 +236,6 @@ describe("ChessBoard", () => {
       black_user_2: null,
       white_next_user: "white-one",
       black_next_user: "black-one",
-      panel_mode: "chess",
     };
     const backend = (load: () => Promise<ChessRow>): ChessBackend => ({
       gameId: "game-team",
@@ -249,7 +244,6 @@ describe("ChessBoard", () => {
       subscribe: () => () => undefined,
       move: async (_before, after) => after,
       reset: async () => undefined,
-      setPanelMode: async () => undefined,
     });
 
     const fourPlayer = mount(ChessBoard as any, {
@@ -285,7 +279,6 @@ describe("ChessBoard", () => {
       black_user_2: null,
       white_next_user: "solo",
       black_next_user: "solo",
-      panel_mode: "chess",
     };
     const moves: string[] = [];
     const backend: ChessBackend = {
@@ -299,7 +292,6 @@ describe("ChessBoard", () => {
         return after;
       },
       reset: async () => undefined,
-      setPanelMode: async () => undefined,
     };
     const wrapper = mount(ChessBoard as any, { localVue, store: storeWith(backend, 4) });
     await flush();

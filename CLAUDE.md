@@ -48,7 +48,7 @@ Read these before coding:
 - **The 12th item (the Terraform Standard Tech tile's free-mine prompt) was fixed, shipped to
   `master`, then REVERTED the same session** after it broke loading the one real in-progress game:
   wiring an automatic trigger into `moveChooseTechTile` inserted a new required move into the game's
-  move sequence, and the hosted app always reconstructs a game by replaying its *entire* stored move
+  move sequence, and the hosted app always reconstructs a game by replaying its _entire_ stored move
   history through current code (no version gate) - so a game that had already claimed that tile
   before the trigger existed had its historical log misinterpreted and threw during replay (blank
   screen under the banner). See PROGRESS.md #66's revert note before re-attempting this: it needs a
@@ -82,6 +82,14 @@ Read these before coding:
   so every push to `master` goes live immediately.
 - See `docs/lost-fleet/PROGRESS.md`'s "Done so far" list for the full numbered history and "Next
   actions" for what's still open.
+
+- The two side games (sidebar chess, research-panel renju) are **per-viewer** as of PROGRESS #118:
+  which face a drawer shows lives in `localStorage` (per game, per account), not in
+  `chess_board`/`renju_board`'s `panel_mode`. Their turn pushes are their own notification
+  categories (`chess_pushes`/`renju_pushes`), and both they and the game bar's green pulse go quiet
+  once the Gaia game is finished. `viewer/src/hosted/turn-kinds.ts` is the one list to extend for a
+  future side game. **#118's migration `20260727120000_minigame_push_prefs.sql` and its `notify`
+  Edge Function redeploy are not yet applied** — until they are, saving notification settings fails.
 
 ## Next Work
 

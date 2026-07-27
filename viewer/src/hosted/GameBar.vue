@@ -9,6 +9,20 @@
           :title="`${claimedSeatsCount} of ${game.player_count} seats joined`"
           >{{ claimedSeatsCount }}/{{ game.player_count }}</span
         >
+        <!-- What the pulse is actually asking for: one tiny glyph per sub-game waiting on this
+             viewer (Gaia / chess / renju / whatever comes next). Directly under the round badge, so
+             it reads as part of the same left-edge "state of this game" column. -->
+        <span v-if="turnBadges.length > 0" class="game-bar__turn-kinds">
+          <span
+            v-for="badge in turnBadges"
+            :key="badge.kind"
+            class="game-bar__turn-kind"
+            :class="`game-bar__turn-kind--${badge.kind}`"
+            :title="badge.label"
+            :aria-label="badge.label"
+            >{{ badge.glyph }}</span
+          >
+        </span>
       </span>
       <span class="game-bar__copy">
         <span class="game-bar__title">
@@ -66,6 +80,7 @@
 import Vue from "vue";
 import Token from "../components/Token.vue";
 import { isOnline, PresenceState } from "./presence";
+import { pendingTurnBadges, TurnKindBadge } from "./turn-kinds";
 import {
   auctionLabel,
   claimedSeats,
@@ -98,6 +113,9 @@ export default Vue.extend({
     gameHref: { type: String, default: "" },
     presenceState: { type: Object, default: () => ({}) },
     myUserId: { type: String, required: true },
+    // Only needed to resolve a seat this viewer holds by invitation rather than by user_id (see
+    // isMyTurn) - the offline game list has neither and simply never shows a turn badge.
+    userEmail: { type: String, default: "" },
   },
   computed: {
     href(): string {
@@ -108,6 +126,13 @@ export default Vue.extend({
     },
     claimedSeatsCount(): number {
       return claimedSeats(this.game);
+    },
+    // Computed here rather than passed in, so both game lists label the pulse identically for free
+    // (the same reason `href` is computed internally). The wrapper class that actually pulses still
+    // belongs to each caller, since it sits on their own row element - both derive it from the same
+    // turn-kinds module.
+    turnBadges(): TurnKindBadge[] {
+      return pendingTurnBadges(this.game, this.myUserId, this.userEmail);
     },
     auctionLabelText(): string {
       return auctionLabel(this.game);
@@ -208,6 +233,36 @@ export default Vue.extend({
 .game-bar__round-slot {
   width: 2.35rem;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+}
+
+// Deliberately tiny and unboxed (owner request: "a small icon somewhere subtle") - it labels the
+// pulse, it isn't a second badge competing with the round pill above it. Sized in `em` off the
+// row's own font so it scales with the rest of the bar.
+.game-bar__turn-kinds {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  line-height: 1;
+  color: rgb(var(--highlighted-rgb, 32, 204, 68));
+}
+
+.game-bar__turn-kind {
+  font-size: 0.62rem;
+  line-height: 1;
+}
+
+// The glyphs are drawn at whatever size their own font gives them, which is nowhere near uniform:
+// nudge the two side-game marks so all three read as the same weight next to each other.
+.game-bar__turn-kind--renju {
+  font-size: 0.44rem;
+}
+
+.game-bar__turn-kind--chess {
+  font-size: 0.72rem;
 }
 
 .game-bar__round {

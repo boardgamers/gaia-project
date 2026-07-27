@@ -42,7 +42,7 @@
             :key="game.id"
             class="game-nav__row game-bar"
             :class="{
-              'game-bar--my-turn': isMyTurn(game) || isMyChessTurn(game) || isMyRenjuTurn(game),
+              'game-bar--my-turn': hasPendingTurn(game),
               'game-nav__row--current': game.id === currentGameId,
             }"
           >
@@ -50,6 +50,7 @@
               :game="game"
               :presence-state="presenceState"
               :my-user-id="myUserId"
+              :user-email="userEmail"
               @click.native="onRowClick(game, $event)"
             />
           </div>
@@ -62,7 +63,8 @@
 <script lang="ts">
 import Vue from "vue";
 import GameBar from "./GameBar.vue";
-import { isMyChessTurn, isMyGame, isMyRenjuTurn, isMyTurn, sortGames } from "./game-bar";
+import { isMyGame, sortGames } from "./game-bar";
+import { hasPendingTurn } from "./turn-kinds";
 import { PresenceState } from "./presence";
 import { isDesktopViewport, watchDesktopViewport } from "./viewport";
 
@@ -195,14 +197,10 @@ export default Vue.extend({
     }
   },
   methods: {
-    isMyTurn(game: any): boolean {
-      return isMyTurn(game, this.myUserId, this.userEmail);
-    },
-    isMyChessTurn(game: any): boolean {
-      return isMyChessTurn(game, this.myUserId);
-    },
-    isMyRenjuTurn(game: any): boolean {
-      return isMyRenjuTurn(game, this.myUserId);
+    // Any of this game's sub-games (Gaia, chess, renju, ...) waiting on me - the same predicate
+    // GameBar labels with its tiny turn-kind glyphs.
+    hasPendingTurn(game: any): boolean {
+      return hasPendingTurn(game, this.myUserId, this.userEmail);
     },
     setOpen(open: boolean) {
       this.open = open;

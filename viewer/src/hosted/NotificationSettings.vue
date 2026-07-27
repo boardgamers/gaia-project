@@ -59,7 +59,12 @@
           <section class="notif-sect">
             <div class="notif-sect__label">Notify me about</div>
             <label v-for="cat in categories" :key="cat.key" class="notif-row">
-              <span>{{ cat.label }}</span>
+              <span
+                ><span v-if="cat.glyph" class="notif-glyph" :class="`notif-glyph--${cat.kind}`" aria-hidden="true">{{
+                  cat.glyph
+                }}</span
+                >{{ cat.label }}</span
+              >
               <span class="switch">
                 <input type="checkbox" :checked="prefs[cat.key]" @change="onToggle(cat.key, $event.target.checked)" />
                 <span class="switch__track"><span class="switch__thumb"></span></span>
@@ -144,15 +149,32 @@ import {
   saveNotificationPrefs,
   snoozeFromNow,
 } from "./notification-prefs";
+import { TURN_KINDS } from "./turn-kinds";
 
 // The boolean-valued preference keys — the only ones driven by a plain on/off switch.
 type BoolPrefKey =
   | "turn_pushes"
+  | "chess_pushes"
+  | "renju_pushes"
   | "chat_pushes"
   | "invite_pushes"
   | "finished_pushes"
   | "reminders_enabled"
   | "quiet_hours_enabled";
+
+type Category = { key: BoolPrefKey; label: string; kind?: string; glyph?: string };
+
+// One "your move" row per playable game inside a hosted game (Gaia plus each side game), derived
+// from the same TURN_KINDS list that labels the game bar's pulse - so a future side game shows up
+// here, with its own opt-out and the same little glyph, without touching this component. Each is a
+// category of its own on purpose (owner request): turning renju pings off must not cost you the
+// Gaia turn push.
+const TURN_CATEGORIES: Category[] = TURN_KINDS.map((badge) => ({
+  key: badge.pushPrefKey,
+  label: badge.label,
+  kind: badge.kind,
+  glyph: badge.glyph,
+}));
 
 export default Vue.extend({
   name: "NotificationSettings",
@@ -173,11 +195,11 @@ export default Vue.extend({
       deviceStatusOk: false,
       saveError: "" as string,
       categories: [
-        { key: "turn_pushes", label: "Your turn" },
+        ...TURN_CATEGORIES,
         { key: "chat_pushes", label: "New chat messages" },
         { key: "invite_pushes", label: "Game invites" },
         { key: "finished_pushes", label: "Game finished" },
-      ] as { key: BoolPrefKey; label: string }[],
+      ] as Category[],
       intervalOptions: [
         { value: 12, text: "12 hours" },
         { value: 24, text: "24 hours" },
@@ -433,6 +455,25 @@ export default Vue.extend({
 
 .notif-row--head {
   font-weight: 600;
+}
+
+// The same three glyphs the game bar pulses with, at the same relative sizes, so a row here and a
+// badge there are recognisably the same thing.
+.notif-glyph {
+  display: inline-block;
+  width: 0.95rem;
+  margin-right: 0.35rem;
+  color: #34c759;
+  font-size: 0.62rem;
+  text-align: center;
+
+  &--renju {
+    font-size: 0.44rem;
+  }
+
+  &--chess {
+    font-size: 0.78rem;
+  }
 }
 
 .notif-muted {

@@ -37,8 +37,11 @@ export function localRenjuStorageKey(search = ""): string {
   return `${LOCAL_RENJU_KEY_PREFIX}${localGameStorageSuffix(search)}`;
 }
 
-export function localRenjuPanelStorageKey(search = ""): string {
-  return `${LOCAL_RENJU_PANEL_KEY_PREFIX}${localGameStorageSuffix(search)}`;
+// The research panel's visible face, per Gaia game and per account - see
+// logic/chess.ts::localChessPanelStorageKey for why this is deliberately local rather than shared.
+export function localRenjuPanelStorageKey(search = "", userId: string | null = null): string {
+  const account = userId ? `:${encodeURIComponent(userId)}` : "";
+  return `${LOCAL_RENJU_PANEL_KEY_PREFIX}${localGameStorageSuffix(search)}${account}`;
 }
 
 export function rowOf(index: number): number {

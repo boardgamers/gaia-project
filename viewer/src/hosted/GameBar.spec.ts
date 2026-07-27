@@ -88,6 +88,96 @@ describe("GameBar", () => {
     expect(wrapper.find(".game-bar__delete-test-game").exists()).to.equal(false);
   });
 
+  // Which sub-game the green pulse is asking for. Every one of these boards belongs to the SAME
+  // game row, so without a label the pulse is ambiguous (owner request: "a little tiny icon on the
+  // game bar if the pulsing is for Gaia, chess, renju or any other future game").
+  describe("turn-kind badges", () => {
+    const chessBoard = {
+      // White to move, and the viewer is white.
+      fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      white_user: "user-me",
+      white_user_2: null,
+      black_user: "user-other",
+      black_user_2: null,
+      white_next_user: null,
+      black_next_user: null,
+    };
+    const renjuBoard = {
+      // One black stone played, so it is white's move - and the viewer is white.
+      board: "b" + ".".repeat(224),
+      black_user: "user-other",
+      black_user_2: null,
+      white_user: "user-me",
+      white_user_2: null,
+      black_next_user: null,
+      white_next_user: null,
+    };
+
+    function kinds(wrapper: any): string[] {
+      return wrapper.findAll(".game-bar__turn-kind").wrappers.map((w: any) => w.attributes("aria-label"));
+    }
+
+    it("shows nothing at all when no sub-game is waiting on this viewer", () => {
+      const wrapper = mount(GameBar, {
+        propsData: { game: game({ current_seat: 1 }), myUserId: "user-me" },
+      });
+      expect(wrapper.find(".game-bar__turn-kinds").exists()).to.equal(false);
+    });
+
+    it("labels a Gaia turn, a chess move and a renju move independently, in a stable order", () => {
+      const gaiaOnly = mount(GameBar, { propsData: { game: game({}), myUserId: "user-me" } });
+      expect(kinds(gaiaOnly)).to.deep.equal(["Your Gaia turn"]);
+
+      // Someone else's Gaia turn, but both side boards are on this viewer.
+      const sideOnly = mount(GameBar, {
+        propsData: {
+          game: game({ current_seat: 1, chess_board: chessBoard, renju_board: renjuBoard }),
+          myUserId: "user-me",
+        },
+      });
+      expect(kinds(sideOnly)).to.deep.equal(["Your chess move", "Your renju move"]);
+
+      const all = mount(GameBar, {
+        propsData: { game: game({ chess_board: chessBoard, renju_board: renjuBoard }), myUserId: "user-me" },
+      });
+      expect(kinds(all)).to.deep.equal(["Your Gaia turn", "Your chess move", "Your renju move"]);
+    });
+
+    it("resolves a seat this viewer holds by invitation rather than by user_id", () => {
+      const invited = game({
+        players: [
+          { seat: 0, invited_email: "Me@Example.com", faction: "terrans", display_name: "Me" },
+          { seat: 1, user_id: "user-other", faction: "nevlas", display_name: "Other" },
+        ],
+      });
+      const wrapper = mount(GameBar, {
+        propsData: { game: invited, myUserId: "user-me", userEmail: "me@example.com" },
+      });
+      expect(kinds(wrapper)).to.deep.equal(["Your Gaia turn"]);
+    });
+
+    it("never claims an unclaimed seat for an identity-less viewer (the offline game list)", () => {
+      // The offline lobby renders this same bar with no user id and no email; "" must not match an
+      // unclaimed seat's empty invited_email.
+      const offline = game({ players: [{ seat: 0, faction: "terrans", display_name: "P1" }] });
+      const wrapper = mount(GameBar, { propsData: { game: offline, myUserId: "" } });
+      expect(wrapper.find(".game-bar__turn-kinds").exists()).to.equal(false);
+    });
+
+    it("goes quiet on every sub-game once the Gaia game is finished", () => {
+      // Owner request: a finished game stops asking for attention - the chess and renju boards stay
+      // playable, they just stop pulsing (and, server-side, stop pushing).
+      const finished = game({
+        status: "finished",
+        current_seat: null,
+        chess_board: chessBoard,
+        renju_board: renjuBoard,
+      });
+      const wrapper = mount(GameBar, { propsData: { game: finished, myUserId: "user-me" } });
+      expect(wrapper.find(".game-bar__turn-kinds").exists()).to.equal(false);
+    });
+  });
+
   it("renders one avatar per player with faction initial, score, and a presence dot", () => {
     const wrapper = mount(GameBar, {
       propsData: {

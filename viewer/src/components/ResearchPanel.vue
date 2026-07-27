@@ -43,7 +43,6 @@
         :data-mode="mode"
         :aria-label="mode === 'research' ? 'Show the research board' : 'Show the shared renju board'"
         :aria-pressed="mode === panelVisibleFace ? 'true' : 'false'"
-        :disabled="panelModeSaving"
         @pointerdown.stop
         @click.stop="selectPanelMode(mode)"
       />
@@ -55,47 +54,21 @@
 import { Component, Mixins } from "vue-property-decorator";
 import PanelSwipe from "../logic/panel-swipe";
 import RenjuBoard from "./RenjuBoard.vue";
-import { RenjuBackend, RenjuPanelMode, RenjuRow } from "../logic/renju-backend";
+import { RenjuBackend, RenjuPanelMode } from "../logic/renju-backend";
 import { localRenjuPanelStorageKey } from "../logic/renju";
 
 @Component({ components: { RenjuBoard } })
 export default class ResearchPanel extends Mixins(PanelSwipe) {
   showRenju = false;
   renjuMounted = false;
-  panelModeSaving = false;
-
-  private renjuUnsubscribe: (() => void) | null = null;
-  private panelModeIntent = 0;
-  private pendingPanelMode: RenjuPanelMode | null = null;
-  private latestPanelUpdatedAt = 0;
-  private localPanelModeOverride = false;
-  private localPanelModeBaseline = 0;
 
   mounted() {
-    const backend = this.renjuBackend;
-    if (!backend) {
-      this.showRenju = window.localStorage.getItem(this.localPanelStorageKey) === "renju";
-      this.renjuMounted = this.showRenju;
-      return;
-    }
-    this.renjuUnsubscribe = backend.subscribe((row) => this.applyPanelRow(row));
-    const loadIntent = this.panelModeIntent;
-    backend
-      .load()
-      .then((row) => {
-        // A four-player assignment can make this first request noticeably slower. Never let its
-        // pre-swipe snapshot overwrite a newer local choice when it eventually returns.
-        if (row && loadIntent === this.panelModeIntent) {
-          this.applyPanelRow(row);
-        }
-      })
-      .catch(() => undefined);
-  }
-
-  beforeDestroy() {
-    if (this.renjuUnsubscribe) {
-      this.renjuUnsubscribe();
-    }
+    // No backend call: the visible face is this viewer's own, so there is nothing to fetch. That
+    // also means `ensure_renju_assignment` now runs when someone first opens the board (via
+    // RenjuBoard.vue's own mount) rather than when anyone opens the Gaia game - the first person to
+    // reach for it still creates the row and locks in the colour shuffle for everyone.
+    this.showRenju = window.localStorage.getItem(this.localPanelStorageKey) === "renju";
+    this.renjuMounted = this.showRenju;
   }
 
   // ---- PanelSwipe contract -------------------------------------------------
@@ -106,10 +79,6 @@ export default class ResearchPanel extends Mixins(PanelSwipe) {
 
   get panelVisibleFace(): string {
     return this.showRenju ? "renju" : "research";
-  }
-
-  get panelSwipeLocked(): boolean {
-    return this.panelModeSaving;
   }
 
   get panelSwipeIgnoreSelector(): string {
@@ -143,7 +112,8 @@ export default class ResearchPanel extends Mixins(PanelSwipe) {
   }
 
   get localPanelStorageKey(): string {
-    return localRenjuPanelStorageKey(typeof window === "undefined" ? "" : window.location.search);
+    const search = typeof window === "undefined" ? "" : window.location.search;
+    return localRenjuPanelStorageKey(search, this.renjuBackend?.userId ?? null);
   }
 
   selectPanelMode(mode: RenjuPanelMode) {
@@ -153,30 +123,12 @@ export default class ResearchPanel extends Mixins(PanelSwipe) {
     this.setPanelMode(mode);
   }
 
-  // ---- shared mode ---------------------------------------------------------
-  // Same ordering rules the chess drawer learned from live play: ignore stale snapshots, keep a
-  // spectator's local-only face until a genuinely newer participant change supersedes it, and never
-  // let a failed write leave the panel showing a face nobody committed.
-
-  private applyPanelRow(row: RenjuRow) {
-    const updatedAt = row.updated_at ? Date.parse(row.updated_at) : 0;
-    if (updatedAt && updatedAt < this.latestPanelUpdatedAt) {
-      return;
-    }
-    if (updatedAt) {
-      this.latestPanelUpdatedAt = updatedAt;
-    }
-    if (this.localPanelModeOverride && (!updatedAt || updatedAt <= this.localPanelModeBaseline)) {
-      return;
-    }
-    if (this.localPanelModeOverride) {
-      this.localPanelModeOverride = false;
-    }
-    if (this.pendingPanelMode && row.panel_mode !== this.pendingPanelMode) {
-      return;
-    }
-    this.applyPanelMode(row.panel_mode);
-  }
+  // ---- which face this viewer is looking at --------------------------------
+  // Purely local (owner request: the side games are not shared state). The renju POSITION is still
+  // shared through RenjuBackend - it's the same board everyone plays on - but whether your research
+  // panel is currently showing it is yours alone, and is remembered per Gaia game so leaving and
+  // re-entering the game brings back the face you left on. Nothing here awaits the network, so a
+  // swipe can never be locked out or snapped back by someone else's write.
 
   private applyPanelMode(mode: RenjuPanelMode) {
     if (mode === "renju" && !this.showRenju) {
@@ -188,53 +140,9 @@ export default class ResearchPanel extends Mixins(PanelSwipe) {
     this.showRenju = mode === "renju";
   }
 
-  private async setPanelMode(mode: RenjuPanelMode) {
-    if (this.panelModeSaving) {
-      return;
-    }
-    const previousMode: RenjuPanelMode = this.showRenju ? "renju" : "research";
-    const intent = ++this.panelModeIntent;
-    this.pendingPanelMode = mode;
+  private setPanelMode(mode: RenjuPanelMode) {
     this.applyPanelMode(mode);
-
-    const backend = this.renjuBackend;
-    if (!backend) {
-      window.localStorage.setItem(this.localPanelStorageKey, mode);
-      this.pendingPanelMode = null;
-      return;
-    }
-
-    this.panelModeSaving = true;
-    try {
-      const row = await backend.setPanelMode(mode);
-      if (intent === this.panelModeIntent) {
-        this.pendingPanelMode = null;
-        if (row) {
-          this.localPanelModeOverride = false;
-          this.applyPanelRow(row);
-        } else {
-          // A null row means the shared write was unavailable (normally because this viewer is a
-          // spectator). Keep the chosen face locally; the next newer shared row still wins.
-          this.localPanelModeOverride = true;
-          this.localPanelModeBaseline = this.latestPanelUpdatedAt;
-        }
-      }
-    } catch (error) {
-      this.pendingPanelMode = null;
-      this.localPanelModeOverride = false;
-      try {
-        const row = await backend.load();
-        if (intent === this.panelModeIntent) {
-          row ? this.applyPanelRow(row) : this.applyPanelMode(previousMode);
-        }
-      } catch (loadError) {
-        if (intent === this.panelModeIntent) {
-          this.applyPanelMode(previousMode);
-        }
-      }
-    } finally {
-      this.panelModeSaving = false;
-    }
+    window.localStorage.setItem(this.localPanelStorageKey, mode);
   }
 }
 </script>
@@ -310,10 +218,6 @@ export default class ResearchPanel extends Mixins(PanelSwipe) {
   &:focus-visible {
     outline: 2px solid var(--ui-primary);
     outline-offset: 2px;
-  }
-
-  &:disabled {
-    cursor: wait;
   }
 }
 </style>

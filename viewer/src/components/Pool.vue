@@ -64,7 +64,6 @@
             :data-mode="mode"
             :aria-label="mode === 'pool' ? 'Show booster and federation tiles' : 'Show shared chess board'"
             :aria-pressed="mode === (showChess ? 'chess' : 'pool') ? 'true' : 'false'"
-            :disabled="panelModeSaving"
             @pointerdown.stop
             @click.stop="selectPanelMode(mode)"
           />
@@ -94,7 +93,7 @@ import Booster from "./Booster.vue";
 import FederationTile from "./FederationTile.vue";
 import ChessBoard from "./ChessBoard.vue";
 import Engine, { Booster as BoosterEnum } from "@gaia-project/engine";
-import { ChessBackend, ChessPanelMode, ChessRow } from "../logic/chess-backend";
+import { ChessBackend, ChessPanelMode } from "../logic/chess-backend";
 import { localChessPanelStorageKey } from "../logic/chess";
 import { isBeforeRound1 } from "../logic/utils";
 
@@ -122,13 +121,6 @@ export default class Pool extends Mixins(PanelSwipe) {
   // drawer reuses; this component only supplies its two faces and how a switch is committed.
   showChess = false;
   chessMounted = false;
-  panelModeSaving = false;
-  private chessUnsubscribe: (() => void) | null = null;
-  private panelModeIntent = 0;
-  private pendingPanelMode: ChessPanelMode | null = null;
-  private latestPanelUpdatedAt = 0;
-  private localPanelModeOverride = false;
-  private localPanelModeBaseline = 0;
 
   // Used by LostFleetShips' sidebar placement (Game.vue): switches to the flex/grid layout below
   // (sized to the sidebar's own narrow width) instead of the base game's fixed-size flex-wrap row.
@@ -142,30 +134,12 @@ export default class Pool extends Mixins(PanelSwipe) {
     if (!this.compact) {
       return;
     }
-    const backend = this.chessBackend;
-    if (!backend) {
-      this.showChess = window.localStorage.getItem(this.localPanelStorageKey) === "chess";
-      this.chessMounted = this.showChess;
-      return;
-    }
-    this.chessUnsubscribe = backend.subscribe((row) => this.applyPanelRow(row));
-    const loadIntent = this.panelModeIntent;
-    backend
-      .load()
-      .then((row) => {
-        // A four-player assignment can make this first request noticeably slower. Never let its
-        // pre-swipe snapshot overwrite a newer local choice when it eventually returns.
-        if (row && loadIntent === this.panelModeIntent) {
-          this.applyPanelRow(row);
-        }
-      })
-      .catch(() => undefined);
-  }
-
-  beforeDestroy() {
-    if (this.chessUnsubscribe) {
-      this.chessUnsubscribe();
-    }
+    // No backend call: the visible face is this viewer's own, so there is nothing to fetch. That
+    // also means `ensure_chess_assignment` now runs when someone first opens the board (via
+    // ChessBoard.vue's own mount) rather than when anyone opens the Gaia game - the first person to
+    // reach for it still creates the row and locks in the colour shuffle for everyone.
+    this.showChess = window.localStorage.getItem(this.localPanelStorageKey) === "chess";
+    this.chessMounted = this.showChess;
   }
 
   // ---- PanelSwipe contract -------------------------------------------------
@@ -176,10 +150,6 @@ export default class Pool extends Mixins(PanelSwipe) {
 
   get panelVisibleFace(): string {
     return this.showChess ? "chess" : "pool";
-  }
-
-  get panelSwipeLocked(): boolean {
-    return this.panelModeSaving;
   }
 
   get panelSwipeIgnoreSelector(): string {
@@ -203,7 +173,8 @@ export default class Pool extends Mixins(PanelSwipe) {
   }
 
   get localPanelStorageKey(): string {
-    return localChessPanelStorageKey(typeof window === "undefined" ? "" : window.location.search);
+    const search = typeof window === "undefined" ? "" : window.location.search;
+    return localChessPanelStorageKey(search, this.chessBackend?.userId ?? null);
   }
 
   get poolFaceStyle(): Record<string, string> {
@@ -234,26 +205,12 @@ export default class Pool extends Mixins(PanelSwipe) {
     this.setPanelMode(mode);
   }
 
-  private applyPanelRow(row: ChessRow) {
-    const updatedAt = row.updated_at ? Date.parse(row.updated_at) : 0;
-    if (updatedAt && updatedAt < this.latestPanelUpdatedAt) {
-      return;
-    }
-    if (updatedAt) {
-      this.latestPanelUpdatedAt = updatedAt;
-    }
-    if (this.localPanelModeOverride && (!updatedAt || updatedAt <= this.localPanelModeBaseline)) {
-      return;
-    }
-    if (this.localPanelModeOverride) {
-      // A genuinely newer participant change supersedes a spectator's local-only view.
-      this.localPanelModeOverride = false;
-    }
-    if (this.pendingPanelMode && row.panel_mode !== this.pendingPanelMode) {
-      return;
-    }
-    this.applyPanelMode(row.panel_mode);
-  }
+  // ---- which face this viewer is looking at --------------------------------
+  // Purely local (owner request: the side games are not shared state). The chess POSITION is still
+  // shared through ChessBackend - it's the same board everyone plays on - but whether your sidebar
+  // is currently showing it is yours alone, and is remembered per Gaia game so leaving and
+  // re-entering the game brings back the face you left on. Nothing here awaits the network, so a
+  // swipe can never be locked out or snapped back by someone else's write.
 
   private applyPanelMode(mode: ChessPanelMode) {
     if (mode === "chess" && !this.showChess) {
@@ -265,53 +222,9 @@ export default class Pool extends Mixins(PanelSwipe) {
     this.showChess = mode === "chess";
   }
 
-  private async setPanelMode(mode: ChessPanelMode) {
-    if (this.panelModeSaving) {
-      return;
-    }
-    const previousMode: ChessPanelMode = this.showChess ? "chess" : "pool";
-    const intent = ++this.panelModeIntent;
-    this.pendingPanelMode = mode;
+  private setPanelMode(mode: ChessPanelMode) {
     this.applyPanelMode(mode);
-
-    const backend = this.chessBackend;
-    if (!backend) {
-      window.localStorage.setItem(this.localPanelStorageKey, mode);
-      this.pendingPanelMode = null;
-      return;
-    }
-
-    this.panelModeSaving = true;
-    try {
-      const row = await backend.setPanelMode(mode);
-      if (intent === this.panelModeIntent) {
-        this.pendingPanelMode = null;
-        if (row) {
-          this.localPanelModeOverride = false;
-          this.applyPanelRow(row);
-        } else {
-          // A null row means the shared write was unavailable (normally because this viewer is a
-          // spectator). Keep the chosen face locally; the next newer shared row still wins.
-          this.localPanelModeOverride = true;
-          this.localPanelModeBaseline = this.latestPanelUpdatedAt;
-        }
-      }
-    } catch (error) {
-      this.pendingPanelMode = null;
-      this.localPanelModeOverride = false;
-      try {
-        const row = await backend.load();
-        if (intent === this.panelModeIntent) {
-          row ? this.applyPanelRow(row) : this.applyPanelMode(previousMode);
-        }
-      } catch (loadError) {
-        if (intent === this.panelModeIntent) {
-          this.applyPanelMode(previousMode);
-        }
-      }
-    } finally {
-      this.panelModeSaving = false;
-    }
+    window.localStorage.setItem(this.localPanelStorageKey, mode);
   }
 }
 </script>
@@ -406,10 +319,6 @@ export default class Pool extends Mixins(PanelSwipe) {
       &:focus-visible {
         outline: 2px solid var(--ui-primary);
         outline-offset: 2px;
-      }
-
-      &:disabled {
-        cursor: wait;
       }
     }
 

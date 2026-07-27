@@ -55,12 +55,24 @@ export type RenjuBoardRow = {
   white_next_user: string | null;
 };
 
+// `kind` is both the delivery category the recipient's prefs gate (isCategoryEnabled) and what
+// index.ts uses to decide whether an already-active player still gets the push. The three "it's your
+// move" kinds are deliberately separate rather than one shared "turn": each side game is opt-out on
+// its own, so someone who wants Gaia turn pushes but no chess pings can have exactly that. A future
+// side game adds one more kind here plus its own pref column.
+export type NotificationKind = "invite" | "turn" | "chess_turn" | "renju_turn" | "finished" | "message";
+
+/** The "it's your move" kinds - all of them suppressed while the recipient has the game open on mobile. */
+export function isTurnKind(kind: NotificationKind): boolean {
+  return kind === "turn" || kind === "chess_turn" || kind === "renju_turn";
+}
+
 export type Notification = {
   userId: string;
   title: string;
   body: string;
   tag: string;
-  kind: "invite" | "turn" | "finished" | "message";
+  kind: NotificationKind;
 };
 
 export type ChatMessagePayload = {
@@ -106,6 +118,18 @@ export function chessMover(board: ChessBoardRow): string | null {
     : board.black_next_user ?? board.black_user ?? board.black_user_2;
 }
 
+// Owner request: once the Gaia game itself is over, that game stops asking for attention entirely -
+// no more chess/renju "your move" pushes and no more green game-bar pulse (the viewer half of this
+// lives in viewer/src/hosted/game-bar.ts::pendingTurnKinds). The side boards stay perfectly
+// playable; they just go quiet. Gaia's own turn push already can't fire for a finished game -
+// buildNotifications takes the "finished" branch before it ever reaches the turn case - so this
+// gate is only ever consulted by the two side-game builders. The one-shot "game finished" push and
+// ordinary chat pushes are deliberately NOT affected: those are about the result and the
+// conversation after it, not about a move someone is waiting on.
+export function isSideGameSilenced(game: GameRow): boolean {
+  return game.status === "finished";
+}
+
 // The chess-panel counterpart of buildNotifications' Gaia "turn" case, fired whenever the shared
 // chess board's active color actually changes (supabase/migrations/
 // 20260726181703_chess_turn_notifications.sql's `chess_board_notify_update` trigger). No
@@ -114,7 +138,7 @@ export function chessMover(board: ChessBoardRow): string | null {
 // who just made the move.
 export function buildChessTurnNotification(board: ChessBoardRow, game: GameRow): Notification[] {
   const mover = chessMover(board);
-  if (!mover) {
+  if (!mover || isSideGameSilenced(game)) {
     return [];
   }
   return [
@@ -123,7 +147,7 @@ export function buildChessTurnNotification(board: ChessBoardRow, game: GameRow):
       title: "GP: Fight Club",
       body: `Your chess move in ${gameLabel(game, mover)}.`,
       tag: `chess-${game.id}`,
-      kind: "turn",
+      kind: "chess_turn",
     },
   ];
 }
@@ -159,7 +183,7 @@ export function renjuMover(board: RenjuBoardRow): string | null {
 // just placed the stone, and no `last_committed_by` check is needed.
 export function buildRenjuTurnNotification(board: RenjuBoardRow, game: GameRow): Notification[] {
   const mover = renjuMover(board);
-  if (!mover) {
+  if (!mover || isSideGameSilenced(game)) {
     return [];
   }
   return [
@@ -168,7 +192,7 @@ export function buildRenjuTurnNotification(board: RenjuBoardRow, game: GameRow):
       title: "GP: Fight Club",
       body: `Your renju move in ${gameLabel(game, mover)}.`,
       tag: `renju-${game.id}`,
-      kind: "turn",
+      kind: "renju_turn",
     },
   ];
 }
@@ -285,7 +309,9 @@ export function shouldSkipTurnPushForSubscription(
 // applied by the server to every game and every device. A missing row means "defaults", so the
 // helpers below always operate on a fully-resolved NotificationPrefs (never a partial DB row).
 export type NotificationPrefs = {
-  turn_pushes: boolean; // the immediate "Your turn" push
+  turn_pushes: boolean; // the immediate "Your turn" push (Gaia itself)
+  chess_pushes: boolean; // "your chess move" on the sidebar's shared chess board
+  renju_pushes: boolean; // "your renju move" on the research panel's shared renju board
   chat_pushes: boolean;
   invite_pushes: boolean;
   finished_pushes: boolean;
@@ -300,6 +326,8 @@ export type NotificationPrefs = {
 
 export const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
   turn_pushes: true,
+  chess_pushes: true,
+  renju_pushes: true,
   chat_pushes: true,
   invite_pushes: true,
   finished_pushes: true,
@@ -330,10 +358,14 @@ export function isSnoozed(prefs: NotificationPrefs, now: number = Date.now()): b
   return Number.isFinite(until) && now < until;
 }
 
-function isCategoryEnabled(kind: Notification["kind"], prefs: NotificationPrefs): boolean {
+function isCategoryEnabled(kind: NotificationKind, prefs: NotificationPrefs): boolean {
   switch (kind) {
     case "turn":
       return prefs.turn_pushes;
+    case "chess_turn":
+      return prefs.chess_pushes;
+    case "renju_turn":
+      return prefs.renju_pushes;
     case "message":
       return prefs.chat_pushes;
     case "invite":

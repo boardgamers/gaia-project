@@ -2,15 +2,18 @@
 import { expect } from "chai";
 import { createLocalVue, mount } from "@vue/test-utils";
 import Vuex from "vuex";
-import { RenjuBackend, RenjuPanelMode, RenjuRow } from "../logic/renju-backend";
+import { RenjuBackend, RenjuRow } from "../logic/renju-backend";
 import { EMPTY_RENJU_BOARD } from "../logic/renju";
 import ResearchPanel from "./ResearchPanel.vue";
 
 const localVue = createLocalVue();
 localVue.use(Vuex);
 
-function sharedBackend(initialMode: RenjuPanelMode) {
-  let row: RenjuRow = {
+// A hosted game's backend. The renju POSITION is shared through it; which face a viewer is looking
+// at deliberately is not, so this test double has no panel-mode write at all - the component may
+// only ever reach localStorage for that.
+function hostedBackend(userId = "user-one") {
+  const row: RenjuRow = {
     board: EMPTY_RENJU_BOARD,
     last_move: null,
     black_user: null,
@@ -19,13 +22,11 @@ function sharedBackend(initialMode: RenjuPanelMode) {
     white_user_2: null,
     black_next_user: null,
     white_next_user: null,
-    panel_mode: initialMode,
   };
   const listeners = new Set<(next: RenjuRow) => void>();
-  const writes: RenjuPanelMode[] = [];
   const backend: RenjuBackend = {
     gameId: "game-one",
-    userId: "user-one",
+    userId,
     load: async () => row,
     subscribe(listener) {
       listeners.add(listener);
@@ -33,16 +34,8 @@ function sharedBackend(initialMode: RenjuPanelMode) {
     },
     move: async (_previous, next) => next,
     reset: async () => undefined,
-    async setPanelMode(mode) {
-      writes.push(mode);
-      row = { ...row, panel_mode: mode };
-      for (const listener of listeners) {
-        listener(row);
-      }
-      return row;
-    },
   };
-  return { backend, listeners, writes };
+  return { backend, listeners };
 }
 
 function mountPanel(backend: RenjuBackend | null) {
@@ -94,25 +87,48 @@ describe("ResearchPanel drawer", () => {
     wrapper.destroy();
   });
 
-  it("mirrors every shared mode change to all viewers of the game", async () => {
-    const { backend, listeners, writes } = sharedBackend("research");
-    const first = mountPanel(backend);
-    const second = mountPanel(backend);
+  it("keeps each viewer's face to themselves in a hosted game", async () => {
+    // Owner request: the minigame must not be shared state - one player swiping to renju used to
+    // drag every other viewer's research panel along with them.
+    window.history.pushState({}, "", "/?game=hosted-one");
+    const { backend } = hostedBackend();
+    const mine = mountPanel(backend);
+    const theirs = mountPanel(hostedBackend("user-two").backend);
     await settle();
-    expect(listeners.size).to.equal(2);
 
-    await first.find('[data-mode="renju"]').trigger("click");
+    await mine.find('[data-mode="renju"]').trigger("click");
     await settle();
-    expect(writes).to.deep.equal(["renju"]);
-    expect((first.vm as any).showRenju).to.equal(true);
-    expect((second.vm as any).showRenju).to.equal(true);
+    expect((mine.vm as any).showRenju).to.equal(true);
+    expect((theirs.vm as any).showRenju).to.equal(false);
+    mine.destroy();
+    theirs.destroy();
+  });
 
-    await second.find('[data-mode="research"]').trigger("click");
+  it("remembers the chosen face per hosted game and per account, across leaving and re-entering", async () => {
+    window.history.pushState({}, "", "/?game=hosted-one");
+    const wrapper = mountPanel(hostedBackend().backend);
     await settle();
-    expect(writes).to.deep.equal(["renju", "research"]);
-    expect((first.vm as any).showRenju).to.equal(false);
-    first.destroy();
-    second.destroy();
+    await wrapper.find('[data-mode="renju"]').trigger("click");
+    await settle();
+    wrapper.destroy(); // leave the game...
+
+    const reopened = mountPanel(hostedBackend().backend); // ...and come back
+    await settle();
+    expect((reopened.vm as any).showRenju).to.equal(true);
+    reopened.destroy();
+
+    // A different account on the same browser, and the same account in a different game, both start
+    // from their own default rather than inheriting this one.
+    const otherAccount = mountPanel(hostedBackend("user-two").backend);
+    await settle();
+    expect((otherAccount.vm as any).showRenju).to.equal(false);
+    otherAccount.destroy();
+
+    window.history.pushState({}, "", "/?game=hosted-two");
+    const otherGame = mountPanel(hostedBackend().backend);
+    await settle();
+    expect((otherGame.vm as any).showRenju).to.equal(false);
+    otherGame.destroy();
   });
 
   it("remembers the chosen face per offline game when there is no backend", async () => {
@@ -130,7 +146,8 @@ describe("ResearchPanel drawer", () => {
   });
 
   it("switches faces on a horizontal swipe but leaves a vertical drag to the page", async () => {
-    const { backend, writes } = sharedBackend("research");
+    window.history.pushState({}, "", "/?game=hosted-one");
+    const { backend } = hostedBackend();
     const wrapper = mountPanel(backend);
     await settle();
     const panel = wrapper.find(".research-panel").element;
@@ -141,7 +158,6 @@ describe("ResearchPanel drawer", () => {
     dispatchPointer(panel, "pointermove", 190, 260);
     dispatchPointer(panel, "pointerup", 190, 260);
     await settle();
-    expect(writes).to.deep.equal([]);
     expect((wrapper.vm as any).showRenju).to.equal(false);
 
     // A short horizontal drag falls under the commit threshold and springs back.
@@ -149,14 +165,13 @@ describe("ResearchPanel drawer", () => {
     dispatchPointer(panel, "pointermove", 180, 202);
     dispatchPointer(panel, "pointerup", 180, 202);
     await settle();
-    expect(writes).to.deep.equal([]);
+    expect((wrapper.vm as any).showRenju).to.equal(false);
 
     // A full horizontal swipe commits the switch.
     dispatchPointer(panel, "pointerdown", 200, 200);
     dispatchPointer(panel, "pointermove", 100, 205);
     dispatchPointer(panel, "pointerup", 100, 205);
     await settle();
-    expect(writes).to.deep.equal(["renju"]);
     expect((wrapper.vm as any).showRenju).to.equal(true);
     wrapper.destroy();
   });

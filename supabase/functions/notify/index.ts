@@ -23,6 +23,7 @@ import {
   currentTurnPlayer,
   GameRow,
   isNotificationAllowed,
+  isTurnKind,
   MIN_REMINDER_INTERVAL_MS,
   NotificationPrefs,
   planTurnReminder,
@@ -34,7 +35,7 @@ import {
 
 // Columns of public.notification_prefs the notify function reads.
 const PREFS_COLUMNS =
-  "user_id,turn_pushes,chat_pushes,invite_pushes,finished_pushes,reminders_enabled," +
+  "user_id,turn_pushes,chess_pushes,renju_pushes,chat_pushes,invite_pushes,finished_pushes,reminders_enabled," +
   "reminder_interval_hours,reminder_max_count,quiet_hours_enabled,quiet_start_hour,quiet_end_hour,snooze_until";
 
 // Loads global prefs for the given users into a Map, resolving defaults for anyone without a row.
@@ -186,7 +187,7 @@ Deno.serve(async (req) => {
       // mover).
       const recipient = playerByUserId.get(notification.userId);
       if (
-        (notification.kind === "turn" || notification.kind === "message") &&
+        (isTurnKind(notification.kind) || notification.kind === "message") &&
         recipient &&
         shouldSkipTurnPushForSubscription(recipient, sub)
       ) {

@@ -79,6 +79,11 @@ release.json`) has two audiences and they must not blur together: a "What's new"
   "your turn" pulse, and a real searching advantage bar (`logic/renju-engine.ts`) rather than a
   static score.
   It also fixed a pre-existing pointer-capture bug that made the renju board unplayable with a mouse.
+- **Side games are per-viewer as of #118.** Which face either drawer shows (pool/chess,
+  research/renju) is now each viewer's own choice, stored in `localStorage` per game and per
+  account - not shared over Realtime. Anything below describing a switch as shared/committed state
+  is history. Their "your move" pushes are also separate notification categories from Gaia's, and
+  both go silent once the Gaia game is finished.
 - **Sidebar chess:** implementation is complete in viewer v5.37.11. Any Gaia-game participant can
   switch the shared `pool`/`chess` drawer with its two equal bottom-right page dots or a live left/right
   swipe, and all approved viewers receive the committed state over Realtime. The chess face has no
@@ -4125,25 +4130,25 @@ opacity: 0.7 }` wrapper that also diluted the X itself, while `BoardAction.vue`'
       `pnpm test`: 440 passing/31 failing both before and after (identical failing-test names,
       confirmed via `git stash` on the same run - all pre-existing, none touch these components).
 
-                                                                                                                                                                                                     **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
-                                                                                                                                                                                                     pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
-                                                                                                                                                                                                     desktop mice, which was never the actual bug - only touch devices raced hover against the
-                                                                                                                                                                                                     click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
-                                                                                                                                                                                                     `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
-                                                                                                                                                                                                     `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
-                                                                                                                                                                                                     shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
-                                                                                                                                                                                                     `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
-                                                                                                                                                                                                     directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
-                                                                                                                                                                                                     `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
-                                                                                                                                                                                                     config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
-                                                                                                                                                                                                     on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
-                                                                                                                                                                                                     desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
-                                                                                                                                                                                                     is what actually closed that race originally. Verified live via Playwright with two device
-                                                                                                                                                                                                     profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
-                                                                                                                                                                                                     tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
-                                                                                                                                                                                                     context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
-                                                                                                                                                                                                     a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
-                                                                                                                                                                                                     still 440 passing/31 failing, same pre-existing set.
+                                                                                                                                                                                                           **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
+                                                                                                                                                                                                           pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
+                                                                                                                                                                                                           desktop mice, which was never the actual bug - only touch devices raced hover against the
+                                                                                                                                                                                                           click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
+                                                                                                                                                                                                           `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
+                                                                                                                                                                                                           `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
+                                                                                                                                                                                                           shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
+                                                                                                                                                                                                           `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
+                                                                                                                                                                                                           directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
+                                                                                                                                                                                                           `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
+                                                                                                                                                                                                           config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
+                                                                                                                                                                                                           on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
+                                                                                                                                                                                                           desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
+                                                                                                                                                                                                           is what actually closed that race originally. Verified live via Playwright with two device
+                                                                                                                                                                                                           profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
+                                                                                                                                                                                                           tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
+                                                                                                                                                                                                           context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
+                                                                                                                                                                                                           a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
+                                                                                                                                                                                                           still 440 passing/31 failing, same pre-existing set.
 
 102.  ✅ **Offline pass-and-play with automatic local recovery and airplane-mode launch
       (2026-07-17, v5.31.0).** The viewer now has a dedicated `?offline=1` hot-seat mode, linked from
@@ -4633,84 +4638,78 @@ new.fen` - a real move or reset, not a colour claim or panel-mode switch) that P
       advantage bar like in chess").** Three separate pieces, on
       `claude/renku-notifications-advantage-bar-5z8myk`:
 
-      - **Turn pushes.** #114 gave chess a `chess_board` trigger that posts `{type: "chess_turn"}` to
-        the `notify` Edge Function; renju shipped a day later (#115) with no equivalent, so a stone
-        landed silently. New migration `20260726210000_renju_turn_notifications.sql` adds
-        `notify_renju_turn()` on `renju_board` `when (old.board is distinct from new.board)`, plus
-        `renjuMover` / `buildRenjuTurnNotification` in `notify/logic.ts` and a `renju_turn` branch in
-        `index.ts`. Renju has no FEN, so the active colour comes from the stone counts (black opens,
-        level counts = black to move), and the relay `*_next_user` columns take priority exactly as
-        `move_renju` resolves them. Body "Your renju move in <game>.", tag `renju-<gameId>` so it
-        stacks separately from the Gaia and chess pushes; it inherits the whole existing pipeline
-        (VAPID web push - which is what reaches an installed iOS PWA - plus per-category prefs,
-        snooze and quiet hours) for free.
-      - **Backend deploy (2026-07-27) - DONE, both steps live on `mitawjpdxkheascdiffz`.** Done in
-        the safe order (function first, then the trigger that calls it), via the **Supabase MCP
-        tools**, which worked this session even though they were denied in the session that wrote
-        the code:
-        - _Pre-check:_ `public.renju_board` exists with 3 rows and `20260726190000
-shared_renju_board` is in the ledger, so #115's migration had already run - hosted renju
+            - **Turn pushes.** #114 gave chess a `chess_board` trigger that posts `{type: "chess_turn"}` to
+              the `notify` Edge Function; renju shipped a day later (#115) with no equivalent, so a stone
+              landed silently. New migration `20260726210000_renju_turn_notifications.sql` adds
+              `notify_renju_turn()` on `renju_board` `when (old.board is distinct from new.board)`, plus
+              `renjuMover` / `buildRenjuTurnNotification` in `notify/logic.ts` and a `renju_turn` branch in
+              `index.ts`. Renju has no FEN, so the active colour comes from the stone counts (black opens,
+              level counts = black to move), and the relay `*_next_user` columns take priority exactly as
+              `move_renju` resolves them. Body "Your renju move in <game>.", tag `renju-<gameId>` so it
+              stacks separately from the Gaia and chess pushes; it inherits the whole existing pipeline
+              (VAPID web push - which is what reaches an installed iOS PWA - plus per-category prefs,
+              snooze and quiet hours) for free.
+            - **Backend deploy (2026-07-27) - DONE, both steps live on `mitawjpdxkheascdiffz`.** Done in
+              the safe order (function first, then the trigger that calls it), via the **Supabase MCP
+              tools**, which worked this session even though they were denied in the session that wrote
+              the code:
+              - _Pre-check:_ `public.renju_board` exists with 3 rows and `20260726190000
+
+      shared*renju_board`is in the ledger, so #115's migration had already run - hosted renju
           was NOT silently falling back to pass-and-play, and nothing needed re-applying first.
-        - _Step 1, `notify` Edge Function:_ redeployed `index.ts` + `logic.ts` (`deno.lock` is not
-          needed - there is no `deno.json`, and the deployed function only ever carried those two
-          files), **v11 -> v12, `verify_jwt: true` unchanged**. Worth recording: v11 predated #114
-          as well, so the deployed function was missing the `chess_turn` branch too - `chess_board`
-          had a live trigger posting a type the function rejected with 400. **This redeploy fixed
-          chess pushes at the same time as shipping renju's.**
-        - _Step 2, migration `20260726210000_renju_turn_notifications.sql`:_ applied via
-          `apply_migration`, which records it in the CLI ledger (so unlike #115's it did NOT need
-          the SQL editor). `apply_migration` stamps the ledger with the apply-time version
-          (`20260727011014`), so the row was then re-versioned to `20260726210000` to match the
-          repo filename, keeping every ledger row a faithful map of `supabase/migrations/` and a
-          future `supabase db push` a no-op. `notify_renju_turn()` is present and `security
-definer`; `renju_board_notify_update` is the only non-internal trigger on the table.
-        - _Verified server-side, without delivering any push:_ posting `{type: "renju_turn"}` for a
-          nonexistent game returns **404 "game not found"** where the old code returned 400 "bad
-          request", proving the new branch is live; posting it for a real game whose board is a
-          valid 225-char position with both colours assigned (so `renjuMover` cannot return null)
-          but whose players have no `push_subscriptions` rows returns **`{"sent":0,"deleted":0}`** -
-          and `deleted` is only present on the handler's _final_ return, so the board really was
-          loaded, the mover resolved, the notification built, prefs read and the VAPID app server
-          constructed. The full path executes; the loop simply found no devices.
-        - _Not done here:_ the two-account live browser check (play a stone, confirm the other
-          account's banner and green lobby pulse). That needs two signed-in accounts on the
-          deployed site and is the owner's to run.
-      - **Game-bar pulse.** `game-bar.ts` gained `renjuBoardOf` / `renjuMover` / `isMyRenjuTurn`
-        alongside the chess trio, both game lists now embed `renju_board(*)` and subscribe to that
-        table's Realtime changes, and `game-bar--my-turn` is now
-        `isMyTurn || isMyChessTurn || isMyRenjuTurn` in both `Lobby.vue` and `GameNavPanel.vue`.
-      - **Advantage bar (the real one).** The visual is deliberately the chess meter, copied: the same
-        text-free 6px strip, white-relative, `role="meter"` with a spoken description in
-        `aria-valuetext`/`title`. The number behind it needed a whole engine, because there is no
-        gomoku Stockfish to bolt on: `logic/renju-engine.ts` is a genuine alpha-beta searcher -
-        incremental 5-window pattern evaluation (which makes open-vs-closed and broken shapes fall out
-        for free rather than needing a pattern list), exact rules-accurate five/four detection under
-        this board's exactly-five-wins house rule, candidate moves limited to the neighbourhood of
-        played stones, forced-block extensions, iterative deepening to depth 6, and a VCF
-        (victory-by-continuous-four) solver that proves forcing wins far deeper than the main search.
-        `logic/renju-evaluation.ts` is the controller, mirroring `StockfishEvaluator`'s shape.
-        **It runs on the main thread in slices, not in a Web Worker** - `IterativeSearch` yields after
-        every root move, which is a few milliseconds - because a worker entry would mean a webpack 4 /
-        vue-cli 4 build-config change for no user-visible gain. Measured: a full depth-6 + VCF analysis
-        is ~70ms average / ~300ms worst case, in slices averaging 2-6ms. Verified in a real browser
-        (see below): the bar drifts as a shape builds, then pins with "Black wins in 2 moves" the
-        moment a forced win exists and counts down as it is played out.
-      - **Bug found while verifying, fixed here (pre-existing, shipped in #115):** `panel-swipe.ts`
-        called `setPointerCapture` on _pointerdown_, which retargets every later mouse event - including
-        the click the browser derives from pointerup - to the panel element. The research board's
-        controls escaped it because they are `button`s and bail out via `panelSwipeIgnoreSelector`;
-        the renju intersections are plain SVG rects with a click handler, so **the renju board could
-        not be played with a mouse at all on desktop** (touch was unaffected, which is why it was not
-        reported). Capture now happens at the moment a drag is actually recognised instead, with a
-        `buttons === 0` guard for a mouse released off-panel. The chess drawer shares this mixin and is
-        unaffected either way, since it drives selection from pointer events rather than clicks.
-      - **Testing:** viewer **645 passing** (607 baseline, +38: `renju-engine.spec.ts` 22,
-        `renju-evaluation.spec.ts` 13, plus `RenjuBoard`/`ResearchPanel`/`Lobby` cases), same 2
-        pre-existing map-rotation flakes; `notify/logic.spec.ts` 50 passing (46 baseline, +4);
-        production build clean. Browser-verified end to end with Playwright against the built app:
-        the meter renders, moves with the position, proves and counts down a forced win, pins on the
-        finished game, and both the swipe gesture and the page dots still switch faces after the
-        pointer-capture change.
+        - _Step 1,`notify` Edge Function:* redeployed `index.ts` + `logic.ts` (`deno.lock` is not
+      needed - there is no `deno.json`, and the deployed function only ever carried those two
+      files), **v11 -> v12, `verify_jwt: true` unchanged**. Worth recording: v11 predated #114
+      as well, so the deployed function was missing the `chess_turn` branch too - `chess_board`
+      had a live trigger posting a type the function rejected with 400. **This redeploy fixed
+      chess pushes at the same time as shipping renju's.** - _Step 2, migration `20260726210000_renju_turn_notifications.sql`:_ applied via
+      `apply_migration`, which records it in the CLI ledger (so unlike #115's it did NOT need
+      the SQL editor). `apply_migration` stamps the ledger with the apply-time version
+      (`20260727011014`), so the row was then re-versioned to `20260726210000` to match the
+      repo filename, keeping every ledger row a faithful map of `supabase/migrations/` and a
+      future `supabase db push` a no-op. `notify_renju_turn()` is present and `security
+definer`; `renju_board_notify_update` is the only non-internal trigger on the table. - _Verified server-side, without delivering any push:_ posting `{type: "renju_turn"}` for a
+      nonexistent game returns **404 "game not found"** where the old code returned 400 "bad
+      request", proving the new branch is live; posting it for a real game whose board is a
+      valid 225-char position with both colours assigned (so `renjuMover` cannot return null)
+      but whose players have no `push_subscriptions` rows returns **`{"sent":0,"deleted":0}`** -
+      and `deleted` is only present on the handler's _final_ return, so the board really was
+      loaded, the mover resolved, the notification built, prefs read and the VAPID app server
+      constructed. The full path executes; the loop simply found no devices. - _Not done here:_ the two-account live browser check (play a stone, confirm the other
+      account's banner and green lobby pulse). That needs two signed-in accounts on the
+      deployed site and is the owner's to run. - **Game-bar pulse.** `game-bar.ts` gained `renjuBoardOf` / `renjuMover` / `isMyRenjuTurn`
+      alongside the chess trio, both game lists now embed `renju_board(*)` and subscribe to that
+      table's Realtime changes, and `game-bar--my-turn` is now
+      `isMyTurn || isMyChessTurn || isMyRenjuTurn` in both `Lobby.vue` and `GameNavPanel.vue`. - **Advantage bar (the real one).** The visual is deliberately the chess meter, copied: the same
+      text-free 6px strip, white-relative, `role="meter"` with a spoken description in
+      `aria-valuetext`/`title`. The number behind it needed a whole engine, because there is no
+      gomoku Stockfish to bolt on: `logic/renju-engine.ts` is a genuine alpha-beta searcher -
+      incremental 5-window pattern evaluation (which makes open-vs-closed and broken shapes fall out
+      for free rather than needing a pattern list), exact rules-accurate five/four detection under
+      this board's exactly-five-wins house rule, candidate moves limited to the neighbourhood of
+      played stones, forced-block extensions, iterative deepening to depth 6, and a VCF
+      (victory-by-continuous-four) solver that proves forcing wins far deeper than the main search.
+      `logic/renju-evaluation.ts` is the controller, mirroring `StockfishEvaluator`'s shape.
+      **It runs on the main thread in slices, not in a Web Worker** - `IterativeSearch` yields after
+      every root move, which is a few milliseconds - because a worker entry would mean a webpack 4 /
+      vue-cli 4 build-config change for no user-visible gain. Measured: a full depth-6 + VCF analysis
+      is ~70ms average / ~300ms worst case, in slices averaging 2-6ms. Verified in a real browser
+      (see below): the bar drifts as a shape builds, then pins with "Black wins in 2 moves" the
+      moment a forced win exists and counts down as it is played out. - **Bug found while verifying, fixed here (pre-existing, shipped in #115):** `panel-swipe.ts`
+      called `setPointerCapture` on _pointerdown_, which retargets every later mouse event - including
+      the click the browser derives from pointerup - to the panel element. The research board's
+      controls escaped it because they are `button`s and bail out via `panelSwipeIgnoreSelector`;
+      the renju intersections are plain SVG rects with a click handler, so **the renju board could
+      not be played with a mouse at all on desktop** (touch was unaffected, which is why it was not
+      reported). Capture now happens at the moment a drag is actually recognised instead, with a
+      `buttons === 0` guard for a mouse released off-panel. The chess drawer shares this mixin and is
+      unaffected either way, since it drives selection from pointer events rather than clicks. - **Testing:** viewer **645 passing** (607 baseline, +38: `renju-engine.spec.ts` 22,
+      `renju-evaluation.spec.ts` 13, plus `RenjuBoard`/`ResearchPanel`/`Lobby` cases), same 2
+      pre-existing map-rotation flakes; `notify/logic.spec.ts` 50 passing (46 baseline, +4);
+      production build clean. Browser-verified end to end with Playwright against the built app:
+      the meter renders, moves with the position, proves and counts down a forced win, pins on the
+      finished game, and both the swipe gesture and the page dots still switch faces after the
+      pointer-capture change.
 
 117.  ✅ **The main menu always opens on My games, never Lobby (2026-07-27, viewer v5.40.1, owner
       request: "whenever returning back to main menu through whichever means, always return to my
@@ -4721,6 +4720,7 @@ definer`; `renju_board_notify_update` is the only non-internal trigger on the ta
       (`/?lobby=1`), the installed PWA's `start_url`, and a plain reload. Only `HostedBar.vue`'s
       in-game back arrow was already explicit (`?lobby=1&tab=mine`). The default is now `"mine"`,
       which fixes all of those at once - no link had to change.
+
       - **Also removed the `?tab=` URL pinning in `setActiveTab`.** It `replaceState`d the browsed
         tab onto the lobby's history entry so an OS/browser swipe-back restored it; with Lobby as
         the old default that was an improvement, but it is exactly what would still drop a player
@@ -4734,6 +4734,63 @@ definer`; `renju_board_notify_update` is the only non-internal trigger on the ta
         "defaults to Lobby..." case became "defaults to My games...", plus a regression test that a
         tab click leaves `location.search` empty and a freshly mounted lobby comes back on My games,
         and one that an explicit `?tab=finished` deep link is still honoured.
+
+118.  ✅ **Side-game notification opt-outs, a pulse label, silence for finished games, and per-viewer
+      minigame faces (2026-07-27, branch `claude/game-notifications-settings-dp69kc`, four owner
+      requests in one pass).** All four are about the two side games (sidebar chess, research-panel
+      renju) having been wired as if they were the Gaia game itself.
+      - **Each game's "your move" push is now its own category.** Chess and renju turn pushes were
+        built with `kind: "turn"`, so they shared the single `turn_pushes` toggle with Gaia - the one
+        notification the app exists for. `notify/logic.ts` gained a `NotificationKind` union with
+        `chess_turn`/`renju_turn` (plus an `isTurnKind()` helper `index.ts` uses for the existing
+        "already has the game open on mobile" suppression, so all three keep behaving identically
+        there), `isCategoryEnabled` maps them to new `chess_pushes`/`renju_pushes` prefs, and
+        migration `20260727120000_minigame_push_prefs.sql` adds both columns, defaulting to `true`
+        so nothing changes for anyone who never opens the settings modal. The settings modal builds
+        those three rows from `TURN_KINDS` rather than a hardcoded list.
+      - **A tiny glyph on the game bar says what the pulse is for.** A hosted game row is really
+        three games at once and any combination can be waiting on you, so the green pulse alone was
+        ambiguous. New `hosted/turn-kinds.ts` is the single list of playable sub-games (kind, glyph,
+        label, prefs column, "is it my move" predicate); `GameBar.vue` renders one small glyph per
+        pending kind under the round badge, and `Lobby.vue`/`GameNavPanel.vue` both derive the pulse
+        class from the same `hasPendingTurn()` so the pulse and its icons can never disagree. Adding
+        a future side game means one entry in `TURN_KINDS`, one `NotificationKind`, and one column.
+      - **A finished Gaia game goes quiet.** `isMyChessTurn`/`isMyRenjuTurn` (viewer) and both side-
+        game notification builders (server, via `isSideGameSilenced`) now return nothing once
+        `status === "finished"`: no more side-game pushes and no more green pulse for a game that is
+        over. The boards stay open and playable; they just stop nagging. The one-shot "game finished"
+        push and ordinary chat pushes are deliberately unaffected. While wiring the badge into the
+        offline game list (which renders the same bar with no user id and no email) a latent
+        `isMyTurn` bug surfaced: `"" === ""` matched an unclaimed seat's empty `invited_email`, so
+        the email arm now requires a non-empty email.
+      - **Neither minigame is shared state any more.** `chess_board.panel_mode`/
+        `renju_board.panel_mode` meant one player swiping to the board dragged every other viewer's
+        panel along with them. Both `Pool.vue` and `ResearchPanel.vue` now keep the visible face in
+        `localStorage`, keyed per Gaia game _and_ per account, so everyone controls their own view
+        and it is remembered across leaving and re-entering the game. The shared POSITION is
+        untouched - it is still the same board everyone plays on. `setPanelMode` is gone from the
+        `ChessBackend`/`RenjuBackend` interfaces and both Supabase implementations, along with all
+        the ordering machinery it needed (pending-write intents, `updated_at` comparisons, the
+        spectator local-override baseline, the saving lock that disabled the page dots) - a face
+        switch is now synchronous and can never be locked out or snapped back by someone else.
+        The `panel_mode` columns and the `set_*_panel_mode` RPCs are left in the database, unused;
+        no migration drops them.
+      - **One knock-on worth knowing:** the drawers no longer call `load()` at mount (they had no
+        reason to - the only thing they read from it was `panel_mode`), so `ensure_chess_assignment`/
+        `ensure_renju_assignment` now run when someone first _opens_ a face rather than when anyone
+        opens the Gaia game. `ChessBoard.vue`/`RenjuBoard.vue` already load on their own mount, so
+        the first person to reach for a board still creates the row and locks in the colour shuffle;
+        a game nobody ever swipes to simply never gets a side-board row. Existing games are
+        unaffected - their rows already exist.
+      - **Deploy state:** the migration and the `notify` Edge Function redeploy are **NOT applied**.
+        Until both land, the settings modal's save will fail (the upsert names two columns the live
+        table does not have) and chess/renju pushes keep arriving under the Gaia `turn_pushes`
+        toggle. Everything else in this entry is pure viewer code and ships with the Vercel build.
+      - **Testing:** viewer **655 passing / 2 failing**, where those same 2 map-rotation flakes also
+        fail on a clean tree (647 passing before, +8). New: 5 `GameBar.spec.ts` badge cases and a
+        new `NotificationSettings.spec.ts` (3 cases); `Pool.spec.ts`/`ResearchPanel.spec.ts` traded
+        their shared-mode tests for per-viewer and persistence ones. `notify/logic.spec.ts` **55
+        passing** (50 before, +5). Lint output is byte-identical to the clean tree.
 
 ## Still MISSING — only one art-only item left
 

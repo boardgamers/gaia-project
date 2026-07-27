@@ -39,10 +39,17 @@ export function localChessLastMoveStorageKey(search = ""): string {
   return `${LOCAL_CHESS_LAST_MOVE_KEY_PREFIX}${localGameStorageSuffix(search)}`;
 }
 
-// The selected sidebar face is also local to one offline Gaia game. Hosted games store this on
-// their shared chess row instead, so every connected viewer receives the same mode over Realtime.
-export function localChessPanelStorageKey(search = ""): string {
-  return `${LOCAL_CHESS_PANEL_KEY_PREFIX}${localGameStorageSuffix(search)}`;
+// Which sidebar face you're looking at is YOUR choice, never the table's (owner request: the side
+// games must not be shared state - everyone controls whether they're seeing the minigame). Hosted
+// games used to write it to the shared chess row, which meant one player swiping to the board
+// dragged everyone else's sidebar along with them; now every viewer keeps their own, in
+// localStorage, per Gaia game - so it also survives leaving and re-entering the game.
+//
+// `userId` scopes the key to the signed-in account, so two people sharing one browser profile don't
+// inherit each other's choice; offline/self-contained play has no account and simply omits it.
+export function localChessPanelStorageKey(search = "", userId: string | null = null): string {
+  const account = userId ? `:${encodeURIComponent(userId)}` : "";
+  return `${LOCAL_CHESS_PANEL_KEY_PREFIX}${localGameStorageSuffix(search)}${account}`;
 }
 
 // Online players keep their own colour at the bottom. Offline is pass-and-play on one device, so

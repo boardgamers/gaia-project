@@ -6,6 +6,10 @@ import { SupabaseClient } from "./supabase-client";
 // separate and per-device; see push.ts.)
 export type NotificationPrefs = {
   turn_pushes: boolean;
+  // The two side games notify on their own toggles, so "no renju pings" never costs you the Gaia
+  // turn push. A future side game adds one more field here plus a column in notification_prefs.
+  chess_pushes: boolean;
+  renju_pushes: boolean;
   chat_pushes: boolean;
   invite_pushes: boolean;
   finished_pushes: boolean;
@@ -22,6 +26,8 @@ export type NotificationPrefs = {
 // whether the UI or the server is deciding: every category on, the 12h reminder on (opt-out), quiet 22-08.
 export const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
   turn_pushes: true,
+  chess_pushes: true,
+  renju_pushes: true,
   chat_pushes: true,
   invite_pushes: true,
   finished_pushes: true,
@@ -35,8 +41,8 @@ export const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
 };
 
 const PREFS_COLUMNS =
-  "turn_pushes,chat_pushes,invite_pushes,finished_pushes,reminders_enabled,reminder_interval_hours," +
-  "reminder_max_count,quiet_hours_enabled,quiet_start_hour,quiet_end_hour,snooze_until";
+  "turn_pushes,chess_pushes,renju_pushes,chat_pushes,invite_pushes,finished_pushes,reminders_enabled," +
+  "reminder_interval_hours,reminder_max_count,quiet_hours_enabled,quiet_start_hour,quiet_end_hour,snooze_until";
 
 /** Loads this user's saved prefs, falling back to defaults for any unset field / missing row. */
 export async function loadNotificationPrefs(client: SupabaseClient, userId: string): Promise<NotificationPrefs> {

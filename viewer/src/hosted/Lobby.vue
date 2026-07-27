@@ -217,13 +217,14 @@
         </div>
         <b-list-group-item
           class="game-bar"
-          :class="{ 'game-bar--my-turn': isMyTurn(game) || isMyChessTurn(game) || isMyRenjuTurn(game) }"
+          :class="{ 'game-bar--my-turn': hasPendingTurn(game) }"
           :style="{ transform: `translateX(${swipeOffset(game.id)}px)` }"
         >
           <GameBar
             :game="game"
             :presence-state="presenceState"
             :my-user-id="myUserId"
+            :user-email="userEmail"
             @click.native="handleGameClick(game.id, $event)"
             @delete-test-game="deleteMyTestGame"
           />
@@ -245,10 +246,7 @@ import {
   auctionLabel as auctionLabelShared,
   claimedSeats as claimedSeatsShared,
   factionInitial as factionInitialShared,
-  isMyChessTurn as isMyChessTurnShared,
   isMyGame as isMyGameShared,
-  isMyRenjuTurn as isMyRenjuTurnShared,
-  isMyTurn as isMyTurnShared,
   isTestGame as isTestGameShared,
   moveAge as moveAgeShared,
   playerBarTitle as playerBarTitleShared,
@@ -258,6 +256,7 @@ import {
   sortGames as sortGamesShared,
   summaryForGame as summaryForGameShared,
 } from "./game-bar";
+import { hasPendingTurn as hasPendingTurnShared } from "./turn-kinds";
 import InfoModal from "./InfoModal.vue";
 import NotificationSettings from "./NotificationSettings.vue";
 import { fetchMyNickname, setMyNickname } from "./profile";
@@ -671,14 +670,10 @@ export default Vue.extend({
     isMyGame(game: any): boolean {
       return isMyGameShared(game, this.myUserId, this.userEmail);
     },
-    isMyTurn(game: any): boolean {
-      return isMyTurnShared(game, this.myUserId, this.userEmail);
-    },
-    isMyChessTurn(game: any): boolean {
-      return isMyChessTurnShared(game, this.myUserId);
-    },
-    isMyRenjuTurn(game: any): boolean {
-      return isMyRenjuTurnShared(game, this.myUserId);
+    // Any of this game's sub-games (Gaia, chess, renju, ...) waiting on me - the same predicate
+    // GameBar labels with its tiny turn-kind glyphs, so the pulse and its icons can never disagree.
+    hasPendingTurn(game: any): boolean {
+      return hasPendingTurnShared(game, this.myUserId, this.userEmail);
     },
     sortGames(games: any[]): any[] {
       return sortGamesShared(games, this.myUserId, this.userEmail);

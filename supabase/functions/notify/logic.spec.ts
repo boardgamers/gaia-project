@@ -11,6 +11,7 @@ import {
   GameRow,
   isNotificationAllowed,
   isQuietHour,
+  isTurnKind,
   isSnoozed,
   isWithinReminderHours,
   localHourInZone,
@@ -289,13 +290,20 @@ describe("notify logic", () => {
 
       assert.equal(notifications.length, 1);
       assert.equal(notifications[0].userId, "white-1");
-      assert.equal(notifications[0].kind, "turn");
+      // Its own category, so a player can keep Gaia turn pushes while switching chess pings off.
+      assert.equal(notifications[0].kind, "chess_turn");
       assert.equal(notifications[0].body, "Your chess move in your game with Sarah.");
       assert.equal(notifications[0].tag, "chess-game-1");
     });
 
     it("builds no notification when the active color has no claimed player yet", () => {
       assert.deepEqual(buildChessTurnNotification(makeBoard({ white_user: null }), makeGame()), []);
+    });
+
+    it("goes quiet once the Gaia game itself is finished", () => {
+      // Owner request: a finished game stops asking for attention entirely - the side boards stay
+      // playable, they just stop pushing (and the game bar stops pulsing).
+      assert.deepEqual(buildChessTurnNotification(makeBoard(), makeGame({ status: "finished" })), []);
     });
   });
 
@@ -325,7 +333,7 @@ describe("notify logic", () => {
 
       assert.equal(notifications.length, 1);
       assert.equal(notifications[0].userId, "black-1");
-      assert.equal(notifications[0].kind, "turn");
+      assert.equal(notifications[0].kind, "renju_turn");
       assert.equal(notifications[0].body, "Your renju move in your game with Sarah.");
       assert.equal(notifications[0].tag, "renju-game-1");
     });
@@ -333,6 +341,10 @@ describe("notify logic", () => {
     it("builds no notification when the active colour has no claimed player, or the board is unusable", () => {
       assert.deepEqual(buildRenjuTurnNotification(makeRenjuBoard({ black_user: null }), makeGame()), []);
       assert.deepEqual(buildRenjuTurnNotification(makeRenjuBoard({ board: "..." }), makeGame()), []);
+    });
+
+    it("goes quiet once the Gaia game itself is finished", () => {
+      assert.deepEqual(buildRenjuTurnNotification(makeRenjuBoard(), makeGame({ status: "finished" })), []);
     });
   });
 });
@@ -347,6 +359,11 @@ describe("notification preferences", () => {
   it("reminders are on by default (opt-out)", () => {
     assert.equal(DEFAULT_NOTIFICATION_PREFS.reminders_enabled, true);
     assert.equal(DEFAULT_NOTIFICATION_PREFS.turn_pushes, true);
+  });
+
+  it("both side games notify by default, so nothing changes until you opt out", () => {
+    assert.equal(DEFAULT_NOTIFICATION_PREFS.chess_pushes, true);
+    assert.equal(DEFAULT_NOTIFICATION_PREFS.renju_pushes, true);
   });
 
   describe("isSnoozed", () => {
@@ -365,6 +382,27 @@ describe("notification preferences", () => {
       assert.equal(isNotificationAllowed(notif("invite"), prefs({ invite_pushes: false })), false);
       assert.equal(isNotificationAllowed(notif("finished"), prefs({ finished_pushes: false })), false);
       assert.equal(isNotificationAllowed(notif("turn"), prefs()), true);
+    });
+
+    it("lets each side game be switched off without touching the Gaia turn push", () => {
+      const noSideGames = prefs({ chess_pushes: false, renju_pushes: false });
+      assert.equal(isNotificationAllowed(notif("chess_turn"), noSideGames), false);
+      assert.equal(isNotificationAllowed(notif("renju_turn"), noSideGames), false);
+      assert.equal(isNotificationAllowed(notif("turn"), noSideGames), true);
+      // ...and the reverse: no Gaia turn pushes, but still ping me about the side boards.
+      const gaiaOff = prefs({ turn_pushes: false });
+      assert.equal(isNotificationAllowed(notif("turn"), gaiaOff), false);
+      assert.equal(isNotificationAllowed(notif("chess_turn"), gaiaOff), true);
+      assert.equal(isNotificationAllowed(notif("renju_turn"), gaiaOff), true);
+    });
+
+    it("treats every side game's push as a turn kind, so the same active-player suppression applies", () => {
+      assert.equal(isTurnKind("turn"), true);
+      assert.equal(isTurnKind("chess_turn"), true);
+      assert.equal(isTurnKind("renju_turn"), true);
+      assert.equal(isTurnKind("message"), false);
+      assert.equal(isTurnKind("invite"), false);
+      assert.equal(isTurnKind("finished"), false);
     });
 
     it("suppresses everything while snoozed, even an enabled category", () => {

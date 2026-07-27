@@ -1,17 +1,13 @@
 /* eslint-disable @typescript-eslint/camelcase */
 // Supabase row/RPC wire names are snake_case. Structurally identical to hosted/chess-backend.ts -
 // see that file for why each of these steps exists (they were all learned from live play).
-import { RenjuBackend, RenjuPanelMode, RenjuRow } from "../logic/renju-backend";
+import { RenjuBackend, RenjuRow } from "../logic/renju-backend";
 import { SupabaseClient } from "./supabase-client";
 
 function throwIfError(error: any): void {
   if (error) {
     throw error;
   }
-}
-
-function isPanelPermissionError(error: any): boolean {
-  return typeof error?.message === "string" && error.message.includes("only a player in this game can switch");
 }
 
 export function createSupabaseRenjuBackend(client: SupabaseClient, gameId: string, userId: string): RenjuBackend {
@@ -95,27 +91,6 @@ export function createSupabaseRenjuBackend(client: SupabaseClient, gameId: strin
     async reset(): Promise<void> {
       const { error } = await client.rpc("reset_renju", { p_game_id: gameId });
       throwIfError(error);
-    },
-    async setPanelMode(mode: RenjuPanelMode): Promise<RenjuRow | null> {
-      // A player can arrive through an invitation after this browser session first loaded. Reclaim
-      // that seat before the membership-checked write so a first swipe cannot be rejected.
-      const { error: claimError } = await client.rpc("claim_my_seats", {});
-      throwIfError(claimError);
-      const { error } = await client.rpc("set_renju_panel_mode", {
-        p_game_id: gameId,
-        p_mode: mode,
-      });
-      if (isPanelPermissionError(error)) {
-        // Spectators may browse either face locally without changing it for the seated players.
-        const row = await load().catch(() => null);
-        if (row) {
-          emit(row);
-        }
-        return null;
-      }
-      throwIfError(error);
-      // The write is already committed, so a follow-up read failure must not snap the face back.
-      return load().catch(() => null);
     },
   };
 }

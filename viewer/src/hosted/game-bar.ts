@@ -23,7 +23,10 @@ export function isMyTurn(game: any, myUserId: string, userEmail: string): boolea
     return false;
   }
   const email = (userEmail ?? "").toLowerCase();
-  return seat.user_id === myUserId || (seat.invited_email ?? "").toLowerCase() === email;
+  // The email arm only counts for a viewer who actually has one: the offline game list renders the
+  // same bar with no identity at all (my-user-id="", no email), and its unclaimed seats carry no
+  // invited_email either - without this guard "" === "" would make every offline row "my turn".
+  return seat.user_id === myUserId || (!!email && (seat.invited_email ?? "").toLowerCase() === email);
 }
 
 // `chess_board` is a 1:1 join (its primary key is the game's own id), but PostgREST embeds a
@@ -48,12 +51,20 @@ export function chessMover(board: any): string | null {
     : board.black_next_user ?? board.black_user ?? board.black_user_2 ?? null;
 }
 
+// Owner request: a finished Gaia game stops asking for attention altogether - no side-game pulse
+// around its bar and no side-game push (the server half of this is notify/logic.ts's
+// isSideGameSilenced). The boards themselves stay open and playable; they just stop nagging, the
+// same way a finished game's Gaia turn has nothing left to ask for.
+function isSideGameSilenced(game: any): boolean {
+  return game.status === "finished";
+}
+
 // Whether it's this viewer's move in the game's shared chess board - used alongside isMyTurn to
 // decide the game bar's "your turn" pulse, since a game can need your attention for its Gaia turn,
 // its chess turn, its renju turn, or any combination.
 export function isMyChessTurn(game: any, myUserId: string): boolean {
   const board = chessBoardOf(game);
-  if (!board || !board.fen || !myUserId) {
+  if (!board || !board.fen || !myUserId || isSideGameSilenced(game)) {
     return false;
   }
   return chessMover(board) === myUserId;
@@ -94,7 +105,7 @@ export function renjuMover(board: any): string | null {
 /** Whether it's this viewer's move on the game's shared renju board (the research panel's face two). */
 export function isMyRenjuTurn(game: any, myUserId: string): boolean {
   const board = renjuBoardOf(game);
-  if (!board || !board.board || !myUserId) {
+  if (!board || !board.board || !myUserId || isSideGameSilenced(game)) {
     return false;
   }
   return renjuMover(board) === myUserId;

@@ -1,5 +1,8 @@
 /* eslint-disable @typescript-eslint/camelcase */
 // Supabase row/RPC wire names are snake_case.
+
+/** Which face of the research-panel drawer a viewer is looking at. Local to that viewer - see
+ * logic/renju.ts::localRenjuPanelStorageKey - so it is deliberately NOT part of RenjuRow. */
 export type RenjuPanelMode = "research" | "renju";
 
 export interface RenjuRow {
@@ -12,7 +15,6 @@ export interface RenjuRow {
   white_user_2: string | null;
   black_next_user: string | null;
   white_next_user: string | null;
-  panel_mode: RenjuPanelMode;
 }
 
 /**
@@ -30,5 +32,4 @@ export interface RenjuBackend {
   /** Returns the board actually stored, which differs from `nextBoard` if someone moved first. */
   move(previousBoard: string, nextBoard: string, index: number): Promise<string>;
   reset(): Promise<void>;
-  setPanelMode(mode: RenjuPanelMode): Promise<RenjuRow | null>;
 }

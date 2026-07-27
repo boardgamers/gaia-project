@@ -23,7 +23,6 @@ function emptyRow(overrides: Partial<RenjuRow> = {}): RenjuRow {
     white_user_2: null,
     black_next_user: null,
     white_next_user: null,
-    panel_mode: "research",
     ...overrides,
   };
 }
@@ -50,7 +49,6 @@ function sharedBackend(initial: RenjuRow, userId = "user-black") {
       return next;
     },
     reset: async () => undefined,
-    setPanelMode: async () => row,
   };
   return { backend, moves };
 }
@@ -212,7 +210,6 @@ describe("RenjuBoard", () => {
       subscribe: () => () => undefined,
       move: async (_previous, next) => next,
       reset: async () => undefined,
-      setPanelMode: async () => null,
     };
     const wrapper = mountBoard(backend);
     await settle();
