@@ -1,7 +1,29 @@
 {
-  "version": "5.40.1",
+  "version": "5.41.0",
   "releasedAt": "2026-07-27",
   "entries": [
+    {
+      "version": "5.41.0",
+      "releasedAt": "2026-07-27",
+      "kind": "update",
+      "title": "Side games are yours to control",
+      "impact": "",
+      "changes": [
+        "Chess and renju now have their own notification switches, so you can turn either one off without losing your Gaia turn push",
+        "The game bar shows a tiny icon for what the green pulse is asking for - Gaia, chess or renju",
+        "Showing the chess or renju board is now your own choice: it no longer changes what everyone else sees, and it's remembered per game",
+        "A finished game stops notifying and stops pulsing, including its chess and renju boards",
+        "Chess/renju turn pushes became their own notification categories (chess_pushes/renju_pushes) instead of sharing the Gaia turn_pushes toggle",
+        "Removed the shared panel_mode write path from both side-game backends; the visible face is now local to each viewer",
+        "Fixed isMyTurn matching an unclaimed seat's empty invited_email for a viewer with no email (the offline game list)"
+      ],
+      "userChanges": [
+        "Chess and renju now have their own notification switches, so you can turn either one off without losing your Gaia turn push",
+        "The game bar shows a tiny icon for what the green pulse is asking for - Gaia, chess or renju",
+        "Showing the chess or renju board is now your own choice: it no longer changes what everyone else sees, and it's remembered per game",
+        "A finished game stops notifying and stops pulsing, including its chess and renju boards"
+      ]
+    },
     {
       "version": "5.40.1",
       "releasedAt": "2026-07-27",
