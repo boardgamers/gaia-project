@@ -4125,25 +4125,25 @@ opacity: 0.7 }` wrapper that also diluted the X itself, while `BoardAction.vue`'
       `pnpm test`: 440 passing/31 failing both before and after (identical failing-test names,
       confirmed via `git stash` on the same run - all pre-existing, none touch these components).
 
-                                                                                                                                                                                               **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
-                                                                                                                                                                                               pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
-                                                                                                                                                                                               desktop mice, which was never the actual bug - only touch devices raced hover against the
-                                                                                                                                                                                               click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
-                                                                                                                                                                                               `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
-                                                                                                                                                                                               `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
-                                                                                                                                                                                               shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
-                                                                                                                                                                                               `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
-                                                                                                                                                                                               directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
-                                                                                                                                                                                               `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
-                                                                                                                                                                                               config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
-                                                                                                                                                                                               on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
-                                                                                                                                                                                               desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
-                                                                                                                                                                                               is what actually closed that race originally. Verified live via Playwright with two device
-                                                                                                                                                                                               profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
-                                                                                                                                                                                               tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
-                                                                                                                                                                                               context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
-                                                                                                                                                                                               a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
-                                                                                                                                                                                               still 440 passing/31 failing, same pre-existing set.
+                                                                                                                                                                                                     **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
+                                                                                                                                                                                                     pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
+                                                                                                                                                                                                     desktop mice, which was never the actual bug - only touch devices raced hover against the
+                                                                                                                                                                                                     click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
+                                                                                                                                                                                                     `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
+                                                                                                                                                                                                     `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
+                                                                                                                                                                                                     shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
+                                                                                                                                                                                                     `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
+                                                                                                                                                                                                     directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
+                                                                                                                                                                                                     `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
+                                                                                                                                                                                                     config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
+                                                                                                                                                                                                     on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
+                                                                                                                                                                                                     desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
+                                                                                                                                                                                                     is what actually closed that race originally. Verified live via Playwright with two device
+                                                                                                                                                                                                     profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
+                                                                                                                                                                                                     tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
+                                                                                                                                                                                                     context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
+                                                                                                                                                                                                     a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
+                                                                                                                                                                                                     still 440 passing/31 failing, same pre-existing set.
 
 102.  ✅ **Offline pass-and-play with automatic local recovery and airplane-mode launch
       (2026-07-17, v5.31.0).** The viewer now has a dedicated `?offline=1` hot-seat mode, linked from
@@ -4632,6 +4632,7 @@ new.fen` - a real move or reset, not a colour claim or panel-mode switch) that P
       the gamebar flash as well... investigate whether it's too much work or not to build a real live
       advantage bar like in chess").** Three separate pieces, on
       `claude/renku-notifications-advantage-bar-5z8myk`:
+
       - **Turn pushes.** #114 gave chess a `chess_board` trigger that posts `{type: "chess_turn"}` to
         the `notify` Edge Function; renju shipped a day later (#115) with no equivalent, so a stone
         landed silently. New migration `20260726210000_renju_turn_notifications.sql` adds
@@ -4647,31 +4648,31 @@ new.fen` - a real move or reset, not a colour claim or panel-mode switch) that P
         the safe order (function first, then the trigger that calls it), via the **Supabase MCP
         tools**, which worked this session even though they were denied in the session that wrote
         the code:
-        - *Pre-check:* `public.renju_board` exists with 3 rows and `20260726190000
-          shared_renju_board` is in the ledger, so #115's migration had already run - hosted renju
+        - _Pre-check:_ `public.renju_board` exists with 3 rows and `20260726190000
+shared_renju_board` is in the ledger, so #115's migration had already run - hosted renju
           was NOT silently falling back to pass-and-play, and nothing needed re-applying first.
-        - *Step 1, `notify` Edge Function:* redeployed `index.ts` + `logic.ts` (`deno.lock` is not
+        - _Step 1, `notify` Edge Function:_ redeployed `index.ts` + `logic.ts` (`deno.lock` is not
           needed - there is no `deno.json`, and the deployed function only ever carried those two
           files), **v11 -> v12, `verify_jwt: true` unchanged**. Worth recording: v11 predated #114
           as well, so the deployed function was missing the `chess_turn` branch too - `chess_board`
           had a live trigger posting a type the function rejected with 400. **This redeploy fixed
           chess pushes at the same time as shipping renju's.**
-        - *Step 2, migration `20260726210000_renju_turn_notifications.sql`:* applied via
+        - _Step 2, migration `20260726210000_renju_turn_notifications.sql`:_ applied via
           `apply_migration`, which records it in the CLI ledger (so unlike #115's it did NOT need
           the SQL editor). `apply_migration` stamps the ledger with the apply-time version
           (`20260727011014`), so the row was then re-versioned to `20260726210000` to match the
           repo filename, keeping every ledger row a faithful map of `supabase/migrations/` and a
           future `supabase db push` a no-op. `notify_renju_turn()` is present and `security
-          definer`; `renju_board_notify_update` is the only non-internal trigger on the table.
-        - *Verified server-side, without delivering any push:* posting `{type: "renju_turn"}` for a
+definer`; `renju_board_notify_update` is the only non-internal trigger on the table.
+        - _Verified server-side, without delivering any push:_ posting `{type: "renju_turn"}` for a
           nonexistent game returns **404 "game not found"** where the old code returned 400 "bad
           request", proving the new branch is live; posting it for a real game whose board is a
           valid 225-char position with both colours assigned (so `renjuMover` cannot return null)
           but whose players have no `push_subscriptions` rows returns **`{"sent":0,"deleted":0}`** -
-          and `deleted` is only present on the handler's *final* return, so the board really was
+          and `deleted` is only present on the handler's _final_ return, so the board really was
           loaded, the mover resolved, the notification built, prefs read and the VAPID app server
           constructed. The full path executes; the loop simply found no devices.
-        - *Not done here:* the two-account live browser check (play a stone, confirm the other
+        - _Not done here:_ the two-account live browser check (play a stone, confirm the other
           account's banner and green lobby pulse). That needs two signed-in accounts on the
           deployed site and is the owner's to run.
       - **Game-bar pulse.** `game-bar.ts` gained `renjuBoardOf` / `renjuMover` / `isMyRenjuTurn`
@@ -4710,6 +4711,29 @@ new.fen` - a real move or reset, not a colour claim or panel-mode switch) that P
         the meter renders, moves with the position, proves and counts down a forced win, pins on the
         finished game, and both the swipe gesture and the page dots still switch faces after the
         pointer-capture change.
+
+117.  ✅ **The main menu always opens on My games, never Lobby (2026-07-27, viewer v5.40.1, owner
+      request: "whenever returning back to main menu through whichever means, always return to my
+      games tab and not lobby tab").** `Lobby.vue`'s `activeTab` defaulted to `"open"` (the Lobby
+      tab), so every route into the main menu that carries no `?tab=` landed there: "Back to lobby"
+      from Create game / Open-game preview / Admin users, the `Online lobby` links in
+      `Wrapper.vue`/`OfflineLobby.vue`, the service worker's default notification target
+      (`/?lobby=1`), the installed PWA's `start_url`, and a plain reload. Only `HostedBar.vue`'s
+      in-game back arrow was already explicit (`?lobby=1&tab=mine`). The default is now `"mine"`,
+      which fixes all of those at once - no link had to change.
+      - **Also removed the `?tab=` URL pinning in `setActiveTab`.** It `replaceState`d the browsed
+        tab onto the lobby's history entry so an OS/browser swipe-back restored it; with Lobby as
+        the old default that was an improvement, but it is exactly what would still drop a player
+        on Lobby under the new rule (browse Lobby → open a game → swipe back → Lobby again).
+        Browsing a tab is now session-only state and never touches the URL. An explicit `?tab=` is
+        still honoured on load, so deep links (and the back arrow's `tab=mine`) keep working.
+      - **Not touched:** `GameNavPanel.vue`, the desktop in-game side menu, already defaults to its
+        Active tab (the viewer's own active games), not Lobby.
+      - **Testing:** viewer 606 passing / 2 failing, where the same 2 map-rotation flakes fail on a
+        clean tree (604 passing before, +2 new `Lobby.spec.ts` cases). `Lobby.spec.ts`'s
+        "defaults to Lobby..." case became "defaults to My games...", plus a regression test that a
+        tab click leaves `location.search` empty and a freshly mounted lobby comes back on My games,
+        and one that an explicit `?tab=finished` deep link is still honoured.
 
 ## Still MISSING — only one art-only item left
 

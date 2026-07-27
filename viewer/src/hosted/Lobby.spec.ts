@@ -799,7 +799,7 @@ describe("Lobby", () => {
     expect(wrapper.text()).to.contain("boardgamers.space");
   });
 
-  it("defaults to Lobby, while My games, Active, and Finished keep their own sections", async () => {
+  it("defaults to My games, while Lobby, Active, and Finished keep their own sections", async () => {
     const { client } = makeClient(membershipGames, [
       { game_id: "g-open", seq: 1, move: "p3 rotate", committed_at: "2026-07-08T09:00:00Z" },
       { game_id: "g-mine", seq: 7, move: "terrans up int.", committed_at: "2026-07-08T11:05:00Z" },
@@ -816,22 +816,22 @@ describe("Lobby", () => {
     await Vue.nextTick();
 
     let titles = wrapper.findAll(".game-bar__title").wrappers.map((node) => node.text());
-    expect(titles).to.deep.equal(["Open tableStandard"]);
-    expect(wrapper.findAll(".game-bar__seats").wrappers.map((node) => node.text())).to.deep.equal(["1/3"]);
+    expect(titles).to.deep.equal(["My gameStandard"]);
     let summaries = wrapper.findAll(".game-bar__summary").wrappers.map((node) => node.text());
-    expect(summaries).to.deep.equal([]);
+    expect(summaries).to.deep.equal(["55m ago Terrans up int."]);
 
-    const mineTab = wrapper
+    const lobbyTab = wrapper
       .findAll("button")
-      .filter((b) => b.text().includes("My games"))
+      .filter((b) => b.text().includes("Lobby"))
       .at(0);
-    await mineTab.trigger("click");
+    await lobbyTab.trigger("click");
     await Vue.nextTick();
 
     titles = wrapper.findAll(".game-bar__title").wrappers.map((node) => node.text());
-    expect(titles).to.deep.equal(["My gameStandard"]);
+    expect(titles).to.deep.equal(["Open tableStandard"]);
+    expect(wrapper.findAll(".game-bar__seats").wrappers.map((node) => node.text())).to.deep.equal(["1/3"]);
     summaries = wrapper.findAll(".game-bar__summary").wrappers.map((node) => node.text());
-    expect(summaries).to.deep.equal(["55m ago Terrans up int."]);
+    expect(summaries).to.deep.equal([]);
 
     const activeTab = wrapper
       .findAll("button")
@@ -856,6 +856,44 @@ describe("Lobby", () => {
     expect(titles).to.deep.equal(["Finished theirsSilent Auction"]);
     summaries = wrapper.findAll(".game-bar__summary").wrappers.map((node) => node.text());
     expect(summaries).to.deep.equal(["2d ago Nevlas form fed."]);
+  });
+
+  it("never pins the browsed tab into the URL, so returning to the main menu always lands on My games", async () => {
+    // Owner's standing rule: coming back to the main menu by ANY route lands on My games, never on
+    // Lobby. Tab clicks used to `replaceState` a `?tab=` onto the lobby's history entry, so a
+    // player who browsed Lobby, opened a game, then swiped back was dropped on Lobby again.
+    const { client } = makeClient(membershipGames);
+    const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    expect((wrapper.vm as any).activeTab).to.equal("mine");
+
+    const lobbyTab = wrapper
+      .findAll("button")
+      .filter((b) => b.text().includes("Lobby"))
+      .at(0);
+    await lobbyTab.trigger("click");
+    await Vue.nextTick();
+
+    expect((wrapper.vm as any).activeTab).to.equal("open");
+    expect(window.location.search, "browsing a tab must not rewrite the URL").to.equal("");
+
+    // Same URL the swipe-back / back-arrow / PWA start_url all land on: no tab, so My games.
+    const returned = mount(Lobby, { propsData: { client, session: adminSession } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+    expect((returned.vm as any).activeTab).to.equal("mine");
+  });
+
+  it("honours an explicit ?tab= deep link", async () => {
+    window.history.replaceState({}, "", "/?lobby=1&tab=finished");
+    const { client } = makeClient(membershipGames);
+    const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    expect((wrapper.vm as any).activeTab).to.equal("finished");
   });
 
   it("excludes a finished game the current user played from My games, showing it only under Finished", async () => {

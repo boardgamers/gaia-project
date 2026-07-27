@@ -411,7 +411,7 @@ export default Vue.extend({
       myNickname: "" as string,
       nicknameInput: "" as string,
       nicknameSaving: false,
-      activeTab: "open" as "mine" | "open" | "active" | "finished",
+      activeTab: "mine" as "mine" | "open" | "active" | "finished",
       revealedGameId: "" as string,
       swipeGameId: "" as string,
       swipeStartX: 0,
@@ -528,12 +528,13 @@ export default Vue.extend({
     });
     // Backfill this device's timezone for the turn-reminder quiet-hours gate (no-op once set).
     backfillSubscriptionTimezone(this.client as any);
-    // Default to the Lobby tab, but honour an explicit `?tab=` so backing out of a game (the
-    // hosted bar's back arrow links to `?lobby=1&tab=mine`) - and an OS/browser swipe-back that
-    // returns to the lobby's own history entry - land on the tab the player was last on rather
-    // than always resetting to Lobby.
+    // Owner's standing rule: coming back to the main menu by ANY route - the hosted bar's back
+    // arrow, "Back to lobby" from create/join/admin screens, an OS/browser swipe-back onto the
+    // lobby's history entry, a reload, or the installed PWA's `start_url` - must land on My games,
+    // never on Lobby. So My games is the default, and `setActiveTab` deliberately does NOT pin the
+    // chosen tab into the URL (see there). An explicit `?tab=` is still honoured for deep links.
     const requestedTab = this.readTabFromUrl();
-    this.activeTab = requestedTab ?? "open";
+    this.activeTab = requestedTab ?? "mine";
     if (typeof document !== "undefined") {
       this.documentPointerDownHandler = (event: PointerEvent) => this.onDocumentPointerDown(event);
       document.addEventListener("pointerdown", this.documentPointerDownHandler, true);
@@ -561,14 +562,11 @@ export default Vue.extend({
       return tab === "mine" || tab === "open" || tab === "active" || tab === "finished" ? tab : null;
     },
     setActiveTab(tab: "mine" | "open" | "active" | "finished") {
+      // Switching tabs is a within-session browse, not a new destination: it stays out of the URL
+      // on purpose. Pinning it (this used to `replaceState` a `?tab=`) meant a player who had
+      // tapped Lobby, opened a game, then swiped back got dropped on Lobby again - exactly what
+      // `created()`'s "always land on My games" rule exists to prevent.
       this.activeTab = tab;
-      // Reflect the tab in the URL (without adding a history entry) so a subsequent OS/browser
-      // swipe-back into this lobby entry restores the same tab instead of resetting to Lobby.
-      if (typeof window !== "undefined" && window.history && typeof window.history.replaceState === "function") {
-        const params = new URLSearchParams(window.location.search);
-        params.set("tab", tab);
-        window.history.replaceState(window.history.state, "", `?${params.toString()}`);
-      }
     },
     onDocumentPointerDown(event: PointerEvent) {
       if (!(event.target as HTMLElement | null)?.closest?.(".game-swipe")) {

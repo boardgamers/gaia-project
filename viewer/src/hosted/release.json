@@ -1,7 +1,20 @@
 {
-  "version": "5.40.0",
+  "version": "5.40.1",
   "releasedAt": "2026-07-27",
   "entries": [
+    {
+      "version": "5.40.1",
+      "releasedAt": "2026-07-27",
+      "kind": "update",
+      "title": "Main menu opens on My games",
+      "impact": "",
+      "changes": [
+        "The main menu now always opens on your My games tab - backing out of a game, the back arrow, a reload, or launching the app from your home screen all land there instead of on Lobby"
+      ],
+      "userChanges": [
+        "The main menu now always opens on your My games tab - backing out of a game, the back arrow, a reload, or launching the app from your home screen all land there instead of on Lobby"
+      ]
+    },
     {
       "version": "5.40.0",
       "releasedAt": "2026-07-27",
