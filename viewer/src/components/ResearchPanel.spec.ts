@@ -161,6 +161,34 @@ describe("ResearchPanel drawer", () => {
     wrapper.destroy();
   });
 
+  it("does not capture the pointer until a drag is recognised, so a plain press still reaches the face", async () => {
+    // Capturing on pointerdown retargeted every later mouse event - pointerup and the click derived
+    // from it - to the panel itself, which left the renju face (plain SVG rects with click handlers,
+    // not buttons) unplayable with a mouse. A drag still needs capture, just not before there is one.
+    const wrapper = mountPanel(null);
+    await settle();
+    const panel = wrapper.find(".research-panel").element;
+    Object.defineProperty(panel, "clientWidth", { value: 300, configurable: true });
+    const captured: number[] = [];
+    (panel as any).setPointerCapture = (pointerId: number) => captured.push(pointerId);
+    (panel as any).hasPointerCapture = (pointerId: number) => captured.indexOf(pointerId) !== -1;
+    (panel as any).releasePointerCapture = () => undefined;
+
+    dispatchPointer(panel, "pointerdown", 200, 200);
+    expect(captured).to.deep.equal([]);
+    dispatchPointer(panel, "pointerup", 200, 200);
+    await settle();
+    expect(captured).to.deep.equal([]);
+
+    // A real horizontal drag does take the pointer, so the rest of the gesture keeps arriving.
+    dispatchPointer(panel, "pointerdown", 200, 200);
+    dispatchPointer(panel, "pointermove", 100, 205);
+    expect(captured).to.deep.equal([1]);
+    dispatchPointer(panel, "pointerup", 100, 205);
+    await settle();
+    wrapper.destroy();
+  });
+
   it("swallows the click a touch release synthesizes, so a swipe cannot press a move button", async () => {
     const wrapper = mountPanel(null);
     await settle();

@@ -151,6 +151,34 @@ describe("RenjuBoard", () => {
     wrapper.destroy();
   });
 
+  it("shows the same advantage meter the chess face does, pinned once the game is decided", async () => {
+    const wrapper = mountBoard(null);
+    await settle();
+
+    const meter = wrapper.find(".lf-renju-eval");
+    expect(meter.exists()).to.equal(true);
+    expect(meter.attributes("role")).to.equal("meter");
+    // Nothing has been searched yet on an empty board, so the meter starts level.
+    expect(meter.attributes("aria-valuenow")).to.equal("50");
+    expect(wrapper.find(".lf-renju-eval-white").attributes("style")).to.contain("50%");
+
+    // Black builds a five while white answers elsewhere; the finished game pins the bar to black.
+    for (let i = 0; i < 5; i++) {
+      await tap(wrapper, at(5, 2 + i));
+      await tap(wrapper, at(5, 2 + i));
+      if (i < 4) {
+        await tap(wrapper, at(12, 2 + i));
+        await tap(wrapper, at(12, 2 + i));
+      }
+    }
+    await settle();
+
+    const decided = wrapper.find(".lf-renju-eval");
+    expect(decided.attributes("aria-valuenow")).to.equal("0"); // 0% white = all black
+    expect(decided.attributes("aria-valuetext")).to.equal("Black has five in a row");
+    wrapper.destroy();
+  });
+
   it("online, only the designated mover may play, and the shared board is mirrored", async () => {
     const { backend, moves } = sharedBackend(
       emptyRow({ black_user: "user-black", white_user: "user-white", black_next_user: "user-black" }),

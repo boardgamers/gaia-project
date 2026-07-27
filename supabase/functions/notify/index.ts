@@ -2,9 +2,10 @@
 //
 // Called by the pg_net trigger on the games table with {type, game_id}
 // (type "insert" = game created, "update" = current_seat/status changed), by the trigger on
-// chess_board with {type: "chess_turn", game_id} (fen changed - a move or a reset), or by the
+// chess_board with {type: "chess_turn", game_id} (fen changed - a move or a reset), by the trigger
+// on renju_board with {type: "renju_turn", game_id} (board changed - a stone or a reset), or by the
 // trigger on game_chat_messages with {type: "chat", game_id, sender_id, author_name, body}.
-// Reads everything it needs (game, players, chess board, subscriptions, VAPID keys) with
+// Reads everything it needs (game, players, chess/renju board, subscriptions, VAPID keys) with
 // the service role - it never runs the game engine.
 //
 // app_config['vapid'] value shape (seeded out-of-band, never committed):
@@ -17,6 +18,7 @@ import * as webpush from "jsr:@negrel/webpush@0.5.0";
 import {
   buildChessTurnNotification,
   buildNotifications,
+  buildRenjuTurnNotification,
   ChessBoardRow,
   currentTurnPlayer,
   GameRow,
@@ -24,6 +26,7 @@ import {
   MIN_REMINDER_INTERVAL_MS,
   NotificationPrefs,
   planTurnReminder,
+  RenjuBoardRow,
   resolvePrefs,
   shouldSkipTurnPushForSubscription,
   SubscriptionRow,
@@ -69,7 +72,10 @@ Deno.serve(async (req) => {
     return await runReminderSweep(supabase);
   }
 
-  if (!game_id || (type !== "insert" && type !== "update" && type !== "chat" && type !== "chess_turn")) {
+  if (
+    !game_id ||
+    (type !== "insert" && type !== "update" && type !== "chat" && type !== "chess_turn" && type !== "renju_turn")
+  ) {
     return new Response("bad request", { status: 400 });
   }
   if (type === "chat" && (!sender_id || !author_name || !chatBody)) {
@@ -101,6 +107,17 @@ Deno.serve(async (req) => {
       return new Response("chess board not found", { status: 404 });
     }
     notifications = buildChessTurnNotification(board as ChessBoardRow, game as GameRow);
+  } else if (type === "renju_turn") {
+    const { data: board, error: boardError } = await supabase
+      .from("renju_board")
+      .select("*")
+      .eq("game_id", game_id)
+      .single();
+    if (boardError || !board) {
+      console.error("renju board not found:", boardError?.message);
+      return new Response("renju board not found", { status: 404 });
+    }
+    notifications = buildRenjuTurnNotification(board as RenjuBoardRow, game as GameRow);
   } else {
     let hasQueuedPremove = false;
     if (type === "update" && (game as GameRow).current_seat !== null) {
@@ -161,11 +178,12 @@ Deno.serve(async (req) => {
       url: `${siteUrl}/?game=${game_id}`,
     });
     for (const sub of (subscriptions ?? []).filter((s: SubscriptionRow) => s.user_id === notification.userId)) {
-      // Desktop subscriptions are intentionally "more sensitive": if it's your turn (Gaia or chess)
-      // or someone just chatted, they still get the push even while the game is already open.
+      // Desktop subscriptions are intentionally "more sensitive": if it's your turn (Gaia, chess or
+      // renju) or someone just chatted, they still get the push even while the game is already open.
       // Mobile/PWA subscriptions keep the old suppression behavior to avoid duplicate alerts while
       // actively playing there. The recipient's own player row always decides this - it's the same
-      // row for a "turn" notification's userId either way (Gaia's current seat or the chess mover).
+      // row for a "turn" notification's userId either way (Gaia's current seat, or the chess/renju
+      // mover).
       const recipient = playerByUserId.get(notification.userId);
       if (
         (notification.kind === "turn" || notification.kind === "message") &&

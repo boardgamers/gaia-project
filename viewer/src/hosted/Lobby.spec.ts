@@ -598,6 +598,57 @@ describe("Lobby", () => {
     expect(wrapper.find(".game-bar").classes()).to.contain("game-bar--my-turn");
   });
 
+  it("pulses green when it's not the viewer's Gaia turn but it IS their move on the game's shared renju board", async () => {
+    const game = {
+      id: "g-renju-turn",
+      name: "Sunward Drift",
+      created_by: "user-admin",
+      player_count: 2,
+      options: {},
+      status: "active",
+      current_seat: 0, // the OTHER seat's Gaia turn - isMyTurn() alone would be false
+      current_round: 2,
+      latest_move_summary: "Terrans build mine sector 3.",
+      players: [
+        {
+          seat: 0,
+          invited_email: "someone-else@example.com",
+          user_id: "user-other",
+          display_name: "Other",
+          faction: "terrans",
+          score: 10,
+        },
+        {
+          seat: 1,
+          invited_email: "kim.pham.nguyen2@gmail.com",
+          user_id: "user-admin",
+          display_name: "Admin",
+          faction: "moweyds",
+          score: 8,
+        },
+      ],
+      renju_board: {
+        // One black stone played, so it is white's move - and the viewer is white.
+        board: "b" + ".".repeat(224),
+        black_user: "user-other",
+        black_user_2: null,
+        white_user: "user-admin",
+        white_user_2: null,
+        black_next_user: null,
+        white_next_user: null,
+      },
+    };
+    const { client } = makeClient([game]);
+    const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    wrapper.setData({ activeTab: "mine" });
+    await Vue.nextTick();
+
+    expect(wrapper.find(".game-bar").classes()).to.contain("game-bar--my-turn");
+  });
+
   it("shows the move age as 'just now' instead of hiding it when the client clock is slightly behind the server's", async () => {
     const game = {
       id: "g-clock-skew",

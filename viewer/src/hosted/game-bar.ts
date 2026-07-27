@@ -50,13 +50,54 @@ export function chessMover(board: any): string | null {
 
 // Whether it's this viewer's move in the game's shared chess board - used alongside isMyTurn to
 // decide the game bar's "your turn" pulse, since a game can need your attention for its Gaia turn,
-// its chess turn, or both.
+// its chess turn, its renju turn, or any combination.
 export function isMyChessTurn(game: any, myUserId: string): boolean {
   const board = chessBoardOf(game);
   if (!board || !board.fen || !myUserId) {
     return false;
   }
   return chessMover(board) === myUserId;
+}
+
+/** The renju counterpart of chessBoardOf - same PostgREST to-one embed shape caveat. */
+export function renjuBoardOf(game: any): any | null {
+  const board = game.renju_board;
+  if (!board) {
+    return null;
+  }
+  return Array.isArray(board) ? board[0] ?? null : board;
+}
+
+// Mirrors move_renju's own "who moves next" resolution (supabase/migrations/
+// 20260726190000_shared_renju_board.sql). Renju has no FEN: black opens, so the side to move is
+// black exactly while both colours have played the same number of stones.
+export function renjuMover(board: any): string | null {
+  const position: string = board.board ?? "";
+  if (position.length !== 225) {
+    return null;
+  }
+  let black = 0;
+  let white = 0;
+  for (let index = 0; index < position.length; index++) {
+    const cell = position.charAt(index);
+    if (cell === "b") {
+      black++;
+    } else if (cell === "w") {
+      white++;
+    }
+  }
+  return black === white
+    ? board.black_next_user ?? board.black_user ?? board.black_user_2 ?? null
+    : board.white_next_user ?? board.white_user ?? board.white_user_2 ?? null;
+}
+
+/** Whether it's this viewer's move on the game's shared renju board (the research panel's face two). */
+export function isMyRenjuTurn(game: any, myUserId: string): boolean {
+  const board = renjuBoardOf(game);
+  if (!board || !board.board || !myUserId) {
+    return false;
+  }
+  return renjuMover(board) === myUserId;
 }
 
 export function isMyGame(game: any, myUserId: string, userEmail: string): boolean {

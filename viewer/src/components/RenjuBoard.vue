@@ -1,6 +1,23 @@
 <template>
   <div class="lf-renju" @click.stop>
     <div class="lf-renju-status" :class="{ over: status.over }" aria-live="polite">{{ statusLabel }}</div>
+
+    <!-- The analysis meter, deliberately identical to the chess face's (ChessBoard.vue): the same
+         text-free 6px strip reading as the board's thin top edge, white on the left. -->
+    <div
+      class="lf-renju-eval"
+      :class="{ pending: evaluation === null && !evaluationUnavailable }"
+      role="meter"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      :aria-valuenow="Math.round(evaluationWhitePercent)"
+      :aria-valuetext="evaluationAriaText"
+      :title="evaluationAriaText"
+    >
+      <span class="lf-renju-eval-white" :style="{ width: evaluationWhitePercent + '%' }" />
+      <span class="lf-renju-eval-black" />
+    </div>
+
     <div class="lf-renju-stage">
       <!-- Stones sit on the INTERSECTIONS of a 14x14 grid of lines, the traditional renju/gomoku
            board (unlike chess, which plays inside the squares). One SVG user unit is one grid step,
@@ -96,9 +113,11 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { Component } from "vue-property-decorator";
+import { Component, Watch } from "vue-property-decorator";
 import { PANEL_SWIPE_EVENT } from "../logic/panel-swipe";
 import { RenjuBackend, RenjuRow } from "../logic/renju-backend";
+import { playerOfStone } from "../logic/renju-engine";
+import { decidedEvaluation, evaluationDescription, RenjuEvaluation, RenjuEvaluator } from "../logic/renju-evaluation";
 import {
   EMPTY_RENJU_BOARD,
   RENJU_CELLS,
@@ -129,6 +148,10 @@ interface RenjuStone extends RenjuPoint {
 @Component
 export default class RenjuBoard extends Vue {
   private unsubscribe: (() => void) | null = null;
+  private evaluator: RenjuEvaluator | null = null;
+
+  evaluation: RenjuEvaluation | null = null;
+  evaluationUnavailable = false;
 
   board = EMPTY_RENJU_BOARD;
   lastMove: number | null = null;
@@ -152,6 +175,7 @@ export default class RenjuBoard extends Vue {
   async mounted() {
     this.$root.$on(PANEL_SWIPE_EVENT, this.cancelForPanelSwipe);
     this.myUserId = this.backend?.userId ?? null;
+    this.startEvaluation();
     if (this.backend) {
       this.online = true;
       await this.connect(this.backend);
@@ -165,7 +189,44 @@ export default class RenjuBoard extends Vue {
     if (this.unsubscribe) {
       this.unsubscribe();
     }
+    this.evaluator?.destroy();
+    this.evaluator = null;
     this.clearPressTimer();
+  }
+
+  // ---- analysis meter -----------------------------------------------------
+
+  private startEvaluation() {
+    try {
+      this.evaluator = new RenjuEvaluator((evaluation) => {
+        this.evaluation = evaluation;
+        this.evaluationUnavailable = false;
+      });
+    } catch (error) {
+      // The meter is an extra, never a reason for the board itself to fail to render.
+      this.evaluator = null;
+      this.evaluationUnavailable = true;
+    }
+    this.evaluateCurrentPosition();
+  }
+
+  /**
+   * Kept in step with the position by a watcher, exactly like the chess face. A finished game is
+   * reported straight from the board's own status - there is nothing left to search.
+   */
+  @Watch("board")
+  @Watch("lastMove")
+  private evaluateCurrentPosition() {
+    if (!this.evaluator) {
+      return;
+    }
+    const status = this.status;
+    if (status.over) {
+      this.evaluator.cancel();
+      this.evaluation = decidedEvaluation(status.winner ? playerOfStone(status.winner) : null);
+      return;
+    }
+    this.evaluator.analyze(this.board);
   }
 
   // ---- setup / sync -------------------------------------------------------
@@ -450,6 +511,14 @@ export default class RenjuBoard extends Vue {
     return this.isDesignatedMover ? this.turn : null;
   }
 
+  get evaluationWhitePercent(): number {
+    return this.evaluation?.whitePercent ?? 50;
+  }
+
+  get evaluationAriaText(): string {
+    return evaluationDescription(this.evaluation, this.evaluationUnavailable);
+  }
+
   get statusLabel(): string {
     const status = this.status;
     if (status.winner) {
@@ -513,6 +582,41 @@ export default class RenjuBoard extends Vue {
   &.over {
     color: var(--ui-primary, #247b0a);
   }
+}
+
+// Deliberately identical to ChessBoard.vue's `.lf-chess-eval` block - the two drawer faces are
+// meant to read as the same instrument, so any change here belongs there too.
+.lf-renju-eval {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 6px;
+  flex: 0 0 6px;
+  align-self: center;
+  margin-bottom: 2px;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 1px solid var(--ui-border-strong, #555);
+  border-radius: 2px;
+  background: #252525;
+
+  &.pending {
+    opacity: 0.78;
+  }
+}
+
+.lf-renju-eval-white {
+  height: 100%;
+  flex: 0 0 auto;
+  background: #f2f2f2;
+  transition: width 0.25s ease-out;
+}
+
+.lf-renju-eval-black {
+  height: 100%;
+  min-width: 0;
+  flex: 1 1 auto;
+  background: #252525;
 }
 
 .lf-renju-stage {

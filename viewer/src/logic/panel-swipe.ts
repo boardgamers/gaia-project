@@ -102,14 +102,26 @@ export default class PanelSwipe extends Vue {
     this.panelSwipeDirection = 0;
     this.panelSwipeOffset = 0;
     this.panelSwipeActive = false;
-    if (typeof element.setPointerCapture === "function") {
-      element.setPointerCapture(event.pointerId);
-    }
+    // NOTE: the pointer is deliberately NOT captured here, only once a drag is actually recognised
+    // (onPanelPointerMove). Capturing on press retargets every later mouse event - pointerup and the
+    // click the browser derives from it - to this panel element, so a plain mouse click on a face
+    // never reached the thing under the cursor. Buttons escaped that because they bail out above via
+    // panelSwipeIgnoreSelector; the renju board's intersections, which are plain SVG rects with a
+    // click handler, did not, leaving that face unplayable with a mouse. A drag still needs capture,
+    // just not before there is a drag.
   }
 
   onPanelPointerMove(event: PointerEvent) {
     const start = this.panelSwipeStart;
     if (!start || start.pointerId !== event.pointerId) {
+      return;
+    }
+    // Without capture held (it is only taken once a drag is recognised) a release outside the panel
+    // never reaches onPanelPointerUp, so a press that wandered off and let go would otherwise leave
+    // a stale start behind and start a phantom drag on the way back in.
+    if (event.pointerType === "mouse" && event.buttons === 0) {
+      this.panelSwipeStart = null;
+      this.resetPanelSwipe();
       return;
     }
     const dx = event.clientX - start.x;
@@ -125,6 +137,11 @@ export default class PanelSwipe extends Vue {
       }
       this.panelSwipeDirection = dx < 0 ? -1 : 1;
       this.panelSwipeActive = true;
+      // Now that this really is a drag, take the pointer so the rest of it keeps arriving even if
+      // the finger/cursor leaves the panel.
+      if (typeof start.element.setPointerCapture === "function") {
+        start.element.setPointerCapture(start.pointerId);
+      }
       this.$root.$emit(PANEL_SWIPE_EVENT);
     }
 

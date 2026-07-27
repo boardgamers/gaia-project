@@ -73,7 +73,11 @@ release.json`) has two audiences and they must not blur together: a "What's new"
   reusing the chess drawer's gesture through `logic/panel-swipe.ts`. Stones need two taps. Hosted
   state is the new `renju_board` table plus its four RPCs; `chess_board` is untouched. The migration
   `20260726190000_shared_renju_board.sql` is applied BY HAND in the Supabase SQL editor, not through
-  the CLI ledger - hosted games fall back to local pass-and-play until it runs.
+  the CLI ledger - hosted games fall back to local pass-and-play until it runs. #116 then brought the
+  face up to parity with chess: turn pushes (migration `20260726210000_renju_turn_notifications.sql`,
+  **also apply by hand**, plus a `notify` Edge Function redeploy), the lobby/game-bar "your turn"
+  pulse, and a real searching advantage bar (`logic/renju-engine.ts`) rather than a static score.
+  It also fixed a pre-existing pointer-capture bug that made the renju board unplayable with a mouse.
 - **Sidebar chess:** implementation is complete in viewer v5.37.11. Any Gaia-game participant can
   switch the shared `pool`/`chess` drawer with its two equal bottom-right page dots or a live left/right
   swipe, and all approved viewers receive the committed state over Realtime. The chess face has no
@@ -4120,25 +4124,25 @@ opacity: 0.7 }` wrapper that also diluted the X itself, while `BoardAction.vue`'
       `pnpm test`: 440 passing/31 failing both before and after (identical failing-test names,
       confirmed via `git stash` on the same run - all pre-existing, none touch these components).
 
-                                                                                                                                                                                         **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
-                                                                                                                                                                                         pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
-                                                                                                                                                                                         desktop mice, which was never the actual bug - only touch devices raced hover against the
-                                                                                                                                                                                         click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
-                                                                                                                                                                                         `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
-                                                                                                                                                                                         `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
-                                                                                                                                                                                         shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
-                                                                                                                                                                                         `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
-                                                                                                                                                                                         directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
-                                                                                                                                                                                         `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
-                                                                                                                                                                                         config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
-                                                                                                                                                                                         on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
-                                                                                                                                                                                         desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
-                                                                                                                                                                                         is what actually closed that race originally. Verified live via Playwright with two device
-                                                                                                                                                                                         profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
-                                                                                                                                                                                         tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
-                                                                                                                                                                                         context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
-                                                                                                                                                                                         a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
-                                                                                                                                                                                         still 440 passing/31 failing, same pre-existing set.
+                                                                                                                                                                                               **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
+                                                                                                                                                                                               pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
+                                                                                                                                                                                               desktop mice, which was never the actual bug - only touch devices raced hover against the
+                                                                                                                                                                                               click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
+                                                                                                                                                                                               `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
+                                                                                                                                                                                               `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
+                                                                                                                                                                                               shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
+                                                                                                                                                                                               `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
+                                                                                                                                                                                               directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
+                                                                                                                                                                                               `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
+                                                                                                                                                                                               config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
+                                                                                                                                                                                               on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
+                                                                                                                                                                                               desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
+                                                                                                                                                                                               is what actually closed that race originally. Verified live via Playwright with two device
+                                                                                                                                                                                               profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
+                                                                                                                                                                                               tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
+                                                                                                                                                                                               context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
+                                                                                                                                                                                               a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
+                                                                                                                                                                                               still 440 passing/31 failing, same pre-existing set.
 
 102.  ✅ **Offline pass-and-play with automatic local recovery and airplane-mode launch
       (2026-07-17, v5.31.0).** The viewer now has a dedicated `?offline=1` hot-seat mode, linked from
@@ -4607,6 +4611,7 @@ new.fen` - a real move or reset, not a colour claim or panel-mode switch) that P
       comparison, which proves the new board adds exactly one stone of the right colour on the claimed
       empty intersection and changes nothing else. `chess_board` was NOT touched. The shared face is
       per-game like the chess drawer's (spectators keep a local-only face). Offline/self-contained play
+
       - and any stack where the RPC is missing, so the migration can land after the deploy - falls back
         to per-game localStorage pass-and-play. The pool drawer's ~200-line swipe gesture moved verbatim
         into a shared `logic/panel-swipe.ts` mixin that both drawers now use (its root cancel event is
@@ -4620,6 +4625,60 @@ new.fen` - a real move or reset, not a colour claim or panel-mode switch) that P
         reported the page no longer scrolled with a finger on the board: `none` is right for the small
         sidebar chess tile but not for a face filling the whole research panel, and the long press
         still works because it needs a stationary finger (a scroll that does start simply cancels it).
+
+116.  ✅ **Renju gets the rest of what chess has: turn pushes, the game-bar pulse, and a real live
+      advantage bar (2026-07-27, owner request: "Apple push notification for renju as well. Also make
+      the gamebar flash as well... investigate whether it's too much work or not to build a real live
+      advantage bar like in chess").** Three separate pieces, on
+      `claude/renku-notifications-advantage-bar-5z8myk`:
+      - **Turn pushes.** #114 gave chess a `chess_board` trigger that posts `{type: "chess_turn"}` to
+        the `notify` Edge Function; renju shipped a day later (#115) with no equivalent, so a stone
+        landed silently. New migration `20260726210000_renju_turn_notifications.sql` adds
+        `notify_renju_turn()` on `renju_board` `when (old.board is distinct from new.board)`, plus
+        `renjuMover` / `buildRenjuTurnNotification` in `notify/logic.ts` and a `renju_turn` branch in
+        `index.ts`. Renju has no FEN, so the active colour comes from the stone counts (black opens,
+        level counts = black to move), and the relay `*_next_user` columns take priority exactly as
+        `move_renju` resolves them. Body "Your renju move in <game>.", tag `renju-<gameId>` so it
+        stacks separately from the Gaia and chess pushes; it inherits the whole existing pipeline
+        (VAPID web push - which is what reaches an installed iOS PWA - plus per-category prefs,
+        snooze and quiet hours) for free. **This migration also has to be applied BY HAND**, same as
+        #115's, and the Edge Function needs a redeploy.
+      - **Game-bar pulse.** `game-bar.ts` gained `renjuBoardOf` / `renjuMover` / `isMyRenjuTurn`
+        alongside the chess trio, both game lists now embed `renju_board(*)` and subscribe to that
+        table's Realtime changes, and `game-bar--my-turn` is now
+        `isMyTurn || isMyChessTurn || isMyRenjuTurn` in both `Lobby.vue` and `GameNavPanel.vue`.
+      - **Advantage bar (the real one).** The visual is deliberately the chess meter, copied: the same
+        text-free 6px strip, white-relative, `role="meter"` with a spoken description in
+        `aria-valuetext`/`title`. The number behind it needed a whole engine, because there is no
+        gomoku Stockfish to bolt on: `logic/renju-engine.ts` is a genuine alpha-beta searcher -
+        incremental 5-window pattern evaluation (which makes open-vs-closed and broken shapes fall out
+        for free rather than needing a pattern list), exact rules-accurate five/four detection under
+        this board's exactly-five-wins house rule, candidate moves limited to the neighbourhood of
+        played stones, forced-block extensions, iterative deepening to depth 6, and a VCF
+        (victory-by-continuous-four) solver that proves forcing wins far deeper than the main search.
+        `logic/renju-evaluation.ts` is the controller, mirroring `StockfishEvaluator`'s shape.
+        **It runs on the main thread in slices, not in a Web Worker** - `IterativeSearch` yields after
+        every root move, which is a few milliseconds - because a worker entry would mean a webpack 4 /
+        vue-cli 4 build-config change for no user-visible gain. Measured: a full depth-6 + VCF analysis
+        is ~70ms average / ~300ms worst case, in slices averaging 2-6ms. Verified in a real browser
+        (see below): the bar drifts as a shape builds, then pins with "Black wins in 2 moves" the
+        moment a forced win exists and counts down as it is played out.
+      - **Bug found while verifying, fixed here (pre-existing, shipped in #115):** `panel-swipe.ts`
+        called `setPointerCapture` on _pointerdown_, which retargets every later mouse event - including
+        the click the browser derives from pointerup - to the panel element. The research board's
+        controls escaped it because they are `button`s and bail out via `panelSwipeIgnoreSelector`;
+        the renju intersections are plain SVG rects with a click handler, so **the renju board could
+        not be played with a mouse at all on desktop** (touch was unaffected, which is why it was not
+        reported). Capture now happens at the moment a drag is actually recognised instead, with a
+        `buttons === 0` guard for a mouse released off-panel. The chess drawer shares this mixin and is
+        unaffected either way, since it drives selection from pointer events rather than clicks.
+      - **Testing:** viewer **645 passing** (607 baseline, +38: `renju-engine.spec.ts` 22,
+        `renju-evaluation.spec.ts` 13, plus `RenjuBoard`/`ResearchPanel`/`Lobby` cases), same 2
+        pre-existing map-rotation flakes; `notify/logic.spec.ts` 50 passing (46 baseline, +4);
+        production build clean. Browser-verified end to end with Playwright against the built app:
+        the meter renders, moves with the position, proves and counts down a forced win, pins on the
+        finished game, and both the swipe gesture and the page dots still switch faces after the
+        pointer-capture change.
 
 ## Still MISSING — only one art-only item left
 

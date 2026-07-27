@@ -3,6 +3,7 @@ import { strict as assert } from "assert";
 import {
   buildChessTurnNotification,
   buildNotifications,
+  buildRenjuTurnNotification,
   chessMover,
   ChessBoardRow,
   DEFAULT_NOTIFICATION_PREFS,
@@ -19,6 +20,8 @@ import {
   planTurnReminder,
   PlayerRow,
   RECENTLY_ACTIVE_MS,
+  RenjuBoardRow,
+  renjuMover,
   resolvePrefs,
   shouldSkipTurnPushForSubscription,
   SubscriptionRow,
@@ -69,6 +72,34 @@ function makeBoard(overrides: Partial<ChessBoardRow> = {}): ChessBoardRow {
     black_next_user: null,
     ...overrides,
   };
+}
+
+// An empty 15x15 renju position (black to move), matching public.renju_start_board().
+const EMPTY_RENJU = ".".repeat(225);
+
+// `board` defaults to one black stone played, so the default row is white's move - the mirror of
+// makeBoard()'s "white to move" chess default being black's.
+function makeRenjuBoard(overrides: Partial<RenjuBoardRow> = {}): RenjuBoardRow {
+  return {
+    game_id: "game-1",
+    board: EMPTY_RENJU,
+    black_user: "black-1",
+    black_user_2: null,
+    white_user: "white-1",
+    white_user_2: null,
+    black_next_user: null,
+    white_next_user: null,
+    ...overrides,
+  };
+}
+
+/** The empty board with `stones` alternating from black, placed on the first free intersections. */
+function renjuPosition(stones: number): string {
+  let board = "";
+  for (let index = 0; index < 225; index++) {
+    board += index < stones ? (index % 2 === 0 ? "b" : "w") : ".";
+  }
+  return board;
 }
 
 function makeSubscription(overrides: Partial<SubscriptionRow> = {}): SubscriptionRow {
@@ -265,6 +296,43 @@ describe("notify logic", () => {
 
     it("builds no notification when the active color has no claimed player yet", () => {
       assert.deepEqual(buildChessTurnNotification(makeBoard({ white_user: null }), makeGame()), []);
+    });
+  });
+
+  describe("renju turn notifications", () => {
+    it("derives the active colour from the stone counts, black opening", () => {
+      assert.equal(renjuMover(makeRenjuBoard()), "black-1"); // empty board - black opens
+      assert.equal(renjuMover(makeRenjuBoard({ board: renjuPosition(1) })), "white-1");
+      assert.equal(renjuMover(makeRenjuBoard({ board: renjuPosition(2) })), "black-1");
+    });
+
+    it("prefers the relay *_next_user over the seated user, like move_renju does", () => {
+      assert.equal(renjuMover(makeRenjuBoard({ black_next_user: "relay-black-2" })), "relay-black-2");
+      assert.equal(
+        renjuMover(makeRenjuBoard({ board: renjuPosition(1), white_next_user: "relay-white-2" })),
+        "relay-white-2"
+      );
+      // A team with only the second seat filled still resolves - the same coalesce chain.
+      assert.equal(renjuMover(makeRenjuBoard({ black_user: null, black_user_2: "black-2" })), "black-2");
+    });
+
+    it("builds a turn-kind notification for the resolved mover, tagged separately from Gaia and chess", () => {
+      const black = makePlayer({ seat: 0, user_id: "black-1", display_name: "Luke" });
+      const white = makePlayer({ seat: 1, user_id: "white-1", display_name: "Sarah" });
+      const game = makeGame({ name: "", players: [black, white] });
+
+      const notifications = buildRenjuTurnNotification(makeRenjuBoard(), game);
+
+      assert.equal(notifications.length, 1);
+      assert.equal(notifications[0].userId, "black-1");
+      assert.equal(notifications[0].kind, "turn");
+      assert.equal(notifications[0].body, "Your renju move in your game with Sarah.");
+      assert.equal(notifications[0].tag, "renju-game-1");
+    });
+
+    it("builds no notification when the active colour has no claimed player, or the board is unusable", () => {
+      assert.deepEqual(buildRenjuTurnNotification(makeRenjuBoard({ black_user: null }), makeGame()), []);
+      assert.deepEqual(buildRenjuTurnNotification(makeRenjuBoard({ board: "..." }), makeGame()), []);
     });
   });
 });

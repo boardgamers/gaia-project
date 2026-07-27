@@ -217,7 +217,7 @@
         </div>
         <b-list-group-item
           class="game-bar"
-          :class="{ 'game-bar--my-turn': isMyTurn(game) || isMyChessTurn(game) }"
+          :class="{ 'game-bar--my-turn': isMyTurn(game) || isMyChessTurn(game) || isMyRenjuTurn(game) }"
           :style="{ transform: `translateX(${swipeOffset(game.id)}px)` }"
         >
           <GameBar
@@ -247,6 +247,7 @@ import {
   factionInitial as factionInitialShared,
   isMyChessTurn as isMyChessTurnShared,
   isMyGame as isMyGameShared,
+  isMyRenjuTurn as isMyRenjuTurnShared,
   isMyTurn as isMyTurnShared,
   isTestGame as isTestGameShared,
   moveAge as moveAgeShared,
@@ -593,7 +594,7 @@ export default Vue.extend({
         const { data, error } = await Promise.race([
           (this.client as any)
             .from("games")
-            .select("*, players(*), chess_board(*)")
+            .select("*, players(*), chess_board(*), renju_board(*)")
             .order("created_at", { ascending: false }),
           new Promise<never>((_resolve, reject) =>
             setTimeout(() => reject(new Error("Timed out - check your connection")), 15000)
@@ -662,6 +663,7 @@ export default Vue.extend({
         .on("postgres_changes", { event: "*", schema: "public", table: "games" }, () => this.refresh())
         .on("postgres_changes", { event: "*", schema: "public", table: "players" }, () => this.refresh())
         .on("postgres_changes", { event: "*", schema: "public", table: "chess_board" }, () => this.refresh())
+        .on("postgres_changes", { event: "*", schema: "public", table: "renju_board" }, () => this.refresh())
         .subscribe();
       this.gamesChannel = channel;
     },
@@ -676,6 +678,9 @@ export default Vue.extend({
     },
     isMyChessTurn(game: any): boolean {
       return isMyChessTurnShared(game, this.myUserId);
+    },
+    isMyRenjuTurn(game: any): boolean {
+      return isMyRenjuTurnShared(game, this.myUserId);
     },
     sortGames(games: any[]): any[] {
       return sortGamesShared(games, this.myUserId, this.userEmail);

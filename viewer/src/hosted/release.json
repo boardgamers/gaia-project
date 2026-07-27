@@ -1,7 +1,26 @@
 {
-  "version": "5.39.1",
-  "releasedAt": "2026-07-26",
+  "version": "5.40.0",
+  "releasedAt": "2026-07-27",
   "entries": [
+    {
+      "version": "5.40.0",
+      "releasedAt": "2026-07-27",
+      "kind": "update",
+      "title": "Renju notifications and advantage bar",
+      "impact": "",
+      "changes": [
+        "Renju now sends a push notification when it's your move, and its games flash in the lobby just like Gaia and chess ones",
+        "The renju board has a live advantage bar above it, the same one the chess board has",
+        "New renju alpha-beta engine (logic/renju-engine.ts): incremental 5-window pattern evaluation, exact five/four detection under the exactly-five rule, forced-block extensions, depth-6 iterative deepening and a VCF forced-win solver, sliced across frames on the main thread",
+        "Added a notify_renju_turn trigger on renju_board plus renju_turn handling in the notify Edge Function (migration 20260726210000, applied by hand)",
+        "Lobby and the desktop game menu now embed renju_board and subscribe to its Realtime changes so the game-bar pulse tracks renju turns",
+        "Fixed the research/renju drawer capturing the pointer on press, which retargeted the click away from the renju intersections and left that board unplayable with a mouse"
+      ],
+      "userChanges": [
+        "Renju now sends a push notification when it's your move, and its games flash in the lobby just like Gaia and chess ones",
+        "The renju board has a live advantage bar above it, the same one the chess board has"
+      ]
+    },
     {
       "version": "5.39.1",
       "releasedAt": "2026-07-26",

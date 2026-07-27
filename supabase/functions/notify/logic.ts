@@ -44,6 +44,17 @@ export type ChessBoardRow = {
   black_next_user: string | null;
 };
 
+export type RenjuBoardRow = {
+  game_id: string;
+  board: string;
+  black_user: string | null;
+  black_user_2: string | null;
+  white_user: string | null;
+  white_user_2: string | null;
+  black_next_user: string | null;
+  white_next_user: string | null;
+};
+
 export type Notification = {
   userId: string;
   title: string;
@@ -112,6 +123,51 @@ export function buildChessTurnNotification(board: ChessBoardRow, game: GameRow):
       title: "GP: Fight Club",
       body: `Your chess move in ${gameLabel(game, mover)}.`,
       tag: `chess-${game.id}`,
+      kind: "turn",
+    },
+  ];
+}
+
+// Mirrors move_renju's own "who moves next" resolution (supabase/migrations/
+// 20260726190000_shared_renju_board.sql): black opens, so the active colour is whichever has played
+// no more stones than the other; the *_next_user columns exist for 2v2 relay renju and take
+// priority, and a solo team falls back to its single seated user. A board string that isn't a legal
+// 225-character position (never written by the RPC, but the row is read back untyped here) yields
+// no mover rather than a wrong one.
+export function renjuMover(board: RenjuBoardRow): string | null {
+  const position = board.board ?? "";
+  if (position.length !== 225) {
+    return null;
+  }
+  let black = 0;
+  let white = 0;
+  for (let index = 0; index < position.length; index++) {
+    const cell = position.charAt(index);
+    if (cell === "b") {
+      black++;
+    } else if (cell === "w") {
+      white++;
+    }
+  }
+  return black === white
+    ? board.black_next_user ?? board.black_user ?? board.black_user_2
+    : board.white_next_user ?? board.white_user ?? board.white_user_2;
+}
+
+// The renju-panel counterpart of buildChessTurnNotification. Same reasoning about guards: the
+// active colour only ever flips to the *other* team, so the resolved mover is never the player who
+// just placed the stone, and no `last_committed_by` check is needed.
+export function buildRenjuTurnNotification(board: RenjuBoardRow, game: GameRow): Notification[] {
+  const mover = renjuMover(board);
+  if (!mover) {
+    return [];
+  }
+  return [
+    {
+      userId: mover,
+      title: "GP: Fight Club",
+      body: `Your renju move in ${gameLabel(game, mover)}.`,
+      tag: `renju-${game.id}`,
       kind: "turn",
     },
   ];
