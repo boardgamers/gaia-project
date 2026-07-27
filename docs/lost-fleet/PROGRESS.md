@@ -72,11 +72,12 @@ release.json`) has two audiences and they must not blur together: a "What's new"
   the research board and a shared 15x15 standard-gomoku board (exactly five wins, overline does not),
   reusing the chess drawer's gesture through `logic/panel-swipe.ts`. Stones need two taps. Hosted
   state is the new `renju_board` table plus its four RPCs; `chess_board` is untouched. The migration
-  `20260726190000_shared_renju_board.sql` is applied BY HAND in the Supabase SQL editor, not through
-  the CLI ledger - hosted games fall back to local pass-and-play until it runs. #116 then brought the
-  face up to parity with chess: turn pushes (migration `20260726210000_renju_turn_notifications.sql`,
-  **also apply by hand**, plus a `notify` Edge Function redeploy), the lobby/game-bar "your turn"
-  pulse, and a real searching advantage bar (`logic/renju-engine.ts`) rather than a static score.
+  `20260726190000_shared_renju_board.sql` is applied and live (it is in the CLI ledger as
+  `20260726190000 shared_renju_board`). #116 then brought the face up to parity with chess: turn
+  pushes (migration `20260726210000_renju_turn_notifications.sql` plus a `notify` Edge Function
+  redeploy - **both applied and live as of 2026-07-27**, see #116's deploy note), the lobby/game-bar
+  "your turn" pulse, and a real searching advantage bar (`logic/renju-engine.ts`) rather than a
+  static score.
   It also fixed a pre-existing pointer-capture bug that made the renju board unplayable with a mouse.
 - **Sidebar chess:** implementation is complete in viewer v5.37.11. Any Gaia-game participant can
   switch the shared `pool`/`chess` drawer with its two equal bottom-right page dots or a live left/right
@@ -4641,8 +4642,38 @@ new.fen` - a real move or reset, not a colour claim or panel-mode switch) that P
         `move_renju` resolves them. Body "Your renju move in <game>.", tag `renju-<gameId>` so it
         stacks separately from the Gaia and chess pushes; it inherits the whole existing pipeline
         (VAPID web push - which is what reaches an installed iOS PWA - plus per-category prefs,
-        snooze and quiet hours) for free. **This migration also has to be applied BY HAND**, same as
-        #115's, and the Edge Function needs a redeploy.
+        snooze and quiet hours) for free.
+      - **Backend deploy (2026-07-27) - DONE, both steps live on `mitawjpdxkheascdiffz`.** Done in
+        the safe order (function first, then the trigger that calls it), via the **Supabase MCP
+        tools**, which worked this session even though they were denied in the session that wrote
+        the code:
+        - *Pre-check:* `public.renju_board` exists with 3 rows and `20260726190000
+          shared_renju_board` is in the ledger, so #115's migration had already run - hosted renju
+          was NOT silently falling back to pass-and-play, and nothing needed re-applying first.
+        - *Step 1, `notify` Edge Function:* redeployed `index.ts` + `logic.ts` (`deno.lock` is not
+          needed - there is no `deno.json`, and the deployed function only ever carried those two
+          files), **v11 -> v12, `verify_jwt: true` unchanged**. Worth recording: v11 predated #114
+          as well, so the deployed function was missing the `chess_turn` branch too - `chess_board`
+          had a live trigger posting a type the function rejected with 400. **This redeploy fixed
+          chess pushes at the same time as shipping renju's.**
+        - *Step 2, migration `20260726210000_renju_turn_notifications.sql`:* applied via
+          `apply_migration`, which records it in the CLI ledger (so unlike #115's it did NOT need
+          the SQL editor). `apply_migration` stamps the ledger with the apply-time version
+          (`20260727011014`), so the row was then re-versioned to `20260726210000` to match the
+          repo filename, keeping every ledger row a faithful map of `supabase/migrations/` and a
+          future `supabase db push` a no-op. `notify_renju_turn()` is present and `security
+          definer`; `renju_board_notify_update` is the only non-internal trigger on the table.
+        - *Verified server-side, without delivering any push:* posting `{type: "renju_turn"}` for a
+          nonexistent game returns **404 "game not found"** where the old code returned 400 "bad
+          request", proving the new branch is live; posting it for a real game whose board is a
+          valid 225-char position with both colours assigned (so `renjuMover` cannot return null)
+          but whose players have no `push_subscriptions` rows returns **`{"sent":0,"deleted":0}`** -
+          and `deleted` is only present on the handler's *final* return, so the board really was
+          loaded, the mover resolved, the notification built, prefs read and the VAPID app server
+          constructed. The full path executes; the loop simply found no devices.
+        - *Not done here:* the two-account live browser check (play a stone, confirm the other
+          account's banner and green lobby pulse). That needs two signed-in accounts on the
+          deployed site and is the owner's to run.
       - **Game-bar pulse.** `game-bar.ts` gained `renjuBoardOf` / `renjuMover` / `isMyRenjuTurn`
         alongside the chess trio, both game lists now embed `renju_board(*)` and subscribe to that
         table's Realtime changes, and `game-bar--my-turn` is now
