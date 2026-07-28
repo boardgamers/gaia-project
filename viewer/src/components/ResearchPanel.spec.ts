@@ -52,7 +52,17 @@ async function settle() {
   await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
-function dispatchPointer(element: Element, type: string, clientX: number, clientY: number, pointerId = 1) {
+// `time` stamps the event on the clock the drawer measures flick speed with. Left out, every event
+// of a test gesture lands in the same instant, which is too short a span to time - so those gestures
+// are decided on distance alone, exactly as before flicks existed.
+function dispatchPointer(
+  element: Element,
+  type: string,
+  clientX: number,
+  clientY: number,
+  pointerId = 1,
+  time?: number
+) {
   const event = new Event(type, { bubbles: true, cancelable: true });
   Object.defineProperties(event, {
     button: { value: 0 },
@@ -61,6 +71,9 @@ function dispatchPointer(element: Element, type: string, clientX: number, client
     isPrimary: { value: true },
     pointerId: { value: pointerId },
   });
+  if (time !== undefined) {
+    Object.defineProperty(event, "timeStamp", { value: time });
+  }
   element.dispatchEvent(event);
 }
 
@@ -172,6 +185,44 @@ describe("ResearchPanel drawer", () => {
     dispatchPointer(panel, "pointermove", 100, 205);
     dispatchPointer(panel, "pointerup", 100, 205);
     await settle();
+    expect((wrapper.vm as any).showRenju).to.equal(true);
+    wrapper.destroy();
+  });
+
+  it("opens on a quick flick that never travels the commit distance", async () => {
+    // Owner report: the drawer bounced back far too often. A thrown-open drawer is short and fast,
+    // so speed commits on its own - here 30px of travel against a 42px distance threshold.
+    const wrapper = mountPanel(null);
+    await settle();
+    const panel = wrapper.find(".research-panel").element;
+    Object.defineProperty(panel, "clientWidth", { value: 300, configurable: true });
+
+    dispatchPointer(panel, "pointerdown", 200, 200, 1, 0);
+    dispatchPointer(panel, "pointermove", 182, 203, 1, 18);
+    dispatchPointer(panel, "pointermove", 172, 204, 1, 30);
+    dispatchPointer(panel, "pointerup", 170, 204, 1, 36);
+    await settle();
+
+    expect((wrapper.vm as any).showRenju).to.equal(true);
+    wrapper.destroy();
+  });
+
+  it("keeps watching a drag that starts diagonally instead of writing it off", async () => {
+    // The first sample past the dead zone used to decide the gesture for good, so a swipe that began
+    // with a few pixels of vertical wobble did nothing at all.
+    const wrapper = mountPanel(null);
+    await settle();
+    const panel = wrapper.find(".research-panel").element;
+    Object.defineProperty(panel, "clientWidth", { value: 300, configurable: true });
+
+    dispatchPointer(panel, "pointerdown", 200, 200);
+    dispatchPointer(panel, "pointermove", 194, 210);
+    expect((wrapper.vm as any).panelSwipeActive).to.equal(false);
+    dispatchPointer(panel, "pointermove", 170, 214);
+    expect((wrapper.vm as any).panelSwipeActive).to.equal(true);
+    dispatchPointer(panel, "pointerup", 150, 216);
+    await settle();
+
     expect((wrapper.vm as any).showRenju).to.equal(true);
     wrapper.destroy();
   });

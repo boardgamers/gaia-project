@@ -61,7 +61,17 @@ async function settle() {
   await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
-function dispatchPointer(element: Element, type: string, clientX: number, clientY: number, pointerId = 1) {
+// `time` stamps the event on the clock the drawer measures flick speed with. Left out, every event
+// of a test gesture lands in the same instant, which is too short a span to time - so those gestures
+// are decided on distance alone, exactly as before flicks existed.
+function dispatchPointer(
+  element: Element,
+  type: string,
+  clientX: number,
+  clientY: number,
+  pointerId = 1,
+  time?: number
+) {
   const event = new Event(type, { bubbles: true, cancelable: true });
   Object.defineProperties(event, {
     button: { value: 0 },
@@ -70,6 +80,9 @@ function dispatchPointer(element: Element, type: string, clientX: number, client
     isPrimary: { value: true },
     pointerId: { value: pointerId },
   });
+  if (time !== undefined) {
+    Object.defineProperty(event, "timeStamp", { value: time });
+  }
   element.dispatchEvent(event);
 }
 
@@ -222,9 +235,10 @@ describe("compact Pool chess mode", () => {
     await settle();
     const source = wrapper.find(".pool-tiles-face").element;
 
+    // Slow and well short of the commit distance (24px at this panel's width) - the drawer springs back.
     dispatchPointer(source, "pointerdown", 100, 20);
-    dispatchPointer(source, "pointermove", 75, 22);
-    dispatchPointer(source, "pointerup", 75, 22);
+    dispatchPointer(source, "pointermove", 86, 22);
+    dispatchPointer(source, "pointerup", 86, 22);
     dispatchPointer(source, "pointerdown", 100, 20, 2);
     dispatchPointer(source, "pointermove", 115, 85, 2);
     dispatchPointer(source, "pointerup", 115, 85, 2);
@@ -232,6 +246,24 @@ describe("compact Pool chess mode", () => {
 
     expect((wrapper.vm as any).showChess).to.equal(false);
     expect(wrapper.find(".pool-chess-overlay").attributes("aria-hidden")).to.equal("true");
+    wrapper.destroy();
+  });
+
+  it("springs back when the finger flicks back the way it came", async () => {
+    const { backend } = hostedBackend();
+    const wrapper = mountPool(backend);
+    await settle();
+    const source = wrapper.find(".pool-tiles-face").element;
+
+    // Dragged well past the commit distance, then thrown back towards where it started: that reads
+    // as changing your mind, not as a switch.
+    dispatchPointer(source, "pointerdown", 100, 20, 1, 0);
+    dispatchPointer(source, "pointermove", 30, 22, 1, 120);
+    dispatchPointer(source, "pointermove", 50, 22, 1, 150);
+    dispatchPointer(source, "pointerup", 65, 22, 1, 170);
+    await settle();
+
+    expect((wrapper.vm as any).showChess).to.equal(false);
     wrapper.destroy();
   });
 });

@@ -1,7 +1,20 @@
 {
-  "version": "5.45.0",
+  "version": "5.45.1",
   "releasedAt": "2026-07-28",
   "entries": [
+    {
+      "version": "5.45.1",
+      "releasedAt": "2026-07-28",
+      "kind": "fix",
+      "title": "Easier minigame swipes",
+      "impact": "",
+      "changes": [
+        "Swiping between a Gaia panel and its minigame no longer springs back so easily: a quick flick now commits on speed alone, the distance needed to commit dropped from up to 64px to at most 48px (14% of the panel width, min 24px), and a flick back the way you came cancels",
+        "A drag that starts slightly diagonally is no longer written off on its first sample - the gesture stays undecided until it resolves horizontally or the finger travels 14px vertically, and the drag dead zone dropped from 7px to 5px",
+        "The release position now updates the drag offset, so a swipe is judged on where the finger actually left the screen"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.45.0",
       "releasedAt": "2026-07-28",

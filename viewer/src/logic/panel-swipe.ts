@@ -7,12 +7,12 @@ import { Component } from "vue-property-decorator";
  * which swipes between the research art and the renju board).
  *
  * This started life inside Pool.vue and was lifted here unchanged when the second drawer arrived.
- * Everything about the gesture's feel lives here: a 7px dead zone before a drag is recognised, a
+ * Everything about the gesture's feel lives here: a small dead zone before a drag is recognised, a
  * horizontal-vs-vertical intent test that releases the pointer for a vertical scroll, both faces
- * following the finger, a commit threshold proportional to the panel's own width, a short settle
- * transition, and the one synthetic click a browser fires after a touch release being swallowed so
- * a drawer gesture can never also press whatever sits under the finger. That last part matters most
- * for the research panel, whose faces are live Gaia move buttons.
+ * following the finger, a commit rule combining distance and flick speed, a short settle transition,
+ * and the one synthetic click a browser fires after a touch release being swallowed so a drawer
+ * gesture can never also press whatever sits under the finger. That last part matters most for the
+ * research panel, whose faces are live Gaia move buttons.
  *
  * A component mixes this in and supplies its own two face names plus how a completed swipe is
  * committed (locally, or through a shared per-game backend).
@@ -21,11 +21,42 @@ import { Component } from "vue-property-decorator";
 export const PANEL_SWIPE_EVENT = "lf::panel-swipe";
 
 // Below this the pointer is still treated as a tap, so ordinary presses on either face are unaffected.
-const DRAG_THRESHOLD = 7;
-// A drag only counts as horizontal when it clearly out-paces its own vertical component; otherwise
-// the pointer is released so the page can scroll normally.
-const HORIZONTAL_BIAS = 1.15;
+const DRAG_THRESHOLD = 5;
+// A drag counts as horizontal once it out-paces its own vertical component. Slightly under 1 so a
+// finger that starts a little diagonally - which is what a real thumb swipe across a phone does -
+// still opens the drawer instead of doing nothing.
+const HORIZONTAL_BIAS = 0.9;
+// ...and an ambiguous start is NOT thrown away: the gesture stays undecided, still watching, until
+// either the horizontal test above passes or the finger has travelled this far vertically while
+// out-pacing its horizontal component, at which point the pointer is handed back for page scroll.
+// (Deciding on the very first sample past the dead zone used to kill any swipe that began with a
+// few pixels of vertical wobble.)
+const VERTICAL_RELEASE = 14;
 const SETTLE_MS = 180;
+
+// Commit distance: a fraction of the panel's own width, clamped so neither a narrow sidebar nor a
+// wide research board asks for an awkward amount of travel.
+const COMMIT_FRACTION = 0.14;
+const COMMIT_MIN = 24;
+const COMMIT_MAX = 48;
+// A flick commits on speed alone, which is how a drawer is normally thrown open: short, fast, and
+// nowhere near the distance threshold. Measured over a trailing window rather than the whole drag so
+// a slow drag that ends with a flick still counts (and vice versa).
+const FLICK_VELOCITY = 0.3; // px per ms
+const FLICK_MIN_TRAVEL = 10;
+const VELOCITY_WINDOW_MS = 120;
+// Under this span the samples are too close together to measure a speed from, so distance decides.
+const VELOCITY_MIN_SPAN_MS = 8;
+
+/**
+ * Pointer events are stamped on the same clock as performance.now(); fall back only when an event
+ * carries no usable stamp at all. A stamp of 0 is taken at face value on purpose - mixing the two
+ * clocks would produce a nonsense span, and a gesture whose events all read 0 simply measures as
+ * unmeasurably fast, which leaves the distance rule to decide it.
+ */
+function panelSwipeTime(event: PointerEvent): number {
+  return typeof event.timeStamp === "number" && Number.isFinite(event.timeStamp) ? event.timeStamp : performance.now();
+}
 
 @Component
 export default class PanelSwipe extends Vue {
@@ -39,6 +70,7 @@ export default class PanelSwipe extends Vue {
   private panelSwipeOriginFace = "";
   private panelSwipeCompletes = false;
   private panelSwipeSettleTimer: number | null = null;
+  private panelSwipeSamples: Array<{ t: number; x: number }> = [];
   private suppressPanelClick = false;
   private suppressPanelClickTimer: number | null = null;
 
@@ -102,6 +134,7 @@ export default class PanelSwipe extends Vue {
     this.panelSwipeDirection = 0;
     this.panelSwipeOffset = 0;
     this.panelSwipeActive = false;
+    this.panelSwipeSamples = [{ t: panelSwipeTime(event), x: event.clientX }];
     // NOTE: the pointer is deliberately NOT captured here, only once a drag is actually recognised
     // (onPanelPointerMove). Capturing on press retargets every later mouse event - pointerup and the
     // click the browser derives from it - to this panel element, so a plain mouse click on a face
@@ -126,13 +159,18 @@ export default class PanelSwipe extends Vue {
     }
     const dx = event.clientX - start.x;
     const dy = event.clientY - start.y;
+    this.recordPanelSwipeSample(event);
     if (this.panelSwipeDirection === 0) {
-      if (Math.max(Math.abs(dx), Math.abs(dy)) < DRAG_THRESHOLD) {
-        return;
-      }
-      if (Math.abs(dx) <= Math.abs(dy) * HORIZONTAL_BIAS) {
-        this.releasePanelPointer(start);
-        this.panelSwipeStart = null;
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
+      if (absX < DRAG_THRESHOLD || absX < absY * HORIZONTAL_BIAS) {
+        // Not a horizontal drag (yet). Only give the pointer back once the finger has clearly
+        // committed to scrolling the page; anything else stays undecided so a swipe that started
+        // slightly off-axis can still resolve into one a few pixels later.
+        if (absY >= VERTICAL_RELEASE && absY > absX) {
+          this.releasePanelPointer(start);
+          this.panelSwipeStart = null;
+        }
         return;
       }
       this.panelSwipeDirection = dx < 0 ? -1 : 1;
@@ -145,8 +183,7 @@ export default class PanelSwipe extends Vue {
       this.$root.$emit(PANEL_SWIPE_EVENT);
     }
 
-    const directionalOffset = this.panelSwipeDirection < 0 ? Math.min(0, dx) : Math.max(0, dx);
-    this.panelSwipeOffset = Math.max(-start.width, Math.min(start.width, directionalOffset));
+    this.applyPanelSwipeOffset(dx, start.width);
     event.preventDefault();
   }
 
@@ -165,8 +202,17 @@ export default class PanelSwipe extends Vue {
     // The browser synthesizes a click immediately after a touch pointerup. Consume that one click so
     // a drawer gesture cannot also press whatever sits under the finger on either face.
     this.suppressSyntheticPanelClick();
-    const threshold = Math.min(64, Math.max(36, start.width * 0.22));
-    this.settlePanelSwipe(Math.abs(this.panelSwipeOffset) >= threshold);
+    this.recordPanelSwipeSample(event);
+    // The release carries the finger's true final position, which can sit past the last move event.
+    this.applyPanelSwipeOffset(event.clientX - start.x, start.width);
+    const threshold = Math.min(COMMIT_MAX, Math.max(COMMIT_MIN, start.width * COMMIT_FRACTION));
+    const travelled = Math.abs(this.panelSwipeOffset);
+    // Signed along the drag's own direction, so a finger that flicks back the way it came reads as
+    // negative and cancels the swipe however far it had already dragged.
+    const speed = this.panelSwipeVelocity() * this.panelSwipeDirection;
+    const flickedOpen = speed >= FLICK_VELOCITY && travelled >= FLICK_MIN_TRAVEL;
+    const flickedBack = speed <= -FLICK_VELOCITY;
+    this.settlePanelSwipe(!flickedBack && (flickedOpen || travelled >= threshold));
   }
 
   cancelPanelSwipe() {
@@ -219,6 +265,41 @@ export default class PanelSwipe extends Vue {
     return face === this.panelFaces[0] ? "translate3d(-100%, 0, 0)" : "translate3d(100%, 0, 0)";
   }
 
+  /** Both faces follow the finger, clamped to the drag's own direction and the panel's own width. */
+  private applyPanelSwipeOffset(dx: number, width: number) {
+    const directional = this.panelSwipeDirection < 0 ? Math.min(0, dx) : Math.max(0, dx);
+    this.panelSwipeOffset = Math.max(-width, Math.min(width, directional));
+  }
+
+  private recordPanelSwipeSample(event: PointerEvent) {
+    const t = panelSwipeTime(event);
+    this.panelSwipeSamples.push({ t, x: event.clientX });
+    // Only the trailing window is ever read, plus the one sample just before it so a window holding
+    // a single point still has something to measure against.
+    let oldestInWindow = this.panelSwipeSamples.length - 1;
+    while (oldestInWindow > 0 && t - this.panelSwipeSamples[oldestInWindow - 1].t <= VELOCITY_WINDOW_MS) {
+      oldestInWindow--;
+    }
+    if (oldestInWindow > 1) {
+      this.panelSwipeSamples.splice(0, oldestInWindow - 1);
+    }
+  }
+
+  /** Horizontal pointer speed over the trailing window, in px/ms; 0 when it cannot be measured. */
+  private panelSwipeVelocity(): number {
+    const samples = this.panelSwipeSamples;
+    const last = samples[samples.length - 1];
+    if (!last) {
+      return 0;
+    }
+    const windowStart = samples.find((sample) => last.t - sample.t <= VELOCITY_WINDOW_MS) ?? last;
+    // A window too short to time (one coalesced burst of moves, or a synchronous test) falls back to
+    // everything retained rather than reporting a wild speed from a near-zero span.
+    const first = last.t - windowStart.t >= VELOCITY_MIN_SPAN_MS ? windowStart : samples[0];
+    const span = last.t - first.t;
+    return span >= VELOCITY_MIN_SPAN_MS ? (last.x - first.x) / span : 0;
+  }
+
   private settlePanelSwipe(completes: boolean) {
     this.panelSwipeActive = false;
     this.panelSwipeSettling = true;
@@ -234,6 +315,7 @@ export default class PanelSwipe extends Vue {
   }
 
   private resetPanelSwipe() {
+    this.panelSwipeSamples = [];
     this.panelSwipeActive = false;
     this.panelSwipeSettling = false;
     this.panelSwipeCompletes = false;
