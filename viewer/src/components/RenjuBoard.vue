@@ -3,7 +3,7 @@
     <div class="lf-renju-status" :class="{ over: status.over }" aria-live="polite">{{ statusLabel }}</div>
 
     <!-- The analysis meter, deliberately identical to the chess face's (ChessBoard.vue): the same
-         text-free 6px strip reading as the board's thin top edge, white on the left. -->
+         text-free 3px pill above the board, white on the left. -->
     <div
       class="lf-renju-eval"
       :class="{ pending: evaluation === null && !evaluationUnavailable }"
@@ -553,7 +553,15 @@ export default class RenjuBoard extends Vue {
 </script>
 
 <style lang="scss" scoped>
+// Shares the minimal drawer-face language of UltimateTicTacToeBoard.vue and ChessBoard.vue: a flat
+// board with hairline lines, one accent color for every interaction hint, and a 3px advantage pill.
+// Any change to that shared vocabulary belongs in all three files.
 .lf-renju {
+  --lf-felt: #ffffff;
+  --lf-grid: #98a2b3;
+  --lf-accent: #0b5ed7;
+  --lf-accent-ring: rgba(11, 94, 215, 0.55);
+
   display: flex;
   width: 100%;
   height: 100%;
@@ -567,12 +575,22 @@ export default class RenjuBoard extends Vue {
   background: var(--ui-board-canvas, #fff);
 }
 
+// Like the chess squares, the playing surface stays a light neutral in dark mode (only muted): the
+// stones are black and white ink, so a dark board would cost the black stones all of their contrast.
+:root[data-theme="dark"] .lf-renju {
+  --lf-felt: #ccd3dd;
+  --lf-grid: #78849a;
+  --lf-accent: #1f5fbd;
+  --lf-accent-ring: rgba(31, 95, 189, 0.65);
+}
+
 .lf-renju-status {
   flex: 0 0 auto;
-  padding-bottom: 2px;
+  padding-bottom: 3px;
   color: var(--ui-text-muted, #666);
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   line-height: 1.2;
   overflow: hidden;
   text-align: center;
@@ -580,35 +598,36 @@ export default class RenjuBoard extends Vue {
   white-space: nowrap;
 
   &.over {
-    color: var(--ui-primary, #247b0a);
+    color: var(--ui-text, #222);
+    font-weight: 600;
   }
 }
 
-// Deliberately identical to ChessBoard.vue's `.lf-chess-eval` block - the two drawer faces are
-// meant to read as the same instrument, so any change here belongs there too.
+// Deliberately identical to ChessBoard.vue's `.lf-chess-eval` block - the drawer faces are meant to
+// read as the same instrument, so any change here belongs there too.
 .lf-renju-eval {
   position: relative;
   display: flex;
   width: 100%;
-  height: 6px;
-  flex: 0 0 6px;
+  height: 3px;
+  flex: 0 0 3px;
   align-self: center;
-  margin-bottom: 2px;
+  margin-bottom: 6px;
   box-sizing: border-box;
   overflow: hidden;
-  border: 1px solid var(--ui-border-strong, #555);
-  border-radius: 2px;
-  background: #252525;
+  border-radius: 999px;
+  background: #3a3f47;
+  opacity: 0.85;
 
   &.pending {
-    opacity: 0.78;
+    opacity: 0.5;
   }
 }
 
 .lf-renju-eval-white {
   height: 100%;
   flex: 0 0 auto;
-  background: #f2f2f2;
+  background: #e9ecf1;
   transition: width 0.25s ease-out;
 }
 
@@ -616,7 +635,7 @@ export default class RenjuBoard extends Vue {
   height: 100%;
   min-width: 0;
   flex: 1 1 auto;
-  background: #252525;
+  background: #3a3f47;
 }
 
 .lf-renju-stage {
@@ -640,66 +659,66 @@ export default class RenjuBoard extends Vue {
 }
 
 .lf-renju-felt {
-  fill: #e6c893;
-  stroke: var(--ui-board-border, #8a6a3a);
-  stroke-width: 0.05;
+  fill: var(--lf-felt);
+  stroke: var(--ui-border, #d6dce6);
+  stroke-width: 0.04;
 }
 
 .lf-renju-grid line {
-  stroke: #7a5a30;
-  stroke-width: 0.035;
+  stroke: var(--lf-grid);
+  stroke-width: 0.03;
 }
 
 .lf-renju-star {
-  fill: #7a5a30;
+  fill: var(--lf-grid);
 }
 
+// Flat ink discs rather than lacquered stones: one fill, one hairline edge, no second color.
 .lf-renju-stone {
-  stroke-width: 0.05;
+  stroke-width: 0.04;
 
   &.black {
-    fill: #16181a;
-    stroke: #000;
+    fill: #21262e;
+    stroke: #21262e;
   }
 
   &.white {
-    fill: #f7f4ec;
-    stroke: #4a4a4a;
+    fill: #ffffff;
+    stroke: #7d8798;
   }
 
   &.winning {
-    stroke: var(--ui-primary, #247b0a);
-    stroke-width: 0.12;
+    stroke: var(--lf-accent);
+    stroke-width: 0.1;
   }
 }
 
 .lf-renju-ghost {
-  opacity: 0.45;
-  stroke-width: 0.07;
-  stroke-dasharray: 0.18 0.12;
+  opacity: 0.4;
+  stroke-width: 0.04;
   pointer-events: none;
 
   &.black {
-    fill: #16181a;
-    stroke: #000;
+    fill: #21262e;
+    stroke: #21262e;
   }
 
   &.white {
-    fill: #f7f4ec;
-    stroke: #4a4a4a;
+    fill: #ffffff;
+    stroke: #7d8798;
   }
 }
 
 .lf-renju-last {
   fill: none;
-  stroke: #d0342c;
-  stroke-width: 0.09;
+  stroke: var(--lf-accent);
+  stroke-width: 0.08;
   pointer-events: none;
 }
 
 .lf-renju-win-line {
-  stroke: rgba(36, 125, 65, 0.85);
-  stroke-width: 0.14;
+  stroke: var(--lf-accent-ring);
+  stroke-width: 0.1;
   stroke-linecap: round;
   pointer-events: none;
 }
@@ -716,21 +735,23 @@ export default class RenjuBoard extends Vue {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--ui-backdrop, rgba(0, 0, 0, 0.45));
 }
 
 .lf-renju-confirm {
   max-width: 90%;
-  padding: 10px 12px;
-  border-radius: 4px;
+  padding: 12px 14px;
+  border: 1px solid var(--ui-border, #d6dce6);
+  border-radius: 8px;
   background: var(--ui-surface, #fff);
+  box-shadow: 0 6px 20px var(--ui-shadow, rgba(0, 0, 0, 0.2));
   color: var(--ui-text, inherit);
   text-align: center;
 }
 
 .lf-renju-confirm-text {
-  margin-bottom: 8px;
-  font-size: 0.8rem;
+  margin-bottom: 10px;
+  font-size: 0.78rem;
 }
 
 .lf-renju-confirm-actions {
@@ -740,18 +761,18 @@ export default class RenjuBoard extends Vue {
 }
 
 .lf-renju-btn {
-  padding: 0 6px;
-  border: 1px solid var(--ui-border-strong, #888);
-  border-radius: 3px;
-  background: var(--ui-surface, #fff);
-  color: var(--ui-text, inherit);
+  padding: 2px 10px;
+  border: 1px solid var(--ui-border, #d6dce6);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ui-text-muted, #667085);
   font-size: 0.7rem;
   line-height: 1.4;
   cursor: pointer;
 
   &.danger {
-    border-color: #a5281b;
-    background: #c0392b;
+    border-color: transparent;
+    background: var(--ui-danger-solid, #b42332);
     color: #fff;
   }
 }

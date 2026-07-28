@@ -1,7 +1,23 @@
 {
-  "version": "5.43.0",
+  "version": "5.44.0",
   "releasedAt": "2026-07-28",
   "entries": [
+    {
+      "version": "5.44.0",
+      "releasedAt": "2026-07-28",
+      "kind": "update",
+      "title": "Minimal chess and renju",
+      "impact": "",
+      "changes": [
+        "The chess and renju boards now match Ultimate tic-tac-toe's minimal look: flat neutral boards, hairline edges and one accent color for move hints",
+        "Both advantage strips are now the same thin pill as the tic-tac-toe one",
+        "Replaced the wooden chess squares, renju felt and the yellow/green/red hint colors with theme-aware CSS variables shared in spirit across all three drawer faces"
+      ],
+      "userChanges": [
+        "The chess and renju boards now match Ultimate tic-tac-toe's minimal look: flat neutral boards, hairline edges and one accent color for move hints",
+        "Both advantage strips are now the same thin pill as the tic-tac-toe one"
+      ]
+    },
     {
       "version": "5.43.0",
       "releasedAt": "2026-07-28",

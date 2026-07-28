@@ -16,7 +16,7 @@
 
       <div class="lf-chess-turn" ref="turnLabel" :style="meterStyle" aria-live="polite">{{ turnLabel }}</div>
 
-      <!-- The analysis meter is deliberately text-free and reads as the board's thin top edge. -->
+      <!-- The analysis meter is deliberately text-free: a thin pill sitting just above the board. -->
       <div
         class="lf-chess-eval"
         ref="meter"
@@ -742,7 +742,17 @@ export default class ChessBoard extends Vue {
 </script>
 
 <style lang="scss" scoped>
+// Shares the minimal drawer-face language of UltimateTicTacToeBoard.vue and RenjuBoard.vue: a flat
+// board with hairline edges, one accent color for every interaction hint, and a 3px advantage pill.
+// Any change to that shared vocabulary belongs in all three files.
 .lf-chess {
+  --lf-square-light: #ffffff;
+  --lf-square-dark: #e5eaf1;
+  --lf-accent: #0b5ed7;
+  --lf-accent-ring: rgba(11, 94, 215, 0.5);
+  --lf-accent-soft: rgba(11, 94, 215, 0.16);
+  --lf-accent-wash: rgba(11, 94, 215, 0.26);
+
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -757,13 +767,25 @@ export default class ChessBoard extends Vue {
   background: var(--ui-surface, #fff);
 }
 
+// The squares stay a light neutral pair in dark mode as well (only muted): the piece glyphs are
+// black and white ink, so a dark board would cost the black pieces all of their contrast.
+:root[data-theme="dark"] .lf-chess {
+  --lf-square-light: #ccd3dd;
+  --lf-square-dark: #adb7c4;
+  --lf-accent: #1f5fbd;
+  --lf-accent-ring: rgba(31, 95, 189, 0.55);
+  --lf-accent-soft: rgba(31, 95, 189, 0.24);
+  --lf-accent-wash: rgba(31, 95, 189, 0.34);
+}
+
 .lf-chess-stage {
   display: flex;
   flex: 0 0 auto;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1px;
+  // Measured as `stageGap * 4` when sizing the board, so spacing the stack out here stays exact.
+  gap: 3px;
   width: 100%;
   max-width: 100%;
   max-height: 100%;
@@ -808,7 +830,8 @@ export default class ChessBoard extends Vue {
   overflow: hidden;
   color: var(--ui-text-muted, #666);
   font-size: 9px;
-  font-weight: 600;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   line-height: 11px;
   text-align: left;
   text-overflow: ellipsis;
@@ -816,52 +839,53 @@ export default class ChessBoard extends Vue {
 }
 
 .lf-chess-btn {
-  border: 1px solid var(--ui-border-strong, #888);
-  background: var(--ui-surface, #fff);
-  color: var(--ui-text, inherit);
-  border-radius: 3px;
-  padding: 0 4px;
+  padding: 2px 10px;
+  border: 1px solid var(--ui-border, #d6dce6);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ui-text-muted, #667085);
   font-size: 0.7rem;
   line-height: 1.4;
   cursor: pointer;
 
   &.danger {
-    background: #c0392b;
+    border-color: transparent;
+    background: var(--ui-danger-solid, #b42332);
     color: #fff;
-    border-color: #a5281b;
   }
 }
 
+// A hairline advantage strip: no frame, no gloss, just White meeting Black.
 .lf-chess-eval {
   position: relative;
   display: flex;
   width: 100%;
-  height: 6px;
-  flex: 0 0 6px;
+  height: 3px;
+  flex: 0 0 3px;
   align-self: center;
   margin-bottom: 0;
   box-sizing: border-box;
   overflow: hidden;
-  border: 1px solid var(--ui-border-strong, #555);
-  border-radius: 2px 2px 0 0;
-  background: #252525;
+  border-radius: 999px;
+  background: #3a3f47;
+  opacity: 0.85;
 
   &.pending {
-    opacity: 0.78;
+    opacity: 0.5;
   }
 }
 
 .lf-chess-eval-white {
   height: 100%;
   flex: 0 0 auto;
-  background: #f2f2f2;
+  background: #e9ecf1;
 }
 
 .lf-chess-eval-black {
   height: 100%;
   min-width: 0;
   flex: 1 1 auto;
-  background: #252525;
+  background: #3a3f47;
 }
 
 .lf-chess-board {
@@ -876,8 +900,8 @@ export default class ChessBoard extends Vue {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
-  border: 2px solid var(--ui-border-strong, #555);
-  border-radius: 3px;
+  border: 1px solid var(--ui-border, #d6dce6);
+  border-radius: 6px;
   overflow: hidden;
   // A one-finger gesture stays with the board so long-press remains reliable; two fingers retain
   // native page zoom instead of this interactive surface becoming a pinch-zoom dead zone.
@@ -893,27 +917,29 @@ export default class ChessBoard extends Vue {
   cursor: pointer;
 
   &.light {
-    background: #efd9b5;
+    background: var(--lf-square-light);
   }
   &.dark {
-    background: #b58863;
+    background: var(--lf-square-dark);
   }
+  // One accent carries every hint - the previous move, the selected piece and a capture target -
+  // instead of the old yellow wash, yellow ring and green ring competing with each other.
   &.last-move::before {
     content: "";
     position: absolute;
     inset: 0;
     z-index: 1;
-    background: rgba(245, 225, 66, 0.32);
+    background: var(--lf-accent-soft);
     pointer-events: none;
   }
   &.last-to::before {
-    background: rgba(245, 225, 66, 0.44);
+    background: var(--lf-accent-wash);
   }
   &.selected {
-    box-shadow: inset 0 0 0 3px #f1c40f;
+    box-shadow: inset 0 0 0 2px var(--lf-accent);
   }
   &.capture {
-    box-shadow: inset 0 0 0 3px rgba(46, 204, 113, 0.9);
+    box-shadow: inset 0 0 0 2px var(--lf-accent-ring);
   }
 }
 
@@ -945,10 +971,10 @@ export default class ChessBoard extends Vue {
 
 .lf-chess-dot {
   position: absolute;
-  width: 26%;
-  height: 26%;
+  width: 22%;
+  height: 22%;
   border-radius: 50%;
-  background: rgba(46, 204, 113, 0.75);
+  background: var(--lf-accent-ring);
   z-index: 3;
   pointer-events: none;
 }
@@ -956,11 +982,10 @@ export default class ChessBoard extends Vue {
 .lf-chess-last-arrow {
   position: absolute;
   z-index: 2;
-  height: 3px;
+  height: 2px;
   transform-origin: 0 50%;
-  border-radius: 2px;
-  background: rgba(36, 125, 65, 0.78);
-  box-shadow: 0 0 1px rgba(255, 255, 255, 0.75);
+  border-radius: 999px;
+  background: var(--lf-accent-ring);
   pointer-events: none;
 
   &::after {
@@ -970,9 +995,9 @@ export default class ChessBoard extends Vue {
     top: 50%;
     width: 0;
     height: 0;
-    border-top: 5px solid transparent;
-    border-bottom: 5px solid transparent;
-    border-left: 8px solid rgba(36, 125, 65, 0.86);
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    border-left: 6px solid var(--lf-accent-ring);
     transform: translate(50%, -50%);
   }
 }
@@ -984,31 +1009,32 @@ export default class ChessBoard extends Vue {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--ui-backdrop, rgba(0, 0, 0, 0.45));
 }
 
 .lf-chess-promo {
   display: flex;
   gap: 4px;
-  background: var(--ui-surface, #fff);
   padding: 6px;
-  border-radius: 4px;
+  border: 1px solid var(--ui-border, #d6dce6);
+  border-radius: 8px;
+  background: var(--ui-surface, #fff);
+  box-shadow: 0 6px 20px var(--ui-shadow, rgba(0, 0, 0, 0.2));
 }
 
 .lf-chess-promo-btn {
-  border: 1px solid var(--ui-border-strong, #888);
-  background: var(--ui-surface, #fff);
-  border-radius: 3px;
-  font-size: 1.6rem;
-  line-height: 1;
   width: 2rem;
   height: 2rem;
+  border: 1px solid var(--ui-border, #d6dce6);
+  border-radius: 6px;
+  background: var(--lf-square-light);
+  font-size: 1.6rem;
+  line-height: 1;
   cursor: pointer;
 
   &.white {
     color: #fff;
     text-shadow: 0 0 1px #000, 0 1px 1px #000, 1px 0 1px #000, -1px 0 1px #000, 0 -1px 1px #000;
-    background: #777;
   }
   &.black {
     color: #000;
@@ -1016,17 +1042,19 @@ export default class ChessBoard extends Vue {
 }
 
 .lf-chess-confirm {
-  background: var(--ui-surface, #fff);
-  color: var(--ui-text, inherit);
-  border-radius: 4px;
-  padding: 10px 12px;
-  text-align: center;
   max-width: 90%;
+  padding: 12px 14px;
+  border: 1px solid var(--ui-border, #d6dce6);
+  border-radius: 8px;
+  background: var(--ui-surface, #fff);
+  box-shadow: 0 6px 20px var(--ui-shadow, rgba(0, 0, 0, 0.2));
+  color: var(--ui-text, inherit);
+  text-align: center;
 }
 
 .lf-chess-confirm-text {
-  font-size: 0.8rem;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  font-size: 0.78rem;
 }
 
 .lf-chess-confirm-actions {
