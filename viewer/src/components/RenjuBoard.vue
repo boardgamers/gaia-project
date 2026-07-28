@@ -558,7 +558,14 @@ export default class RenjuBoard extends Vue {
 // Any change to that shared vocabulary belongs in all three files.
 .lf-renju {
   --lf-felt: #ffffff;
+  --lf-felt-edge: var(--ui-border, #d6dce6);
   --lf-grid: #98a2b3;
+  --lf-stone-black: #21262e;
+  --lf-stone-black-edge: #21262e;
+  --lf-stone-white: #ffffff;
+  --lf-stone-white-edge: #7d8798;
+  --lf-eval-white: #e9ecf1;
+  --lf-eval-black: #3a3f47;
   --lf-accent: #0b5ed7;
   --lf-accent-ring: rgba(11, 94, 215, 0.55);
 
@@ -575,13 +582,21 @@ export default class RenjuBoard extends Vue {
   background: var(--ui-board-canvas, #fff);
 }
 
-// Like the chess squares, the playing surface stays a light neutral in dark mode (only muted): the
-// stones are black and white ink, so a dark board would cost the black stones all of their contrast.
+// A real dark board (owner request), like the chess face - and mid-slate for the same reason: the
+// stones are black and white ink, so a felt as dark as the panel would leave the black stones with
+// nothing to sit against. Each stone keeps a hairline edge in the opposite ink.
 :root[data-theme="dark"] .lf-renju {
-  --lf-felt: #ccd3dd;
-  --lf-grid: #78849a;
-  --lf-accent: #1f5fbd;
-  --lf-accent-ring: rgba(31, 95, 189, 0.65);
+  --lf-felt: #4c5666;
+  --lf-felt-edge: #6d7889;
+  --lf-grid: #8b95a5;
+  --lf-stone-black: #10141a;
+  --lf-stone-black-edge: rgba(233, 238, 245, 0.45);
+  --lf-stone-white: #f7f9fc;
+  --lf-stone-white-edge: #737f91;
+  --lf-eval-white: #e9ecf1;
+  --lf-eval-black: #596375;
+  --lf-accent: #6f9ffb;
+  --lf-accent-ring: rgba(111, 159, 251, 0.75);
 }
 
 .lf-renju-status {
@@ -616,7 +631,7 @@ export default class RenjuBoard extends Vue {
   box-sizing: border-box;
   overflow: hidden;
   border-radius: 999px;
-  background: #3a3f47;
+  background: var(--lf-eval-black);
   opacity: 0.85;
 
   &.pending {
@@ -627,7 +642,7 @@ export default class RenjuBoard extends Vue {
 .lf-renju-eval-white {
   height: 100%;
   flex: 0 0 auto;
-  background: #e9ecf1;
+  background: var(--lf-eval-white);
   transition: width 0.25s ease-out;
 }
 
@@ -635,7 +650,7 @@ export default class RenjuBoard extends Vue {
   height: 100%;
   min-width: 0;
   flex: 1 1 auto;
-  background: #3a3f47;
+  background: var(--lf-eval-black);
 }
 
 .lf-renju-stage {
@@ -660,7 +675,7 @@ export default class RenjuBoard extends Vue {
 
 .lf-renju-felt {
   fill: var(--lf-felt);
-  stroke: var(--ui-border, #d6dce6);
+  stroke: var(--lf-felt-edge);
   stroke-width: 0.04;
 }
 
@@ -678,13 +693,13 @@ export default class RenjuBoard extends Vue {
   stroke-width: 0.04;
 
   &.black {
-    fill: #21262e;
-    stroke: #21262e;
+    fill: var(--lf-stone-black);
+    stroke: var(--lf-stone-black-edge);
   }
 
   &.white {
-    fill: #ffffff;
-    stroke: #7d8798;
+    fill: var(--lf-stone-white);
+    stroke: var(--lf-stone-white-edge);
   }
 
   &.winning {
@@ -699,13 +714,13 @@ export default class RenjuBoard extends Vue {
   pointer-events: none;
 
   &.black {
-    fill: #21262e;
-    stroke: #21262e;
+    fill: var(--lf-stone-black);
+    stroke: var(--lf-stone-black-edge);
   }
 
   &.white {
-    fill: #ffffff;
-    stroke: #7d8798;
+    fill: var(--lf-stone-white);
+    stroke: var(--lf-stone-white-edge);
   }
 }
 

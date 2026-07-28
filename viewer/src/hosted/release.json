@@ -1,7 +1,19 @@
 {
-  "version": "5.44.0",
+  "version": "5.44.1",
   "releasedAt": "2026-07-28",
   "entries": [
+    {
+      "version": "5.44.1",
+      "releasedAt": "2026-07-28",
+      "kind": "update",
+      "title": "Dark chess and renju boards",
+      "impact": "",
+      "changes": [
+        "In dark mode the chess and renju boards are now dark too, instead of staying light",
+        "Moved the chess square/piece and renju felt/stone colors onto theme-scoped CSS variables and gave the dark theme a mid-slate board with opposite-ink hairline edges on every piece and stone"
+      ],
+      "userChanges": ["In dark mode the chess and renju boards are now dark too, instead of staying light"]
+    },
     {
       "version": "5.44.0",
       "releasedAt": "2026-07-28",

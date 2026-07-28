@@ -748,6 +748,12 @@ export default class ChessBoard extends Vue {
 .lf-chess {
   --lf-square-light: #ffffff;
   --lf-square-dark: #e5eaf1;
+  --lf-piece-white: #ffffff;
+  --lf-piece-white-edge: #000000;
+  --lf-piece-black: #000000;
+  --lf-piece-black-edge: rgba(0, 0, 0, 0.9);
+  --lf-eval-white: #e9ecf1;
+  --lf-eval-black: #3a3f47;
   --lf-accent: #0b5ed7;
   --lf-accent-ring: rgba(11, 94, 215, 0.5);
   --lf-accent-soft: rgba(11, 94, 215, 0.16);
@@ -767,15 +773,23 @@ export default class ChessBoard extends Vue {
   background: var(--ui-surface, #fff);
 }
 
-// The squares stay a light neutral pair in dark mode as well (only muted): the piece glyphs are
-// black and white ink, so a dark board would cost the black pieces all of their contrast.
+// A real dark board (owner request). Both piece colors are the same solid U+265x silhouette, told
+// apart only by fill and edge, so the squares land on mid-slate rather than near-black: a board as
+// dark as the panel would leave the black pieces with no contrast to sit against. Each piece still
+// carries a hairline edge in the opposite ink so it reads on either square.
 :root[data-theme="dark"] .lf-chess {
-  --lf-square-light: #ccd3dd;
-  --lf-square-dark: #adb7c4;
-  --lf-accent: #1f5fbd;
-  --lf-accent-ring: rgba(31, 95, 189, 0.55);
-  --lf-accent-soft: rgba(31, 95, 189, 0.24);
-  --lf-accent-wash: rgba(31, 95, 189, 0.34);
+  --lf-square-light: #6d7889;
+  --lf-square-dark: #4c5666;
+  --lf-piece-white: #f7f9fc;
+  --lf-piece-white-edge: #0d1116;
+  --lf-piece-black: #10141a;
+  --lf-piece-black-edge: rgba(233, 238, 245, 0.45);
+  --lf-eval-white: #e9ecf1;
+  --lf-eval-black: #596375;
+  --lf-accent: #6f9ffb;
+  --lf-accent-ring: rgba(111, 159, 251, 0.7);
+  --lf-accent-soft: rgba(111, 159, 251, 0.2);
+  --lf-accent-wash: rgba(111, 159, 251, 0.32);
 }
 
 .lf-chess-stage {
@@ -814,13 +828,15 @@ export default class ChessBoard extends Vue {
   line-height: 1;
 
   &.white {
-    color: #fff;
-    text-shadow: 0 0 1px #000, 0 1px 1px #000, 1px 0 1px #000, -1px 0 1px #000;
+    color: var(--lf-piece-white);
+    text-shadow: 0 0 1px var(--lf-piece-white-edge), 0 1px 1px var(--lf-piece-white-edge),
+      1px 0 1px var(--lf-piece-white-edge), -1px 0 1px var(--lf-piece-white-edge);
   }
 
   &.black {
-    color: #000;
-    text-shadow: 0 0 1px rgba(255, 255, 255, 0.7);
+    color: var(--lf-piece-black);
+    text-shadow: 0 0 1px var(--lf-piece-black-edge), 0 1px 1px var(--lf-piece-black-edge),
+      1px 0 1px var(--lf-piece-black-edge), -1px 0 1px var(--lf-piece-black-edge);
   }
 }
 
@@ -867,7 +883,7 @@ export default class ChessBoard extends Vue {
   box-sizing: border-box;
   overflow: hidden;
   border-radius: 999px;
-  background: #3a3f47;
+  background: var(--lf-eval-black);
   opacity: 0.85;
 
   &.pending {
@@ -878,14 +894,14 @@ export default class ChessBoard extends Vue {
 .lf-chess-eval-white {
   height: 100%;
   flex: 0 0 auto;
-  background: #e9ecf1;
+  background: var(--lf-eval-white);
 }
 
 .lf-chess-eval-black {
   height: 100%;
   min-width: 0;
   flex: 1 1 auto;
-  background: #3a3f47;
+  background: var(--lf-eval-black);
 }
 
 .lf-chess-board {
@@ -960,12 +976,15 @@ export default class ChessBoard extends Vue {
   }
 
   &.white {
-    color: #fff;
-    text-shadow: 0 0 1px #000, 0 0 1px #000, 0 1px 1px #000, 1px 0 1px #000, 0 -1px 1px #000, -1px 0 1px #000;
+    color: var(--lf-piece-white);
+    text-shadow: 0 0 1px var(--lf-piece-white-edge), 0 0 1px var(--lf-piece-white-edge),
+      0 1px 1px var(--lf-piece-white-edge), 1px 0 1px var(--lf-piece-white-edge), 0 -1px 1px var(--lf-piece-white-edge),
+      -1px 0 1px var(--lf-piece-white-edge);
   }
   &.black {
-    color: #000;
-    text-shadow: 0 0 1px #000;
+    color: var(--lf-piece-black);
+    text-shadow: 0 0 1px var(--lf-piece-black-edge), 0 1px 1px var(--lf-piece-black-edge),
+      1px 0 1px var(--lf-piece-black-edge), 0 -1px 1px var(--lf-piece-black-edge), -1px 0 1px var(--lf-piece-black-edge);
   }
 }
 
@@ -1033,11 +1052,14 @@ export default class ChessBoard extends Vue {
   cursor: pointer;
 
   &.white {
-    color: #fff;
-    text-shadow: 0 0 1px #000, 0 1px 1px #000, 1px 0 1px #000, -1px 0 1px #000, 0 -1px 1px #000;
+    color: var(--lf-piece-white);
+    text-shadow: 0 0 1px var(--lf-piece-white-edge), 0 1px 1px var(--lf-piece-white-edge),
+      1px 0 1px var(--lf-piece-white-edge), -1px 0 1px var(--lf-piece-white-edge), 0 -1px 1px var(--lf-piece-white-edge);
   }
   &.black {
-    color: #000;
+    color: var(--lf-piece-black);
+    text-shadow: 0 0 1px var(--lf-piece-black-edge), 0 1px 1px var(--lf-piece-black-edge),
+      1px 0 1px var(--lf-piece-black-edge), -1px 0 1px var(--lf-piece-black-edge);
   }
 }
 
