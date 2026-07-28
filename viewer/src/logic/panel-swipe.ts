@@ -35,15 +35,18 @@ const VERTICAL_RELEASE = 14;
 const SETTLE_MS = 180;
 
 // Commit distance: a fraction of the panel's own width, clamped so neither a narrow sidebar nor a
-// wide research board asks for an awkward amount of travel.
-const COMMIT_FRACTION = 0.14;
-const COMMIT_MIN = 24;
-const COMMIT_MAX = 48;
+// wide research board asks for an awkward amount of travel. Owner request - "a SMALL swipe should
+// change state" - so this is deliberately about a fingertip's worth of movement (14-24px) rather
+// than a proportion of the drawer anyone would call a drag. The dead zone above still protects taps:
+// a press has to move 5px before it is a drag at all, and horizontally at that.
+const COMMIT_FRACTION = 0.06;
+const COMMIT_MIN = 14;
+const COMMIT_MAX = 24;
 // A flick commits on speed alone, which is how a drawer is normally thrown open: short, fast, and
-// nowhere near the distance threshold. Measured over a trailing window rather than the whole drag so
-// a slow drag that ends with a flick still counts (and vice versa).
-const FLICK_VELOCITY = 0.3; // px per ms
-const FLICK_MIN_TRAVEL = 10;
+// nowhere near even that distance. Measured over a trailing window rather than the whole drag so a
+// slow drag that ends with a flick still counts (and vice versa).
+const FLICK_VELOCITY = 0.2; // px per ms
+const FLICK_MIN_TRAVEL = 8;
 const VELOCITY_WINDOW_MS = 120;
 // Under this span the samples are too close together to measure a speed from, so distance decides.
 const VELOCITY_MIN_SPAN_MS = 8;

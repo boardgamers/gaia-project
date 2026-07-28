@@ -1,7 +1,18 @@
 {
-  "version": "5.45.1",
+  "version": "5.45.2",
   "releasedAt": "2026-07-28",
   "entries": [
+    {
+      "version": "5.45.2",
+      "releasedAt": "2026-07-28",
+      "kind": "fix",
+      "title": "Smaller minigame swipes",
+      "impact": "",
+      "changes": [
+        "A small swipe now switches between a Gaia panel and its minigame: the commit distance dropped again from 14% of the panel width (24-48px) to 6% (14-24px), about a fingertip's travel, and the flick that commits on speed alone relaxed from 0.3 to 0.2 px/ms over 8px"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.45.1",
       "releasedAt": "2026-07-28",

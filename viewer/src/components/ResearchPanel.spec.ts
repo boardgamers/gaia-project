@@ -173,10 +173,10 @@ describe("ResearchPanel drawer", () => {
     await settle();
     expect((wrapper.vm as any).showRenju).to.equal(false);
 
-    // A short horizontal drag falls under the commit threshold and springs back.
+    // A short horizontal drag falls under the commit threshold (18px at this width) and springs back.
     dispatchPointer(panel, "pointerdown", 200, 200);
-    dispatchPointer(panel, "pointermove", 180, 202);
-    dispatchPointer(panel, "pointerup", 180, 202);
+    dispatchPointer(panel, "pointermove", 188, 202);
+    dispatchPointer(panel, "pointerup", 188, 202);
     await settle();
     expect((wrapper.vm as any).showRenju).to.equal(false);
 
@@ -189,18 +189,37 @@ describe("ResearchPanel drawer", () => {
     wrapper.destroy();
   });
 
+  it("switches on a small deliberate swipe, without a flick to help it", async () => {
+    // Owner request: "a small swipe should make it change state ... currently you have to swipe too
+    // far". 20px of unhurried travel on a 300px-wide panel is now enough - no timestamps here, so
+    // this gesture measures as unmeasurably slow and the distance rule alone decides it.
+    const wrapper = mountPanel(null);
+    await settle();
+    const panel = wrapper.find(".research-panel").element;
+    Object.defineProperty(panel, "clientWidth", { value: 300, configurable: true });
+
+    dispatchPointer(panel, "pointerdown", 200, 200);
+    dispatchPointer(panel, "pointermove", 190, 201);
+    dispatchPointer(panel, "pointermove", 180, 202);
+    dispatchPointer(panel, "pointerup", 180, 202);
+    await settle();
+
+    expect((wrapper.vm as any).showRenju).to.equal(true);
+    wrapper.destroy();
+  });
+
   it("opens on a quick flick that never travels the commit distance", async () => {
     // Owner report: the drawer bounced back far too often. A thrown-open drawer is short and fast,
-    // so speed commits on its own - here 30px of travel against a 42px distance threshold.
+    // so speed commits on its own - here 12px of travel against an 18px distance threshold.
     const wrapper = mountPanel(null);
     await settle();
     const panel = wrapper.find(".research-panel").element;
     Object.defineProperty(panel, "clientWidth", { value: 300, configurable: true });
 
     dispatchPointer(panel, "pointerdown", 200, 200, 1, 0);
-    dispatchPointer(panel, "pointermove", 182, 203, 1, 18);
-    dispatchPointer(panel, "pointermove", 172, 204, 1, 30);
-    dispatchPointer(panel, "pointerup", 170, 204, 1, 36);
+    dispatchPointer(panel, "pointermove", 192, 203, 1, 18);
+    dispatchPointer(panel, "pointermove", 189, 204, 1, 28);
+    dispatchPointer(panel, "pointerup", 188, 204, 1, 34);
     await settle();
 
     expect((wrapper.vm as any).showRenju).to.equal(true);

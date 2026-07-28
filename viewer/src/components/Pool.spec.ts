@@ -235,10 +235,10 @@ describe("compact Pool chess mode", () => {
     await settle();
     const source = wrapper.find(".pool-tiles-face").element;
 
-    // Slow and well short of the commit distance (24px at this panel's width) - the drawer springs back.
+    // Slow and short of the commit distance (14px at this panel's width) - the drawer springs back.
     dispatchPointer(source, "pointerdown", 100, 20);
-    dispatchPointer(source, "pointermove", 86, 22);
-    dispatchPointer(source, "pointerup", 86, 22);
+    dispatchPointer(source, "pointermove", 90, 22);
+    dispatchPointer(source, "pointerup", 90, 22);
     dispatchPointer(source, "pointerdown", 100, 20, 2);
     dispatchPointer(source, "pointermove", 115, 85, 2);
     dispatchPointer(source, "pointerup", 115, 85, 2);
