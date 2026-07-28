@@ -34,9 +34,8 @@
           class="lf-ultimate-mini"
           :class="{
             valid: validBoardSet.has(mini.index),
+            dimmed: isDimmed(mini.index),
             resolved: mini.resolution !== null,
-            won: mini.resolution === 'x' || mini.resolution === 'o',
-            drawn: mini.resolution === 'draw',
           }"
           role="rowgroup"
           :aria-label="miniBoardAriaLabel(mini)"
@@ -93,10 +92,7 @@ import {
   UltimateEvaluator,
   ultimateEvaluationDescription,
 } from "../logic/ultimate-tic-tac-toe-evaluation";
-import {
-  UltimateTicTacToeBackend,
-  UltimateTicTacToeRow,
-} from "../logic/ultimate-tic-tac-toe-backend";
+import { UltimateTicTacToeBackend, UltimateTicTacToeRow } from "../logic/ultimate-tic-tac-toe-backend";
 import {
   EMPTY_ULTIMATE_BOARD,
   MiniResolution,
@@ -256,9 +252,7 @@ export default class UltimateTicTacToeBoard extends Vue {
       this.board = row.board;
     }
     this.lastMove =
-      typeof row.last_move === "number" && row.last_move >= 0 && row.last_move < ULTIMATE_CELLS
-        ? row.last_move
-        : null;
+      typeof row.last_move === "number" && row.last_move >= 0 && row.last_move < ULTIMATE_CELLS ? row.last_move : null;
   }
 
   onCellClick(index: number) {
@@ -293,10 +287,7 @@ export default class UltimateTicTacToeBoard extends Vue {
   }
 
   private persistOffline() {
-    window.localStorage.setItem(
-      this.localStorageKey,
-      JSON.stringify({ board: this.board, lastMove: this.lastMove })
-    );
+    window.localStorage.setItem(this.localStorageKey, JSON.stringify({ board: this.board, lastMove: this.lastMove }));
   }
 
   async confirmReset() {
@@ -374,6 +365,15 @@ export default class UltimateTicTacToeBoard extends Vue {
     return new Set(validMiniBoards(this.board, this.lastMove));
   }
 
+  /**
+   * Everything that is not in play right now fades back, so the board that must be entered is the
+   * only thing at full strength. Once the game is over nothing is playable any more, so dimming
+   * would just grey out the whole result - the finished board stays fully lit instead.
+   */
+  isDimmed(miniBoard: number): boolean {
+    return !this.status.over && !this.validBoardSet.has(miniBoard);
+  }
+
   get miniBoards(): UltimateMiniBoard[] {
     const resolutions = miniBoardResolutions(this.board);
     return Array.from({ length: 9 }, (_, miniBoard) => ({
@@ -436,9 +436,7 @@ export default class UltimateTicTacToeBoard extends Vue {
     const forced = validMiniBoards(this.board, this.lastMove);
     const route = forced.length === 1 ? `board ${forced[0] + 1}` : "free move";
     const mover = this.nicknameFor(this.turn === "x" ? this.xMover : this.oMover);
-    return mover
-      ? `${mover} (${this.turn.toUpperCase()}) · ${route}`
-      : `${this.turn.toUpperCase()} to move · ${route}`;
+    return mover ? `${mover} (${this.turn.toUpperCase()}) · ${route}` : `${this.turn.toUpperCase()} to move · ${route}`;
   }
 
   miniBoardAriaLabel(mini: UltimateMiniBoard): string {
@@ -476,7 +474,19 @@ export default class UltimateTicTacToeBoard extends Vue {
 </script>
 
 <style lang="scss" scoped>
+// The board is deliberately drawn as one flat surface with hairlines rather than as 81 tiles on a
+// frame: hierarchy comes from line *color* (major grid strong, minor grid barely there) and from
+// opacity (mini boards that cannot be played fade back), not from borders, fills and glows.
 .lf-ultimate {
+  --lf-x: #0e8f89;
+  --lf-o: #c03a5b;
+  --lf-x-soft: rgba(14, 143, 137, 0.14);
+  --lf-o-soft: rgba(192, 58, 91, 0.14);
+  --lf-line-major: var(--ui-border-strong, #98a2b3);
+  --lf-line-minor: rgba(33, 37, 41, 0.09);
+  --lf-active-tint: rgba(11, 94, 215, 0.07);
+  --lf-hover-tint: rgba(33, 37, 41, 0.06);
+
   display: flex;
   width: 100%;
   height: 100%;
@@ -489,42 +499,55 @@ export default class UltimateTicTacToeBoard extends Vue {
   background: var(--ui-board-canvas, #fff);
 }
 
+:root[data-theme="dark"] .lf-ultimate {
+  --lf-x: #45cfc6;
+  --lf-o: #ff8095;
+  --lf-x-soft: rgba(69, 207, 198, 0.16);
+  --lf-o-soft: rgba(255, 128, 149, 0.16);
+  --lf-line-minor: rgba(241, 244, 248, 0.11);
+  --lf-active-tint: rgba(138, 180, 255, 0.11);
+  --lf-hover-tint: rgba(241, 244, 248, 0.08);
+}
+
 .lf-ultimate-status {
   flex: 0 0 auto;
-  padding-bottom: 2px;
+  padding-bottom: 3px;
   overflow: hidden;
   color: var(--ui-text-muted, #666);
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   line-height: 1.2;
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
 
   &.over {
-    color: var(--ui-primary, #247b0a);
+    color: var(--ui-text, #222);
+    font-weight: 600;
   }
 }
 
+// A hairline advantage strip: no frame, no gloss, just the two mark colors meeting.
 .lf-ultimate-eval {
   position: relative;
   display: flex;
   width: 100%;
-  height: 6px;
-  flex: 0 0 6px;
+  height: 3px;
+  flex: 0 0 3px;
   align-self: center;
-  margin-bottom: 3px;
+  margin-bottom: 6px;
   box-sizing: border-box;
   overflow: hidden;
-  border: 1px solid var(--ui-border-strong, #555);
-  border-radius: 2px;
-  background: #b13b58;
+  border-radius: 999px;
+  background: var(--lf-o);
+  opacity: 0.85;
 }
 
 .lf-ultimate-eval-x {
   height: 100%;
   flex: 0 0 auto;
-  background: #31b9b1;
+  background: var(--lf-x);
   transition: width 0.25s ease-out;
 }
 
@@ -532,7 +555,7 @@ export default class UltimateTicTacToeBoard extends Vue {
   height: 100%;
   min-width: 0;
   flex: 1 1 auto;
-  background: #b13b58;
+  background: var(--lf-o);
 }
 
 .lf-ultimate-stage {
@@ -554,12 +577,12 @@ export default class UltimateTicTacToeBoard extends Vue {
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
   aspect-ratio: 1;
-  gap: 4px;
-  padding: 3px;
+  gap: 0;
   box-sizing: border-box;
-  border: 2px solid #172e62;
-  border-radius: 5px;
-  background: #172e62;
+  overflow: hidden;
+  border: 1px solid var(--lf-line-major);
+  border-radius: 6px;
+  background: var(--ui-surface, #fff);
   touch-action: pan-y pinch-zoom;
   user-select: none;
 }
@@ -571,22 +594,26 @@ export default class UltimateTicTacToeBoard extends Vue {
   min-height: 0;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
-  gap: 1px;
-  padding: 2px;
-  border: 1px solid #6f7f9c;
-  border-radius: 3px;
-  background: #d8deea;
-  transition: background-color 120ms ease, box-shadow 120ms ease;
+  gap: 0;
+  transition: opacity 160ms ease, background-color 160ms ease;
 
-  &.valid {
-    z-index: 1;
-    background: #fff1a8;
-    box-shadow: 0 0 0 2px #efb400, 0 0 7px rgba(239, 180, 0, 0.75);
+  // The 3x3 of mini boards is separated by the only strong lines on the whole board.
+  &:not(:nth-child(3n)) {
+    border-right: 1px solid var(--lf-line-major);
   }
 
-  &.resolved {
-    background: #d7dce5;
-    box-shadow: none;
+  &:nth-child(-n + 6) {
+    border-bottom: 1px solid var(--lf-line-major);
+  }
+
+  &.valid {
+    background: var(--lf-active-tint);
+  }
+
+  // Mini boards that cannot be entered on this move step back instead of competing for attention -
+  // far enough to be clearly out of play, but not so far that their marks stop being readable.
+  &.dimmed {
+    opacity: 0.42;
   }
 }
 
@@ -599,35 +626,50 @@ export default class UltimateTicTacToeBoard extends Vue {
   justify-content: center;
   padding: 0;
   border: 0;
-  border-radius: 1px;
-  background: var(--ui-surface, #fff);
+  background: transparent;
   color: var(--ui-text, #222);
-  font-size: clamp(0.48rem, 1.45vw, 0.82rem);
-  font-weight: 800;
+  font-size: clamp(0.5rem, 1.5vw, 0.9rem);
+  font-weight: 600;
   line-height: 1;
+  transition: background-color 120ms ease;
+
+  &:not(:nth-child(3n)) {
+    border-right: 1px solid var(--lf-line-minor);
+  }
+
+  &:nth-child(-n + 6) {
+    border-bottom: 1px solid var(--lf-line-minor);
+  }
 
   &.x {
-    color: #087e79;
+    color: var(--lf-x);
   }
 
   &.o {
-    color: #a42043;
+    color: var(--lf-o);
   }
 
   &.playable {
     cursor: pointer;
   }
 
-  &.playable:hover,
+  &.playable:hover {
+    background: var(--lf-hover-tint);
+  }
+
   &.playable:focus-visible {
     z-index: 1;
-    outline: 2px solid var(--ui-primary, #247b0a);
+    outline: 2px solid var(--ui-focus, #0b5ed7);
     outline-offset: -2px;
   }
 
-  &.last {
-    z-index: 1;
-    box-shadow: inset 0 0 0 2px #e14335;
+  // The most recent move is marked by a quiet wash in its own color rather than a red frame.
+  &.last.x {
+    background: var(--lf-x-soft);
+  }
+
+  &.last.o {
+    background: var(--lf-o-soft);
   }
 
   &:disabled {
@@ -635,32 +677,37 @@ export default class UltimateTicTacToeBoard extends Vue {
   }
 }
 
+// A decided mini board collapses to a single large ghost glyph; its individual marks stay readable
+// underneath at low contrast instead of being covered by an opaque block.
+.lf-ultimate-mini.resolved .lf-ultimate-cell {
+  opacity: 0.3;
+}
+
 .lf-ultimate-mini-result {
   position: absolute;
   z-index: 2;
-  inset: 2px;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 2px;
   font-size: clamp(1.35rem, 5.4vw, 2.7rem);
-  font-weight: 900;
+  font-weight: 500;
   line-height: 1;
+  opacity: 0.55;
   pointer-events: none;
 
   &.x {
-    background: rgba(49, 185, 177, 0.78);
-    color: #064d4a;
+    color: var(--lf-x);
   }
 
   &.o {
-    background: rgba(201, 80, 108, 0.78);
-    color: #67142a;
+    color: var(--lf-o);
   }
 
   &.draw {
-    background: rgba(117, 126, 142, 0.72);
-    color: #fff;
+    color: var(--ui-text-muted, #667085);
+    font-size: clamp(1rem, 4vw, 2rem);
+    opacity: 0.45;
   }
 }
 
@@ -671,21 +718,23 @@ export default class UltimateTicTacToeBoard extends Vue {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--ui-backdrop, rgba(0, 0, 0, 0.45));
 }
 
 .lf-ultimate-confirm {
   max-width: 90%;
-  padding: 10px 12px;
-  border-radius: 4px;
+  padding: 12px 14px;
+  border: 1px solid var(--ui-border, #d6dce6);
+  border-radius: 8px;
   background: var(--ui-surface, #fff);
+  box-shadow: 0 6px 20px var(--ui-shadow, rgba(0, 0, 0, 0.2));
   color: var(--ui-text, inherit);
   text-align: center;
 }
 
 .lf-ultimate-confirm-text {
-  margin-bottom: 8px;
-  font-size: 0.8rem;
+  margin-bottom: 10px;
+  font-size: 0.78rem;
 }
 
 .lf-ultimate-confirm-actions {
@@ -695,18 +744,18 @@ export default class UltimateTicTacToeBoard extends Vue {
 }
 
 .lf-ultimate-btn {
-  padding: 0 6px;
-  border: 1px solid var(--ui-border-strong, #888);
-  border-radius: 3px;
-  background: var(--ui-surface, #fff);
-  color: var(--ui-text, inherit);
+  padding: 2px 10px;
+  border: 1px solid var(--ui-border, #d6dce6);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ui-text-muted, #667085);
   font-size: 0.7rem;
   line-height: 1.4;
   cursor: pointer;
 
   &.danger {
-    border-color: #a5281b;
-    background: #c0392b;
+    border-color: transparent;
+    background: var(--ui-danger-solid, #b42332);
     color: #fff;
   }
 }

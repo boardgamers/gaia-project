@@ -51,6 +51,29 @@ describe("UltimateTicTacToeBoard", () => {
     wrapper.destroy();
   });
 
+  it("dims every mini board that is out of play, and none of them once the game is over", async () => {
+    const wrapper = mountBoard();
+    await settle();
+
+    // An opening move is free placement: nothing is out of play, so nothing fades.
+    expect(wrapper.findAll(".lf-ultimate-mini.dimmed")).to.have.length(0);
+
+    await wrapper.findAll(".lf-ultimate-cell").at(8).trigger("click");
+    expect(wrapper.findAll(".lf-ultimate-mini.dimmed")).to.have.length(8);
+    expect(wrapper.findAll(".lf-ultimate-mini").at(8).classes()).to.not.include("dimmed");
+
+    let board = ".".repeat(81);
+    for (const index of [0, 1, 2, 9, 10, 11, 18, 19, 20]) {
+      board = board.slice(0, index) + "x" + board.slice(index + 1);
+    }
+    for (const index of [27, 28, 30, 31, 33, 34, 36, 37]) {
+      board = board.slice(0, index) + "o" + board.slice(index + 1);
+    }
+    await wrapper.setData({ board, lastMove: 20 });
+    expect(wrapper.findAll(".lf-ultimate-mini.dimmed")).to.have.length(0);
+    wrapper.destroy();
+  });
+
   it("shows owned-board overlays, the winner, and a pinned X/O advantage meter", async () => {
     const wrapper = mountBoard();
     let board = ".".repeat(81);

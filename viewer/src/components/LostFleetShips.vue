@@ -23,196 +23,200 @@
           :viewBox="`0 -22 ${viewBoxWidth} 80`"
           style="overflow: visible"
         >
-      <!-- The board is a rounded card outlined in the ship's color. Its name and the player
+          <!-- The board is a rounded card outlined in the ship's color. Its name and the player
            (exploration) slots live in two tabs that sit on top of this card's top edge (drawn last,
            below), which frees the card interior for just the action row + Federation/Tech tiles and
            lets the whole board be shorter than when those lived inside it. -->
-      <rect
-        x="1.25"
-        y="0"
-        :width="cardWidth"
-        height="56"
-        rx="7"
-        ry="7"
-        class="lost-fleet-ship__card"
-        :style="{ fill: shipColor(ship), stroke: shipColor(ship) }"
-      />
+          <rect
+            x="1.25"
+            y="0"
+            :width="cardWidth"
+            height="56"
+            rx="7"
+            ry="7"
+            class="lost-fleet-ship__card"
+            :style="{ fill: shipColor(ship), stroke: shipColor(ship) }"
+          />
 
-      <!-- the ship's 3 board actions, rendered exactly like the base game's BoardAction row - tighter
+          <!-- the ship's 3 board actions, rendered exactly like the base game's BoardAction row - tighter
            spacing than the base game's own action row (owner request: "less space between each ship
            action"), see ACTION_SPACING's own comment. -->
-      <g
-        v-for="(action, i) in shipActions(ship)"
-        :key="action.type"
-        :class="['lost-fleet-ship__action', action.type, { used: actionUser(ship, action.type) != null }]"
-        :data-action="action.type"
-        :transform="`translate(${actionXBase + i * actionSpacing}, 28)`"
-        v-b-tooltip.nofade="tooltipTriggerConfig()"
-        :title="actionTooltip(ship, action)"
-      >
-        <SpecialAction
-          :class="{ faded: actionUser(ship, action.type) != null }"
-          :action="actionIncome(ship, action.type)"
-          :planet="actionPlanet(ship, action.type)"
-          :board="true"
-          x="-20"
-          y="-25"
-          width="40"
-        />
-        <g v-if="actionOverlay(ship, action.type)" class="lost-fleet-ship__action-overlay" transform="translate(0, -5)">
-          <template v-if="isMineBubble(actionOverlay(ship, action.type))">
-            <!-- same bubble language as Condition.vue's "mg" (mine on Gaia) VP icon, just bigger and asteroid-colored;
+          <g
+            v-for="(action, i) in shipActions(ship)"
+            :key="action.type"
+            :class="['lost-fleet-ship__action', action.type, { used: actionUser(ship, action.type) != null }]"
+            :data-action="action.type"
+            :transform="`translate(${actionXBase + i * actionSpacing}, 28)`"
+            v-b-tooltip.nofade="tooltipTriggerConfig()"
+            :title="actionTooltip(ship, action)"
+          >
+            <SpecialAction
+              :class="{ faded: actionUser(ship, action.type) != null }"
+              :action="actionIncome(ship, action.type)"
+              :planet="actionPlanet(ship, action.type)"
+              :board="true"
+              x="-20"
+              y="-25"
+              width="40"
+            />
+            <g
+              v-if="actionOverlay(ship, action.type)"
+              class="lost-fleet-ship__action-overlay"
+              transform="translate(0, -5)"
+            >
+              <template v-if="isMineBubble(actionOverlay(ship, action.type))">
+                <!-- same bubble language as Condition.vue's "mg" (mine on Gaia) VP icon, just bigger and asteroid-colored;
                  nudged down from the octagon's visual center so it doesn't crowd the cost badge above it -->
-            <g transform="translate(0, 5) scale(1.2)">
-              <circle r="10" :class="['planet-fill', actionOverlay(ship, action.type).planet]" />
-              <Building
-                :building="actionOverlay(ship, action.type).building"
-                faction="gen"
-                :flat="flat"
-                outline-white
-                transform="scale(1.9)"
+                <g transform="translate(0, 5) scale(1.2)">
+                  <circle r="10" :class="['planet-fill', actionOverlay(ship, action.type).planet]" />
+                  <Building
+                    :building="actionOverlay(ship, action.type).building"
+                    faction="gen"
+                    :flat="flat"
+                    outline-white
+                    transform="scale(1.9)"
+                  />
+                </g>
+              </template>
+              <!-- resource-only overlays (no building) never get the building branch's compounded scale(2.2),
+               so they read much smaller than their siblings - boost and re-center them here. -->
+              <g
+                v-else-if="actionOverlay(ship, action.type).resource && !actionOverlay(ship, action.type).building"
+                transform="translate(0, 6) scale(1.3)"
+              >
+                <Resource :kind="actionOverlay(ship, action.type).resource" />
+              </g>
+              <g
+                v-else-if="actionOverlay(ship, action.type).condition"
+                class="lost-fleet-ship__condition-overlay"
+                transform="translate(3, 6) scale(0.85)"
+              >
+                <Condition :condition="actionOverlay(ship, action.type).condition" />
+              </g>
+              <g v-else transform="scale(0.82)">
+                <circle
+                  v-if="actionOverlay(ship, action.type).planet"
+                  r="9"
+                  :class="['planet-fill', actionOverlay(ship, action.type).planet]"
+                />
+                <Building
+                  v-if="actionOverlay(ship, action.type).building"
+                  :building="actionOverlay(ship, action.type).building"
+                  faction="gen"
+                  :flat="flat"
+                  outline-white
+                  :transform="`translate(${actionOverlay(ship, action.type).resource ? -6 : 0}, 0) scale(2.2)`"
+                />
+                <Resource
+                  v-if="actionOverlay(ship, action.type).resource"
+                  :kind="actionOverlay(ship, action.type).resource"
+                  :transform="`translate(${actionOverlay(ship, action.type).building ? 8 : 0}, 0)`"
+                />
+              </g>
+            </g>
+            <g class="lost-fleet-ship__cost-badge" :transform="costBadgeTransform(ship, action.type)">
+              <image v-if="costKind(action.cost) === 'pw'" xlink:href="../assets/resources/power-charge.svg" width="20"
+              :height=133/345*20 transform="scale(-1,1) translate(-9, -12)" />
+              <rect
+                x="-8"
+                y="-8"
+                width="16"
+                height="16"
+                :rx="costKind(action.cost) === 'pw' ? 8 : 0"
+                :ry="costKind(action.cost) === 'pw' ? 8 : 0"
+                stroke="black"
+                stroke-width="1"
+                :fill="costFill(action.cost)"
+                transform="scale(0.8)"
+              />
+              <text x="-3" y="3.5" class="lost-fleet-ship__cost">{{ costNumber(action.cost) }}</text>
+              <Resource
+                v-for="(extra, j) in extraCosts(action.cost)"
+                :key="j"
+                :kind="extra.type"
+                :count="extra.count"
+                :transform="`translate(0, ${13 + j * 12}) scale(0.75)`"
               />
             </g>
-          </template>
-          <!-- resource-only overlays (no building) never get the building branch's compounded scale(2.2),
-               so they read much smaller than their siblings - boost and re-center them here. -->
-          <g
-            v-else-if="actionOverlay(ship, action.type).resource && !actionOverlay(ship, action.type).building"
-            transform="translate(0, 6) scale(1.3)"
-          >
-            <Resource :kind="actionOverlay(ship, action.type).resource" />
+            <UsedActionMark v-if="actionUser(ship, action.type) != null" transform="translate(0, -5)" />
           </g>
-          <g
-            v-else-if="actionOverlay(ship, action.type).condition"
-            class="lost-fleet-ship__condition-overlay"
-            transform="translate(3, 6) scale(0.85)"
-          >
-            <Condition :condition="actionOverlay(ship, action.type).condition" />
-          </g>
-          <g v-else transform="scale(0.82)">
-            <circle
-              v-if="actionOverlay(ship, action.type).planet"
-              r="9"
-              :class="['planet-fill', actionOverlay(ship, action.type).planet]"
-            />
-            <Building
-              v-if="actionOverlay(ship, action.type).building"
-              :building="actionOverlay(ship, action.type).building"
-              faction="gen"
-              :flat="flat"
-              outline-white
-              :transform="`translate(${actionOverlay(ship, action.type).resource ? -6 : 0}, 0) scale(2.2)`"
-            />
-            <Resource
-              v-if="actionOverlay(ship, action.type).resource"
-              :kind="actionOverlay(ship, action.type).resource"
-              :transform="`translate(${actionOverlay(ship, action.type).building ? 8 : 0}, 0)`"
-            />
-          </g>
-        </g>
-        <g class="lost-fleet-ship__cost-badge" :transform="costBadgeTransform(ship, action.type)">
-          <image v-if="costKind(action.cost) === 'pw'" xlink:href="../assets/resources/power-charge.svg" width="20"
-          :height=133/345*20 transform="scale(-1,1) translate(-9, -12)" />
-          <rect
-            x="-8"
-            y="-8"
-            width="16"
-            height="16"
-            :rx="costKind(action.cost) === 'pw' ? 8 : 0"
-            :ry="costKind(action.cost) === 'pw' ? 8 : 0"
-            stroke="black"
-            stroke-width="1"
-            :fill="costFill(action.cost)"
-            transform="scale(0.8)"
-          />
-          <text x="-3" y="3.5" class="lost-fleet-ship__cost">{{ costNumber(action.cost) }}</text>
-          <Resource
-            v-for="(extra, j) in extraCosts(action.cost)"
-            :key="j"
-            :kind="extra.type"
-            :count="extra.count"
-            :transform="`translate(0, ${13 + j * 12}) scale(0.75)`"
-          />
-        </g>
-        <UsedActionMark v-if="actionUser(ship, action.type) != null" transform="translate(0, -5)" />
-      </g>
 
-      <!-- the Federation token still up for grabs on this ship (base-game token art). The action
+          <!-- the Federation token still up for grabs on this ship (base-game token art). The action
            octagons, this Federation tile and the Tech tile are all vertically centered on the card's
            middle. FederationTile is a 50-unit box centered at its own (0,0); its drop-shadow extends
            downward, so it is nudged ~3 units above the geometric center (translate y=5) so the token
            itself reads as centered rather than sitting low. -->
-      <g data-section="federation" :transform="`translate(${federationX}, 5) scale(0.8)`">
-        <FederationTile
-          v-if="shipFederation(ship)"
-          :rewardsOverride="federationDisplayRewards(shipFederation(ship))"
-          :spaceship-federation="shipFederation(ship)"
-          x="0"
-          y="0"
-          filter="url(#shadow-1)"
-        />
-        <g v-else v-b-tooltip.nofade="tooltipTriggerConfig()" :title="federationTooltip(ship)">
-          <FederationTile :used="true" x="0" y="0" />
-        </g>
-      </g>
+          <g data-section="federation" :transform="`translate(${federationX}, 5) scale(0.8)`">
+            <FederationTile
+              v-if="shipFederation(ship)"
+              :rewardsOverride="federationDisplayRewards(shipFederation(ship))"
+              :spaceship-federation="shipFederation(ship)"
+              x="0"
+              y="0"
+              filter="url(#shadow-1)"
+            />
+            <g v-else v-b-tooltip.nofade="tooltipTriggerConfig()" :title="federationTooltip(ship)">
+              <FederationTile :used="true" x="0" y="0" />
+            </g>
+          </g>
 
-      <!-- the Standard Tech tile seeded on this ship (Twilight has artifacts instead). TechTile draws
+          <!-- the Standard Tech tile seeded on this ship (Twilight has artifacts instead). TechTile draws
            a 60-unit box whose visual center sits at its own local (30, 30); scaled 0.95 so it matches
            the research board's own tech tiles (which render at that same 0.95), and translated so its
            middle stays on the action octagons' y=28 center line (ty + 30*0.95 = 28). At 0.95 the tile
            spans y ~1.3..54.7, just inside the 56-unit card. -->
-      <g v-if="hasTechSlot(ship)" data-section="tech" :transform="`translate(${techX}, -0.5) scale(0.95)`">
-        <TechTile :pos="ship" x="0" y="0" />
-      </g>
-      <!-- Twilight has no Standard Tech slot (see `hasTechSlot` above) - this artifact grid fills the
+          <g v-if="hasTechSlot(ship)" data-section="tech" :transform="`translate(${techX}, -0.5) scale(0.95)`">
+            <TechTile :pos="ship" x="0" y="0" />
+          </g>
+          <!-- Twilight has no Standard Tech slot (see `hasTechSlot` above) - this artifact grid fills the
            same right-hand slot instead, a 2-column grid centered vertically on the same y=27 line as
            the tiles (up to 4 artifacts = player count at 4p, so 2 rows). The tokens are ovals (wider
            than tall) at size=24, i.e. 32 wide x 24 tall. The left column starts at artifactX0 so it
            clears the Federation tile, and the columns sit 37 apart so the right column stays inside the
            card's right border; rows are 27 apart and stay above the bottom border. -->
-      <g v-else data-section="artifacts">
-        <g
-          v-for="(artifact, i) in remainingArtifacts"
-          :key="artifact"
-          :data-artifact="artifact"
-          :transform="`translate(${artifactX0 + (i % 2) * 37}, ${3 + Math.floor(i / 2) * 27})`"
-        >
-          <ArtifactIcon :artifact="artifact" :size="24" />
-        </g>
-      </g>
+          <g v-else data-section="artifacts">
+            <g
+              v-for="(artifact, i) in remainingArtifacts"
+              :key="artifact"
+              :data-artifact="artifact"
+              :transform="`translate(${artifactX0 + (i % 2) * 37}, ${3 + Math.floor(i / 2) * 27})`"
+            >
+              <ArtifactIcon :artifact="artifact" :size="24" />
+            </g>
+          </g>
 
-      <!-- Left tab: the ship name, sitting like a folder tab on the card's top-left border, filled in
+          <!-- Left tab: the ship name, sitting like a folder tab on the card's top-left border, filled in
            the ship color. The first letter sits in a white hexagon badge (echoing the map hex) so it
            reads as the ship's identity even on the colored tab; the rest of the name follows in dark
            text (dark reads better than white on the lighter ship colors). -->
-      <g class="lost-fleet-ship__tab" v-b-tooltip.nofade="tooltipTriggerConfig()" :title="shipLabel(ship)">
-        <path :d="nameTabPath(ship)" :style="{ fill: shipColor(ship) }" class="lost-fleet-ship__tab-shape" />
-        <polygon :points="nameHexPoints" class="lost-fleet-ship__name-hex" />
-        <text x="15" y="-10" dy="3.8" class="lost-fleet-ship__name-letter">{{ shipFirstLetter(ship) }}</text>
-        <text x="25" y="-10" dy="3.8" class="lost-fleet-ship__name-rest">{{ shipNameRest(ship) }}</text>
-      </g>
+          <g class="lost-fleet-ship__tab" v-b-tooltip.nofade="tooltipTriggerConfig()" :title="shipLabel(ship)">
+            <path :d="nameTabPath(ship)" :style="{ fill: shipColor(ship) }" class="lost-fleet-ship__tab-shape" />
+            <polygon :points="nameHexPoints" class="lost-fleet-ship__name-hex" />
+            <text x="15" y="-10" dy="3.8" class="lost-fleet-ship__name-letter">{{ shipFirstLetter(ship) }}</text>
+            <text x="25" y="-10" dy="3.8" class="lost-fleet-ship__name-rest">{{ shipNameRest(ship) }}</text>
+          </g>
 
-      <!-- Right tab: the 4 exploration/player slots, its negative space filled in the ship color and
+          <!-- Right tab: the 4 exploration/player slots, its negative space filled in the ship color and
            the slot circles (charge-power icons, or a claiming player's token) sitting on top. -->
-      <g class="lost-fleet-ship__tab">
-        <path :d="slotsTabPath" :style="{ fill: shipColor(ship) }" class="lost-fleet-ship__tab-shape" />
-        <g
-          v-for="slot in explorationSlots(ship)"
-          :key="slot.index"
-          class="lost-fleet-ship__slot"
-          :data-slot="slot.index"
-          :transform="`translate(${slotTabX(slot.index)}, ${slotY})`"
-          v-b-tooltip.nofade="tooltipTriggerConfig()"
-          :title="slotTitle(slot)"
-        >
-          <circle :r="slotRadius" class="lost-fleet-ship__slot-bg" />
-          <template v-if="!slot.player">
-            <!-- the free (0-power) slot shows no number at all - a bare circle reads as "free". -->
-            <Resource v-if="slot.cost > 0" kind="pw" :count="slot.cost" transform="translate(0, 2) scale(0.62)" />
-          </template>
-          <Token v-else :faction="slot.player.faction" transform="translate(0, 0.95) scale(0.35)" />
-        </g>
-      </g>
+          <g class="lost-fleet-ship__tab">
+            <path :d="slotsTabPath" :style="{ fill: shipColor(ship) }" class="lost-fleet-ship__tab-shape" />
+            <g
+              v-for="slot in explorationSlots(ship)"
+              :key="slot.index"
+              class="lost-fleet-ship__slot"
+              :data-slot="slot.index"
+              :transform="`translate(${slotTabX(slot.index)}, ${slotY})`"
+              v-b-tooltip.nofade="tooltipTriggerConfig()"
+              :title="slotTitle(slot)"
+            >
+              <circle :r="slotRadius" class="lost-fleet-ship__slot-bg" />
+              <template v-if="!slot.player">
+                <!-- the free (0-power) slot shows no number at all - a bare circle reads as "free". -->
+                <Resource v-if="slot.cost > 0" kind="pw" :count="slot.cost" transform="translate(0, 2) scale(0.62)" />
+              </template>
+              <Token v-else :faction="slot.player.faction" transform="translate(0, 0.95) scale(0.35)" />
+            </g>
+          </g>
         </svg>
       </div>
       <UltimateTicTacToeBoard
@@ -710,8 +714,8 @@ export default class LostFleetShips extends Mixins(PanelSwipe) {
   z-index: 1;
   inset: 0;
   overflow: hidden;
-  border: 2px solid var(--ui-border-strong);
-  border-radius: 5px;
+  border: 1px solid var(--ui-border);
+  border-radius: 6px;
 }
 
 .lost-fleet-ships__mode-dots {

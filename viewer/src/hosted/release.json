@@ -1,7 +1,25 @@
 {
-  "version": "5.42.1",
-  "releasedAt": "2026-07-27",
+  "version": "5.43.0",
+  "releasedAt": "2026-07-28",
   "entries": [
+    {
+      "version": "5.43.0",
+      "releasedAt": "2026-07-28",
+      "kind": "update",
+      "title": "Ultimate tic-tac-toe redesign",
+      "impact": "",
+      "changes": [
+        "Ultimate tic-tac-toe has a calmer, minimal look: thin grid lines instead of tiles and frames",
+        "Small boards you cannot play into fade back, so the board you must enter stands out",
+        "Won small boards now show a single large X or O ghost instead of a solid colored block",
+        "Reworked UltimateTicTacToeBoard.vue's styles around theme-aware CSS variables and hairline major/minor grid rules, replacing the navy frame, yellow glow and red last-move outline"
+      ],
+      "userChanges": [
+        "Ultimate tic-tac-toe has a calmer, minimal look: thin grid lines instead of tiles and frames",
+        "Small boards you cannot play into fade back, so the board you must enter stands out",
+        "Won small boards now show a single large X or O ghost instead of a solid colored block"
+      ]
+    },
     {
       "version": "5.42.1",
       "releasedAt": "2026-07-27",

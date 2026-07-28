@@ -4135,25 +4135,25 @@ opacity: 0.7 }` wrapper that also diluted the X itself, while `BoardAction.vue`'
       `pnpm test`: 440 passing/31 failing both before and after (identical failing-test names,
       confirmed via `git stash` on the same run - all pre-existing, none touch these components).
 
-                                                                                                                                                                                                           **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
-                                                                                                                                                                                                           pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
-                                                                                                                                                                                                           desktop mice, which was never the actual bug - only touch devices raced hover against the
-                                                                                                                                                                                                           click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
-                                                                                                                                                                                                           `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
-                                                                                                                                                                                                           `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
-                                                                                                                                                                                                           shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
-                                                                                                                                                                                                           `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
-                                                                                                                                                                                                           directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
-                                                                                                                                                                                                           `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
-                                                                                                                                                                                                           config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
-                                                                                                                                                                                                           on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
-                                                                                                                                                                                                           desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
-                                                                                                                                                                                                           is what actually closed that race originally. Verified live via Playwright with two device
-                                                                                                                                                                                                           profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
-                                                                                                                                                                                                           tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
-                                                                                                                                                                                                           context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
-                                                                                                                                                                                                           a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
-                                                                                                                                                                                                           still 440 passing/31 failing, same pre-existing set.
+                                                                                                                                                                                                                 **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
+                                                                                                                                                                                                                 pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
+                                                                                                                                                                                                                 desktop mice, which was never the actual bug - only touch devices raced hover against the
+                                                                                                                                                                                                                 click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
+                                                                                                                                                                                                                 `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
+                                                                                                                                                                                                                 `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
+                                                                                                                                                                                                                 shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
+                                                                                                                                                                                                                 `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
+                                                                                                                                                                                                                 directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
+                                                                                                                                                                                                                 `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
+                                                                                                                                                                                                                 config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
+                                                                                                                                                                                                                 on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
+                                                                                                                                                                                                                 desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
+                                                                                                                                                                                                                 is what actually closed that race originally. Verified live via Playwright with two device
+                                                                                                                                                                                                                 profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
+                                                                                                                                                                                                                 tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
+                                                                                                                                                                                                                 context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
+                                                                                                                                                                                                                 a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
+                                                                                                                                                                                                                 still 440 passing/31 failing, same pre-existing set.
 
 102.  ✅ **Offline pass-and-play with automatic local recovery and airplane-mode launch
       (2026-07-17, v5.31.0).** The viewer now has a dedicated `?offline=1` hot-seat mode, linked from
@@ -4643,37 +4643,38 @@ new.fen` - a real move or reset, not a colour claim or panel-mode switch) that P
       advantage bar like in chess").** Three separate pieces, on
       `claude/renku-notifications-advantage-bar-5z8myk`:
 
-            - **Turn pushes.** #114 gave chess a `chess_board` trigger that posts `{type: "chess_turn"}` to
-              the `notify` Edge Function; renju shipped a day later (#115) with no equivalent, so a stone
-              landed silently. New migration `20260726210000_renju_turn_notifications.sql` adds
-              `notify_renju_turn()` on `renju_board` `when (old.board is distinct from new.board)`, plus
-              `renjuMover` / `buildRenjuTurnNotification` in `notify/logic.ts` and a `renju_turn` branch in
-              `index.ts`. Renju has no FEN, so the active colour comes from the stone counts (black opens,
-              level counts = black to move), and the relay `*_next_user` columns take priority exactly as
-              `move_renju` resolves them. Body "Your renju move in <game>.", tag `renju-<gameId>` so it
-              stacks separately from the Gaia and chess pushes; it inherits the whole existing pipeline
-              (VAPID web push - which is what reaches an installed iOS PWA - plus per-category prefs,
-              snooze and quiet hours) for free.
-            - **Backend deploy (2026-07-27) - DONE, both steps live on `mitawjpdxkheascdiffz`.** Done in
-              the safe order (function first, then the trigger that calls it), via the **Supabase MCP
-              tools**, which worked this session even though they were denied in the session that wrote
-              the code:
-              - _Pre-check:_ `public.renju_board` exists with 3 rows and `20260726190000
+                  - **Turn pushes.** #114 gave chess a `chess_board` trigger that posts `{type: "chess_turn"}` to
+                    the `notify` Edge Function; renju shipped a day later (#115) with no equivalent, so a stone
+                    landed silently. New migration `20260726210000_renju_turn_notifications.sql` adds
+                    `notify_renju_turn()` on `renju_board` `when (old.board is distinct from new.board)`, plus
+                    `renjuMover` / `buildRenjuTurnNotification` in `notify/logic.ts` and a `renju_turn` branch in
+                    `index.ts`. Renju has no FEN, so the active colour comes from the stone counts (black opens,
+                    level counts = black to move), and the relay `*_next_user` columns take priority exactly as
+                    `move_renju` resolves them. Body "Your renju move in <game>.", tag `renju-<gameId>` so it
+                    stacks separately from the Gaia and chess pushes; it inherits the whole existing pipeline
+                    (VAPID web push - which is what reaches an installed iOS PWA - plus per-category prefs,
+                    snooze and quiet hours) for free.
+                  - **Backend deploy (2026-07-27) - DONE, both steps live on `mitawjpdxkheascdiffz`.** Done in
+                    the safe order (function first, then the trigger that calls it), via the **Supabase MCP
+                    tools**, which worked this session even though they were denied in the session that wrote
+                    the code:
+                    - _Pre-check:_ `public.renju_board` exists with 3 rows and `20260726190000
 
-      shared*renju_board`is in the ledger, so #115's migration had already run - hosted renju
-          was NOT silently falling back to pass-and-play, and nothing needed re-applying first.
-        - _Step 1,`notify` Edge Function:* redeployed `index.ts` + `logic.ts` (`deno.lock` is not
-      needed - there is no `deno.json`, and the deployed function only ever carried those two
-      files), **v11 -> v12, `verify_jwt: true` unchanged**. Worth recording: v11 predated #114
-      as well, so the deployed function was missing the `chess_turn` branch too - `chess_board`
-      had a live trigger posting a type the function rejected with 400. **This redeploy fixed
-      chess pushes at the same time as shipping renju's.** - _Step 2, migration `20260726210000_renju_turn_notifications.sql`:_ applied via
-      `apply_migration`, which records it in the CLI ledger (so unlike #115's it did NOT need
-      the SQL editor). `apply_migration` stamps the ledger with the apply-time version
-      (`20260727011014`), so the row was then re-versioned to `20260726210000` to match the
-      repo filename, keeping every ledger row a faithful map of `supabase/migrations/` and a
-      future `supabase db push` a no-op. `notify_renju_turn()` is present and `security
-definer`; `renju_board_notify_update` is the only non-internal trigger on the table. - _Verified server-side, without delivering any push:_ posting `{type: "renju_turn"}` for a
+            shared*renju_board`is in the ledger, so #115's migration had already run - hosted renju
+                was NOT silently falling back to pass-and-play, and nothing needed re-applying first.
+              - _Step 1,`notify` Edge Function:* redeployed `index.ts` + `logic.ts` (`deno.lock` is not
+            needed - there is no `deno.json`, and the deployed function only ever carried those two
+            files), **v11 -> v12, `verify_jwt: true` unchanged**. Worth recording: v11 predated #114
+            as well, so the deployed function was missing the `chess_turn` branch too - `chess_board`
+            had a live trigger posting a type the function rejected with 400. **This redeploy fixed
+            chess pushes at the same time as shipping renju's.** - _Step 2, migration `20260726210000_renju_turn_notifications.sql`:_ applied via
+            `apply_migration`, which records it in the CLI ledger (so unlike #115's it did NOT need
+            the SQL editor). `apply_migration` stamps the ledger with the apply-time version
+            (`20260727011014`), so the row was then re-versioned to `20260726210000` to match the
+            repo filename, keeping every ledger row a faithful map of `supabase/migrations/` and a
+            future `supabase db push` a no-op. `notify_renju_turn()` is present and `security
+
+      definer`; `renju*board_notify_update` is the only non-internal trigger on the table. - \_Verified server-side, without delivering any push:* posting `{type: "renju_turn"}` for a
       nonexistent game returns **404 "game not found"** where the old code returned 400 "bad
       request", proving the new branch is live; posting it for a real game whose board is a
       valid 225-char position with both colours assigned (so `renjuMover` cannot return null)
@@ -4744,6 +4745,7 @@ definer`; `renju_board_notify_update` is the only non-internal trigger on the ta
       minigame faces (2026-07-27, branch `claude/game-notifications-settings-dp69kc`, four owner
       requests in one pass).** All four are about the two side games (sidebar chess, research-panel
       renju) having been wired as if they were the Gaia game itself.
+
       - **Each game's "your move" push is now its own category.** Chess and renju turn pushes were
         built with `kind: "turn"`, so they shared the single `turn_pushes` toggle with Gaia - the one
         notification the app exists for. `notify/logic.ts` gained a `NotificationKind` union with
@@ -4819,6 +4821,35 @@ definer`; `renju_board_notify_update` is the only non-internal trigger on the ta
         persistence, evaluation, board UI, reset, and drawer mount. Browser checks at desktop and
         mobile widths confirmed the square responsive board, all 81 cells, valid-board routing, and
         last-move marker.
+
+120.  ✅ **Ultimate tic-tac-toe visual redesign — minimal, with everything out of play dimmed
+      (2026-07-28, viewer v5.43.0, owner request: "looks too busy").** The board no longer draws
+      itself as 81 white tiles inside a navy frame. It is now one flat `--ui-surface` panel whose
+      structure comes from hairlines only: the 3x3 of mini boards is separated by
+      `--ui-border-strong`, the cells inside each mini by a barely-there `--lf-line-minor`, so the
+      hierarchy is carried by line _color_ rather than by borders, gaps, fills and glows.
+
+      - **Dimming (the owner's own suggestion):** every mini board that cannot be entered on this
+        move drops to `opacity: 0.42`, and the board(s) that can be entered carry a faint accent
+        tint. `isDimmed()` deliberately returns `false` once `status.over` is true — `validMiniBoards`
+        returns `[]` on a finished game, so dimming on that condition alone would have greyed out
+        the entire final position instead of showing the result.
+      - **What was removed:** the yellow highlight + glow on the valid board, the red inset outline
+        on the last move (now a quiet wash in the mark's own color), and the opaque colored block
+        over a won mini (now one large ghost X/O at 55% with its own marks still legible at low
+        contrast underneath). The advantage strip became a 3px pill with no frame, and the panel's
+        own 2px `--ui-border-strong` frame in `LostFleetShips.vue` became a 1px `--ui-border`.
+      - **Theming:** mark colors, line colors and tints are component-scoped CSS variables with a
+        `:root[data-theme="dark"]` override, so X/O keep real contrast on the dark surface instead
+        of reusing the old fixed dark-teal/maroon.
+      - **Verification:** the three existing `UltimateTicTacToeBoard.spec.ts` cases still pass, a
+        fourth locks the dimming rule (none dimmed on a free move, 8 dimmed once routed, none dimmed
+        after the game is won), and the full viewer suite is **667 passing / 2 failing** — the same
+        two documented map-rotation flakes, confirmed identical on a stashed baseline run in the
+        same session.
+        Lint clean. Checked in a real browser (Playwright against `pnpm serve`, `?lostFleet=1`) in
+        both themes: empty/free-move board, a mid-game position with won + drawn minis and a forced
+        destination, and a finished game.
 
 ## Still MISSING — only one art-only item left
 
