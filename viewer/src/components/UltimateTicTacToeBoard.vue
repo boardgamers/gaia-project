@@ -53,6 +53,7 @@
               },
             ]"
             role="gridcell"
+            :style="markFontStyle"
             :disabled="!canPlace(cell.index)"
             :aria-label="cellAriaLabel(cell.index)"
             @click="onCellClick(cell.index)"
@@ -63,6 +64,7 @@
             v-if="mini.resolution !== null"
             class="lf-ultimate-mini-result"
             :class="mini.resolution"
+            :style="resultFontStyle"
             aria-hidden="true"
           >
             {{ mini.resolution === "draw" ? "–" : mini.resolution.toUpperCase() }}
@@ -418,6 +420,20 @@ export default class UltimateTicTacToeBoard extends Vue {
     );
   }
 
+  /**
+   * Marks are sized from the measured board the way ChessBoard.vue sizes its pieces - a fixed share
+   * of one cell - so an X or an O fills its cell instead of floating in the middle of it. The CSS
+   * `clamp()` stays as the fallback for before the first measurement (and in jsdom).
+   */
+  get markFontStyle(): Record<string, string> | undefined {
+    return this.boardSize === null ? undefined : { fontSize: `${Math.max(8, (this.boardSize / 9) * 0.74)}px` };
+  }
+
+  /** The ghost mark over a decided mini board, sized against the mini board rather than the cell. */
+  get resultFontStyle(): Record<string, string> | undefined {
+    return this.boardSize === null ? undefined : { fontSize: `${Math.max(12, (this.boardSize / 3) * 0.7)}px` };
+  }
+
   get evaluationXPercent(): number {
     return this.evaluation?.xPercent ?? 50;
   }
@@ -478,12 +494,22 @@ export default class UltimateTicTacToeBoard extends Vue {
 // frame: hierarchy comes from line *color* (major grid strong, minor grid barely there) and from
 // opacity (mini boards that cannot be played fade back), not from borders, fills and glows.
 .lf-ultimate {
-  --lf-x: #0e8f89;
-  --lf-o: #c03a5b;
-  --lf-x-soft: rgba(14, 143, 137, 0.14);
-  --lf-o-soft: rgba(192, 58, 91, 0.14);
-  --lf-line-major: var(--ui-border-strong, #98a2b3);
-  --lf-line-minor: rgba(33, 37, 41, 0.09);
+  // X is the white side and O the black one - the same two inks the chess and renju faces use, so
+  // the drawer never introduces a third piece palette. The advantage strip reads the same way:
+  // white on the left is X, exactly as White is on the left of the chess strip.
+  // The board is a light slate rather than white even in light mode: a white X on a white board
+  // would be nothing but its own outline, the same reason the dark board is mid-slate and not black.
+  --lf-board: #dde3ec;
+  --lf-board-edge: #b9c2d0;
+  --lf-piece-white: #ffffff;
+  --lf-piece-white-edge: #000000;
+  --lf-piece-black: #000000;
+  --lf-piece-black-edge: rgba(0, 0, 0, 0.9);
+  --lf-eval-white: #e9ecf1;
+  --lf-eval-black: #3a3f47;
+  --lf-line-major: #97a1b1;
+  --lf-line-minor: rgba(33, 37, 41, 0.11);
+  --lf-accent-soft: rgba(11, 94, 215, 0.18);
   --lf-active-tint: rgba(11, 94, 215, 0.07);
   --lf-hover-tint: rgba(33, 37, 41, 0.06);
 
@@ -499,14 +525,22 @@ export default class UltimateTicTacToeBoard extends Vue {
   background: var(--ui-board-canvas, #fff);
 }
 
+// Mid-slate in dark mode for the same reason as the chess and renju faces: the marks are black and
+// white ink, so a board as dark as the panel would leave every O with nothing to sit against.
 :root[data-theme="dark"] .lf-ultimate {
-  --lf-x: #45cfc6;
-  --lf-o: #ff8095;
-  --lf-x-soft: rgba(69, 207, 198, 0.16);
-  --lf-o-soft: rgba(255, 128, 149, 0.16);
-  --lf-line-minor: rgba(241, 244, 248, 0.11);
-  --lf-active-tint: rgba(138, 180, 255, 0.11);
-  --lf-hover-tint: rgba(241, 244, 248, 0.08);
+  --lf-board: #4c5666;
+  --lf-board-edge: #6d7889;
+  --lf-piece-white: #f7f9fc;
+  --lf-piece-white-edge: #0d1116;
+  --lf-piece-black: #10141a;
+  --lf-piece-black-edge: rgba(233, 238, 245, 0.45);
+  --lf-eval-white: #e9ecf1;
+  --lf-eval-black: #596375;
+  --lf-line-major: #8b95a5;
+  --lf-line-minor: rgba(241, 244, 248, 0.16);
+  --lf-accent-soft: rgba(111, 159, 251, 0.24);
+  --lf-active-tint: rgba(111, 159, 251, 0.16);
+  --lf-hover-tint: rgba(241, 244, 248, 0.1);
 }
 
 .lf-ultimate-status {
@@ -540,14 +574,14 @@ export default class UltimateTicTacToeBoard extends Vue {
   box-sizing: border-box;
   overflow: hidden;
   border-radius: 999px;
-  background: var(--lf-o);
+  background: var(--lf-eval-black);
   opacity: 0.85;
 }
 
 .lf-ultimate-eval-x {
   height: 100%;
   flex: 0 0 auto;
-  background: var(--lf-x);
+  background: var(--lf-eval-white);
   transition: width 0.25s ease-out;
 }
 
@@ -555,7 +589,7 @@ export default class UltimateTicTacToeBoard extends Vue {
   height: 100%;
   min-width: 0;
   flex: 1 1 auto;
-  background: var(--lf-o);
+  background: var(--lf-eval-black);
 }
 
 .lf-ultimate-stage {
@@ -580,9 +614,9 @@ export default class UltimateTicTacToeBoard extends Vue {
   gap: 0;
   box-sizing: border-box;
   overflow: hidden;
-  border: 1px solid var(--lf-line-major);
+  border: 1px solid var(--lf-board-edge);
   border-radius: 6px;
-  background: var(--ui-surface, #fff);
+  background: var(--lf-board);
   touch-action: pan-y pinch-zoom;
   user-select: none;
 }
@@ -628,8 +662,8 @@ export default class UltimateTicTacToeBoard extends Vue {
   border: 0;
   background: transparent;
   color: var(--ui-text, #222);
-  font-size: clamp(0.5rem, 1.5vw, 0.9rem);
-  font-weight: 600;
+  font-size: clamp(0.6rem, 2vw, 1.2rem);
+  font-weight: 700;
   line-height: 1;
   transition: background-color 120ms ease;
 
@@ -641,12 +675,19 @@ export default class UltimateTicTacToeBoard extends Vue {
     border-bottom: 1px solid var(--lf-line-minor);
   }
 
+  // Both marks are the same letterform weight, so each carries a hairline edge in the opposite ink
+  // - that edge, not the fill, is what keeps a white X readable on a light board and a black O on a
+  // dark one. Same rule as the chess pieces and the renju stones.
   &.x {
-    color: var(--lf-x);
+    color: var(--lf-piece-white);
+    text-shadow: 0 0 1px var(--lf-piece-white-edge), 0 1px 1px var(--lf-piece-white-edge),
+      1px 0 1px var(--lf-piece-white-edge), -1px 0 1px var(--lf-piece-white-edge), 0 -1px 1px var(--lf-piece-white-edge);
   }
 
   &.o {
-    color: var(--lf-o);
+    color: var(--lf-piece-black);
+    text-shadow: 0 0 1px var(--lf-piece-black-edge), 0 1px 1px var(--lf-piece-black-edge),
+      1px 0 1px var(--lf-piece-black-edge), -1px 0 1px var(--lf-piece-black-edge), 0 -1px 1px var(--lf-piece-black-edge);
   }
 
   &.playable {
@@ -663,13 +704,10 @@ export default class UltimateTicTacToeBoard extends Vue {
     outline-offset: -2px;
   }
 
-  // The most recent move is marked by a quiet wash in its own color rather than a red frame.
-  &.last.x {
-    background: var(--lf-x-soft);
-  }
-
-  &.last.o {
-    background: var(--lf-o-soft);
+  // The most recent move is marked by the same quiet accent wash the chess face uses for its own
+  // last move, rather than a red frame.
+  &.last {
+    background: var(--lf-accent-soft);
   }
 
   &:disabled {
@@ -691,17 +729,21 @@ export default class UltimateTicTacToeBoard extends Vue {
   align-items: center;
   justify-content: center;
   font-size: clamp(1.35rem, 5.4vw, 2.7rem);
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1;
-  opacity: 0.55;
+  opacity: 0.7;
   pointer-events: none;
 
   &.x {
-    color: var(--lf-x);
+    color: var(--lf-piece-white);
+    text-shadow: 0 0 1px var(--lf-piece-white-edge), 0 1px 1px var(--lf-piece-white-edge),
+      1px 0 1px var(--lf-piece-white-edge), -1px 0 1px var(--lf-piece-white-edge), 0 -1px 1px var(--lf-piece-white-edge);
   }
 
   &.o {
-    color: var(--lf-o);
+    color: var(--lf-piece-black);
+    text-shadow: 0 0 1px var(--lf-piece-black-edge), 0 1px 1px var(--lf-piece-black-edge),
+      1px 0 1px var(--lf-piece-black-edge), -1px 0 1px var(--lf-piece-black-edge), 0 -1px 1px var(--lf-piece-black-edge);
   }
 
   &.draw {

@@ -1,7 +1,23 @@
 {
-  "version": "5.44.1",
+  "version": "5.45.0",
   "releasedAt": "2026-07-28",
   "entries": [
+    {
+      "version": "5.45.0",
+      "releasedAt": "2026-07-28",
+      "kind": "update",
+      "title": "Black-and-white tic-tac-toe",
+      "impact": "",
+      "changes": [
+        "Ultimate tic-tac-toe now uses the same black and white pieces as chess and renju, with a matching white-vs-black advantage bar",
+        "The X and O marks are much bigger, sized from the board like the chess pieces",
+        "Replaced the teal/rose mark palette with the shared piece-ink variables, moved the last-move wash onto the accent, and sized marks and ghost glyphs from the measured board instead of a viewport clamp"
+      ],
+      "userChanges": [
+        "Ultimate tic-tac-toe now uses the same black and white pieces as chess and renju, with a matching white-vs-black advantage bar",
+        "The X and O marks are much bigger, sized from the board like the chess pieces"
+      ]
+    },
     {
       "version": "5.44.1",
       "releasedAt": "2026-07-28",

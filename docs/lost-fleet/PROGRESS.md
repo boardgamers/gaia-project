@@ -4135,25 +4135,25 @@ opacity: 0.7 }` wrapper that also diluted the X itself, while `BoardAction.vue`'
       `pnpm test`: 440 passing/31 failing both before and after (identical failing-test names,
       confirmed via `git stash` on the same run - all pre-existing, none touch these components).
 
-                                                                                                                                                                                                                             **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
-                                                                                                                                                                                                                             pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
-                                                                                                                                                                                                                             desktop mice, which was never the actual bug - only touch devices raced hover against the
-                                                                                                                                                                                                                             click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
-                                                                                                                                                                                                                             `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
-                                                                                                                                                                                                                             `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
-                                                                                                                                                                                                                             shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
-                                                                                                                                                                                                                             `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
-                                                                                                                                                                                                                             directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
-                                                                                                                                                                                                                             `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
-                                                                                                                                                                                                                             config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
-                                                                                                                                                                                                                             on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
-                                                                                                                                                                                                                             desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
-                                                                                                                                                                                                                             is what actually closed that race originally. Verified live via Playwright with two device
-                                                                                                                                                                                                                             profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
-                                                                                                                                                                                                                             tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
-                                                                                                                                                                                                                             context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
-                                                                                                                                                                                                                             a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
-                                                                                                                                                                                                                             still 440 passing/31 failing, same pre-existing set.
+                                                                                                                                                                                                                                   **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
+                                                                                                                                                                                                                                   pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
+                                                                                                                                                                                                                                   desktop mice, which was never the actual bug - only touch devices raced hover against the
+                                                                                                                                                                                                                                   click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
+                                                                                                                                                                                                                                   `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
+                                                                                                                                                                                                                                   `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
+                                                                                                                                                                                                                                   shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
+                                                                                                                                                                                                                                   `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
+                                                                                                                                                                                                                                   directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
+                                                                                                                                                                                                                                   `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
+                                                                                                                                                                                                                                   config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
+                                                                                                                                                                                                                                   on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
+                                                                                                                                                                                                                                   desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
+                                                                                                                                                                                                                                   is what actually closed that race originally. Verified live via Playwright with two device
+                                                                                                                                                                                                                                   profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
+                                                                                                                                                                                                                                   tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
+                                                                                                                                                                                                                                   context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
+                                                                                                                                                                                                                                   a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
+                                                                                                                                                                                                                                   still 440 passing/31 failing, same pre-existing set.
 
 102.  ✅ **Offline pass-and-play with automatic local recovery and airplane-mode launch
       (2026-07-17, v5.31.0).** The viewer now has a dedicated `?offline=1` hot-seat mode, linked from
@@ -4895,6 +4895,29 @@ new.fen` - a real move or reset, not a colour claim or panel-mode switch) that P
       - **Verification:** viewer suite **667 passing / 2 failing** (the usual map-rotation flakes),
         lint clean, and both faces re-checked in a browser in both themes, including a 3x-scale
         capture of the chess board to confirm the piece edges at full size.
+
+123.  ✅ **Ultimate tic-tac-toe joins the black-and-white piece system, with bigger marks (2026-07-28,
+      viewer v5.45.0, owner request: "all pieces must be black or white ... same with game advantage
+      bar to match ... make the pieces bigger").** The teal/rose X and O are gone: X is now the white
+      ink and O the black one, the same two the chess pieces and renju stones use, each carrying a
+      hairline edge in the opposite ink. The advantage strip follows — white on the left is X,
+      exactly as White is on the left of the chess strip, using the identical
+      `--lf-eval-white`/`--lf-eval-black` values.
+
+      - **The board surface had to move in both themes.** A white X on the old white board is
+        nothing but its own outline, so the light board became a light slate (`#dde3ec`) and the
+        dark board mid-slate (`#4c5666`, matching the renju felt). This is the same constraint #122
+        hit from the other direction: with black-and-white ink, neither end of the surface range is
+        available.
+      - **Marks are sized from the measured board**, not from a viewport `clamp()`: `markFontStyle`
+        gives each cell `boardSize / 9 * 0.74` and `resultFontStyle` gives a decided mini board's
+        ghost `boardSize / 3 * 0.7`, mirroring how `ChessBoard.vue` sizes its pieces. The old clamp
+        stays as the pre-measurement fallback (and for jsdom, where nothing is laid out).
+      - **Last-move wash** dropped its per-mark color and now uses the same accent wash as the chess
+        face, since the mark color no longer carries meaning.
+      - **Verification:** viewer suite **667 passing / 2 failing** (the usual map-rotation flakes),
+        lint clean, both themes re-checked in a browser on a seeded position with won + drawn minis,
+        a forced destination and a last move.
 
 ## Still MISSING — only one art-only item left
 
