@@ -84,6 +84,10 @@ export type State = {
    * itself. null in self-contained/hot-seat play, where the sheet falls back to localStorage. */
   notesBackend: NotesBackend | null;
   /** Per-game chess persistence injected by hosted.ts. null means local/offline pass-and-play. */
+  /** True while showing an offline copy of an online game (hosted/offline-mirror.ts): play is
+   * limited to the seats this account holds, so the board explains itself when it is someone
+   * else's turn instead of simply offering nothing. False for ordinary pass-and-play. */
+  offlineMirror: boolean;
   chessBackend: ChessBackend | null;
   /** Per-game renju (research panel drawer) persistence, same injection contract as chessBackend. */
   renjuBackend: RenjuBackend | null;
@@ -164,6 +168,7 @@ const gaiaViewer = {
       seatLastActive: {},
       presence: {},
       notesBackend: null,
+      offlineMirror: false,
       chessBackend: null,
       renjuBackend: null,
       ultimateTicTacToeBackend: null,
@@ -304,6 +309,9 @@ const gaiaViewer = {
       state.notesBackend = backend;
     },
 
+    setOfflineMirror(state: State, mirrored: boolean) {
+      state.offlineMirror = mirrored;
+    },
     setChessBackend(state: State, backend: ChessBackend | null) {
       state.chessBackend = backend;
     },

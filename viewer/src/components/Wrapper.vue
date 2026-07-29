@@ -2,7 +2,9 @@
   <div>
     <div v-if="offlineMode" class="offline-game-banner">
       <div class="offline-game-banner__copy">
-        <div class="offline-game-banner__title">Offline pass-and-play</div>
+        <div class="offline-game-banner__title">
+          {{ offlineMirrored ? "Offline copy of an online game" : "Offline pass-and-play" }}
+        </div>
         <div class="offline-game-banner__status">
           <span>{{ offlineConnectivityText }}</span>
           <span aria-hidden="true">&middot;</span>
@@ -15,7 +17,11 @@
             Before flying, wait for <strong>App available offline</strong> and add Fight Club to your home screen.
           </span>
           <span v-else>Airplane mode is active.</span>
-          Pass this phone around; every move is saved here and resumes automatically.
+          <span v-if="offlineMirrored">
+            You play only your own seats here; every move is saved locally and sent to the online game the next time you
+            open it with a connection.
+          </span>
+          <span v-else>Pass this phone around; every move is saved here and resumes automatically.</span>
         </div>
       </div>
       <div class="offline-game-banner__actions">
@@ -137,6 +143,12 @@ export default class Wrapper extends Vue {
   offlineCacheUnsupported = false;
   offlineSavedAt = currentOfflineSavedAt();
   offlineSaveError = "";
+  // A copy of an online game (hosted/offline-mirror.ts) is not a hot seat: it plays only the seats
+  // this account holds and its moves go up to the online game, so the banner must not tell the
+  // player to pass the phone around.
+  offlineMirrored =
+    typeof window !== "undefined" &&
+    !!readStoredOfflineGame(offlineGameIdFromSearch(window.location.search) ?? "").save?.mirrorOf;
   loadType = LoadFromJsonType.load;
   stopMove = "";
   text = "";

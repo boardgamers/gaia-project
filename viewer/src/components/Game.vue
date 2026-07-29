@@ -138,6 +138,13 @@
           <!-- The old "Current player" heading + circle here was redundant with the turn-order
                banner at the top of the page (PROGRESS.md Gaia 10) - removed, keeping only the
                premove explainer this block also carried. -->
+          <!-- An offline copy of an online game (hosted/offline-mirror.ts) plays only the seats
+               this account holds, and has no premove machinery to offer instead - so without this
+               the action area is simply empty while an opponent is on turn, which reads as broken. -->
+          <div v-else-if="offlineMirrorWaiting" class="text-muted small">
+            Waiting for {{ turnPlayer.name || "the other player" }}. This is your offline copy of an online game, so you
+            play only your own seats here; their move arrives the next time you open the game with a connection.
+          </div>
           <div
             v-else-if="turnPlayer && !ended && premoveOffered && !premoveExplainerDismissed"
             class="text-muted small"
@@ -530,6 +537,12 @@ export default class Game extends Vue {
 
   get totalStickyFooterHeight() {
     return this.stickyBarHeight + this.premoveBarHeight;
+  }
+
+  /** Someone else is on turn in an offline copy of an online game - nothing to play, and nothing
+   * else (premove bar, Commands) would otherwise appear to say why. */
+  get offlineMirrorWaiting(): boolean {
+    return !!this.$store.state.offlineMirror && !!this.turnPlayer && !this.ended && !this.canPlay;
   }
 
   get showOffTurnAutoLeechFab(): boolean {

@@ -1,7 +1,23 @@
 {
-  "version": "5.47.0",
+  "version": "5.47.1",
   "releasedAt": "2026-07-29",
   "entries": [
+    {
+      "version": "5.47.1",
+      "releasedAt": "2026-07-29",
+      "kind": "update",
+      "title": "Offline copies explain themselves",
+      "impact": "",
+      "changes": [
+        "An offline copy of an online game now says so, instead of inviting you to pass the phone around",
+        "When it is the other player's turn in an offline copy, the board says who it is waiting for instead of showing nothing",
+        "Verified the whole plane path in a real browser against the built app with the network cut: the offline lobby lists the copy, it opens and plays from the service-worker cache, and the seat lock blocks the opponent's seat while an ordinary pass-and-play game keeps its free hot seat"
+      ],
+      "userChanges": [
+        "An offline copy of an online game now says so, instead of inviting you to pass the phone around",
+        "When it is the other player's turn in an offline copy, the board says who it is waiting for instead of showing nothing"
+      ]
+    },
     {
       "version": "5.47.0",
       "releasedAt": "2026-07-29",

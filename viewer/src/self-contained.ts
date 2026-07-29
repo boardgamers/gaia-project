@@ -228,6 +228,10 @@ function launchSelfContained(selector = "#app", debug = true) {
   });
   emitter.app.$once("hook:beforeDestroy", unsub);
 
+  // Lets the board explain itself when a mirrored copy is showing someone else's turn (Game.vue):
+  // without it the action area is simply empty, which reads as broken rather than as "not yours".
+  emitter.store.commit("setOfflineMirror", mirrorSeats !== null);
+
   // Emits a state and, for a mirrored copy only, re-applies the seat lock for whoever must act in
   // it - the same rule hosted play uses (host.ts's `seatToLock`), so a leech interrupt unlocks the
   // right seat and a player holding every seat still plays freely.
