@@ -42,7 +42,7 @@ function sharedBackend(initial: RenjuRow, userId = "user-black") {
     },
     async move(_previous, next, index) {
       moves.push({ board: next, index });
-      row = { ...row, board: next, last_move: index };
+      row = { ...row, board: next, last_move: index, prev_move: row.last_move };
       for (const listener of listeners) {
         listener(row);
       }
@@ -123,6 +123,81 @@ describe("RenjuBoard", () => {
     await settle();
     expect(wrapper.findAll(".lf-renju-stone")).to.have.length(1);
     expect(wrapper.find(".lf-renju-last").exists()).to.equal(true);
+    // Only one stone exists, so there is no other colour to mark.
+    expect(wrapper.find(".lf-renju-prev").exists()).to.equal(false);
+    wrapper.destroy();
+  });
+
+  it("marks both colours' latest stones, and keeps them across an offline reload", async () => {
+    window.history.pushState({}, "", "/?offline=1&game=renju-both");
+    const first = mountBoard(null);
+    await settle();
+
+    await tap(first, at(7, 7));
+    await tap(first, at(7, 7));
+    await tap(first, at(4, 5));
+    await tap(first, at(4, 5));
+
+    const marked = (wrapper: any, selector: string) => {
+      const marker = wrapper.find(selector);
+      return marker.exists() ? at(Number(marker.attributes("cy")), Number(marker.attributes("cx"))) : null;
+    };
+    expect(marked(first, ".lf-renju-last")).to.equal(at(4, 5)); // white's stone, just played
+    expect(marked(first, ".lf-renju-prev")).to.equal(at(7, 7)); // black's own latest stone
+    first.destroy();
+
+    const reloaded = mountBoard(null);
+    await settle();
+    expect(marked(reloaded, ".lf-renju-last")).to.equal(at(4, 5));
+    expect(marked(reloaded, ".lf-renju-prev")).to.equal(at(7, 7));
+    reloaded.destroy();
+  });
+
+  it("keeps both markers visible while a tap is still waiting to be confirmed", async () => {
+    const wrapper = mountBoard(null);
+    await settle();
+    for (const index of [at(7, 7), at(4, 5)]) {
+      await tap(wrapper, index);
+      await tap(wrapper, index);
+    }
+
+    // The first tap of a new stone only arms the ghost - nothing is committed yet, so the position's
+    // two markers must stay exactly where they are.
+    await tap(wrapper, at(9, 9));
+    expect(wrapper.find(".lf-renju-ghost").exists()).to.equal(true);
+    expect(wrapper.find(".lf-renju-last").exists()).to.equal(true);
+    expect(wrapper.find(".lf-renju-prev").exists()).to.equal(true);
+    wrapper.destroy();
+  });
+
+  it("online, marks both colours from the shared row and clears them on a reset", async () => {
+    const board =
+      EMPTY_RENJU_BOARD.slice(0, at(2, 2)) +
+      "b" +
+      EMPTY_RENJU_BOARD.slice(at(2, 2) + 1, at(2, 3)) +
+      "w" +
+      EMPTY_RENJU_BOARD.slice(at(2, 3) + 1);
+    let row = emptyRow({ board, last_move: at(2, 3), prev_move: at(2, 2) });
+    const backend: RenjuBackend = {
+      gameId: "game-one",
+      userId: "user-one",
+      load: async () => row,
+      subscribe: () => () => undefined,
+      move: async (_previous, next) => next,
+      reset: async () => {
+        row = emptyRow();
+      },
+    };
+    const wrapper = mountBoard(backend);
+    await settle();
+    expect(wrapper.find(".lf-renju-last").exists()).to.equal(true);
+    expect(wrapper.find(".lf-renju-prev").attributes("cx")).to.equal(String(2));
+
+    await (wrapper.vm as any).confirmReset();
+    await settle();
+    expect(wrapper.findAll(".lf-renju-stone")).to.have.length(0);
+    expect(wrapper.find(".lf-renju-last").exists()).to.equal(false);
+    expect(wrapper.find(".lf-renju-prev").exists()).to.equal(false);
     wrapper.destroy();
   });
 

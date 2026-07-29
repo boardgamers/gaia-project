@@ -57,6 +57,32 @@ export function stoneAt(board: string, index: number): Stone | null {
   return value === "b" || value === "w" ? value : null;
 }
 
+/** An intersection index from any untrusted source (a database row, a stale localStorage blob). */
+export function moveIndexOrNull(value: unknown): number | null {
+  return Number.isInteger(value) && (value as number) >= 0 && (value as number) < RENJU_CELLS
+    ? (value as number)
+    : null;
+}
+
+/**
+ * The intersection to mark for the colour that did NOT play `lastMove` - i.e. the other side's own
+ * most recent stone, so both players can see where they each played last.
+ *
+ * `candidate` is whatever the caller believes that move was (the persisted `prev_move`, or the move
+ * it was showing before the position changed). It is only accepted when it really holds a stone of
+ * the opposite colour: after a reset it points at an empty intersection, and if two stones arrived
+ * at once - a realtime update missed while the tab slept - it is the same colour as `lastMove` and
+ * the other side's latest move is genuinely unknown. Both cases return null rather than a lie.
+ */
+export function otherColorLastMove(board: string, lastMove: number | null, candidate: number | null): number | null {
+  if (lastMove === null || candidate === null || candidate === lastMove) {
+    return null;
+  }
+  const last = stoneAt(board, lastMove);
+  const other = stoneAt(board, candidate);
+  return last && other && last !== other ? candidate : null;
+}
+
 /**
  * A board string is 225 characters of `.`/`b`/`w` whose stone counts are consistent with black
  * moving first. The database re-checks the same shape, so an out-of-range or tampered board can
@@ -170,6 +196,8 @@ export function boardStatus(board: string, lastMove: number | null): RenjuStatus
 export interface RenjuLocalState {
   board: string;
   lastMove: number | null;
+  /** The other colour's latest stone, so both last moves survive an offline reload. */
+  prevMove: number | null;
 }
 
 /** Offline pass-and-play persistence: one JSON blob per Gaia game, tolerant of anything stale. */
@@ -182,11 +210,13 @@ export function parseLocalState(raw: string | null): RenjuLocalState | null {
     if (!parsed || !isValidBoard(parsed.board)) {
       return null;
     }
-    const lastMove =
-      Number.isInteger(parsed.lastMove) && parsed.lastMove >= 0 && parsed.lastMove < RENJU_CELLS
-        ? parsed.lastMove
-        : null;
-    return { board: parsed.board, lastMove };
+    const lastMove = moveIndexOrNull(parsed.lastMove);
+    return {
+      board: parsed.board,
+      lastMove,
+      // Blobs written before both markers existed simply have no prevMove.
+      prevMove: otherColorLastMove(parsed.board, lastMove, moveIndexOrNull(parsed.prevMove)),
+    };
   } catch {
     return null;
   }

@@ -1,7 +1,22 @@
 {
-  "version": "5.45.2",
-  "releasedAt": "2026-07-28",
+  "version": "5.45.3",
+  "releasedAt": "2026-07-29",
   "entries": [
+    {
+      "version": "5.45.3",
+      "releasedAt": "2026-07-29",
+      "kind": "update",
+      "title": "Both renju last moves",
+      "impact": "",
+      "changes": [
+        "Renju now marks both sides' latest stones - your own last move as well as your opponent's, with the older of the two dimmed",
+        "Arming a renju stone (the first of the two taps) no longer hides the last-move markers; the ghost is no longer a condition for drawing them",
+        "The move before the last one is persisted (renju_board.prev_move via migration 20260729120000_renju_previous_move, and the offline localStorage blob), so both markers survive a reload; a client on a stack without that column falls back to the position it was already showing"
+      ],
+      "userChanges": [
+        "Renju now marks both sides' latest stones - your own last move as well as your opponent's, with the older of the two dimmed"
+      ]
+    },
     {
       "version": "5.45.2",
       "releasedAt": "2026-07-28",

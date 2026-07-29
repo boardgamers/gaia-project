@@ -9,6 +9,8 @@ import {
   isValidBoard,
   localRenjuPanelStorageKey,
   localRenjuStorageKey,
+  moveIndexOrNull,
+  otherColorLastMove,
   parseLocalState,
   placeStone,
   turnFor,
@@ -140,13 +142,47 @@ describe("renju", () => {
     expect(isValidBoard(boardWith([0, "b"], [1, "w"]))).to.equal(true);
   });
 
-  it("parses only sane local state", () => {
-    const board = boardWith([at(7, 7), "b"]);
-    expect(parseLocalState(JSON.stringify({ board, lastMove: at(7, 7) }))).to.deep.equal({
+  it("accepts only in-range move indices", () => {
+    expect(moveIndexOrNull(0)).to.equal(0);
+    expect(moveIndexOrNull(RENJU_CELLS - 1)).to.equal(RENJU_CELLS - 1);
+    expect(moveIndexOrNull(RENJU_CELLS)).to.equal(null);
+    expect(moveIndexOrNull(-1)).to.equal(null);
+    expect(moveIndexOrNull(1.5)).to.equal(null);
+    expect(moveIndexOrNull(null)).to.equal(null);
+    expect(moveIndexOrNull("7")).to.equal(null);
+  });
+
+  it("marks the other colour's latest stone only when it really is the other colour", () => {
+    const board = boardWith([at(7, 7), "b"], [at(7, 8), "w"], [at(3, 3), "b"]);
+    // The stone before the last one belongs to the other side: mark it.
+    expect(otherColorLastMove(board, at(7, 8), at(7, 7))).to.equal(at(7, 7));
+    // Two black moves - a realtime update was missed, so white's latest is unknown.
+    expect(otherColorLastMove(board, at(3, 3), at(7, 7))).to.equal(null);
+    // Nothing to compare against, or the candidate points at an empty intersection (post-reset).
+    expect(otherColorLastMove(board, at(7, 8), null)).to.equal(null);
+    expect(otherColorLastMove(board, null, at(7, 7))).to.equal(null);
+    expect(otherColorLastMove(board, at(7, 8), at(0, 0))).to.equal(null);
+    expect(otherColorLastMove(board, at(7, 8), at(7, 8))).to.equal(null);
+  });
+
+  it("parses only sane local state, including both markers", () => {
+    const board = boardWith([at(7, 7), "b"], [at(7, 8), "w"]);
+    expect(parseLocalState(JSON.stringify({ board, lastMove: at(7, 8), prevMove: at(7, 7) }))).to.deep.equal({
       board,
-      lastMove: at(7, 7),
+      lastMove: at(7, 8),
+      prevMove: at(7, 7),
     });
-    expect(parseLocalState(JSON.stringify({ board, lastMove: 9999 }))).to.deep.equal({ board, lastMove: null });
+    // A blob written before the second marker existed, and a nonsense one.
+    expect(parseLocalState(JSON.stringify({ board, lastMove: at(7, 8) }))).to.deep.equal({
+      board,
+      lastMove: at(7, 8),
+      prevMove: null,
+    });
+    expect(parseLocalState(JSON.stringify({ board, lastMove: 9999, prevMove: 9999 }))).to.deep.equal({
+      board,
+      lastMove: null,
+      prevMove: null,
+    });
     expect(parseLocalState(JSON.stringify({ board: "nope", lastMove: 1 }))).to.equal(null);
     expect(parseLocalState("{not json")).to.equal(null);
     expect(parseLocalState(null)).to.equal(null);

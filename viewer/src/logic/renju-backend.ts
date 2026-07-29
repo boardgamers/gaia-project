@@ -8,6 +8,10 @@ export type RenjuPanelMode = "research" | "renju";
 export interface RenjuRow {
   board: string;
   last_move: number | null;
+  /** The move before `last_move`, i.e. the other colour's latest stone. Both are marked on the
+   * board. Optional because a stack without migration `20260729...renju_previous_move` has no such
+   * column - RenjuBoard.vue then derives it from the position it was already showing. */
+  prev_move?: number | null;
   updated_at?: string;
   black_user: string | null;
   black_user_2: string | null;

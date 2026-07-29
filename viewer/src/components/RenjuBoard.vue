@@ -68,8 +68,19 @@
           :cy="Math.floor(ghost / size)"
           r="0.44"
         />
+        <!-- Both sides' latest stones are marked, so a player can see where they themselves played
+             last as well as what the opponent just answered with; the older of the two is dimmed so
+             it still reads as the earlier move. Neither marker depends on the ghost - a pending,
+             uncommitted tap must not make the position's history disappear. -->
         <circle
-          v-if="lastMove !== null && ghost === null"
+          v-if="prevMove !== null"
+          class="lf-renju-prev"
+          :cx="prevMove % size"
+          :cy="Math.floor(prevMove / size)"
+          r="0.17"
+        />
+        <circle
+          v-if="lastMove !== null"
           class="lf-renju-last"
           :cx="lastMove % size"
           :cy="Math.floor(lastMove / size)"
@@ -129,6 +140,8 @@ import {
   columnOf,
   isValidBoard,
   localRenjuStorageKey,
+  moveIndexOrNull,
+  otherColorLastMove,
   parseLocalState,
   placeStone,
   rowOf,
@@ -155,6 +168,8 @@ export default class RenjuBoard extends Vue {
 
   board = EMPTY_RENJU_BOARD;
   lastMove: number | null = null;
+  /** The other colour's latest stone, marked alongside `lastMove`. */
+  prevMove: number | null = null;
   ghost: number | null = null;
   showResetConfirm = false;
 
@@ -258,6 +273,7 @@ export default class RenjuBoard extends Vue {
     if (stored) {
       this.board = stored.board;
       this.lastMove = stored.lastMove;
+      this.prevMove = stored.prevMove;
     }
   }
 
@@ -282,8 +298,18 @@ export default class RenjuBoard extends Vue {
       this.board = row.board;
       this.ghost = null;
     }
-    this.lastMove =
-      typeof row.last_move === "number" && row.last_move >= 0 && row.last_move < RENJU_CELLS ? row.last_move : null;
+    const showing = this.lastMove;
+    const nextMove = moveIndexOrNull(row.last_move);
+    // `prev_move` is persisted so both markers survive a reload. On a stack that predates that
+    // column, the move we were showing a moment ago is the same thing - and a row that arrives
+    // without advancing the position (a colour assignment, a duplicate realtime frame) must not
+    // discard the marker we already have.
+    let candidate = moveIndexOrNull(row.prev_move);
+    if (candidate === null) {
+      candidate = nextMove === showing ? this.prevMove : showing;
+    }
+    this.prevMove = otherColorLastMove(this.board, nextMove, candidate);
+    this.lastMove = nextMove;
   }
 
   // ---- interaction --------------------------------------------------------
@@ -318,6 +344,7 @@ export default class RenjuBoard extends Vue {
       return;
     }
     this.board = nextBoard;
+    this.prevMove = otherColorLastMove(nextBoard, index, this.lastMove);
     this.lastMove = index;
     this.ghost = null;
 
@@ -339,7 +366,10 @@ export default class RenjuBoard extends Vue {
   }
 
   private persistOffline() {
-    window.localStorage.setItem(this.localStorageKey, JSON.stringify({ board: this.board, lastMove: this.lastMove }));
+    window.localStorage.setItem(
+      this.localStorageKey,
+      JSON.stringify({ board: this.board, lastMove: this.lastMove, prevMove: this.prevMove })
+    );
   }
 
   // ---- reset --------------------------------------------------------------
@@ -350,6 +380,7 @@ export default class RenjuBoard extends Vue {
     if (!this.online) {
       this.board = EMPTY_RENJU_BOARD;
       this.lastMove = null;
+      this.prevMove = null;
       this.persistOffline();
       return;
     }
@@ -724,11 +755,17 @@ export default class RenjuBoard extends Vue {
   }
 }
 
-.lf-renju-last {
+.lf-renju-last,
+.lf-renju-prev {
   fill: none;
   stroke: var(--lf-accent);
   stroke-width: 0.08;
   pointer-events: none;
+}
+
+// The other colour's latest stone: the same ring, faded, so which of the two came last is obvious.
+.lf-renju-prev {
+  opacity: 0.45;
 }
 
 .lf-renju-win-line {

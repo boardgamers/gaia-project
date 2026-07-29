@@ -79,6 +79,11 @@ release.json`) has two audiences and they must not blur together: a "What's new"
   "your turn" pulse, and a real searching advantage bar (`logic/renju-engine.ts`) rather than a
   static score.
   It also fixed a pre-existing pointer-capture bug that made the renju board unplayable with a mouse.
+  #125 (v5.45.3) then marked BOTH colours' latest stones instead of only the most recent one, and
+  stopped an uncommitted first tap from hiding those markers. Its migration
+  `20260729120000_renju_previous_move.sql` (`renju_board.prev_move` + `move_renju`/`reset_renju`) is
+  **written but NOT applied**; until it is, the second marker is derived live and does not survive a
+  reload.
 - **Side games are per-viewer as of #118.** Which face either drawer shows (pool/chess,
   research/renju) is now each viewer's own choice, stored in `localStorage` per game and per
   account - not shared over Realtime. Anything below describing a switch as shared/committed state
@@ -4963,6 +4968,49 @@ new.fen` - a real move or reset, not a colour claim or panel-mode switch) that P
         actually described — a small, slow, deliberate swipe with no flick to help it — and the two
         "springs back" fixtures shrank to 10-12px to stay under the new threshold. Suite **671
         passing / 2 failing** (same flakes), lint clean.
+
+125.  ✅ **Renju marks BOTH sides' latest stones, and a pending tap no longer hides them (2026-07-29,
+      viewer v5.45.3, owner request: "in renju mark my own last move as well and not just opponents
+      last move. Also when I click on a spot opponents last move disappears even though I didn't
+      commit yet").** Two separate problems in `RenjuBoard.vue`, both fixed:
+
+      - **Only one marker existed.** The board tracked a single `lastMove`, so whoever was to move
+        only ever saw the opponent's stone ringed. There is now a second, dimmed ring (`.lf-renju-prev`,
+        `opacity: 0.45`) on the other colour's latest stone, so each player can see where they
+        themselves last played while the brighter ring still shows what just happened. Both are the
+        same accent ring at the same radius — only the opacity differs.
+      - **The ghost hid the markers.** The last-move ring was drawn under `v-if="lastMove !== null &&
+        ghost === null"`, so the two-tap placement's first tap (which commits nothing) erased the
+        board's history until the stone was confirmed or the ghost was cancelled. The ghost condition
+        is gone; a ghost and both markers coexist. Nothing else about two-tap placement changed.
+
+      **Where the second move comes from.** Play alternates, so the move before `last_move` *is* the
+      other colour's latest stone — no move list is needed, just one more index. Migration
+      `20260729120000_renju_previous_move.sql` adds `renju_board.prev_move` (nullable smallint, same
+      0-224 check) and rewrites `move_renju` to carry the outgoing `last_move` into it plus
+      `reset_renju` to null both, exactly the shape chess already uses
+      (`20260724185341_persist_chess_last_move`). Offline pass-and-play persists `prevMove` in its
+      localStorage blob the same way. **This migration is NOT applied yet** — apply it before
+      expecting the second marker to survive a page reload in a hosted game.
+
+      Because it is not applied, `RenjuRow.prev_move` is optional and the component degrades instead
+      of breaking: with no such column it uses the move it was already showing as the candidate, and
+      `otherColorLastMove()` (new, in `logic/renju.ts`) only accepts a candidate that really holds a
+      stone of the opposite colour. That one guard covers every wrong case — a candidate emptied by a
+      reset, and two stones arriving in one update after a sleeping tab missed a realtime frame, where
+      the other side's latest move is genuinely unknown and no marker is better than a false one. A
+      row that arrives without advancing the position (a colour assignment, a duplicate realtime
+      frame) keeps the marker it already had rather than clearing it.
+
+      - **Verification:** viewer suite **635 passing / 2 failing** (the same two documented
+        map-rotation/German-rules flakes; unrelated to renju). The count is lower than #124's 671
+        because this session's run aborted one spec file early on its failing `afterEach` — the renju
+        suites themselves all ran and passed, 24/24. No new lint findings (the pre-existing
+        `renju.ts` use-before-define and spec non-null-assertion errors are unchanged). Six new tests:
+        `moveIndexOrNull`, `otherColorLastMove`'s accept/reject cases and `parseLocalState`'s new
+        field in `renju.spec.ts`; both markers plus their survival across an offline reload, both
+        markers staying visible while a ghost is armed, and the hosted row's `prev_move` plus a reset
+        clearing both in `RenjuBoard.spec.ts`.
 
 ## Still MISSING — only one art-only item left
 

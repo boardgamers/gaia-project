@@ -90,6 +90,11 @@ Read these before coding:
   once the Gaia game is finished. `viewer/src/hosted/turn-kinds.ts` is the one list to extend for a
   future side game. **#118's migration `20260727120000_minigame_push_prefs.sql` and its `notify`
   Edge Function redeploy are not yet applied** — until they are, saving notification settings fails.
+- Renju marks BOTH colours' latest stones as of PROGRESS #125 (viewer v5.45.3), and an uncommitted
+  first tap no longer hides those markers. **Its migration `20260729120000_renju_previous_move.sql`
+  (`renju_board.prev_move`, plus `move_renju`/`reset_renju`) is not applied yet either** — without it
+  the viewer derives the second marker from the position it is already showing, so the marker works
+  during play but does not survive a page reload.
 
 ## Next Work
 
