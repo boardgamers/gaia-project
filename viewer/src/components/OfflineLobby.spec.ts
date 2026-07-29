@@ -4,12 +4,7 @@ import { expect } from "chai";
 import { mount } from "@vue/test-utils";
 import Vue from "vue";
 import { createStoredOfflineGame, listOfflineGames, offlineGameListRow } from "../offline-game";
-import {
-  isOfflineMirrorEnabled,
-  mirrorOfflineGameId,
-  setOfflineMirrorEnabled,
-  syncOfflineMirror,
-} from "../hosted/offline-mirror";
+import { mirrorOfflineGameId, setOfflineMirrorEnabled, syncOfflineMirror } from "../hosted/offline-mirror";
 import OfflineLobby from "./OfflineLobby.vue";
 
 Vue.use(BootstrapVue);
@@ -78,7 +73,7 @@ describe("OfflineLobby", () => {
     wrapper.destroy();
   });
 
-  it("marks a copy of an online game, keeps it out of the move-online flow, and stops its sync on delete", async () => {
+  it("treats a legacy synced copy as an ordinary pass-and-play game", async () => {
     const online = new Engine(["init 2 mirrored-online-game"], { lostFleet: true });
     setOfflineMirrorEnabled("hosted-game-1", true, storage);
     syncOfflineMirror("hosted-game-1", "Mirrored Nova", JSON.parse(JSON.stringify(online)), [0], storage);
@@ -88,9 +83,8 @@ describe("OfflineLobby", () => {
 
     const mirrorId = mirrorOfflineGameId("hosted-game-1");
     expect(wrapper.text()).to.include("Mirrored Nova");
-    expect(wrapper.text()).to.include("Online copy");
-    // It is already online - importing it would fork a second copy of the same hosted game.
-    expect(wrapper.find(`a[href="?importOffline=${mirrorId}"]`).exists()).to.equal(false);
+    expect(wrapper.text()).to.not.include("Online copy");
+    expect(wrapper.find(`a[href="?importOffline=${mirrorId}"]`).exists()).to.equal(true);
     expect(wrapper.find(`a[href="?importOffline=${ids[0]}"]`).exists()).to.equal(true);
 
     const mirrorRow = listOfflineGames(storage)
@@ -106,8 +100,6 @@ describe("OfflineLobby", () => {
     await Vue.nextTick();
 
     expect(listOfflineGames(storage).games.map((game) => game.id)).to.not.include(mirrorId);
-    // Otherwise the online game's still-on setting would recreate the row on its next move.
-    expect(isOfflineMirrorEnabled("hosted-game-1", storage)).to.equal(false);
 
     wrapper.destroy();
   });

@@ -3,6 +3,7 @@ import { expect } from "chai";
 import { listOfflineGames, offlineGameListRow, readStoredOfflineGame, restoreOfflineGame } from "../offline-game";
 import {
   compareMoveHistories,
+  convertHostedGameToPassAndPlay,
   isOfflineMirrorEnabled,
   listOfflineMirroredGameIds,
   mirrorOfflineGameId,
@@ -95,6 +96,37 @@ describe("hosted -> offline copy", () => {
     expect(mirrorOfflineGameId(HOSTED_ID)).to.equal(mirrorOfflineGameId(HOSTED_ID));
     // The offline library only accepts [a-z0-9-] ids, so anything else has to be folded away.
     expect(mirrorOfflineGameId("game 1_x")).to.equal("online-game-1-x");
+  });
+
+  it("converts once to an independent pass-and-play snapshot without overwriting local turns", () => {
+    const storage = new MemoryStorage();
+    const first = convertHostedGameToPassAndPlay(
+      HOSTED_ID,
+      "Copper Nova",
+      committedState(SETUP_MOVES),
+      storage,
+      Date.UTC(2026, 6, 29, 10)
+    );
+
+    expect(first.error).to.equal(null);
+    expect(first.created).to.equal(true);
+    expect(first.save?.id).to.equal(mirrorOfflineGameId(HOSTED_ID));
+    expect(first.save?.mirrorOf).to.equal(undefined);
+    expect(first.save?.mirrorSeats).to.equal(undefined);
+
+    const localHistory = playOffline(storage, ["terrans build ts -1x2."]);
+    const second = convertHostedGameToPassAndPlay(
+      HOSTED_ID,
+      "Renamed online",
+      committedState(SETUP_MOVES),
+      storage,
+      Date.UTC(2026, 6, 29, 11)
+    );
+
+    expect(second.error).to.equal(null);
+    expect(second.created).to.equal(false);
+    expect(second.save?.name).to.equal("Copper Nova");
+    expect(second.save?.engineData.moveHistory).to.deep.equal(localHistory);
   });
 
   it("stores nothing until the setting is turned on for that game", () => {

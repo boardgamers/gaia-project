@@ -7,37 +7,10 @@ import {
 } from "../offline-game";
 
 /**
- * "Convert this online game to an offline game" (the hosted settings menu, HostedBar.vue).
- *
- * Turning the setting on drops a playable copy of the hosted game into this device's offline
- * library (offline-game.ts), and from then on every committed turn the hosted session sees - the
- * local player's own moves, an opponent's move arriving over Realtime, a server-side premove, a
- * full resync - is written straight back into that copy. So the offline library always holds the
- * online game as of the last time this browser had it open, ready to open and read (or play on
- * from) with no account and no connection.
- *
- * **Moves played offline are never lost, and never reverted.** The copy is refreshed only from an
- * online state that is strictly further along the SAME history (`MirrorRelation`) - so a hosted
- * state that is BEHIND the copy, which is exactly what a returning player sees after playing on a
- * plane, cannot overwrite it. Instead the moves the copy holds and the online game doesn't are
- * uploaded to the online game (`planOfflineUpload`, driven by hosted.ts): the two converge forwards,
- * never backwards. Once they match, ordinary mirroring resumes.
- *
- * Because those offline moves become real committed turns in the hosted game, only seats this
- * account actually holds may be played offline - `mirrorSeats` is stored on the record and
- * self-contained.ts locks the offline copy to them, the same way hosted play is seat-locked. A move
- * for someone else's seat could never be committed (`commit_turn` asserts seat ownership), so
- * letting it be made offline would be building an upload that can never happen.
- *
- * (The separate one-shot "Move online" flow - hosted/import-offline-game.ts - is unrelated: it
- * turns a purely local game into a NEW hosted game, and refuses a mirrored record.)
- *
- * The setting is per browser, not per account: the copy it maintains lives in this device's
- * localStorage, so "is this game mirrored" is only ever meaningful for the device holding it.
- * Turning it off only stops the syncing - the copy stays in the offline library, since keeping a
- * readable/playable copy is the entire point of having made one. Deleting that copy in the offline
- * lobby turns the setting off too (OfflineLobby.vue), so a deleted copy can't quietly reappear on
- * the next online move.
+ * The current hosted action creates one independent offline pass-and-play snapshot; see
+ * `convertHostedGameToPassAndPlay`. The older preference, synchronization, upload-planning, and
+ * seat-lock helpers remain below so existing stored records and their focused compatibility tests
+ * can still be interpreted, but hosted.ts no longer invokes that two-way mirror workflow.
  */
 export const OFFLINE_MIRROR_PREFS_KEY = "gaia-offline-mirror-v1";
 
@@ -76,6 +49,38 @@ function errorMessage(error: unknown): string {
  */
 export function mirrorOfflineGameId(hostedGameId: string): string {
   return `${OFFLINE_MIRROR_ID_PREFIX}${String(hostedGameId).replace(/[^a-z0-9-]+/gi, "-")}`;
+}
+
+export type OfflinePassAndPlayConversionResult = {
+  save: StoredOfflineGame | null;
+  error: string | null;
+  created: boolean;
+};
+
+/**
+ * Takes one committed hosted state and stores it as an independent offline pass-and-play game.
+ *
+ * The stable source-derived id makes this idempotent: converting twice finds the first copy instead
+ * of overwriting local turns with a newer online snapshot. No `mirrorOf`/`mirrorSeats` metadata is
+ * written, because the histories intentionally separate at conversion time.
+ */
+export function convertHostedGameToPassAndPlay(
+  hostedGameId: string,
+  gameName: string,
+  engineData: unknown,
+  storage: Storage | null = browserOfflineStorage(),
+  now = Date.now()
+): OfflinePassAndPlayConversionResult {
+  if (!storage) {
+    return { save: null, error: "Local storage is unavailable in this browser.", created: false };
+  }
+  const offlineGameId = mirrorOfflineGameId(hostedGameId);
+  const existing = readStoredOfflineGame(offlineGameId, storage);
+  if (existing.save) {
+    return { save: existing.save, error: null, created: false };
+  }
+  const result = upsertStoredOfflineGame(offlineGameId, engineData, gameName, null, storage, now);
+  return { save: result.save, error: result.error, created: !!result.save };
 }
 
 function isOfflineMirrorPrefs(value: any): value is OfflineMirrorPrefs {

@@ -14,26 +14,11 @@ import ImportOfflineGame from "./hosted/ImportOfflineGame.vue";
 import LobbyChatPanel from "./hosted/LobbyChatPanel.vue";
 import NotificationSettings from "./hosted/NotificationSettings.vue";
 import { HostedGameHost, seatToLock } from "./hosted/host";
-import {
-  isOfflineMirrorEnabled,
-  mirrorOfflineGameId,
-  planOfflineUpload,
-  readOfflineMirrorState,
-  setOfflineMirrorEnabled,
-  syncOfflineMirror,
-} from "./hosted/offline-mirror";
+import { convertHostedGameToPassAndPlay, mirrorOfflineGameId } from "./hosted/offline-mirror";
 import { localChessLastMoveStorageKey, localChessStorageKey } from "./logic/chess";
 import { localRenjuStorageKey } from "./logic/renju";
 import { localUltimateStorageKey } from "./logic/ultimate-tic-tac-toe";
-import {
-  clearOfflineMinigameOps,
-  MinigameKind,
-  offlineMinigameGameId,
-  queueOfflineMinigameOp,
-  readOfflineMinigameOps,
-  uploadOfflineMinigameOps,
-  writeOfflineMinigameMirror,
-} from "./logic/offline-minigame-sync";
+import { discardOfflineMinigameMirror } from "./logic/offline-minigame-sync";
 import Lobby from "./hosted/Lobby.vue";
 import OpenLobbyGame from "./hosted/OpenLobbyGame.vue";
 import PendingApproval from "./hosted/PendingApproval.vue";
@@ -157,218 +142,42 @@ async function mountGameInstance(
   emitter.store.commit("setRenjuBackend", renjuBackend);
   // The ship-board drawer follows the same shared-online / local-offline boundary.
   emitter.store.commit("setUltimateTicTacToeBackend", ultimateBackend);
-  // The three sidebar minigames travel with the offline copy too (logic/offline-minigame-sync.ts).
-  // Same contract as the Gaia board: their positions come down, moves played offline go back up.
+  // A converted pass-and-play game starts its three sidebar minigames from the positions currently
+  // shown online. Only the positions are copied: account assignments and upload logs would lock the
+  // offline boards to online players, contradicting pass-and-play.
   const offlineCopySearch = `?game=${encodeURIComponent(mirrorOfflineGameId(gameId))}`;
-  const minigames: Array<{ kind: MinigameKind; backend: any; localState: (row: any) => void }> = [
-    {
-      kind: "chess",
-      backend: chessBackend,
-      localState: (row) => {
-        window.localStorage.setItem(localChessStorageKey(offlineCopySearch), row.fen);
-        window.localStorage.setItem(
-          localChessLastMoveStorageKey(offlineCopySearch),
-          JSON.stringify({ from: row.last_move_from ?? null, to: row.last_move_to ?? null })
-        );
-      },
-    },
-    {
-      kind: "renju",
-      backend: renjuBackend,
-      localState: (row) =>
-        window.localStorage.setItem(
-          localRenjuStorageKey(offlineCopySearch),
-          JSON.stringify({ board: row.board, lastMove: row.last_move ?? null, prevMove: row.prev_move ?? null })
-        ),
-    },
-    {
-      kind: "ultimate",
-      backend: ultimateBackend,
-      localState: (row) =>
-        window.localStorage.setItem(
-          localUltimateStorageKey(offlineCopySearch),
-          JSON.stringify({ board: row.board, lastMove: row.last_move ?? null })
-        ),
-    },
-  ];
+  const copyOfflineMinigames = async () => {
+    const offlineGameId = mirrorOfflineGameId(gameId);
+    discardOfflineMinigameMirror(offlineGameId);
+    const [chess, renju, ultimate] = await Promise.all([
+      chessBackend.load().catch(() => null),
+      renjuBackend.load().catch(() => null),
+      ultimateBackend.load().catch(() => null),
+    ]);
+    if (chess) {
+      window.localStorage.setItem(localChessStorageKey(offlineCopySearch), chess.fen);
+      window.localStorage.setItem(
+        localChessLastMoveStorageKey(offlineCopySearch),
+        JSON.stringify({ from: chess.last_move_from ?? null, to: chess.last_move_to ?? null })
+      );
+    }
+    if (renju) {
+      window.localStorage.setItem(
+        localRenjuStorageKey(offlineCopySearch),
+        JSON.stringify({ board: renju.board, lastMove: renju.last_move ?? null, prevMove: renju.prev_move ?? null })
+      );
+    }
+    if (ultimate) {
+      window.localStorage.setItem(
+        localUltimateStorageKey(offlineCopySearch),
+        JSON.stringify({ board: ultimate.board, lastMove: ultimate.last_move ?? null })
+      );
+    }
+  };
 
-  // "Convert to offline game" (hosted/offline-mirror.ts) - a per-device setting in this game's
-  // settings menu. While it's on, every committed state (host.ts's `onCommittedState`, below)
-  // is written into a playable copy of this game in the browser's own offline library, so it stays
-  // readable and playable with no account and no connection. Deliberately not in the Vuex store:
-  // nothing in the viewer tree needs it, only the bar's own menu.
+  // The settings action snapshots this committed state once. It deliberately does not subscribe the
+  // copy to later hosted states: independent histories are what make every offline seat playable.
   let lastCommittedState: any = null;
-  // Guards the upload loop below against re-entry: each move it sends commits, which emits another
-  // committed state, which calls straight back into `syncOfflineCopy`.
-  let uploadingOfflineMoves = false;
-  // Set once `host.load()` has resolved and `mySeats` is real. The copy records which seats may be
-  // played offline, and nothing may be uploaded before we know whose seats they are, so the first
-  // states (emitted from inside `load()`, while `mySeats` is still empty) must not write it.
-  let seatsKnown = false;
-  let syncingMinigames = false;
-  let minigameUploads = 0;
-  const minigameConflicts = new Set<MinigameKind>();
-
-  const syncOfflineCopy = () => {
-    if (!lastCommittedState || !bar.offlineMirror || !seatsKnown) {
-      return;
-    }
-    const result = syncOfflineMirror(gameId, host.game?.name ?? "", lastCommittedState, mySeats);
-    if (result.error) {
-      // Never interrupts play - the online game is unaffected either way, and the copy just stays at
-      // the last move it managed to store (a full-storage quota error being the likeliest cause).
-      // Reported on the settings menu's own status line rather than as an alert per move.
-      bar.offlineMirrorStatus = `Offline copy failed: ${result.error}`;
-      console.warn("[hosted] offline copy failed", result.error);
-      return;
-    }
-    if (result.relation === "ahead") {
-      // The copy holds moves played offline that this game doesn't have yet. It is NOT overwritten
-      // (syncOfflineMirror refuses); those moves go up instead, so the two converge forwards.
-      uploadOfflineMoves();
-      return;
-    }
-    if (result.relation === "diverged") {
-      // Offline play raced a move made online: the two histories genuinely disagree, so neither side
-      // can be replayed onto the other. Leave both alone and say so - the local game is still intact
-      // in the offline lobby, and the online game is untouched.
-      bar.offlineMirrorStatus = "Offline copy conflicts with the online game - kept, not overwritten";
-      return;
-    }
-    if (!result.skipped && result.save) {
-      const moves = Math.max((result.save.engineData?.moveHistory?.length ?? 1) - 1, 0);
-      bar.offlineMirrorStatus = `Offline copy saved (${moves} ${moves === 1 ? "move" : "moves"})`;
-    }
-    syncOfflineMinigames();
-  };
-
-  /**
-   * The sidebar minigames' half of the copy. Their rows hold only a current position, so unlike the
-   * Gaia board they cannot be compared for "ahead"; instead anything played offline is recorded as
-   * an op log (logic/offline-minigame-sync.ts) which is replayed here first. A board with a pending
-   * log is never refreshed from the online row until that log has gone up, which is the same
-   * no-overwrite rule the Gaia copy follows.
-   */
-  const syncOfflineMinigames = () => {
-    if (!bar.offlineMirror || syncingMinigames) {
-      return;
-    }
-    syncingMinigames = true;
-    const offlineGameId = offlineMinigameGameId(offlineCopySearch);
-    const rows: Partial<Record<MinigameKind, any>> = {};
-    Promise.all(
-      minigames.map(async ({ kind, backend, localState }) => {
-        const pending = readOfflineMinigameOps(offlineGameId, kind);
-        if (pending.length > 0) {
-          const result = await uploadOfflineMinigameOps(backend, kind, pending);
-          if (result.uploaded > 0) {
-            minigameUploads += result.uploaded;
-          }
-          if (result.conflict) {
-            // Keep what could not be sent: the offline board stays as the player left it, and the
-            // online board is whatever the other player made of it.
-            minigameConflicts.add(kind);
-            clearOfflineMinigameOps(offlineGameId, kind);
-            for (const op of result.remaining) {
-              queueOfflineMinigameOp(offlineGameId, kind, op);
-            }
-            return;
-          }
-          clearOfflineMinigameOps(offlineGameId, kind);
-        }
-        const row = await backend.load();
-        if (row) {
-          rows[kind] = row;
-          if (readOfflineMinigameOps(offlineGameId, kind).length === 0) {
-            localState(row);
-          }
-        }
-      })
-    )
-      .then(() => {
-        // The colour/team assignments and this account's id travel with the copy: offline there is
-        // no session to ask, and without them the boards could not tell whose move it is.
-        writeOfflineMinigameMirror(offlineGameId, session.user.id, rows);
-        if (minigameConflicts.size > 0) {
-          bar.offlineMirrorStatus = `Offline ${[...minigameConflicts].join(
-            "/"
-          )} moves clashed with the online board and were kept offline`;
-        } else if (minigameUploads > 0) {
-          bar.offlineMirrorStatus = `Sent ${minigameUploads} offline minigame ${
-            minigameUploads === 1 ? "move" : "moves"
-          }`;
-        }
-        minigameUploads = 0;
-        minigameConflicts.clear();
-      })
-      .catch(() => {
-        // Best effort - the minigames must never block or alarm about the Gaia game.
-      })
-      .finally(() => {
-        syncingMinigames = false;
-      });
-  };
-
-  /**
-   * Sends moves played in the offline copy up to the online game, one committed turn at a time
-   * through the ordinary commit path, so other players see them exactly like any other move.
-   *
-   * Re-planned on every iteration rather than from one precomputed list: each commit can be beaten
-   * by another device (seq conflict -> resync), which changes what is still uploadable. The loop
-   * stops as soon as a move can't go (someone else's seat, or the engine rejects it now) and says
-   * why; whatever couldn't be sent stays in the offline copy rather than being discarded.
-   */
-  const uploadOfflineMoves = async () => {
-    if (uploadingOfflineMoves) {
-      return;
-    }
-    uploadingOfflineMoves = true;
-    let uploaded = 0;
-    let blocked: ReturnType<typeof planOfflineUpload>["blocked"] = null;
-    try {
-      for (;;) {
-        const state = readOfflineMirrorState(gameId, lastCommittedState?.moveHistory ?? []);
-        if (state.relation !== "ahead") {
-          break;
-        }
-        const plan = planOfflineUpload(lastCommittedState, state.offlineMoves, (seat) => mySeats.includes(seat));
-        if (plan.moves.length === 0) {
-          blocked = plan.blocked;
-          break;
-        }
-        bar.offlineMirrorStatus = `Sending ${plan.moves.length} offline ${
-          plan.moves.length === 1 ? "move" : "moves"
-        } to the online game…`;
-        const before = lastCommittedState?.moveHistory?.length ?? 0;
-        await host.submitMove(plan.moves[0]);
-        if ((lastCommittedState?.moveHistory?.length ?? 0) <= before) {
-          // The commit didn't land (rejected, or another device won the race and we resynced).
-          // Stop rather than spin - the next committed state will try again from the real state.
-          blocked = { move: plan.moves[0], seat: null, reason: "rejected" };
-          break;
-        }
-        uploaded++;
-      }
-    } finally {
-      uploadingOfflineMoves = false;
-    }
-
-    if (blocked?.reason === "other-seat") {
-      const seatLabel = blocked.seat === null ? "another player" : `seat ${blocked.seat + 1}`;
-      bar.offlineMirrorStatus = `Sent ${uploaded} offline ${
-        uploaded === 1 ? "move" : "moves"
-      }; the rest waits on ${seatLabel}`;
-    } else if (blocked) {
-      bar.offlineMirrorStatus = `Sent ${uploaded} offline ${
-        uploaded === 1 ? "move" : "moves"
-      }; the next one no longer fits the online game and was kept offline`;
-    } else if (uploaded > 0) {
-      bar.offlineMirrorStatus = `Sent ${uploaded} offline ${uploaded === 1 ? "move" : "moves"} to the online game`;
-      // Everything landed: the copy and the online game now match, so refresh it normally (this also
-      // re-stamps the record, which is what makes the offline lobby show it as up to date again).
-      syncOfflineCopy();
-    }
-  };
 
   // Declared here (before its watchers below, which reference it) rather than in its previous
   // spot further down - HostedBar.vue's settings-menu labels (`chatPanelOpen`/`gameNavPanelOpen`)
@@ -386,8 +195,7 @@ async function mountGameInstance(
       notifSettingsOpen: false,
       chatPanelOpen: chatNotes.open,
       gameNavPanelOpen: nav.open,
-      offlineMirror: isOfflineMirrorEnabled(gameId),
-      offlineMirrorStatus: "",
+      offlineCopyStatus: "",
     },
     render(h) {
       // The bell now opens a settings modal (rendered as a sibling of the bar so its fixed-position
@@ -409,17 +217,30 @@ async function mountGameInstance(
             },
             "toggle-chat-panel": () => chatNotes.toggleOpen(),
             "toggle-game-nav-panel": () => nav.toggleOpen(),
-            // The bar has already confirmed the change with the user (HostedBar.vue's
-            // `toggleOfflineCopy`); switching it on copies the state this session is already
-            // holding, so the copy exists immediately rather than only after the next turn.
-            "toggle-offline-mirror": () => {
-              const result = setOfflineMirrorEnabled(gameId, !bar.offlineMirror);
-              bar.offlineMirror = result.enabled;
-              bar.offlineMirrorStatus = "";
-              if (result.error) {
-                window.alert(`Could not change the offline copy setting: ${result.error}`);
+            // A one-time independent snapshot. Reusing a stable id makes repeat clicks idempotent
+            // and, critically, never overwrites a pass-and-play copy that has advanced locally.
+            "convert-to-offline": async () => {
+              if (!lastCommittedState) {
+                bar.offlineCopyStatus = "The game is still loading; try again in a moment.";
+                return;
               }
-              syncOfflineCopy();
+              const offlineGameId = mirrorOfflineGameId(gameId);
+              const result = convertHostedGameToPassAndPlay(gameId, bar.gameName, lastCommittedState);
+              if (result.save && !result.created) {
+                discardOfflineMinigameMirror(offlineGameId);
+                bar.offlineCopyStatus = "Pass-and-play copy already exists in Offline games.";
+                return;
+              }
+              if (!result.save) {
+                bar.offlineCopyStatus = `Could not create pass-and-play copy: ${result.error ?? "unknown error"}`;
+                return;
+              }
+              bar.offlineCopyStatus = "Pass-and-play copy saved in Offline games.";
+              try {
+                await copyOfflineMinigames();
+              } catch {
+                bar.offlineCopyStatus = "Pass-and-play game saved; a sidebar game could not be copied.";
+              }
             },
           },
         }),
@@ -542,11 +363,10 @@ async function mountGameInstance(
         const lock = seatToLock(mySeats, playerCount, turnSeat);
         emitter.emit("player", lock !== null ? { index: lock } : null);
       },
-      // Committed states only (never a half-composed turn) - the offline copy must hold a game that
-      // opens cleanly in the offline lobby, not a turn frozen mid-click. See host.ts's `emitState`.
+      // Keep the latest committed state ready for the one-shot pass-and-play conversion. A
+      // half-composed turn is never snapshotted; see host.ts's `emitState`.
       onCommittedState: (data: any) => {
         lastCommittedState = data;
-        syncOfflineCopy();
       },
       onError: (message: string) => {
         emitter.emit("error", message);
@@ -618,10 +438,6 @@ async function mountGameInstance(
   }
 
   mySeats = host.mySeats(session.user.id, session.user.email);
-  // The offline copy may now be written/uploaded: which seats this account holds is what decides
-  // both what it records as playable offline and what may be sent back up (see syncOfflineCopy).
-  // `host.emitCurrentState()` below re-emits the loaded state, which is what actually runs it.
-  seatsKnown = true;
   updateBarLive();
 
   // Presence (PROGRESS.md Gaia 9) - the seat->user_id map (for matching a seat's turn-order dot to

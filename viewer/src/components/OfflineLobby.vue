@@ -66,11 +66,8 @@
         This browser does not report whether local game storage is protected from automatic cleanup.
       </p>
       <p v-if="online">
-        A game marked <strong>“Online copy”</strong> came from the online lobby: open that game online and turn on
-        <strong>Convert to offline game</strong> in its settings menu, and every move played there is copied here
-        automatically. Play it on a plane and your moves are sent up to the online game the next time you open it with a
-        connection — nothing you played offline is thrown away or rolled back. Only your own seats can be played here,
-        because nobody can move for another player.
+        Converting an online game creates an independent pass-and-play snapshot here. Everyone can take turns on this
+        device; later moves in the online and offline versions do not affect each other.
       </p>
       <p class="mb-0">
         Games remain on this phone after closing or restarting the app. Clearing browser/site data or uninstalling the
@@ -118,18 +115,9 @@
       <b-list-group-item v-for="game in games" :key="game.id" class="game-bar offline-lobby__game">
         <GameBar :game="game" :game-href="gameHref(game.id)" my-user-id="" />
         <div class="offline-lobby__game-actions">
-          <b-badge
-            v-if="game.mirror_of"
-            variant="info"
-            class="offline-lobby__mirror-badge"
-            v-b-tooltip.hover
-            title="A copy of an online game, kept in sync both ways: it updates whenever you open that game online, and moves you play here are sent up to the online game next time you open it with a connection. Only your own seats can be played."
-          >
-            Online copy
-          </b-badge>
           <b-button size="sm" variant="outline-secondary" @click="downloadBackup(game)"> Download backup </b-button>
           <a
-            v-if="online && !game.mirror_of"
+            v-if="online"
             class="btn btn-sm btn-outline-primary"
             :href="`?importOffline=${encodeURIComponent(game.id)}`"
           >
@@ -158,7 +146,6 @@ import {
 } from "../offline-game";
 import GameBar from "../hosted/GameBar.vue";
 import InfoModal from "../hosted/InfoModal.vue";
-import { setOfflineMirrorEnabled } from "../hosted/offline-mirror";
 import { getTheme, toggleTheme } from "../hosted/theme";
 
 function backupFileName(name: string): string {
@@ -323,9 +310,7 @@ export default Vue.extend({
       this.backupMessage = `Downloaded a backup of “${result.save.name}”.`;
     },
     deleteGame(game: OfflineGameListRow) {
-      const question = game.mirror_of
-        ? `Delete "${game.name}" from this device? The online game is not affected, but it will stop being copied here.`
-        : `Delete "${game.name}" from this device? This cannot be undone.`;
+      const question = `Delete "${game.name}" from this device? This cannot be undone.`;
       if (!window.confirm(question)) {
         return;
       }
@@ -335,16 +320,6 @@ export default Vue.extend({
       if (result.error) {
         this.storageError = result.error;
         return;
-      }
-      // Otherwise the online game's still-enabled "Convert to offline game" setting would quietly
-      // recreate this row on its very next committed move (see hosted/offline-mirror.ts).
-      if (game.mirror_of) {
-        const stopped = this.storage
-          ? setOfflineMirrorEnabled(game.mirror_of, false, this.storage as Storage)
-          : setOfflineMirrorEnabled(game.mirror_of, false);
-        if (stopped.error) {
-          this.storageError = stopped.error;
-        }
       }
       this.refresh();
     },

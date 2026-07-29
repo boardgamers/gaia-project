@@ -61,7 +61,7 @@ describe("ImportOfflineGame", () => {
     expect(wrapper.find("select").exists()).to.equal(false);
   });
 
-  it("refuses to move an automatic copy of a game that is already online", async () => {
+  it("allows a legacy automatic copy to move online now that it is independent pass-and-play", async () => {
     const storage = new MemoryStorage();
     const engine = new Engine(["init 2 randomSeed", "p1 faction terrans"], {});
     engine.generateAvailableCommandsIfNeeded();
@@ -73,10 +73,11 @@ describe("ImportOfflineGame", () => {
       propsData: { client, session, offlineGameId: mirrorOfflineGameId("hosted-game-1"), storage },
     });
     await Vue.nextTick();
+    await Vue.nextTick();
 
-    expect(wrapper.text()).to.include("already in the online lobby");
-    expect(wrapper.find("select").exists()).to.equal(false);
-    expect((wrapper.vm as any).canImport).to.equal(false);
+    expect(wrapper.text()).to.not.include("already in the online lobby");
+    expect(wrapper.find("select").exists()).to.equal(true);
+    expect((wrapper.vm as any).canImport).to.equal(true);
   });
 
   it("defaults every seat to the signed-in player and enables the move button", async () => {

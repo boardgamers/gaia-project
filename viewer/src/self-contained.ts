@@ -2,10 +2,9 @@ import Engine, { FactionVariant } from "@gaia-project/engine";
 import { AuctionVariant, Layout } from "@gaia-project/engine/src/engine";
 import Game from "./components/Game.vue";
 import Wrapper from "./components/Wrapper.vue";
-import { seatToLock } from "./hosted/host";
-import { offlineMirrorSeatLock } from "./hosted/offline-mirror";
 import launch from "./launcher";
 import { autoDecideChargePower, parseAutoChargePreference } from "./logic/auto-decide";
+import { discardOfflineMinigameMirror } from "./logic/offline-minigame-sync";
 import {
   announceOfflineGameSave,
   isOfflineGameMode,
@@ -152,15 +151,6 @@ function launchSelfContained(selector = "#app", debug = true) {
   let restoredPendingMove = "";
   let restoredOfflineSave = false;
   let rewriteRestoredSave = false;
-  // A copy of an online game (hosted/offline-mirror.ts) is not a hot-seat game: whatever is played
-  // here becomes a real committed turn in the hosted game as soon as this browser is back online,
-  // and only a seat this account holds can ever be committed for. So the same seat lock hosted play
-  // uses applies here, instead of letting a whole table be played and then refused on upload.
-  // `null` for every ordinary pass-and-play game (and for a mirrored record written before seats
-  // were recorded), which keeps its unlocked hot seat; an empty array means a mirrored game this
-  // account holds no seat in - a spectator's copy, readable but not playable, since not one of its
-  // moves could ever be committed online.
-  let mirrorSeats: number[] | null = null;
   try {
     const initialLoad = parseLoadFromQuery(search);
     const scenarioId = parseScenarioFromQuery(search);
@@ -177,7 +167,11 @@ function launchSelfContained(selector = "#app", debug = true) {
     }
 
     if (stored?.save) {
-      mirrorSeats = offlineMirrorSeatLock(stored.save);
+      // Copies created by the former two-way mirror become ordinary pass-and-play games too. Drop
+      // the minigames' legacy account/assignment lock while retaining their last local positions.
+      if (stored.save.mirrorOf && offlineGameId) {
+        discardOfflineMinigameMirror(offlineGameId);
+      }
       const restored = restoreOfflineGame(stored.save);
       engine = restored.engine;
       initialDisplayEngine = restored.displayEngine;
@@ -225,6 +219,12 @@ function launchSelfContained(selector = "#app", debug = true) {
     persistOfflineGame(restoredPendingMove);
   }
 
+  // Every offline game is pass-and-play. No player lock is emitted, so whichever seat is active can
+  // take its turn on this device.
+  const emitState = (data: any) => {
+    emitter.emit("state", data);
+  };
+
   const unsub = emitter.store.subscribeAction(({ payload, type }) => {
     if (type === "loadFromJSON") {
       const p: LoadFromJson = payload;
@@ -237,25 +237,10 @@ function launchSelfContained(selector = "#app", debug = true) {
       });
       engine.generateAvailableCommandsIfNeeded();
       persistOfflineGame();
-      emitStateWithSeatLock(JSON.parse(JSON.stringify(engine)));
+      emitState(JSON.parse(JSON.stringify(engine)));
     }
   });
   emitter.app.$once("hook:beforeDestroy", unsub);
-
-  // Lets the board explain itself when a mirrored copy is showing someone else's turn (Game.vue):
-  // without it the action area is simply empty, which reads as broken rather than as "not yours".
-  emitter.store.commit("setOfflineMirror", mirrorSeats !== null);
-
-  // Emits a state and, for a mirrored copy only, re-applies the seat lock for whoever must act in
-  // it - the same rule hosted play uses (host.ts's `seatToLock`), so a leech interrupt unlocks the
-  // right seat and a player holding every seat still plays freely.
-  const emitStateWithSeatLock = (data: any) => {
-    emitter.emit("state", data);
-    if (mirrorSeats) {
-      const lock = seatToLock(mirrorSeats, data?.players?.length ?? 0, data?.playerToMove);
-      emitter.emit("player", lock !== null ? { index: lock } : null);
-    }
-  };
 
   emitter.on("move", (move: string) => {
     const copy = Engine.fromData(JSON.parse(JSON.stringify(engine)));
@@ -279,10 +264,10 @@ function launchSelfContained(selector = "#app", debug = true) {
 
     persistOfflineGame(copy.newTurn ? "" : move);
 
-    emitStateWithSeatLock(JSON.parse(JSON.stringify(copy)));
+    emitState(JSON.parse(JSON.stringify(copy)));
   });
 
-  emitStateWithSeatLock(JSON.parse(JSON.stringify(initialDisplayEngine)));
+  emitState(JSON.parse(JSON.stringify(initialDisplayEngine)));
 }
 
 export default launchSelfContained;

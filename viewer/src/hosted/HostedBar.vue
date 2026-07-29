@@ -52,11 +52,9 @@
           }}</b-dropdown-item-button>
         </template>
         <b-dropdown-divider></b-dropdown-divider>
-        <b-dropdown-item-button @click="toggleOfflineCopy">{{
-          offlineMirror ? "Stop offline copy" : "Convert to offline game"
-        }}</b-dropdown-item-button>
-        <b-dropdown-text v-if="offlineMirror" class="hosted-bar__offline-status small text-muted">
-          {{ offlineMirrorStatus || "Offline copy up to date" }}
+        <b-dropdown-item-button @click="convertToOffline">Convert to offline pass-and-play</b-dropdown-item-button>
+        <b-dropdown-text v-if="offlineCopyStatus" class="hosted-bar__offline-status small text-muted">
+          {{ offlineCopyStatus }}
         </b-dropdown-text>
         <b-dropdown-divider></b-dropdown-divider>
         <b-dropdown-item-button v-if="!abandoned" @click="confirmAbandon">Abandon game</b-dropdown-item-button>
@@ -90,11 +88,9 @@ export default Vue.extend({
     // updates these props, same pattern as `gameName`/`finished` above.
     chatPanelOpen: { type: Boolean, default: false },
     gameNavPanelOpen: { type: Boolean, default: false },
-    // "Convert to offline game" (hosted/offline-mirror.ts) - whether this device is keeping a
-    // playable offline copy of this game in sync, and a one-line status for it (last sync time, or
-    // whatever went wrong), both owned by hosted.ts since the copy lives outside this component.
-    offlineMirror: { type: Boolean, default: false },
-    offlineMirrorStatus: { type: String, default: "" },
+    // One-line result of the one-shot pass-and-play conversion, owned by hosted.ts because the
+    // resulting game lives in the device's offline library rather than in this component.
+    offlineCopyStatus: { type: String, default: "" },
   },
   data() {
     return {
@@ -122,17 +118,11 @@ export default Vue.extend({
     toggleDarkMode() {
       this.isDarkMode = toggleTheme() === "dark";
     },
-    /**
-     * Both directions are confirmed because both have a consequence the wording has to be honest
-     * about: switching on copies the whole game onto this device (and keeps doing so), and
-     * switching off leaves the copy behind at whatever move it last synced rather than deleting it.
-     */
-    toggleOfflineCopy() {
-      const message = this.offlineMirror
-        ? "Stop copying this game to your offline games? The copy already on this device stays there, frozen at the last move it synced - delete it from the offline lobby if you don't want it."
-        : "Add this game to your offline games on this device? Every move played online is copied there automatically, and moves you play in the copy while offline are sent up to the online game as soon as you are back - they are real moves, not practice. The copy is never overwritten by an older online state. You can only play your own seats in it, since nobody can move for another player.";
+    convertToOffline() {
+      const message =
+        "Create an independent pass-and-play copy of this game on this device? Everyone can take their turns on the same device. The copy will not stay synchronized with this online game, and moves made in either version will not affect the other.";
       if (window.confirm(message)) {
-        this.$emit("toggle-offline-mirror");
+        this.$emit("convert-to-offline");
       }
     },
     confirmAbandon() {

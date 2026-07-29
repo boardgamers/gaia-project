@@ -1,7 +1,22 @@
 {
-  "version": "5.48.2",
+  "version": "5.48.3",
   "releasedAt": "2026-07-29",
   "entries": [
+    {
+      "version": "5.48.3",
+      "releasedAt": "2026-07-29",
+      "kind": "update",
+      "title": "Converted games are pass-and-play",
+      "impact": "",
+      "changes": [
+        "Converted online games now become independent offline pass-and-play copies, so every seat can take a turn on the same device.",
+        "Replaced the two-way hosted/offline mirror with an idempotent one-time snapshot that never uploads offline moves or overwrites either history.",
+        "Previously mirrored Gaia and sidebar games now open without account seat or colour locks."
+      ],
+      "userChanges": [
+        "Converted online games now become independent offline pass-and-play copies, so every seat can take a turn on the same device."
+      ]
+    },
     {
       "version": "5.48.2",
       "releasedAt": "2026-07-29",

@@ -117,6 +117,23 @@ export function writeOfflineMinigameMirror(
   }
 }
 
+/**
+ * Removes the legacy account/assignment lock and pending upload log from an offline game that is
+ * becoming independent pass-and-play. The boards' own local position keys are deliberately kept,
+ * so chess/renju/Ultimate resume from the copied position with both sides unlocked.
+ */
+export function discardOfflineMinigameMirror(gameId: string, storage: Storage | null = browserStorage()): void {
+  if (!storage || !gameId) {
+    return;
+  }
+  try {
+    storage.removeItem(stateKey(gameId));
+    storage.removeItem(opsKey(gameId));
+  } catch {
+    // Best effort: the Gaia game remains playable even when this browser blocks localStorage writes.
+  }
+}
+
 function readOpsRecord(gameId: string, storage: Storage): OpsRecord {
   try {
     const parsed = JSON.parse(storage.getItem(opsKey(gameId)) ?? "null");

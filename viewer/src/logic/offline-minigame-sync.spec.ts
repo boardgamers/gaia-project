@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import {
   clearOfflineMinigameOps,
+  discardOfflineMinigameMirror,
   hasPendingOfflineMinigameOps,
   MinigameOp,
   offlineMinigameGameId,
@@ -102,6 +103,19 @@ describe("offline minigame sync", () => {
     expect(mirror?.userId).to.equal("me");
     expect(mirror?.rows.chess).to.deep.equal(row);
     expect(readOfflineMinigameMirror("some-other-game", storage)).to.equal(null);
+  });
+
+  it("discards legacy assignment/upload locks while retaining the pass-and-play board position", () => {
+    const storage = new MemoryStorage();
+    writeOfflineMinigameMirror(GAME, "me", { chess: { fen: "somefen" } }, storage);
+    queueOfflineMinigameOp(GAME, "chess", { kind: "move", previous: "a", next: "b" }, storage);
+    storage.setItem(`lf-chess-fen:${GAME}`, "local-position");
+
+    discardOfflineMinigameMirror(GAME, storage);
+
+    expect(readOfflineMinigameMirror(GAME, storage)).to.equal(null);
+    expect(hasPendingOfflineMinigameOps(GAME, storage)).to.equal(false);
+    expect(storage.getItem(`lf-chess-fen:${GAME}`)).to.equal("local-position");
   });
 
   it("replays a whole offline session in order, moves and resets alike", async () => {
