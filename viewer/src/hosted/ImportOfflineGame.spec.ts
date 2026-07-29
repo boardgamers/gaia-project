@@ -5,6 +5,7 @@ import { mount } from "@vue/test-utils";
 import Vue from "vue";
 import { createStoredOfflineGame, readStoredOfflineGame } from "../offline-game";
 import ImportOfflineGame from "./ImportOfflineGame.vue";
+import { mirrorOfflineGameId, setOfflineMirrorEnabled, syncOfflineMirror } from "./offline-mirror";
 
 Vue.use(BootstrapVue);
 
@@ -58,6 +59,24 @@ describe("ImportOfflineGame", () => {
 
     expect(wrapper.text()).to.include("could not be loaded on this device");
     expect(wrapper.find("select").exists()).to.equal(false);
+  });
+
+  it("refuses to move an automatic copy of a game that is already online", async () => {
+    const storage = new MemoryStorage();
+    const engine = new Engine(["init 2 randomSeed", "p1 faction terrans"], {});
+    engine.generateAvailableCommandsIfNeeded();
+    setOfflineMirrorEnabled("hosted-game-1", true, storage);
+    syncOfflineMirror("hosted-game-1", "Mirrored Nova", JSON.parse(JSON.stringify(engine)), storage);
+
+    const client = makeClient(async () => ({ data: [], error: null }));
+    const wrapper = mount(ImportOfflineGame, {
+      propsData: { client, session, offlineGameId: mirrorOfflineGameId("hosted-game-1"), storage },
+    });
+    await Vue.nextTick();
+
+    expect(wrapper.text()).to.include("already in the online lobby");
+    expect(wrapper.find("select").exists()).to.equal(false);
+    expect((wrapper.vm as any).canImport).to.equal(false);
   });
 
   it("defaults every seat to the signed-in player and enables the move button", async () => {

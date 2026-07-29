@@ -14,6 +14,7 @@ import ImportOfflineGame from "./hosted/ImportOfflineGame.vue";
 import LobbyChatPanel from "./hosted/LobbyChatPanel.vue";
 import NotificationSettings from "./hosted/NotificationSettings.vue";
 import { HostedGameHost, seatToLock } from "./hosted/host";
+import { isOfflineMirrorEnabled, setOfflineMirrorEnabled, syncOfflineMirror } from "./hosted/offline-mirror";
 import Lobby from "./hosted/Lobby.vue";
 import OpenLobbyGame from "./hosted/OpenLobbyGame.vue";
 import PendingApproval from "./hosted/PendingApproval.vue";
@@ -138,6 +139,29 @@ async function mountGameInstance(
     createSupabaseUltimateTicTacToeBackend(client, gameId, session.user.id)
   );
 
+  // "Convert to offline game" (hosted/offline-mirror.ts) - a per-device setting in this game's
+  // settings menu. While it's on, every committed state (host.ts's `onCommittedState`, below)
+  // is written into a playable copy of this game in the browser's own offline library, so it stays
+  // readable and playable with no account and no connection. Deliberately not in the Vuex store:
+  // nothing in the viewer tree needs it, only the bar's own menu.
+  let lastCommittedState: any = null;
+  const syncOfflineCopy = () => {
+    if (!lastCommittedState || !bar.offlineMirror) {
+      return;
+    }
+    const result = syncOfflineMirror(gameId, host.game?.name ?? "", lastCommittedState);
+    if (result.error) {
+      // Never interrupts play - the online game is unaffected either way, and the copy just stays at
+      // the last move it managed to store (a full-storage quota error being the likeliest cause).
+      // Reported on the settings menu's own status line rather than as an alert per move.
+      bar.offlineMirrorStatus = `Offline copy failed: ${result.error}`;
+      console.warn("[hosted] offline copy failed", result.error);
+    } else if (!result.skipped && result.save) {
+      const moves = Math.max((result.save.engineData?.moveHistory?.length ?? 1) - 1, 0);
+      bar.offlineMirrorStatus = `Offline copy saved (${moves} ${moves === 1 ? "move" : "moves"})`;
+    }
+  };
+
   // Declared here (before its watchers below, which reference it) rather than in its previous
   // spot further down - HostedBar.vue's settings-menu labels (`chatPanelOpen`/`gameNavPanelOpen`)
   // need to be kept live from `chatNotes`'/`nav`'s own `open` state, and a watcher can't reference
@@ -154,6 +178,8 @@ async function mountGameInstance(
       notifSettingsOpen: false,
       chatPanelOpen: chatNotes.open,
       gameNavPanelOpen: nav.open,
+      offlineMirror: isOfflineMirrorEnabled(gameId),
+      offlineMirrorStatus: "",
     },
     render(h) {
       // The bell now opens a settings modal (rendered as a sibling of the bar so its fixed-position
@@ -175,6 +201,18 @@ async function mountGameInstance(
             },
             "toggle-chat-panel": () => chatNotes.toggleOpen(),
             "toggle-game-nav-panel": () => nav.toggleOpen(),
+            // The bar has already confirmed the change with the user (HostedBar.vue's
+            // `toggleOfflineCopy`); switching it on copies the state this session is already
+            // holding, so the copy exists immediately rather than only after the next turn.
+            "toggle-offline-mirror": () => {
+              const result = setOfflineMirrorEnabled(gameId, !bar.offlineMirror);
+              bar.offlineMirror = result.enabled;
+              bar.offlineMirrorStatus = "";
+              if (result.error) {
+                window.alert(`Could not change the offline copy setting: ${result.error}`);
+              }
+              syncOfflineCopy();
+            },
           },
         }),
         h(NotificationSettings, {
@@ -295,6 +333,12 @@ async function mountGameInstance(
         // gets whichever of their seats must act now (leech interrupts included).
         const lock = seatToLock(mySeats, playerCount, turnSeat);
         emitter.emit("player", lock !== null ? { index: lock } : null);
+      },
+      // Committed states only (never a half-composed turn) - the offline copy must hold a game that
+      // opens cleanly in the offline lobby, not a turn frozen mid-click. See host.ts's `emitState`.
+      onCommittedState: (data: any) => {
+        lastCommittedState = data;
+        syncOfflineCopy();
       },
       onError: (message: string) => {
         emitter.emit("error", message);

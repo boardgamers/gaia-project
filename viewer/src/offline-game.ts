@@ -33,6 +33,12 @@ export type StoredOfflineGame = OfflineGameSave & {
   id: string;
   name: string;
   createdAt: string;
+  /**
+   * Set only on a record that is an automatically maintained copy of a hosted (online) game: the
+   * online game's id (see hosted/offline-mirror.ts). Optional, so every record written before the
+   * mirror existed - and every ordinary pass-and-play game - stays valid without a migration.
+   */
+  mirrorOf?: string;
 };
 
 export type OfflineGameBackup = {
@@ -69,6 +75,8 @@ export type OfflineGameListRow = {
   current_round: number | null;
   latest_move_summary: string | null;
   latest_move_committed_at: string;
+  /** The online game this record mirrors, or null for an ordinary local game (see StoredOfflineGame). */
+  mirror_of: string | null;
   players: Array<{
     seat: number;
     user_id: null;
@@ -302,6 +310,7 @@ export function offlineGameListRow(game: StoredOfflineGame): OfflineGameListRow 
     current_round: Number.isInteger(data.round) && data.round > 0 ? data.round : null,
     latest_move_summary: lastMove,
     latest_move_committed_at: game.savedAt,
+    mirror_of: game.mirrorOf ?? null,
     players: players.map((player: any, seat: number) => ({
       seat,
       user_id: null,
@@ -381,6 +390,73 @@ export function writeStoredOfflineGame(
     storage.setItem(offlineGameRecordKey(gameId), JSON.stringify(save));
     return { save, error: null };
   } catch (error) {
+    return { save: null, error: `The offline game could not be saved: ${errorMessage(error)}` };
+  }
+}
+
+/**
+ * Creates the record when this id is new and overwrites it in place (keeping the original
+ * `createdAt`) when it already exists - unlike `createStoredOfflineGame`, which refuses a duplicate
+ * id, and `writeStoredOfflineGame`, which refuses a missing one. The hosted->offline mirror
+ * (hosted/offline-mirror.ts) derives its id from the online game's id rather than minting one per
+ * save, so the same call has to serve both the very first sync and every later one.
+ *
+ * Takes already-serialized engine data rather than an `Engine`: the hosted host hands its state out
+ * as plain JSON (host.ts's `emitState`), and re-hydrating an Engine only to serialize it straight
+ * back again would be pure waste. Any half-composed `pendingMove` on an existing record is dropped
+ * along with the state it belonged to - the incoming data is a complete, committed game.
+ */
+export function upsertStoredOfflineGame(
+  gameId: string,
+  engineData: unknown,
+  name: string,
+  mirrorOf: string | null = null,
+  storage: Storage | null = browserOfflineStorage(),
+  now = Date.now()
+): StoredOfflineGameWriteResult {
+  if (!storage) {
+    return { save: null, error: "Local storage is unavailable in this browser." };
+  }
+  if (!validOfflineGameId(gameId)) {
+    return { save: null, error: "The offline game id is invalid." };
+  }
+  if (!Array.isArray((engineData as any)?.moveHistory)) {
+    return { save: null, error: "That game state cannot be stored offline." };
+  }
+
+  const library = ensureOfflineGameIndex(storage);
+  if (!library.index) {
+    return { save: null, error: library.error };
+  }
+
+  const existing = readStoredOfflineGame(gameId, storage);
+  const savedAt = new Date(now).toISOString();
+  const save: StoredOfflineGame = {
+    version: OFFLINE_GAME_SAVE_VERSION,
+    savedAt,
+    engineData: JSON.parse(JSON.stringify(engineData)),
+    id: gameId,
+    name: name.trim() || existing.save?.name || "Offline game",
+    createdAt: existing.save?.createdAt ?? savedAt,
+    ...(mirrorOf ? { mirrorOf } : {}),
+  };
+
+  const listed = library.index.gameIds.includes(gameId);
+  try {
+    storage.setItem(offlineGameRecordKey(gameId), JSON.stringify(save));
+    if (!listed) {
+      const nextIndex: OfflineGameIndex = { ...library.index, gameIds: [gameId, ...library.index.gameIds] };
+      storage.setItem(OFFLINE_GAME_LIBRARY_KEY, JSON.stringify(nextIndex));
+    }
+    return { save, error: library.error };
+  } catch (error) {
+    if (!listed) {
+      try {
+        storage.removeItem(offlineGameRecordKey(gameId));
+      } catch (_rollbackError) {
+        // The index was not updated, so an unlisted record is harmless even if rollback is blocked.
+      }
+    }
     return { save: null, error: `The offline game could not be saved: ${errorMessage(error)}` };
   }
 }

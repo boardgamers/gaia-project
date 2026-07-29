@@ -220,17 +220,19 @@ class FakeBackend implements HostedBackend {
 
 function makeHost(backend: FakeBackend, autoDecide?: AutoDecideConfig) {
   const states: any[] = [];
+  const committed: any[] = [];
   const errors: string[] = [];
   const host = new HostedGameHost(
     backend,
     "game-1",
     {
       onState: (data) => states.push(data),
+      onCommittedState: (data) => committed.push(data),
       onError: (message) => errors.push(message),
     },
     autoDecide
   );
-  return { host, states, errors };
+  return { host, states, committed, errors };
 }
 
 describe("seat locking rule", () => {
@@ -718,6 +720,36 @@ describe("hosted game host", () => {
     const rendered = states[states.length - 1];
     expect(rendered.moveHistory).to.have.length(SETUP_MOVES.length + 2);
     expect(rendered.newTurn).to.equal(false);
+  });
+
+  // The offline copy (hosted/offline-mirror.ts) persists whatever this reports, so a half-composed
+  // turn must never reach it - it would store a game that reopens mid-click in the offline lobby.
+  it("reports committed states separately from a turn still being composed", async () => {
+    const backend = new FakeBackend(gameRow(), playerRows());
+    backend.seedMoves(SETUP_MOVES);
+    const { host, states, committed } = makeHost(backend);
+
+    await host.load();
+    expect(committed, "the loaded state is committed").to.have.length(1);
+
+    await host.submitMove("terrans build ts -1x2");
+    expect(states, "the partial turn is still rendered").to.have.length(2);
+    expect(committed, "...but it is not a committed state").to.have.length(1);
+
+    await host.submitMove("terrans build ts -1x2.");
+    expect(committed).to.have.length(2);
+    expect(committed[1].moveHistory).to.have.length(SETUP_MOVES.length + 2);
+    expect(committed[1].moveHistory[SETUP_MOVES.length + 1]).to.equal("terrans build ts -1x2.");
+
+    // A move arriving from another player/device is committed state too, not just our own.
+    await host.applyRemoteMove({
+      game_id: "game-1",
+      seq: host.committedMoveCount + 1,
+      seat: 1,
+      move: "nevlas charge 1pw",
+    });
+    expect(committed).to.have.length(3);
+    expect(committed[2].moveHistory[committed[2].moveHistory.length - 1]).to.contain("charge 1pw");
   });
 
   describe("premove", () => {

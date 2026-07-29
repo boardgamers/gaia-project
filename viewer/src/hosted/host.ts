@@ -702,8 +702,20 @@ export class HostedGameHost {
     return Engine.fromData(JSON.parse(JSON.stringify(this.engine)));
   }
 
+  /**
+   * `engine === this.engine` is exactly "this state is committed", with no extra bookkeeping: every
+   * partially composed turn is rendered from a throwaway clone (applyAndCommit's `copy`), while
+   * every committed one - load, resync, a locally completed turn, an applied remote move - is only
+   * emitted after `this.engine` has been pointed at it. Consumers that must never persist half a
+   * turn (the offline copy in hosted/offline-mirror.ts) key off `onCommittedState` instead of
+   * re-deriving that distinction from the state itself.
+   */
   private emitState(engine: Engine): void {
-    this.callbacks.onState(JSON.parse(JSON.stringify(engine)));
+    const data = JSON.parse(JSON.stringify(engine));
+    this.callbacks.onState(data);
+    if (engine === this.engine) {
+      this.callbacks.onCommittedState?.(data);
+    }
   }
 
   private enqueue(fn: () => Promise<void>): Promise<void> {

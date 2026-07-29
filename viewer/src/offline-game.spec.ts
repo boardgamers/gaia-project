@@ -14,6 +14,7 @@ import {
   readStoredOfflineGame,
   restoreOfflineGame,
   serializeOfflineGameBackup,
+  upsertStoredOfflineGame,
   writeOfflineGame,
   writeStoredOfflineGame,
 } from "./offline-game";
@@ -108,6 +109,53 @@ describe("offline hot-seat games", () => {
     expect(deleteStoredOfflineGame("beta", storage)).to.deep.equal({ deleted: true, error: null });
     expect(listOfflineGames(storage).games.map((game) => game.name)).to.deep.equal(["Alpha"]);
     expect(readStoredOfflineGame("beta", storage).save).to.equal(null);
+  });
+
+  it("creates a record under a caller-chosen id and overwrites it in place on every later save", () => {
+    const storage = new MemoryStorage();
+    const engine = new Engine(["init 2 offline-upsert"], { lostFleet: true });
+
+    const created = upsertStoredOfflineGame(
+      "online-abc",
+      JSON.parse(JSON.stringify(engine)),
+      "Copper Nova",
+      "abc",
+      storage,
+      Date.UTC(2026, 6, 29, 10)
+    );
+    expect(created.error).to.equal(null);
+    expect(created.save?.mirrorOf).to.equal("abc");
+
+    // A half-composed turn on the existing record is dropped with the state it belonged to.
+    writeStoredOfflineGame("online-abc", engine, "p1 faction terrans", storage, Date.UTC(2026, 6, 29, 11));
+    engine.move("p1 faction terrans");
+    const updated = upsertStoredOfflineGame(
+      "online-abc",
+      JSON.parse(JSON.stringify(engine)),
+      "Copper Nova",
+      "abc",
+      storage,
+      Date.UTC(2026, 6, 29, 12)
+    );
+
+    expect(updated.error).to.equal(null);
+    expect(updated.save?.createdAt, "the original creation date survives an overwrite").to.equal(
+      "2026-07-29T10:00:00.000Z"
+    );
+    expect(updated.save?.savedAt).to.equal("2026-07-29T12:00:00.000Z");
+    expect(readStoredOfflineGame("online-abc", storage).save?.pendingMove).to.equal(undefined);
+    expect(
+      listOfflineGames(storage).games.map((game) => game.id),
+      "one listed record, not one per save"
+    ).to.deep.equal(["online-abc"]);
+    expect(offlineGameListRow(updated.save!).mirror_of).to.equal("abc");
+
+    expect(upsertStoredOfflineGame("online-abc", { nope: true }, "Copper Nova", "abc", storage).error).to.equal(
+      "That game state cannot be stored offline."
+    );
+    expect(
+      upsertStoredOfflineGame("not a valid id", JSON.parse(JSON.stringify(engine)), "X", null, storage).error
+    ).to.equal("The offline game id is invalid.");
   });
 
   it("exports a versioned backup and imports it as a new game without overwriting the original", () => {

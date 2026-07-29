@@ -108,6 +108,41 @@ describe("HostedBar", () => {
     withoutLive.unmount();
   });
 
+  it("offers the offline-copy setting, confirms it, and reports its status once it is on", async () => {
+    const engine = new Engine(["init 2 hosted-bar-offline-copy", "p1 faction terrans", "p2 faction hadsch-hallas"]);
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const previousConfirm = window.confirm;
+    const confirmed: string[] = [];
+    (window as any).confirm = (message: string) => {
+      confirmed.push(message);
+      return confirmed.length === 1;
+    };
+
+    try {
+      const off = render(HostedBar, { props: { finished: false, offlineMirror: false }, store });
+      // Declining the confirm must leave the setting exactly as it was.
+      await fireEvent.click(off.getByText("Convert to offline game"));
+      expect(off.emitted()["toggle-offline-mirror"]).to.have.lengthOf(1);
+      await fireEvent.click(off.getByText("Convert to offline game"));
+      expect(off.emitted()["toggle-offline-mirror"]).to.have.lengthOf(1);
+      expect(confirmed).to.have.lengthOf(2);
+      off.unmount();
+
+      const on = render(HostedBar, {
+        props: { finished: false, offlineMirror: true, offlineMirrorStatus: "Offline copy saved (12 moves)" },
+        store,
+      });
+      expect(on.queryByText("Convert to offline game")).to.equal(null);
+      expect(on.getByText("Stop offline copy")).to.not.equal(null);
+      expect(on.getByText("Offline copy saved (12 moves)")).to.not.equal(null);
+      on.unmount();
+    } finally {
+      (window as any).confirm = previousConfirm;
+    }
+  });
+
   it("emits toggle-chat-panel and toggle-game-nav-panel when their settings items are clicked", async () => {
     const engine = new Engine(["init 2 hosted-bar-toggle-events", "p1 faction terrans", "p2 faction hadsch-hallas"]);
     const store = makeStore();

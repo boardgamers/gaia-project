@@ -1,7 +1,25 @@
 {
-  "version": "5.45.3",
+  "version": "5.46.0",
   "releasedAt": "2026-07-29",
   "entries": [
+    {
+      "version": "5.46.0",
+      "releasedAt": "2026-07-29",
+      "kind": "update",
+      "title": "Offline copies of online games",
+      "impact": "",
+      "changes": [
+        "Turn on \"Convert to offline game\" in an online game's settings menu to keep a copy of it in your offline games",
+        "Every move played in that online game is copied into the offline copy automatically while you have it open",
+        "New viewer/src/hosted/offline-mirror.ts: a per-device localStorage setting (gaia-offline-mirror-v1) and one derived offline record per hosted game (online-<gameId>), written from every committed hosted state",
+        "HostedGameHost gained an onCommittedState callback so only committed turns - never a half-composed one - can be persisted",
+        "offline-game.ts gained upsertStoredOfflineGame plus a mirrorOf marker; the offline lobby badges a mirrored game, keeps it out of the Move-online flow, and switches the setting off when the copy is deleted"
+      ],
+      "userChanges": [
+        "Turn on \"Convert to offline game\" in an online game's settings menu to keep a copy of it in your offline games",
+        "Every move played in that online game is copied into the offline copy automatically while you have it open"
+      ]
+    },
     {
       "version": "5.45.3",
       "releasedAt": "2026-07-29",

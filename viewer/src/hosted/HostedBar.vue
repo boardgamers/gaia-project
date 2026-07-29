@@ -52,6 +52,13 @@
           }}</b-dropdown-item-button>
         </template>
         <b-dropdown-divider></b-dropdown-divider>
+        <b-dropdown-item-button @click="toggleOfflineCopy">{{
+          offlineMirror ? "Stop offline copy" : "Convert to offline game"
+        }}</b-dropdown-item-button>
+        <b-dropdown-text v-if="offlineMirror" class="hosted-bar__offline-status small text-muted">
+          {{ offlineMirrorStatus || "Offline copy up to date" }}
+        </b-dropdown-text>
+        <b-dropdown-divider></b-dropdown-divider>
         <b-dropdown-item-button v-if="!abandoned" @click="confirmAbandon">Abandon game</b-dropdown-item-button>
       </b-dropdown>
     </span>
@@ -83,6 +90,11 @@ export default Vue.extend({
     // updates these props, same pattern as `gameName`/`finished` above.
     chatPanelOpen: { type: Boolean, default: false },
     gameNavPanelOpen: { type: Boolean, default: false },
+    // "Convert to offline game" (hosted/offline-mirror.ts) - whether this device is keeping a
+    // playable offline copy of this game in sync, and a one-line status for it (last sync time, or
+    // whatever went wrong), both owned by hosted.ts since the copy lives outside this component.
+    offlineMirror: { type: Boolean, default: false },
+    offlineMirrorStatus: { type: String, default: "" },
   },
   data() {
     return {
@@ -109,6 +121,19 @@ export default Vue.extend({
   methods: {
     toggleDarkMode() {
       this.isDarkMode = toggleTheme() === "dark";
+    },
+    /**
+     * Both directions are confirmed because both have a consequence the wording has to be honest
+     * about: switching on copies the whole game onto this device (and keeps doing so), and
+     * switching off leaves the copy behind at whatever move it last synced rather than deleting it.
+     */
+    toggleOfflineCopy() {
+      const message = this.offlineMirror
+        ? "Stop copying this game to your offline games? The copy already on this device stays there, frozen at the last move it synced - delete it from the offline lobby if you don't want it."
+        : "Add this game to your offline games on this device? Every move played online is copied there automatically while you have the game open, so you can read or play on offline. The online game stays the real one: moves you make in the offline copy are not sent back, and are replaced the next time it syncs.";
+      if (window.confirm(message)) {
+        this.$emit("toggle-offline-mirror");
+      }
     },
     confirmAbandon() {
       if (window.confirm("Abandon this game? It will be unplayable and shown as abandoned to the other players.")) {
@@ -161,6 +186,13 @@ export default Vue.extend({
   &:active:not(:disabled) {
     box-shadow: inset 0 1px 3px var(--ui-shadow);
   }
+}
+
+// A status line, not a menu item: it wraps instead of stretching the menu, and never looks clickable.
+.hosted-bar__offline-status {
+  max-width: 15rem;
+  margin-bottom: 0;
+  white-space: normal;
 }
 
 .hosted-bar__turn-order {

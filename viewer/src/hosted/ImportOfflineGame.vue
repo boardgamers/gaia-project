@@ -11,6 +11,12 @@
       This offline game could not be loaded on this device{{ loadError ? `: ${loadError}` : "." }}
     </div>
 
+    <div v-else-if="isMirror" class="text-muted">
+      “{{ storedGame.name }}” is an automatic copy of a game that is already in the online lobby, so there is nothing to
+      move. Open it there instead — or turn off <strong>Convert to offline game</strong> in that game's settings menu if
+      you no longer want the copy.
+    </div>
+
     <div v-else>
       <p class="text-muted small">
         "{{ storedGame.name }}" ({{ row.player_count }} players, {{ row.move_count }} moves so far) will be copied to
@@ -93,6 +99,11 @@ export default Vue.extend({
     myUserId(): string {
       return (this.session as any).user?.id ?? "";
     },
+    /** A record kept in sync FROM an online game (hosted/offline-mirror.ts) - importing it would
+     * create a second, forked copy of a game that is already hosted. */
+    isMirror(): boolean {
+      return !!this.storedGame?.mirrorOf;
+    },
     seatIndexes(): number[] {
       return this.row ? Array.from({ length: this.row.player_count }, (_, i) => i) : [];
     },
@@ -104,6 +115,7 @@ export default Vue.extend({
     },
     canImport(): boolean {
       return (
+        !this.isMirror &&
         this.seatAssignments.length > 0 &&
         this.seatAssignments.every((id) => !!id) &&
         this.seatAssignments.includes(this.myUserId)

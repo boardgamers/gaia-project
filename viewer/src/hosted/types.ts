@@ -99,6 +99,14 @@ export interface HostedBackend {
 export type HostedCallbacks = {
   /** Serialized engine JSON, ready for the launcher's "state" event. */
   onState: (engineData: unknown) => void;
+  /**
+   * The same serialized engine JSON as `onState`, but only for a COMMITTED state - a completed turn
+   * (local or remote), a load, or a resync - never a half-composed turn being previewed while the
+   * player clicks through it. For consumers that persist or export the game rather than render it
+   * (hosted/offline-mirror.ts's offline copy); see host.ts's `emitState` for how the two are told
+   * apart. Fires per state, not per move: a resync that lands several turns at once fires once.
+   */
+  onCommittedState?: (engineData: any) => void;
   onError?: (message: string) => void;
   /** Refetched on load and whenever a moves row arrives (PREMOVE_PLAN.md §3's refresh rule). */
   onPremoveState?: (premoves: PremoveRow[], failures: PremoveFailureRow[]) => void;
