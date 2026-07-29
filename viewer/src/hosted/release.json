@@ -1,7 +1,27 @@
 {
-  "version": "5.47.1",
+  "version": "5.48.0",
   "releasedAt": "2026-07-29",
   "entries": [
+    {
+      "version": "5.48.0",
+      "releasedAt": "2026-07-29",
+      "kind": "update",
+      "title": "Minigames come offline too",
+      "impact": "",
+      "changes": [
+        "Chess, renju and ultimate tic-tac-toe now travel with a converted offline game: you get the real positions on the plane, not fresh boards",
+        "Minigame moves and resets you make offline are sent to the online board when you reconnect, and are never silently thrown away",
+        "In an offline copy you can only play your own colour in a minigame, just like online",
+        "New logic/offline-minigame-sync.ts records offline minigame play as an ordered op log (each op carrying its own previous/next position) and replays it through the existing move(previous, next) RPCs, whose staleness check detects a conflict without any extra divergence logic",
+        "A board with a pending op log is never refreshed from the online row until the log has gone up; unsent ops are handed back and re-queued rather than dropped",
+        "The hosted colour assignments and the viewer's user id are written into the copy so offline boards can enforce the designated-mover rule instead of falling back to pass-and-play"
+      ],
+      "userChanges": [
+        "Chess, renju and ultimate tic-tac-toe now travel with a converted offline game: you get the real positions on the plane, not fresh boards",
+        "Minigame moves and resets you make offline are sent to the online board when you reconnect, and are never silently thrown away",
+        "In an offline copy you can only play your own colour in a minigame, just like online"
+      ]
+    },
     {
       "version": "5.47.1",
       "releasedAt": "2026-07-29",

@@ -91,7 +91,11 @@ Read these before coding:
   played offline are uploaded instead (`planOfflineUpload` + `hosted.ts`'s loop), so a copy that is
   ahead is never reverted. A genuinely diverged copy is left alone on both sides. Offline play of a
   copy is seat-locked to `mirrorSeats` (`self-contained.ts`), because only an owned seat can ever be
-  committed for online. `HostedGameHost.onCommittedState` is what keeps a half-composed turn from
+  committed for online. The three sidebar minigames travel with the copy under the same guarantee
+  (`viewer/src/logic/offline-minigame-sync.ts`): their rows hold only a current position, so offline
+  play is recorded as an ordered op log (each op carrying its own `previous`/`next`) and replayed
+  through the existing `move(previous, next, …)` RPCs, whose own staleness check is what detects a
+  conflict. Offline minigame play is colour-locked for the same reason Gaia play is seat-locked. `HostedGameHost.onCommittedState` is what keeps a half-composed turn from
   ever being persisted; use it for anything else that saves/exports hosted state.
 - The two side games (sidebar chess, research-panel renju) are **per-viewer** as of PROGRESS #118:
   which face a drawer shows lives in `localStorage` (per game, per account), not in

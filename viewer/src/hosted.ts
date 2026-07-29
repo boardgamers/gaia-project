@@ -16,11 +16,24 @@ import NotificationSettings from "./hosted/NotificationSettings.vue";
 import { HostedGameHost, seatToLock } from "./hosted/host";
 import {
   isOfflineMirrorEnabled,
+  mirrorOfflineGameId,
   planOfflineUpload,
   readOfflineMirrorState,
   setOfflineMirrorEnabled,
   syncOfflineMirror,
 } from "./hosted/offline-mirror";
+import { localChessLastMoveStorageKey, localChessStorageKey } from "./logic/chess";
+import { localRenjuStorageKey } from "./logic/renju";
+import { localUltimateStorageKey } from "./logic/ultimate-tic-tac-toe";
+import {
+  clearOfflineMinigameOps,
+  MinigameKind,
+  offlineMinigameGameId,
+  queueOfflineMinigameOp,
+  readOfflineMinigameOps,
+  uploadOfflineMinigameOps,
+  writeOfflineMinigameMirror,
+} from "./logic/offline-minigame-sync";
 import Lobby from "./hosted/Lobby.vue";
 import OpenLobbyGame from "./hosted/OpenLobbyGame.vue";
 import PendingApproval from "./hosted/PendingApproval.vue";
@@ -136,14 +149,48 @@ async function mountGameInstance(
   // ChessBoard.vue uses the same injection boundary as the notes sheet: the reusable viewer stays
   // unaware of Supabase, while hosted mode supplies a backend already scoped to this exact game.
   // Offline/self-contained stores leave this null and use per-game localStorage pass-and-play.
-  emitter.store.commit("setChessBackend", createSupabaseChessBackend(client, gameId, session.user.id));
+  const chessBackend = createSupabaseChessBackend(client, gameId, session.user.id);
+  const renjuBackend = createSupabaseRenjuBackend(client, gameId, session.user.id);
+  const ultimateBackend = createSupabaseUltimateTicTacToeBackend(client, gameId, session.user.id);
+  emitter.store.commit("setChessBackend", chessBackend);
   // The research board's research/renju drawer uses the same injection boundary as the chess face.
-  emitter.store.commit("setRenjuBackend", createSupabaseRenjuBackend(client, gameId, session.user.id));
+  emitter.store.commit("setRenjuBackend", renjuBackend);
   // The ship-board drawer follows the same shared-online / local-offline boundary.
-  emitter.store.commit(
-    "setUltimateTicTacToeBackend",
-    createSupabaseUltimateTicTacToeBackend(client, gameId, session.user.id)
-  );
+  emitter.store.commit("setUltimateTicTacToeBackend", ultimateBackend);
+  // The three sidebar minigames travel with the offline copy too (logic/offline-minigame-sync.ts).
+  // Same contract as the Gaia board: their positions come down, moves played offline go back up.
+  const offlineCopySearch = `?game=${encodeURIComponent(mirrorOfflineGameId(gameId))}`;
+  const minigames: Array<{ kind: MinigameKind; backend: any; localState: (row: any) => void }> = [
+    {
+      kind: "chess",
+      backend: chessBackend,
+      localState: (row) => {
+        window.localStorage.setItem(localChessStorageKey(offlineCopySearch), row.fen);
+        window.localStorage.setItem(
+          localChessLastMoveStorageKey(offlineCopySearch),
+          JSON.stringify({ from: row.last_move_from ?? null, to: row.last_move_to ?? null })
+        );
+      },
+    },
+    {
+      kind: "renju",
+      backend: renjuBackend,
+      localState: (row) =>
+        window.localStorage.setItem(
+          localRenjuStorageKey(offlineCopySearch),
+          JSON.stringify({ board: row.board, lastMove: row.last_move ?? null, prevMove: row.prev_move ?? null })
+        ),
+    },
+    {
+      kind: "ultimate",
+      backend: ultimateBackend,
+      localState: (row) =>
+        window.localStorage.setItem(
+          localUltimateStorageKey(offlineCopySearch),
+          JSON.stringify({ board: row.board, lastMove: row.last_move ?? null })
+        ),
+    },
+  ];
 
   // "Convert to offline game" (hosted/offline-mirror.ts) - a per-device setting in this game's
   // settings menu. While it's on, every committed state (host.ts's `onCommittedState`, below)
@@ -158,6 +205,9 @@ async function mountGameInstance(
   // played offline, and nothing may be uploaded before we know whose seats they are, so the first
   // states (emitted from inside `load()`, while `mySeats` is still empty) must not write it.
   let seatsKnown = false;
+  let syncingMinigames = false;
+  let minigameUploads = 0;
+  const minigameConflicts = new Set<MinigameKind>();
 
   const syncOfflineCopy = () => {
     if (!lastCommittedState || !bar.offlineMirror || !seatsKnown) {
@@ -189,6 +239,74 @@ async function mountGameInstance(
       const moves = Math.max((result.save.engineData?.moveHistory?.length ?? 1) - 1, 0);
       bar.offlineMirrorStatus = `Offline copy saved (${moves} ${moves === 1 ? "move" : "moves"})`;
     }
+    syncOfflineMinigames();
+  };
+
+  /**
+   * The sidebar minigames' half of the copy. Their rows hold only a current position, so unlike the
+   * Gaia board they cannot be compared for "ahead"; instead anything played offline is recorded as
+   * an op log (logic/offline-minigame-sync.ts) which is replayed here first. A board with a pending
+   * log is never refreshed from the online row until that log has gone up, which is the same
+   * no-overwrite rule the Gaia copy follows.
+   */
+  const syncOfflineMinigames = () => {
+    if (!bar.offlineMirror || syncingMinigames) {
+      return;
+    }
+    syncingMinigames = true;
+    const offlineGameId = offlineMinigameGameId(offlineCopySearch);
+    const rows: Partial<Record<MinigameKind, any>> = {};
+    Promise.all(
+      minigames.map(async ({ kind, backend, localState }) => {
+        const pending = readOfflineMinigameOps(offlineGameId, kind);
+        if (pending.length > 0) {
+          const result = await uploadOfflineMinigameOps(backend, kind, pending);
+          if (result.uploaded > 0) {
+            minigameUploads += result.uploaded;
+          }
+          if (result.conflict) {
+            // Keep what could not be sent: the offline board stays as the player left it, and the
+            // online board is whatever the other player made of it.
+            minigameConflicts.add(kind);
+            clearOfflineMinigameOps(offlineGameId, kind);
+            for (const op of result.remaining) {
+              queueOfflineMinigameOp(offlineGameId, kind, op);
+            }
+            return;
+          }
+          clearOfflineMinigameOps(offlineGameId, kind);
+        }
+        const row = await backend.load();
+        if (row) {
+          rows[kind] = row;
+          if (readOfflineMinigameOps(offlineGameId, kind).length === 0) {
+            localState(row);
+          }
+        }
+      })
+    )
+      .then(() => {
+        // The colour/team assignments and this account's id travel with the copy: offline there is
+        // no session to ask, and without them the boards could not tell whose move it is.
+        writeOfflineMinigameMirror(offlineGameId, session.user.id, rows);
+        if (minigameConflicts.size > 0) {
+          bar.offlineMirrorStatus = `Offline ${[...minigameConflicts].join(
+            "/"
+          )} moves clashed with the online board and were kept offline`;
+        } else if (minigameUploads > 0) {
+          bar.offlineMirrorStatus = `Sent ${minigameUploads} offline minigame ${
+            minigameUploads === 1 ? "move" : "moves"
+          }`;
+        }
+        minigameUploads = 0;
+        minigameConflicts.clear();
+      })
+      .catch(() => {
+        // Best effort - the minigames must never block or alarm about the Gaia game.
+      })
+      .finally(() => {
+        syncingMinigames = false;
+      });
   };
 
   /**

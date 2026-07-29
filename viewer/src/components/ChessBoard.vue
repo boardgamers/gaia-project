@@ -129,6 +129,11 @@ import { ChessInstance, createChess } from "../logic/chess-lib";
 import { ChessBackend, ChessRow } from "../logic/chess-backend";
 import { PANEL_SWIPE_EVENT } from "../logic/panel-swipe";
 import {
+  offlineMinigameGameId,
+  queueOfflineMinigameOp,
+  readOfflineMinigameMirror,
+} from "../logic/offline-minigame-sync";
+import {
   Cell,
   DisplaySquare,
   Orientation,
@@ -160,6 +165,10 @@ export default class ChessBoard extends Vue {
   blackNextUser: string | null = null;
   myUserId: string | null = null;
   online = false;
+  // Offline, inside a copy of an online game (logic/offline-minigame-sync.ts): the position and the
+  // colour assignments came down from the hosted board, so this plays by the ONLINE rules (only the
+  // designated mover, never both sides) and every move is queued for upload - it is not a hot seat.
+  mirrored = false;
 
   selected: string | null = null;
   selectedPiece: Cell = null;
@@ -307,6 +316,13 @@ export default class ChessBoard extends Vue {
   // for each offline Gaia game. No Supabase client or network request is involved.
   private goOffline() {
     this.online = false;
+    const mirror = readOfflineMinigameMirror(this.offlineGameId);
+    const row = mirror?.rows?.chess as ChessRow | undefined;
+    if (mirror && row) {
+      this.mirrored = true;
+      this.myUserId = mirror.userId;
+      this.applyAssignments(row);
+    }
     const stored = window.localStorage.getItem(this.localStorageKey);
     if (stored && this.chess && this.chess.load(stored)) {
       this.fen = stored;
@@ -337,14 +353,20 @@ export default class ChessBoard extends Vue {
   }
 
   private applyRow(row: ChessRow) {
+    this.applyAssignments(row);
+    this.setLastMove(row.last_move_from ?? null, row.last_move_to ?? null);
+    this.applyFen(row.fen);
+  }
+
+  /** Who plays which colour. Also used offline by a mirrored copy, which carries the hosted row's
+   * assignments with it so it can enforce the same "only the designated mover" rule. */
+  private applyAssignments(row: ChessRow) {
     this.whiteUser = row.white_user;
     this.whiteUser2 = row.white_user_2 ?? null;
     this.blackUser = row.black_user;
     this.blackUser2 = row.black_user_2 ?? null;
     this.whiteNextUser = row.white_next_user ?? null;
     this.blackNextUser = row.black_next_user ?? null;
-    this.setLastMove(row.last_move_from ?? null, row.last_move_to ?? null);
-    this.applyFen(row.fen);
   }
 
   private applyFen(fen: string) {
@@ -445,6 +467,15 @@ export default class ChessBoard extends Vue {
     if (!this.online) {
       window.localStorage.setItem(this.localStorageKey, nextFen);
       window.localStorage.setItem(this.localLastMoveStorageKey, JSON.stringify({ from, to }));
+      if (this.mirrored) {
+        queueOfflineMinigameOp(this.offlineGameId, "chess", {
+          kind: "move",
+          previous: prevFen,
+          next: nextFen,
+          from,
+          to,
+        });
+      }
       return;
     }
     this.backend
@@ -496,6 +527,9 @@ export default class ChessBoard extends Vue {
         window.localStorage.removeItem(this.localLastMoveStorageKey);
         this.setLastMove(null, null);
         this.clearSelection();
+        if (this.mirrored) {
+          queueOfflineMinigameOp(this.offlineGameId, "chess", { kind: "reset" });
+        }
       }
       return;
     }
@@ -619,16 +653,21 @@ export default class ChessBoard extends Vue {
   // Which colour the local user is allowed to move: their designated relay turn online, or either
   // side offline. Teammates share a colour in 3-4 player games but alternate who may actually move.
   get effectiveColor(): Orientation | null {
-    if (!this.online) {
+    if (!this.online && !this.mirrored) {
       return this.chess ? this.chess.turn() : "w";
     }
     return this.isDesignatedMover && this.chess ? (this.chess.turn() as Orientation) : null;
   }
 
+  /** The offline game id both this board's own local keys and its op log hang off. */
+  private get offlineGameId(): string {
+    return offlineMinigameGameId(typeof window === "undefined" ? "" : window.location.search);
+  }
+
   get orientation(): Orientation {
     // `chess` is an imperative library instance; `fen` is its reactive version token.
     void this.fen;
-    return boardOrientation(this.online, this.myColor, this.chess?.turn() ?? "w");
+    return boardOrientation(this.online || this.mirrored, this.myColor, this.chess?.turn() ?? "w");
   }
 
   get cells(): DisplaySquare[] {

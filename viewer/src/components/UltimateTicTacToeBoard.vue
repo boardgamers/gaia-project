@@ -90,6 +90,11 @@ import Vue from "vue";
 import { Component, Watch } from "vue-property-decorator";
 import { PANEL_SWIPE_EVENT } from "../logic/panel-swipe";
 import {
+  offlineMinigameGameId,
+  queueOfflineMinigameOp,
+  readOfflineMinigameMirror,
+} from "../logic/offline-minigame-sync";
+import {
   UltimateEvaluation,
   UltimateEvaluator,
   ultimateEvaluationDescription,
@@ -148,6 +153,9 @@ export default class UltimateTicTacToeBoard extends Vue {
   oNextUser: string | null = null;
   myUserId: string | null = null;
   online = false;
+  // Offline inside a copy of an online game: plays by the online rules and queues every move for
+  // upload (logic/offline-minigame-sync.ts), rather than being a free pass-and-play board.
+  mirrored = false;
 
   async mounted() {
     this.$root.$on(PANEL_SWIPE_EVENT, this.cancelForPanelSwipe);
@@ -226,6 +234,13 @@ export default class UltimateTicTacToeBoard extends Vue {
 
   private goOffline() {
     this.online = false;
+    const mirror = readOfflineMinigameMirror(this.offlineGameId);
+    const row = mirror?.rows?.ultimate as UltimateTicTacToeRow | undefined;
+    if (mirror && row) {
+      this.mirrored = true;
+      this.myUserId = mirror.userId;
+      this.applyAssignments(row);
+    }
     const stored = parseUltimateLocalState(window.localStorage.getItem(this.localStorageKey));
     if (stored) {
       this.board = stored.board;
@@ -243,13 +258,23 @@ export default class UltimateTicTacToeBoard extends Vue {
     }
   }
 
-  private applyRow(row: UltimateTicTacToeRow) {
+  /** Who plays which mark - also carried offline by a mirrored copy, see ChessBoard.vue. */
+  private applyAssignments(row: UltimateTicTacToeRow) {
     this.xUser = row.x_user;
     this.xUser2 = row.x_user_2 ?? null;
     this.oUser = row.o_user;
     this.oUser2 = row.o_user_2 ?? null;
     this.xNextUser = row.x_next_user ?? null;
     this.oNextUser = row.o_next_user ?? null;
+  }
+
+  /** The offline game id this board's local key and its op log hang off. */
+  private get offlineGameId(): string {
+    return offlineMinigameGameId(typeof window === "undefined" ? "" : window.location.search);
+  }
+
+  private applyRow(row: UltimateTicTacToeRow) {
+    this.applyAssignments(row);
     if (isValidUltimateBoard(row.board) && row.board !== this.board) {
       this.board = row.board;
     }
@@ -274,6 +299,14 @@ export default class UltimateTicTacToeBoard extends Vue {
     this.lastMove = index;
     if (!this.online) {
       this.persistOffline();
+      if (this.mirrored) {
+        queueOfflineMinigameOp(this.offlineGameId, "ultimate", {
+          kind: "move",
+          previous: previousBoard,
+          next: nextBoard,
+          index,
+        });
+      }
       return;
     }
     this.backend
@@ -298,6 +331,9 @@ export default class UltimateTicTacToeBoard extends Vue {
       this.board = EMPTY_ULTIMATE_BOARD;
       this.lastMove = null;
       this.persistOffline();
+      if (this.mirrored) {
+        queueOfflineMinigameOp(this.offlineGameId, "ultimate", { kind: "reset" });
+      }
       return;
     }
     if (!this.backend) {
@@ -408,7 +444,7 @@ export default class UltimateTicTacToeBoard extends Vue {
   }
 
   get effectiveMark(): UltimateMark | null {
-    return !this.online || this.isDesignatedMover ? this.turn : null;
+    return (!this.online && !this.mirrored) || this.isDesignatedMover ? this.turn : null;
   }
 
   canPlace(index: number): boolean {

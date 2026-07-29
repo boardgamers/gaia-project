@@ -126,6 +126,11 @@
 import Vue from "vue";
 import { Component, Watch } from "vue-property-decorator";
 import { PANEL_SWIPE_EVENT } from "../logic/panel-swipe";
+import {
+  offlineMinigameGameId,
+  queueOfflineMinigameOp,
+  readOfflineMinigameMirror,
+} from "../logic/offline-minigame-sync";
 import { RenjuBackend, RenjuRow } from "../logic/renju-backend";
 import { playerOfStone } from "../logic/renju-engine";
 import { decidedEvaluation, evaluationDescription, RenjuEvaluation, RenjuEvaluator } from "../logic/renju-evaluation";
@@ -181,6 +186,9 @@ export default class RenjuBoard extends Vue {
   whiteNextUser: string | null = null;
   myUserId: string | null = null;
   online = false;
+  // Offline inside a copy of an online game: plays by the online rules and queues every move for
+  // upload (logic/offline-minigame-sync.ts), rather than being a free pass-and-play board.
+  mirrored = false;
 
   // long-press bookkeeping
   private pressTimer: number | null = null;
@@ -269,12 +277,34 @@ export default class RenjuBoard extends Vue {
   // position for each offline Gaia game. No Supabase client or network request is involved.
   private goOffline() {
     this.online = false;
+    const mirror = readOfflineMinigameMirror(this.offlineGameId);
+    const row = mirror?.rows?.renju as RenjuRow | undefined;
+    if (mirror && row) {
+      this.mirrored = true;
+      this.myUserId = mirror.userId;
+      this.applyAssignments(row);
+    }
     const stored = parseLocalState(window.localStorage.getItem(this.localStorageKey));
     if (stored) {
       this.board = stored.board;
       this.lastMove = stored.lastMove;
       this.prevMove = stored.prevMove;
     }
+  }
+
+  /** Who plays which colour - also carried offline by a mirrored copy, see ChessBoard.vue. */
+  private applyAssignments(row: RenjuRow) {
+    this.blackUser = row.black_user;
+    this.blackUser2 = row.black_user_2 ?? null;
+    this.whiteUser = row.white_user;
+    this.whiteUser2 = row.white_user_2 ?? null;
+    this.blackNextUser = row.black_next_user ?? null;
+    this.whiteNextUser = row.white_next_user ?? null;
+  }
+
+  /** The offline game id this board's local key and its op log hang off. */
+  private get offlineGameId(): string {
+    return offlineMinigameGameId(typeof window === "undefined" ? "" : window.location.search);
   }
 
   private async fetchRow() {
@@ -288,12 +318,7 @@ export default class RenjuBoard extends Vue {
   }
 
   private applyRow(row: RenjuRow) {
-    this.blackUser = row.black_user;
-    this.blackUser2 = row.black_user_2 ?? null;
-    this.whiteUser = row.white_user;
-    this.whiteUser2 = row.white_user_2 ?? null;
-    this.blackNextUser = row.black_next_user ?? null;
-    this.whiteNextUser = row.white_next_user ?? null;
+    this.applyAssignments(row);
     if (isValidBoard(row.board) && row.board !== this.board) {
       this.board = row.board;
       this.ghost = null;
@@ -350,6 +375,14 @@ export default class RenjuBoard extends Vue {
 
     if (!this.online) {
       this.persistOffline();
+      if (this.mirrored) {
+        queueOfflineMinigameOp(this.offlineGameId, "renju", {
+          kind: "move",
+          previous: previousBoard,
+          next: nextBoard,
+          index,
+        });
+      }
       return;
     }
     this.backend
@@ -382,6 +415,9 @@ export default class RenjuBoard extends Vue {
       this.lastMove = null;
       this.prevMove = null;
       this.persistOffline();
+      if (this.mirrored) {
+        queueOfflineMinigameOp(this.offlineGameId, "renju", { kind: "reset" });
+      }
       return;
     }
     if (!this.backend) {
@@ -536,7 +572,7 @@ export default class RenjuBoard extends Vue {
   // Which colour the local user may play: their designated relay turn online, or either side
   // offline (one device, pass-and-play).
   get effectiveColor(): Stone | null {
-    if (!this.online) {
+    if (!this.online && !this.mirrored) {
       return this.turn;
     }
     return this.isDesignatedMover ? this.turn : null;
