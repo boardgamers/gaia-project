@@ -193,4 +193,15 @@ export default class LostFleetNotes extends Vue {
   opacity: 0.75;
   pointer-events: none;
 }
+
+@media (max-width: 767px) {
+  .lost-fleet-notes__area {
+    // iOS zooms the entire visual viewport when a focused text field is smaller than 16px. This
+    // textarea used to be 11px on phones, so merely tapping Notes could leave the game zoomed after
+    // the keyboard closed; subsequent scrolling then made the fixed action/premove bar appear to
+    // float mid-screen until a hard refresh. Keep the compact handwritten size on desktop, but use
+    // the platform-safe input size in the mobile layout where the automatic zoom happens.
+    font-size: 16px;
+  }
+}
 </style>

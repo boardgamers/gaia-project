@@ -1,7 +1,19 @@
 {
-  "version": "5.48.1",
+  "version": "5.48.2",
   "releasedAt": "2026-07-29",
   "entries": [
+    {
+      "version": "5.48.2",
+      "releasedAt": "2026-07-29",
+      "kind": "fix",
+      "title": "Sticky footer reliability",
+      "impact": "",
+      "changes": [
+        "Fixed the off-turn premove bar retaining a post-zoom transform and floating into the page while scrolling; both sticky footer states now share the same tested viewport compensation.",
+        "Prevented the mobile Lost Fleet notes field from triggering iOS input auto-zoom, which could leave the sticky footer detached until a hard refresh."
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.48.1",
       "releasedAt": "2026-07-29",

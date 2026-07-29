@@ -1,8 +1,8 @@
-// Decides the counter-transform that keeps the mobile sticky action bar (#move-buttons, which is
-// `position: fixed` in the narrow layout) at a constant on-screen size and position while the game
-// board is pinch-zoomed. Extracted from Commands.vue as a pure function purely so the "is the page
-// actually zoomed?" gate can be unit-tested - it is the exact spot a long-standing "the fixed bar
-// floats mid-screen on scroll" bug kept coming back through (see the spec).
+// Decides the counter-transform that keeps both mobile sticky footer states (#move-buttons on-turn,
+// PremoveBar off-turn) at a constant on-screen size and position while the game board is
+// pinch-zoomed. Extracted as a pure function so every fixed footer shares the unit-tested "is the
+// page actually zoomed?" gate - this is the exact spot a long-standing "the fixed bar floats
+// mid-screen on scroll" bug kept coming back through (see the spec).
 
 export type ZoomCompensationInput = {
   /** Is the bar currently in its `position: fixed` mobile-sticky layout? Only then does it need

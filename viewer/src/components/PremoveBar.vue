@@ -124,6 +124,7 @@ import Engine, { PlayerEnum } from "@gaia-project/engine";
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { PremoveMode, PremoveRow } from "../hosted/types";
 import { buildSequentialChainPreview } from "../logic/premove-preview";
+import { zoomCompensationTransform } from "../logic/zoom-compensation";
 
 @Component
 export default class PremoveBar extends Vue {
@@ -308,30 +309,23 @@ export default class PremoveBar extends Vue {
   mounted() {
     const root = this.$refs.root as HTMLElement;
 
-    // Same fix as Commands.vue's on-turn sticky bar (see its `mounted()` for the full rationale):
-    // without this, pinch-zooming the map makes this `position: fixed` bar balloon/detach along
-    // with the visual viewport instead of staying put - the "kinda floats when I scroll" symptom.
+    // Use the exact same compensation rule as Commands.vue's on-turn bar. Keeping a second copy of
+    // the scale/offset checks here left this off-turn bar on the old exact `scale === 1` path after
+    // Commands switched to a tolerance, so a tiny post-pinch scale residue could keep translating
+    // this fixed bar during ordinary scrolling until the app was hard-refreshed.
     const vv = window.visualViewport;
     const updateZoomTransform = () => {
       if (!root || !vv) {
         return;
       }
-      if (!this.stickyMobile) {
-        root.style.transform = "";
-        return;
-      }
-      const scale = vv.scale || 1;
-      if (scale === 1) {
-        root.style.transform = "";
-        return;
-      }
-      const x = vv.offsetLeft;
-      const y = vv.offsetTop + vv.height - window.innerHeight;
-      if (x === 0 && y === 0) {
-        root.style.transform = "";
-        return;
-      }
-      root.style.transform = `translate(${x}px, ${y}px) scale(${1 / scale})`;
+      root.style.transform = zoomCompensationTransform({
+        isStickyMobile: this.stickyMobile,
+        scale: vv.scale || 1,
+        offsetLeft: vv.offsetLeft,
+        offsetTop: vv.offsetTop,
+        height: vv.height,
+        innerHeight: window.innerHeight,
+      });
     };
     this.zoomTransformUpdater = updateZoomTransform;
 
