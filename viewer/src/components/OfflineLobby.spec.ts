@@ -81,7 +81,7 @@ describe("OfflineLobby", () => {
   it("marks a copy of an online game, keeps it out of the move-online flow, and stops its sync on delete", async () => {
     const online = new Engine(["init 2 mirrored-online-game"], { lostFleet: true });
     setOfflineMirrorEnabled("hosted-game-1", true, storage);
-    syncOfflineMirror("hosted-game-1", "Mirrored Nova", JSON.parse(JSON.stringify(online)), storage);
+    syncOfflineMirror("hosted-game-1", "Mirrored Nova", JSON.parse(JSON.stringify(online)), [0], storage);
 
     const wrapper = mount(OfflineLobby, { propsData: { storage } });
     await Vue.nextTick();

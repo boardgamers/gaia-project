@@ -119,12 +119,13 @@ describe("offline hot-seat games", () => {
       "online-abc",
       JSON.parse(JSON.stringify(engine)),
       "Copper Nova",
-      "abc",
+      { of: "abc", seats: [1] },
       storage,
       Date.UTC(2026, 6, 29, 10)
     );
     expect(created.error).to.equal(null);
     expect(created.save?.mirrorOf).to.equal("abc");
+    expect(created.save?.mirrorSeats).to.deep.equal([1]);
 
     // A half-composed turn on the existing record is dropped with the state it belonged to.
     writeStoredOfflineGame("online-abc", engine, "p1 faction terrans", storage, Date.UTC(2026, 6, 29, 11));
@@ -133,7 +134,7 @@ describe("offline hot-seat games", () => {
       "online-abc",
       JSON.parse(JSON.stringify(engine)),
       "Copper Nova",
-      "abc",
+      { of: "abc", seats: [1] },
       storage,
       Date.UTC(2026, 6, 29, 12)
     );
@@ -150,7 +151,7 @@ describe("offline hot-seat games", () => {
     ).to.deep.equal(["online-abc"]);
     expect(offlineGameListRow(updated.save!).mirror_of).to.equal("abc");
 
-    expect(upsertStoredOfflineGame("online-abc", { nope: true }, "Copper Nova", "abc", storage).error).to.equal(
+    expect(upsertStoredOfflineGame("online-abc", { nope: true }, "Copper Nova", { of: "abc" }, storage).error).to.equal(
       "That game state cannot be stored offline."
     );
     expect(

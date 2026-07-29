@@ -14,7 +14,13 @@ import ImportOfflineGame from "./hosted/ImportOfflineGame.vue";
 import LobbyChatPanel from "./hosted/LobbyChatPanel.vue";
 import NotificationSettings from "./hosted/NotificationSettings.vue";
 import { HostedGameHost, seatToLock } from "./hosted/host";
-import { isOfflineMirrorEnabled, setOfflineMirrorEnabled, syncOfflineMirror } from "./hosted/offline-mirror";
+import {
+  isOfflineMirrorEnabled,
+  planOfflineUpload,
+  readOfflineMirrorState,
+  setOfflineMirrorEnabled,
+  syncOfflineMirror,
+} from "./hosted/offline-mirror";
 import Lobby from "./hosted/Lobby.vue";
 import OpenLobbyGame from "./hosted/OpenLobbyGame.vue";
 import PendingApproval from "./hosted/PendingApproval.vue";
@@ -145,20 +151,104 @@ async function mountGameInstance(
   // readable and playable with no account and no connection. Deliberately not in the Vuex store:
   // nothing in the viewer tree needs it, only the bar's own menu.
   let lastCommittedState: any = null;
+  // Guards the upload loop below against re-entry: each move it sends commits, which emits another
+  // committed state, which calls straight back into `syncOfflineCopy`.
+  let uploadingOfflineMoves = false;
+  // Set once `host.load()` has resolved and `mySeats` is real. The copy records which seats may be
+  // played offline, and nothing may be uploaded before we know whose seats they are, so the first
+  // states (emitted from inside `load()`, while `mySeats` is still empty) must not write it.
+  let seatsKnown = false;
+
   const syncOfflineCopy = () => {
-    if (!lastCommittedState || !bar.offlineMirror) {
+    if (!lastCommittedState || !bar.offlineMirror || !seatsKnown) {
       return;
     }
-    const result = syncOfflineMirror(gameId, host.game?.name ?? "", lastCommittedState);
+    const result = syncOfflineMirror(gameId, host.game?.name ?? "", lastCommittedState, mySeats);
     if (result.error) {
       // Never interrupts play - the online game is unaffected either way, and the copy just stays at
       // the last move it managed to store (a full-storage quota error being the likeliest cause).
       // Reported on the settings menu's own status line rather than as an alert per move.
       bar.offlineMirrorStatus = `Offline copy failed: ${result.error}`;
       console.warn("[hosted] offline copy failed", result.error);
-    } else if (!result.skipped && result.save) {
+      return;
+    }
+    if (result.relation === "ahead") {
+      // The copy holds moves played offline that this game doesn't have yet. It is NOT overwritten
+      // (syncOfflineMirror refuses); those moves go up instead, so the two converge forwards.
+      uploadOfflineMoves();
+      return;
+    }
+    if (result.relation === "diverged") {
+      // Offline play raced a move made online: the two histories genuinely disagree, so neither side
+      // can be replayed onto the other. Leave both alone and say so - the local game is still intact
+      // in the offline lobby, and the online game is untouched.
+      bar.offlineMirrorStatus = "Offline copy conflicts with the online game - kept, not overwritten";
+      return;
+    }
+    if (!result.skipped && result.save) {
       const moves = Math.max((result.save.engineData?.moveHistory?.length ?? 1) - 1, 0);
       bar.offlineMirrorStatus = `Offline copy saved (${moves} ${moves === 1 ? "move" : "moves"})`;
+    }
+  };
+
+  /**
+   * Sends moves played in the offline copy up to the online game, one committed turn at a time
+   * through the ordinary commit path, so other players see them exactly like any other move.
+   *
+   * Re-planned on every iteration rather than from one precomputed list: each commit can be beaten
+   * by another device (seq conflict -> resync), which changes what is still uploadable. The loop
+   * stops as soon as a move can't go (someone else's seat, or the engine rejects it now) and says
+   * why; whatever couldn't be sent stays in the offline copy rather than being discarded.
+   */
+  const uploadOfflineMoves = async () => {
+    if (uploadingOfflineMoves) {
+      return;
+    }
+    uploadingOfflineMoves = true;
+    let uploaded = 0;
+    let blocked: ReturnType<typeof planOfflineUpload>["blocked"] = null;
+    try {
+      for (;;) {
+        const state = readOfflineMirrorState(gameId, lastCommittedState?.moveHistory ?? []);
+        if (state.relation !== "ahead") {
+          break;
+        }
+        const plan = planOfflineUpload(lastCommittedState, state.offlineMoves, (seat) => mySeats.includes(seat));
+        if (plan.moves.length === 0) {
+          blocked = plan.blocked;
+          break;
+        }
+        bar.offlineMirrorStatus = `Sending ${plan.moves.length} offline ${
+          plan.moves.length === 1 ? "move" : "moves"
+        } to the online game…`;
+        const before = lastCommittedState?.moveHistory?.length ?? 0;
+        await host.submitMove(plan.moves[0]);
+        if ((lastCommittedState?.moveHistory?.length ?? 0) <= before) {
+          // The commit didn't land (rejected, or another device won the race and we resynced).
+          // Stop rather than spin - the next committed state will try again from the real state.
+          blocked = { move: plan.moves[0], seat: null, reason: "rejected" };
+          break;
+        }
+        uploaded++;
+      }
+    } finally {
+      uploadingOfflineMoves = false;
+    }
+
+    if (blocked?.reason === "other-seat") {
+      const seatLabel = blocked.seat === null ? "another player" : `seat ${blocked.seat + 1}`;
+      bar.offlineMirrorStatus = `Sent ${uploaded} offline ${
+        uploaded === 1 ? "move" : "moves"
+      }; the rest waits on ${seatLabel}`;
+    } else if (blocked) {
+      bar.offlineMirrorStatus = `Sent ${uploaded} offline ${
+        uploaded === 1 ? "move" : "moves"
+      }; the next one no longer fits the online game and was kept offline`;
+    } else if (uploaded > 0) {
+      bar.offlineMirrorStatus = `Sent ${uploaded} offline ${uploaded === 1 ? "move" : "moves"} to the online game`;
+      // Everything landed: the copy and the online game now match, so refresh it normally (this also
+      // re-stamps the record, which is what makes the offline lobby show it as up to date again).
+      syncOfflineCopy();
     }
   };
 
@@ -410,6 +500,10 @@ async function mountGameInstance(
   }
 
   mySeats = host.mySeats(session.user.id, session.user.email);
+  // The offline copy may now be written/uploaded: which seats this account holds is what decides
+  // both what it records as playable offline and what may be sent back up (see syncOfflineCopy).
+  // `host.emitCurrentState()` below re-emits the loaded state, which is what actually runs it.
+  seatsKnown = true;
   updateBarLive();
 
   // Presence (PROGRESS.md Gaia 9) - the seat->user_id map (for matching a seat's turn-order dot to

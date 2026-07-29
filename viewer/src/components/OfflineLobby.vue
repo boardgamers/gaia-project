@@ -68,7 +68,9 @@
       <p v-if="online">
         A game marked <strong>“Online copy”</strong> came from the online lobby: open that game online and turn on
         <strong>Convert to offline game</strong> in its settings menu, and every move played there is copied here
-        automatically. The online game stays the real one — moves you make in the copy are not sent back to it.
+        automatically. Play it on a plane and your moves are sent up to the online game the next time you open it with a
+        connection — nothing you played offline is thrown away or rolled back. Only your own seats can be played here,
+        because nobody can move for another player.
       </p>
       <p class="mb-0">
         Games remain on this phone after closing or restarting the app. Clearing browser/site data or uninstalling the
@@ -118,7 +120,7 @@
             variant="info"
             class="offline-lobby__mirror-badge"
             v-b-tooltip.hover
-            title="An automatic copy of an online game: it updates whenever you open that game online. Moves you play here stay here, and are replaced the next time it syncs."
+            title="A copy of an online game, kept in sync both ways: it updates whenever you open that game online, and moves you play here are sent up to the online game next time you open it with a connection. Only your own seats can be played."
           >
             Online copy
           </b-badge>

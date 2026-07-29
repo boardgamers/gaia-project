@@ -2,6 +2,8 @@ import Engine, { FactionVariant } from "@gaia-project/engine";
 import { AuctionVariant, Layout } from "@gaia-project/engine/src/engine";
 import Game from "./components/Game.vue";
 import Wrapper from "./components/Wrapper.vue";
+import { seatToLock } from "./hosted/host";
+import { offlineMirrorSeatLock } from "./hosted/offline-mirror";
 import launch from "./launcher";
 import { autoDecideChargePower, parseAutoChargePreference } from "./logic/auto-decide";
 import {
@@ -132,6 +134,15 @@ function launchSelfContained(selector = "#app", debug = true) {
   let restoredPendingMove = "";
   let restoredOfflineSave = false;
   let rewriteRestoredSave = false;
+  // A copy of an online game (hosted/offline-mirror.ts) is not a hot-seat game: whatever is played
+  // here becomes a real committed turn in the hosted game as soon as this browser is back online,
+  // and only a seat this account holds can ever be committed for. So the same seat lock hosted play
+  // uses applies here, instead of letting a whole table be played and then refused on upload.
+  // `null` for every ordinary pass-and-play game (and for a mirrored record written before seats
+  // were recorded), which keeps its unlocked hot seat; an empty array means a mirrored game this
+  // account holds no seat in - a spectator's copy, readable but not playable, since not one of its
+  // moves could ever be committed online.
+  let mirrorSeats: number[] | null = null;
   try {
     const initialLoad = parseLoadFromQuery(search);
     const scenarioId = parseScenarioFromQuery(search);
@@ -150,6 +161,7 @@ function launchSelfContained(selector = "#app", debug = true) {
     }
 
     if (stored?.save) {
+      mirrorSeats = offlineMirrorSeatLock(stored.save);
       const restored = restoreOfflineGame(stored.save);
       engine = restored.engine;
       initialDisplayEngine = restored.displayEngine;
@@ -211,10 +223,21 @@ function launchSelfContained(selector = "#app", debug = true) {
       });
       engine.generateAvailableCommandsIfNeeded();
       persistOfflineGame();
-      emitter.emit("state", JSON.parse(JSON.stringify(engine)));
+      emitStateWithSeatLock(JSON.parse(JSON.stringify(engine)));
     }
   });
   emitter.app.$once("hook:beforeDestroy", unsub);
+
+  // Emits a state and, for a mirrored copy only, re-applies the seat lock for whoever must act in
+  // it - the same rule hosted play uses (host.ts's `seatToLock`), so a leech interrupt unlocks the
+  // right seat and a player holding every seat still plays freely.
+  const emitStateWithSeatLock = (data: any) => {
+    emitter.emit("state", data);
+    if (mirrorSeats) {
+      const lock = seatToLock(mirrorSeats, data?.players?.length ?? 0, data?.playerToMove);
+      emitter.emit("player", lock !== null ? { index: lock } : null);
+    }
+  };
 
   emitter.on("move", (move: string) => {
     const copy = Engine.fromData(JSON.parse(JSON.stringify(engine)));
@@ -238,10 +261,10 @@ function launchSelfContained(selector = "#app", debug = true) {
 
     persistOfflineGame(copy.newTurn ? "" : move);
 
-    emitter.emit("state", JSON.parse(JSON.stringify(copy)));
+    emitStateWithSeatLock(JSON.parse(JSON.stringify(copy)));
   });
 
-  emitter.emit("state", JSON.parse(JSON.stringify(initialDisplayEngine)));
+  emitStateWithSeatLock(JSON.parse(JSON.stringify(initialDisplayEngine)));
 }
 
 export default launchSelfContained;

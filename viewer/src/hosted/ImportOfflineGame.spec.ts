@@ -66,7 +66,7 @@ describe("ImportOfflineGame", () => {
     const engine = new Engine(["init 2 randomSeed", "p1 faction terrans"], {});
     engine.generateAvailableCommandsIfNeeded();
     setOfflineMirrorEnabled("hosted-game-1", true, storage);
-    syncOfflineMirror("hosted-game-1", "Mirrored Nova", JSON.parse(JSON.stringify(engine)), storage);
+    syncOfflineMirror("hosted-game-1", "Mirrored Nova", JSON.parse(JSON.stringify(engine)), [0], storage);
 
     const client = makeClient(async () => ({ data: [], error: null }));
     const wrapper = mount(ImportOfflineGame, {

@@ -39,6 +39,13 @@ export type StoredOfflineGame = OfflineGameSave & {
    * mirror existed - and every ordinary pass-and-play game - stays valid without a migration.
    */
   mirrorOf?: string;
+  /**
+   * The seats the mirroring account holds in that hosted game. Playing this copy offline produces
+   * real turns that get uploaded when the connection is back, and only an owned seat can ever be
+   * committed for - so self-contained.ts locks offline play to these seats instead of the usual
+   * hot-seat freedom. Empty/absent means "no lock" (a pre-`mirrorSeats` record, or a spectator).
+   */
+  mirrorSeats?: number[];
 };
 
 export type OfflineGameBackup = {
@@ -410,7 +417,7 @@ export function upsertStoredOfflineGame(
   gameId: string,
   engineData: unknown,
   name: string,
-  mirrorOf: string | null = null,
+  mirror: { of: string; seats?: number[] } | null = null,
   storage: Storage | null = browserOfflineStorage(),
   now = Date.now()
 ): StoredOfflineGameWriteResult {
@@ -438,7 +445,7 @@ export function upsertStoredOfflineGame(
     id: gameId,
     name: name.trim() || existing.save?.name || "Offline game",
     createdAt: existing.save?.createdAt ?? savedAt,
-    ...(mirrorOf ? { mirrorOf } : {}),
+    ...(mirror ? { mirrorOf: mirror.of, mirrorSeats: mirror.seats ?? [] } : {}),
   };
 
   const listed = library.index.gameIds.includes(gameId);

@@ -83,13 +83,16 @@ Read these before coding:
 - See `docs/lost-fleet/PROGRESS.md`'s "Done so far" list for the full numbered history and "Next
   actions" for what's still open.
 
-- An online game can keep a **synced offline copy** as of PROGRESS #126 (viewer v5.46.0): the hosted
+- An online game can keep a **synced offline copy** as of PROGRESS #126 (viewer v5.47.0): the hosted
   gear menu's "Convert to offline game" setting (`viewer/src/hosted/offline-mirror.ts`, per device,
   localStorage only — no database change) puts the game in the offline library and writes every
-  committed hosted turn into it. One-directional by design: the online game stays authoritative and
-  local moves in the copy are replaced on the next sync. `HostedGameHost.onCommittedState` is what
-  keeps a half-composed turn from ever being persisted; use it for anything else that saves/exports
-  hosted state.
+  committed hosted turn into it. **Two-way, and it never goes backwards:** the copy is refreshed only
+  from an online state strictly further along the SAME history (`compareMoveHistories`), and moves
+  played offline are uploaded instead (`planOfflineUpload` + `hosted.ts`'s loop), so a copy that is
+  ahead is never reverted. A genuinely diverged copy is left alone on both sides. Offline play of a
+  copy is seat-locked to `mirrorSeats` (`self-contained.ts`), because only an owned seat can ever be
+  committed for online. `HostedGameHost.onCommittedState` is what keeps a half-composed turn from
+  ever being persisted; use it for anything else that saves/exports hosted state.
 - The two side games (sidebar chess, research-panel renju) are **per-viewer** as of PROGRESS #118:
   which face a drawer shows lives in `localStorage` (per game, per account), not in
   `chess_board`/`renju_board`'s `panel_mode`. Their turn pushes are their own notification

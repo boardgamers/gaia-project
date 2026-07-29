@@ -130,7 +130,7 @@ export default Vue.extend({
     toggleOfflineCopy() {
       const message = this.offlineMirror
         ? "Stop copying this game to your offline games? The copy already on this device stays there, frozen at the last move it synced - delete it from the offline lobby if you don't want it."
-        : "Add this game to your offline games on this device? Every move played online is copied there automatically while you have the game open, so you can read or play on offline. The online game stays the real one: moves you make in the offline copy are not sent back, and are replaced the next time it syncs.";
+        : "Add this game to your offline games on this device? Every move played online is copied there automatically, and moves you play in the copy while offline are sent up to the online game as soon as you are back - they are real moves, not practice. The copy is never overwritten by an older online state. You can only play your own seats in it, since nobody can move for another player.";
       if (window.confirm(message)) {
         this.$emit("toggle-offline-mirror");
       }

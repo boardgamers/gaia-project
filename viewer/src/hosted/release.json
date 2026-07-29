@@ -1,7 +1,27 @@
 {
-  "version": "5.46.1",
+  "version": "5.47.0",
   "releasedAt": "2026-07-29",
   "entries": [
+    {
+      "version": "5.47.0",
+      "releasedAt": "2026-07-29",
+      "kind": "update",
+      "title": "Offline moves are never lost",
+      "impact": "",
+      "changes": [
+        "Moves you play in an offline copy are now sent up to the online game when you are back online, instead of being replaced by it",
+        "An offline copy is never rolled back to an older online state",
+        "You can only play your own seats in an offline copy, since nobody can move for another player",
+        "syncOfflineMirror refreshes a copy only from an online state strictly further along the same history (compareMoveHistories: none/same/behind/ahead/diverged); an ahead or diverged copy is never written over",
+        "planOfflineUpload replays offline-only moves against the online engine and returns the leading run that can be committed, stopping at a seat this account does not hold or a move the engine now rejects; hosted.ts sends that run one move at a time, re-planning after each commit",
+        "mirrorSeats is recorded on the copy and self-contained.ts applies the hosted seatToLock rule to it, so a mirrored game is no longer played hot-seat"
+      ],
+      "userChanges": [
+        "Moves you play in an offline copy are now sent up to the online game when you are back online, instead of being replaced by it",
+        "An offline copy is never rolled back to an older online state",
+        "You can only play your own seats in an offline copy, since nobody can move for another player"
+      ]
+    },
     {
       "version": "5.46.1",
       "releasedAt": "2026-07-29",

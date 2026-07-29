@@ -4140,25 +4140,25 @@ opacity: 0.7 }` wrapper that also diluted the X itself, while `BoardAction.vue`'
       `pnpm test`: 440 passing/31 failing both before and after (identical failing-test names,
       confirmed via `git stash` on the same run - all pre-existing, none touch these components).
 
-                                                                                                                                                                                                                                                                 **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
-                                                                                                                                                                                                                                                                 pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
-                                                                                                                                                                                                                                                                 desktop mice, which was never the actual bug - only touch devices raced hover against the
-                                                                                                                                                                                                                                                                 click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
-                                                                                                                                                                                                                                                                 `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
-                                                                                                                                                                                                                                                                 `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
-                                                                                                                                                                                                                                                                 shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
-                                                                                                                                                                                                                                                                 `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
-                                                                                                                                                                                                                                                                 directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
-                                                                                                                                                                                                                                                                 `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
-                                                                                                                                                                                                                                                                 config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
-                                                                                                                                                                                                                                                                 on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
-                                                                                                                                                                                                                                                                 desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
-                                                                                                                                                                                                                                                                 is what actually closed that race originally. Verified live via Playwright with two device
-                                                                                                                                                                                                                                                                 profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
-                                                                                                                                                                                                                                                                 tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
-                                                                                                                                                                                                                                                                 context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
-                                                                                                                                                                                                                                                                 a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
-                                                                                                                                                                                                                                                                 still 440 passing/31 failing, same pre-existing set.
+                                                                                                                                                                                                                                                                       **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
+                                                                                                                                                                                                                                                                       pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
+                                                                                                                                                                                                                                                                       desktop mice, which was never the actual bug - only touch devices raced hover against the
+                                                                                                                                                                                                                                                                       click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
+                                                                                                                                                                                                                                                                       `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
+                                                                                                                                                                                                                                                                       `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
+                                                                                                                                                                                                                                                                       shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
+                                                                                                                                                                                                                                                                       `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
+                                                                                                                                                                                                                                                                       directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
+                                                                                                                                                                                                                                                                       `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
+                                                                                                                                                                                                                                                                       config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
+                                                                                                                                                                                                                                                                       on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
+                                                                                                                                                                                                                                                                       desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
+                                                                                                                                                                                                                                                                       is what actually closed that race originally. Verified live via Playwright with two device
+                                                                                                                                                                                                                                                                       profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
+                                                                                                                                                                                                                                                                       tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
+                                                                                                                                                                                                                                                                       context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
+                                                                                                                                                                                                                                                                       a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
+                                                                                                                                                                                                                                                                       still 440 passing/31 failing, same pre-existing set.
 
 102.  ✅ **Offline pass-and-play with automatic local recovery and airplane-mode launch
       (2026-07-17, v5.31.0).** The viewer now has a dedicated `?offline=1` hot-seat mode, linked from
@@ -5039,11 +5039,41 @@ new.fen` - a real move or reset, not a colour claim or panel-mode switch) that P
         existing commitment rule: partial turns are always rendered from a throwaway clone, committed
         ones are emitted after `this.engine` is pointed at them. Without that distinction the copy
         could store a turn frozen mid-click, which would reopen broken in the offline lobby.
-      - **Deliberately one-directional.** The online game stays authoritative: moves played in the
-        copy are not pushed back, and are replaced by the next sync. Both confirm dialogs and the
-        offline lobby's own row say so. Going the other way remains the separate, explicit, one-shot
-        "Move online" flow (`hosted/import-offline-game.ts`), which now refuses a mirrored record
-        outright rather than forking a second copy of a game that is already hosted.
+      - **Moves played offline are never reverted, and go back up (added the same session, viewer
+        v5.47.0, owner: "I don't want the offline game to be overwritten once I get back online …
+        it shouldn't revert or use the online state which would be behind in moves").** The first
+        cut was a strict mirror, which meant exactly that bug: play on a plane, reconnect, and the
+        first committed online state — necessarily BEHIND the copy — overwrote it. Now the copy is
+        refreshed only from an online state that is strictly further along the SAME history, and
+        what the copy holds beyond the online game is uploaded instead, so the two converge forwards.
+        `compareMoveHistories` classifies the pair as `none`/`same`/`behind`/`ahead`/`diverged`;
+        only `behind` (and `none`) ever writes. This is sound because a move line survives a replay
+        byte-identically — `moveHistory` holds the annotated `createMoveToShow` form, and re-running
+        that annotated line through a fresh engine (what `buildEngine` does with the stored `moves`
+        rows, and what the "Move online" import has always relied on) reproduces the same string
+        rather than annotating it twice, so the shared prefix of an untouched copy is literally equal.
+      - **The upload.** `planOfflineUpload` replays the offline-only moves against a throwaway copy
+        of the online engine and returns the leading run that may actually be sent, stopping at the
+        first move belonging to a seat this account does not hold (`commit_turn` asserts seat
+        ownership) or that the engine now rejects. `hosted.ts` sends that run one move at a time
+        through the ordinary commit path — so opponents see them like any other move — re-planning
+        after each commit, since another device can win the race and change what is still uploadable.
+        Anything that cannot go stays in the offline copy rather than being dropped, and the settings
+        menu says why ("Sent 2 offline moves; the rest waits on seat 2").
+      - **A `diverged` copy is left strictly alone**, on both sides: offline play that raced a real
+        online move cannot be replayed onto it, so neither is touched and the status line says the
+        copy was kept, not overwritten. Resolving that automatically (replaying the still-legal
+        offline moves onto the newer online state) is deliberately NOT done — a Gaia turn chosen
+        against a stale board is not obviously the turn the player would choose against the real one.
+      - **Only your own seats can be played offline.** Because an offline move becomes a real
+        committed turn, `mirrorSeats` is recorded on the copy and `self-contained.ts` applies the
+        same `seatToLock` rule hosted play uses, instead of the usual hot seat. Otherwise a whole
+        table could be played offline and then refused on upload. A record with no `mirrorSeats`
+        (an ordinary pass-and-play game, or a copy written before this existed) keeps its hot seat;
+        an explicitly empty list is a spectator's copy — readable, not playable.
+      - Going the other way for a purely local game remains the separate, explicit, one-shot "Move
+        online" flow (`hosted/import-offline-game.ts`), which refuses a mirrored record outright
+        rather than forking a second copy of a game that is already hosted.
       - **Switching off** stops the syncing and leaves the copy alone (keeping a readable copy is the
         point of having made one). Deleting that copy in the offline lobby switches the setting off
         too, so a deleted copy cannot quietly reappear on the online game's next move.
@@ -5054,9 +5084,8 @@ new.fen` - a real move or reset, not a colour claim or panel-mode switch) that P
         `offlineGameListRow` as `mirror_of`. The offline lobby badges such a row "Online copy" and
         hides its "Move online" button. Failures never interrupt play: a quota error shows on the
         settings menu's own status line, and the copy simply stays at the last move it stored.
-      - **Verification:** viewer suite **689 passing / 2 failing** on the rebased tree (this change
-        contributes 13 new tests — measured 671 → 684 against its own pre-rebase base, before #125's
-        renju commit landed on `master`; the 2 failures are the same map-rotation flakes, which fail
+      - **Verification:** viewer suite **695 passing / 2 failing** (this entry contributes 19 new
+        tests across its two rounds; the 2 failures are the same map-rotation flakes, which fail
         identically on a clean tree). Production build clean (`npm run build`, 50 precached URLs).
         No new lint errors versus the baseline's 149 pre-existing ones. No database change — the
         whole feature is client-side, so nothing here needs a migration or an Edge Function deploy.
