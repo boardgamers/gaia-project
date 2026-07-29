@@ -112,6 +112,24 @@ describe("OfflineLobby", () => {
     wrapper.destroy();
   });
 
+  it("shows why a game failed to open instead of just bouncing back here", async () => {
+    window.history.replaceState({}, "", "?offline=1&error=That%20game%20could%20not%20be%20opened%3A%20boom");
+
+    const wrapper = mount(OfflineLobby, { propsData: { storage } });
+    await Vue.nextTick();
+
+    expect(wrapper.text()).to.include("That game could not be opened: boom");
+    // The library load must not wipe it (refresh() rewrites its own storageError every render)...
+    (wrapper.vm as any).refresh();
+    await Vue.nextTick();
+    expect(wrapper.text()).to.include("That game could not be opened: boom");
+    // ...and it is cleared from the URL so a refresh doesn't re-announce it.
+    expect(window.location.search).to.not.include("error=");
+
+    wrapper.destroy();
+    window.history.replaceState({}, "", "?offline=1");
+  });
+
   it("offers file backups in the lobby and restores an older raw engine export", async () => {
     const wrapper = mount(OfflineLobby, { propsData: { storage } });
     await Vue.nextTick();

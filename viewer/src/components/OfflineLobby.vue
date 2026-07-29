@@ -79,6 +79,9 @@
       </p>
     </InfoModal>
 
+    <b-alert :show="!!openError" variant="danger" dismissible @dismissed="openError = ''">
+      {{ openError }}
+    </b-alert>
     <b-alert :show="!!storageError" variant="warning" dismissible @dismissed="storageError = ''">
       {{ storageError }}
     </b-alert>
@@ -186,6 +189,9 @@ export default Vue.extend({
     return {
       games: [] as OfflineGameListRow[],
       storageError: "",
+      // Why a game just failed to open, handed over by self-contained.ts's redirect. Kept apart
+      // from `storageError`, which `refresh()` rewrites from the library load on every render.
+      openError: "",
       backupMessage: "",
       online: typeof navigator === "undefined" || navigator.onLine !== false,
       cacheReady: false,
@@ -207,6 +213,7 @@ export default Vue.extend({
     },
   },
   mounted() {
+    this.showOpenFailure();
     this.refresh();
     requestPersistentOfflineStorage()
       .then((persisted) => {
@@ -232,6 +239,26 @@ export default Vue.extend({
     }
   },
   methods: {
+    /**
+     * A game that could not be opened sends the player back here with the reason in the URL (see
+     * self-contained.ts's `returnToOfflineLobby`) - otherwise the redirect looked like a flash and
+     * a bounce with no explanation. Read once, then stripped from the URL so a refresh or a shared
+     * link does not keep re-announcing it.
+     */
+    showOpenFailure() {
+      if (typeof window === "undefined") {
+        return;
+      }
+      const params = new URLSearchParams(window.location.search);
+      const reason = params.get("error");
+      if (!reason) {
+        return;
+      }
+      this.openError = reason;
+      params.delete("error");
+      const query = params.toString();
+      window.history.replaceState({}, "", `${window.location.pathname}${query ? `?${query}` : ""}`);
+    },
     refresh() {
       const result = this.storage ? listOfflineGames(this.storage as Storage) : listOfflineGames();
       this.games = result.games.map(offlineGameListRow);

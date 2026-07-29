@@ -101,6 +101,24 @@ export function parseSelfContainedSetup(search = "", env: SelfContainedEnv = pro
   };
 }
 
+/**
+ * Bouncing straight back to the offline lobby is right - a game that cannot be restored has nothing
+ * to render - but doing it SILENTLY meant the player saw only a flash of the game page and never
+ * learned why (owner report: "it just flashes quickly and I can see a green box appear at top but
+ * can[not] read what it says because it's too quick"). The reason rides along in the URL so the
+ * lobby can show it, which also makes it reportable instead of lost.
+ */
+function returnToOfflineLobby(reason: string): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  const url = new URL(window.location.href);
+  url.search = "";
+  url.searchParams.set("offline", "1");
+  url.searchParams.set("error", reason.slice(0, 300));
+  window.location.replace(url.toString());
+}
+
 function launchSelfContained(selector = "#app", debug = true) {
   const emitter = launch(selector, debug ? Wrapper : Game);
 
@@ -154,9 +172,7 @@ function launchSelfContained(selector = "#app", debug = true) {
     }
 
     if (offlineMode && !initialLoad && !scenarioId && !stored?.save) {
-      if (typeof window !== "undefined") {
-        window.location.replace("?offline=1");
-      }
+      returnToOfflineLobby(stored?.error ?? "That game is not stored on this device.");
       return;
     }
 
@@ -182,9 +198,7 @@ function launchSelfContained(selector = "#app", debug = true) {
   } catch (error) {
     if (offlineMode) {
       console.error("could not restore offline game", error);
-      if (typeof window !== "undefined") {
-        window.location.replace("?offline=1");
-      }
+      returnToOfflineLobby(`That game could not be opened: ${error instanceof Error ? error.message : error}`);
       return;
     }
     console.error("could not load state from URL, falling back to fresh self-contained setup", error);

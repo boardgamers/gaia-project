@@ -1,7 +1,21 @@
 {
-  "version": "5.48.0",
+  "version": "5.48.1",
   "releasedAt": "2026-07-29",
   "entries": [
+    {
+      "version": "5.48.1",
+      "releasedAt": "2026-07-29",
+      "kind": "update",
+      "title": "Say why a game will not open",
+      "impact": "",
+      "changes": [
+        "If an offline game cannot be opened, the lobby now shows the reason instead of flashing and sending you back with no explanation",
+        "self-contained.ts's two silent window.location.replace calls now carry the reason in the URL, and OfflineLobby shows it in its own alert (kept apart from storageError, which refresh() rewrites on every render) then strips it from the URL"
+      ],
+      "userChanges": [
+        "If an offline game cannot be opened, the lobby now shows the reason instead of flashing and sending you back with no explanation"
+      ]
+    },
     {
       "version": "5.48.0",
       "releasedAt": "2026-07-29",
