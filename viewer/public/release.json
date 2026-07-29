@@ -1,7 +1,22 @@
 {
-  "version": "5.48.3",
+  "version": "5.48.4",
   "releasedAt": "2026-07-29",
   "entries": [
+    {
+      "version": "5.48.4",
+      "releasedAt": "2026-07-29",
+      "kind": "update",
+      "title": "Online-ahead games refresh offline",
+      "impact": "",
+      "changes": [
+        "When the online game is ahead on the same history, its offline pass-and-play copy now catches up automatically when that online game is opened on the device.",
+        "Added prefix-safe one-way fast-forwarding for converted Gaia games while preserving offline-ahead, diverged, and unfinished local turns.",
+        "Offline pass-and-play moves remain local and are never uploaded to the hosted game."
+      ],
+      "userChanges": [
+        "When the online game is ahead on the same history, its offline pass-and-play copy now catches up automatically when that online game is opened on the device."
+      ]
+    },
     {
       "version": "5.48.3",
       "releasedAt": "2026-07-29",

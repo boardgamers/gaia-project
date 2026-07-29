@@ -7,10 +7,11 @@ import {
 } from "../offline-game";
 
 /**
- * The current hosted action creates one independent offline pass-and-play snapshot; see
- * `convertHostedGameToPassAndPlay`. The older preference, synchronization, upload-planning, and
- * seat-lock helpers remain below so existing stored records and their focused compatibility tests
- * can still be interpreted, but hosted.ts no longer invokes that two-way mirror workflow.
+ * The current hosted action creates an offline pass-and-play copy; see
+ * `convertHostedGameToPassAndPlay`. Online commits may safely fast-forward that copy while its
+ * history is still a prefix, but offline moves are never uploaded. The older preference,
+ * upload-planning, and seat-lock helpers remain below so existing stored records and their focused
+ * compatibility tests can still be interpreted.
  */
 export const OFFLINE_MIRROR_PREFS_KEY = "gaia-offline-mirror-v1";
 
@@ -51,18 +52,116 @@ export function mirrorOfflineGameId(hostedGameId: string): string {
   return `${OFFLINE_MIRROR_ID_PREFIX}${String(hostedGameId).replace(/[^a-z0-9-]+/gi, "-")}`;
 }
 
+function storedHistoryOf(stored: StoredOfflineGame | null): string[] {
+  const history = stored?.engineData?.moveHistory;
+  return Array.isArray(history) ? history : [];
+}
+
+/**
+ * How the copy on this device relates to the online game's committed history. This is the whole
+ * safety mechanism: a copy is only ever refreshed from the online game when the online game is
+ * strictly further along the SAME history, so moves played offline can never be reverted by a
+ * hosted state that is behind them.
+ *
+ * Comparing the two histories line by line is reliable because a move line survives a replay
+ * byte-identically: the engine's `moveHistory` holds the annotated form (`createMoveToShow`), and
+ * re-running that annotated line through a fresh engine (which is exactly what host.ts's
+ * `buildEngine` does with the stored `moves` rows) reproduces the same string rather than annotating
+ * it twice. So the shared prefix of an unmodified copy and its online source is literally equal.
+ */
+export type MirrorRelation =
+  /** Nothing stored yet for this game - the first sync creates it. */
+  | "none"
+  /** Identical: nothing to do. */
+  | "same"
+  /** The copy is a strict prefix of the online game - it is stale and safe to refresh. */
+  | "behind"
+  /** The online game is a strict prefix of the copy - the copy holds moves played offline. */
+  | "ahead"
+  /** They agree up to a point and then disagree - offline play raced a move made online. */
+  | "diverged";
+
+export function compareMoveHistories(stored: string[], online: string[]): MirrorRelation {
+  if (stored.length === 0) {
+    return "none";
+  }
+  const shared = Math.min(stored.length, online.length);
+  for (let index = 0; index < shared; index++) {
+    if (stored[index] !== online[index]) {
+      return "diverged";
+    }
+  }
+  if (stored.length === online.length) {
+    return "same";
+  }
+  return stored.length < online.length ? "behind" : "ahead";
+}
+
 export type OfflinePassAndPlayConversionResult = {
   save: StoredOfflineGame | null;
   error: string | null;
   created: boolean;
+  updated: boolean;
+  relation: MirrorRelation;
+  blockedByPendingMove: boolean;
 };
 
 /**
- * Takes one committed hosted state and stores it as an independent offline pass-and-play game.
+ * Safely advances an existing pass-and-play copy from one committed online state.
  *
- * The stable source-derived id makes this idempotent: converting twice finds the first copy instead
- * of overwriting local turns with a newer online snapshot. No `mirrorOf`/`mirrorSeats` metadata is
- * written, because the histories intentionally separate at conversion time.
+ * Only a strict matching extension is written. Offline-ahead and diverged histories, plus any
+ * half-composed offline turn, are preserved exactly as they are. Returning `none` is the ordinary
+ * case when this online game has never been converted on this device.
+ */
+export function refreshHostedPassAndPlayFromOnline(
+  hostedGameId: string,
+  engineData: unknown,
+  storage: Storage | null = browserOfflineStorage(),
+  now = Date.now()
+): Omit<OfflinePassAndPlayConversionResult, "created"> {
+  if (!storage) {
+    return {
+      save: null,
+      error: null,
+      updated: false,
+      relation: "none",
+      blockedByPendingMove: false,
+    };
+  }
+  const offlineGameId = mirrorOfflineGameId(hostedGameId);
+  const existing = readStoredOfflineGame(offlineGameId, storage);
+  if (!existing.save) {
+    return { save: null, error: null, updated: false, relation: "none", blockedByPendingMove: false };
+  }
+  const onlineHistory = (engineData as any)?.moveHistory;
+  if (!Array.isArray(onlineHistory)) {
+    return {
+      save: existing.save,
+      error: "That game state cannot be stored offline.",
+      updated: false,
+      relation: "none",
+      blockedByPendingMove: false,
+    };
+  }
+  const relation = compareMoveHistories(storedHistoryOf(existing.save), onlineHistory);
+  const blockedByPendingMove = relation === "behind" && !!existing.save.pendingMove;
+  if (relation !== "behind" || blockedByPendingMove) {
+    return { save: existing.save, error: null, updated: false, relation, blockedByPendingMove };
+  }
+  const result = upsertStoredOfflineGame(offlineGameId, engineData, existing.save.name, null, storage, now);
+  return {
+    save: result.save,
+    error: result.error,
+    updated: !!result.save,
+    relation,
+    blockedByPendingMove: false,
+  };
+}
+
+/**
+ * Takes one committed hosted state and stores it as an offline pass-and-play game. Repeating the
+ * conversion also applies the safe online-ahead refresh above, without ever overwriting local turns.
+ * No `mirrorOf`/`mirrorSeats` metadata is written because offline turns never upload.
  */
 export function convertHostedGameToPassAndPlay(
   hostedGameId: string,
@@ -72,15 +171,29 @@ export function convertHostedGameToPassAndPlay(
   now = Date.now()
 ): OfflinePassAndPlayConversionResult {
   if (!storage) {
-    return { save: null, error: "Local storage is unavailable in this browser.", created: false };
+    return {
+      save: null,
+      error: "Local storage is unavailable in this browser.",
+      created: false,
+      updated: false,
+      relation: "none",
+      blockedByPendingMove: false,
+    };
+  }
+  const refreshed = refreshHostedPassAndPlayFromOnline(hostedGameId, engineData, storage, now);
+  if (refreshed.save || refreshed.error) {
+    return { ...refreshed, created: false };
   }
   const offlineGameId = mirrorOfflineGameId(hostedGameId);
-  const existing = readStoredOfflineGame(offlineGameId, storage);
-  if (existing.save) {
-    return { save: existing.save, error: null, created: false };
-  }
   const result = upsertStoredOfflineGame(offlineGameId, engineData, gameName, null, storage, now);
-  return { save: result.save, error: result.error, created: !!result.save };
+  return {
+    save: result.save,
+    error: result.error,
+    created: !!result.save,
+    updated: false,
+    relation: "none",
+    blockedByPendingMove: false,
+  };
 }
 
 function isOfflineMirrorPrefs(value: any): value is OfflineMirrorPrefs {
@@ -141,50 +254,6 @@ export function setOfflineMirrorEnabled(
       error: `The offline-copy setting could not be saved: ${errorMessage(error)}`,
     };
   }
-}
-
-function storedHistoryOf(stored: StoredOfflineGame | null): string[] {
-  return Array.isArray(stored?.engineData?.moveHistory) ? stored!.engineData.moveHistory : [];
-}
-
-/**
- * How the copy on this device relates to the online game's committed history. This is the whole
- * safety mechanism: a copy is only ever refreshed from the online game when the online game is
- * strictly further along the SAME history, so moves played offline can never be reverted by a
- * hosted state that is behind them.
- *
- * Comparing the two histories line by line is reliable because a move line survives a replay
- * byte-identically: the engine's `moveHistory` holds the annotated form (`createMoveToShow`), and
- * re-running that annotated line through a fresh engine (which is exactly what host.ts's
- * `buildEngine` does with the stored `moves` rows) reproduces the same string rather than annotating
- * it twice. So the shared prefix of an unmodified copy and its online source is literally equal.
- */
-export type MirrorRelation =
-  /** Nothing stored yet for this game - the first sync creates it. */
-  | "none"
-  /** Identical: nothing to do. */
-  | "same"
-  /** The copy is a strict prefix of the online game - it is stale and safe to refresh. */
-  | "behind"
-  /** The online game is a strict prefix of the copy - the copy holds moves played offline. */
-  | "ahead"
-  /** They agree up to a point and then disagree - offline play raced a move made online. */
-  | "diverged";
-
-export function compareMoveHistories(stored: string[], online: string[]): MirrorRelation {
-  if (stored.length === 0) {
-    return "none";
-  }
-  const shared = Math.min(stored.length, online.length);
-  for (let index = 0; index < shared; index++) {
-    if (stored[index] !== online[index]) {
-      return "diverged";
-    }
-  }
-  if (stored.length === online.length) {
-    return "same";
-  }
-  return stored.length < online.length ? "behind" : "ahead";
 }
 
 export type OfflineMirrorState = {

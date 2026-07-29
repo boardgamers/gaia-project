@@ -11,6 +11,7 @@ import {
   OFFLINE_MIRROR_PREFS_KEY,
   planOfflineUpload,
   readOfflineMirrorState,
+  refreshHostedPassAndPlayFromOnline,
   setOfflineMirrorEnabled,
   syncOfflineMirror,
 } from "./offline-mirror";
@@ -98,7 +99,7 @@ describe("hosted -> offline copy", () => {
     expect(mirrorOfflineGameId("game 1_x")).to.equal("online-game-1-x");
   });
 
-  it("converts once to an independent pass-and-play snapshot without overwriting local turns", () => {
+  it("creates a pass-and-play copy and fast-forwards it when online is safely ahead", () => {
     const storage = new MemoryStorage();
     const first = convertHostedGameToPassAndPlay(
       HOSTED_ID,
@@ -110,23 +111,77 @@ describe("hosted -> offline copy", () => {
 
     expect(first.error).to.equal(null);
     expect(first.created).to.equal(true);
+    expect(first.updated).to.equal(false);
     expect(first.save?.id).to.equal(mirrorOfflineGameId(HOSTED_ID));
     expect(first.save?.mirrorOf).to.equal(undefined);
     expect(first.save?.mirrorSeats).to.equal(undefined);
 
-    const localHistory = playOffline(storage, ["terrans build ts -1x2."]);
+    const onlineAhead = committedState([...SETUP_MOVES, "terrans build ts -1x2."]);
     const second = convertHostedGameToPassAndPlay(
       HOSTED_ID,
       "Renamed online",
-      committedState(SETUP_MOVES),
+      onlineAhead,
       storage,
       Date.UTC(2026, 6, 29, 11)
     );
 
     expect(second.error).to.equal(null);
     expect(second.created).to.equal(false);
+    expect(second.updated).to.equal(true);
+    expect(second.relation).to.equal("behind");
     expect(second.save?.name).to.equal("Copper Nova");
-    expect(second.save?.engineData.moveHistory).to.deep.equal(localHistory);
+    expect(second.save?.engineData.moveHistory).to.deep.equal(onlineAhead.moveHistory);
+    expect(second.save?.mirrorOf).to.equal(undefined);
+    expect(second.save?.mirrorSeats).to.equal(undefined);
+  });
+
+  it("never creates a copy during automatic refresh and preserves local-ahead, diverged, and pending play", () => {
+    const storage = new MemoryStorage();
+    const missing = refreshHostedPassAndPlayFromOnline(HOSTED_ID, committedState(SETUP_MOVES), storage);
+    expect(missing).to.deep.equal({
+      save: null,
+      error: null,
+      updated: false,
+      relation: "none",
+      blockedByPendingMove: false,
+    });
+
+    convertHostedGameToPassAndPlay(HOSTED_ID, "Copper Nova", committedState(SETUP_MOVES), storage);
+    const localHistory = playOffline(storage, ["terrans build ts -1x2."]);
+
+    const behindOnline = refreshHostedPassAndPlayFromOnline(HOSTED_ID, committedState(SETUP_MOVES), storage);
+    expect(behindOnline.updated).to.equal(false);
+    expect(behindOnline.relation).to.equal("ahead");
+    expect(behindOnline.save?.engineData.moveHistory).to.deep.equal(localHistory);
+
+    const divergedOnline = refreshHostedPassAndPlayFromOnline(
+      HOSTED_ID,
+      committedState([...SETUP_MOVES, "terrans up nav."]),
+      storage
+    );
+    expect(divergedOnline.updated).to.equal(false);
+    expect(divergedOnline.relation).to.equal("diverged");
+    expect(divergedOnline.save?.engineData.moveHistory).to.deep.equal(localHistory);
+
+    const pendingStorage = new MemoryStorage();
+    convertHostedGameToPassAndPlay(HOSTED_ID, "Copper Nova", committedState(SETUP_MOVES), pendingStorage);
+    const pendingId = mirrorOfflineGameId(HOSTED_ID);
+    const pendingSave = readStoredOfflineGame(pendingId, pendingStorage).save;
+    if (!pendingSave) {
+      throw new Error("expected a converted record");
+    }
+    pendingSave.pendingMove = "terrans spend 1o for 1t";
+    pendingStorage.setItem(`gaia-offline-game-v2:${pendingId}`, JSON.stringify(pendingSave));
+
+    const pending = refreshHostedPassAndPlayFromOnline(
+      HOSTED_ID,
+      committedState([...SETUP_MOVES, "terrans up nav."]),
+      pendingStorage
+    );
+    expect(pending.updated).to.equal(false);
+    expect(pending.relation).to.equal("behind");
+    expect(pending.blockedByPendingMove).to.equal(true);
+    expect(pending.save?.pendingMove).to.equal("terrans spend 1o for 1t");
   });
 
   it("stores nothing until the setting is turned on for that game", () => {

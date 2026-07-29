@@ -14,7 +14,11 @@ import ImportOfflineGame from "./hosted/ImportOfflineGame.vue";
 import LobbyChatPanel from "./hosted/LobbyChatPanel.vue";
 import NotificationSettings from "./hosted/NotificationSettings.vue";
 import { HostedGameHost, seatToLock } from "./hosted/host";
-import { convertHostedGameToPassAndPlay, mirrorOfflineGameId } from "./hosted/offline-mirror";
+import {
+  convertHostedGameToPassAndPlay,
+  mirrorOfflineGameId,
+  refreshHostedPassAndPlayFromOnline,
+} from "./hosted/offline-mirror";
 import { localChessLastMoveStorageKey, localChessStorageKey } from "./logic/chess";
 import { localRenjuStorageKey } from "./logic/renju";
 import { localUltimateStorageKey } from "./logic/ultimate-tic-tac-toe";
@@ -175,8 +179,9 @@ async function mountGameInstance(
     }
   };
 
-  // The settings action snapshots this committed state once. It deliberately does not subscribe the
-  // copy to later hosted states: independent histories are what make every offline seat playable.
+  // The settings action creates the pass-and-play copy from a committed state. Later online states
+  // may fast-forward it only while its local history is still an exact prefix; offline moves never
+  // upload and are never overwritten.
   let lastCommittedState: any = null;
 
   // Declared here (before its watchers below, which reference it) rather than in its previous
@@ -217,8 +222,8 @@ async function mountGameInstance(
             },
             "toggle-chat-panel": () => chatNotes.toggleOpen(),
             "toggle-game-nav-panel": () => nav.toggleOpen(),
-            // A one-time independent snapshot. Reusing a stable id makes repeat clicks idempotent
-            // and, critically, never overwrites a pass-and-play copy that has advanced locally.
+            // A pass-and-play copy under one stable id. Repeating the action fast-forwards a stale
+            // matching copy, but never overwrites one that advanced or diverged offline.
             "convert-to-offline": async () => {
               if (!lastCommittedState) {
                 bar.offlineCopyStatus = "The game is still loading; try again in a moment.";
@@ -228,7 +233,17 @@ async function mountGameInstance(
               const result = convertHostedGameToPassAndPlay(gameId, bar.gameName, lastCommittedState);
               if (result.save && !result.created) {
                 discardOfflineMinigameMirror(offlineGameId);
-                bar.offlineCopyStatus = "Pass-and-play copy already exists in Offline games.";
+                if (result.updated) {
+                  bar.offlineCopyStatus = "Pass-and-play copy updated to the latest online turn.";
+                } else if (result.blockedByPendingMove) {
+                  bar.offlineCopyStatus = "Offline copy has an unfinished turn, so it was not overwritten.";
+                } else if (result.relation === "ahead") {
+                  bar.offlineCopyStatus = "Offline copy is ahead; its local turns were kept.";
+                } else if (result.relation === "diverged") {
+                  bar.offlineCopyStatus = "Online and offline histories differ; the offline turns were kept.";
+                } else {
+                  bar.offlineCopyStatus = "Pass-and-play copy is already up to date.";
+                }
                 return;
               }
               if (!result.save) {
@@ -363,10 +378,17 @@ async function mountGameInstance(
         const lock = seatToLock(mySeats, playerCount, turnSeat);
         emitter.emit("player", lock !== null ? { index: lock } : null);
       },
-      // Keep the latest committed state ready for the one-shot pass-and-play conversion. A
-      // half-composed turn is never snapshotted; see host.ts's `emitState`.
+      // Keep the latest committed state ready for conversion, and safely fast-forward any existing
+      // pass-and-play copy on this device. A half-composed hosted turn never reaches this callback;
+      // see host.ts's `emitState`.
       onCommittedState: (data: any) => {
         lastCommittedState = data;
+        const result = refreshHostedPassAndPlayFromOnline(gameId, data);
+        if (result.updated) {
+          bar.offlineCopyStatus = "Pass-and-play copy updated from the online game.";
+        } else if (result.error) {
+          bar.offlineCopyStatus = `Could not update pass-and-play copy: ${result.error}`;
+        }
       },
       onError: (message: string) => {
         emitter.emit("error", message);

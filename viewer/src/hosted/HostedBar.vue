@@ -88,8 +88,8 @@ export default Vue.extend({
     // updates these props, same pattern as `gameName`/`finished` above.
     chatPanelOpen: { type: Boolean, default: false },
     gameNavPanelOpen: { type: Boolean, default: false },
-    // One-line result of the one-shot pass-and-play conversion, owned by hosted.ts because the
-    // resulting game lives in the device's offline library rather than in this component.
+    // One-line result of pass-and-play conversion/safe online fast-forwarding, owned by hosted.ts
+    // because the resulting game lives in the device's offline library rather than this component.
     offlineCopyStatus: { type: String, default: "" },
   },
   data() {
@@ -120,7 +120,7 @@ export default Vue.extend({
     },
     convertToOffline() {
       const message =
-        "Create an independent pass-and-play copy of this game on this device? Everyone can take their turns on the same device. The copy will not stay synchronized with this online game, and moves made in either version will not affect the other.";
+        "Create a pass-and-play copy of this game on this device? Everyone can take their turns on the same device. When this online game is opened here, newer online turns will update the copy only while its history still matches. Offline turns never change the online game and are never overwritten.";
       if (window.confirm(message)) {
         this.$emit("convert-to-offline");
       }

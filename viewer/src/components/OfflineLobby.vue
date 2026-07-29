@@ -66,8 +66,9 @@
         This browser does not report whether local game storage is protected from automatic cleanup.
       </p>
       <p v-if="online">
-        Converting an online game creates an independent pass-and-play snapshot here. Everyone can take turns on this
-        device; later moves in the online and offline versions do not affect each other.
+        Converting an online game creates a pass-and-play copy here. Everyone can take turns on this device. Opening the
+        online game on this device safely brings newer online turns into the copy while their histories still match;
+        offline turns never upload or get overwritten.
       </p>
       <p class="mb-0">
         Games remain on this phone after closing or restarting the app. Clearing browser/site data or uninstalling the

@@ -128,7 +128,8 @@ describe("HostedBar", () => {
       expect(off.emitted()["convert-to-offline"]).to.have.lengthOf(1);
       expect(confirmed).to.have.lengthOf(2);
       expect(confirmed[0]).to.include("Everyone can take their turns on the same device");
-      expect(confirmed[0]).to.include("will not stay synchronized");
+      expect(confirmed[0]).to.include("newer online turns will update the copy");
+      expect(confirmed[0]).to.include("Offline turns never change the online game");
       off.unmount();
 
       const status = render(HostedBar, {
