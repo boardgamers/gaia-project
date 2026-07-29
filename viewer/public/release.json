@@ -1,7 +1,18 @@
 {
-  "version": "5.46.0",
+  "version": "5.46.1",
   "releasedAt": "2026-07-29",
   "entries": [
+    {
+      "version": "5.46.1",
+      "releasedAt": "2026-07-29",
+      "kind": "fix",
+      "title": "Migration ledger check",
+      "impact": "",
+      "changes": [
+        "Verified against the live ledger that minigame_push_prefs (plus its notify redeploy) and renju_previous_move are both applied, and recorded the live-vs-repo migration drift (side_game_pushes_opt_in has no repo file; minigame_push_prefs is recorded twice under versions that do not match its filename)"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.46.0",
       "releasedAt": "2026-07-29",

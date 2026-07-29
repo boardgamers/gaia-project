@@ -95,13 +95,20 @@ Read these before coding:
   `chess_board`/`renju_board`'s `panel_mode`. Their turn pushes are their own notification
   categories (`chess_pushes`/`renju_pushes`), and both they and the game bar's green pulse go quiet
   once the Gaia game is finished. `viewer/src/hosted/turn-kinds.ts` is the one list to extend for a
-  future side game. **#118's migration `20260727120000_minigame_push_prefs.sql` and its `notify`
-  Edge Function redeploy are not yet applied** — until they are, saving notification settings fails.
+  future side game. **#118's migration (`minigame_push_prefs`) and its `notify` Edge Function
+  redeploy are both live** on `mitawjpdxkheascdiffz` as of 2026-07-27 (verified 2026-07-29:
+  `notification_prefs.chess_pushes`/`renju_pushes` exist and the deployed `notify` reads them), so
+  saving notification settings works.
 - Renju marks BOTH colours' latest stones as of PROGRESS #125 (viewer v5.45.3), and an uncommitted
   first tap no longer hides those markers. **Its migration `20260729120000_renju_previous_move.sql`
-  (`renju_board.prev_move`, plus `move_renju`/`reset_renju`) is not applied yet either** — without it
-  the viewer derives the second marker from the position it is already showing, so the marker works
-  during play but does not survive a page reload.
+  (`renju_board.prev_move`, plus `move_renju`/`reset_renju`) is live too** (applied 2026-07-29,
+  ledger version `20260729175859`; verified: the column exists and both functions reference it), so
+  the second marker now survives a page reload.
+- **Live-vs-repo migration drift, 2026-07-29:** the ledger on `mitawjpdxkheascdiffz` records
+  `20260728180129 side_game_pushes_opt_in`, which has no file under `supabase/migrations/`, and
+  `minigame_push_prefs` twice (`20260727154543`, `20260729175737`) under versions that don't match
+  the repo's `20260727120000_…` filename. Nothing is broken — the live schema is ahead, not behind —
+  but don't infer "unapplied" from a filename that isn't in the ledger; check the ledger itself.
 
 ## Next Work
 

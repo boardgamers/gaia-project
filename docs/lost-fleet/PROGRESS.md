@@ -4140,25 +4140,25 @@ opacity: 0.7 }` wrapper that also diluted the X itself, while `BoardAction.vue`'
       `pnpm test`: 440 passing/31 failing both before and after (identical failing-test names,
       confirmed via `git stash` on the same run - all pre-existing, none touch these components).
 
-                                                                                                                                                                                                                                                           **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
-                                                                                                                                                                                                                                                           pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
-                                                                                                                                                                                                                                                           desktop mice, which was never the actual bug - only touch devices raced hover against the
-                                                                                                                                                                                                                                                           click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
-                                                                                                                                                                                                                                                           `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
-                                                                                                                                                                                                                                                           `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
-                                                                                                                                                                                                                                                           shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
-                                                                                                                                                                                                                                                           `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
-                                                                                                                                                                                                                                                           directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
-                                                                                                                                                                                                                                                           `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
-                                                                                                                                                                                                                                                           config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
-                                                                                                                                                                                                                                                           on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
-                                                                                                                                                                                                                                                           desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
-                                                                                                                                                                                                                                                           is what actually closed that race originally. Verified live via Playwright with two device
-                                                                                                                                                                                                                                                           profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
-                                                                                                                                                                                                                                                           tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
-                                                                                                                                                                                                                                                           context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
-                                                                                                                                                                                                                                                           a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
-                                                                                                                                                                                                                                                           still 440 passing/31 failing, same pre-existing set.
+                                                                                                                                                                                                                                                                 **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
+                                                                                                                                                                                                                                                                 pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
+                                                                                                                                                                                                                                                                 desktop mice, which was never the actual bug - only touch devices raced hover against the
+                                                                                                                                                                                                                                                                 click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
+                                                                                                                                                                                                                                                                 `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
+                                                                                                                                                                                                                                                                 `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
+                                                                                                                                                                                                                                                                 shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
+                                                                                                                                                                                                                                                                 `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
+                                                                                                                                                                                                                                                                 directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
+                                                                                                                                                                                                                                                                 `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
+                                                                                                                                                                                                                                                                 config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
+                                                                                                                                                                                                                                                                 on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
+                                                                                                                                                                                                                                                                 desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
+                                                                                                                                                                                                                                                                 is what actually closed that race originally. Verified live via Playwright with two device
+                                                                                                                                                                                                                                                                 profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
+                                                                                                                                                                                                                                                                 tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
+                                                                                                                                                                                                                                                                 context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
+                                                                                                                                                                                                                                                                 a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
+                                                                                                                                                                                                                                                                 still 440 passing/31 failing, same pre-existing set.
 
 102.  ✅ **Offline pass-and-play with automatic local recovery and airplane-mode launch
       (2026-07-17, v5.31.0).** The viewer now has a dedicated `?offline=1` hot-seat mode, linked from
@@ -4975,43 +4975,47 @@ new.fen` - a real move or reset, not a colour claim or panel-mode switch) that P
       last move. Also when I click on a spot opponents last move disappears even though I didn't
       commit yet").** Two separate problems in `RenjuBoard.vue`, both fixed:
 
-      - **Only one marker existed.** The board tracked a single `lastMove`, so whoever was to move
-        only ever saw the opponent's stone ringed. There is now a second, dimmed ring (`.lf-renju-prev`,
-        `opacity: 0.45`) on the other colour's latest stone, so each player can see where they
-        themselves last played while the brighter ring still shows what just happened. Both are the
-        same accent ring at the same radius — only the opacity differs.
-      - **The ghost hid the markers.** The last-move ring was drawn under `v-if="lastMove !== null &&
-ghost === null"`, so the two-tap placement's first tap (which commits nothing) erased the
-        board's history until the stone was confirmed or the ghost was cancelled. The ghost condition
-        is gone; a ghost and both markers coexist. Nothing else about two-tap placement changed.
+            - **Only one marker existed.** The board tracked a single `lastMove`, so whoever was to move
+              only ever saw the opponent's stone ringed. There is now a second, dimmed ring (`.lf-renju-prev`,
+              `opacity: 0.45`) on the other colour's latest stone, so each player can see where they
+              themselves last played while the brighter ring still shows what just happened. Both are the
+              same accent ring at the same radius — only the opacity differs.
+            - **The ghost hid the markers.** The last-move ring was drawn under `v-if="lastMove !== null &&
 
-      **Where the second move comes from.** Play alternates, so the move before `last_move` _is_ the
-      other colour's latest stone — no move list is needed, just one more index. Migration
-      `20260729120000_renju_previous_move.sql` adds `renju_board.prev_move` (nullable smallint, same
-      0-224 check) and rewrites `move_renju` to carry the outgoing `last_move` into it plus
-      `reset_renju` to null both, exactly the shape chess already uses
-      (`20260724185341_persist_chess_last_move`). Offline pass-and-play persists `prevMove` in its
-      localStorage blob the same way. **This migration is NOT applied yet** — apply it before
-      expecting the second marker to survive a page reload in a hosted game.
+      ghost === null"`, so the two-tap placement's first tap (which commits nothing) erased the
+      board's history until the stone was confirmed or the ghost was cancelled. The ghost condition
+      is gone; a ghost and both markers coexist. Nothing else about two-tap placement changed.
 
-      Because it is not applied, `RenjuRow.prev_move` is optional and the component degrades instead
-      of breaking: with no such column it uses the move it was already showing as the candidate, and
-      `otherColorLastMove()` (new, in `logic/renju.ts`) only accepts a candidate that really holds a
-      stone of the opposite colour. That one guard covers every wrong case — a candidate emptied by a
-      reset, and two stones arriving in one update after a sleeping tab missed a realtime frame, where
-      the other side's latest move is genuinely unknown and no marker is better than a false one. A
-      row that arrives without advancing the position (a colour assignment, a duplicate realtime
-      frame) keeps the marker it already had rather than clearing it.
+            **Where the second move comes from.** Play alternates, so the move before `last_move` _is_ the
+            other colour's latest stone — no move list is needed, just one more index. Migration
+            `20260729120000_renju_previous_move.sql` adds `renju_board.prev_move` (nullable smallint, same
+            0-224 check) and rewrites `move_renju` to carry the outgoing `last_move` into it plus
+            `reset_renju` to null both, exactly the shape chess already uses
+            (`20260724185341_persist_chess_last_move`). Offline pass-and-play persists `prevMove` in its
+            localStorage blob the same way. **This migration is now APPLIED** (2026-07-29, live ledger
+            version `20260729175859 renju_previous_move`; verified from #126's session — `renju_board`
+            has `prev_move` and both `move_renju`/`reset_renju` reference it), so the second marker
+            survives a page reload in a hosted game. The paragraph below described the pre-apply state and
+            still describes how the client behaves against an older stack.
 
-      - **Verification:** viewer suite **635 passing / 2 failing** (the same two documented
-        map-rotation/German-rules flakes; unrelated to renju). The count is lower than #124's 671
-        because this session's run aborted one spec file early on its failing `afterEach` — the renju
-        suites themselves all ran and passed, 24/24. No new lint findings (the pre-existing
-        `renju.ts` use-before-define and spec non-null-assertion errors are unchanged). Six new tests:
-        `moveIndexOrNull`, `otherColorLastMove`'s accept/reject cases and `parseLocalState`'s new
-        field in `renju.spec.ts`; both markers plus their survival across an offline reload, both
-        markers staying visible while a ghost is armed, and the hosted row's `prev_move` plus a reset
-        clearing both in `RenjuBoard.spec.ts`.
+            `RenjuRow.prev_move` is optional and the component degrades instead
+            of breaking: with no such column it uses the move it was already showing as the candidate, and
+            `otherColorLastMove()` (new, in `logic/renju.ts`) only accepts a candidate that really holds a
+            stone of the opposite colour. That one guard covers every wrong case — a candidate emptied by a
+            reset, and two stones arriving in one update after a sleeping tab missed a realtime frame, where
+            the other side's latest move is genuinely unknown and no marker is better than a false one. A
+            row that arrives without advancing the position (a colour assignment, a duplicate realtime
+            frame) keeps the marker it already had rather than clearing it.
+
+            - **Verification:** viewer suite **635 passing / 2 failing** (the same two documented
+              map-rotation/German-rules flakes; unrelated to renju). The count is lower than #124's 671
+              because this session's run aborted one spec file early on its failing `afterEach` — the renju
+              suites themselves all ran and passed, 24/24. No new lint findings (the pre-existing
+              `renju.ts` use-before-define and spec non-null-assertion errors are unchanged). Six new tests:
+              `moveIndexOrNull`, `otherColorLastMove`'s accept/reject cases and `parseLocalState`'s new
+              field in `renju.spec.ts`; both markers plus their survival across an offline reload, both
+              markers staying visible while a ghost is armed, and the hosted row's `prev_move` plus a reset
+              clearing both in `RenjuBoard.spec.ts`.
 
 126.  ✅ **"Convert to offline game": an online game can now keep a synced offline copy (2026-07-29,
       viewer v5.46.0, owner request: "make it a setting to convert an online game to offline game …
