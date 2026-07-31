@@ -1,7 +1,20 @@
 {
-  "version": "5.48.4",
-  "releasedAt": "2026-07-29",
+  "version": "5.48.5",
+  "releasedAt": "2026-07-31",
   "entries": [
+    {
+      "version": "5.48.5",
+      "releasedAt": "2026-07-31",
+      "kind": "update",
+      "title": "Green pulse is Gaia-only",
+      "impact": "",
+      "changes": [
+        "The game bar only pulses green when it's your turn in the Gaia game. A waiting chess or renju move still shows its little icon on the bar, but no longer flashes it."
+      ],
+      "userChanges": [
+        "The game bar only pulses green when it's your turn in the Gaia game. A waiting chess or renju move still shows its little icon on the bar, but no longer flashes it."
+      ]
+    },
     {
       "version": "5.48.4",
       "releasedAt": "2026-07-29",

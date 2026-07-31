@@ -548,7 +548,9 @@ describe("Lobby", () => {
     expect(wrapper.text()).to.contain("Hadsch Hallas power action 6.");
   });
 
-  it("pulses green when it's not the viewer's Gaia turn but it IS their move on the game's shared chess board", async () => {
+  // Owner request 2026-07-31: the green flash means "your Gaia turn" and nothing else. A waiting
+  // side game still labels itself with its glyph, it just doesn't flash the bar.
+  it("does NOT pulse green when only the game's shared chess board is waiting on the viewer", async () => {
     const game = {
       id: "g-chess-turn",
       name: "Lunar Beacon",
@@ -595,10 +597,11 @@ describe("Lobby", () => {
     wrapper.setData({ activeTab: "mine" });
     await Vue.nextTick();
 
-    expect(wrapper.find(".game-bar").classes()).to.contain("game-bar--my-turn");
+    expect(wrapper.find(".game-bar").classes()).to.not.contain("game-bar--my-turn");
+    expect(wrapper.find(".game-bar__turn-kind--chess").exists()).to.equal(true);
   });
 
-  it("pulses green when it's not the viewer's Gaia turn but it IS their move on the game's shared renju board", async () => {
+  it("does NOT pulse green when only the game's shared renju board is waiting on the viewer", async () => {
     const game = {
       id: "g-renju-turn",
       name: "Sunward Drift",
@@ -646,7 +649,8 @@ describe("Lobby", () => {
     wrapper.setData({ activeTab: "mine" });
     await Vue.nextTick();
 
-    expect(wrapper.find(".game-bar").classes()).to.contain("game-bar--my-turn");
+    expect(wrapper.find(".game-bar").classes()).to.not.contain("game-bar--my-turn");
+    expect(wrapper.find(".game-bar__turn-kind--renju").exists()).to.equal(true);
   });
 
   it("shows the move age as 'just now' instead of hiding it when the client clock is slightly behind the server's", async () => {
