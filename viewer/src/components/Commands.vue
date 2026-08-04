@@ -184,8 +184,9 @@
       </div>
       <div v-if="isSilentBidding" class="silent-bid-form">
         <p class="text-muted small">
-          Privately enter the most VP you're willing to lose to win each faction. Submit once and everyone's bids will
-          be resolved automatically once all players have submitted.
+          Privately enter the most VP you're willing to pay for each faction - bid highest on the one you want most, and
+          0 on one you'd only take for free. Bids stay hidden until everyone has submitted, then the auction resolves
+          automatically. You never pay more than you bid, and usually a lot less.
         </p>
         <div v-for="pos in silentBidCommand.data.bids" :key="pos.faction" class="d-flex align-items-center mb-2">
           <span class="silent-bid-faction mr-2">

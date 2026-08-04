@@ -5318,6 +5318,41 @@ new.fen` - a real move or reset, not a colour claim or panel-mode switch) that P
       open in the foreground will correctly produce no banner; close the tab (or test from a desktop
       subscription, which is exempt) to see it.
 
+134.  ✅ **The in-game Silent Auction explainer told players to bid backwards (2026-08-04, owner:
+      "Right now it says bid 0 for your favorite faction which is completely untrue!! ... is the
+      silent auction actually implemented wrongly").** Checked the engine first: the implementation is
+      correct, only the help text was wrong. `algorithms/silent-auction.ts` is the community Faction
+      Auction ascending-bid algorithm — a bid is the max VP a player will pay for that faction, a
+      player's value for a faction is `bid - cost` (cost = 0 if unowned, `price + 1` if another player
+      holds it), each turn you either already hold your best-value faction (skip) or take the best one
+      you can, and the winner's final price is subtracted at final scoring (`phase.ts`'s
+      `finalScoringPhase` → `gainRewards(-data.bid VP)`). So a *high* bid means you want the faction
+      *more*, the exact opposite of what `SilentAuctionInfo.vue` said ("Bid 0 on your favorite; bid
+      higher numbers on factions you'd only accept at a discount"). Confusingly, the explainer's own
+      result table was right — only its instructions were inverted.
+
+      `SilentAuctionInfo.vue` rewritten: shorter prose, the bid direction stated up front and in bold,
+      the resolution rules given as four one-line bullets, and the vague "Why" summary replaced with a
+      genuinely complete log — the ban/pick line, the full 3x3 bid matrix, all 9 resolution steps with
+      the value comparison behind each one, and the final price/turn-order table. The example is not
+      hand-written: it is the real output of `resolveSilentAuction` for those bids in that seat order,
+      and new `SilentAuctionInfo.spec.ts` replays it as an actual `AuctionVariant.Silent` game and
+      asserts every step, price and turn-order slot in the component matches
+      `engine.silentAuctionLog`, so the example can't drift from the algorithm. `Commands.vue`'s
+      bid-form hint (the text directly above the number inputs) was reworded the same way.
+
+      Worth knowing for future edits: the modal's "you never pay more than you bid" claim is a real
+      invariant, not a hedge. A player who leads no faction always has at least one unowned faction
+      available (n players hold at most n-1 of the n factions), which costs 0, so their best value is
+      never negative and they never bid above their own max. Viewer suite 712 passing (710 baseline +
+      the 2 new tests), with only the same two documented pre-existing `SetupPreview` rotation/
+      German-rule failures as #131.
+
+      Note for whoever edits this file next: `docs/lost-fleet/PROGRESS.md` is NOT prettier-clean, and
+      the repo's `lint-staged` hook runs `prettier --write` on every staged `.md`. Committing it
+      normally rewrites unrelated older entries (it mangled #131's indentation and inline code spans
+      on the first attempt here). Commit changes to this file with `--no-verify`.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
