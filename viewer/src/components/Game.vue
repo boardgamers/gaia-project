@@ -19,6 +19,19 @@
           <TurnOrder />
         </div>
       </div>
+      <!-- Round 0 only (ban/pick/bid/starting buildings/booster): says whose turn it is and what
+           they have to do, plus the auction/ban explainer buttons. Deliberately above the map
+           rather than down in the commands column - during setup the board matters least and
+           "whose turn, doing what" matters most, and the commands column is both below the whole
+           map+research row on mobile AND only rendered for the player on turn (`canPlay`), so
+           everyone else used to have nothing but a green ring on a turn-order circle to go on.
+           Rendered here (not in HostedBar.vue) so hosted and self-contained/hot-seat play get the
+           same strip - HostedBar only exists in hosted mode. -->
+      <div class="row" v-if="!ended">
+        <div class="col-12">
+          <SetupStatus />
+        </div>
+      </div>
       <div
         :class="[
           'row',
@@ -228,6 +241,7 @@
       <AutoLeechFab v-if="showOffTurnAutoLeechFab" :bottom-offset="offTurnAutoLeechBottomOffset" />
     </template>
     <div v-else class="d-flex flex-column">
+      <SetupStatus v-if="!ended" />
       <SpaceMap v-if="hasMap" :class="['mb-1', 'space-map', 'col-md-7']" />
       <AdvancedLog :currentMove="currentMove" :hideLog.sync="hideLog" v-if="logPlacement === 'top'" />
       <Commands @command="handleCommand" v-if="canPlay" :currentMove="currentMove" />
@@ -263,6 +277,7 @@ import SpaceMap from "./SpaceMap.vue";
 import LostFleetShips, { SHIP_BOARD_VIEWBOX_WIDTH } from "./LostFleetShips.vue";
 import LostFleetNotes from "./LostFleetNotes.vue";
 import TurnOrder from "./TurnOrder.vue";
+import SetupStatus from "./SetupStatus.vue";
 import { BASE_RESEARCH_BOARD_HEIGHT, researchBoardHeight } from "../logic/utils";
 import { parseCommands } from "../logic/recent";
 import { LogPlacement } from "../data";
@@ -306,6 +321,7 @@ const BOARD_ACTION_BASE_X = -20;
     LostFleetShips,
     LostFleetNotes,
     TurnOrder,
+    SetupStatus,
     Rules,
     Table,
     PremoveBar,

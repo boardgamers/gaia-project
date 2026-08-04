@@ -46,7 +46,9 @@ describe("Commands", () => {
 
   function occupyConnectedPlanets(engine: Engine, player: PlayerEnum, count: number): GaiaHex[] {
     const pl = engine.player(player);
-    const start = [...engine.map.grid.values()].find((hex) => hex.hasPlanet() && hex.data.spaceship === undefined && !hex.occupied());
+    const start = [...engine.map.grid.values()].find(
+      (hex) => hex.hasPlanet() && hex.data.spaceship === undefined && !hex.occupied()
+    );
 
     expect(start, "need a starting planet for federation setup").to.not.equal(undefined);
 
@@ -233,7 +235,7 @@ describe("Commands", () => {
         addEventListener: () => undefined,
         removeEventListener: () => undefined,
         dispatchEvent: () => false,
-      }) as MediaQueryList;
+      } as MediaQueryList);
 
     try {
       federationCluster[0].data.building = Building.ResearchLab;
@@ -293,10 +295,7 @@ describe("Commands", () => {
       Array.from(container.querySelectorAll<HTMLButtonElement>("#move-buttons button.move-button")).filter(
         (button) => !button.classList.contains("d-none")
       );
-    const labels = () =>
-      visibleButtons().map(
-        (button) => button.textContent?.trim() ?? ""
-      );
+    const labels = () => visibleButtons().map((button) => button.textContent?.trim() ?? "");
 
     expect(labels()).to.include("Pick tech tile");
 
@@ -344,7 +343,10 @@ describe("Commands", () => {
     // the Build-a-Mine command button renders as a building icon; "Mine" is in its title,
     // which carries shortcut markup ("Build a <u>M</u>ine")
     const mineButton = visibleButtons().find((button) =>
-      button.getAttribute("title")?.replace(/<[^>]+>/g, "").includes("Mine")
+      button
+        .getAttribute("title")
+        ?.replace(/<[^>]+>/g, "")
+        .includes("Mine")
     );
     expect(mineButton, "expected a Build-a-Mine command button").to.not.equal(undefined);
 
@@ -371,7 +373,9 @@ describe("Commands", () => {
     // that naturally happen before a real user can click.
     wrapper.vm.$forceUpdate();
     await Vue.nextTick();
-    const terransButton = wrapper.findAll("#move-buttons button.move-button").filter((w) => w.text().includes("Terrans"));
+    const terransButton = wrapper
+      .findAll("#move-buttons button.move-button")
+      .filter((w) => w.text().includes("Terrans"));
 
     expect(terransButton.length).to.equal(1);
 
@@ -382,9 +386,9 @@ describe("Commands", () => {
     expect(wrapper.emitted("command")).to.equal(undefined);
     const modalTitle = document.querySelector(".gaia-viewer-modal .modal-title");
     expect(modalTitle?.textContent).to.contain("Terrans");
-    const okButton = Array.from(document.querySelectorAll<HTMLButtonElement>(".gaia-viewer-modal .modal-footer button")).find(
-      (b) => b.textContent?.includes("ban")
-    );
+    const okButton = Array.from(
+      document.querySelectorAll<HTMLButtonElement>(".gaia-viewer-modal .modal-footer button")
+    ).find((b) => b.textContent?.includes("ban"));
     expect(okButton, "expected an 'OK, I ban this one!' confirm button").to.not.equal(undefined);
 
     await fireEvent.click(okButton!);
@@ -438,42 +442,6 @@ describe("Commands", () => {
     expect(command).to.include("itars 15");
     expect(command).to.include("xenos 0");
     expect(command).to.include("taklons 10");
-  });
-
-  it("Silent Auction: shows the 'how does the auction work?' info button during ban/pick/bid, and opens the explainer", async () => {
-    const engine = new Engine(["init 3 lf-silent-info"], { auction: AuctionVariant.Silent });
-    engine.generateAvailableCommandsIfNeeded();
-
-    const store = makeStore();
-    store.commit("receiveData", engine);
-
-    const wrapper = mount(Commands, { propsData: { currentMove: "" }, store, attachTo: document.body });
-
-    const infoButton = wrapper.find(".silent-auction-info-button");
-    expect(infoButton.exists()).to.equal(true);
-    expect(infoButton.text()).to.contain("How does the auction work?");
-
-    await infoButton.trigger("click");
-    await Vue.nextTick();
-
-    expect(document.body.textContent).to.contain("How the Silent Auction works");
-    expect(document.body.textContent).to.contain("Ban");
-
-    wrapper.destroy();
-  });
-
-  it("does not show the Silent Auction info button for a standard (non-auction) faction pick", () => {
-    const engine = new Engine(["init 2 lf-no-auction"]);
-    engine.generateAvailableCommandsIfNeeded();
-
-    expect(engine.availableCommands.map((command) => command.name)).to.deep.equal([Command.ChooseFaction]);
-
-    const store = makeStore();
-    store.commit("receiveData", engine);
-
-    const wrapper = mount(Commands, { propsData: { currentMove: "" }, store });
-
-    expect(wrapper.find(".silent-auction-info-button").exists()).to.equal(false);
   });
 
   it("renders Moweyds' power-ring special action without crashing", () => {

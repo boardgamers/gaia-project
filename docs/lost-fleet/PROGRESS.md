@@ -5353,6 +5353,37 @@ new.fen` - a real move or reset, not a colour claim or panel-mode switch) that P
       normally rewrites unrelated older entries (it mangled #131's indentation and inline code spans
       on the first attempt here). Commit changes to this file with `--no-verify`.
 
+135.  ✅ **Round 0 now says whose turn it is and what they have to do (2026-08-04, owner: "for the
+      round 0 where we ban pick and bid. There should still be a status text somewhere. Like marks
+      turn to ban ... so people are not confused whose turn it is and what that players
+      assignment is").** During setup the only status text lived in `Commands.vue`'s `#move-title`,
+      and `Game.vue` renders `Commands` under `v-if="canPlay"` - so every player who wasn't on turn
+      had literally nothing to read: the sole cue was the green ring `PlayerCircle.vue` draws around
+      one turn-order circle. The "How does the auction work?" button was inside that same on-turn-only
+      panel, so the people most likely to want it (waiting, reading, not acting) could never reach it.
+
+      New `SetupStatus.vue`, rendered by `Game.vue` **above the map**, directly under the turn-order
+      banner, for everyone, for the whole of round 0 (`isBeforeRound1`): "**Your turn** to ban a
+      faction" for the viewer's own locked seat, "**Mark's turn** to ban a faction" otherwise, with a
+      per-phase assignment for ban/pick/auction-bid/silent-bid/starting-buildings/booster. Placement
+      was deliberate: the commands column sits below the entire map+research row on mobile, and
+      round 0 is exactly when the board matters least and "who is doing what" matters most.
+      `Game.vue` (not `HostedBar.vue`) is the host because it renders in hosted *and* self-contained/
+      hot-seat play, and both text and graphical `uiMode` branches get it.
+
+      The two explainer buttons moved into that strip and were **deleted** from `Commands.vue` - two
+      copies would register the same `b-modal` id twice, and `Commands.vue`'s mobile sticky-bar copy
+      was dead code anyway (`showStickyMobileBar` is round-1+ only, so it could never render during
+      ban/pick/bid). `showSilentAuctionInfo`/`showBanPhaseInfo` and the `.silent-auction-info-button`
+      CSS went with them; the two Commands specs that covered the button moved to
+      `SetupStatus.spec.ts` and grew into 8 (naming, second person for your own seat, the off-turn
+      case that motivated all this, phase progression, both explainers, and nothing at all from
+      round 1 on). Verified in a real browser at 1400x1000 and 390x844 with
+      `?players=3&auction=silent`: the strip sits under the circles above the map on both, wrapping
+      its button to a second line on mobile, and the explainer opens from it. Viewer suite 718
+      passing (710 baseline + 8, with 2 moved out of `Commands.spec.ts` and rewritten), same two
+      pre-existing `SetupPreview` rotation failures as #131/#134.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

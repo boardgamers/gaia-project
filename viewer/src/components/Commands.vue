@@ -5,26 +5,10 @@
         <span v-if="init">Pick the number of players</span>
         <RichTextView :content="statusLine" />
       </h5>
-      <b-btn
-        v-if="showSilentAuctionInfo"
-        v-b-modal.silent-auction-info
-        variant="link"
-        size="sm"
-        class="ml-2 silent-auction-info-button"
-      >
-        How does the auction work? <b-badge variant="info" pill>i</b-badge>
-      </b-btn>
-      <SilentAuctionInfo v-if="showSilentAuctionInfo" />
-      <b-btn
-        v-if="showBanPhaseInfo"
-        v-b-modal.ban-phase-info
-        variant="link"
-        size="sm"
-        class="ml-2 silent-auction-info-button"
-      >
-        What's the ban phase? <b-badge variant="info" pill>i</b-badge>
-      </b-btn>
-      <BanPhaseInfo v-if="showBanPhaseInfo" />
+      <!-- The Silent Auction / ban-phase explainer buttons used to sit here. They now live in
+           SetupStatus.vue's round-0 strip at the top of the page (Game.vue), which - unlike this
+           panel - also renders for players who aren't on turn. Two copies would also register the
+           same modal id twice. -->
       <!-- "Auto leech": lets the engine's own already-implemented decision logic
            (engine/src/auto-charge.ts) auto-resolve power-charge/decline offers instead of asking
            every time - a per-browser preference (never synced/persisted as part of game state).
@@ -66,24 +50,8 @@
         <h5 class="mb-0">
           <RichTextView :content="statusLine" />
         </h5>
-        <b-btn
-          v-if="showSilentAuctionInfo"
-          v-b-modal.silent-auction-info
-          variant="link"
-          size="sm"
-          class="ml-2 silent-auction-info-button"
-        >
-          How does the auction work? <b-badge variant="info" pill>i</b-badge>
-        </b-btn>
-        <b-btn
-          v-if="showBanPhaseInfo"
-          v-b-modal.ban-phase-info
-          variant="link"
-          size="sm"
-          class="ml-2 silent-auction-info-button"
-        >
-          What's the ban phase? <b-badge variant="info" pill>i</b-badge>
-        </b-btn>
+        <!-- No explainer buttons here either: this bar is round-1+ only (showStickyMobileBar), so
+             they could never show during the ban/pick/bid phases anyway. See SetupStatus.vue. -->
         <b-dropdown
           v-if="showAutoLeechSelect"
           size="sm"
@@ -248,8 +216,6 @@ import Engine, {
   TechTilePos,
 } from "@gaia-project/engine";
 import MoveButton from "./MoveButton.vue";
-import SilentAuctionInfo from "./SilentAuctionInfo.vue";
-import BanPhaseInfo from "./BanPhaseInfo.vue";
 import FactionInfoCard from "./FactionInfoCard.vue";
 import {
   ButtonData,
@@ -332,8 +298,6 @@ export type EmitCommandParams = { disappear?: boolean; times?: number; warnings?
     StickyResourceBar,
     MoveButton,
     Undo,
-    SilentAuctionInfo,
-    BanPhaseInfo,
   },
 })
 export default class Commands extends Vue implements CommandController {
@@ -494,21 +458,6 @@ export default class Commands extends Vue implements CommandController {
       default:
         return `Leech: ${this.autoChargePower}`;
     }
-  }
-
-  get showSilentAuctionInfo(): boolean {
-    return (
-      this.gameData.options.auction === AuctionVariant.Silent &&
-      (this.engine.phase === Phase.SetupFactionBan ||
-        this.engine.phase === Phase.SetupFaction ||
-        this.engine.phase === Phase.SetupSilentBid)
-    );
-  }
-
-  // Ban's own explanation only during the ban phase itself, and only when it's not already covered
-  // by the Silent Auction walkthrough above (which explains banning as its own first step).
-  get showBanPhaseInfo(): boolean {
-    return this.engine.phase === Phase.SetupFactionBan && this.gameData.options.auction !== AuctionVariant.Silent;
   }
 
   submitSilentBid() {
@@ -1087,15 +1036,6 @@ export default class Commands extends Vue implements CommandController {
 </script>
 
 <style lang="scss">
-.silent-auction-info-button {
-  text-decoration: none;
-  white-space: nowrap;
-
-  .badge {
-    margin-left: 0.25rem;
-  }
-}
-
 // Status dot on the auto-leech dropdown button - green/pulsing while it's set to actually act on
 // its own, static red while off ("ask every time"), so the button's current state reads at a
 // glance without parsing its ("Leech: off"/"Leech: 3") text.
@@ -1297,13 +1237,9 @@ $mobile-sticky-actions-max-height: 40vh;
     color: inherit;
   }
 
-  // Both the auction-info link and the auto-leech dropdown default to Bootstrap's grey
-  // outline/link styling, which reads as a muddy near-invisible smudge against a dark background -
-  // recolored to sit clearly on the dark header instead, same sizing/behavior otherwise.
-  .silent-auction-info-button {
-    color: var(--ui-banner-link);
-  }
-
+  // The auto-leech dropdown defaults to Bootstrap's grey outline styling, which reads as a muddy
+  // near-invisible smudge against a dark background - recolored to sit clearly on the dark header
+  // instead, same sizing/behavior otherwise.
   .auto-leech-select .btn {
     padding: 0.15rem 0.4rem;
     font-size: 0.75rem;
