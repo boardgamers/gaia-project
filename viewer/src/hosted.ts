@@ -1,6 +1,7 @@
 import Vue from "vue";
 import AdminUsers from "./hosted/AdminUsers.vue";
 import { fetchMyApprovalStatus } from "./hosted/approval";
+import { grantOfflineAccess } from "./hosted/offline-access";
 import { createSupabaseChessBackend } from "./hosted/chess-backend";
 import { createSupabaseRenjuBackend } from "./hosted/renju-backend";
 import { createSupabaseUltimateTicTacToeBackend } from "./hosted/ultimate-tic-tac-toe-backend";
@@ -673,6 +674,7 @@ export default async function launchHosted(selector = "#app"): Promise<void> {
     mountChild(root, PendingApproval, { client, session });
     return;
   }
+  grantOfflineAccess();
 
   // Match the signed-in email to any seats the user was invited to.
   await client.rpc("claim_my_seats");

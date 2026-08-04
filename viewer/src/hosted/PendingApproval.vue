@@ -7,7 +7,6 @@
     </b-alert>
     <p class="text-muted small">Ask the host to approve you, then reload this page.</p>
     <b-button variant="outline-secondary" :disabled="busy" @click="signOut">Sign out</b-button>
-    <a href="?offline=1" class="btn btn-outline-success ml-2">Play offline</a>
   </div>
 </template>
 

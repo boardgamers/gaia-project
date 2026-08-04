@@ -1,5 +1,6 @@
 import launchHosted from "./hosted";
 import { startHostedInstallPrompt } from "./hosted/install-prompt";
+import { isOfflineAccessGranted } from "./hosted/offline-access";
 import { registerServiceWorker, registerServiceWorkerNavigationListener } from "./hosted/push";
 import { initTheme } from "./hosted/theme";
 import launch from "./launcher";
@@ -34,9 +35,22 @@ if (offlineLobbyFallback && typeof window !== "undefined") {
   window.history.replaceState({}, "", offlineUrl.toString());
 }
 
-if ((params.has("offline") || offlineLobbyFallback) && params.get("game")) {
+const wantsOffline = params.has("offline") || offlineLobbyFallback;
+
+if (wantsOffline && !isOfflineAccessGranted()) {
+  // Offline pass-and-play needs no account or connection, so it can't be checked against
+  // `user_approvals` server-side - it's unlocked locally (see grantOfflineAccess()) the first
+  // time this device's account clears the hosted approval gate. Until then, route to sign-in /
+  // pending-approval instead of the offline lobby, same as every other feature in the app.
+  if (typeof window !== "undefined") {
+    const url = new URL(window.location.href);
+    url.search = "";
+    window.history.replaceState({}, "", url.toString());
+  }
+  launchHosted("#app");
+} else if (wantsOffline && params.get("game")) {
   launchSelfContained();
-} else if (params.has("offline") || offlineLobbyFallback) {
+} else if (wantsOffline) {
   launchOffline();
 } else if (
   params.get("game") ||

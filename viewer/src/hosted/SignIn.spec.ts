@@ -30,7 +30,7 @@ describe("SignIn", () => {
     expect(wrapper.text()).to.include("Send sign-in link");
     expect(wrapper.find('input[type="email"]').exists()).to.equal(true);
     expect(wrapper.find('label[for="sign-in-email"]').text()).to.equal("Email address");
-    expect(wrapper.find('a[href="?offline=1"]').text()).to.equal("Play offline on this device");
+    expect(wrapper.find('a[href="?offline=1"]').exists()).to.equal(false);
   });
 
   it("sends a magic link to the entered email", async () => {

@@ -20,9 +20,6 @@
       >
     </b-form>
     <b-alert class="mt-3" :show="!!message" variant="info">{{ message }}</b-alert>
-    <hr />
-    <a href="?offline=1" class="btn btn-outline-success btn-block">Play offline on this device</a>
-    <p class="text-muted small mt-2 mb-0">No account or connection is needed for pass-and-play.</p>
   </div>
 </template>
 
