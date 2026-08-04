@@ -1,7 +1,18 @@
 {
-  "version": "5.50.2",
+  "version": "5.50.3",
   "releasedAt": "2026-08-04",
   "entries": [
+    {
+      "version": "5.50.3",
+      "releasedAt": "2026-08-04",
+      "kind": "fix",
+      "title": "Faction sheet colours off turn",
+      "impact": "",
+      "changes": [
+        "Fixed the off-turn faction sheet rendering its board icons black - a bootstrap modal is appended outside .gaia-viewer-game, so it needs dialog-class=gaia-viewer-modal to inherit the game colour variables, which MoveButton's own modal always passed"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.50.2",
       "releasedAt": "2026-08-04",
