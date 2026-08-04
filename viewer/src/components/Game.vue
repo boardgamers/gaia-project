@@ -640,7 +640,23 @@ export default class Game extends Vue {
         classes.push("accessible-space-map");
       }
     }
+    if (this.desktopLayoutVariant) {
+      classes.push(`desktop-layout-${this.desktopLayoutVariant}`);
+    }
     return classes;
+  }
+
+  /**
+   * TEMPORARY desktop-layout A/B switch (`?desktopLayout=a|b|c`), for comparing candidate wide-screen
+   * layouts side by side before settling on one. Every rule it enables lives behind a `min-width`
+   * media query, so mobile is byte-for-byte unchanged, and no param at all keeps today's layout.
+   */
+  get desktopLayoutVariant(): string | null {
+    if (typeof window === "undefined") {
+      return null;
+    }
+    const value = new URLSearchParams(window.location.search).get("desktopLayout");
+    return value && ["a", "b", "c"].includes(value) ? value : null;
   }
 
   get player() {
@@ -1084,6 +1100,159 @@ export default class Game extends Vue {
 
   .game-board-layout .space-map {
     border-radius: 0.5rem;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// TEMPORARY desktop-layout candidates (`?desktopLayout=a|b|c`, see Game.vue's
+// `desktopLayoutVariant`). Everything here is inside a `min-width: 992px` query and scoped to a
+// `desktop-layout-*` root class, so phones and today's default layout are untouched. Delete the
+// two losing variants (and the switch) once one is picked.
+//
+// What they all fix, in different proportions:
+//  * `.space-map`'s 600px cap made the map draw at 600x600 inside a 1103px-wide box on a 1080p
+//    screen - 503px of the map container was empty background. Same story for the research board.
+//  * The map column therefore ended 618px short of the side column, leaving a dead rectangle under
+//    the map that nothing filled.
+//  * `.player-board`'s `max-width: 700px` left ~260px unused in each half-width board cell.
+// ---------------------------------------------------------------------------
+@media (min-width: 992px) {
+  // Shared: let the boards actually fill the box they're given. The extra `.gaia-viewer-game` is
+  // needed to outrank SetupPreviewBoard.vue's unscoped `.gaia-viewer-game .space-map` rule, which
+  // is where the 600px cap effectively comes from app-wide (same specificity, later in the cascade).
+  .gaia-viewer-game.desktop-layout-a,
+  .gaia-viewer-game.desktop-layout-b,
+  .gaia-viewer-game.desktop-layout-c {
+    .space-map,
+    .scoring-research-board {
+      max-height: none;
+    }
+
+    .player-board {
+      max-width: none;
+    }
+
+    .game-board-layout {
+      align-items: flex-start;
+    }
+  }
+
+  // ---- A: "Balanced columns" -------------------------------------------------------------
+  // Same three blocks as today, but the 7/5 split is re-cut to 65/35 - the width at which the map
+  // (nearly square) and the research+ships stack finish at the same height, so neither column has a
+  // tail of empty space. Nothing moves; everything just grows into the room it already had.
+  .desktop-layout-a {
+    .game-board-layout > .space-map {
+      flex: 0 0 65%;
+      max-width: 65%;
+    }
+
+    .game-board-side-column {
+      flex: 0 0 35%;
+      max-width: 35%;
+    }
+  }
+
+  // ---- B: "Ships 2x2, boards four-up" ----------------------------------------------------
+  // The ship boards become a 2x2 grid instead of a 4-high stack, halving the side column's lower
+  // block, and the boosters + notes move under them as a two-up row instead of a narrow strip
+  // alongside. With the side column that much shorter, the player boards go four-across in a single
+  // row: the whole page loses a screen of height versus today while every board still fills its box.
+  .desktop-layout-b {
+    // 68/32 is where the two columns finish level once the ships are 2x2: the side column's height is
+    // ~2.14x its own width (research 1.16 + ships 0.30 + boosters/notes 0.68), the map's is ~1x.
+    .game-board-layout > .space-map {
+      flex: 0 0 68%;
+      max-width: 68%;
+    }
+
+    .game-board-side-column {
+      flex: 0 0 32%;
+      max-width: 32%;
+    }
+
+    .lost-fleet-ships-row {
+      flex-direction: column;
+
+      > .lost-fleet-ships {
+        flex: 0 0 auto;
+        width: 100%;
+      }
+    }
+
+    .lost-fleet-ships__boards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: start;
+    }
+
+    // Boosters + notes as a two-up row under the ships instead of a tall right-hand strip. The notes
+    // sheet has no natural height of its own (it is built to absorb whatever is left over in a
+    // column), so side by side it needs one given to it.
+    .lf-sidebar-col {
+      flex-direction: row;
+      gap: 0.4rem;
+      margin-top: 0.4rem;
+
+      > div {
+        flex: 1 1 0;
+        min-width: 0;
+      }
+
+      > div > .pool.compact {
+        margin-bottom: 0;
+      }
+
+      .lost-fleet-notes {
+        height: 170px;
+      }
+    }
+
+    .player-info.col-md-6 {
+      flex: 0 0 25%;
+      max-width: 25%;
+    }
+  }
+
+  // ---- C: "Four-column dashboard" --------------------------------------------------------
+  // The side column and the ships row are both dissolved (`display: contents`) so map / research /
+  // ships / boosters+notes become four real grid columns. The track widths are the inverse of each
+  // block's own aspect ratio (map ~1:1, research ~0.87:1, ship stack ~0.82:1), which is what makes
+  // all four finish at the same height with no filler anywhere - the entire board state lands in one
+  // ~600px band instead of today's 1220px. Player boards then go four-across under it.
+  // `.gaia-viewer-game` here only to outrank the shared block's `align-items: flex-start` above -
+  // the four columns must stretch, so the notes sheet can fill the last one to the same height.
+  .gaia-viewer-game.desktop-layout-c {
+    .game-board-layout {
+      display: grid;
+      grid-template-columns: 1.01fr 0.87fr 0.82fr 0.5fr;
+      gap: 0.5rem;
+      align-items: stretch;
+    }
+
+    .game-board-side-column,
+    .lost-fleet-ships-row {
+      display: contents;
+    }
+
+    .game-board-layout > .space-map,
+    .game-board-layout .research-panel,
+    .game-board-layout .lost-fleet-ships,
+    .game-board-layout .lost-fleet-pool-sidebar {
+      max-width: none;
+      margin-top: 0;
+    }
+
+    // Commands span the full width now that nothing sits to their right.
+    .game-board-layout + .row > .col-md-7 {
+      flex: 0 0 100%;
+      max-width: 100%;
+    }
+
+    .player-info.col-md-6 {
+      flex: 0 0 25%;
+      max-width: 25%;
+    }
   }
 }
 </style>
