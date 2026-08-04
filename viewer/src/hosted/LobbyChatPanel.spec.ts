@@ -14,9 +14,10 @@ describe("LobbyChatPanel", () => {
     };
   }
 
-  function makeClient(opts: { messages?: any[]; nickname?: string; olderBatch?: any[] } = {}) {
+  function makeClient(opts: { messages?: any[]; nickname?: string; olderBatch?: any[]; reads?: any[] } = {}) {
     const messages = opts.messages ?? [];
     const inserted: any[] = [];
+    const rpcCalls: { name: string; args: any }[] = [];
     const channel = {
       on: () => channel,
       subscribe: () => channel,
@@ -24,7 +25,17 @@ describe("LobbyChatPanel", () => {
     };
     return {
       inserted,
+      rpcCalls,
+      rpc: async (name: string, args: any) => {
+        rpcCalls.push({ name, args });
+        return { data: null, error: null };
+      },
       from: (table: string) => {
+        if (table === "lobby_chat_reads") {
+          return {
+            select: async () => ({ data: opts.reads ?? [], error: null }),
+          };
+        }
         if (table === "lobby_chat_messages") {
           return {
             select: () => ({
@@ -146,6 +157,34 @@ describe("LobbyChatPanel", () => {
     await tick(wrapper);
     const bodies = (wrapper.vm as any).messages.map((m: any) => m.body);
     expect(bodies).to.deep.equal(["older", "recent"]);
+  });
+
+  it("shows read checks for other readers and reports my own position on open", async () => {
+    const client = makeClient({
+      nickname: "Luke",
+      messages: [makeMessage({ id: 4, user_id: "user-1", body: "mine" })],
+      reads: [
+        {
+          user_id: "user-2",
+          reader_name: "Leia Organa",
+          last_read_message_id: 4,
+          last_read_at: "2026-08-04T10:00:00Z",
+        },
+      ],
+    });
+    const wrapper = mount(LobbyChatPanel as any, {
+      propsData: { client, userId: "user-1" },
+    });
+    await tick(wrapper);
+    await tick(wrapper);
+    await wrapper.find(".lobby-chat__toggle").trigger("click");
+    await tick(wrapper);
+
+    expect(wrapper.find(".lobby-chat__readers").text()).to.include("Read by Leia Organa");
+    expect(wrapper.find(".lobby-chat__reader").text()).to.equal("LO");
+    expect(client.rpcCalls).to.deep.equal([
+      { name: "mark_lobby_chat_read", args: { p_message_id: 4, p_reader_name: "Luke" } },
+    ]);
   });
 
   it("shows the unread badge for a new message that arrived while closed", async () => {

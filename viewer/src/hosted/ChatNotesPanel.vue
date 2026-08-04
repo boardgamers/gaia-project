@@ -30,22 +30,37 @@
         </div>
         <div class="chat-notes__messages" ref="messageList">
           <p v-if="messages.length === 0" class="chat-notes__empty text-muted">No messages yet - say hello.</p>
-          <div
-            v-for="msg in messages"
-            :key="msg.id"
-            class="chat-notes__message"
-            :class="{ 'chat-notes__message--own': msg.user_id === userId }"
-          >
-            <span class="chat-notes__meta">
-              <span
-                class="chat-notes__presence"
-                :class="`chat-notes__presence--${isOnline(msg.user_id) ? 'online' : 'offline'}`"
-              ></span>
-              <span class="chat-notes__author">{{ msg.author_name }}</span>
-              <span class="chat-notes__time">{{ formatTime(msg.created_at) }}</span>
-            </span>
-            <span class="chat-notes__body">{{ msg.body }}</span>
-          </div>
+          <template v-for="msg in messages">
+            <div
+              :key="msg.id"
+              class="chat-notes__message"
+              :class="{ 'chat-notes__message--own': msg.user_id === userId }"
+            >
+              <span class="chat-notes__meta">
+                <span
+                  class="chat-notes__presence"
+                  :class="`chat-notes__presence--${isOnline(msg.user_id) ? 'online' : 'offline'}`"
+                ></span>
+                <span class="chat-notes__author">{{ msg.author_name }}</span>
+                <span class="chat-notes__time">{{ formatTime(msg.created_at) }}</span>
+              </span>
+              <span class="chat-notes__body">{{ msg.body }}</span>
+            </div>
+            <!-- Read check: everyone whose read position lands on this message, i.e. this is as far
+                 as they have got in the thread (see chat-reads.ts). -->
+            <div
+              v-if="readersFor(msg.id).length > 0"
+              :key="`readers-${msg.id}`"
+              class="chat-notes__readers"
+              :title="readSummaryFor(msg.id)"
+              :aria-label="readSummaryFor(msg.id)"
+            >
+              <span v-if="msg.id === lastMessageId" class="chat-notes__read-summary">{{ readSummaryFor(msg.id) }}</span>
+              <span v-for="reader in readersFor(msg.id)" :key="reader.userId" class="chat-notes__reader">
+                {{ reader.initials }}
+              </span>
+            </div>
+          </template>
         </div>
         <form class="chat-notes__composer" @submit.prevent="sendMessage">
           <textarea
@@ -66,6 +81,15 @@ import Vue from "vue";
 import { fetchMyNickname } from "./profile";
 import { isOnline as isUserOnline, PresenceState } from "./presence";
 import { formatChatTime } from "./chat-time";
+import {
+  applyReceipt,
+  ChatReader,
+  ChatReadReceipt,
+  loadGameChatReads,
+  markGameChatRead,
+  readSummary,
+  readersByMessage,
+} from "./chat-reads";
 import { isDesktopViewport, watchDesktopViewport } from "./viewport";
 
 interface ChatMessage {
@@ -128,6 +152,13 @@ export default Vue.extend({
       authorName: "Player",
       muted: false,
       unreadSince: 0,
+      // Read checks: one receipt per reader, holding how far they have got in this thread. Loaded
+      // once and then kept live off the same Realtime channel as the messages themselves.
+      readReceipts: [] as ChatReadReceipt[],
+      // Highest message id already reported as read by me, so re-opening the panel or every
+      // incoming message doesn't fire a redundant RPC. (The RPC is idempotent and never rewinds a
+      // receipt, so this is purely about not chattering.)
+      reportedReadId: 0,
       // Set directly from outside (hosted.ts, via emitter.store.watch) rather than tracked here -
       // this game already tracks its own presence (hosted.ts's own `trackPresence(..., {type:
       // "game", gameId}, ...)` call feeds the shared Vuex store's `state.presence`), so reading
@@ -171,13 +202,35 @@ export default Vue.extend({
       const last = this.messages[this.messages.length - 1];
       return !!last && new Date(last.created_at).getTime() > this.unreadSince;
     },
+    lastMessageId(): number {
+      const last = this.messages[this.messages.length - 1];
+      return last ? last.id : 0;
+    },
+    readers(): Record<number, ChatReader[]> {
+      return readersByMessage(
+        this.readReceipts,
+        this.messages.map((m) => m.id),
+        this.userId
+      );
+    },
   },
   async mounted() {
     this.unreadSince = this.loadLastRead();
     this.authorName = (await fetchMyNickname(this.client, this.userId)) || "Player";
     await this.loadMessages();
     await this.loadMuted();
+    // Deliberately not awaited: read checks are decoration on top of the thread, and blocking the
+    // rest of mounted() on them would delay the panel's own layout setup below (the sticky-bar and
+    // visual-viewport watchers) behind another round trip.
+    loadGameChatReads(this.client, this.gameId).then((receipts) => {
+      this.readReceipts = receipts;
+    });
     this.subscribeChat();
+    // Desktop can mount already-open (the stored preference), in which case the thread is on screen
+    // right now and the others should see that straight away.
+    if (this.open) {
+      this.reportRead();
+    }
     this.startStickyBarWatch();
     if (!this.isDesktop) {
       this.startVisualViewportPin();
@@ -304,10 +357,43 @@ export default Vue.extend({
           { event: "INSERT", schema: "public", table: "game_chat_messages", filter: `game_id=eq.${this.gameId}` },
           (payload: { new: ChatMessage }) => {
             this.messages.push(payload.new);
+            // Arriving while the panel is open means I'm looking at it - report it read so the
+            // sender sees the check without either of us touching anything.
+            if (this.open) {
+              this.reportRead();
+            }
             this.$nextTick(() => this.scrollToBottom());
           }
         )
+        // Second binding on the same channel rather than a second channel: read receipts are
+        // scoped to exactly the same game as the messages and change at the same kind of rate.
+        // INSERT (first read ever) and UPDATE (read position moving forward) both matter.
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "game_chat_reads", filter: `game_id=eq.${this.gameId}` },
+          (payload: { new: ChatReadReceipt }) => {
+            if (payload.new && payload.new.user_id) {
+              this.readReceipts = applyReceipt(this.readReceipts, payload.new);
+            }
+          }
+        )
         .subscribe();
+    },
+    readersFor(messageId: number): ChatReader[] {
+      return this.readers[messageId] || [];
+    },
+    readSummaryFor(messageId: number): string {
+      return readSummary(this.readersFor(messageId));
+    },
+    /** Records how far I have read, for everyone else's read checks. Fire-and-forget: a failed
+     * receipt must never disturb reading or sending messages. */
+    reportRead() {
+      const lastId = this.lastMessageId;
+      if (!lastId || lastId <= this.reportedReadId) {
+        return;
+      }
+      this.reportedReadId = lastId;
+      markGameChatRead(this.client, this.gameId, lastId, this.authorName).catch(() => undefined);
     },
     scrollToBottom() {
       const el = this.$refs.messageList as HTMLElement | undefined;
@@ -373,6 +459,7 @@ export default Vue.extend({
     openPanel() {
       this.setOpen(true);
       this.markRead();
+      this.reportRead();
       this.$nextTick(() => this.scrollToBottom());
     },
     closePanel() {
@@ -562,6 +649,44 @@ export default Vue.extend({
 .chat-notes__body {
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+// Read checks: a right-aligned row of reader initials under the last message each person has read,
+// plus a spelled-out "Read by ..." line on the newest message (initials alone are cryptic, and a
+// tooltip is useless on a phone). Deliberately tiny and low-contrast - it must never compete with
+// the messages themselves.
+.chat-notes__readers {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+  margin-top: -0.2rem;
+}
+
+.chat-notes__read-summary {
+  font-size: 0.65rem;
+  opacity: 0.6;
+  margin-right: 0.15rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 60%;
+}
+
+.chat-notes__reader {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.05rem;
+  height: 1.05rem;
+  border-radius: 50%;
+  background: var(--ui-chat-own);
+  border: 1px solid var(--ui-border);
+  font-size: 0.55rem;
+  font-weight: 700;
+  line-height: 1;
+  opacity: 0.85;
 }
 
 .chat-notes__composer {

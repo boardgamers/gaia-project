@@ -137,6 +137,13 @@ after the source is stable — not after each edit, and never twice to restate t
   `minigame_push_prefs` twice (`20260727154543`, `20260729175737`) under versions that don't match
   the repo's `20260727120000_…` filename. Nothing is broken — the live schema is ahead, not behind —
   but don't infer "unapplied" from a filename that isn't in the ledger; check the ledger itself.
+- **Chat has read checks as of PROGRESS #136 (viewer v5.50.0):** both the per-game chat and the
+  lobby chat show who has read the thread so far — initials under the last message each person has
+  read, plus a "Read by …" line on the newest one. Receipts live in `game_chat_reads`/
+  `lobby_chat_reads` (migration `20260804202928_chat_read_receipts`, applied via `apply_migration`
+  and in the ledger) and are written ONLY through the `mark_game_chat_read`/`mark_lobby_chat_read`
+  RPCs, which `greatest()` the position so a receipt can never rewind. Shared client logic lives in
+  `viewer/src/hosted/chat-reads.ts` — extend that, not the two panels, for anything receipt-shaped.
 - **…and the drift can also run the other way — a repo migration that never reached the database
   (2026-08-04, PROGRESS #133).** In-game chat pushes were silently dead for ~a month because
   `0033_notify_chat_message.sql` existed in the repo but its function and trigger were never created

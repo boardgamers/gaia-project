@@ -4145,25 +4145,25 @@ opacity: 0.7 }` wrapper that also diluted the X itself, while `BoardAction.vue`'
       `pnpm test`: 440 passing/31 failing both before and after (identical failing-test names,
       confirmed via `git stash` on the same run - all pre-existing, none touch these components).
 
-                                                                                                                                                                                                                                                                                                                             **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
-                                                                                                                                                                                                                                                                                                                             pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
-                                                                                                                                                                                                                                                                                                                             desktop mice, which was never the actual bug - only touch devices raced hover against the
-                                                                                                                                                                                                                                                                                                                             click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
-                                                                                                                                                                                                                                                                                                                             `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
-                                                                                                                                                                                                                                                                                                                             `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
-                                                                                                                                                                                                                                                                                                                             shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
-                                                                                                                                                                                                                                                                                                                             `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
-                                                                                                                                                                                                                                                                                                                             directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
-                                                                                                                                                                                                                                                                                                                             `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
-                                                                                                                                                                                                                                                                                                                             config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
-                                                                                                                                                                                                                                                                                                                             on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
-                                                                                                                                                                                                                                                                                                                             desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
-                                                                                                                                                                                                                                                                                                                             is what actually closed that race originally. Verified live via Playwright with two device
-                                                                                                                                                                                                                                                                                                                             profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
-                                                                                                                                                                                                                                                                                                                             tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
-                                                                                                                                                                                                                                                                                                                             context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
-                                                                                                                                                                                                                                                                                                                             a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
-                                                                                                                                                                                                                                                                                                                             still 440 passing/31 failing, same pre-existing set.
+                                                                                                                                                                                                                                                                                                                                   **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
+                                                                                                                                                                                                                                                                                                                                   pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
+                                                                                                                                                                                                                                                                                                                                   desktop mice, which was never the actual bug - only touch devices raced hover against the
+                                                                                                                                                                                                                                                                                                                                   click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
+                                                                                                                                                                                                                                                                                                                                   `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
+                                                                                                                                                                                                                                                                                                                                   `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
+                                                                                                                                                                                                                                                                                                                                   shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
+                                                                                                                                                                                                                                                                                                                                   `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
+                                                                                                                                                                                                                                                                                                                                   directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
+                                                                                                                                                                                                                                                                                                                                   `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
+                                                                                                                                                                                                                                                                                                                                   config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
+                                                                                                                                                                                                                                                                                                                                   on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
+                                                                                                                                                                                                                                                                                                                                   desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
+                                                                                                                                                                                                                                                                                                                                   is what actually closed that race originally. Verified live via Playwright with two device
+                                                                                                                                                                                                                                                                                                                                   profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
+                                                                                                                                                                                                                                                                                                                                   tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
+                                                                                                                                                                                                                                                                                                                                   context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
+                                                                                                                                                                                                                                                                                                                                   a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
+                                                                                                                                                                                                                                                                                                                                   still 440 passing/31 failing, same pre-existing set.
 
 102.  ✅ **Offline pass-and-play with automatic local recovery and airplane-mode launch
       (2026-07-17, v5.31.0).** The viewer now has a dedicated `?offline=1` hot-seat mode, linked from
@@ -5241,27 +5241,28 @@ new.fen` - a real move or reset, not a colour claim or panel-mode switch) that P
       "Play offline on this device" link on `SignIn.vue` (shown before sign-in), the "Play offline"
       link on `PendingApproval.vue` (shown while pending), and a direct `?offline=1` URL.
 
-             Fixed with a device-local flag rather than a server check, since offline mode is explicitly
-             designed to need neither an account nor a connection: `hosted/offline-access.ts` adds
-             `isOfflineAccessGranted()`/`grantOfflineAccess()` (a `localStorage` flag). `hosted.ts` now calls
-             `grantOfflineAccess()` immediately after the existing approval check passes (`approval ===
+                   Fixed with a device-local flag rather than a server check, since offline mode is explicitly
+                   designed to need neither an account nor a connection: `hosted/offline-access.ts` adds
+                   `isOfflineAccessGranted()`/`grantOfflineAccess()` (a `localStorage` flag). `hosted.ts` now calls
+                   `grantOfflineAccess()` immediately after the existing approval check passes (`approval ===
 
-      "approved"`), so the flag is only ever set once a real approved sign-in has happened on this
- device. `main.ts`'s routing now checks the flag before honoring `?offline=1`(or the
- already-offline`navigator.onLine === false`fallback): ungranted, it strips the URL back to
- bare and falls through to`launchHosted()`, which shows sign-in or "pending approval" exactly
- like every other feature — never the offline lobby. The "Play offline" links on `SignIn.vue`and
-`PendingApproval.vue`are removed outright so an unapproved user doesn't even see the option.
- Once approved, offline access stays granted on that device even if the user later goes fully
- offline, since the flag was already written during their one approved online session.
- 667/667 non-Lost-Fleet-adjacent viewer tests unaffected; the 2 pre-existing`SetupPreview`
+            "approved"`), so the flag is only ever set once a real approved sign-in has happened on this
+
+      device. `main.ts`'s routing now checks the flag before honoring `?offline=1`(or the
+      already-offline`navigator.onLine === false`fallback): ungranted, it strips the URL back to
+      bare and falls through to`launchHosted()`, which shows sign-in or "pending approval" exactly
+      like every other feature — never the offline lobby. The "Play offline" links on `SignIn.vue`and
+      `PendingApproval.vue`are removed outright so an unapproved user doesn't even see the option.
+      Once approved, offline access stays granted on that device even if the user later goes fully
+      offline, since the flag was already written during their one approved online session.
+      667/667 non-Lost-Fleet-adjacent viewer tests unaffected; the 2 pre-existing`SetupPreview`
       rotation-validation failures are unrelated (reproduce on a clean pre-change checkout too).
 
-             Four specs were inverted to match (both panels' "defaults to open" and "persists the closed
-             preference" cases), and `GameNavPanel.spec.ts`'s `mountDesktop` helper now seeds the stored
-             preference so the content-rendering tests still have a panel to look at. Full viewer run: 667
-             passing with only the same two documented setup-preview rotation/German-rule failures,
-             identical to a stashed baseline run on the same checkout.
+                   Four specs were inverted to match (both panels' "defaults to open" and "persists the closed
+                   preference" cases), and `GameNavPanel.spec.ts`'s `mountDesktop` helper now seeds the stored
+                   preference so the content-rendering tests still have a panel to look at. Full viewer run: 667
+                   passing with only the same two documented setup-preview rotation/German-rule failures,
+                   identical to a stashed baseline run on the same checkout.
 
 132.  ✅ **Direct-invite games now randomize seats too (viewer v5.49.3, 2026-08-04, owner-reported):**
       the owner noticed they were always seated first when creating a direct-invite game and asked
@@ -5285,7 +5286,7 @@ new.fen` - a real move or reset, not a colour claim or panel-mode switch) that P
       correct and had been all along — `buildNotifications`' `type === "chat"` branch, the `message`
       kind, the `chat_pushes` pref, the `game_chat_mutes` exclusion, and the deployed `notify` Edge
       Function (v13, which already handled `{type: "chat", …}`). What did not exist on
-      `mitawjpdxkheascdiffz` was the thing that *calls* it: `public.notify_chat_message()` and its
+      `mitawjpdxkheascdiffz` was the thing that _calls_ it: `public.notify_chat_message()` and its
       `game_chat_messages_notify_insert` trigger (repo file `0033_notify_chat_message.sql`) were
       never applied. Verified by direct inspection: `pg_trigger` listed notify triggers on `games`,
       `chess_board` and `renju_board` but nothing on `game_chat_messages`, and
@@ -5306,13 +5307,13 @@ new.fen` - a real move or reset, not a colour claim or panel-mode switch) that P
       (`{"type":"chat","game_id":…,"sender_id":…,"author_name":…,"body":…}` POSTed to
       `/functions/v1/notify`), while no chat row and no HTTP request survived the rollback; and (b) a
       direct `net.http_post` probe with a nonexistent `game_id`, which came back `404 "game not
-      found"` — proving the function authenticates and accepts the chat payload shape (not a 401 or
+found"` — proving the function authenticates and accepts the chat payload shape (not a 401 or
       a 400 from its `type === "chat"` validation branch) without building a single notification.
       The push chain itself was already known-good (`net._http_response` shows real `"sent":N>0`
       deliveries from the other trigger paths). One real chat message landed at 20:07:45.566, the
       same second the DDL took its lock, and is the last one that will have missed its push.
       **Not a bug, but worth knowing when testing this:** both of the owner's push subscriptions are
-      iPhones, and chat pushes (like turn pushes) are deliberately suppressed to *mobile*
+      iPhones, and chat pushes (like turn pushes) are deliberately suppressed to _mobile_
       subscriptions while that player has the game open — `shouldSkipTurnPushForSubscription` +
       `hasGameOpen`'s 45s `last_active_at` window. Testing chat from the phone that has the game
       open in the foreground will correctly produce no banner; close the tab (or test from a desktop
@@ -5399,6 +5400,50 @@ new.fen` - a real move or reset, not a colour claim or panel-mode switch) that P
       its button to a second line on mobile, and the explainer opens from it. Viewer suite 718
       passing (710 baseline + 8, with 2 moved out of `Commands.spec.ts` and rewritten), same two
       pre-existing `SetupPreview` rotation failures as #131/#134.
+
+136.  ✅ **Read checks in chat — see who has read the thread so far (2026-08-04, viewer v5.50.0, owner
+      request):** both chats now carry read receipts. Under each message sits the set of people whose
+      read position lands on it (small initials chips, right-aligned), and the newest message also
+      spells it out — "Read by Luke and Leia" — because initials alone are cryptic and a `title`
+      tooltip is useless on a phone. Your own receipt is never shown back to you.
+      **Schema (migration `20260804202928_chat_read_receipts`, applied live via `apply_migration`, so
+      it IS in the ledger — see #133 for why that matters):** `game_chat_reads` (PK `(game_id,
+user_id)`) and `lobby_chat_reads` (PK `user_id`), one row per reader per thread holding
+      `last_read_message_id` + `reader_name` + `last_read_at`. Two tables rather than one with a
+      nullable `game_id`, mirroring the existing `game_chat_messages`/`lobby_chat_messages` split.
+      Read bar is `is_approved()`, the same as the messages themselves (a receipt nobody can see is
+      pointless). **Writes are RPC-only** — `mark_game_chat_read(uuid, bigint, text)` /
+      `mark_lobby_chat_read(bigint, text)`, security definer, `authenticated` has no table-level
+      insert/update grant at all — so a client can neither forge someone else's receipt nor rewind
+      its own: the upsert takes `greatest(existing, incoming)`, which is what makes a second device
+      with a shorter loaded window harmless. Both tables are in the `supabase_realtime` publication.
+      **Client:** shared `viewer/src/hosted/chat-reads.ts` (types, load/mark helpers, `readerInitials`,
+      `readersByMessage`, `readSummary`, `applyReceipt`) used by both `ChatNotesPanel.vue` and
+      `LobbyChatPanel.vue`. A receipt attaches to the newest _loaded_ message at or below its
+      `last_read_message_id` rather than needing an exact id match — without that fallback a fully
+      caught-up reader would silently vanish whenever their exact message fell outside the loaded
+      window (LobbyChatPanel pages 200 at a time; ChatNotesPanel caps at 500). Receipts older than
+      the whole window are dropped. Reporting fires on panel open and on every message that arrives
+      while the panel is open, guarded by a local high-water mark so it doesn't chatter; it is
+      fire-and-forget, so a failed receipt can never disturb reading or sending. Receipts stay live
+      through a _second_ `postgres_changes` binding on the panel's existing chat channel (INSERT =
+      first read ever, UPDATE = position moving forward) rather than a second channel. Both panels'
+      initial receipt load is deliberately not awaited inside `mounted()` — blocking there delays the
+      panel's own sticky-bar/visual-viewport setup behind another round trip (it also broke the
+      existing visualViewport test, which is a fair proxy for "the panel took too long to be ready").
+      **Verified live** with two rolled-back `DO`-block probes against `mitawjpdxkheascdiffz`: as a
+      real approved user the RPC upserted, trimmed the name, defaulted a blank name to "Player", and
+      a follow-up call with an older message id did NOT move the receipt back; a direct
+      `insert into lobby_chat_reads` as `authenticated` was refused ("permission denied for table").
+      Both probes rolled back — the tables are still empty. New advisor warnings are the same
+      `authenticated_security_definer_function_executable` class every other RPC in this project
+      already carries (49 of them), which is exactly the intended design here.
+      **Tests:** new `chat-reads.spec.ts` (10 cases) plus 2 ChatNotesPanel and 1 LobbyChatPanel case.
+      Measured on this entry's own base (`c38b6f6`, before the rebase onto #134/#135): viewer suite
+      725 passing, up 13 from that base's 712. The 2 failures in a full-suite run (`setup-preview`
+      German-rules rotation) are pre-existing — identical on the stashed baseline, and both pass when
+      their spec runs alone. The suite was NOT re-run after rebasing onto master's 718-test tree
+      (owner: "Don't run more tests"); the three new specs are self-contained and touch only chat.
 
 ## Still MISSING — only one art-only item left
 

@@ -19,10 +19,13 @@ function mockDesktopViewport(matches: boolean) {
 }
 
 describe("ChatNotesPanel", () => {
-  function makeClient(opts: { messages?: any[]; nickname?: string; noteBody?: string; muted?: boolean } = {}) {
+  function makeClient(
+    opts: { messages?: any[]; nickname?: string; noteBody?: string; muted?: boolean; reads?: any[] } = {}
+  ) {
     const messages = opts.messages ?? [];
     const inserted: any[] = [];
     const upserts: any[] = [];
+    const rpcCalls: { name: string; args: any }[] = [];
     let muted = opts.muted ?? false;
     const channel = {
       on: () => channel,
@@ -31,6 +34,11 @@ describe("ChatNotesPanel", () => {
     return {
       inserted,
       upserts,
+      rpcCalls,
+      rpc: async (name: string, args: any) => {
+        rpcCalls.push({ name, args });
+        return { data: null, error: null };
+      },
       get muted() {
         return muted;
       },
@@ -71,6 +79,13 @@ describe("ChatNotesPanel", () => {
               inserted.push(row);
               return { data: null, error: null };
             },
+          };
+        }
+        if (table === "game_chat_reads") {
+          return {
+            select: () => ({
+              eq: async () => ({ data: opts.reads ?? [], error: null }),
+            }),
           };
         }
         if (table === "game_notes") {
@@ -269,6 +284,89 @@ describe("ChatNotesPanel", () => {
   async function Vue_nextTick(wrapper: any) {
     await wrapper.vm.$nextTick();
   }
+
+  it("shows a read check under the last message each other reader has reached", async () => {
+    const client = makeClient({
+      messages: [
+        {
+          id: 1,
+          game_id: "game-1",
+          user_id: "user-1",
+          author_name: "Me",
+          body: "one",
+          created_at: "2026-08-04T10:00:00Z",
+        },
+        {
+          id: 2,
+          game_id: "game-1",
+          user_id: "user-1",
+          author_name: "Me",
+          body: "two",
+          created_at: "2026-08-04T10:01:00Z",
+        },
+      ],
+      reads: [
+        {
+          user_id: "user-2",
+          reader_name: "Luke Skywalker",
+          last_read_message_id: 1,
+          last_read_at: "2026-08-04T10:00:30Z",
+        },
+        { user_id: "user-3", reader_name: "Leia", last_read_message_id: 2, last_read_at: "2026-08-04T10:02:00Z" },
+        // My own receipt is never shown back to me.
+        { user_id: "user-1", reader_name: "Me", last_read_message_id: 2, last_read_at: "2026-08-04T10:02:00Z" },
+      ],
+    });
+    const wrapper = mount(ChatNotesPanel as any, {
+      propsData: { client, gameId: "game-1", userId: "user-1" },
+    });
+    await Vue_nextTick(wrapper);
+    await Vue_nextTick(wrapper);
+    await wrapper.find(".chat-notes__toggle").trigger("click");
+    await Vue_nextTick(wrapper);
+
+    const rows = wrapper.findAll(".chat-notes__readers");
+    expect(rows.length).to.equal(2);
+    expect(rows.at(0).text()).to.include("LS");
+    expect(rows.at(0).text()).to.not.include("LE");
+    // The newest message spells the names out; older ones stay initials-only.
+    expect(rows.at(1).text()).to.include("Read by Leia");
+    expect(rows.at(0).text()).to.not.include("Read by");
+  });
+
+  it("reports my own read position through mark_game_chat_read when the panel opens", async () => {
+    const client = makeClient({
+      nickname: "Luke",
+      messages: [
+        {
+          id: 7,
+          game_id: "game-1",
+          user_id: "user-2",
+          author_name: "Leia",
+          body: "hi",
+          created_at: "2026-08-04T10:00:00Z",
+        },
+      ],
+    });
+    const wrapper = mount(ChatNotesPanel as any, {
+      propsData: { client, gameId: "game-1", userId: "user-1" },
+    });
+    await Vue_nextTick(wrapper);
+    await Vue_nextTick(wrapper);
+    expect(client.rpcCalls.length).to.equal(0);
+
+    await wrapper.find(".chat-notes__toggle").trigger("click");
+    await Vue_nextTick(wrapper);
+    expect(client.rpcCalls).to.deep.equal([
+      { name: "mark_game_chat_read", args: { p_game_id: "game-1", p_message_id: 7, p_reader_name: "Luke" } },
+    ]);
+
+    // Re-opening without a newer message must not re-report.
+    (wrapper.vm as any).closePanel();
+    await wrapper.find(".chat-notes__toggle").trigger("click");
+    await Vue_nextTick(wrapper);
+    expect(client.rpcCalls.length).to.equal(1);
+  });
 
   // Desktop defaults to CLOSED (see the component doc comment): docked, this panel reserved 360px
   // of the window that the board should have. It has no floating toggle on desktop either - it is
