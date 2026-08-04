@@ -1,7 +1,20 @@
 {
-  "version": "5.49.6",
+  "version": "5.49.7",
   "releasedAt": "2026-08-04",
   "entries": [
+    {
+      "version": "5.49.7",
+      "releasedAt": "2026-08-04",
+      "kind": "update",
+      "title": "Silent Auction explainer, tightened",
+      "impact": "",
+      "changes": [
+        "The Silent Auction guide now explains a \"deal\" in one highlighted box, with its own short example, and reads shorter"
+      ],
+      "userChanges": [
+        "The Silent Auction guide now explains a \"deal\" in one highlighted box, with its own short example, and reads shorter"
+      ]
+    },
     {
       "version": "5.49.6",
       "releasedAt": "2026-08-04",
