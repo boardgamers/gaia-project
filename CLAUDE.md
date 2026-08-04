@@ -116,6 +116,14 @@ Read these before coding:
   `minigame_push_prefs` twice (`20260727154543`, `20260729175737`) under versions that don't match
   the repo's `20260727120000_…` filename. Nothing is broken — the live schema is ahead, not behind —
   but don't infer "unapplied" from a filename that isn't in the ledger; check the ledger itself.
+- **…and the drift can also run the other way — a repo migration that never reached the database
+  (2026-08-04, PROGRESS #133).** In-game chat pushes were silently dead for ~a month because
+  `0033_notify_chat_message.sql` existed in the repo but its function and trigger were never created
+  live. None of the numbered `00xx_*.sql` files are in the ledger at all (they were applied by hand
+  via the SQL editor), so a skipped one leaves no trace. **When a backend feature "doesn't work",
+  check the live object before re-reading the code** — `pg_trigger` / `to_regproc` / `list_tables`,
+  not the migration filename. Fixed and verified; if you add a trigger-backed feature, apply it with
+  `apply_migration` so it lands in the ledger.
 
 ## Next Work
 

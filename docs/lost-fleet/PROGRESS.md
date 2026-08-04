@@ -5280,6 +5280,44 @@ new.fen` - a real move or reset, not a colour claim or panel-mode switch) that P
       corrected to say seats are randomized. Full viewer run: 711 passing, same 2 pre-existing
       `SetupPreview` rotation/German-rules failures (reproduce on a clean pre-change `master` too).
 
+133.  ✅ **In-game chat pushes never fired — the trigger was missing from the live DB, not from the
+      code (2026-08-04, owner-reported "I don't seem to be getting any"):** every code-side piece was
+      correct and had been all along — `buildNotifications`' `type === "chat"` branch, the `message`
+      kind, the `chat_pushes` pref, the `game_chat_mutes` exclusion, and the deployed `notify` Edge
+      Function (v13, which already handled `{type: "chat", …}`). What did not exist on
+      `mitawjpdxkheascdiffz` was the thing that *calls* it: `public.notify_chat_message()` and its
+      `game_chat_messages_notify_insert` trigger (repo file `0033_notify_chat_message.sql`) were
+      never applied. Verified by direct inspection: `pg_trigger` listed notify triggers on `games`,
+      `chess_board` and `renju_board` but nothing on `game_chat_messages`, and
+      `to_regproc('public.notify_chat_message')` was NULL — while the table itself, `game_chat_mutes`
+      (0034) and the RLS policies were all present. So chat messages inserted fine, realtime
+      delivered them to open panels, and no push was ever requested for any of them. **This is the
+      0032-0036 ledger gap in `CLAUDE.md`'s drift note biting for real:** none of the numbered
+      `00xx_*.sql` files appear in `supabase_migrations.schema_migrations` (they were applied by hand
+      through the SQL editor), so a file that got skipped left no trace anywhere — "the migration is
+      in the repo" proved nothing about the live database.
+      **Fix:** applied 0033's SQL live via `apply_migration` (ledger version `20260804200745`
+      `notify_chat_message`), made idempotent with `drop trigger if exists` first; the same
+      idempotency was backported into the repo's `0033_notify_chat_message.sql` so a future re-apply
+      can't fail on an existing trigger.
+      **Verified live, without spamming anyone:** (a) an insert into `game_chat_messages` inside a
+      `DO` block that then raised, so the transaction rolled back — the queued
+      `net.http_request_queue` row was present and carried exactly the right payload
+      (`{"type":"chat","game_id":…,"sender_id":…,"author_name":…,"body":…}` POSTed to
+      `/functions/v1/notify`), while no chat row and no HTTP request survived the rollback; and (b) a
+      direct `net.http_post` probe with a nonexistent `game_id`, which came back `404 "game not
+      found"` — proving the function authenticates and accepts the chat payload shape (not a 401 or
+      a 400 from its `type === "chat"` validation branch) without building a single notification.
+      The push chain itself was already known-good (`net._http_response` shows real `"sent":N>0`
+      deliveries from the other trigger paths). One real chat message landed at 20:07:45.566, the
+      same second the DDL took its lock, and is the last one that will have missed its push.
+      **Not a bug, but worth knowing when testing this:** both of the owner's push subscriptions are
+      iPhones, and chat pushes (like turn pushes) are deliberately suppressed to *mobile*
+      subscriptions while that player has the game open — `shouldSkipTurnPushForSubscription` +
+      `hasGameOpen`'s 45s `last_active_at` window. Testing chat from the phone that has the game
+      open in the foreground will correctly produce no banner; close the tab (or test from a desktop
+      subscription, which is exempt) to see it.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

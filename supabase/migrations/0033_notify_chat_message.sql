@@ -36,6 +36,11 @@ $$;
 
 revoke execute on function public.notify_chat_message() from public, anon, authenticated;
 
+-- Idempotent (added 2026-08-04, PROGRESS.md #133): this file was written but never actually applied
+-- to the live database for ~a month - the table, its policies and 0034's mutes were all there, so
+-- chat worked while no chat push ever fired. It was re-applied live as ledger version
+-- 20260804200745; dropping first keeps a re-run from failing on the now-existing trigger.
+drop trigger if exists game_chat_messages_notify_insert on public.game_chat_messages;
 create trigger game_chat_messages_notify_insert
   after insert on public.game_chat_messages
   for each row execute function public.notify_chat_message();
