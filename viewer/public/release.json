@@ -1,7 +1,22 @@
 {
-  "version": "5.49.4",
+  "version": "5.49.5",
   "releasedAt": "2026-08-04",
   "entries": [
+    {
+      "version": "5.49.5",
+      "releasedAt": "2026-08-04",
+      "kind": "update",
+      "title": "Round 0 status strip",
+      "impact": "",
+      "changes": [
+        "During faction ban, pick and bidding, a strip above the map now says whose turn it is and what they have to do",
+        "The Silent Auction and ban-phase explainers are now reachable while you wait, not only on your own turn"
+      ],
+      "userChanges": [
+        "During faction ban, pick and bidding, a strip above the map now says whose turn it is and what they have to do",
+        "The Silent Auction and ban-phase explainers are now reachable while you wait, not only on your own turn"
+      ]
+    },
     {
       "version": "5.49.4",
       "releasedAt": "2026-08-04",
