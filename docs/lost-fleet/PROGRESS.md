@@ -5353,6 +5353,22 @@ new.fen` - a real move or reset, not a colour claim or panel-mode switch) that P
       normally rewrites unrelated older entries (it mangled #131's indentation and inline code spans
       on the first attempt here). Commit changes to this file with `--no-verify`.
 
+      **Same-session follow-up (viewer v5.49.7): the "deal" got its own highlighted box, and the
+      prose lost a fifth of its words.** Owner: *"make a highlighted information box on what a deal
+      is ... and in the same box give a concise and short example ... include that you always bid on
+      the factions that gives you the best deal ... Is there anything we can strip off without
+      loosing information?"* `deal-box` (a tinted, left-accented callout) now carries the whole
+      definition in one place — the formula, both costs (unheld = 0, held = price + 1), and a
+      three-sentence example that is deliberately A's own opening from the worked example below, so
+      the numbers introduce the table instead of competing with it. The best-deal rule sits directly
+      under the box, bolded, which is what the box exists to support. Cuts, none of which lose a
+      fact: the closing takeaway under the result table (it restated the box's example with the same
+      numbers), the "you finish with the best deal still open to you" restatement (folded into the
+      rule paragraph as "**You never pay more than you bid**"), and the bans from the example's setup
+      line (they never affect it). 396 → 327 template words (-17%) *including* the new box; the
+      explanation now ends above the fold on desktop, with a hairline `example-heading` rule marking
+      where the worked example starts. Viewer 721 passing, same two pre-existing failures.
+
 135.  ✅ **Round 0 now says whose turn it is and what they have to do (2026-08-04, owner: "for the
       round 0 where we ban pick and bid. There should still be a status text somewhere. Like marks
       turn to ban ... so people are not confused whose turn it is and what that players

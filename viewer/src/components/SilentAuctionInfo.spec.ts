@@ -23,20 +23,42 @@ describe("SilentAuctionInfo", () => {
   const bidFor = (player: string, faction: string) =>
     info.exampleBids.find((row) => row.faction === faction)[player] as number;
 
-  it("explains that a higher bid means you want the faction more", async () => {
+  async function openModal() {
     const wrapper = mount(SilentAuctionInfo, { attachTo: document.body });
     wrapper.vm.$bvModal.show("silent-auction-info");
     await Vue.nextTick();
     await Vue.nextTick();
+    return wrapper;
+  }
 
+  it("explains that a higher bid means you want the faction more", async () => {
+    const wrapper = await openModal();
     const text = document.body.textContent ?? "";
 
-    expect(text).to.contain("most Victory Points you are willing to pay");
-    expect(text).to.contain("high on the faction you want most");
-    expect(text).to.contain("never more than you bid");
+    expect(text).to.contain("most Victory Points you will pay");
+    expect(text).to.contain("highest on the one you want most");
+    expect(text).to.contain("You never pay more than you bid");
     // This used to say "Bid 0 on your favorite", which is exactly backwards: the bid is what you
     // are willing to pay, so your favourite faction gets your highest number, not 0.
     expect(text.toLowerCase()).to.not.contain("0 on your favorite");
+
+    wrapper.destroy();
+  });
+
+  it("defines a deal in its own highlighted box, with a worked example inside it", async () => {
+    const wrapper = await openModal();
+    const box = document.body.querySelector(".deal-box");
+
+    expect(box, "the deal definition needs its own highlighted box").to.not.equal(null);
+    const boxText = box?.textContent ?? "";
+    expect(boxText).to.contain("your bid");
+    expect(boxText).to.contain("cost you right now");
+    // Costs and a concrete example both belong inside the box, not scattered through the prose.
+    expect(boxText).to.contain("price + 1");
+    expect(boxText).to.contain("free Taklons is still a deal of");
+
+    // The rule the box exists to support.
+    expect(document.body.textContent).to.contain("you always take the faction giving you your best deal");
 
     wrapper.destroy();
   });
