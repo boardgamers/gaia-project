@@ -1,7 +1,18 @@
 {
-  "version": "5.49.5",
+  "version": "5.49.6",
   "releasedAt": "2026-08-04",
   "entries": [
+    {
+      "version": "5.49.6",
+      "releasedAt": "2026-08-04",
+      "kind": "fix",
+      "title": "Test-scope working agreement",
+      "impact": "",
+      "changes": [
+        "Documented the owner's test-scope rule (never run the offline-AI/corpus suites for a change that doesn't touch them) in CLAUDE.md and PROGRESS.md's Testing section"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.49.5",
       "releasedAt": "2026-08-04",
