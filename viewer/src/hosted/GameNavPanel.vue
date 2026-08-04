@@ -68,17 +68,21 @@ import { hasPendingTurn } from "./turn-kinds";
 import { PresenceState } from "./presence";
 import { isDesktopViewport, watchDesktopViewport } from "./viewport";
 
-const OPEN_PREF_KEY = "game-nav-panel-open";
+// `-v2` deliberately abandons the old `game-nav-panel-open` key: the default flipped from open to
+// closed (below), and a stored "1" from the default-open era would otherwise keep re-docking the
+// panel for everyone who had ever toggled it, which is exactly what the flip is meant to stop.
+const OPEN_PREF_KEY = "game-nav-panel-open-v2";
 
-// Desktop-only preference (owner request: this is a desktop-only docked panel that defaults open,
-// with a settings-menu switch to turn it off - mobile never gets this menu at all, see `isDesktop`
-// below). Defaults to open (true) so a desktop user who never touched the setting still gets it.
+// Desktop-only preference, defaulting to CLOSED (owner request, desktop space-usage pass): docked
+// open, this panel plus ChatNotesPanel.vue reserved 420px + 360px of a 1920px screen, so the game
+// itself got barely 1140px - the board is what the screen is for. Still one click away from
+// HostedBar.vue's settings menu, and mobile never gets this menu at all (see `isDesktop` below).
 function loadOpenPreference(): boolean {
   if (typeof window === "undefined") {
-    return true;
+    return false;
   }
   const stored = window.localStorage.getItem(OPEN_PREF_KEY);
-  return stored === null ? true : stored === "1";
+  return stored === "1";
 }
 
 function saveOpenPreference(open: boolean): void {
@@ -99,7 +103,7 @@ function saveOpenPreference(open: boolean): void {
  * dedicated flows, no need to reproduce them here).
  *
  * This component renders NOTHING at all on mobile (`v-if="isDesktop"` on the template root) - not
- * a hidden panel, not a floating toggle, nothing - it's docked, default-open, and toggled from
+ * a hidden panel, not a floating toggle, nothing - it's docked, default-closed, and toggled from
  * HostedBar.vue's settings menu (`toggleOpen`, called externally via the mounted instance - same
  * "hold the instance, assign into it" pattern `hosted.ts` already uses). `isDesktop` is
  * re-evaluated on every breakpoint crossing (`watchDesktopViewport`) so resizing a browser window

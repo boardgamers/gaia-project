@@ -77,16 +77,20 @@ interface ChatMessage {
   created_at: string;
 }
 
-const OPEN_PREF_KEY = "chat-notes-panel-open";
+// `-v2` for the same reason as GameNavPanel.vue's own key: the default flipped to closed, and a
+// stored "1" from the default-open era would otherwise keep re-docking the panel.
+const OPEN_PREF_KEY = "chat-notes-panel-open-v2";
 
-// Desktop-only preference, mirroring GameNavPanel.vue's own (see its doc comment) - mobile never
-// reads or writes this, it always starts closed behind the floating bubble.
+// Desktop-only preference, mirroring GameNavPanel.vue's own (see its doc comment) - now defaulting
+// to CLOSED so the game keeps the full window width, and still one click away in HostedBar.vue's
+// settings menu. Mobile never reads or writes this, it always starts closed behind the floating
+// bubble.
 function loadOpenPreference(): boolean {
   if (typeof window === "undefined") {
-    return true;
+    return false;
   }
   const stored = window.localStorage.getItem(OPEN_PREF_KEY);
-  return stored === null ? true : stored === "1";
+  return stored === "1";
 }
 
 function saveOpenPreference(open: boolean): void {
@@ -103,7 +107,7 @@ function saveOpenPreference(open: boolean): void {
  *
  * Desktop and mobile are genuinely different UIs, not just a CSS reflow (see GameNavPanel.vue's
  * doc comment for the same split on the opposite edge): on desktop this panel is docked and
- * defaults open, toggled from HostedBar.vue's settings menu (`toggleOpen`, called externally via
+ * defaults closed, toggled from HostedBar.vue's settings menu (`toggleOpen`, called externally via
  * the mounted instance); on mobile there is no settings entry at all, only the floating bubble
  * toggle below, and it always starts closed. `isDesktop` re-evaluates on every breakpoint
  * crossing via `watchDesktopViewport`. */

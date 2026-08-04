@@ -4145,25 +4145,25 @@ opacity: 0.7 }` wrapper that also diluted the X itself, while `BoardAction.vue`'
       `pnpm test`: 440 passing/31 failing both before and after (identical failing-test names,
       confirmed via `git stash` on the same run - all pre-existing, none touch these components).
 
-                                                                                                                                                                                                                                                                                                     **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
-                                                                                                                                                                                                                                                                                                     pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
-                                                                                                                                                                                                                                                                                                     desktop mice, which was never the actual bug - only touch devices raced hover against the
-                                                                                                                                                                                                                                                                                                     click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
-                                                                                                                                                                                                                                                                                                     `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
-                                                                                                                                                                                                                                                                                                     `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
-                                                                                                                                                                                                                                                                                                     shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
-                                                                                                                                                                                                                                                                                                     `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
-                                                                                                                                                                                                                                                                                                     directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
-                                                                                                                                                                                                                                                                                                     `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
-                                                                                                                                                                                                                                                                                                     config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
-                                                                                                                                                                                                                                                                                                     on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
-                                                                                                                                                                                                                                                                                                     desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
-                                                                                                                                                                                                                                                                                                     is what actually closed that race originally. Verified live via Playwright with two device
-                                                                                                                                                                                                                                                                                                     profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
-                                                                                                                                                                                                                                                                                                     tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
-                                                                                                                                                                                                                                                                                                     context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
-                                                                                                                                                                                                                                                                                                     a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
-                                                                                                                                                                                                                                                                                                     still 440 passing/31 failing, same pre-existing set.
+                                                                                                                                                                                                                                                                                                           **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
+                                                                                                                                                                                                                                                                                                           pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
+                                                                                                                                                                                                                                                                                                           desktop mice, which was never the actual bug - only touch devices raced hover against the
+                                                                                                                                                                                                                                                                                                           click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
+                                                                                                                                                                                                                                                                                                           `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
+                                                                                                                                                                                                                                                                                                           `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
+                                                                                                                                                                                                                                                                                                           shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
+                                                                                                                                                                                                                                                                                                           `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
+                                                                                                                                                                                                                                                                                                           directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
+                                                                                                                                                                                                                                                                                                           `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
+                                                                                                                                                                                                                                                                                                           config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
+                                                                                                                                                                                                                                                                                                           on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
+                                                                                                                                                                                                                                                                                                           desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
+                                                                                                                                                                                                                                                                                                           is what actually closed that race originally. Verified live via Playwright with two device
+                                                                                                                                                                                                                                                                                                           profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
+                                                                                                                                                                                                                                                                                                           tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
+                                                                                                                                                                                                                                                                                                           context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
+                                                                                                                                                                                                                                                                                                           a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
+                                                                                                                                                                                                                                                                                                           still 440 passing/31 failing, same pre-existing set.
 
 102.  ✅ **Offline pass-and-play with automatic local recovery and airplane-mode launch
       (2026-07-17, v5.31.0).** The viewer now has a dedicated `?offline=1` hot-seat mode, linked from
@@ -5183,6 +5183,57 @@ new.fen` - a real move or reset, not a colour claim or panel-mode switch) that P
       asserted a side-game pulse were inverted to assert the glyph-without-pulse behaviour instead.
       Full viewer run: 667 passing with only the same two documented setup-preview rotation/German-
       rule failures, identical to a stashed baseline run on the same checkout.
+
+130.  ✅ **Desktop uses the whole window: map/research fill their columns, and neither side panel
+      docks itself open any more (2026-08-04, viewer v5.49.0, owner: "really think about how we can
+      locate each container component so we make most use of the space as possible... the hexmap
+      container should have the actual map fill out as much as possible instead of all the white
+      space besides it", then "Do option A. Also is there a left and right sidebar on desktop on
+      default? Remove that").** Two independent causes, both desktop-only — every rule added here is
+      inside a `min-width: 992px` query, and a 390px-wide check found the phone layout metrically
+      identical (same map size, same ship size, same page height) before and after.
+
+      **1. The boards were capped, not sized.** `SetupPreviewBoard.vue` carries an _unscoped_
+      `.gaia-viewer-game .space-map, .gaia-viewer-game .scoring-research-board { max-height: 600px }`
+      rule, so it applies to the real game too — and it is what actually wins the cascade app-wide
+      (same specificity as Game.vue's own rule, later in source order; a `.desktop-layout-x .space-map`
+      override loses to it, which cost a debugging round). The map's viewBox is near-square (aspect
+      1.007), so a 600px height cap inside a 1103px-wide column drew it at 600x600 and left 503px of
+      the map container as empty background — 45% of it. Same for the research board (519 wide inside
+      788). Because the map stopped at 600px while the research+ships column ran to 1218px, a
+      618px dead band sat under the map, and `.player-board`'s `max-width: 700px` wasted another
+      ~260px in each half-width board cell.
+
+      Fixed by dropping both caps at `min-width: 992px` (scoped under `.game-board-layout`, so
+      SetupPreviewBoard's own small preview row is untouched) and re-cutting the 7/5 split to
+      **65/35** — the split where the two columns finish level, since the map's height is ~1x its
+      width and the side column's is ~1.93x its own (research 1.16 + ship stack 0.77). At 1920 the
+      map goes from 1103x600 (55% filled) to **1229x1220 (100% filled)** against a 1289px side
+      column. Owner picked this ("option A") over two alternatives that were built and screenshotted
+      the same session: ships in a 2x2 with four-across player boards (page 2896px -> 2316px), and a
+      four-column dashboard whose track widths were the inverse of each block's aspect ratio so all
+      four ended at ~586px (page 1607px). Both are gone from the tree; the numbers are here in case
+      the question comes back.
+
+      **2. Both side panels docked themselves open.** `GameNavPanel.vue` (420px, left) and
+      `ChatNotesPanel.vue` (360px, right) each defaulted to open on desktop, so a 1920px window gave
+      the game barely 1140px before any of the above applied. Both now default **closed** — the key
+      is `-v2` in each (`game-nav-panel-open-v2`, `chat-notes-panel-open-v2`) precisely so a stored
+      "1" from the default-open era cannot re-dock them — and both are still one click away in
+      `HostedBar.vue`'s settings menu, which is the only desktop entry point either has ever had
+      (the chat's floating bubble is `v-if="!isDesktop"`). Nothing was deleted: chat, notes and the
+      game menu are all intact.
+
+      Side effect worth knowing: `hosted.ts` only ever toggles the `#app.game-nav-open` /
+      `.chat-notes-open` padding reservations from a `$watch`, never from the panel's initial state,
+      so under the old default-open the panels covered the page's left/right edges on first load
+      until you toggled them. Default-closed makes the initial state and the reservation agree.
+
+      Four specs were inverted to match (both panels' "defaults to open" and "persists the closed
+      preference" cases), and `GameNavPanel.spec.ts`'s `mountDesktop` helper now seeds the stored
+      preference so the content-rendering tests still have a panel to look at. Full viewer run: 667
+      passing with only the same two documented setup-preview rotation/German-rule failures,
+      identical to a stashed baseline run on the same checkout.
 
 ## Still MISSING — only one art-only item left
 

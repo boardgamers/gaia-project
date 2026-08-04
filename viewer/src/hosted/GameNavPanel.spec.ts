@@ -24,7 +24,7 @@ function mockDesktopViewport(matches: boolean) {
 
 describe("GameNavPanel", () => {
   const session = { user: { id: "user-me", email: "me@example.com" } } as any;
-  const OPEN_PREF_KEY = "game-nav-panel-open";
+  const OPEN_PREF_KEY = "game-nav-panel-open-v2";
 
   afterEach(() => {
     window.localStorage.removeItem(OPEN_PREF_KEY);
@@ -76,9 +76,14 @@ describe("GameNavPanel", () => {
   }
 
   // GameNavPanel is desktop-only (renders nothing at all on mobile - see the component doc
-  // comment) - every test that needs the panel's actual content mounted has to mock desktop.
-  async function mountDesktop(games: any[]) {
+  // comment) - every test that needs the panel's actual content mounted has to mock desktop. It is
+  // also closed by default now, so the stored preference is what puts the content in the DOM;
+  // `open: false` is for the tests that assert the default itself.
+  async function mountDesktop(games: any[], { open = true }: { open?: boolean } = {}) {
     const restore = mockDesktopViewport(true);
+    if (open) {
+      window.localStorage.setItem(OPEN_PREF_KEY, "1");
+    }
     const wrapper = mount(GameNavPanel as any, {
       propsData: { client: makeClient(games), session },
     });
@@ -164,9 +169,12 @@ describe("GameNavPanel", () => {
     restore();
   });
 
-  it("defaults to open on desktop, renders nothing (no open state to check) on mobile", async () => {
-    const { wrapper: desktopWrapper, restore: restoreDesktop } = await mountDesktop([]);
-    expect((desktopWrapper.vm as any).open).to.equal(true);
+  // Defaults to CLOSED so an in-game desktop window is all board (see the component doc comment) -
+  // the 420px docked panel is one settings-menu click away instead.
+  it("defaults to closed on desktop, renders nothing (no open state to check) on mobile", async () => {
+    const { wrapper: desktopWrapper, restore: restoreDesktop } = await mountDesktop([], { open: false });
+    expect((desktopWrapper.vm as any).open).to.equal(false);
+    expect(desktopWrapper.find(".game-nav__panel").exists()).to.equal(false);
     desktopWrapper.destroy();
     restoreDesktop();
 
@@ -176,15 +184,15 @@ describe("GameNavPanel", () => {
     mobileWrapper.destroy();
   });
 
-  it("persists the closed preference on desktop and honors it on the next mount", async () => {
-    const { wrapper, restore } = await mountDesktop([]);
-    (wrapper.vm as any).setOpen(false);
+  it("persists the opened preference on desktop and honors it on the next mount", async () => {
+    const { wrapper, restore } = await mountDesktop([], { open: false });
+    (wrapper.vm as any).setOpen(true);
     await Vue.nextTick();
-    expect(window.localStorage.getItem(OPEN_PREF_KEY)).to.equal("0");
+    expect(window.localStorage.getItem(OPEN_PREF_KEY)).to.equal("1");
     wrapper.destroy();
 
-    const { wrapper: reopened } = await mountDesktop([]);
-    expect((reopened.vm as any).open).to.equal(false);
+    const { wrapper: reopened } = await mountDesktop([], { open: false });
+    expect((reopened.vm as any).open).to.equal(true);
     reopened.destroy();
     restore();
   });

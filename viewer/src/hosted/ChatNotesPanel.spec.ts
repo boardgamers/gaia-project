@@ -270,14 +270,17 @@ describe("ChatNotesPanel", () => {
     await wrapper.vm.$nextTick();
   }
 
-  it("defaults to open with no floating toggle on desktop, closed with a toggle on mobile", async () => {
+  // Desktop defaults to CLOSED (see the component doc comment): docked, this panel reserved 360px
+  // of the window that the board should have. It has no floating toggle on desktop either - it is
+  // opened from HostedBar.vue's settings menu.
+  it("defaults to closed with no floating toggle on desktop, closed with a toggle on mobile", async () => {
     const restoreDesktop = mockDesktopViewport(true);
     const desktopWrapper = mount(ChatNotesPanel as any, {
       propsData: { client: makeClient(), gameId: "game-1", userId: "user-1" },
     });
     await Vue_nextTick(desktopWrapper);
-    expect((desktopWrapper.vm as any).open).to.equal(true);
-    expect(desktopWrapper.find(".chat-notes__panel").exists()).to.equal(true);
+    expect((desktopWrapper.vm as any).open).to.equal(false);
+    expect(desktopWrapper.find(".chat-notes__panel").exists()).to.equal(false);
     expect(desktopWrapper.find(".chat-notes__toggle").exists()).to.equal(false);
     desktopWrapper.destroy();
     restoreDesktop();
@@ -293,7 +296,7 @@ describe("ChatNotesPanel", () => {
     restoreMobile();
   });
 
-  it("persists the closed preference on desktop and honors it on the next mount, but never applies it on mobile", async () => {
+  it("persists the opened preference on desktop and honors it on the next mount, but never applies it on mobile", async () => {
     const restoreDesktop = mockDesktopViewport(true);
     const wrapper = mount(ChatNotesPanel as any, {
       propsData: { client: makeClient(), gameId: "game-1", userId: "user-1" },
@@ -301,15 +304,15 @@ describe("ChatNotesPanel", () => {
     await Vue_nextTick(wrapper);
     (wrapper.vm as any).toggleOpen();
     await Vue_nextTick(wrapper);
-    expect((wrapper.vm as any).open).to.equal(false);
-    expect(window.localStorage.getItem("chat-notes-panel-open")).to.equal("0");
+    expect((wrapper.vm as any).open).to.equal(true);
+    expect(window.localStorage.getItem("chat-notes-panel-open-v2")).to.equal("1");
     wrapper.destroy();
 
     const reopened = mount(ChatNotesPanel as any, {
       propsData: { client: makeClient(), gameId: "game-1", userId: "user-1" },
     });
     await Vue_nextTick(reopened);
-    expect((reopened.vm as any).open).to.equal(false);
+    expect((reopened.vm as any).open).to.equal(true);
     reopened.destroy();
     restoreDesktop();
 

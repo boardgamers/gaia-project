@@ -1,7 +1,22 @@
 {
-  "version": "5.48.5",
-  "releasedAt": "2026-07-31",
+  "version": "5.49.0",
+  "releasedAt": "2026-08-04",
   "entries": [
+    {
+      "version": "5.49.0",
+      "releasedAt": "2026-08-04",
+      "kind": "update",
+      "title": "Desktop layout uses the whole window",
+      "impact": "",
+      "changes": [
+        "On desktop the map and research board now fill their columns instead of sitting in a 600px box, and the player boards fill their half of the row.",
+        "The game menu and chat panels no longer open by themselves on desktop - open them from the settings menu when you want them."
+      ],
+      "userChanges": [
+        "On desktop the map and research board now fill their columns instead of sitting in a 600px box, and the player boards fill their half of the row.",
+        "The game menu and chat panels no longer open by themselves on desktop - open them from the settings menu when you want them."
+      ]
+    },
     {
       "version": "5.48.5",
       "releasedAt": "2026-07-31",
