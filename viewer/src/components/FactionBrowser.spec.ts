@@ -42,6 +42,15 @@ describe("FactionBrowser", () => {
     const modal = document.body.querySelector(".modal");
     expect(modal, "clicking a faction should open its sheet").to.not.equal(null);
 
+    // stylesheets/planets.css defines every game colour variable (--res-ore, --res-power, ...) only
+    // under `.gaia-viewer-game, .gaia-viewer-modal`. A bootstrap modal is appended to <body>, i.e.
+    // outside `.gaia-viewer-game`, so without this class the faction board's icons resolve to black -
+    // which is exactly what an owner screenshot caught. MoveButton's own modal carries it too.
+    expect(
+      document.body.querySelector(".modal-dialog")?.classList.contains("gaia-viewer-modal"),
+      "the sheet modal must carry gaia-viewer-modal or its board renders without colours"
+    ).to.equal(true);
+
     const footerButtons = Array.from(modal?.querySelectorAll(".modal-footer button") ?? []).map((b) =>
       (b.textContent ?? "").trim()
     );

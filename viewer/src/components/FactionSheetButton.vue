@@ -8,7 +8,15 @@
       {{ label }}
       <i :class="`planet ${planet}`" :style="{ color: color }"></i>
     </b-btn>
-    <b-modal :id="`faction-sheet-${faction}`" v-model="open" :title="label" ok-only ok-title="Close" size="lg">
+    <b-modal
+      :id="`faction-sheet-${faction}`"
+      v-model="open"
+      :title="label"
+      ok-only
+      ok-title="Close"
+      size="lg"
+      dialog-class="gaia-viewer-modal"
+    >
       <FactionInfoCard :faction="faction" :variant="variant" :expansion="expansions" />
     </b-modal>
   </span>

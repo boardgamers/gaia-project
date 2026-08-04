@@ -5468,6 +5468,23 @@ found"` — proving the function authenticates and accepts the chat payload shap
       passing (741 + 4 summary + 1 bid-form), same two pre-existing failures. Verified in a browser by
       driving a real 3-player Silent Auction through ban, pick, bid and resolution.
 
+      **Bug this shipped and the same-session fix (viewer v5.50.3):** the owner sent a screenshot of
+      an off-turn Gleens sheet with every income icon and planet circle rendered solid **black**.
+      Cause: `stylesheets/planets.css` defines every game colour variable (`--res-ore`,
+      `--res-credit`, `--res-power`, the planet and research-track colours, ...) under
+      **`.gaia-viewer-game, .gaia-viewer-modal` only**. A bootstrap modal is appended to `<body>` —
+      outside `.gaia-viewer-game` — so a modal that doesn't carry `.gaia-viewer-modal` gets none of
+      them and every `var()` falls back to black. `MoveButton.vue` has always passed
+      `dialog-class="gaia-viewer-modal"`, which is why the on-turn sheet looked right and the new one
+      didn't, from identical props and the same `FactionInfoCard`. Added to `FactionSheetButton`,
+      `SilentAuctionSummary`'s log modal, and (pre-emptively) `SilentAuctionInfo`/`BanPhaseInfo`.
+      **Rule for any future `b-modal` in the viewer: it must carry `dialog-class="gaia-viewer-modal"`
+      (or wrap its content in that class, as `Charts.vue`/`Rules.vue` do) or its game visuals render
+      black.** `FactionBrowser.spec.ts` now asserts the class. Verified in a browser: on-turn and
+      off-turn dialogs both resolve `--res-ore=#ddd --res-credit=#f2ff00 --res-power=#984ff1
+      --res-knowledge=#2080f0`, and the two sheets are pixel-identical above the footer (the only
+      difference being Close vs Cancel / "OK, I ban this one!"). Viewer 746 passing.
+
 136.  ✅ **Read checks in chat — see who has read the thread so far (2026-08-04, viewer v5.50.0, owner
       request):** both chats now carry read receipts. Under each message sits the set of people whose
       read position lands on it (small initials chips, right-aligned), and the newest message also

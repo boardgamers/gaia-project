@@ -12,7 +12,14 @@
     </span>
     <b-btn variant="link" size="sm" class="auction-summary__action" @click="logOpen = true">Full log</b-btn>
     <b-btn variant="link" size="sm" class="auction-summary__action" @click="dismiss">Dismiss</b-btn>
-    <b-modal v-model="logOpen" title="Silent Auction" size="lg" ok-only ok-title="Close">
+    <b-modal
+      v-model="logOpen"
+      title="Silent Auction"
+      size="lg"
+      ok-only
+      ok-title="Close"
+      dialog-class="gaia-viewer-modal"
+    >
       <SilentAuctionLog hide-title />
     </b-modal>
   </div>

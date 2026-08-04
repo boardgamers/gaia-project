@@ -1,5 +1,11 @@
 <template>
-  <b-modal id="silent-auction-info" size="lg" title="How the Silent Auction works" ok-only>
+  <b-modal
+    id="silent-auction-info"
+    size="lg"
+    title="How the Silent Auction works"
+    ok-only
+    dialog-class="gaia-viewer-modal"
+  >
     <div class="silent-auction-info">
       <p>
         Every faction here is auctioned. <b>Your bid is the most Victory Points you will pay to play that faction</b> -
