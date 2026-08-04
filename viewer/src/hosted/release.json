@@ -1,7 +1,18 @@
 {
-  "version": "5.49.1",
+  "version": "5.49.2",
   "releasedAt": "2026-08-04",
   "entries": [
+    {
+      "version": "5.49.2",
+      "releasedAt": "2026-08-04",
+      "kind": "fix",
+      "title": "Mobile chat keyboard fix",
+      "impact": "",
+      "changes": [
+        "Fixed the mobile chat panel losing its full-screen cover when the on-screen keyboard opened, which could send taps through to faction buttons underneath; also enlarged the chat composer's textarea"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.49.1",
       "releasedAt": "2026-08-04",
