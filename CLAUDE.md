@@ -22,6 +22,27 @@ Read these before coding:
 3. `docs/lost-fleet/COMPONENTS.md`
 4. `docs/lost-fleet/PERFORMANCE.md` before touching viewer rendering
 
+## Testing: run only what the change can break (owner instruction, 2026-08-04)
+
+**Never run the full engine suite — and above all never the offline-AI suite (`engine/src/ai/**`,
+`fuzz/`, the corpus campaigns) — for a change that doesn't touch those files.** They take many
+minutes, and in this container the full engine run is OOM-killed partway through (exit 137) so it
+doesn't even produce an answer. Owner, verbatim: *"ai test is absolute no go when the implementation
+has nothing to do with it!"*
+
+Pick the gate from what you actually edited:
+
+| Changed | Run |
+| --- | --- |
+| A viewer component / `viewer/src/**` | that component's spec, then the viewer suite once at the end |
+| `engine/src/**` (not AI) | the affected engine specs, then the engine suite minus `src/ai/**` |
+| `engine/src/ai/**`, `fuzz/`, planner/corpus inputs | the AI/corpus gates — the only time they're in scope |
+| Docs/markdown only | nothing; prettier/diff check only |
+
+Always append `--reporter min` (see PROGRESS.md's **Testing** section — it's a standing instruction,
+and it exists so a passing run costs ~2 lines of context instead of 700). Run the broad suite **once**,
+after the source is stable — not after each edit, and never twice to restate the same number.
+
 ## Current State
 
 - Lost Fleet chunks 1 through 7b, Darkanians' Planetary Institute, the full Explore/federation/

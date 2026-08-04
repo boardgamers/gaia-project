@@ -5394,6 +5394,22 @@ As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
 
 ## Testing — required going forward
 
+### Scope first: never run a suite the change cannot break (owner instruction, 2026-08-04)
+
+**The offline-AI suite (`engine/src/ai/**`, `fuzz/`, the corpus campaigns) is off limits unless the
+change touches those files.** Owner, verbatim: *"Make sure in the future to not run those extensive
+tests. For example ai test is absolute no go when the implementation has nothing to do with it!"*
+This was written after a session that edited two Vue components and then ran the whole engine suite
+anyway — which in this container doesn't even finish: it is OOM-killed mid-campaign (exit 137), so
+the cost is many minutes and no answer. The same applies to any full-repo suite whose files the diff
+never touched.
+
+Route by what was actually edited: viewer-only change → that component's spec, then the viewer suite
+once at the end. Engine (non-AI) change → the affected engine specs, then the engine suite. AI/fuzz/
+corpus change → the AI gates, which is the *only* time they belong in the plan. Docs-only change →
+no suite at all. This is the concrete form of the risk-based cadence below, not a separate rule; when
+they seem to disagree, this one wins.
+
 **Always run test commands with `--reporter min`, not the default `spec` reporter** (standing
 instruction, added 2026-07-03 after a token-usage review): the default reporter prints one line per
 passing test (500+ lines for the full engine suite alone), which gets dumped into every session's
