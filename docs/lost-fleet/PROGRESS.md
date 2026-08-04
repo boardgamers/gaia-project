@@ -5433,6 +5433,41 @@ found"` — proving the function authenticates and accepts the chat payload shap
       (`daa727a`), and **741 passing after rebasing onto #136's chat-read tree** (that entry's 13 new
       cases land on top), same two pre-existing failures throughout.
 
+      **Second follow-up (viewer v5.50.2): the bid form got readable, and the auction result got a
+      banner.** Owner: *"make it so you can only click on the factions that have been chosen for that
+      phase ... make the faction name ... a button like normal pick faction button ... align the
+      bidding boxes so they are on the same column ... is there a log summary of the silent auction
+      afterwards? It should present in the same banner thing right under the top banner that you can
+      then dismiss."*
+
+      - **`FactionSheetButton.vue`** now owns the "button that only opens a faction sheet" behaviour
+        (Close-only modal, no `MoveButton`, no command). `FactionBrowser.vue` was refactored onto it,
+        and `Commands.vue`'s bid form uses it for each of the three factions up for auction — the
+        picker that normally lets you read a sheet is long gone by the bid phase, so those three
+        factions were previously plain unreadable text right as real VP were being committed to them.
+        Only the auctioned factions are offered, since that is exactly what `SilentBid`'s command data
+        contains.
+      - **Alignment:** `.silent-bid-faction` is now a fixed `11rem` column and `.silent-bid-input` a
+        fixed `6rem` one, so the number boxes share an x instead of stepping in and out with each
+        faction name's length. Measured in-browser: all three at x=199.
+      - **Answering "is the summary elsewhere?"** — it always was, in the statistics panel's
+        **Silent Auction** tab (`Charts.vue` → `SilentAuctionLog.vue`: bans, picks, the bid matrix,
+        the full resolution trace, the result). Nothing ever pointed at it, so nobody found it. New
+        `SilentAuctionSummary.vue` puts a one-line result ("Silent Auction resolved — Itars to Bob
+        for 3 VP · …") in the same slot and shape as `SetupStatus`'s strip, with **Full log** (the
+        same `SilentAuctionLog`, `hide-title` since the modal is already titled) and **Dismiss**.
+        Dismissal is per game per device (`localStorage`, keyed by the `?game=` id or the map seed) —
+        one game's dismissal never hides another's.
+
+      Two traps worth remembering: `{{ "&mdash;" }}` in a mustache renders the literal entity (Vue
+      escapes interpolation) — use the character; and under the test runner the bare `localStorage`
+      global is **not** always the same Storage instance the specs poke via `window.localStorage`, so
+      stored preferences must read and write `window.localStorage` (as `theme.ts` already does).
+      `Commands.spec.ts`'s bid-submit test also had to stop selecting `.silent-bid-form button`, which
+      now finds a faction button first — the submit button carries `.silent-bid-submit`. Viewer 746
+      passing (741 + 4 summary + 1 bid-form), same two pre-existing failures. Verified in a browser by
+      driving a real 3-player Silent Auction through ban, pick, bid and resolution.
+
 136.  ✅ **Read checks in chat — see who has read the thread so far (2026-08-04, viewer v5.50.0, owner
       request):** both chats now carry read receipts. Under each message sits the set of people whose
       read position lands on it (small initials chips, right-aligned), and the newest message also

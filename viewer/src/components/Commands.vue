@@ -156,20 +156,22 @@
           0 on one you'd only take for free. Bids stay hidden until everyone has submitted, then the auction resolves
           automatically. You never pay more than you bid, and usually a lot less.
         </p>
+        <!-- The faction is a real button (FactionSheetButton) rather than a label, so the three
+             factions being bid on can actually be read before committing VP to them - the picker
+             that normally offers that is long gone by this phase. The name column is a fixed width
+             so every bid input lines up, whatever the names are. -->
         <div v-for="pos in silentBidCommand.data.bids" :key="pos.faction" class="d-flex align-items-center mb-2">
-          <span class="silent-bid-faction mr-2">
-            <i :class="`planet ${factionPlanet(pos.faction)}`" :style="{ color: factionPickerColor(pos.faction) }"></i>
-            {{ factionName(pos.faction) }}
-          </span>
+          <FactionSheetButton :faction="pos.faction" class="silent-bid-faction mr-2" />
           <b-form-input
             type="number"
             min="0"
             :max="pos.bid[pos.bid.length - 1]"
             v-model.number="silentBidValues[pos.faction]"
-            style="width: 6rem"
+            :aria-label="`Your bid for ${factionName(pos.faction)}`"
+            class="silent-bid-input"
           />
         </div>
-        <b-btn variant="primary" @click="submitSilentBid">Submit bids</b-btn>
+        <b-btn variant="primary" class="silent-bid-submit" @click="submitSilentBid">Submit bids</b-btn>
       </div>
       <!-- Placed last (below the action buttons, at the very bottom of the sticky bar) - see the
            .sticky-resource-bar-row CSS for the divider separating it from the buttons above and the
@@ -216,6 +218,7 @@ import Engine, {
   TechTilePos,
 } from "@gaia-project/engine";
 import MoveButton from "./MoveButton.vue";
+import FactionSheetButton from "./FactionSheetButton.vue";
 import FactionInfoCard from "./FactionInfoCard.vue";
 import {
   ButtonData,
@@ -297,6 +300,7 @@ export type EmitCommandParams = { disappear?: boolean; times?: number; warnings?
     RichTextView,
     StickyResourceBar,
     MoveButton,
+    FactionSheetButton,
     Undo,
   },
 })
@@ -1077,6 +1081,18 @@ export default class Commands extends Vue implements CommandController {
     background: linear-gradient(180deg, var(--ui-primary-hover) 0%, var(--ui-primary) 100%);
     border-color: var(--ui-primary);
   }
+}
+
+// One fixed-width column for the faction buttons and one for the number boxes, so the bid inputs
+// line up instead of stepping in and out with each faction name's length.
+.silent-bid-faction {
+  flex: 0 0 11rem;
+  max-width: 11rem;
+}
+
+.silent-bid-input {
+  width: 6rem;
+  flex: 0 0 6rem;
 }
 
 .faction-picker-buttons {

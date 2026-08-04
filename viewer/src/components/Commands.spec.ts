@@ -429,7 +429,7 @@ describe("Commands", () => {
     await inputs.at(0).setValue("15");
     await inputs.at(1).setValue("0");
     await inputs.at(2).setValue("10");
-    await wrapper.find(".silent-bid-form button").trigger("click");
+    await wrapper.find(".silent-bid-submit").trigger("click");
     await Vue.nextTick();
 
     const emitted = wrapper.emitted("command");
@@ -442,6 +442,46 @@ describe("Commands", () => {
     expect(command).to.include("itars 15");
     expect(command).to.include("xenos 0");
     expect(command).to.include("taklons 10");
+  });
+
+  it("Silent Auction: the factions being bid on are buttons that open their sheets, in one aligned column", async () => {
+    const engine = new Engine(
+      [
+        "init 3 lf-silent-bid-sheets",
+        "p1 banFaction terrans",
+        "p2 banFaction lantids",
+        "p3 banFaction hadsch-hallas",
+        "p1 faction itars",
+        "p2 faction xenos",
+        "p3 faction taklons",
+      ],
+      { auction: AuctionVariant.Silent }
+    );
+    engine.generateAvailableCommandsIfNeeded();
+
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const wrapper = mount(Commands, { propsData: { currentMove: "" }, store, attachTo: document.body });
+
+    // Only the three factions up for auction are offered - not every faction in the box.
+    const sheetButtons = wrapper.findAll(".silent-bid-form .faction-sheet-button");
+    expect(sheetButtons.length).to.equal(3);
+    expect(sheetButtons.wrappers.map((w) => w.text().trim())).to.deep.equal(["Itars", "Xenos", "Taklons"]);
+
+    await sheetButtons.at(0).find("button").trigger("click");
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    const modal = document.body.querySelector(".modal");
+    expect(modal, "a faction button should open that faction's sheet").to.not.equal(null);
+    expect(
+      Array.from(modal?.querySelectorAll(".modal-footer button") ?? []).map((b) => (b.textContent ?? "").trim())
+    ).to.deep.equal(["Close"]);
+    // Clicking a faction must never turn into a bid submission.
+    expect(wrapper.emitted("command")).to.equal(undefined);
+
+    wrapper.destroy();
   });
 
   it("renders Moweyds' power-ring special action without crashing", () => {

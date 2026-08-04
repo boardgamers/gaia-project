@@ -1,6 +1,6 @@
 <template>
   <div class="silent-auction-log">
-    <h5>Silent Auction</h5>
+    <h5 v-if="!hideTitle">Silent Auction</h5>
 
     <h6>Bans</h6>
     <b-table small bordered :items="bans" :fields="['player', 'faction']" />
@@ -20,12 +20,17 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Prop, Vue } from "vue-property-decorator";
 import Engine, { Faction, PlayerEnum } from "@gaia-project/engine";
 import { factionName } from "../data/factions";
 
 @Component
 export default class SilentAuctionLog extends Vue {
+  /** The summary banner's modal is already titled "Silent Auction"; the statistics tab keeps the
+   * heading, since a tab strip alone doesn't title the panel below it clearly enough. */
+  @Prop({ default: false, type: Boolean })
+  hideTitle: boolean;
+
   get gameData(): Engine {
     return this.$store.state.data;
   }
