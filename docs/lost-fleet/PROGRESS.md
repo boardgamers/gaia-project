@@ -5430,7 +5430,8 @@ found"` — proving the function authenticates and accepts the chat payload shap
       390x844 and 1400x1000, on turn and with a seat lock forced to an off-turn seat: mobile puts the
       action area 8px under the strip in all four states, desktop leaves it at its usual y≈770.
       Viewer 728 passing (721 + 4 `FactionBrowser` + 3 placement) on this change's own base
-      (`daa727a`); re-run after the rebase onto master's #136 chat-read tree below.
+      (`daa727a`), and **741 passing after rebasing onto #136's chat-read tree** (that entry's 13 new
+      cases land on top), same two pre-existing failures throughout.
 
 136.  ✅ **Read checks in chat — see who has read the thread so far (2026-08-04, viewer v5.50.0, owner
       request):** both chats now carry read receipts. Under each message sits the set of people whose
