@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import Engine from "@gaia-project/engine";
-import { buildCreateGameParams } from "./new-game";
+import { buildCreateGameParams, shuffleSeats } from "./new-game";
 
 describe("buildCreateGameParams", () => {
   it("builds params with pristine options, the setup move, and an engine-derived first seat", () => {
@@ -19,7 +19,12 @@ describe("buildCreateGameParams", () => {
     );
 
     // the probe engine must not leak its mutations (map, factionVariantVersion)
-    expect(params.p_options).to.deep.equal({ lostFleet: true, advancedRules: true, factionVariant: "standard", banPhase: false });
+    expect(params.p_options).to.deep.equal({
+      lostFleet: true,
+      advancedRules: true,
+      factionVariant: "standard",
+      banPhase: false,
+    });
     expect(params.p_name).to.be.a("string").and.to.not.equal("");
     expect(params.p_seed).to.equal("fixed-seed");
     expect(params.p_setup_move).to.equal("p2 rotate");
@@ -67,7 +72,10 @@ describe("buildCreateGameParams", () => {
     const params1 = buildCreateGameParams(
       {
         playerCount: 2,
-        seats: [{ userId: "a", name: "A" }, { userId: "b", name: "B" }],
+        seats: [
+          { userId: "a", name: "A" },
+          { userId: "b", name: "B" },
+        ],
         auctionVariant: "none",
         openLobby: false,
       },
@@ -77,7 +85,10 @@ describe("buildCreateGameParams", () => {
     const params2 = buildCreateGameParams(
       {
         playerCount: 2,
-        seats: [{ userId: "a", name: "A" }, { userId: "b", name: "B" }],
+        seats: [
+          { userId: "a", name: "A" },
+          { userId: "b", name: "B" },
+        ],
         auctionVariant: "none",
         openLobby: false,
       },
@@ -85,7 +96,40 @@ describe("buildCreateGameParams", () => {
       "p2 rotate"
     );
 
-    expect(params1.p_options).to.deep.equal({ lostFleet: true, advancedRules: true, factionVariant: "standard", banPhase: false });
-    expect(params2.p_options).to.deep.equal({ lostFleet: true, advancedRules: true, factionVariant: "standard", banPhase: false });
+    expect(params1.p_options).to.deep.equal({
+      lostFleet: true,
+      advancedRules: true,
+      factionVariant: "standard",
+      banPhase: false,
+    });
+    expect(params2.p_options).to.deep.equal({
+      lostFleet: true,
+      advancedRules: true,
+      factionVariant: "standard",
+      banPhase: false,
+    });
+  });
+});
+
+describe("shuffleSeats", () => {
+  it("returns a permutation of the input without mutating it", () => {
+    const seats = [{ userId: "a" }, { userId: "b" }, { userId: "c" }, { userId: "d" }];
+    const original = [...seats];
+
+    const shuffled = shuffleSeats(seats);
+
+    expect(seats).to.deep.equal(original);
+    expect(shuffled).to.have.members(seats);
+    expect(shuffled).to.have.lengthOf(seats.length);
+  });
+
+  it("can produce every seat order over many runs", () => {
+    const seats = ["a", "b", "c"];
+    const seen = new Set<string>();
+    for (let i = 0; i < 500; i++) {
+      seen.add(shuffleSeats(seats).join(""));
+    }
+    // all 3! = 6 permutations should show up given enough runs
+    expect(seen.size).to.equal(6);
   });
 });

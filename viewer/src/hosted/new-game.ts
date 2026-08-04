@@ -68,6 +68,22 @@ function engineAuctionOption(variant: AuctionVariantOption): AuctionVariant | un
   }
 }
 
+/**
+ * Fisher-Yates shuffle of a seats array, returning a new array (input untouched). Used for
+ * direct-invite games, where every seat is known at creation time and would otherwise always
+ * seat the creator first (see 0025_randomize_seats_on_lobby_fill.sql, which already randomizes
+ * open-lobby seats once the table fills - direct invite needs the same treatment since it never
+ * goes through that join flow).
+ */
+export function shuffleSeats<T>(seats: T[]): T[] {
+  const shuffled = [...seats];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 export function randomSeed(): string {
   return `lf-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
 }

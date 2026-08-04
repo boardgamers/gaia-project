@@ -104,8 +104,8 @@
 
           <div v-else>
             <p class="create-game-help mb-2">
-              Pick {{ form.playerCount - 1 }} player<span v-if="form.playerCount > 2">s</span> to invite (seat 1 is
-              you). {{ selectedInvitees.length }}/{{ form.playerCount - 1 }} selected.
+              Pick {{ form.playerCount - 1 }} player<span v-if="form.playerCount > 2">s</span> to invite. Seats are
+              randomized, including yours. {{ selectedInvitees.length }}/{{ form.playerCount - 1 }} selected.
             </p>
             <div class="create-game-invite-list">
               <button
@@ -185,7 +185,7 @@
 import Engine from "@gaia-project/engine";
 import Vue from "vue";
 import InfoModal from "./InfoModal.vue";
-import { AUCTION_VARIANT_OPTIONS, buildCreateGameParams } from "./new-game";
+import { AUCTION_VARIANT_OPTIONS, buildCreateGameParams, shuffleSeats } from "./new-game";
 import { createStoredOfflineGame } from "../offline-game";
 import { fetchMyNickname } from "./profile";
 import SetupPreview from "./SetupPreview.vue";
@@ -324,10 +324,10 @@ export default Vue.extend({
               name: `Player ${i + 1}`,
             }))
           : directInvite
-          ? [
+          ? shuffleSeats([
               { userId: this.myUserId, name: this.myDisplayName },
               ...this.selectedInvitees.map((id) => ({ userId: id, name: this.nicknameFor(id) })),
-            ]
+            ])
           : Array.from({ length: this.form.playerCount }, (_, i) =>
               i === 0 ? { userId: this.myUserId, name: this.myDisplayName } : { userId: null, name: "" }
             );

@@ -1,7 +1,21 @@
 {
-  "version": "5.49.2",
+  "version": "5.49.3",
   "releasedAt": "2026-08-04",
   "entries": [
+    {
+      "version": "5.49.3",
+      "releasedAt": "2026-08-04",
+      "kind": "update",
+      "title": "Direct-invite seats are randomized",
+      "impact": "",
+      "changes": [
+        "Direct-invite games now randomize who gets which seat, same as open-lobby games already did - the host is no longer always seat 1",
+        "Added shuffleSeats() in new-game.ts and applied it to CreateGame.vue's direct-invite seat list before building create_game params"
+      ],
+      "userChanges": [
+        "Direct-invite games now randomize who gets which seat, same as open-lobby games already did - the host is no longer always seat 1"
+      ]
+    },
     {
       "version": "5.49.2",
       "releasedAt": "2026-08-04",

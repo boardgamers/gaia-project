@@ -4145,25 +4145,25 @@ opacity: 0.7 }` wrapper that also diluted the X itself, while `BoardAction.vue`'
       `pnpm test`: 440 passing/31 failing both before and after (identical failing-test names,
       confirmed via `git stash` on the same run - all pre-existing, none touch these components).
 
-                                                                                                                                                                                                                                                                                                                 **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
-                                                                                                                                                                                                                                                                                                                 pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
-                                                                                                                                                                                                                                                                                                                 desktop mice, which was never the actual bug - only touch devices raced hover against the
-                                                                                                                                                                                                                                                                                                                 click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
-                                                                                                                                                                                                                                                                                                                 `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
-                                                                                                                                                                                                                                                                                                                 `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
-                                                                                                                                                                                                                                                                                                                 shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
-                                                                                                                                                                                                                                                                                                                 `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
-                                                                                                                                                                                                                                                                                                                 directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
-                                                                                                                                                                                                                                                                                                                 `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
-                                                                                                                                                                                                                                                                                                                 config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
-                                                                                                                                                                                                                                                                                                                 on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
-                                                                                                                                                                                                                                                                                                                 desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
-                                                                                                                                                                                                                                                                                                                 is what actually closed that race originally. Verified live via Playwright with two device
-                                                                                                                                                                                                                                                                                                                 profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
-                                                                                                                                                                                                                                                                                                                 tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
-                                                                                                                                                                                                                                                                                                                 context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
-                                                                                                                                                                                                                                                                                                                 a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
-                                                                                                                                                                                                                                                                                                                 still 440 passing/31 failing, same pre-existing set.
+                                                                                                                                                                                                                                                                                                                             **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
+                                                                                                                                                                                                                                                                                                                             pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
+                                                                                                                                                                                                                                                                                                                             desktop mice, which was never the actual bug - only touch devices raced hover against the
+                                                                                                                                                                                                                                                                                                                             click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
+                                                                                                                                                                                                                                                                                                                             `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
+                                                                                                                                                                                                                                                                                                                             `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
+                                                                                                                                                                                                                                                                                                                             shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
+                                                                                                                                                                                                                                                                                                                             `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
+                                                                                                                                                                                                                                                                                                                             directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
+                                                                                                                                                                                                                                                                                                                             `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
+                                                                                                                                                                                                                                                                                                                             config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
+                                                                                                                                                                                                                                                                                                                             on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
+                                                                                                                                                                                                                                                                                                                             desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
+                                                                                                                                                                                                                                                                                                                             is what actually closed that race originally. Verified live via Playwright with two device
+                                                                                                                                                                                                                                                                                                                             profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
+                                                                                                                                                                                                                                                                                                                             tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
+                                                                                                                                                                                                                                                                                                                             context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
+                                                                                                                                                                                                                                                                                                                             a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
+                                                                                                                                                                                                                                                                                                                             still 440 passing/31 failing, same pre-existing set.
 
 102.  ✅ **Offline pass-and-play with automatic local recovery and airplane-mode launch
       (2026-07-17, v5.31.0).** The viewer now has a dedicated `?offline=1` hot-seat mode, linked from
@@ -5241,26 +5241,44 @@ new.fen` - a real move or reset, not a colour claim or panel-mode switch) that P
       "Play offline on this device" link on `SignIn.vue` (shown before sign-in), the "Play offline"
       link on `PendingApproval.vue` (shown while pending), and a direct `?offline=1` URL.
 
-      Fixed with a device-local flag rather than a server check, since offline mode is explicitly
-      designed to need neither an account nor a connection: `hosted/offline-access.ts` adds
-      `isOfflineAccessGranted()`/`grantOfflineAccess()` (a `localStorage` flag). `hosted.ts` now calls
-      `grantOfflineAccess()` immediately after the existing approval check passes (`approval ===
-"approved"`), so the flag is only ever set once a real approved sign-in has happened on this
-      device. `main.ts`'s routing now checks the flag before honoring `?offline=1` (or the
-      already-offline `navigator.onLine === false` fallback): ungranted, it strips the URL back to
-      bare and falls through to `launchHosted()`, which shows sign-in or "pending approval" exactly
-      like every other feature — never the offline lobby. The "Play offline" links on `SignIn.vue` and
-      `PendingApproval.vue` are removed outright so an unapproved user doesn't even see the option.
-      Once approved, offline access stays granted on that device even if the user later goes fully
-      offline, since the flag was already written during their one approved online session.
-      667/667 non-Lost-Fleet-adjacent viewer tests unaffected; the 2 pre-existing `SetupPreview`
+             Fixed with a device-local flag rather than a server check, since offline mode is explicitly
+             designed to need neither an account nor a connection: `hosted/offline-access.ts` adds
+             `isOfflineAccessGranted()`/`grantOfflineAccess()` (a `localStorage` flag). `hosted.ts` now calls
+             `grantOfflineAccess()` immediately after the existing approval check passes (`approval ===
+
+      "approved"`), so the flag is only ever set once a real approved sign-in has happened on this
+ device. `main.ts`'s routing now checks the flag before honoring `?offline=1`(or the
+ already-offline`navigator.onLine === false`fallback): ungranted, it strips the URL back to
+ bare and falls through to`launchHosted()`, which shows sign-in or "pending approval" exactly
+ like every other feature — never the offline lobby. The "Play offline" links on `SignIn.vue`and
+`PendingApproval.vue`are removed outright so an unapproved user doesn't even see the option.
+ Once approved, offline access stays granted on that device even if the user later goes fully
+ offline, since the flag was already written during their one approved online session.
+ 667/667 non-Lost-Fleet-adjacent viewer tests unaffected; the 2 pre-existing`SetupPreview`
       rotation-validation failures are unrelated (reproduce on a clean pre-change checkout too).
 
-      Four specs were inverted to match (both panels' "defaults to open" and "persists the closed
-      preference" cases), and `GameNavPanel.spec.ts`'s `mountDesktop` helper now seeds the stored
-      preference so the content-rendering tests still have a panel to look at. Full viewer run: 667
-      passing with only the same two documented setup-preview rotation/German-rule failures,
-      identical to a stashed baseline run on the same checkout.
+             Four specs were inverted to match (both panels' "defaults to open" and "persists the closed
+             preference" cases), and `GameNavPanel.spec.ts`'s `mountDesktop` helper now seeds the stored
+             preference so the content-rendering tests still have a panel to look at. Full viewer run: 667
+             passing with only the same two documented setup-preview rotation/German-rule failures,
+             identical to a stashed baseline run on the same checkout.
+
+132.  ✅ **Direct-invite games now randomize seats too (viewer v5.49.3, 2026-08-04, owner-reported):**
+      the owner noticed they were always seated first when creating a direct-invite game and asked
+      whether seats were randomized. Open-lobby games already were (migration
+      `0025_randomize_seats_on_lobby_fill.sql`, Gaia 16 — `join_open_game_seat` shuffles the `seat`
+      column once every seat is claimed), but direct invite never goes through that join flow: all
+      seats are known at `create_game` time, and `CreateGame.vue`'s `createGame()` built the seats
+      array with the creator hardcoded at index 0 (`{ userId: this.myUserId, ... }` first, then
+      `selectedInvitees` in selection order) — not a coincidence, a real gap. Fixed with a new
+      `shuffleSeats()` (Fisher-Yates, `new-game.ts`) applied to that array before it's passed to
+      `buildCreateGameParams()`; `buildCreateGameParams()` itself stays order-preserving (its existing
+      tests assert exact `p_invites` seat order for a given `seats` array), so the shuffle happens at
+      the call site rather than inside it. `p_current_seat` is unaffected since it's engine-derived
+      from `options`/seed only, never from which human sits where — same reasoning migration 0025's
+      comment already documents for its own shuffle. The direct-invite help text ("seat 1 is you") was
+      corrected to say seats are randomized. Full viewer run: 711 passing, same 2 pre-existing
+      `SetupPreview` rotation/German-rules failures (reproduce on a clean pre-change `master` too).
 
 ## Still MISSING — only one art-only item left
 
