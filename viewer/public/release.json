@@ -1,7 +1,22 @@
 {
-  "version": "5.50.1",
+  "version": "5.50.2",
   "releasedAt": "2026-08-04",
   "entries": [
+    {
+      "version": "5.50.2",
+      "releasedAt": "2026-08-04",
+      "kind": "update",
+      "title": "Readable bid form and an auction result banner",
+      "impact": "",
+      "changes": [
+        "While bidding in a Silent Auction you can now open each faction's sheet - the three names are buttons, and the bid boxes line up",
+        "When the auction resolves, a dismissible banner shows who won what for how much, with the full log one click away"
+      ],
+      "userChanges": [
+        "While bidding in a Silent Auction you can now open each faction's sheet - the three names are buttons, and the bid boxes line up",
+        "When the auction resolves, a dismissible banner shows who won what for how much, with the full log one click away"
+      ]
+    },
     {
       "version": "5.50.1",
       "releasedAt": "2026-08-04",
