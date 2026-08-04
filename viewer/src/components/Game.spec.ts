@@ -1,4 +1,4 @@
-import Engine, { Building, Command, Faction, Phase, Planet, PlayerEnum } from "@gaia-project/engine";
+import Engine, { AuctionVariant, Building, Command, Faction, Phase, Planet, PlayerEnum } from "@gaia-project/engine";
 import { fireEvent } from "@testing-library/vue";
 import { expect } from "chai";
 import Vue from "vue";
@@ -445,6 +445,10 @@ describe("Game", () => {
 
     const store = makeStore();
     const vm = new (Vue.extend(Game as any))({ store }) as any;
+    // This test is about the desktop layout, and jsdom has no matchMedia, so isDesktopViewport()
+    // defaults to mobile - where round 0 deliberately moves the buttons out of this column (see
+    // `setupActionsAtTop`). Say so explicitly rather than depending on the default.
+    vm.isDesktopViewport = true;
     vm.handleData(engine);
     vm.$mount();
     document.body.appendChild(vm.$el);
@@ -687,6 +691,48 @@ describe("Game", () => {
       expect(dispatched).to.deep.equal([{ type: "editPremove", payload: { seat: 1, seq: 1, move: "nevlas up nav." } }]);
 
       vm.$el.remove();
+      vm.$destroy();
+    });
+  });
+
+  describe("round 0 action placement", () => {
+    // `setupActionsAtTop` is the switch that decides whether the pick/ban action area renders under
+    // the setup status strip (mobile) or stays in the commands column (desktop) - the two mount
+    // points are mutually exclusive on it, so exactly one Commands instance ever exists.
+    function setupVm(moves: string[] = []) {
+      const engine = new Engine(["init 3 round0-placement", ...moves], { auction: AuctionVariant.Silent });
+      engine.generateAvailableCommandsIfNeeded();
+      const store = makeStore();
+      store.commit("receiveData", engine);
+      return new (Vue.extend(Game as any))({ store }) as any;
+    }
+
+    it("moves the action area to the top on mobile during round 0", () => {
+      const vm = setupVm();
+      vm.isDesktopViewport = false;
+
+      expect(vm.engine.phase).to.equal(Phase.SetupFactionBan);
+      expect(vm.setupActionsAtTop).to.equal(true);
+
+      vm.$destroy();
+    });
+
+    it("leaves the desktop layout alone", () => {
+      const vm = setupVm();
+      vm.isDesktopViewport = true;
+
+      expect(vm.setupActionsAtTop).to.equal(false);
+
+      vm.$destroy();
+    });
+
+    it("stops moving it once round 1 starts, even on mobile", () => {
+      const vm = setupVm();
+      vm.isDesktopViewport = false;
+      vm.engine.round = 1;
+
+      expect(vm.setupActionsAtTop).to.equal(false);
+
       vm.$destroy();
     });
   });

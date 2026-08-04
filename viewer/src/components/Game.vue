@@ -30,6 +30,19 @@
       <div class="row" v-if="!ended">
         <div class="col-12">
           <SetupStatus />
+          <!-- Mobile only (`setupActionsAtTop`): during round 0 the pick/ban buttons move up here,
+               directly under the status strip, instead of sitting below the whole map+research row
+               where they normally live. Desktop keeps them in the commands column, unchanged. The
+               matching `v-if` on the commands column's own <Commands> keeps exactly one of the two
+               mounted - never both, which would duplicate its element ids and modals. -->
+          <Commands
+            v-if="setupActionsAtTop && canPlay"
+            @command="handleCommand"
+            :currentMove="currentMove"
+            :hide-spacer="true"
+            @sticky-bar-height="stickyBarHeight = $event"
+          />
+          <FactionBrowser v-else-if="setupActionsAtTop" />
         </div>
       </div>
       <div
@@ -138,7 +151,7 @@
           </div>
           <Commands
             @command="handleCommand"
-            v-if="canPlay"
+            v-if="canPlay && !setupActionsAtTop"
             :currentMove="currentMove"
             :hide-spacer="true"
             :show-premove-cancel="premoveMode"
@@ -197,6 +210,10 @@
             Played automatically from your queue{{ premovePlayedNoticeSuffix }}: {{ premovePlayedNotice.move }}
             <button type="button" class="btn btn-link btn-sm p-0" @click="dismissPremovePlayedNotice">Dismiss</button>
           </div>
+          <!-- Desktop's off-turn round-0 slot (mobile's is up under the status strip). Placed after
+               the block above rather than inside its v-if/v-else-if chain, so the offline-mirror
+               "waiting for X" message still gets to render alongside it. -->
+          <FactionBrowser v-if="!canPlay && !setupActionsAtTop" />
         </div>
       </div>
       <AdvancedLog
@@ -278,7 +295,9 @@ import LostFleetShips, { SHIP_BOARD_VIEWBOX_WIDTH } from "./LostFleetShips.vue";
 import LostFleetNotes from "./LostFleetNotes.vue";
 import TurnOrder from "./TurnOrder.vue";
 import SetupStatus from "./SetupStatus.vue";
-import { BASE_RESEARCH_BOARD_HEIGHT, researchBoardHeight } from "../logic/utils";
+import FactionBrowser from "./FactionBrowser.vue";
+import { BASE_RESEARCH_BOARD_HEIGHT, isBeforeRound1, researchBoardHeight } from "../logic/utils";
+import { isDesktopViewport, watchDesktopViewport } from "../hosted/viewport";
 import { parseCommands } from "../logic/recent";
 import { LogPlacement } from "../data";
 import { ExecuteBack } from "../logic/buttons/types";
@@ -322,6 +341,7 @@ const BOARD_ACTION_BASE_X = -20;
     LostFleetNotes,
     TurnOrder,
     SetupStatus,
+    FactionBrowser,
     Rules,
     Table,
     PremoveBar,
@@ -332,6 +352,7 @@ const BOARD_ACTION_BASE_X = -20;
 export default class Game extends Vue {
   public currentMove = "";
   public hideLog = false;
+  isDesktopViewport = isDesktopViewport();
   clearCurrentMove = false;
   // Mirrors Commands.vue's own measured mobile sticky-bar height (see its `hide-spacer` prop /
   // `sticky-bar-height` event) so the reserved space for it can render at the end of the page
@@ -386,6 +407,14 @@ export default class Game extends Vue {
       }
     });
     this.$on("hook:beforeDestroy", () => undoListener());
+
+    // Only fires when the desktop/mobile breakpoint is actually crossed, so `setupActionsAtTop`
+    // (which moves the round-0 action area between two mount points) can't thrash on every resize
+    // pixel and remount Commands mid-turn.
+    const viewportListener = watchDesktopViewport((isDesktop) => {
+      this.isDesktopViewport = isDesktop;
+    });
+    this.$on("hook:beforeDestroy", () => viewportListener());
   }
 
   created(this: Game) {
@@ -626,6 +655,13 @@ export default class Game extends Vue {
   // plain full-width col-12 every other game mode still uses.
   get commandsColumnClass(): string[] {
     return this.engine.options.lostFleet ? ["order-2", "order-md-1", "col-12", "col-md-7"] : ["col-12"];
+  }
+
+  /** Mobile-only: during round 0 the pick/ban action area is rendered directly under the setup
+   * status strip instead of in the commands column, which on mobile sits below the entire
+   * map+research row. Desktop layout is unchanged. */
+  get setupActionsAtTop(): boolean {
+    return !this.isDesktopViewport && !this.ended && isBeforeRound1(this.engine);
   }
 
   get canPlay() {

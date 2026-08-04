@@ -5401,6 +5401,37 @@ found"` — proving the function authenticates and accepts the chat payload shap
       passing (710 baseline + 8, with 2 moved out of `Commands.spec.ts` and rewritten), same two
       pre-existing `SetupPreview` rotation failures as #131/#134.
 
+      **Same-session follow-up (viewer v5.50.1): faction sheets are readable off turn, and on mobile
+      the round-0 buttons sit under the strip.** Owner: _"even though it's not your turn still make it
+      so you have all faction buttons available so you can click in on them to see their faction
+      sheets. You should just not have the confirm pick or confirm ban button exposed ... move that
+      whole round 0 buttons container on mobile right under the status bar ... Keep whatever it is on
+      desktop."_ New `FactionBrowser.vue` renders the same faction buttons for a player who isn't on
+      turn during `SetupFactionBan`/`SetupFaction`, reading the very list the player on turn is being
+      offered (`availableCommands`' `BanFaction`/`ChooseFaction` data — the same for everyone; only
+      the right to act on it differs). Clicking one opens the same `FactionInfoCard` sheet in a modal
+      whose footer is a single **Close** — no `MoveButton`, no command, so there is nothing to
+      accidentally commit — under a "Not your turn to ban/pick — tap a faction to read its sheet"
+      line.
+
+      Placement is switched by `Game.vue`'s new `setupActionsAtTop` (mobile **and** round 0), which
+      moves the whole action area — `Commands` on turn, `FactionBrowser` off turn — into the `col-12`
+      directly under `SetupStatus`, and is `false` on desktop so that layout is untouched. The two
+      mount points carry mutually exclusive `v-if`s, so exactly one `Commands` is ever mounted (two
+      would duplicate its element ids and modals). Viewport state comes from `hosted/viewport.ts`'s
+      `isDesktopViewport`/`watchDesktopViewport`, which only fires on a real breakpoint crossing, so
+      resizing can't remount `Commands` mid-turn.
+
+      **Gotcha this exposed:** jsdom has no `matchMedia`, so `isDesktopViewport()` returns false and
+      every Game test now runs as _mobile_ by default — which relocates the round-0 buttons out of the
+      commands column. `Game.spec.ts`'s "narrows the buttons row to the map's own width" test asserts
+      a desktop layout and started failing; it now sets `vm.isDesktopViewport = true` explicitly. Any
+      future Game test that cares about desktop layout must do the same. Verified in a real browser at
+      390x844 and 1400x1000, on turn and with a seat lock forced to an off-turn seat: mobile puts the
+      action area 8px under the strip in all four states, desktop leaves it at its usual y≈770.
+      Viewer 728 passing (721 + 4 `FactionBrowser` + 3 placement) on this change's own base
+      (`daa727a`); re-run after the rebase onto master's #136 chat-read tree below.
+
 136.  ✅ **Read checks in chat — see who has read the thread so far (2026-08-04, viewer v5.50.0, owner
       request):** both chats now carry read receipts. Under each message sits the set of people whose
       read position lands on it (small initials chips, right-aligned), and the newest message also
