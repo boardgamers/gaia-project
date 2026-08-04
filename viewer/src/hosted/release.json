@@ -1,7 +1,18 @@
 {
-  "version": "5.49.0",
+  "version": "5.49.1",
   "releasedAt": "2026-08-04",
   "entries": [
+    {
+      "version": "5.49.1",
+      "releasedAt": "2026-08-04",
+      "kind": "fix",
+      "title": "Offline access gated by approval",
+      "impact": "",
+      "changes": [
+        "Offline pass-and-play is no longer reachable before the host approves your account (or before signing in)"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.49.0",
       "releasedAt": "2026-08-04",
