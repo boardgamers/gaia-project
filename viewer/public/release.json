@@ -1,7 +1,21 @@
 {
-  "version": "5.49.3",
+  "version": "5.49.4",
   "releasedAt": "2026-08-04",
   "entries": [
+    {
+      "version": "5.49.4",
+      "releasedAt": "2026-08-04",
+      "kind": "update",
+      "title": "Silent Auction explainer",
+      "impact": "",
+      "changes": [
+        "The in-game Silent Auction guide now walks through a complete example auction, step by step",
+        "Fixed the Silent Auction explainer's inverted advice (it said to bid 0 on your favourite faction; a bid is the VP you are willing to pay, so your favourite takes your highest bid), rewrote it more compactly, and pinned its worked example to the engine's real resolveSilentAuction output with a new test"
+      ],
+      "userChanges": [
+        "The in-game Silent Auction guide now walks through a complete example auction, step by step"
+      ]
+    },
     {
       "version": "5.49.3",
       "releasedAt": "2026-08-04",
@@ -272,7 +286,9 @@
         "In dark mode the chess and renju boards are now dark too, instead of staying light",
         "Moved the chess square/piece and renju felt/stone colors onto theme-scoped CSS variables and gave the dark theme a mid-slate board with opposite-ink hairline edges on every piece and stone"
       ],
-      "userChanges": ["In dark mode the chess and renju boards are now dark too, instead of staying light"]
+      "userChanges": [
+        "In dark mode the chess and renju boards are now dark too, instead of staying light"
+      ]
     },
     {
       "version": "5.44.0",
@@ -486,7 +502,9 @@
         "The chess drawer now uses two equal circular page dots tucked into the bottom-right corner.",
         "Removed the active indicator's pill expansion and moved the zero-layout-space control away from tile content."
       ],
-      "userChanges": ["The chess drawer now uses two equal circular page dots tucked into the bottom-right corner."]
+      "userChanges": [
+        "The chess drawer now uses two equal circular page dots tucked into the bottom-right corner."
+      ]
     },
     {
       "version": "5.37.7",
@@ -512,7 +530,9 @@
         "The chess board now highlights the previous move's two squares and draws an arrow between them.",
         "Persists each chess move's origin and destination per Gaia game and offline game so the marker survives reloads and Realtime sync."
       ],
-      "userChanges": ["The chess board now highlights the previous move's two squares and draws an arrow between them."]
+      "userChanges": [
+        "The chess board now highlights the previous move's two squares and draws an arrow between them."
+      ]
     },
     {
       "version": "5.37.5",
@@ -712,8 +732,12 @@
       "kind": "update",
       "title": "Bigger Lost Fleet faction wheel",
       "impact": "",
-      "changes": ["The Lost Fleet faction color wheel is now as large as it can be without covering the board"],
-      "userChanges": ["The Lost Fleet faction color wheel is now as large as it can be without covering the board"]
+      "changes": [
+        "The Lost Fleet faction color wheel is now as large as it can be without covering the board"
+      ],
+      "userChanges": [
+        "The Lost Fleet faction color wheel is now as large as it can be without covering the board"
+      ]
     },
     {
       "version": "5.36.10",
@@ -1033,7 +1057,9 @@
       "kind": "fix",
       "title": "Tooltip hover/click refinement",
       "impact": "",
-      "changes": ["Restored hover-to-preview tooltips on desktop mice, keeping tap-to-toggle on touch devices"],
+      "changes": [
+        "Restored hover-to-preview tooltips on desktop mice, keeping tap-to-toggle on touch devices"
+      ],
       "userChanges": []
     },
     {
@@ -1054,7 +1080,9 @@
       "kind": "fix",
       "title": "Fix artifact/Federation overlap",
       "impact": "",
-      "changes": ["Fixed the Lost Fleet artifact tokens overlapping the ship's Federation tile"],
+      "changes": [
+        "Fixed the Lost Fleet artifact tokens overlapping the ship's Federation tile"
+      ],
       "userChanges": []
     },
     {
@@ -1208,8 +1236,12 @@
       "kind": "update",
       "title": "Fix mobile auto-leech/chat overlap",
       "impact": "",
-      "changes": ["Fixed the auto-leech dropdown overlapping the floating chat button on mobile"],
-      "userChanges": ["Fixed the auto-leech dropdown overlapping the floating chat button on mobile"]
+      "changes": [
+        "Fixed the auto-leech dropdown overlapping the floating chat button on mobile"
+      ],
+      "userChanges": [
+        "Fixed the auto-leech dropdown overlapping the floating chat button on mobile"
+      ]
     },
     {
       "version": "5.25.0",
@@ -1245,8 +1277,12 @@
       "kind": "update",
       "title": "In-game chat parity with Lobby Chat",
       "impact": "",
-      "changes": ["In-game chat now shows a timestamp and each sender's online/offline status, matching Lobby Chat"],
-      "userChanges": ["In-game chat now shows a timestamp and each sender's online/offline status, matching Lobby Chat"]
+      "changes": [
+        "In-game chat now shows a timestamp and each sender's online/offline status, matching Lobby Chat"
+      ],
+      "userChanges": [
+        "In-game chat now shows a timestamp and each sender's online/offline status, matching Lobby Chat"
+      ]
     },
     {
       "version": "5.23.0",
@@ -1492,7 +1528,9 @@
       "kind": "fix",
       "title": "Lobby crash hotfix",
       "impact": "",
-      "changes": ["Fixed a crash in the lobby's game-loading code (rpc().catch is not a function)"],
+      "changes": [
+        "Fixed a crash in the lobby's game-loading code (rpc().catch is not a function)"
+      ],
       "userChanges": []
     },
     {
@@ -1595,7 +1633,9 @@
         "Open-lobby games now show a green X/Y seats-joined badge where the round number goes, instead of an empty slot.",
         "Move age no longer disappears if the client clock is even slightly behind the server's."
       ],
-      "userChanges": ["Open lobby games show a seats-joined badge"]
+      "userChanges": [
+        "Open lobby games show a seats-joined badge"
+      ]
     },
     {
       "version": "5.16.0",
@@ -1626,8 +1666,12 @@
       "kind": "update",
       "title": "Private access control",
       "impact": "",
-      "changes": ["New accounts start unapproved and see no game data until approved from Settings > Manage users"],
-      "userChanges": ["New accounts need admin approval before they can see any games"]
+      "changes": [
+        "New accounts start unapproved and see no game data until approved from Settings > Manage users"
+      ],
+      "userChanges": [
+        "New accounts need admin approval before they can see any games"
+      ]
     },
     {
       "version": "5.14.8",
@@ -1664,7 +1708,9 @@
         "The lobby now opens on public tables first, and open-table visibility is backed by the latest SQL policy update.",
         "The duplicate top turn banner is gone, and full setup previews use the main game layout so maps load more reliably."
       ],
-      "userChanges": ["Lobby now shows public tables first"]
+      "userChanges": [
+        "Lobby now shows public tables first"
+      ]
     },
     {
       "version": "5.14.5",
@@ -1697,15 +1743,21 @@
         "Open lobby tables now show one join action with joined player names instead of a full seat-by-seat button list.",
         "Setup previews now load the map and board art more reliably on the full-page lobby screen."
       ],
-      "userChanges": ["Open lobby tables show one join button with joined player names"]
+      "userChanges": [
+        "Open lobby tables show one join button with joined player names"
+      ]
     },
     {
       "version": "5.14.2",
       "releasedAt": "2026-07-08",
       "kind": "feature",
       "title": "Full-page lobby previews",
-      "changes": ["Open lobby tables now open on their own page with compact seat controls above the setup preview."],
-      "userChanges": ["Open lobby tables now open on their own page with seat controls"]
+      "changes": [
+        "Open lobby tables now open on their own page with compact seat controls above the setup preview."
+      ],
+      "userChanges": [
+        "Open lobby tables now open on their own page with seat controls"
+      ]
     },
     {
       "version": "5.14.1",
@@ -1755,14 +1807,18 @@
         "Desktop devices still get turn alerts even while the game is open.",
         "Mobile and installed PWA sessions keep duplicate-alert suppression while you are actively playing."
       ],
-      "userChanges": ["Turn notifications now work correctly on both desktop and mobile"]
+      "userChanges": [
+        "Turn notifications now work correctly on both desktop and mobile"
+      ]
     },
     {
       "version": "5.13.1",
       "releasedAt": "2026-07-07",
       "kind": "fix",
       "title": "Correct fourth exploration reward",
-      "changes": ["The fourth spaceship exploration slot in 4-player Lost Fleet games now charges exactly 3 power."],
+      "changes": [
+        "The fourth spaceship exploration slot in 4-player Lost Fleet games now charges exactly 3 power."
+      ],
       "userChanges": []
     },
     {
@@ -1770,8 +1826,12 @@
       "releasedAt": "2026-07-07",
       "kind": "feature",
       "title": "In-app update prompt",
-      "changes": ["Hosted tabs can detect when a newer version was deployed and prompt you to reload into it."],
-      "userChanges": ["The app can now prompt you to reload when a new version is available"]
+      "changes": [
+        "Hosted tabs can detect when a newer version was deployed and prompt you to reload into it."
+      ],
+      "userChanges": [
+        "The app can now prompt you to reload when a new version is available"
+      ]
     }
   ]
 }
