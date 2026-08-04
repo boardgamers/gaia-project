@@ -296,6 +296,43 @@ describe("ChatNotesPanel", () => {
     restoreMobile();
   });
 
+  it("pins the mobile panel to window.visualViewport so the keyboard can't expose the board underneath", async () => {
+    const restoreMobile = mockDesktopViewport(false);
+    const listeners: Record<string, () => void> = {};
+    const fakeVisualViewport = {
+      offsetTop: 0,
+      height: 640,
+      addEventListener: (type: string, cb: () => void) => {
+        listeners[type] = cb;
+      },
+      removeEventListener: (type: string) => {
+        delete listeners[type];
+      },
+    };
+    const previousVv = (window as any).visualViewport;
+    (window as any).visualViewport = fakeVisualViewport;
+
+    const wrapper = mount(ChatNotesPanel as any, {
+      propsData: { client: makeClient(), gameId: "game-1", userId: "user-1" },
+    });
+    await Vue_nextTick(wrapper);
+    await wrapper.find(".chat-notes__toggle").trigger("click");
+    await Vue_nextTick(wrapper);
+    expect(wrapper.find(".chat-notes__panel").attributes("style")).to.include("height: 640px");
+
+    // Simulate the on-screen keyboard opening: the visible area shrinks and shifts.
+    fakeVisualViewport.height = 380;
+    fakeVisualViewport.offsetTop = 20;
+    listeners.resize();
+    await Vue_nextTick(wrapper);
+    expect(wrapper.find(".chat-notes__panel").attributes("style")).to.include("height: 380px");
+    expect(wrapper.find(".chat-notes__panel").attributes("style")).to.include("top: 20px");
+
+    wrapper.destroy();
+    (window as any).visualViewport = previousVv;
+    restoreMobile();
+  });
+
   it("persists the opened preference on desktop and honors it on the next mount, but never applies it on mobile", async () => {
     const restoreDesktop = mockDesktopViewport(true);
     const wrapper = mount(ChatNotesPanel as any, {

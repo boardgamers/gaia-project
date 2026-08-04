@@ -13,7 +13,7 @@
       <span v-if="hasUnread" class="chat-notes__badge"></span>
     </button>
 
-    <div v-if="open" class="chat-notes__panel">
+    <div v-if="open" class="chat-notes__panel" :style="mobileViewportStyle">
       <div class="chat-notes__header">
         <button type="button" class="chat-notes__back" @click="closePanel" aria-label="Back to game">&larr;</button>
         <!-- Notes moved out to the Lost Fleet sidebar's sticky sheet (LostFleetNotes.vue) - this panel
@@ -50,7 +50,7 @@
         <form class="chat-notes__composer" @submit.prevent="sendMessage">
           <textarea
             v-model="draft"
-            rows="1"
+            rows="2"
             placeholder="Message this game's chat..."
             @keydown.enter.exact.prevent="sendMessage"
           ></textarea>
@@ -145,9 +145,25 @@ export default Vue.extend({
       stickyBarPoll: null as ReturnType<typeof setInterval> | null,
       channel: null as any,
       viewportUnwatch: null as (() => void) | null,
+      // Mobile only: mirrors window.visualViewport so the full-screen panel stays pinned to the
+      // area actually visible above the on-screen keyboard. Without this, opening the keyboard on
+      // iOS/Chrome can leave this `position: fixed` panel sized to the pre-keyboard layout
+      // viewport while the browser scrolls the page to keep the focused textarea in view, exposing
+      // a strip of the game board (faction buttons included) below the panel - so a tap meant for
+      // the composer/keyboard lands on the board instead. Recalculated on both `resize` (keyboard
+      // open/close, height change) and `scroll` (the same keyboard-avoidance scroll) events.
+      visualViewportTop: 0,
+      visualViewportHeight: 0,
+      handleVisualViewportChange: null as (() => void) | null,
     };
   },
   computed: {
+    mobileViewportStyle(): Record<string, string> {
+      if (this.isDesktop || !this.visualViewportHeight) {
+        return {};
+      }
+      return { top: `${this.visualViewportTop}px`, height: `${this.visualViewportHeight}px` };
+    },
     hasUnread(): boolean {
       if (this.open) {
         return false;
@@ -163,9 +179,17 @@ export default Vue.extend({
     await this.loadMuted();
     this.subscribeChat();
     this.startStickyBarWatch();
+    if (!this.isDesktop) {
+      this.startVisualViewportPin();
+    }
     this.viewportUnwatch = watchDesktopViewport((isDesktop) => {
       this.isDesktop = isDesktop;
       this.open = isDesktop && loadOpenPreference();
+      if (isDesktop) {
+        this.stopVisualViewportPin();
+      } else {
+        this.startVisualViewportPin();
+      }
     });
   },
   beforeDestroy() {
@@ -173,6 +197,7 @@ export default Vue.extend({
       this.viewportUnwatch();
       this.viewportUnwatch = null;
     }
+    this.stopVisualViewportPin();
     this.stickyBarObserver?.disconnect();
     if (this.stickyBarPoll) {
       clearInterval(this.stickyBarPoll);
@@ -182,6 +207,29 @@ export default Vue.extend({
     }
   },
   methods: {
+    startVisualViewportPin() {
+      const vv = typeof window !== "undefined" ? window.visualViewport : undefined;
+      if (!vv || this.handleVisualViewportChange) {
+        return;
+      }
+      const update = () => {
+        this.visualViewportTop = vv.offsetTop;
+        this.visualViewportHeight = vv.height;
+      };
+      this.handleVisualViewportChange = update;
+      vv.addEventListener("resize", update);
+      vv.addEventListener("scroll", update);
+      update();
+    },
+    stopVisualViewportPin() {
+      const vv = typeof window !== "undefined" ? window.visualViewport : undefined;
+      if (vv && this.handleVisualViewportChange) {
+        vv.removeEventListener("resize", this.handleVisualViewportChange);
+        vv.removeEventListener("scroll", this.handleVisualViewportChange);
+      }
+      this.handleVisualViewportChange = null;
+      this.visualViewportHeight = 0;
+    },
     isOnline(userId: string): boolean {
       return isUserOnline(this.presenceState, userId);
     },
@@ -525,8 +573,8 @@ export default Vue.extend({
   textarea {
     flex: 1;
     resize: none;
-    min-height: 2.2rem;
-    max-height: 6rem;
+    min-height: 3.6rem;
+    max-height: 8rem;
     border-radius: 0.4rem;
     border: 1px solid var(--ui-border-strong);
     background: var(--ui-input-bg);
