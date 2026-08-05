@@ -8,6 +8,20 @@ import PlayerData, { BrainstoneDest, effectiveRange, MaxLeech, Power } from "./s
 import Reward from "./src/reward";
 
 export { boardActions, FreeAction, freeActionConversions, ResourceConversion } from "./src/actions";
+export {
+  DEFAULT_PREFERENCE_SPLIT_BUDGET,
+  MAX_PREFERENCE_SPLIT_BUDGET,
+  MIN_PREFERENCE_SPLIT_BUDGET,
+  PreferenceSplitAllocation,
+  PreferenceSplitBid,
+  PreferenceSplitFactionSummary,
+  PreferenceSplitResult,
+  PREFERENCE_SPLIT_PLAYERS,
+  isValidPreferenceSplitBudget,
+  preferenceSplitBidError,
+  resolvePreferenceSplitAuction,
+  roundVictoryPoints,
+} from "./src/algorithms/preference-split-auction";
 export { conversionToFreeAction } from "./src/available/actions";
 export { canResearchField, canTakeAdvancedTechTile } from "./src/available/research";
 export { shipsInHex } from "./src/available/ships";

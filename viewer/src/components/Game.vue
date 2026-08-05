@@ -30,7 +30,12 @@
       <div class="row" v-if="!ended">
         <div class="col-12">
           <SilentAuctionSummary />
+          <PreferenceSplitSummary />
           <SetupStatus />
+          <!-- The Preference Split Auction's bid form lives here rather than in Commands: all four
+               seats bid at once, so it must render for players the engine's turn pointer is not
+               currently on (which is what gates Commands' `canPlay`). -->
+          <PreferenceSplitBid @command="handleCommand" />
           <!-- Mobile only (`setupActionsAtTop`): during round 0 the pick/ban buttons move up here,
                directly under the status strip, instead of sitting below the whole map+research row
                where they normally live. Desktop keeps them in the commands column, unchanged. The
@@ -297,6 +302,8 @@ import LostFleetNotes from "./LostFleetNotes.vue";
 import TurnOrder from "./TurnOrder.vue";
 import SetupStatus from "./SetupStatus.vue";
 import FactionBrowser from "./FactionBrowser.vue";
+import PreferenceSplitBid from "./PreferenceSplitBid.vue";
+import PreferenceSplitSummary from "./PreferenceSplitSummary.vue";
 import SilentAuctionSummary from "./SilentAuctionSummary.vue";
 import { BASE_RESEARCH_BOARD_HEIGHT, isBeforeRound1, researchBoardHeight } from "../logic/utils";
 import { isDesktopViewport, watchDesktopViewport } from "../hosted/viewport";
@@ -345,6 +352,8 @@ const BOARD_ACTION_BASE_X = -20;
     SetupStatus,
     FactionBrowser,
     SilentAuctionSummary,
+    PreferenceSplitSummary,
+    PreferenceSplitBid,
     Rules,
     Table,
     PremoveBar,

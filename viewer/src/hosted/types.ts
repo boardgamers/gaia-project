@@ -69,6 +69,19 @@ export type PremoveMode = "sequential" | "priority";
 export type PremoveRow = { seat: number; seq: number; move: string; mode: PremoveMode; queued_move_count: number };
 export type PremoveFailureRow = { id: string; seat: number; move: string; reason: string; read_at: string | null };
 
+// Preference Split Auction (engine AuctionVariant.PreferenceSplit) - the sealed-bid side channel.
+// Bids do NOT go through commitTurn while the auction is open: they are held server-side
+// (auction_sealed_bids, migration 20260805120000) where RLS shows a player only their own row, and
+// become four ordinary moves in one transaction once everybody has submitted. See that migration's
+// header for why the ordinary move log cannot be used here.
+export type SealedBidEntry = { faction: string; points: number };
+export type SealedBidStatus = {
+  playerCount: number;
+  budget: number;
+  /** Which seats have submitted. Progress only - never carries anybody's points. */
+  submittedSeats: number[];
+};
+
 // The data layer the game host needs. Implemented for real over supabase-js
 // in supabase-client.ts and faked in host.spec.ts.
 export interface HostedBackend {
@@ -94,6 +107,16 @@ export interface HostedBackend {
   // Phase 2 (offline auto-leech) - persists the client's existing auto-charge preference per seat
   // so resolve-automation can honor it while the player is offline.
   setAutoCharge(gameId: string, seat: number, pref: string): Promise<void>;
+  /** Preference Split Auction: submission progress. Safe to call from any seat at any time. */
+  fetchSealedBidStatus(gameId: string): Promise<SealedBidStatus>;
+  /** Submits one seat's whole split. Returns how many seats have submitted afterwards. */
+  submitSealedBid(gameId: string, seat: number, bids: SealedBidEntry[]): Promise<number>;
+  /** Every seat's submitted split. RLS only ever returns rows once all of them are in (before that
+   * it returns just the caller's own), so this is safe to call and useless to call early. */
+  fetchSealedBids(gameId: string): Promise<{ seat: number; bids: SealedBidEntry[] }[]>;
+  /** Appends every sealed bid to the move log at once. Returns the number of moves appended, or 0
+   * if another client had already done it. Throws `seq_conflict` when this client was racing one. */
+  revealSealedBids(gameId: string, seq: number, nextSeat: number): Promise<number>;
 }
 
 export type HostedCallbacks = {
@@ -110,6 +133,9 @@ export type HostedCallbacks = {
   onError?: (message: string) => void;
   /** Refetched on load and whenever a moves row arrives (PREMOVE_PLAN.md §3's refresh rule). */
   onPremoveState?: (premoves: PremoveRow[], failures: PremoveFailureRow[]) => void;
+  /** Preference Split Auction: submission progress while the bid phase is open. Progress only -
+   * never anybody's points, which is the whole point of the sealed table. */
+  onSealedBidState?: (status: SealedBidStatus) => void;
   /** Phase 3 (§10.6) - fired whenever a queued premove is the thing that just played (fast-path
    * success only - the offline edge function's own plays are noticed the same way on the next
    * refresh, since the consumed row simply vanished). Quiet, in-app only: a log tag / subtle toast,

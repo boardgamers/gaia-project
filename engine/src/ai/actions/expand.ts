@@ -21,11 +21,7 @@ import {
 import { tinkeringTileSpec } from "../../factions";
 import { effectiveRange } from "../../player-data";
 import Reward from "../../reward";
-import {
-  claimableSpaceshipFederations,
-  spaceshipActionEffects,
-  SpaceshipActionType,
-} from "../../spaceships";
+import { claimableSpaceshipFederations, spaceshipActionEffects, SpaceshipActionType } from "../../spaceships";
 import { artifactTokenRewards } from "../../tiles/artifacts";
 import { federationRewards } from "../../tiles/federations";
 import { spaceshipFederationRewards } from "../../tiles/spaceship-federations";
@@ -87,7 +83,11 @@ function resourceAmounts(amounts: Map<Resource, number>): ResourceAmount[] {
     .map(([resource, amount]) => ({ resource, amount }));
 }
 
-function resourceFlow(costSpecs: string[] = [], rewardSpecsInput: string[] = [], effects: string[] = []): CandidateResourceFlow {
+function resourceFlow(
+  costSpecs: string[] = [],
+  rewardSpecsInput: string[] = [],
+  effects: string[] = []
+): CandidateResourceFlow {
   const costs = new Map<Resource, number>();
   const rewards = new Map<Resource, number>();
   const deferred = [...effects];
@@ -489,9 +489,7 @@ function expandCommand(
       ];
 
     case Command.EndTurn:
-      return [
-        makeCandidate(Command.EndTurn, actor, phase, subphase, {}, resourceFlow(), [], Command.EndTurn),
-      ];
+      return [makeCandidate(Command.EndTurn, actor, phase, subphase, {}, resourceFlow(), [], Command.EndTurn)];
 
     case Command.ExamineArtifact:
       return [
@@ -535,7 +533,8 @@ function expandCommand(
       const candidates: AtomicDecisionCandidate[] = [];
       for (const federation of command.data.federations) {
         const satellites = satelliteMetadata(engine, actor, federation.hexes);
-        const satelliteCostResource = engine.player(actor).faction === Faction.Ivits ? Resource.Qic : Resource.GainToken;
+        const satelliteCostResource =
+          engine.player(actor).faction === Faction.Ivits ? Resource.Qic : Resource.GainToken;
         for (const tile of command.data.tiles) {
           const specs = federationRewardSpecs(tile);
           const spaceship = claimable.find((entry) => entry.federation === tile)?.ship ?? null;
@@ -577,7 +576,9 @@ function expandCommand(
     case Command.Pass: {
       const boosters = command.data.boosters;
       if (boosters.length === 0) {
-        return [makeCandidate(Command.Pass, actor, phase, subphase, { booster: null }, resourceFlow(), [], Command.Pass)];
+        return [
+          makeCandidate(Command.Pass, actor, phase, subphase, { booster: null }, resourceFlow(), [], Command.Pass),
+        ];
       }
       return boosters.map((booster) =>
         makeCandidate(
@@ -659,7 +660,8 @@ function expandCommand(
 
     case Command.Spend:
       return command.data.acts.reduce((candidates, action) => {
-        const multipliers = action.range && action.range.length > 0 ? Array.from(new Set(action.range)).sort((a, b) => a - b) : [1];
+        const multipliers =
+          action.range && action.range.length > 0 ? Array.from(new Set(action.range)).sort((a, b) => a - b) : [1];
         for (const multiplier of multipliers) {
           const cost = scaleRewardSpec(action.cost, multiplier);
           const income = scaleRewardSpec(action.income, multiplier);
@@ -718,6 +720,7 @@ function expandCommand(
     case Command.Bid:
     case Command.Init:
     case Command.MoveShip:
+    case Command.PreferenceBid:
     case Command.RotateSectors:
     case Command.Setup:
     case Command.SilentBid:

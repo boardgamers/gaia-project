@@ -1,5 +1,12 @@
 import assert from "assert";
 import { uniq } from "lodash";
+import {
+  isValidPreferenceSplitBudget,
+  MAX_PREFERENCE_SPLIT_BUDGET,
+  MIN_PREFERENCE_SPLIT_BUDGET,
+  preferenceSplitBidError,
+  PREFERENCE_SPLIT_PLAYERS,
+} from "../algorithms/preference-split-auction";
 import { AvailableCommand } from "../available/types";
 import Engine, { AuctionVariant } from "../engine";
 import { BoardAction, Command, Faction, Player as PlayerEnum } from "../enums";
@@ -22,6 +29,24 @@ export function moveInit(engine: Engine, players: number, seed: string) {
     !(engine.options.lostFleet && engine.options.customBoardSetup),
     "Custom (drafted) board setup is not supported with the Lost Fleet expansion"
   );
+  if (engine.options.auction === AuctionVariant.PreferenceSplit) {
+    // Both preconditions of the variant, checked at the earliest possible moment (a game that
+    // reached its bid phase before anyone noticed would have no legal way forward). The faction
+    // count follows from the player count: the pick round gives exactly one distinct faction per
+    // player, which `resolvePreferenceSplitAuction` re-asserts before it resolves anything.
+    assert(
+      players === PREFERENCE_SPLIT_PLAYERS,
+      `The Preference Split Auction needs exactly ${PREFERENCE_SPLIT_PLAYERS} players and ${PREFERENCE_SPLIT_PLAYERS} factions, got ${players} players`
+    );
+    assert(
+      isValidPreferenceSplitBudget(engine.preferenceSplitBudget),
+      `The Preference Split Auction's bid budget must be a whole number between ${MIN_PREFERENCE_SPLIT_BUDGET} and ${MAX_PREFERENCE_SPLIT_BUDGET}, got ${engine.options.auctionBudget}`
+    );
+    assert(
+      !engine.options.randomFactions,
+      "The Preference Split Auction cannot be combined with forced random factions"
+    );
+  }
 
   engine.map = new SpaceMap(
     players,
@@ -190,5 +215,42 @@ export function moveSilentBid(
 
   for (const [faction, bid] of pairs) {
     engine.silentAuctionBids.push({ player, faction: faction as Faction, max: +bid });
+  }
+}
+
+/**
+ * A Preference Split Auction submission: one player's entire budget split, entered secretly and
+ * recorded in a single move, e.g. "p1 preferenceBid itars 20 taklons 12 xenos 6 gleens 2".
+ *
+ * Validated here rather than only against `command.data` because these numbers decide both who
+ * gets which faction and what everybody pays: the four amounts must be whole, non-negative, cover
+ * every faction up for auction exactly once, and add up to exactly the game's budget. The same
+ * check runs on replay (unlike the available-command check, which `engine.replay` skips) via
+ * `preferenceSplitBidError`, so a hand-edited move log cannot smuggle in an illegal split.
+ */
+export function movePreferenceBid(
+  engine: Engine,
+  command: AvailableCommand<Command.PreferenceBid>,
+  player: PlayerEnum,
+  ...params: string[]
+) {
+  assert(params.length % 2 === 0, "The preferenceBid command needs an even number of parameters");
+
+  const entries: { faction: string; points: number }[] = [];
+  for (let i = 0; i < params.length; i += 2) {
+    assert(/^\d+$/.test(params[i + 1]), `"${params[i + 1]}" is not a whole, non-negative number of bid points`);
+    entries.push({ faction: params[i], points: +params[i + 1] });
+  }
+
+  assert(
+    !engine.preferenceSplitBids.some((bid) => bid.player === player),
+    `Player ${player} has already submitted their bids`
+  );
+
+  const error = preferenceSplitBidError(entries, engine.setup, engine.preferenceSplitBudget);
+  assert(error === null, error);
+
+  for (const entry of entries) {
+    engine.preferenceSplitBids.push({ player, faction: entry.faction as Faction, points: entry.points });
   }
 }

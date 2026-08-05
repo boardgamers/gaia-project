@@ -43,6 +43,7 @@
 
 <script lang="ts">
 import Vue from "vue";
+import { auctionLabel } from "./game-bar";
 import OpenGamePreview from "./OpenGamePreview.vue";
 import { fetchMyNickname } from "./profile";
 
@@ -117,7 +118,8 @@ export default Vue.extend({
         .subscribe();
     },
     auctionLabel(game: any): string {
-      return game.options?.auction === "silent" ? "Silent Auction" : "Standard";
+      // The lobby's own reference implementation, so a newly added variant shows up in both places.
+      return auctionLabel(game);
     },
     claimedSeats(game: any): number {
       return (game.players ?? []).filter((player: any) => !!player.user_id).length;

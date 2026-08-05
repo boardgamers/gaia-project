@@ -476,7 +476,9 @@ function assertCanonicalStateSupported(engine: Engine) {
   if (engine.options.banPhase) {
     throw new CanonicalStateError("unsupported faction-picking option: banPhase");
   }
-  if ([Phase.SetupFactionBan, Phase.SetupAuction, Phase.SetupSilentBid].includes(engine.phase)) {
+  if (
+    [Phase.SetupFactionBan, Phase.SetupAuction, Phase.SetupSilentBid, Phase.SetupPreferenceBid].includes(engine.phase)
+  ) {
     throw new CanonicalStateError(`unsupported faction-picking phase: ${engine.phase}`);
   }
   if ((engine.randomFactions?.length ?? 0) > 0) {

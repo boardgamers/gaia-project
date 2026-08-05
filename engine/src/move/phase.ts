@@ -1,6 +1,7 @@
 import assert from "assert";
 import { range } from "lodash";
 import { finalRankings, gainFinalScoringVictoryPoints } from "../algorithms/scoring";
+import { resolvePreferenceSplitAuction } from "../algorithms/preference-split-auction";
 import { resolveSilentAuction } from "../algorithms/silent-auction";
 import { stdBuildingValue } from "../buildings";
 import Engine, { AuctionVariant, LEECHING_DISTANCE } from "../engine";
@@ -70,6 +71,8 @@ export function phaseSetupFaction(engine: Engine, move: string) {
   if (!engine.moveToNextPlayer(engine.turnOrder, { loop: false })) {
     if (engine.options.auction === AuctionVariant.Silent) {
       beginSetupSilentBidPhase(engine);
+    } else if (engine.options.auction === AuctionVariant.PreferenceSplit) {
+      beginSetupPreferenceBidPhase(engine);
     } else if (engine.options.auction) {
       beginSetupAuctionPhase(engine);
     } else {
@@ -105,6 +108,55 @@ export function phaseSetupSilentBid(engine: Engine, move: string) {
       winner.data.bid = result.prices.get(faction);
     }
     endSetupFactionPhase(engine);
+  }
+}
+
+/**
+ * The Preference Split Auction's bid phase (AuctionVariant.PreferenceSplit). Every player submits
+ * one `preferenceBid` move splitting the whole budget across the four picked factions; the moves
+ * are recorded in seat order, but nothing is derived from any of them until the last one lands -
+ * which is what makes the submissions simultaneous rather than sequential from a player's point of
+ * view. In hosted play they are literally collected in parallel and only appended to the move log
+ * once all four are in, so no player can ever read another's numbers first (see the
+ * `auction_sealed_bids` table).
+ *
+ * The resolution is done exactly once, guarded by `preferenceSplitResult`, and the whole audited
+ * outcome (ranking, both kinds of random tiebreak, every payment) is stored on the engine. Its
+ * only randomness comes from the game's own seeded PRNG, so replaying the same move log always
+ * reproduces the same result - a reload can never reroll a tie.
+ */
+export function phaseSetupPreferenceBid(engine: Engine, move: string) {
+  engine.loadTurnMoves(move, { split: false, processFirst: true });
+
+  if (!engine.moveToNextPlayer(engine.turnOrder, { loop: false })) {
+    resolvePreferenceSplitPhase(engine);
+    endSetupFactionPhase(engine);
+  }
+}
+
+function resolvePreferenceSplitPhase(engine: Engine) {
+  if (engine.preferenceSplitResult) {
+    // Already resolved (a re-entrant call, or a state restored from JSON): the stored result is
+    // the authority, never recomputed.
+    return;
+  }
+
+  const result = resolvePreferenceSplitAuction(
+    engine.setup,
+    engine.players.map((pl) => pl.player as PlayerEnum),
+    engine.preferenceSplitBids,
+    engine.preferenceSplitBudget,
+    () => engine.map.rng()
+  );
+  engine.preferenceSplitResult = result;
+
+  for (const player of engine.players) {
+    player.faction = undefined;
+  }
+  for (const allocation of result.allocations) {
+    const winner = engine.player(allocation.winner);
+    winner.faction = allocation.faction;
+    winner.data.bid = allocation.payment;
   }
 }
 
@@ -245,6 +297,12 @@ function beginSetupFactionBanPhase(engine: Engine) {
 
 function beginSetupSilentBidPhase(engine: Engine) {
   engine.changePhase(Phase.SetupSilentBid);
+  engine.turnOrder = engine.players.map((pl) => pl.player as PlayerEnum);
+  engine.moveToNextPlayer(engine.turnOrder, { loop: false });
+}
+
+function beginSetupPreferenceBidPhase(engine: Engine) {
+  engine.changePhase(Phase.SetupPreferenceBid);
   engine.turnOrder = engine.players.map((pl) => pl.player as PlayerEnum);
   engine.moveToNextPlayer(engine.turnOrder, { loop: false });
 }

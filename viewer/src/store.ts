@@ -6,7 +6,7 @@ import Vuex from "vuex";
 import { ButtonData, GameContext, HexSelection, HighlightHex, SpecialActionIncome } from "./data";
 import { FastConversionEvent, MapMode } from "./data/actions";
 import { PresenceState } from "./hosted/presence";
-import { PremoveFailureRow, PremoveMode, PremoveRow } from "./hosted/types";
+import { PremoveFailureRow, PremoveMode, PremoveRow, SealedBidEntry, SealedBidStatus } from "./hosted/types";
 import { ExecuteBack, FastConversionTooltips } from "./logic/buttons/types";
 import { ChessBackend } from "./logic/chess-backend";
 import { RenjuBackend } from "./logic/renju-backend";
@@ -89,6 +89,17 @@ export type State = {
    * else's turn instead of simply offering nothing. False for ordinary pass-and-play. */
   offlineMirror: boolean;
   chessBackend: ChessBackend | null;
+  /**
+   * Preference Split Auction (engine AuctionVariant.PreferenceSplit) - hosted mode only, same
+   * injection contract as the backends above. Non-null means bids are collected server-side, where
+   * a player can only ever read their own until every seat has submitted (see migration
+   * 20260805120000). Null means offline/hot-seat play, where the bid form submits an ordinary
+   * `preferenceBid` move for whichever seat is on turn and secrecy is pass-the-device.
+   */
+  sealedBidBackend: SealedBidBackend | null;
+  /** Submission progress pushed by the host while the bid phase is open. Progress only - it never
+   * carries anybody's points, so there is nothing here to leak into the UI early. */
+  sealedBidStatus: SealedBidStatus | null;
   /** Per-game renju (research panel drawer) persistence, same injection contract as chessBackend. */
   renjuBackend: RenjuBackend | null;
   /** Per-game Ultimate tic-tac-toe persistence for the ship-board drawer. */
@@ -98,6 +109,13 @@ export type State = {
 export type NotesBackend = {
   load: () => Promise<string>;
   save: (body: string) => Promise<void>;
+};
+
+export type SealedBidBackend = {
+  /** Submits this seat's whole split. Rejects (server-side) unless it is a legal split of the budget. */
+  submit: (seat: number, bids: SealedBidEntry[]) => Promise<void>;
+  /** Re-reads submission progress; also what closes the auction once the last seat is in. */
+  refresh: () => Promise<void>;
 };
 
 function indexCommands(commands, command: Command) {
@@ -170,6 +188,8 @@ const gaiaViewer = {
       notesBackend: null,
       offlineMirror: false,
       chessBackend: null,
+      sealedBidBackend: null,
+      sealedBidStatus: null,
       renjuBackend: null,
       ultimateTicTacToeBackend: null,
     } as State;
@@ -314,6 +334,14 @@ const gaiaViewer = {
     },
     setChessBackend(state: State, backend: ChessBackend | null) {
       state.chessBackend = backend;
+    },
+
+    setSealedBidBackend(state: State, backend: SealedBidBackend | null) {
+      state.sealedBidBackend = backend;
+    },
+
+    sealedBidStatus(state: State, status: SealedBidStatus | null) {
+      state.sealedBidStatus = status;
     },
 
     setRenjuBackend(state: State, backend: RenjuBackend | null) {

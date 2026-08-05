@@ -172,6 +172,7 @@ interface CommandData {
   [Command.PlacePowerRing]: { spaces: AvailableHex[] };
   [Command.RotateSectors]: never;
   [Command.Setup]: AvailableSetupOption;
+  [Command.PreferenceBid]: { budget: number; factions: Faction[]; bids: PossibleBid[] };
   [Command.SilentBid]: { bids: PossibleBid[] };
   [Command.Special]: { specialacts: { income: string; spec: string }[] };
   [Command.Spend]: AvailableFreeActionData;

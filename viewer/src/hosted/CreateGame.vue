@@ -42,12 +42,17 @@
               v-for="option in auctionVariantOptions"
               :key="option.value"
               class="create-game-variant"
-              :class="{ 'create-game-variant--active': form.auctionVariant === option.value }"
+              :class="{
+                'create-game-variant--active': form.auctionVariant === option.value,
+                'create-game-variant--blocked': !!blockedVariants[option.value],
+              }"
             >
               <button
                 type="button"
                 class="create-game-variant__select"
                 :aria-pressed="form.auctionVariant === option.value ? 'true' : 'false'"
+                :disabled="!!blockedVariants[option.value]"
+                :title="blockedVariants[option.value] || null"
                 @click="form.auctionVariant = option.value"
               >
                 <strong class="create-game-variant__title">{{ option.label }}</strong>
@@ -63,6 +68,23 @@
               </button>
             </div>
           </div>
+          <p v-if="unavailableVariantNote" class="create-game-help create-game-variant-note mb-2">
+            {{ unavailableVariantNote }}
+          </p>
+          <div v-if="form.auctionVariant === 'preference-split'" class="create-game-budget">
+            <label class="mb-0" for="create-game-auction-budget">Bid points per player</label>
+            <b-form-input
+              id="create-game-auction-budget"
+              type="number"
+              :min="minAuctionBudget"
+              :max="maxAuctionBudget"
+              step="1"
+              v-model.number="form.auctionBudget"
+              class="create-game-budget__input"
+            />
+            <span class="create-game-help">Each player splits exactly this many points across the four factions.</span>
+          </div>
+          <div v-if="auctionBudgetError" class="small text-danger mb-2">{{ auctionBudgetError }}</div>
           <div class="create-game-ban-phase">
             <b-form-checkbox v-model="form.banPhase" class="create-game-inline-check mb-0">Ban phase</b-form-checkbox>
             <button
@@ -182,10 +204,15 @@
 </template>
 
 <script lang="ts">
-import Engine from "@gaia-project/engine";
+import Engine, {
+  DEFAULT_PREFERENCE_SPLIT_BUDGET,
+  isValidPreferenceSplitBudget,
+  MAX_PREFERENCE_SPLIT_BUDGET,
+  MIN_PREFERENCE_SPLIT_BUDGET,
+} from "@gaia-project/engine";
 import Vue from "vue";
 import InfoModal from "./InfoModal.vue";
-import { AUCTION_VARIANT_OPTIONS, buildCreateGameParams, shuffleSeats } from "./new-game";
+import { AUCTION_VARIANT_OPTIONS, auctionVariantBlockedReason, buildCreateGameParams, shuffleSeats } from "./new-game";
 import { createStoredOfflineGame } from "../offline-game";
 import { fetchMyNickname } from "./profile";
 import SetupPreview from "./SetupPreview.vue";
@@ -224,6 +251,7 @@ export default Vue.extend({
         playerCount: 2,
         testGame: false,
         auctionVariant: (offline ? "silent" : "none") as import("./new-game").AuctionVariantOption,
+        auctionBudget: DEFAULT_PREFERENCE_SPLIT_BUDGET,
         banPhase: offline,
         officialCenterSectors: true,
       },
@@ -246,6 +274,32 @@ export default Vue.extend({
     auctionVariantOptions() {
       return AUCTION_VARIANT_OPTIONS;
     },
+    minAuctionBudget(): number {
+      return MIN_PREFERENCE_SPLIT_BUDGET;
+    },
+    maxAuctionBudget(): number {
+      return MAX_PREFERENCE_SPLIT_BUDGET;
+    },
+    /** variant value -> why it can't be picked at the current player count ("" when it can). */
+    blockedVariants(): Record<string, string> {
+      const blocked: Record<string, string> = {};
+      for (const option of AUCTION_VARIANT_OPTIONS) {
+        blocked[option.value] = auctionVariantBlockedReason(option.value, this.form.playerCount);
+      }
+      return blocked;
+    },
+    /** Says out loud why a greyed-out variant is greyed out, rather than leaving it a mystery. */
+    unavailableVariantNote(): string {
+      return Object.values(this.blockedVariants as Record<string, string>).find((reason) => !!reason) ?? "";
+    },
+    auctionBudgetError(): string {
+      if (this.form.auctionVariant !== "preference-split") {
+        return "";
+      }
+      return isValidPreferenceSplitBudget(this.form.auctionBudget)
+        ? ""
+        : `The bid budget must be a whole number between ${MIN_PREFERENCE_SPLIT_BUDGET} and ${MAX_PREFERENCE_SPLIT_BUDGET}.`;
+    },
     myUserId(): string {
       return (this.session as any).user?.id ?? "";
     },
@@ -256,12 +310,21 @@ export default Vue.extend({
       if (!this.currentSeed || !this.setupValid) {
         return false;
       }
+      if (this.blockedVariants[this.form.auctionVariant] || this.auctionBudgetError) {
+        return false;
+      }
       if (!this.offline && !this.form.testGame && this.inviteMode === "direct") {
         return this.selectedInvitees.length === this.form.playerCount - 1;
       }
       return true;
     },
     blockedReason(): string {
+      if (this.blockedVariants[this.form.auctionVariant]) {
+        return this.blockedVariants[this.form.auctionVariant];
+      }
+      if (this.auctionBudgetError) {
+        return this.auctionBudgetError;
+      }
       if (
         !this.offline &&
         !this.form.testGame &&
@@ -282,6 +345,10 @@ export default Vue.extend({
   methods: {
     setPlayerCount(count: number) {
       this.form.playerCount = count;
+      // A variant that only exists at some player counts must not silently survive a count change.
+      if (auctionVariantBlockedReason(this.form.auctionVariant, count)) {
+        this.form.auctionVariant = "none";
+      }
       this.selectedInvitees = this.selectedInvitees.slice(0, count - 1);
     },
     isInvited(userId: string): boolean {
@@ -336,6 +403,7 @@ export default Vue.extend({
             playerCount: this.form.playerCount,
             seats,
             auctionVariant: this.form.auctionVariant,
+            auctionBudget: this.form.auctionBudget,
             banPhase: this.form.banPhase,
             officialCenterSectors: this.form.officialCenterSectors,
             openLobby: !this.offline && !this.form.testGame && !directInvite,
@@ -513,6 +581,29 @@ export default Vue.extend({
   align-items: center;
   gap: 0.5rem;
   margin-top: 0.6rem;
+}
+
+// Preference Split Auction's configurable budget - only rendered while that variant is selected.
+.create-game-budget {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.create-game-budget__input {
+  width: 6rem;
+}
+
+// A variant that needs a player count this game doesn't have stays visible (so it's discoverable)
+// but reads as unavailable, with `unavailableVariantNote` underneath saying why.
+.create-game-variant--blocked {
+  opacity: 0.55;
+}
+
+.create-game-variant-note {
+  font-style: italic;
 }
 
 .create-game-info-dot {

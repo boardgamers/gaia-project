@@ -189,4 +189,74 @@ describe("CreateGame", () => {
     expect((wrapper.vm as any).form.banPhase).to.equal(true);
     expect(wrapper.find('a[href="?offline=1"]').exists()).to.equal(true);
   });
+
+  describe("Preference Split Auction", () => {
+    async function mounted() {
+      const wrapper = mount(CreateGame, {
+        propsData: { client: makeClient(), session },
+        stubs: { SetupPreview: true },
+      });
+      await Vue.nextTick();
+      await Vue.nextTick();
+      return wrapper;
+    }
+
+    it("is listed with its 4-player requirement, and greyed out below four players", async () => {
+      const wrapper = await mounted();
+      const vm = wrapper.vm as any;
+
+      expect(wrapper.text()).to.include("Preference Split Auction");
+      expect(wrapper.text()).to.include("4 players only");
+      // The default player count is not 4, so the option is blocked and says why.
+      vm.setPlayerCount(3);
+      await Vue.nextTick();
+      expect(vm.blockedVariants["preference-split"]).to.match(/needs exactly 4 players/);
+      expect(wrapper.text()).to.include("needs exactly 4 players");
+
+      vm.setPlayerCount(4);
+      await Vue.nextTick();
+      expect(vm.blockedVariants["preference-split"]).to.equal("");
+    });
+
+    it("offers a configurable budget only for this variant, defaulting to 40", async () => {
+      const wrapper = await mounted();
+      const vm = wrapper.vm as any;
+
+      expect(wrapper.find("#create-game-auction-budget").exists()).to.equal(false);
+
+      vm.setPlayerCount(4);
+      vm.form.auctionVariant = "preference-split";
+      await Vue.nextTick();
+
+      expect(wrapper.find("#create-game-auction-budget").exists()).to.equal(true);
+      expect(vm.form.auctionBudget).to.equal(40);
+      expect(vm.auctionBudgetError).to.equal("");
+    });
+
+    it("blocks creation on an invalid budget and says so", async () => {
+      const wrapper = await mounted();
+      const vm = wrapper.vm as any;
+      vm.setPlayerCount(4);
+      vm.form.auctionVariant = "preference-split";
+      vm.form.auctionBudget = 0;
+      await Vue.nextTick();
+
+      expect(vm.auctionBudgetError).to.match(/whole number between/);
+      expect(vm.canCreate).to.equal(false);
+      expect(vm.blockedReason).to.match(/whole number between/);
+    });
+
+    it("drops the variant when the player count moves away from four", async () => {
+      const wrapper = await mounted();
+      const vm = wrapper.vm as any;
+      vm.setPlayerCount(4);
+      vm.form.auctionVariant = "preference-split";
+      await Vue.nextTick();
+
+      vm.setPlayerCount(3);
+      await Vue.nextTick();
+
+      expect(vm.form.auctionVariant).to.equal("none");
+    });
+  });
 });

@@ -25,19 +25,19 @@ Read these before coding:
 ## Testing: run only what the change can break (owner instruction, 2026-08-04)
 
 **Never run the full engine suite — and above all never the offline-AI suite (`engine/src/ai/**`,
-`fuzz/`, the corpus campaigns) — for a change that doesn't touch those files.** They take many
+`fuzz/`, the corpus campaigns) — for a change that doesn't touch those files.\*_ They take many
 minutes, and in this container the full engine run is OOM-killed partway through (exit 137) so it
-doesn't even produce an answer. Owner, verbatim: *"ai test is absolute no go when the implementation
-has nothing to do with it!"*
+doesn't even produce an answer. Owner, verbatim: _"ai test is absolute no go when the implementation
+has nothing to do with it!"\*
 
 Pick the gate from what you actually edited:
 
-| Changed | Run |
-| --- | --- |
-| A viewer component / `viewer/src/**` | that component's spec, then the viewer suite once at the end |
-| `engine/src/**` (not AI) | the affected engine specs, then the engine suite minus `src/ai/**` |
-| `engine/src/ai/**`, `fuzz/`, planner/corpus inputs | the AI/corpus gates — the only time they're in scope |
-| Docs/markdown only | nothing; prettier/diff check only |
+| Changed                                            | Run                                                                |
+| -------------------------------------------------- | ------------------------------------------------------------------ |
+| A viewer component / `viewer/src/**`               | that component's spec, then the viewer suite once at the end       |
+| `engine/src/**` (not AI)                           | the affected engine specs, then the engine suite minus `src/ai/**` |
+| `engine/src/ai/**`, `fuzz/`, planner/corpus inputs | the AI/corpus gates — the only time they're in scope               |
+| Docs/markdown only                                 | nothing; prettier/diff check only                                  |
 
 Always append `--reporter min` (see PROGRESS.md's **Testing** section — it's a standing instruction,
 and it exists so a passing run costs ~2 lines of context instead of 700). Run the broad suite **once**,
@@ -50,7 +50,17 @@ after the source is stable — not after each edit, and never twice to restate t
   gold-side execution, Space Giants' Exploration special action, the Scoring Board Extension gate,
   the 6 Lost Fleet Advanced Tech tiles, and Examine Artifact + Artifact-token seeding are all
   implemented and tested.
-- A new "Silent Auction" faction-selection variant (`AuctionVariant.Silent`, PROGRESS #61) is
+- A **"Preference Split Auction"** faction-selection variant (`AuctionVariant.PreferenceSplit`,
+  PROGRESS #137) is implemented and tested: 4 players / 4 factions only, everyone secretly splits one
+  fixed budget (default 40, configurable) across all four factions at the same time, then factions are
+  ranked by total bid and awarded top-first to the highest still-unassigned bidder, priced at the
+  faction average capped by the winner's own bid. Rules + file map: `docs/lost-fleet/
+PREFERENCE_SPLIT_AUCTION.md`. Unlike the Silent Auction, its secrecy is **server-enforced** —
+  simultaneous bids never touch `public.moves`; they sit in `auction_sealed_bids` behind RLS and are
+  appended as four moves in one transaction by `reveal_sealed_bids()`. **Its migration
+  `20260805120000_preference_split_sealed_bids.sql` is NOT applied live yet** — apply it with
+  `apply_migration` before creating an online game with this variant.
+- A "Silent Auction" faction-selection variant (`AuctionVariant.Silent`, PROGRESS #61) is
   implemented and tested: sequential ban → sequential pick → sequential private bid submission →
   automatic ascending-auction resolution (`algorithms/silent-auction.ts`), with a setup picker
   (`hosted/CreateGame.vue`), ban/pick/bid UI (`Commands.vue`), and a statistics-panel log

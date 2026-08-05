@@ -1,6 +1,14 @@
 import Engine from "@gaia-project/engine";
 import { expect } from "chai";
-import { AutoDecideConfig, engineOptions, HostedGameHost, initMoveLine, latestMoveSummary, seatToLock } from "./host";
+import {
+  AutoDecideConfig,
+  engineOptions,
+  HostedGameHost,
+  initMoveLine,
+  latestMoveSummary,
+  sealedBidMove,
+  seatToLock,
+} from "./host";
 import {
   CommitTurnArgs,
   GameRow,
@@ -10,6 +18,8 @@ import {
   PremoveFailureRow,
   PremoveMode,
   PremoveRow,
+  SealedBidEntry,
+  SealedBidStatus,
 } from "./types";
 
 // Committed-turn lines from a known-valid engine fixture
@@ -85,6 +95,9 @@ class FakeBackend implements HostedBackend {
   premoves: PremoveRow[] = [];
   premoveFailures: PremoveFailureRow[] = [];
   commitUsesGameMoveCount = false;
+  sealedBids = new Map<number, SealedBidEntry[]>();
+  sealedBidStatusCalls = 0;
+  revealCalls = 0;
   private nextFailureId = 1;
 
   constructor(private game: GameRow, private players: PlayerRow[]) {}
@@ -212,6 +225,65 @@ class FakeBackend implements HostedBackend {
     this.autoCharge[seat] = pref;
   }
 
+  // Preference Split Auction (migration 20260805120000). Faithful to the real RPCs in the ways the
+  // host depends on: one submission per seat, nothing readable until every seat is in, and a reveal
+  // that is exactly-once by sequence number.
+  async fetchSealedBidStatus(): Promise<SealedBidStatus> {
+    this.sealedBidStatusCalls++;
+    return {
+      playerCount: this.game.player_count,
+      budget: (this.game.options?.auctionBudget as number) ?? 40,
+      submittedSeats: [...this.sealedBids.keys()].sort((a, b) => a - b),
+    };
+  }
+
+  async submitSealedBid(_gameId: string, seat: number, bids: SealedBidEntry[]): Promise<number> {
+    if (this.sealedBids.has(seat)) {
+      throw new Error(`seat ${seat} has already submitted its bids`);
+    }
+    const budget = (this.game.options?.auctionBudget as number) ?? 40;
+    const total = bids.reduce((sum, b) => sum + b.points, 0);
+    if (total !== budget) {
+      throw new Error(`your bids must add up to exactly ${budget} points, got ${total}`);
+    }
+    this.sealedBids.set(seat, bids);
+    return this.sealedBids.size;
+  }
+
+  async fetchSealedBids(): Promise<{ seat: number; bids: SealedBidEntry[] }[]> {
+    if (this.sealedBids.size < this.game.player_count) {
+      // What RLS does: before the reveal a player only ever sees their own row.
+      return [];
+    }
+    return [...this.sealedBids.entries()].sort((a, b) => a[0] - b[0]).map(([seat, bids]) => ({ seat, bids }));
+  }
+
+  async revealSealedBids(_gameId: string, seq: number, nextSeat: number): Promise<number> {
+    this.revealCalls++;
+    if (this.moves.some((m) => m.move.includes(" preferenceBid "))) {
+      return 0;
+    }
+    if (this.sealedBids.size < this.game.player_count) {
+      throw new Error("not every player has submitted their bids yet");
+    }
+    if (seq !== this.moves.length + 1) {
+      throw new Error(`seq_conflict: expected ${this.moves.length + 1}, got ${seq}`);
+    }
+    let next = seq;
+    for (const [seat, bids] of [...this.sealedBids.entries()].sort((a, b) => a[0] - b[0])) {
+      this.moves.push({
+        game_id: this.game.id,
+        seq: next,
+        seat,
+        move: `p${seat + 1} preferenceBid ${bids.map((b) => `${b.faction} ${b.points}`).join(" ")}`,
+      });
+      next++;
+    }
+    this.game.move_count = next - 1;
+    this.game.current_seat = nextSeat;
+    return next - seq;
+  }
+
   // Test helper mirroring what resolve-automation (or a genuinely failed fast-path) would do.
   seedPremoveFailure(seat: number, move: string, reason: string): void {
     this.premoveFailures.push({ id: String(this.nextFailureId++), seat, move, reason, read_at: null });
@@ -222,6 +294,7 @@ function makeHost(backend: FakeBackend, autoDecide?: AutoDecideConfig) {
   const states: any[] = [];
   const committed: any[] = [];
   const errors: string[] = [];
+  const sealedBidStates: SealedBidStatus[] = [];
   const host = new HostedGameHost(
     backend,
     "game-1",
@@ -229,10 +302,11 @@ function makeHost(backend: FakeBackend, autoDecide?: AutoDecideConfig) {
       onState: (data) => states.push(data),
       onCommittedState: (data) => committed.push(data),
       onError: (message) => errors.push(message),
+      onSealedBidState: (status) => sealedBidStates.push(status),
     },
     autoDecide
   );
-  return { host, states, committed, errors };
+  return { host, states, committed, errors, sealedBidStates };
 }
 
 describe("seat locking rule", () => {
@@ -1051,5 +1125,198 @@ describe("hosted game host", () => {
         });
       });
     });
+  });
+});
+
+describe("Preference Split Auction (sealed bidding)", () => {
+  const PICKS = ["p1 faction itars", "p2 faction taklons", "p3 faction xenos", "p4 faction terrans"];
+
+  // The deterministic fixture from engine/src/preference-split-variant.spec.ts, keyed by seat.
+  // Totals: itars 38, taklons 36, xenos 35, terrans 51 - no tie anywhere, so the expected
+  // allocation and payments below are exact.
+  const SPLITS: SealedBidEntry[][] = [
+    [
+      { faction: "itars", points: 20 },
+      { faction: "taklons", points: 12 },
+      { faction: "xenos", points: 6 },
+      { faction: "terrans", points: 2 },
+    ],
+    [
+      { faction: "itars", points: 16 },
+      { faction: "taklons", points: 14 },
+      { faction: "xenos", points: 8 },
+      { faction: "terrans", points: 2 },
+    ],
+    [
+      { faction: "itars", points: 2 },
+      { faction: "taklons", points: 6 },
+      { faction: "xenos", points: 10 },
+      { faction: "terrans", points: 22 },
+    ],
+    [
+      { faction: "itars", points: 0 },
+      { faction: "taklons", points: 4 },
+      { faction: "xenos", points: 11 },
+      { faction: "terrans", points: 25 },
+    ],
+  ];
+
+  function auctionGameRow(): GameRow {
+    return {
+      ...gameRow(),
+      player_count: 4,
+      options: { auction: "preference-split", auctionBudget: 40 },
+    };
+  }
+
+  function auctionPlayerRows(): PlayerRow[] {
+    return [0, 1, 2, 3].map((seat) => ({
+      game_id: "game-1",
+      seat,
+      invited_email: `p${seat}@example.com`,
+      user_id: `user-${seat}`,
+      display_name: `Player ${seat + 1}`,
+      faction: null,
+      score: null,
+    }));
+  }
+
+  function auctionBackend(): FakeBackend {
+    const backend = new FakeBackend(auctionGameRow(), auctionPlayerRows());
+    backend.seedMoves(PICKS);
+    return backend;
+  }
+
+  it("builds the same move line the server writes at reveal time", () => {
+    expect(sealedBidMove(2, SPLITS[2])).to.equal("p3 preferenceBid itars 2 taklons 6 xenos 10 terrans 22");
+  });
+
+  it("keeps every submission unreadable until the last one lands", async () => {
+    const backend = auctionBackend();
+    const { host, states, sealedBidStates } = makeHost(backend);
+    await host.load();
+    expect(host.engine.phase).to.equal("setupPreferenceBid");
+
+    for (const seat of [0, 1, 2]) {
+      await host.submitSealedBid(seat, SPLITS[seat]);
+    }
+
+    // Nothing has reached the move log, so nothing has reached any other player's engine either.
+    expect(backend.moves.filter((m) => m.move.includes("preferenceBid"))).to.have.length(0);
+    // ...and the rows themselves are still invisible, exactly as RLS makes them.
+    expect(await backend.fetchSealedBids()).to.deep.equal([]);
+    // The only thing that leaked is who has submitted - never a number.
+    const latest = sealedBidStates[sealedBidStates.length - 1];
+    expect(latest.submittedSeats).to.deep.equal([0, 1, 2]);
+    // Nothing derived from a submission is in any emitted state either: no recorded bids, no
+    // result, and the offered command carries only the budget and the factions.
+    expect(states.every((s) => (s.preferenceSplitBids ?? []).length === 0)).to.equal(true);
+    expect(states.every((s) => !s.preferenceSplitResult)).to.equal(true);
+    const offered = states
+      .flatMap((s) => s.availableCommands ?? [])
+      .filter((c: any) => c.name === "preferenceBid")
+      .map((c: any) => c.data);
+    expect(offered.length).to.be.greaterThan(0);
+    expect(offered.every((data: any) => data.budget === 40 && !JSON.stringify(data).includes("points"))).to.equal(true);
+  });
+
+  it("resolves the auction the moment the fourth split lands", async () => {
+    const backend = auctionBackend();
+    const { host, errors } = makeHost(backend);
+    await host.load();
+
+    for (const seat of [0, 1, 2, 3]) {
+      await host.submitSealedBid(seat, SPLITS[seat]);
+    }
+
+    expect(errors).to.deep.equal([]);
+    expect(backend.moves.filter((m) => m.move.includes("preferenceBid"))).to.have.length(4);
+    expect(host.engine.phase).to.equal("setupBuilding");
+    const result = host.engine.preferenceSplitResult;
+    expect(result.order).to.deep.equal(["terrans", "itars", "taklons", "xenos"]);
+    expect(result.allocations.map((a: any) => [a.winner, a.payment])).to.deep.equal([
+      [3, 13],
+      [0, 10],
+      [1, 9],
+      [2, 9],
+    ]);
+    expect((await backend.fetchGame()).current_seat).to.equal(host.engine.playerToMove);
+  });
+
+  it("appends the bids exactly once when two clients close the auction at the same time", async () => {
+    const backend = auctionBackend();
+    const first = makeHost(backend);
+    const second = makeHost(backend);
+    await first.host.load();
+    await second.host.load();
+
+    for (const seat of [0, 1, 2, 3]) {
+      await first.host.submitSealedBid(seat, SPLITS[seat]);
+    }
+    // The second client notices independently (its own poll) and tries to close it too.
+    await second.host.refreshSealedBids();
+
+    expect(backend.revealCalls).to.be.at.least(2);
+    expect(backend.moves.filter((m) => m.move.includes("preferenceBid"))).to.have.length(4);
+    expect(second.errors).to.deep.equal([]);
+    expect(second.host.engine.preferenceSplitResult).to.deep.equal(first.host.engine.preferenceSplitResult);
+  });
+
+  it("produces the identical result on a later reload", async () => {
+    const backend = auctionBackend();
+    const { host } = makeHost(backend);
+    await host.load();
+    for (const seat of [0, 1, 2, 3]) {
+      await host.submitSealedBid(seat, SPLITS[seat]);
+    }
+    const resolved = JSON.parse(JSON.stringify(host.engine.preferenceSplitResult));
+
+    const reloaded = makeHost(backend);
+    await reloaded.host.load();
+
+    expect(reloaded.host.engine.preferenceSplitResult).to.deep.equal(resolved);
+    expect(backend.moves.filter((m) => m.move.includes("preferenceBid"))).to.have.length(4);
+  });
+
+  it("closes an auction whose last submitter went away before the reveal landed", async () => {
+    const backend = auctionBackend();
+    for (const seat of [0, 1, 2, 3]) {
+      await backend.submitSealedBid("game-1", seat, SPLITS[seat]);
+    }
+    expect(backend.moves.filter((m) => m.move.includes("preferenceBid"))).to.have.length(0);
+
+    // Any other player simply opening the game is enough.
+    const { host } = makeHost(backend);
+    await host.load();
+
+    expect(host.engine.phase).to.equal("setupBuilding");
+    expect(backend.moves.filter((m) => m.move.includes("preferenceBid"))).to.have.length(4);
+  });
+
+  it("refuses a split that is not exactly the budget, and a second submission from a seat", async () => {
+    const backend = auctionBackend();
+    const { host, errors } = makeHost(backend);
+    await host.load();
+
+    const short = SPLITS[0].map((b, i) => (i === 0 ? { ...b, points: b.points - 1 } : b));
+    let failed = "";
+    try {
+      await host.submitSealedBid(0, short);
+    } catch (err) {
+      failed = err instanceof Error ? err.message : String(err);
+    }
+    expect(failed).to.match(/add up to exactly 40/);
+    expect(backend.sealedBids.size).to.equal(0);
+
+    await host.submitSealedBid(0, SPLITS[0]);
+    failed = "";
+    try {
+      await host.submitSealedBid(0, SPLITS[1]);
+    } catch (err) {
+      failed = err instanceof Error ? err.message : String(err);
+    }
+    expect(failed).to.match(/already submitted/);
+    expect(backend.sealedBids.get(0)).to.deep.equal(SPLITS[0]);
+    expect(errors).to.deep.equal([]);
   });
 });

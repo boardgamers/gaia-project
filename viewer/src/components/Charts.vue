@@ -83,6 +83,9 @@
       <b-tab v-if="gameData.silentAuctionLog.length > 0" title="Silent Auction">
         <SilentAuctionLog />
       </b-tab>
+      <b-tab v-if="gameData.preferenceSplitResult" title="Faction Auction">
+        <PreferenceSplitLog />
+      </b-tab>
     </b-tabs>
   </div>
 </template>
@@ -93,6 +96,7 @@ import { ChartGroup, ChartSelect, ChartType } from "../logic/charts/charts";
 import PlayerCircle from "./PlayerCircle.vue";
 import BuildingImage from "./Building.vue";
 import SpecialAction from "./SpecialAction.vue";
+import PreferenceSplitLog from "./PreferenceSplitLog.vue";
 import SilentAuctionLog from "./SilentAuctionLog.vue";
 import Engine, { PlayerEnum } from "@gaia-project/engine";
 import type { ChartConfiguration } from "chart.js";
@@ -109,7 +113,7 @@ import { tableHeader, tableItems } from "../logic/charts/table";
 type Table = { title: string; header: any[]; items: any[]; descriptions: any[] };
 
 @Component({
-  components: { PlayerCircle, BuildingImage, SpecialAction, SilentAuctionLog },
+  components: { PlayerCircle, BuildingImage, SpecialAction, SilentAuctionLog, PreferenceSplitLog },
 })
 export default class Charts extends Vue {
   private setup: ChartSetup;

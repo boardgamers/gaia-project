@@ -28,7 +28,13 @@ import {
 import { possibleLeech } from "./leech";
 import { possibleCoverTechTiles, possibleResearchAreas, possibleTechTiles } from "./research";
 import { possibleIncomes, possibleRoundBoosters } from "./round";
-import { chooseFactionOrBid, possibleBids, possibleFactionBans, possibleSilentBids } from "./setup";
+import {
+  chooseFactionOrBid,
+  possibleBids,
+  possibleFactionBans,
+  possiblePreferenceBids,
+  possibleSilentBids,
+} from "./setup";
 import { possibleShipMovements } from "./ships";
 import {
   possibleInstantGaiaforming,
@@ -120,6 +126,8 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
       return possibleBids(engine, player);
     case Phase.SetupSilentBid:
       return possibleSilentBids(engine, player);
+    case Phase.SetupPreferenceBid:
+      return possiblePreferenceBids(engine, player);
     case Phase.SetupBuilding: {
       const planet = engine.player(player).planet;
       const faction = engine.player(player).faction;

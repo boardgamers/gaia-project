@@ -15,6 +15,8 @@ import {
   PremoveFailureRow,
   PremoveMode,
   PremoveRow,
+  SealedBidEntry,
+  SealedBidStatus,
 } from "./types";
 
 const SEQ_CONFLICT_PREFIX = "seq_conflict";
@@ -49,6 +51,16 @@ const noAutoDecide: AutoDecideConfig = { isMySeat: () => false, getAutoChargePow
 
 export function initMoveLine(game: GameRow): string {
   return `init ${game.player_count} ${game.seed}`;
+}
+
+/**
+ * The move line one sealed Preference Split submission becomes at reveal time. Must stay
+ * byte-identical to what `reveal_sealed_bids` builds server-side (migration 20260805120000): the
+ * server writes the authoritative text, and this only reproduces it locally to work out which seat
+ * the game lands on once the auction has resolved.
+ */
+export function sealedBidMove(seat: number, bids: SealedBidEntry[]): string {
+  return `p${seat + 1} preferenceBid ${bids.map((b) => `${b.faction} ${b.points}`).join(" ")}`;
 }
 
 /**
@@ -234,6 +246,8 @@ export class HostedGameHost {
   // Serializes submit/remote/resync so an in-flight commit can't interleave
   // with a realtime apply on the same engine.
   private queue: Promise<void> = Promise.resolve();
+  // Preference Split Auction - true while this client is closing the auction, see refreshSealedBidState.
+  private revealing = false;
 
   constructor(
     private readonly backend: HostedBackend,
@@ -268,8 +282,103 @@ export class HostedGameHost {
       this.engine = this.buildEngine(game, moves);
       this.emitState(this.engine);
       await this.refreshPremoveState();
+      // Also the fallback that closes a Preference Split auction whose last submitter went away
+      // before the reveal landed: every client that opens the game re-checks.
+      await this.refreshSealedBidState();
       await this.resolveAutoDecisions();
     });
+  }
+
+  /**
+   * Preference Split Auction (engine AuctionVariant.PreferenceSplit).
+   *
+   * The bid phase is the one part of a hosted game that does NOT go through `submitMove`: all four
+   * players bid at the same time and none of them may see another's numbers, so the submissions are
+   * held server-side (`auction_sealed_bids`) instead of being committed as moves. Once the server
+   * reports every seat in, ANY client may close the auction - `reveal_sealed_bids` appends all four
+   * moves in one transaction, and its seq check makes that exactly-once even if several clients
+   * notice at the same instant (the losers get `seq_conflict` and simply resync into the result).
+   *
+   * That "any client" is deliberate: it also covers the case where the last submitter closes their
+   * browser before the reveal lands, since every other client re-checks on load and after each
+   * status refresh.
+   */
+  submitSealedBid(seat: number, bids: SealedBidEntry[]): Promise<void> {
+    return this.enqueue(async () => {
+      await this.backend.submitSealedBid(this.gameId, seat, bids);
+      await this.refreshSealedBidState();
+    });
+  }
+
+  /** Re-reads submission progress, emits it, and closes the auction if it is complete. */
+  refreshSealedBids(): Promise<void> {
+    return this.enqueue(() => this.refreshSealedBidState());
+  }
+
+  private async refreshSealedBidState(): Promise<void> {
+    // `revealing` keeps the reveal -> resync -> refresh chain from re-entering itself if the reveal
+    // could not land (the phase would still be SetupPreferenceBid with every seat submitted).
+    if (!this.engine || this.engine.phase !== Phase.SetupPreferenceBid || this.revealing) {
+      return;
+    }
+    let status: SealedBidStatus;
+    try {
+      status = await this.backend.fetchSealedBidStatus(this.gameId);
+    } catch (err) {
+      this.callbacks.onError?.(`Could not read the auction's progress: ${errorMessage(err)}`);
+      return;
+    }
+    this.callbacks.onSealedBidState?.(status);
+
+    if (status.playerCount > 0 && status.submittedSeats.length >= status.playerCount) {
+      this.revealing = true;
+      try {
+        await this.revealSealedBids();
+      } finally {
+        this.revealing = false;
+      }
+    }
+  }
+
+  private async revealSealedBids(): Promise<void> {
+    // The server builds the move text itself, from the rows it stores - nothing about the bids is
+    // taken from this client. All it contributes is `nextSeat`, the seat the engine lands on once
+    // the auction has resolved, which can only be known by actually replaying it. That is the same
+    // trust model as `commit_turn`'s own client-computed `p_next_seat`, and the bids are readable
+    // here by now precisely because every seat has submitted.
+    const seq = this.committedMoveCount + 1;
+    let nextSeat = 0;
+    try {
+      const rows = await this.backend.fetchSealedBids(this.gameId);
+      // A FULL replay, not `clone()`: the auction's tiebreaks draw from the game's seeded PRNG,
+      // whose position comes from having generated the map - and a `fromData` round trip does not
+      // carry that. Only a replay from the init line reproduces the same draw the authoritative
+      // replay will make on every other client.
+      const replayed = new Engine(
+        [
+          ...this.engine.moveHistory,
+          ...[...rows].sort((a, b) => a.seat - b.seat).map((row) => sealedBidMove(row.seat, row.bids)),
+        ],
+        engineOptions(this.game) as any
+      );
+      replayed.generateAvailableCommandsIfNeeded();
+      nextSeat = replayed.playerToMove ?? 0;
+    } catch (err) {
+      this.callbacks.onError?.(`Could not resolve the auction locally (${errorMessage(err)}); reloading.`);
+      await this.resyncNow();
+      return;
+    }
+
+    try {
+      await this.backend.revealSealedBids(this.gameId, seq, nextSeat);
+    } catch (err) {
+      // Another client closed the auction first (or the move log moved on). Not an error worth
+      // showing - resyncing lands us on the very same resolved state.
+      if (!isSeqConflict(err)) {
+        this.callbacks.onError?.(`Could not close the auction (${errorMessage(err)}); reloading the game state.`);
+      }
+    }
+    await this.resyncNow();
   }
 
   /**

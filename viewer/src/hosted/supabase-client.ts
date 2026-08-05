@@ -7,6 +7,8 @@ import {
   PlayerRow,
   PremoveFailureRow,
   PremoveRow,
+  SealedBidEntry,
+  SealedBidStatus,
 } from "./types";
 
 // supabase-js v2 is loaded at runtime from its self-contained UMD bundle
@@ -109,6 +111,23 @@ export function createSupabaseBackend(client: SupabaseClient): HostedBackend {
     markPremoveFailureRead: (id): Promise<void> => unwrap(client.rpc("mark_premove_failure_read", { p_id: id })),
     setAutoCharge: (gameId, seat, pref): Promise<void> =>
       unwrap(client.rpc("set_auto_charge", { p_game_id: gameId, p_seat: seat, p_pref: pref })),
+    // Preference Split Auction (migration 20260805120000). Note that nothing here ever selects
+    // from `auction_sealed_bids` directly: `sealed_bid_status` returns progress only, and the
+    // points themselves are read exclusively by the server, inside `reveal_sealed_bids`.
+    fetchSealedBidStatus: async (gameId): Promise<SealedBidStatus> => {
+      const raw = await unwrap<any>(client.rpc("sealed_bid_status", { p_game_id: gameId }));
+      return {
+        playerCount: raw?.player_count ?? 0,
+        budget: raw?.budget ?? 0,
+        submittedSeats: raw?.submitted_seats ?? [],
+      };
+    },
+    submitSealedBid: (gameId, seat, bids): Promise<number> =>
+      unwrap(client.rpc("submit_sealed_bid", { p_game_id: gameId, p_seat: seat, p_bids: bids })),
+    fetchSealedBids: (gameId): Promise<{ seat: number; bids: SealedBidEntry[] }[]> =>
+      unwrap(client.from("auction_sealed_bids").select("seat,bids").eq("game_id", gameId).order("seat")),
+    revealSealedBids: (gameId, seq, nextSeat): Promise<number> =>
+      unwrap(client.rpc("reveal_sealed_bids", { p_game_id: gameId, p_seq: seq, p_next_seat: nextSeat })),
   };
 }
 

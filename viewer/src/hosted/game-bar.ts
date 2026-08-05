@@ -138,6 +138,8 @@ export function auctionLabel(game: any): string {
   switch (game.options?.auction) {
     case "silent":
       return "Silent Auction";
+    case "preference-split":
+      return "Preference Split Auction";
     case "choose-bid":
       return "Choose, Then Bid";
     case "bid-while-choosing":

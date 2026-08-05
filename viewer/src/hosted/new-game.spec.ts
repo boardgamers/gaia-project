@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import Engine from "@gaia-project/engine";
-import { buildCreateGameParams, shuffleSeats } from "./new-game";
+import { auctionVariantBlockedReason, buildCreateGameParams, shuffleSeats } from "./new-game";
 
 describe("buildCreateGameParams", () => {
   it("builds params with pristine options, the setup move, and an engine-derived first seat", () => {
@@ -131,5 +131,67 @@ describe("shuffleSeats", () => {
     }
     // all 3! = 6 permutations should show up given enough runs
     expect(seen.size).to.equal(6);
+  });
+});
+
+describe("Preference Split Auction setup", () => {
+  const fourSeats = [0, 1, 2, 3].map((i) => ({ userId: `user-${i}`, name: `P${i + 1}` }));
+
+  it("is only offered at exactly four players", () => {
+    expect(auctionVariantBlockedReason("preference-split", 4)).to.equal("");
+    for (const count of [2, 3, 5]) {
+      expect(auctionVariantBlockedReason("preference-split", count)).to.match(/needs exactly 4 players/);
+    }
+    // Every other variant stays available at every count.
+    expect(auctionVariantBlockedReason("silent", 2)).to.equal("");
+    expect(auctionVariantBlockedReason("none", 5)).to.equal("");
+  });
+
+  it("stores the variant and its configured budget in the game options", () => {
+    const params = buildCreateGameParams(
+      { playerCount: 4, seats: fourSeats, auctionVariant: "preference-split", auctionBudget: 24, openLobby: false },
+      "fixed-seed",
+      "p4 rotate"
+    );
+
+    expect(params.p_options).to.deep.equal({
+      lostFleet: true,
+      advancedRules: true,
+      factionVariant: "standard",
+      auction: "preference-split",
+      auctionBudget: 24,
+      banPhase: false,
+    });
+  });
+
+  it("defaults the budget to 40 and never stores one for another variant", () => {
+    const defaulted = buildCreateGameParams(
+      { playerCount: 4, seats: fourSeats, auctionVariant: "preference-split", openLobby: false },
+      "fixed-seed",
+      "p4 rotate"
+    );
+    expect((defaulted.p_options as any).auctionBudget).to.equal(40);
+
+    const silent = buildCreateGameParams(
+      { playerCount: 4, seats: fourSeats, auctionVariant: "silent", auctionBudget: 24, openLobby: false },
+      "fixed-seed",
+      "p4 rotate"
+    );
+    expect((silent.p_options as any).auctionBudget).to.equal(undefined);
+  });
+
+  it("refuses to build params for a player count the variant does not support", () => {
+    expect(() =>
+      buildCreateGameParams(
+        {
+          playerCount: 3,
+          seats: fourSeats.slice(0, 3),
+          auctionVariant: "preference-split",
+          openLobby: false,
+        },
+        "fixed-seed",
+        "p3 rotate"
+      )
+    ).to.throw(/needs exactly 4 players/);
   });
 });

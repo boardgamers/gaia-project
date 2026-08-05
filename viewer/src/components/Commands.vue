@@ -392,6 +392,12 @@ export default class Commands extends Vue implements CommandController {
         this.silentBidValues = Object.fromEntries(command.data.bids.map((pos) => [pos.faction, 0]));
         return;
       }
+      if (command.name === Command.PreferenceBid) {
+        // The form itself is PreferenceSplitBid.vue, up in Game.vue's round-0 strip - every seat
+        // bids at once, so it cannot live in this on-turn-only panel. Just say where it is.
+        this.title("Split your bid points in the panel above");
+        return;
+      }
     }
   }
 

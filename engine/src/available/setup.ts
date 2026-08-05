@@ -57,6 +57,23 @@ export function possibleSilentBids(engine: Engine, player: Player): AvailableCom
   return [{ name: Command.SilentBid, player, data: { bids } }];
 }
 
+/**
+ * Preference Split Auction: the player has to split exactly `budget` whole points across every
+ * faction up for auction, so each individual amount can be anything from 0 to the whole budget -
+ * the constraint that actually matters is the sum, which `movePreferenceBid` enforces and the
+ * viewer's form mirrors. `budget` and `factions` travel with the command so the UI never has to
+ * re-derive them from engine options.
+ */
+export function possiblePreferenceBids(engine: Engine, player: Player): AvailableCommand<Command.PreferenceBid>[] {
+  const budget = engine.preferenceSplitBudget;
+  const bids: PossibleBid[] = engine.setup.map((faction) => ({
+    faction,
+    bid: range(0, budget + 1),
+  }));
+
+  return [{ name: Command.PreferenceBid, player, data: { budget, factions: [...engine.setup], bids } }];
+}
+
 export function possibleBids(engine: Engine, player: Player): AvailableCommand<Command.Bid>[] {
   const commands: AvailableCommand<Command.Bid>[] = [];
   const bids: PossibleBid[] = [];

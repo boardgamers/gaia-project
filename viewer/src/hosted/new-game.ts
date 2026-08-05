@@ -1,9 +1,15 @@
-import Engine, { AuctionVariant } from "@gaia-project/engine";
+import Engine, {
+  AuctionVariant,
+  DEFAULT_PREFERENCE_SPLIT_BUDGET,
+  PREFERENCE_SPLIT_PLAYERS,
+} from "@gaia-project/engine";
 
 export type NewGameForm = {
   playerCount: number;
   seats: { userId?: string | null; name?: string }[];
   auctionVariant: AuctionVariantOption;
+  /** Preference Split Auction only: the fixed bid budget every player splits. */
+  auctionBudget?: number;
   banPhase?: boolean;
   officialCenterSectors?: boolean;
   openLobby: boolean;
@@ -14,13 +20,15 @@ export type NewGameForm = {
  * (no bidding at all). Add future variants here and to `AUCTION_VARIANT_OPTIONS` below - the
  * dropdown in CreateGame.vue is driven entirely off that list.
  */
-export type AuctionVariantOption = "none" | "silent" | "choose-bid" | "bid-while-choosing";
+export type AuctionVariantOption = "none" | "silent" | "preference-split" | "choose-bid" | "bid-while-choosing";
 
 export const AUCTION_VARIANT_OPTIONS: {
   value: AuctionVariantOption;
   label: string;
   summary: string;
   description: string;
+  /** Player counts this variant can be played at; undefined means any. */
+  playerCounts?: number[];
 }[] = [
   {
     value: "none",
@@ -35,6 +43,18 @@ export const AUCTION_VARIANT_OPTIONS: {
     description:
       "Every player picks one faction, then privately submits a maximum VP bid for each picked faction. An " +
       "ascending-auction algorithm assigns each player the faction that maximizes their own value.",
+  },
+  {
+    value: "preference-split",
+    label: "Preference Split Auction",
+    summary: "Secretly split a fixed pot of bid points. 4 players only.",
+    description:
+      "Four players, four picked factions. Everyone secretly splits the same fixed budget of bid points across all " +
+      "four factions at the same time, and nothing is revealed until every split is in. Factions are then ranked by " +
+      "the total bid on them and awarded, top first, to the highest bidder who doesn't have one yet. The price is the " +
+      "average of all four bids on that faction, and a winner never pays more than they bid on it themselves. Any " +
+      "ties are broken automatically, at random.",
+    playerCounts: [PREFERENCE_SPLIT_PLAYERS],
   },
   {
     value: "choose-bid",
@@ -54,10 +74,22 @@ export const AUCTION_VARIANT_OPTIONS: {
   },
 ];
 
+/** Why a variant can't be picked for the currently-selected player count, or "" when it can. */
+export function auctionVariantBlockedReason(variant: AuctionVariantOption, playerCount: number): string {
+  const option = AUCTION_VARIANT_OPTIONS.find((o) => o.value === variant);
+  if (!option?.playerCounts || option.playerCounts.includes(playerCount)) {
+    return "";
+  }
+  const counts = option.playerCounts.join(" or ");
+  return `${option.label} needs exactly ${counts} players (and ${counts} factions) — this game has ${playerCount}.`;
+}
+
 function engineAuctionOption(variant: AuctionVariantOption): AuctionVariant | undefined {
   switch (variant) {
     case "silent":
       return AuctionVariant.Silent;
+    case "preference-split":
+      return AuctionVariant.PreferenceSplit;
     case "choose-bid":
       return AuctionVariant.ChooseBid;
     case "bid-while-choosing":
@@ -126,11 +158,20 @@ export function randomGameName(): string {
  */
 export function buildCreateGameParams(form: NewGameForm, seed: string, rotateMove: string) {
   const auction = engineAuctionOption(form.auctionVariant);
+  const blocked = auctionVariantBlockedReason(form.auctionVariant, form.playerCount);
+  if (blocked) {
+    throw new Error(blocked);
+  }
   const options = {
     lostFleet: true,
     advancedRules: true,
     factionVariant: "standard",
     ...(auction ? { auction } : {}),
+    // Only stored for the variant it belongs to, so no other game's options carry a meaningless
+    // budget. The engine (and the sealed-bid RPCs) fall back to the default when it is absent.
+    ...(auction === AuctionVariant.PreferenceSplit
+      ? { auctionBudget: form.auctionBudget ?? DEFAULT_PREFERENCE_SPLIT_BUDGET }
+      : {}),
     // Always explicit (not conditionally omitted) so the checkbox has full control even for Silent
     // Auction - the engine's `banPhase ?? auction === Silent` fallback is only meant to preserve
     // *pre-existing* stored games that predate this option, never to override a fresh choice here.

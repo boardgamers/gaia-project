@@ -74,7 +74,8 @@ export function phaseBeforeSetupBuilding(data: Engine): boolean {
     data.phase === Phase.SetupFactionBan ||
     data.phase === Phase.SetupFaction ||
     data.phase === Phase.SetupAuction ||
-    data.phase === Phase.SetupSilentBid
+    data.phase === Phase.SetupSilentBid ||
+    data.phase === Phase.SetupPreferenceBid
   );
 }
 

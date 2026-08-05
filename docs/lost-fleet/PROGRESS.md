@@ -4145,25 +4145,25 @@ opacity: 0.7 }` wrapper that also diluted the X itself, while `BoardAction.vue`'
       `pnpm test`: 440 passing/31 failing both before and after (identical failing-test names,
       confirmed via `git stash` on the same run - all pre-existing, none touch these components).
 
-                                                                                                                                                                                                                                                                                                                                   **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
-                                                                                                                                                                                                                                                                                                                                   pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
-                                                                                                                                                                                                                                                                                                                                   desktop mice, which was never the actual bug - only touch devices raced hover against the
-                                                                                                                                                                                                                                                                                                                                   click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
-                                                                                                                                                                                                                                                                                                                                   `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
-                                                                                                                                                                                                                                                                                                                                   `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
-                                                                                                                                                                                                                                                                                                                                   shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
-                                                                                                                                                                                                                                                                                                                                   `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
-                                                                                                                                                                                                                                                                                                                                   directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
-                                                                                                                                                                                                                                                                                                                                   `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
-                                                                                                                                                                                                                                                                                                                                   config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
-                                                                                                                                                                                                                                                                                                                                   on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
-                                                                                                                                                                                                                                                                                                                                   desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
-                                                                                                                                                                                                                                                                                                                                   is what actually closed that race originally. Verified live via Playwright with two device
-                                                                                                                                                                                                                                                                                                                                   profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
-                                                                                                                                                                                                                                                                                                                                   tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
-                                                                                                                                                                                                                                                                                                                                   context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
-                                                                                                                                                                                                                                                                                                                                   a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
-                                                                                                                                                                                                                                                                                                                                   still 440 passing/31 failing, same pre-existing set.
+                                                                                                                                                                                                                                                                                                                                         **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
+                                                                                                                                                                                                                                                                                                                                         pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
+                                                                                                                                                                                                                                                                                                                                         desktop mice, which was never the actual bug - only touch devices raced hover against the
+                                                                                                                                                                                                                                                                                                                                         click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
+                                                                                                                                                                                                                                                                                                                                         `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
+                                                                                                                                                                                                                                                                                                                                         `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
+                                                                                                                                                                                                                                                                                                                                         shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
+                                                                                                                                                                                                                                                                                                                                         `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
+                                                                                                                                                                                                                                                                                                                                         directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
+                                                                                                                                                                                                                                                                                                                                         `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
+                                                                                                                                                                                                                                                                                                                                         config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
+                                                                                                                                                                                                                                                                                                                                         on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
+                                                                                                                                                                                                                                                                                                                                         desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
+                                                                                                                                                                                                                                                                                                                                         is what actually closed that race originally. Verified live via Playwright with two device
+                                                                                                                                                                                                                                                                                                                                         profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
+                                                                                                                                                                                                                                                                                                                                         tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
+                                                                                                                                                                                                                                                                                                                                         context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
+                                                                                                                                                                                                                                                                                                                                         a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
+                                                                                                                                                                                                                                                                                                                                         still 440 passing/31 failing, same pre-existing set.
 
 102.  ✅ **Offline pass-and-play with automatic local recovery and airplane-mode launch
       (2026-07-17, v5.31.0).** The viewer now has a dedicated `?offline=1` hot-seat mode, linked from
@@ -5327,8 +5327,8 @@ found"` — proving the function authenticates and accepts the chat payload shap
       player's value for a faction is `bid - cost` (cost = 0 if unowned, `price + 1` if another player
       holds it), each turn you either already hold your best-value faction (skip) or take the best one
       you can, and the winner's final price is subtracted at final scoring (`phase.ts`'s
-      `finalScoringPhase` → `gainRewards(-data.bid VP)`). So a *high* bid means you want the faction
-      *more*, the exact opposite of what `SilentAuctionInfo.vue` said ("Bid 0 on your favorite; bid
+      `finalScoringPhase` → `gainRewards(-data.bid VP)`). So a _high_ bid means you want the faction
+      _more_, the exact opposite of what `SilentAuctionInfo.vue` said ("Bid 0 on your favorite; bid
       higher numbers on factions you'd only accept at a discount"). Confusingly, the explainer's own
       result table was right — only its instructions were inverted.
 
@@ -5355,10 +5355,10 @@ found"` — proving the function authenticates and accepts the chat payload shap
       on the first attempt here). Commit changes to this file with `--no-verify`.
 
       **Same-session follow-up (viewer v5.49.7): the "deal" got its own highlighted box, and the
-      prose lost a fifth of its words.** Owner: *"make a highlighted information box on what a deal
+      prose lost a fifth of its words.** Owner: _"make a highlighted information box on what a deal
       is ... and in the same box give a concise and short example ... include that you always bid on
       the factions that gives you the best deal ... Is there anything we can strip off without
-      loosing information?"* `deal-box` (a tinted, left-accented callout) now carries the whole
+      loosing information?"_ `deal-box` (a tinted, left-accented callout) now carries the whole
       definition in one place — the formula, both costs (unheld = 0, held = price + 1), and a
       three-sentence example that is deliberately A's own opening from the worked example below, so
       the numbers introduce the table instead of competing with it. The best-deal rule sits directly
@@ -5366,7 +5366,7 @@ found"` — proving the function authenticates and accepts the chat payload shap
       fact: the closing takeaway under the result table (it restated the box's example with the same
       numbers), the "you finish with the best deal still open to you" restatement (folded into the
       rule paragraph as "**You never pay more than you bid**"), and the bans from the example's setup
-      line (they never affect it). 396 → 327 template words (-17%) *including* the new box; the
+      line (they never affect it). 396 → 327 template words (-17%) _including_ the new box; the
       explanation now ends above the fold on desktop, with a hairline `example-heading` rule marking
       where the worked example starts. Viewer 721 passing, same two pre-existing failures.
 
@@ -5385,7 +5385,7 @@ found"` — proving the function authenticates and accepts the chat payload shap
       per-phase assignment for ban/pick/auction-bid/silent-bid/starting-buildings/booster. Placement
       was deliberate: the commands column sits below the entire map+research row on mobile, and
       round 0 is exactly when the board matters least and "who is doing what" matters most.
-      `Game.vue` (not `HostedBar.vue`) is the host because it renders in hosted *and* self-contained/
+      `Game.vue` (not `HostedBar.vue`) is the host because it renders in hosted _and_ self-contained/
       hot-seat play, and both text and graphical `uiMode` branches get it.
 
       The two explainer buttons moved into that strip and were **deleted** from `Commands.vue` - two
@@ -5434,11 +5434,11 @@ found"` — proving the function authenticates and accepts the chat payload shap
       cases land on top), same two pre-existing failures throughout.
 
       **Second follow-up (viewer v5.50.2): the bid form got readable, and the auction result got a
-      banner.** Owner: *"make it so you can only click on the factions that have been chosen for that
+      banner.** Owner: _"make it so you can only click on the factions that have been chosen for that
       phase ... make the faction name ... a button like normal pick faction button ... align the
       bidding boxes so they are on the same column ... is there a log summary of the silent auction
       afterwards? It should present in the same banner thing right under the top banner that you can
-      then dismiss."*
+      then dismiss."_
 
       - **`FactionSheetButton.vue`** now owns the "button that only opens a faction sheet" behaviour
         (Close-only modal, no `MoveButton`, no command). `FactionBrowser.vue` was refactored onto it,
@@ -5482,7 +5482,7 @@ found"` — proving the function authenticates and accepts the chat payload shap
       (or wrap its content in that class, as `Charts.vue`/`Rules.vue` do) or its game visuals render
       black.** `FactionBrowser.spec.ts` now asserts the class. Verified in a browser: on-turn and
       off-turn dialogs both resolve `--res-ore=#ddd --res-credit=#f2ff00 --res-power=#984ff1
-      --res-knowledge=#2080f0`, and the two sheets are pixel-identical above the footer (the only
+--res-knowledge=#2080f0`, and the two sheets are pixel-identical above the footer (the only
       difference being Close vs Cancel / "OK, I ban this one!"). Viewer 746 passing.
 
 136.  ✅ **Read checks in chat — see who has read the thread so far (2026-08-04, viewer v5.50.0, owner
@@ -5529,6 +5529,59 @@ user_id)`) and `lobby_chat_reads` (PK `user_id`), one row per reader per thread 
       their spec runs alone. The suite was NOT re-run after rebasing onto master's 718-test tree
       (owner: "Don't run more tests"); the three new specs are self-contained and touch only chat.
 
+137.  ✅ **"Preference Split Auction" — a new simultaneous, secret, budget-limited faction-selection
+      variant (2026-08-05, viewer v5.51.0).** Four players, four picked factions, one fixed pot of
+      bid points each (`EngineOptions.auctionBudget`, default **40**, range 1–999). Everyone secretly
+      splits their whole budget across all four factions at the same time; nothing is revealed until
+      the last split lands, and the assignment then follows mechanically: factions ranked by the
+      **total** bid on them, awarded top-first to the highest bidder who has no faction yet, priced
+      at the faction's **average** bid (all four original bids, never recalculated as players drop
+      out) **capped by the winner's own bid**, rounded half-up. Both tie situations — equal faction
+      totals, equal player bids — are settled automatically at random. Full rules, file map and
+      design notes: `docs/lost-fleet/PREFERENCE_SPLIT_AUCTION.md`.
+      **Engine:** `algorithms/preference-split-auction.ts` (pure resolver + `roundVictoryPoints` +
+      the shared `preferenceSplitBidError` validator), `Phase.SetupPreferenceBid`,
+      `Command.PreferenceBid`, `phaseSetupPreferenceBid`, `movePreferenceBid`,
+      `possiblePreferenceBids`. The 4-player and budget preconditions are asserted in `moveInit`, the
+      earliest point they can be — a game that reached its bid phase before anyone noticed would have
+      no legal way forward. The whole audited outcome is persisted as `engine.preferenceSplitResult`
+      and the resolution is a no-op when it is already set, so a reload can never reroll a tie (the
+      tiebreaks draw from the game's seeded PRNG on top of that, so a full replay agrees anyway).
+      **Secrecy is server-enforced, unlike the Silent Auction's** (which is only "silent" because its
+      bids are entered one seat at a time — they are plain text in `public.moves` the moment each one
+      is committed). Simultaneous bidding cannot use the move log at all, so migration
+      `20260805120000_preference_split_sealed_bids.sql` adds `auction_sealed_bids` (PK
+      `(game_id, seat)`), whose select policy returns a player only their own row until
+      `sealed_bids_complete()`, with **no** insert/update/delete policies — a submission cannot be
+      edited or withdrawn by anyone. `submit_sealed_bid()` re-validates the budget, whole/non-negative
+      points, one bid per faction and one submission per seat **server-side**. `reveal_sealed_bids()`
+      builds the four move lines itself from the stored rows and appends them in one transaction;
+      exactly-once by the same `seq_conflict` mechanism `commit_turn` uses, and returns 0 if the
+      reveal already happened. `sealed_bid_status()` exposes counts and seat numbers only, never
+      points. **NOT YET APPLIED to `mitawjpdxkheascdiffz`** — see the deploy note below.
+      **Viewer:** the bid form (`PreferenceSplitBid.vue`) lives in Game.vue's round-0 strip, not in
+      `Commands.vue`, because all four seats bid at once and Commands only renders for the one seat
+      `canPlay` points at. It polls `sealed_bid_status` every 5s (Realtime can't deliver rows that
+      are invisible by design). Reveal screen is `PreferenceSplitLog.vue` (every bid, totals,
+      averages, the ranking with any random faction-order tiebreak, a step-by-step allocation
+      timeline naming who was still eligible and why the price is what it is, and the result table
+      with bid/average/capped price/final VP), reachable from a dismissible `PreferenceSplitSummary`
+      strip and a "Faction Auction" statistics tab. `PreferenceSplitInfo.vue` is the in-app rules
+      explainer, offered from the round-0 strip during ban/pick. Create-game lists the variant with
+      its 4-player requirement, greys it out (with a reason) at other counts, drops it if the count
+      changes, and offers the budget input.
+      **Offline/hot-seat** has no server to seal anything, so the form falls back to an ordinary
+      `preferenceBid` move for the seat on turn — pass-and-play, exactly as the Silent Auction
+      already behaves offline.
+      **Tests:** 25 new algorithm cases, 18 engine-variant cases, 7 hosted sealed-bid cases, 7 bid-form
+      cases, 5 reveal-screen cases, 4 new-game cases and 4 CreateGame cases. Engine suite (excluding
+      `src/ai/**`, which this change does not touch beyond one exhaustiveness `case` in `expand.ts`)
+      and the full viewer suite both run clean — see the rerun log below.
+      **Deploy:** the migration must be applied with `apply_migration` (so it lands in the ledger —
+      see #133) before a Preference Split game is created online. Until then the variant is safe to
+      leave visible: `submit_sealed_bid` simply does not exist, so the bid panel surfaces the error
+      rather than silently losing a bid. Offline games need nothing.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
@@ -5542,8 +5595,8 @@ As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
 ### Scope first: never run a suite the change cannot break (owner instruction, 2026-08-04)
 
 **The offline-AI suite (`engine/src/ai/**`, `fuzz/`, the corpus campaigns) is off limits unless the
-change touches those files.** Owner, verbatim: *"Make sure in the future to not run those extensive
-tests. For example ai test is absolute no go when the implementation has nothing to do with it!"*
+change touches those files.\*_ Owner, verbatim: _"Make sure in the future to not run those extensive
+tests. For example ai test is absolute no go when the implementation has nothing to do with it!"\*
 This was written after a session that edited two Vue components and then ran the whole engine suite
 anyway — which in this container doesn't even finish: it is OOM-killed mid-campaign (exit 137), so
 the cost is many minutes and no answer. The same applies to any full-repo suite whose files the diff
@@ -5551,7 +5604,7 @@ never touched.
 
 Route by what was actually edited: viewer-only change → that component's spec, then the viewer suite
 once at the end. Engine (non-AI) change → the affected engine specs, then the engine suite. AI/fuzz/
-corpus change → the AI gates, which is the *only* time they belong in the plan. Docs-only change →
+corpus change → the AI gates, which is the _only_ time they belong in the plan. Docs-only change →
 no suite at all. This is the concrete form of the risk-based cadence below, not a separate rule; when
 they seem to disagree, this one wins.
 

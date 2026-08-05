@@ -398,6 +398,12 @@ async function mountGameInstance(
       onPremoveState: (premoves, failures) => {
         emitter.emit("premoveState", { premoves, failures });
       },
+      // Preference Split Auction - submission progress for the bid panel. Straight into the store
+      // (like the injected backends above) rather than through a launcher event: it is hosted-only
+      // state that no other viewer mode has an equivalent of.
+      onSealedBidState: (status) => {
+        emitter.store.commit("sealedBidStatus", status);
+      },
       // Phase 3 (§10.6) - quiet, in-app-only success feedback for a fast-path-played premove; never
       // a push (only failures push - see premove_failures' existing notify tie-in).
       onPremovePlayed: (seat, move, info) => {
@@ -412,6 +418,13 @@ async function mountGameInstance(
       getAutoChargePower: () => parseAutoChargePreference(emitter.store.state.preferences.autoChargePower as string),
     }
   );
+
+  // Preference Split Auction - the bid panel's only way to reach the server. Injected the same way
+  // the notes/chess/renju backends are, so the reusable viewer never imports Supabase itself.
+  emitter.store.commit("setSealedBidBackend", {
+    submit: (seat: number, bids: { faction: string; points: number }[]) => host.submitSealedBid(seat, bids),
+    refresh: () => host.refreshSealedBids(),
+  });
 
   // Top-bar "Live" badge (mirrors GameBar.vue's `isLive`, the lobby's own reference
   // implementation): every player seated in this specific game is online right now. Recomputed on

@@ -1,6 +1,11 @@
 import assert from "assert";
 import { set } from "lodash";
 import { version } from "../package.json";
+import {
+  DEFAULT_PREFERENCE_SPLIT_BUDGET,
+  PreferenceSplitBid,
+  PreferenceSplitResult,
+} from "./algorithms/preference-split-auction";
 import { SilentAuctionBid, SilentAuctionStep } from "./algorithms/silent-auction";
 import { generate as generateAvailableCommands } from "./available/available-command";
 import { AvailableCommand, BrainstoneActionData } from "./available/types";
@@ -59,11 +64,20 @@ import {
   phaseSetupFaction,
   phaseSetupFactionBan,
   phaseSetupInit,
+  phaseSetupPreferenceBid,
   phaseSetupSilentBid,
 } from "./move/phase";
 import { moveChooseCoverTechTile, moveChooseTechTile, moveResearch } from "./move/research";
 import { moveChooseIncome, moveChooseRoundBooster, moveEndTurn, movePass } from "./move/round";
-import { moveBanFaction, moveBid, moveChooseFaction, moveRotateSectors, moveSetup, moveSilentBid } from "./move/setup";
+import {
+  moveBanFaction,
+  moveBid,
+  moveChooseFaction,
+  movePreferenceBid,
+  moveRotateSectors,
+  moveSetup,
+  moveSilentBid,
+} from "./move/setup";
 import { moveShip } from "./move/ships";
 import { moveGaiaFormTransdim, moveSpaceshipAction } from "./move/spaceship-actions";
 import Player from "./player";
@@ -88,6 +102,16 @@ export enum AuctionVariant {
    * maximizes their own value, at the lowest price nobody else was willing to beat.
    */
   Silent = "silent",
+  /**
+   * "Preference Split Auction" (4 players / 4 factions only): after the pick round, every player
+   * secretly splits ONE fixed budget of `EngineOptions.auctionBudget` whole bid points across the
+   * four picked factions, all at the same time. Nothing is revealed until all four submissions are
+   * in, and the whole assignment then follows mechanically from the numbers - factions ranked by
+   * the total bid on them, each awarded to the highest still-unassigned bidder, priced at the
+   * faction's average bid capped by the winner's own bid. See
+   * algorithms/preference-split-auction.ts.
+   */
+  PreferenceSplit = "preference-split",
 }
 
 export type FactionVariant =
@@ -127,6 +151,13 @@ export interface EngineOptions {
   officialCenterSectors?: boolean;
   /** auction */
   auction?: AuctionVariant;
+  /**
+   * Total bid budget each player must split across the factions in the Preference Split Auction
+   * (AuctionVariant.PreferenceSplit). Ignored by every other variant. Undefined falls back to
+   * DEFAULT_PREFERENCE_SPLIT_BUDGET, which is also what pre-existing stored games (none yet, but
+   * the fallback keeps a future default change from rewriting old games) replay with.
+   */
+  auctionBudget?: number;
   /**
    * Independent sequential-ban round before faction selection (one forced ban per player, turn
    * order), regardless of auction variant. Undefined (not explicitly set) falls back to the legacy
@@ -266,6 +297,12 @@ export default class Engine {
   bannedFactions: Faction[] = [];
   silentAuctionBids: SilentAuctionBid[] = [];
   silentAuctionLog: SilentAuctionStep[] = [];
+  // Preference Split Auction variant (AuctionVariant.PreferenceSplit) state - see move/phase.ts's
+  // SetupPreferenceBid phase and algorithms/preference-split-auction.ts. `preferenceSplitResult`
+  // is the persisted, audited outcome (ranking, both kinds of random tiebreak, every payment):
+  // written exactly once, when the last submission lands, and never recomputed afterwards.
+  preferenceSplitBids: PreferenceSplitBid[] = [];
+  preferenceSplitResult?: PreferenceSplitResult;
   options: EngineOptions = {};
   tiles: {
     boosters: {
@@ -325,10 +362,14 @@ export default class Engine {
   replayVersion: string;
   replay: boolean; // be more permissive during replay
 
+  /** The Preference Split Auction's per-player bid budget, defaulted once so every layer
+   * (move validation, available commands, the viewer's form) reads the same number. */
+  get preferenceSplitBudget(): number {
+    return this.options.auctionBudget ?? DEFAULT_PREFERENCE_SPLIT_BUDGET;
+  }
+
   get expansions(): Expansion {
-    return (
-      0 | (this.options.frontiers ? Expansion.Frontiers : 0) | (this.options.lostFleet ? Expansion.LostFleet : 0)
-    );
+    return 0 | (this.options.frontiers ? Expansion.Frontiers : 0) | (this.options.lostFleet ? Expansion.LostFleet : 0);
   }
 
   round: number = Round.None;
@@ -560,11 +601,7 @@ export default class Engine {
     this.players.push(player);
 
     player.data.on(`gain-${Resource.TechTile}`, (count, source) =>
-      this.processNextMove(
-        SubPhase.ChooseTechTile,
-        null,
-        source === BoardAction.Qic1 || source === Spaceship.Rebellion
-      )
+      this.processNextMove(SubPhase.ChooseTechTile, null, source === BoardAction.Qic1 || source === Spaceship.Rebellion)
     );
     player.data.on(`gain-${Resource.InstantGaiaforming}`, () =>
       this.processNextMove(SubPhase.InstantGaiaforming, null, true)
@@ -910,6 +947,7 @@ export default class Engine {
       [Phase.SetupFaction]: phaseSetupFaction,
       [Phase.SetupAuction]: phaseSetupAuction,
       [Phase.SetupSilentBid]: phaseSetupSilentBid,
+      [Phase.SetupPreferenceBid]: phaseSetupPreferenceBid,
       [Phase.SetupBuilding]: phaseSetupBuilding,
       [Phase.SetupBooster]: phaseSetupBooster,
       [Phase.RoundIncome]: phaseRoundIncome,
@@ -982,6 +1020,7 @@ export default class Engine {
       [Command.ChooseFaction]: moveChooseFaction,
       [Command.Bid]: moveBid,
       [Command.SilentBid]: moveSilentBid,
+      [Command.PreferenceBid]: movePreferenceBid,
       [Command.Build]: moveBuild,
       [Command.PlaceLostPlanet]: moveLostPlanet,
       [Command.MoveShip]: moveShip,

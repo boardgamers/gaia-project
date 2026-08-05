@@ -18,6 +18,16 @@
       How does the auction work? <b-badge variant="info" pill>i</b-badge>
     </b-btn>
     <SilentAuctionInfo v-if="showSilentAuctionInfo" />
+    <b-btn
+      v-if="showPreferenceSplitInfo"
+      v-b-modal.preference-split-info
+      variant="link"
+      size="sm"
+      class="setup-status__info"
+    >
+      How does the auction work? <b-badge variant="info" pill>i</b-badge>
+    </b-btn>
+    <PreferenceSplitInfo v-if="showPreferenceSplitInfo" :budget="gameData.preferenceSplitBudget" />
     <b-btn v-if="showBanPhaseInfo" v-b-modal.ban-phase-info variant="link" size="sm" class="setup-status__info">
       What's the ban phase? <b-badge variant="info" pill>i</b-badge>
     </b-btn>
@@ -31,6 +41,7 @@ import { Component, Vue } from "vue-property-decorator";
 import { factionName } from "../data/factions";
 import { isBeforeRound1 } from "../logic/utils";
 import BanPhaseInfo from "./BanPhaseInfo.vue";
+import PreferenceSplitInfo from "./PreferenceSplitInfo.vue";
 import SilentAuctionInfo from "./SilentAuctionInfo.vue";
 
 /** What the player on turn has to do, in the second person and in the third person. */
@@ -39,11 +50,14 @@ const assignments: { [phase: string]: [string, string] } = {
   [Phase.SetupFaction]: ["to pick a faction", "to pick a faction"],
   [Phase.SetupAuction]: ["to bid on a faction", "to bid on a faction"],
   [Phase.SetupSilentBid]: ["to submit your secret bids", "to submit their secret bids"],
+  // The Preference Split Auction is simultaneous, so "whose turn" is really "who is still missing";
+  // the engine's turn pointer only decides the order the submissions are recorded in.
+  [Phase.SetupPreferenceBid]: ["to split your bid points", "to split their bid points"],
   [Phase.SetupBuilding]: ["to place your starting buildings", "to place their starting buildings"],
   [Phase.SetupBooster]: ["to choose your round booster", "to choose their round booster"],
 };
 
-@Component({ components: { BanPhaseInfo, SilentAuctionInfo } })
+@Component({ components: { BanPhaseInfo, PreferenceSplitInfo, SilentAuctionInfo } })
 export default class SetupStatus extends Vue {
   get gameData(): Engine {
     return this.$store.state.data;
@@ -63,6 +77,12 @@ export default class SetupStatus extends Vue {
 
   get visible(): boolean {
     const data = this.gameData;
+    // Hosted Preference Split bidding is simultaneous: naming one seat as "on turn" there would be
+    // actively wrong, and the bid panel right below says what is actually happening (n of 4 in).
+    // Hot-seat play keeps the line, because there the device really does get passed around.
+    if (data?.phase === Phase.SetupPreferenceBid && this.$store.state.sealedBidBackend) {
+      return false;
+    }
     return (
       !!data &&
       data.players?.length > 0 &&
@@ -101,6 +121,13 @@ export default class SetupStatus extends Vue {
       (this.gameData.phase === Phase.SetupFactionBan ||
         this.gameData.phase === Phase.SetupFaction ||
         this.gameData.phase === Phase.SetupSilentBid)
+    );
+  }
+
+  get showPreferenceSplitInfo(): boolean {
+    return (
+      this.gameData.options.auction === AuctionVariant.PreferenceSplit &&
+      (this.gameData.phase === Phase.SetupFactionBan || this.gameData.phase === Phase.SetupFaction)
     );
   }
 

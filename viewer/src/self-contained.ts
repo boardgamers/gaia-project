@@ -27,6 +27,7 @@ export type SelfContainedSetup = {
   options: {
     layout: Layout | undefined;
     auction: AuctionVariant | undefined;
+    auctionBudget: number | undefined;
     banPhase: boolean | undefined;
     factionVariant: FactionVariant;
     randomFactions: boolean;
@@ -81,6 +82,10 @@ export function parseSelfContainedSetup(search = "", env: SelfContainedEnv = pro
       ? AuctionVariant.Silent
       : undefined;
   const banPhase = optionalFlag("banPhase", env.VUE_APP_banPhase) ?? (params.has("offline") ? true : undefined);
+  // Preference Split Auction's per-player bid budget; left undefined (engine default) unless a
+  // whole number was actually supplied.
+  const budgetValue = str("auctionBudget", env.VUE_APP_auctionBudget);
+  const auctionBudget = budgetValue != null && /^\d+$/.test(budgetValue) ? Number(budgetValue) : undefined;
 
   return {
     players,
@@ -89,6 +94,7 @@ export function parseSelfContainedSetup(search = "", env: SelfContainedEnv = pro
     options: {
       layout: (str("layout", env.VUE_APP_layout) ?? undefined) as Layout,
       auction,
+      auctionBudget,
       banPhase,
       factionVariant: (str("factionVariant", env.VUE_APP_factionVariant) ?? "standard") as FactionVariant,
       randomFactions: flag("randomFactions", env.VUE_APP_randomFactions),
