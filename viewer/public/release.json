@@ -1,7 +1,24 @@
 {
-  "version": "5.52.0",
-  "releasedAt": "2026-08-05",
+  "version": "5.53.0",
+  "releasedAt": "2026-08-06",
   "entries": [
+    {
+      "version": "5.53.0",
+      "releasedAt": "2026-08-06",
+      "kind": "update",
+      "title": "Setup log fix, bigger auction budget",
+      "impact": "",
+      "changes": [
+        "Fixed the game log disappearing entirely during round 0 in any game with a faction ban phase.",
+        "The Preference Split Auction budget is now 20 points per player (40/60/80 for 2/3/4 players), up from 10.",
+        "makeEntry treats banFaction/silentBid/preferenceBid as pre-faction commands and falls back to a neutral row for any faction with no log color, so an undefined color can no longer throw in AdvancedLog.rowStyle and drop the whole panel.",
+        "Only the default budget moved: auctionBudget is still stored per game at creation, and the server-side preference_split_budget fallback was migrated in lockstep."
+      ],
+      "userChanges": [
+        "Fixed the game log disappearing entirely during round 0 in any game with a faction ban phase.",
+        "The Preference Split Auction budget is now 20 points per player (40/60/80 for 2/3/4 players), up from 10."
+      ]
+    },
     {
       "version": "5.52.0",
       "releasedAt": "2026-08-05",
