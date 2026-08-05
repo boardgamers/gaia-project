@@ -63,12 +63,13 @@ PREFERENCE_SPLIT_AUCTION.md`. Unlike the Silent Auction, its secrecy is **server
   migrations ARE applied live** on `mitawjpdxkheascdiffz` (2026-08-05, ledger versions
   `20260805122251 preference_split_sealed_bids`, `20260805130145 lock_down_auction_sealed_bids_grants`,
   `20260805131046 pin_preference_split_budget_search_path`) and verified against the live objects.
-  **What is NOT deployed is the `resolve-automation` Edge Function**: its committed
-  `_shared/engine.bundle.js` was rebuilt for the new `preferenceBid` command, but the
-  `Supabase - Deploy Edge Function` workflow has been failing with `401 Unauthorized` since at least
-  2026-07-27 — the repo's `SUPABASE_ACCESS_TOKEN` secret is expired. Until it is rotated and the
-  workflow re-run, offline premove/auto-leech automation no-ops (`outcome: "replay-failed"`, caught,
-  nothing deleted or corrupted) for Preference Split games only.
+  **`resolve-automation` is deployed too** (version 4, 2026-08-05), carrying the
+  `_shared/engine.bundle.js` rebuilt for the new `preferenceBid` command, so offline premove/
+  auto-leech automation works for this variant. Getting there needed the repo's expired
+  `SUPABASE_ACCESS_TOKEN` secret rotated — the `Supabase - Deploy Edge Function` workflow had been
+  failing on `401 Unauthorized` since at least 2026-07-27, which had also left `notify` stuck on
+  version 13 (now 14). **If that workflow ever starts 401ing again, the secret has expired again;
+  that is the whole diagnosis.**
 - A "Silent Auction" faction-selection variant (`AuctionVariant.Silent`, PROGRESS #61) is
   implemented and tested: sequential ban → sequential pick → sequential private bid submission →
   automatic ascending-auction resolution (`algorithms/silent-auction.ts`), with a setup picker

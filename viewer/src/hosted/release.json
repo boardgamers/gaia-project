@@ -1,7 +1,20 @@
 {
-  "version": "5.51.3",
+  "version": "5.51.4",
   "releasedAt": "2026-08-05",
   "entries": [
+    {
+      "version": "5.51.4",
+      "releasedAt": "2026-08-05",
+      "kind": "update",
+      "title": "Offline automation for the faction auction",
+      "impact": "",
+      "changes": [
+        "Premoves and auto-leech now also run while you are offline in Preference Split Auction games.",
+        "Deployed resolve-automation v4 with the rebuilt engine bundle (and notify v14) after the expired SUPABASE_ACCESS_TOKEN repo secret was rotated - that workflow had been failing on 401 since 2026-07-27.",
+        "Ran the 2/3-player generalization's tests: engine 677 passing, viewer 777 passing with only the known pre-existing SetupPreview failure."
+      ],
+      "userChanges": ["Premoves and auto-leech now also run while you are offline in Preference Split Auction games."]
+    },
     {
       "version": "5.51.3",
       "releasedAt": "2026-08-05",
