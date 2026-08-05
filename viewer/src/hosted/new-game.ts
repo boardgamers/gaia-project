@@ -4,8 +4,6 @@ export type NewGameForm = {
   playerCount: number;
   seats: { userId?: string | null; name?: string }[];
   auctionVariant: AuctionVariantOption;
-  /** Preference Split Auction only: the fixed bid budget every player splits. */
-  auctionBudget?: number;
   banPhase?: boolean;
   officialCenterSectors?: boolean;
   openLobby: boolean;
@@ -169,10 +167,12 @@ export function buildCreateGameParams(form: NewGameForm, seed: string, rotateMov
     advancedRules: true,
     factionVariant: "standard",
     ...(auction ? { auction } : {}),
-    // Only stored for the variant it belongs to, so no other game's options carry a meaningless
-    // budget. The engine (and the sealed-bid RPCs) fall back to the default when it is absent.
+    // Fixed by the player count rather than chosen at setup (owner request, 2026-08-05), but still
+    // STORED per game: that pins this game's budget forever, so changing the default later can
+    // never rewrite what an in-progress game's players were asked to split. Only stored for the
+    // variant it belongs to, so no other game's options carry a meaningless budget.
     ...(auction === AuctionVariant.PreferenceSplit
-      ? { auctionBudget: form.auctionBudget ?? defaultPreferenceSplitBudget(form.playerCount) }
+      ? { auctionBudget: defaultPreferenceSplitBudget(form.playerCount) }
       : {}),
     // Always explicit (not conditionally omitted) so the checkbox has full control even for Silent
     // Auction - the engine's `banPhase ?? auction === Silent` fallback is only meant to preserve

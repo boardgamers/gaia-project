@@ -148,9 +148,9 @@ describe("Preference Split Auction setup", () => {
     }
   });
 
-  it("stores the variant and its configured budget in the game options", () => {
+  it("stores the variant and the budget its player count fixes", () => {
     const params = buildCreateGameParams(
-      { playerCount: 4, seats: fourSeats, auctionVariant: "preference-split", auctionBudget: 24, openLobby: false },
+      { playerCount: 4, seats: fourSeats, auctionVariant: "preference-split", openLobby: false },
       "fixed-seed",
       "p4 rotate"
     );
@@ -160,12 +160,12 @@ describe("Preference Split Auction setup", () => {
       advancedRules: true,
       factionVariant: "standard",
       auction: "preference-split",
-      auctionBudget: 24,
+      auctionBudget: 40,
       banPhase: false,
     });
   });
 
-  it("scales the default budget with the player count, and stores none for another variant", () => {
+  it("scales the stored budget with the player count, and stores none for another variant", () => {
     for (const [playerCount, budget] of [
       [2, 20],
       [3, 30],
@@ -185,7 +185,7 @@ describe("Preference Split Auction setup", () => {
     }
 
     const silent = buildCreateGameParams(
-      { playerCount: 4, seats: fourSeats, auctionVariant: "silent", auctionBudget: 24, openLobby: false },
+      { playerCount: 4, seats: fourSeats, auctionVariant: "silent", openLobby: false },
       "fixed-seed",
       "p4 rotate"
     );

@@ -77,9 +77,9 @@ export default class PreferenceSplitBid extends Vue {
   values: Record<string, number> = {};
   busy = false;
   error = "";
-  /** Set once this device has submitted for `seat`, so the form doesn't come back while the poll
-   * is still catching up. Server-side the submission is final regardless. */
-  private submittedSeat: number | null = null;
+  /** Seats this device has submitted for, so the form doesn't come back for one of them while the
+   * status poll is still catching up. Server-side the submission is final regardless. */
+  private locallySubmitted: number[] = [];
   private poller: number | null = null;
 
   get gameData(): Engine {
@@ -100,19 +100,41 @@ export default class PreferenceSplitBid extends Vue {
   }
 
   /**
-   * The seat this device is bidding for.
+   * Every seat this device may submit for, in the order it should be asked for them.
    *
-   * Hosted: the seat the viewer is locked to (`player.index`), whoever the engine currently points
-   * at - that is what makes the submissions genuinely simultaneous. Offline/hot-seat: the seat
-   * on turn, since the device is passed around and the engine's own order decides.
+   * - A locked seat (`player.index` >= 0) is the ordinary hosted case: exactly that one, whoever
+   *   the engine's turn pointer currently happens to be on. That is what makes the submissions
+   *   genuinely simultaneous.
+   * - `player.index === -1` is a spectator: nothing to submit.
+   * - NO lock at all in hosted play means one account holds every seat - a test game. `seatToLock`
+   *   (host.ts) deliberately returns null there, so reading `player.index` alone would leave this
+   *   panel with no seat and render nothing, while Commands.vue - whose `canPlay` reads "no lock"
+   *   as "you may play" - still pointed at it. That was a real bug: an unplayable bid phase.
+   *   Here it means all seats, asked for one at a time.
+   * - No lock and no backend is offline/hot-seat: the seat on turn, since the device gets passed
+   *   around and the engine's own order decides.
    */
-  get seat(): number | null {
+  get mySeats(): number[] {
+    const locked = this.$store.state.player?.index;
+    if (typeof locked === "number") {
+      return locked >= 0 ? [locked] : [];
+    }
     if (this.backend) {
-      const locked = this.$store.state.player?.index;
-      return typeof locked === "number" && locked >= 0 ? locked : null;
+      return (this.gameData?.players ?? []).map((_, index: number) => index);
     }
     const onTurn = this.gameData?.playerToMove;
-    return typeof onTurn === "number" ? onTurn : null;
+    return typeof onTurn === "number" ? [onTurn] : [];
+  }
+
+  /** The seats above that still owe a submission. */
+  get pendingSeats(): number[] {
+    const done = new Set<number>([...(this.status?.submittedSeats ?? []), ...this.locallySubmitted]);
+    return this.mySeats.filter((seat) => !done.has(seat));
+  }
+
+  /** The seat the form is currently for: the next one that still owes a submission. */
+  get seat(): number | null {
+    return this.pendingSeats.length > 0 ? this.pendingSeats[0] : this.mySeats[0] ?? null;
   }
 
   get command() {
@@ -131,24 +153,21 @@ export default class PreferenceSplitBid extends Vue {
     return this.status?.playerCount ?? this.gameData?.players?.length ?? 0;
   }
 
+  /** True once this device has nothing left to submit - show the waiting screen instead. */
   get submitted(): boolean {
-    if (this.seat === null) {
-      return false;
-    }
-    if (this.submittedSeat === this.seat) {
-      return true;
-    }
-    return (this.status?.submittedSeats ?? []).includes(this.seat);
+    return this.mySeats.length > 0 && this.pendingSeats.length === 0;
   }
 
   get visible(): boolean {
-    return this.bidding && this.seat !== null && this.factions.length > 0;
+    return this.bidding && this.mySeats.length > 0 && this.factions.length > 0;
   }
 
-  /** Hosted play has real seats, so name which one this form is for when the user holds several. */
+  /** Always name the seat being bid for. It is not decoration when this device holds several of
+   * them (a hosted test game, or hot-seat play): it is the only thing saying whose split this is. */
   get seatSuffix(): string {
     const name = this.seat === null ? "" : this.gameData?.players?.[this.seat]?.name ?? "";
-    return this.backend && name ? ` — ${name}` : "";
+    const fallback = this.seat === null ? "" : `Player ${this.seat + 1}`;
+    return ` — ${name || fallback}`;
   }
 
   get waitingText(): string {
@@ -193,6 +212,15 @@ export default class PreferenceSplitBid extends Vue {
   @Watch("factions")
   onFactionsChanged(next: Faction[], previous: Faction[]) {
     if (next.join(",") !== (previous ?? []).join(",")) {
+      this.resetValues();
+    }
+  }
+
+  /** A hosted test game (or hot-seat play) walks this form through several seats in turn - each one
+   * has to start from a blank split, not the previous player's numbers. */
+  @Watch("seat")
+  onSeatChanged(next: number | null, previous: number | null) {
+    if (next !== previous) {
       this.resetValues();
     }
   }
@@ -252,7 +280,8 @@ export default class PreferenceSplitBid extends Vue {
     try {
       if (this.backend) {
         await this.backend.submit(seat, this.entries);
-        this.submittedSeat = seat;
+        this.locallySubmitted = [...this.locallySubmitted, seat];
+        this.resetValues();
       } else {
         // Offline/hot-seat: no server to seal anything, so the bid is an ordinary move for the seat
         // on turn and secrecy is whoever else is looking at the screen.

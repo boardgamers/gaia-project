@@ -35,11 +35,16 @@ bid is (`player.data.bid`, cashed out in `finalScoringPhase`).
 
 ### Budget (X)
 
-Configurable per game (`EngineOptions.auctionBudget`, set from the create-game screen), valid range
-1–999, whole numbers only.
+**Fixed by the player count: 10 points per player** (owner decision, 2026-08-05 — it was briefly a
+number you typed at setup, and that was one dial too many for something with a single sensible
+answer). `EngineOptions.auctionBudget` still exists and is still stored per game by `create_game`,
+which pins a game's budget forever so changing the default can never rewrite what an in-progress
+game's players were asked to split; there is simply no UI that lets you choose it. The engine
+accepts any whole number 1–999 if one is supplied another way (`?auctionBudget=` in the
+self-contained viewer, handy for testing).
 
-**The default scales with the player count: 10 points per player** — 20 at 2 players, 30 at 3, 40 at
-4 (`defaultPreferenceSplitBudget`). That is because **X is the table's total bill, not one player's**:
+**The scale is 10 points per player** — 20 at 2 players, 30 at 3, 40 at 4
+(`defaultPreferenceSplitBudget`). That is because **X is the table's total bill, not one player's**:
 every faction costs its own average (its total over N players) and there are N factions, so the
 payments always add up to exactly X before rounding. Each player therefore pays X/N on average,
 whoever ends up with what. A flat default would have made a 2-player auction twice as punishing as a

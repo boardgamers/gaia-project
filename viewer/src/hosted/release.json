@@ -1,7 +1,23 @@
 {
-  "version": "5.51.4",
+  "version": "5.52.0",
   "releasedAt": "2026-08-05",
   "entries": [
+    {
+      "version": "5.52.0",
+      "releasedAt": "2026-08-05",
+      "kind": "update",
+      "title": "Faction auction bid panel fix",
+      "impact": "",
+      "changes": [
+        "Fixed the Preference Split Auction bid panel not appearing in test games, which made the bid phase impossible to play.",
+        "The bid budget is now fixed by the player count (20/30/40 for 2/3/4 players) instead of being typed in at setup.",
+        "PreferenceSplitBid derives mySeats/pendingSeats rather than a single locked seat, so a test game (seatToLock returns null when one account holds every seat) walks through each seat in turn."
+      ],
+      "userChanges": [
+        "Fixed the Preference Split Auction bid panel not appearing in test games, which made the bid phase impossible to play.",
+        "The bid budget is now fixed by the player count (20/30/40 for 2/3/4 players) instead of being typed in at setup."
+      ]
+    },
     {
       "version": "5.51.4",
       "releasedAt": "2026-08-05",

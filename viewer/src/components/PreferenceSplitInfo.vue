@@ -8,7 +8,8 @@
   >
     <div class="preference-split-info">
       <p>
-        One picked faction per player, and one fixed pot of <b>{{ budget }} bid points</b> each.
+        One picked faction per player, and one fixed pot of <b>{{ budget }} bid points</b> each (10 per player at the
+        table, so the whole table's payments come to {{ budget }}).
         <b>You split your whole {{ budget }} across them all</b> - as lopsided or as even as you like - and everybody
         does it at the same time, in secret. Nothing at all is revealed until the last submission is in, and then the
         whole thing resolves on its own. There is no second round and nothing left to decide.

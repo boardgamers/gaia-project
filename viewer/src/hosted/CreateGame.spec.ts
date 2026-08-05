@@ -214,41 +214,31 @@ describe("CreateGame", () => {
       expect(vm.unavailableVariantNote).to.equal("");
     });
 
-    it("offers a configurable budget only for this variant, scaled to the player count", async () => {
+    it("states the budget the player count fixes, and offers no way to change it", async () => {
       const wrapper = await mounted();
       const vm = wrapper.vm as any;
 
+      // The budget note only appears once the variant is picked (the variant card's own summary
+      // mentions bid points regardless, so match on the concrete number).
+      expect(wrapper.text()).to.not.match(/\d+ bid points/);
+
+      vm.setPlayerCount(4);
+      vm.form.auctionVariant = "preference-split";
+      await Vue.nextTick();
+
+      expect(vm.auctionBudget).to.equal(40);
+      expect(wrapper.text()).to.include("40 bid points");
+      // It is derived, not entered - there is no input for it at all.
       expect(wrapper.find("#create-game-auction-budget").exists()).to.equal(false);
 
-      vm.setPlayerCount(4);
-      vm.form.auctionVariant = "preference-split";
-      await Vue.nextTick();
-
-      expect(wrapper.find("#create-game-auction-budget").exists()).to.equal(true);
-      expect(vm.form.auctionBudget).to.equal(40);
-      expect(vm.auctionBudgetError).to.equal("");
-
-      // The budget is the table's whole bill, so it follows the head count rather than keeping a
-      // value chosen for a differently-sized game.
       vm.setPlayerCount(3);
       await Vue.nextTick();
-      expect(vm.form.auctionBudget).to.equal(30);
+      expect(vm.auctionBudget).to.equal(30);
+      expect(wrapper.text()).to.include("30 bid points");
+
       vm.setPlayerCount(2);
       await Vue.nextTick();
-      expect(vm.form.auctionBudget).to.equal(20);
-    });
-
-    it("blocks creation on an invalid budget and says so", async () => {
-      const wrapper = await mounted();
-      const vm = wrapper.vm as any;
-      vm.setPlayerCount(4);
-      vm.form.auctionVariant = "preference-split";
-      vm.form.auctionBudget = 0;
-      await Vue.nextTick();
-
-      expect(vm.auctionBudgetError).to.match(/whole number between/);
-      expect(vm.canCreate).to.equal(false);
-      expect(vm.blockedReason).to.match(/whole number between/);
+      expect(vm.auctionBudget).to.equal(20);
     });
 
     it("keeps the variant selected across a player-count change", async () => {

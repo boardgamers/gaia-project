@@ -122,6 +122,7 @@ describe("PreferenceSplitBid", () => {
   });
 
   it("falls back to an ordinary move in offline/hot-seat play, for the seat on turn", async () => {
+    // No lock AND no backend - the offline case, where the seat on turn is the one to bid for.
     const { store } = biddingStore({ seat: null });
     const { container, emitted } = render(PreferenceSplitBid, { store });
 
@@ -138,6 +139,60 @@ describe("PreferenceSplitBid", () => {
     store.commit("receiveData", engine);
 
     const { container } = render(PreferenceSplitBid, { store });
+    expect(container.querySelector(".preference-split-bid")).to.equal(null);
+  });
+
+  it("renders in a hosted test game, where one account holds every seat and there is no seat lock", async () => {
+    // seatToLock() returns null when mySeats covers the whole table, so `player` is null even
+    // though this IS hosted play. Reading player.index alone used to leave the panel with no seat
+    // and render nothing at all, while Commands.vue still told the user to use it.
+    const { store, submitted } = biddingStore({ hosted: true, seat: null });
+    const { container } = render(PreferenceSplitBid, { store });
+
+    expect(inputs(container)).to.have.length(4);
+    // It bids for the first seat that still owes a submission, and names whose split it is.
+    expect(container.textContent).to.contain("Player 1");
+
+    await fill(container, [20, 12, 6, 2]);
+    await fireEvent.click(submitButton(container));
+
+    expect(submitted).to.deep.equal([
+      {
+        seat: 0,
+        bids: [
+          { faction: "itars", points: 20 },
+          { faction: "taklons", points: 12 },
+          { faction: "xenos", points: 6 },
+          { faction: "terrans", points: 2 },
+        ],
+      },
+    ]);
+  });
+
+  it("walks a test game through the remaining seats, blanking the form each time", async () => {
+    // Seats 0 and 1 are already in, so the form must be on seat 2 - with empty inputs, not seat 1's
+    // numbers - and must still be a form rather than the waiting screen.
+    const { store } = biddingStore({ hosted: true, seat: null, submittedSeats: [0, 1] });
+    const { container } = render(PreferenceSplitBid, { store });
+
+    expect(inputs(container)).to.have.length(4);
+    expect(inputs(container).every((input) => input.value === "0")).to.equal(true);
+    expect(container.textContent).to.contain("Player 3");
+    expect(submitButton(container).disabled).to.equal(true);
+  });
+
+  it("shows the waiting screen in a test game only once every seat is in", () => {
+    const { store } = biddingStore({ hosted: true, seat: null, submittedSeats: [0, 1, 2, 3] });
+    const { container } = render(PreferenceSplitBid, { store });
+
+    expect(inputs(container)).to.have.length(0);
+    expect(container.textContent).to.contain("Everyone has submitted");
+  });
+
+  it("shows nothing to a spectator", () => {
+    const { store } = biddingStore({ hosted: true, seat: -1 });
+    const { container } = render(PreferenceSplitBid, { store });
+
     expect(container.querySelector(".preference-split-bid")).to.equal(null);
   });
 });

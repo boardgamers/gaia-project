@@ -71,24 +71,11 @@
           <p v-if="unavailableVariantNote" class="create-game-help create-game-variant-note mb-2">
             {{ unavailableVariantNote }}
           </p>
-          <div v-if="form.auctionVariant === 'preference-split'" class="create-game-budget">
-            <label class="mb-0" for="create-game-auction-budget">Bid points per player</label>
-            <b-form-input
-              id="create-game-auction-budget"
-              type="number"
-              :min="minAuctionBudget"
-              :max="maxAuctionBudget"
-              step="1"
-              v-model.number="form.auctionBudget"
-              class="create-game-budget__input"
-            />
-            <span class="create-game-help">
-              Each player splits exactly this many points across the {{ form.playerCount }} picked factions. The
-              payments add up to this across the table, so ~{{ Math.round(form.auctionBudget / form.playerCount) }} VP
-              each.
-            </span>
-          </div>
-          <div v-if="auctionBudgetError" class="small text-danger mb-2">{{ auctionBudgetError }}</div>
+          <p v-if="form.auctionVariant === 'preference-split'" class="create-game-help create-game-budget mb-2">
+            Each player secretly splits <b>{{ auctionBudget }} bid points</b> across the {{ form.playerCount }} picked
+            factions. Fixed by the player count (10 per player), because the payments add up to that across the whole
+            table &mdash; about {{ auctionBudget / form.playerCount }} VP each.
+          </p>
           <div class="create-game-ban-phase">
             <b-form-checkbox v-model="form.banPhase" class="create-game-inline-check mb-0">Ban phase</b-form-checkbox>
             <button
@@ -208,12 +195,7 @@
 </template>
 
 <script lang="ts">
-import Engine, {
-  defaultPreferenceSplitBudget,
-  isValidPreferenceSplitBudget,
-  MAX_PREFERENCE_SPLIT_BUDGET,
-  MIN_PREFERENCE_SPLIT_BUDGET,
-} from "@gaia-project/engine";
+import Engine, { defaultPreferenceSplitBudget } from "@gaia-project/engine";
 import Vue from "vue";
 import InfoModal from "./InfoModal.vue";
 import { AUCTION_VARIANT_OPTIONS, auctionVariantBlockedReason, buildCreateGameParams, shuffleSeats } from "./new-game";
@@ -255,7 +237,6 @@ export default Vue.extend({
         playerCount: 2,
         testGame: false,
         auctionVariant: (offline ? "silent" : "none") as import("./new-game").AuctionVariantOption,
-        auctionBudget: defaultPreferenceSplitBudget(2),
         banPhase: offline,
         officialCenterSectors: true,
       },
@@ -278,11 +259,9 @@ export default Vue.extend({
     auctionVariantOptions() {
       return AUCTION_VARIANT_OPTIONS;
     },
-    minAuctionBudget(): number {
-      return MIN_PREFERENCE_SPLIT_BUDGET;
-    },
-    maxAuctionBudget(): number {
-      return MAX_PREFERENCE_SPLIT_BUDGET;
+    /** Not configurable: derived from the player count, and shown so it is not a surprise later. */
+    auctionBudget(): number {
+      return defaultPreferenceSplitBudget(this.form.playerCount);
     },
     /** variant value -> why it can't be picked at the current player count ("" when it can). */
     blockedVariants(): Record<string, string> {
@@ -296,14 +275,6 @@ export default Vue.extend({
     unavailableVariantNote(): string {
       return Object.values(this.blockedVariants as Record<string, string>).find((reason) => !!reason) ?? "";
     },
-    auctionBudgetError(): string {
-      if (this.form.auctionVariant !== "preference-split") {
-        return "";
-      }
-      return isValidPreferenceSplitBudget(this.form.auctionBudget)
-        ? ""
-        : `The bid budget must be a whole number between ${MIN_PREFERENCE_SPLIT_BUDGET} and ${MAX_PREFERENCE_SPLIT_BUDGET}.`;
-    },
     myUserId(): string {
       return (this.session as any).user?.id ?? "";
     },
@@ -314,7 +285,7 @@ export default Vue.extend({
       if (!this.currentSeed || !this.setupValid) {
         return false;
       }
-      if (this.blockedVariants[this.form.auctionVariant] || this.auctionBudgetError) {
+      if (this.blockedVariants[this.form.auctionVariant]) {
         return false;
       }
       if (!this.offline && !this.form.testGame && this.inviteMode === "direct") {
@@ -325,9 +296,6 @@ export default Vue.extend({
     blockedReason(): string {
       if (this.blockedVariants[this.form.auctionVariant]) {
         return this.blockedVariants[this.form.auctionVariant];
-      }
-      if (this.auctionBudgetError) {
-        return this.auctionBudgetError;
       }
       if (
         !this.offline &&
@@ -349,10 +317,8 @@ export default Vue.extend({
   methods: {
     setPlayerCount(count: number) {
       this.form.playerCount = count;
-      // The budget is the table's total bill, so its default scales with the head count - follow
-      // the count unconditionally rather than tracking whether the number was hand-edited, so the
-      // field can never silently keep a value that was chosen for a different-sized game.
-      this.form.auctionBudget = defaultPreferenceSplitBudget(count);
+      // The bid budget follows from this automatically (see `auctionBudget`), so there is nothing
+      // to keep in sync here.
       // No variant restricts its player count today, but one could - and must not silently survive
       // a count change if it did.
       if (auctionVariantBlockedReason(this.form.auctionVariant, count)) {
@@ -412,7 +378,6 @@ export default Vue.extend({
             playerCount: this.form.playerCount,
             seats,
             auctionVariant: this.form.auctionVariant,
-            auctionBudget: this.form.auctionBudget,
             banPhase: this.form.banPhase,
             officialCenterSectors: this.form.officialCenterSectors,
             openLobby: !this.offline && !this.form.testGame && !directInvite,
@@ -592,17 +557,9 @@ export default Vue.extend({
   margin-top: 0.6rem;
 }
 
-// Preference Split Auction's configurable budget - only rendered while that variant is selected.
+// Preference Split Auction's fixed budget note - only rendered while that variant is selected.
 .create-game-budget {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 0.4rem;
-}
-
-.create-game-budget__input {
-  width: 6rem;
+  font-style: italic;
 }
 
 // A variant that needs a player count this game doesn't have stays visible (so it's discoverable)
