@@ -1,7 +1,22 @@
 {
-  "version": "5.51.2",
+  "version": "5.51.3",
   "releasedAt": "2026-08-05",
   "entries": [
+    {
+      "version": "5.51.3",
+      "releasedAt": "2026-08-05",
+      "kind": "update",
+      "title": "Faction auction goes live",
+      "impact": "",
+      "changes": [
+        "The Preference Split Auction now works in online games - its sealed bidding is live on the server.",
+        "Applied preference_split_sealed_bids plus two hardening follow-ups (revoke-then-grant on auction_sealed_bids, pinned search_path on preference_split_budget); all three verified against live objects.",
+        "resolve-automation is still on its old engine bundle - the deploy workflow has been failing on an expired SUPABASE_ACCESS_TOKEN since 2026-07-27; offline automation no-ops safely for this variant until it is rotated."
+      ],
+      "userChanges": [
+        "The Preference Split Auction now works in online games - its sealed bidding is live on the server."
+      ]
+    },
     {
       "version": "5.51.2",
       "releasedAt": "2026-08-05",
