@@ -9,14 +9,15 @@ import Reward from "./src/reward";
 
 export { boardActions, FreeAction, freeActionConversions, ResourceConversion } from "./src/actions";
 export {
-  DEFAULT_PREFERENCE_SPLIT_BUDGET,
   MAX_PREFERENCE_SPLIT_BUDGET,
   MIN_PREFERENCE_SPLIT_BUDGET,
+  MIN_PREFERENCE_SPLIT_PLAYERS,
   PreferenceSplitAllocation,
   PreferenceSplitBid,
   PreferenceSplitFactionSummary,
   PreferenceSplitResult,
-  PREFERENCE_SPLIT_PLAYERS,
+  PREFERENCE_SPLIT_BUDGET_PER_PLAYER,
+  defaultPreferenceSplitBudget,
   isValidPreferenceSplitBudget,
   preferenceSplitBidError,
   resolvePreferenceSplitAuction,

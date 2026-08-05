@@ -1,8 +1,4 @@
-import Engine, {
-  AuctionVariant,
-  DEFAULT_PREFERENCE_SPLIT_BUDGET,
-  PREFERENCE_SPLIT_PLAYERS,
-} from "@gaia-project/engine";
+import Engine, { AuctionVariant, defaultPreferenceSplitBudget } from "@gaia-project/engine";
 
 export type NewGameForm = {
   playerCount: number;
@@ -47,14 +43,14 @@ export const AUCTION_VARIANT_OPTIONS: {
   {
     value: "preference-split",
     label: "Preference Split Auction",
-    summary: "Secretly split a fixed pot of bid points. 4 players only.",
+    summary: "Secretly split a fixed pot of bid points across the picked factions.",
     description:
-      "Four players, four picked factions. Everyone secretly splits the same fixed budget of bid points across all " +
-      "four factions at the same time, and nothing is revealed until every split is in. Factions are then ranked by " +
-      "the total bid on them and awarded, top first, to the highest bidder who doesn't have one yet. The price is the " +
-      "average of all four bids on that faction, and a winner never pays more than they bid on it themselves. Any " +
-      "ties are broken automatically, at random.",
-    playerCounts: [PREFERENCE_SPLIT_PLAYERS],
+      "One picked faction per player. Everyone secretly splits the same fixed budget of bid points across all of " +
+      "them at the same time, and nothing is revealed until every split is in. Factions are then ranked by the " +
+      "total bid on them and awarded, top first, to the highest bidder who doesn't have one yet. The price is the " +
+      "average of every bid on that faction - always, whatever the winner bid themselves - so your own bid decides " +
+      "which faction you get, not what it costs. Any ties are broken automatically, at random. The default budget " +
+      "scales with the player count, because the payments always add up to exactly the budget across the table.",
   },
   {
     value: "choose-bid",
@@ -74,7 +70,13 @@ export const AUCTION_VARIANT_OPTIONS: {
   },
 ];
 
-/** Why a variant can't be picked for the currently-selected player count, or "" when it can. */
+/**
+ * Why a variant can't be picked for the currently-selected player count, or "" when it can.
+ *
+ * No variant currently restricts its player count - the Preference Split Auction did until it was
+ * generalized (owner request, 2026-08-05) - but the machinery stays because it is exactly what a
+ * future count-restricted variant needs, and `AUCTION_VARIANT_OPTIONS` is the one list to extend.
+ */
 export function auctionVariantBlockedReason(variant: AuctionVariantOption, playerCount: number): string {
   const option = AUCTION_VARIANT_OPTIONS.find((o) => o.value === variant);
   if (!option?.playerCounts || option.playerCounts.includes(playerCount)) {
@@ -170,7 +172,7 @@ export function buildCreateGameParams(form: NewGameForm, seed: string, rotateMov
     // Only stored for the variant it belongs to, so no other game's options carry a meaningless
     // budget. The engine (and the sealed-bid RPCs) fall back to the default when it is absent.
     ...(auction === AuctionVariant.PreferenceSplit
-      ? { auctionBudget: form.auctionBudget ?? DEFAULT_PREFERENCE_SPLIT_BUDGET }
+      ? { auctionBudget: form.auctionBudget ?? defaultPreferenceSplitBudget(form.playerCount) }
       : {}),
     // Always explicit (not conditionally omitted) so the checkbox has full control even for Silent
     // Auction - the engine's `banPhase ?? auction === Silent` fallback is only meant to preserve

@@ -1,11 +1,11 @@
 import assert from "assert";
 import { uniq } from "lodash";
 import {
+  defaultPreferenceSplitBudget,
   isValidPreferenceSplitBudget,
   MAX_PREFERENCE_SPLIT_BUDGET,
   MIN_PREFERENCE_SPLIT_BUDGET,
   preferenceSplitBidError,
-  PREFERENCE_SPLIT_PLAYERS,
 } from "../algorithms/preference-split-auction";
 import { AvailableCommand } from "../available/types";
 import Engine, { AuctionVariant } from "../engine";
@@ -30,16 +30,17 @@ export function moveInit(engine: Engine, players: number, seed: string) {
     "Custom (drafted) board setup is not supported with the Lost Fleet expansion"
   );
   if (engine.options.auction === AuctionVariant.PreferenceSplit) {
-    // Both preconditions of the variant, checked at the earliest possible moment (a game that
-    // reached its bid phase before anyone noticed would have no legal way forward). The faction
-    // count follows from the player count: the pick round gives exactly one distinct faction per
-    // player, which `resolvePreferenceSplitAuction` re-asserts before it resolves anything.
+    // Checked at the earliest possible moment (a game that reached its bid phase before anyone
+    // noticed would have no legal way forward). The faction count needs no check of its own: the
+    // pick round gives exactly one distinct faction per player, which
+    // `resolvePreferenceSplitAuction` re-asserts before it resolves anything.
+    //
+    // `engine.preferenceSplitBudget` cannot be used here - it derives its default from
+    // `engine.players`, which this function has not populated yet - so the default is resolved
+    // from the `players` argument instead.
+    const budget = engine.options.auctionBudget ?? defaultPreferenceSplitBudget(players);
     assert(
-      players === PREFERENCE_SPLIT_PLAYERS,
-      `The Preference Split Auction needs exactly ${PREFERENCE_SPLIT_PLAYERS} players and ${PREFERENCE_SPLIT_PLAYERS} factions, got ${players} players`
-    );
-    assert(
-      isValidPreferenceSplitBudget(engine.preferenceSplitBudget),
+      isValidPreferenceSplitBudget(budget),
       `The Preference Split Auction's bid budget must be a whole number between ${MIN_PREFERENCE_SPLIT_BUDGET} and ${MAX_PREFERENCE_SPLIT_BUDGET}, got ${engine.options.auctionBudget}`
     );
     assert(

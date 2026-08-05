@@ -113,11 +113,11 @@ export function phaseSetupSilentBid(engine: Engine, move: string) {
 
 /**
  * The Preference Split Auction's bid phase (AuctionVariant.PreferenceSplit). Every player submits
- * one `preferenceBid` move splitting the whole budget across the four picked factions; the moves
- * are recorded in seat order, but nothing is derived from any of them until the last one lands -
+ * one `preferenceBid` move splitting the whole budget across the picked factions; the moves are
+ * recorded in seat order, but nothing is derived from any of them until the last one lands -
  * which is what makes the submissions simultaneous rather than sequential from a player's point of
  * view. In hosted play they are literally collected in parallel and only appended to the move log
- * once all four are in, so no player can ever read another's numbers first (see the
+ * once every one of them is in, so no player can ever read another's numbers first (see the
  * `auction_sealed_bids` table).
  *
  * The resolution is done exactly once, guarded by `preferenceSplitResult`, and the whole audited

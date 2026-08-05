@@ -82,7 +82,11 @@
               v-model.number="form.auctionBudget"
               class="create-game-budget__input"
             />
-            <span class="create-game-help">Each player splits exactly this many points across the four factions.</span>
+            <span class="create-game-help">
+              Each player splits exactly this many points across the {{ form.playerCount }} picked factions. The
+              payments add up to this across the table, so ~{{ Math.round(form.auctionBudget / form.playerCount) }} VP
+              each.
+            </span>
           </div>
           <div v-if="auctionBudgetError" class="small text-danger mb-2">{{ auctionBudgetError }}</div>
           <div class="create-game-ban-phase">
@@ -205,7 +209,7 @@
 
 <script lang="ts">
 import Engine, {
-  DEFAULT_PREFERENCE_SPLIT_BUDGET,
+  defaultPreferenceSplitBudget,
   isValidPreferenceSplitBudget,
   MAX_PREFERENCE_SPLIT_BUDGET,
   MIN_PREFERENCE_SPLIT_BUDGET,
@@ -251,7 +255,7 @@ export default Vue.extend({
         playerCount: 2,
         testGame: false,
         auctionVariant: (offline ? "silent" : "none") as import("./new-game").AuctionVariantOption,
-        auctionBudget: DEFAULT_PREFERENCE_SPLIT_BUDGET,
+        auctionBudget: defaultPreferenceSplitBudget(2),
         banPhase: offline,
         officialCenterSectors: true,
       },
@@ -345,7 +349,12 @@ export default Vue.extend({
   methods: {
     setPlayerCount(count: number) {
       this.form.playerCount = count;
-      // A variant that only exists at some player counts must not silently survive a count change.
+      // The budget is the table's total bill, so its default scales with the head count - follow
+      // the count unconditionally rather than tracking whether the number was hand-edited, so the
+      // field can never silently keep a value that was chosen for a different-sized game.
+      this.form.auctionBudget = defaultPreferenceSplitBudget(count);
+      // No variant restricts its player count today, but one could - and must not silently survive
+      // a count change if it did.
       if (auctionVariantBlockedReason(this.form.auctionVariant, count)) {
         this.form.auctionVariant = "none";
       }

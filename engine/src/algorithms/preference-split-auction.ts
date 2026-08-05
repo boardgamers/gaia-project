@@ -6,11 +6,11 @@ import { Faction, Player as PlayerEnum } from "../enums";
  * entirely from the submitted numbers, with no bidding rounds and no player decisions after the
  * submission.
  *
- * Every player secretly splits ONE fixed budget of `budget` whole bid points across the four
- * factions up for auction (a bid of 0 is allowed, the four bids must add up to exactly the
- * budget). Once all four vectors are in, everything below follows mechanically:
+ * Every player secretly splits ONE fixed budget of `budget` whole bid points across the factions up
+ * for auction - one per player, nominated in the pick round (a bid of 0 is allowed, the bids must
+ * add up to exactly the budget). Once every vector is in, everything below follows mechanically:
  *
- * 1. Each faction's `total` is the sum of ALL FOUR original bids on it, and its `average` is that
+ * 1. Each faction's `total` is the sum of EVERY original bid on it, and its `average` is that
  *    total divided by the number of players. Both are computed once, from the original bids, and
  *    are never recomputed as players drop out of the running.
  * 2. Factions are ranked by `total`, highest first. Factions on an equal total are ordered
@@ -38,16 +38,28 @@ import { Faction, Player as PlayerEnum } from "../enums";
  * own seeded PRNG) and the whole resolution is reproducible from the submitted bids alone.
  */
 
-/** The variant is defined for exactly this many players, each of whom nominates one faction. */
-export const PREFERENCE_SPLIT_PLAYERS = 4;
+/** Fewest players the variant makes sense for. Nothing above this is count-specific: the auction
+ * runs at whatever player count the game itself supports (moveInit caps that at 2-5), with one
+ * nominated faction per player. Note that at exactly 2 players the ranking step cannot change the
+ * outcome - whoever bid more on one of the two factions necessarily bid less on the other, so each
+ * player simply gets the one they rated relatively higher. It still prices correctly; it is just a
+ * much simpler game than at 3 or more. */
+export const MIN_PREFERENCE_SPLIT_PLAYERS = 2;
 
 /**
- * Default total bid budget per player. 40 points across four factions averages 10 per faction,
- * which - since every faction's price is an average of four bids - puts a typical winning price in
- * the 5-15 VP range: expensive enough to matter next to a ~120 VP game, cheap enough that no
- * single faction can eat a whole game's scoring. Configurable per game (EngineOptions.auctionBudget).
+ * The default budget scales with the player count, because the budget is the TABLE's total bill,
+ * not one player's. Every faction costs its own average (total over N players) and there are N
+ * factions, so the payments always sum to exactly the budget before rounding - meaning each player
+ * pays budget/N on average, whoever wins what. At 10 points per player that is ~10 VP each at any
+ * count: 20 at 2 players, 30 at 3, 40 at 4. Expensive enough to matter next to a ~120 VP game,
+ * cheap enough that no single faction can eat a whole game's scoring. A flat default would instead
+ * have made a 2-player auction twice as punishing as a 4-player one.
  */
-export const DEFAULT_PREFERENCE_SPLIT_BUDGET = 40;
+export const PREFERENCE_SPLIT_BUDGET_PER_PLAYER = 10;
+
+export function defaultPreferenceSplitBudget(players: number): number {
+  return PREFERENCE_SPLIT_BUDGET_PER_PLAYER * players;
+}
 
 export const MIN_PREFERENCE_SPLIT_BUDGET = 1;
 export const MAX_PREFERENCE_SPLIT_BUDGET = 999;
@@ -61,7 +73,7 @@ export type PreferenceSplitBid = {
 
 export type PreferenceSplitFactionSummary = {
   faction: Faction;
-  /** All four original bids on this faction, in seat order - including bids by players who end up
+  /** Every original bid on this faction, in seat order - including bids by players who end up
    * winning some other faction, which still count towards the total and the average. */
   bids: { player: PlayerEnum; points: number }[];
   total: number;
@@ -95,7 +107,7 @@ export type PreferenceSplitResult = {
   budget: number;
   /** Seat order of the participating players, as resolved. */
   players: PlayerEnum[];
-  /** The factions in resolved rank order, first to fourth. */
+  /** The factions in resolved rank order, most-wanted first. */
   order: Faction[];
   /** Per-faction totals/averages/ranks, in the same order as `order`. */
   factions: PreferenceSplitFactionSummary[];
@@ -187,12 +199,12 @@ export function resolvePreferenceSplitAuction(
   random: () => number = Math.random
 ): PreferenceSplitResult {
   assert(
-    players.length === PREFERENCE_SPLIT_PLAYERS,
-    `The Preference Split Auction needs exactly ${PREFERENCE_SPLIT_PLAYERS} players, got ${players.length}`
+    players.length >= MIN_PREFERENCE_SPLIT_PLAYERS,
+    `The Preference Split Auction needs at least ${MIN_PREFERENCE_SPLIT_PLAYERS} players, got ${players.length}`
   );
   assert(
-    factions.length === PREFERENCE_SPLIT_PLAYERS,
-    `The Preference Split Auction needs exactly ${PREFERENCE_SPLIT_PLAYERS} factions, got ${factions.length}`
+    factions.length === players.length,
+    `The Preference Split Auction needs one faction per player - got ${factions.length} factions for ${players.length} players`
   );
   assert(new Set(factions).size === factions.length, "The factions up for auction have to be distinct");
   assert(isValidPreferenceSplitBudget(budget), `Invalid bid budget ${budget}`);

@@ -6,9 +6,9 @@
     <h5 v-if="!hideTitle">Preference Split Auction</h5>
 
     <p class="text-muted small mb-2">
-      Everyone split {{ result.budget }} bid points across the four factions, in secret and at the same time. Factions
-      were then ranked by their total, awarded top-first to the highest bidder still without one, and priced at the
-      faction's average. Your own bid decides which faction you get, never what it costs.
+      Everyone split {{ result.budget }} bid points across the {{ result.factions.length }} factions, in secret and at
+      the same time. Factions were then ranked by their total, awarded top-first to the highest bidder still without
+      one, and priced at the faction's average. Your own bid decides which faction you get, never what it costs.
     </p>
 
     <h6>Every bid</h6>
@@ -127,7 +127,7 @@ export default class PreferenceSplitLog extends Vue {
         } VP`,
         detail:
           `Still in the running: ${allocation.eligible.map((p) => this.playerLabel(p)).join(", ")}. ` +
-          `All four bids on it were ${bids}, so the average is ${price} - rounded to ${allocation.payment}.` +
+          `Every bid on it was ${bids}, so the average is ${price} - rounded to ${allocation.payment}.` +
           overBid,
         tiebreak:
           allocation.tiedPlayers.length > 0

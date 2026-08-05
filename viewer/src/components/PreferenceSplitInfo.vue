@@ -8,16 +8,16 @@
   >
     <div class="preference-split-info">
       <p>
-        Four players, four factions, and one fixed pot of <b>{{ budget }} bid points</b> each.
-        <b>You split your whole {{ budget }} across the four factions</b> - as lopsided or as even as you like - and
-        everybody does it at the same time, in secret. Nothing at all is revealed until the last submission is in, and
-        then the whole thing resolves on its own. There is no second round and nothing left to decide.
+        One picked faction per player, and one fixed pot of <b>{{ budget }} bid points</b> each.
+        <b>You split your whole {{ budget }} across them all</b> - as lopsided or as even as you like - and everybody
+        does it at the same time, in secret. Nothing at all is revealed until the last submission is in, and then the
+        whole thing resolves on its own. There is no second round and nothing left to decide.
       </p>
 
       <ol class="mb-3">
         <li>
-          <b>Split</b> &mdash; put your {{ budget }} points on the four factions. Whole numbers, 0 is allowed, and the
-          four have to add up to exactly {{ budget }}. How much you put somewhere <i>is</i> how much you want it.
+          <b>Split</b> &mdash; put your {{ budget }} points on the factions. Whole numbers, 0 is allowed, and they have
+          to add up to exactly {{ budget }}. How much you put somewhere <i>is</i> how much you want it.
         </li>
         <li><b>Rank</b> &mdash; factions are sorted by the total everyone bid on them, most-wanted first.</li>
         <li>
@@ -25,8 +25,8 @@
           don't have one yet. Win a faction and you're out of the running for the rest.
         </li>
         <li>
-          <b>Pay</b> &mdash; the price is the <b>average</b> of all four bids on that faction. Always. Your own bid
-          decides <i>which</i> faction you get, never what it costs. The payment comes off your final score.
+          <b>Pay</b> &mdash; the price is the <b>average</b> of every bid on that faction. Always. Your own bid decides
+          <i>which</i> faction you get, never what it costs. The payment comes off your final score.
         </li>
         <li><b>Ties</b> &mdash; equal totals and equal bids are separated automatically, at random.</li>
       </ol>
@@ -51,9 +51,12 @@
       </p>
 
       <h6 class="example-heading">A worked example, start to finish</h6>
-      <p class="small mb-2">Four players split 40 points each. Their secret splits:</p>
+      <p class="small mb-2">
+        Four players splitting 40 points each &mdash; the shape is the same at any player count, with the budget and the
+        number of factions scaled to it. Their secret splits:
+      </p>
       <b-table small bordered class="small" :items="exampleBids" :fields="bidFields" />
-      <p class="small mb-2">Totals and averages, from all four bids on each faction:</p>
+      <p class="small mb-2">Totals and averages, from every bid on each faction:</p>
       <b-table small bordered class="small" :items="exampleTotals" :fields="totalFields" />
       <p class="small mb-2">Awarded top-total first, always to the highest bidder still without a faction:</p>
       <b-table small bordered responsive class="small mb-0" :items="exampleSteps" :fields="stepFields" />
@@ -62,13 +65,17 @@
 </template>
 
 <script lang="ts">
-import { DEFAULT_PREFERENCE_SPLIT_BUDGET } from "@gaia-project/engine";
+import { defaultPreferenceSplitBudget } from "@gaia-project/engine";
 import { Component, Prop, Vue } from "vue-property-decorator";
+
+/** The budget the worked example at the bottom is written for; also the prop default, which both
+ * call sites override with the real game's own budget. */
+const EXAMPLE_BUDGET = defaultPreferenceSplitBudget(4);
 
 @Component
 export default class PreferenceSplitInfo extends Vue {
   /** The game's actual budget, so the explanation matches the numbers on the bid form. */
-  @Prop({ default: DEFAULT_PREFERENCE_SPLIT_BUDGET, type: Number })
+  @Prop({ default: EXAMPLE_BUDGET, type: Number })
   budget: number;
 
   bidFields = [{ key: "faction", label: "Faction" }, "A", "B", "C", "D"];

@@ -184,8 +184,8 @@ export function commandButtons(
       c.name != Command.ChooseFaction &&
       c.name != Command.BanFaction &&
       c.name != Command.SilentBid &&
-      // Preference Split bidding has its own panel (PreferenceSplitBid.vue), because all four seats
-      // bid at once and this button list only ever renders for the seat on turn.
+      // Preference Split bidding has its own panel (PreferenceSplitBid.vue), because every seat
+      // bids at once and this button list only ever renders for the seat on turn.
       c.name != Command.PreferenceBid
   )) {
     ret.push(...commandButton(command, engine, player, commands, conversions, controller));

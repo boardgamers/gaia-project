@@ -1,8 +1,13 @@
 # Preference Split Auction
 
-A faction-selection variant for **exactly four players and four factions**. Selectable at game
-creation as `AuctionVariant.PreferenceSplit` (`"preference-split"`), alongside Standard, Silent
-Auction, Choose-Then-Bid and Bid-While-Choosing.
+A faction-selection variant playable at **any player count the game supports (2–5)**, with one
+picked faction per player. Selectable at game creation as `AuctionVariant.PreferenceSplit`
+(`"preference-split"`), alongside Standard, Silent Auction, Choose-Then-Bid and Bid-While-Choosing.
+
+> It was 4-players-only in its first version — an explicit requirement of the original brief — and
+> generalized the same day (owner request, 2026-08-05). Nothing in the mechanism was ever
+> count-specific: the price is a faction's total over the player count, and the pick round always
+> produces exactly one faction per player.
 
 It is deliberately **not** a first-price, second-price or ascending ("silent") auction: nobody
 outbids anybody, nobody reacts to anybody else's numbers, and the price never comes from a single
@@ -10,13 +15,14 @@ opponent's bid.
 
 ## The rules, in plain language
 
-1. Every player secretly distributes **exactly X bid points** among the four factions, all at the
-   same time. Bids are whole numbers, 0 is allowed, and the four must add up to exactly X.
+1. Every player secretly distributes **exactly X bid points** among the picked factions (one per
+   player), all at the same time. Bids are whole numbers, 0 is allowed, and they must add up to
+   exactly X.
 2. Nothing is revealed until every player has submitted. Then everything is revealed at once.
 3. Factions are **ranked by the total** bid on them, highest first.
 4. Going down that ranking, each faction is **awarded to the highest bidder who has not already
    received a faction**. A player who wins one is out of the running for the rest.
-5. The price is the **average of all four bids** on that faction — including bids from players who
+5. The price is the **average of every bid** on that faction — including bids from players who
    already won something else. It is never recalculated as players drop out.
 6. That average is the price **whatever the winner bid themselves**. Your own bid decides _which_
    faction you get, never what it costs — so you can end up paying more than you put on it, and a
@@ -29,9 +35,24 @@ bid is (`player.data.bid`, cashed out in `finalScoringPhase`).
 
 ### Budget (X)
 
-Configurable per game (`EngineOptions.auctionBudget`, set from the create-game screen). Default
-**40**, valid range 1–999, whole numbers only. 40 points across four factions averages 10 per
-faction, which puts a typical winning price in the 5–15 VP range next to a ~120 VP game.
+Configurable per game (`EngineOptions.auctionBudget`, set from the create-game screen), valid range
+1–999, whole numbers only.
+
+**The default scales with the player count: 10 points per player** — 20 at 2 players, 30 at 3, 40 at
+4 (`defaultPreferenceSplitBudget`). That is because **X is the table's total bill, not one player's**:
+every faction costs its own average (its total over N players) and there are N factions, so the
+payments always add up to exactly X before rounding. Each player therefore pays X/N on average,
+whoever ends up with what. A flat default would have made a 2-player auction twice as punishing as a
+4-player one for the same number.
+
+At 10 per player, a typical winning price lands in the 5–15 VP range next to a ~120 VP game.
+
+### What 2 players looks like
+
+The mechanism is well defined at 2 players but much simpler than it looks: with two factions,
+whoever bid more on one necessarily bid less on the other, so each player just gets the faction they
+rated relatively higher and the ranking step cannot change the outcome. Pricing still works normally
+(each pays half the combined bid on their faction). 3 players and up is fully non-degenerate.
 
 ### Why there is no cap at the winner's own bid (owner decision, 2026-08-05)
 
@@ -52,8 +73,7 @@ one sentence long: **you pay what the table thought it was worth.**
 
 `roundVictoryPoints()` in `engine/src/algorithms/preference-split-auction.ts` is the single place
 this happens: conventional **half-up** (10.5 → 11, 10.49 → 10). Totals and averages stay exact until
-the very end; only the final payment is rounded. Averages are exact in binary
-anyway (an integer divided by 4), and the UI shows them to two decimals.
+the very end; only the final payment is rounded. The UI shows averages to two decimals.
 
 ## Flow
 
@@ -63,7 +83,7 @@ SetupBoard → [SetupFactionBan] → SetupFaction → SetupPreferenceBid → Set
 
 The ban round is the existing independent `EngineOptions.banPhase` and is orthogonal to this
 variant. The pick round is the ordinary `Command.ChooseFaction` one: four players each nominate one
-faction, which is where the four factions up for auction come from. A pick is only a nomination —
+faction, which is where the factions up for auction come from. A pick is only a nomination —
 the auction can and often does give it to somebody else.
 
 Turn order after the auction is the existing rule for every auction variant: `engine.setup` (pick
@@ -89,7 +109,7 @@ order) mapped to each faction's final owner.
 
 The engine is client-side and authoritative, and every committed move lands in `public.moves`,
 which every seated player can read. That is fine for the Silent Auction, whose bids are entered
-strictly one seat at a time, but not here: all four players bid simultaneously.
+strictly one seat at a time, but not here: every player bids simultaneously.
 
 So in hosted play, a `preferenceBid` move **does not exist** while the auction is open. Submissions
 go to `public.auction_sealed_bids` through `submit_sealed_bid()`, behind an RLS policy that returns
@@ -98,7 +118,7 @@ delete policies at all, so a submission can never be edited or withdrawn. The RP
 enforces the budget, the whole-number/non-negative bids, one bid per faction and one submission per
 seat.
 
-When the last submission lands, any client may call `reveal_sealed_bids()`, which builds the four
+When the last submission lands, any client may call `reveal_sealed_bids()`, which builds the
 move lines **itself, from the stored rows**, appends them to `public.moves` in seat order and moves
 the turn pointer, all in one transaction. It is exactly-once by construction: the caller names the
 sequence number it expects, `games` is locked for the duration, and a loser of the race gets
@@ -147,6 +167,7 @@ stored decision, not a re-derivation of it.
 
 Nothing here is hardcoded to this mechanism. A new variant needs: a value in `AuctionVariant`, a
 `Phase`/`Command` pair, a resolver under `engine/src/algorithms/`, a branch in `phaseSetupFaction`,
-an entry in `AUCTION_VARIANT_OPTIONS` (with `playerCounts` if it is restricted), and — only if it
-needs simultaneous secret input — reuse of the `auction_sealed_bids` table, which is keyed by game
-and seat and holds an opaque `bids` JSON payload, not anything specific to this variant.
+an entry in `AUCTION_VARIANT_OPTIONS` (with `playerCounts` if it is restricted to certain player counts — no
+variant uses that today, but the gating machinery is still there and tested), and — only if it needs
+simultaneous secret input — reuse of the `auction_sealed_bids` table, which is keyed by game and
+seat and holds an opaque `bids` JSON payload, not anything specific to this variant.

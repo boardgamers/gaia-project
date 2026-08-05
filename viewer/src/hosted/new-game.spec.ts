@@ -137,14 +137,15 @@ describe("shuffleSeats", () => {
 describe("Preference Split Auction setup", () => {
   const fourSeats = [0, 1, 2, 3].map((i) => ({ userId: `user-${i}`, name: `P${i + 1}` }));
 
-  it("is only offered at exactly four players", () => {
-    expect(auctionVariantBlockedReason("preference-split", 4)).to.equal("");
-    for (const count of [2, 3, 5]) {
-      expect(auctionVariantBlockedReason("preference-split", count)).to.match(/needs exactly 4 players/);
+  it("is offered at every player count, like every other variant", () => {
+    // It was 4-players-only until the owner generalized it (2026-08-05). The blocking machinery
+    // stays for a future count-restricted variant, so this also guards against one of the current
+    // variants picking up a restriction by accident.
+    for (const variant of ["none", "silent", "preference-split", "choose-bid", "bid-while-choosing"] as const) {
+      for (const count of [2, 3, 4, 5]) {
+        expect(auctionVariantBlockedReason(variant, count)).to.equal("");
+      }
     }
-    // Every other variant stays available at every count.
-    expect(auctionVariantBlockedReason("silent", 2)).to.equal("");
-    expect(auctionVariantBlockedReason("none", 5)).to.equal("");
   });
 
   it("stores the variant and its configured budget in the game options", () => {
@@ -164,13 +165,24 @@ describe("Preference Split Auction setup", () => {
     });
   });
 
-  it("defaults the budget to 40 and never stores one for another variant", () => {
-    const defaulted = buildCreateGameParams(
-      { playerCount: 4, seats: fourSeats, auctionVariant: "preference-split", openLobby: false },
-      "fixed-seed",
-      "p4 rotate"
-    );
-    expect((defaulted.p_options as any).auctionBudget).to.equal(40);
+  it("scales the default budget with the player count, and stores none for another variant", () => {
+    for (const [playerCount, budget] of [
+      [2, 20],
+      [3, 30],
+      [4, 40],
+    ]) {
+      const defaulted = buildCreateGameParams(
+        {
+          playerCount,
+          seats: fourSeats.slice(0, playerCount),
+          auctionVariant: "preference-split",
+          openLobby: false,
+        },
+        "fixed-seed",
+        `p${playerCount} rotate`
+      );
+      expect((defaulted.p_options as any).auctionBudget).to.equal(budget);
+    }
 
     const silent = buildCreateGameParams(
       { playerCount: 4, seats: fourSeats, auctionVariant: "silent", auctionBudget: 24, openLobby: false },
@@ -180,18 +192,15 @@ describe("Preference Split Auction setup", () => {
     expect((silent.p_options as any).auctionBudget).to.equal(undefined);
   });
 
-  it("refuses to build params for a player count the variant does not support", () => {
-    expect(() =>
-      buildCreateGameParams(
-        {
-          playerCount: 3,
-          seats: fourSeats.slice(0, 3),
-          auctionVariant: "preference-split",
-          openLobby: false,
-        },
-        "fixed-seed",
-        "p3 rotate"
-      )
-    ).to.throw(/needs exactly 4 players/);
+  it("builds params for a three-player game the same way", () => {
+    const params = buildCreateGameParams(
+      { playerCount: 3, seats: fourSeats.slice(0, 3), auctionVariant: "preference-split", openLobby: false },
+      "fixed-seed",
+      "p3 rotate"
+    );
+
+    expect(params.p_player_count).to.equal(3);
+    expect((params.p_options as any).auction).to.equal("preference-split");
+    expect((params.p_options as any).auctionBudget).to.equal(30);
   });
 });

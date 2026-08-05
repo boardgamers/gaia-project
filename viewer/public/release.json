@@ -1,7 +1,23 @@
 {
-  "version": "5.51.1",
+  "version": "5.51.2",
   "releasedAt": "2026-08-05",
   "entries": [
+    {
+      "version": "5.51.2",
+      "releasedAt": "2026-08-05",
+      "kind": "update",
+      "title": "Faction auction at any player count",
+      "impact": "",
+      "changes": [
+        "The Preference Split Auction is no longer 4-player only - it works at every player count, with one picked faction per player.",
+        "Its bid budget now scales with the table: 20 points at 2 players, 30 at 3, 40 at 4, so each player pays about the same either way.",
+        "Removed the 4-player gate from the resolver, moveInit and the create-game option list; the default budget is now defaultPreferenceSplitBudget(players) = 10 per player, mirrored in preference_split_budget() server-side."
+      ],
+      "userChanges": [
+        "The Preference Split Auction is no longer 4-player only - it works at every player count, with one picked faction per player.",
+        "Its bid budget now scales with the table: 20 points at 2 players, 30 at 3, 40 at 4, so each player pays about the same either way."
+      ]
+    },
     {
       "version": "5.51.1",
       "releasedAt": "2026-08-05",

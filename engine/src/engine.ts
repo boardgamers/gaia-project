@@ -2,7 +2,7 @@ import assert from "assert";
 import { set } from "lodash";
 import { version } from "../package.json";
 import {
-  DEFAULT_PREFERENCE_SPLIT_BUDGET,
+  defaultPreferenceSplitBudget,
   PreferenceSplitBid,
   PreferenceSplitResult,
 } from "./algorithms/preference-split-auction";
@@ -154,8 +154,8 @@ export interface EngineOptions {
   /**
    * Total bid budget each player must split across the factions in the Preference Split Auction
    * (AuctionVariant.PreferenceSplit). Ignored by every other variant. Undefined falls back to
-   * DEFAULT_PREFERENCE_SPLIT_BUDGET, which is also what pre-existing stored games (none yet, but
-   * the fallback keeps a future default change from rewriting old games) replay with.
+   * `defaultPreferenceSplitBudget(players)`, which is also what pre-existing stored games (none
+   * yet, but the fallback keeps a future default change from rewriting old games) replay with.
    */
   auctionBudget?: number;
   /**
@@ -363,9 +363,11 @@ export default class Engine {
   replay: boolean; // be more permissive during replay
 
   /** The Preference Split Auction's per-player bid budget, defaulted once so every layer
-   * (move validation, available commands, the viewer's form) reads the same number. */
+   * (move validation, available commands, the viewer's form) reads the same number. The default
+   * scales with the player count - see `defaultPreferenceSplitBudget`. Only safe to read once
+   * `players` is populated; `moveInit` resolves the same default from its own argument instead. */
   get preferenceSplitBudget(): number {
-    return this.options.auctionBudget ?? DEFAULT_PREFERENCE_SPLIT_BUDGET;
+    return this.options.auctionBudget ?? defaultPreferenceSplitBudget(this.players.length);
   }
 
   get expansions(): Expansion {

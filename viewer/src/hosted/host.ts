@@ -292,11 +292,11 @@ export class HostedGameHost {
   /**
    * Preference Split Auction (engine AuctionVariant.PreferenceSplit).
    *
-   * The bid phase is the one part of a hosted game that does NOT go through `submitMove`: all four
-   * players bid at the same time and none of them may see another's numbers, so the submissions are
+   * The bid phase is the one part of a hosted game that does NOT go through `submitMove`: every
+   * player bids at the same time and none of them may see another's numbers, so the submissions are
    * held server-side (`auction_sealed_bids`) instead of being committed as moves. Once the server
-   * reports every seat in, ANY client may close the auction - `reveal_sealed_bids` appends all four
-   * moves in one transaction, and its seq check makes that exactly-once even if several clients
+   * reports every seat in, ANY client may close the auction - `reveal_sealed_bids` appends every
+   * move in one transaction, and its seq check makes that exactly-once even if several clients
    * notice at the same instant (the losers get `seq_conflict` and simply resync into the result).
    *
    * That "any client" is deliberate: it also covers the case where the last submitter closes their

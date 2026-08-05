@@ -201,24 +201,20 @@ describe("CreateGame", () => {
       return wrapper;
     }
 
-    it("is listed with its 4-player requirement, and greyed out below four players", async () => {
+    it("is listed and selectable at every player count", async () => {
       const wrapper = await mounted();
       const vm = wrapper.vm as any;
 
       expect(wrapper.text()).to.include("Preference Split Auction");
-      expect(wrapper.text()).to.include("4 players only");
-      // The default player count is not 4, so the option is blocked and says why.
-      vm.setPlayerCount(3);
-      await Vue.nextTick();
-      expect(vm.blockedVariants["preference-split"]).to.match(/needs exactly 4 players/);
-      expect(wrapper.text()).to.include("needs exactly 4 players");
-
-      vm.setPlayerCount(4);
-      await Vue.nextTick();
-      expect(vm.blockedVariants["preference-split"]).to.equal("");
+      for (const count of [2, 3, 4]) {
+        vm.setPlayerCount(count);
+        await Vue.nextTick();
+        expect(vm.blockedVariants["preference-split"]).to.equal("");
+      }
+      expect(vm.unavailableVariantNote).to.equal("");
     });
 
-    it("offers a configurable budget only for this variant, defaulting to 40", async () => {
+    it("offers a configurable budget only for this variant, scaled to the player count", async () => {
       const wrapper = await mounted();
       const vm = wrapper.vm as any;
 
@@ -231,6 +227,15 @@ describe("CreateGame", () => {
       expect(wrapper.find("#create-game-auction-budget").exists()).to.equal(true);
       expect(vm.form.auctionBudget).to.equal(40);
       expect(vm.auctionBudgetError).to.equal("");
+
+      // The budget is the table's whole bill, so it follows the head count rather than keeping a
+      // value chosen for a differently-sized game.
+      vm.setPlayerCount(3);
+      await Vue.nextTick();
+      expect(vm.form.auctionBudget).to.equal(30);
+      vm.setPlayerCount(2);
+      await Vue.nextTick();
+      expect(vm.form.auctionBudget).to.equal(20);
     });
 
     it("blocks creation on an invalid budget and says so", async () => {
@@ -246,7 +251,7 @@ describe("CreateGame", () => {
       expect(vm.blockedReason).to.match(/whole number between/);
     });
 
-    it("drops the variant when the player count moves away from four", async () => {
+    it("keeps the variant selected across a player-count change", async () => {
       const wrapper = await mounted();
       const vm = wrapper.vm as any;
       vm.setPlayerCount(4);
@@ -256,7 +261,7 @@ describe("CreateGame", () => {
       vm.setPlayerCount(3);
       await Vue.nextTick();
 
-      expect(vm.form.auctionVariant).to.equal("none");
+      expect(vm.form.auctionVariant).to.equal("preference-split");
     });
   });
 });

@@ -1,8 +1,8 @@
 <template>
   <!-- The private bidding screen. Rendered from Game.vue's round-0 strip rather than from
-       Commands.vue, because in hosted play all four seats bid AT THE SAME TIME - `canPlay` (which
-       gates Commands) is only ever true for the one seat the engine happens to point at, so three
-       of the four players would have no way to submit. -->
+       Commands.vue, because in hosted play every seat bids AT THE SAME TIME - `canPlay` (which
+       gates Commands) is only ever true for the one seat the engine happens to point at, so
+       everybody else would have no way to submit. -->
   <div v-if="visible" class="preference-split-bid">
     <div class="preference-split-bid__header">
       <b>Preference Split Auction{{ seatSuffix }}</b>
@@ -13,11 +13,11 @@
 
     <template v-if="!submitted">
       <p class="text-muted small mb-2">
-        Split exactly <b>{{ budget }}</b> bid points across the four factions - highest on the one you want most,
-        <b>0</b> on one you'd take only for free. Everyone submits at the same time and
+        Split exactly <b>{{ budget }}</b> bid points across the {{ factions.length }} factions - highest on the one you
+        want most, <b>0</b> on one you'd take only for free. Everyone submits at the same time and
         <b>nothing is revealed until all {{ playerCount }} splits are in</b>. Whoever wins a faction pays the average of
-        all four bids on it - your own bid decides which faction you get, not what it costs, so you can end up paying
-        more than you put on it.
+        every bid on it - your own bid decides which faction you get, not what it costs, so you can end up paying more
+        than you put on it.
       </p>
 
       <div v-for="faction in factions" :key="faction" class="d-flex align-items-center mb-2">
@@ -103,7 +103,7 @@ export default class PreferenceSplitBid extends Vue {
    * The seat this device is bidding for.
    *
    * Hosted: the seat the viewer is locked to (`player.index`), whoever the engine currently points
-   * at - that is what makes the four submissions genuinely simultaneous. Offline/hot-seat: the seat
+   * at - that is what makes the submissions genuinely simultaneous. Offline/hot-seat: the seat
    * on turn, since the device is passed around and the engine's own order decides.
    */
   get seat(): number | null {

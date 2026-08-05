@@ -3,15 +3,15 @@
 -- Why this table exists at all: the engine is client-side and authoritative, and every committed
 -- move lands in public.moves, which every seated player of the game can read (moves_select). That
 -- is fine for ordinary turns, and it is fine for the older Silent Auction, whose bids are entered
--- strictly one seat at a time. It is NOT fine here: all four players submit at the same time, and
--- rule 3 of this auction is that no submission may be readable by anybody else — including through
--- an API response, a realtime payload or the move log — until the last one has landed.
+-- strictly one seat at a time. It is NOT fine here: every player submits at the same time, and the
+-- central rule of this auction is that no submission may be readable by anybody else — including
+-- through an API response, a realtime payload or the move log — until the last one has landed.
 --
 -- So the bids never touch public.moves while the auction is open. They are collected here first,
 -- behind a select policy that shows a player only their own row until every seat has submitted,
 -- and are appended to the move log as ordinary `preferenceBid` moves — all of them, in one
 -- transaction — by reveal_sealed_bids() once the last one is in. From the engine's point of view
--- nothing is special: it replays four normal moves in seat order.
+-- nothing is special: it replays one normal move per seat, in seat order.
 --
 -- Writes go only through the security-definer RPCs below (no insert/update/delete policies), which
 -- is also what makes a submission final: there is no code path that can change or delete a row.
@@ -86,13 +86,16 @@ grant all on table public.auction_sealed_bids to service_role;
 -- ---------------------------------------------------------------------------
 
 -- The game's configured per-player bid budget. Mirrors the engine's
--- `EngineOptions.auctionBudget ?? DEFAULT_PREFERENCE_SPLIT_BUDGET`, so the server can enforce the
--- "exactly X, no more, no less" rule without trusting the client that submitted the split.
-create or replace function public.preference_split_budget(p_options jsonb)
+-- `EngineOptions.auctionBudget ?? defaultPreferenceSplitBudget(players)`, INCLUDING the scaled
+-- default (10 points per player), so the server can enforce the "exactly X, no more, no less" rule
+-- without trusting the client that submitted the split. create_game always stores an explicit
+-- budget for this variant, so the fallback should never actually be needed - but if the two sides
+-- ever disagreed about it, every submission in the game would be rejected.
+create or replace function public.preference_split_budget(p_options jsonb, p_player_count int)
 returns int
 language sql immutable
 as $$
-  select coalesce(nullif(p_options ->> 'auctionBudget', '')::int, 40);
+  select coalesce(nullif(p_options ->> 'auctionBudget', '')::int, 10 * p_player_count);
 $$;
 
 -- One player's whole split, submitted once. Returns how many seats have submitted so far.
@@ -152,7 +155,7 @@ begin
     raise exception 'every bid must be a whole, non-negative number of points on a named faction';
   end if;
 
-  v_budget := public.preference_split_budget(v_game.options);
+  v_budget := public.preference_split_budget(v_game.options, v_game.player_count);
   select sum((b ->> 'points')::int) into v_total from jsonb_array_elements(p_bids) b;
   if v_total is distinct from v_budget then
     raise exception 'your bids must add up to exactly % points, got %', v_budget, v_total;
@@ -186,7 +189,7 @@ begin
 
   return jsonb_build_object(
     'player_count', v_game.player_count,
-    'budget', public.preference_split_budget(v_game.options),
+    'budget', public.preference_split_budget(v_game.options, v_game.player_count),
     'submitted_seats', coalesce(
       (select jsonb_agg(seat order by seat) from public.auction_sealed_bids where game_id = p_game_id),
       '[]'::jsonb

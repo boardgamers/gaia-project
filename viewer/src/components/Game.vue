@@ -32,8 +32,8 @@
           <SilentAuctionSummary />
           <PreferenceSplitSummary />
           <SetupStatus />
-          <!-- The Preference Split Auction's bid form lives here rather than in Commands: all four
-               seats bid at once, so it must render for players the engine's turn pointer is not
+          <!-- The Preference Split Auction's bid form lives here rather than in Commands: every
+               seat bids at once, so it must render for players the engine's turn pointer is not
                currently on (which is what gates Commands' `canPlay`). -->
           <PreferenceSplitBid @command="handleCommand" />
           <!-- Mobile only (`setupActionsAtTop`): during round 0 the pick/ban buttons move up here,

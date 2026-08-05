@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { Faction, Player as PlayerEnum } from "../enums";
 import {
-  DEFAULT_PREFERENCE_SPLIT_BUDGET,
+  defaultPreferenceSplitBudget,
   isValidPreferenceSplitBudget,
   preferenceSplitBidError,
   PreferenceSplitBid,
@@ -105,7 +105,7 @@ describe("Preference Split Auction", () => {
     });
 
     it("rejects an invalid budget outright", () => {
-      expect(isValidPreferenceSplitBudget(DEFAULT_PREFERENCE_SPLIT_BUDGET)).to.equal(true);
+      expect(isValidPreferenceSplitBudget(defaultPreferenceSplitBudget(4))).to.equal(true);
       expect(isValidPreferenceSplitBudget(0)).to.equal(false);
       expect(isValidPreferenceSplitBudget(-5)).to.equal(false);
       expect(isValidPreferenceSplitBudget(12.5)).to.equal(false);
@@ -129,13 +129,15 @@ describe("Preference Split Auction", () => {
       ).to.throw(/not a legal split/);
     });
 
-    it("refuses anything other than four players and four factions", () => {
+    it("needs at least two players and exactly one faction per player", () => {
       expect(() =>
-        resolvePreferenceSplitAuction(FACTIONS.slice(0, 3), PLAYERS.slice(0, 3), bidsFrom(NO_TIES), 40)
-      ).to.throw(/exactly 4 players/);
+        resolvePreferenceSplitAuction(FACTIONS.slice(0, 1), PLAYERS.slice(0, 1), bidsFrom(NO_TIES), 40)
+      ).to.throw(/at least 2 players/);
+      // Four factions, three players - the pick round can never produce this, but the resolver is
+      // the last line of defence for a hand-edited move log.
       expect(() =>
-        resolvePreferenceSplitAuction(FACTIONS.slice(0, 3), PLAYERS, bidsFrom(NO_TIES).slice(0, 12), 40)
-      ).to.throw(/exactly 4 factions/);
+        resolvePreferenceSplitAuction(FACTIONS, PLAYERS.slice(0, 3), bidsFrom(NO_TIES).slice(0, 12), 40)
+      ).to.throw(/one faction per player/);
     });
   });
 
@@ -425,6 +427,100 @@ describe("Preference Split Auction", () => {
           },
         ]);
       });
+    });
+  });
+
+  describe("other player counts", () => {
+    it("scales the default budget so the cost per player stays the same", () => {
+      expect(defaultPreferenceSplitBudget(2)).to.equal(20);
+      expect(defaultPreferenceSplitBudget(3)).to.equal(30);
+      expect(defaultPreferenceSplitBudget(4)).to.equal(40);
+    });
+
+    it("resolves a three-player auction, averaging over three bids", () => {
+      const factions = FACTIONS.slice(0, 3);
+      const players = PLAYERS.slice(0, 3);
+      // itars 15+9+3 = 27 (avg 9), taklons 10+14+6 = 30 (avg 10), xenos 5+7+21 = 33 (avg 11).
+      const bids = bidsFrom(
+        [
+          [15, 10, 5],
+          [9, 14, 7],
+          [3, 6, 21],
+        ],
+        factions
+      );
+      const result = resolvePreferenceSplitAuction(factions, players, bids, 30, seededRandom([0]));
+
+      expect(result.order).to.deep.equal([Faction.Xenos, Faction.Taklons, Faction.Itars]);
+      expect(result.factions.map((f) => f.average)).to.deep.equal([11, 10, 9]);
+      expect(result.allocations.map((a) => [a.faction, a.winner, a.payment])).to.deep.equal([
+        [Faction.Xenos, PlayerEnum.Player3, 11],
+        [Faction.Taklons, PlayerEnum.Player2, 10],
+        [Faction.Itars, PlayerEnum.Player1, 9],
+      ]);
+    });
+
+    it("resolves a two-player auction, where each player simply takes the one they rated higher", () => {
+      const factions = FACTIONS.slice(0, 2);
+      const players = PLAYERS.slice(0, 2);
+      // itars 14+6 = 20 (avg 10), taklons 6+14 = 20 (avg 10) - a total tie, so the order is random,
+      // but at two players the order cannot change who gets what: whoever bid more on one bid less
+      // on the other.
+      const bids = bidsFrom(
+        [
+          [14, 6],
+          [6, 14],
+        ],
+        factions
+      );
+      for (const random of [seededRandom([0]), seededRandom([0.99])]) {
+        const result = resolvePreferenceSplitAuction(factions, players, bids, 20, random);
+        const itars = result.allocations.find((a) => a.faction === Faction.Itars);
+        const taklons = result.allocations.find((a) => a.faction === Faction.Taklons);
+        expect(itars.winner).to.equal(PlayerEnum.Player1);
+        expect(taklons.winner).to.equal(PlayerEnum.Player2);
+        expect(itars.payment).to.equal(10);
+        expect(taklons.payment).to.equal(10);
+      }
+    });
+
+    it("always bills the table exactly the budget, whatever the player count", () => {
+      // Every faction costs total/N and there are N factions, so the payments sum to the budget
+      // before rounding - which is why the default has to scale with the head count.
+      const cases: { factions: Faction[]; players: PlayerEnum[]; vectors: number[][]; budget: number }[] = [
+        {
+          factions: FACTIONS.slice(0, 2),
+          players: PLAYERS.slice(0, 2),
+          vectors: [
+            [14, 6],
+            [6, 14],
+          ],
+          budget: 20,
+        },
+        {
+          factions: FACTIONS.slice(0, 3),
+          players: PLAYERS.slice(0, 3),
+          vectors: [
+            [15, 10, 5],
+            [9, 14, 7],
+            [3, 6, 21],
+          ],
+          budget: 30,
+        },
+        { factions: FACTIONS, players: PLAYERS, vectors: NO_TIES, budget: 40 },
+      ];
+
+      for (const { factions, players, vectors, budget } of cases) {
+        const result = resolvePreferenceSplitAuction(
+          factions,
+          players,
+          bidsFrom(vectors, factions),
+          budget,
+          seededRandom([0])
+        );
+        const exact = result.allocations.reduce((sum, a) => sum + a.basePrice, 0);
+        expect(exact).to.equal(budget);
+      }
     });
   });
 });
