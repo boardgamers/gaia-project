@@ -432,9 +432,9 @@ describe("Preference Split Auction", () => {
 
   describe("other player counts", () => {
     it("scales the default budget so the cost per player stays the same", () => {
-      expect(defaultPreferenceSplitBudget(2)).to.equal(20);
-      expect(defaultPreferenceSplitBudget(3)).to.equal(30);
-      expect(defaultPreferenceSplitBudget(4)).to.equal(40);
+      expect(defaultPreferenceSplitBudget(2)).to.equal(40);
+      expect(defaultPreferenceSplitBudget(3)).to.equal(60);
+      expect(defaultPreferenceSplitBudget(4)).to.equal(80);
     });
 
     it("resolves a three-player auction, averaging over three bids", () => {

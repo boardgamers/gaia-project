@@ -1,5 +1,4 @@
 import { expect } from "chai";
-import { defaultPreferenceSplitBudget } from "./algorithms/preference-split-auction";
 import Engine, { AuctionVariant, EngineOptions } from "./engine";
 import { Command, Faction, Phase, Player as PlayerEnum } from "./enums";
 
@@ -40,11 +39,16 @@ const allTiedBids = `
       p4 preferenceBid itars 2 taklons 2 xenos 9 terrans 27
 `;
 
-/** `Engine.parseMoves` keeps blank lines, and the fixtures above are concatenated - so drop them. */
+/** `Engine.parseMoves` keeps blank lines, and the fixtures above are concatenated - so drop them.
+ *
+ * The bid vectors above were written against a 40-point, four-player table, so pin that budget here
+ * instead of leaning on the scaled default - the default moved to 20 points per player in 2026-08
+ * and the fixtures should stay readable rather than track it. Tests that are about the default
+ * itself build their engine directly from `options()`. */
 const engineFor = (moves: string, extra: Partial<EngineOptions> = {}) =>
   new Engine(
     Engine.parseMoves(moves).filter((move) => move.length > 0),
-    options(extra)
+    options({ auctionBudget: 40, ...extra })
   );
 
 describe("Preference Split Auction variant", () => {
@@ -58,7 +62,7 @@ describe("Preference Split Auction variant", () => {
     it("assigns every faction to the highest remaining bidder and charges the capped average", () => {
       const result = engine.preferenceSplitResult;
 
-      expect(result.budget).to.equal(defaultPreferenceSplitBudget(4));
+      expect(result.budget).to.equal(40);
       expect(result.order).to.deep.equal([Faction.Terrans, Faction.Itars, Faction.Taklons, Faction.Xenos]);
       expect(result.factions.map((f) => f.total)).to.deep.equal([51, 38, 36, 35]);
       expect(result.factions.map((f) => f.average)).to.deep.equal([12.75, 9.5, 9, 8.75]);
@@ -233,10 +237,10 @@ describe("Preference Split Auction variant", () => {
       }
     });
 
-    it("defaults the budget to 10 points per player", () => {
+    it("defaults the budget to 20 points per player", () => {
       for (const count of [2, 3, 4, 5]) {
         const engine = new Engine([`init ${count} djfjjv4k`], options());
-        expect(engine.preferenceSplitBudget).to.equal(count * 10);
+        expect(engine.preferenceSplitBudget).to.equal(count * 20);
       }
       // An explicit budget always wins over the scaled default.
       expect(new Engine(["init 3 djfjjv4k"], options({ auctionBudget: 44 })).preferenceSplitBudget).to.equal(44);
@@ -296,7 +300,8 @@ describe("Preference Split Auction variant", () => {
 
   describe("smaller tables", () => {
     it("runs the whole flow at three players, averaging over three bids", () => {
-      const engine = engineFor(`
+      const engine = engineFor(
+        `
         init 3 djfjjv4k
         p1 faction itars
         p2 faction taklons
@@ -304,7 +309,9 @@ describe("Preference Split Auction variant", () => {
         p1 preferenceBid itars 15 taklons 10 xenos 5
         p2 preferenceBid itars 9 taklons 14 xenos 7
         p3 preferenceBid itars 3 taklons 6 xenos 21
-      `);
+      `,
+        { auctionBudget: 30 }
+      );
 
       expect(engine.phase).to.equal(Phase.SetupBuilding);
       expect(engine.preferenceSplitResult.budget).to.equal(30);
@@ -315,13 +322,16 @@ describe("Preference Split Auction variant", () => {
     });
 
     it("runs the whole flow at two players", () => {
-      const engine = engineFor(`
+      const engine = engineFor(
+        `
         init 2 djfjjv4k
         p1 faction itars
         p2 faction taklons
         p1 preferenceBid itars 14 taklons 6
         p2 preferenceBid itars 6 taklons 14
-      `);
+      `,
+        { auctionBudget: 20 }
+      );
 
       expect(engine.phase).to.equal(Phase.SetupBuilding);
       expect(engine.preferenceSplitResult.budget).to.equal(20);
@@ -330,17 +340,17 @@ describe("Preference Split Auction variant", () => {
       expect(engine.players.map((pl) => pl.data.bid)).to.deep.equal([10, 10]);
     });
 
-    it("still enforces the scaled budget exactly", () => {
-      // 40 was the right total for four players; at three it is 10 too many.
+    it("still enforces the configured budget exactly", () => {
+      // 40 is this fixture's budget; 45 is 5 too many.
       expect(() =>
         engineFor(`
           init 3 djfjjv4k
           p1 faction itars
           p2 faction taklons
           p3 faction xenos
-          p1 preferenceBid itars 20 taklons 12 xenos 8
+          p1 preferenceBid itars 25 taklons 12 xenos 8
         `)
-      ).to.throw(/10 more than your 30/);
+      ).to.throw(/5 more than your 40/);
     });
   });
 });

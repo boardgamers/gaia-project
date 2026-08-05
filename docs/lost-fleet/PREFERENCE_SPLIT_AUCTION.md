@@ -35,7 +35,7 @@ bid is (`player.data.bid`, cashed out in `finalScoringPhase`).
 
 ### Budget (X)
 
-**Fixed by the player count: 10 points per player** (owner decision, 2026-08-05 — it was briefly a
+**Fixed by the player count: 20 points per player** (owner decision, 2026-08-05 — it was briefly a
 number you typed at setup, and that was one dial too many for something with a single sensible
 answer). `EngineOptions.auctionBudget` still exists and is still stored per game by `create_game`,
 which pins a game's budget forever so changing the default can never rewrite what an in-progress
@@ -43,14 +43,20 @@ game's players were asked to split; there is simply no UI that lets you choose i
 accepts any whole number 1–999 if one is supplied another way (`?auctionBudget=` in the
 self-contained viewer, handy for testing).
 
-**The scale is 10 points per player** — 20 at 2 players, 30 at 3, 40 at 4
+**The scale is 20 points per player** — 40 at 2 players, 60 at 3, 80 at 4
 (`defaultPreferenceSplitBudget`). That is because **X is the table's total bill, not one player's**:
 every faction costs its own average (its total over N players) and there are N factions, so the
 payments always add up to exactly X before rounding. Each player therefore pays X/N on average,
 whoever ends up with what. A flat default would have made a 2-player auction twice as punishing as a
 4-player one for the same number.
 
-At 10 per player, a typical winning price lands in the 5–15 VP range next to a ~120 VP game.
+At 20 per player, a typical winning price lands in the 10–30 VP range next to a ~120 VP game.
+
+The scale was 10 per player when the variant shipped (2026-08-05) and was doubled to 20 the next
+day (owner decision) to give a split more resolution to express preferences with. Only the default
+moved: `auctionBudget` is stamped into a game's options at creation, so the two games created on the
+old scale still run on it, and the server-side fallback in `preference_split_budget` was moved in
+lockstep (migration `20260806090000_preference_split_budget_20_per_player.sql`).
 
 ### What 2 players looks like
 

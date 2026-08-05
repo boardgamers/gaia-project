@@ -23,7 +23,7 @@ const MOVES = [
 ];
 
 function mount() {
-  const engine = new Engine(MOVES, { auction: AuctionVariant.PreferenceSplit });
+  const engine = new Engine(MOVES, { auction: AuctionVariant.PreferenceSplit, auctionBudget: 40 });
   const store = makeStore();
   store.commit("receiveData", engine);
   return { engine, ...render(PreferenceSplitLog, { store }) };
@@ -93,7 +93,7 @@ describe("PreferenceSplitLog", () => {
         "p3 preferenceBid itars 4 taklons 12 xenos 22 terrans 2",
         "p4 preferenceBid itars 6 taklons 4 xenos 16 terrans 14",
       ],
-      { auction: AuctionVariant.PreferenceSplit }
+      { auction: AuctionVariant.PreferenceSplit, auctionBudget: 40 }
     );
     const store = makeStore();
     store.commit("receiveData", engine);

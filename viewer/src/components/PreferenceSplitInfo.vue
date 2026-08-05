@@ -8,7 +8,7 @@
   >
     <div class="preference-split-info">
       <p>
-        One picked faction per player, and one fixed pot of <b>{{ budget }} bid points</b> each (10 per player at the
+        One picked faction per player, and one fixed pot of <b>{{ budget }} bid points</b> each (20 per player at the
         table, so the whole table's payments come to {{ budget }}).
         <b>You split your whole {{ budget }} across them all</b> - as lopsided or as even as you like - and everybody
         does it at the same time, in secret. Nothing at all is revealed until the last submission is in, and then the
@@ -66,12 +66,13 @@
 </template>
 
 <script lang="ts">
-import { defaultPreferenceSplitBudget } from "@gaia-project/engine";
 import { Component, Prop, Vue } from "vue-property-decorator";
 
 /** The budget the worked example at the bottom is written for; also the prop default, which both
- * call sites override with the real game's own budget. */
-const EXAMPLE_BUDGET = defaultPreferenceSplitBudget(4);
+ * call sites override with the real game's own budget. Deliberately a literal rather than
+ * `defaultPreferenceSplitBudget(4)`: the example's bid tables are hand-written for a 40-point table
+ * and stay a valid illustration whatever the default scale is. */
+const EXAMPLE_BUDGET = 40;
 
 @Component
 export default class PreferenceSplitInfo extends Vue {

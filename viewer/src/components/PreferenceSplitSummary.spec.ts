@@ -23,7 +23,7 @@ const RESOLVED = [
 ];
 
 function mount(moves: string[] = RESOLVED) {
-  const engine = new Engine([...moves], { auction: AuctionVariant.PreferenceSplit });
+  const engine = new Engine([...moves], { auction: AuctionVariant.PreferenceSplit, auctionBudget: 40 });
   const store = makeStore();
   store.commit("receiveData", engine);
   return render(PreferenceSplitSummary, { store });

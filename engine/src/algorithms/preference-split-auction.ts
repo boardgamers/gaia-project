@@ -50,12 +50,16 @@ export const MIN_PREFERENCE_SPLIT_PLAYERS = 2;
  * The default budget scales with the player count, because the budget is the TABLE's total bill,
  * not one player's. Every faction costs its own average (total over N players) and there are N
  * factions, so the payments always sum to exactly the budget before rounding - meaning each player
- * pays budget/N on average, whoever wins what. At 10 points per player that is ~10 VP each at any
- * count: 20 at 2 players, 30 at 3, 40 at 4. Expensive enough to matter next to a ~120 VP game,
+ * pays budget/N on average, whoever wins what. At 20 points per player that is ~20 VP each at any
+ * count: 40 at 2 players, 60 at 3, 80 at 4. Expensive enough to matter next to a ~120 VP game,
  * cheap enough that no single faction can eat a whole game's scoring. A flat default would instead
  * have made a 2-player auction twice as punishing as a 4-player one.
+ *
+ * Raised from 10 to 20 per player on 2026-08-06 (owner decision) so a split has more resolution to
+ * express preferences with. `auctionBudget` is stored per game at creation, so this only affects
+ * games created from here on - an in-progress game keeps whatever it was created with.
  */
-export const PREFERENCE_SPLIT_BUDGET_PER_PLAYER = 10;
+export const PREFERENCE_SPLIT_BUDGET_PER_PLAYER = 20;
 
 export function defaultPreferenceSplitBudget(players: number): number {
   return PREFERENCE_SPLIT_BUDGET_PER_PLAYER * players;

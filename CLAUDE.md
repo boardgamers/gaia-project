@@ -52,7 +52,8 @@ after the source is stable — not after each edit, and never twice to restate t
   implemented and tested.
 - A **"Preference Split Auction"** faction-selection variant (`AuctionVariant.PreferenceSplit`,
   PROGRESS #137) is implemented: one picked faction per player at any supported player count (2–5),
-  everyone secretly splits one fixed budget (**10 points per player**, fixed by the player count and
+  everyone secretly splits one fixed budget (**20 points per player** since 2026-08-06 — it was 10
+  when the variant shipped the day before; fixed by the player count and
   not settable at setup — the budget is the table's whole bill, so payments always sum to it) across
   them all at the same time, then factions are
   ranked by total bid and awarded top-first to the highest still-unassigned bidder, priced at the

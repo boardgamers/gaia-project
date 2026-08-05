@@ -143,6 +143,18 @@ type HistoryState = {
   turnFactions: string[];
 };
 
+/** Commands a player can make before they have a faction, so the move is logged under their seat
+ * ("p1 banFaction ambas") instead of a faction name. Their rows are neutral - there is no faction
+ * to color them with yet - but they still count as that seat's turn. */
+const setupCommandsBeforeFactions: Command[] = [
+  Command.Bid,
+  Command.RotateSectors,
+  Command.Setup,
+  Command.BanFaction,
+  Command.SilentBid,
+  Command.PreferenceBid,
+];
+
 function makeEntry(
   data: Engine,
   state: HistoryState,
@@ -164,7 +176,7 @@ function makeEntry(
     } else if (command == Command.ChooseFaction) {
       faction = cmd.args[0] as Faction;
       turnFaction = faction;
-    } else if (command == Command.Bid || command == Command.RotateSectors || command == Command.Setup) {
+    } else if (setupCommandsBeforeFactions.includes(command)) {
       turnFaction = cmd.faction;
     } else {
       faction = cmd.faction;
@@ -177,6 +189,14 @@ function makeEntry(
       turnFaction = faction;
     }
     move = faction;
+  }
+  // Belt and braces for the list above: a move logged before its player has a faction carries a
+  // seat slug ("p1") where a faction name would be, and that has no entry in the color maps. An
+  // `undefined` color used to blow up AdvancedLog's rowStyle and take the WHOLE log panel down with
+  // it (owner-reported, 2026-08-06: the log vanished during the round-0 ban phase), so treat any
+  // unrecognized faction as the neutral row it renders as anyway.
+  if (faction != null && factionLogColors[faction] == null) {
+    faction = null;
   }
   const color = faction == null ? "white" : own ? factionLogColors[faction] : lightFactionLogColors[faction];
   const textColor = own ? (faction != null ? factionLogTextColors[faction] : "black") : "var(--res-power)";

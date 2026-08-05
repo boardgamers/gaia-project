@@ -226,19 +226,19 @@ describe("CreateGame", () => {
       vm.form.auctionVariant = "preference-split";
       await Vue.nextTick();
 
-      expect(vm.auctionBudget).to.equal(40);
-      expect(wrapper.text()).to.include("40 bid points");
+      expect(vm.auctionBudget).to.equal(80);
+      expect(wrapper.text()).to.include("80 bid points");
       // It is derived, not entered - there is no input for it at all.
       expect(wrapper.find("#create-game-auction-budget").exists()).to.equal(false);
 
       vm.setPlayerCount(3);
       await Vue.nextTick();
-      expect(vm.auctionBudget).to.equal(30);
-      expect(wrapper.text()).to.include("30 bid points");
+      expect(vm.auctionBudget).to.equal(60);
+      expect(wrapper.text()).to.include("60 bid points");
 
       vm.setPlayerCount(2);
       await Vue.nextTick();
-      expect(vm.auctionBudget).to.equal(20);
+      expect(vm.auctionBudget).to.equal(40);
     });
 
     it("keeps the variant selected across a player-count change", async () => {

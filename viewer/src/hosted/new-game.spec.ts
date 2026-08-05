@@ -160,16 +160,16 @@ describe("Preference Split Auction setup", () => {
       advancedRules: true,
       factionVariant: "standard",
       auction: "preference-split",
-      auctionBudget: 40,
+      auctionBudget: 80,
       banPhase: false,
     });
   });
 
   it("scales the stored budget with the player count, and stores none for another variant", () => {
     for (const [playerCount, budget] of [
-      [2, 20],
-      [3, 30],
-      [4, 40],
+      [2, 40],
+      [3, 60],
+      [4, 80],
     ]) {
       const defaulted = buildCreateGameParams(
         {
@@ -201,6 +201,6 @@ describe("Preference Split Auction setup", () => {
 
     expect(params.p_player_count).to.equal(3);
     expect((params.p_options as any).auction).to.equal("preference-split");
-    expect((params.p_options as any).auctionBudget).to.equal(30);
+    expect((params.p_options as any).auctionBudget).to.equal(60);
   });
 });

@@ -13,7 +13,7 @@ const PICKS = ["init 4 djfjjv4k", "p1 faction itars", "p2 faction taklons", "p3 
 
 /** In the bid phase, with nobody having submitted yet. */
 function biddingStore(options: { seat?: number | null; hosted?: boolean; submittedSeats?: number[] } = {}) {
-  const engine = new Engine([...PICKS], { auction: AuctionVariant.PreferenceSplit });
+  const engine = new Engine([...PICKS], { auction: AuctionVariant.PreferenceSplit, auctionBudget: 40 });
   engine.generateAvailableCommandsIfNeeded();
   const store = makeStore();
   store.commit("receiveData", engine);
@@ -133,7 +133,7 @@ describe("PreferenceSplitBid", () => {
   });
 
   it("stays hidden outside the bid phase", () => {
-    const engine = new Engine(["init 4 djfjjv4k"], { auction: AuctionVariant.PreferenceSplit });
+    const engine = new Engine(["init 4 djfjjv4k"], { auction: AuctionVariant.PreferenceSplit, auctionBudget: 40 });
     engine.generateAvailableCommandsIfNeeded();
     const store = makeStore();
     store.commit("receiveData", engine);
