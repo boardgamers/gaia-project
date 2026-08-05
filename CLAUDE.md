@@ -59,9 +59,16 @@ after the source is stable — not after each edit, and never twice to restate t
   handed table-valued factions out for free), so a winner can pay more VP than they bid. Rules + file map: `docs/lost-fleet/
 PREFERENCE_SPLIT_AUCTION.md`. Unlike the Silent Auction, its secrecy is **server-enforced** —
   simultaneous bids never touch `public.moves`; they sit in `auction_sealed_bids` behind RLS and are
-  appended as four moves in one transaction by `reveal_sealed_bids()`. **Its migration
-  `20260805120000_preference_split_sealed_bids.sql` is NOT applied live yet** — apply it with
-  `apply_migration` before creating an online game with this variant.
+  appended as one move per seat in a single transaction by `reveal_sealed_bids()`. **Its three
+  migrations ARE applied live** on `mitawjpdxkheascdiffz` (2026-08-05, ledger versions
+  `20260805122251 preference_split_sealed_bids`, `20260805130145 lock_down_auction_sealed_bids_grants`,
+  `20260805131046 pin_preference_split_budget_search_path`) and verified against the live objects.
+  **What is NOT deployed is the `resolve-automation` Edge Function**: its committed
+  `_shared/engine.bundle.js` was rebuilt for the new `preferenceBid` command, but the
+  `Supabase - Deploy Edge Function` workflow has been failing with `401 Unauthorized` since at least
+  2026-07-27 — the repo's `SUPABASE_ACCESS_TOKEN` secret is expired. Until it is rotated and the
+  workflow re-run, offline premove/auto-leech automation no-ops (`outcome: "replay-failed"`, caught,
+  nothing deleted or corrupted) for Preference Split games only.
 - A "Silent Auction" faction-selection variant (`AuctionVariant.Silent`, PROGRESS #61) is
   implemented and tested: sequential ban → sequential pick → sequential private bid submission →
   automatic ascending-auction resolution (`algorithms/silent-auction.ts`), with a setup picker
