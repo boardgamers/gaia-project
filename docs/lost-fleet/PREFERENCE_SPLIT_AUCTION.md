@@ -18,8 +18,9 @@ opponent's bid.
    received a faction**. A player who wins one is out of the running for the rest.
 5. The price is the **average of all four bids** on that faction — including bids from players who
    already won something else. It is never recalculated as players drop out.
-6. A winner **never pays more than their own bid** on the faction they got. They often pay less. A
-   player who bid 0 on the faction they end up with pays 0.
+6. That average is the price **whatever the winner bid themselves**. Your own bid decides _which_
+   faction you get, never what it costs — so you can end up paying more than you put on it, and a
+   player who bid 0 on the faction they receive still pays its average.
 7. Any tie — two factions on the same total, or two eligible players on the same highest bid — is
    resolved **automatically and at random**. Players are never asked to break a tie.
 
@@ -32,11 +33,26 @@ Configurable per game (`EngineOptions.auctionBudget`, set from the create-game s
 **40**, valid range 1–999, whole numbers only. 40 points across four factions averages 10 per
 faction, which puts a typical winning price in the 5–15 VP range next to a ~120 VP game.
 
+### Why there is no cap at the winner's own bid (owner decision, 2026-08-05)
+
+An earlier draft capped the payment at `min(average, own bid)`. It was removed: a cap sounds fairer
+and is not. It lets a player take a faction the whole table rated highly for **nothing at all**,
+simply by having bid 0 on it.
+
+The owner's example: one player splits their budget almost evenly across two factions — say 20 and
+19 — and another player rates those same two almost equally too. The first player's marginally
+higher bid pulls them onto one of them, and under a cap the second player picks up the other for 0,
+even though everyone at the table agreed it was worth about 20. Paying the average keeps a faction's
+price tied to what it is actually worth to the table.
+
+The accepted cost is that a winner can pay more VP than they personally bid. In exchange the rule is
+one sentence long: **you pay what the table thought it was worth.**
+
 ### Rounding
 
 `roundVictoryPoints()` in `engine/src/algorithms/preference-split-auction.ts` is the single place
-this happens: conventional **half-up** (10.5 → 11, 10.49 → 10). Totals, averages and the cap all
-stay exact until the very end; only the final payment is rounded. Averages are exact in binary
+this happens: conventional **half-up** (10.5 → 11, 10.49 → 10). Totals and averages stay exact until
+the very end; only the final payment is rounded. Averages are exact in binary
 anyway (an integer divided by 4), and the UI shows them to two decimals.
 
 ## Flow
@@ -117,14 +133,15 @@ stored decision, not a re-derivation of it.
 
 ## Tests
 
-| File                                                       | Covers                                                                                                                                                                                                                                                                                     |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `engine/src/algorithms/preference-split-auction.spec.ts`   | rounding, submission validation, ranking, allocation, exclusion of assigned players, averages including assigned players' bids, the cap, the 0-bid case, both tiebreaks, determinism, and both end-to-end fixtures (the four-way-tied one and a tie-free one with exact expected payments) |
-| `engine/src/preference-split-variant.spec.ts`              | the same through real move logs: full flow, the 4-player and budget preconditions, per-move validation, one submission per player, a configured budget, reload determinism (full replay and `fromData`), and that nothing is derived before the last submission                            |
-| `viewer/src/hosted/host.spec.ts`                           | sealed submissions unreadable until the last one lands, resolution on the fourth, exactly-once reveal under two concurrent clients, identical result on reload, the abandoned-last-submitter fallback, and server-side rejection of a wrong total / second submission                      |
-| `viewer/src/components/PreferenceSplitBid.spec.ts`         | one input per faction, allocated/remaining, submit disabled off-budget, submits through the sealed backend (never as a move), renders for a seat that is not on turn, post-submission progress, and the offline move fallback                                                              |
-| `viewer/src/components/PreferenceSplitLog.spec.ts`         | every bid, totals, averages, the ranking, the step-by-step allocation timeline, and a capped payment explained as capped                                                                                                                                                                   |
-| `viewer/src/hosted/new-game.spec.ts`, `CreateGame.spec.ts` | 4-player-only gating, the stored budget and its default, invalid-budget blocking, and dropping the variant on a player-count change                                                                                                                                                        |
+| File                                                       | Covers                                                                                                                                                                                                                                                                                                                                             |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `engine/src/algorithms/preference-split-auction.spec.ts`   | rounding, submission validation, ranking, allocation, exclusion of assigned players, averages including assigned players' bids, paying **more** than your own bid, the 0-bid case, the owner's near-tie example, both tiebreaks, determinism, and both end-to-end fixtures (the four-way-tied one and a tie-free one with exact expected payments) |
+| `engine/src/preference-split-variant.spec.ts`              | the same through real move logs: full flow, the 4-player and budget preconditions, per-move validation, one submission per player, a configured budget, reload determinism (full replay and `fromData`), and that nothing is derived before the last submission                                                                                    |
+| `viewer/src/hosted/host.spec.ts`                           | sealed submissions unreadable until the last one lands, resolution on the fourth, exactly-once reveal under two concurrent clients, identical result on reload, the abandoned-last-submitter fallback, and server-side rejection of a wrong total / second submission                                                                              |
+| `viewer/src/components/PreferenceSplitBid.spec.ts`         | one input per faction, allocated/remaining, submit disabled off-budget, submits through the sealed backend (never as a move), renders for a seat that is not on turn, post-submission progress, and the offline move fallback                                                                                                                      |
+| `viewer/src/components/PreferenceSplitLog.spec.ts`         | every bid, totals, averages, the ranking, the step-by-step allocation timeline (arithmetic spelled out), and an over-own-bid payment explained as such                                                                                                                                                                                             |
+| `viewer/src/components/PreferenceSplitSummary.spec.ts`     | the result strip under the banner: what it announces, opening the full log from it, dismissing it per game per device, and staying hidden before the auction resolves                                                                                                                                                                              |
+| `viewer/src/hosted/new-game.spec.ts`, `CreateGame.spec.ts` | 4-player-only gating, the stored budget and its default, invalid-budget blocking, and dropping the variant on a player-count change                                                                                                                                                                                                                |
 
 ## Adding another auction variant later
 

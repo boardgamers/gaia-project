@@ -4145,25 +4145,25 @@ opacity: 0.7 }` wrapper that also diluted the X itself, while `BoardAction.vue`'
       `pnpm test`: 440 passing/31 failing both before and after (identical failing-test names,
       confirmed via `git stash` on the same run - all pre-existing, none touch these components).
 
-                                                                                                                                                                                                                                                                                                                                         **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
-                                                                                                                                                                                                                                                                                                                                         pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
-                                                                                                                                                                                                                                                                                                                                         desktop mice, which was never the actual bug - only touch devices raced hover against the
-                                                                                                                                                                                                                                                                                                                                         click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
-                                                                                                                                                                                                                                                                                                                                         `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
-                                                                                                                                                                                                                                                                                                                                         `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
-                                                                                                                                                                                                                                                                                                                                         shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
-                                                                                                                                                                                                                                                                                                                                         `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
-                                                                                                                                                                                                                                                                                                                                         directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
-                                                                                                                                                                                                                                                                                                                                         `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
-                                                                                                                                                                                                                                                                                                                                         config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
-                                                                                                                                                                                                                                                                                                                                         on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
-                                                                                                                                                                                                                                                                                                                                         desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
-                                                                                                                                                                                                                                                                                                                                         is what actually closed that race originally. Verified live via Playwright with two device
-                                                                                                                                                                                                                                                                                                                                         profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
-                                                                                                                                                                                                                                                                                                                                         tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
-                                                                                                                                                                                                                                                                                                                                         context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
-                                                                                                                                                                                                                                                                                                                                         a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
-                                                                                                                                                                                                                                                                                                                                         still 440 passing/31 failing, same pre-existing set.
+                                                                                                                                                                                                                                                                                                                                               **Same-session follow-up: hover restored on desktop, click-only kept on mobile.** The owner
+                                                                                                                                                                                                                                                                                                                                               pointed out that dropping `.hover` everywhere (above) also removed hover-to-preview on real
+                                                                                                                                                                                                                                                                                                                                               desktop mice, which was never the actual bug - only touch devices raced hover against the
+                                                                                                                                                                                                                                                                                                                                               click listener, since a tap synthesizes both close together. New `logic/tooltip.ts` exports
+                                                                                                                                                                                                                                                                                                                                               `supportsHoverTooltips()` (same `window.matchMedia("(hover: hover)")` check `Commands.vue`'s
+                                                                                                                                                                                                                                                                                                                                               `supportsHover()` already used for the map's federation-hover-preview, now delegated to this
+                                                                                                                                                                                                                                                                                                                                               shared function instead of duplicating the check) and `tooltipTriggerConfig()`, returning
+                                                                                                                                                                                                                                                                                                                                               `{ trigger: "hover" }` or `{ trigger: "click" }`. All 12 spots above now bind that as the
+                                                                                                                                                                                                                                                                                                                                               directive's *value* (`v-b-tooltip.nofade="tooltipTriggerConfig()"`) instead of a static
+                                                                                                                                                                                                                                                                                                                                               `.hover`/`.click` modifier - bootstrap-vue's tooltip directive reads `trigger` from the bound
+                                                                                                                                                                                                                                                                                                                                               config object, so this is real per-device branching, not a compile-time choice. Kept `.nofade`
+                                                                                                                                                                                                                                                                                                                                               on all of them (previously only on a few LostFleetShips spots) since a hover trigger on
+                                                                                                                                                                                                                                                                                                                                               desktop reintroduces the documented adjacent-icon fade-in/fade-out race if animated - `.nofade`
+                                                                                                                                                                                                                                                                                                                                               is what actually closed that race originally. Verified live via Playwright with two device
+                                                                                                                                                                                                                                                                                                                                               profiles: a real-mouse context (`matchMedia('hover: hover')` true) shows/hides a research
+                                                                                                                                                                                                                                                                                                                                               tile's tooltip purely by hovering and moving away, no click involved at all; a touch-emulated
+                                                                                                                                                                                                                                                                                                                                               context (`hasTouch`/`isMobile`, `matchMedia('hover: hover')` false) requires a tap to open and
+                                                                                                                                                                                                                                                                                                                                               a second tap elsewhere to close, same single-tooltip-at-a-time behavior as before. `pnpm test`
+                                                                                                                                                                                                                                                                                                                                               still 440 passing/31 failing, same pre-existing set.
 
 102.  ✅ **Offline pass-and-play with automatic local recovery and airplane-mode launch
       (2026-07-17, v5.31.0).** The viewer now has a dedicated `?offline=1` hot-seat mode, linked from
@@ -5379,110 +5379,111 @@ found"` — proving the function authenticates and accepts the chat payload shap
       one turn-order circle. The "How does the auction work?" button was inside that same on-turn-only
       panel, so the people most likely to want it (waiting, reading, not acting) could never reach it.
 
-      New `SetupStatus.vue`, rendered by `Game.vue` **above the map**, directly under the turn-order
-      banner, for everyone, for the whole of round 0 (`isBeforeRound1`): "**Your turn** to ban a
-      faction" for the viewer's own locked seat, "**Mark's turn** to ban a faction" otherwise, with a
-      per-phase assignment for ban/pick/auction-bid/silent-bid/starting-buildings/booster. Placement
-      was deliberate: the commands column sits below the entire map+research row on mobile, and
-      round 0 is exactly when the board matters least and "who is doing what" matters most.
-      `Game.vue` (not `HostedBar.vue`) is the host because it renders in hosted _and_ self-contained/
-      hot-seat play, and both text and graphical `uiMode` branches get it.
+            New `SetupStatus.vue`, rendered by `Game.vue` **above the map**, directly under the turn-order
+            banner, for everyone, for the whole of round 0 (`isBeforeRound1`): "**Your turn** to ban a
+            faction" for the viewer's own locked seat, "**Mark's turn** to ban a faction" otherwise, with a
+            per-phase assignment for ban/pick/auction-bid/silent-bid/starting-buildings/booster. Placement
+            was deliberate: the commands column sits below the entire map+research row on mobile, and
+            round 0 is exactly when the board matters least and "who is doing what" matters most.
+            `Game.vue` (not `HostedBar.vue`) is the host because it renders in hosted _and_ self-contained/
+            hot-seat play, and both text and graphical `uiMode` branches get it.
 
-      The two explainer buttons moved into that strip and were **deleted** from `Commands.vue` - two
-      copies would register the same `b-modal` id twice, and `Commands.vue`'s mobile sticky-bar copy
-      was dead code anyway (`showStickyMobileBar` is round-1+ only, so it could never render during
-      ban/pick/bid). `showSilentAuctionInfo`/`showBanPhaseInfo` and the `.silent-auction-info-button`
-      CSS went with them; the two Commands specs that covered the button moved to
-      `SetupStatus.spec.ts` and grew into 8 (naming, second person for your own seat, the off-turn
-      case that motivated all this, phase progression, both explainers, and nothing at all from
-      round 1 on). Verified in a real browser at 1400x1000 and 390x844 with
-      `?players=3&auction=silent`: the strip sits under the circles above the map on both, wrapping
-      its button to a second line on mobile, and the explainer opens from it. Viewer suite 718
-      passing (710 baseline + 8, with 2 moved out of `Commands.spec.ts` and rewritten), same two
-      pre-existing `SetupPreview` rotation failures as #131/#134.
+            The two explainer buttons moved into that strip and were **deleted** from `Commands.vue` - two
+            copies would register the same `b-modal` id twice, and `Commands.vue`'s mobile sticky-bar copy
+            was dead code anyway (`showStickyMobileBar` is round-1+ only, so it could never render during
+            ban/pick/bid). `showSilentAuctionInfo`/`showBanPhaseInfo` and the `.silent-auction-info-button`
+            CSS went with them; the two Commands specs that covered the button moved to
+            `SetupStatus.spec.ts` and grew into 8 (naming, second person for your own seat, the off-turn
+            case that motivated all this, phase progression, both explainers, and nothing at all from
+            round 1 on). Verified in a real browser at 1400x1000 and 390x844 with
+            `?players=3&auction=silent`: the strip sits under the circles above the map on both, wrapping
+            its button to a second line on mobile, and the explainer opens from it. Viewer suite 718
+            passing (710 baseline + 8, with 2 moved out of `Commands.spec.ts` and rewritten), same two
+            pre-existing `SetupPreview` rotation failures as #131/#134.
 
-      **Same-session follow-up (viewer v5.50.1): faction sheets are readable off turn, and on mobile
-      the round-0 buttons sit under the strip.** Owner: _"even though it's not your turn still make it
-      so you have all faction buttons available so you can click in on them to see their faction
-      sheets. You should just not have the confirm pick or confirm ban button exposed ... move that
-      whole round 0 buttons container on mobile right under the status bar ... Keep whatever it is on
-      desktop."_ New `FactionBrowser.vue` renders the same faction buttons for a player who isn't on
-      turn during `SetupFactionBan`/`SetupFaction`, reading the very list the player on turn is being
-      offered (`availableCommands`' `BanFaction`/`ChooseFaction` data — the same for everyone; only
-      the right to act on it differs). Clicking one opens the same `FactionInfoCard` sheet in a modal
-      whose footer is a single **Close** — no `MoveButton`, no command, so there is nothing to
-      accidentally commit — under a "Not your turn to ban/pick — tap a faction to read its sheet"
-      line.
+            **Same-session follow-up (viewer v5.50.1): faction sheets are readable off turn, and on mobile
+            the round-0 buttons sit under the strip.** Owner: _"even though it's not your turn still make it
+            so you have all faction buttons available so you can click in on them to see their faction
+            sheets. You should just not have the confirm pick or confirm ban button exposed ... move that
+            whole round 0 buttons container on mobile right under the status bar ... Keep whatever it is on
+            desktop."_ New `FactionBrowser.vue` renders the same faction buttons for a player who isn't on
+            turn during `SetupFactionBan`/`SetupFaction`, reading the very list the player on turn is being
+            offered (`availableCommands`' `BanFaction`/`ChooseFaction` data — the same for everyone; only
+            the right to act on it differs). Clicking one opens the same `FactionInfoCard` sheet in a modal
+            whose footer is a single **Close** — no `MoveButton`, no command, so there is nothing to
+            accidentally commit — under a "Not your turn to ban/pick — tap a faction to read its sheet"
+            line.
 
-      Placement is switched by `Game.vue`'s new `setupActionsAtTop` (mobile **and** round 0), which
-      moves the whole action area — `Commands` on turn, `FactionBrowser` off turn — into the `col-12`
-      directly under `SetupStatus`, and is `false` on desktop so that layout is untouched. The two
-      mount points carry mutually exclusive `v-if`s, so exactly one `Commands` is ever mounted (two
-      would duplicate its element ids and modals). Viewport state comes from `hosted/viewport.ts`'s
-      `isDesktopViewport`/`watchDesktopViewport`, which only fires on a real breakpoint crossing, so
-      resizing can't remount `Commands` mid-turn.
+            Placement is switched by `Game.vue`'s new `setupActionsAtTop` (mobile **and** round 0), which
+            moves the whole action area — `Commands` on turn, `FactionBrowser` off turn — into the `col-12`
+            directly under `SetupStatus`, and is `false` on desktop so that layout is untouched. The two
+            mount points carry mutually exclusive `v-if`s, so exactly one `Commands` is ever mounted (two
+            would duplicate its element ids and modals). Viewport state comes from `hosted/viewport.ts`'s
+            `isDesktopViewport`/`watchDesktopViewport`, which only fires on a real breakpoint crossing, so
+            resizing can't remount `Commands` mid-turn.
 
-      **Gotcha this exposed:** jsdom has no `matchMedia`, so `isDesktopViewport()` returns false and
-      every Game test now runs as _mobile_ by default — which relocates the round-0 buttons out of the
-      commands column. `Game.spec.ts`'s "narrows the buttons row to the map's own width" test asserts
-      a desktop layout and started failing; it now sets `vm.isDesktopViewport = true` explicitly. Any
-      future Game test that cares about desktop layout must do the same. Verified in a real browser at
-      390x844 and 1400x1000, on turn and with a seat lock forced to an off-turn seat: mobile puts the
-      action area 8px under the strip in all four states, desktop leaves it at its usual y≈770.
-      Viewer 728 passing (721 + 4 `FactionBrowser` + 3 placement) on this change's own base
-      (`daa727a`), and **741 passing after rebasing onto #136's chat-read tree** (that entry's 13 new
-      cases land on top), same two pre-existing failures throughout.
+            **Gotcha this exposed:** jsdom has no `matchMedia`, so `isDesktopViewport()` returns false and
+            every Game test now runs as _mobile_ by default — which relocates the round-0 buttons out of the
+            commands column. `Game.spec.ts`'s "narrows the buttons row to the map's own width" test asserts
+            a desktop layout and started failing; it now sets `vm.isDesktopViewport = true` explicitly. Any
+            future Game test that cares about desktop layout must do the same. Verified in a real browser at
+            390x844 and 1400x1000, on turn and with a seat lock forced to an off-turn seat: mobile puts the
+            action area 8px under the strip in all four states, desktop leaves it at its usual y≈770.
+            Viewer 728 passing (721 + 4 `FactionBrowser` + 3 placement) on this change's own base
+            (`daa727a`), and **741 passing after rebasing onto #136's chat-read tree** (that entry's 13 new
+            cases land on top), same two pre-existing failures throughout.
 
-      **Second follow-up (viewer v5.50.2): the bid form got readable, and the auction result got a
-      banner.** Owner: _"make it so you can only click on the factions that have been chosen for that
-      phase ... make the faction name ... a button like normal pick faction button ... align the
-      bidding boxes so they are on the same column ... is there a log summary of the silent auction
-      afterwards? It should present in the same banner thing right under the top banner that you can
-      then dismiss."_
+            **Second follow-up (viewer v5.50.2): the bid form got readable, and the auction result got a
+            banner.** Owner: _"make it so you can only click on the factions that have been chosen for that
+            phase ... make the faction name ... a button like normal pick faction button ... align the
+            bidding boxes so they are on the same column ... is there a log summary of the silent auction
+            afterwards? It should present in the same banner thing right under the top banner that you can
+            then dismiss."_
 
-      - **`FactionSheetButton.vue`** now owns the "button that only opens a faction sheet" behaviour
-        (Close-only modal, no `MoveButton`, no command). `FactionBrowser.vue` was refactored onto it,
-        and `Commands.vue`'s bid form uses it for each of the three factions up for auction — the
-        picker that normally lets you read a sheet is long gone by the bid phase, so those three
-        factions were previously plain unreadable text right as real VP were being committed to them.
-        Only the auctioned factions are offered, since that is exactly what `SilentBid`'s command data
-        contains.
-      - **Alignment:** `.silent-bid-faction` is now a fixed `11rem` column and `.silent-bid-input` a
-        fixed `6rem` one, so the number boxes share an x instead of stepping in and out with each
-        faction name's length. Measured in-browser: all three at x=199.
-      - **Answering "is the summary elsewhere?"** — it always was, in the statistics panel's
-        **Silent Auction** tab (`Charts.vue` → `SilentAuctionLog.vue`: bans, picks, the bid matrix,
-        the full resolution trace, the result). Nothing ever pointed at it, so nobody found it. New
-        `SilentAuctionSummary.vue` puts a one-line result ("Silent Auction resolved — Itars to Bob
-        for 3 VP · …") in the same slot and shape as `SetupStatus`'s strip, with **Full log** (the
-        same `SilentAuctionLog`, `hide-title` since the modal is already titled) and **Dismiss**.
-        Dismissal is per game per device (`localStorage`, keyed by the `?game=` id or the map seed) —
-        one game's dismissal never hides another's.
+            - **`FactionSheetButton.vue`** now owns the "button that only opens a faction sheet" behaviour
+              (Close-only modal, no `MoveButton`, no command). `FactionBrowser.vue` was refactored onto it,
+              and `Commands.vue`'s bid form uses it for each of the three factions up for auction — the
+              picker that normally lets you read a sheet is long gone by the bid phase, so those three
+              factions were previously plain unreadable text right as real VP were being committed to them.
+              Only the auctioned factions are offered, since that is exactly what `SilentBid`'s command data
+              contains.
+            - **Alignment:** `.silent-bid-faction` is now a fixed `11rem` column and `.silent-bid-input` a
+              fixed `6rem` one, so the number boxes share an x instead of stepping in and out with each
+              faction name's length. Measured in-browser: all three at x=199.
+            - **Answering "is the summary elsewhere?"** — it always was, in the statistics panel's
+              **Silent Auction** tab (`Charts.vue` → `SilentAuctionLog.vue`: bans, picks, the bid matrix,
+              the full resolution trace, the result). Nothing ever pointed at it, so nobody found it. New
+              `SilentAuctionSummary.vue` puts a one-line result ("Silent Auction resolved — Itars to Bob
+              for 3 VP · …") in the same slot and shape as `SetupStatus`'s strip, with **Full log** (the
+              same `SilentAuctionLog`, `hide-title` since the modal is already titled) and **Dismiss**.
+              Dismissal is per game per device (`localStorage`, keyed by the `?game=` id or the map seed) —
+              one game's dismissal never hides another's.
 
-      Two traps worth remembering: `{{ "&mdash;" }}` in a mustache renders the literal entity (Vue
-      escapes interpolation) — use the character; and under the test runner the bare `localStorage`
-      global is **not** always the same Storage instance the specs poke via `window.localStorage`, so
-      stored preferences must read and write `window.localStorage` (as `theme.ts` already does).
-      `Commands.spec.ts`'s bid-submit test also had to stop selecting `.silent-bid-form button`, which
-      now finds a faction button first — the submit button carries `.silent-bid-submit`. Viewer 746
-      passing (741 + 4 summary + 1 bid-form), same two pre-existing failures. Verified in a browser by
-      driving a real 3-player Silent Auction through ban, pick, bid and resolution.
+            Two traps worth remembering: `{{ "&mdash;" }}` in a mustache renders the literal entity (Vue
+            escapes interpolation) — use the character; and under the test runner the bare `localStorage`
+            global is **not** always the same Storage instance the specs poke via `window.localStorage`, so
+            stored preferences must read and write `window.localStorage` (as `theme.ts` already does).
+            `Commands.spec.ts`'s bid-submit test also had to stop selecting `.silent-bid-form button`, which
+            now finds a faction button first — the submit button carries `.silent-bid-submit`. Viewer 746
+            passing (741 + 4 summary + 1 bid-form), same two pre-existing failures. Verified in a browser by
+            driving a real 3-player Silent Auction through ban, pick, bid and resolution.
 
-      **Bug this shipped and the same-session fix (viewer v5.50.3):** the owner sent a screenshot of
-      an off-turn Gleens sheet with every income icon and planet circle rendered solid **black**.
-      Cause: `stylesheets/planets.css` defines every game colour variable (`--res-ore`,
-      `--res-credit`, `--res-power`, the planet and research-track colours, ...) under
-      **`.gaia-viewer-game, .gaia-viewer-modal` only**. A bootstrap modal is appended to `<body>` —
-      outside `.gaia-viewer-game` — so a modal that doesn't carry `.gaia-viewer-modal` gets none of
-      them and every `var()` falls back to black. `MoveButton.vue` has always passed
-      `dialog-class="gaia-viewer-modal"`, which is why the on-turn sheet looked right and the new one
-      didn't, from identical props and the same `FactionInfoCard`. Added to `FactionSheetButton`,
-      `SilentAuctionSummary`'s log modal, and (pre-emptively) `SilentAuctionInfo`/`BanPhaseInfo`.
-      **Rule for any future `b-modal` in the viewer: it must carry `dialog-class="gaia-viewer-modal"`
-      (or wrap its content in that class, as `Charts.vue`/`Rules.vue` do) or its game visuals render
-      black.** `FactionBrowser.spec.ts` now asserts the class. Verified in a browser: on-turn and
-      off-turn dialogs both resolve `--res-ore=#ddd --res-credit=#f2ff00 --res-power=#984ff1
---res-knowledge=#2080f0`, and the two sheets are pixel-identical above the footer (the only
+            **Bug this shipped and the same-session fix (viewer v5.50.3):** the owner sent a screenshot of
+            an off-turn Gleens sheet with every income icon and planet circle rendered solid **black**.
+            Cause: `stylesheets/planets.css` defines every game colour variable (`--res-ore`,
+            `--res-credit`, `--res-power`, the planet and research-track colours, ...) under
+            **`.gaia-viewer-game, .gaia-viewer-modal` only**. A bootstrap modal is appended to `<body>` —
+            outside `.gaia-viewer-game` — so a modal that doesn't carry `.gaia-viewer-modal` gets none of
+            them and every `var()` falls back to black. `MoveButton.vue` has always passed
+            `dialog-class="gaia-viewer-modal"`, which is why the on-turn sheet looked right and the new one
+            didn't, from identical props and the same `FactionInfoCard`. Added to `FactionSheetButton`,
+            `SilentAuctionSummary`'s log modal, and (pre-emptively) `SilentAuctionInfo`/`BanPhaseInfo`.
+            **Rule for any future `b-modal` in the viewer: it must carry `dialog-class="gaia-viewer-modal"`
+            (or wrap its content in that class, as `Charts.vue`/`Rules.vue` do) or its game visuals render
+            black.** `FactionBrowser.spec.ts` now asserts the class. Verified in a browser: on-turn and
+            off-turn dialogs both resolve `--res-ore=#ddd --res-credit=#f2ff00 --res-power=#984ff1
+
+      --res-knowledge=#2080f0`, and the two sheets are pixel-identical above the footer (the only
       difference being Close vs Cancel / "OK, I ban this one!"). Viewer 746 passing.
 
 136.  ✅ **Read checks in chat — see who has read the thread so far (2026-08-04, viewer v5.50.0, owner
@@ -5536,7 +5537,12 @@ user_id)`) and `lobby_chat_reads` (PK `user_id`), one row per reader per thread 
       the last split lands, and the assignment then follows mechanically: factions ranked by the
       **total** bid on them, awarded top-first to the highest bidder who has no faction yet, priced
       at the faction's **average** bid (all four original bids, never recalculated as players drop
-      out) **capped by the winner's own bid**, rounded half-up. Both tie situations — equal faction
+      out), rounded half-up. **The average is the price whatever the winner bid themselves** - an
+      earlier draft capped it at `min(average, own bid)` and the owner removed the cap the same day
+      (2026-08-05): a cap lets a player take a faction the whole table rated highly for _nothing_
+      just by having bid 0 on it. Owner's example: split your budget ~evenly over two factions, lose
+      the one you edged ahead on, and the other falls to somebody for free even though everyone
+      valued it at ~20. Accepted cost: a winner can pay more VP than they personally bid. Both tie situations — equal faction
       totals, equal player bids — are settled automatically at random. Full rules, file map and
       design notes: `docs/lost-fleet/PREFERENCE_SPLIT_AUCTION.md`.
       **Engine:** `algorithms/preference-split-auction.ts` (pure resolver + `roundVictoryPoints` +
@@ -5573,8 +5579,10 @@ user_id)`) and `lobby_chat_reads` (PK `user_id`), one row per reader per thread 
       **Offline/hot-seat** has no server to seal anything, so the form falls back to an ordinary
       `preferenceBid` move for the seat on turn — pass-and-play, exactly as the Silent Auction
       already behaves offline.
-      **Tests:** 25 new algorithm cases, 18 engine-variant cases, 7 hosted sealed-bid cases, 7 bid-form
-      cases, 5 reveal-screen cases, 4 new-game cases and 4 CreateGame cases. Engine suite (excluding
+      **Tests:** 26 new algorithm cases (incl. the owner's near-tie example and both
+      "pays more than they bid" directions), 18 engine-variant cases, 7 hosted sealed-bid cases,
+      7 bid-form cases, 5 reveal-screen cases, 4 summary-strip cases, 4 new-game cases and 4
+      CreateGame cases. Engine suite (excluding
       `src/ai/**`, which this change does not touch beyond one exhaustiveness `case` in `expand.ts`)
       and the full viewer suite both run clean — see the rerun log below.
       **Deploy:** the migration must be applied with `apply_migration` (so it lands in the ledger —

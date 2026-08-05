@@ -15,8 +15,9 @@
       <p class="text-muted small mb-2">
         Split exactly <b>{{ budget }}</b> bid points across the four factions - highest on the one you want most,
         <b>0</b> on one you'd take only for free. Everyone submits at the same time and
-        <b>nothing is revealed until all {{ playerCount }} splits are in</b>. The winner of a faction pays the average
-        of all four bids on it, and never more than their own bid.
+        <b>nothing is revealed until all {{ playerCount }} splits are in</b>. Whoever wins a faction pays the average of
+        all four bids on it - your own bid decides which faction you get, not what it costs, so you can end up paying
+        more than you put on it.
       </p>
 
       <div v-for="faction in factions" :key="faction" class="d-flex align-items-center mb-2">

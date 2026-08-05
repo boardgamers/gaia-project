@@ -1,7 +1,21 @@
 {
-  "version": "5.51.0",
+  "version": "5.51.1",
   "releasedAt": "2026-08-05",
   "entries": [
+    {
+      "version": "5.51.1",
+      "releasedAt": "2026-08-05",
+      "kind": "update",
+      "title": "Faction auction pricing",
+      "impact": "",
+      "changes": [
+        "In the Preference Split Auction the winner now always pays the faction's average price, even if that is more than they bid on it themselves.",
+        "Removed the min(average, ownBid) cap from resolvePreferenceSplitAuction and dropped the now-meaningless rawPayment field; reveal screen, in-app rules and docs updated."
+      ],
+      "userChanges": [
+        "In the Preference Split Auction the winner now always pays the faction's average price, even if that is more than they bid on it themselves."
+      ]
+    },
     {
       "version": "5.51.0",
       "releasedAt": "2026-08-05",

@@ -54,7 +54,8 @@ after the source is stable — not after each edit, and never twice to restate t
   PROGRESS #137) is implemented and tested: 4 players / 4 factions only, everyone secretly splits one
   fixed budget (default 40, configurable) across all four factions at the same time, then factions are
   ranked by total bid and awarded top-first to the highest still-unassigned bidder, priced at the
-  faction average capped by the winner's own bid. Rules + file map: `docs/lost-fleet/
+  faction average — **always** the average, with no cap at the winner's own bid (owner decision; a cap
+  handed table-valued factions out for free), so a winner can pay more VP than they bid. Rules + file map: `docs/lost-fleet/
 PREFERENCE_SPLIT_AUCTION.md`. Unlike the Silent Auction, its secrecy is **server-enforced** —
   simultaneous bids never touch `public.moves`; they sit in `auction_sealed_bids` behind RLS and are
   appended as four moves in one transaction by `reveal_sealed_bids()`. **Its migration

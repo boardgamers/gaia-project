@@ -99,7 +99,6 @@ describe("Preference Split Auction variant", () => {
       expect(terrans.winner).to.equal(PlayerEnum.Player4);
       expect(terrans.winnerBid).to.equal(25);
       expect(terrans.basePrice).to.equal(12.75);
-      expect(terrans.rawPayment).to.equal(12.75);
       expect(terrans.payment).to.equal(13);
       expect(terrans.tiedPlayers).to.deep.equal([]);
       // Every original bid is preserved, including the ones by players who won something else.
@@ -119,7 +118,7 @@ describe("Preference Split Auction variant", () => {
       expect(result.factions.every((f) => f.tiedWith.length === 3)).to.equal(true);
     });
 
-    it("allocates along the resolved order and never charges above a winner's own bid", () => {
+    it("allocates along the resolved order and prices everything at the faction average", () => {
       const result = engineFor(picks + allTiedBids).preferenceSplitResult;
 
       expect(result.allocations.map((a) => a.faction)).to.deep.equal(result.order);
@@ -128,8 +127,9 @@ describe("Preference Split Auction variant", () => {
         expect(assigned).to.not.include(allocation.winner);
         expect(allocation.eligible).to.include(allocation.winner);
         expect(allocation.basePrice).to.equal(10); // every faction totals 40 here
-        expect(allocation.rawPayment).to.equal(Math.min(10, allocation.winnerBid));
-        expect(allocation.payment).to.be.at.most(allocation.winnerBid);
+        // Every faction totals 40 here, so every winner pays 10 - including anyone who bid less
+        // than that on the faction they ended up with.
+        expect(allocation.payment).to.equal(10);
         assigned.push(allocation.winner);
       }
       expect(assigned).to.have.length(4);

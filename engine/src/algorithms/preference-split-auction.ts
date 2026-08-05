@@ -18,13 +18,21 @@ import { Faction, Player as PlayerEnum } from "../enums";
  * 3. Working down that ranking, each faction goes to whichever still-unassigned player bid the
  *    most on it. Players on an equal highest bid are separated randomly (recorded in
  *    `tiedPlayers`). A player who wins a faction is out of the running for the rest.
- * 4. The winner pays the faction's `average`, capped at their own bid on it - `min(average, own
- *    bid)` - rounded to a whole VP. A player therefore never pays more VP than they personally
- *    bid on the faction they got, and usually pays less.
+ * 4. The winner pays the faction's `average`, rounded to a whole VP. **Always the average, whatever
+ *    they bid themselves** - their own bid decides which faction they get, never what it costs.
  *
  * Deliberately NOT a first-price, second-price or ascending ("silent") auction: the price comes
  * from what the table as a whole thought the faction was worth, not from what anyone offered to
  * outbid, and nobody ever gets the chance to react to anybody else's numbers.
+ *
+ * Rule 4 deliberately has NO cap at the winner's own bid (owner decision, 2026-08-05). A cap sounds
+ * fairer and is not: it lets a player take a faction the whole table rated highly for nothing at all
+ * simply by having bid 0 on it. The owner's example - one player splitting their budget almost
+ * evenly across two factions and another rating those same two almost evenly - ends with the second
+ * player picking up a faction everybody valued at ~20 VP for free, purely because the first player's
+ * marginally higher bid pulled them onto the other one. Paying the average keeps a faction's price
+ * tied to what it is actually worth to the table. The accepted cost is that a winner can pay more
+ * than they personally bid; in exchange the rule is one sentence long.
  *
  * The only randomness is the two tiebreaks. Pass a seeded `random` (the engine passes the game's
  * own seeded PRNG) and the whole resolution is reproducible from the submitted bids alone.
@@ -72,13 +80,11 @@ export type PreferenceSplitAllocation = {
   /** Players still without a faction when this one came up, in seat order. */
   eligible: PlayerEnum[];
   winner: PlayerEnum;
-  /** The winner's own original bid on this faction - the hard cap on what they can pay. */
+  /** The winner's own original bid on this faction - what won it for them, NOT what they pay. */
   winnerBid: number;
-  /** The faction's average, i.e. the list price before the cap. */
+  /** The faction's average - the price, before VP rounding. Charged whatever `winnerBid` was. */
   basePrice: number;
-  /** `min(basePrice, winnerBid)`, before VP rounding. */
-  rawPayment: number;
-  /** VP actually deducted from the winner's score. */
+  /** VP actually deducted from the winner's score: `basePrice` rounded. */
   payment: number;
   /** The eligible players who shared the highest bid; the winner among them was drawn at random.
    * Empty when the highest bid was unique. */
@@ -99,8 +105,8 @@ export type PreferenceSplitResult = {
 
 /**
  * The project's VP rounding rule for auction payments, in one place: conventional half-up, so
- * 10.5 costs 11 VP and 10.49 costs 10. Applied once, at the very end - every intermediate value
- * (totals, averages, the cap) stays exact.
+ * 10.5 costs 11 VP and 10.49 costs 10. Applied once, at the very end - totals and averages stay
+ * exact right up to the payment.
  */
 export function roundVictoryPoints(value: number): number {
   return Math.floor(value + 0.5);
@@ -261,19 +267,14 @@ export function resolvePreferenceSplitAuction(
     const winner = tiedPlayers.length === 1 ? tiedPlayers[0] : tiedPlayers[pick(tiedPlayers.length, random)];
     remaining.splice(remaining.indexOf(winner), 1);
 
-    const winnerBid = bidOf(winner, summary.faction);
-    const basePrice = summary.average;
-    const rawPayment = Math.min(basePrice, winnerBid);
-
     return {
       faction: summary.faction,
       rank: summary.rank,
       eligible,
       winner,
-      winnerBid,
-      basePrice,
-      rawPayment,
-      payment: roundVictoryPoints(rawPayment),
+      winnerBid: bidOf(winner, summary.faction),
+      basePrice: summary.average,
+      payment: roundVictoryPoints(summary.average),
       tiedPlayers: tiedPlayers.length > 1 ? tiedPlayers : [],
     };
   });
@@ -288,9 +289,11 @@ export function resolvePreferenceSplitAuction(
     "The auction awarded a faction more than once"
   );
   for (const allocation of allocations) {
+    // The price is the faction's own average and nothing else - not the winner's bid, not a bid
+    // from anyone still in the running. This is the invariant the cap used to hide.
     assert(
-      allocation.payment <= allocation.winnerBid,
-      `${allocation.faction} would cost more than its winner bid on it`
+      allocation.payment === roundVictoryPoints(allocation.basePrice),
+      `${allocation.faction} was not priced at its average`
     );
   }
 

@@ -25,29 +25,29 @@
           don't have one yet. Win a faction and you're out of the running for the rest.
         </li>
         <li>
-          <b>Pay</b> &mdash; the price is the <b>average</b> of all four bids on that faction, and you
-          <b>never pay more than you bid on it</b> yourself. The payment comes off your final score.
+          <b>Pay</b> &mdash; the price is the <b>average</b> of all four bids on that faction. Always. Your own bid
+          decides <i>which</i> faction you get, never what it costs. The payment comes off your final score.
         </li>
         <li><b>Ties</b> &mdash; equal totals and equal bids are separated automatically, at random.</li>
       </ol>
 
       <div class="split-box">
-        <div class="split-box__title">Why the price is an average, and why the cap matters</div>
+        <div class="split-box__title">Why the price is always the average</div>
         <p class="mb-1">
           The average is what the <i>table</i> thought the faction was worth, not what you offered - so a faction
-          everybody wants is expensive even for the player who wins it cheaply, and one nobody else rated is cheap even
-          if you loved it.
+          everybody wants is expensive whoever ends up with it, and one nobody else rated is cheap even if you loved it.
         </p>
         <p class="mb-0">
-          Your own bid is a hard ceiling on top of that. Bidding {{ Math.round(budget / 4) }} can cost you
-          {{ Math.round(budget / 4) }} but never more, and often much less. A faction you bid <b>0</b> on is free if you
-          end up with it.
+          That means you <b>can</b> pay more than you bid. It is meant to: without it, rate two factions almost equally,
+          lose the one you edged ahead on, and you would pick up the other for <b>nothing</b> - a faction the whole
+          table valued, free, purely because your own number on it happened to be low. Your bids say which faction you
+          want most, not how little you would like to pay.
         </p>
       </div>
 
       <p class="text-muted small">
         This is not a "highest bidder pays their bid" auction and not a sealed second-price one: nobody outbids anybody,
-        nobody reacts to anybody, and the price never comes from a single opponent's number.
+        nobody reacts to anybody, and the price never comes from any single player's number - not even the winner's.
       </p>
 
       <h6 class="example-heading">A worked example, start to finish</h6>
@@ -110,28 +110,28 @@ export default class PreferenceSplitInfo extends Vue {
       faction: "Terrans",
       winner: "D",
       why: "highest bid on it (25), everyone still eligible",
-      pays: "13 VP (12.75, under D's 25)",
+      pays: "13 VP (12.75, its average)",
     },
     {
       step: 2,
       faction: "Itars",
       winner: "A",
       why: "20 beats B's 16 and C's 2; D is already out",
-      pays: "10 VP (9.5, under A's 20)",
+      pays: "10 VP (9.5, its average)",
     },
     {
       step: 3,
       faction: "Taklons",
       winner: "B",
       why: "14 beats C's 6; A and D are out",
-      pays: "9 VP (the average exactly)",
+      pays: "9 VP (9, its average)",
     },
     {
       step: 4,
       faction: "Xenos",
       winner: "C",
       why: "only C is left - D's 11 no longer counts for winning it",
-      pays: "9 VP (8.75, under C's 10)",
+      pays: "9 VP (8.75, its average)",
     },
   ];
 }

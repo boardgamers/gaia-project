@@ -62,20 +62,24 @@ describe("PreferenceSplitLog", () => {
     expect(timeline[0]).to.contain("Terrans");
     expect(timeline[0]).to.contain("wins it with a bid of 25");
     expect(timeline[0]).to.contain("pays 13 VP");
-    expect(timeline[0]).to.contain("average of all four bids was 12.75");
+    // The arithmetic is spelled out: the four bids, their average, the rounded payment.
+    expect(timeline[0]).to.contain("2 + 2 + 22 + 25");
+    expect(timeline[0]).to.contain("the average is 12.75");
     // Nothing was decided at random in this fixture.
     expect(timeline.every((step) => !step.includes("Random tiebreak"))).to.equal(true);
   });
 
-  it("shows the winner's own bid, the average, the capped price and the final VP payment", () => {
+  it("shows the winner's own bid, the average and the final VP payment", () => {
     const { container } = mount();
     const rows = Array.from(container.querySelectorAll("tbody tr")).map((row) => row.textContent ?? "");
 
-    // Result table row for Itars: winner bid 20, average 9.5, capped price 9.5, pays 10.
+    // Result table row for Itars: winner bid 20, average 9.5, pays 10.
     expect(rows.some((row) => row.includes("Itars") && row.includes("9.5") && row.includes("10"))).to.equal(true);
+    // No "capped price" column any more - the average IS the price.
+    expect(container.textContent).to.not.contain("Capped");
   });
 
-  it("renders a capped payment as capped, naming the winner's own bid as the reason", () => {
+  it("spells out when the average comes to more than the winner's own bid", () => {
     // itars totals 36 (average 9) but is ranked last, by which point only p4 - who bid 6 - is left.
     const engine = new Engine(
       [
@@ -100,8 +104,8 @@ describe("PreferenceSplitLog", () => {
     );
     const itars = timeline.find((step) => step.startsWith("Itars")) ?? "";
 
-    expect(itars).to.contain("nobody pays more than they bid");
-    expect(itars).to.contain("capped at 6");
-    expect(itars).to.contain("pays 6 VP");
+    expect(itars).to.contain("pays 9 VP");
+    expect(itars).to.contain("more than their own bid of 6");
+    expect(itars).to.contain("what the table thought the faction was worth");
   });
 });

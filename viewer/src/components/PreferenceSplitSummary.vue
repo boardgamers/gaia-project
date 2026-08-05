@@ -10,7 +10,7 @@
         {{ i === 0 ? "—" : "·" }} {{ row.faction }} to {{ row.winner }} for {{ row.price }} VP
       </span>
     </span>
-    <b-btn variant="link" size="sm" class="auction-summary__action" @click="logOpen = true">Full result</b-btn>
+    <b-btn variant="link" size="sm" class="auction-summary__action" @click="logOpen = true">Full log</b-btn>
     <b-btn variant="link" size="sm" class="auction-summary__action" @click="dismiss">Dismiss</b-btn>
     <b-modal
       v-model="logOpen"

@@ -187,41 +187,42 @@ describe("Preference Split Auction", () => {
       expect(result.allocations[3].basePrice).to.equal(8.75);
     });
 
-    it("charges the faction average when it is below the winner's own bid", () => {
+    it("charges the faction average, whatever the winner bid themselves", () => {
       const result = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bidsFrom(NO_TIES), 40, seededRandom([0]));
 
       const gleens = result.allocations[0];
       expect(gleens.winnerBid).to.equal(25);
       expect(gleens.basePrice).to.equal(12.75);
-      expect(gleens.rawPayment).to.equal(12.75);
       expect(gleens.payment).to.equal(13); // 12.75 rounds up
+
+      for (const allocation of result.allocations) {
+        expect(allocation.payment).to.equal(roundVictoryPoints(allocation.basePrice));
+      }
     });
 
-    it("never charges more than the winner's own bid when the average is higher", () => {
-      // Itars totals 22+4+4+6 = 36 (average 9) but is ranked last, by which point only p4 - who
-      // bid 6 on it - is left. The cap, not the average, is what they pay.
-      const capped = [
+    it("charges more than the winner's own bid when the average is higher", () => {
+      // Itars totals 22+4+4+6 = 36 (average 9) but is ranked last, by which point only p4 - who bid
+      // just 6 on it - is left. They still pay 9: the price is what the table thought Itars was
+      // worth, not what p4 happened to put on it.
+      const overBid = [
         [22, 14, 2, 2],
         [4, 13, 2, 21],
         [4, 12, 22, 2],
         [6, 4, 16, 14],
       ];
-      const result = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bidsFrom(capped), 40, seededRandom([0]));
+      const result = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bidsFrom(overBid), 40, seededRandom([0]));
 
       const itars = result.allocations.find((a) => a.faction === Faction.Itars);
       expect(itars.winner).to.equal(PlayerEnum.Player4);
       expect(itars.basePrice).to.equal(9);
       expect(itars.winnerBid).to.equal(6);
-      expect(itars.rawPayment).to.equal(6);
-      expect(itars.payment).to.equal(6);
-      for (const allocation of result.allocations) {
-        expect(allocation.payment).to.be.at.most(allocation.winnerBid);
-      }
+      expect(itars.payment).to.equal(9);
+      expect(itars.payment).to.be.greaterThan(itars.winnerBid);
     });
 
-    it("lets a player who bid 0 take the last faction for free", () => {
+    it("charges a player who bid 0 the full average of the faction they end up with", () => {
       // p4 spends their whole budget contesting Itars and Taklons, loses both, and is left with
-      // Gleens - which they bid 0 on.
+      // Gleens - which they bid 0 on. They pay its average anyway.
       const zeroBid = [
         [25, 5, 5, 5],
         [5, 25, 5, 5],
@@ -234,12 +235,35 @@ describe("Preference Split Auction", () => {
       expect(last.faction).to.equal(Faction.Gleens);
       expect(last.winner).to.equal(PlayerEnum.Player4);
       expect(last.winnerBid).to.equal(0);
-      expect(last.rawPayment).to.equal(0);
-      expect(last.payment).to.equal(0);
-      // ...and Gleens's average still counts all four original bids (5 + 5 + 5 + 0), including the
-      // three from players who had already been assigned elsewhere.
+      // Gleens's average counts all four original bids (5 + 5 + 5 + 0), including the three from
+      // players who had already been assigned elsewhere...
       expect(result.factions.find((f) => f.faction === Faction.Gleens).total).to.equal(15);
       expect(last.basePrice).to.equal(3.75);
+      // ...and that, not the winner's 0, is the price.
+      expect(last.payment).to.equal(4);
+    });
+
+    it("does not let a near-tie between two factions hand one of them over for free", () => {
+      // The owner's motivating case (2026-08-05), scaled to four players and a budget of 40: p1
+      // rates Itars and Taklons as near-equals and lands on Taklons by a whisker, which under a
+      // "never pay more than you bid" cap would have left Itars - a faction the table as a whole
+      // valued - going to p2 for nothing at all, purely because p2 bid 0 on it.
+      const nearTie = [
+        [20, 19, 1, 0],
+        [0, 5, 18, 17],
+        [1, 2, 20, 17],
+        [2, 3, 16, 19],
+      ];
+      const result = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bidsFrom(nearTie), 40, seededRandom([0]));
+
+      const taklons = result.allocations.find((a) => a.faction === Faction.Taklons);
+      expect(taklons.winner).to.equal(PlayerEnum.Player1);
+
+      const itars = result.allocations.find((a) => a.faction === Faction.Itars);
+      expect(itars.winner).to.equal(PlayerEnum.Player2);
+      expect(itars.winnerBid).to.equal(0);
+      expect(itars.basePrice).to.equal(5.75); // 20 + 0 + 1 + 2, over four players
+      expect(itars.payment).to.equal(6);
     });
 
     it("breaks a faction-total tie at random and records who was tied", () => {
@@ -344,13 +368,14 @@ describe("Preference Split Auction", () => {
         expect(seen).to.have.length(4);
       });
 
-      it("prices everything off the original averages, capped by the winner's own bid", () => {
+      it("prices everything off the original averages, whatever anyone bid", () => {
         for (const allocation of result.allocations) {
           const summary = result.factions.find((f) => f.faction === allocation.faction);
           expect(summary.total).to.equal(40); // every faction, in this fixture
           expect(allocation.basePrice).to.equal(10);
-          expect(allocation.rawPayment).to.equal(Math.min(10, allocation.winnerBid));
-          expect(allocation.payment).to.be.at.most(allocation.winnerBid);
+          // Every faction averages 10 here, so every winner pays exactly 10 - including whoever
+          // bid less than that on the one they ended up with.
+          expect(allocation.payment).to.equal(10);
         }
       });
     });
@@ -367,7 +392,6 @@ describe("Preference Split Auction", () => {
             winner: a.winner,
             winnerBid: a.winnerBid,
             basePrice: a.basePrice,
-            rawPayment: a.rawPayment,
             payment: a.payment,
           }))
         ).to.deep.equal([
@@ -376,7 +400,6 @@ describe("Preference Split Auction", () => {
             winner: PlayerEnum.Player4,
             winnerBid: 25,
             basePrice: 12.75,
-            rawPayment: 12.75,
             payment: 13,
           },
           {
@@ -384,7 +407,6 @@ describe("Preference Split Auction", () => {
             winner: PlayerEnum.Player1,
             winnerBid: 20,
             basePrice: 9.5,
-            rawPayment: 9.5,
             payment: 10,
           },
           {
@@ -392,7 +414,6 @@ describe("Preference Split Auction", () => {
             winner: PlayerEnum.Player2,
             winnerBid: 14,
             basePrice: 9,
-            rawPayment: 9,
             payment: 9,
           },
           {
@@ -400,7 +421,6 @@ describe("Preference Split Auction", () => {
             winner: PlayerEnum.Player3,
             winnerBid: 10,
             basePrice: 8.75,
-            rawPayment: 8.75,
             payment: 9,
           },
         ]);

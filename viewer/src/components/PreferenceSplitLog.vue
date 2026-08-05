@@ -8,7 +8,7 @@
     <p class="text-muted small mb-2">
       Everyone split {{ result.budget }} bid points across the four factions, in secret and at the same time. Factions
       were then ranked by their total, awarded top-first to the highest bidder still without one, and priced at the
-      faction's average - never above the winner's own bid.
+      faction's average. Your own bid decides which faction you get, never what it costs.
     </p>
 
     <h6>Every bid</h6>
@@ -109,20 +109,26 @@ export default class PreferenceSplitLog extends Vue {
    * how the price was arrived at - including the cap when it actually bit. */
   get timeline() {
     return this.result.allocations.map((allocation) => {
-      const capped = allocation.winnerBid < allocation.basePrice;
       const price = formatPrice(allocation.basePrice);
+      const bids = this.result.factions
+        .find((f) => f.faction === allocation.faction)
+        .bids.map((b) => b.points)
+        .join(" + ");
+      // The one case worth calling out, because it is the rule people expect to work the other way:
+      // the price is the faction's average even when that is more than the winner put on it.
+      const overBid =
+        allocation.payment > allocation.winnerBid
+          ? ` That is more than their own bid of ${allocation.winnerBid} - the price is what the table thought the faction was worth, not what the winner happened to bid on it.`
+          : "";
       return {
         faction: this.factionLabel(allocation.faction),
         headline: `${this.playerLabel(allocation.winner)} wins it with a bid of ${allocation.winnerBid}, and pays ${
           allocation.payment
         } VP`,
-        detail: capped
-          ? `Still in the running: ${allocation.eligible.map((p) => this.playerLabel(p)).join(", ")}. ` +
-            `The average price was ${price}, but nobody pays more than they bid, so it was capped at ` +
-            `${allocation.winnerBid} and rounded to ${allocation.payment}.`
-          : `Still in the running: ${allocation.eligible.map((p) => this.playerLabel(p)).join(", ")}. ` +
-            `The average of all four bids was ${price}, under the winner's own ${allocation.winnerBid}, ` +
-            `so that is the price - rounded to ${allocation.payment}.`,
+        detail:
+          `Still in the running: ${allocation.eligible.map((p) => this.playerLabel(p)).join(", ")}. ` +
+          `All four bids on it were ${bids}, so the average is ${price} - rounded to ${allocation.payment}.` +
+          overBid,
         tiebreak:
           allocation.tiedPlayers.length > 0
             ? `Random tiebreak: ${allocation.tiedPlayers.map((p) => this.playerLabel(p)).join(" and ")} all bid ${
@@ -138,7 +144,6 @@ export default class PreferenceSplitLog extends Vue {
     { key: "winner", label: "Winner" },
     { key: "bid", label: "Their bid" },
     { key: "base", label: "Average" },
-    { key: "raw", label: "Capped price" },
     { key: "payment", label: "Pays (VP)" },
   ];
 
@@ -148,7 +153,6 @@ export default class PreferenceSplitLog extends Vue {
       winner: this.playerLabel(allocation.winner),
       bid: allocation.winnerBid,
       base: formatPrice(allocation.basePrice),
-      raw: formatPrice(allocation.rawPayment),
       payment: allocation.payment,
     }));
   }
