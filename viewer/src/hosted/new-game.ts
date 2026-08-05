@@ -21,6 +21,8 @@ export const AUCTION_VARIANT_OPTIONS: {
   label: string;
   summary: string;
   description: string;
+  /** Optional attribution shown as a small tag on the variant's button (e.g. who designed it). */
+  credit?: string;
   /** Player counts this variant can be played at; undefined means any. */
   playerCounts?: number[];
 }[] = [
@@ -42,6 +44,7 @@ export const AUCTION_VARIANT_OPTIONS: {
     value: "preference-split",
     label: "Preference Split Auction",
     summary: "Secretly split a fixed pot of bid points across the picked factions.",
+    credit: "by Angelshark",
     description:
       "One picked faction per player. Everyone secretly splits the same fixed budget of bid points across all of " +
       "them at the same time, and nothing is revealed until every split is in. Factions are then ranked by the " +

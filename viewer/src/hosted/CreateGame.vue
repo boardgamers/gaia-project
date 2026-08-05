@@ -56,6 +56,7 @@
                 @click="form.auctionVariant = option.value"
               >
                 <strong class="create-game-variant__title">{{ option.label }}</strong>
+                <span v-if="option.credit" class="create-game-variant__credit">{{ option.credit }}</span>
                 <span class="create-game-variant__summary">{{ option.summary }}</span>
               </button>
               <button
@@ -500,6 +501,18 @@ export default Vue.extend({
 .create-game-variant__title {
   display: block;
   margin-bottom: 0.25rem;
+}
+
+.create-game-variant__credit {
+  display: inline-block;
+  margin-bottom: 0.25rem;
+  padding: 0.05rem 0.35rem;
+  border: 1px solid var(--ui-border);
+  border-radius: 0.6rem;
+  font-size: 0.68rem;
+  line-height: 1.3;
+  color: var(--ui-text-muted);
+  white-space: nowrap;
 }
 
 .create-game-variant__summary {

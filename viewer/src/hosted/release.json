@@ -1,7 +1,21 @@
 {
-  "version": "5.53.0",
+  "version": "5.53.1",
   "releasedAt": "2026-08-06",
   "entries": [
+    {
+      "version": "5.53.1",
+      "releasedAt": "2026-08-06",
+      "kind": "update",
+      "title": "Auction designer credit",
+      "impact": "",
+      "changes": [
+        "The Preference Split Auction button on the create-game screen now carries a small 'by Angelshark' tag.",
+        "AUCTION_VARIANT_OPTIONS gained an optional `credit` field, so any future variant can be attributed the same way."
+      ],
+      "userChanges": [
+        "The Preference Split Auction option on the create-game screen now shows a small 'by Angelshark' tag."
+      ]
+    },
     {
       "version": "5.53.0",
       "releasedAt": "2026-08-06",

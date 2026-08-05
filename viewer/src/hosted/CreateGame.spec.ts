@@ -201,11 +201,17 @@ describe("CreateGame", () => {
       return wrapper;
     }
 
-    it("is listed and selectable at every player count", async () => {
+    it("is listed and selectable at every player count, credited to its designer", async () => {
       const wrapper = await mounted();
       const vm = wrapper.vm as any;
 
       expect(wrapper.text()).to.include("Preference Split Auction");
+      // The credit tag sits on the variant's own button, not loose in the section.
+      const splitButton = wrapper
+        .findAll("button.create-game-variant__select")
+        .filter((b) => b.text().includes("Preference Split Auction"));
+      expect(splitButton).to.have.length(1);
+      expect(splitButton.at(0).text()).to.include("by Angelshark");
       for (const count of [2, 3, 4]) {
         vm.setPlayerCount(count);
         await Vue.nextTick();
