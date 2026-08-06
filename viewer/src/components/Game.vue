@@ -148,6 +148,7 @@
             <strong>{{ premoveEditSeq !== null ? "EDITING PREMOVE" : "PREMOVE" }}</strong> — plays automatically on your
             turn.
             <div class="small" v-if="!premoveReady">Build the move you want, then end the turn to queue it.</div>
+            <div class="small text-warning" v-if="premoveComposeCaveat">{{ premoveComposeCaveat }}</div>
             <div class="small text-warning" v-if="premoveEditDownstreamCount > 0">
               This will also discard the {{ premoveEditDownstreamCount }} premove{{
                 premoveEditDownstreamCount === 1 ? "" : "s"
@@ -783,6 +784,21 @@ export default class Game extends Vue {
       !this.ended &&
       (this.myQueuedPremoves.length > 0 || this.premoveOffered)
     );
+  }
+
+  /** Composing a premove while the game is paused on someone else's charge/income decision is
+   * allowed (Engine.previewAvailableCommandsFor), but the preview is built as if that decision were
+   * already settled - say so rather than let the board quietly disagree with what lands later.
+   * Reads the phase off `premoveBackup` (the real state snapshotted at compose time), because
+   * `this.engine` is the forced preview clone while composing and always reads RoundMove. */
+  get premoveComposeCaveat(): string | null {
+    const phase = (this.premoveBackup as Engine | null)?.phase;
+    if (!this.premoveMode || phase === undefined || phase === Phase.RoundMove) {
+      return null;
+    }
+    return phase === Phase.RoundLeech
+      ? "A power-charge decision is still open — this previews the board as if it had already been answered."
+      : "This round's income hasn't been handed out yet — this preview can show fewer resources than you'll actually have.";
   }
 
   /** How many entries editing the seat's currently-being-edited Sequential premove would discard -

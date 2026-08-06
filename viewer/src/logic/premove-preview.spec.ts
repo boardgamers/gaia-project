@@ -48,6 +48,26 @@ describe("buildSequentialChainPreview", () => {
     expect(clone.availableCommands.map((c) => c.name)).to.include("up");
   });
 
+  it("keeps chaining when premove #1 offers an opponent a leech", () => {
+    const engine = new Engine(SETUP_MOVES);
+    // Nevlas's mine at -1x0 is two hexes from terrans' at -1x2, so upgrading it offers terrans 2
+    // power - a real decision (it costs a VP), which parks the engine in Phase.RoundLeech. Replaying
+    // that move used to leave the chain clone stuck in that phase, where the next slot could
+    // generate no commands at all and every queued row behind it read "no longer possible".
+    engine.players[1].data.credits = 20;
+    engine.players[1].data.ores = 20;
+
+    const clone = buildSequentialChainPreview(engine, 1, ["nevlas build ts -1x0."]);
+
+    expect(clone.playerToMove).to.equal(1);
+    expect(clone.availableCommands.length).to.be.greaterThan(0);
+    expect(clone.availableCommands.map((c) => c.name)).to.include("pass");
+
+    clone.move("nevlas pass booster4");
+    clone.generateAvailableCommandsIfNeeded();
+    expect(clone.newTurn).to.equal(true);
+  });
+
   it("leaves the original engine untouched", () => {
     const engine = new Engine(SETUP_MOVES);
     const before = JSON.stringify(engine);

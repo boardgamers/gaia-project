@@ -203,6 +203,17 @@ export interface LogEntry {
   phase?: Phase.RoundIncome | Phase.RoundGaia | Phase.RoundMove | Phase.EndGame;
 }
 
+/**
+ * Premove support (PREMOVE_PLAN.md §2): the phases of a running round that `previewAvailableCommandsFor`
+ * will preview an off-turn seat's upcoming move-phase turn from. `RoundMove` is the obvious one; the
+ * other three are the states a live async game actually SITS in between turns - waiting on someone
+ * else's power-charge answer, or on a start-of-round income/gaia choice - which is precisely when a
+ * player reaches for a premove. Everything else (setup, auction, scoring, endgame, and the transient
+ * `RoundStart`/`RoundFinish`/`RoundShip` the engine never rests in) has no well-defined "my next turn"
+ * to preview.
+ */
+const premovePreviewablePhases: Phase[] = [Phase.RoundMove, Phase.RoundLeech, Phase.RoundIncome, Phase.RoundGaia];
+
 const replaceRegex = new RegExp(
   `\\b((${Command.Pass}|${Command.PISwap}|${Building.GaiaFormer}|${Command.FormFederation} [^ ]+|${Command.UpgradeResearch}) ?([^. ]+)?)(\\.|$)`,
   "g"
@@ -574,11 +585,37 @@ export default class Engine {
   }
 
   /**
+   * "Premove" support (PREMOVE_PLAN.md §2): forces THIS engine - always a disposable preview clone,
+   * never a real game state - into "it is `seat`'s ordinary move-phase turn right now".
+   *
+   * The phase override is the part that's easy to miss: `available-command.ts`'s generator branches
+   * on `engine.phase` first, so a clone left in `RoundLeech` (or `RoundIncome`/`RoundGaia`) answers
+   * with that phase's decision - or with nothing at all once its `tempTurnOrder` no longer names the
+   * forced seat - instead of the move the seat will actually get. That's what previously emptied the
+   * command list for a Sequential premove chained after one that offers an opponent a leech.
+   */
+  forcePremovePreviewTurn(seat: PlayerEnum) {
+    this.phase = Phase.RoundMove;
+    this.currentPlayer = seat;
+    this.tempCurrentPlayer = undefined;
+    this.clearAvailableCommands();
+  }
+
+  /**
    * "Premove" support (PREMOVE_PLAN.md §2): what `seat` could legally do right now if it were their
    * turn, without it actually being their turn. Returns `null` (premove not offered) when it already
-   * is their turn (the real buttons apply), when they've already passed this round (nothing to
-   * premove into), or before round 1 / outside `RoundMove` (setup/income/gaia/leech/scoring/
-   * endgame/auction all have a differently-shaped "next turn" that isn't well-defined to preview).
+   * is their turn (the real buttons apply - including a leech/income decision they owe this instant),
+   * when they've already passed this round (nothing to premove into), or before round 1 / outside a
+   * running round (setup/scoring/endgame/auction all have a differently-shaped "next turn" that isn't
+   * well-defined to preview).
+   *
+   * The other phases a running round can rest in - `RoundLeech` while someone answers a charge offer,
+   * `RoundIncome`/`RoundGaia` while someone makes a start-of-round choice - DO preview (2026-08-06).
+   * They're exactly when an off-turn player wants to queue a premove and used to be offered nothing
+   * at all, and the seat's own next turn is still an ordinary move-phase turn in the same round.
+   * Income the seat hasn't collected yet is simply absent from the preview, which offers fewer
+   * options rather than illegal ones; the resolver still refuses to fire outside a genuine
+   * `Phase.RoundMove` turn and revalidates the move when that turn arrives.
    *
    * Never mutates `this` - operates on a disposable clone, exactly like every other preview/replay
    * path in this engine (`fromData(JSON.parse(JSON.stringify(...)))`).
@@ -586,7 +623,7 @@ export default class Engine {
   previewAvailableCommandsFor(seat: PlayerEnum): AvailableCommand[] | null {
     if (
       this.round < Round.Round1 ||
-      this.phase !== Phase.RoundMove ||
+      !premovePreviewablePhases.includes(this.phase) ||
       seat === this.playerToMove ||
       this.passedPlayers?.includes(seat)
     ) {
@@ -594,9 +631,15 @@ export default class Engine {
     }
 
     const clone = Engine.fromData(JSON.parse(JSON.stringify(this)));
-    clone.currentPlayer = seat;
-    clone.tempCurrentPlayer = undefined;
-    return clone.generateAvailableCommands();
+    clone.forcePremovePreviewTurn(seat);
+    try {
+      return clone.generateAvailableCommands();
+    } catch {
+      // Defensive: a preview is never worth breaking the game screen over. Every caller treats this
+      // as "no premove offered", the same as an unsupported phase - and the getter that asks for it
+      // renders the whole off-turn UI (the -1 placeholder seat already taught this lesson once).
+      return null;
+    }
   }
 
   addPlayer(player: Player) {

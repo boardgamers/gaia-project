@@ -18,12 +18,15 @@ import Engine, { PlayerEnum } from "@gaia-project/engine";
 export function buildSequentialChainPreview(engine: Engine, seat: number, priorMoves: string[]): Engine {
   const clone = Engine.fromData(JSON.parse(JSON.stringify(engine)));
   for (const move of priorMoves) {
-    // Force it to be this seat's turn before EACH replayed step, not just once at the end - the
-    // real engine only lets a move through when playerToMove already matches the move's stated
-    // player, and every one of these steps is only ever hypothetically "this seat's turn" (that's
-    // the whole point of previewing a premove chain before it's genuinely anyone's turn for real).
-    clone.currentPlayer = seat as PlayerEnum;
-    clone.tempCurrentPlayer = undefined;
+    // Force it to be this seat's move-phase turn before EACH replayed step, not just once at the
+    // end - the real engine only lets a move through when playerToMove already matches the move's
+    // stated player, and every one of these steps is only ever hypothetically "this seat's turn"
+    // (that's the whole point of previewing a premove chain before it's genuinely anyone's turn for
+    // real). `forcePremovePreviewTurn` resets the PHASE too, which is what makes a chain survive a
+    // step that offers an opponent a leech: replaying such a move leaves the clone in RoundLeech,
+    // where the next step could neither execute nor generate a single available command, so every
+    // slot after the first build near an opponent came back empty/"no longer possible" (2026-08-06).
+    clone.forcePremovePreviewTurn(seat as PlayerEnum);
     try {
       clone.move(move);
       clone.generateAvailableCommandsIfNeeded();
@@ -31,8 +34,7 @@ export function buildSequentialChainPreview(engine: Engine, seat: number, priorM
       break;
     }
   }
-  clone.currentPlayer = seat as PlayerEnum;
-  clone.tempCurrentPlayer = undefined;
+  clone.forcePremovePreviewTurn(seat as PlayerEnum);
   clone.generateAvailableCommands();
   return clone;
 }

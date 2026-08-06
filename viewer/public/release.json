@@ -1,7 +1,19 @@
 {
-  "version": "5.53.1",
+  "version": "5.53.2",
   "releasedAt": "2026-08-06",
   "entries": [
+    {
+      "version": "5.53.2",
+      "releasedAt": "2026-08-06",
+      "kind": "fix",
+      "title": "Premove fixes",
+      "impact": "",
+      "changes": [
+        "Off-turn premove buttons now appear while a round is paused on someone else's power-charge or income decision, instead of disappearing until the move phase resumes",
+        "Fixed a Sequential premove chain going empty from slot 2 onwards whenever the previous slot's move offered an opponent a leech"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.53.1",
       "releasedAt": "2026-08-06",

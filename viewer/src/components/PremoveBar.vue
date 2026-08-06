@@ -193,8 +193,10 @@ export default class PremoveBar extends Vue {
 
   private isLegal(base: Engine, move: string): boolean {
     const clone = Engine.fromData(JSON.parse(JSON.stringify(base)));
-    clone.currentPlayer = this.seat as PlayerEnum;
-    clone.tempCurrentPlayer = undefined;
+    // Move phase forced as well as the seat (see Engine.forcePremovePreviewTurn): in Priority mode
+    // `base` is the live engine, which may currently be sitting in RoundLeech/RoundIncome waiting on
+    // somebody's decision - every queued row would read as "no longer possible" there otherwise.
+    clone.forcePremovePreviewTurn(this.seat as PlayerEnum);
     clone.generateAvailableCommands();
     try {
       clone.move(move);

@@ -529,8 +529,7 @@ describe("Game", () => {
       "terrans booster booster3",
     ];
 
-    function mountAsSeat(seatIndex: number | undefined) {
-      const engine = new Engine(SETUP_MOVES);
+    function mountAsSeat(seatIndex: number | undefined, engine: Engine = new Engine(SETUP_MOVES)) {
       const store = makeStore();
       if (seatIndex !== undefined) {
         store.commit("player", { index: seatIndex });
@@ -551,6 +550,33 @@ describe("Game", () => {
       expect(vm.premoveOffered).to.equal(true);
       expect(vm.$el.textContent).to.contain("Sequential premove");
       expect(vm.$el.textContent).to.contain("Priority premove");
+
+      vm.$el.remove();
+      vm.$destroy();
+    });
+
+    it("keeps offering it while the round is paused on someone else's leech decision", () => {
+      // The state a live async game actually sits in between turns: terrans upgrading next to
+      // nevlas offers 2 power, which costs a VP and parks the game in Phase.RoundLeech until nevlas
+      // answers. Seat 0 is off-turn there and used to be shown no premove UI at all.
+      const engine = new Engine(SETUP_MOVES);
+      engine.players[0].data.credits = 20;
+      engine.players[0].data.ores = 20;
+      engine.move("terrans build ts -1x2.");
+      engine.generateAvailableCommandsIfNeeded();
+      expect(engine.phase).to.equal(Phase.RoundLeech);
+
+      const vm = mountAsSeat(0, engine);
+
+      expect(vm.canPlay).to.equal(false);
+      expect(vm.premoveOffered).to.equal(true);
+      expect(vm.showPremoveBar).to.equal(true);
+      expect(vm.$el.textContent).to.contain("Sequential premove");
+
+      // ...and composing from there says so, rather than quietly previewing a board that is still
+      // waiting on an answer.
+      vm.onStartNewPremove({ mode: "sequential", switchingModes: false });
+      expect(vm.premoveComposeCaveat).to.contain("power-charge decision");
 
       vm.$el.remove();
       vm.$destroy();

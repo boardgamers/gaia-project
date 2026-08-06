@@ -67,7 +67,11 @@ describe("Engine", () => {
       engine.move("p2 faction terrans");
 
       expect(engine.phase).to.equal(Phase.SetupBuilding);
-      expect([engine.currentPlayer, ...engine.turnOrder]).to.eql([PlayerEnum.Player2, PlayerEnum.Player2, PlayerEnum.Player1]);
+      expect([engine.currentPlayer, ...engine.turnOrder]).to.eql([
+        PlayerEnum.Player2,
+        PlayerEnum.Player2,
+        PlayerEnum.Player1,
+      ]);
     });
   });
 
@@ -116,9 +120,7 @@ describe("Engine", () => {
     engine.move("p2 faction terrans");
 
     while (engine.phase === Phase.SetupBuilding) {
-      const command = engine
-        .generateAvailableCommandsIfNeeded()
-        .find((c) => c.name === Command.Build) as any;
+      const command = engine.generateAvailableCommandsIfNeeded().find((c) => c.name === Command.Build) as any;
       const building = command.data.buildings[0];
       engine.move(`p${engine.playerToMove + 1} build ${building.building} ${building.coordinates}`);
     }
@@ -400,10 +402,59 @@ describe("Engine", () => {
       expect(engine.previewAvailableCommandsFor(PlayerEnum.Player1)).to.equal(null);
     });
 
-    it("returns null outside of Phase.RoundMove (e.g. during setup)", () => {
+    it("returns null outside of a running round (e.g. during setup)", () => {
       const engine = new Engine(parseMoves("init 2 randomSeed\np1 faction terrans"));
       expect(engine.phase).to.not.equal(Phase.RoundMove);
       expect(engine.previewAvailableCommandsFor(PlayerEnum.Player2)).to.equal(null);
+    });
+
+    describe("while the round is paused on a leech decision", () => {
+      // An upgrade to a trading station next to the opponent offers them 2 power, which costs a VP
+      // and therefore genuinely pauses the game in Phase.RoundLeech - a mine's free single power is
+      // charged automatically and never stops anything.
+      function leechPausedEngine(): Engine {
+        const engine = new Engine(parseMoves(setupMoves));
+        engine.player(PlayerEnum.Player1).data.credits = 20;
+        engine.player(PlayerEnum.Player1).data.ores = 20;
+        engine.move("terrans build ts -1x2.");
+        engine.generateAvailableCommandsIfNeeded();
+        expect(engine.phase).to.equal(Phase.RoundLeech);
+        expect(engine.playerToMove).to.equal(PlayerEnum.Player2);
+        return engine;
+      }
+
+      it("still previews the off-turn seat's next move-phase turn", () => {
+        const engine = leechPausedEngine();
+        const preview = engine.previewAvailableCommandsFor(PlayerEnum.Player1);
+
+        expect(preview).to.not.equal(null);
+        expect(preview.some((c) => c.name === Command.Build && c.player === PlayerEnum.Player1)).to.equal(true);
+        // The leech decision itself is never what a premove composes against.
+        expect(preview.some((c) => c.name === Command.ChargePower)).to.equal(false);
+      });
+
+      it("does not mutate the paused engine", () => {
+        const engine = leechPausedEngine();
+        const before = JSON.stringify(engine);
+        engine.previewAvailableCommandsFor(PlayerEnum.Player1);
+        expect(JSON.stringify(engine)).to.equal(before);
+      });
+
+      it("returns null for the seat that owes the pending decision", () => {
+        const engine = leechPausedEngine();
+        expect(engine.previewAvailableCommandsFor(PlayerEnum.Player2)).to.equal(null);
+      });
+    });
+
+    it("previews from the income and gaia phases too", () => {
+      for (const phase of [Phase.RoundIncome, Phase.RoundGaia]) {
+        const engine = new Engine(parseMoves(setupMoves));
+        engine.phase = phase;
+
+        const preview = engine.previewAvailableCommandsFor(PlayerEnum.Player2);
+        expect(preview, `expected a preview during ${phase}`).to.not.equal(null);
+        expect(preview.some((c) => c.player === PlayerEnum.Player2)).to.equal(true);
+      }
     });
   });
 
