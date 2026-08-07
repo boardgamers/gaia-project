@@ -126,6 +126,8 @@ g {
       font-size: 10px;
       font-weight: bold;
       pointer-events: none;
+      // the tile background is white, so keep the label dark even under a dark-mode host
+      fill: #212529;
     }
     .score {
       font-size: 12px;

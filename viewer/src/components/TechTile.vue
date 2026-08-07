@@ -142,7 +142,9 @@ svg {
     .content {
       font-size: 11px;
       pointer-events: none;
-      fill: white;
+      // the (non-advanced) tech tile background is a light gray (#e5e5ea), so keep the
+      // label dark for readability both on light pages and under a dark-mode host
+      fill: #212529;
 
       &.smaller {
         font-size: 9px;
@@ -153,8 +155,14 @@ svg {
       fill: var(--tech-tile);
     }
 
-    &.advanced .tech-border {
-      fill: var(--adv-tech-tile);
+    &.advanced {
+      .tech-border {
+        fill: var(--adv-tech-tile);
+      }
+      // advanced tiles are a darker blue (#6888fa), so their labels stay light
+      .content {
+        fill: white;
+      }
     }
 
     &.eco .tech-border {
