@@ -224,6 +224,7 @@ const gaiaViewer = {
     replayEnd(context: any, data: Engine) {},
     // WRAPPER / DEBUG COMMUNICATION
     loadFromJSON(context: any, data: LoadFromJson) {},
+    automove(context: any) {},
     back(context: any, arg: ExecuteBack) {},
     undo(context: any) {},
   },

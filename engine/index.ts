@@ -69,6 +69,7 @@ export { factionPlanet } from "./src/factions";
 export { federationCost, FederationInfo, parseFederationLocation } from "./src/federation";
 export { GaiaHex, GaiaHexData } from "./src/gaia-hex";
 export { applyChargePowers } from "./src/income";
+export { autoMove } from "./src/move/auto";
 export { leechPossible } from "./src/move/phase";
 export { planetNames, terraformingStepsRequired } from "./src/planets";
 export { lastTile, researchEvents } from "./src/research-tracks";
