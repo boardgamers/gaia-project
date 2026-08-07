@@ -73,3 +73,10 @@
 .pointer {
   cursor: pointer;
 }
+
+// Dark-mode host pages (e.g. boardgamers.space) recolor bare SVG text for readability
+// on the dark background. Text drawn inside resource tiles is positioned on colored
+// tokens, not on the page background, so it must keep its intended color.
+html.dark svg text {
+  fill: inherit;
+}

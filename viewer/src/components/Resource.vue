@@ -90,7 +90,7 @@
       </g>
       <g transform="translate(-7,-7)">
         <rect class="ore" width="12" height="12" x="-6" y="-6" />
-        <text x="0" y="0">{{ 3 - count }}</text>
+        <text x="0" y="0" fill="black">{{ 3 - count }}</text>
       </g>
     </template>
     <image v-else-if="kind === 'tech'" xlink:href='../assets/resources/tech.svg' :height=155/211*22 width=22 x=-11 y=-8
@@ -104,6 +104,7 @@
         v-if="count > 1"
         x="-7"
         y="-2.5"
+        fill="black"
         stroke="black"
         stroke-width="0.3"
         style="font-weight: bold; font-size: 15px; stroke-width: 0.7px"
@@ -121,7 +122,7 @@
       <g transform="translate(1,0) rotate(70)">
         <image xlink:href="../assets/resources/range-arrow.svg" :height=285/164*9 width=10 x=-5 y=-8 />
       </g>
-      <text v-if="count >= 1" x="13" y="1.2" stroke-width="0.3" style="font-weight: bold; font-size: 10px">
+      <text v-if="count >= 1" x="13" y="1.2" fill="black" stroke-width="0.3" style="font-weight: bold; font-size: 10px">
         {{ count }}
       </text>
     </template>
@@ -135,10 +136,19 @@
       <g transform="translate(1,0) rotate(70)">
         <image xlink:href="../assets/resources/range-arrow.svg" :height=285/164*9 width=10 x=-5 y=-8 />
       </g>
-      <text v-if="count >= 1" x="13" y="1.2" stroke-width="0.3" style="font-weight: bold; font-size: 10px">
+      <text v-if="count >= 1" x="13" y="1.2" fill="black" stroke-width="0.3" style="font-weight: bold; font-size: 10px">
         {{ count }}
       </text>
-      <text v-if="count >= 1" x="-13" y="1.2" stroke-width="0.3" style="font-weight: bold; font-size: 10px"> S </text>
+      <text
+        v-if="count >= 1"
+        x="-13"
+        y="1.2"
+        fill="black"
+        stroke-width="0.3"
+        style="font-weight: bold; font-size: 10px"
+      >
+        S
+      </text>
     </template>
     <template v-else-if="kind === 'up-lowest'">
       <Condition condition="a" transform="scale(0.75)" />
