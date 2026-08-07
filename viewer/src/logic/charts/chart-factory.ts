@@ -13,6 +13,7 @@ import {
   ChartConfiguration,
   ChartDataset,
   ChartEvent,
+  ChartType as ChartJsChartType,
   LegendItem,
   LegendOptions,
   TooltipItem,
@@ -147,7 +148,7 @@ function newLegendOptions(provider: (index: number) => string) {
   let hovering = false;
   const tooltip = document.getElementById("tooltip");
 
-  const legendOptions: DeepPartial<LegendOptions> = {
+  const legendOptions: DeepPartial<LegendOptions<ChartJsChartType>> = {
     onHover(event: ChartEvent, legendItem: LegendItem) {
       const description = provider(legendItem.datasetIndex);
       if (hovering || description == null) {
