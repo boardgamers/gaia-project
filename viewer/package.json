@@ -7,7 +7,7 @@
     "rzulian",
     "zeitlinger"
   ],
-  "repository": "git@github.com:boardgamers-mono/gaia-project.git",
+  "repository": "git@github.com:boardgamers/gaia-project.git",
   "publishConfig": {
     "access": "public"
   },
