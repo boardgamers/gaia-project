@@ -151,6 +151,13 @@ you submit. Own submissions are folded in locally so the roster never lags the 5
 /hot-seat play — which has no poll — derives the same roster from `preferenceSplitBids`, the engine's
 own record of which seats have bid.
 
+The same idea covers the other round-0 phases where every player owes exactly one thing — the ban
+round, the pick round and the **Silent Auction's** secret-bid round — as a compact chip row in
+`SetupStatus.vue` (see PROGRESS #142). That one is deliberately absent during hosted Preference
+Split bidding, because the panel above already carries it; and absent from `Phase.SetupAuction`
+(Choose-Then-Bid / Bid-While-Choosing), because a player there bids repeatedly and can be outbid
+again, so "done" is not a state that exists.
+
 **Offline / hot-seat play** has no server, so there is nothing to enforce: the bid form falls back
 to an ordinary `preferenceBid` move for the seat on turn, and secrecy is pass-the-device — the same
 model the Silent Auction already uses offline.

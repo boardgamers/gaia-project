@@ -4,34 +4,60 @@
        ring on a turn-order circle to tell them what was happening - and the "how does the auction
        work?" button lived inside that same on-turn-only panel. -->
   <div v-if="visible" class="setup-status" :class="mine ? 'setup-status--mine' : 'setup-status--theirs'">
-    <span class="setup-status__text">
-      <b>{{ who }}</b>
-      {{ assignment }}
-    </span>
-    <b-btn
-      v-if="showSilentAuctionInfo"
-      v-b-modal.silent-auction-info
-      variant="link"
-      size="sm"
-      class="setup-status__info"
-    >
-      How does the auction work? <b-badge variant="info" pill>i</b-badge>
-    </b-btn>
-    <SilentAuctionInfo v-if="showSilentAuctionInfo" />
-    <b-btn
-      v-if="showPreferenceSplitInfo"
-      v-b-modal.preference-split-info
-      variant="link"
-      size="sm"
-      class="setup-status__info"
-    >
-      How does the auction work? <b-badge variant="info" pill>i</b-badge>
-    </b-btn>
-    <PreferenceSplitInfo v-if="showPreferenceSplitInfo" :budget="gameData.preferenceSplitBudget" />
-    <b-btn v-if="showBanPhaseInfo" v-b-modal.ban-phase-info variant="link" size="sm" class="setup-status__info">
-      What's the ban phase? <b-badge variant="info" pill>i</b-badge>
-    </b-btn>
-    <BanPhaseInfo v-if="showBanPhaseInfo" />
+    <div class="setup-status__main">
+      <span class="setup-status__text">
+        <b>{{ who }}</b>
+        {{ assignment }}
+      </span>
+      <b-btn
+        v-if="showSilentAuctionInfo"
+        v-b-modal.silent-auction-info
+        variant="link"
+        size="sm"
+        class="setup-status__info"
+      >
+        How does the auction work? <b-badge variant="info" pill>i</b-badge>
+      </b-btn>
+      <SilentAuctionInfo v-if="showSilentAuctionInfo" />
+      <b-btn
+        v-if="showPreferenceSplitInfo"
+        v-b-modal.preference-split-info
+        variant="link"
+        size="sm"
+        class="setup-status__info"
+      >
+        How does the auction work? <b-badge variant="info" pill>i</b-badge>
+      </b-btn>
+      <PreferenceSplitInfo v-if="showPreferenceSplitInfo" :budget="gameData.preferenceSplitBudget" />
+      <b-btn v-if="showBanPhaseInfo" v-b-modal.ban-phase-info variant="link" size="sm" class="setup-status__info">
+        What's the ban phase? <b-badge variant="info" pill>i</b-badge>
+      </b-btn>
+      <BanPhaseInfo v-if="showBanPhaseInfo" />
+    </div>
+
+    <!-- Who is done and who is not, for the round-0 phases where every player owes exactly one
+         thing. `who` above names only the seat on turn; in an async game the question people
+         actually ask is "how much of this round is left, and is anyone waiting on me?". Never
+         carries what anybody banned, picked or bid - only whether they have. -->
+    <div v-if="roster.length > 0" class="setup-status__roster">
+      <span class="setup-status__roster-label">{{ rosterLabel }}</span>
+      <span
+        v-for="row in roster"
+        :key="row.seat"
+        class="setup-status__chip"
+        :class="{
+          'setup-status__chip--done': row.done,
+          'setup-status__chip--turn': row.onTurn,
+          'setup-status__chip--mine': row.mine,
+        }"
+        :aria-label="row.label"
+        :title="row.label"
+      >
+        <span class="setup-status__chip-mark" aria-hidden="true">{{ row.done ? "✔" : row.onTurn ? "▸" : "·" }}</span>
+        {{ row.name }}
+      </span>
+      <span class="setup-status__roster-count">{{ doneCount }} of {{ roster.length }} in</span>
+    </div>
   </div>
 </template>
 
@@ -55,6 +81,33 @@ const assignments: { [phase: string]: [string, string] } = {
   [Phase.SetupPreferenceBid]: ["to split your bid points", "to split their bid points"],
   [Phase.SetupBuilding]: ["to place your starting buildings", "to place their starting buildings"],
   [Phase.SetupBooster]: ["to choose your round booster", "to choose their round booster"],
+};
+
+/**
+ * The round-0 phases that get a per-player done/waiting roster, and what to call it.
+ *
+ * Only phases where every player owes **exactly one** thing qualify, so "done" is a real state:
+ *
+ * - `SetupAuction` (the Choose-Then-Bid and Bid-While-Choosing variants) is deliberately absent.
+ *   There a player bids repeatedly and can be outbid again afterwards, so a done/waiting mark would
+ *   be actively wrong - what matters there is who currently leads which faction at what price,
+ *   which the turn-order circles and the auction's own buttons already show.
+ * - `SetupPreferenceBid` is absent too, but for the opposite reason: its submissions are
+ *   simultaneous rather than sequential, and `PreferenceSplitBid.vue` already carries the same
+ *   roster inside the bid form itself (fed by the server's sealed-bid status in hosted play).
+ *   Rendering it here as well would put two of them on one screen.
+ */
+const rosterLabels: { [phase: string]: string } = {
+  [Phase.SetupFactionBan]: "Bans",
+  [Phase.SetupFaction]: "Picks",
+  [Phase.SetupSilentBid]: "Secret bids",
+};
+
+/** The state each roster phase reports, in the third person, for the chip's tooltip/aria-label. */
+const rosterStates: { [phase: string]: [string, string] } = {
+  [Phase.SetupFactionBan]: ["has banned a faction", "has not banned yet"],
+  [Phase.SetupFaction]: ["has picked a faction", "has not picked yet"],
+  [Phase.SetupSilentBid]: ["has submitted their secret bids", "has not submitted their bids yet"],
 };
 
 @Component({ components: { BanPhaseInfo, PreferenceSplitInfo, SilentAuctionInfo } })
@@ -106,13 +159,76 @@ export default class SetupStatus extends Vue {
   }
 
   private get playerName(): string {
-    const pl = this.onTurn;
+    return this.onTurn ? this.seatName(this.onTurn.player as PlayerEnum) : "?";
+  }
+
+  private seatName(seat: PlayerEnum): string {
+    const pl = this.gameData?.players?.[seat as number];
     if (!pl) {
       return "?";
     }
     // The account name first: during setup a faction is only provisional (the Silent Auction can
     // still reassign it), and in the ban phase nobody has one at all.
-    return pl.name || (pl.faction ? factionName(pl.faction) : `Player ${(pl.player as number) + 1}`);
+    return pl.name || (pl.faction ? factionName(pl.faction) : `Player ${(seat as number) + 1}`);
+  }
+
+  get rosterLabel(): string {
+    return rosterLabels[this.gameData?.phase] ?? "";
+  }
+
+  /**
+   * One entry per seat: has this player done their one thing for this phase yet?
+   *
+   * Each phase is read from the state that phase actually writes, rather than from a shared
+   * "how many moves have been made" counter:
+   *
+   * - the ban round is strictly seat order, one ban each, so the first `bannedFactions.length`
+   *   seats are the ones that have banned (`bannedFactions` records the factions, not who banned
+   *   them);
+   * - a pick sets `player.faction`, which is order-independent - Bid-While-Choosing interleaves
+   *   picks with bids, so a positional rule would be wrong there;
+   * - a silent bid appends that seat's rows to `silentAuctionBids`. Only their presence is read,
+   *   never the numbers.
+   */
+  get roster(): { seat: number; name: string; done: boolean; onTurn: boolean; mine: boolean; label: string }[] {
+    const data = this.gameData;
+    if (!this.rosterLabel || !data?.players?.length) {
+      return [];
+    }
+    const mySeat = this.$store.state.player?.index;
+    const [doneState, waitingState] = rosterStates[data.phase];
+    return data.players.map((_, seat: number) => {
+      const done = this.hasActed(seat);
+      const name = this.seatName(seat as PlayerEnum);
+      return {
+        seat,
+        name,
+        done,
+        onTurn: seat === data.playerToMove,
+        mine: typeof mySeat === "number" && mySeat === seat,
+        label: `${name} ${done ? doneState : waitingState}`,
+      };
+    });
+  }
+
+  get doneCount(): number {
+    return this.roster.filter((row) => row.done).length;
+  }
+
+  private hasActed(seat: number): boolean {
+    const data = this.gameData;
+    switch (data.phase) {
+      case Phase.SetupFactionBan:
+        return seat < (data.bannedFactions?.length ?? 0);
+      case Phase.SetupFaction:
+        // Truthiness, not `!== undefined`: an unpicked seat's faction is `null` (Player's own
+        // initializer), and the Silent Auction resets it to `undefined` when it reassigns.
+        return !!data.players[seat]?.faction;
+      case Phase.SetupSilentBid:
+        return (data.silentAuctionBids ?? []).some((bid) => (bid.player as number) === seat);
+      default:
+        return false;
+    }
   }
 
   get showSilentAuctionInfo(): boolean {
@@ -141,15 +257,19 @@ export default class SetupStatus extends Vue {
 
 <style lang="scss" scoped>
 .setup-status {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.25rem 0.5rem;
   padding: 0.25rem 0.75rem;
   margin-bottom: 0.5rem;
   border-radius: 0.25rem;
   border: 1px solid transparent;
   font-size: 0.95rem;
+}
+
+// The strip was a single flex row before the roster existed; the row it used to be is now this.
+.setup-status__main {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
 }
 
 .setup-status__text {
@@ -176,5 +296,59 @@ export default class SetupStatus extends Vue {
   .badge {
     margin-left: 0.25rem;
   }
+}
+
+.setup-status__roster {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.4rem;
+  margin-top: 0.2rem;
+  font-size: 0.8rem;
+}
+
+.setup-status__roster-label {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #6c757d;
+}
+
+.setup-status__roster-count {
+  margin-left: auto;
+  color: #6c757d;
+  white-space: nowrap;
+}
+
+.setup-status__chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.2rem;
+  padding: 0 0.35rem;
+  border-radius: 0.75rem;
+  border: 1px solid currentColor;
+  max-width: 10rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  // Waiting is the default state; done and on-turn each override it below.
+  color: #8a8a8a;
+}
+
+.setup-status__chip--done {
+  color: #2b7a2b;
+}
+
+.setup-status__chip--turn {
+  color: #b36b00;
+  font-weight: 600;
+}
+
+.setup-status__chip--mine {
+  text-decoration: underline;
+}
+
+.setup-status__chip-mark {
+  flex: 0 0 auto;
 }
 </style>
