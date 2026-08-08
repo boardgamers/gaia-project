@@ -232,7 +232,28 @@ RLS enabled on all three tables. One membership predicate, used everywhere
   subscribed device gets no notification (game unaffected). First-time invitees can't receive
   an invite push (no account yet) — the host shares the game link out-of-band once. Turn pushes
   now stay aggressive on desktop subscriptions even when that player already has the game open,
-  while mobile/PWA subscriptions keep the old "already open" suppression behavior.
+  while mobile/PWA subscriptions are suppressed **only by that phone's own report** that it has this
+  very game open (see per-device presence below).
+- **Per-device presence** (migration `20260808121000_per_device_push_presence`): the "already open"
+  suppression used to read `players.last_active_at`, which is **one row per seat**, shared by every
+  device that user is signed in on — so leaving the game open in a desktop tab kept it fresh forever
+  and silenced their **phone** as well, a device that was in a pocket with the screen off
+  (owner-reported). Presence is now recorded on the subscription instead:
+  `push_subscriptions.active_game_id` (the game this device has open right now, null = none) and
+  `active_at` (when it last reported **either way**), written by `mark_device_viewing()` from the
+  same ~20s heartbeat tick as `mark_seat_active` — but also while the tab is _hidden_, since that
+  report is exactly what re-enables pushes. `notify/logic.ts::shouldSkipTurnPushForSubscription` then
+  withholds a mobile push only when that subscription itself says this game is open and the report is
+  fresh; a device that has **never** reported (a client older than the migration) still falls back to
+  the old per-player signal, so it can't start double-alerting the person actually playing on it, and
+  self-corrects the first time that device loads a game. Desktop is never withheld, unchanged.
+- **Auction bid-phase pushes** (migration `20260808120000_auction_bid_notifications`): the Preference
+  Split Auction bids simultaneously, into `auction_sealed_bids` rather than `public.moves`, so
+  `current_seat` never moves and the trigger above fired for exactly one of the four players. An
+  announcement (`announce_sealed_bid_auction()` → `games.sealed_bid_announced_at` →
+  `games_notify_sealed_bid_auction` → `{type:'auction_bid'}`) pushes to everyone who still owes a
+  bid, and the sweep re-nudges them per **seat** (`auction_bid_reminders`) rather than per game.
+  Full write-up in `PREFERENCE_SPLIT_AUCTION.md`'s "Notifications during the auction".
 - Known cosmetic wart, accepted for v1: a leech chain produces a couple of rapid turn-change
   pushes. Fine for a friend group; debounce later if it annoys.
 - **Recurring turn reminders** (migration `20260721000000_turn_reminders`): the one-shot "Your turn"

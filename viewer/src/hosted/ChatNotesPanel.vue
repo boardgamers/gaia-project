@@ -91,6 +91,7 @@ import {
   readersByMessage,
 } from "./chat-reads";
 import { isDesktopViewport, watchDesktopViewport } from "./viewport";
+import { overlayViewportPin, OverlayViewportPin } from "./overlay-viewport";
 
 interface ChatMessage {
   id: number;
@@ -134,7 +135,12 @@ function saveOpenPreference(open: boolean): void {
  * defaults closed, toggled from HostedBar.vue's settings menu (`toggleOpen`, called externally via
  * the mounted instance); on mobile there is no settings entry at all, only the floating bubble
  * toggle below, and it always starts closed. `isDesktop` re-evaluates on every breakpoint
- * crossing via `watchDesktopViewport`. */
+ * crossing via `watchDesktopViewport`.
+ *
+ * The mobile overlay is also modal in the "nothing behind it responds" sense: hosted.ts mirrors
+ * `open` onto `#app.chat-notes-open`, and frontend.scss drops pointer events for the whole page
+ * except this component's own subtree while that class is set on a narrow viewport. Anything added
+ * here that must stay tappable therefore has to live inside `.chat-notes`. */
 export default Vue.extend({
   name: "ChatNotesPanel",
   props: {
@@ -176,24 +182,30 @@ export default Vue.extend({
       stickyBarPoll: null as ReturnType<typeof setInterval> | null,
       channel: null as any,
       viewportUnwatch: null as (() => void) | null,
-      // Mobile only: mirrors window.visualViewport so the full-screen panel stays pinned to the
-      // area actually visible above the on-screen keyboard. Without this, opening the keyboard on
-      // iOS/Chrome can leave this `position: fixed` panel sized to the pre-keyboard layout
+      // Mobile only: while an on-screen keyboard is up, mirrors window.visualViewport so the
+      // full-screen panel stays pinned to the area actually visible above it. Without this, opening
+      // the keyboard on iOS can leave this `position: fixed` panel sized to the pre-keyboard layout
       // viewport while the browser scrolls the page to keep the focused textarea in view, exposing
       // a strip of the game board (faction buttons included) below the panel - so a tap meant for
-      // the composer/keyboard lands on the board instead. Recalculated on both `resize` (keyboard
-      // open/close, height change) and `scroll` (the same keyboard-avoidance scroll) events.
-      visualViewportTop: 0,
-      visualViewportHeight: 0,
+      // the composer/keyboard lands on the board instead. Null the rest of the time, which is the
+      // point: `position: fixed; inset: 0` already covers the visible area on an ordinary scroll,
+      // an address-bar collapse, an elastic overscroll or a pinch-zoom, and pinning through those
+      // (which this used to do unconditionally) is itself what tears a gap open. `overlayViewportPin`
+      // owns that decision. Recalculated on both `resize` (keyboard open/close, height change) and
+      // `scroll` (the same keyboard-avoidance scroll) events.
+      viewportPin: null as OverlayViewportPin,
       handleVisualViewportChange: null as (() => void) | null,
     };
   },
   computed: {
     mobileViewportStyle(): Record<string, string> {
-      if (this.isDesktop || !this.visualViewportHeight) {
+      const pin = this.viewportPin;
+      if (this.isDesktop || !pin) {
         return {};
       }
-      return { top: `${this.visualViewportTop}px`, height: `${this.visualViewportHeight}px` };
+      // `bottom: auto` explicitly rather than relying on the over-constrained-box rule dropping the
+      // stylesheet's `bottom: 0` - the pinned height is the whole point here.
+      return { top: `${pin.top}px`, height: `${pin.height}px`, bottom: "auto" };
     },
     hasUnread(): boolean {
       if (this.open) {
@@ -227,9 +239,12 @@ export default Vue.extend({
     });
     this.subscribeChat();
     // Desktop can mount already-open (the stored preference), in which case the thread is on screen
-    // right now and the others should see that straight away.
+    // right now and the others should see that straight away - and it has to be scrolled to the
+    // newest message explicitly. That used to happen by accident: the list was bottom-ALIGNED, so
+    // the newest message showed whatever `scrollTop` said. It is a real scroll container now.
     if (this.open) {
       this.reportRead();
+      this.$nextTick(() => this.scrollToBottom());
     }
     this.startStickyBarWatch();
     if (!this.isDesktop) {
@@ -266,8 +281,12 @@ export default Vue.extend({
         return;
       }
       const update = () => {
-        this.visualViewportTop = vv.offsetTop;
-        this.visualViewportHeight = vv.height;
+        this.viewportPin = overlayViewportPin({
+          scale: vv.scale || 1,
+          offsetTop: vv.offsetTop,
+          height: vv.height,
+          innerHeight: window.innerHeight,
+        });
       };
       this.handleVisualViewportChange = update;
       vv.addEventListener("resize", update);
@@ -281,7 +300,7 @@ export default Vue.extend({
         vv.removeEventListener("scroll", this.handleVisualViewportChange);
       }
       this.handleVisualViewportChange = null;
-      this.visualViewportHeight = 0;
+      this.viewportPin = null;
     },
     isOnline(userId: string): boolean {
       return isUserOnline(this.presenceState, userId);
@@ -356,13 +375,20 @@ export default Vue.extend({
           "postgres_changes",
           { event: "INSERT", schema: "public", table: "game_chat_messages", filter: `game_id=eq.${this.gameId}` },
           (payload: { new: ChatMessage }) => {
+            // Measured BEFORE the push, while the DOM still shows the pre-arrival thread. Now that
+            // the list genuinely scrolls, following every arrival unconditionally would yank
+            // somebody reading older messages back down; only follow when they were already at the
+            // newest one, or when the arrival is their own message.
+            const follow = this.isAtBottom() || payload.new.user_id === this.userId;
             this.messages.push(payload.new);
             // Arriving while the panel is open means I'm looking at it - report it read so the
             // sender sees the check without either of us touching anything.
             if (this.open) {
               this.reportRead();
             }
-            this.$nextTick(() => this.scrollToBottom());
+            if (follow) {
+              this.$nextTick(() => this.scrollToBottom());
+            }
           }
         )
         // Second binding on the same channel rather than a second channel: read receipts are
@@ -400,6 +426,18 @@ export default Vue.extend({
       if (el) {
         el.scrollTop = el.scrollHeight;
       }
+    },
+    /** Is the thread already parked on its newest message? A few pixels of slack, because a
+     * fractional layout height means an at-the-bottom list rarely reports an exact 0. Answers
+     * "true" when there is nothing to measure yet (no list rendered, or a thread too short to
+     * scroll), which is the harmless direction: following an arrival is only wrong when it takes
+     * the reader away from something. */
+    isAtBottom(): boolean {
+      const el = this.$refs.messageList as HTMLElement | undefined;
+      if (!el) {
+        return true;
+      }
+      return el.scrollHeight - el.scrollTop - el.clientHeight < 60;
     },
     async sendMessage() {
       const body = this.draft.trim();
@@ -590,13 +628,27 @@ export default Vue.extend({
 .chat-notes__messages {
   flex: 1;
   overflow-y: auto;
+  // Keeps a flick that reaches either end of the thread from chaining out into the page behind the
+  // overlay - both because scrolling the board under an open chat is the same "interacting with
+  // what's behind it" the panel is there to prevent, and because the elastic overscroll it produces
+  // is what makes `window.visualViewport` twitch (see overlay-viewport.ts).
+  overscroll-behavior: contain;
   padding: 0.6rem;
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  // Messenger-style: a handful of messages hug the bottom of the box instead of sitting stranded
-  // at the top of a mostly-empty scroll area.
-  justify-content: flex-end;
+
+  // Messenger-style: a handful of messages hug the bottom of the box instead of sitting stranded at
+  // the top of a mostly-empty scroll area. This MUST be an auto margin on the first child, not
+  // `justify-content: flex-end` (which is what it used to be): content pushed out of a scroll
+  // container's START edge by alignment is not part of its scrollable overflow, so with a thread
+  // longer than the box `scrollHeight` stayed equal to `clientHeight`, the list could not be
+  // scrolled at all, and every older message was stranded above the top edge with no way to reach
+  // it. An auto margin gets the identical look and resolves to 0 the moment the content is taller
+  // than the box, leaving an ordinary scrollable overflow.
+  > *:first-child {
+    margin-top: auto;
+  }
 }
 
 .chat-notes__empty {
@@ -698,6 +750,9 @@ export default Vue.extend({
   textarea {
     flex: 1;
     resize: none;
+    // Same scroll-chaining containment as the message list above - a long draft scrolls inside the
+    // box, never on into the board behind the overlay.
+    overscroll-behavior: contain;
     min-height: 3.6rem;
     max-height: 8rem;
     border-radius: 0.4rem;

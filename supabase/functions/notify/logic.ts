@@ -19,6 +19,9 @@ export type GameRow = {
   latest_move_committed_at?: string | null;
   last_turn_reminder_at?: string | null;
   turn_reminder_count?: number | null;
+  // When the Preference Split Auction's bid phase was announced (migration 20260808120000), and
+  // null once `reveal_sealed_bids` has closed it. The bid phase's own "turn start".
+  sealed_bid_announced_at?: string | null;
 };
 
 export type SubscriptionRow = {
@@ -31,6 +34,11 @@ export type SubscriptionRow = {
   // IANA timezone captured at subscribe time (viewer/src/hosted/push.ts). Used only for the
   // reminder sweep's quiet-hours gate; null for legacy subscriptions that predate the column.
   tz?: string | null;
+  // Per-device presence (migration 20260808121000): which game THIS device has open right now
+  // (null = none) and when it last reported either way. Both null on a subscription whose client
+  // has never run the reporting code - see deviceHasGameOpen.
+  active_game_id?: string | null;
+  active_at?: string | null;
 };
 
 export type ChessBoardRow = {
@@ -282,15 +290,95 @@ export function buildNotifications(
   ];
 }
 
+/**
+ * Whether THIS device (not merely this player) has the given game open right now, or null when the
+ * device has never reported its presence at all - a subscription from a client older than migration
+ * 20260808121000, for which there is simply no per-device answer.
+ *
+ * `active_at` is stamped on every report, including the "I'm not looking at anything" one, which is
+ * what separates "reported, not here" (false) from "never reported" (null). It still has to be
+ * fresh: a device that goes offline mid-game stops reporting entirely, and must not stay silenced.
+ */
+export function deviceHasGameOpen(
+  subscription: SubscriptionRow,
+  gameId: string,
+  now: number = Date.now()
+): boolean | null {
+  if (!subscription.active_at) {
+    return null;
+  }
+  if (subscription.active_game_id !== gameId) {
+    return false;
+  }
+  return now - new Date(subscription.active_at).getTime() < RECENTLY_ACTIVE_MS;
+}
+
+/**
+ * Whether to withhold a turn/chat push from one specific device.
+ *
+ * Desktop subscriptions are never withheld - they're the "you're at your computer, here's a banner"
+ * case, and that stays true whether or not the game is already on screen.
+ *
+ * Mobile is where suppression earns its keep (a phone that is literally displaying the board should
+ * not also buzz), and where it used to overreach: the only signal available was `players
+ * .last_active_at`, ONE row per seat shared by every device that user is signed in on, so an open
+ * desktop tab silenced their phone as well. Now a phone is silenced only by its own report that it
+ * has this very game open. A device that has never reported (a client older than migration
+ * 20260808121000) still falls back to the old per-player signal, so it can't start double-alerting
+ * the person actually playing on it; it self-corrects the first time that device loads a game.
+ */
+/**
+ * The Preference Split Auction's bid phase (`type: "auction_bid"`, migration 20260808120000), and
+ * the sweep's re-nudge for the same phase.
+ *
+ * Every other push in this file describes one seat acting in turn. This one is the exception the
+ * variant is built around: every player bids at the same time, into `auction_sealed_bids` rather
+ * than the move log, so `current_seat` never moves and the ordinary turn push fires for exactly one
+ * of them. `pendingSeats` is whoever still owes a submission - the auction cannot resolve until all
+ * of them are in, so they are all "on turn" in every sense that matters to a notification.
+ *
+ * Deliberately `kind: "turn"` on the ordinary `turn-<game>` tag: it IS the player's move, someone
+ * who turned turn pushes off does not want this either, and reusing the tag means the announcement,
+ * its re-nudges and the real turn push that follows the reveal all replace one another instead of
+ * stacking four banners.
+ */
+export function buildSealedBidNotifications(
+  game: GameRow,
+  pendingSeats: readonly number[],
+  variant: "open" | "reminder" = "open"
+): Notification[] {
+  if (game.status !== "active") {
+    return [];
+  }
+  const pending = new Set(pendingSeats);
+  return game.players
+    .filter((p) => p.user_id !== null && pending.has(p.seat))
+    .map((p) => ({
+      userId: p.user_id!,
+      title: "GP: Fight Club",
+      body:
+        variant === "open"
+          ? `Faction auction in ${gameLabel(game, p.user_id!)} - split your bid points.`
+          : `Still waiting on your auction bid in ${gameLabel(game, p.user_id!)}.`,
+      tag: `turn-${game.id}`,
+      kind: "turn" as const,
+    }));
+}
+
 export function shouldSkipTurnPushForSubscription(
   player: PlayerRow,
   subscription: SubscriptionRow,
+  gameId: string,
   now: number = Date.now()
 ): boolean {
-  if (!hasGameOpen(player, now)) {
+  if (!isMobileUserAgent(subscription.user_agent)) {
     return false;
   }
-  return isMobileUserAgent(subscription.user_agent);
+  const openOnThisDevice = deviceHasGameOpen(subscription, gameId, now);
+  if (openOnThisDevice !== null) {
+    return openOnThisDevice;
+  }
+  return hasGameOpen(player, now);
 }
 
 // ---------------------------------------------------------------------------
@@ -507,4 +595,57 @@ export function planTurnReminder(
     },
     reminderCount: remindersThisTurn + 1,
   };
+}
+
+/** One seat's row in `auction_bid_reminders` - absent until that seat has been re-nudged once. */
+export type AuctionReminderRow = {
+  seat: number;
+  reminder_count: number;
+  last_reminder_at: string;
+};
+
+/**
+ * planTurnReminder's counterpart for an open Preference Split auction: should THIS seat, which
+ * still owes a bid, be re-nudged right now?
+ *
+ * Kept per-seat rather than per-game (which is all `games.last_turn_reminder_at` /
+ * `turn_reminder_count` can express) because an open auction has up to five people on turn at once,
+ * each with their own interval, cap, quiet hours and snooze. The clock starts at
+ * `sealed_bid_announced_at` - the auction's equivalent of a turn's `latest_move_committed_at`, and
+ * the reason the reveal clears it.
+ *
+ * Pure: the same game row, reminder row, subscriptions, prefs and clock always give the same answer.
+ */
+export function planSealedBidReminder(
+  game: GameRow,
+  reminder: AuctionReminderRow | undefined,
+  subscriptions: SubscriptionRow[],
+  prefs: NotificationPrefs,
+  now: number = Date.now()
+): { reminderCount: number } | null {
+  if (!prefs.reminders_enabled || isSnoozed(prefs, now)) {
+    return null; // opt-in only, and never while snoozed
+  }
+  if (game.status !== "active" || !game.sealed_bid_announced_at) {
+    return null; // no auction open (the reveal clears the stamp)
+  }
+  const announcedAt = new Date(game.sealed_bid_announced_at).getTime();
+  if (!Number.isFinite(announcedAt)) {
+    return null;
+  }
+
+  const count = reminder?.reminder_count ?? 0;
+  if (count >= prefs.reminder_max_count) {
+    return null; // capped for this auction
+  }
+  const lastAt = reminder ? new Date(reminder.last_reminder_at).getTime() : announcedAt;
+  const intervalMs = Math.max(1, prefs.reminder_interval_hours) * 60 * 60 * 1000;
+  if (!Number.isFinite(lastAt) || now - lastAt < intervalMs) {
+    return null; // the auction (or the last nudge) isn't old enough yet
+  }
+  if (!isWithinReminderHours(subscriptions, prefs, now)) {
+    return null; // recipient's local night - the next sweep will retry in a saner hour
+  }
+
+  return { reminderCount: count + 1 };
 }

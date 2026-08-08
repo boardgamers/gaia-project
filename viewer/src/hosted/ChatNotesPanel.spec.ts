@@ -27,11 +27,17 @@ describe("ChatNotesPanel", () => {
     const upserts: any[] = [];
     const rpcCalls: { name: string; args: any }[] = [];
     let muted = opts.muted ?? false;
+    // Captures the Realtime handlers so a test can deliver an INSERT the way the server would.
+    const handlers: Record<string, (payload: any) => void> = {};
     const channel = {
-      on: () => channel,
+      on: (_event: string, filter: { table: string }, cb: (payload: any) => void) => {
+        handlers[filter.table] = cb;
+        return channel;
+      },
       subscribe: () => channel,
     };
     return {
+      handlers,
       inserted,
       upserts,
       rpcCalls,
@@ -394,12 +400,62 @@ describe("ChatNotesPanel", () => {
     restoreMobile();
   });
 
+  // The message list is a real scroll container (it hugs the bottom via an auto margin on its first
+  // child; it used to be bottom-ALIGNED with `justify-content: flex-end`, which silently made a
+  // thread longer than the box unscrollable). That means an incoming message now genuinely moves the
+  // view, so it must only do so when the reader is already on the newest message.
+  async function openWithScrollState(client: any, scroll: { scrollTop: number; scrollHeight: number }) {
+    const wrapper = mount(ChatNotesPanel as any, {
+      propsData: { client, gameId: "game-1", userId: "user-1" },
+    });
+    await Vue_nextTick(wrapper);
+    await wrapper.find(".chat-notes__toggle").trigger("click");
+    await Vue_nextTick(wrapper);
+    const list = { clientHeight: 400, ...scroll };
+    (wrapper.vm as any).$refs.messageList = list;
+    return { wrapper, list };
+  }
+
+  it("follows an incoming message only when the reader is already at the newest one", async () => {
+    const client = makeClient();
+    // Scrolled up reading history: 2000px of thread, parked near the top.
+    const { wrapper, list } = await openWithScrollState(client, { scrollTop: 100, scrollHeight: 2000 });
+    client.handlers.game_chat_messages({
+      new: { id: 7, game_id: "game-1", user_id: "someone-else", author_name: "P", body: "hi", created_at: "" },
+    });
+    await Vue_nextTick(wrapper);
+    expect(list.scrollTop).to.equal(100);
+    wrapper.destroy();
+  });
+
+  it("does follow when the reader is at the bottom, or when the message is their own", async () => {
+    const client = makeClient();
+    const atBottom = await openWithScrollState(client, { scrollTop: 1600, scrollHeight: 2000 });
+    client.handlers.game_chat_messages({
+      new: { id: 7, game_id: "game-1", user_id: "someone-else", author_name: "P", body: "hi", created_at: "" },
+    });
+    await Vue_nextTick(atBottom.wrapper);
+    expect(atBottom.list.scrollTop).to.equal(2000);
+    atBottom.wrapper.destroy();
+
+    // Sending from a scrolled-up position still jumps to your own message.
+    const ownClient = makeClient();
+    const own = await openWithScrollState(ownClient, { scrollTop: 100, scrollHeight: 2000 });
+    ownClient.handlers.game_chat_messages({
+      new: { id: 8, game_id: "game-1", user_id: "user-1", author_name: "Me", body: "mine", created_at: "" },
+    });
+    await Vue_nextTick(own.wrapper);
+    expect(own.list.scrollTop).to.equal(2000);
+    own.wrapper.destroy();
+  });
+
   it("pins the mobile panel to window.visualViewport so the keyboard can't expose the board underneath", async () => {
     const restoreMobile = mockDesktopViewport(false);
     const listeners: Record<string, () => void> = {};
     const fakeVisualViewport = {
+      scale: 1,
       offsetTop: 0,
-      height: 640,
+      height: window.innerHeight,
       addEventListener: (type: string, cb: () => void) => {
         listeners[type] = cb;
       },
@@ -416,15 +472,38 @@ describe("ChatNotesPanel", () => {
     await Vue_nextTick(wrapper);
     await wrapper.find(".chat-notes__toggle").trigger("click");
     await Vue_nextTick(wrapper);
-    expect(wrapper.find(".chat-notes__panel").attributes("style")).to.include("height: 640px");
+    const panelStyle = () => wrapper.find(".chat-notes__panel").attributes("style") || "";
+    // Nothing to correct at rest: the stylesheet's own `inset: 0` covers the whole layout viewport,
+    // and pinning anyway is what used to leave a strip of the board live beside the panel.
+    expect(panelStyle()).to.equal("");
+
+    // An ordinary scroll on iOS (address bar sliding away, elastic overscroll at the end of the
+    // thread) moves the visual viewport around without a keyboard being up - still no pin.
+    fakeVisualViewport.offsetTop = 60;
+    fakeVisualViewport.height = window.innerHeight - 90;
+    listeners.scroll();
+    await Vue_nextTick(wrapper);
+    expect(panelStyle()).to.equal("");
 
     // Simulate the on-screen keyboard opening: the visible area shrinks and shifts.
     fakeVisualViewport.height = 380;
     fakeVisualViewport.offsetTop = 20;
     listeners.resize();
     await Vue_nextTick(wrapper);
-    expect(wrapper.find(".chat-notes__panel").attributes("style")).to.include("height: 380px");
-    expect(wrapper.find(".chat-notes__panel").attributes("style")).to.include("top: 20px");
+    expect(panelStyle()).to.include("height: 380px");
+    expect(panelStyle()).to.include("top: 20px");
+    // Asserted off the computed style rather than the rendered attribute: jsdom's CSS engine drops
+    // `bottom` here, but a real browser needs it - `top` + `height` + the stylesheet's `bottom: 0`
+    // is an over-constrained box, and leaning on which of the three the spec says to ignore is a
+    // worse bet than saying it outright.
+    expect((wrapper.vm as any).mobileViewportStyle.bottom).to.equal("auto");
+
+    // ...and released again once it closes.
+    fakeVisualViewport.height = window.innerHeight;
+    fakeVisualViewport.offsetTop = 0;
+    listeners.resize();
+    await Vue_nextTick(wrapper);
+    expect(panelStyle()).to.equal("");
 
     wrapper.destroy();
     (window as any).visualViewport = previousVv;

@@ -5779,7 +5779,211 @@ pin_preference_split_budget_search_path` (the one function in the set without a 
       next-poll, and the offline derivation from a recorded `preferenceBid` move), same 2 pre-existing
       full-run-only `SetupPreview` failures. Engine untouched, so no engine gate applies.
 
-142.  ✅ **Every GitHub Actions workflow was failing; all four are green again (2026-08-08).** The
+142.  ✅ **The same "who is done?" roster now covers the ban round, the pick round and the Silent
+      Auction's secret bids (2026-08-08, viewer v5.53.4, owner: _"Apply this for other auction types
+      where it makes sense as well. Silent auction for example."_).** #141 gave the Preference Split
+      bid panel a per-player roster; this generalizes it to the sequential round-0 phases.
+      **Home is `SetupStatus.vue`**, not `Commands.vue`. That was the whole point of #135: `Commands`
+      renders only for the seat on turn, so putting a "who has bid" list there would hide it from
+      exactly the people who want it (everyone waiting). `SetupStatus` is already rendered by
+      `Game.vue` above the map, for every player, for all of round 0, in hosted **and** hot-seat play.
+      **What it looks like:** the strip's existing line ("Taklons' turn to submit their secret bids")
+      keeps its own row, and a second row underneath holds a phase label, one chip per seat, and an
+      "N of M in" count. Chips are ✔ done / ▸ on turn / · not yet, coloured green/amber/grey, the
+      viewer's own seat underlined, each carrying an `aria-label`/tooltip spelling the state out
+      ("Ada has not submitted their bids yet"). `.setup-status` went from a flex row to a block with
+      `.setup-status__main` as the row it used to be.
+      **Which phases, and why not the others:**
+
+      - `SetupFactionBan` → "Bans", `SetupFaction` → "Picks", `SetupSilentBid` → "Secret bids". Each
+        is one action per player, so "done" is a real state. Note the pick round applies to plain
+        games too, not just auction ones — same information shape, no reason to gate it.
+      - **`SetupAuction` (Choose-Then-Bid / Bid-While-Choosing) is excluded on purpose.** There a
+        player bids, gets outbid and bids again; a done/waiting mark would be actively wrong. What
+        matters in that variant is who currently leads which faction at what price, which the
+        turn-order circles and the auction's own buttons already show.
+      - `SetupPreferenceBid` is excluded too, for the opposite reason — it is simultaneous, and
+        `PreferenceSplitBid.vue`'s own roster (#141, fed by the server's sealed-bid status) already
+        covers it. Two rosters on one screen is noise. In hosted play `SetupStatus` hides itself
+        there entirely anyway.
+      - `SetupBuilding`/`SetupBooster` are out of scope (buildings are two placements, not one, and
+        neither is an auction), but they would be a cheap follow-up if wanted.
+
+      **Each phase is read from the state that phase writes**, not from a shared move counter: the
+      ban round is strictly seat order, so the first `bannedFactions.length` seats have banned;
+      a pick sets `player.faction` (order-independent, which matters because Bid-While-Choosing
+      interleaves picks with bids); a silent bid appends that seat's rows to `silentAuctionBids`, and
+      only their **presence** is ever read — never the numbers, which a test pins.
+      **Gotcha:** an unpicked seat's `faction` is `null`, not `undefined` (`Player`'s own
+      initializer), so the pick check has to be truthiness — `!== undefined` marked every seat done.
+      **Verified in a real browser** (Playwright, self-contained viewer, `VUE_APP_moves` preloaded
+      into `SetupSilentBid`): dark and light themes at 1400x1000, and 390x844 mobile where the roster
+      wraps to its own line under the status text; a 5-player ban round wraps to two chip rows and
+      still costs the strip only ~108px.
+      **Tests:** viewer 792 passing (+6 in `SetupStatus.spec.ts`: ban progress, pick progress, secret
+      bids with an assertion that no bid number reaches the DOM, own-seat marking plus aria-labels,
+      the two excluded phases, and the Preference Split hand-off), same 2 pre-existing full-run-only
+      `SetupPreview` failures. Engine untouched.
+
+143.  ✅ **Nobody was notified during a Preference Split auction, and a desktop tab silenced your
+      phone (2026-08-08, `claude/auction-notifications-devices-9r4o5c`, owner: _"Are notifications
+      sent during auctions as well? Ie preference split auction? Also make sure there is a
+      notification on your phone even if you are logged into desktop somewhere and have the tab
+      open."_).** Two independent holes, both in the push path.
+
+      **1. The Preference Split bid phase produced no notification for anyone but one player.** Every
+      "it's your move" push in this app rides on `games.current_seat` changing
+      (`games_notify_update`, `0001_multiplayer.sql`). Simultaneous bidding is the one phase that
+      signal cannot describe: submissions sit in `auction_sealed_bids`, nothing is committed to
+      `public.moves` while the auction is open, and `current_seat` therefore sits unchanged - on
+      whichever single seat the engine nominally names - from the last faction pick right through to
+      `reveal_sealed_bids`. So exactly one player got a push (their ordinary turn push, fired by the
+      last pick), everyone else got nothing, and the hourly reminder sweep could nudge none of them
+      because `planTurnReminder` only ever looks at the current seat. A game could stall indefinitely
+      on somebody who was never told it was their move. **The Silent Auction was never affected** -
+      its bans/picks/bids are sequential `commit_turn` moves, so `current_seat` moves and ordinary
+      turn pushes already worked.
+
+      Fixed by giving the auction its own announcement (migration
+      `20260808120000_auction_bid_notifications`): `announce_sealed_bid_auction()` stamps
+      `games.sealed_bid_announced_at`, whose null -> not-null transition fires
+      `games_notify_sealed_bid_auction` -> `{type:'auction_bid'}` -> the `notify` function pushes
+      _"Faction auction in <game> - split your bid points."_ to every seat with no row in
+      `auction_sealed_bids` yet. Any client sitting in `SetupPreferenceBid` calls the RPC - the same
+      "whoever notices first" shape as `reveal_sealed_bids`, and for the same reason (the client that
+      committed the final pick may already be gone); it is exactly-once server-side, so calling it
+      from every client on every status refresh is correct rather than merely harmless.
+      `host.ts::refreshSealedBidState` is now also reached from `applyAndCommit`, `applyRemoteMove`
+      and `resyncNow`, so the phase is announced the moment it opens rather than at the next reload.
+      The push is deliberately the ordinary `turn` kind on the `turn-<id>` tag: it IS the player's
+      move, a turn-pushes-off user doesn't want it either, and the shared tag makes the announcement,
+      its re-nudges and the post-reveal turn push replace one another instead of stacking. Re-nudges
+      are tracked per **seat** (`auction_bid_reminders`), not per game, because an open auction has up
+      to five people on turn at once with their own intervals, caps, quiet hours and snoozes
+      (`planSealedBidReminder`). `reveal_sealed_bids` closes it all out: clears the stamp (so a
+      resolved auction leaves the sweep's candidate query for good), deletes the reminder rows, and -
+      a real pre-existing bug found on the way - stamps `latest_move_committed_at`, which it had been
+      leaving on the last faction pick, so the turn _after_ the auction inherited however long the
+      auction took and could look 12h overdue the instant it began.
+
+      **2. Push suppression was per PLAYER, not per device.** `shouldSkipTurnPushForSubscription` read
+      `players.last_active_at` - **one row per seat**, shared by every device that user is signed in
+      on (`0013_notify_presence_gate.sql`). Holding the game open in a desktop tab kept it fresh
+      forever, and that silenced the user's **phone** too, a device in a pocket with the screen off.
+      Exactly the owner's report. Presence now lives on the subscription (migration
+      `20260808121000_per_device_push_presence`): `push_subscriptions.active_game_id` (the game this
+      device has open, null = none) + `active_at` (when it last reported **either way**), written by
+      `mark_device_viewing()` from the same ~20s heartbeat as `mark_seat_active` - but also while the
+      tab is hidden, since that report is what re-enables pushes, and on leaving the game. A mobile
+      push is withheld only when that subscription itself says this very game is open and the report
+      is fresh; a device that has never reported (a client older than the migration) still falls back
+      to the old per-player signal so it can't start double-alerting the person actually playing on
+      it, and self-corrects the first time it loads a game. Desktop is never withheld - unchanged, and
+      the service worker always calls `showNotification`, so a desktop banner appears whether or not
+      the tab is focused.
+
+      **Tests:** `notify/logic.spec.ts` **68 passing** (55 baseline, +13: the phone-vs-desktop presence
+      matrix including the stale-report and never-reported cases, who the bid-phase push goes to and
+      its wording, and the per-seat re-nudge's interval/cap/snooze/quiet-hours gates); viewer
+      `host.spec.ts` **61 passing** (+3: announced from any client exactly once, announced the moment
+      the last faction pick opens the phase without a reload, and never after the reveal). Full viewer
+      suite 795 passing (792 baseline + 3), same 2 pre-existing full-run-only `SetupPreview`
+      German-rules failures. No engine change, so `_shared/engine.bundle.js` and `resolve-automation`
+      are untouched. **Deployment: neither migration is applied live yet and `notify` has NOT been
+      redeployed - none of this works until both happen.**
+
+144.  ✅ **Taps went through the open mobile chat and hit the move buttons behind it (2026-08-08,
+      `claude/mobile-chat-button-blocking-65g3hs`, owner: _"When chat window on mobile is open I don't
+      want to be able to interact with any buttons behind it. Like move buttons. Right now it seems
+      I'm pressing buttons that are hidden behind the chat window."_).**
+
+      Not a stacking-order bug: `.chat-notes__panel` is `z-index: 1050` and the sticky move/premove
+      bars are 1030, so the panel already paints over them. The hole was geometric. On mobile the
+      panel is `position: fixed` over the **layout** viewport, and `ChatNotesPanel.vue` additionally
+      pinned it to `window.visualViewport` (`top: offsetTop; height: height`) on **every** `resize`
+      and `scroll` event that viewport fired. That listener was added for the on-screen keyboard, but
+      the visual viewport also moves for reasons that need no correction at all — an iOS address bar
+      sliding away, elastic overscroll at the end of the message list, a pinch-zoom — and re-pinning
+      through those shrinks the panel to a stale rectangle while the page behind it stays exactly
+      where it was. The strip that opens up is live, and on a phone the thing sitting in it is the
+      fixed bottom action bar. This is the same class of bug `logic/zoom-compensation.ts` already
+      documents for the sticky bar itself ("the fixed bar floats mid-screen on scroll"), reached from
+      the other direction — that file exists precisely because a naive visualViewport listener gets
+      this wrong.
+
+      Fixed in two layers.
+
+      **1. Pin only when the layout viewport genuinely can't cover the screen** — new pure helper
+      `hosted/overlay-viewport.ts` (`overlayViewportPin`, unit-tested, deliberately shaped like
+      `zoom-compensation.ts`). `position: fixed; inset: 0` contains the visual viewport by definition
+      while scrolling, overscrolling or pinch-zoomed, so the answer there is "don't pin". The one case
+      it can't cover is an on-screen keyboard shrinking the visual viewport **without** resizing the
+      layout viewport — iOS Safari — detected as a height shrink of at least
+      `KEYBOARD_MIN_SHRINK_PX` (150px: every phone keyboard clears it, address-bar transitions
+      (~50-100px) and overscroll (which moves `offsetTop` and leaves `height` alone) don't. Android
+      Chrome resizes the layout viewport with the keyboard by default, so no pin is needed or applied
+      there either. Pinch-zoom is skipped outright behind the same `scale` tolerance
+      zoom-compensation.ts uses, and for the same reason (iOS leaves a residue like 1.0000000002).
+
+      **2. Make the page behind the overlay inert regardless** — frontend.scss now drops
+      `pointer-events` for all of `#app` under `#app.chat-notes-open` on `max-width: 767px`, with
+      `.chat-notes` opting its own subtree back in. hosted.ts already mirrored the panel's `open`
+      state onto that class for the desktop dock's `padding-right`; on mobile the same class now
+      means "nothing behind this responds". Deliberately the whole page rather than an enumerated
+      list of the fixed bars: the owner's requirement is that **no** button behind the chat reacts,
+      and a list would go stale the next time something fixed is added. Toasts appended to `<body>`
+      (the update/install prompts) are outside `#app` and stay clickable. Scroll chaining out of the
+      overlay is contained too (`overscroll-behavior: contain` on the message list and the composer),
+      which both stops the board scrolling under an open chat and removes the elastic overscroll that
+      made the visual viewport twitch in the first place.
+
+      **Tests:** new `overlay-viewport.spec.ts` **8 passing** (at rest / address-bar-sized change /
+      overscroll / pinch-zoom / post-pinch residue / Android's resized layout viewport / keyboard /
+      unmeasurable viewport), and `ChatNotesPanel.spec.ts`'s viewport test rewritten to assert the
+      panel is left alone at rest and on an ordinary scroll, pinned only while the keyboard is up, and
+      released again when it closes. Full viewer suite **803 passing** (795 baseline + 8), same 2
+      pre-existing full-run-only `SetupPreview` German-rules failures. Viewer-only, no schema or Edge
+      Function change.
+
+145.  ✅ **The chat thread could not be scrolled at all once it outgrew its box (2026-08-08, same
+      branch, owner: _"Scrolling i chat vinduet fungerer ikke ordentligt"_).** Both chat panels
+      centred their "newest message hugs the bottom" look on `justify-content: flex-end` over an
+      `overflow-y: auto` flex column. Alignment cannot push content into a scroll container's
+      **scrollable overflow**: content displaced past the start edge is simply out of reach.
+      Measured in headless Chromium at 390x844 against the components' own compiled SCSS, 40
+      messages: `clientHeight` 698, `scrollHeight` **698**, `maxScrollTop` **0** — the list did not
+      scroll, and the first message sat **2427px above** the visible area with no way to get to it.
+      Only the last screenful of a thread was ever readable. In the lobby panel the same trap also
+      hid its own "Load older messages" button (its first child), so paging back was unreachable by
+      button _and_ by scroll.
+
+      Replaced with an auto margin on the first child (`> *:first-child { margin-top: auto }`) in
+      `ChatNotesPanel.vue` and `LobbyChatPanel.vue` — identical look, and it resolves to 0 the moment
+      the content is taller than the box, leaving an ordinary scrollable overflow. Re-measured, same
+      harness: 40 messages -> `scrollHeight` 3134, first message reachable at `scrollTop` 0, newest
+      flush with the bottom when scrolled down; 3 messages -> not scrollable, content still parked at
+      the bottom. **Not caused by #144** — the alignment predates it. #144's `pointer-events` guard
+      was explicitly cleared as a suspect in the same harness: hit-testing inside the panel lands on
+      the chat (`elementFromPoint` -> `.chat-notes__body`) and the list scrolls with the guard on,
+      exactly as it does with it off (synthesized _touch_ gestures scroll nothing in this headless
+      harness at all, overlay or no overlay — a harness limit, not a page behavior).
+
+      Two JS behaviours were leaning on the broken layout and had to follow, since the list is a real
+      scroll container now: (1) an already-open panel is scrolled to the newest message after its
+      initial load (bottom-alignment used to make that happen whatever `scrollTop` said), and (2) an
+      incoming message only pulls the view down when the reader is already on the newest message or
+      sent it themselves — otherwise reading history would be yanked away by every arrival, a bug
+      that was unreachable while nothing scrolled. The lobby list also picked up the
+      `overscroll-behavior: contain` its in-game twin got in #144.
+
+      **Tests:** +2 in `ChatNotesPanel.spec.ts` (a scrolled-up reader is left alone by someone else's
+      message; a reader at the bottom, and the sender of the message, both follow), driven through a
+      captured Realtime handler — the fake client in that spec now records its `on()` callbacks. Full
+      viewer suite **805 passing** (803 + 2), same 2 pre-existing full-run-only `SetupPreview`
+      failures. The layout fix itself is verified by measurement in a real browser, not in jsdom,
+      which has no layout.
+
+146.  ✅ **Every GitHub Actions workflow was failing; all four are green again (2026-08-08).** The
       repo had been firing "run failed" push notifications on essentially every push, because all
       four CI workflows were red — each for its own unrelated reason:
 
@@ -5851,7 +6055,8 @@ pin_preference_split_budget_search_path` (the one function in the set without a 
       today would just trade one permanently-red workflow for another. Fix the planner fixtures
       first, then quote the glob.
 
-      **Tests:** viewer 788 passing / 0 failing (746 under the old glob, +42 previously unreachable),
+      **Tests:** viewer 807 passing / 0 failing after merging #142-#145 (788 before that merge, of
+      which 746 under the old glob, so +42 previously unreachable),
       viewer build clean, engine 716 passing / 0 failing via the exact CI command in ~31s, engine
       build and lint clean, old-ui lint clean, and prettier clean across the repo and stable across
       repeated runs.

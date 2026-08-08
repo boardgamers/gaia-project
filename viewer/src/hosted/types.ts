@@ -109,6 +109,10 @@ export interface HostedBackend {
   setAutoCharge(gameId: string, seat: number, pref: string): Promise<void>;
   /** Preference Split Auction: submission progress. Safe to call from any seat at any time. */
   fetchSealedBidStatus(gameId: string): Promise<SealedBidStatus>;
+  /** Announces the open bid phase, so every player who still owes a bid gets a push. Server-side
+   * exactly-once (migration 20260808120000); returns whether THIS call was the one that announced,
+   * so every client can call it unconditionally while sitting in the phase. */
+  announceSealedBidAuction(gameId: string): Promise<boolean>;
   /** Submits one seat's whole split. Returns how many seats have submitted afterwards. */
   submitSealedBid(gameId: string, seat: number, bids: SealedBidEntry[]): Promise<number>;
   /** Every seat's submitted split. RLS only ever returns rows once all of them are in (before that

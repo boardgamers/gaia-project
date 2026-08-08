@@ -27,7 +27,7 @@ import { discardOfflineMinigameMirror } from "./logic/offline-minigame-sync";
 import Lobby from "./hosted/Lobby.vue";
 import OpenLobbyGame from "./hosted/OpenLobbyGame.vue";
 import PendingApproval from "./hosted/PendingApproval.vue";
-import { backfillSubscriptionTimezone, isPushEnabled } from "./hosted/push";
+import { backfillSubscriptionTimezone, currentPushEndpoint, isPushEnabled } from "./hosted/push";
 import { isOnline, PresenceState, trackPresence, usersInGame } from "./hosted/presence";
 import SignIn from "./hosted/SignIn.vue";
 import { createSupabaseBackend, getSupabaseClient, subscribeMoves, SupabaseClient } from "./hosted/supabase-client";
@@ -290,8 +290,10 @@ async function mountGameInstance(
   // ChatNotesPanel.vue's own content/behavior is untouched (owner's explicit "keep it as is") - its
   // panel is `position: fixed`, so it floats OVER whatever's underneath rather than participating in
   // layout. Toggling a class on the page root and reserving the same width via CSS padding (see
-  // frontend.scss's `#app.chat-notes-open`, desktop-only) makes the game area itself shrink out of
-  // the way instead, so the two no longer overlap.
+  // frontend.scss's `#app.chat-notes-open`) makes the game area itself shrink out of the way
+  // instead, so the two no longer overlap on desktop. The same class is what makes the page behind
+  // the panel non-interactive on mobile, where it's a full-screen overlay rather than a dock - so
+  // keep toggling it on every viewport, not just the desktop one it was first added for.
   const chatOpenUnwatch = chatNotes.$watch("open", (open: boolean) => {
     root.classList.toggle("chat-notes-open", open);
     bar.chatPanelOpen = open;
@@ -569,7 +571,24 @@ async function mountGameInstance(
   // mark_seat_active asserts seat ownership itself too) - a spectator or a session with no seats
   // here has nothing to heartbeat. Interval comfortably shorter than the server's staleness
   // threshold (45s) so ordinary timer jitter never makes an open tab look inactive.
+  //
+  // Reported alongside it, but per DEVICE rather than per seat: `players.last_active_at` above is
+  // one row shared by every device this user is signed in on, so an open desktop tab used to
+  // silence their phone as well (migration 20260808121000). This device's own push subscription is
+  // the thing the push gate can key on instead - and unlike the seat heartbeat it must also report
+  // while the tab is HIDDEN, since that report is exactly what re-enables pushes here. Null
+  // endpoint = this device has no push subscription, so there is nothing to gate.
+  let pushEndpoint: string | null = null;
+  const markDeviceViewing = (viewing: boolean) => {
+    if (!pushEndpoint) {
+      return;
+    }
+    Promise.resolve(
+      client.rpc("mark_device_viewing", { p_endpoint: pushEndpoint, p_game_id: viewing ? gameId : null })
+    ).catch(() => undefined);
+  };
   const markSeatsActive = () => {
+    markDeviceViewing(document.visibilityState === "visible");
     if (document.visibilityState !== "visible") {
       return;
     }
@@ -581,14 +600,23 @@ async function mountGameInstance(
     }
   };
   markSeatsActive();
+  // Async, so the first tick above can't have carried it - report as soon as it's known.
+  currentPushEndpoint().then((endpoint) => {
+    pushEndpoint = endpoint;
+    markDeviceViewing(document.visibilityState === "visible");
+  });
   const heartbeatInterval = setInterval(markSeatsActive, 20_000);
   cleanups.push(() => clearInterval(heartbeatInterval));
+  // Leaving the game (back to the lobby, or a different game) is "no longer looking at it" just as
+  // much as backgrounding the tab is.
+  cleanups.push(() => markDeviceViewing(false));
 
   const visibilityListener = () => {
     if (document.visibilityState === "visible") {
       resyncWithRetry();
-      markSeatsActive();
     }
+    // Both directions: hiding the tab is the report that lets this device be pushed again.
+    markSeatsActive();
   };
   document.addEventListener("visibilitychange", visibilityListener);
   cleanups.push(() => document.removeEventListener("visibilitychange", visibilityListener));

@@ -1,12 +1,15 @@
 import { strict as assert } from "assert";
 
 import {
+  AuctionReminderRow,
   buildChessTurnNotification,
   buildNotifications,
   buildRenjuTurnNotification,
+  buildSealedBidNotifications,
   chessMover,
   ChessBoardRow,
   DEFAULT_NOTIFICATION_PREFS,
+  deviceHasGameOpen,
   gameLabel,
   GameRow,
   isNotificationAllowed,
@@ -18,6 +21,7 @@ import {
   MIN_REMINDER_INTERVAL_MS,
   Notification,
   NotificationPrefs,
+  planSealedBidReminder,
   planTurnReminder,
   PlayerRow,
   RECENTLY_ACTIVE_MS,
@@ -143,14 +147,17 @@ describe("notify logic", () => {
         "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 Version/18.5 Mobile/15E148 Safari/604.1",
     });
 
-    assert.equal(shouldSkipTurnPushForSubscription(activePlayer, desktop), false);
-    assert.equal(shouldSkipTurnPushForSubscription(activePlayer, mobile), true);
+    assert.equal(shouldSkipTurnPushForSubscription(activePlayer, desktop, "game-1"), false);
+    assert.equal(shouldSkipTurnPushForSubscription(activePlayer, mobile, "game-1"), true);
   });
 
   it("treats legacy subscriptions with no stored user agent as mobile-safe while active", () => {
     const activePlayer = makePlayer({ last_active_at: new Date(Date.now() - 1_000).toISOString() });
 
-    assert.equal(shouldSkipTurnPushForSubscription(activePlayer, makeSubscription({ user_agent: null })), true);
+    assert.equal(
+      shouldSkipTurnPushForSubscription(activePlayer, makeSubscription({ user_agent: null }), "game-1"),
+      true
+    );
   });
 
   it("never suppresses stale subscriptions once the active heartbeat has expired", () => {
@@ -164,10 +171,66 @@ describe("notify logic", () => {
         makeSubscription({
           user_agent:
             "Mozilla/5.0 (Linux; Android 15; Pixel 8) AppleWebKit/537.36 Chrome/137.0.0.0 Mobile Safari/537.36",
-        })
+        }),
+        "game-1"
       ),
       false
     );
+  });
+
+  // The owner-reported bug this replaced: `players.last_active_at` is ONE row per seat, shared by
+  // every device that user is signed in on, so holding the game open in a desktop tab silenced
+  // their phone too.
+  it("still pushes to the phone while the same player has the game open on another device", () => {
+    const activePlayer = makePlayer({ last_active_at: new Date(Date.now() - 1_000).toISOString() });
+    const phone = makeSubscription({
+      user_agent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148",
+      // The phone itself reported, recently, that it is looking at nothing.
+      active_game_id: null,
+      active_at: new Date(Date.now() - 1_000).toISOString(),
+    });
+
+    assert.equal(shouldSkipTurnPushForSubscription(activePlayer, phone, "game-1"), false);
+  });
+
+  it("suppresses the phone only for the game that phone itself has open", () => {
+    const player = makePlayer();
+    const phone = (activeGameId: string | null) =>
+      makeSubscription({
+        user_agent: "Mozilla/5.0 (Linux; Android 15; Pixel 8) AppleWebKit/537.36 Chrome/137.0.0.0 Mobile Safari/537.36",
+        active_game_id: activeGameId,
+        active_at: new Date(Date.now() - 1_000).toISOString(),
+      });
+
+    assert.equal(shouldSkipTurnPushForSubscription(player, phone("game-1"), "game-1"), true);
+    assert.equal(shouldSkipTurnPushForSubscription(player, phone("game-2"), "game-1"), false);
+  });
+
+  it("stops trusting a device report once it goes stale", () => {
+    const player = makePlayer();
+    const phone = makeSubscription({
+      user_agent: "Mozilla/5.0 (Linux; Android 15; Pixel 8) AppleWebKit/537.36 Chrome/137.0.0.0 Mobile Safari/537.36",
+      active_game_id: "game-1",
+      active_at: new Date(Date.now() - RECENTLY_ACTIVE_MS - 1_000).toISOString(),
+    });
+
+    assert.equal(shouldSkipTurnPushForSubscription(player, phone, "game-1"), false);
+  });
+
+  it("falls back to the per-player signal for a device that has never reported", () => {
+    const activePlayer = makePlayer({ last_active_at: new Date(Date.now() - 1_000).toISOString() });
+    const legacyPhone = makeSubscription({
+      user_agent: "Mozilla/5.0 (Linux; Android 15; Pixel 8) AppleWebKit/537.36 Chrome/137.0.0.0 Mobile Safari/537.36",
+    });
+
+    assert.equal(deviceHasGameOpen(legacyPhone, "game-1"), null);
+    assert.equal(shouldSkipTurnPushForSubscription(activePlayer, legacyPhone, "game-1"), true);
+  });
+
+  it("never suppresses a desktop subscription, whatever it reports", () => {
+    const desktop = makeSubscription({ active_game_id: "game-1", active_at: new Date().toISOString() });
+
+    assert.equal(shouldSkipTurnPushForSubscription(makePlayer(), desktop, "game-1"), false);
   });
 
   it("notifies every other seated player of a new chat message, not the sender", () => {
@@ -587,6 +650,134 @@ describe("turn reminders", () => {
     it("does not remind a finished game or one with no current seat", () => {
       assert.equal(planTurnReminder(reminderGame({ status: "finished" }), [], false, prefs(), NOON), null);
       assert.equal(planTurnReminder(reminderGame({ current_seat: null }), [], false, prefs(), NOON), null);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Preference Split Auction: the simultaneous bid phase (migration 20260808120000)
+  // ---------------------------------------------------------------------------
+
+  describe("buildSealedBidNotifications", () => {
+    const auctionGame = (overrides: Partial<GameRow> = {}) =>
+      makeGame({
+        name: "",
+        players: [
+          makePlayer({ seat: 0, user_id: "user-1", display_name: "Ann" }),
+          makePlayer({ seat: 1, user_id: "user-2", display_name: "Bo" }),
+          makePlayer({ seat: 2, user_id: "user-3", display_name: "Cy" }),
+        ],
+        ...overrides,
+      });
+
+    it("notifies every seat that still owes a bid, and nobody else", () => {
+      const notifications = buildSealedBidNotifications(auctionGame(), [1, 2]);
+
+      assert.deepEqual(
+        notifications.map((n) => n.userId),
+        ["user-2", "user-3"]
+      );
+      // Deliberately the ordinary turn kind/tag: it IS the player's move, someone who turned turn
+      // pushes off does not want this either, and the tag lets it replace rather than stack.
+      assert.deepEqual(
+        notifications.map((n) => n.kind),
+        ["turn", "turn"]
+      );
+      assert.deepEqual(
+        notifications.map((n) => n.tag),
+        ["turn-game-1", "turn-game-1"]
+      );
+      assert.match(notifications[0].body, /^Faction auction in your game with Ann, Cy - split your bid points\.$/);
+    });
+
+    it("uses the waiting wording for a re-nudge", () => {
+      const [notification] = buildSealedBidNotifications(auctionGame({ name: "Sunday" }), [0], "reminder");
+
+      assert.equal(notification.body, "Still waiting on your auction bid in Sunday.");
+    });
+
+    it("says nothing once every seat has submitted, or for a game that is over", () => {
+      assert.deepEqual(buildSealedBidNotifications(auctionGame(), []), []);
+      assert.deepEqual(buildSealedBidNotifications(auctionGame({ status: "finished" }), [0, 1, 2]), []);
+    });
+  });
+
+  describe("planSealedBidReminder", () => {
+    const auctionGame = (announcedAgoMs: number | null, overrides: Partial<GameRow> = {}) =>
+      makeGame({
+        sealed_bid_announced_at: announcedAgoMs === null ? null : new Date(NOON - announcedAgoMs).toISOString(),
+        ...overrides,
+      });
+    const reminderRow = (overrides: Partial<AuctionReminderRow> = {}): AuctionReminderRow => ({
+      seat: 0,
+      reminder_count: 1,
+      last_reminder_at: new Date(NOON - MIN_REMINDER_INTERVAL_MS - 60_000).toISOString(),
+      ...overrides,
+    });
+
+    it("re-nudges once the auction has been open longer than the interval", () => {
+      const decision = planSealedBidReminder(
+        auctionGame(MIN_REMINDER_INTERVAL_MS + 60_000),
+        undefined,
+        [],
+        prefs(),
+        NOON
+      );
+
+      assert.ok(decision);
+      assert.equal(decision!.reminderCount, 1);
+    });
+
+    it("waits out the interval from the announcement, then from the last nudge", () => {
+      assert.equal(planSealedBidReminder(auctionGame(60_000), undefined, [], prefs(), NOON), null);
+      assert.equal(
+        planSealedBidReminder(
+          auctionGame(MIN_REMINDER_INTERVAL_MS * 3),
+          reminderRow({ last_reminder_at: new Date(NOON - 60_000).toISOString() }),
+          [],
+          prefs(),
+          NOON
+        ),
+        null
+      );
+    });
+
+    it("counts up per seat and stops at the cap", () => {
+      const due = auctionGame(MIN_REMINDER_INTERVAL_MS * 5);
+
+      assert.equal(planSealedBidReminder(due, reminderRow(), [], prefs(), NOON)!.reminderCount, 2);
+      assert.equal(planSealedBidReminder(due, reminderRow({ reminder_count: 3 }), [], prefs(), NOON), null);
+    });
+
+    it("respects reminders being off, a snooze, and the recipient's quiet hours", () => {
+      const due = auctionGame(MIN_REMINDER_INTERVAL_MS + 60_000);
+
+      assert.equal(planSealedBidReminder(due, undefined, [], prefs({ reminders_enabled: false }), NOON), null);
+      assert.equal(
+        planSealedBidReminder(due, undefined, [], prefs({ snooze_until: new Date(NOON + 60_000).toISOString() }), NOON),
+        null
+      );
+      const dueAtThreeAm = makeGame({
+        sealed_bid_announced_at: new Date(THREE_AM - MIN_REMINDER_INTERVAL_MS - 60_000).toISOString(),
+      });
+      assert.ok(planSealedBidReminder(dueAtThreeAm, undefined, [], prefs(), THREE_AM)); // no known zone
+      assert.equal(
+        planSealedBidReminder(dueAtThreeAm, undefined, [makeSubscription({ tz: "UTC" })], prefs(), THREE_AM),
+        null
+      );
+    });
+
+    it("does nothing for a game with no open auction", () => {
+      assert.equal(planSealedBidReminder(auctionGame(null), undefined, [], prefs(), NOON), null);
+      assert.equal(
+        planSealedBidReminder(
+          auctionGame(MIN_REMINDER_INTERVAL_MS * 2, { status: "finished" }),
+          undefined,
+          [],
+          prefs(),
+          NOON
+        ),
+        null
+      );
     });
   });
 });

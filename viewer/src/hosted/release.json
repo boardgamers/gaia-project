@@ -1,7 +1,56 @@
 {
-  "version": "5.53.3",
+  "version": "5.53.7",
   "releasedAt": "2026-08-08",
   "entries": [
+    {
+      "version": "5.53.7",
+      "releasedAt": "2026-08-08",
+      "kind": "fix",
+      "title": "Chat scrolling",
+      "impact": "",
+      "changes": [
+        "Fixed the game and lobby chat threads not scrolling at all once they outgrew the panel - every older message was stranded above an unreachable top edge"
+      ],
+      "userChanges": []
+    },
+    {
+      "version": "5.53.6",
+      "releasedAt": "2026-08-08",
+      "kind": "fix",
+      "title": "Mobile chat blocks the board behind it",
+      "impact": "",
+      "changes": [
+        "Fixed taps landing on the game's move buttons through the open mobile chat overlay - the page behind it is now inert, and the overlay no longer re-pins itself to a stale rectangle on an ordinary scroll, overscroll or pinch-zoom"
+      ],
+      "userChanges": []
+    },
+    {
+      "version": "5.53.5",
+      "releasedAt": "2026-08-08",
+      "kind": "fix",
+      "title": "Auction notifications and per-device pushes",
+      "impact": "",
+      "changes": [
+        "The Preference Split auction now notifies every player when the bid phase opens, and re-nudges anyone who still owes a bid",
+        "A push to your phone is no longer suppressed just because you have the game open on another device"
+      ],
+      "userChanges": []
+    },
+    {
+      "version": "5.53.4",
+      "releasedAt": "2026-08-08",
+      "kind": "update",
+      "title": "Round 0 bid/ban/pick status",
+      "impact": "",
+      "changes": [
+        "The round-0 status strip now shows one chip per player - done, on turn, or not yet - for the ban round, the pick round and the Silent Auction's secret bids, with an 'N of M in' count.",
+        "SetupStatus reads each phase from the state that phase writes (bannedFactions length, player.faction, silentAuctionBids presence) and never renders anybody's bid numbers.",
+        "The ascending auction (Choose-Then-Bid / Bid-While-Choosing) gets no roster on purpose: a player there bids repeatedly and can be outbid, so 'done' is not a state. The Preference Split bid phase keeps its own roster in the bid panel instead."
+      ],
+      "userChanges": [
+        "During round 0 you can now see at a glance which players have already banned, picked, or submitted their Silent Auction bids - and which ones everyone is still waiting on."
+      ]
+    },
     {
       "version": "5.53.3",
       "releasedAt": "2026-08-08",

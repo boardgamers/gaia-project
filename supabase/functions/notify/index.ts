@@ -16,9 +16,11 @@ import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 import * as webpush from "jsr:@negrel/webpush@0.5.0";
 
 import {
+  AuctionReminderRow,
   buildChessTurnNotification,
   buildNotifications,
   buildRenjuTurnNotification,
+  buildSealedBidNotifications,
   ChessBoardRow,
   currentTurnPlayer,
   GameRow,
@@ -26,12 +28,18 @@ import {
   isTurnKind,
   MIN_REMINDER_INTERVAL_MS,
   NotificationPrefs,
+  planSealedBidReminder,
   planTurnReminder,
   RenjuBoardRow,
   resolvePrefs,
   shouldSkipTurnPushForSubscription,
   SubscriptionRow,
 } from "./logic.ts";
+
+// Columns of public.push_subscriptions every delivery path needs: the keys to push with, the
+// user agent that decides whether suppression applies at all, and the per-device presence the
+// suppression is judged on (migration 20260808121000).
+const SUBSCRIPTION_COLUMNS = "id,user_id,endpoint,p256dh,auth,user_agent,active_game_id,active_at";
 
 // Columns of public.notification_prefs the notify function reads.
 const PREFS_COLUMNS =
@@ -75,7 +83,12 @@ Deno.serve(async (req) => {
 
   if (
     !game_id ||
-    (type !== "insert" && type !== "update" && type !== "chat" && type !== "chess_turn" && type !== "renju_turn")
+    (type !== "insert" &&
+      type !== "update" &&
+      type !== "chat" &&
+      type !== "chess_turn" &&
+      type !== "renju_turn" &&
+      type !== "auction_bid")
   ) {
     return new Response("bad request", { status: 400 });
   }
@@ -119,6 +132,12 @@ Deno.serve(async (req) => {
       return new Response("renju board not found", { status: 404 });
     }
     notifications = buildRenjuTurnNotification(board as RenjuBoardRow, game as GameRow);
+  } else if (type === "auction_bid") {
+    // The Preference Split Auction opened its bid phase (announce_sealed_bid_auction stamped the
+    // game row). Everyone who hasn't submitted yet is on turn - which, at announcement time, is
+    // normally everyone, but a player who managed to bid before this call lands is correctly left
+    // out rather than told to do what they just did.
+    notifications = buildSealedBidNotifications(game as GameRow, await pendingBidSeats(supabase, game as GameRow));
   } else {
     let hasQueuedPremove = false;
     if (type === "update" && (game as GameRow).current_seat !== null) {
@@ -153,7 +172,7 @@ Deno.serve(async (req) => {
   const userIds = [...new Set(notifications.map((n) => n.userId))];
   const { data: subscriptions, error: subsError } = await supabase
     .from("push_subscriptions")
-    .select("id,user_id,endpoint,p256dh,auth,user_agent")
+    .select(SUBSCRIPTION_COLUMNS)
     .in("user_id", userIds);
   if (subsError) {
     console.error("could not load subscriptions:", subsError.message);
@@ -181,15 +200,16 @@ Deno.serve(async (req) => {
     for (const sub of (subscriptions ?? []).filter((s: SubscriptionRow) => s.user_id === notification.userId)) {
       // Desktop subscriptions are intentionally "more sensitive": if it's your turn (Gaia, chess or
       // renju) or someone just chatted, they still get the push even while the game is already open.
-      // Mobile/PWA subscriptions keep the old suppression behavior to avoid duplicate alerts while
-      // actively playing there. The recipient's own player row always decides this - it's the same
-      // row for a "turn" notification's userId either way (Gaia's current seat, or the chess/renju
-      // mover).
+      // Mobile/PWA subscriptions are suppressed only by their OWN report that this game is open on
+      // them right now (never by another of the user's devices) - see
+      // shouldSkipTurnPushForSubscription. The player row is still passed for the legacy fallback
+      // there; it's the same row for a "turn" notification's userId either way (Gaia's current seat,
+      // the chess/renju mover, or a seat that still owes an auction bid).
       const recipient = playerByUserId.get(notification.userId);
       if (
         (isTurnKind(notification.kind) || notification.kind === "message") &&
         recipient &&
-        shouldSkipTurnPushForSubscription(recipient, sub)
+        shouldSkipTurnPushForSubscription(recipient, sub, game_id)
       ) {
         continue;
       }
@@ -244,10 +264,24 @@ async function pushToSubscription(
   }
 }
 
+/** Seats of `game` that still owe a Preference Split submission (empty once the auction is full). */
+async function pendingBidSeats(supabase: SupabaseClient, game: GameRow): Promise<number[]> {
+  const { data, error } = await supabase.from("auction_sealed_bids").select("seat").eq("game_id", game.id);
+  if (error) {
+    console.error("could not load sealed bids:", error.message);
+    return [];
+  }
+  const submitted = new Set(((data ?? []) as { seat: number }[]).map((row) => row.seat));
+  return game.players.filter((p) => p.user_id !== null && !submitted.has(p.seat)).map((p) => p.seat);
+}
+
 // Hourly pg_cron entry point (migration 20260721_turn_reminders): finds every active game whose
 // current player has let their turn go idle past the reminder threshold and re-nudges them, subject
 // to the per-turn cap and their local quiet hours (planTurnReminder). Loads its own config/state
 // with the service role - it never runs the game engine.
+//
+// Second pass (migration 20260808120000): the same treatment for an open Preference Split auction,
+// which no amount of `current_seat` watching can cover - see sweepSealedBidAuctions.
 async function runReminderSweep(supabase: SupabaseClient): Promise<Response> {
   const { data: cfg, error: cfgError } = await supabase.from("app_config").select("value").eq("key", "vapid").single();
   if (cfgError || !cfg) {
@@ -256,32 +290,45 @@ async function runReminderSweep(supabase: SupabaseClient): Promise<Response> {
   }
 
   // Prefilter on the SMALLEST interval a user can choose (12h) so a longer-interval opt-in isn't
-  // dropped here; planTurnReminder applies each user's actual interval.
+  // dropped here; planTurnReminder/planSealedBidReminder apply each user's actual interval.
   const cutoff = new Date(Date.now() - MIN_REMINDER_INTERVAL_MS).toISOString();
-  const { data: games, error: gamesError } = await supabase
-    .from("games")
-    .select("*, players(*)")
-    .eq("status", "active")
-    .not("current_seat", "is", null)
-    .not("latest_move_committed_at", "is", null)
-    .lt("latest_move_committed_at", cutoff);
+  const [{ data: games, error: gamesError }, { data: auctions, error: auctionsError }] = await Promise.all([
+    supabase
+      .from("games")
+      .select("*, players(*)")
+      .eq("status", "active")
+      .not("current_seat", "is", null)
+      .not("latest_move_committed_at", "is", null)
+      .lt("latest_move_committed_at", cutoff),
+    supabase
+      .from("games")
+      .select("*, players(*)")
+      .eq("status", "active")
+      .not("sealed_bid_announced_at", "is", null)
+      .lt("sealed_bid_announced_at", cutoff),
+  ]);
   if (gamesError) {
     console.error("could not load candidate games:", gamesError.message);
     return new Response("games unavailable", { status: 500 });
   }
-  if (!games || games.length === 0) {
+  if (auctionsError) {
+    // Not fatal: the ordinary turn reminders below are independent of this half.
+    console.error("could not load candidate auctions:", auctionsError.message);
+  }
+  const auctionGames = (auctions ?? []) as GameRow[];
+  if ((!games || games.length === 0) && auctionGames.length === 0) {
     return new Response(JSON.stringify({ swept: 0, reminded: 0, sent: 0 }), { status: 200 });
   }
 
   // The current player of each candidate game, and everything needed to decide/deliver a reminder.
-  const currentPlayers = (games as GameRow[])
+  const currentPlayers = ((games ?? []) as GameRow[])
     .map((game) => ({ game, player: currentTurnPlayer(game) }))
     .filter((entry) => entry.player?.user_id);
   const userIds = [...new Set(currentPlayers.map((entry) => entry.player!.user_id as string))];
   const gameIds = currentPlayers.map((entry) => entry.game.id);
 
   const [{ data: subscriptions }, { data: premoves }, prefsByUser] = await Promise.all([
-    supabase.from("push_subscriptions").select("id,user_id,endpoint,p256dh,auth,user_agent,tz").in("user_id", userIds),
+    supabase.from("push_subscriptions").select(`${SUBSCRIPTION_COLUMNS},tz`).in("user_id", userIds),
     supabase.from("premoves").select("game_id,seat").in("game_id", gameIds),
     loadPrefsByUser(supabase, userIds),
   ]);
@@ -321,7 +368,7 @@ async function runReminderSweep(supabase: SupabaseClient): Promise<Response> {
     });
     const recipient = currentTurnPlayer(game)!;
     for (const sub of currentPlayerSubs) {
-      if (shouldSkipTurnPushForSubscription(recipient, sub)) {
+      if (shouldSkipTurnPushForSubscription(recipient, sub, game.id)) {
         continue;
       }
       if (await pushToSubscription(appServer, sub, payload, gone)) {
@@ -338,12 +385,123 @@ async function runReminderSweep(supabase: SupabaseClient): Promise<Response> {
       .eq("id", game.id);
   }
 
+  const auctionResult = await sweepSealedBidAuctions(supabase, auctionGames, appServer, siteUrl, gone);
+  reminded += auctionResult.reminded;
+  sent += auctionResult.sent;
+
   if (gone.length > 0) {
     await supabase.from("push_subscriptions").delete().in("id", gone);
   }
 
-  return new Response(JSON.stringify({ swept: games.length, reminded, sent, deleted: gone.length }), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-  });
+  return new Response(
+    JSON.stringify({ swept: (games ?? []).length + auctionGames.length, reminded, sent, deleted: gone.length }),
+    {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    }
+  );
+}
+
+/**
+ * The reminder sweep's second pass: re-nudge everyone who still owes a bid in an open Preference
+ * Split auction (migration 20260808120000).
+ *
+ * Structurally different from the turn pass above for one reason: an open auction has up to five
+ * people on turn simultaneously, so the decision, the cap and the cadence are all per SEAT
+ * (`auction_bid_reminders`) rather than per game. Seats that have already submitted are simply not
+ * in the pending set, and a fully-submitted auction is skipped entirely - the reveal is what clears
+ * `sealed_bid_announced_at` and drops the game out of the candidate query for good.
+ */
+async function sweepSealedBidAuctions(
+  supabase: SupabaseClient,
+  auctionGames: GameRow[],
+  appServer: AppServer,
+  siteUrl: string,
+  gone: string[]
+): Promise<{ reminded: number; sent: number }> {
+  if (auctionGames.length === 0) {
+    return { reminded: 0, sent: 0 };
+  }
+  const gameIds = auctionGames.map((game) => game.id);
+  const [{ data: bids }, { data: reminderRows }] = await Promise.all([
+    supabase.from("auction_sealed_bids").select("game_id,seat").in("game_id", gameIds),
+    supabase
+      .from("auction_bid_reminders")
+      .select("game_id,seat,reminder_count,last_reminder_at")
+      .in("game_id", gameIds),
+  ]);
+  const submitted = new Set(((bids ?? []) as { game_id: string; seat: number }[]).map((b) => `${b.game_id}:${b.seat}`));
+  const reminderByKey = new Map(
+    ((reminderRows ?? []) as (AuctionReminderRow & { game_id: string })[]).map((r) => [`${r.game_id}:${r.seat}`, r])
+  );
+
+  // Only seats that still owe a bid, and only ones with a real account to push to.
+  const pending = auctionGames.flatMap((game) =>
+    game.players
+      .filter((p) => p.user_id !== null && !submitted.has(`${game.id}:${p.seat}`))
+      .map((p) => ({ game, seat: p.seat, userId: p.user_id as string }))
+  );
+  if (pending.length === 0) {
+    return { reminded: 0, sent: 0 };
+  }
+
+  const userIds = [...new Set(pending.map((entry) => entry.userId))];
+  const [{ data: subscriptions }, prefsByUser] = await Promise.all([
+    supabase.from("push_subscriptions").select(`${SUBSCRIPTION_COLUMNS},tz`).in("user_id", userIds),
+    loadPrefsByUser(supabase, userIds),
+  ]);
+  const subsByUser = new Map<string, SubscriptionRow[]>();
+  for (const sub of (subscriptions ?? []) as SubscriptionRow[]) {
+    const list = subsByUser.get(sub.user_id) ?? [];
+    list.push(sub);
+    subsByUser.set(sub.user_id, list);
+  }
+
+  let reminded = 0;
+  let sent = 0;
+  for (const { game, seat, userId } of pending) {
+    const subs = subsByUser.get(userId) ?? [];
+    // Same rule as the turn pass: no subscribed device means nothing to remind, and no bookkeeping
+    // to advance either.
+    if (subs.length === 0) {
+      continue;
+    }
+    const prefs = prefsByUser.get(userId) ?? resolvePrefs(null);
+    const key = `${game.id}:${seat}`;
+    const decision = planSealedBidReminder(game, reminderByKey.get(key), subs, prefs);
+    if (!decision) {
+      continue;
+    }
+    const [notification] = buildSealedBidNotifications(game, [seat], "reminder");
+    if (!notification || !isNotificationAllowed(notification, prefs)) {
+      continue;
+    }
+    const payload = JSON.stringify({
+      title: notification.title,
+      body: notification.body,
+      tag: notification.tag,
+      url: `${siteUrl}/?game=${game.id}`,
+    });
+    const recipient = game.players.find((p) => p.seat === seat)!;
+    for (const sub of subs) {
+      if (shouldSkipTurnPushForSubscription(recipient, sub, game.id)) {
+        continue;
+      }
+      if (await pushToSubscription(appServer, sub, payload, gone)) {
+        sent++;
+      }
+    }
+    reminded++;
+    await supabase.from("auction_bid_reminders").upsert(
+      {
+        game_id: game.id,
+        seat,
+        reminder_count: decision.reminderCount,
+        last_reminder_at: new Date().toISOString(),
+      },
+      { onConflict: "game_id,seat" }
+    );
+  }
+
+  return { reminded, sent };
 }

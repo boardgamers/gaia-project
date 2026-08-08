@@ -113,6 +113,111 @@ describe("SetupStatus", () => {
     wrapper.destroy();
   });
 
+  /** One "mark name" chip per seat, in seat order. */
+  function roster(wrapper: ReturnType<typeof mount>): string[] {
+    return wrapper.findAll(".setup-status__chip").wrappers.map((chip) => chip.text().replace(/\s+/g, " ").trim());
+  }
+
+  it("tracks who has banned already, seat by seat", () => {
+    const engine = silentAuctionEngine(["p1 banFaction terrans"]);
+    engine.players[0].name = "Mark";
+    engine.players[1].name = "Ada";
+    engine.players[2].name = "Bo";
+
+    const wrapper = mountFor(engine);
+    // Mark is done, Ada is the one everybody is waiting on, Bo has not been asked yet.
+    expect(roster(wrapper)).to.deep.equal(["✔ Mark", "▸ Ada", "· Bo"]);
+    expect(wrapper.text()).to.contain("Bans");
+    expect(wrapper.text()).to.contain("1 of 3 in");
+    wrapper.destroy();
+  });
+
+  it("tracks who has picked a faction", () => {
+    const engine = silentAuctionEngine([
+      "p1 banFaction terrans",
+      "p2 banFaction lantids",
+      "p3 banFaction gleens",
+      "p1 faction itars",
+    ]);
+    expect(engine.phase).to.equal(Phase.SetupFaction);
+
+    const wrapper = mountFor(engine);
+    // A player with a faction is named by it once they have one, which is also the "done" signal.
+    expect(roster(wrapper)).to.deep.equal(["✔ Itars", "▸ Player 2", "· Player 3"]);
+    expect(wrapper.text()).to.contain("Picks");
+    expect(wrapper.text()).to.contain("1 of 3 in");
+    wrapper.destroy();
+  });
+
+  it("tracks who has submitted their secret bids, without ever showing the bids", () => {
+    const engine = silentAuctionEngine([
+      "p1 banFaction terrans",
+      "p2 banFaction lantids",
+      "p3 banFaction gleens",
+      "p1 faction itars",
+      "p2 faction taklons",
+      "p3 faction xenos",
+      "p1 silentBid itars 17 taklons 4 xenos 0",
+    ]);
+    expect(engine.phase).to.equal(Phase.SetupSilentBid);
+
+    const wrapper = mountFor(engine);
+    expect(roster(wrapper)).to.deep.equal(["✔ Itars", "▸ Taklons", "· Xenos"]);
+    expect(wrapper.text()).to.contain("Secret bids");
+    expect(wrapper.text()).to.contain("1 of 3 in");
+    // The one thing this must never leak.
+    expect(wrapper.text()).to.not.contain("17");
+    wrapper.destroy();
+  });
+
+  it("marks the viewer's own seat and explains each chip for a screen reader", () => {
+    const engine = silentAuctionEngine(["p1 banFaction terrans"]);
+    engine.players[1].name = "Ada";
+
+    const wrapper = mountFor(engine, 1);
+    const chips = wrapper.findAll(".setup-status__chip");
+    expect(chips.at(0).classes()).to.contain("setup-status__chip--done");
+    expect(chips.at(0).attributes("aria-label")).to.equal("Player 1 has banned a faction");
+    expect(chips.at(1).classes()).to.contain("setup-status__chip--mine");
+    expect(chips.at(1).attributes("aria-label")).to.equal("Ada has not banned yet");
+    wrapper.destroy();
+  });
+
+  it("offers no roster where 'done' is not a state: the ascending auction and the booster round", () => {
+    // Choose-Then-Bid: a player bids, gets outbid, bids again - there is nothing to tick off.
+    const auction = new Engine(["init 2 setup-status-cb", "p1 faction terrans", "p2 faction xenos"], {
+      auction: AuctionVariant.ChooseBid,
+    });
+    expect(auction.phase).to.equal(Phase.SetupAuction);
+    let wrapper = mountFor(auction);
+    expect(wrapper.text()).to.contain("to bid on a faction");
+    expect(roster(wrapper)).to.deep.equal([]);
+    wrapper.destroy();
+
+    // And the starting-building round, where a player owes two placements rather than one.
+    const buildings = new Engine(["init 2 setup-status-build", "p1 faction terrans", "p2 faction xenos"]);
+    expect(buildings.phase).to.equal(Phase.SetupBuilding);
+    wrapper = mountFor(buildings);
+    expect(wrapper.text()).to.contain("starting buildings");
+    expect(roster(wrapper)).to.deep.equal([]);
+    wrapper.destroy();
+  });
+
+  it("leaves the Preference Split bid phase to its own panel, which already has a roster", () => {
+    const engine = new Engine(
+      ["init 3 setup-status-ps", "p1 faction itars", "p2 faction taklons", "p3 faction xenos"],
+      { auction: AuctionVariant.PreferenceSplit, auctionBudget: 60 }
+    );
+    expect(engine.phase).to.equal(Phase.SetupPreferenceBid);
+
+    // Hot-seat: the strip itself still shows (the device really is passed around), but the roster
+    // belongs to PreferenceSplitBid.vue - two on one screen would just be noise.
+    const wrapper = mountFor(engine);
+    expect(wrapper.text()).to.contain("to split their bid points");
+    expect(roster(wrapper)).to.deep.equal([]);
+    wrapper.destroy();
+  });
+
   it("renders nothing once round 1 has started", () => {
     const setup = mountFor(new Engine(["init 2 setup-status-round1"]));
     expect(setup.find(".setup-status").exists()).to.equal(true);

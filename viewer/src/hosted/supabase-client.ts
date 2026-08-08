@@ -122,6 +122,8 @@ export function createSupabaseBackend(client: SupabaseClient): HostedBackend {
         submittedSeats: raw?.submitted_seats ?? [],
       };
     },
+    announceSealedBidAuction: (gameId): Promise<boolean> =>
+      unwrap(client.rpc("announce_sealed_bid_auction", { p_game_id: gameId })),
     submitSealedBid: (gameId, seat, bids): Promise<number> =>
       unwrap(client.rpc("submit_sealed_bid", { p_game_id: gameId, p_seat: seat, p_bids: bids })),
     fetchSealedBids: (gameId): Promise<{ seat: number; bids: SealedBidEntry[] }[]> =>
