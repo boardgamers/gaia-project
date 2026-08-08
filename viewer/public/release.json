@@ -1,7 +1,20 @@
 {
-  "version": "5.53.7",
+  "version": "5.53.8",
   "releasedAt": "2026-08-08",
   "entries": [
+    {
+      "version": "5.53.8",
+      "releasedAt": "2026-08-08",
+      "kind": "fix",
+      "title": "CI repair",
+      "impact": "",
+      "changes": [
+        "Repaired all four GitHub Actions workflows, which had been failing on every push",
+        "Fixed two viewer tests that only failed in full runs, where source-map-support overflowed the stack scanning the test bundle and replaced the real error",
+        "Recovered 42 viewer tests that the unquoted test glob had been silently skipping"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.53.7",
       "releasedAt": "2026-08-08",
