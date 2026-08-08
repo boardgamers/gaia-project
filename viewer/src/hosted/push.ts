@@ -45,6 +45,25 @@ export async function isPushEnabled(): Promise<boolean> {
 }
 
 /**
+ * This device's push endpoint (the primary key of its `push_subscriptions` row), or null when it
+ * has no live subscription. Used to report per-device presence while a game is open, so the
+ * `notify` function can tell "this phone is showing the board" from "some other device of theirs
+ * is" - see migration 20260808121000 and hosted.ts's heartbeat.
+ */
+export async function currentPushEndpoint(): Promise<string | null> {
+  try {
+    if (!(await isPushEnabled())) {
+      return null;
+    }
+    const registration = await navigator.serviceWorker.getRegistration();
+    const subscription = await registration?.pushManager.getSubscription();
+    return subscription?.endpoint ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Backfill the reminder sweep's timezone for a subscription that predates the `tz` column.
  * Subscriptions created before turn reminders shipped have `tz = null`, and a null timezone is
  * never quiet-hours-suppressed - so those devices would get 3am reminders until the user toggled

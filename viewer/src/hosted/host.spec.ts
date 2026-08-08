@@ -97,6 +97,8 @@ class FakeBackend implements HostedBackend {
   commitUsesGameMoveCount = false;
   sealedBids = new Map<number, SealedBidEntry[]>();
   sealedBidStatusCalls = 0;
+  announceCalls = 0;
+  announced = false;
   revealCalls = 0;
   private nextFailureId = 1;
 
@@ -235,6 +237,17 @@ class FakeBackend implements HostedBackend {
       budget: (this.game.options?.auctionBudget as number) ?? 40,
       submittedSeats: [...this.sealedBids.keys()].sort((a, b) => a - b),
     };
+  }
+
+  // Exactly-once, like announce_sealed_bid_auction's own game-row stamp: the first caller
+  // announces, every later one is told there was nothing to do.
+  async announceSealedBidAuction(): Promise<boolean> {
+    this.announceCalls++;
+    if (this.announced || this.sealedBids.size >= this.game.player_count) {
+      return false;
+    }
+    this.announced = true;
+    return true;
   }
 
   async submitSealedBid(_gameId: string, seat: number, bids: SealedBidEntry[]): Promise<number> {
@@ -1291,6 +1304,57 @@ describe("Preference Split Auction (sealed bidding)", () => {
 
     expect(host.engine.phase).to.equal("setupBuilding");
     expect(backend.moves.filter((m) => m.move.includes("preferenceBid"))).to.have.length(4);
+  });
+
+  // Migration 20260808120000: simultaneous bidding never moves `current_seat`, so the ordinary turn
+  // push fires for exactly one player and the other three are told nothing at all. The announcement
+  // is what closes that hole, and (like the reveal) any client sitting in the phase may send it.
+  it("announces the open auction from any client, exactly once", async () => {
+    const backend = auctionBackend();
+    const first = makeHost(backend);
+    const second = makeHost(backend);
+
+    await first.host.load();
+    expect(backend.announced).to.equal(true);
+
+    // Every other client calls it too - the server is what makes it exactly-once, so this must be
+    // correct rather than merely tolerated.
+    await second.host.load();
+    await second.host.refreshSealedBids();
+    expect(backend.announceCalls).to.be.at.least(3);
+    expect(first.errors).to.deep.equal([]);
+    expect(second.errors).to.deep.equal([]);
+  });
+
+  it("announces as soon as the last faction pick opens the bid phase, without a reload", async () => {
+    const backend = new FakeBackend(auctionGameRow(), auctionPlayerRows());
+    backend.seedMoves(PICKS.slice(0, 3));
+    const { host, errors } = makeHost(backend);
+    await host.load();
+    expect(backend.announced).to.equal(false); // still picking factions
+
+    await host.submitMove("p4 faction terrans");
+
+    expect(host.engine.phase).to.equal("setupPreferenceBid");
+    expect(backend.announced).to.equal(true);
+    expect(errors).to.deep.equal([]);
+  });
+
+  it("stops announcing once the auction is full, and never after the reveal", async () => {
+    const backend = auctionBackend();
+    const { host } = makeHost(backend);
+    await host.load();
+    for (const seat of [0, 1, 2, 3]) {
+      await host.submitSealedBid(seat, SPLITS[seat]);
+    }
+    const callsAtReveal = backend.announceCalls;
+
+    // A late-arriving client opens the resolved game: no phase to announce any more.
+    const late = makeHost(backend);
+    await late.host.load();
+
+    expect(backend.announceCalls).to.equal(callsAtReveal);
+    expect(late.host.engine.phase).to.equal("setupBuilding");
   });
 
   it("refuses a split that is not exactly the budget, and a second submission from a seat", async () => {

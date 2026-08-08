@@ -102,19 +102,20 @@ order) mapped to each faction's final owner.
 
 ## Where the code lives
 
-| Layer                                    | File                                                                                                                                                |
-| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Resolution algorithm (pure, no engine)   | `engine/src/algorithms/preference-split-auction.ts`                                                                                                 |
-| Variant + persisted result on the engine | `engine/src/engine.ts` (`AuctionVariant.PreferenceSplit`, `auctionBudget`, `preferenceSplitBids`, `preferenceSplitResult`, `preferenceSplitBudget`) |
-| Phase + one-shot resolution              | `engine/src/move/phase.ts` (`phaseSetupPreferenceBid`)                                                                                              |
-| Move validation                          | `engine/src/move/setup.ts` (`movePreferenceBid`, plus the 4-player/budget preconditions in `moveInit`)                                              |
-| Available command                        | `engine/src/available/setup.ts` (`possiblePreferenceBids`)                                                                                          |
-| Server-side sealed bidding               | `supabase/migrations/20260805120000_preference_split_sealed_bids.sql`                                                                               |
-| Hosted orchestration                     | `viewer/src/hosted/host.ts` (`submitSealedBid`, `refreshSealedBids`, `sealedBidMove`)                                                               |
-| Bid form                                 | `viewer/src/components/PreferenceSplitBid.vue`                                                                                                      |
-| Reveal / result                          | `viewer/src/components/PreferenceSplitLog.vue`, `PreferenceSplitSummary.vue`                                                                        |
-| In-app rules                             | `viewer/src/components/PreferenceSplitInfo.vue`                                                                                                     |
-| Setup                                    | `viewer/src/hosted/new-game.ts`, `viewer/src/hosted/CreateGame.vue`                                                                                 |
+| Layer                                    | File                                                                                                                                                              |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Resolution algorithm (pure, no engine)   | `engine/src/algorithms/preference-split-auction.ts`                                                                                                               |
+| Variant + persisted result on the engine | `engine/src/engine.ts` (`AuctionVariant.PreferenceSplit`, `auctionBudget`, `preferenceSplitBids`, `preferenceSplitResult`, `preferenceSplitBudget`)               |
+| Phase + one-shot resolution              | `engine/src/move/phase.ts` (`phaseSetupPreferenceBid`)                                                                                                            |
+| Move validation                          | `engine/src/move/setup.ts` (`movePreferenceBid`, plus the 4-player/budget preconditions in `moveInit`)                                                            |
+| Available command                        | `engine/src/available/setup.ts` (`possiblePreferenceBids`)                                                                                                        |
+| Server-side sealed bidding               | `supabase/migrations/20260805120000_preference_split_sealed_bids.sql`                                                                                             |
+| Bid-phase notifications                  | `supabase/migrations/20260808120000_auction_bid_notifications.sql`, `supabase/functions/notify/logic.ts` (`buildSealedBidNotifications`, `planSealedBidReminder`) |
+| Hosted orchestration                     | `viewer/src/hosted/host.ts` (`submitSealedBid`, `refreshSealedBids`, `sealedBidMove`)                                                                             |
+| Bid form                                 | `viewer/src/components/PreferenceSplitBid.vue`                                                                                                                    |
+| Reveal / result                          | `viewer/src/components/PreferenceSplitLog.vue`, `PreferenceSplitSummary.vue`                                                                                      |
+| In-app rules                             | `viewer/src/components/PreferenceSplitInfo.vue`                                                                                                                   |
+| Setup                                    | `viewer/src/hosted/new-game.ts`, `viewer/src/hosted/CreateGame.vue`                                                                                               |
 
 ## How secrecy is enforced
 
@@ -162,6 +163,40 @@ again, so "done" is not a state that exists.
 to an ordinary `preferenceBid` move for the seat on turn, and secrecy is pass-the-device — the same
 model the Silent Auction already uses offline.
 
+## Notifications during the auction
+
+Every other "it's your move" push in this app rides on `games.current_seat` changing
+(`games_notify_update`, `0001_multiplayer.sql`). Simultaneous bidding is the one phase that signal
+cannot describe: nothing is committed to `public.moves` while the auction is open, so `current_seat`
+sits unchanged — on whichever single seat the engine nominally names — from the last faction pick
+right through to `reveal_sealed_bids`. Until migration `20260808120000` that meant exactly **one**
+player got told anything (their ordinary turn push, fired by the last pick), everybody else got
+nothing, and the hourly reminder sweep could nudge none of them, because `planTurnReminder` only ever
+looks at the current seat. A game could stall indefinitely on one person who was never told.
+
+So the auction announces itself:
+
+- `announce_sealed_bid_auction(game_id)` stamps `games.sealed_bid_announced_at`. Any client sitting
+  in `SetupPreferenceBid` calls it — the same "whoever notices first" shape as the reveal, and for
+  the same reason: the client that committed the final pick may already be gone. It is exactly-once
+  server-side (row locked, stamp written once, later callers get `false`), so calling it from every
+  client on every status refresh is correct, not merely tolerated.
+- The null → not-null transition fires `games_notify_sealed_bid_auction`, which POSTs
+  `{type: 'auction_bid', game_id}` to the `notify` Edge Function. That function looks up who has **no**
+  row in `auction_sealed_bids` yet and pushes to each of them —
+  _"Faction auction in <game> — split your bid points."_
+- The push is deliberately the ordinary `turn` kind on the ordinary `turn-<id>` tag: it **is** the
+  player's move, someone who turned turn pushes off does not want this either, and the shared tag
+  makes the announcement, its re-nudges and the real turn push after the reveal replace one another
+  instead of stacking banners.
+- The sweep re-nudges per **seat**, not per game (`auction_bid_reminders`), because an open auction
+  has up to five people on turn at once, each with their own interval, cap, quiet hours and snooze.
+  `sealed_bid_announced_at` is the auction's equivalent of a turn's `latest_move_committed_at`.
+- `reveal_sealed_bids` closes all of it out: it clears `sealed_bid_announced_at` (so a resolved
+  auction drops out of the sweep's candidate query for good), deletes the reminder rows, and — new
+  in the same migration — stamps `latest_move_committed_at`, which it previously left on the last
+  faction pick, making the turn that _follows_ the auction inherit however long the auction took.
+
 ## Randomness and determinism
 
 The two tiebreaks are the only randomness, and they draw from the game's own **seeded** PRNG
@@ -182,7 +217,8 @@ stored decision, not a re-derivation of it.
 | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `engine/src/algorithms/preference-split-auction.spec.ts`   | rounding, submission validation, ranking, allocation, exclusion of assigned players, averages including assigned players' bids, paying **more** than your own bid, the 0-bid case, the owner's near-tie example, both tiebreaks, determinism, and both end-to-end fixtures (the four-way-tied one and a tie-free one with exact expected payments)                        |
 | `engine/src/preference-split-variant.spec.ts`              | the same through real move logs: full flow, the 4-player and budget preconditions, per-move validation, one submission per player, a configured budget, reload determinism (full replay and `fromData`), and that nothing is derived before the last submission                                                                                                           |
-| `viewer/src/hosted/host.spec.ts`                           | sealed submissions unreadable until the last one lands, resolution on the fourth, exactly-once reveal under two concurrent clients, identical result on reload, the abandoned-last-submitter fallback, and server-side rejection of a wrong total / second submission                                                                                                     |
+| `viewer/src/hosted/host.spec.ts`                           | sealed submissions unreadable until the last one lands, resolution on the fourth, exactly-once reveal under two concurrent clients, identical result on reload, the abandoned-last-submitter fallback, server-side rejection of a wrong total / second submission, and the bid-phase announcement (from any client, exactly once, the moment the last pick opens the phase, never after the reveal) |
+| `supabase/functions/notify/logic.spec.ts`                  | who the bid-phase push goes to and its wording, that it reuses the `turn` kind/tag, and the per-seat re-nudge's interval, cap, snooze and quiet-hours gates |
 | `viewer/src/components/PreferenceSplitBid.spec.ts`         | one input per faction, allocated/remaining, submit disabled off-budget, submits through the sealed backend (never as a move), renders for a seat that is not on turn, post-submission progress, the per-player bid-status roster (during the form, named seats, unnamed fallback, own submission before the next poll, offline derivation), and the offline move fallback |
 | `viewer/src/components/PreferenceSplitLog.spec.ts`         | every bid, totals, averages, the ranking, the step-by-step allocation timeline (arithmetic spelled out), and an over-own-bid payment explained as such                                                                                                                                                                                                                    |
 | `viewer/src/components/PreferenceSplitSummary.spec.ts`     | the result strip under the banner: what it announces, opening the full log from it, dismissing it per game per device, and staying hidden before the auction resolves                                                                                                                                                                                                     |

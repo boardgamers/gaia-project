@@ -72,6 +72,14 @@ PREFERENCE_SPLIT_AUCTION.md`. Unlike the Silent Auction, its secrecy is **server
   failing on `401 Unauthorized` since at least 2026-07-27, which had also left `notify` stuck on
   version 13 (now 14). **If that workflow ever starts 401ing again, the secret has expired again;
   that is the whole diagnosis.**
+- **Auction pushes + per-device push presence (PROGRESS #143, 2026-08-08).** The Preference Split bid phase notified nobody
+  but one player (simultaneous bidding never moves `games.current_seat`, which is what every turn
+  push rides on), and mobile push suppression read `players.last_active_at` — one row per seat shared
+  by every device — so an open desktop tab silenced the same user's phone. Fixed by
+  `announce_sealed_bid_auction()` + `auction_bid_reminders` (migration `20260808120000`) and
+  `push_subscriptions.active_game_id`/`active_at` + `mark_device_viewing()` (migration
+  `20260808121000`). **Neither migration is applied live yet and `notify` has NOT been redeployed** —
+  none of it works until both happen. The Silent Auction was never affected (sequential moves).
 - A "Silent Auction" faction-selection variant (`AuctionVariant.Silent`, PROGRESS #61) is
   implemented and tested: sequential ban → sequential pick → sequential private bid submission →
   automatic ascending-auction resolution (`algorithms/silent-auction.ts`), with a setup picker

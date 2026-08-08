@@ -330,6 +330,21 @@ export class HostedGameHost {
     }
     this.callbacks.onSealedBidState?.(status);
 
+    // Tell the server the auction is open, so everyone who still owes a bid gets a push (migration
+    // 20260808120000). Same "any client may do it" shape as the reveal below, and for the same
+    // reason: `current_seat` doesn't move during simultaneous bidding, so nothing else in the
+    // system would ever notice the phase began - not even the client that committed the final
+    // faction pick, which may well have closed its tab by now. Exactly-once server-side, so calling
+    // it from every client on every refresh is correct rather than merely harmless. Best-effort: a
+    // failure here costs a notification, never the auction.
+    if (status.submittedSeats.length < status.playerCount) {
+      try {
+        await this.backend.announceSealedBidAuction(this.gameId);
+      } catch {
+        // Non-critical - the bid panel itself is what the players actually act on.
+      }
+    }
+
     if (status.playerCount > 0 && status.submittedSeats.length >= status.playerCount) {
       this.revealing = true;
       try {
@@ -563,6 +578,9 @@ export class HostedGameHost {
       this.emitState(copy);
     }
     await this.refreshPremoveState();
+    // The move just committed may have been the last faction pick, i.e. the one that opens the
+    // Preference Split bid phase. A no-op in every other phase (see refreshSealedBidState).
+    await this.refreshSealedBidState();
     // After emitting, not before: a chained auto-decision computes/commits/emits its own
     // further state, which must never be overwritten by this call's own (now-stale) copy.
     await this.resolveAutoDecisions();
@@ -627,6 +645,9 @@ export class HostedGameHost {
             // A moves row arrived (PREMOVE_PLAN.md §3's refresh rule) - a committed turn, ours or
             // not, is exactly the moment the server may have consumed (or newly offered) a premove.
             await this.refreshPremoveState();
+            // ...and, if it was another player's final faction pick, the moment the Preference Split
+            // bid phase opened for us. A no-op in every other phase.
+            await this.refreshSealedBidState();
             // A remote move can hand control straight to one of the local user's own seats
             // (a leech interrupt), so this is a real trigger point too, not just submitMove.
             await this.resolveAutoDecisions();
@@ -697,6 +718,9 @@ export class HostedGameHost {
       this.emitState(this.engine);
     }
     await this.refreshPremoveState();
+    // Catching up after a reconnect can land straight in the Preference Split bid phase; the
+    // `revealing` guard inside is what keeps the reveal -> resync -> refresh chain from re-entering.
+    await this.refreshSealedBidState();
     await this.resolveAutoDecisions();
   }
 
