@@ -1,7 +1,19 @@
 {
-  "version": "5.53.4",
+  "version": "5.53.5",
   "releasedAt": "2026-08-08",
   "entries": [
+    {
+      "version": "5.53.5",
+      "releasedAt": "2026-08-08",
+      "kind": "fix",
+      "title": "Auction notifications and per-device pushes",
+      "impact": "",
+      "changes": [
+        "The Preference Split auction now notifies every player when the bid phase opens, and re-nudges anyone who still owes a bid",
+        "A push to your phone is no longer suppressed just because you have the game open on another device"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.53.4",
       "releasedAt": "2026-08-08",
