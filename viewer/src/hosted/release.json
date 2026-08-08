@@ -1,7 +1,22 @@
 {
-  "version": "5.53.2",
-  "releasedAt": "2026-08-06",
+  "version": "5.53.3",
+  "releasedAt": "2026-08-08",
   "entries": [
+    {
+      "version": "5.53.3",
+      "releasedAt": "2026-08-08",
+      "kind": "update",
+      "title": "Preference Split bid status",
+      "impact": "",
+      "changes": [
+        "The Preference Split Auction bid panel now lists every player with whether their split is in yet, and shows it while you are still filling the form rather than only after you submit.",
+        "The roster folds in this device's own submission immediately, so it never lags the 5s sealed_bid_status poll, and derives the same list from the engine's recorded bids in offline/hot-seat play.",
+        "The waiting screen no longer repeats the submitted count - the roster is the single place progress is reported."
+      ],
+      "userChanges": [
+        "While bidding in a Preference Split Auction you can now see, player by player, who has already submitted their split and who is still choosing."
+      ]
+    },
     {
       "version": "5.53.2",
       "releasedAt": "2026-08-06",

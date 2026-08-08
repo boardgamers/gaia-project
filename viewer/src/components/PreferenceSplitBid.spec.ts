@@ -12,9 +12,23 @@ Vue.use(BootstrapVue);
 const PICKS = ["init 4 djfjjv4k", "p1 faction itars", "p2 faction taklons", "p3 faction xenos", "p4 faction terrans"];
 
 /** In the bid phase, with nobody having submitted yet. */
-function biddingStore(options: { seat?: number | null; hosted?: boolean; submittedSeats?: number[] } = {}) {
-  const engine = new Engine([...PICKS], { auction: AuctionVariant.PreferenceSplit, auctionBudget: 40 });
+function biddingStore(
+  options: {
+    seat?: number | null;
+    hosted?: boolean;
+    submittedSeats?: number[];
+    names?: string[];
+    extraMoves?: string[];
+  } = {}
+) {
+  const engine = new Engine([...PICKS, ...(options.extraMoves ?? [])], {
+    auction: AuctionVariant.PreferenceSplit,
+    auctionBudget: 40,
+  });
   engine.generateAvailableCommandsIfNeeded();
+  (options.names ?? []).forEach((name, index) => {
+    engine.players[index].name = name;
+  });
   const store = makeStore();
   store.commit("receiveData", engine);
   if (options.seat !== undefined) {
@@ -50,6 +64,15 @@ async function fill(container: Element, points: number[]) {
 
 function submitButton(container: Element): HTMLButtonElement {
   return container.querySelector(".preference-split-bid__submit") as HTMLButtonElement;
+}
+
+/** One "name — state" line per seat, in seat order. */
+function roster(container: Element): string[] {
+  return Array.from(container.querySelectorAll(".preference-split-bid__roster-row")).map((row) => {
+    const name = row.querySelector(".preference-split-bid__roster-name").textContent.trim();
+    const state = row.querySelector(".preference-split-bid__roster-state").textContent.trim();
+    return `${name} — ${state}`;
+  });
 }
 
 describe("PreferenceSplitBid", () => {
@@ -118,7 +141,67 @@ describe("PreferenceSplitBid", () => {
 
     expect(inputs(container)).to.have.length(0);
     expect(container.textContent).to.contain("Your split is in");
-    expect(container.textContent).to.contain("2 of 4 players have submitted");
+    // Progress is the roster's job, and only the roster's - it is still there after submitting.
+    expect(container.textContent).to.contain("2 of 4 in");
+    expect(roster(container)[1]).to.equal("Player 2 (you) — Split submitted");
+  });
+
+  it("lists every seat's submission status while the form is still open", () => {
+    // The whole point of showing it here rather than only afterwards: you can see, before you
+    // submit, whether you are the one everybody is waiting for.
+    const { store } = biddingStore({
+      hosted: true,
+      seat: 2,
+      submittedSeats: [0, 3],
+      names: ["Ada", "Bo", "Cleo", "Dee"],
+    });
+    const { container } = render(PreferenceSplitBid, { store });
+
+    expect(inputs(container)).to.have.length(4);
+    expect(roster(container)).to.deep.equal([
+      "Ada — Split submitted",
+      "Bo — Still choosing",
+      "Cleo (you) — Still choosing",
+      "Dee — Split submitted",
+    ]);
+    expect(container.textContent).to.contain("2 of 4 in");
+  });
+
+  it("falls back to seat numbers when a player has no name, and keeps the roster after submitting", async () => {
+    const { store } = biddingStore({ hosted: true, seat: 1, submittedSeats: [0] });
+    const { container } = render(PreferenceSplitBid, { store });
+
+    expect(roster(container)).to.deep.equal([
+      "Player 1 — Split submitted",
+      "Player 2 (you) — Still choosing",
+      "Player 3 — Still choosing",
+      "Player 4 — Still choosing",
+    ]);
+
+    await fill(container, [20, 12, 6, 2]);
+    await fireEvent.click(submitButton(container));
+
+    // The status poll runs every 5s, so it still says only seat 0 is in - this device's own
+    // submission has to show up immediately regardless.
+    expect(roster(container)[1]).to.equal("Player 2 (you) — Split submitted");
+    expect(container.textContent).to.contain("2 of 4 in");
+  });
+
+  it("derives the roster from the recorded bids in offline/hot-seat play, where there is no status poll", () => {
+    // No backend, so nothing to poll: a submitted split is an ordinary move and the engine is the
+    // only record of who has bid.
+    const { store } = biddingStore({
+      seat: null,
+      extraMoves: ["p1 preferenceBid itars 20 taklons 12 xenos 6 terrans 2"],
+    });
+    const { container } = render(PreferenceSplitBid, { store });
+
+    expect(roster(container)[0]).to.equal("Player 1 — Split submitted");
+    expect(roster(container).slice(1)).to.deep.equal([
+      "Player 2 (you) — Still choosing",
+      "Player 3 — Still choosing",
+      "Player 4 — Still choosing",
+    ]);
   });
 
   it("falls back to an ordinary move in offline/hot-seat play, for the seat on turn", async () => {

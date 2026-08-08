@@ -56,6 +56,31 @@
       <p class="text-muted small mb-0">{{ waitingText }}</p>
     </template>
 
+    <!-- Who is still deciding. Shown while the form is open too, not just afterwards: knowing you
+         are the last one everybody is waiting for is exactly the thing you want to know BEFORE you
+         submit. Progress only - `sealed_bid_status()` never returns anybody's points. -->
+    <div class="preference-split-bid__roster">
+      <div class="preference-split-bid__roster-title">
+        Bid status
+        <span class="preference-split-bid__roster-count">{{ submittedCount }} of {{ playerCount }} in</span>
+      </div>
+      <ul class="preference-split-bid__roster-list">
+        <li
+          v-for="row in roster"
+          :key="row.seat"
+          class="preference-split-bid__roster-row"
+          :class="{
+            'preference-split-bid__roster-row--done': row.done,
+            'preference-split-bid__roster-row--mine': row.mine,
+          }"
+        >
+          <span class="preference-split-bid__roster-mark" aria-hidden="true">{{ row.done ? "✔" : "…" }}</span>
+          <span class="preference-split-bid__roster-name">{{ row.name }}</span>
+          <span class="preference-split-bid__roster-state">{{ row.state }}</span>
+        </li>
+      </ul>
+    </div>
+
     <PreferenceSplitInfo :budget="budget" />
   </div>
 </template>
@@ -126,10 +151,50 @@ export default class PreferenceSplitBid extends Vue {
     return typeof onTurn === "number" ? [onTurn] : [];
   }
 
+  /**
+   * Every seat that has submitted, from whichever source knows.
+   *
+   * - `status.submittedSeats` is the hosted truth (`sealed_bid_status()`), but it is polled, so it
+   *   lags this device's own submission by up to POLL_INTERVAL_MS - hence `locallySubmitted`.
+   * - `preferenceSplitBids` is the offline/hot-seat one: there is no server there, so a submitted
+   *   split is an ordinary move and the engine itself is the record of who has bid. It stays empty
+   *   in hosted play until the reveal, by which point this panel is gone.
+   */
+  get submittedSeats(): number[] {
+    const done = new Set<number>([
+      ...(this.status?.submittedSeats ?? []),
+      ...this.locallySubmitted,
+      ...(this.gameData?.preferenceSplitBids ?? []).map((bid) => bid.player as number),
+    ]);
+    return [...done].sort((a, b) => a - b);
+  }
+
+  get submittedCount(): number {
+    return this.submittedSeats.length;
+  }
+
   /** The seats above that still owe a submission. */
   get pendingSeats(): number[] {
-    const done = new Set<number>([...(this.status?.submittedSeats ?? []), ...this.locallySubmitted]);
+    const done = new Set<number>(this.submittedSeats);
     return this.mySeats.filter((seat) => !done.has(seat));
+  }
+
+  /** One row per seat at the table: who has locked their split in and who has not. */
+  get roster(): { seat: number; name: string; done: boolean; mine: boolean; state: string }[] {
+    const done = new Set<number>(this.submittedSeats);
+    const mine = new Set<number>(this.mySeats);
+    const seats = Math.max(this.playerCount, this.gameData?.players?.length ?? 0);
+    return Array.from({ length: seats }, (_, seat) => {
+      const isMine = mine.has(seat);
+      const isDone = done.has(seat);
+      return {
+        seat,
+        name: this.seatName(seat) + (isMine && this.mySeats.length === 1 ? " (you)" : ""),
+        done: isDone,
+        mine: isMine,
+        state: isDone ? "Split submitted" : "Still choosing",
+      };
+    });
   }
 
   /** The seat the form is currently for: the next one that still owes a submission. */
@@ -165,19 +230,22 @@ export default class PreferenceSplitBid extends Vue {
   /** Always name the seat being bid for. It is not decoration when this device holds several of
    * them (a hosted test game, or hot-seat play): it is the only thing saying whose split this is. */
   get seatSuffix(): string {
-    const name = this.seat === null ? "" : this.gameData?.players?.[this.seat]?.name ?? "";
-    const fallback = this.seat === null ? "" : `Player ${this.seat + 1}`;
-    return ` — ${name || fallback}`;
+    return this.seat === null ? "" : ` — ${this.seatName(this.seat)}`;
   }
 
+  seatName(seat: number): string {
+    return this.gameData?.players?.[seat]?.name || `Player ${seat + 1}`;
+  }
+
+  /** Deliberately carries no count: the roster right underneath is the one place progress is
+   * reported, so the two can never drift apart or say the same thing twice. */
   get waitingText(): string {
-    const submitted = this.status?.submittedSeats?.length ?? 0;
     if (!this.backend) {
       return "Pass the device to the next player.";
     }
-    return submitted >= this.playerCount
+    return this.submittedCount >= this.playerCount
       ? "Everyone has submitted - resolving the auction…"
-      : `${submitted} of ${this.playerCount} players have submitted. The auction resolves itself the moment the last one does.`;
+      : "The auction resolves itself the moment the last split lands.";
   }
 
   get allocated(): number {
@@ -349,5 +417,70 @@ export default class PreferenceSplitBid extends Vue {
 
 .preference-split-bid__tally--ok {
   color: #2b7a2b;
+}
+
+.preference-split-bid__roster {
+  margin-top: 0.5rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid rgba(23, 162, 184, 0.35);
+}
+
+.preference-split-bid__roster-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #6c757d;
+}
+
+.preference-split-bid__roster-count {
+  margin-left: auto;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.preference-split-bid__roster-list {
+  list-style: none;
+  margin: 0.25rem 0 0;
+  padding: 0;
+}
+
+.preference-split-bid__roster-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #b36b00;
+}
+
+.preference-split-bid__roster-row--done {
+  color: #2b7a2b;
+}
+
+.preference-split-bid__roster-row--mine .preference-split-bid__roster-name {
+  font-weight: 600;
+}
+
+.preference-split-bid__roster-mark {
+  width: 1rem;
+  flex: 0 0 auto;
+  text-align: center;
+}
+
+.preference-split-bid__roster-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preference-split-bid__roster-state {
+  margin-left: auto;
+  flex: 0 0 auto;
+  font-size: 0.8rem;
 }
 </style>
