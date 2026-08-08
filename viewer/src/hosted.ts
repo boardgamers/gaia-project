@@ -290,8 +290,10 @@ async function mountGameInstance(
   // ChatNotesPanel.vue's own content/behavior is untouched (owner's explicit "keep it as is") - its
   // panel is `position: fixed`, so it floats OVER whatever's underneath rather than participating in
   // layout. Toggling a class on the page root and reserving the same width via CSS padding (see
-  // frontend.scss's `#app.chat-notes-open`, desktop-only) makes the game area itself shrink out of
-  // the way instead, so the two no longer overlap.
+  // frontend.scss's `#app.chat-notes-open`) makes the game area itself shrink out of the way
+  // instead, so the two no longer overlap on desktop. The same class is what makes the page behind
+  // the panel non-interactive on mobile, where it's a full-screen overlay rather than a dock - so
+  // keep toggling it on every viewport, not just the desktop one it was first added for.
   const chatOpenUnwatch = chatNotes.$watch("open", (open: boolean) => {
     root.classList.toggle("chat-notes-open", open);
     bar.chatPanelOpen = open;

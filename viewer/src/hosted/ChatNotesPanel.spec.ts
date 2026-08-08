@@ -398,8 +398,9 @@ describe("ChatNotesPanel", () => {
     const restoreMobile = mockDesktopViewport(false);
     const listeners: Record<string, () => void> = {};
     const fakeVisualViewport = {
+      scale: 1,
       offsetTop: 0,
-      height: 640,
+      height: window.innerHeight,
       addEventListener: (type: string, cb: () => void) => {
         listeners[type] = cb;
       },
@@ -416,15 +417,38 @@ describe("ChatNotesPanel", () => {
     await Vue_nextTick(wrapper);
     await wrapper.find(".chat-notes__toggle").trigger("click");
     await Vue_nextTick(wrapper);
-    expect(wrapper.find(".chat-notes__panel").attributes("style")).to.include("height: 640px");
+    const panelStyle = () => wrapper.find(".chat-notes__panel").attributes("style") || "";
+    // Nothing to correct at rest: the stylesheet's own `inset: 0` covers the whole layout viewport,
+    // and pinning anyway is what used to leave a strip of the board live beside the panel.
+    expect(panelStyle()).to.equal("");
+
+    // An ordinary scroll on iOS (address bar sliding away, elastic overscroll at the end of the
+    // thread) moves the visual viewport around without a keyboard being up - still no pin.
+    fakeVisualViewport.offsetTop = 60;
+    fakeVisualViewport.height = window.innerHeight - 90;
+    listeners.scroll();
+    await Vue_nextTick(wrapper);
+    expect(panelStyle()).to.equal("");
 
     // Simulate the on-screen keyboard opening: the visible area shrinks and shifts.
     fakeVisualViewport.height = 380;
     fakeVisualViewport.offsetTop = 20;
     listeners.resize();
     await Vue_nextTick(wrapper);
-    expect(wrapper.find(".chat-notes__panel").attributes("style")).to.include("height: 380px");
-    expect(wrapper.find(".chat-notes__panel").attributes("style")).to.include("top: 20px");
+    expect(panelStyle()).to.include("height: 380px");
+    expect(panelStyle()).to.include("top: 20px");
+    // Asserted off the computed style rather than the rendered attribute: jsdom's CSS engine drops
+    // `bottom` here, but a real browser needs it - `top` + `height` + the stylesheet's `bottom: 0`
+    // is an over-constrained box, and leaning on which of the three the spec says to ignore is a
+    // worse bet than saying it outright.
+    expect((wrapper.vm as any).mobileViewportStyle.bottom).to.equal("auto");
+
+    // ...and released again once it closes.
+    fakeVisualViewport.height = window.innerHeight;
+    fakeVisualViewport.offsetTop = 0;
+    listeners.resize();
+    await Vue_nextTick(wrapper);
+    expect(panelStyle()).to.equal("");
 
     wrapper.destroy();
     (window as any).visualViewport = previousVv;

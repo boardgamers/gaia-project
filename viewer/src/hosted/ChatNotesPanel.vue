@@ -91,6 +91,7 @@ import {
   readersByMessage,
 } from "./chat-reads";
 import { isDesktopViewport, watchDesktopViewport } from "./viewport";
+import { overlayViewportPin, OverlayViewportPin } from "./overlay-viewport";
 
 interface ChatMessage {
   id: number;
@@ -134,7 +135,12 @@ function saveOpenPreference(open: boolean): void {
  * defaults closed, toggled from HostedBar.vue's settings menu (`toggleOpen`, called externally via
  * the mounted instance); on mobile there is no settings entry at all, only the floating bubble
  * toggle below, and it always starts closed. `isDesktop` re-evaluates on every breakpoint
- * crossing via `watchDesktopViewport`. */
+ * crossing via `watchDesktopViewport`.
+ *
+ * The mobile overlay is also modal in the "nothing behind it responds" sense: hosted.ts mirrors
+ * `open` onto `#app.chat-notes-open`, and frontend.scss drops pointer events for the whole page
+ * except this component's own subtree while that class is set on a narrow viewport. Anything added
+ * here that must stay tappable therefore has to live inside `.chat-notes`. */
 export default Vue.extend({
   name: "ChatNotesPanel",
   props: {
@@ -176,24 +182,30 @@ export default Vue.extend({
       stickyBarPoll: null as ReturnType<typeof setInterval> | null,
       channel: null as any,
       viewportUnwatch: null as (() => void) | null,
-      // Mobile only: mirrors window.visualViewport so the full-screen panel stays pinned to the
-      // area actually visible above the on-screen keyboard. Without this, opening the keyboard on
-      // iOS/Chrome can leave this `position: fixed` panel sized to the pre-keyboard layout
+      // Mobile only: while an on-screen keyboard is up, mirrors window.visualViewport so the
+      // full-screen panel stays pinned to the area actually visible above it. Without this, opening
+      // the keyboard on iOS can leave this `position: fixed` panel sized to the pre-keyboard layout
       // viewport while the browser scrolls the page to keep the focused textarea in view, exposing
       // a strip of the game board (faction buttons included) below the panel - so a tap meant for
-      // the composer/keyboard lands on the board instead. Recalculated on both `resize` (keyboard
-      // open/close, height change) and `scroll` (the same keyboard-avoidance scroll) events.
-      visualViewportTop: 0,
-      visualViewportHeight: 0,
+      // the composer/keyboard lands on the board instead. Null the rest of the time, which is the
+      // point: `position: fixed; inset: 0` already covers the visible area on an ordinary scroll,
+      // an address-bar collapse, an elastic overscroll or a pinch-zoom, and pinning through those
+      // (which this used to do unconditionally) is itself what tears a gap open. `overlayViewportPin`
+      // owns that decision. Recalculated on both `resize` (keyboard open/close, height change) and
+      // `scroll` (the same keyboard-avoidance scroll) events.
+      viewportPin: null as OverlayViewportPin,
       handleVisualViewportChange: null as (() => void) | null,
     };
   },
   computed: {
     mobileViewportStyle(): Record<string, string> {
-      if (this.isDesktop || !this.visualViewportHeight) {
+      const pin = this.viewportPin;
+      if (this.isDesktop || !pin) {
         return {};
       }
-      return { top: `${this.visualViewportTop}px`, height: `${this.visualViewportHeight}px` };
+      // `bottom: auto` explicitly rather than relying on the over-constrained-box rule dropping the
+      // stylesheet's `bottom: 0` - the pinned height is the whole point here.
+      return { top: `${pin.top}px`, height: `${pin.height}px`, bottom: "auto" };
     },
     hasUnread(): boolean {
       if (this.open) {
@@ -266,8 +278,12 @@ export default Vue.extend({
         return;
       }
       const update = () => {
-        this.visualViewportTop = vv.offsetTop;
-        this.visualViewportHeight = vv.height;
+        this.viewportPin = overlayViewportPin({
+          scale: vv.scale || 1,
+          offsetTop: vv.offsetTop,
+          height: vv.height,
+          innerHeight: window.innerHeight,
+        });
       };
       this.handleVisualViewportChange = update;
       vv.addEventListener("resize", update);
@@ -281,7 +297,7 @@ export default Vue.extend({
         vv.removeEventListener("scroll", this.handleVisualViewportChange);
       }
       this.handleVisualViewportChange = null;
-      this.visualViewportHeight = 0;
+      this.viewportPin = null;
     },
     isOnline(userId: string): boolean {
       return isUserOnline(this.presenceState, userId);
@@ -590,6 +606,11 @@ export default Vue.extend({
 .chat-notes__messages {
   flex: 1;
   overflow-y: auto;
+  // Keeps a flick that reaches either end of the thread from chaining out into the page behind the
+  // overlay - both because scrolling the board under an open chat is the same "interacting with
+  // what's behind it" the panel is there to prevent, and because the elastic overscroll it produces
+  // is what makes `window.visualViewport` twitch (see overlay-viewport.ts).
+  overscroll-behavior: contain;
   padding: 0.6rem;
   display: flex;
   flex-direction: column;
@@ -698,6 +719,9 @@ export default Vue.extend({
   textarea {
     flex: 1;
     resize: none;
+    // Same scroll-chaining containment as the message list above - a long draft scrolls inside the
+    // box, never on into the board behind the overlay.
+    overscroll-behavior: contain;
     min-height: 3.6rem;
     max-height: 8rem;
     border-radius: 0.4rem;

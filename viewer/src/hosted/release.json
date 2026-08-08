@@ -1,7 +1,18 @@
 {
-  "version": "5.53.5",
+  "version": "5.53.6",
   "releasedAt": "2026-08-08",
   "entries": [
+    {
+      "version": "5.53.6",
+      "releasedAt": "2026-08-08",
+      "kind": "fix",
+      "title": "Mobile chat blocks the board behind it",
+      "impact": "",
+      "changes": [
+        "Fixed taps landing on the game's move buttons through the open mobile chat overlay - the page behind it is now inert, and the overlay no longer re-pins itself to a stale rectangle on an ordinary scroll, overscroll or pinch-zoom"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.53.5",
       "releasedAt": "2026-08-08",
