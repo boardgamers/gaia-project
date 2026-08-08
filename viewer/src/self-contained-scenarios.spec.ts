@@ -1,8 +1,20 @@
 import Engine from "@gaia-project/engine";
-import { ArtifactToken, Building, Command, Planet, Player as PlayerEnum, Spaceship } from "@gaia-project/engine/src/enums";
+import {
+  ArtifactToken,
+  Building,
+  Command,
+  Planet,
+  Player as PlayerEnum,
+  Spaceship,
+} from "@gaia-project/engine/src/enums";
 import { AvailableCommand } from "@gaia-project/engine/src/available/types";
 import { expect } from "chai";
-import { buildScenarioUrl, loadScenarioEngine, parseScenarioFromQuery, selfContainedScenarios } from "./self-contained-scenarios";
+import {
+  buildScenarioUrl,
+  loadScenarioEngine,
+  parseScenarioFromQuery,
+  selfContainedScenarios,
+} from "./self-contained-scenarios";
 
 function clonedEngine(engine: Engine): Engine {
   return Engine.fromData(JSON.parse(JSON.stringify(engine)));
@@ -111,7 +123,8 @@ describe("self-contained scenarios", () => {
     const prefix = currentPlayerPrefix(engine);
     const afterAction = executeUntilInteractiveState(engine, `${prefix} ${Command.SpaceshipAction} rebellion qic`);
     const techCommand = expectCommand(afterAction, Command.ChooseTechTile);
-    const shipTech = techCommand.data.tiles.find((tile) => tile.pos === Spaceship.Rebellion) ?? techCommand.data.tiles[0];
+    const shipTech =
+      techCommand.data.tiles.find((tile) => tile.pos === Spaceship.Rebellion) ?? techCommand.data.tiles[0];
     const afterTech = executeUntilInteractiveState(
       engine,
       `${prefix} ${Command.SpaceshipAction} rebellion qic. ${Command.ChooseTechTile} ${shipTech.pos}`

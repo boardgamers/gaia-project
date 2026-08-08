@@ -40,7 +40,10 @@ export function possibleSpecialActions(engine: Engine, player: Player) {
       if (event.rewards[0].type === Resource.PISwap && pl.data.buildings[Building.Mine] === 0) {
         continue;
       }
-      if (event.rewards[0].type === Resource.InstantGaiaforming && possibleInstantGaiaforming(engine, player).length === 0) {
+      if (
+        event.rewards[0].type === Resource.InstantGaiaforming &&
+        possibleInstantGaiaforming(engine, player).length === 0
+      ) {
         continue;
       }
       // If the action decreases rewards, the player must have them
@@ -65,7 +68,10 @@ export function possibleSpecialActions(engine: Engine, player: Player) {
   return commands;
 }
 
-export function possibleTinkeringTiles(engine: Engine, player: Player): AvailableCommand<Command.ChooseTinkeringTile>[] {
+export function possibleTinkeringTiles(
+  engine: Engine,
+  player: Player
+): AvailableCommand<Command.ChooseTinkeringTile>[] {
   const pl = engine.player(player);
   const tiles = pl.availableTinkeringTiles(engine.round);
 
@@ -76,7 +82,10 @@ export function possibleTinkeringTiles(engine: Engine, player: Player): Availabl
   return [{ name: Command.ChooseTinkeringTile, player, data: { tiles } }];
 }
 
-export function possiblePowerRingPlacements(engine: Engine, player: Player): AvailableCommand<Command.PlacePowerRing>[] {
+export function possiblePowerRingPlacements(
+  engine: Engine,
+  player: Player
+): AvailableCommand<Command.PlacePowerRing>[] {
   const pl = engine.player(player);
   const spaces: AvailableHex[] = [];
 

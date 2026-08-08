@@ -138,7 +138,8 @@ export const selfContainedScenarios: SelfContainedScenario[] = [
   {
     id: "lost-fleet-overview",
     label: "Lost Fleet Overview",
-    description: "General round-move snapshot with explored ships, seeded rewards, and mixed factions for map and panel checks.",
+    description:
+      "General round-move snapshot with explored ships, seeded rewards, and mixed factions for map and panel checks.",
     tags: ["overview", "map", "panels"],
     build: () => {
       const engine = createLostFleetRoundMoveEngine(3, [Faction.Darkanians, Faction.SpaceGiants, Faction.Terrans]);
@@ -164,7 +165,8 @@ export const selfContainedScenarios: SelfContainedScenario[] = [
   {
     id: "lost-fleet-explore-ready",
     label: "Explore Ready",
-    description: "Player 1 can click Explore immediately to test shuttle slots, ship costs, and the exploration command flow.",
+    description:
+      "Player 1 can click Explore immediately to test shuttle slots, ship costs, and the exploration command flow.",
     tags: ["explore", "ships", "actions"],
     build: () => {
       const engine = createLostFleetRoundMoveEngine(2, [Faction.Terrans, Faction.Lantids]);
@@ -177,7 +179,8 @@ export const selfContainedScenarios: SelfContainedScenario[] = [
   {
     id: "lost-fleet-twilight-range-plus-3",
     label: "Twilight +3 Range",
-    description: "Twilight's knowledge ship action is ready; click Ship Action, then Build a Mine to verify the +3 range overlay.",
+    description:
+      "Twilight's knowledge ship action is ready; click Ship Action, then Build a Mine to verify the +3 range overlay.",
     tags: ["twilight", "range", "build"],
     build: () => {
       const engine = createLostFleetRoundMoveEngine(3);
@@ -227,7 +230,8 @@ export const selfContainedScenarios: SelfContainedScenario[] = [
   {
     id: "lost-fleet-terraforming-board",
     label: "Terraforming Board",
-    description: "Faction setup with resolved Tinkeroids and Moweyds 3-step colors for the Lost Fleet terraforming board.",
+    description:
+      "Faction setup with resolved Tinkeroids and Moweyds 3-step colors for the Lost Fleet terraforming board.",
     tags: ["setup", "terraforming-board", "factions"],
     build: () =>
       finalizeScenario(
@@ -245,7 +249,8 @@ export const selfContainedScenarios: SelfContainedScenario[] = [
   {
     id: "lost-fleet-ship-tech-claim",
     label: "Ship Tech Claim",
-    description: "Rebellion's Q.I.C. ship action is ready and its seeded ship tech can be claimed through the resulting tech-pick flow.",
+    description:
+      "Rebellion's Q.I.C. ship action is ready and its seeded ship tech can be claimed through the resulting tech-pick flow.",
     tags: ["tech", "ships", "research"],
     build: () => {
       const engine = createLostFleetRoundMoveEngine(3);
@@ -261,7 +266,8 @@ export const selfContainedScenarios: SelfContainedScenario[] = [
   {
     id: "lost-fleet-tf-mars-instant-gaiaforming",
     label: "T F Mars Instant Gaiaforming",
-    description: "T F Mars's power ship action is ready; click Ship Action to enter instant Gaiaforming target selection.",
+    description:
+      "T F Mars's power ship action is ready; click Ship Action to enter instant Gaiaforming target selection.",
     tags: ["tf-mars", "gaiaforming", "ships"],
     build: () => {
       const engine = createLostFleetRoundMoveEngine(3);
@@ -291,7 +297,8 @@ export const selfContainedScenarios: SelfContainedScenario[] = [
   {
     id: "lost-fleet-rebellion-upgrade-ts",
     label: "Rebellion Upgrade TS",
-    description: "Rebellion's power ship action is ready and there is an owned mine available to upgrade into a Trading Station.",
+    description:
+      "Rebellion's power ship action is ready and there is an owned mine available to upgrade into a Trading Station.",
     tags: ["rebellion", "upgrade", "ships"],
     build: () => {
       const engine = createLostFleetRoundMoveEngine(3);
@@ -332,7 +339,8 @@ export const selfContainedScenarios: SelfContainedScenario[] = [
   {
     id: "lost-fleet-moweyds-power-ring",
     label: "Moweyds Power Ring",
-    description: "Moweyds can trigger their power-ring special action from the Planetary Institute and place the ring on-map.",
+    description:
+      "Moweyds can trigger their power-ring special action from the Planetary Institute and place the ring on-map.",
     tags: ["moweyds", "power-ring", "special-action"],
     build: () => {
       const engine = createLostFleetRoundMoveEngine(2, [Faction.Moweyds, Faction.Terrans]);

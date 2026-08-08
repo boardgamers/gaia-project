@@ -26,6 +26,10 @@ concurrency:
 jobs:
   test_and_build:
     runs-on: ubuntu-latest
+    env:
+      # mochapack bundles every spec plus the engine into one webpack build,
+      # which needs more than the runner's ~2 GB default heap.
+      NODE_OPTIONS: --max-old-space-size=8192
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

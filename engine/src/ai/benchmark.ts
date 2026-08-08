@@ -56,7 +56,8 @@ function timing(warmupIterations: number, iterations: number, operation: () => u
   }
 
   const sorted = [...samples].sort((a, b) => a - b);
-  const percentileIndex = (percentile: number) => Math.min(sorted.length - 1, Math.ceil(sorted.length * percentile) - 1);
+  const percentileIndex = (percentile: number) =>
+    Math.min(sorted.length - 1, Math.ceil(sorted.length * percentile) - 1);
   return {
     status: "measured",
     warmupIterations,
@@ -206,9 +207,8 @@ export function runPhase0Benchmark(overrides: Partial<BenchmarkConfig> = {}) {
     return parsedSink.phase;
   });
 
-  const hydrateInputs = Array.from(
-    { length: config.warmupIterations + config.iterations },
-    () => JSON.parse(serializedState)
+  const hydrateInputs = Array.from({ length: config.warmupIterations + config.iterations }, () =>
+    JSON.parse(serializedState)
   );
   let hydrateIndex = 0;
   let engineSink: Engine;
@@ -222,9 +222,8 @@ export function runPhase0Benchmark(overrides: Partial<BenchmarkConfig> = {}) {
     return engineSink.phase;
   });
 
-  const commandEngines = Array.from(
-    { length: config.warmupIterations + config.iterations },
-    () => Engine.fromData(JSON.parse(serializedState))
+  const commandEngines = Array.from({ length: config.warmupIterations + config.iterations }, () =>
+    Engine.fromData(JSON.parse(serializedState))
   );
   let commandIndex = 0;
   let commandCountSink = 0;
@@ -261,26 +260,27 @@ export function runPhase0Benchmark(overrides: Partial<BenchmarkConfig> = {}) {
   }> = [];
   let randomGameResult: FuzzGameResult | undefined;
   let randomGameCall = 0;
-  const randomGame = config.randomGameIterations > 0
-    ? timing(config.randomGameWarmupIterations, config.randomGameIterations, () => {
-        randomGameResult = runRandomGame();
-        if (randomGameCall++ >= config.randomGameWarmupIterations) {
-          randomGameOutcomes.push({
-            finished: randomGameResult.finished,
-            committedLines: randomGameResult.moves.length,
-            rounds: randomGameResult.rounds,
-            failureCount: randomGameResult.failures.length,
-            finalStateBytes: Buffer.byteLength(JSON.stringify(randomGameResult.engine), "utf8"),
-          });
-        }
-        return randomGameResult.finished;
-      })
-    : {
-        status: "skipped" as const,
-        reason: "randomGameIterations was configured as 0",
-        warmupIterations: config.randomGameWarmupIterations,
-        iterations: 0,
-      };
+  const randomGame =
+    config.randomGameIterations > 0
+      ? timing(config.randomGameWarmupIterations, config.randomGameIterations, () => {
+          randomGameResult = runRandomGame();
+          if (randomGameCall++ >= config.randomGameWarmupIterations) {
+            randomGameOutcomes.push({
+              finished: randomGameResult.finished,
+              committedLines: randomGameResult.moves.length,
+              rounds: randomGameResult.rounds,
+              failureCount: randomGameResult.failures.length,
+              finalStateBytes: Buffer.byteLength(JSON.stringify(randomGameResult.engine), "utf8"),
+            });
+          }
+          return randomGameResult.finished;
+        })
+      : {
+          status: "skipped" as const,
+          reason: "randomGameIterations was configured as 0",
+          warmupIterations: config.randomGameWarmupIterations,
+          iterations: 0,
+        };
 
   const result = {
     schemaVersion: BENCHMARK_SCHEMA_VERSION,

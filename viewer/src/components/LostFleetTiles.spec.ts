@@ -35,16 +35,18 @@ describe("Lost Fleet tiles render with base-game iconography", () => {
 
       const rawSpec = techTileEventWithSource(tile, null)[0].spec;
       expect(container.textContent, `${tile} must not print its raw spec "${rawSpec}"`).to.not.contain(rawSpec);
-      expect(
-        container.querySelector("g.condition"),
-        `${tile} should render a condition icon`
-      ).to.not.equal(null);
+      expect(container.querySelector("g.condition"), `${tile} should render a condition icon`).to.not.equal(null);
     }
   });
 
   it("renders the asteroid and ship-QIC-action conditions with their own icons", () => {
     const asteroid = render(TechTile, {
-      props: { pos: TechTilePos.Economy, tileOverride: AdvTechTile.AsteroidPass, countOverride: 1, disableTooltip: true },
+      props: {
+        pos: TechTilePos.Economy,
+        tileOverride: AdvTechTile.AsteroidPass,
+        countOverride: 1,
+        disableTooltip: true,
+      },
       store: store(),
     });
     expect(asteroid.container.querySelector("g.condition .planet-fill.a")).to.not.equal(null);

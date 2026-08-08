@@ -106,7 +106,9 @@ async function interceptContextNetwork(context, requestContext, proxyUrl, label 
       const response = await requestContext.fetch(route.request(), { maxRedirects: 0 });
       await route.fulfill({ response });
     } catch (err) {
-      console.log(`  [${label} net] ${route.request().method()} ${route.request().url()} failed: ${err.message.split("\n")[0]}`);
+      console.log(
+        `  [${label} net] ${route.request().method()} ${route.request().url()} failed: ${err.message.split("\n")[0]}`
+      );
       await route.abort().catch(() => undefined);
     }
   });
@@ -128,7 +130,9 @@ async function interceptContextNetwork(context, requestContext, proxyUrl, label 
       }
     });
     target.on("message", (data) => route.send(data.toString()));
-    target.on("close", (code, reason) => route.close({ code, reason: reason ? reason.toString() : undefined }).catch(() => undefined));
+    target.on("close", (code, reason) =>
+      route.close({ code, reason: reason ? reason.toString() : undefined }).catch(() => undefined)
+    );
     target.on("error", (err) => {
       console.log(`  [${label} ws] ${route.url()} error: ${err.message}`);
       route.close({ code: 1011 }).catch(() => undefined);

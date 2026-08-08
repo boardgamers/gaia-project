@@ -43,6 +43,20 @@ Always append `--reporter min` (see PROGRESS.md's **Testing** section — it's a
 and it exists so a passing run costs ~2 lines of context instead of 700). Run the broad suite **once**,
 after the source is stable — not after each edit, and never twice to restate the same number.
 
+## Run prettier before every commit (2026-08-08)
+
+Run **`pnpm run prettier`** from the repo root before committing anything, including docs. The `All`
+workflow gates `prettier --check` on every push to every branch, so unformatted code turns CI red and
+the owner gets a "run failed" push notification. This is not theoretical: 95 files had drifted (see
+PROGRESS.md #142), most formatted at prettier's default 80 columns instead of the repo's
+`printWidth: 120` — i.e. by a tool that never read the root `.prettierrc`. The husky pre-commit hook
+only exists if `pnpm install` has run in this container, so don't rely on it.
+
+When writing markdown, **never let a backticked code span wrap across a line break inside a list
+item.** Prettier's markdown printer then re-indents the _following_ paragraph by +6 spaces on every
+run, so `prettier --check` fails no matter how many times you run `--write`. One such span had pushed
+a PROGRESS.md paragraph to 383 spaces of indentation.
+
 ## Current State
 
 - Lost Fleet chunks 1 through 7b, Darkanians' Planetary Institute, the full Explore/federation/

@@ -205,20 +205,26 @@ async function main() {
     await pageB.locator("button", { hasText: "Plan my move" }).click();
     await composeUpMove(pageB, "Research", "Terraforming");
     await pageB.locator("button", { hasText: "Queue this move" }).click();
-    await pageB.waitForFunction(() => {
-      const btn = [...document.querySelectorAll("button")].find((b) => b.textContent.includes("Premoves"));
-      return btn && btn.textContent.includes("(1)");
-    }, { timeout: 15000 });
+    await pageB.waitForFunction(
+      () => {
+        const btn = [...document.querySelectorAll("button")].find((b) => b.textContent.includes("Premoves"));
+        return btn && btn.textContent.includes("(1)");
+      },
+      { timeout: 15000 }
+    );
     check("browser B: queued premove #1 (up terra) via real UI");
     await pageB.screenshot({ path: path.join(ARTIFACTS, "phase3-after-queue1.png"), fullPage: true });
 
     await pageB.locator("button", { hasText: "Plan my move" }).click();
     await composeUpMove(pageB, "Research", "Navigation");
     await pageB.locator("button", { hasText: "Queue this move" }).click();
-    await pageB.waitForFunction(() => {
-      const btn = [...document.querySelectorAll("button")].find((b) => b.textContent.includes("Premoves"));
-      return btn && btn.textContent.includes("(2)");
-    }, { timeout: 15000 });
+    await pageB.waitForFunction(
+      () => {
+        const btn = [...document.querySelectorAll("button")].find((b) => b.textContent.includes("Premoves"));
+        return btn && btn.textContent.includes("(2)");
+      },
+      { timeout: 15000 }
+    );
     check("browser B: queued premove #2 (up nav) via real UI");
 
     console.log("  pill text:", await pill.textContent());
@@ -231,7 +237,10 @@ async function main() {
       throw new Error(`expected 2 queued premoves in overview, got ${rows.length}`);
     }
     check("browser B: overview modal shows both queued premoves, ranked 1/2");
-    await pageB.locator("button", { hasText: /^Close$/ }).click().catch(() => undefined);
+    await pageB
+      .locator("button", { hasText: /^Close$/ })
+      .click()
+      .catch(() => undefined);
     await pageB.keyboard.press("Escape").catch(() => undefined);
 
     const baseline = (await committedMoves(pageA, GAME_ID)).length;

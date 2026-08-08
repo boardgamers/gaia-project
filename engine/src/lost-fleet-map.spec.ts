@@ -52,9 +52,7 @@ describe("Lost Fleet map layout", () => {
       for (const nbPlayers of [2, 3, 4]) {
         const centers = lostFleetSectorCenters(nbPlayers);
         for (const c of centers) {
-          const nearest = Math.min(
-            ...centers.filter((o) => o !== c).map((o) => CubeCoordinates.distance(c, o))
-          );
+          const nearest = Math.min(...centers.filter((o) => o !== c).map((o) => CubeCoordinates.distance(c, o)));
           expect(nearest, `nearest neighbour distance for ${nbPlayers}p`).to.equal(5);
         }
       }
@@ -112,8 +110,8 @@ describe("Lost Fleet map layout", () => {
         const interspace = new Set(findInterspaceHoles(centers).map(key));
         for (const notch of findDeepSpaceNotches(centers)) {
           for (const cell of notch) {
-            expect(interspace.has(key(cell)), `notch cell ${key(cell)} collides with Interspace at ${nbPlayers}p`)
-              .to.be.false;
+            expect(interspace.has(key(cell)), `notch cell ${key(cell)} collides with Interspace at ${nbPlayers}p`).to.be
+              .false;
           }
         }
       }
@@ -165,9 +163,7 @@ describe("Lost Fleet map layout", () => {
 
     it("should have totals that match the number of Interspace holes in the layout", () => {
       for (const nbPlayers of [2, 3, 4]) {
-        expect(interspaceSet(nbPlayers).total).to.equal(
-          findInterspaceHoles(lostFleetSectorCenters(nbPlayers)).length
-        );
+        expect(interspaceSet(nbPlayers).total).to.equal(findInterspaceHoles(lostFleetSectorCenters(nbPlayers)).length);
       }
     });
   });

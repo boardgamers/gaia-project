@@ -48,7 +48,7 @@ export default class Sector extends Vue {
 
   get sector(): GaiaHex[] {
     const coords = Hex.hexagon(2, { center: this.center });
-    const ret = coords.map((coord) => this.map.grid.get(coord)).filter(h => h);
+    const ret = coords.map((coord) => this.map.grid.get(coord)).filter((h) => h);
 
     return ret;
   }

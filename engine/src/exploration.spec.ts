@@ -79,7 +79,9 @@ function availableExploreCommand(engine: Engine): AvailableCommand<Command.Explo
 
 function occupyConnectedPlanets(engine: Engine, player: PlayerEnum, count: number): GaiaHex[] {
   const pl = engine.player(player);
-  const start = [...engine.map.grid.values()].find((hex) => hex.hasPlanet() && hex.data.spaceship === undefined && !hex.occupied());
+  const start = [...engine.map.grid.values()].find(
+    (hex) => hex.hasPlanet() && hex.data.spaceship === undefined && !hex.occupied()
+  );
 
   expect(start, "need a starting planet for federation setup").to.not.equal(undefined);
 
@@ -400,9 +402,7 @@ describe("Lost Fleet exploration", () => {
 
     const [buildCommand] = possibleSpaceshipTechTileBuildMine(engine, PlayerEnum.Player1);
     const building = buildCommand.data.buildings.find((b) => b.coordinates === protoplanetHex.toString());
-    expect(building, "Protoplanet should be buildable via the Terraform tech tile's free mine").to.not.equal(
-      undefined
-    );
+    expect(building, "Protoplanet should be buildable via the Terraform tech tile's free mine").to.not.equal(undefined);
 
     const cost = Reward.parse(building.cost);
     expect(cost.find((r) => r.type === Resource.VictoryPoint)?.count ?? 0).to.equal(-6);
@@ -455,7 +455,8 @@ describe("Lost Fleet exploration", () => {
       { ship: Spaceship.Twilight, federation: SpaceshipFederation.Credit },
     ]);
     expect(command.data.tiles).to.include(command.data.claimableFederations[0].federation);
-    expect(command.data.tiles.some((tile) => tile === command.data.tiles[0] && tile !== SpaceshipFederation.Credit)).to.be.true;
+    expect(command.data.tiles.some((tile) => tile === command.data.tiles[0] && tile !== SpaceshipFederation.Credit)).to
+      .be.true;
     expect(command.data.federations[0].hexes.split(",")).to.not.include(shipTile.toString());
 
     moveFormFederation(
@@ -519,7 +520,13 @@ describe("Lost Fleet exploration", () => {
     expect(command.data.tiles).to.include(SpaceshipFederation.Credit);
     expect(command.data.tiles).to.include(SpaceshipFederation.Knowledge);
 
-    moveFormFederation(engine, command, PlayerEnum.Player1, command.data.federations[0].hexes, SpaceshipFederation.Knowledge);
+    moveFormFederation(
+      engine,
+      command,
+      PlayerEnum.Player1,
+      command.data.federations[0].hexes,
+      SpaceshipFederation.Knowledge
+    );
 
     expect(engine.tiles.spaceshipFederations[Spaceship.Twilight]).to.equal(SpaceshipFederation.Credit);
     expect(engine.tiles.spaceshipFederations[Spaceship.Eclipse]).to.equal(undefined);
@@ -546,7 +553,13 @@ describe("Lost Fleet exploration", () => {
 
     expect(command.data.tiles).to.deep.equal([SpaceshipFederation.Credit]);
 
-    moveFormFederation(engine, command, PlayerEnum.Player1, command.data.federations[0].hexes, SpaceshipFederation.Credit);
+    moveFormFederation(
+      engine,
+      command,
+      PlayerEnum.Player1,
+      command.data.federations[0].hexes,
+      SpaceshipFederation.Credit
+    );
 
     expect(player.data.spaceshipFederations.map((fed) => fed.tile)).to.deep.equal([SpaceshipFederation.Credit]);
   });
@@ -574,7 +587,13 @@ describe("Lost Fleet exploration", () => {
     const command = engine.findAvailableCommand(PlayerEnum.Player1, Command.FormFederation);
 
     engine.turnMoves = [`build m ${target.hex.toString()}`];
-    moveFormFederation(engine, command, PlayerEnum.Player1, command.data.federations[0].hexes, SpaceshipFederation.Range);
+    moveFormFederation(
+      engine,
+      command,
+      PlayerEnum.Player1,
+      command.data.federations[0].hexes,
+      SpaceshipFederation.Range
+    );
 
     expect(engine.tiles.spaceshipFederations[Spaceship.Eclipse]).to.equal(undefined);
     expect(player.data.spaceshipFederations.map((fed) => fed.tile)).to.deep.equal([SpaceshipFederation.Range]);
@@ -582,7 +601,9 @@ describe("Lost Fleet exploration", () => {
     expect(target.hex.data.player).to.equal(PlayerEnum.Player1);
     expect(player.data.qics, "Range waives range QIC entirely").to.equal(beforeQic);
     expect(player.data.credits, "the board build cost should be waived").to.equal(beforeCredits);
-    expect(player.data.ores, "Range still charges the full, undiscounted terraforming ore").to.equal(beforeOre - expectedOre);
+    expect(player.data.ores, "Range still charges the full, undiscounted terraforming ore").to.equal(
+      beforeOre - expectedOre
+    );
   });
 
   it("should claim a Terraform Federation token and chain into a free Build a Mine action with discounted terraforming", () => {
@@ -607,7 +628,13 @@ describe("Lost Fleet exploration", () => {
     const command = engine.findAvailableCommand(PlayerEnum.Player1, Command.FormFederation);
 
     engine.turnMoves = [`build m ${target.hex.toString()}`];
-    moveFormFederation(engine, command, PlayerEnum.Player1, command.data.federations[0].hexes, SpaceshipFederation.Terraform);
+    moveFormFederation(
+      engine,
+      command,
+      PlayerEnum.Player1,
+      command.data.federations[0].hexes,
+      SpaceshipFederation.Terraform
+    );
 
     expect(engine.tiles.spaceshipFederations[Spaceship.TFMars]).to.equal(undefined);
     expect(player.data.spaceshipFederations.map((fed) => fed.tile)).to.deep.equal([SpaceshipFederation.Terraform]);

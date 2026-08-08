@@ -75,15 +75,9 @@ export interface AtomicCandidateBase<C extends Command, T> {
   moveFragment: string;
 }
 
-export type ActionCandidate = AtomicCandidateBase<
-  Command.Action,
-  { boardAction: BoardAction }
->;
+export type ActionCandidate = AtomicCandidateBase<Command.Action, { boardAction: BoardAction }>;
 
-export type BrainStoneCandidate = AtomicCandidateBase<
-  Command.BrainStone,
-  { destination: BrainstoneDest }
->;
+export type BrainStoneCandidate = AtomicCandidateBase<Command.BrainStone, { destination: BrainstoneDest }>;
 
 export type BuildCandidate = AtomicCandidateBase<
   Command.Build,
@@ -100,10 +94,7 @@ export type BuildCandidate = AtomicCandidateBase<
 
 export type BurnPowerCandidate = AtomicCandidateBase<Command.BurnPower, { amount: number }>;
 
-export type ChargePowerCandidate = AtomicCandidateBase<
-  Command.ChargePower,
-  { offer: string }
->;
+export type ChargePowerCandidate = AtomicCandidateBase<Command.ChargePower, { offer: string }>;
 
 export type ChooseArtifactTokenCandidate = AtomicCandidateBase<
   Command.ChooseArtifactToken,
@@ -124,29 +115,20 @@ export type ChooseFederationTileCandidate = AtomicCandidateBase<
 
 export type ChooseIncomeCandidate = AtomicCandidateBase<Command.ChooseIncome, { income: string }>;
 
-export type ChooseRoundBoosterCandidate = AtomicCandidateBase<
-  Command.ChooseRoundBooster,
-  { booster: Booster }
->;
+export type ChooseRoundBoosterCandidate = AtomicCandidateBase<Command.ChooseRoundBooster, { booster: Booster }>;
 
 export type ChooseTechTileCandidate = AtomicCandidateBase<
   Command.ChooseTechTile,
   { position: AnyTechTilePos | Spaceship; tile: AnyTechTile | SpaceshipTechTile }
 >;
 
-export type ChooseTinkeringTileCandidate = AtomicCandidateBase<
-  Command.ChooseTinkeringTile,
-  { tile: TinkeringTile }
->;
+export type ChooseTinkeringTileCandidate = AtomicCandidateBase<Command.ChooseTinkeringTile, { tile: TinkeringTile }>;
 
 export type DeclineCandidate = AtomicCandidateBase<Command.Decline, { offers: string[] }>;
 
 export type EndTurnCandidate = AtomicCandidateBase<Command.EndTurn, Record<string, never>>;
 
-export type ExamineArtifactCandidate = AtomicCandidateBase<
-  Command.ExamineArtifact,
-  { ship: Spaceship.Twilight }
->;
+export type ExamineArtifactCandidate = AtomicCandidateBase<Command.ExamineArtifact, { ship: Spaceship.Twilight }>;
 
 export type ExploreCandidate = AtomicCandidateBase<
   Command.Explore,
@@ -188,10 +170,7 @@ export type PlaceLostPlanetCandidate = AtomicCandidateBase<
 
 export type PlacePowerRingCandidate = AtomicCandidateBase<Command.PlacePowerRing, { coordinates: string }>;
 
-export type SpecialCandidate = AtomicCandidateBase<
-  Command.Special,
-  { income: string; eventSpec: string }
->;
+export type SpecialCandidate = AtomicCandidateBase<Command.Special, { income: string; eventSpec: string }>;
 
 export type SpendCandidate = AtomicCandidateBase<
   Command.Spend,

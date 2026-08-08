@@ -1,6 +1,6 @@
 # Lost Fleet — project working notes
 
-This folder is the **source of truth** for adding the official *Gaia Project: The Lost Fleet*
+This folder is the **source of truth** for adding the official _Gaia Project: The Lost Fleet_
 expansion to this fork of the open-source `boardgamers/gaia-project` engine + viewer, plus a thin
 private Supabase multiplayer backend for invite-only async play among friends who own the game.
 
@@ -8,6 +8,7 @@ private Supabase multiplayer backend for invite-only async play among friends wh
 > running state + prioritized next actions, kept current each session.
 
 ## Canonical documents (read in this order)
+
 1. **`rulebook-v1.0.pdf`** — the official rulebook (v1.0). The PDF holds the component artwork.
 2. **`rulebook-v1.0.txt`** — searchable text layer extracted from the PDF (`pdftotext -layout`).
    Prose is complete here; **numeric values that live only as artwork are NOT in the text** (faction
@@ -19,7 +20,9 @@ private Supabase multiplayer backend for invite-only async play among friends wh
    `Expansion` enum shape is §A1; the errata-check result is §K.
 
 ## Status (as of 2026-06-29 — superseded almost entirely by PROGRESS.md; this section is
+
 historical context only, not a current tracker)
+
 - ☑ Rulebook + planning docs imported and version-controlled.
 - ☑ Errata check done: **no official errata exists**; v1.0 is authoritative (§K).
 - ☑ `Expansion` enum restructure (A1) decided and locked, verified against `engine/src/enums.ts`.
@@ -31,6 +34,7 @@ historical context only, not a current tracker)
   started yet; see `PROGRESS.md`'s "Next actions".
 
 ## Repo setup
+
 - Cloned from upstream `boardgamers/gaia-project`; that remote was originally named **`upstream`**.
 - `origin` is now `kimphamnguyen/gaia-lost-fleet` on GitHub (private). The active branch is
   `claude/lost-fleet-viewer-support-95lled`; `master` is kept fast-forwarded to match it and is the

@@ -14,30 +14,36 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { Component } from 'vue-property-decorator';
-import { Planet } from '@gaia-project/engine';
+import Vue from "vue";
+import { Component } from "vue-property-decorator";
+import { Planet } from "@gaia-project/engine";
 
 @Component
 export default class FactionWheel extends Vue {
-
-  get r () {
+  get r() {
     return 3;
   }
 
-  get spacing () {
+  get spacing() {
     return 1.1;
   }
 
-  angle (deg) {
-    return deg * 180 / Math.PI;
+  angle(deg) {
+    return (deg * 180) / Math.PI;
   }
 
-  planet (pos: number) {
-    const list = [Planet.Terra, Planet.Oxide, Planet.Volcanic, Planet.Desert, Planet.Swamp, Planet.Titanium, Planet.Ice];
+  planet(pos: number) {
+    const list = [
+      Planet.Terra,
+      Planet.Oxide,
+      Planet.Volcanic,
+      Planet.Desert,
+      Planet.Swamp,
+      Planet.Titanium,
+      Planet.Ice,
+    ];
     return list[pos];
   }
-
 }
 </script>
 <style lang="scss" scoped>

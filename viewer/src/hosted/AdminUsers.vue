@@ -39,12 +39,7 @@
               </td>
               <td>{{ formatDate(row.created_at) }}</td>
               <td class="text-right">
-                <b-button
-                  size="sm"
-                  variant="success"
-                  :disabled="approvingUserId === row.user_id"
-                  @click="approve(row)"
-                >
+                <b-button size="sm" variant="success" :disabled="approvingUserId === row.user_id" @click="approve(row)">
                   &#10003; Approve
                 </b-button>
               </td>
@@ -91,10 +86,7 @@
               <td>{{ formatDate(user.created_at) }}</td>
               <td>{{ formatDate(user.last_sign_in_at) }}</td>
               <td class="text-center">
-                <span
-                  class="badge"
-                  :class="isApproved(user.id) ? 'badge-success' : 'badge-warning'"
-                >
+                <span class="badge" :class="isApproved(user.id) ? 'badge-success' : 'badge-warning'">
                   {{ isApproved(user.id) ? "Approved" : "Pending" }}
                 </span>
                 <div v-if="!isSelf(user)">

@@ -100,9 +100,7 @@ export function lostFleetTerraformingCost3Planets(
   }
 
   const counts = board.map(() => 1);
-  const baseGamePlanets = players
-    .filter((pl) => isBaseGameFaction(pl.faction))
-    .map((pl) => factionPlanet(pl.faction));
+  const baseGamePlanets = players.filter((pl) => isBaseGameFaction(pl.faction)).map((pl) => factionPlanet(pl.faction));
 
   if (specialPlayers.length === 2) {
     for (const planet of baseGamePlanets) {

@@ -16,7 +16,11 @@ import Player from "../player";
 import Reward from "../reward";
 import { artifactTokenRewards } from "../tiles/artifacts";
 
-export function moveExamineArtifact(engine: Engine, command: AvailableCommand<Command.ExamineArtifact>, player: PlayerEnum) {
+export function moveExamineArtifact(
+  engine: Engine,
+  command: AvailableCommand<Command.ExamineArtifact>,
+  player: PlayerEnum
+) {
   const pl = engine.player(player);
 
   pl.payCosts(Reward.parse(command.data.cost), Spaceship.Twilight);

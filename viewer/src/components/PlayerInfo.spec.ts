@@ -23,12 +23,7 @@ describe("PlayerInfo terraforming strip", () => {
 
   it("shows resolved 1-step and 3-step planets for Tinkeroids using compact markers", () => {
     const engine = new Engine(
-      [
-        "init 3 player-info-lost-fleet",
-        "p1 faction tinkeroids",
-        "p2 faction bescods",
-        "p3 faction moweyds",
-      ],
+      ["init 3 player-info-lost-fleet", "p1 faction tinkeroids", "p2 faction bescods", "p3 faction moweyds"],
       { lostFleet: true }
     );
     const store = makeStore();
@@ -105,8 +100,10 @@ describe("PlayerInfo terraforming strip", () => {
     const shipFed = container.querySelector(`[data-ship-federation="${SpaceshipFederation.Terraform}"]`);
 
     expect(shipFed, "claimed Terraform ship Federation token should render in the tiles row").to.not.equal(null);
-    expect(shipFed?.querySelector(".building"), "expected a mine building icon, matching the free-mine tech tile's icon style")
-      .to.not.equal(null);
+    expect(
+      shipFed?.querySelector(".building"),
+      "expected a mine building icon, matching the free-mine tech tile's icon style"
+    ).to.not.equal(null);
     const arrows = Array.from(shipFed?.querySelectorAll("image") ?? []).filter((img) =>
       img.outerHTML.includes("dig-arrow")
     );
@@ -114,7 +111,11 @@ describe("PlayerInfo terraforming strip", () => {
   });
 
   it("shows only the Gaia planet counter for base-game (non-Lost-Fleet) games", () => {
-    const engine = new Engine(["init 2 player-info-planet-counters-base", "p1 faction terrans", "p2 faction hadsch-hallas"]);
+    const engine = new Engine([
+      "init 2 player-info-planet-counters-base",
+      "p1 faction terrans",
+      "p2 faction hadsch-hallas",
+    ]);
     const store = makeStore();
     store.commit("receiveData", engine);
 
@@ -126,9 +127,12 @@ describe("PlayerInfo terraforming strip", () => {
   });
 
   it("shows a Gaia/Protoplanet/Asteroid 3-counter column for Lost Fleet games", () => {
-    const engine = new Engine(["init 2 player-info-planet-counters-lf", "p1 faction terrans", "p2 faction hadsch-hallas"], {
-      lostFleet: true,
-    });
+    const engine = new Engine(
+      ["init 2 player-info-planet-counters-lf", "p1 faction terrans", "p2 faction hadsch-hallas"],
+      {
+        lostFleet: true,
+      }
+    );
     const store = makeStore();
     store.commit("receiveData", engine);
 

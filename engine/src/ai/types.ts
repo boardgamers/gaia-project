@@ -37,4 +37,3 @@ export interface BenchmarkConfig {
   randomGameIterations: number;
   memoryCloneCount: number;
 }
-

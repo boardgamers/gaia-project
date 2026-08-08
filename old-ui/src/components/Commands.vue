@@ -308,7 +308,9 @@ export default class Commands extends Vue {
                 label: `Booster ${i + 1}`,
                 booster,
                 needConfirm: true,
-                tooltip: boosterEvents(booster).map((e) => eventDesc(e)).join("\n"),
+                tooltip: boosterEvents(booster)
+                  .map((e) => eventDesc(e))
+                  .join("\n"),
               });
             }
           });

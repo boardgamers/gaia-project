@@ -12,9 +12,7 @@ const tinkeringTileLabels: Record<TinkeringTile, string> = {
   [TinkeringTile.Qic2]: "Gain 2 QIC",
 };
 
-export function chooseTinkeringTileButton(
-  command: AvailableCommand<Command.ChooseTinkeringTile>
-): ButtonData {
+export function chooseTinkeringTileButton(command: AvailableCommand<Command.ChooseTinkeringTile>): ButtonData {
   return autoClickButton({
     label: "Choose Tinkering Tile",
     command: command.name,

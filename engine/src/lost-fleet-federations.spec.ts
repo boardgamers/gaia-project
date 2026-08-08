@@ -94,7 +94,9 @@ function findPlanetParticipationScenario(
 ): { engine: Engine; targetHex: GaiaHex; federation: FederationInfo } | undefined {
   for (const seed of seeds) {
     const template = createLostFleetRoundMoveEngine(nbPlayers, seed);
-    const targets = [...template.map.grid.values()].filter((hex) => isFreeColonizablePlanet(hex) && target(hex)).map((hex) => hex.toString());
+    const targets = [...template.map.grid.values()]
+      .filter((hex) => isFreeColonizablePlanet(hex) && target(hex))
+      .map((hex) => hex.toString());
 
     for (const targetCoord of targets) {
       const engine = createLostFleetRoundMoveEngine(nbPlayers, seed);
@@ -130,16 +132,16 @@ function findBlankRoutingScenario(
     const blankCoords = [...template.map.grid.values()]
       .filter(
         (hex) =>
-          !hex.hasPlanet() &&
-          !hex.hasSpaceship() &&
-          !hex.occupied() &&
-          classifySectorId(hex.data.sector) === sectorType
+          !hex.hasPlanet() && !hex.hasSpaceship() && !hex.occupied() && classifySectorId(hex.data.sector) === sectorType
       )
       .map((hex) => hex.toString());
 
     for (const blankCoord of blankCoords) {
       const blank = template.map.getS(blankCoord);
-      const neighbors = template.map.grid.neighbours(blank).filter(isFreeColonizablePlanet).map((hex) => hex.toString());
+      const neighbors = template.map.grid
+        .neighbours(blank)
+        .filter(isFreeColonizablePlanet)
+        .map((hex) => hex.toString());
 
       for (let i = 0; i < neighbors.length; i++) {
         for (let j = i + 1; j < neighbors.length; j++) {
@@ -192,9 +194,15 @@ function findBlankRoutingScenario(
 
 describe("Lost Fleet federation auto-routing", () => {
   it("can route through a blank Deep Space hex", () => {
-    const scenario = findBlankRoutingScenario(2, ["lf-fed-deep-route-a", "lf-fed-deep-route-b", "lf-fed-deep-route-c"], LostFleetSectorType.DeepSpace);
+    const scenario = findBlankRoutingScenario(
+      2,
+      ["lf-fed-deep-route-a", "lf-fed-deep-route-b", "lf-fed-deep-route-c"],
+      LostFleetSectorType.DeepSpace
+    );
 
-    expect(scenario, "need a Lost Fleet federation scenario that routes through blank Deep Space").to.not.equal(undefined);
+    expect(scenario, "need a Lost Fleet federation scenario that routes through blank Deep Space").to.not.equal(
+      undefined
+    );
     expect(scenario.federation.hexes).to.include(scenario.blankHex);
     expect(scenario.federation.newSatellites).to.equal(1);
   });
@@ -206,7 +214,9 @@ describe("Lost Fleet federation auto-routing", () => {
       LostFleetSectorType.Interspace
     );
 
-    expect(scenario, "need a Lost Fleet federation scenario that routes through blank Interspace").to.not.equal(undefined);
+    expect(scenario, "need a Lost Fleet federation scenario that routes through blank Interspace").to.not.equal(
+      undefined
+    );
     expect(scenario.federation.hexes).to.include(scenario.blankHex);
     expect(scenario.federation.newSatellites).to.equal(1);
     expect(scenario.federation.hexes.some((hex) => hex.hasSpaceship())).to.equal(false);
@@ -288,11 +298,16 @@ describe("Lost Fleet federation auto-routing", () => {
       }
     }
 
-    expect(scenario, "need a Moweyds PI/TS pair that only reaches federation value with a Power Ring").to.not.equal(undefined);
-    expect(scenario.piHex.data.powerRing).to.equal(PlayerEnum.Player1);
-    expect(scenario.federation.hexes.map((hex) => hex.toString()).sort().join(",")).to.equal(
-      scenario.playerCoords.split(",").sort().join(",")
+    expect(scenario, "need a Moweyds PI/TS pair that only reaches federation value with a Power Ring").to.not.equal(
+      undefined
     );
+    expect(scenario.piHex.data.powerRing).to.equal(PlayerEnum.Player1);
+    expect(
+      scenario.federation.hexes
+        .map((hex) => hex.toString())
+        .sort()
+        .join(",")
+    ).to.equal(scenario.playerCoords.split(",").sort().join(","));
     expect(scenario.federation.powerValue).to.equal(7);
   });
 });

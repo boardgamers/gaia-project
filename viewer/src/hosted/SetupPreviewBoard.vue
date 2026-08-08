@@ -6,7 +6,9 @@
     <svg class="setup-preview-defs" aria-hidden="true" focusable="false">
       <Definitions />
     </svg>
-    <div :class="['row', 'no-gutters', 'justify-content-center', engine.players.length > 2 ? 'medium-map' : 'small-map']">
+    <div
+      :class="['row', 'no-gutters', 'justify-content-center', engine.players.length > 2 ? 'medium-map' : 'small-map']"
+    >
       <SpaceMap v-if="hasMap" :class="['mb-1', 'space-map', 'col-md-7']" />
       <div class="col-md-5">
         <svg

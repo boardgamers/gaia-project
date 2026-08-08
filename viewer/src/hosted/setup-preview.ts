@@ -10,9 +10,11 @@ export function buildRotateMove(playerCount: number, rotation: Map<string, numbe
   const pairs = [...rotation.entries()]
     .map(([center, times]) => [center, times % 6] as [string, number])
     .filter(([, times]) => times !== 0);
-  return [`p${playerCount}`, Command.RotateSectors, ...pairs.flatMap(([center, times]) => [center, String(times)])].join(
-    " "
-  );
+  return [
+    `p${playerCount}`,
+    Command.RotateSectors,
+    ...pairs.flatMap(([center, times]) => [center, String(times)]),
+  ].join(" ");
 }
 
 export type RotationValidation = { valid: true } | { valid: false; error: string };

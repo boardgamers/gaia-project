@@ -1,7 +1,15 @@
 import assert from "assert";
 import { AvailableCommand } from "../available/types";
 import Engine from "../engine";
-import { BoardAction, Command, Expansion, Federation, Player as PlayerEnum, SpaceshipFederation, SubPhase } from "../enums";
+import {
+  BoardAction,
+  Command,
+  Expansion,
+  Federation,
+  Player as PlayerEnum,
+  SpaceshipFederation,
+  SubPhase,
+} from "../enums";
 import Reward from "../reward";
 import { claimableSpaceshipFederations } from "../spaceships";
 import { federationRewards } from "../tiles/federations";
@@ -56,7 +64,10 @@ export function moveFormFederation(
   tile: Federation | SpaceshipFederation
 ) {
   const pl = engine.player(player);
-  const claimableFederations = claimableSpaceshipFederations(pl.data.explorationShips, engine.tiles.spaceshipFederations);
+  const claimableFederations = claimableSpaceshipFederations(
+    pl.data.explorationShips,
+    engine.tiles.spaceshipFederations
+  );
   const claimedShip = claimableFederations.find((entry) => entry.federation === tile);
   const poolFederation = Federation.values(Expansion.All).find((entry) => entry === tile);
 
@@ -75,7 +86,10 @@ export function moveFormFederation(
     pl.gainSpaceshipFederationToken(claimedShip.federation);
     delete engine.tiles.spaceshipFederations[claimedShip.ship];
 
-    if (claimedShip.federation === SpaceshipFederation.Range || claimedShip.federation === SpaceshipFederation.Terraform) {
+    if (
+      claimedShip.federation === SpaceshipFederation.Range ||
+      claimedShip.federation === SpaceshipFederation.Terraform
+    ) {
       engine.processNextMove(SubPhase.FederationTokenBuildMine, { federation: claimedShip.federation }, false);
     }
   }

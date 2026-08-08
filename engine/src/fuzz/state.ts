@@ -30,8 +30,9 @@ export function normalizedEngineState(engine: Engine): Record<string, any> {
   delete state.availableCommands;
   delete state.availableCommand;
   for (const player of state.players ?? []) {
-    if (player?.data?.tiles && player.data.tiles.booster == null) {
-      delete player.data.tiles.booster;
+    const tiles = player?.data?.tiles;
+    if (tiles && (tiles.booster === null || tiles.booster === undefined)) {
+      delete tiles.booster;
     }
     if (player && "federationCache" in player) {
       delete player.federationCache;

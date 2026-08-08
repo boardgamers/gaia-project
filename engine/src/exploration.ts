@@ -19,7 +19,9 @@ export function spaceshipHex(map: SpaceMap, ship: Spaceship): GaiaHex | undefine
 }
 
 export function nextFreeExplorationSlot(players: Player[], ship: Spaceship): number | null {
-  const occupiedSlots = new Set(players.map((pl) => pl.data.explorationShips[ship]).filter((slot) => slot !== undefined));
+  const occupiedSlots = new Set(
+    players.map((pl) => pl.data.explorationShips[ship]).filter((slot) => slot !== undefined)
+  );
 
   for (let slot = 1; slot <= EXPLORATION_CHARGE_TRACK.length; slot++) {
     if (!occupiedSlots.has(slot)) {

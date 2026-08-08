@@ -128,11 +128,9 @@ async function waitForTurnState(page, canPlay, timeout = 30000) {
     return;
   }
 
-  await page.waitForFunction(
-    () => document.querySelectorAll("button.move-button").length === 0,
-    undefined,
-    { timeout }
-  );
+  await page.waitForFunction(() => document.querySelectorAll("button.move-button").length === 0, undefined, {
+    timeout,
+  });
 }
 
 async function pickFirstFaction(page) {

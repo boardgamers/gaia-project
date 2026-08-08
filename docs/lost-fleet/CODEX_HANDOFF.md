@@ -51,7 +51,7 @@ session ends — it's the fastest on-ramp for whichever tool picks up next.
   0-VP correction for Moweyds / Space Giants are all coded and covered.
 - Engine: **490/490** tests passing (`cd engine && npm test`). Viewer: **168/168** tests passing
   (`cd viewer && npx vue-cli-service test:unit --timeout 4000 'src/**/*.spec.ts'
-  'src/logic/**/*.spec.ts'`).
+'src/logic/**/*.spec.ts'`).
 - "Viewer Step Zero" is done: the viewer builds and type-checks clean against the Lost Fleet engine
   (the 6 `Object.values(Faction)` call sites and related gaps are all fixed).
 - Lost Fleet map rendering has started: `SpaceMap.vue` now renders Interspace / Deep Space hexes

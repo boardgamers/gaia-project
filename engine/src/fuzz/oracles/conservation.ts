@@ -161,9 +161,7 @@ export class TilePoolConservation implements Oracle {
         0
       );
       if (poolCount + heldCount !== initial) {
-        messages.push(
-          `tech tiles at ${pos} leak: pool ${poolCount} + player-held ${heldCount} != seeded ${initial}`
-        );
+        messages.push(`tech tiles at ${pos} leak: pool ${poolCount} + player-held ${heldCount} != seeded ${initial}`);
       }
     }
     // Ship-seeded Standard Tech tiles (§C4: 1 per ship on Rebellion/T F Mars/Eclipse).
@@ -199,7 +197,9 @@ export class TilePoolConservation implements Oracle {
       // `federations[x] -= 1`) AFTER the 3-per-type seeding this oracle captured; capture happens
       // post-setup, so `federationTotal` already excludes it and the track token is additional.
       messages.push(
-        `federation tokens leak: pool ${poolNow} + players ${playerHeld} + terraforming-track ${onTerraformingTrack} != ${this.federationTotal + 1}`
+        `federation tokens leak: pool ${poolNow} + players ${playerHeld} + terraforming-track ${onTerraformingTrack} != ${
+          this.federationTotal + 1
+        }`
       );
     }
     // Ship-seeded Federation tokens (§C4): setup deals distinct types, one per ship; a claimed

@@ -188,7 +188,7 @@ export default class Game extends Vue {
   handleData(data: Engine, keepMoveHistory?: boolean) {
     console.log("handle data", keepMoveHistory);
 
-    for (const sector of (document.getElementsByClassName("sector") as any) as Element[]) {
+    for (const sector of document.getElementsByClassName("sector") as any as Element[]) {
       sector.classList.add("notransition");
     }
 
@@ -203,7 +203,7 @@ export default class Game extends Vue {
     }
 
     setTimeout(() => {
-      for (const sector of (document.getElementsByClassName("sector") as any) as Element[]) {
+      for (const sector of document.getElementsByClassName("sector") as any as Element[]) {
         sector.classList.remove("notransition");
       }
     });

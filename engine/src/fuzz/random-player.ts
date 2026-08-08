@@ -202,10 +202,7 @@ function movePartFor(command: AvailableCommand, ctx: PlayContext): string | null
       if (act.range && act.range.length > 0) {
         // In the Gaia phase spend as much as possible (Terrans must empty their Gaia area to
         // progress); otherwise scale modestly.
-        k =
-          ctx.phase === Phase.RoundGaia
-            ? act.range[act.range.length - 1]
-            : pick(rng, act.range.slice(0, 3));
+        k = ctx.phase === Phase.RoundGaia ? act.range[act.range.length - 1] : pick(rng, act.range.slice(0, 3));
       }
       return `${Command.Spend} ${scaleRewardString(act.cost, k)} for ${scaleRewardString(act.income, k)}`;
     }

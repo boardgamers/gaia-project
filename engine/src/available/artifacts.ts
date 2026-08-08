@@ -21,7 +21,10 @@ export function possibleExamineArtifact(engine: Engine, player: Player): Availab
   return [{ name: Command.ExamineArtifact, player, data: { cost: EXAMINE_ARTIFACT_COST } }];
 }
 
-export function possibleArtifactTokens(engine: Engine, player: Player): AvailableCommand<Command.ChooseArtifactToken>[] {
+export function possibleArtifactTokens(
+  engine: Engine,
+  player: Player
+): AvailableCommand<Command.ChooseArtifactToken>[] {
   const pl = engine.player(player);
   const tokens = engine.tiles.artifacts as ArtifactToken[];
 

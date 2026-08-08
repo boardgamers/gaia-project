@@ -108,9 +108,7 @@ export function miniBoardResolution(board: string, miniBoard: number): MiniResol
 }
 
 export function miniBoardResolutions(board: string): MiniResolution[] {
-  return Array.from({ length: ULTIMATE_MINI_CELLS }, (_, miniBoard) =>
-    miniBoardResolution(board, miniBoard)
-  );
+  return Array.from({ length: ULTIMATE_MINI_CELLS }, (_, miniBoard) => miniBoardResolution(board, miniBoard));
 }
 
 export function ultimateWinner(board: string): UltimateMark | null {
@@ -129,9 +127,7 @@ export interface UltimateBoardStatus {
 
 export function ultimateBoardStatus(board: string): UltimateBoardStatus {
   const resolutions = miniBoardResolutions(board);
-  const owners = resolutions.map((resolution) =>
-    resolution === "x" || resolution === "o" ? resolution : null
-  );
+  const owners = resolutions.map((resolution) => (resolution === "x" || resolution === "o" ? resolution : null));
   const winner = winnerOfNine(owners);
   const draw = !winner && resolutions.every((resolution) => resolution !== null);
   return { winner, draw, over: !!winner || draw, resolutions };
@@ -164,12 +160,7 @@ export function validMiniBoards(board: string, lastMove: number | null): number[
 }
 
 export function isLegalUltimateMove(board: string, lastMove: number | null, index: number): boolean {
-  if (
-    !Number.isInteger(index) ||
-    index < 0 ||
-    index >= ULTIMATE_CELLS ||
-    markAt(board, index) !== null
-  ) {
+  if (!Number.isInteger(index) || index < 0 || index >= ULTIMATE_CELLS || markAt(board, index) !== null) {
     return false;
   }
   return validMiniBoards(board, lastMove).indexOf(miniBoardOf(index)) !== -1;

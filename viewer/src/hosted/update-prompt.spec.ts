@@ -47,10 +47,7 @@ describe("hosted update prompt", () => {
 
   it("renders a reload prompt and wires the reload button", async () => {
     let reloaded = false;
-    showHostedUpdatePrompt(
-      { version: "5.13.0", releasedAt: "2026-07-08", entries: [] },
-      () => (reloaded = true)
-    );
+    showHostedUpdatePrompt({ version: "5.13.0", releasedAt: "2026-07-08", entries: [] }, () => (reloaded = true));
 
     const prompt = document.getElementById("hosted-update-banner");
     expect(prompt?.textContent).to.contain("Version 5.13.0");

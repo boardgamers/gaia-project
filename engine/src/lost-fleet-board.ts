@@ -162,9 +162,7 @@ function placeInterspaceTiles(grid: Grid<GaiaHex>, nbPlayers: number, rng: seedr
   let spaceshipCursor = 0;
   let otherCursor = 0;
   holes.forEach((hole, i) => {
-    const tag = spaceshipHoleIndices.has(i)
-      ? shuffledSpaceshipTags[spaceshipCursor++]
-      : otherTags[otherCursor++];
+    const tag = spaceshipHoleIndices.has(i) ? shuffledSpaceshipTags[spaceshipCursor++] : otherTags[otherCursor++];
     grid.push(new GaiaHex(hole.q, hole.r, { planet: tag.planet, sector: `IS${i}`, spaceship: tag.spaceship }));
   });
 }
@@ -173,7 +171,8 @@ function placeInterspaceTiles(grid: Grid<GaiaHex>, nbPlayers: number, rng: seedr
 function placeDeepSpaceTiles(grid: Grid<GaiaHex>, nbPlayers: number, rng: seedrandom.prng) {
   const centers = lostFleetSectorCenters(nbPlayers);
   const notches = findDeepSpaceNotches(centers);
-  const tilePool = nbPlayers <= 2 ? DEEP_SPACE_TILES.filter((t) => DEEP_SPACE_TILES_2P.includes(t.id)) : DEEP_SPACE_TILES;
+  const tilePool =
+    nbPlayers <= 2 ? DEEP_SPACE_TILES.filter((t) => DEEP_SPACE_TILES_2P.includes(t.id)) : DEEP_SPACE_TILES;
   const tiles = shuffleSeed.shuffle(tilePool, rng());
 
   // One tile per notch. At 3p exactly one pair of notches is itself hex-adjacent (§H1 note 4), which
@@ -241,5 +240,7 @@ export function generateLostFleetBoard(nbPlayers: number, seed: string, official
     }
   }
 
-  throw new Error(`Could not find a valid Lost Fleet board layout for seed "${seed}" after ${MAX_LAYOUT_ATTEMPTS} attempts`);
+  throw new Error(
+    `Could not find a valid Lost Fleet board layout for seed "${seed}" after ${MAX_LAYOUT_ATTEMPTS} attempts`
+  );
 }

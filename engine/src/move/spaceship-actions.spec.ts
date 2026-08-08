@@ -592,9 +592,7 @@ describe("Lost Fleet spaceship board actions", () => {
     // player owns no buildings at all yet - nothing to upgrade into a Research Lab
 
     const command = availableSpaceshipActionCommand(engine, PlayerEnum.Player1);
-    expect(command?.data.actions.find((a) => a.ship === Spaceship.Twilight && a.type === "power")).to.equal(
-      undefined
-    );
+    expect(command?.data.actions.find((a) => a.ship === Spaceship.Twilight && a.type === "power")).to.equal(undefined);
   });
 
   it("should not offer Twilight's Power action once Research Labs are already maxed", () => {
@@ -608,9 +606,7 @@ describe("Lost Fleet spaceship board actions", () => {
     player.data.buildings[Building.ResearchLab] = player.maxBuildings(Building.ResearchLab);
 
     const command = availableSpaceshipActionCommand(engine, PlayerEnum.Player1);
-    expect(command?.data.actions.find((a) => a.ship === Spaceship.Twilight && a.type === "power")).to.equal(
-      undefined
-    );
+    expect(command?.data.actions.find((a) => a.ship === Spaceship.Twilight && a.type === "power")).to.equal(undefined);
   });
 
   it("should not offer Rebellion's Power action when the player has no Mine to upgrade", () => {
@@ -620,9 +616,7 @@ describe("Lost Fleet spaceship board actions", () => {
     // player owns no Mine yet - nothing to upgrade into a Trading Station
 
     const command = availableSpaceshipActionCommand(engine, PlayerEnum.Player1);
-    expect(command?.data.actions.find((a) => a.ship === Spaceship.Rebellion && a.type === "power")).to.equal(
-      undefined
-    );
+    expect(command?.data.actions.find((a) => a.ship === Spaceship.Rebellion && a.type === "power")).to.equal(undefined);
   });
 
   it("should not offer Eclipse's Power action once every research track is fully maxed", () => {
@@ -634,9 +628,7 @@ describe("Lost Fleet spaceship board actions", () => {
     }
 
     const command = availableSpaceshipActionCommand(engine, PlayerEnum.Player1);
-    expect(command?.data.actions.find((a) => a.ship === Spaceship.Eclipse && a.type === "power")).to.equal(
-      undefined
-    );
+    expect(command?.data.actions.find((a) => a.ship === Spaceship.Eclipse && a.type === "power")).to.equal(undefined);
   });
 
   it("should additionally grant 4 VP per Q.I.C. action via the qaction Advanced Tech tile (RULES_CLARIFICATIONS.md §G2)", () => {

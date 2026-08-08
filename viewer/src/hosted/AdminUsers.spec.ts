@@ -85,7 +85,10 @@ describe("AdminUsers", () => {
       await Vue.nextTick();
       await Vue.nextTick();
 
-      const deleteButton = wrapper.findAll("button").filter((b) => b.text() === "Delete").at(0);
+      const deleteButton = wrapper
+        .findAll("button")
+        .filter((b) => b.text() === "Delete")
+        .at(0);
       await deleteButton.trigger("click");
       await Vue.nextTick();
       await Vue.nextTick();

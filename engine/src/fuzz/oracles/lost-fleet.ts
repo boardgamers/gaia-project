@@ -36,12 +36,7 @@ const TERRAIN_COLORS: readonly Planet[] = [
  */
 const EXPLORATION_CHARGE_TRACK_C5: readonly number[] = [0, 2, 2, 3];
 
-const LF_FACTIONS: readonly Faction[] = [
-  Faction.Tinkeroids,
-  Faction.Darkanians,
-  Faction.Moweyds,
-  Faction.SpaceGiants,
-];
+const LF_FACTIONS: readonly Faction[] = [Faction.Tinkeroids, Faction.Darkanians, Faction.Moweyds, Faction.SpaceGiants];
 
 function rewardCount(cost: string, type: Resource): number {
   if (!cost || cost === "~") {
@@ -175,7 +170,9 @@ function checkBuildOffer(
     const expectedVpBonus = isHomeProtoplanetFaction ? 0 : -6;
     if (rewardCount(b.cost, Resource.VictoryPoint) !== expectedVpBonus) {
       messages.push(
-        `${label}: §E1 requires a ${-expectedVpBonus} VP bonus on this Protoplanet mine, cost "${b.cost}" does not grant it`
+        `${label}: §E1 requires a ${-expectedVpBonus} VP bonus on this Protoplanet mine, cost "${
+          b.cost
+        }" does not grant it`
       );
     }
   }
@@ -193,7 +190,9 @@ function checkBuildOffer(
   // §B2/§B4/§B5 terraform-step rules for the 4 LF factions.
   const steps = expectedSteps(faction, target, engine.player(player)?.data.lostFleetCost3Planets);
   if (steps !== null && TERRAIN_COLORS.includes(target) && (b.steps ?? 0) !== steps) {
-    messages.push(`${label}: ledger requires ${steps} terraforming step(s) for this faction/color, offer says ${b.steps}`);
+    messages.push(
+      `${label}: ledger requires ${steps} terraforming step(s) for this faction/color, offer says ${b.steps}`
+    );
   }
 
   // §B2/§B4 vs §B1/§B5 Gaia Q.I.C. surcharge (LF factions only; Gleens pays ore, base trusted).
@@ -361,14 +360,13 @@ export const lfMapComposition: Oracle = {
       .map((hex) => hex.data.spaceship)
       .filter((s): s is Spaceship => s !== undefined)
       .sort();
-    const expected = (ctx.players === 2
-      ? [Spaceship.Twilight, Spaceship.TFMars, Spaceship.Eclipse]
-      : [Spaceship.Twilight, Spaceship.Rebellion, Spaceship.TFMars, Spaceship.Eclipse]
+    const expected = (
+      ctx.players === 2
+        ? [Spaceship.Twilight, Spaceship.TFMars, Spaceship.Eclipse]
+        : [Spaceship.Twilight, Spaceship.Rebellion, Spaceship.TFMars, Spaceship.Eclipse]
     ).sort();
     if (ships.join(",") !== expected.join(",")) {
-      return [
-        `§H3 ship tiles in play should be exactly [${expected}] for ${ctx.players}p, found [${ships}]`,
-      ];
+      return [`§H3 ship tiles in play should be exactly [${expected}] for ${ctx.players}p, found [${ships}]`];
     }
     return [];
   },

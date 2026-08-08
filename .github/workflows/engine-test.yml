@@ -4,27 +4,40 @@ on:
     paths:
       - ".github/workflows/engine-test.yml"
       - "engine/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
   pull_request:
     paths:
       - ".github/workflows/engine-test.yml"
       - "engine/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
 
-defaults:
-  run:
-    working-directory: engine
+concurrency:
+  group: engine-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   lint_and_test:
     runs-on: ubuntu-latest
+    env:
+      # The suite bundles the whole engine plus the AI/fuzz specs; the default
+      # heap (~2 GB on a runner) is not enough.
+      NODE_OPTIONS: --max-old-space-size=8192
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
         with:
-          node-version: "14"
-      - uses: pnpm/action-setup@v1.2.1
+          version: 9.12.0
+          run_install: false
+      - uses: actions/setup-node@v4
         with:
-          version: 5.17.1
-      - run: pnpm install
-      - run: yarn build
-      - run: yarn lint
-      - run: yarn test
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @gaia-project/engine build
+      - run: pnpm --filter @gaia-project/engine lint
+      - run: pnpm --filter @gaia-project/engine test

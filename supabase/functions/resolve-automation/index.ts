@@ -49,20 +49,13 @@ function makeBackend(supabase: ReturnType<typeof createClient>): Backend {
       return (data ?? []) as PremoveRow[];
     },
     async deletePremove(gameId: string, seat: number, seq: number): Promise<void> {
-      const { error } = await supabase
-        .from("premoves")
-        .delete()
-        .eq("game_id", gameId)
-        .eq("seat", seat)
-        .eq("seq", seq);
+      const { error } = await supabase.from("premoves").delete().eq("game_id", gameId).eq("seat", seat).eq("seq", seq);
       if (error) {
         throw new Error(error.message);
       }
     },
     async insertPremoveFailure(gameId: string, seat: number, move: string, reason: string): Promise<void> {
-      const { error } = await supabase
-        .from("premove_failures")
-        .insert({ game_id: gameId, seat, move, reason });
+      const { error } = await supabase.from("premove_failures").insert({ game_id: gameId, seat, move, reason });
       if (error) {
         throw new Error(error.message);
       }

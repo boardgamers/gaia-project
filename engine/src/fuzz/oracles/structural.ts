@@ -37,9 +37,7 @@ export const structuralAfterLine: Oracle = {
       } else {
         const commands = engine.generateAvailableCommandsIfNeeded();
         if (!commands.some((c) => c.name !== Command.DeadEnd)) {
-          messages.push(
-            `non-EndGame state offers no available command other than DeadEnd (phase ${engine.phase})`
-          );
+          messages.push(`non-EndGame state offers no available command other than DeadEnd (phase ${engine.phase})`);
         }
       }
     }
@@ -90,11 +88,7 @@ export function structuralOracles(): Oracle[] {
   return [structuralAfterLine, structuralDeterminism];
 }
 
-export function runOracles(
-  oracles: Oracle[],
-  ctx: OracleContext,
-  stage: "afterLine" | "atEnd"
-): OracleFailure[] {
+export function runOracles(oracles: Oracle[], ctx: OracleContext, stage: "afterLine" | "atEnd"): OracleFailure[] {
   const failures: OracleFailure[] = [];
   for (const oracle of oracles) {
     const check = oracle[stage];

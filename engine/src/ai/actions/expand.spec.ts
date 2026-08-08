@@ -34,11 +34,7 @@ function actorPrefix(engine: Engine): string {
   return engine.player(engine.playerToMove)?.faction ?? `p${engine.playerToMove + 1}`;
 }
 
-function applyCandidate(
-  source: Engine,
-  candidate: AtomicDecisionCandidate,
-  priorMoveFragments: string[] = []
-): Engine {
+function applyCandidate(source: Engine, candidate: AtomicDecisionCandidate, priorMoveFragments: string[] = []): Engine {
   const clone = hydrate(source);
   clone.move(`${actorPrefix(clone)} ${priorMoveFragments.concat(candidate.moveFragment).join(". ")}`);
   return clone;
@@ -137,8 +133,9 @@ function exerciseDecision(
   for (const command of decision.availableCommands) {
     seen.add(command.name);
     expect(
-      expansion.candidates.filter((candidate) => candidate.command === command.name && candidate.actor === command.player)
-        .length,
+      expansion.candidates.filter(
+        (candidate) => candidate.command === command.name && candidate.actor === command.player
+      ).length,
       `candidate count for ${command.name}`
     ).to.equal(expectedCount(command));
   }
@@ -149,11 +146,7 @@ function exerciseDecision(
 
   for (const candidate of expansion.candidates) {
     const expectedSubphase =
-      options.subphase !== undefined
-        ? options.subphase
-        : decision.phase === Phase.RoundMove
-        ? decision.subPhase
-        : null;
+      options.subphase !== undefined ? options.subphase : decision.phase === Phase.RoundMove ? decision.subPhase : null;
     expect(candidate.key).to.match(/^atomic-v1:[0-9a-f]{64}$/);
     expect(candidate.actor).to.equal(decision.playerToMove);
     expect(candidate.phase).to.equal(decision.phase);
@@ -245,7 +238,9 @@ describe("Phase 1.2 typed atomic decision expansion", () => {
     const slowMotion = Engine.slowMotion(source.moveHistory, challengeEngineOptions(), source.version);
     const hydration = hydrate(source);
 
-    expect(expandAtomicDecisions(constructorReplay).candidates.map((candidate) => candidate.key)).to.deep.equal(expected);
+    expect(expandAtomicDecisions(constructorReplay).candidates.map((candidate) => candidate.key)).to.deep.equal(
+      expected
+    );
     expect(expandAtomicDecisions(slowMotion).candidates.map((candidate) => candidate.key)).to.deep.equal(expected);
     expect(expandAtomicDecisions(hydration).candidates.map((candidate) => candidate.key)).to.deep.equal(expected);
   });
@@ -418,7 +413,8 @@ describe("Phase 1.2 typed atomic decision expansion", () => {
       priorMoveFragments: [advancedLab.moveFragment],
       subphase: SubPhase.ChooseTechTile,
     }).find(
-      (candidate) => candidate.command === Command.ChooseTechTile && String(candidate.target.position).startsWith("adv-")
+      (candidate) =>
+        candidate.command === Command.ChooseTechTile && String(candidate.target.position).startsWith("adv-")
     );
     exerciseDecision(advanced, seen, {
       priorMoveFragments: [advancedLab.moveFragment, advancedTile.moveFragment],
@@ -430,13 +426,10 @@ describe("Phase 1.2 typed atomic decision expansion", () => {
     lostPlanetPlayer.data.research[ResearchField.Navigation] = 4;
     lostPlanetPlayer.data.tiles.federations.push({ tile: Federation.Fed2, green: true });
     lostPlanetPlayer.data.knowledge = 20;
-    lostPlanet.availableCommands = possibleResearchAreas(
-      lostPlanet,
-      Player.Player1,
-      UPGRADE_RESEARCH_COST
-    );
+    lostPlanet.availableCommands = possibleResearchAreas(lostPlanet, Player.Player1, UPGRADE_RESEARCH_COST);
     const navigation = exerciseDecision(lostPlanet, seen).find(
-      (candidate) => candidate.command === Command.UpgradeResearch && candidate.target.field === ResearchField.Navigation
+      (candidate) =>
+        candidate.command === Command.UpgradeResearch && candidate.target.field === ResearchField.Navigation
     );
     exerciseDecision(lostPlanet, seen, {
       priorMoveFragments: [navigation.moveFragment],
@@ -490,9 +483,7 @@ describe("Phase 1.2 typed atomic decision expansion", () => {
 
   it("projects identifiers, resources, range/terraform/satellite metadata, warnings, and move fragments", () => {
     const round = lockedRoundOneEngine();
-    const explore = expandAtomicDecisions(round).candidates.find(
-      (candidate) => candidate.command === Command.Explore
-    );
+    const explore = expandAtomicDecisions(round).candidates.find((candidate) => candidate.command === Command.Explore);
     expect(explore.target.ship).to.be.oneOf([Spaceship.Twilight, Spaceship.TFMars, Spaceship.Eclipse]);
     expect(explore.target.range.distance).to.be.a("number");
     expect(explore.resources.cost.find((amount) => amount.resource === Resource.VictoryPoint)?.amount).to.equal(5);
@@ -508,9 +499,9 @@ describe("Phase 1.2 typed atomic decision expansion", () => {
     );
     expect(federation.target.federation).to.be.a("string");
     expect(federation.target.satellites.newSatelliteHexes.length).to.be.greaterThan(0);
-    expect(
-      federation.resources.cost.find((amount) => amount.resource === Resource.GainToken)?.amount
-    ).to.equal(federation.target.satellites.newSatelliteHexes.length);
+    expect(federation.resources.cost.find((amount) => amount.resource === Resource.GainToken)?.amount).to.equal(
+      federation.target.satellites.newSatelliteHexes.length
+    );
   });
 
   it("reports rather than silently merging documented semantic duplicates", () => {
@@ -519,7 +510,9 @@ describe("Phase 1.2 typed atomic decision expansion", () => {
     build.data.buildings.push(JSON.parse(JSON.stringify(build.data.buildings[0])));
     const exactExpansion = expandAtomicDecisions(exact);
     expect(exactExpansion.deduplications).to.deep.include({
-      key: exactExpansion.candidates.find((candidate) => candidate.moveFragment === `build m ${build.data.buildings[0].coordinates}`).key,
+      key: exactExpansion.candidates.find(
+        (candidate) => candidate.moveFragment === `build m ${build.data.buildings[0].coordinates}`
+      ).key,
       command: Command.Build,
       occurrences: 2,
       reason: "identical-semantic-option",

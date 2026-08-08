@@ -16,7 +16,9 @@ function newPlayer(faction = Faction.Terrans): Player {
 
 /** Colonizable hexes of a Lost Fleet Deep Space Sector tile, grouped by physical tile (3 hexes each). */
 function deepSpaceSectorGroups(map: SpaceMap): GaiaHex[][] {
-  const colonizableHexes = [...map.grid.values()].filter((hex) => hex.data.planet !== Planet.Empty && !hex.data.building);
+  const colonizableHexes = [...map.grid.values()].filter(
+    (hex) => hex.data.planet !== Planet.Empty && !hex.data.building
+  );
   const groups = new Map<string, GaiaHex[]>();
 
   for (const hex of colonizableHexes) {

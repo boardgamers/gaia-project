@@ -55,13 +55,13 @@ describe("Lost Fleet round scoring tiles (RULES_CLARIFICATIONS.md §G4)", () => 
     player.loadEvents(roundScoringEvents(ScoringTile.LfSector3, 1));
 
     const beforeVp = player.data.victoryPoints;
-    player.build(Building.Mine, sameSectorHexes![0], [], map);
+    player.build(Building.Mine, sameSectorHexes[0], [], map);
     expect(player.data.victoryPoints, "first mine in a new sector").to.equal(beforeVp + 3);
 
-    player.build(Building.Mine, sameSectorHexes![1], [], map);
+    player.build(Building.Mine, sameSectorHexes[1], [], map);
     expect(player.data.victoryPoints, "second mine in the SAME sector must not re-trigger").to.equal(beforeVp + 3);
 
-    player.build(Building.Mine, otherSectorHex!, [], map);
+    player.build(Building.Mine, otherSectorHex, [], map);
     expect(player.data.victoryPoints, "mine in a distinct sector triggers again").to.equal(beforeVp + 6);
   });
 
@@ -77,7 +77,7 @@ describe("Lost Fleet round scoring tiles (RULES_CLARIFICATIONS.md §G4)", () => 
     player.loadEvents(roundScoringEvents(ScoringTile.LfSector3, 1));
 
     const beforeVp = player.data.victoryPoints;
-    player.build(Building.Mine, interspaceHex!, [], map);
+    player.build(Building.Mine, interspaceHex, [], map);
 
     expect(player.data.victoryPoints).to.equal(beforeVp);
   });
@@ -106,7 +106,7 @@ describe("Lost Fleet round scoring tiles (RULES_CLARIFICATIONS.md §G4)", () => 
     player.build(Building.Mine, distinctTypeHexes[0], [], map);
     expect(player.data.victoryPoints, "first mine of a new planet type").to.equal(beforeVp + 3);
 
-    player.build(Building.Mine, sameTypeHex!, [], map);
+    player.build(Building.Mine, sameTypeHex, [], map);
     expect(player.data.victoryPoints, "second mine of the SAME planet type must not re-trigger").to.equal(beforeVp + 3);
 
     player.build(Building.Mine, distinctTypeHexes[1], [], map);

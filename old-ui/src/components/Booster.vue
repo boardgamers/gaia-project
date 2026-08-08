@@ -25,7 +25,7 @@ import { boosterEvents } from "@gaia-project/engine/src/tiles/boosters";
 @Component<Booster>({
   computed: {
     tileObject() {
-      return boosterEvents(this.booster).map(e => e.spec);
+      return boosterEvents(this.booster).map((e) => e.spec);
     },
 
     event1() {

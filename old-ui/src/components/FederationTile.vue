@@ -28,7 +28,7 @@ import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
 @Component<FederationTile>({
   computed: {
     income() {
-      const [first, ...others] = federationRewards(this.federation).map(r => r.toString());
+      const [first, ...others] = federationRewards(this.federation).map((r) => r.toString());
       return others.length > 0 ? [first, others.join(", ")] : first.split("-");
     },
 

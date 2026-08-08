@@ -1,6 +1,17 @@
 import { expect } from "chai";
 import Engine from "../engine";
-import { Booster, Building, Command, Expansion, Faction, Operator, Phase, Planet, Player as PlayerEnum, Resource } from "../enums";
+import {
+  Booster,
+  Building,
+  Command,
+  Expansion,
+  Faction,
+  Operator,
+  Phase,
+  Planet,
+  Player as PlayerEnum,
+  Resource,
+} from "../enums";
 import { GaiaHex } from "../gaia-hex";
 import { Power } from "../player-data";
 import { moveBuild } from "../move/buildings";
@@ -240,8 +251,11 @@ describe("boosters", () => {
     const engine = new Engine(["init 3 randomSeed"], { lostFleet: true });
 
     expect(Object.keys(engine.tiles.boosters)).to.have.length(6);
-    expect(Object.keys(engine.tiles.boosters).every((booster) => Booster.values(engine.expansions).includes(booster as Booster))).to
-      .be.true;
+    expect(
+      Object.keys(engine.tiles.boosters).every((booster) =>
+        Booster.values(engine.expansions).includes(booster as Booster)
+      )
+    ).to.be.true;
   });
 
   it("should score 3 VP per Gaiaformer on board or deployed, but not asteroid-consumed, from the Lost Fleet former booster", () => {
@@ -312,9 +326,9 @@ describe("boosters", () => {
     expect(sectorWithTwoPlanets).to.not.equal(undefined);
     expect(otherSector).to.not.equal(undefined);
 
-    occupyHex(engine, PlayerEnum.Player1, sectorWithTwoPlanets![0]);
-    occupyHex(engine, PlayerEnum.Player1, sectorWithTwoPlanets![1]);
-    occupyHex(engine, PlayerEnum.Player1, otherSector![0]);
+    occupyHex(engine, PlayerEnum.Player1, sectorWithTwoPlanets[0]);
+    occupyHex(engine, PlayerEnum.Player1, sectorWithTwoPlanets[1]);
+    occupyHex(engine, PlayerEnum.Player1, otherSector[0]);
 
     const beforeVp = player.data.victoryPoints;
     player.receivePassIncome();
@@ -340,13 +354,19 @@ describe("boosters", () => {
 
     const sectors = [...deepSpaceBySector.values()];
     const regularSector = sectors.find((sector) => sector.some((hex) => hex.hasPlanet()));
-    const lostPlanetSector = sectors.find((sector) => sector !== regularSector && sector.some((hex) => hex.data.planet === Planet.Empty));
+    const lostPlanetSector = sectors.find(
+      (sector) => sector !== regularSector && sector.some((hex) => hex.data.planet === Planet.Empty)
+    );
     expect(regularSector).to.not.equal(undefined);
     expect(lostPlanetSector).to.not.equal(undefined);
 
-    occupyHex(engine, PlayerEnum.Player1, regularSector!.find((hex) => hex.hasPlanet())!);
+    occupyHex(
+      engine,
+      PlayerEnum.Player1,
+      regularSector.find((hex) => hex.hasPlanet())
+    );
 
-    const lostPlanetHex = lostPlanetSector!.find((hex) => hex.data.planet === Planet.Empty)!;
+    const lostPlanetHex = lostPlanetSector.find((hex) => hex.data.planet === Planet.Empty);
     lostPlanetHex.data.planet = Planet.Lost;
     occupyHex(engine, PlayerEnum.Player1, lostPlanetHex);
 
@@ -374,10 +394,10 @@ describe("boosters", () => {
 
     const target = cheapestTransdimHex(engine, PlayerEnum.Player1);
     expect(target, "need a Transdim planet on the board").to.not.equal(undefined);
-    const chosenTarget = target!;
+    const chosenTarget = target;
 
     engine.clearAvailableCommands();
-    const command = engine.findAvailableCommand(PlayerEnum.Player1, Command.Special)!;
+    const command = engine.findAvailableCommand(PlayerEnum.Player1, Command.Special);
     expect(command).to.not.equal(undefined);
     expect(command.data.specialacts.some((action) => action.income === Resource.InstantGaiaforming)).to.be.true;
 
@@ -397,7 +417,7 @@ describe("boosters", () => {
     expect(player.data.getResources(Resource.GaiaFormer)).to.equal(beforeGaiaformers - 1);
 
     engine.clearAvailableCommands();
-    const buildCommand = engine.findAvailableCommand(PlayerEnum.Player1, Command.Build)!;
+    const buildCommand = engine.findAvailableCommand(PlayerEnum.Player1, Command.Build);
     const buildMine = buildCommand.data.buildings.find(
       (b) => b.coordinates === chosenTarget.hex.toString() && b.building === Building.Mine && b.upgrade
     );

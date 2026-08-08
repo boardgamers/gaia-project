@@ -20,10 +20,7 @@ describe("Phase 0 AI challenge manifest", () => {
     );
     expect(engine.players.every((player) => player.data.occupied.length === 0)).to.equal(true);
     expect(engine.players.every((player) => player.data.tiles.booster === null)).to.equal(true);
-    expect(LOST_FLEET_CHALLENGE.strategicSetupDecisions).to.deep.equal([
-      "starting-buildings",
-      "round-boosters",
-    ]);
+    expect(LOST_FLEET_CHALLENGE.strategicSetupDecisions).to.deep.equal(["starting-buildings", "round-boosters"]);
   });
 
   it("matches the checked-in manifest generated from the real engine", () => {
@@ -43,4 +40,3 @@ describe("Phase 0 AI challenge manifest", () => {
     expect(first.setup.finalScoring.objectives.deepSpace).to.have.property("selected");
   });
 });
-

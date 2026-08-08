@@ -151,7 +151,7 @@ export default class FactionWheel extends Vue {
   }
 
   togglePlanetHighlight(planet: Planet) {
-    this.$store.commit("toggleMapMode", { type: "planetType", planet  } as MapMode);
+    this.$store.commit("toggleMapMode", { type: "planetType", planet } as MapMode);
   }
 }
 </script>

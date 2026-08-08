@@ -1,9 +1,6 @@
 import { writeFileSync } from "fs";
 import { resolve } from "path";
-import {
-  generateChallengeManifest,
-  stableManifestJson,
-} from "../../src/ai/challenge-manifest";
+import { generateChallengeManifest, stableManifestJson } from "../../src/ai/challenge-manifest";
 
 function outputPath(args: string[]): string | undefined {
   const index = args.indexOf("--output");
@@ -18,4 +15,3 @@ if (target) {
 } else {
   process.stdout.write(json);
 }
-

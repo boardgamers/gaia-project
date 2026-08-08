@@ -1,8 +1,5 @@
 /* eslint-disable @typescript-eslint/camelcase */
-import {
-  UltimateTicTacToeBackend,
-  UltimateTicTacToeRow,
-} from "../logic/ultimate-tic-tac-toe-backend";
+import { UltimateTicTacToeBackend, UltimateTicTacToeRow } from "../logic/ultimate-tic-tac-toe-backend";
 import { SupabaseClient } from "./supabase-client";
 
 function throwIfError(error: any): void {

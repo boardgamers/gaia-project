@@ -46,7 +46,9 @@ function changedFilesBetween(baseRef, headRef) {
   if (!baseRef || /^0+$/.test(baseRef)) {
     return git(["diff", "--name-only", headRef]).split(/\r?\n/).filter(Boolean);
   }
-  return git(["diff", "--name-only", `${baseRef}..${headRef}`]).split(/\r?\n/).filter(Boolean);
+  return git(["diff", "--name-only", `${baseRef}..${headRef}`])
+    .split(/\r?\n/)
+    .filter(Boolean);
 }
 
 function assertReleaseMetadata() {
@@ -76,7 +78,12 @@ function assertReleaseMetadata() {
       `Latest changelog entry version (${latestEntry.version}) does not match current release version (${releaseData.version}).`
     );
   }
-  if (!latestEntry.kind || !latestEntry.title || !Array.isArray(latestEntry.changes) || latestEntry.changes.length === 0) {
+  if (
+    !latestEntry.kind ||
+    !latestEntry.title ||
+    !Array.isArray(latestEntry.changes) ||
+    latestEntry.changes.length === 0
+  ) {
     throw new Error("Latest changelog entry must include a title and at least one change line.");
   }
 }

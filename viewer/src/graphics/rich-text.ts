@@ -1,4 +1,13 @@
-import { ArtifactToken, BoardAction, Booster, Building, Faction, Planet, Reward, SpaceshipTechTile } from "@gaia-project/engine";
+import {
+  ArtifactToken,
+  BoardAction,
+  Booster,
+  Building,
+  Faction,
+  Planet,
+  Reward,
+  SpaceshipTechTile,
+} from "@gaia-project/engine";
 import { AnyTechTile, AnyTechTilePos, Spaceship } from "@gaia-project/engine/src/enums";
 import { SpaceshipActionType } from "@gaia-project/engine/src/spaceships";
 import { SpecialActionIncome } from "../data";

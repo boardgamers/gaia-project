@@ -26,7 +26,10 @@ export function possibleFederations(engine: Engine, player: Player): AvailableCo
     .filter((key) => engine.tiles.federations[key] > 0)
     .map((f) => f as Federation);
   const p = engine.player(player);
-  const claimableFederations = claimableSpaceshipFederations(p.data.explorationShips, engine.tiles.spaceshipFederations);
+  const claimableFederations = claimableSpaceshipFederations(
+    p.data.explorationShips,
+    engine.tiles.spaceshipFederations
+  );
   const possibleTiles: AvailableFederationChoice[] = [
     ...possiblePoolTiles,
     ...claimableFederations.map((entry) => entry.federation),

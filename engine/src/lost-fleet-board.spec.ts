@@ -20,9 +20,7 @@ describe("Lost Fleet board assembly", () => {
       for (const nbPlayers of [2, 3, 4]) {
         const a = generateLostFleetBoard(nbPlayers, "same-seed");
         const b = generateLostFleetBoard(nbPlayers, "same-seed");
-        expect([...a.grid.values()].map((h) => h.toJSON())).to.deep.equal(
-          [...b.grid.values()].map((h) => h.toJSON())
-        );
+        expect([...a.grid.values()].map((h) => h.toJSON())).to.deep.equal([...b.grid.values()].map((h) => h.toJSON()));
       }
     });
 
@@ -80,11 +78,17 @@ describe("Lost Fleet board assembly", () => {
     it("should classify hexes correctly by sector id convention", () => {
       for (const nbPlayers of [2, 3, 4]) {
         const { grid } = generateLostFleetBoard(nbPlayers, `classify-${nbPlayers}`);
-        const counts = { [LostFleetSectorType.Space]: 0, [LostFleetSectorType.Interspace]: 0, [LostFleetSectorType.DeepSpace]: 0 };
+        const counts = {
+          [LostFleetSectorType.Space]: 0,
+          [LostFleetSectorType.Interspace]: 0,
+          [LostFleetSectorType.DeepSpace]: 0,
+        };
         for (const hex of grid.values()) {
           counts[classifySectorId(hex.data.sector)]++;
         }
-        expect(counts[LostFleetSectorType.Space], `space hex count at ${nbPlayers}p`).to.equal(SECTOR_COUNT[nbPlayers] * 19);
+        expect(counts[LostFleetSectorType.Space], `space hex count at ${nbPlayers}p`).to.equal(
+          SECTOR_COUNT[nbPlayers] * 19
+        );
         expect(counts[LostFleetSectorType.Interspace], `interspace hex count at ${nbPlayers}p`).to.equal(
           interspaceSet(nbPlayers).total
         );
@@ -138,7 +142,10 @@ describe("Lost Fleet board assembly", () => {
           // where the placement says, and tagged with this same sector name.
           for (const hex of grid.values()) {
             if (hex.data.sector === placement.sector) {
-              expect(dist(hex, placement.center), `${placement.sector} hex within radius 2 of its center`).to.be.at.most(2);
+              expect(
+                dist(hex, placement.center),
+                `${placement.sector} hex within radius 2 of its center`
+              ).to.be.at.most(2);
             }
           }
           expect(grid.get(placement.center)?.data.sector, `center hex sector at ${nbPlayers}p`).to.equal(
@@ -169,7 +176,11 @@ describe("Lost Fleet board assembly", () => {
         for (const seed of ["valid-1", "valid-2", "valid-3", "valid-4", "valid-5"]) {
           const { grid } = generateLostFleetBoard(nbPlayers, `${seed}-${nbPlayers}`);
           for (const hex of grid.values()) {
-            if (hex.data.planet === Planet.Transdim || hex.data.planet === Planet.Empty || hex.data.planet === Planet.Gaia) {
+            if (
+              hex.data.planet === Planet.Transdim ||
+              hex.data.planet === Planet.Empty ||
+              hex.data.planet === Planet.Gaia
+            ) {
               continue;
             }
             for (const neighbour of grid.neighbours(hex)) {

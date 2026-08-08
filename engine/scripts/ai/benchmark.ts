@@ -1,9 +1,6 @@
 import { writeFileSync } from "fs";
 import { resolve } from "path";
-import {
-  DEFAULT_BENCHMARK_CONFIG,
-  runPhase0Benchmark,
-} from "../../src/ai/benchmark";
+import { DEFAULT_BENCHMARK_CONFIG, runPhase0Benchmark } from "../../src/ai/benchmark";
 
 function numericArgument(args: string[], flag: string, fallback: number): number {
   const index = args.indexOf(flag);
@@ -44,4 +41,3 @@ if (target) {
 } else {
   process.stdout.write(json);
 }
-

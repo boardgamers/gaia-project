@@ -1,9 +1,6 @@
 {
   "challenge": {
-    "fixedTurnOrder": [
-      0,
-      1
-    ],
+    "fixedTurnOrder": [0, 1],
     "id": "lost-fleet-xenos-hadsch-hallas-lf-mrj5exuu-c680",
     "options": {
       "advancedRules": false,
@@ -27,11 +24,7 @@
       "manifest": "gaia-ai-challenge-manifest/v1",
       "model": "gaia-ai-model/v1"
     },
-    "scriptedPrefix": [
-      "init 2 lf-mrj5exuu-c680",
-      "p1 faction xenos",
-      "p2 faction hadsch-hallas"
-    ],
+    "scriptedPrefix": ["init 2 lf-mrj5exuu-c680", "p1 faction xenos", "p2 faction hadsch-hallas"],
     "scriptedPrefixScope": "initialization-and-faction-choice-only",
     "seats": [
       {
@@ -48,10 +41,7 @@
       }
     ],
     "seed": "lf-mrj5exuu-c680",
-    "strategicSetupDecisions": [
-      "starting-buildings",
-      "round-boosters"
-    ],
+    "strategicSetupDecisions": ["starting-buildings", "round-boosters"],
     "version": "1.0.0"
   },
   "engine": {
@@ -69,25 +59,14 @@
         "player": 1
       }
     ],
-    "setupBuildingTurnOrder": [
-      1,
-      1,
-      0,
-      0
-    ],
+    "setupBuildingTurnOrder": [1, 1, 0, 0],
     "stateSchemaVersion": "gaia-engine-state/v1",
     "version": "4.8.51"
   },
   "map": {
     "hexes": [
       {
-        "adjacent": [
-          "1A1",
-          "1A11",
-          "1B0",
-          "DS13_0",
-          "DS13_2"
-        ],
+        "adjacent": ["1A1", "1A11", "1B0", "DS13_0", "DS13_2"],
         "hasPlanet": true,
         "id": "1A0",
         "planet": "o",
@@ -100,14 +79,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "1A0",
-          "1A2",
-          "1B0",
-          "1B1",
-          "6A8",
-          "DS13_0"
-        ],
+        "adjacent": ["1A0", "1A2", "1B0", "1B1", "6A8", "DS13_0"],
         "hasPlanet": false,
         "id": "1A1",
         "planet": "e",
@@ -120,11 +92,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "1A11",
-          "1A9",
-          "1B5"
-        ],
+        "adjacent": ["1A11", "1A9", "1B5"],
         "hasPlanet": false,
         "id": "1A10",
         "planet": "e",
@@ -137,12 +105,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "1A0",
-          "1A10",
-          "1B0",
-          "1B5"
-        ],
+        "adjacent": ["1A0", "1A10", "1B0", "1B5"],
         "hasPlanet": true,
         "id": "1A11",
         "planet": "v",
@@ -155,14 +118,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "1A1",
-          "1A3",
-          "1B1",
-          "6A7",
-          "6A8",
-          "IS5"
-        ],
+        "adjacent": ["1A1", "1A3", "1B1", "6A7", "6A8", "IS5"],
         "hasPlanet": false,
         "id": "1A2",
         "planet": "e",
@@ -175,14 +131,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "1A2",
-          "1A4",
-          "1B1",
-          "1B2",
-          "5A10",
-          "IS5"
-        ],
+        "adjacent": ["1A2", "1A4", "1B1", "1B2", "5A10", "IS5"],
         "hasPlanet": true,
         "id": "1A3",
         "planet": "d",
@@ -195,14 +144,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "1A3",
-          "1A5",
-          "1B2",
-          "5A10",
-          "5A9",
-          "IS4"
-        ],
+        "adjacent": ["1A3", "1A5", "1B2", "5A10", "5A9", "IS4"],
         "hasPlanet": false,
         "id": "1A4",
         "planet": "e",
@@ -215,14 +157,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "1A4",
-          "1A6",
-          "1B2",
-          "1B3",
-          "2A0",
-          "IS4"
-        ],
+        "adjacent": ["1A4", "1A6", "1B2", "1B3", "2A0", "IS4"],
         "hasPlanet": false,
         "id": "1A5",
         "planet": "e",
@@ -235,14 +170,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "1A5",
-          "1A7",
-          "1B3",
-          "2A0",
-          "2A11",
-          "DS11_0"
-        ],
+        "adjacent": ["1A5", "1A7", "1B3", "2A0", "2A11", "DS11_0"],
         "hasPlanet": false,
         "id": "1A6",
         "planet": "e",
@@ -255,14 +183,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "1A6",
-          "1A8",
-          "1B3",
-          "1B4",
-          "DS11_0",
-          "DS11_2"
-        ],
+        "adjacent": ["1A6", "1A8", "1B3", "1B4", "DS11_0", "DS11_2"],
         "hasPlanet": false,
         "id": "1A7",
         "planet": "e",
@@ -275,12 +196,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "1A7",
-          "1A9",
-          "1B4",
-          "DS11_2"
-        ],
+        "adjacent": ["1A7", "1A9", "1B4", "DS11_2"],
         "hasPlanet": false,
         "id": "1A8",
         "planet": "e",
@@ -293,12 +209,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "1A10",
-          "1A8",
-          "1B4",
-          "1B5"
-        ],
+        "adjacent": ["1A10", "1A8", "1B4", "1B5"],
         "hasPlanet": true,
         "id": "1A9",
         "planet": "m",
@@ -311,14 +222,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "1A0",
-          "1A1",
-          "1A11",
-          "1B1",
-          "1B5",
-          "1C"
-        ],
+        "adjacent": ["1A0", "1A1", "1A11", "1B1", "1B5", "1C"],
         "hasPlanet": false,
         "id": "1B0",
         "planet": "e",
@@ -331,14 +235,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "1A1",
-          "1A2",
-          "1A3",
-          "1B0",
-          "1B2",
-          "1C"
-        ],
+        "adjacent": ["1A1", "1A2", "1A3", "1B0", "1B2", "1C"],
         "hasPlanet": false,
         "id": "1B1",
         "planet": "e",
@@ -351,14 +248,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "1A3",
-          "1A4",
-          "1A5",
-          "1B1",
-          "1B3",
-          "1C"
-        ],
+        "adjacent": ["1A3", "1A4", "1A5", "1B1", "1B3", "1C"],
         "hasPlanet": true,
         "id": "1B2",
         "planet": "s",
@@ -371,14 +261,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "1A5",
-          "1A6",
-          "1A7",
-          "1B2",
-          "1B4",
-          "1C"
-        ],
+        "adjacent": ["1A5", "1A6", "1A7", "1B2", "1B4", "1C"],
         "hasPlanet": false,
         "id": "1B3",
         "planet": "e",
@@ -391,14 +274,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "1A7",
-          "1A8",
-          "1A9",
-          "1B3",
-          "1B5",
-          "1C"
-        ],
+        "adjacent": ["1A7", "1A8", "1A9", "1B3", "1B5", "1C"],
         "hasPlanet": true,
         "id": "1B4",
         "planet": "r",
@@ -411,14 +287,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "1A10",
-          "1A11",
-          "1A9",
-          "1B0",
-          "1B4",
-          "1C"
-        ],
+        "adjacent": ["1A10", "1A11", "1A9", "1B0", "1B4", "1C"],
         "hasPlanet": false,
         "id": "1B5",
         "planet": "e",
@@ -431,14 +300,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "1B0",
-          "1B1",
-          "1B2",
-          "1B3",
-          "1B4",
-          "1B5"
-        ],
+        "adjacent": ["1B0", "1B1", "1B2", "1B3", "1B4", "1B5"],
         "hasPlanet": false,
         "id": "1C",
         "planet": "e",
@@ -451,14 +313,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "1A5",
-          "1A6",
-          "2A1",
-          "2A11",
-          "2B0",
-          "IS4"
-        ],
+        "adjacent": ["1A5", "1A6", "2A1", "2A11", "2B0", "IS4"],
         "hasPlanet": false,
         "id": "2A0",
         "planet": "e",
@@ -471,14 +326,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "2A0",
-          "2A2",
-          "2B0",
-          "2B1",
-          "5A8",
-          "IS4"
-        ],
+        "adjacent": ["2A0", "2A2", "2B0", "2B1", "5A8", "IS4"],
         "hasPlanet": true,
         "id": "2A1",
         "planet": "m",
@@ -491,13 +339,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "2A11",
-          "2A9",
-          "2B5",
-          "DS11_0",
-          "DS11_1"
-        ],
+        "adjacent": ["2A11", "2A9", "2B5", "DS11_0", "DS11_1"],
         "hasPlanet": false,
         "id": "2A10",
         "planet": "e",
@@ -510,14 +352,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "1A6",
-          "2A0",
-          "2A10",
-          "2B0",
-          "2B5",
-          "DS11_0"
-        ],
+        "adjacent": ["1A6", "2A0", "2A10", "2B0", "2B5", "DS11_0"],
         "hasPlanet": true,
         "id": "2A11",
         "planet": "d",
@@ -530,14 +365,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "2A1",
-          "2A3",
-          "2B1",
-          "5A7",
-          "5A8",
-          "IS3"
-        ],
+        "adjacent": ["2A1", "2A3", "2B1", "5A7", "5A8", "IS3"],
         "hasPlanet": false,
         "id": "2A2",
         "planet": "e",
@@ -550,14 +378,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "2A2",
-          "2A4",
-          "2B1",
-          "2B2",
-          "3A10",
-          "IS3"
-        ],
+        "adjacent": ["2A2", "2A4", "2B1", "2B2", "3A10", "IS3"],
         "hasPlanet": true,
         "id": "2A3",
         "planet": "o",
@@ -570,14 +391,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "2A3",
-          "2A5",
-          "2B2",
-          "3A10",
-          "3A9",
-          "DS15_0"
-        ],
+        "adjacent": ["2A3", "2A5", "2B2", "3A10", "3A9", "DS15_0"],
         "hasPlanet": false,
         "id": "2A4",
         "planet": "e",
@@ -590,14 +404,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "2A4",
-          "2A6",
-          "2B2",
-          "2B3",
-          "DS15_0",
-          "DS15_2"
-        ],
+        "adjacent": ["2A4", "2A6", "2B2", "2B3", "DS15_0", "DS15_2"],
         "hasPlanet": false,
         "id": "2A5",
         "planet": "e",
@@ -610,12 +417,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "2A5",
-          "2A7",
-          "2B3",
-          "DS15_2"
-        ],
+        "adjacent": ["2A5", "2A7", "2B3", "DS15_2"],
         "hasPlanet": false,
         "id": "2A6",
         "planet": "e",
@@ -628,12 +430,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "2A6",
-          "2A8",
-          "2B3",
-          "2B4"
-        ],
+        "adjacent": ["2A6", "2A8", "2B3", "2B4"],
         "hasPlanet": true,
         "id": "2A7",
         "planet": "v",
@@ -646,11 +443,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "2A7",
-          "2A9",
-          "2B4"
-        ],
+        "adjacent": ["2A7", "2A9", "2B4"],
         "hasPlanet": true,
         "id": "2A8",
         "planet": "t",
@@ -663,12 +456,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "2A10",
-          "2A8",
-          "2B4",
-          "2B5"
-        ],
+        "adjacent": ["2A10", "2A8", "2B4", "2B5"],
         "hasPlanet": false,
         "id": "2A9",
         "planet": "e",
@@ -681,14 +469,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "2A0",
-          "2A1",
-          "2A11",
-          "2B1",
-          "2B5",
-          "2C"
-        ],
+        "adjacent": ["2A0", "2A1", "2A11", "2B1", "2B5", "2C"],
         "hasPlanet": false,
         "id": "2B0",
         "planet": "e",
@@ -701,14 +482,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "2A1",
-          "2A2",
-          "2A3",
-          "2B0",
-          "2B2",
-          "2C"
-        ],
+        "adjacent": ["2A1", "2A2", "2A3", "2B0", "2B2", "2C"],
         "hasPlanet": false,
         "id": "2B1",
         "planet": "e",
@@ -721,14 +495,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "2A3",
-          "2A4",
-          "2A5",
-          "2B1",
-          "2B3",
-          "2C"
-        ],
+        "adjacent": ["2A3", "2A4", "2A5", "2B1", "2B3", "2C"],
         "hasPlanet": true,
         "id": "2B2",
         "planet": "s",
@@ -741,14 +508,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "2A5",
-          "2A6",
-          "2A7",
-          "2B2",
-          "2B4",
-          "2C"
-        ],
+        "adjacent": ["2A5", "2A6", "2A7", "2B2", "2B4", "2C"],
         "hasPlanet": false,
         "id": "2B3",
         "planet": "e",
@@ -761,14 +521,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "2A7",
-          "2A8",
-          "2A9",
-          "2B3",
-          "2B5",
-          "2C"
-        ],
+        "adjacent": ["2A7", "2A8", "2A9", "2B3", "2B5", "2C"],
         "hasPlanet": false,
         "id": "2B4",
         "planet": "e",
@@ -781,14 +534,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "2A10",
-          "2A11",
-          "2A9",
-          "2B0",
-          "2B4",
-          "2C"
-        ],
+        "adjacent": ["2A10", "2A11", "2A9", "2B0", "2B4", "2C"],
         "hasPlanet": true,
         "id": "2B5",
         "planet": "i",
@@ -801,14 +547,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "2B0",
-          "2B1",
-          "2B2",
-          "2B3",
-          "2B4",
-          "2B5"
-        ],
+        "adjacent": ["2B0", "2B1", "2B2", "2B3", "2B4", "2B5"],
         "hasPlanet": false,
         "id": "2C",
         "planet": "e",
@@ -821,14 +560,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "3A1",
-          "3A11",
-          "3B0",
-          "5A5",
-          "5A6",
-          "IS2"
-        ],
+        "adjacent": ["3A1", "3A11", "3B0", "5A5", "5A6", "IS2"],
         "hasPlanet": true,
         "id": "3A0",
         "planet": "d",
@@ -841,14 +573,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "3A0",
-          "3A2",
-          "3B0",
-          "3B1",
-          "7A8",
-          "IS2"
-        ],
+        "adjacent": ["3A0", "3A2", "3B0", "3B1", "7A8", "IS2"],
         "hasPlanet": true,
         "id": "3A1",
         "planet": "r",
@@ -861,14 +586,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "2A3",
-          "2A4",
-          "3A11",
-          "3A9",
-          "3B5",
-          "IS3"
-        ],
+        "adjacent": ["2A3", "2A4", "3A11", "3A9", "3B5", "IS3"],
         "hasPlanet": false,
         "id": "3A10",
         "planet": "e",
@@ -881,14 +599,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "3A0",
-          "3A10",
-          "3B0",
-          "3B5",
-          "5A6",
-          "IS3"
-        ],
+        "adjacent": ["3A0", "3A10", "3B0", "3B5", "5A6", "IS3"],
         "hasPlanet": false,
         "id": "3A11",
         "planet": "e",
@@ -901,14 +612,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "3A1",
-          "3A3",
-          "3B1",
-          "7A7",
-          "7A8",
-          "DS12_0"
-        ],
+        "adjacent": ["3A1", "3A3", "3B1", "7A7", "7A8", "DS12_0"],
         "hasPlanet": false,
         "id": "3A2",
         "planet": "e",
@@ -921,14 +625,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "3A2",
-          "3A4",
-          "3B1",
-          "3B2",
-          "DS12_0",
-          "DS12_2"
-        ],
+        "adjacent": ["3A2", "3A4", "3B1", "3B2", "DS12_0", "DS12_2"],
         "hasPlanet": false,
         "id": "3A3",
         "planet": "e",
@@ -941,12 +638,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "3A3",
-          "3A5",
-          "3B2",
-          "DS12_2"
-        ],
+        "adjacent": ["3A3", "3A5", "3B2", "DS12_2"],
         "hasPlanet": false,
         "id": "3A4",
         "planet": "e",
@@ -959,12 +651,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "3A4",
-          "3A6",
-          "3B2",
-          "3B3"
-        ],
+        "adjacent": ["3A4", "3A6", "3B2", "3B3"],
         "hasPlanet": false,
         "id": "3A5",
         "planet": "e",
@@ -977,11 +664,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "3A5",
-          "3A7",
-          "3B3"
-        ],
+        "adjacent": ["3A5", "3A7", "3B3"],
         "hasPlanet": true,
         "id": "3A6",
         "planet": "m",
@@ -994,12 +677,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "3A6",
-          "3A8",
-          "3B3",
-          "3B4"
-        ],
+        "adjacent": ["3A6", "3A8", "3B3", "3B4"],
         "hasPlanet": false,
         "id": "3A7",
         "planet": "e",
@@ -1012,13 +690,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "3A7",
-          "3A9",
-          "3B4",
-          "DS15_0",
-          "DS15_1"
-        ],
+        "adjacent": ["3A7", "3A9", "3B4", "DS15_0", "DS15_1"],
         "hasPlanet": false,
         "id": "3A8",
         "planet": "e",
@@ -1031,14 +703,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "2A4",
-          "3A10",
-          "3A8",
-          "3B4",
-          "3B5",
-          "DS15_0"
-        ],
+        "adjacent": ["2A4", "3A10", "3A8", "3B4", "3B5", "DS15_0"],
         "hasPlanet": true,
         "id": "3A9",
         "planet": "t",
@@ -1051,14 +716,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "3A0",
-          "3A1",
-          "3A11",
-          "3B1",
-          "3B5",
-          "3C"
-        ],
+        "adjacent": ["3A0", "3A1", "3A11", "3B1", "3B5", "3C"],
         "hasPlanet": false,
         "id": "3B0",
         "planet": "e",
@@ -1071,14 +729,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "3A1",
-          "3A2",
-          "3A3",
-          "3B0",
-          "3B2",
-          "3C"
-        ],
+        "adjacent": ["3A1", "3A2", "3A3", "3B0", "3B2", "3C"],
         "hasPlanet": false,
         "id": "3B1",
         "planet": "e",
@@ -1091,14 +742,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "3A3",
-          "3A4",
-          "3A5",
-          "3B1",
-          "3B3",
-          "3C"
-        ],
+        "adjacent": ["3A3", "3A4", "3A5", "3B1", "3B3", "3C"],
         "hasPlanet": true,
         "id": "3B2",
         "planet": "g",
@@ -1111,14 +755,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "3A5",
-          "3A6",
-          "3A7",
-          "3B2",
-          "3B4",
-          "3C"
-        ],
+        "adjacent": ["3A5", "3A6", "3A7", "3B2", "3B4", "3C"],
         "hasPlanet": false,
         "id": "3B3",
         "planet": "e",
@@ -1131,14 +768,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "3A7",
-          "3A8",
-          "3A9",
-          "3B3",
-          "3B5",
-          "3C"
-        ],
+        "adjacent": ["3A7", "3A8", "3A9", "3B3", "3B5", "3C"],
         "hasPlanet": false,
         "id": "3B4",
         "planet": "e",
@@ -1151,14 +781,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "3A10",
-          "3A11",
-          "3A9",
-          "3B0",
-          "3B4",
-          "3C"
-        ],
+        "adjacent": ["3A10", "3A11", "3A9", "3B0", "3B4", "3C"],
         "hasPlanet": true,
         "id": "3B5",
         "planet": "i",
@@ -1171,14 +794,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "3B0",
-          "3B1",
-          "3B2",
-          "3B3",
-          "3B4",
-          "3B5"
-        ],
+        "adjacent": ["3B0", "3B1", "3B2", "3B3", "3B4", "3B5"],
         "hasPlanet": false,
         "id": "3C",
         "planet": "e",
@@ -1191,12 +807,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "4A1",
-          "4A11",
-          "4B0",
-          "DS16_2"
-        ],
+        "adjacent": ["4A1", "4A11", "4B0", "DS16_2"],
         "hasPlanet": false,
         "id": "4A0",
         "planet": "e",
@@ -1209,12 +820,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "4A0",
-          "4A2",
-          "4B0",
-          "4B1"
-        ],
+        "adjacent": ["4A0", "4A2", "4B0", "4B1"],
         "hasPlanet": false,
         "id": "4A1",
         "planet": "e",
@@ -1227,14 +833,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "4A11",
-          "4A9",
-          "4B5",
-          "6A3",
-          "6A4",
-          "DS16_0"
-        ],
+        "adjacent": ["4A11", "4A9", "4B5", "6A3", "6A4", "DS16_0"],
         "hasPlanet": true,
         "id": "4A10",
         "planet": "t",
@@ -1247,14 +846,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "4A0",
-          "4A10",
-          "4B0",
-          "4B5",
-          "DS16_0",
-          "DS16_2"
-        ],
+        "adjacent": ["4A0", "4A10", "4B0", "4B5", "DS16_0", "DS16_2"],
         "hasPlanet": false,
         "id": "4A11",
         "planet": "e",
@@ -1267,11 +859,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "4A1",
-          "4A3",
-          "4B1"
-        ],
+        "adjacent": ["4A1", "4A3", "4B1"],
         "hasPlanet": true,
         "id": "4A2",
         "planet": "r",
@@ -1284,12 +872,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "4A2",
-          "4A4",
-          "4B1",
-          "4B2"
-        ],
+        "adjacent": ["4A2", "4A4", "4B1", "4B2"],
         "hasPlanet": false,
         "id": "4A3",
         "planet": "e",
@@ -1302,13 +885,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "4A3",
-          "4A5",
-          "4B2",
-          "DS14_0",
-          "DS14_1"
-        ],
+        "adjacent": ["4A3", "4A5", "4B2", "DS14_0", "DS14_1"],
         "hasPlanet": false,
         "id": "4A4",
         "planet": "e",
@@ -1321,14 +898,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "4A4",
-          "4A6",
-          "4B2",
-          "4B3",
-          "7A0",
-          "DS14_0"
-        ],
+        "adjacent": ["4A4", "4A6", "4B2", "4B3", "7A0", "DS14_0"],
         "hasPlanet": false,
         "id": "4A5",
         "planet": "e",
@@ -1341,14 +911,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "4A5",
-          "4A7",
-          "4B3",
-          "7A0",
-          "7A11",
-          "IS1"
-        ],
+        "adjacent": ["4A5", "4A7", "4B3", "7A0", "7A11", "IS1"],
         "hasPlanet": false,
         "id": "4A6",
         "planet": "e",
@@ -1361,14 +924,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "4A6",
-          "4A8",
-          "4B3",
-          "4B4",
-          "5A2",
-          "IS1"
-        ],
+        "adjacent": ["4A6", "4A8", "4B3", "4B4", "5A2", "IS1"],
         "hasPlanet": true,
         "id": "4A7",
         "planet": "i",
@@ -1381,14 +937,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "4A7",
-          "4A9",
-          "4B4",
-          "5A1",
-          "5A2",
-          "IS0"
-        ],
+        "adjacent": ["4A7", "4A9", "4B4", "5A1", "5A2", "IS0"],
         "hasPlanet": false,
         "id": "4A8",
         "planet": "e",
@@ -1401,14 +950,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "4A10",
-          "4A8",
-          "4B4",
-          "4B5",
-          "6A4",
-          "IS0"
-        ],
+        "adjacent": ["4A10", "4A8", "4B4", "4B5", "6A4", "IS0"],
         "hasPlanet": false,
         "id": "4A9",
         "planet": "e",
@@ -1421,14 +963,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "4A0",
-          "4A1",
-          "4A11",
-          "4B1",
-          "4B5",
-          "4C"
-        ],
+        "adjacent": ["4A0", "4A1", "4A11", "4B1", "4B5", "4C"],
         "hasPlanet": false,
         "id": "4B0",
         "planet": "e",
@@ -1441,14 +976,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "4A1",
-          "4A2",
-          "4A3",
-          "4B0",
-          "4B2",
-          "4C"
-        ],
+        "adjacent": ["4A1", "4A2", "4A3", "4B0", "4B2", "4C"],
         "hasPlanet": true,
         "id": "4B1",
         "planet": "s",
@@ -1461,14 +989,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "4A3",
-          "4A4",
-          "4A5",
-          "4B1",
-          "4B3",
-          "4C"
-        ],
+        "adjacent": ["4A3", "4A4", "4A5", "4B1", "4B3", "4C"],
         "hasPlanet": false,
         "id": "4B2",
         "planet": "e",
@@ -1481,14 +1002,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "4A5",
-          "4A6",
-          "4A7",
-          "4B2",
-          "4B4",
-          "4C"
-        ],
+        "adjacent": ["4A5", "4A6", "4A7", "4B2", "4B4", "4C"],
         "hasPlanet": true,
         "id": "4B3",
         "planet": "v",
@@ -1501,14 +1015,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "4A7",
-          "4A8",
-          "4A9",
-          "4B3",
-          "4B5",
-          "4C"
-        ],
+        "adjacent": ["4A7", "4A8", "4A9", "4B3", "4B5", "4C"],
         "hasPlanet": false,
         "id": "4B4",
         "planet": "e",
@@ -1521,14 +1028,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "4A10",
-          "4A11",
-          "4A9",
-          "4B0",
-          "4B4",
-          "4C"
-        ],
+        "adjacent": ["4A10", "4A11", "4A9", "4B0", "4B4", "4C"],
         "hasPlanet": true,
         "id": "4B5",
         "planet": "o",
@@ -1541,14 +1041,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "4B0",
-          "4B1",
-          "4B2",
-          "4B3",
-          "4B4",
-          "4B5"
-        ],
+        "adjacent": ["4B0", "4B1", "4B2", "4B3", "4B4", "4B5"],
         "hasPlanet": false,
         "id": "4C",
         "planet": "e",
@@ -1561,14 +1054,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "5A1",
-          "5A11",
-          "5B0",
-          "6A5",
-          "6A6",
-          "IS0"
-        ],
+        "adjacent": ["5A1", "5A11", "5B0", "6A5", "6A6", "IS0"],
         "hasPlanet": false,
         "id": "5A0",
         "planet": "e",
@@ -1581,14 +1067,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "4A8",
-          "5A0",
-          "5A2",
-          "5B0",
-          "5B1",
-          "IS0"
-        ],
+        "adjacent": ["4A8", "5A0", "5A2", "5B0", "5B1", "IS0"],
         "hasPlanet": true,
         "id": "5A1",
         "planet": "v",
@@ -1601,14 +1080,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "1A3",
-          "1A4",
-          "5A11",
-          "5A9",
-          "5B5",
-          "IS5"
-        ],
+        "adjacent": ["1A3", "1A4", "5A11", "5A9", "5B5", "IS5"],
         "hasPlanet": false,
         "id": "5A10",
         "planet": "e",
@@ -1621,14 +1093,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "5A0",
-          "5A10",
-          "5B0",
-          "5B5",
-          "6A6",
-          "IS5"
-        ],
+        "adjacent": ["5A0", "5A10", "5B0", "5B5", "6A6", "IS5"],
         "hasPlanet": false,
         "id": "5A11",
         "planet": "e",
@@ -1641,14 +1106,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "4A7",
-          "4A8",
-          "5A1",
-          "5A3",
-          "5B1",
-          "IS1"
-        ],
+        "adjacent": ["4A7", "4A8", "5A1", "5A3", "5B1", "IS1"],
         "hasPlanet": false,
         "id": "5A2",
         "planet": "e",
@@ -1661,14 +1119,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "5A2",
-          "5A4",
-          "5B1",
-          "5B2",
-          "7A10",
-          "IS1"
-        ],
+        "adjacent": ["5A2", "5A4", "5B1", "5B2", "7A10", "IS1"],
         "hasPlanet": false,
         "id": "5A3",
         "planet": "e",
@@ -1681,14 +1132,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "5A3",
-          "5A5",
-          "5B2",
-          "7A10",
-          "7A9",
-          "IS2"
-        ],
+        "adjacent": ["5A3", "5A5", "5B2", "7A10", "7A9", "IS2"],
         "hasPlanet": false,
         "id": "5A4",
         "planet": "e",
@@ -1701,14 +1145,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "3A0",
-          "5A4",
-          "5A6",
-          "5B2",
-          "5B3",
-          "IS2"
-        ],
+        "adjacent": ["3A0", "5A4", "5A6", "5B2", "5B3", "IS2"],
         "hasPlanet": false,
         "id": "5A5",
         "planet": "e",
@@ -1721,14 +1158,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "3A0",
-          "3A11",
-          "5A5",
-          "5A7",
-          "5B3",
-          "IS3"
-        ],
+        "adjacent": ["3A0", "3A11", "5A5", "5A7", "5B3", "IS3"],
         "hasPlanet": true,
         "id": "5A6",
         "planet": "i",
@@ -1741,14 +1171,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "2A2",
-          "5A6",
-          "5A8",
-          "5B3",
-          "5B4",
-          "IS3"
-        ],
+        "adjacent": ["2A2", "5A6", "5A8", "5B3", "5B4", "IS3"],
         "hasPlanet": false,
         "id": "5A7",
         "planet": "e",
@@ -1761,14 +1184,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "2A1",
-          "2A2",
-          "5A7",
-          "5A9",
-          "5B4",
-          "IS4"
-        ],
+        "adjacent": ["2A1", "2A2", "5A7", "5A9", "5B4", "IS4"],
         "hasPlanet": true,
         "id": "5A8",
         "planet": "m",
@@ -1781,14 +1197,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "1A4",
-          "5A10",
-          "5A8",
-          "5B4",
-          "5B5",
-          "IS4"
-        ],
+        "adjacent": ["1A4", "5A10", "5A8", "5B4", "5B5", "IS4"],
         "hasPlanet": true,
         "id": "5A9",
         "planet": "o",
@@ -1801,14 +1210,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "5A0",
-          "5A1",
-          "5A11",
-          "5B1",
-          "5B5",
-          "5C"
-        ],
+        "adjacent": ["5A0", "5A1", "5A11", "5B1", "5B5", "5C"],
         "hasPlanet": false,
         "id": "5B0",
         "planet": "e",
@@ -1821,14 +1223,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "5A1",
-          "5A2",
-          "5A3",
-          "5B0",
-          "5B2",
-          "5C"
-        ],
+        "adjacent": ["5A1", "5A2", "5A3", "5B0", "5B2", "5C"],
         "hasPlanet": false,
         "id": "5B1",
         "planet": "e",
@@ -1841,14 +1236,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "5A3",
-          "5A4",
-          "5A5",
-          "5B1",
-          "5B3",
-          "5C"
-        ],
+        "adjacent": ["5A3", "5A4", "5A5", "5B1", "5B3", "5C"],
         "hasPlanet": true,
         "id": "5B2",
         "planet": "g",
@@ -1861,14 +1249,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "5A5",
-          "5A6",
-          "5A7",
-          "5B2",
-          "5B4",
-          "5C"
-        ],
+        "adjacent": ["5A5", "5A6", "5A7", "5B2", "5B4", "5C"],
         "hasPlanet": false,
         "id": "5B3",
         "planet": "e",
@@ -1881,14 +1262,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "5A7",
-          "5A8",
-          "5A9",
-          "5B3",
-          "5B5",
-          "5C"
-        ],
+        "adjacent": ["5A7", "5A8", "5A9", "5B3", "5B5", "5C"],
         "hasPlanet": false,
         "id": "5B4",
         "planet": "e",
@@ -1901,14 +1275,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "5A10",
-          "5A11",
-          "5A9",
-          "5B0",
-          "5B4",
-          "5C"
-        ],
+        "adjacent": ["5A10", "5A11", "5A9", "5B0", "5B4", "5C"],
         "hasPlanet": false,
         "id": "5B5",
         "planet": "e",
@@ -1921,14 +1288,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "5B0",
-          "5B1",
-          "5B2",
-          "5B3",
-          "5B4",
-          "5B5"
-        ],
+        "adjacent": ["5B0", "5B1", "5B2", "5B3", "5B4", "5B5"],
         "hasPlanet": false,
         "id": "5C",
         "planet": "e",
@@ -1941,11 +1301,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "6A1",
-          "6A11",
-          "6B0"
-        ],
+        "adjacent": ["6A1", "6A11", "6B0"],
         "hasPlanet": false,
         "id": "6A0",
         "planet": "e",
@@ -1958,12 +1314,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "6A0",
-          "6A2",
-          "6B0",
-          "6B1"
-        ],
+        "adjacent": ["6A0", "6A2", "6B0", "6B1"],
         "hasPlanet": true,
         "id": "6A1",
         "planet": "m",
@@ -1976,12 +1327,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "6A11",
-          "6A9",
-          "6B5",
-          "DS13_1"
-        ],
+        "adjacent": ["6A11", "6A9", "6B5", "DS13_1"],
         "hasPlanet": false,
         "id": "6A10",
         "planet": "e",
@@ -1994,12 +1340,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "6A0",
-          "6A10",
-          "6B0",
-          "6B5"
-        ],
+        "adjacent": ["6A0", "6A10", "6B0", "6B5"],
         "hasPlanet": false,
         "id": "6A11",
         "planet": "e",
@@ -2012,13 +1353,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "6A1",
-          "6A3",
-          "6B1",
-          "DS16_0",
-          "DS16_1"
-        ],
+        "adjacent": ["6A1", "6A3", "6B1", "DS16_0", "DS16_1"],
         "hasPlanet": false,
         "id": "6A2",
         "planet": "e",
@@ -2031,14 +1366,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "4A10",
-          "6A2",
-          "6A4",
-          "6B1",
-          "6B2",
-          "DS16_0"
-        ],
+        "adjacent": ["4A10", "6A2", "6A4", "6B1", "6B2", "DS16_0"],
         "hasPlanet": false,
         "id": "6A3",
         "planet": "e",
@@ -2051,14 +1379,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "4A10",
-          "4A9",
-          "6A3",
-          "6A5",
-          "6B2",
-          "IS0"
-        ],
+        "adjacent": ["4A10", "4A9", "6A3", "6A5", "6B2", "IS0"],
         "hasPlanet": true,
         "id": "6A4",
         "planet": "d",
@@ -2071,14 +1392,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "5A0",
-          "6A4",
-          "6A6",
-          "6B2",
-          "6B3",
-          "IS0"
-        ],
+        "adjacent": ["5A0", "6A4", "6A6", "6B2", "6B3", "IS0"],
         "hasPlanet": true,
         "id": "6A5",
         "planet": "m",
@@ -2091,14 +1405,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "5A0",
-          "5A11",
-          "6A5",
-          "6A7",
-          "6B3",
-          "IS5"
-        ],
+        "adjacent": ["5A0", "5A11", "6A5", "6A7", "6B3", "IS5"],
         "hasPlanet": false,
         "id": "6A6",
         "planet": "e",
@@ -2111,14 +1418,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "1A2",
-          "6A6",
-          "6A8",
-          "6B3",
-          "6B4",
-          "IS5"
-        ],
+        "adjacent": ["1A2", "6A6", "6A8", "6B3", "6B4", "IS5"],
         "hasPlanet": false,
         "id": "6A7",
         "planet": "e",
@@ -2131,14 +1431,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "1A1",
-          "1A2",
-          "6A7",
-          "6A9",
-          "6B4",
-          "DS13_0"
-        ],
+        "adjacent": ["1A1", "1A2", "6A7", "6A9", "6B4", "DS13_0"],
         "hasPlanet": false,
         "id": "6A8",
         "planet": "e",
@@ -2151,14 +1444,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "6A10",
-          "6A8",
-          "6B4",
-          "6B5",
-          "DS13_0",
-          "DS13_1"
-        ],
+        "adjacent": ["6A10", "6A8", "6B4", "6B5", "DS13_0", "DS13_1"],
         "hasPlanet": false,
         "id": "6A9",
         "planet": "e",
@@ -2171,14 +1457,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "6A0",
-          "6A1",
-          "6A11",
-          "6B1",
-          "6B5",
-          "6C"
-        ],
+        "adjacent": ["6A0", "6A1", "6A11", "6B1", "6B5", "6C"],
         "hasPlanet": false,
         "id": "6B0",
         "planet": "e",
@@ -2191,14 +1470,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "6A1",
-          "6A2",
-          "6A3",
-          "6B0",
-          "6B2",
-          "6C"
-        ],
+        "adjacent": ["6A1", "6A2", "6A3", "6B0", "6B2", "6C"],
         "hasPlanet": true,
         "id": "6B1",
         "planet": "r",
@@ -2211,14 +1483,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "6A3",
-          "6A4",
-          "6A5",
-          "6B1",
-          "6B3",
-          "6C"
-        ],
+        "adjacent": ["6A3", "6A4", "6A5", "6B1", "6B3", "6C"],
         "hasPlanet": false,
         "id": "6B2",
         "planet": "e",
@@ -2231,14 +1496,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "6A5",
-          "6A6",
-          "6A7",
-          "6B2",
-          "6B4",
-          "6C"
-        ],
+        "adjacent": ["6A5", "6A6", "6A7", "6B2", "6B4", "6C"],
         "hasPlanet": true,
         "id": "6B3",
         "planet": "g",
@@ -2251,14 +1509,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "6A7",
-          "6A8",
-          "6A9",
-          "6B3",
-          "6B5",
-          "6C"
-        ],
+        "adjacent": ["6A7", "6A8", "6A9", "6B3", "6B5", "6C"],
         "hasPlanet": false,
         "id": "6B4",
         "planet": "e",
@@ -2271,14 +1522,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "6A10",
-          "6A11",
-          "6A9",
-          "6B0",
-          "6B4",
-          "6C"
-        ],
+        "adjacent": ["6A10", "6A11", "6A9", "6B0", "6B4", "6C"],
         "hasPlanet": false,
         "id": "6B5",
         "planet": "e",
@@ -2291,14 +1535,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "6B0",
-          "6B1",
-          "6B2",
-          "6B3",
-          "6B4",
-          "6B5"
-        ],
+        "adjacent": ["6B0", "6B1", "6B2", "6B3", "6B4", "6B5"],
         "hasPlanet": false,
         "id": "6C",
         "planet": "e",
@@ -2311,14 +1548,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "4A5",
-          "4A6",
-          "7A1",
-          "7A11",
-          "7B0",
-          "DS14_0"
-        ],
+        "adjacent": ["4A5", "4A6", "7A1", "7A11", "7B0", "DS14_0"],
         "hasPlanet": true,
         "id": "7A0",
         "planet": "m",
@@ -2331,14 +1561,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "7A0",
-          "7A2",
-          "7B0",
-          "7B1",
-          "DS14_0",
-          "DS14_2"
-        ],
+        "adjacent": ["7A0", "7A2", "7B0", "7B1", "DS14_0", "DS14_2"],
         "hasPlanet": false,
         "id": "7A1",
         "planet": "e",
@@ -2351,14 +1574,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "5A3",
-          "5A4",
-          "7A11",
-          "7A9",
-          "7B5",
-          "IS1"
-        ],
+        "adjacent": ["5A3", "5A4", "7A11", "7A9", "7B5", "IS1"],
         "hasPlanet": false,
         "id": "7A10",
         "planet": "e",
@@ -2371,14 +1587,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "4A6",
-          "7A0",
-          "7A10",
-          "7B0",
-          "7B5",
-          "IS1"
-        ],
+        "adjacent": ["4A6", "7A0", "7A10", "7B0", "7B5", "IS1"],
         "hasPlanet": false,
         "id": "7A11",
         "planet": "e",
@@ -2391,12 +1600,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "7A1",
-          "7A3",
-          "7B1",
-          "DS14_2"
-        ],
+        "adjacent": ["7A1", "7A3", "7B1", "DS14_2"],
         "hasPlanet": false,
         "id": "7A2",
         "planet": "e",
@@ -2409,12 +1613,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "7A2",
-          "7A4",
-          "7B1",
-          "7B2"
-        ],
+        "adjacent": ["7A2", "7A4", "7B1", "7B2"],
         "hasPlanet": false,
         "id": "7A3",
         "planet": "e",
@@ -2427,11 +1626,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "7A3",
-          "7A5",
-          "7B2"
-        ],
+        "adjacent": ["7A3", "7A5", "7B2"],
         "hasPlanet": false,
         "id": "7A4",
         "planet": "e",
@@ -2444,12 +1639,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "7A4",
-          "7A6",
-          "7B2",
-          "7B3"
-        ],
+        "adjacent": ["7A4", "7A6", "7B2", "7B3"],
         "hasPlanet": false,
         "id": "7A5",
         "planet": "e",
@@ -2462,13 +1652,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "7A5",
-          "7A7",
-          "7B3",
-          "DS12_0",
-          "DS12_1"
-        ],
+        "adjacent": ["7A5", "7A7", "7B3", "DS12_0", "DS12_1"],
         "hasPlanet": false,
         "id": "7A6",
         "planet": "e",
@@ -2481,14 +1665,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "3A2",
-          "7A6",
-          "7A8",
-          "7B3",
-          "7B4",
-          "DS12_0"
-        ],
+        "adjacent": ["3A2", "7A6", "7A8", "7B3", "7B4", "DS12_0"],
         "hasPlanet": false,
         "id": "7A7",
         "planet": "e",
@@ -2501,14 +1678,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "3A1",
-          "3A2",
-          "7A7",
-          "7A9",
-          "7B4",
-          "IS2"
-        ],
+        "adjacent": ["3A1", "3A2", "7A7", "7A9", "7B4", "IS2"],
         "hasPlanet": true,
         "id": "7A8",
         "planet": "t",
@@ -2521,14 +1691,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "5A4",
-          "7A10",
-          "7A8",
-          "7B4",
-          "7B5",
-          "IS2"
-        ],
+        "adjacent": ["5A4", "7A10", "7A8", "7B4", "7B5", "IS2"],
         "hasPlanet": false,
         "id": "7A9",
         "planet": "e",
@@ -2541,14 +1704,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "7A0",
-          "7A1",
-          "7A11",
-          "7B1",
-          "7B5",
-          "7C"
-        ],
+        "adjacent": ["7A0", "7A1", "7A11", "7B1", "7B5", "7C"],
         "hasPlanet": false,
         "id": "7B0",
         "planet": "e",
@@ -2561,14 +1717,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "7A1",
-          "7A2",
-          "7A3",
-          "7B0",
-          "7B2",
-          "7C"
-        ],
+        "adjacent": ["7A1", "7A2", "7A3", "7B0", "7B2", "7C"],
         "hasPlanet": true,
         "id": "7B1",
         "planet": "g",
@@ -2581,14 +1730,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "7A3",
-          "7A4",
-          "7A5",
-          "7B1",
-          "7B3",
-          "7C"
-        ],
+        "adjacent": ["7A3", "7A4", "7A5", "7B1", "7B3", "7C"],
         "hasPlanet": false,
         "id": "7B2",
         "planet": "e",
@@ -2601,14 +1743,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "7A5",
-          "7A6",
-          "7A7",
-          "7B2",
-          "7B4",
-          "7C"
-        ],
+        "adjacent": ["7A5", "7A6", "7A7", "7B2", "7B4", "7C"],
         "hasPlanet": true,
         "id": "7B3",
         "planet": "s",
@@ -2621,14 +1756,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "7A7",
-          "7A8",
-          "7A9",
-          "7B3",
-          "7B5",
-          "7C"
-        ],
+        "adjacent": ["7A7", "7A8", "7A9", "7B3", "7B5", "7C"],
         "hasPlanet": false,
         "id": "7B4",
         "planet": "e",
@@ -2641,14 +1769,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "7A10",
-          "7A11",
-          "7A9",
-          "7B0",
-          "7B4",
-          "7C"
-        ],
+        "adjacent": ["7A10", "7A11", "7A9", "7B0", "7B4", "7C"],
         "hasPlanet": true,
         "id": "7B5",
         "planet": "g",
@@ -2661,14 +1782,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "7B0",
-          "7B1",
-          "7B2",
-          "7B3",
-          "7B4",
-          "7B5"
-        ],
+        "adjacent": ["7B0", "7B1", "7B2", "7B3", "7B4", "7B5"],
         "hasPlanet": false,
         "id": "7C",
         "planet": "e",
@@ -2681,14 +1795,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "1A6",
-          "1A7",
-          "2A10",
-          "2A11",
-          "DS11_1",
-          "DS11_2"
-        ],
+        "adjacent": ["1A6", "1A7", "2A10", "2A11", "DS11_1", "DS11_2"],
         "hasPlanet": true,
         "id": "DS11_0",
         "planet": "p",
@@ -2701,11 +1808,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "2A10",
-          "DS11_0",
-          "DS11_2"
-        ],
+        "adjacent": ["2A10", "DS11_0", "DS11_2"],
         "hasPlanet": true,
         "id": "DS11_1",
         "planet": "a",
@@ -2718,12 +1821,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "1A7",
-          "1A8",
-          "DS11_0",
-          "DS11_1"
-        ],
+        "adjacent": ["1A7", "1A8", "DS11_0", "DS11_1"],
         "hasPlanet": false,
         "id": "DS11_2",
         "planet": "e",
@@ -2736,14 +1834,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "3A2",
-          "3A3",
-          "7A6",
-          "7A7",
-          "DS12_1",
-          "DS12_2"
-        ],
+        "adjacent": ["3A2", "3A3", "7A6", "7A7", "DS12_1", "DS12_2"],
         "hasPlanet": true,
         "id": "DS12_0",
         "planet": "a",
@@ -2756,11 +1847,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "7A6",
-          "DS12_0",
-          "DS12_2"
-        ],
+        "adjacent": ["7A6", "DS12_0", "DS12_2"],
         "hasPlanet": false,
         "id": "DS12_1",
         "planet": "e",
@@ -2773,12 +1860,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "3A3",
-          "3A4",
-          "DS12_0",
-          "DS12_1"
-        ],
+        "adjacent": ["3A3", "3A4", "DS12_0", "DS12_1"],
         "hasPlanet": false,
         "id": "DS12_2",
         "planet": "e",
@@ -2791,14 +1873,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "1A0",
-          "1A1",
-          "6A8",
-          "6A9",
-          "DS13_1",
-          "DS13_2"
-        ],
+        "adjacent": ["1A0", "1A1", "6A8", "6A9", "DS13_1", "DS13_2"],
         "hasPlanet": false,
         "id": "DS13_0",
         "planet": "e",
@@ -2811,12 +1886,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "6A10",
-          "6A9",
-          "DS13_0",
-          "DS13_2"
-        ],
+        "adjacent": ["6A10", "6A9", "DS13_0", "DS13_2"],
         "hasPlanet": false,
         "id": "DS13_1",
         "planet": "e",
@@ -2829,11 +1899,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "1A0",
-          "DS13_0",
-          "DS13_1"
-        ],
+        "adjacent": ["1A0", "DS13_0", "DS13_1"],
         "hasPlanet": true,
         "id": "DS13_2",
         "planet": "a",
@@ -2846,14 +1912,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "4A4",
-          "4A5",
-          "7A0",
-          "7A1",
-          "DS14_1",
-          "DS14_2"
-        ],
+        "adjacent": ["4A4", "4A5", "7A0", "7A1", "DS14_1", "DS14_2"],
         "hasPlanet": false,
         "id": "DS14_0",
         "planet": "e",
@@ -2866,11 +1925,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "4A4",
-          "DS14_0",
-          "DS14_2"
-        ],
+        "adjacent": ["4A4", "DS14_0", "DS14_2"],
         "hasPlanet": false,
         "id": "DS14_1",
         "planet": "e",
@@ -2883,12 +1938,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "7A1",
-          "7A2",
-          "DS14_0",
-          "DS14_1"
-        ],
+        "adjacent": ["7A1", "7A2", "DS14_0", "DS14_1"],
         "hasPlanet": true,
         "id": "DS14_2",
         "planet": "a",
@@ -2901,14 +1951,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "2A4",
-          "2A5",
-          "3A8",
-          "3A9",
-          "DS15_1",
-          "DS15_2"
-        ],
+        "adjacent": ["2A4", "2A5", "3A8", "3A9", "DS15_1", "DS15_2"],
         "hasPlanet": true,
         "id": "DS15_0",
         "planet": "p",
@@ -2921,11 +1964,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "3A8",
-          "DS15_0",
-          "DS15_2"
-        ],
+        "adjacent": ["3A8", "DS15_0", "DS15_2"],
         "hasPlanet": false,
         "id": "DS15_1",
         "planet": "e",
@@ -2938,12 +1977,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "2A5",
-          "2A6",
-          "DS15_0",
-          "DS15_1"
-        ],
+        "adjacent": ["2A5", "2A6", "DS15_0", "DS15_1"],
         "hasPlanet": false,
         "id": "DS15_2",
         "planet": "e",
@@ -2956,14 +1990,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "4A10",
-          "4A11",
-          "6A2",
-          "6A3",
-          "DS16_1",
-          "DS16_2"
-        ],
+        "adjacent": ["4A10", "4A11", "6A2", "6A3", "DS16_1", "DS16_2"],
         "hasPlanet": false,
         "id": "DS16_0",
         "planet": "e",
@@ -2976,11 +2003,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "6A2",
-          "DS16_0",
-          "DS16_2"
-        ],
+        "adjacent": ["6A2", "DS16_0", "DS16_2"],
         "hasPlanet": false,
         "id": "DS16_1",
         "planet": "e",
@@ -2993,12 +2016,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "4A0",
-          "4A11",
-          "DS16_0",
-          "DS16_1"
-        ],
+        "adjacent": ["4A0", "4A11", "DS16_0", "DS16_1"],
         "hasPlanet": true,
         "id": "DS16_2",
         "planet": "p",
@@ -3011,14 +2029,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "4A8",
-          "4A9",
-          "5A0",
-          "5A1",
-          "6A4",
-          "6A5"
-        ],
+        "adjacent": ["4A8", "4A9", "5A0", "5A1", "6A4", "6A5"],
         "hasPlanet": false,
         "id": "IS0",
         "planet": "e",
@@ -3031,14 +2042,7 @@
         "spaceship": "tfmars"
       },
       {
-        "adjacent": [
-          "4A6",
-          "4A7",
-          "5A2",
-          "5A3",
-          "7A10",
-          "7A11"
-        ],
+        "adjacent": ["4A6", "4A7", "5A2", "5A3", "7A10", "7A11"],
         "hasPlanet": true,
         "id": "IS1",
         "planet": "p",
@@ -3051,14 +2055,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "3A0",
-          "3A1",
-          "5A4",
-          "5A5",
-          "7A8",
-          "7A9"
-        ],
+        "adjacent": ["3A0", "3A1", "5A4", "5A5", "7A8", "7A9"],
         "hasPlanet": false,
         "id": "IS2",
         "planet": "e",
@@ -3071,14 +2068,7 @@
         "spaceship": "eclipse"
       },
       {
-        "adjacent": [
-          "2A2",
-          "2A3",
-          "3A10",
-          "3A11",
-          "5A6",
-          "5A7"
-        ],
+        "adjacent": ["2A2", "2A3", "3A10", "3A11", "5A6", "5A7"],
         "hasPlanet": true,
         "id": "IS3",
         "planet": "a",
@@ -3091,14 +2081,7 @@
         "spaceship": null
       },
       {
-        "adjacent": [
-          "1A4",
-          "1A5",
-          "2A0",
-          "2A1",
-          "5A8",
-          "5A9"
-        ],
+        "adjacent": ["1A4", "1A5", "2A0", "2A1", "5A8", "5A9"],
         "hasPlanet": false,
         "id": "IS4",
         "planet": "e",
@@ -3111,14 +2094,7 @@
         "spaceship": "twilight"
       },
       {
-        "adjacent": [
-          "1A2",
-          "1A3",
-          "5A10",
-          "5A11",
-          "6A6",
-          "6A7"
-        ],
+        "adjacent": ["1A2", "1A3", "5A10", "5A11", "6A6", "6A7"],
         "hasPlanet": true,
         "id": "IS5",
         "planet": "a",
@@ -3134,26 +2110,11 @@
     "mirror": false,
     "objectives": {
       "deepSpace": {
-        "sectorIds": [
-          "DS11",
-          "DS12",
-          "DS13",
-          "DS14",
-          "DS15",
-          "DS16"
-        ],
+        "sectorIds": ["DS11", "DS12", "DS13", "DS14", "DS15", "DS16"],
         "sectorType": "deepSpace"
       },
       "space": {
-        "sectorIds": [
-          "1",
-          "2",
-          "3",
-          "4",
-          "5B",
-          "6B",
-          "7B"
-        ],
+        "sectorIds": ["1", "2", "3", "4", "5B", "6B", "7B"],
         "sectorType": "space"
       }
     },
@@ -3551,15 +2512,7 @@
         ]
       },
       "scoringExtensionSide": "vp",
-      "terraformingRow": [
-        "v",
-        "t",
-        "i",
-        "o",
-        "d",
-        "s",
-        "r"
-      ]
+      "terraformingRow": ["v", "t", "i", "o", "d", "s", "r"]
     },
     "roundScoring": [
       {

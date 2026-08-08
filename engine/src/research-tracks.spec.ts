@@ -97,9 +97,11 @@ describe("Lost Fleet Economy track overlay (§F1)", () => {
       player.onResearchAdvanced(ResearchField.Economy, 3, Expansion.LostFleet);
 
       const income = Reward.merge(player.incomeRewards);
-      const creditDelta = (income.find((r) => r.type === Resource.Credit)?.count ?? 0) -
+      const creditDelta =
+        (income.find((r) => r.type === Resource.Credit)?.count ?? 0) -
         (baseline.find((r) => r.type === Resource.Credit)?.count ?? 0);
-      const oreDelta = (income.find((r) => r.type === Resource.Ore)?.count ?? 0) -
+      const oreDelta =
+        (income.find((r) => r.type === Resource.Ore)?.count ?? 0) -
         (baseline.find((r) => r.type === Resource.Ore)?.count ?? 0);
       expect(creditDelta).to.equal(2);
       expect(oreDelta).to.equal(1);
@@ -114,9 +116,11 @@ describe("Lost Fleet Economy track overlay (§F1)", () => {
       player.onResearchAdvanced(ResearchField.Economy, 4, Expansion.LostFleet);
 
       const income = Reward.merge(player.incomeRewards);
-      const creditDelta = (income.find((r) => r.type === Resource.Credit)?.count ?? 0) -
+      const creditDelta =
+        (income.find((r) => r.type === Resource.Credit)?.count ?? 0) -
         (baseline.find((r) => r.type === Resource.Credit)?.count ?? 0);
-      const oreDelta = (income.find((r) => r.type === Resource.Ore)?.count ?? 0) -
+      const oreDelta =
+        (income.find((r) => r.type === Resource.Ore)?.count ?? 0) -
         (baseline.find((r) => r.type === Resource.Ore)?.count ?? 0);
       expect(creditDelta).to.equal(4);
       expect(oreDelta).to.equal(2);

@@ -239,7 +239,8 @@ const deepSpaceSectors: FinalScoringExtractLog = ExtractLog.new((want) => {
 
         if (
           sectorType === LostFleetSectorType.DeepSpace &&
-          (building === Building.Mine || (building === Building.PlanetaryInstitute && want.faction === Faction.Ivits)) &&
+          (building === Building.Mine ||
+            (building === Building.PlanetaryInstitute && want.faction === Faction.Ivits)) &&
           !transdim.has(location)
         ) {
           const sectorKey = hex.data.sector.replace(/_\d+$/, "");

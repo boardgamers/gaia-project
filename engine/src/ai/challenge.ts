@@ -39,11 +39,7 @@ export const LOST_FLEET_CHALLENGE: ChallengeDefinition = {
     { seat: 1, player: Player.Player2, playerId: "p2", faction: Faction.HadschHallas },
   ],
   fixedTurnOrder: [Player.Player1, Player.Player2],
-  scriptedPrefix: [
-    "init 2 lf-mrj5exuu-c680",
-    "p1 faction xenos",
-    "p2 faction hadsch-hallas",
-  ],
+  scriptedPrefix: ["init 2 lf-mrj5exuu-c680", "p1 faction xenos", "p2 faction hadsch-hallas"],
   scriptedPrefixScope: "initialization-and-faction-choice-only",
   strategicSetupDecisions: ["starting-buildings", "round-boosters"],
 };
@@ -51,4 +47,3 @@ export const LOST_FLEET_CHALLENGE: ChallengeDefinition = {
 export function challengeEngineOptions(): EngineOptions {
   return JSON.parse(JSON.stringify(LOST_FLEET_CHALLENGE.options));
 }
-

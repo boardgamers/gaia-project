@@ -1,3 +1,6 @@
+// The fake GameRow literals below mirror Supabase column names (player_count, move_count),
+// so snake_case is the correct spelling here rather than a style slip.
+/* eslint-disable @typescript-eslint/camelcase */
 import { expect } from "chai";
 import * as fs from "fs";
 import * as path from "path";

@@ -1,32 +1,15 @@
 import { createHash } from "crypto";
 import Engine from "../engine";
-import {
-  AdvTechTilePos,
-  Booster,
-  Federation,
-  FinalTile,
-  Phase,
-  ResearchField,
-  Spaceship,
-  TechTilePos,
-} from "../enums";
+import { AdvTechTilePos, Booster, Federation, FinalTile, Phase, ResearchField, Spaceship, TechTilePos } from "../enums";
 import Event from "../events";
 import { classifySectorId, lostFleetSectorKey, LostFleetSectorType } from "../lost-fleet-map";
 import { researchEvents } from "../research-tracks";
 import Reward from "../reward";
-import {
-  EXPLORATION_CHARGE_TRACK,
-  shipsInPlay,
-  spaceshipBoards,
-} from "../spaceships";
+import { EXPLORATION_CHARGE_TRACK, shipsInPlay, spaceshipBoards } from "../spaceships";
 import { artifactTokenRewards, artifactTokenSpec } from "../tiles/artifacts";
 import { boosterEvents } from "../tiles/boosters";
 import { federationRewards } from "../tiles/federations";
-import {
-  finalScoringNeutralPlayer,
-  finalScorings,
-  roundScoringEvents,
-} from "../tiles/scoring";
+import { finalScoringNeutralPlayer, finalScorings, roundScoringEvents } from "../tiles/scoring";
 import { spaceshipFederationSpec } from "../tiles/spaceship-federations";
 import { spaceshipTechSpec } from "../tiles/spaceship-techs";
 import { techTileEvents } from "../tiles/techs";
@@ -120,18 +103,22 @@ function buildChallengeManifest() {
     }))
     .sort((a, b) => a.id.localeCompare(b.id));
 
-  const spaceSectorIds = [...new Set(
-    mapHexes
-      .filter((hex) => hex.sectorType === LostFleetSectorType.Space)
-      .map((hex) => hex.sectorKey)
-      .filter((sector): sector is string => sector !== null)
-  )].sort();
-  const deepSpaceSectorIds = [...new Set(
-    mapHexes
-      .filter((hex) => hex.sectorType === LostFleetSectorType.DeepSpace)
-      .map((hex) => hex.sectorKey)
-      .filter((sector): sector is string => sector !== null)
-  )].sort();
+  const spaceSectorIds = [
+    ...new Set(
+      mapHexes
+        .filter((hex) => hex.sectorType === LostFleetSectorType.Space)
+        .map((hex) => hex.sectorKey)
+        .filter((sector): sector is string => sector !== null)
+    ),
+  ].sort();
+  const deepSpaceSectorIds = [
+    ...new Set(
+      mapHexes
+        .filter((hex) => hex.sectorType === LostFleetSectorType.DeepSpace)
+        .map((hex) => hex.sectorKey)
+        .filter((sector): sector is string => sector !== null)
+    ),
+  ].sort();
 
   const manifest = {
     schemaVersion: LOST_FLEET_CHALLENGE.schemas.manifest,
@@ -218,18 +205,12 @@ function buildChallengeManifest() {
       lostFleet: {
         economySide: {
           id: engine.lostFleetEconomySide,
-          level3Effects: researchEvents(
-            ResearchField.Economy,
-            3,
-            engine.expansions,
-            engine.lostFleetEconomySide
-          ).map(eventManifest),
-          level4Effects: researchEvents(
-            ResearchField.Economy,
-            4,
-            engine.expansions,
-            engine.lostFleetEconomySide
-          ).map(eventManifest),
+          level3Effects: researchEvents(ResearchField.Economy, 3, engine.expansions, engine.lostFleetEconomySide).map(
+            eventManifest
+          ),
+          level4Effects: researchEvents(ResearchField.Economy, 4, engine.expansions, engine.lostFleetEconomySide).map(
+            eventManifest
+          ),
         },
         scoringExtensionSide: engine.scoringExtensionSide,
         terraformingRow: [...engine.lostFleetTerraformingRow],
@@ -241,12 +222,8 @@ function buildChallengeManifest() {
         return {
           id: ship,
           coordinate,
-          technology: tech
-            ? { id: tech.tile, copies: tech.count, effect: spaceshipTechSpec[tech.tile] }
-            : null,
-          federation: federation
-            ? { id: federation, effect: spaceshipFederationSpec[federation] }
-            : null,
+          technology: tech ? { id: tech.tile, copies: tech.count, effect: spaceshipTechSpec[tech.tile] } : null,
+          federation: federation ? { id: federation, effect: spaceshipFederationSpec[federation] } : null,
           actions: spaceshipBoards[ship].actions.map((action) => ({ ...action })),
           shuttleSlots: EXPLORATION_CHARGE_TRACK.map((charge, index) => ({ slot: index + 1, charge })),
         };
@@ -328,7 +305,10 @@ export function validateChallengeManifest(manifest: any): string[] {
   if (manifest.setup.finalScoring.selected.length !== 2) {
     errors.push("manifest must contain two selected final scoring tiles");
   }
-  if (manifest.setup.finalScoring.objectives.space === undefined || manifest.setup.finalScoring.objectives.deepSpace === undefined) {
+  if (
+    manifest.setup.finalScoring.objectives.space === undefined ||
+    manifest.setup.finalScoring.objectives.deepSpace === undefined
+  ) {
     errors.push("Space and Deep Space final objectives must be separate fields");
   }
   if (manifest.setup.boosters.length !== LOST_FLEET_CHALLENGE.playerCount + 3) {

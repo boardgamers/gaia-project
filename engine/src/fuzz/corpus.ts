@@ -20,12 +20,7 @@ function spec(kind: "base" | "lf", players: number, index: number): FuzzGameSpec
 
 /** Fixed smoke seeds for `npm test` — small on purpose (runtime budget: seconds). */
 export function smokeCorpus(): FuzzGameSpec[] {
-  return [
-    spec("base", 2, 0),
-    spec("base", 2, 1),
-    spec("base", 3, 0),
-    spec("base", 4, 0),
-  ];
+  return [spec("base", 2, 0), spec("base", 2, 1), spec("base", 3, 0), spec("base", 4, 0)];
 }
 
 /** Lost Fleet smoke seeds — switched on once the base control corpus is quiet (plan §6 phase 2). */

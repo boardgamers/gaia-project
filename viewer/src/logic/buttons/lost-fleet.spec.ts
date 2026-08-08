@@ -27,9 +27,7 @@ describe("lost-fleet buttons", () => {
       const command: AvailableCommand<Command.Explore> = {
         name: Command.Explore,
         data: {
-          ships: [
-            { ship: Spaceship.TFMars, coordinates: "0,0", cost: "2q,5vp", charge: 2, slot: 2, adjustments: [] },
-          ],
+          ships: [{ ship: Spaceship.TFMars, coordinates: "0,0", cost: "2q,5vp", charge: 2, slot: 2, adjustments: [] }],
         },
       } as any;
 

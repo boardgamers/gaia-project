@@ -27,4 +27,3 @@ describe("Phase 0 AI benchmark", () => {
     expect(result.workloads.candidateExpansion.status).to.equal("unavailable");
   });
 });
-

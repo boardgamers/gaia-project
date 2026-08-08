@@ -10,8 +10,6 @@ describe("spaceshipFederationSpec", () => {
   });
 
   it("should not define entries beyond the 8 Lost Fleet Federation tokens", () => {
-    expect(Object.keys(spaceshipFederationSpec)).to.have.length(
-      SpaceshipFederation.values(Expansion.LostFleet).length
-    );
+    expect(Object.keys(spaceshipFederationSpec)).to.have.length(SpaceshipFederation.values(Expansion.LostFleet).length);
   });
 });

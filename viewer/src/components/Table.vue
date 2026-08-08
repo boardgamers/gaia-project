@@ -59,7 +59,6 @@ import { InfoTable } from "src/logic/table/types";
     TableCell,
   },
 })
-
 export default class Table extends Vue {
   get engine(): Engine {
     return this.$store.state.data;
@@ -79,7 +78,7 @@ export default class Table extends Vue {
     }
 
     if (s && !passed(s)) {
-      return players.filter(p => !passed(p)).concat(...players.filter(p => passed(p)));
+      return players.filter((p) => !passed(p)).concat(...players.filter((p) => passed(p)));
     }
     return players;
   }
@@ -94,10 +93,9 @@ export default class Table extends Vue {
   }
 
   get infoTables(): InfoTable[] {
-    return infoTables(this.engine, this.orderedPlayers, this.uiMode,
-      {
-        convertTooltip: (resource, player) => this.convertTooltip(resource, player),
-      });
+    return infoTables(this.engine, this.orderedPlayers, this.uiMode, {
+      convertTooltip: (resource, player) => this.convertTooltip(resource, player),
+    });
   }
 
   get mapModeTypeOptions() {
@@ -105,7 +103,7 @@ export default class Table extends Vue {
   }
 
   selectedMapMode(player: PlayerEnum): MapModeType {
-    return this.$store.getters.mapModes.find(m => m.player === player)?.type ?? MapModeType.default;
+    return this.$store.getters.mapModes.find((m) => m.player === player)?.type ?? MapModeType.default;
   }
 
   toggleMapMode(player: PlayerEnum, mode: MapModeType) {

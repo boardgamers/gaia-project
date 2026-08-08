@@ -86,7 +86,7 @@ export class ExtractLog<Source> {
   }
 
   static filterPlayer<Source>(e: (a: ExtractLogArg<Source>) => number): ExtractLog<Source> {
-    return ExtractLog.new((p) => (a) => (a.cmd && a.cmd.faction == p.faction ? e(a) : 0));
+    return ExtractLog.new((p) => (a) => a.cmd && a.cmd.faction == p.faction ? e(a) : 0);
   }
 
   static filterPlayerChanges<Source>(e: (a: ExtractLogArg<Source>) => number): ExtractLog<Source> {

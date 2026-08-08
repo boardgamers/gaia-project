@@ -6,9 +6,12 @@ import StickyResourceBar from "./StickyResourceBar.vue";
 
 describe("StickyResourceBar", () => {
   it("marks the bowl holding Taklons' Brainstone with a B badge, and no others", () => {
-    const engine = new Engine(["init 2 sticky-resource-bar-brainstone-spec", "p1 faction taklons", "p2 faction terrans"], {
-      lostFleet: true,
-    });
+    const engine = new Engine(
+      ["init 2 sticky-resource-bar-brainstone-spec", "p1 faction taklons", "p2 faction terrans"],
+      {
+        lostFleet: true,
+      }
+    );
     const player = engine.players[0];
     player.data.brainstone = PowerArea.Area2;
 
@@ -22,9 +25,12 @@ describe("StickyResourceBar", () => {
   });
 
   it("shows no Brainstone badge for factions without one", () => {
-    const engine = new Engine(["init 2 sticky-resource-bar-no-brainstone-spec", "p1 faction terrans", "p2 faction hadsch-hallas"], {
-      lostFleet: true,
-    });
+    const engine = new Engine(
+      ["init 2 sticky-resource-bar-no-brainstone-spec", "p1 faction terrans", "p2 faction hadsch-hallas"],
+      {
+        lostFleet: true,
+      }
+    );
     const player = engine.players[0];
 
     const store = makeStore();

@@ -57,11 +57,7 @@ describe("Tinkeroids", () => {
     engine.generateAvailableCommands();
     const chooseCommand = engine.findAvailableCommand(PlayerEnum.Player1, Command.ChooseTinkeringTile);
 
-    expect(chooseCommand.data.tiles).to.have.members([
-      TinkeringTile.Step1,
-      TinkeringTile.Power4,
-      TinkeringTile.Qic1,
-    ]);
+    expect(chooseCommand.data.tiles).to.have.members([TinkeringTile.Step1, TinkeringTile.Power4, TinkeringTile.Qic1]);
 
     moveChooseTinkeringTile(engine, chooseCommand, PlayerEnum.Player1, TinkeringTile.Step1);
 

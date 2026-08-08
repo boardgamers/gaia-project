@@ -21,7 +21,10 @@ export interface ReproFn {
 
 /** Builds a `ReproFn` that reproduces the exact tier-1 "constructor replay throws" / oracle-set
  * failure class this fuzzer's driver looks for, keyed off the target failure's oracle name. */
-export function reproFnFor(options: EngineOptions, oracles: { name: string; check: (engine: Engine) => string[] }[]): ReproFn {
+export function reproFnFor(
+  options: EngineOptions,
+  oracles: { name: string; check: (engine: Engine) => string[] }[]
+): ReproFn {
   return (moves: string[]) => {
     let engine: Engine;
     try {

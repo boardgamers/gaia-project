@@ -45,7 +45,12 @@ describe("OpenLobbyGame", () => {
             ...gameRow,
             players: gameRow.players.map((player: any) =>
               player.seat === args.p_seat
-                ? { ...player, user_id: "user-admin", invited_email: "kim.pham.nguyen2@gmail.com", display_name: "Admin" }
+                ? {
+                    ...player,
+                    user_id: "user-admin",
+                    invited_email: "kim.pham.nguyen2@gmail.com",
+                    display_name: "Admin",
+                  }
                 : player
             ),
           };
@@ -55,7 +60,9 @@ describe("OpenLobbyGame", () => {
           gameRow = {
             ...gameRow,
             players: gameRow.players.map((player: any) =>
-              player.seat === args.p_seat ? { ...player, user_id: null, invited_email: "open-seat@lobby.invalid", display_name: "" } : player
+              player.seat === args.p_seat
+                ? { ...player, user_id: null, invited_email: "open-seat@lobby.invalid", display_name: "" }
+                : player
             ),
           };
           return { data: gameRow, error: null };
@@ -115,7 +122,10 @@ describe("OpenLobbyGame", () => {
     await Vue.nextTick();
     await Vue.nextTick();
 
-    const joinButton = wrapper.findAll("button").filter((b) => b.text() === "Join game").at(0);
+    const joinButton = wrapper
+      .findAll("button")
+      .filter((b) => b.text() === "Join game")
+      .at(0);
     await joinButton.trigger("click");
     await Vue.nextTick();
     await Vue.nextTick();

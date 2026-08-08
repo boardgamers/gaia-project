@@ -27,7 +27,9 @@ function createLostFleetRoundMoveEngine(
   nbPlayers: number,
   factions: Faction[] = [Faction.Terrans, Faction.Lantids, Faction.HadschHallas, Faction.Ivits]
 ) {
-  const engine = new Engine([`init ${nbPlayers} lost-fleet-federation-token-build-mine-${nbPlayers}`], { lostFleet: true });
+  const engine = new Engine([`init ${nbPlayers} lost-fleet-federation-token-build-mine-${nbPlayers}`], {
+    lostFleet: true,
+  });
 
   engine.players.forEach((pl, index) => {
     pl.faction = factions[index];

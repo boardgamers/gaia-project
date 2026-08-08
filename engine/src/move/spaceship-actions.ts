@@ -43,7 +43,11 @@ export function moveSpaceshipAction(
   }
 
   if (ship === Spaceship.Rebellion && type === "power") {
-    engine.processNextMove(SubPhase.SpaceshipUpgradeBuilding, { from: Building.Mine, to: Building.TradingStation }, false);
+    engine.processNextMove(
+      SubPhase.SpaceshipUpgradeBuilding,
+      { from: Building.Mine, to: Building.TradingStation },
+      false
+    );
     return;
   }
 

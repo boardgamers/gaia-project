@@ -129,7 +129,11 @@ describe("canonical-state", () => {
   it("matches across constructor replay, slowMotion replay, and serialize/parse hydration", () => {
     for (const entry of CORPUS) {
       const constructorState = buildEngine(entry);
-      const slowMotionState = Engine.slowMotion([...entry.moves], cloneOptions(entry.options), constructorState.version);
+      const slowMotionState = Engine.slowMotion(
+        [...entry.moves],
+        cloneOptions(entry.options),
+        constructorState.version
+      );
       const hydratedState = Engine.fromData(JSON.parse(JSON.stringify(constructorState)));
 
       const constructorJson = canonicalStateJson(constructorState);
@@ -138,8 +142,14 @@ describe("canonical-state", () => {
 
       expect(slowMotionJson).to.equal(constructorJson, `${entry.id} slowMotion parity`);
       expect(hydratedJson).to.equal(constructorJson, `${entry.id} hydration parity`);
-      expect(canonicalStateHash(slowMotionState)).to.equal(canonicalStateHash(constructorState), `${entry.id} slowMotion hash`);
-      expect(canonicalStateHash(hydratedState)).to.equal(canonicalStateHash(constructorState), `${entry.id} hydration hash`);
+      expect(canonicalStateHash(slowMotionState)).to.equal(
+        canonicalStateHash(constructorState),
+        `${entry.id} slowMotion hash`
+      );
+      expect(canonicalStateHash(hydratedState)).to.equal(
+        canonicalStateHash(constructorState),
+        `${entry.id} hydration hash`
+      );
     }
   });
 

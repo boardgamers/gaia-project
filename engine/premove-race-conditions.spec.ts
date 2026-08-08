@@ -224,7 +224,9 @@ describe("Premove race-condition regressions (#69 audit)", () => {
       pl.data.knowledge = 10;
       pl.data.ores = 10;
     });
-    const start = [...engine.map.grid.values()].find((hex) => hex.hasPlanet() && !hex.hasSpaceship() && !hex.occupied());
+    const start = [...engine.map.grid.values()].find(
+      (hex) => hex.hasPlanet() && !hex.hasSpaceship() && !hex.occupied()
+    );
     if (!start) {
       throw new Error("need a non-ship starting hex for player 1");
     }

@@ -12,7 +12,17 @@
  * magnitudes, the 13 Artifact token effects, the ship-action per-round lock, the QIC-action
  * overlay, and the Scoring Board Extension's side persistence.
  */
-import { Building, Command, Faction, FinalTile, Planet, Resource, ScoringBoardExtensionSide, Spaceship, SpaceshipFederation } from "../../enums";
+import {
+  Building,
+  Command,
+  Faction,
+  FinalTile,
+  Planet,
+  Resource,
+  ScoringBoardExtensionSide,
+  Spaceship,
+  SpaceshipFederation,
+} from "../../enums";
 import Engine from "../../engine";
 import { classifySectorId, LostFleetSectorType } from "../../lost-fleet-map";
 import Player from "../../player";
@@ -104,7 +114,11 @@ export class ArtifactTokenEffects implements Oracle {
       case "artifact-credit":
         return checkDelta(label, deltas, { [Resource.Credit]: 3, [Resource.Ore]: 3 });
       case "artifact-knowledgeqic":
-        return checkDelta(label, deltas, applyGleensQicSubstitution(pl, { [Resource.Knowledge]: 3, [Resource.Qic]: 1 }));
+        return checkDelta(
+          label,
+          deltas,
+          applyGleensQicSubstitution(pl, { [Resource.Knowledge]: 3, [Resource.Qic]: 1 })
+        );
       case "artifact-creditlarge":
         return checkDelta(label, deltas, { [Resource.Credit]: 5, [Resource.Ore]: 2 });
       case "artifact-power":
@@ -175,7 +189,10 @@ export class ArtifactTokenEffects implements Oracle {
  * Lost Fleet content itself, but a pre-existing base mechanic this fuzzer's LF reward-magnitude
  * oracles must account for, since it changes what "correct" looks like for a Gleens player.
  */
-function applyGleensQicSubstitution(pl: Player, expected: Partial<Record<Resource, number>>): Partial<Record<Resource, number>> {
+function applyGleensQicSubstitution(
+  pl: Player,
+  expected: Partial<Record<Resource, number>>
+): Partial<Record<Resource, number>> {
   if (pl.faction !== Faction.Gleens || pl.data.buildings[Building.Academy2] > 0) {
     return expected;
   }
@@ -183,11 +200,16 @@ function applyGleensQicSubstitution(pl: Player, expected: Partial<Record<Resourc
   if (!qic) {
     return expected;
   }
-  const { [Resource.Qic]: _drop, ...rest } = expected;
+  const rest = { ...expected };
+  delete rest[Resource.Qic];
   return { ...rest, [Resource.Ore]: (rest[Resource.Ore] ?? 0) + qic };
 }
 
-function checkDelta(label: string, deltas: Partial<Record<Resource, number>>, expected: Partial<Record<Resource, number>>): string[] {
+function checkDelta(
+  label: string,
+  deltas: Partial<Record<Resource, number>>,
+  expected: Partial<Record<Resource, number>>
+): string[] {
   const messages: string[] = [];
   for (const [resource, count] of Object.entries(expected)) {
     if ((deltas[resource as Resource] ?? 0) !== count) {
@@ -407,7 +429,10 @@ export const tileGatingLeaks: Oracle = {
       if (engine.tiles.artifacts.length > 0) {
         messages.push(`base game has Lost Fleet Artifact tokens seeded: [${engine.tiles.artifacts}]`);
       }
-      if (Object.keys(engine.tiles.spaceshipFederations).length > 0 || Object.keys(engine.tiles.spaceshipTechs).length > 0) {
+      if (
+        Object.keys(engine.tiles.spaceshipFederations).length > 0 ||
+        Object.keys(engine.tiles.spaceshipTechs).length > 0
+      ) {
         messages.push(`base game has spaceship-seeded tiles/tokens present`);
       }
       if (!("qic1" in engine.boardActions)) {

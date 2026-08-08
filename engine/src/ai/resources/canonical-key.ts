@@ -14,9 +14,7 @@ function digest(value: unknown): string {
 }
 
 /** Object identity and property insertion order are deliberately absent from state keys. */
-export function canonicalConversionStateKey(
-  state: ProjectedConversionState
-): CanonicalConversionStateKey {
+export function canonicalConversionStateKey(state: ProjectedConversionState): CanonicalConversionStateKey {
   return `conversion-state-v1:${digest({
     schemaVersion: CONVERSION_STATE_SCHEMA,
     ...state,

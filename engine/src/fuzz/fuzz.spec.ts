@@ -15,7 +15,9 @@ describe("Fuzzer", function () {
 
   describe("smoke corpus (fixed seeds, end-to-end, tier-1 structural + tier-2 conservation oracles)", () => {
     for (const spec of [...smokeCorpus(), ...lostFleetSmokeCorpus()]) {
-      it(`should play ${spec.gameSeed} (${spec.players}p${spec.lostFleet ? ", Lost Fleet" : ""}) to completion with no oracle failures`, () => {
+      it(`should play ${spec.gameSeed} (${spec.players}p${
+        spec.lostFleet ? ", Lost Fleet" : ""
+      }) to completion with no oracle failures`, () => {
         const result = fuzzGame(spec);
 
         expect(result.failures, JSON.stringify(result.failures, null, 2)).to.have.length(0);
@@ -38,10 +40,8 @@ describe("Fuzzer", function () {
           "host-style (slowMotion) replay diverged from constructor replay"
         ).to.be.true;
         // Serialization must be lossless.
-        expect(
-          isEqual(outcome.roundTripState, outcome.constructorState),
-          "fromData(JSON) round trip diverged"
-        ).to.be.true;
+        expect(isEqual(outcome.roundTripState, outcome.constructorState), "fromData(JSON) round trip diverged").to.be
+          .true;
       });
     }
 

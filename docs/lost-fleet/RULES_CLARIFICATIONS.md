@@ -8,7 +8,9 @@
 > **Result: no official errata/FAQ document exists for Lost Fleet.** The v1.0 rulebook is authoritative.
 
 ## How to use this file
+
 Every entry has:
+
 - **Value/Rule** — the actual answer (the effect text)
 - **Source** — one of: `RULEBOOK-TEXT p.N` | `BOARD-ART <component>` | `ERRATA <link>` | `COMMUNITY <link>` | `OUR-RULING`
 - **Confidence** — `CONFIRMED` (read directly / official) | `INFERRED` (reasoned, unverified) | `TODO` (placeholder, needs filling)
@@ -17,15 +19,17 @@ Every entry has:
   text rules that have no physical card.
 
 When you read a value off a physical/rendered component, replace the placeholder, set Source =
-`BOARD-ART <component name/seed>` (a text pointer to *where* it was confirmed, never the image
+`BOARD-ART <component name/seed>` (a text pointer to _where_ it was confirmed, never the image
 file itself — see "Art policy" below), and Confidence = `CONFIRMED`.
 
 ### Art policy: original image vs. our depiction
+
 We never commit official Lost Fleet artwork (scans, randomizer screenshots, photos) into this
 repo — copyrighted third-party game art, and the project already keeps everything else
 text-only (see `PROGRESS.md` "Done so far" #1: "no third-party art committed"). Source images are
-a *reference used once to derive the rule and the depiction*, then discarded — only the derived
+a _reference used once to derive the rule and the depiction_, then discarded — only the derived
 text (effect + depiction plan) is kept here. Concretely, each component-type entry has three parts:
+
 1. **Original component** — identified by name (Source line), not stored as a file.
 2. **Depiction** — how it's drawn in the viewer, reusing existing house style/components instead of
    replicating scanned art (already the stated viewer principle for Lost Fleet — see `PROGRESS.md`
@@ -42,17 +46,20 @@ text (effect + depiction plan) is kept here. Concretely, each component-type ent
   Source: `OUR-RULING`. Confidence: CONFIRMED.
 
   **LOCKED enum shape (approved 2026-06-25, repo-verified against `engine/src/enums.ts`):**
+
   ```ts
   export enum Expansion {
     // 1 was the old spaceships expansion
     None = 0,
-    Frontiers = 2,                 // value UNCHANGED — keeps recorded-game fixtures (serialize "2") valid
-    LostFleet = 4,                 // new, a distinct bit so it can never collide with a Frontiers check
-    All = Frontiers | LostFleet,   // = 6 — "all content" sentinel for `.values()` enumeration ONLY,
-                                   //         never a valid game-config selection
+    Frontiers = 2, // value UNCHANGED — keeps recorded-game fixtures (serialize "2") valid
+    LostFleet = 4, // new, a distinct bit so it can never collide with a Frontiers check
+    All = Frontiers | LostFleet, // = 6 — "all content" sentinel for `.values()` enumeration ONLY,
+    //         never a valid game-config selection
   }
   ```
+
   Verified facts that shaped this:
+
   - Current real enum is `None=0, Frontiers=2, All=2` (NOT `All=2` as additive — `All` aliases Frontiers).
   - **`Expansion.All` is used in 8 sites** (`player-data.ts`, `faction-boards/types.ts`, viewer charts,
     `available/ships.ts`, old-ui) as a "give me every value incl. expansion content" argument to the
@@ -71,7 +78,7 @@ text (effect + depiction plan) is kept here. Concretely, each component-type ent
     of `None` / `Frontiers` / `LostFleet`; `All` is rejected as a config value (it is enumeration-only).
   - Total migration surface: ~20 files touch `Expansion.*`; most are harmless `Expansion.All` enumeration
     sites that keep working; the strict-equality config checks are the ones to convert to bitwise.
-  Source: `OUR-RULING` + repo verification. Confidence: CONFIRMED.
+    Source: `OUR-RULING` + repo verification. Confidence: CONFIRMED.
 
 - **A2. Undo.** Players may undo freely WITHIN their own turn. A turn is committed (and synced to
   others) only when the full turn completes — mirrors existing `self-contained.ts` "save only if a
@@ -79,7 +86,7 @@ text (effect + depiction plan) is kept here. Concretely, each component-type ent
 
 - **A3. No Automa / no solo.** Source: `OUR-RULING`. Confidence: CONFIRMED.
 
-- **A4. No-home-planet factions.** The 4 new factions have no home *terrain* planet (they start on
+- **A4. No-home-planet factions.** The 4 new factions have no home _terrain_ planet (they start on
   Asteroid/Protoplanet). **Same-color exclusivity still applies (owner-confirmed 2026-06-27): only one
   faction per color per game, exactly like the base game.** The 4 new factions form 2 color pairs —
   Tinkeroids↔Darkanians (Asteroid/turquoise) and Moweyds↔Space Giants (Protoplanet/pink) — and are
@@ -92,9 +99,10 @@ text (effect + depiction plan) is kept here. Concretely, each component-type ent
 
 ---
 
-## B. NEW FACTION VALUES  (fill from faction boards + p.16)
+## B. NEW FACTION VALUES (fill from faction boards + p.16)
 
 ### B1. Tinkeroids — start planet: Asteroid
+
 - Starting resources (one-time): **2k, 4o, 15c, 1q** + **1 step Science track**.
   → engine income[0] ≈ `"2k,4o,15c,q,up-sci"`.
 - Recurring base income (income[1]): **+1k, +1o** → `"+o,k"`.
@@ -102,7 +110,7 @@ text (effect + depiction plan) is kept here. Concretely, each component-type ent
 - Planetary Institute income: **+4pw, +1 token(B1)** (standard) → `["+4pw","+t"]`.
 - TS/RL/AC incomes: standard (TS +3/4/4/5c, RL +k+tech, AC1 +2k, AC2 =>q). No building-cost deltas.
 - Source: `COMMUNITY (faction-overview PDF, pp.1-2 table; base-faction rows in same table match known
-  base values → high trust)`. Confidence: **CONFIRMED** (owner-verified 2026-06-25: 2k start + 4/2 power split).
+base values → high trust)`. Confidence: **CONFIRMED** (owner-verified 2026-06-25: 2k start + 4/2 power split).
 - Terraform: 3 steps for the "cost-3" base colors, 1 step for all others; the cost-3 set is
   determined at setup via the Moweyds/Tinkeroids Terraforming board (see revised §B5).
   **Gaia planet: a mine costs the normal 1 Q.I.C. — NOT 2** (corrected 2026-06-27; only Darkanians &
@@ -117,6 +125,7 @@ text (effect + depiction plan) is kept here. Concretely, each component-type ent
   - Source: `BOARD-ART tinkering tiles` (owner board-read 2026-06-27). Confidence: CONFIRMED.
 
 ### B2. Darkanians — start planet: Asteroid
+
 - Starting resources (one-time): **3k, 7o, 15c, 1q** + **1 step Navigation AND 1 step Economy**.
   → engine income[0] ≈ `"3k,7o,15c,q,up-nav,up-eco"`. (Note: 7 ore is unusually high — confirm.)
 - Recurring base income: **+1k, +1o** → `"+o,k"`.
@@ -133,6 +142,7 @@ text (effect + depiction plan) is kept here. Concretely, each component-type ent
   Source: p.13. CONFIRMED.
 
 ### B3. Moweyds — start planet: Protoplanet
+
 - Starting resources (one-time): **5k, 6o, 15c, 2q** + **1 step Gaiaforming track**.
   → engine income[0] ≈ `"5k,6o,15c,2q,up-gaia"`. (High start — compensates 1-mine + 0-VP protoplanet.)
 - Recurring base income: **+1k, +1o** → `"+o,k"`.
@@ -149,6 +159,7 @@ text (effect + depiction plan) is kept here. Concretely, each component-type ent
   6 Power Rings available. Source: p.13. CONFIRMED.
 
 ### B4. Space Giants — start planet: Protoplanet
+
 - Starting resources (one-time): **3k, 6o, 15c, 1q** + **1 step Navigation track**.
   → engine income[0] ≈ `"3k,6o,15c,q,up-nav"`.
 - Recurring base income: **+1k, +1o** → `"+o,k"`.
@@ -165,20 +176,22 @@ text (effect + depiction plan) is kept here. Concretely, each component-type ent
 - PI: immediately take 1 tech tile of choice (Upgrade rules apply); once only. Source: p.13. CONFIRMED.
 
 ### B5. Moweyds/Tinkeroids Terraforming board — cost-3 color selection (REVISED 2026-06-30, owner-confirmed)
+
 Determines which base planet colors cost 3 terraform steps (vs. 1 for all others) for these two
 no-home-planet factions. **This is NOT a blind random draw** (corrects the earlier description).
 Source: `RULEBOOK-TEXT p.8` + owner clarifications 2026-06-27 and 2026-06-30. Confidence: CONFIRMED.
+
 - **There are always exactly 3 base colors that cost 3 steps; every other base color costs 1 step.**
 - **Opponents' home colors always cost 3, and take priority.** Terraforming toward any color that is
   another player's faction home color costs 3 steps. (An opponent that is itself a no-home-planet
-  faction — e.g. the *other* new faction in the game — contributes NO color, so the count of
+  faction — e.g. the _other_ new faction in the game — contributes NO color, so the count of
   color-bearing opponents can be fewer than playerCount−1.)
 - The remaining cost-3 slots (to always reach exactly 3) are filled from the random setup layout:
   - **4 players:** the 3 color-bearing opponents normally already supply all 3 → no random fill.
   - **3 players:** ~2 opponents' colors + 1 filled from the setup layout.
   - **2 players:** 1 opponent's color + 2 filled from the setup layout.
-  (If a new-faction opponent reduces the color-bearing-opponent count, proportionally more slots are
-  filled from the layout — the invariant is simply "exactly 3 cost-3 colors total.")
+    (If a new-faction opponent reduces the color-bearing-opponent count, proportionally more slots are
+    filled from the layout — the invariant is simply "exactly 3 cost-3 colors total.")
 - **Random-fill procedure (owner-resolved 2026-06-30):** at setup the 7 base colors are placed on the
   board in a random order (one satellite of each color, p.8). After assigning/removing the mandatory
   opponent colors, scan that randomized 7-color row **left to right** and take the next remaining colors
@@ -193,7 +206,7 @@ Source: `RULEBOOK-TEXT p.8` + owner clarifications 2026-06-27 and 2026-06-30. Co
 
 ---
 
-## C. SPACESHIP BOARDS  (fill from the 4 spaceship boards)
+## C. SPACESHIP BOARDS (fill from the 4 spaceship boards)
 
 For each ship, capture every action space: {type, cost, effect, grid-position} and tech-slot count.
 
@@ -203,6 +216,7 @@ Color→type mapping CONFIRMED: **green = Q.I.C. action, purple = Power action, 
 yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-read 2026-06-27. CONFIRMED.
 
 ### C1. Twilight (Nautilaks)
+
 - Q.I.C. action: 3 Q.I.C. → re-score (re-trigger) a Federation token you already own (same mechanic as
   the base game's federation re-scoring / the Federation-token-shaped Artifact, G6).
 - Power action: 3 power (Area III) + 2 ore → build a Research Lab.
@@ -217,7 +231,8 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
   setup names exactly those 3 ships for tile placement, omitting Twilight) + owner-confirmed
   2026-06-27. CONFIRMED.
 
-### C2. Rebellion (Vo'Kron)  — excluded in 2p
+### C2. Rebellion (Vo'Kron) — excluded in 2p
+
 - Q.I.C. action: 3 Q.I.C. → claim a Tech tile (same as the base game's "take a tech tile" Q.I.C. action).
 - Power action: 3 power + 1 ore → build a Trading Station, ignoring the normal adjacency-to-a-mine
   requirement.
@@ -227,6 +242,7 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
   `RULEBOOK-TEXT` p.6. CONFIRMED.
 
 ### C3. T F Mars (Gaia Federation)
+
 - Q.I.C. action: 2 Q.I.C. → gain 2 VP + 1 VP per Tech tile you have.
 - Power action: charge 2 power → perform the Instant Gaiaforming action (same mechanic as the
   "instant" Round Booster, G3: start a Gaia Project on a transdim planet in range without moving
@@ -241,6 +257,7 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
   p.6. CONFIRMED.
 
 ### C4. Eclipse (Eridani Empire)
+
 - Q.I.C. action: 2 Q.I.C. → gain 2 VP + 1 VP per planet type colonized.
 - Power action: 3 power + 2 knowledge → advance 1 level on any Research track of your choice.
 - Credit action: 6 credits → place a Mine on an Asteroid under normal range rules; the mine itself is
@@ -258,14 +275,15 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
   varies which ship has what"). CONFIRMED.
 - **Federation-token setup distribution (separate from the Standard Tech assignment above; applies to
   all 4 ships, not just C2-C4) — transcribed verbatim from `rulebook-v1.0.txt` p.6, previously found
-  but not yet quoted in this doc:** *"Take 4 of the new Federation tokens and distribute them on the 4
+  but not yet quoted in this doc:** _"Take 4 of the new Federation tokens and distribute them on the 4
   spaceships at random. If there are 2 players, you will only be playing with 3 spaceships, so take 3
   of the new Federation tokens at random and place them onto those 3 spaceships. Return the remaining
-  Federation tokens to the box."* So: 3-4p draws 4 of the 8 tokens (one per ship, all 4 ships incl.
+  Federation tokens to the box."_ So: 3-4p draws 4 of the 8 tokens (one per ship, all 4 ships incl.
   Twilight); 2p draws 3 of the 8 (one per ship, Rebellion excluded per C2); the rest go back in the box
   unused. CONFIRMED.
 
 ### C5. Shuttle-space charge values — CONFIRMED (owner board-read 2026-06-27)
+
 - The Exploration track has **4 spaces per ship**, not 5 (corrects D1's earlier "5 spaces" guess).
   Never more than 1 shuttle per ship per player, so a ship caps out at 4 explorers.
 - Space 1: no charge (whoever lands here is by definition the first explorer, per D1's exception).
@@ -318,22 +336,22 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
   - **Side-selection rule — RESOLVED 2026-06-27 (owner ruling, `OUR-RULING`).** The rulebook states the
     rule twice (re-checked directly, not a column-merge/OCR artifact — both passages are clean,
     unambiguous text):
-    - p.5, setup: *"Take the Scoring Board Extension. For 2 players, always use the side showing 25
+    - p.5, setup: _"Take the Scoring Board Extension. For 2 players, always use the side showing 25
       victory points. For 3 or 4 players, use the side showing 3 Exploration Shuttles. In later games,
-      you can decide at random which side to use."*
+      you can decide at random which side to use."_
     - p.10, the Advanced-Tech-conditions paragraph attached to "Action: Build a Mine" (NOT "Action:
       Upgrade Existing Structures" — that's a separate paragraph on the same physical page; corrects an
-      earlier mis-citation): *"Instead, the conditions shown on the Scoring Board Extension are applied
+      earlier mis-citation): _"Instead, the conditions shown on the Scoring Board Extension are applied
       (either you have at least 25 victory points or have explored 3 different spaceships in the Lost
-      Fleet; the latter condition only applies in 3- and 4-player games)."*
-    Both passages agree with each other and tie side selection to player count by default: 2p always
-    uses the 25-VP side; 3-4p default to the ships-explored side, with randomization offered only as an
-    optional "in later games" house option for 3-4p. **Owner's final call: keep the printed 2p rule as-is
-    (always forced to the 25-VP side), but for 3-4p, always randomize the side from game 1 onward**
-    (exercising the rulebook's own "decide at random" option every game, rather than defaulting to the
-    ships side with optional later randomization). This is now the engine's locked behavior — no conflict
-    remains; this was never a misprint, just a digital house-rule choice to apply the rulebook's own
-    randomization option unconditionally for 3-4p.
+      Fleet; the latter condition only applies in 3- and 4-player games)."_
+      Both passages agree with each other and tie side selection to player count by default: 2p always
+      uses the 25-VP side; 3-4p default to the ships-explored side, with randomization offered only as an
+      optional "in later games" house option for 3-4p. **Owner's final call: keep the printed 2p rule as-is
+      (always forced to the 25-VP side), but for 3-4p, always randomize the side from game 1 onward**
+      (exercising the rulebook's own "decide at random" option every game, rather than defaulting to the
+      ships side with optional later randomization). This is now the engine's locked behavior — no conflict
+      remains; this was never a misprint, just a digital house-rule choice to apply the rulebook's own
+      randomization option unconditionally for 3-4p.
   - **Engine rule, final:** 2 players → side is always "25 VP." 3 or 4 players → side is chosen uniformly
     at random (50/50) at setup, every game.
   - The **2nd** condition (flip an owned, unflipped Federation token) and **3rd** condition (cover an
@@ -344,9 +362,9 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
     by default — explored 3 of 4 ships) AND flip an unflipped Federation token AND cover a matching
     Standard Tech tile. The other 5 Advanced Tech tiles in the game are still taken under the normal,
     unmodified 3-condition rule.
-  Source: `RULEBOOK-TEXT` p.5 (setup/side selection) + p.10 (Advanced-Tech-conditions paragraph) +
-  `OUR-RULING` (3-4p always-random side selection, owner-confirmed 2026-06-27).
-  Confidence: CONFIRMED.
+    Source: `RULEBOOK-TEXT` p.5 (setup/side selection) + p.10 (Advanced-Tech-conditions paragraph) +
+    `OUR-RULING` (3-4p always-random side selection, owner-confirmed 2026-06-27).
+    Confidence: CONFIRMED.
 
 ## F. RESEARCH TRACK CHANGES
 
@@ -358,7 +376,7 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
   - **Side "vp" (flat-VP side):** Level 3 = 1 ore + 3 credits + 1 VP. Level 4 = 2 ore + 4 credits + 1 VP.
   - One side is placed at random at setup, covering the base game's level-3/4 income symbols on the
     Economy research track. Source: `RULEBOOK-TEXT` (placement only, not the reward values). CONFIRMED.
-  (Base + Frontiers economy strings are in `research-tracks.ts` for reference.)
+    (Base + Frontiers economy strings are in `research-tracks.ts` for reference.)
 - F2. No new research track is added (unlike Frontiers' Diplomacy) — Lost Fleet only modifies the
   existing Economy track via the F1 overlay tile, it doesn't add a 7th track. Owner-confirmed 2026-06-27.
   CONFIRMED.
@@ -426,7 +444,7 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
   tiles that pay per sector (1 ore/sector, 2 VP/sector — same shared `Condition.Sector`). Only a real
   Space Sector tile counts as a sector for these; Interspace already didn't count either way. **Source:
   OUR-RULING (owner, 2026-07-05) — there is no rulebook text either way** for this specific tile/these
-  2 tiles (the base game predates Deep Space and Lost Fleet's own appendix only reprints the 3 *new*
+  2 tiles (the base game predates Deep Space and Lost Fleet's own appendix only reprints the 3 _new_
   Final Scoring tiles, not this pre-existing one). This is deliberately narrower than `Condition.NewSector`
   (the `sector3` Round Scoring tile) and Darkanians' PI ability, which DO count Deep Space — those two
   have their own explicit rulebook text ("Space sector / Deep Space sector", rulebook p.6/p.13, line 132
@@ -498,7 +516,7 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
   doc; now captured verbatim from a fresh full read of `rulebook-v1.0.txt` p.4-5, 2026-06-27).
   Source: `RULEBOOK-TEXT` p.4-5. CONFIRMED.
   - **2 players:** Space Sector tiles **01-07** (7 of the base game's 10). Flip Sectors **05, 06, 07**
-    to their *"black numbers outlined in white"* side (a Lost-Fleet-specific revised face — see H4).
+    to their _"black numbers outlined in white"_ side (a Lost-Fleet-specific revised face — see H4).
     Randomly pick 1 of Sectors 01-04 for the center; arrange the other 6 around it, sliding each outer
     sector 1 space left/right so it only borders the inner sector along 2 spaces (not a full edge
     match like the base game) — this opens **6 holes**, 1 space each, around the center sector. Place
@@ -516,18 +534,18 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
     engine-implementation note below). Place the **8 Deep Space Sector tiles**, random side up, in the
     gaps around the outside edge — **3p-only rule: place 2 Deep Space tiles next to each other in the
     larger gap beside the last-placed sector.**
-  - **4 players:** **All 10** Space Sector tiles. Sectors 05/06/07 stay on their normal *white numbers*
+  - **4 players:** **All 10** Space Sector tiles. Sectors 05/06/07 stay on their normal _white numbers_
     side (4p is the only player count using the base-game-style face for those 3 tiles — no flip).
     Randomly pick 2 of Sectors 01-04 and place them adjacent in the center; arrange the other 8 around
     them at random, shifted the same way — 10 holes. Place the **10 Interspace tiles for 4p** at
     random; same "not within 3 spaces" spacing rule as 3p. Place the (same) **8 Deep Space Sector
     tiles**, random side up, in the gaps — no 3p-style "2 adjacent" rule at 4p.
   - **Engine-relevant details not previously captured in this doc:**
-    1. Deep Space tile *count* is fixed at 8 in the physical set, but 2p games only place 6 of them
+    1. Deep Space tile _count_ is fixed at 8 in the physical set, but 2p games only place 6 of them
        (tiles 11-16 explicitly, by number) — 3p/4p both place all 8.
     2. Sectors 05/06/07 are genuine double-sided Lost-Fleet components (revised face for 2-3p, stock
        base-game face for 4p) — feeds directly into H4 below.
-    3. **RESOLVED 2026-06-28 (empirical, engine-side):** the Interspace spacing rule's *wording* changes
+    3. **RESOLVED 2026-06-28 (empirical, engine-side):** the Interspace spacing rule's _wording_ changes
        by player count (2p: "≥5 spaces," 3-4p: "not within 3 spaces") but is the **same underlying
        constraint**, not two different formulas. Computed all pairwise hex-distances between
        `findInterspaceHoles()` results at 2p/3p/4p: the only distances that ever occur are
@@ -539,12 +557,12 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
     4. **RESOLVED 2026-06-28 — the 3p-only "place 2 Deep Space tiles next to each other in the larger
        gap by the sector you placed last" rule has an exact geometric match, not just an inferred
        convention.** All 8 notches are individually uniform in size (same 3-hex triangle, same local
-       pocket), but checking pairwise hex-adjacency *between* notches (do any two notches share a hex
+       pocket), but checking pairwise hex-adjacency _between_ notches (do any two notches share a hex
        border?) found exactly **one adjacent pair at 3p, and zero adjacent pairs at 2p and 4p** — this
        is a fixed structural property of `lostFleetSectorCenters()`'s geometry (sector centers are not
        randomized, only which physical tile goes where is), so it holds in every 3p game, never in 2p/4p
        games, matching the rulebook's "3p-only" framing exactly. The adjacent pair sits where ring sector
-       index 2 meets *both* extra sectors (indices 7 and 8, the two sectors added after the base 6-ring
+       index 2 meets _both_ extra sectors (indices 7 and 8, the two sectors added after the base 6-ring
        in `lostFleetSectorCenters(3)`) — i.e. right beside index 8, the array's last sector, matching
        "the sector you placed last." Engine implementation: find the (3p-only) adjacent notch pair via
        hex-adjacency and place 2 Deep Space tiles there instead of the usual 1; no separate "last sector"
@@ -552,7 +570,7 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
     5. **Tile shapes (owner-clarified 2026-06-28, was the cause of a long-running layout bug):** an
        **Interspace tile is a single hex**, placed only in the interior holes; a **Deep Space tile is a
        3-hex triangle**, placed only in the perimeter notches along the outside edge. A 3-hex cluster
-       appearing *in the interior* between sectors is therefore a layout DEFECT (the interior must be
+       appearing _in the interior_ between sectors is therefore a layout DEFECT (the interior must be
        clean single-hex holes), not a Deep Space slot. The "slide every outer sector the same way"
        rule must be applied consistently or the seam between two inner-adjacent sectors collapses two
        interior singles into a 3-hex middle cluster.
@@ -586,16 +604,16 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
   redrawn pixel-for-pixel (own SVG style instead, per Art policy above) but DOES need this composition
   data for game logic — explicitly requested, not yet captured anywhere else:
 
-  | Tile | Side a | Side b |
-  |---|---|---|
-  | 11 | Protoplanet, Asteroid, Blank | Asteroid, Blank, Blank |
-  | 12 | **Transdim**, Protoplanet, Blank | Asteroid, Blank, Blank |
-  | 13 | **Transdim**, Blank, Asteroid | Blank, Blank, Asteroid |
-  | 14 | Protoplanet, Blank, Asteroid | Blank, Blank, Asteroid |
-  | 15 | Protoplanet, Blank, Blank | Protoplanet, Blank, Asteroid |
-  | 16 | Blank, Blank, Protoplanet | Asteroid, Blank, Asteroid |
-  | 17 | **Transdim**, Blank, Blank | Blank, Asteroid, Blank |
-  | 18 | Protoplanet, Blank, Blank | Asteroid, Blank, Blank |
+  | Tile | Side a                           | Side b                       |
+  | ---- | -------------------------------- | ---------------------------- |
+  | 11   | Protoplanet, Asteroid, Blank     | Asteroid, Blank, Blank       |
+  | 12   | **Transdim**, Protoplanet, Blank | Asteroid, Blank, Blank       |
+  | 13   | **Transdim**, Blank, Asteroid    | Blank, Blank, Asteroid       |
+  | 14   | Protoplanet, Blank, Asteroid     | Blank, Blank, Asteroid       |
+  | 15   | Protoplanet, Blank, Blank        | Protoplanet, Blank, Asteroid |
+  | 16   | Blank, Blank, Protoplanet        | Asteroid, Blank, Asteroid    |
+  | 17   | **Transdim**, Blank, Blank       | Blank, Asteroid, Blank       |
+  | 18   | Protoplanet, Blank, Blank        | Asteroid, Blank, Blank       |
 
   Source: `BOARD-ART` (randomizer asset read). Confidence: CONFIRMED — including the previously
   "unidentified" hex. **RESOLVED 2026-06-27:** the hex on tiles 12a/13a/17a (a solid violet/magenta
@@ -605,10 +623,12 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
   wildcard/ghost planet type (becomes Gaia when converted via Gaiaforming), simply also seeded onto
   Deep Space tiles alongside Protoplanet/Asteroid/Blank. Yes — the randomizer site's own asset set was
   sufficient to resolve this without needing the physical component; no further owner check needed.
+
   - Extends H5: tile 16 has 0 asteroid hexes on side a vs. 2 on side b — exactly the swing the setup
     code keys off (`advcond`-style forced logic) when deciding whether to flip tile 16 to reach the ≥6
     asteroid minimum. A full side-b set totals 9 asteroid hexes across all 8 tiles; a full side-a set
     totals only 3 — confirms why tile 16 specifically is the one the rulebook calls out to flip.
+
 - H3. Interspace tile contents per player-count set (30 in 4 sets). Structural detail
   (`RULEBOOK-TEXT` p.5 sidebar, verbatim) explaining the "4 sets" framing: each Interspace tile has 2
   faces — **front** shows one of {Lost Fleet spaceship tile, planet tile (Protoplanet or Asteroid),
@@ -624,9 +644,9 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
     | 3p | 2 | 1 | 4 (all) | 1 | 8 |
     | 4p | 4 | 1 | 4 (all) | 1 | 10 |
   - **Note (low priority — solo/Automa is not implemented per A3):** the rulebook's own solo-setup text
-    (p.6) excludes a different ship for solo play than what the owner stated above — it says *"Return
+    (p.6) excludes a different ship for solo play than what the owner stated above — it says _"Return
     the Twilight spaceship ... to the box. Put the other 3 spaceships [Rebellion, T F Mars, Eclipse]
-    near the gameboard,"* i.e. solo excludes **Twilight**, not Rebellion. The owner's solo composition
+    near the gameboard,"_ i.e. solo excludes **Twilight**, not Rebellion. The owner's solo composition
     above says "no Rebellion" instead. Since solo play isn't being built (A3), this discrepancy is
     flagged for completeness only and isn't blocking — 2p (which IS in scope and does exclude Rebellion,
     per C2) matches the owner's data exactly.
@@ -645,7 +665,7 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
     `engine/src/map.ts`) and already picks B-side for its 2-3p `smallConfiguration` and A-side for its
     4-5p `bigConfiguration`. Lost Fleet board generation reuses that exact same split — B-side
     (`s5b`/`s6b`/`s7b`) for LF 2p/3p, A-side (`s5`/`s6`/`s7`) for LF 4p — even though it isn't
-    confirmed to be the *correct* Lost-Fleet-specific revised art, since it's the closest available
+    confirmed to be the _correct_ Lost-Fleet-specific revised art, since it's the closest available
     proxy and keeps 4p genuinely unrevised (matching the rulebook's explicit "white numbers" note for
     4p above).
 - H5. "Most asteroids" final scoring needs ≥6 asteroids in play (flip Deep Space tile 16 if not). p.4. CONFIRMED.
@@ -662,26 +682,26 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
   PB1/PB2=token(s) gained into Area I/II; "de" (Ambas TS) = a board-printed footnote abbreviation, not
   yet decoded — flag if it matters when implementing Ambas.
 
-  | Faction | Bldgs | Power B1/B2 | Resources | Start research | Basic income | TS 1/2/3/4 | PI | RL | AC1 | AC2 | Ship cost | LF special ability |
-  |---|---|---|---|---|---|---|---|---|---|---|---|---|
-  | Terrans | 2M | 4/4 | 3K,4R,15C,1Q | GF | +1K,+1R | +3/4/4/5C | +4P,+1PB1 | +1K | +2K | 1Q | 5VP | None |
-  | Lantids | 2M | 4/0 | 3K,4R,13C,1Q | None | +1K,+1R,+1PB1 | +3/4/4/5C | +4P | +1K | +2K | 1Q | 5VP | None |
-  | Xenos | 3M | 2/4 | 3K,4R,15C,1Q | AI | +1K,+1R | +3/4/4/5C | +4P,+1Q | +1K | +2K | 1Q | 5VP | 1R→1PB3 free action |
-  | Gleens | 2M | 2/4 | 3K,4R,15C | Nav | +1K,+1R | +3/4/4/5C | +4P,+1R | +1K | +2K | 1Q | 5VP | +2 range special action |
-  | Taklons | 2M | 2+BS/4 | 3K,4R,15C,1Q | None | +1K,+1R | +3/4/4/5C | +4P,+1PB1 | +1K | +2K | 1Q | 5VP + BS to gaia area | None |
-  | Ambas | 2M | 2/4 | 3K,4R,15C,1Q | Nav | +1K,+2R | +3/4/4/5C de | +4P,+2PB1 | +1K | +2K | 1Q | 5VP | None |
-  | Hadsch Hallas | 2M | 2/4 | 3K,4R,15C,1Q | Eco | +1K,+1R,+3C | +3/4/4/5C | +4P,+1PB1 | +1K | +2K | 1Q | 5VP | None |
-  | Ivits | 1PI | 2/2 | 3K,4R,15C,1Q | None | +1K,+1R,+1Q | +3/4/4/5C | +4P,+1PB1 | +1K | +2K | 1Q | 5VP | None |
-  | Geodens | 2M | 2/4 | 3K,4R,15C,1Q | TF | +1K,+1R | +3/4/4/5C | +4P,+1PB1 | +1K | +2K | 1Q | 5VP | None |
-  | Bal T'aks | 2M | 2/2 | 3K,4R,15C | GF | +1K,+1R | +3/4/4/5C | +4P,+1PB1 | +1K | +2K | 4C | 7VP | None |
-  | Firaks | 2M | 2/4 | 2K,4R,15C,1Q | None | +2K,+1R | +3/4/4/5C | +4P,+1PB1 | +1K | +2K | 1Q | 5VP | None |
-  | Bescods | 2M | 2/4 | 3K,4R,15C,1Q | None | +1R | +1/1/1/1K | +4P,+2PB1 | +2K | +3/4/5C | 1Q | 5VP | None |
-  | Nevlas | 2M | 2/4 | 2K,4R,15C,1Q | Sci | +1K,+1R | +3/4/4/5C | +4P,+1PB1 | +2P | +2K | 1Q | 5VP + burn 1P | None |
-  | Itars | 2M | 4/4 | 3K,5R,15C,1Q | None | +1K,+1R,+1PB1 | +3/4/4/5C | +4P,+1PB1 | +1K | +3K | 1Q | 5VP + burn 1P | None |
-  | Moweyds | 1M | 4/4 | 5K,6R,15C,2Q | GF | +1K,+1R | +3/4/4/5C | +4P,+1PB1 | +1K | +2K | 1Q | 5VP | None |
-  | Space Giants | 1M | 4/4 | 3K,6R,15C,1Q | Nav | +1K,+1R | +3/4/4/5C | +6P,+1PB1 | +1K | +2K | 1Q | 5VP | 2 dig special action |
-  | Darkanians | 1M | 4/2 | 3K,7R,15C,1Q | Nav,Eco | +1K,+1R | +3/4/4/5C | +4P,+1PB1 | +1K | +2K | 1Q | 5VP | None |
-  | Tinkeroids | 1PI | 4/2 | 2K,4R,15C,1Q | Sci | +1K,+1R | +3/4/4/5C | +4P,+1PB1 | +1K | +2K | 1Q | 5VP | None |
+  | Faction       | Bldgs | Power B1/B2 | Resources    | Start research | Basic income  | TS 1/2/3/4   | PI        | RL  | AC1     | AC2 | Ship cost             | LF special ability      |
+  | ------------- | ----- | ----------- | ------------ | -------------- | ------------- | ------------ | --------- | --- | ------- | --- | --------------------- | ----------------------- |
+  | Terrans       | 2M    | 4/4         | 3K,4R,15C,1Q | GF             | +1K,+1R       | +3/4/4/5C    | +4P,+1PB1 | +1K | +2K     | 1Q  | 5VP                   | None                    |
+  | Lantids       | 2M    | 4/0         | 3K,4R,13C,1Q | None           | +1K,+1R,+1PB1 | +3/4/4/5C    | +4P       | +1K | +2K     | 1Q  | 5VP                   | None                    |
+  | Xenos         | 3M    | 2/4         | 3K,4R,15C,1Q | AI             | +1K,+1R       | +3/4/4/5C    | +4P,+1Q   | +1K | +2K     | 1Q  | 5VP                   | 1R→1PB3 free action     |
+  | Gleens        | 2M    | 2/4         | 3K,4R,15C    | Nav            | +1K,+1R       | +3/4/4/5C    | +4P,+1R   | +1K | +2K     | 1Q  | 5VP                   | +2 range special action |
+  | Taklons       | 2M    | 2+BS/4      | 3K,4R,15C,1Q | None           | +1K,+1R       | +3/4/4/5C    | +4P,+1PB1 | +1K | +2K     | 1Q  | 5VP + BS to gaia area | None                    |
+  | Ambas         | 2M    | 2/4         | 3K,4R,15C,1Q | Nav            | +1K,+2R       | +3/4/4/5C de | +4P,+2PB1 | +1K | +2K     | 1Q  | 5VP                   | None                    |
+  | Hadsch Hallas | 2M    | 2/4         | 3K,4R,15C,1Q | Eco            | +1K,+1R,+3C   | +3/4/4/5C    | +4P,+1PB1 | +1K | +2K     | 1Q  | 5VP                   | None                    |
+  | Ivits         | 1PI   | 2/2         | 3K,4R,15C,1Q | None           | +1K,+1R,+1Q   | +3/4/4/5C    | +4P,+1PB1 | +1K | +2K     | 1Q  | 5VP                   | None                    |
+  | Geodens       | 2M    | 2/4         | 3K,4R,15C,1Q | TF             | +1K,+1R       | +3/4/4/5C    | +4P,+1PB1 | +1K | +2K     | 1Q  | 5VP                   | None                    |
+  | Bal T'aks     | 2M    | 2/2         | 3K,4R,15C    | GF             | +1K,+1R       | +3/4/4/5C    | +4P,+1PB1 | +1K | +2K     | 4C  | 7VP                   | None                    |
+  | Firaks        | 2M    | 2/4         | 2K,4R,15C,1Q | None           | +2K,+1R       | +3/4/4/5C    | +4P,+1PB1 | +1K | +2K     | 1Q  | 5VP                   | None                    |
+  | Bescods       | 2M    | 2/4         | 3K,4R,15C,1Q | None           | +1R           | +1/1/1/1K    | +4P,+2PB1 | +2K | +3/4/5C | 1Q  | 5VP                   | None                    |
+  | Nevlas        | 2M    | 2/4         | 2K,4R,15C,1Q | Sci            | +1K,+1R       | +3/4/4/5C    | +4P,+1PB1 | +2P | +2K     | 1Q  | 5VP + burn 1P         | None                    |
+  | Itars         | 2M    | 4/4         | 3K,5R,15C,1Q | None           | +1K,+1R,+1PB1 | +3/4/4/5C    | +4P,+1PB1 | +1K | +3K     | 1Q  | 5VP + burn 1P         | None                    |
+  | Moweyds       | 1M    | 4/4         | 5K,6R,15C,2Q | GF             | +1K,+1R       | +3/4/4/5C    | +4P,+1PB1 | +1K | +2K     | 1Q  | 5VP                   | None                    |
+  | Space Giants  | 1M    | 4/4         | 3K,6R,15C,1Q | Nav            | +1K,+1R       | +3/4/4/5C    | +6P,+1PB1 | +1K | +2K     | 1Q  | 5VP                   | 2 dig special action    |
+  | Darkanians    | 1M    | 4/2         | 3K,7R,15C,1Q | Nav,Eco        | +1K,+1R       | +3/4/4/5C    | +4P,+1PB1 | +1K | +2K     | 1Q  | 5VP                   | None                    |
+  | Tinkeroids    | 1PI   | 4/2         | 2K,4R,15C,1Q | Sci            | +1K,+1R       | +3/4/4/5C    | +4P,+1PB1 | +1K | +2K     | 1Q  | 5VP                   | None                    |
 
   **Important caveat before using this for I1/I3/I6 below:** most of the green-highlighted deviations
   above (e.g. Ivits' 1-PI start, Taklons' Brainstone, Bescods' all-knowledge research income, Ambas'
@@ -704,6 +724,7 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
   definition** (which already encodes correct, tested vanilla numbers); any mismatch found that way is
   the real delta to apply, anything matching needs no change. No further owner input is needed for I1/
   I3/I6 — this is now a coding-time verification step, not an open question.
+
 - I1. Ivits — **CLOSED**, see I7: power 2/2 (table-confirmed, matches p.8 and pre-existing vanilla
   value), no LF-specific ability or other delta found.
 - I2. Lantids: +1 power Area I income (CONFIRMED, p.8). Adjusted PI tile, text-only (no image in the
@@ -731,6 +752,7 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
   code per I7's note, but no owner input is needed.
 
 ## J. MULTIPLAYER / SYNC RULINGS
+
 - J1. Turn commitment: only completed turns persist + broadcast (ties to A2 undo). OUR-RULING. CONFIRMED.
 - J2. Leech/charge-power interrupts: another player may owe a charge decision mid-turn. The sync
   layer must surface "who can act now" from the engine's available-commands, not assume strict
@@ -765,13 +787,14 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
     (directly relevant to §I: does an existing per-planet-type bonus fire on the 2 new planet types?)
   - "How The Lost Fleet affects Gaia Project's design" — https://boardgamegeek.com/thread/3353396
   - "Another Update from Feuerland" — https://boardgamegeek.com/thread/3253233
-  Status: ☐ awaiting human review (owner has BGG access).
+    Status: ☐ awaiting human review (owner has BGG access).
 - **K3.** Confirmed from rulebook prose (so `RULEBOOK-TEXT`, not errata): the "Gain VP for Planet types"
   Q.I.C. action base is reduced to **2** points (p.13), because there are now more planet types.
 
 ---
 
 ## OPEN QUESTIONS / TODO BEFORE CODING
+
 1. ☑ Check BGG errata thread; record any corrections here with `ERRATA` source. → DONE: no official
    errata exists (§K1). Remaining: human review of community threads (§K2).
 2. ◐ Fill all `TODO [BOARD-ART]` placeholders from the physical game. Remaining open: H4 (revised
