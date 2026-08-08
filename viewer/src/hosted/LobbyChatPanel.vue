@@ -150,6 +150,12 @@ export default Vue.extend({
     this.unreadSince = this.loadLastRead();
     this.authorName = (await fetchMyNickname(this.client, this.userId)) || "Player";
     await this.loadInitialMessages();
+    // Covers the panel being opened while that load was still in flight: `openPanel`'s own
+    // scroll-to-bottom ran against an empty list, and the list is a real scroll container now, so
+    // without this the thread would open parked on its oldest message.
+    if (this.open) {
+      this.$nextTick(() => this.scrollToBottom());
+    }
     // Not awaited, for the same reason as ChatNotesPanel's own receipts load.
     loadLobbyChatReads(this.client).then((receipts) => {
       this.readReceipts = receipts;
@@ -230,12 +236,18 @@ export default Vue.extend({
           "postgres_changes",
           { event: "INSERT", schema: "public", table: "lobby_chat_messages" },
           (payload: { new: LobbyChatMessage }) => {
+            // Measured before the push, and only followed when the reader is already on the newest
+            // message (or sent this one) - see ChatNotesPanel.vue's identical handler. Matters more
+            // here than there: this thread pages older messages in as you scroll up.
+            const follow = this.isAtBottom() || payload.new.user_id === this.userId;
             this.messages.push(payload.new);
             if (this.open) {
               this.markRead();
               this.reportRead();
             }
-            this.$nextTick(() => this.scrollToBottom());
+            if (follow) {
+              this.$nextTick(() => this.scrollToBottom());
+            }
           }
         )
         // Same channel, second binding - read receipts for this same room (see ChatNotesPanel.vue).
@@ -270,6 +282,15 @@ export default Vue.extend({
       if (el) {
         el.scrollTop = el.scrollHeight;
       }
+    },
+    /** Already parked on the newest message? Same slack and same "true when unmeasurable" default
+     * as ChatNotesPanel.vue's own. */
+    isAtBottom(): boolean {
+      const el = this.$refs.messageList as HTMLElement | undefined;
+      if (!el) {
+        return true;
+      }
+      return el.scrollHeight - el.scrollTop - el.clientHeight < 60;
     },
     async sendMessage() {
       const body = this.draft.trim();
@@ -407,11 +428,21 @@ export default Vue.extend({
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
+  // Keeps a flick that reaches either end of the thread inside the panel instead of scrolling the
+  // lobby behind it - same reasoning as ChatNotesPanel.vue's own list.
+  overscroll-behavior: contain;
+
   // Messenger-style: content hugs the BOTTOM of the scroll area, so a handful of messages sit near
-  // the composer instead of stranded at the top of a mostly-empty box. `justify-content: flex-end`
-  // on a scrollable flex container still scrolls correctly once content overflows - only the
-  // "content shorter than container" case changes.
-  justify-content: flex-end;
+  // the composer instead of stranded at the top of a mostly-empty box. This used to be
+  // `justify-content: flex-end` with a comment claiming it "still scrolls correctly once content
+  // overflows" - it does not, measurably: alignment cannot push content into a scroll container's
+  // scrollable overflow, so a thread longer than the box had `scrollHeight === clientHeight`, would
+  // not scroll at all, and hid every older message (and this panel's own "Load older messages"
+  // button, its first child) above an unreachable top edge. An auto margin looks identical and
+  // resolves to 0 as soon as the content is taller than the box. See ChatNotesPanel.vue.
+  > *:first-child {
+    margin-top: auto;
+  }
 }
 
 .lobby-chat__load-older {

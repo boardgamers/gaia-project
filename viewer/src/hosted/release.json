@@ -1,7 +1,18 @@
 {
-  "version": "5.53.6",
+  "version": "5.53.7",
   "releasedAt": "2026-08-08",
   "entries": [
+    {
+      "version": "5.53.7",
+      "releasedAt": "2026-08-08",
+      "kind": "fix",
+      "title": "Chat scrolling",
+      "impact": "",
+      "changes": [
+        "Fixed the game and lobby chat threads not scrolling at all once they outgrew the panel - every older message was stranded above an unreachable top edge"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.53.6",
       "releasedAt": "2026-08-08",

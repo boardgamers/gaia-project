@@ -27,11 +27,17 @@ describe("ChatNotesPanel", () => {
     const upserts: any[] = [];
     const rpcCalls: { name: string; args: any }[] = [];
     let muted = opts.muted ?? false;
+    // Captures the Realtime handlers so a test can deliver an INSERT the way the server would.
+    const handlers: Record<string, (payload: any) => void> = {};
     const channel = {
-      on: () => channel,
+      on: (_event: string, filter: { table: string }, cb: (payload: any) => void) => {
+        handlers[filter.table] = cb;
+        return channel;
+      },
       subscribe: () => channel,
     };
     return {
+      handlers,
       inserted,
       upserts,
       rpcCalls,
@@ -392,6 +398,55 @@ describe("ChatNotesPanel", () => {
     expect(mobileWrapper.find(".chat-notes__toggle").exists()).to.equal(true);
     mobileWrapper.destroy();
     restoreMobile();
+  });
+
+  // The message list is a real scroll container (it hugs the bottom via an auto margin on its first
+  // child; it used to be bottom-ALIGNED with `justify-content: flex-end`, which silently made a
+  // thread longer than the box unscrollable). That means an incoming message now genuinely moves the
+  // view, so it must only do so when the reader is already on the newest message.
+  async function openWithScrollState(client: any, scroll: { scrollTop: number; scrollHeight: number }) {
+    const wrapper = mount(ChatNotesPanel as any, {
+      propsData: { client, gameId: "game-1", userId: "user-1" },
+    });
+    await Vue_nextTick(wrapper);
+    await wrapper.find(".chat-notes__toggle").trigger("click");
+    await Vue_nextTick(wrapper);
+    const list = { clientHeight: 400, ...scroll };
+    (wrapper.vm as any).$refs.messageList = list;
+    return { wrapper, list };
+  }
+
+  it("follows an incoming message only when the reader is already at the newest one", async () => {
+    const client = makeClient();
+    // Scrolled up reading history: 2000px of thread, parked near the top.
+    const { wrapper, list } = await openWithScrollState(client, { scrollTop: 100, scrollHeight: 2000 });
+    client.handlers.game_chat_messages({
+      new: { id: 7, game_id: "game-1", user_id: "someone-else", author_name: "P", body: "hi", created_at: "" },
+    });
+    await Vue_nextTick(wrapper);
+    expect(list.scrollTop).to.equal(100);
+    wrapper.destroy();
+  });
+
+  it("does follow when the reader is at the bottom, or when the message is their own", async () => {
+    const client = makeClient();
+    const atBottom = await openWithScrollState(client, { scrollTop: 1600, scrollHeight: 2000 });
+    client.handlers.game_chat_messages({
+      new: { id: 7, game_id: "game-1", user_id: "someone-else", author_name: "P", body: "hi", created_at: "" },
+    });
+    await Vue_nextTick(atBottom.wrapper);
+    expect(atBottom.list.scrollTop).to.equal(2000);
+    atBottom.wrapper.destroy();
+
+    // Sending from a scrolled-up position still jumps to your own message.
+    const ownClient = makeClient();
+    const own = await openWithScrollState(ownClient, { scrollTop: 100, scrollHeight: 2000 });
+    ownClient.handlers.game_chat_messages({
+      new: { id: 8, game_id: "game-1", user_id: "user-1", author_name: "Me", body: "mine", created_at: "" },
+    });
+    await Vue_nextTick(own.wrapper);
+    expect(own.list.scrollTop).to.equal(2000);
+    own.wrapper.destroy();
   });
 
   it("pins the mobile panel to window.visualViewport so the keyboard can't expose the board underneath", async () => {

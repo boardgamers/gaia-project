@@ -239,9 +239,12 @@ export default Vue.extend({
     });
     this.subscribeChat();
     // Desktop can mount already-open (the stored preference), in which case the thread is on screen
-    // right now and the others should see that straight away.
+    // right now and the others should see that straight away - and it has to be scrolled to the
+    // newest message explicitly. That used to happen by accident: the list was bottom-ALIGNED, so
+    // the newest message showed whatever `scrollTop` said. It is a real scroll container now.
     if (this.open) {
       this.reportRead();
+      this.$nextTick(() => this.scrollToBottom());
     }
     this.startStickyBarWatch();
     if (!this.isDesktop) {
@@ -372,13 +375,20 @@ export default Vue.extend({
           "postgres_changes",
           { event: "INSERT", schema: "public", table: "game_chat_messages", filter: `game_id=eq.${this.gameId}` },
           (payload: { new: ChatMessage }) => {
+            // Measured BEFORE the push, while the DOM still shows the pre-arrival thread. Now that
+            // the list genuinely scrolls, following every arrival unconditionally would yank
+            // somebody reading older messages back down; only follow when they were already at the
+            // newest one, or when the arrival is their own message.
+            const follow = this.isAtBottom() || payload.new.user_id === this.userId;
             this.messages.push(payload.new);
             // Arriving while the panel is open means I'm looking at it - report it read so the
             // sender sees the check without either of us touching anything.
             if (this.open) {
               this.reportRead();
             }
-            this.$nextTick(() => this.scrollToBottom());
+            if (follow) {
+              this.$nextTick(() => this.scrollToBottom());
+            }
           }
         )
         // Second binding on the same channel rather than a second channel: read receipts are
@@ -416,6 +426,18 @@ export default Vue.extend({
       if (el) {
         el.scrollTop = el.scrollHeight;
       }
+    },
+    /** Is the thread already parked on its newest message? A few pixels of slack, because a
+     * fractional layout height means an at-the-bottom list rarely reports an exact 0. Answers
+     * "true" when there is nothing to measure yet (no list rendered, or a thread too short to
+     * scroll), which is the harmless direction: following an arrival is only wrong when it takes
+     * the reader away from something. */
+    isAtBottom(): boolean {
+      const el = this.$refs.messageList as HTMLElement | undefined;
+      if (!el) {
+        return true;
+      }
+      return el.scrollHeight - el.scrollTop - el.clientHeight < 60;
     },
     async sendMessage() {
       const body = this.draft.trim();
@@ -615,9 +637,18 @@ export default Vue.extend({
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  // Messenger-style: a handful of messages hug the bottom of the box instead of sitting stranded
-  // at the top of a mostly-empty scroll area.
-  justify-content: flex-end;
+
+  // Messenger-style: a handful of messages hug the bottom of the box instead of sitting stranded at
+  // the top of a mostly-empty scroll area. This MUST be an auto margin on the first child, not
+  // `justify-content: flex-end` (which is what it used to be): content pushed out of a scroll
+  // container's START edge by alignment is not part of its scrollable overflow, so with a thread
+  // longer than the box `scrollHeight` stayed equal to `clientHeight`, the list could not be
+  // scrolled at all, and every older message was stranded above the top edge with no way to reach
+  // it. An auto margin gets the identical look and resolves to 0 the moment the content is taller
+  // than the box, leaving an ordinary scrollable overflow.
+  > *:first-child {
+    margin-top: auto;
+  }
 }
 
 .chat-notes__empty {
