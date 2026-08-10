@@ -1,15 +1,27 @@
 {
-  "version": "5.54.1",
+  "version": "5.54.2",
   "releasedAt": "2026-08-10",
   "entries": [
     {
-      "version": "5.54.1",
+      "version": "5.54.2",
       "releasedAt": "2026-08-10",
       "kind": "fix",
       "title": "Chat popup scrolling",
       "impact": "",
       "changes": [
         "Fixed swiping on the mobile chat popup's header, notification strip or composer scrolling the game behind it instead of the chat - the page is now locked while the popup is open"
+      ],
+      "userChanges": []
+    },
+    {
+      "version": "5.54.1",
+      "releasedAt": "2026-08-10",
+      "kind": "fix",
+      "title": "Nicknames in user management",
+      "impact": "",
+      "changes": [
+        "User management now shows each account's in-app nickname in brackets after the Google account name, in both the pending-approval and all-users tables, and the filter box matches on nickname too",
+        "admin-users edge function returns the profiles nickname (service role - profiles is select-own-row-only under RLS) and is now deployed by the Supabase deploy workflow alongside notify and resolve-automation"
       ],
       "userChanges": []
     },

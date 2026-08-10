@@ -92,8 +92,9 @@ PREFERENCE_SPLIT_AUCTION.md`. Unlike the Silent Auction, its secrecy is **server
   by every device — so an open desktop tab silenced the same user's phone. Fixed by
   `announce_sealed_bid_auction()` + `auction_bid_reminders` (migration `20260808120000`) and
   `push_subscriptions.active_game_id`/`active_at` + `mark_device_viewing()` (migration
-  `20260808121000`). **Neither migration is applied live yet and `notify` has NOT been redeployed** —
-  none of it works until both happen. The Silent Auction was never affected (sequential moves).
+  `20260808121000`). **Both migrations are applied live** — verified 2026-08-10 against
+  `mitawjpdxkheascdiffz`: both columns, `auction_bid_reminders`, `announce_sealed_bid_auction()` and
+  `mark_device_viewing()` all exist. The Silent Auction was never affected (sequential moves).
 - A "Silent Auction" faction-selection variant (`AuctionVariant.Silent`, PROGRESS #61) is
   implemented and tested: sequential ban → sequential pick → sequential private bid submission →
   automatic ascending-auction resolution (`algorithms/silent-auction.ts`), with a setup picker
@@ -196,7 +197,7 @@ PREFERENCE_SPLIT_AUCTION.md`. Unlike the Silent Auction, its secrecy is **server
   unread-shaped), and the badge shows a count instead of a bare dot. Mobile is now a popup anchored
   above the floating toggle, so the toggle stays tappable to minimize; its geometry (sticky-bar
   offset, on-screen keyboard) lives in `viewer/src/hosted/chat-popup.ts`. Client-only, no schema
-  change. **The popup also locks page scrolling while it is up** (PROGRESS #150,
+  change. **The popup also locks page scrolling while it is up** (PROGRESS #151,
   `setPageScrollLock` + frontend.scss's `html.chat-popup-open`): a swipe starting on the popup's
   header, notification strip or composer has no scroll container of its own, so without the lock it
   chains out and scrolls the game behind the popup. `overscroll-behavior` on the panel does not fix
