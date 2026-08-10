@@ -1,7 +1,19 @@
 {
-  "version": "5.53.9",
+  "version": "5.53.10",
   "releasedAt": "2026-08-10",
   "entries": [
+    {
+      "version": "5.53.10",
+      "releasedAt": "2026-08-10",
+      "kind": "fix",
+      "title": "Gaia former map highlight",
+      "impact": "",
+      "changes": [
+        "Fixed the Instant Gaiaforming action not highlighting its target planets on the map - free targets were drawn with a near-invisible style instead of the white highlight every other hex choice uses",
+        "Fixed the same invisible highlight for the Moweyds power-ring placement, whose targets are always free"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.53.9",
       "releasedAt": "2026-08-10",

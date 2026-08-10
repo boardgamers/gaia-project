@@ -6109,6 +6109,41 @@ pin_preference_split_budget_search_path` (the one function in the set without a 
       engine replays — which are pure slowness, not regressions: all six pass on their own at 30s.
       Prettier clean.
 
+148.  ✅ **The Instant Gaiaforming action highlighted nothing on the map (2026-08-10).** Owner report:
+      taking the instant Gaia former action listed the target coordinates as buttons but left the map
+      looking untouched, so there was no way to see _which_ planets were on offer — unlike Build a
+      Mine, which whitens its candidate hexes and lets you click one.
+
+      The candidates were in fact selected and clickable the whole time; they were just drawn
+      invisibly. `instantGaiaformingButton` (`viewer/src/logic/buttons/lost-fleet.ts`) built its
+      selection with `hexMap(..., selectedLight: true)`, and in `SpaceHex.vue`'s `polygonClasses` a
+      "light" selection is nothing but `opacity: 0.7` over the hex's own dark fill — the same faint
+      treatment used for _background_ hexes you cannot click. A hex only escapes that branch if it
+      has a warning (`warn`, red) or a QIC cost (`qic`, green); an instant-Gaiaforming target is a
+      transdim planet already in range, so its cost is `~` and it fell straight through. Build
+      targets pass `selectedLight: false` and land on `bold` (`fill: white`), which is what the map
+      is expected to do for a hex choice. Both call sites in that file now pass `false`.
+
+      **Place Power Ring had the identical defect, unconditionally**, and is fixed in the same
+      change: `possiblePowerRingPlacements` emits its spaces with no `cost` field at all, so its
+      targets could never reach the `qic` branch and were _always_ invisible.
+
+      Two things made this easy to miss. The existing `lost-fleet-tf-mars-instant-gaiaforming`
+      scenario gives the player 10 QICs and range 1, so every target there carries a QIC cost and
+      renders bright green — the bug is invisible in the one scenario built to exercise the flow.
+      And `hexSelectionButton`'s hover handler already forces `selectedLight = false` for the hex
+      under the cursor, so on desktop, hovering a coordinate button _did_ light that one hex up,
+      which likely hid how blank the un-hovered state was.
+
+      Regression test in `viewer/src/logic/buttons/lost-fleet.spec.ts` renders `SpaceMap.vue` with
+      the selection each button produces and asserts the target hex carries `bold`, not `light`; it
+      fails on the old `true` for both actions. `Command.PlaceLostPlanet` in `commands.ts` still uses
+      `selectedLight: true` — it is base-game code, its spaces are usually far enough away to carry a
+      QIC cost, and it was left alone deliberately rather than changed on a hunch.
+
+      **Tests:** the lost-fleet button spec (5 passing), then the viewer suite once — 811 passing /
+      0 failing at `--timeout 30000` (809 before, +2 new). Prettier clean.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

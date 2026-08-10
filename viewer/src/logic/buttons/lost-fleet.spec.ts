@@ -1,10 +1,34 @@
-import { AvailableCommand, Command, Reward } from "@gaia-project/engine";
-import { Spaceship } from "@gaia-project/engine/src/enums";
+import Engine, { AvailableCommand, Command, GaiaHex, Reward } from "@gaia-project/engine";
+import { Planet, Spaceship } from "@gaia-project/engine/src/enums";
+import { render } from "@testing-library/vue";
 import { expect } from "chai";
-import { examineArtifactButton, exploreButton } from "./lost-fleet";
+import { makeStore } from "../../store";
+import SpaceMap from "../../components/SpaceMap.vue";
+import { examineArtifactButton, exploreButton, instantGaiaformingButton, placePowerRingButton } from "./lost-fleet";
+import { CommandController } from "./types";
 
 function rewardStrings(rewards: Reward[]): string[] {
   return rewards.map((r) => r.toString());
+}
+
+function lostFleetEngine(): Engine {
+  return new Engine(["init 2 lost-fleet-space-map"], { lostFleet: true });
+}
+
+function controllerStub(): CommandController {
+  return { isWarningEnabled: () => true } as any as CommandController;
+}
+
+/** The class SpaceHex.vue puts on a hex's background polygon once the selection is highlighted. */
+function hexClasses(engine: Engine, hexes: any, hex: GaiaHex): string[] {
+  const store = makeStore();
+  store.commit("receiveData", engine);
+  store.commit("highlightHexes", hexes);
+
+  const { container } = render(SpaceMap, { store });
+  const cell = container.querySelector(`g.space-hex-cell[id="${hex}"] use.space-hex`);
+  expect(cell, `expected hex ${hex} to be rendered`).to.not.equal(null);
+  return cell.getAttribute("class").split(" ");
 }
 
 describe("lost-fleet buttons", () => {
@@ -50,6 +74,49 @@ describe("lost-fleet buttons", () => {
       const rewardsElement = button.richText.find((el) => el.rewards);
       expect(rewardStrings(rewardsElement.rewards)).to.deep.equal(["6t"]);
       expect(rewardsElement.noPlus).to.equal(true);
+    });
+  });
+
+  // Both actions used to build their hex selection with `selectedLight: true`, which renders a
+  // selectable hex as nothing but `opacity: .7` over its normal dark fill - indistinguishable from
+  // an untouched map. Their targets are normally free (a transdim planet already in range costs
+  // "~"; a power-ring target has no cost at all), so they never fell into the visible "qic"/"warn"
+  // branches either, and the map stayed blank while the button list offered coordinates to pick.
+  describe("map highlight for hex-selection actions", () => {
+    it("marks instant Gaiaforming targets on the map the same way a build target is marked", () => {
+      const engine = lostFleetEngine();
+      const hex = [...engine.map.grid.values()].find((h) => h.data.planet === Planet.Transdim);
+      expect(hex, "expected a transdim planet on the board").to.not.equal(undefined);
+
+      const command: AvailableCommand<Command.GaiaFormTransdim> = {
+        name: Command.GaiaFormTransdim,
+        data: { spaces: [{ coordinates: hex.toString(), cost: "~", warnings: null }] },
+      } as any;
+
+      const button = instantGaiaformingButton(controllerStub(), engine, command);
+      const classes = hexClasses(engine, button.hexes, hex);
+
+      expect(classes).to.include("bold");
+      expect(classes).to.include("pointer");
+      expect(classes).to.not.include("light");
+    });
+
+    it("marks power-ring targets on the map, which carry no cost at all", () => {
+      const engine = lostFleetEngine();
+      const hex = [...engine.map.grid.values()].find((h) => h.data.planet !== Planet.Empty);
+      expect(hex, "expected a planet on the board").to.not.equal(undefined);
+
+      const command: AvailableCommand<Command.PlacePowerRing> = {
+        name: Command.PlacePowerRing,
+        data: { spaces: [{ coordinates: hex.toString() }] },
+      } as any;
+
+      const button = placePowerRingButton(controllerStub(), engine, command);
+      const classes = hexClasses(engine, button.hexes, hex);
+
+      expect(classes).to.include("bold");
+      expect(classes).to.include("pointer");
+      expect(classes).to.not.include("light");
     });
   });
 });
