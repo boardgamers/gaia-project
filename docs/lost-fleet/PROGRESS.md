@@ -6061,6 +6061,54 @@ pin_preference_split_budget_search_path` (the one function in the set without a 
       build and lint clean, old-ui lint clean, and prettier clean across the repo and stable across
       repeated runs.
 
+147.  ✅ **The main menu's green "your turn" pulse stayed lit on a game you had already played
+      (2026-08-10, viewer v5.53.9).** Owner report: _"It is not my turn in the game Solar Comet. Why
+      is the gamebar in main menu pulsing green?"_ The pulse logic was correct — `hasPendingTurn()`
+      → `isMyTurn()` reads `games.current_seat`, and in the live database that seat had already
+      moved on to the next player. What was wrong is that the lobby never found out.
+
+      **Root cause: `Lobby.vue` subscribed to two tables that are not published.**
+      `subscribeGames()` listened on `games`, `players`, `chess_board` and `renju_board`, but
+      `select * from pg_publication_tables where pubname = 'supabase_realtime'` lists only
+      `chess_board`, `game_chat_messages`, `game_chat_reads`, `lobby_chat_messages`,
+      `lobby_chat_reads`, `moves`, `renju_board` and `ultimate_ttt_board` — **no `games`, no
+      `players`**. Realtime `postgres_changes` only ever delivers rows for tables in that
+      publication, so those two listeners had never fired once. The lobby's whole game list — turn
+      state, scores, round number, move summaries — was a snapshot frozen at page load, and there
+      was no polling, no focus refresh and no `visibilitychange` handler to unfreeze it. In the
+      reported game the seat sat on the owner from 14:48 to 19:06; any menu opened in that window
+      kept pulsing afterwards. This is the same class of silent failure as #133 (a repo migration
+      that never reached the database): the code reads correct, and only the live object proves
+      otherwise.
+
+      **Fix (client only — no database change).** The lobby now also subscribes to **`moves`**
+      inserts, which needs no publication change because `moves` is already published, and is
+      strictly the better signal anyway: every path that can change whose turn it is — a committed
+      turn, a leech/income decision, a server-side premove fired by `resolve-automation` — ends in
+      an insert there, in the same transaction that updates `games.current_seat`. It also re-syncs
+      on `visibilitychange` → visible, because Realtime does **not** replay what a socket missed, so
+      a phone that slept comes back needing a fetch rather than an event. Refreshes are throttled on
+      the leading edge (`scheduleRefresh`, 250 ms) so a burst — a `moves` row and a `games` row from
+      one commit, or an event landing as a tab is restored — collapses into one refetch instead of
+      several full `games + players + chess_board + renju_board` selects.
+
+      **`games`/`players` are left subscribed but `players` must never be published.** The two dead
+      listeners cost nothing and become correct the day `games` joins the publication (which would
+      be a reasonable follow-up — it would also make joins and new games appear live). `players`
+      is the opposite: `last_active_at` is a presence heartbeat rewritten every ~20s per open tab
+      (0013), so publishing it would turn every heartbeat in every game into a full-list refetch for
+      every connected client. The reasoning is recorded in the code next to the listeners so nobody
+      "fixes" it by publishing both.
+
+      **Tests:** two regression specs in `Lobby.spec.ts` — a `moves` insert clears the pulse once
+      the seat has moved on, and a `visibilitychange` re-sync does the same for a menu that was left
+      open. The spec's channel mock now records handlers per table, since "which tables does the
+      lobby actually listen to" is the thing that broke. Viewer suite 809 passing / 0 failing at
+      `--timeout 30000` (807 before, +2 new). At the script's default 4s timeout this container
+      instead reports 6 failures — three `Game` specs, one `SetupPreview` and two `Resource Counter`
+      engine replays — which are pure slowness, not regressions: all six pass on their own at 30s.
+      Prettier clean.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

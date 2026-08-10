@@ -1,7 +1,20 @@
 {
-  "version": "5.53.8",
-  "releasedAt": "2026-08-08",
+  "version": "5.53.9",
+  "releasedAt": "2026-08-10",
   "entries": [
+    {
+      "version": "5.53.9",
+      "releasedAt": "2026-08-10",
+      "kind": "fix",
+      "title": "Main-menu game list stops going stale",
+      "impact": "",
+      "changes": [
+        "Fixed the main menu's green your-turn pulse staying lit on a game you had already played - the lobby subscribed only to games/players, neither of which is in the supabase_realtime publication, so no realtime event ever reached it and the whole list was frozen at page load",
+        "Lobby now subscribes to moves inserts (the one published table every turn/leech/premove writes to) and re-syncs on visibilitychange, since realtime never replays what a sleeping phone missed",
+        "Lobby refreshes are throttled on the leading edge so a burst of signals collapses into one refetch instead of several full game-list selects"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.53.8",
       "releasedAt": "2026-08-08",

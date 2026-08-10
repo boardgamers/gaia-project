@@ -265,6 +265,9 @@ import { getTheme, toggleTheme } from "./theme";
 
 const SWIPE_ACTION_WIDTH = 88;
 
+/** How long `scheduleRefresh` swallows further reload signals after acting on one. */
+const REFRESH_COALESCE_MS = 250;
+
 function compactFactionLabel(raw: string): string {
   if (!raw) {
     return "";
@@ -416,6 +419,9 @@ export default Vue.extend({
       swipeStartX: 0,
       swipeDeltaX: 0,
       documentPointerDownHandler: null as ((event: PointerEvent) => void) | null,
+      visibilityHandler: null as (() => void) | null,
+      refreshTimer: null as any,
+      refreshPending: false,
       stopPresenceTracking: null as (() => void) | null,
       presenceState: {} as PresenceState,
       showOnlinePlayers: false,
@@ -537,6 +543,17 @@ export default Vue.extend({
     if (typeof document !== "undefined") {
       this.documentPointerDownHandler = (event: PointerEvent) => this.onDocumentPointerDown(event);
       document.addEventListener("pointerdown", this.documentPointerDownHandler, true);
+      // Realtime does NOT replay what you missed. A phone that slept (or a tab that was backgrounded
+      // long enough for the browser to freeze its socket) comes back with a game list frozen at
+      // whenever it last synced - most visibly as a green "your turn" pulse on a game you have
+      // already played. Re-syncing on the way back in is the only thing that can fix that, since by
+      // then the events that would have updated it are gone for good.
+      this.visibilityHandler = () => {
+        if (document.visibilityState === "visible") {
+          this.scheduleRefresh();
+        }
+      };
+      document.addEventListener("visibilitychange", this.visibilityHandler);
     }
   },
   beforeDestroy() {
@@ -551,6 +568,15 @@ export default Vue.extend({
     if (typeof document !== "undefined" && this.documentPointerDownHandler) {
       document.removeEventListener("pointerdown", this.documentPointerDownHandler, true);
     }
+    if (typeof document !== "undefined" && this.visibilityHandler) {
+      document.removeEventListener("visibilitychange", this.visibilityHandler);
+      this.visibilityHandler = null;
+    }
+    if (this.refreshTimer) {
+      clearTimeout(this.refreshTimer);
+      this.refreshTimer = null;
+    }
+    this.refreshPending = false;
   },
   methods: {
     readTabFromUrl(): "mine" | "open" | "active" | "finished" | null {
@@ -654,13 +680,46 @@ export default Vue.extend({
         this.loading = false;
       }
     },
+    // A full refetch is the only "reload" this list has, and several signals below can land within
+    // milliseconds of each other (a committed turn writes a `moves` row AND a `games` row; a tab
+    // returning to the foreground can fire alongside a queued event). Throttle on the LEADING edge -
+    // the first signal refetches straight away, so the list still reacts instantly, and anything
+    // arriving inside the window collapses into a single trailing refetch rather than firing the
+    // whole `games + players + chess_board + renju_board` select over and over.
+    scheduleRefresh() {
+      if (this.refreshTimer) {
+        this.refreshPending = true;
+        return;
+      }
+      this.refresh();
+      this.refreshTimer = setTimeout(() => {
+        this.refreshTimer = null;
+        if (this.refreshPending) {
+          this.refreshPending = false;
+          this.scheduleRefresh();
+        }
+      }, REFRESH_COALESCE_MS);
+    },
     subscribeGames() {
       const channel = (this.client as any)
         .channel("lobby-games")
-        .on("postgres_changes", { event: "*", schema: "public", table: "games" }, () => this.refresh())
-        .on("postgres_changes", { event: "*", schema: "public", table: "players" }, () => this.refresh())
-        .on("postgres_changes", { event: "*", schema: "public", table: "chess_board" }, () => this.refresh())
-        .on("postgres_changes", { event: "*", schema: "public", table: "renju_board" }, () => this.refresh())
+        // `moves` is what actually keeps the bars - and the green "your turn" pulse - honest while
+        // the menu sits open: every path that can change whose turn it is (a committed turn, a leech
+        // decision, a server-side premove) ends in an insert here, and `games.current_seat` is
+        // already updated in the same transaction by the time this refetch reads it.
+        //
+        // It is doing that job because the two subscriptions below have never delivered an event:
+        // neither `games` nor `players` is in the `supabase_realtime` publication, so the lobby's
+        // turn state was frozen at page load and a bar that was pulsing when you opened the menu
+        // kept pulsing after you had played. They stay here because they cost nothing and are the
+        // right listeners the day `games` is published - but `players` deliberately must NOT be
+        // published: its `last_active_at` presence heartbeat rewrites a row every ~20s per open tab,
+        // which would turn every heartbeat in every game into a full-list refetch for every client.
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "moves" }, () => this.scheduleRefresh())
+        .on("postgres_changes", { event: "*", schema: "public", table: "games" }, () => this.scheduleRefresh())
+        .on("postgres_changes", { event: "*", schema: "public", table: "players" }, () => this.scheduleRefresh())
+        .on("postgres_changes", { event: "*", schema: "public", table: "chess_board" }, () => this.scheduleRefresh())
+        .on("postgres_changes", { event: "*", schema: "public", table: "renju_board" }, () => this.scheduleRefresh())
         .subscribe();
       this.gamesChannel = channel;
     },
