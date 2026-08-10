@@ -18,12 +18,18 @@ describe("LobbyChatPanel", () => {
     const messages = opts.messages ?? [];
     const inserted: any[] = [];
     const rpcCalls: { name: string; args: any }[] = [];
+    // Captures the Realtime handlers so a test can deliver an INSERT the way the server would.
+    const handlers: Record<string, (payload: any) => void> = {};
     const channel = {
-      on: () => channel,
+      on: (_event: string, filter: { table: string }, cb: (payload: any) => void) => {
+        handlers[filter.table] = cb;
+        return channel;
+      },
       subscribe: () => channel,
       presenceState: () => ({}),
     };
     return {
+      handlers,
       inserted,
       rpcCalls,
       rpc: async (name: string, args: any) => {
@@ -196,5 +202,46 @@ describe("LobbyChatPanel", () => {
     (wrapper.vm as any).messages.push(makeMessage({ id: 2 }));
     await tick(wrapper);
     expect(wrapper.find(".lobby-chat__badge").exists()).to.equal(true);
+    expect(wrapper.find(".lobby-chat__badge").text()).to.equal("1");
+  });
+
+  // Same owner-reported bug as ChatNotesPanel's (see its spec): unread used to be a wall-clock
+  // comparison that ignored the sender, so your own message lit your own button.
+  it("never flags my own message as unread, and clears anything on screen when the popup closes", async () => {
+    const client = makeClient({ nickname: "Me" });
+    const wrapper = mount(LobbyChatPanel as any, {
+      propsData: { client, userId: "user-1" },
+    });
+    await tick(wrapper);
+    await wrapper.find(".lobby-chat__toggle").trigger("click");
+    await tick(wrapper);
+    client.handlers.lobby_chat_messages({ new: makeMessage({ id: 5, user_id: "user-1", author_name: "Me" }) });
+    await tick(wrapper);
+
+    await wrapper.find(".lobby-chat__toggle").trigger("click");
+    await tick(wrapper);
+    expect((wrapper.vm as any).open).to.equal(false);
+    expect(wrapper.find(".lobby-chat__badge").exists()).to.equal(false);
+    expect(window.localStorage.getItem("lobby-chat-last-seen-id")).to.equal("5");
+
+    // Somebody else's reply still lights it up.
+    client.handlers.lobby_chat_messages({ new: makeMessage({ id: 6 }) });
+    await tick(wrapper);
+    expect(wrapper.find(".lobby-chat__badge").text()).to.equal("1");
+  });
+
+  it("hangs the mobile popup above the toggle rather than filling the screen", async () => {
+    const wrapper = mount(LobbyChatPanel as any, {
+      propsData: { client: makeClient(), userId: "user-1" },
+    });
+    await tick(wrapper);
+    // 24px toggle offset + a 48px toggle + a 10px gap (see chat-popup.ts).
+    expect((wrapper.vm as any).panelStyle.bottom).to.equal("82px");
+    expect((wrapper.vm as any).panelStyle.maxHeight).to.equal(`${window.innerHeight - 82 - 64}px`);
+
+    // Desktop keeps the docked full-height strip - no popup geometry there.
+    (wrapper.vm as any).isDesktop = true;
+    await tick(wrapper);
+    expect((wrapper.vm as any).panelStyle).to.deep.equal({});
   });
 });

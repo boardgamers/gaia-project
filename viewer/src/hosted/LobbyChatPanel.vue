@@ -3,19 +3,25 @@
     <button
       type="button"
       class="lobby-chat__toggle"
-      :class="{ 'lobby-chat__toggle--unread': hasUnread }"
+      :class="{ 'lobby-chat__toggle--unread': hasUnread, 'lobby-chat__toggle--open': open }"
+      :style="toggleStyle"
       @click="togglePanel"
-      :aria-label="open ? 'Close lobby chat' : 'Open lobby chat'"
+      :aria-label="toggleLabel"
     >
-      <span aria-hidden="true">&#128172;</span>
-      <span v-if="hasUnread" class="lobby-chat__badge"></span>
+      <span class="lobby-chat__toggle-icon" aria-hidden="true">{{ open ? "×" : "💬" }}</span>
+      <!-- Count-and-label pill rather than a bare dot - see ChatNotesPanel.vue's identical toggle. -->
+      <template v-if="hasUnread">
+        <span class="lobby-chat__badge">{{ unreadBadge }}</span>
+        <span class="lobby-chat__toggle-text">new</span>
+      </template>
     </button>
 
-    <div v-if="open" class="lobby-chat__panel">
+    <div v-if="open" class="lobby-chat__panel" :style="panelStyle">
       <div class="lobby-chat__header">
-        <button type="button" class="lobby-chat__back" @click="closePanel" aria-label="Back to lobby">&larr;</button>
         <strong class="lobby-chat__title">Lobby Chat</strong>
-        <button type="button" class="lobby-chat__close" @click="closePanel" aria-label="Close">&times;</button>
+        <button type="button" class="lobby-chat__close" @click="closePanel" aria-label="Minimize lobby chat">
+          &times;
+        </button>
       </div>
 
       <div class="lobby-chat__messages" ref="messageList" @scroll="onScroll">
@@ -84,6 +90,17 @@ import {
   readSummary,
   readersByMessage,
 } from "./chat-reads";
+import { isDesktopViewport, watchDesktopViewport } from "./viewport";
+import { OverlayViewportPin } from "./overlay-viewport";
+import { chatPopupGeometry, watchOverlayViewport } from "./chat-popup";
+import {
+  formatUnreadCount,
+  loadLastSeenId,
+  newestMessageId,
+  saveLastSeenId,
+  unreadCount,
+  unreadSummary,
+} from "./chat-unread";
 
 interface LobbyChatMessage {
   id: number;
@@ -94,10 +111,18 @@ interface LobbyChatMessage {
 }
 
 const PAGE_SIZE = 200;
-const LAST_READ_KEY = "lobby-chat-last-read";
+const LAST_SEEN_KEY = "lobby-chat-last-seen-id";
+/** The pre-id receipt (a wall-clock ms stamp) some devices still carry - read once, then left to go
+ * stale. See chat-unread.ts. */
+const LEGACY_LAST_READ_KEY = "lobby-chat-last-read";
+
+/** Distance from the bottom of the viewport to the floating toggle, matching `.lobby-chat__toggle`'s
+ * own `bottom`. Unlike the per-game panel there is no sticky move bar to clear here, so it is a
+ * constant rather than a live measurement - but the popup above it still needs the number. */
+const TOGGLE_BOTTOM = 24;
 
 /** A single global, all-history "Lobby Chat" room (unlike ChatNotesPanel's per-game chat) - same
- * floating-toggle / desktop-dock / mobile-overlay shell for UI consistency, mounted once on the
+ * floating-toggle / desktop-dock / mobile-popup shell for UI consistency, mounted once on the
  * lobby screen only (see hosted.ts). Shows each message's author, send time, and live online
  * status (reusing the same presence system the lobby's own game-bar dots use). */
 export default Vue.extend({
@@ -109,10 +134,18 @@ export default Vue.extend({
   data() {
     return {
       open: false,
+      isDesktop: isDesktopViewport(),
       messages: [] as LobbyChatMessage[],
       draft: "",
       authorName: "Player",
-      unreadSince: 0,
+      // Highest message id already on screen - see ChatNotesPanel.vue's twin and chat-unread.ts for
+      // why unread is tracked by id and sender rather than by a wall clock.
+      lastSeenId: 0,
+      // Mobile only, and null unless an on-screen keyboard is actually up - see ChatNotesPanel.vue's
+      // identical pair and overlay-viewport.ts.
+      viewportPin: null as OverlayViewportPin,
+      viewportPinUnwatch: null as (() => void) | null,
+      desktopUnwatch: null as (() => void) | null,
       hasMore: true,
       loadingOlder: false,
       // Read checks - see ChatNotesPanel.vue's identical pair and chat-reads.ts for the shared
@@ -127,12 +160,41 @@ export default Vue.extend({
     };
   },
   computed: {
-    hasUnread(): boolean {
-      if (this.open) {
-        return false;
+    /** Popup geometry on mobile, nothing on desktop (a docked full-height strip there). See
+     * chat-popup.ts and ChatNotesPanel.vue's twin. */
+    panelStyle(): Record<string, string> {
+      if (this.isDesktop) {
+        return {};
       }
-      const last = this.messages[this.messages.length - 1];
-      return !!last && new Date(last.created_at).getTime() > this.unreadSince;
+      const geometry = chatPopupGeometry({
+        toggleBottom: TOGGLE_BOTTOM,
+        pin: this.viewportPin,
+        innerHeight: typeof window === "undefined" ? 0 : window.innerHeight,
+      });
+      return { bottom: `${geometry.bottom}px`, maxHeight: `${geometry.maxHeight}px` };
+    },
+    toggleStyle(): Record<string, string> {
+      const geometry = chatPopupGeometry({
+        toggleBottom: TOGGLE_BOTTOM,
+        pin: this.isDesktop ? null : this.viewportPin,
+        innerHeight: typeof window === "undefined" ? 0 : window.innerHeight,
+      });
+      return { bottom: `${TOGGLE_BOTTOM + geometry.keyboardInset}px` };
+    },
+    unreadCount(): number {
+      return this.open ? 0 : unreadCount(this.messages, this.lastSeenId, this.userId);
+    },
+    hasUnread(): boolean {
+      return this.unreadCount > 0;
+    },
+    unreadBadge(): string {
+      return formatUnreadCount(this.unreadCount);
+    },
+    toggleLabel(): string {
+      if (this.open) {
+        return "Minimize lobby chat";
+      }
+      return this.hasUnread ? `Open lobby chat, ${unreadSummary(this.unreadCount)}` : "Open lobby chat";
     },
     lastMessageId(): number {
       const last = this.messages[this.messages.length - 1];
@@ -147,9 +209,11 @@ export default Vue.extend({
     },
   },
   async mounted() {
-    this.unreadSince = this.loadLastRead();
     this.authorName = (await fetchMyNickname(this.client, this.userId)) || "Player";
     await this.loadInitialMessages();
+    // After the messages, so a device still carrying the old timestamp receipt can translate it
+    // into an id instead of re-flagging the whole room as unread (see chat-unread.ts).
+    this.lastSeenId = loadLastSeenId(LAST_SEEN_KEY, LEGACY_LAST_READ_KEY, this.messages);
     // Covers the panel being opened while that load was still in flight: `openPanel`'s own
     // scroll-to-bottom ran against an empty list, and the list is a real scroll container now, so
     // without this the thread would open parked on its oldest message.
@@ -161,8 +225,24 @@ export default Vue.extend({
       this.readReceipts = receipts;
     });
     this.subscribeChat();
+    if (!this.isDesktop) {
+      this.startViewportWatch();
+    }
+    this.desktopUnwatch = watchDesktopViewport((isDesktop) => {
+      this.isDesktop = isDesktop;
+      if (isDesktop) {
+        this.stopViewportWatch();
+      } else {
+        this.startViewportWatch();
+      }
+    });
   },
   beforeDestroy() {
+    if (this.desktopUnwatch) {
+      this.desktopUnwatch();
+      this.desktopUnwatch = null;
+    }
+    this.stopViewportWatch();
     if (this.channel) {
       this.client.removeChannel(this.channel);
     }
@@ -172,19 +252,29 @@ export default Vue.extend({
       return isUserOnline(this.presenceState, userId);
     },
     formatTime: formatChatTime,
-    loadLastRead(): number {
-      if (typeof window === "undefined") {
-        return 0;
+    startViewportWatch() {
+      if (this.viewportPinUnwatch) {
+        return;
       }
-      const stored = window.localStorage.getItem(LAST_READ_KEY);
-      return stored ? Number(stored) : 0;
+      this.viewportPinUnwatch = watchOverlayViewport((pin) => {
+        this.viewportPin = pin;
+      });
     },
-    markRead() {
-      const now = Date.now();
-      this.unreadSince = now;
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem(LAST_READ_KEY, String(now));
+    stopViewportWatch() {
+      if (this.viewportPinUnwatch) {
+        this.viewportPinUnwatch();
+        this.viewportPinUnwatch = null;
       }
+      this.viewportPin = null;
+    },
+    /** Everything in the room is on screen (or was, when the popup closed) - so none of it is
+     * unread. Called on open, on close, and on every arrival while open. */
+    markSeen() {
+      const newest = newestMessageId(this.messages);
+      if (newest > this.lastSeenId) {
+        this.lastSeenId = newest;
+      }
+      saveLastSeenId(LAST_SEEN_KEY, newest);
     },
     async loadInitialMessages() {
       const { data, error } = await (this.client as any)
@@ -242,7 +332,7 @@ export default Vue.extend({
             const follow = this.isAtBottom() || payload.new.user_id === this.userId;
             this.messages.push(payload.new);
             if (this.open) {
-              this.markRead();
+              this.markSeen();
               this.reportRead();
             }
             if (follow) {
@@ -309,11 +399,14 @@ export default Vue.extend({
     },
     openPanel() {
       this.open = true;
-      this.markRead();
+      this.markSeen();
       this.reportRead();
       this.$nextTick(() => this.scrollToBottom());
     },
     closePanel() {
+      // Also on the way out - see ChatNotesPanel.vue's twin: marking only on open is what left your
+      // own just-sent message counting as unread the moment you closed the panel.
+      this.markSeen();
       this.open = false;
     },
     togglePanel() {
@@ -331,36 +424,86 @@ export default Vue.extend({
 // Mirrors ChatNotesPanel.vue's shell (floating toggle, desktop dock / mobile full overlay) for UI
 // consistency - kept as a separate component rather than a shared base since the per-game panel's
 // tabs/notes concepts don't apply here at all.
+// Unread pill + pulse, mirroring ChatNotesPanel.vue's own (see the comment there for why the old
+// 0.6rem dot had to go).
+@keyframes lobby-unread-pulse {
+  0% {
+    box-shadow: 0 2px 10px var(--ui-shadow), 0 0 0 0 rgba(180, 35, 50, 0.55);
+  }
+  70% {
+    box-shadow: 0 2px 10px var(--ui-shadow), 0 0 0 0.75rem rgba(180, 35, 50, 0);
+  }
+  100% {
+    box-shadow: 0 2px 10px var(--ui-shadow), 0 0 0 0 rgba(180, 35, 50, 0);
+  }
+}
+
 .lobby-chat__toggle {
   position: fixed;
   right: 1rem;
+  // `bottom` is set inline (see `toggleStyle`) so an on-screen keyboard can lift it; it resolves to
+  // TOGGLE_BOTTOM the rest of the time, which this literal has to match.
   bottom: 1.5rem;
   z-index: 1040;
-  width: 3rem;
+  min-width: 3rem;
   height: 3rem;
-  border-radius: 50%;
+  padding: 0;
+  border-radius: 1.5rem;
   border: 0;
   background: var(--ui-primary);
   color: var(--ui-primary-text);
   font-size: 1.35rem;
+  line-height: 1;
   box-shadow: 0 2px 10px var(--ui-shadow);
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 0.35rem;
+  transition: bottom 0.15s ease-out, background-color 0.15s ease-out, padding 0.15s ease-out;
 
   // Right side, matching ChatNotesPanel's per-game chat toggle (owner request) - no conflict since
   // this one only ever appears on the lobby screen, never alongside the per-game one.
+
+  &--unread {
+    padding: 0 0.85rem 0 0.7rem;
+    background: var(--ui-danger-solid);
+    color: #fff;
+    animation: lobby-unread-pulse 1.9s ease-out infinite;
+  }
+
+  &--open {
+    background: var(--ui-surface);
+    color: var(--ui-text);
+    border: 1px solid var(--ui-border);
+    font-size: 1.6rem;
+  }
+}
+
+.lobby-chat__toggle-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lobby-chat__toggle-text {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
 }
 
 .lobby-chat__badge {
-  position: absolute;
-  top: 0.15rem;
-  right: 0.15rem;
-  width: 0.6rem;
-  height: 0.6rem;
-  border-radius: 50%;
-  background: var(--ui-danger);
-  border: 2px solid var(--ui-surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.28rem;
+  border-radius: 0.7rem;
+  background: #fff;
+  color: var(--ui-danger-solid);
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .lobby-chat__panel {
@@ -377,10 +520,19 @@ export default Vue.extend({
   display: flex;
   flex-direction: column;
 
+  // Popup on mobile, same shell as ChatNotesPanel.vue's (see the comment there): full width, above
+  // the toggle, only as tall as the space above it, with `bottom`/`max-height` coming in inline
+  // from chat-popup.ts.
   @media (max-width: 767px) {
     left: 0;
-    width: 100vw;
-    border-left: none;
+    right: 0;
+    top: auto;
+    width: auto;
+    min-height: 11rem;
+    border: 1px solid var(--ui-border);
+    border-radius: 1rem;
+    box-shadow: 0 10px 34px var(--ui-shadow), 0 2px 8px var(--ui-shadow);
+    overflow: hidden;
   }
 }
 
@@ -396,29 +548,15 @@ export default Vue.extend({
   flex: 1;
 }
 
-.lobby-chat__back {
-  display: none;
-  border: 0;
-  background: transparent;
-  font-size: 1.3rem;
-  line-height: 1;
-  padding: 0.2rem 0.4rem;
-
-  @media (max-width: 767px) {
-    display: inline-flex;
-  }
-}
-
+// One control on every viewport now - a popup is minimized, not navigated back out of, so the
+// mobile-only back arrow that used to stand in for this went away with the full-screen overlay.
 .lobby-chat__close {
   border: 0;
   background: transparent;
+  color: inherit;
   font-size: 1.2rem;
   line-height: 1;
-  padding: 0.2rem 0.4rem;
-
-  @media (max-width: 767px) {
-    display: none;
-  }
+  padding: 0.2rem 0.5rem;
 }
 
 .lobby-chat__messages {

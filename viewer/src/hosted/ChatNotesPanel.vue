@@ -4,22 +4,27 @@
       v-if="!isDesktop"
       type="button"
       class="chat-notes__toggle"
-      :class="{ 'chat-notes__toggle--unread': hasUnread }"
-      :style="{ bottom: toggleBottomOffset + 'px' }"
-      @click="openPanel()"
-      :aria-label="open ? 'Close chat' : 'Open chat'"
+      :class="{ 'chat-notes__toggle--unread': hasUnread, 'chat-notes__toggle--open': open }"
+      :style="toggleStyle"
+      @click="toggleOpen()"
+      :aria-label="toggleLabel"
     >
-      <span aria-hidden="true">&#128172;</span>
-      <span v-if="hasUnread" class="chat-notes__badge"></span>
+      <span class="chat-notes__toggle-icon" aria-hidden="true">{{ open ? "×" : "💬" }}</span>
+      <!-- Unread turns the circle into a pill that says how many and by whom: a 0.6rem dot was easy
+           to miss entirely on a busy board (owner report). `--unread` also pulses it, and the count
+           lives in `__badge` so it stays legible over the icon. -->
+      <template v-if="hasUnread">
+        <span class="chat-notes__badge">{{ unreadBadge }}</span>
+        <span class="chat-notes__toggle-text">new</span>
+      </template>
     </button>
 
-    <div v-if="open" class="chat-notes__panel" :style="mobileViewportStyle">
+    <div v-if="open" class="chat-notes__panel" :style="panelStyle">
       <div class="chat-notes__header">
-        <button type="button" class="chat-notes__back" @click="closePanel" aria-label="Back to game">&larr;</button>
         <!-- Notes moved out to the Lost Fleet sidebar's sticky sheet (LostFleetNotes.vue) - this panel
              is chat-only now, so a plain title stands in for the old Chat/Notes tab switcher. -->
         <div class="chat-notes__title">Chat</div>
-        <button type="button" class="chat-notes__close" @click="closePanel" aria-label="Close">&times;</button>
+        <button type="button" class="chat-notes__close" @click="closePanel" aria-label="Minimize chat">&times;</button>
       </div>
 
       <div class="chat-notes__chat">
@@ -91,7 +96,16 @@ import {
   readersByMessage,
 } from "./chat-reads";
 import { isDesktopViewport, watchDesktopViewport } from "./viewport";
-import { overlayViewportPin, OverlayViewportPin } from "./overlay-viewport";
+import { OverlayViewportPin } from "./overlay-viewport";
+import { chatPopupGeometry, watchOverlayViewport } from "./chat-popup";
+import {
+  formatUnreadCount,
+  loadLastSeenId,
+  newestMessageId,
+  saveLastSeenId,
+  unreadCount,
+  unreadSummary,
+} from "./chat-unread";
 
 interface ChatMessage {
   id: number;
@@ -125,8 +139,8 @@ function saveOpenPreference(open: boolean): void {
 }
 
 /** Per-game chat (visible to every approved user, players and spectators alike) - a floating toggle
- * that opens a collapsible side panel on desktop or a full-screen overlay on mobile (see the scoped
- * media queries below), matching the owner's brief. Private per-game notes used to live here too, as
+ * that opens a collapsible side panel on desktop or a popup above the toggle on mobile (see the
+ * scoped media queries below), matching the owner's brief. Private per-game notes used to live here too, as
  * a second tab, but moved to the Lost Fleet sidebar's sticky sheet (LostFleetNotes.vue); this panel
  * is chat-only now.
  *
@@ -137,10 +151,16 @@ function saveOpenPreference(open: boolean): void {
  * toggle below, and it always starts closed. `isDesktop` re-evaluates on every breakpoint
  * crossing via `watchDesktopViewport`.
  *
- * The mobile overlay is also modal in the "nothing behind it responds" sense: hosted.ts mirrors
- * `open` onto `#app.chat-notes-open`, and frontend.scss drops pointer events for the whole page
- * except this component's own subtree while that class is set on a narrow viewport. Anything added
- * here that must stay tappable therefore has to live inside `.chat-notes`. */
+ * On mobile it is a POPUP, not a full-screen overlay (owner request): full page width, but anchored
+ * above the floating toggle and only as tall as the space above it, so the toggle stays visible and
+ * one tap minimizes the chat. `chat-popup.ts` owns that arithmetic - the toggle's own offset is
+ * measured off the live sticky bar, and an on-screen keyboard has to lift both surfaces.
+ *
+ * It stays modal in the "nothing behind it responds" sense even so: hosted.ts mirrors `open` onto
+ * `#app.chat-notes-open`, and frontend.scss drops pointer events for the whole page except this
+ * component's own subtree while that class is set on a narrow viewport. Anything added here that
+ * must stay tappable therefore has to live inside `.chat-notes` - the toggle included, which is
+ * exactly what makes tap-to-minimize work. */
 export default Vue.extend({
   name: "ChatNotesPanel",
   props: {
@@ -157,7 +177,10 @@ export default Vue.extend({
       draft: "",
       authorName: "Player",
       muted: false,
-      unreadSince: 0,
+      // Highest message id I have already had on screen. Unread is derived from this and the
+      // sender, NOT from a wall clock - see chat-unread.ts for the two bugs that fixes (chiefly:
+      // my own outgoing message used to light up my own unread badge).
+      lastSeenId: 0,
       // Read checks: one receipt per reader, holding how far they have got in this thread. Loaded
       // once and then kept live off the same Realtime channel as the messages themselves.
       readReceipts: [] as ChatReadReceipt[],
@@ -182,37 +205,59 @@ export default Vue.extend({
       stickyBarPoll: null as ReturnType<typeof setInterval> | null,
       channel: null as any,
       viewportUnwatch: null as (() => void) | null,
-      // Mobile only: while an on-screen keyboard is up, mirrors window.visualViewport so the
-      // full-screen panel stays pinned to the area actually visible above it. Without this, opening
-      // the keyboard on iOS can leave this `position: fixed` panel sized to the pre-keyboard layout
-      // viewport while the browser scrolls the page to keep the focused textarea in view, exposing
-      // a strip of the game board (faction buttons included) below the panel - so a tap meant for
-      // the composer/keyboard lands on the board instead. Null the rest of the time, which is the
-      // point: `position: fixed; inset: 0` already covers the visible area on an ordinary scroll,
-      // an address-bar collapse, an elastic overscroll or a pinch-zoom, and pinning through those
-      // (which this used to do unconditionally) is itself what tears a gap open. `overlayViewportPin`
-      // owns that decision. Recalculated on both `resize` (keyboard open/close, height change) and
-      // `scroll` (the same keyboard-avoidance scroll) events.
+      // Mobile only: how much of the layout viewport an on-screen keyboard is currently covering,
+      // as `overlayViewportPin` reports it. Null the rest of the time, which is the point - only
+      // iOS Safari's keyboard shrinks the visual viewport without resizing the layout viewport one
+      // `position: fixed` anchors to; an ordinary scroll, an address-bar collapse, an elastic
+      // overscroll or a pinch-zoom must all be ignored, and treating them as a keyboard is what
+      // used to detach this panel from the screen. `overlayViewportPin` owns that decision;
+      // `watchOverlayViewport` keeps it current on both `resize` (keyboard open/close) and `scroll`
+      // (the browser chasing a focused input) events.
       viewportPin: null as OverlayViewportPin,
-      handleVisualViewportChange: null as (() => void) | null,
+      viewportPinUnwatch: null as (() => void) | null,
     };
   },
   computed: {
-    mobileViewportStyle(): Record<string, string> {
-      const pin = this.viewportPin;
-      if (this.isDesktop || !pin) {
+    /** Popup geometry (mobile only - desktop is a docked full-height strip, styled purely in CSS).
+     * See chat-popup.ts: the panel hangs above the toggle rather than filling the screen, so the
+     * toggle stays visible and tappable to minimize it again. */
+    panelStyle(): Record<string, string> {
+      if (this.isDesktop) {
         return {};
       }
-      // `bottom: auto` explicitly rather than relying on the over-constrained-box rule dropping the
-      // stylesheet's `bottom: 0` - the pinned height is the whole point here.
-      return { top: `${pin.top}px`, height: `${pin.height}px`, bottom: "auto" };
+      const geometry = chatPopupGeometry({
+        toggleBottom: this.toggleBottomOffset,
+        pin: this.viewportPin,
+        innerHeight: typeof window === "undefined" ? 0 : window.innerHeight,
+      });
+      return { bottom: `${geometry.bottom}px`, maxHeight: `${geometry.maxHeight}px` };
+    },
+    toggleStyle(): Record<string, string> {
+      const geometry = chatPopupGeometry({
+        toggleBottom: this.toggleBottomOffset,
+        pin: this.isDesktop ? null : this.viewportPin,
+        innerHeight: typeof window === "undefined" ? 0 : window.innerHeight,
+      });
+      // Lifted clear of the keyboard too, so "tap the bubble to minimize" survives having the
+      // composer focused.
+      return { bottom: `${this.toggleBottomOffset + geometry.keyboardInset}px` };
+    },
+    unreadCount(): number {
+      // An open panel is by definition being read; `markSeen` keeps `lastSeenId` current while it
+      // is, so this is belt-and-braces against a render between an arrival and that call.
+      return this.open ? 0 : unreadCount(this.messages, this.lastSeenId, this.userId);
     },
     hasUnread(): boolean {
+      return this.unreadCount > 0;
+    },
+    unreadBadge(): string {
+      return formatUnreadCount(this.unreadCount);
+    },
+    toggleLabel(): string {
       if (this.open) {
-        return false;
+        return "Minimize chat";
       }
-      const last = this.messages[this.messages.length - 1];
-      return !!last && new Date(last.created_at).getTime() > this.unreadSince;
+      return this.hasUnread ? `Open chat, ${unreadSummary(this.unreadCount)}` : "Open chat";
     },
     lastMessageId(): number {
       const last = this.messages[this.messages.length - 1];
@@ -227,9 +272,11 @@ export default Vue.extend({
     },
   },
   async mounted() {
-    this.unreadSince = this.loadLastRead();
     this.authorName = (await fetchMyNickname(this.client, this.userId)) || "Player";
     await this.loadMessages();
+    // After the messages, not before: a device upgrading from the old timestamp receipt needs the
+    // thread in hand to translate it into an id (see chat-unread.ts).
+    this.lastSeenId = loadLastSeenId(this.lastSeenKey(), this.legacyLastReadKey(), this.messages);
     await this.loadMuted();
     // Deliberately not awaited: read checks are decoration on top of the thread, and blocking the
     // rest of mounted() on them would delay the panel's own layout setup below (the sticky-bar and
@@ -243,20 +290,21 @@ export default Vue.extend({
     // newest message explicitly. That used to happen by accident: the list was bottom-ALIGNED, so
     // the newest message showed whatever `scrollTop` said. It is a real scroll container now.
     if (this.open) {
+      this.markSeen();
       this.reportRead();
       this.$nextTick(() => this.scrollToBottom());
     }
     this.startStickyBarWatch();
     if (!this.isDesktop) {
-      this.startVisualViewportPin();
+      this.startViewportWatch();
     }
     this.viewportUnwatch = watchDesktopViewport((isDesktop) => {
       this.isDesktop = isDesktop;
       this.open = isDesktop && loadOpenPreference();
       if (isDesktop) {
-        this.stopVisualViewportPin();
+        this.stopViewportWatch();
       } else {
-        this.startVisualViewportPin();
+        this.startViewportWatch();
       }
     });
   },
@@ -265,7 +313,7 @@ export default Vue.extend({
       this.viewportUnwatch();
       this.viewportUnwatch = null;
     }
-    this.stopVisualViewportPin();
+    this.stopViewportWatch();
     this.stickyBarObserver?.disconnect();
     if (this.stickyBarPoll) {
       clearInterval(this.stickyBarPoll);
@@ -275,31 +323,19 @@ export default Vue.extend({
     }
   },
   methods: {
-    startVisualViewportPin() {
-      const vv = typeof window !== "undefined" ? window.visualViewport : undefined;
-      if (!vv || this.handleVisualViewportChange) {
+    startViewportWatch() {
+      if (this.viewportPinUnwatch) {
         return;
       }
-      const update = () => {
-        this.viewportPin = overlayViewportPin({
-          scale: vv.scale || 1,
-          offsetTop: vv.offsetTop,
-          height: vv.height,
-          innerHeight: window.innerHeight,
-        });
-      };
-      this.handleVisualViewportChange = update;
-      vv.addEventListener("resize", update);
-      vv.addEventListener("scroll", update);
-      update();
+      this.viewportPinUnwatch = watchOverlayViewport((pin) => {
+        this.viewportPin = pin;
+      });
     },
-    stopVisualViewportPin() {
-      const vv = typeof window !== "undefined" ? window.visualViewport : undefined;
-      if (vv && this.handleVisualViewportChange) {
-        vv.removeEventListener("resize", this.handleVisualViewportChange);
-        vv.removeEventListener("scroll", this.handleVisualViewportChange);
+    stopViewportWatch() {
+      if (this.viewportPinUnwatch) {
+        this.viewportPinUnwatch();
+        this.viewportPinUnwatch = null;
       }
-      this.handleVisualViewportChange = null;
       this.viewportPin = null;
     },
     isOnline(userId: string): boolean {
@@ -340,22 +376,22 @@ export default Vue.extend({
       const barHeight = el ? el.getBoundingClientRect().height : 0;
       this.toggleBottomOffset = barHeight > 0 ? barHeight + 12 : 24;
     },
-    lastReadKey(): string {
+    lastSeenKey(): string {
+      return `chat-last-seen-id-${this.gameId}`;
+    },
+    /** The pre-id key this device may still be carrying - a wall-clock ms receipt. Read once on
+     * mount and then left to go stale (see chat-unread.ts). */
+    legacyLastReadKey(): string {
       return `chat-last-read-${this.gameId}`;
     },
-    loadLastRead(): number {
-      if (typeof window === "undefined") {
-        return 0;
+    /** Everything currently in the thread is on screen (or was, when the panel closed) - so nothing
+     * in it is unread any more. Called on open, on close, and on every arrival while open. */
+    markSeen() {
+      const newest = newestMessageId(this.messages);
+      if (newest > this.lastSeenId) {
+        this.lastSeenId = newest;
       }
-      const stored = window.localStorage.getItem(this.lastReadKey());
-      return stored ? Number(stored) : 0;
-    },
-    markRead() {
-      const now = Date.now();
-      this.unreadSince = now;
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem(this.lastReadKey(), String(now));
-      }
+      saveLastSeenId(this.lastSeenKey(), newest);
     },
     async loadMessages() {
       const { data, error } = await (this.client as any)
@@ -381,9 +417,10 @@ export default Vue.extend({
             // newest one, or when the arrival is their own message.
             const follow = this.isAtBottom() || payload.new.user_id === this.userId;
             this.messages.push(payload.new);
-            // Arriving while the panel is open means I'm looking at it - report it read so the
-            // sender sees the check without either of us touching anything.
+            // Arriving while the panel is open means I'm looking at it - clear it locally and
+            // report it read, so the sender sees the check without either of us touching anything.
             if (this.open) {
+              this.markSeen();
               this.reportRead();
             }
             if (follow) {
@@ -496,11 +533,15 @@ export default Vue.extend({
     },
     openPanel() {
       this.setOpen(true);
-      this.markRead();
+      this.markSeen();
       this.reportRead();
       this.$nextTick(() => this.scrollToBottom());
     },
     closePanel() {
+      // Also on the way OUT, not just on the way in: whatever was in the thread when you closed it
+      // was on screen, your own just-sent message included. Marking only on open is what left your
+      // own message counting as unread the moment you closed the panel.
+      this.markSeen();
       this.setOpen(false);
     },
   },
@@ -508,35 +549,88 @@ export default Vue.extend({
 </script>
 
 <style lang="scss" scoped>
+// A 0.6rem dot in the corner of the bubble was too easy to miss on a busy board (owner report), so
+// unread now changes the button itself: it grows from a circle into a pill carrying the count and
+// the word "new", flips to the danger colour, and pulses. Shared with LobbyChatPanel.vue's own
+// toggle, which mirrors these rules under its own class names.
+@keyframes chat-unread-pulse {
+  0% {
+    box-shadow: 0 2px 10px var(--ui-shadow), 0 0 0 0 rgba(180, 35, 50, 0.55);
+  }
+  70% {
+    box-shadow: 0 2px 10px var(--ui-shadow), 0 0 0 0.75rem rgba(180, 35, 50, 0);
+  }
+  100% {
+    box-shadow: 0 2px 10px var(--ui-shadow), 0 0 0 0 rgba(180, 35, 50, 0);
+  }
+}
+
 .chat-notes__toggle {
   position: fixed;
   right: 1rem;
-  // `bottom` is set inline (see `toggleBottomOffset`) - dynamically measured off the live sticky
-  // bar element so it always clears it regardless of that bar's current height, on every viewport.
+  // `bottom` is set inline (see `toggleStyle`) - dynamically measured off the live sticky bar
+  // element so it always clears it regardless of that bar's current height, plus whatever an
+  // on-screen keyboard is currently covering.
   z-index: 1040;
-  width: 3rem;
+  min-width: 3rem;
   height: 3rem;
-  border-radius: 50%;
+  padding: 0;
+  // Half the height, so it stays a perfect circle with no content and rounds into a pill with it.
+  border-radius: 1.5rem;
   border: 0;
   background: var(--ui-primary);
   color: var(--ui-primary-text);
   font-size: 1.35rem;
+  line-height: 1;
   box-shadow: 0 2px 10px var(--ui-shadow);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: bottom 0.15s ease-out;
+  gap: 0.35rem;
+  transition: bottom 0.15s ease-out, background-color 0.15s ease-out, padding 0.15s ease-out;
+
+  &--unread {
+    padding: 0 0.85rem 0 0.7rem;
+    background: var(--ui-danger-solid);
+    color: #fff;
+    animation: chat-unread-pulse 1.9s ease-out infinite;
+  }
+
+  // Open: the bubble is the minimize control, and says so.
+  &--open {
+    background: var(--ui-surface);
+    color: var(--ui-text);
+    border: 1px solid var(--ui-border);
+    font-size: 1.6rem;
+  }
 }
 
+.chat-notes__toggle-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-notes__toggle-text {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+// The count itself, not the old bare dot - "3" says something a dot cannot.
 .chat-notes__badge {
-  position: absolute;
-  top: 0.15rem;
-  right: 0.15rem;
-  width: 0.6rem;
-  height: 0.6rem;
-  border-radius: 50%;
-  background: var(--ui-danger);
-  border: 2px solid var(--ui-surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.28rem;
+  border-radius: 0.7rem;
+  background: #fff;
+  color: var(--ui-danger-solid);
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .chat-notes__panel {
@@ -553,13 +647,26 @@ export default Vue.extend({
   display: flex;
   flex-direction: column;
 
-  // Full-screen overlay instead of a squeezed docked strip - a fixed 360px panel doesn't work on a
-  // phone-width viewport (owner's explicit choice over a bottom sheet, to avoid gesture conflicts
-  // with the map's own pinch/pan/scroll handling).
+  // Mobile is a POPUP, not a full-screen overlay and not a squeezed 360px dock (owner request):
+  // full page width, but hanging above the floating toggle and only as tall as the space above it,
+  // so the toggle stays visible and one tap minimizes it. `top`/`bottom`/`max-height` come from
+  // chat-popup.ts as inline styles - the toggle's own offset is measured off the live sticky bar
+  // and an on-screen keyboard shifts both - leaving only the popup's LOOK here. Height is
+  // content-driven up to that max, so a two-message thread is a small card rather than a tall
+  // empty box.
   @media (max-width: 767px) {
     left: 0;
-    width: 100vw;
-    border-left: none;
+    right: 0;
+    top: auto;
+    width: auto;
+    min-height: 11rem;
+    border: 1px solid var(--ui-border);
+    border-radius: 1rem;
+    // Deliberately heavier than the docked panel's: the board is visible above and below it now, so
+    // the popup has to read as a surface floating over the game rather than part of it.
+    box-shadow: 0 10px 34px var(--ui-shadow), 0 2px 8px var(--ui-shadow);
+    // Keeps the header/composer corners inside the rounded frame.
+    overflow: hidden;
   }
 }
 
@@ -571,36 +678,22 @@ export default Vue.extend({
   border-bottom: 1px solid var(--ui-border);
 }
 
-.chat-notes__back {
-  display: none;
-  border: 0;
-  background: transparent;
-  font-size: 1.3rem;
-  line-height: 1;
-  padding: 0.2rem 0.4rem;
-
-  @media (max-width: 767px) {
-    display: inline-flex;
-  }
-}
-
 .chat-notes__title {
   flex: 1;
   font-weight: 700;
   padding: 0.28rem 0.5rem;
 }
 
+// Shown on every viewport now. It used to be desktop-only, with a mobile-only back arrow standing
+// in for it, because mobile was a full-screen overlay you "went back" from; a popup is minimized,
+// not navigated away from, so one control does for both.
 .chat-notes__close {
   border: 0;
   background: transparent;
+  color: inherit;
   font-size: 1.2rem;
   line-height: 1;
-  padding: 0.2rem 0.4rem;
-
-  // The back arrow covers this role on mobile - no need for both.
-  @media (max-width: 767px) {
-    display: none;
-  }
+  padding: 0.2rem 0.5rem;
 }
 
 .chat-notes__chat {

@@ -1,7 +1,23 @@
 {
-  "version": "5.53.8",
-  "releasedAt": "2026-08-08",
+  "version": "5.54.0",
+  "releasedAt": "2026-08-10",
   "entries": [
+    {
+      "version": "5.54.0",
+      "releasedAt": "2026-08-10",
+      "kind": "update",
+      "title": "Chat popup",
+      "impact": "",
+      "changes": [
+        "The mobile chat is now a popup above the chat button instead of a full-screen overlay, so one tap on the button minimizes it again",
+        "The chat button now shows how many unread messages are waiting, as a pill you can't miss, instead of a small dot",
+        "Fixed your own messages lighting up your own unread chat badge - unread is now tracked by message id and sender instead of a device clock, so a read thread also stops re-flagging itself on clock skew"
+      ],
+      "userChanges": [
+        "The mobile chat is now a popup above the chat button instead of a full-screen overlay, so one tap on the button minimizes it again",
+        "The chat button now shows how many unread messages are waiting, as a pill you can't miss, instead of a small dot"
+      ]
+    },
     {
       "version": "5.53.8",
       "releasedAt": "2026-08-08",

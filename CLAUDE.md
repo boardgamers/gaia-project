@@ -188,6 +188,15 @@ PREFERENCE_SPLIT_AUCTION.md`. Unlike the Silent Auction, its secrecy is **server
   and in the ledger) and are written ONLY through the `mark_game_chat_read`/`mark_lobby_chat_read`
   RPCs, which `greatest()` the position so a receipt can never rewind. Shared client logic lives in
   `viewer/src/hosted/chat-reads.ts` — extend that, not the two panels, for anything receipt-shaped.
+- **Chat unread badge + mobile popup (PROGRESS #147, 2026-08-10).** The unread badge used to mean
+  "the newest message is newer than the last time I opened the panel", which lit it up for your OWN
+  outgoing message — the mark only moved on open, never on close, and the sender was never
+  considered. Unread now means "messages from other people above the highest id I have had on
+  screen" (`viewer/src/hosted/chat-unread.ts` — extend that, not the two panels, for anything
+  unread-shaped), and the badge shows a count instead of a bare dot. Mobile is now a popup anchored
+  above the floating toggle, so the toggle stays tappable to minimize; its geometry (sticky-bar
+  offset, on-screen keyboard) lives in `viewer/src/hosted/chat-popup.ts`. Client-only, no schema
+  change.
 - **…and the drift can also run the other way — a repo migration that never reached the database
   (2026-08-04, PROGRESS #133).** In-game chat pushes were silently dead for ~a month because
   `0033_notify_chat_message.sql` existed in the repo but its function and trigger were never created

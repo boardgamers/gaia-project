@@ -112,19 +112,23 @@ body {
   }
 }
 
-// Mobile counterpart of the same class: there the chat is a full-screen overlay, so everything it
-// covers must be untouchable while it's up - the owner was hitting move buttons "through" the open
-// chat. Not a z-index problem (the panel is 1050, the sticky move/premove bars 1030): a
-// `position: fixed` overlay on a phone can still leave a live strip of the page exposed whenever the
-// visual viewport and the layout viewport disagree (keyboard, address bar, pinch-zoom, elastic
-// overscroll), and any tap that lands there hits whatever is underneath. ChatNotesPanel.vue's
-// `overlayViewportPin` keeps that gap from opening in the first place; this makes the page behind
-// inert regardless, so no future viewport quirk can turn one back into a misfired move.
+// Mobile counterpart of the same class: while the chat is up, nothing behind it may respond - the
+// owner was hitting move buttons "through" the open chat. Not a z-index problem (the panel is 1050,
+// the sticky move/premove bars 1030): a tap can land on the page whenever the visual viewport and
+// the layout viewport disagree (keyboard, address bar, pinch-zoom, elastic overscroll), and this
+// makes that harmless whatever the viewport is doing.
+//
+// Still wanted now that mobile is a POPUP rather than a full-screen overlay (see ChatNotesPanel.vue):
+// the board is visible around the popup, but it was never reachable with the chat open before
+// either, and the popup sits right on top of the sticky move bar - so an inert page keeps a
+// half-missed tap on the chat's own edge from firing a move. Closing the chat (one tap on the
+// bubble, which stays live) is what gives the board back.
 //
 // Everything under #app stops hit-testing and the chat's own subtree opts back in (pointer-events is
 // per-element, so re-enabling the panel does not require its ancestors) - deliberately the whole
-// page rather than a list of the fixed bars, since the point is that NOTHING behind the overlay
-// reacts. Toasts appended to <body> (update/install prompts) are outside #app and stay clickable.
+// page rather than a list of the fixed bars, since the point is that NOTHING behind the chat
+// reacts. The floating toggle lives inside `.chat-notes` too, which is what keeps tap-to-minimize
+// working. Toasts appended to <body> (update/install prompts) are outside #app and stay clickable.
 @media (max-width: 767px) {
   #app.chat-notes-open {
     pointer-events: none;

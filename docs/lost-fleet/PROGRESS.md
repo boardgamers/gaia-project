@@ -6061,6 +6061,46 @@ pin_preference_split_budget_search_path` (the one function in the set without a 
       build and lint clean, old-ui lint clean, and prettier clean across the repo and stable across
       repeated runs.
 
+147.  ✅ **Your own chat message no longer lights up your own unread badge; the badge counts; the
+      mobile chat is a popup (2026-08-10).** Three owner-reported items on the chat, all in
+      `ChatNotesPanel.vue` (per-game) and `LobbyChatPanel.vue` (lobby), which share a shell and so
+      shared all three:
+
+
+     - **The bug, confirmed real.** Unread was "the newest message is newer than `unreadSince`",
+       where `unreadSince` was a `Date.now()` written by `markRead()` — and `markRead()` ran on
+       OPEN only, never on close. So: open the chat, type a message, close it, and your own message
+       was newer than the mark and lit the badge. Nothing about the sender was ever considered. The
+       same comparison also put a server `created_at` against a device clock, so a few seconds of
+       skew alone could light it. Both go away in the new shared `viewer/src/hosted/chat-unread.ts`:
+       unread is now "messages from OTHER people with an id above the highest id I have had on
+       screen", ids being server-issued like the messages themselves. `markSeen()` runs on open, on
+       close, and on every arrival while open. A device carrying the old timestamp receipt has it
+       translated once into the id it meant, so the upgrade doesn't re-flag a read thread.
+     - **The indicator is no longer a 0.6rem dot.** Unread now grows the floating bubble into a pill
+       carrying the unread COUNT (capped at "9+") and the word "new", flips it to the danger colour
+       and pulses it; the accessible name spells it out ("Open chat, 3 new messages").
+     - **Mobile is a popup, not a full-screen overlay.** Full page width still, but anchored above
+       the floating toggle and only as tall as the space above it, with rounded corners, a border
+       and a lifted shadow — so the toggle stays visible and one tap minimizes the chat again
+       (which is what the owner asked for). The geometry is measured, not CSS-only, because the
+       toggle's own offset already tracks the live sticky move/premove bar and an on-screen keyboard
+       has to lift both surfaces: `viewer/src/hosted/chat-popup.ts` owns that arithmetic and reuses
+       `overlay-viewport.ts`'s existing keyboard verdict rather than re-deriving it. The panel's
+       height is content-driven up to that max, so a two-message thread is a small card. The
+       mobile-only "back" arrow went with the full-screen overlay; one close button now serves every
+       viewport.
+     - **The page behind stays inert on mobile** (`#app.chat-notes-open`, frontend.scss). Kept
+       deliberately: the popup's bottom edge sits close above the sticky move bar, which is the
+       exact misfire the rule was added for (#111). The toggle lives inside the chat's own subtree,
+       which is what keeps tap-to-minimize working while everything else is dead.
+
+     **Tests:** two new pure-logic specs (`chat-unread.spec.ts`, `chat-popup.spec.ts`) plus new
+     regression tests in both panel specs — own message never unread, count on the badge, legacy
+     receipt migration, popup geometry at rest and under a keyboard. The lobby spec's fake client
+     now captures its Realtime `on()` callbacks the way the per-game one already did. Full viewer
+     suite **833 passing / 0 failing**; prettier clean. Not run: engine or AI suites, untouched here.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
