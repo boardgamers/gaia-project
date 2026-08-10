@@ -20,3 +20,6 @@ jobs:
       - run: npx supabase functions deploy resolve-automation --project-ref mitawjpdxkheascdiffz
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      - run: npx supabase functions deploy admin-users --project-ref mitawjpdxkheascdiffz
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}

@@ -6144,6 +6144,40 @@ pin_preference_split_budget_search_path` (the one function in the set without a 
       **Tests:** the lost-fleet button spec (5 passing), then the viewer suite once — 811 passing /
       0 failing at `--timeout 30000` (809 before, +2 new). Prettier clean.
 
+149.  ✅ **User management now shows each player's nickname (2026-08-10).** Owner request: the admin
+      "User management" page listed only the Google account name and email, so a row read
+      `Kim Pham Nguyen` with no way to tell which lobby player that is. Both tables now render the
+      in-app nickname in brackets after the account name — `Kim Pham Nguyen (PandehAAr)` — and the
+      filter box matches nickname as well as name/email.
+
+      The nickname had to come from the server side. `public.profiles` (migration `0024`) is
+      select-own-row-only under RLS, and the one broad read path that exists,
+      `list_invitable_players()` (`0027`), covers only _approved_ users — exactly the wrong set,
+      since the Pending approval table is by definition everyone who isn't approved yet. So the
+      `admin-users` edge function (service-role key, gated to the single admin email) now selects
+      `profiles.user_id,nickname` alongside its existing players/games/subscriptions reads and adds a
+      `nickname` field to each user row. `AdminUsers.vue` renders `user.nickname` directly in the All
+      users table, and `nicknameFor(user_id)` looks the pending rows up in that same loaded list. The
+      field is additive, so an older client just ignores it.
+
+      **`admin-users` was not in the deploy workflow.** `supabase-deploy-function.yml` deployed only
+      `notify` and `resolve-automation`, so every previous change to this function had to be pushed by
+      hand, and a `supabase/functions/**` push would have shipped the other two while silently
+      leaving this one behind. It is now a third deploy step in that workflow.
+
+      The two tables also picked up `admin-users-pending` / `admin-users-all` classes, purely so the
+      specs can assert against one table instead of counting every `tbody tr` on the page.
+
+      **Live-state check while here:** #143's two migrations _are_ applied now
+      (`push_subscriptions.active_game_id`/`active_at`, `auction_bid_reminders`,
+      `announce_sealed_bid_auction()`, `mark_device_viewing()` all exist on `mitawjpdxkheascdiffz`),
+      contrary to the "not applied live yet" note in `CLAUDE.md`, which is now stale on that point.
+
+      **Tests:** `AdminUsers.spec.ts` (6 passing, +3 new: nickname in each table, and filtering by
+      nickname), then the viewer suite once — 814 passing / 0 failing. Note the container needs
+      `--timeout 20000`; at the package script's 4000ms the three `SetupPreview` specs time out on
+      render speed alone (they pass in 7s on their own). Prettier clean.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

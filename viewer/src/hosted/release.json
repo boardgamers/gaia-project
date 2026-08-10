@@ -1,7 +1,19 @@
 {
-  "version": "5.53.10",
+  "version": "5.53.11",
   "releasedAt": "2026-08-10",
   "entries": [
+    {
+      "version": "5.53.11",
+      "releasedAt": "2026-08-10",
+      "kind": "fix",
+      "title": "Nicknames in user management",
+      "impact": "",
+      "changes": [
+        "User management now shows each account's in-app nickname in brackets after the Google account name, in both the pending-approval and all-users tables, and the filter box matches on nickname too",
+        "admin-users edge function returns the profiles nickname (service role - profiles is select-own-row-only under RLS) and is now deployed by the Supabase deploy workflow alongside notify and resolve-automation"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.53.10",
       "releasedAt": "2026-08-10",

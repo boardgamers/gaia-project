@@ -92,8 +92,9 @@ PREFERENCE_SPLIT_AUCTION.md`. Unlike the Silent Auction, its secrecy is **server
   by every device — so an open desktop tab silenced the same user's phone. Fixed by
   `announce_sealed_bid_auction()` + `auction_bid_reminders` (migration `20260808120000`) and
   `push_subscriptions.active_game_id`/`active_at` + `mark_device_viewing()` (migration
-  `20260808121000`). **Neither migration is applied live yet and `notify` has NOT been redeployed** —
-  none of it works until both happen. The Silent Auction was never affected (sequential moves).
+  `20260808121000`). **Both migrations are applied live** — verified 2026-08-10 against
+  `mitawjpdxkheascdiffz`: both columns, `auction_bid_reminders`, `announce_sealed_bid_auction()` and
+  `mark_device_viewing()` all exist. The Silent Auction was never affected (sequential moves).
 - A "Silent Auction" faction-selection variant (`AuctionVariant.Silent`, PROGRESS #61) is
   implemented and tested: sequential ban → sequential pick → sequential private bid submission →
   automatic ascending-auction resolution (`algorithms/silent-auction.ts`), with a setup picker
