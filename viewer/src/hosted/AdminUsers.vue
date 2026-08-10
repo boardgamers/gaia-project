@@ -23,7 +23,7 @@
         Nobody is waiting on approval right now.
       </div>
       <div v-else class="table-responsive mb-4">
-        <table class="table table-sm table-hover admin-users-table">
+        <table class="table table-sm table-hover admin-users-table admin-users-pending">
           <thead>
             <tr>
               <th>User</th>
@@ -34,7 +34,12 @@
           <tbody>
             <tr v-for="row in pendingApprovals" :key="row.user_id">
               <td>
-                <div class="font-weight-bold">{{ row.display_name || localPart(row.email) }}</div>
+                <div class="font-weight-bold">
+                  {{ row.display_name || localPart(row.email) }}
+                  <span v-if="nicknameFor(row.user_id)" class="text-muted font-weight-normal"
+                    >({{ nicknameFor(row.user_id) }})</span
+                  >
+                </div>
                 <div class="text-muted small">{{ row.email }}</div>
               </td>
               <td>{{ formatDate(row.created_at) }}</td>
@@ -63,7 +68,7 @@
       <div v-if="loading" class="text-muted">Loading users...</div>
       <div v-else-if="filteredUsers.length === 0" class="text-muted">No matching users.</div>
       <div v-else class="table-responsive">
-        <table class="table table-sm table-hover admin-users-table">
+        <table class="table table-sm table-hover admin-users-table admin-users-all">
           <thead>
             <tr>
               <th>User</th>
@@ -80,7 +85,10 @@
           <tbody>
             <tr v-for="user in filteredUsers" :key="user.id">
               <td>
-                <div class="font-weight-bold">{{ user.display_name || localPart(user.email) }}</div>
+                <div class="font-weight-bold">
+                  {{ user.display_name || localPart(user.email) }}
+                  <span v-if="user.nickname" class="text-muted font-weight-normal">({{ user.nickname }})</span>
+                </div>
                 <div class="text-muted small">{{ user.email }}</div>
               </td>
               <td>{{ formatDate(user.created_at) }}</td>
@@ -135,6 +143,8 @@ type AdminManagedUser = {
   id: string;
   email: string;
   display_name: string;
+  /** In-app nickname from public.profiles - the name other players see. "" if the row predates profiles. */
+  nickname: string;
   created_at: string | null;
   last_sign_in_at: string | null;
   invited_seats: number;
@@ -183,7 +193,7 @@ export default Vue.extend({
         return this.users;
       }
       return this.users.filter((user) => {
-        const haystacks = [user.display_name, user.email, this.localPart(user.email)];
+        const haystacks = [user.display_name, user.nickname ?? "", user.email, this.localPart(user.email)];
         return haystacks.some((value) => value.toLowerCase().includes(needle));
       });
     },
@@ -198,6 +208,14 @@ export default Vue.extend({
     }
   },
   methods: {
+    /**
+     * Nickname for a user id, taken from the loaded user list. `profiles` is select-own-row-only
+     * under RLS, so the admin-users function (service role) is the only place these come from -
+     * hence the empty-string fallback while that list is still loading.
+     */
+    nicknameFor(userId: string): string {
+      return this.users.find((user) => user.id === userId)?.nickname ?? "";
+    },
     isApproved(userId: string): boolean {
       return this.approvals.some((row) => row.user_id === userId && row.status === "approved");
     },

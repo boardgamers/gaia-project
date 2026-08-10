@@ -30,6 +30,11 @@ type SubscriptionRow = {
   user_id: string;
 };
 
+type ProfileRow = {
+  user_id: string;
+  nickname: string;
+};
+
 function displayName(user: AuthUser): string {
   const metadata = user.user_metadata ?? {};
   const fullName = metadata.full_name;
@@ -132,11 +137,12 @@ Deno.serve(async (req) => {
       return new Response("unknown action", { status: 400, headers: corsHeaders });
     }
 
-    const [users, playersResult, gamesResult, subscriptionsResult] = await Promise.all([
+    const [users, playersResult, gamesResult, subscriptionsResult, profilesResult] = await Promise.all([
       listAllUsers(service),
       service.from("players").select("user_id,invited_email,game_id"),
       service.from("games").select("id,created_by,status"),
       service.from("push_subscriptions").select("user_id"),
+      service.from("profiles").select("user_id,nickname"),
     ]);
     if (playersResult.error) {
       throw playersResult.error;
@@ -147,10 +153,19 @@ Deno.serve(async (req) => {
     if (subscriptionsResult.error) {
       throw subscriptionsResult.error;
     }
+    if (profilesResult.error) {
+      throw profilesResult.error;
+    }
 
     const players = (playersResult.data ?? []) as PlayerRow[];
     const games = (gamesResult.data ?? []) as GameRow[];
     const subscriptions = (subscriptionsResult.data ?? []) as SubscriptionRow[];
+    // The in-app nickname (public.profiles) is the name everyone else in the lobby sees, and is
+    // usually nothing like the Google account name below - the admin table needs both to be able
+    // to tell who a row actually is.
+    const nicknames = new Map(
+      ((profilesResult.data ?? []) as ProfileRow[]).map((profile) => [profile.user_id, profile.nickname ?? ""])
+    );
     const activeGameIds = new Set(games.filter((game) => game.status === "active").map((game) => game.id));
 
     const payload = users
@@ -166,6 +181,7 @@ Deno.serve(async (req) => {
           id: user.id,
           email: user.email,
           display_name: displayName(user),
+          nickname: nicknames.get(user.id) ?? "",
           created_at: user.created_at,
           last_sign_in_at: user.last_sign_in_at,
           invited_seats: invitedSeats.length,
