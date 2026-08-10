@@ -188,7 +188,7 @@ PREFERENCE_SPLIT_AUCTION.md`. Unlike the Silent Auction, its secrecy is **server
   and in the ledger) and are written ONLY through the `mark_game_chat_read`/`mark_lobby_chat_read`
   RPCs, which `greatest()` the position so a receipt can never rewind. Shared client logic lives in
   `viewer/src/hosted/chat-reads.ts` — extend that, not the two panels, for anything receipt-shaped.
-- **Chat unread badge + mobile popup (PROGRESS #147, 2026-08-10).** The unread badge used to mean
+- **Chat unread badge + mobile popup (PROGRESS #149, 2026-08-10).** The unread badge used to mean
   "the newest message is newer than the last time I opened the panel", which lit it up for your OWN
   outgoing message — the mark only moved on open, never on close, and the sender was never
   considered. Unread now means "messages from other people above the highest id I have had on

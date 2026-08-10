@@ -21,9 +21,15 @@ describe("Lobby", () => {
     let gamesChangeHandler: (() => void) | null = null;
     let removedChannel: any = null;
     let presenceStateData: Record<string, any[]> = {};
+    // Keyed by the subscribed table, because "which tables does the lobby actually listen to" is
+    // itself under test: `games`/`players` are NOT in the supabase_realtime publication, so a
+    // listener on those alone never fires in production and the list silently goes stale.
+    const changeHandlers: Record<string, (() => void)[]> = {};
     const channel = {
-      on: (_event: string, _filter: any, handler: () => void) => {
+      on: (_event: string, filter: any, handler: () => void) => {
         gamesChangeHandler = handler;
+        const table = filter?.table ?? "";
+        changeHandlers[table] = (changeHandlers[table] ?? []).concat(handler);
         return channel;
       },
       subscribe: () => channel,
@@ -139,6 +145,8 @@ describe("Lobby", () => {
       client,
       deletedId: () => deleted,
       emitGamesChange: () => gamesChangeHandler && gamesChangeHandler(),
+      emitChange: (table: string) => (changeHandlers[table] ?? []).forEach((handler) => handler()),
+      subscribedTables: () => Object.keys(changeHandlers),
       setGames: (next: any[]) => {
         gameRows = next;
       },
@@ -546,6 +554,81 @@ describe("Lobby", () => {
     expect(wrapper.find(".game-bar").classes()).to.contain("game-bar--my-turn");
     expect(wrapper.text()).to.contain("3h ago");
     expect(wrapper.text()).to.contain("Hadsch Hallas power action 6.");
+  });
+
+  // Owner-reported 2026-08-10 ("it is not my turn in Solar Comet, why is the game bar pulsing
+  // green?"): the pulse was correct when the menu loaded and then never updated. The lobby only
+  // subscribed to `games`/`players`, neither of which is in the supabase_realtime publication, so
+  // no realtime event ever reached it - the whole list, turn state included, was frozen at page
+  // load. `moves` IS published, and every path that changes whose turn it is inserts a row there.
+  it("clears the green pulse when a move elsewhere hands the turn on, without a reload", async () => {
+    const game = {
+      id: "g-stale-turn",
+      name: "Solar Comet",
+      created_by: "user-admin",
+      player_count: 2,
+      options: {},
+      status: "active",
+      current_seat: 0,
+      current_round: 3,
+      latest_move_summary: "Geodens pass.",
+      latest_move_committed_at: "2026-08-10T14:48:00Z",
+      players: [
+        { seat: 0, invited_email: "kim.pham.nguyen2@gmail.com", user_id: "user-admin", faction: "hadsch-hallas" },
+        { seat: 1, invited_email: "someone-else@example.com", user_id: "user-other", faction: "darkanians" },
+      ],
+    };
+    const { client, emitChange, subscribedTables, setGames } = makeClient([game]);
+    const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    expect(subscribedTables()).to.contain("moves");
+    expect(wrapper.find(".game-bar").classes()).to.contain("game-bar--my-turn");
+
+    // I take my turn; the seat moves on. Only a `moves` insert announces that.
+    setGames([{ ...game, current_seat: 1, latest_move_summary: "Hadsch Hallas build lab." }]);
+    emitChange("moves");
+    await Vue.nextTick();
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    expect(wrapper.find(".game-bar").classes()).to.not.contain("game-bar--my-turn");
+  });
+
+  // The other half of the same bug: realtime never replays what a sleeping phone missed, so coming
+  // back to a menu that was left open has to re-sync rather than trust what's on screen.
+  it("re-syncs the game list when the page becomes visible again", async () => {
+    const game = {
+      id: "g-backgrounded",
+      name: "Solar Comet",
+      created_by: "user-admin",
+      player_count: 2,
+      options: {},
+      status: "active",
+      current_seat: 0,
+      current_round: 3,
+      latest_move_summary: "Geodens pass.",
+      latest_move_committed_at: "2026-08-10T14:48:00Z",
+      players: [
+        { seat: 0, invited_email: "kim.pham.nguyen2@gmail.com", user_id: "user-admin", faction: "hadsch-hallas" },
+        { seat: 1, invited_email: "someone-else@example.com", user_id: "user-other", faction: "darkanians" },
+      ],
+    };
+    const { client, setGames } = makeClient([game]);
+    const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    expect(wrapper.find(".game-bar").classes()).to.contain("game-bar--my-turn");
+
+    setGames([{ ...game, current_seat: 1, latest_move_summary: "Hadsch Hallas build lab." }]);
+    document.dispatchEvent(new Event("visibilitychange"));
+    await Vue.nextTick();
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    expect(wrapper.find(".game-bar").classes()).to.not.contain("game-bar--my-turn");
   });
 
   // Owner request 2026-07-31: the green flash means "your Gaia turn" and nothing else. A waiting

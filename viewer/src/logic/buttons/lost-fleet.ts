@@ -89,7 +89,13 @@ export function instantGaiaformingButton(
     {
       label: "Instant Gaiaforming",
       command: command.name,
-      hexes: hexMap(engine, command.data.spaces, true),
+      // `selectedLight: false` on purpose - a "light" selection is only `opacity: .7` over the
+      // hex's normal dark fill (SpaceHex.vue), which is invisible as a highlight. The targets of
+      // this action are transdim planets already in range, so their cost is "~" (free) and they
+      // fall straight through to that style, leaving the map looking untouched while the button
+      // list offered coordinates to pick from. `false` gives them the same white `bold` fill that
+      // Build/Upgrade targets get, which is what the map is expected to do for a hex choice.
+      hexes: hexMap(engine, command.data.spaces, false),
     },
     undefined,
     undefined,
@@ -108,7 +114,10 @@ export function placePowerRingButton(
     {
       label: "Place Power Ring",
       command: command.name,
-      hexes: hexMap(engine, command.data.spaces, true),
+      // Same reason as Instant Gaiaforming above, and unconditional here: power-ring targets are
+      // the player's own built planets and carry no cost at all, so a "light" selection never
+      // showed anything on the map.
+      hexes: hexMap(engine, command.data.spaces, false),
     },
     undefined,
     undefined,
