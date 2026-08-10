@@ -1,7 +1,18 @@
 {
-  "version": "5.54.2",
+  "version": "5.54.3",
   "releasedAt": "2026-08-10",
   "entries": [
+    {
+      "version": "5.54.3",
+      "releasedAt": "2026-08-10",
+      "kind": "update",
+      "title": "Cleaner ban phase",
+      "impact": "",
+      "changes": ["Ban turns now keep only the turn message and offer compact Ban phase and Auction type help links."],
+      "userChanges": [
+        "Ban turns now keep only the turn message and offer compact Ban phase and Auction type help links."
+      ]
+    },
     {
       "version": "5.54.2",
       "releasedAt": "2026-08-10",

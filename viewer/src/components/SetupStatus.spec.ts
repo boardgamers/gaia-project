@@ -76,14 +76,16 @@ describe("SetupStatus", () => {
     wrapper.destroy();
   });
 
-  it("shows the 'how does the auction work?' button during ban/pick/bid, and opens the explainer", async () => {
+  it("shows compact ban and auction links during an auction's ban phase, and opens the auction explainer", async () => {
     const wrapper = mountFor(silentAuctionEngine());
 
-    const infoButton = wrapper.find(".setup-status__info");
-    expect(infoButton.exists()).to.equal(true);
-    expect(infoButton.text()).to.contain("How does the auction work?");
+    const links = wrapper.find(".setup-status__links");
+    expect(links.exists()).to.equal(true);
+    expect(links.text()).to.contain("Ban phase");
+    expect(links.text()).to.contain("Auction type");
+    expect(wrapper.findAll(".setup-status__info").length).to.equal(2);
 
-    await infoButton.trigger("click");
+    await wrapper.find(".setup-status__info--auction").trigger("click");
     await Vue.nextTick();
 
     expect(document.body.textContent).to.contain("How the Silent Auction works");
@@ -98,10 +100,33 @@ describe("SetupStatus", () => {
 
     const wrapper = mountFor(engine);
     expect(wrapper.text()).to.contain("to ban a faction");
-    expect(wrapper.text()).to.contain("What's the ban phase?");
-    expect(wrapper.text()).to.not.contain("How does the auction work?");
+    expect(wrapper.find(".setup-status__info--ban").text()).to.contain("Ban phase");
+    expect(wrapper.find(".setup-status__info--auction").exists()).to.equal(false);
     wrapper.destroy();
   });
+
+  for (const [variant, title] of [
+    [AuctionVariant.ChooseBid, "Choose, Then Bid"],
+    [AuctionVariant.BidWhileChoosing, "Bid While Choosing"],
+  ] as const) {
+    it(`offers an in-game explainer for ${title} during the ban phase`, async () => {
+      const engine = new Engine([`init 3 setup-status-${variant}`], { auction: variant, banPhase: true });
+      expect(engine.phase).to.equal(Phase.SetupFactionBan);
+
+      const wrapper = mountFor(engine);
+      const auctionInfo = wrapper.find(".setup-status__info--auction");
+      expect(auctionInfo.exists()).to.equal(true);
+      expect(auctionInfo.text()).to.contain("Auction type");
+      expect(auctionInfo.attributes("aria-label")).to.contain(title);
+
+      await auctionInfo.trigger("click");
+      await Vue.nextTick();
+
+      expect(document.body.textContent).to.contain(`How ${title} works`);
+      expect(document.body.textContent).to.contain("Victory Points");
+      wrapper.destroy();
+    });
+  }
 
   it("offers no explainer at all for a plain faction pick", () => {
     const engine = new Engine(["init 2 setup-status-plain"]);
@@ -118,17 +143,16 @@ describe("SetupStatus", () => {
     return wrapper.findAll(".setup-status__chip").wrappers.map((chip) => chip.text().replace(/\s+/g, " ").trim());
   }
 
-  it("tracks who has banned already, seat by seat", () => {
+  it("does not repeat ban turn order in a second roster beneath the status line", () => {
     const engine = silentAuctionEngine(["p1 banFaction terrans"]);
     engine.players[0].name = "Mark";
     engine.players[1].name = "Ada";
     engine.players[2].name = "Bo";
 
     const wrapper = mountFor(engine);
-    // Mark is done, Ada is the one everybody is waiting on, Bo has not been asked yet.
-    expect(roster(wrapper)).to.deep.equal(["✔ Mark", "▸ Ada", "· Bo"]);
-    expect(wrapper.text()).to.contain("Bans");
-    expect(wrapper.text()).to.contain("1 of 3 in");
+    expect(wrapper.text()).to.contain("Ada's turn");
+    expect(roster(wrapper)).to.deep.equal([]);
+    expect(wrapper.find(".setup-status__roster").exists()).to.equal(false);
     wrapper.destroy();
   });
 
@@ -170,16 +194,21 @@ describe("SetupStatus", () => {
     wrapper.destroy();
   });
 
-  it("marks the viewer's own seat and explains each chip for a screen reader", () => {
-    const engine = silentAuctionEngine(["p1 banFaction terrans"]);
+  it("marks the viewer's own seat and explains each remaining roster chip for a screen reader", () => {
+    const engine = silentAuctionEngine([
+      "p1 banFaction terrans",
+      "p2 banFaction lantids",
+      "p3 banFaction gleens",
+      "p1 faction itars",
+    ]);
     engine.players[1].name = "Ada";
 
     const wrapper = mountFor(engine, 1);
     const chips = wrapper.findAll(".setup-status__chip");
     expect(chips.at(0).classes()).to.contain("setup-status__chip--done");
-    expect(chips.at(0).attributes("aria-label")).to.equal("Player 1 has banned a faction");
+    expect(chips.at(0).attributes("aria-label")).to.equal("Itars has picked a faction");
     expect(chips.at(1).classes()).to.contain("setup-status__chip--mine");
-    expect(chips.at(1).attributes("aria-label")).to.equal("Ada has not banned yet");
+    expect(chips.at(1).attributes("aria-label")).to.equal("Ada has not picked yet");
     wrapper.destroy();
   });
 

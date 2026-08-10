@@ -6261,6 +6261,23 @@ pin_preference_split_budget_search_path` (the one function in the set without a 
       on destroy, and that the desktop dock never sets it. Full viewer suite **844 passing / 0
       failing**; prettier clean.
 
+152.  ✅ **The ban status no longer repeats turn order, and its help links stay compact (2026-08-10,
+      viewer v5.54.3).** Owner report: the highlighted turn-order avatar plus the setup sentence
+      already identify who bans next, so the `Bans` / player-chip / `N of M in` roster directly
+      underneath was redundant. `SetupStatus.vue` now omits that roster only during
+      `SetupFactionBan`; pick and secret-bid rosters are unchanged.
+
+      The old sentence-length help button is now a no-wrap inline group beside the turn text:
+      **Ban phase** and, when the game uses an auction, **Auction type**. Ban help is available for
+      every ban round, including Silent and Preference Split games, while the auction link opens the
+      selected variant's own explanation. Choose-Then-Bid and Bid-While-Choosing gained concise
+      in-game explainers rather than being the two auction types with no reachable help.
+
+      **Verification:** focused `SetupStatus` suite **16 passing**, focused lint and Prettier clean;
+      browser-checked at 640px (turn text and both links share one 23px row) and 390px (the sentence
+      wraps beside the links, never into a separate help row), with no ban roster and the classic
+      auction modal opening correctly. The final full viewer suite passed with exit code 0.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

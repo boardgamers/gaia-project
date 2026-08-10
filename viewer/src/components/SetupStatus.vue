@@ -9,36 +9,49 @@
         <b>{{ who }}</b>
         {{ assignment }}
       </span>
-      <b-btn
-        v-if="showSilentAuctionInfo"
-        v-b-modal.silent-auction-info
-        variant="link"
-        size="sm"
-        class="setup-status__info"
-      >
-        How does the auction work? <b-badge variant="info" pill>i</b-badge>
-      </b-btn>
+      <span v-if="showBanPhaseInfo || auctionInfoModalId" class="setup-status__links">
+        <b-btn
+          v-if="showBanPhaseInfo"
+          v-b-modal.ban-phase-info
+          variant="link"
+          size="sm"
+          class="setup-status__info setup-status__info--ban"
+          aria-label="Read about the ban phase"
+          title="Read about the ban phase"
+        >
+          Ban phase <b-badge variant="info" pill>i</b-badge>
+        </b-btn>
+        <b-btn
+          v-if="auctionInfoModalId"
+          variant="link"
+          size="sm"
+          class="setup-status__info setup-status__info--auction"
+          :aria-label="`Read about ${auctionTypeName}`"
+          :title="`Read about ${auctionTypeName}`"
+          @click="$bvModal.show(auctionInfoModalId)"
+        >
+          Auction type <b-badge variant="info" pill>i</b-badge>
+        </b-btn>
+      </span>
       <SilentAuctionInfo v-if="showSilentAuctionInfo" />
-      <b-btn
-        v-if="showPreferenceSplitInfo"
-        v-b-modal.preference-split-info
-        variant="link"
-        size="sm"
-        class="setup-status__info"
-      >
-        How does the auction work? <b-badge variant="info" pill>i</b-badge>
-      </b-btn>
       <PreferenceSplitInfo v-if="showPreferenceSplitInfo" :budget="gameData.preferenceSplitBudget" />
-      <b-btn v-if="showBanPhaseInfo" v-b-modal.ban-phase-info variant="link" size="sm" class="setup-status__info">
-        What's the ban phase? <b-badge variant="info" pill>i</b-badge>
-      </b-btn>
       <BanPhaseInfo v-if="showBanPhaseInfo" />
+      <b-modal
+        v-if="showClassicAuctionInfo"
+        id="classic-auction-info"
+        size="lg"
+        :title="`How ${auctionTypeName} works`"
+        ok-only
+        dialog-class="gaia-viewer-modal"
+      >
+        <p class="mb-0">{{ classicAuctionDescription }}</p>
+      </b-modal>
     </div>
 
-    <!-- Who is done and who is not, for the round-0 phases where every player owes exactly one
-         thing. `who` above names only the seat on turn; in an async game the question people
-         actually ask is "how much of this round is left, and is anyone waiting on me?". Never
-         carries what anybody banned, picked or bid - only whether they have. -->
+    <!-- Who is done and who is not, for the round-0 phases where that adds information beyond the
+         turn-order avatars and `who` above. Never carries what anybody picked or bid - only whether
+         they have. The ban phase deliberately has no roster: it is sequential, and repeating the
+         same active player directly below the turn text and highlighted avatar was redundant. -->
     <div v-if="roster.length > 0" class="setup-status__roster">
       <span class="setup-status__roster-label">{{ rosterLabel }}</span>
       <span
@@ -88,6 +101,8 @@ const assignments: { [phase: string]: [string, string] } = {
  *
  * Only phases where every player owes **exactly one** thing qualify, so "done" is a real state:
  *
+ * - the sequential ban phase is deliberately absent because the turn-order avatar and status line
+ *   already identify the only player who can act;
  * - `SetupAuction` (the Choose-Then-Bid and Bid-While-Choosing variants) is deliberately absent.
  *   There a player bids repeatedly and can be outbid again afterwards, so a done/waiting mark would
  *   be actively wrong - what matters there is who currently leads which faction at what price,
@@ -98,14 +113,12 @@ const assignments: { [phase: string]: [string, string] } = {
  *   Rendering it here as well would put two of them on one screen.
  */
 const rosterLabels: { [phase: string]: string } = {
-  [Phase.SetupFactionBan]: "Bans",
   [Phase.SetupFaction]: "Picks",
   [Phase.SetupSilentBid]: "Secret bids",
 };
 
 /** The state each roster phase reports, in the third person, for the chip's tooltip/aria-label. */
 const rosterStates: { [phase: string]: [string, string] } = {
-  [Phase.SetupFactionBan]: ["has banned a faction", "has not banned yet"],
   [Phase.SetupFaction]: ["has picked a faction", "has not picked yet"],
   [Phase.SetupSilentBid]: ["has submitted their secret bids", "has not submitted their bids yet"],
 };
@@ -182,9 +195,6 @@ export default class SetupStatus extends Vue {
    * Each phase is read from the state that phase actually writes, rather than from a shared
    * "how many moves have been made" counter:
    *
-   * - the ban round is strictly seat order, one ban each, so the first `bannedFactions.length`
-   *   seats are the ones that have banned (`bannedFactions` records the factions, not who banned
-   *   them);
    * - a pick sets `player.faction`, which is order-independent - Bid-While-Choosing interleaves
    *   picks with bids, so a positional rule would be wrong there;
    * - a silent bid appends that seat's rows to `silentAuctionBids`. Only their presence is read,
@@ -218,8 +228,6 @@ export default class SetupStatus extends Vue {
   private hasActed(seat: number): boolean {
     const data = this.gameData;
     switch (data.phase) {
-      case Phase.SetupFactionBan:
-        return seat < (data.bannedFactions?.length ?? 0);
       case Phase.SetupFaction:
         // Truthiness, not `!== undefined`: an unpicked seat's faction is `null` (Player's own
         // initializer), and the Silent Auction resets it to `undefined` when it reassigns.
@@ -247,10 +255,64 @@ export default class SetupStatus extends Vue {
     );
   }
 
-  // The ban phase's own explainer, only when the Silent Auction walkthrough (which covers banning
-  // as its own first step) isn't already offered above.
+  /** The two older, turn-by-turn auction variants share a concise in-game explainer. */
+  get showClassicAuctionInfo(): boolean {
+    const auction = this.gameData.options.auction;
+    return (
+      (auction === AuctionVariant.ChooseBid || auction === AuctionVariant.BidWhileChoosing) &&
+      (this.gameData.phase === Phase.SetupFactionBan ||
+        this.gameData.phase === Phase.SetupFaction ||
+        this.gameData.phase === Phase.SetupAuction)
+    );
+  }
+
+  get auctionInfoModalId(): string {
+    if (this.showSilentAuctionInfo) {
+      return "silent-auction-info";
+    }
+    if (this.showPreferenceSplitInfo) {
+      return "preference-split-info";
+    }
+    if (this.showClassicAuctionInfo) {
+      return "classic-auction-info";
+    }
+    return "";
+  }
+
+  get auctionTypeName(): string {
+    switch (this.gameData.options.auction) {
+      case AuctionVariant.Silent:
+        return "the Silent Auction";
+      case AuctionVariant.PreferenceSplit:
+        return "the Preference Split Auction";
+      case AuctionVariant.ChooseBid:
+        return "Choose, Then Bid";
+      case AuctionVariant.BidWhileChoosing:
+        return "Bid While Choosing";
+      default:
+        return "this auction type";
+    }
+  }
+
+  get classicAuctionDescription(): string {
+    if (this.gameData.options.auction === AuctionVariant.ChooseBid) {
+      return (
+        "Each player first picks a faction in turn order. Once every faction is picked, players take turns " +
+        "bidding Victory Points to take a different picked faction. An outbid player becomes the next player who " +
+        "needs a faction, and bidding continues until everyone holds one."
+      );
+    }
+    return (
+      "Players choose and bid in the same phase. On your turn, either introduce a new faction at no cost or bid " +
+      "more Victory Points for one another player holds. An outbid player becomes the next player who needs a " +
+      "faction, and the auction ends once everyone holds one."
+    );
+  }
+
+  // Ban rules are useful alongside (not instead of) the selected auction's rules: ban phase is an
+  // independent option and applies before every faction-selection variant.
   get showBanPhaseInfo(): boolean {
-    return this.gameData.phase === Phase.SetupFactionBan && this.gameData.options.auction !== AuctionVariant.Silent;
+    return this.gameData.phase === Phase.SetupFactionBan;
   }
 }
 </script>
@@ -264,15 +326,15 @@ export default class SetupStatus extends Vue {
   font-size: 0.95rem;
 }
 
-// The strip was a single flex row before the roster existed; the row it used to be is now this.
 .setup-status__main {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.25rem 0.5rem;
 }
 
 .setup-status__text {
+  flex: 1 1 auto;
   min-width: 0;
 }
 
@@ -287,15 +349,21 @@ export default class SetupStatus extends Vue {
 }
 
 .setup-status__info {
-  margin-left: auto;
-  padding-top: 0;
-  padding-bottom: 0;
+  padding: 0 0.25rem;
   white-space: nowrap;
   text-decoration: none;
 
   .badge {
     margin-left: 0.25rem;
   }
+}
+
+.setup-status__links {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.1rem;
+  margin-left: auto;
 }
 
 .setup-status__roster {
