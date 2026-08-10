@@ -196,7 +196,13 @@ PREFERENCE_SPLIT_AUCTION.md`. Unlike the Silent Auction, its secrecy is **server
   unread-shaped), and the badge shows a count instead of a bare dot. Mobile is now a popup anchored
   above the floating toggle, so the toggle stays tappable to minimize; its geometry (sticky-bar
   offset, on-screen keyboard) lives in `viewer/src/hosted/chat-popup.ts`. Client-only, no schema
-  change.
+  change. **The popup also locks page scrolling while it is up** (PROGRESS #150,
+  `setPageScrollLock` + frontend.scss's `html.chat-popup-open`): a swipe starting on the popup's
+  header, notification strip or composer has no scroll container of its own, so without the lock it
+  chains out and scrolls the game behind the popup. `overscroll-behavior` on the panel does not fix
+  that (the panel has no scrollable overflow, so it is never in the scroll chain) and
+  `touch-action: none` on it would kill the message list's own scrolling — both were measured in a
+  real browser before settling on the lock.
 - **…and the drift can also run the other way — a repo migration that never reached the database
   (2026-08-04, PROGRESS #133).** In-game chat pushes were silently dead for ~a month because
   `0033_notify_chat_message.sql` existed in the repo but its function and trigger were never created

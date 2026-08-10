@@ -138,3 +138,21 @@ body {
     pointer-events: auto;
   }
 }
+
+// Scroll lock for whichever chat popup is open (per-game or lobby - the class is set by
+// `setPageScrollLock` in chat-popup.ts, which is where the full reasoning lives). Short version: a
+// gesture starting anywhere on the popup other than the message list - its header, the
+// notifications strip, the composer - has no scroll container of its own, so it chains out to the
+// document and scrolls the game behind the popup instead. Verified in a real browser: all three of
+// those regions moved the page by 200px while the thread stayed put. Taking the document's own
+// scrollability away for as long as the popup is up removes what the gesture was chaining to; the
+// message list is unaffected because it IS a scroll container and already contains its overscroll.
+//
+// Mobile only, matching the popup itself - the desktop panel is a docked strip beside a page that
+// should still scroll.
+@media (max-width: 767px) {
+  html.chat-popup-open,
+  html.chat-popup-open body {
+    overflow: hidden;
+  }
+}

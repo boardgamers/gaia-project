@@ -230,6 +230,28 @@ describe("LobbyChatPanel", () => {
     expect(wrapper.find(".lobby-chat__badge").text()).to.equal("1");
   });
 
+  it("locks the page while the mobile popup is open so a swipe on it can't scroll the lobby behind", async () => {
+    const wrapper = mount(LobbyChatPanel as any, {
+      propsData: { client: makeClient(), userId: "user-1" },
+    });
+    await tick(wrapper);
+    expect(document.documentElement.classList.contains("chat-popup-open")).to.equal(false);
+
+    await wrapper.find(".lobby-chat__toggle").trigger("click");
+    await tick(wrapper);
+    expect(document.documentElement.classList.contains("chat-popup-open")).to.equal(true);
+
+    await wrapper.find(".lobby-chat__toggle").trigger("click");
+    await tick(wrapper);
+    expect(document.documentElement.classList.contains("chat-popup-open")).to.equal(false);
+
+    // ...and a teardown while open must not strand it.
+    await wrapper.find(".lobby-chat__toggle").trigger("click");
+    await tick(wrapper);
+    wrapper.destroy();
+    expect(document.documentElement.classList.contains("chat-popup-open")).to.equal(false);
+  });
+
   it("hangs the mobile popup above the toggle rather than filling the screen", async () => {
     const wrapper = mount(LobbyChatPanel as any, {
       propsData: { client: makeClient(), userId: "user-1" },

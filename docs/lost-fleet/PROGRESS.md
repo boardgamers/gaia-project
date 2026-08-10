@@ -6184,6 +6184,43 @@ pin_preference_split_budget_search_path` (the one function in the set without a 
      now captures its Realtime `on()` callbacks the way the per-game one already did. Full viewer
      suite **833 passing / 0 failing**; prettier clean. Not run: engine or AI suites, untouched here.
 
+150. ✅ **Swiping on the chat popup scrolled the game behind it (2026-08-10, viewer v5.54.1).** Owner
+     report, immediately after #149 shipped: _"Når jeg scroller i chatten så scroller den i
+     baggrunden istedet?"_
+
+     **Root cause, reproduced in a real browser rather than reasoned about.** A driver script over
+     the popup's actual CSS at a 390x700 viewport wheel-scrolled each region in turn: inside the
+     message list the thread scrolled and the page stayed put (its `overscroll-behavior: contain`
+     holds at both ends), but a gesture starting on the popup's **header**, its **notifications
+     strip** or its **composer** moved the page by the full 200px while the thread did not move at
+     all. None of those three is a scroll container, so the gesture chains outward until it finds
+     one — and the only one above them is the document.
+
+     This was always true of the old full-screen overlay; it simply could not be seen, because the
+     page it scrolled was completely covered. A popup puts the board right there, sliding under the
+     chat.
+
+     **Two plausible-looking fixes were tried and measured, not assumed.** Containing the
+     overscroll on the panel itself changed nothing — the panel has no scrollable overflow, so it is
+     never part of the scroll chain to begin with. `touch-action: none` on the panel would work but
+     takes the message list's own scrolling down with it, because touch-action intersects down the
+     ancestor chain and a descendant cannot widen what an ancestor forbade. What does work is
+     removing the thing being chained TO: `setPageScrollLock` (chat-popup.ts) puts a
+     `chat-popup-open` class on the page root, and frontend.scss turns that into `overflow: hidden`
+     on `html`/`body` at mobile widths for as long as a popup is up. Re-running the same driver:
+     every region now leaves the page at 0, and the thread still scrolls. It also composes with the
+     keyboard pin — the browser can no longer scroll the page to chase the focused composer, which
+     is exactly the behaviour `overlayViewportPin` already provides deliberately.
+
+     Applied to both panels, released on close and on teardown (an in-app game switch destroys the
+     panel mid-open), and desktop is deliberately exempt: the dock sits beside a page that should
+     still scroll.
+
+     **Tests:** `chat-popup.spec.ts` covers the lock helper (marks/clears the root, idempotent,
+     restores the scroll offset); both panel specs assert the lock on open, its release on close and
+     on destroy, and that the desktop dock never sets it. Full viewer suite **844 passing / 0
+     failing**; prettier clean.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

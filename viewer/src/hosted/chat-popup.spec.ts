@@ -4,7 +4,9 @@ import {
   CHAT_POPUP_MIN_HEIGHT,
   CHAT_POPUP_TOP_CLEARANCE,
   CHAT_TOGGLE_HEIGHT,
+  PAGE_SCROLL_LOCK_CLASS,
   chatPopupGeometry,
+  setPageScrollLock,
   watchOverlayViewport,
 } from "./chat-popup";
 
@@ -86,6 +88,59 @@ describe("chat-popup", () => {
     });
 
     it("is a no-op where visualViewport does not exist", () => {
+      const previous = (window as any).visualViewport;
+      delete (window as any).visualViewport;
+      const unwatch = watchOverlayViewport(() => expect.fail("must not report a pin"));
+      unwatch();
+      (window as any).visualViewport = previous;
+    });
+  });
+
+  // A gesture that starts on the popup's header, notifications strip or composer has no scroll
+  // container of its own, so it chains out to the document and scrolls the game behind the popup
+  // (owner report, reproduced in a real browser). Taking the document's scrollability away for as
+  // long as the popup is up is what stops it; the message list is its own scroll container and
+  // keeps working.
+  describe("setPageScrollLock", () => {
+    afterEach(() => {
+      setPageScrollLock(false);
+    });
+
+    it("marks the page root while locked and clears it on release", () => {
+      expect(document.documentElement.classList.contains(PAGE_SCROLL_LOCK_CLASS)).to.equal(false);
+      setPageScrollLock(true);
+      expect(document.documentElement.classList.contains(PAGE_SCROLL_LOCK_CLASS)).to.equal(true);
+      setPageScrollLock(false);
+      expect(document.documentElement.classList.contains(PAGE_SCROLL_LOCK_CLASS)).to.equal(false);
+    });
+
+    it("is idempotent in both directions", () => {
+      setPageScrollLock(true);
+      setPageScrollLock(true);
+      expect(document.documentElement.classList.contains(PAGE_SCROLL_LOCK_CLASS)).to.equal(true);
+      setPageScrollLock(false);
+      setPageScrollLock(false);
+      expect(document.documentElement.classList.contains(PAGE_SCROLL_LOCK_CLASS)).to.equal(false);
+    });
+
+    it("puts the scroll offset back for a browser that drops it while the root cannot scroll", () => {
+      const calls: number[] = [];
+      const previousScrollTo = window.scrollTo;
+      Object.defineProperty(window, "scrollY", { value: 640, configurable: true });
+      (window as any).scrollTo = (_x: number, y: number) => calls.push(y);
+
+      setPageScrollLock(true);
+      Object.defineProperty(window, "scrollY", { value: 0, configurable: true });
+      setPageScrollLock(false);
+      expect(calls).to.deep.equal([640]);
+
+      (window as any).scrollTo = previousScrollTo;
+      Object.defineProperty(window, "scrollY", { value: 0, configurable: true });
+    });
+  });
+
+  describe("watchOverlayViewport edge case", () => {
+    it("stays a no-op where visualViewport does not exist", () => {
       const previous = (window as any).visualViewport;
       delete (window as any).visualViewport;
       const unwatch = watchOverlayViewport(() => expect.fail("must not report a pin"));

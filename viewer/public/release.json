@@ -1,7 +1,18 @@
 {
-  "version": "5.54.0",
+  "version": "5.54.1",
   "releasedAt": "2026-08-10",
   "entries": [
+    {
+      "version": "5.54.1",
+      "releasedAt": "2026-08-10",
+      "kind": "fix",
+      "title": "Chat popup scrolling",
+      "impact": "",
+      "changes": [
+        "Fixed swiping on the mobile chat popup's header, notification strip or composer scrolling the game behind it instead of the chat - the page is now locked while the popup is open"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.54.0",
       "releasedAt": "2026-08-10",

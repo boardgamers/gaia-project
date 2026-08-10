@@ -628,6 +628,49 @@ describe("ChatNotesPanel", () => {
     restoreMobile();
   });
 
+  // Without this, a swipe starting on the popup's header / notifications strip / composer - none of
+  // which is a scroll container - chains out to the document and scrolls the game behind the popup
+  // instead of the thread (owner report, reproduced in a real browser).
+  it("locks the page while the mobile popup is open, and releases it on close and on teardown", async () => {
+    const restoreMobile = mockDesktopViewport(false);
+    const wrapper = mount(ChatNotesPanel as any, {
+      propsData: { client: makeClient(), gameId: "game-1", userId: "user-1" },
+    });
+    await Vue_nextTick(wrapper);
+    expect(document.documentElement.classList.contains("chat-popup-open")).to.equal(false);
+
+    await wrapper.find(".chat-notes__toggle").trigger("click");
+    await Vue_nextTick(wrapper);
+    expect(document.documentElement.classList.contains("chat-popup-open")).to.equal(true);
+
+    (wrapper.vm as any).closePanel();
+    await Vue_nextTick(wrapper);
+    expect(document.documentElement.classList.contains("chat-popup-open")).to.equal(false);
+
+    // Destroyed while still open must not strand the page locked - an in-app game switch does
+    // exactly that.
+    await wrapper.find(".chat-notes__toggle").trigger("click");
+    await Vue_nextTick(wrapper);
+    expect(document.documentElement.classList.contains("chat-popup-open")).to.equal(true);
+    wrapper.destroy();
+    expect(document.documentElement.classList.contains("chat-popup-open")).to.equal(false);
+    restoreMobile();
+  });
+
+  it("never locks the page for the desktop dock, which sits beside a page that should still scroll", async () => {
+    const restoreDesktop = mockDesktopViewport(true);
+    const wrapper = mount(ChatNotesPanel as any, {
+      propsData: { client: makeClient(), gameId: "game-1", userId: "user-1" },
+    });
+    await Vue_nextTick(wrapper);
+    (wrapper.vm as any).toggleOpen();
+    await Vue_nextTick(wrapper);
+    expect((wrapper.vm as any).open).to.equal(true);
+    expect(document.documentElement.classList.contains("chat-popup-open")).to.equal(false);
+    wrapper.destroy();
+    restoreDesktop();
+  });
+
   it("persists the opened preference on desktop and honors it on the next mount, but never applies it on mobile", async () => {
     const restoreDesktop = mockDesktopViewport(true);
     const wrapper = mount(ChatNotesPanel as any, {

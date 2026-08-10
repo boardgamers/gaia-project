@@ -74,6 +74,53 @@ export function chatPopupGeometry(input: ChatPopupInput): ChatPopupGeometry {
  * `scroll` (the browser scrolling the page to chase a focused input) matter, which is the detail a
  * hand-rolled listener in each component kept getting subtly different.
  */
+/** Class the page root carries while a chat popup is up. frontend.scss turns it into an
+ * `overflow: hidden` on `html`/`body` at mobile widths - see `setPageScrollLock`. */
+export const PAGE_SCROLL_LOCK_CLASS = "chat-popup-open";
+
+/** `window.scrollY` at the moment of locking, so a browser that resets the offset when the root
+ * stops scrolling can be put back. Module-level rather than per-component because only one chat
+ * popup can ever be open at a time (the per-game panel and the lobby panel live on different
+ * screens). */
+let lockedScrollY: number | null = null;
+
+/**
+ * Locks or releases document scrolling for as long as a chat popup is open.
+ *
+ * A touch that starts on the popup but NOT on its message list - the header, the notifications
+ * strip, the composer - has no scroll container of its own to move, so the gesture chains outward
+ * and scrolls the game behind the popup instead. That was invisible while the mobile chat was a
+ * full-screen overlay (the page moved, but nothing of it was on screen to see); with a popup, the
+ * board is right there and visibly slides under it, which is what the owner reported.
+ *
+ * `overscroll-behavior` cannot fix this: the panel has no scrollable overflow of its own, so it is
+ * never part of the scroll chain to begin with (verified in a real browser - adding it to the panel
+ * changed nothing). Nor can `touch-action: none` on the panel, since touch-action intersects down
+ * the ancestor chain and would take the message list's own scrolling with it. Removing the thing
+ * being chained TO is what works: the list still scrolls, because it is a real scroll container and
+ * already contains its own overscroll.
+ */
+export function setPageScrollLock(locked: boolean): void {
+  if (typeof document === "undefined") {
+    return;
+  }
+  const root = document.documentElement;
+  if (locked) {
+    if (lockedScrollY === null && typeof window !== "undefined") {
+      lockedScrollY = window.scrollY;
+    }
+    root.classList.add(PAGE_SCROLL_LOCK_CLASS);
+    return;
+  }
+  root.classList.remove(PAGE_SCROLL_LOCK_CLASS);
+  const restoreTo = lockedScrollY;
+  lockedScrollY = null;
+  // Only when it actually moved - jsdom has no layout, and calling scrollTo there is pure noise.
+  if (restoreTo !== null && typeof window !== "undefined" && window.scrollY !== restoreTo) {
+    window.scrollTo(0, restoreTo);
+  }
+}
+
 export function watchOverlayViewport(onPin: (pin: OverlayViewportPin) => void): () => void {
   const vv = typeof window !== "undefined" ? window.visualViewport : undefined;
   if (!vv) {

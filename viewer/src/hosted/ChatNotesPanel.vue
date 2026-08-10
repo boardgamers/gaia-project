@@ -97,7 +97,7 @@ import {
 } from "./chat-reads";
 import { isDesktopViewport, watchDesktopViewport } from "./viewport";
 import { OverlayViewportPin } from "./overlay-viewport";
-import { chatPopupGeometry, watchOverlayViewport } from "./chat-popup";
+import { chatPopupGeometry, setPageScrollLock, watchOverlayViewport } from "./chat-popup";
 import {
   formatUnreadCount,
   loadLastSeenId,
@@ -242,6 +242,11 @@ export default Vue.extend({
       // composer focused.
       return { bottom: `${this.toggleBottomOffset + geometry.keyboardInset}px` };
     },
+    /** Open AS A POPUP, i.e. mobile only - the desktop panel is a docked strip and changes nothing
+     * about how the page scrolls. */
+    popupOpen(): boolean {
+      return this.open && !this.isDesktop;
+    },
     unreadCount(): number {
       // An open panel is by definition being read; `markSeen` keeps `lastSeenId` current while it
       // is, so this is belt-and-braces against a render between an arrival and that call.
@@ -269,6 +274,13 @@ export default Vue.extend({
         this.messages.map((m) => m.id),
         this.userId
       );
+    },
+  },
+  watch: {
+    // While the popup is up the document must not scroll, or a gesture on the popup's own header /
+    // toolbar / composer chains out and scrolls the game behind it (see chat-popup.ts).
+    popupOpen(open: boolean) {
+      setPageScrollLock(open);
     },
   },
   async mounted() {
@@ -309,6 +321,9 @@ export default Vue.extend({
     });
   },
   beforeDestroy() {
+    // Never leave the page locked behind a panel that is going away - an in-app game switch tears
+    // this component down and mounts a fresh one.
+    setPageScrollLock(false);
     if (this.viewportUnwatch) {
       this.viewportUnwatch();
       this.viewportUnwatch = null;

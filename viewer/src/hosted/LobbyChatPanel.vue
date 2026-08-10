@@ -92,7 +92,7 @@ import {
 } from "./chat-reads";
 import { isDesktopViewport, watchDesktopViewport } from "./viewport";
 import { OverlayViewportPin } from "./overlay-viewport";
-import { chatPopupGeometry, watchOverlayViewport } from "./chat-popup";
+import { chatPopupGeometry, setPageScrollLock, watchOverlayViewport } from "./chat-popup";
 import {
   formatUnreadCount,
   loadLastSeenId,
@@ -181,6 +181,10 @@ export default Vue.extend({
       });
       return { bottom: `${TOGGLE_BOTTOM + geometry.keyboardInset}px` };
     },
+    /** Open as a popup, i.e. mobile only - see ChatNotesPanel.vue's twin. */
+    popupOpen(): boolean {
+      return this.open && !this.isDesktop;
+    },
     unreadCount(): number {
       return this.open ? 0 : unreadCount(this.messages, this.lastSeenId, this.userId);
     },
@@ -206,6 +210,13 @@ export default Vue.extend({
         this.messages.map((m) => m.id),
         this.userId
       );
+    },
+  },
+  watch: {
+    // Keeps a gesture on the popup's header/composer from scrolling the lobby behind it - see
+    // chat-popup.ts and ChatNotesPanel.vue's twin.
+    popupOpen(open: boolean) {
+      setPageScrollLock(open);
     },
   },
   async mounted() {
@@ -238,6 +249,7 @@ export default Vue.extend({
     });
   },
   beforeDestroy() {
+    setPageScrollLock(false);
     if (this.desktopUnwatch) {
       this.desktopUnwatch();
       this.desktopUnwatch = null;
