@@ -24,7 +24,7 @@
       class="line-chart-icon"
       v-b-modal.chart-button
       role="button"
-      :transform="`translate(${right - 15}, -10) scale(0.0043)`"
+      :transform="`translate(${right - 15.5}, -10) scale(0.0043)`"
     >
       <path
         d="M32,480h480v32H0V0h32v96h32v32H32v64h32v32H32v64h32v32H32v64h32v32H32V480z M96,336c0-26.5,21.484-48,48-48
