@@ -1,7 +1,22 @@
 {
-  "version": "5.54.3",
-  "releasedAt": "2026-08-10",
+  "version": "5.55.0",
+  "releasedAt": "2026-08-12",
   "entries": [
+    {
+      "version": "5.55.0",
+      "releasedAt": "2026-08-12",
+      "kind": "update",
+      "title": "Bigger renju board",
+      "impact": "",
+      "changes": [
+        "The renju board is now a full 19x19 grid instead of 15x15 - games already in progress keep their stones, re-centred on the larger board",
+        "Fixed the desktop auto-leech control sitting hidden behind the docked chat panel",
+        "Fixed a side panel that was already open when a game loaded reserving no width, which left the board laid out at full window width underneath it - most visible when leaving one game for another"
+      ],
+      "userChanges": [
+        "The renju board is now a full 19x19 grid instead of 15x15 - games already in progress keep their stones, re-centred on the larger board"
+      ]
+    },
     {
       "version": "5.54.3",
       "releasedAt": "2026-08-10",

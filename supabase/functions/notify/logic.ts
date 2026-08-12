@@ -164,11 +164,19 @@ export function buildChessTurnNotification(board: ChessBoardRow, game: GameRow):
 // 20260726190000_shared_renju_board.sql): black opens, so the active colour is whichever has played
 // no more stones than the other; the *_next_user columns exist for 2v2 relay renju and take
 // priority, and a solo team falls back to its single seated user. A board string that isn't a legal
-// 225-character position (never written by the RPC, but the row is read back untyped here) yields
-// no mover rather than a wrong one.
+// position (never written by the RPC, but the row is read back untyped here) yields no mover rather
+// than a wrong one.
+//
+// "Legal" here means the shape of a square grid of intersections, NOT a hard-coded cell count. This
+// function is deployed independently of both the database and the viewer (its own workflow fires on
+// any push touching supabase/functions/**), so a fixed count goes stale mid-rollout: when the grid
+// grew from 15x15 to 19x19, `length !== 225` would have resolved no mover at all - i.e. silently
+// dropped every renju turn push - for whichever size was not live yet. Counting stones needs no
+// more than this, and a truncated or garbage string still fails it.
 export function renjuMover(board: RenjuBoardRow): string | null {
   const position = board.board ?? "";
-  if (position.length !== 225) {
+  const gridSize = Math.sqrt(position.length);
+  if (!/^[.bw]+$/.test(position) || !Number.isInteger(gridSize) || gridSize < 5) {
     return null;
   }
   let black = 0;

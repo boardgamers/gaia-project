@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { mount } from "@vue/test-utils";
+import { RENJU_CELLS } from "../logic/renju";
 import GameBar from "./GameBar.vue";
 
 describe("GameBar", () => {
@@ -104,7 +105,7 @@ describe("GameBar", () => {
     };
     const renjuBoard = {
       // One black stone played, so it is white's move - and the viewer is white.
-      board: "b" + ".".repeat(224),
+      board: "b" + ".".repeat(RENJU_CELLS - 1),
       black_user: "user-other",
       black_user_2: null,
       white_user: "user-me",

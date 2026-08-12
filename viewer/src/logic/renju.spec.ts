@@ -92,9 +92,17 @@ describe("renju", () => {
 
   it("never counts a run that wraps around a board edge", () => {
     // Three stones at the end of row 5 and two at the start of row 6 are adjacent by raw index but
-    // are not a line on the board.
-    const board = boardWith([at(5, 12), "b"], [at(5, 13), "b"], [at(5, 14), "b"], [at(6, 0), "b"], [at(6, 1), "b"]);
-    expect(winningLine(board, at(5, 14))).to.equal(null);
+    // are not a line on the board. Anchored to the board's real width, so this keeps straddling the
+    // edge if RENJU_SIZE ever changes again.
+    const edge = RENJU_SIZE - 1;
+    const board = boardWith(
+      [at(5, edge - 2), "b"],
+      [at(5, edge - 1), "b"],
+      [at(5, edge), "b"],
+      [at(6, 0), "b"],
+      [at(6, 1), "b"]
+    );
+    expect(winningLine(board, at(5, edge))).to.equal(null);
     expect(winningLine(board, at(6, 0))).to.equal(null);
   });
 

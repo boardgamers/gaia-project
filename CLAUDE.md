@@ -172,6 +172,15 @@ PREFERENCE_SPLIT_AUCTION.md`. Unlike the Silent Auction, its secrecy is **server
   redeploy are both live** on `mitawjpdxkheascdiffz` as of 2026-07-27 (verified 2026-07-29:
   `notification_prefs.chess_pushes`/`renju_pushes` exist and the deployed `notify` reads them), so
   saving notification settings works.
+- **Renju is a 19x19 board as of PROGRESS #153 (viewer v5.55.0)** — it was 15x15 before. The client
+  half is one constant (`RENJU_SIZE` in `viewer/src/logic/renju.ts`); the database half is migration
+  `20260812120000_renju_19x19.sql`, which is **written but NOT applied live** as of 2026-08-12. The
+  two halves must land together: a client sized for one grid ignores a board string of the other
+  size (`RenjuBoard.vue::applyRow`), so apply the migration when the matching viewer build reaches
+  `master`/production, not before. It converts the 10 existing rows rather than wiping them
+  (re-centred +2/+2, `last_move`/`prev_move` re-indexed), with the push trigger disabled around the
+  UPDATE. Both `renjuMover` copies (`hosted/game-bar.ts`, `notify/logic.ts`) are deliberately
+  size-agnostic now, so the pulse and the pushes survive either rollout order.
 - Renju marks BOTH colours' latest stones as of PROGRESS #125 (viewer v5.45.3), and an uncommitted
   first tap no longer hides those markers. **Its migration `20260729120000_renju_previous_move.sql`
   (`renju_board.prev_move`, plus `move_renju`/`reset_renju`) is live too** (applied 2026-07-29,

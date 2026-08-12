@@ -90,7 +90,10 @@ describe("renju engine", () => {
     });
 
     it("only offers empty points near a stone, and the centre on an empty board", () => {
-      expect(positionOf(EMPTY_RENJU_BOARD).candidates()).to.deep.equal([at(7, 7)]);
+      // Tengen, wherever it is: the engine offers `RENJU_CELLS / 2`, which is the centre point for
+      // any odd-sized board (at(7, 7) on the old 15x15 grid, at(9, 9) on today's 19x19 one).
+      const centre = (RENJU_SIZE - 1) / 2;
+      expect(positionOf(EMPTY_RENJU_BOARD).candidates()).to.deep.equal([at(centre, centre)]);
       const candidates = positionOf(board([[7, 7]])).candidates();
       expect(candidates).to.have.length(24); // the 5x5 neighbourhood minus the stone itself
       expect(candidates).to.not.include(at(7, 7));

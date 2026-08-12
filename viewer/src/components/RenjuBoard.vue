@@ -19,10 +19,10 @@
     </div>
 
     <div class="lf-renju-stage">
-      <!-- Stones sit on the INTERSECTIONS of a 14x14 grid of lines, the traditional renju/gomoku
-           board (unlike chess, which plays inside the squares). One SVG user unit is one grid step,
-           so the whole board scales itself to whatever the research panel's own box happens to be -
-           no measuring, no ResizeObserver. -->
+      <!-- Stones sit on the INTERSECTIONS of the 19x19 grid's lines, like Go and unlike chess,
+           which plays inside the squares. One SVG user unit is one grid step, so the whole board
+           scales itself to whatever the research panel's own box happens to be - no measuring, no
+           ResizeObserver, and nothing here needed changing when the grid grew from 15x15. -->
       <svg
         class="lf-renju-board"
         :viewBox="`${-margin} ${-margin} ${feltSize} ${feltSize}`"
@@ -57,7 +57,7 @@
         />
 
         <!-- Two-tap placement: the first tap leaves a translucent ghost stone, the second on the
-             same intersection commits it. A 15x15 grid inside this panel gives roughly 20px targets
+             same intersection commits it. A 19x19 grid inside this panel gives roughly 16px targets
              on a phone, so a single tap would be far too easy to misplace - and a stray tap on a
              board that is also a live Gaia move surface must never do anything irreversible. -->
         <circle

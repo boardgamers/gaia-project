@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { createLocalVue, mount } from "@vue/test-utils";
 import Vuex from "vuex";
 import { RenjuBackend, RenjuRow } from "../logic/renju-backend";
-import { EMPTY_RENJU_BOARD, RENJU_SIZE, localRenjuStorageKey } from "../logic/renju";
+import { EMPTY_RENJU_BOARD, RENJU_CELLS, RENJU_SIZE, localRenjuStorageKey } from "../logic/renju";
 import RenjuBoard from "./RenjuBoard.vue";
 
 const localVue = createLocalVue();
@@ -78,10 +78,11 @@ describe("RenjuBoard", () => {
     window.history.pushState({}, "", "/");
   });
 
-  it("renders a full 15x15 grid of intersections", async () => {
+  it("renders a full 19x19 grid of intersections", async () => {
     const wrapper = mountBoard(null);
     await settle();
-    expect(wrapper.findAll(".lf-renju-hit")).to.have.length(225);
+    expect(RENJU_SIZE).to.equal(19);
+    expect(wrapper.findAll(".lf-renju-hit")).to.have.length(RENJU_CELLS);
     expect(wrapper.find(".lf-renju-status").text()).to.equal("Black to move");
     wrapper.destroy();
   });

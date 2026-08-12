@@ -123,8 +123,15 @@ export default Vue.extend({
 
 @media (min-width: 768px) {
   .auto-leech-fab {
-    right: 1.1rem;
+    // Desktop docks the chat panel against the right edge (ChatNotesPanel.vue) and reserves its
+    // width by padding `#app` - which does nothing for this pill, since `position: fixed` takes it
+    // out of that flow entirely, so it ended up hidden behind the dock (owner report). Slide it by
+    // the same width instead: `--chat-dock-width` is set alongside that padding in frontend.scss
+    // and inherits down here, and is unset (0 via the fallback) whenever the chat is closed or the
+    // viewer is self-contained. Transition matches the padding's, so the two move together.
+    right: calc(var(--chat-dock-width, 0px) + 1.1rem);
     bottom: 1.1rem;
+    transition: right 0.15s ease-out;
   }
 }
 </style>

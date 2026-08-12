@@ -102,7 +102,13 @@ body {
 // `.chat-notes__panel`/`.game-nav__panel` CSS.
 @media (min-width: 768px) {
   #app.chat-notes-open {
-    padding-right: 360px;
+    // The same width as a custom property, so `position: fixed` controls INSIDE the page can clear
+    // the dock too. They are out of flow, so the padding below never moves them: the auto-leech
+    // pill (AutoLeechFab.vue, bottom-right, z-index 1028) sat squarely underneath the docked chat
+    // (z-index 1050) and was simply invisible while the chat was open (owner report). It reads this
+    // property, which is unset - and so falls back to 0 - whenever the chat is closed.
+    --chat-dock-width: 360px;
+    padding-right: var(--chat-dock-width);
     transition: padding-right 0.15s ease-out;
   }
 

@@ -6,7 +6,7 @@
 //   * Chess gets its bar from a genuine alpha-beta search. A hand-waved "count some patterns" score
 //     would move the renju bar around without ever being right about the thing that decides a
 //     gomoku game - a forced sequence of fours and open threes - so this file does the same kind of
-//     search chess does, just sized for a 15x15 board.
+//     search chess does, just sized for a 19x19 board.
 //   * The whole engine is pure and synchronous, with an explicit node budget, so the UI layer can
 //     slice it across animation frames (logic/renju-evaluation.ts) without a Web Worker. That
 //     matters: this project builds with vue-cli 4 / webpack 4, where an extra worker entry is a

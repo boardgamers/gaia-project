@@ -84,7 +84,12 @@ export function renjuBoardOf(game: any): any | null {
 // black exactly while both colours have played the same number of stones.
 export function renjuMover(board: any): string | null {
   const position: string = board.board ?? "";
-  if (position.length !== 225) {
+  // Deliberately "a square grid of intersections" and not a hard-coded cell count: the grid grew
+  // from 15x15 to 19x19 (logic/renju.ts), and a fixed count here would have silently stopped
+  // resolving a mover - i.e. dropped the game bar's renju pulse - for every board of the other
+  // size, for as long as the client and the database disagreed about which one was current.
+  const gridSize = Math.sqrt(position.length);
+  if (!/^[.bw]+$/.test(position) || !Number.isInteger(gridSize) || gridSize < 5) {
     return null;
   }
   let black = 0;

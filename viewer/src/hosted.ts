@@ -26,6 +26,7 @@ import { localUltimateStorageKey } from "./logic/ultimate-tic-tac-toe";
 import { discardOfflineMinigameMirror } from "./logic/offline-minigame-sync";
 import Lobby from "./hosted/Lobby.vue";
 import OpenLobbyGame from "./hosted/OpenLobbyGame.vue";
+import { syncPanelOpen } from "./hosted/panel-dock";
 import PendingApproval from "./hosted/PendingApproval.vue";
 import { backfillSubscriptionTimezone, currentPushEndpoint, isPushEnabled } from "./hosted/push";
 import { isOnline, PresenceState, trackPresence, usersInGame } from "./hosted/presence";
@@ -294,17 +295,22 @@ async function mountGameInstance(
   // instead, so the two no longer overlap on desktop. The same class is what makes the page behind
   // the panel non-interactive on mobile, where it's a full-screen overlay rather than a dock - so
   // keep toggling it on every viewport, not just the desktop one it was first added for.
-  const chatOpenUnwatch = chatNotes.$watch("open", (open: boolean) => {
+  //
+  // Applied through `syncPanelOpen` (panel-dock.ts) rather than a bare `$watch`, because the panel
+  // restores its desktop open state from localStorage in `data()`: a watcher alone never fires for
+  // a panel that mounts ALREADY open, so the reservation was missing until the user toggled the
+  // panel by hand - on every fresh load, and again on every in-app game switch, which re-mounts
+  // this panel per game. That is what left the board rendered full-width under a docked chat.
+  const chatOpenUnwatch = syncPanelOpen(chatNotes, (open: boolean) => {
     root.classList.toggle("chat-notes-open", open);
     bar.chatPanelOpen = open;
   });
-  root.classList.remove("chat-notes-open");
   cleanups.push(chatOpenUnwatch, () => root.classList.remove("chat-notes-open"));
   // GameNavPanel.vue (`nav`) is mounted once at the `launchGame` level, not per-game like `bar`
   // above (it needs to survive an in-app game switch) - HostedBar.vue's settings-menu label still
   // needs its live `open` state on every re-mounted `bar`, so watch it here and clean up on
   // dispose rather than leaving a watcher from a torn-down `bar` still firing.
-  const gameNavOpenUnwatch = nav.$watch("open", (open: boolean) => {
+  const gameNavOpenUnwatch = syncPanelOpen(nav, (open: boolean) => {
     bar.gameNavPanelOpen = open;
   });
   cleanups.push(gameNavOpenUnwatch);
@@ -639,7 +645,10 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, i
 
   const navRoot = mountChild(root, GameNavPanel, { client, session });
   const nav = navRoot.$children[0] as any;
-  nav.$watch("open", (open: boolean) => root.classList.toggle("game-nav-open", open));
+  // `syncPanelOpen`, not a bare `$watch`, for the same reason as the chat panel's own reservation
+  // in mountGameInstance: this panel also restores its open state from localStorage, so the class
+  // has to be applied once at mount and not only when the state later changes.
+  syncPanelOpen(nav, (open: boolean) => root.classList.toggle("game-nav-open", open));
 
   let currentGameId = initialGameId;
   let dispose: (() => void) | null = null;

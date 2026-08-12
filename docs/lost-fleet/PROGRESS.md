@@ -73,8 +73,11 @@ release.json`) has two audiences and they must not blur together: a "What's new"
   device, a strictly matching newer online history fast-forwards the offline copy; offline-ahead,
   diverged, and unfinished local turns are never overwritten. Previously mirrored Gaia and sidebar
   copies also open without account locks.
-- **Research board renju:** implemented in viewer v5.39.0 (#115). The research panel swipes between
-  the research board and a shared 15x15 standard-gomoku board (exactly five wins, overline does not),
+- **Research board renju:** implemented in viewer v5.39.0 (#115), on a **19x19** board since #153
+  (v5.55.0 — it was 15x15 before that; migration `20260812120000_renju_19x19.sql` re-centres any
+  position that was already in progress, and must land together with the matching viewer build). The
+  research panel swipes between
+  the research board and a shared standard-gomoku board (exactly five wins, overline does not),
   reusing the chess drawer's gesture through `logic/panel-swipe.ts`. Stones need two taps. Hosted
   state is the new `renju_board` table plus its four RPCs; `chess_board` is untouched. The migration
   `20260726190000_shared_renju_board.sql` is applied and live (it is in the CLI ledger as
@@ -87,8 +90,8 @@ release.json`) has two audiences and they must not blur together: a "What's new"
   #125 (v5.45.3) then marked BOTH colours' latest stones instead of only the most recent one, and
   stopped an uncommitted first tap from hiding those markers. Its migration
   `20260729120000_renju_previous_move.sql` (`renju_board.prev_move` + `move_renju`/`reset_renju`) is
-  **written but NOT applied**; until it is, the second marker is derived live and does not survive a
-  reload.
+  **applied and live** (2026-07-29, ledger version `20260729175859`; the "written but NOT applied"
+  note that used to stand here was stale — see `CLAUDE.md`).
 - **Side games are per-viewer as of #118.** Which face either drawer shows (pool/chess,
   research/renju) is now each viewer's own choice, stored in `localStorage` per game and per
   account - not shared over Realtime. Anything below describing a switch as shared/committed state
@@ -6277,6 +6280,68 @@ pin_preference_split_budget_search_path` (the one function in the set without a 
       browser-checked at 640px (turn text and both links share one 23px row) and 390px (the sentence
       wraps beside the links, never into a separate help row), with no ban roster and the classic
       auction modal opening correctly. The final full viewer suite passed with exit code 0.
+
+153.  ✅ **Two desktop layout bugs, and renju moved to a 19x19 board (2026-08-12, viewer v5.55.0).**
+      Three owner reports in one pass; the first two share nothing but the word "desktop", so they
+      are two separate root causes.
+
+      **1. The docked chat hid the auto-leech control.** `AutoLeechFab.vue` is `position: fixed` at
+      the bottom-right corner; the desktop chat dock is `position: fixed` too, 360px wide against the
+      same edge, at z-index 1050 against the pill's 1028. The width reservation that keeps the two
+      apart (`#app.chat-notes-open { padding-right: 360px }`) is padding on the page, and padding
+      does nothing for an element that is out of flow - so the pill sat squarely underneath the dock
+      and simply could not be seen while the chat was open. The reservation now also publishes the
+      same width as a `--chat-dock-width` custom property, which the pill adds to its own `right`
+      (falling back to 0, so a closed chat and the self-contained viewer are unchanged) and
+      transitions on the same 0.15s curve as the padding, so the two slide together.
+
+      **2. A panel that was ALREADY open reserved no width - so the board rendered full-width
+      underneath it.** Owner report: the board is huge by default and only sizes properly once you
+      "pull up" the side panels, and leaving one game for another puts it back to huge with the
+      panels still up, needing a manual close-and-reopen. Root cause: `hosted.ts` mirrored each
+      panel's state onto the page with a bare `$watch("open", ...)`, which only ever fires on a
+      CHANGE - while both panels restore their desktop open state from `localStorage` in `data()`.
+      So a panel that mounted open never announced it: no `chat-notes-open`/`game-nav-open` class, no
+      padding, and the game laid out across the full window with a panel parked on top of it. Toggling
+      by hand was the only thing that ever set the class, which is exactly the workaround the owner
+      had found. It hit every fresh load with a remembered-open panel, and again on every in-app game
+      switch, which re-mounts the chat panel per game while the preference stays open. The chat's
+      wiring even removed the class explicitly at mount, assuming it started closed. Now both go
+      through `hosted/panel-dock.ts::syncPanelOpen`, which registers the watcher AND applies the
+      current value once, so the state can never be half-reported; `HostedBar`'s own show/hide labels
+      ride along and are correct at mount too.
+
+      **3. Renju is now 19x19.** Owner request. `RENJU_SIZE` in `logic/renju.ts` was already the only
+      size fact the viewer had - the SVG, win detection, the search engine and the offline blob all
+      derive from it - so the client change is that constant plus the nine Go star points. The
+      database is the other half: migration `20260812120000_renju_19x19.sql` moves
+      `renju_start_board()` to 361 characters, re-points the three check constraints, and takes
+      `move_renju`'s index bound off a hard-coded 224 and onto `length(board)`, so a future size
+      change has one fewer place to forget. **Positions already in progress are converted, not
+      wiped:** each 15x15 board is re-centred inside the 19x19 one (+2 rows, +2 columns, so the old
+      tengen lands on the new one) with `last_move`/`prev_move` re-indexed to match - a pure
+      translation, so runs and threats survive intact. The push trigger is disabled around that
+      UPDATE, since re-centring is not a move and must not notify the table. The arithmetic was
+      checked against the live database as a read-only query before the file was written (old 0 →
+      40, 112 → 180, 224 → 320, length 361).
+
+      Both `renjuMover` copies (`hosted/game-bar.ts` for the turn pulse, `notify/logic.ts` for the
+      push) had `position.length !== 225` hard-coded. They deploy on different schedules from each
+      other and from the database - the Edge Function's workflow fires on any push touching
+      `supabase/functions/**` - so a fixed cell count means whichever side is not yet live resolves
+      no mover at all, i.e. silently drops every renju push. Both now accept any square grid of at
+      least 5, which is all that counting stones requires, and neither needs touching again.
+
+      **Rollout order matters for this one:** a client sized for one grid ignores the other's board
+      string (`RenjuBoard.vue::applyRow`), so the migration is applied when the matching viewer build
+      goes live, not before. Live at the time of writing: 10 renju rows, all 15x15, one with stones.
+
+      **Tests:** new `panel-dock.spec.ts` (4 cases, pinning the "applies at mount, not only on
+      change" contract); `renju*.spec.ts` **49 passing** on the bigger grid, with the wrap-around and
+      centre-point cases re-anchored to `RENJU_SIZE` rather than to 15; `RenjuBoard.spec.ts` +
+      `GameBar.spec.ts` **26 passing**; `notify/logic.spec.ts` **70 passing** (68 baseline, +2: a
+      board-size rollout keeps resolving a mover on either grid, and a non-grid string still resolves
+      none).
 
 ## Still MISSING — only one art-only item left
 

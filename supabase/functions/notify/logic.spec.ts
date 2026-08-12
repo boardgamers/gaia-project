@@ -79,8 +79,9 @@ function makeBoard(overrides: Partial<ChessBoardRow> = {}): ChessBoardRow {
   };
 }
 
-// An empty 15x15 renju position (black to move), matching public.renju_start_board().
-const EMPTY_RENJU = ".".repeat(225);
+// An empty 19x19 renju position (black to move), matching public.renju_start_board().
+const RENJU_CELLS = 19 * 19;
+const EMPTY_RENJU = ".".repeat(RENJU_CELLS);
 
 // `board` defaults to one black stone played, so the default row is white's move - the mirror of
 // makeBoard()'s "white to move" chess default being black's.
@@ -101,7 +102,7 @@ function makeRenjuBoard(overrides: Partial<RenjuBoardRow> = {}): RenjuBoardRow {
 /** The empty board with `stones` alternating from black, placed on the first free intersections. */
 function renjuPosition(stones: number): string {
   let board = "";
-  for (let index = 0; index < 225; index++) {
+  for (let index = 0; index < RENJU_CELLS; index++) {
     board += index < stones ? (index % 2 === 0 ? "b" : "w") : ".";
   }
   return board;
@@ -385,6 +386,23 @@ describe("notify logic", () => {
       );
       // A team with only the second seat filled still resolves - the same coalesce chain.
       assert.equal(renjuMover(makeRenjuBoard({ black_user: null, black_user_2: "black-2" })), "black-2");
+    });
+
+    // This function deploys on its own schedule (a push touching supabase/functions/**), so it is
+    // routinely live against a database on the other side of a board-size change. It must keep
+    // resolving a mover for both grids rather than silently pushing nobody - it only ever counts
+    // stones, which does not depend on the size at all.
+    it("resolves a mover on any square grid, so a board-size rollout never drops a push", () => {
+      const legacy15x15 = ".".repeat(15 * 15);
+      assert.equal(renjuMover(makeRenjuBoard({ board: legacy15x15 })), "black-1");
+      assert.equal(renjuMover(makeRenjuBoard({ board: "b" + legacy15x15.slice(1) })), "white-1");
+    });
+
+    it("resolves no mover from a board that is not a grid at all", () => {
+      assert.equal(renjuMover(makeRenjuBoard({ board: "" })), null);
+      assert.equal(renjuMover(makeRenjuBoard({ board: "..." })), null); // 3 is not a square
+      assert.equal(renjuMover(makeRenjuBoard({ board: EMPTY_RENJU + "." })), null); // 362 is not either
+      assert.equal(renjuMover(makeRenjuBoard({ board: "x".repeat(RENJU_CELLS) })), null);
     });
 
     it("builds a turn-kind notification for the resolved mover, tagged separately from Gaia and chess", () => {

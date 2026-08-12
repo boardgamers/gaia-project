@@ -5,7 +5,7 @@
  * The Gaia board and the minigames need the same guarantee - play them on a plane and neither the
  * moves nor the boards are thrown away when you reconnect - but they store state very differently.
  * A Gaia game keeps an append-only move history, so "is the copy ahead?" is a prefix test. A
- * minigame row keeps only its CURRENT position (a FEN, a 225-character renju board, an 81-cell
+ * minigame row keeps only its CURRENT position (a FEN, a 19x19 renju board, an 81-cell
  * grid), which cannot tell you how it got there. So instead of comparing positions afterwards, this
  * records what the player did as it happens: an ordered op log per game, each op carrying the exact
  * position it moved FROM and TO.

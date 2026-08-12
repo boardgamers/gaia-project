@@ -3,24 +3,35 @@
 // chess, there is no third-party rules engine here: five-in-a-row is small enough to own outright,
 // which also keeps the offline bundle unchanged.
 //
-// Rule set: STANDARD GOMOKU (owner choice). Stones are placed on the 15x15 grid's intersections,
+// Rule set: STANDARD GOMOKU (owner choice). Stones are placed on the 19x19 grid's intersections,
 // black moves first, and a line of EXACTLY five wins - an overline of six or more does not win, for
 // either colour. (Free-style gomoku would count 6+ as a win; true renju would additionally forbid
 // black's double-three/double-four - neither is what this board plays.)
+//
+// The grid was 15x15 (the gomoku tournament size) until 2026-08-12, when the owner asked for a full
+// 19x19 Go board instead. Everything downstream - the engine, the SVG, win detection - is written
+// against RENJU_SIZE, so this constant is the change; the database's own board string is sized to
+// match by migration 20260812120000_renju_19x19.sql, which also re-centres positions that were
+// already in progress on the smaller grid.
 
-export const RENJU_SIZE = 15;
+export const RENJU_SIZE = 19;
 export const RENJU_CELLS = RENJU_SIZE * RENJU_SIZE;
 export const EMPTY_RENJU_BOARD = ".".repeat(RENJU_CELLS);
 
 export type Stone = "b" | "w";
 
-// The traditional 15x15 star points (tengen plus the four 4-4 handicap points), drawn as small dots.
+// The 19x19 board's nine star points (tengen plus the eight 4-4/4-10 handicap points), drawn as
+// small dots - the standard Go layout, since this is now a Go-sized board.
 export const RENJU_STAR_POINTS: number[] = [
   3 * RENJU_SIZE + 3,
-  3 * RENJU_SIZE + 11,
-  7 * RENJU_SIZE + 7,
-  11 * RENJU_SIZE + 3,
-  11 * RENJU_SIZE + 11,
+  3 * RENJU_SIZE + 9,
+  3 * RENJU_SIZE + 15,
+  9 * RENJU_SIZE + 3,
+  9 * RENJU_SIZE + 9,
+  9 * RENJU_SIZE + 15,
+  15 * RENJU_SIZE + 3,
+  15 * RENJU_SIZE + 9,
+  15 * RENJU_SIZE + 15,
 ];
 
 const LOCAL_RENJU_KEY_PREFIX = "lf-renju-state:";
@@ -84,9 +95,11 @@ export function otherColorLastMove(board: string, lastMove: number | null, candi
 }
 
 /**
- * A board string is 225 characters of `.`/`b`/`w` whose stone counts are consistent with black
- * moving first. The database re-checks the same shape, so an out-of-range or tampered board can
- * never be committed by a client that skipped this.
+ * A board string is RENJU_CELLS characters of `.`/`b`/`w` whose stone counts are consistent with
+ * black moving first. The database re-checks the same shape, so an out-of-range or tampered board
+ * can never be committed by a client that skipped this. A 225-character position from before the
+ * 19x19 change therefore reads as invalid here - the migration converts every stored one, so the
+ * only way to meet one is a client running ahead of the database.
  */
 export function isValidBoard(board: string): boolean {
   if (typeof board !== "string" || board.length !== RENJU_CELLS || !/^[.bw]*$/.test(board)) {
