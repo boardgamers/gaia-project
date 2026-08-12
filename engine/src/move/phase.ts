@@ -86,6 +86,15 @@ export function phaseSetupAuction(engine: Engine, move: string) {
   moveToNextPlayerWithoutAChosenFaction(engine);
 }
 
+/**
+ * The Silent Auction's secret-bid phase (AuctionVariant.Silent). Structurally identical to the
+ * Preference Split's below: every player submits one `silentBid` move carrying their whole
+ * valuation vector, the moves are recorded in seat order, and nothing whatsoever is derived from
+ * any of them until the last one lands - which is what lets the submissions be collected
+ * simultaneously rather than one seat at a time. In hosted play they are literally collected in
+ * parallel, into `auction_sealed_bids`, and only appended to the move log by `reveal_sealed_bids`
+ * once every one of them is in, so no player can read another's numbers first.
+ */
 export function phaseSetupSilentBid(engine: Engine, move: string) {
   engine.loadTurnMoves(move, { split: false, processFirst: true });
 

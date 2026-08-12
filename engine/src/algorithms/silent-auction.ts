@@ -1,11 +1,54 @@
 import assert from "assert";
 import { Faction, Player as PlayerEnum } from "../enums";
 
+/** Upper bound offered for a Silent Auction max-VP bid; a generous ceiling, not a real cap. */
+export const MAX_SILENT_BID = 40;
+
 export type SilentAuctionBid = {
   player: PlayerEnum;
   faction: Faction;
   max: number;
 };
+
+/**
+ * The one rule set a Silent Auction submission has to satisfy, shared by everything that checks
+ * one: the engine's own `moveSilentBid` (so a hand-edited move log can't smuggle in an illegal
+ * bid), the bid form's submit button, and - mirrored in SQL - `submit_sealed_bid`, which is what
+ * actually guards a hosted submission since the bids never pass through the engine until the
+ * reveal.
+ *
+ * Unlike the Preference Split's split there is no budget: each faction is bid on independently,
+ * anywhere from 0 to `MAX_SILENT_BID`. What must hold is that every faction up for auction is bid
+ * on exactly once, so the auction has a complete valuation from every player.
+ *
+ * Returns a human-readable reason, or null when the submission is legal.
+ */
+export function silentAuctionBidError(
+  entries: readonly { faction: string; points: number }[],
+  factions: readonly Faction[],
+  maxBid: number = MAX_SILENT_BID
+): string | null {
+  if (entries.length !== factions.length) {
+    return `You have to bid on all ${factions.length} factions up for auction`;
+  }
+  const seen = new Set<string>();
+  for (const entry of entries) {
+    if (!factions.includes(entry.faction as Faction)) {
+      return `${entry.faction} is not up for auction`;
+    }
+    if (seen.has(entry.faction)) {
+      return `You can only bid once on ${entry.faction}`;
+    }
+    seen.add(entry.faction);
+    if (!Number.isInteger(entry.points) || entry.points < 0) {
+      return `Every bid has to be a whole, non-negative number of victory points`;
+    }
+    if (entry.points > maxBid) {
+      return `A bid cannot be higher than ${maxBid} victory points`;
+    }
+  }
+  return null;
+}
 
 export type SilentAuctionStep = {
   player: PlayerEnum;

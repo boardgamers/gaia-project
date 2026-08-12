@@ -1,95 +1,59 @@
-globalThis.seedrandom = globalThis.seedrandom;
+globalThis.seedrandom=globalThis.seedrandom;
 var __create = Object.create;
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __require = /* @__PURE__ */ ((x) =>
-  typeof require !== "undefined"
-    ? require
-    : typeof Proxy !== "undefined"
-    ? new Proxy(x, {
-        get: (a, b) => (typeof require !== "undefined" ? require : a)[b],
-      })
-    : x)(function (x) {
+var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
+  get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
+}) : x)(function(x) {
   if (typeof require !== "undefined") return require.apply(this, arguments);
   throw Error('Dynamic require of "' + x + '" is not supported');
 });
-var __commonJS = (cb, mod) =>
-  function __require2() {
-    try {
-      return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
-    } catch (e) {
-      throw ((mod = 0), e);
-    }
-  };
+var __commonJS = (cb, mod) => function __require2() {
+  try {
+    return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+  } catch (e) {
+    throw mod = 0, e;
+  }
+};
 var __copyProps = (to, from, except, desc) => {
-  if ((from && typeof from === "object") || typeof from === "function") {
+  if (from && typeof from === "object" || typeof from === "function") {
     for (let key2 of __getOwnPropNames(from))
       if (!__hasOwnProp.call(to, key2) && key2 !== except)
-        __defProp(to, key2, {
-          get: () => from[key2],
-          enumerable: !(desc = __getOwnPropDesc(from, key2)) || desc.enumerable,
-        });
+        __defProp(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc(from, key2)) || desc.enumerable });
   }
   return to;
 };
-var __toESM = (mod, isNodeMode, target) => (
-  (target = mod != null ? __create(__getProtoOf(mod)) : {}),
-  __copyProps(
-    // If the importer is in node compatibility mode or this is not an ESM
-    // file that has been converted to a CommonJS file using a Babel-
-    // compatible transform (i.e. "__esModule" has not been set), then set
-    // "default" to the CommonJS "module.exports" for node compatibility.
-    isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
-    mod
-  )
-);
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
 
 // engine/node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/lodash.js
 var require_lodash = __commonJS({
   "engine/node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/lodash.js"(exports, module) {
-    (function () {
+    (function() {
       var undefined2;
       var VERSION = "4.18.1";
       var LARGE_ARRAY_SIZE = 200;
-      var CORE_ERROR_TEXT = "Unsupported core-js use. Try https://npms.io/search?q=ponyfill.",
-        FUNC_ERROR_TEXT = "Expected a function",
-        INVALID_TEMPL_VAR_ERROR_TEXT = "Invalid `variable` option passed into `_.template`",
-        INVALID_TEMPL_IMPORTS_ERROR_TEXT = "Invalid `imports` option passed into `_.template`";
+      var CORE_ERROR_TEXT = "Unsupported core-js use. Try https://npms.io/search?q=ponyfill.", FUNC_ERROR_TEXT = "Expected a function", INVALID_TEMPL_VAR_ERROR_TEXT = "Invalid `variable` option passed into `_.template`", INVALID_TEMPL_IMPORTS_ERROR_TEXT = "Invalid `imports` option passed into `_.template`";
       var HASH_UNDEFINED = "__lodash_hash_undefined__";
       var MAX_MEMOIZE_SIZE = 500;
       var PLACEHOLDER = "__lodash_placeholder__";
-      var CLONE_DEEP_FLAG = 1,
-        CLONE_FLAT_FLAG = 2,
-        CLONE_SYMBOLS_FLAG = 4;
-      var COMPARE_PARTIAL_FLAG = 1,
-        COMPARE_UNORDERED_FLAG = 2;
-      var WRAP_BIND_FLAG = 1,
-        WRAP_BIND_KEY_FLAG = 2,
-        WRAP_CURRY_BOUND_FLAG = 4,
-        WRAP_CURRY_FLAG = 8,
-        WRAP_CURRY_RIGHT_FLAG = 16,
-        WRAP_PARTIAL_FLAG = 32,
-        WRAP_PARTIAL_RIGHT_FLAG = 64,
-        WRAP_ARY_FLAG = 128,
-        WRAP_REARG_FLAG = 256,
-        WRAP_FLIP_FLAG = 512;
-      var DEFAULT_TRUNC_LENGTH = 30,
-        DEFAULT_TRUNC_OMISSION = "...";
-      var HOT_COUNT = 800,
-        HOT_SPAN = 16;
-      var LAZY_FILTER_FLAG = 1,
-        LAZY_MAP_FLAG = 2,
-        LAZY_WHILE_FLAG = 3;
-      var INFINITY = 1 / 0,
-        MAX_SAFE_INTEGER = 9007199254740991,
-        MAX_INTEGER = 17976931348623157e292,
-        NAN = 0 / 0;
-      var MAX_ARRAY_LENGTH = 4294967295,
-        MAX_ARRAY_INDEX = MAX_ARRAY_LENGTH - 1,
-        HALF_MAX_ARRAY_LENGTH = MAX_ARRAY_LENGTH >>> 1;
+      var CLONE_DEEP_FLAG = 1, CLONE_FLAT_FLAG = 2, CLONE_SYMBOLS_FLAG = 4;
+      var COMPARE_PARTIAL_FLAG = 1, COMPARE_UNORDERED_FLAG = 2;
+      var WRAP_BIND_FLAG = 1, WRAP_BIND_KEY_FLAG = 2, WRAP_CURRY_BOUND_FLAG = 4, WRAP_CURRY_FLAG = 8, WRAP_CURRY_RIGHT_FLAG = 16, WRAP_PARTIAL_FLAG = 32, WRAP_PARTIAL_RIGHT_FLAG = 64, WRAP_ARY_FLAG = 128, WRAP_REARG_FLAG = 256, WRAP_FLIP_FLAG = 512;
+      var DEFAULT_TRUNC_LENGTH = 30, DEFAULT_TRUNC_OMISSION = "...";
+      var HOT_COUNT = 800, HOT_SPAN = 16;
+      var LAZY_FILTER_FLAG = 1, LAZY_MAP_FLAG = 2, LAZY_WHILE_FLAG = 3;
+      var INFINITY = 1 / 0, MAX_SAFE_INTEGER = 9007199254740991, MAX_INTEGER = 17976931348623157e292, NAN = 0 / 0;
+      var MAX_ARRAY_LENGTH = 4294967295, MAX_ARRAY_INDEX = MAX_ARRAY_LENGTH - 1, HALF_MAX_ARRAY_LENGTH = MAX_ARRAY_LENGTH >>> 1;
       var wrapFlags = [
         ["ary", WRAP_ARY_FLAG],
         ["bind", WRAP_BIND_FLAG],
@@ -99,61 +63,18 @@ var require_lodash = __commonJS({
         ["flip", WRAP_FLIP_FLAG],
         ["partial", WRAP_PARTIAL_FLAG],
         ["partialRight", WRAP_PARTIAL_RIGHT_FLAG],
-        ["rearg", WRAP_REARG_FLAG],
+        ["rearg", WRAP_REARG_FLAG]
       ];
-      var argsTag = "[object Arguments]",
-        arrayTag = "[object Array]",
-        asyncTag = "[object AsyncFunction]",
-        boolTag = "[object Boolean]",
-        dateTag = "[object Date]",
-        domExcTag = "[object DOMException]",
-        errorTag = "[object Error]",
-        funcTag = "[object Function]",
-        genTag = "[object GeneratorFunction]",
-        mapTag = "[object Map]",
-        numberTag = "[object Number]",
-        nullTag = "[object Null]",
-        objectTag = "[object Object]",
-        promiseTag = "[object Promise]",
-        proxyTag = "[object Proxy]",
-        regexpTag = "[object RegExp]",
-        setTag = "[object Set]",
-        stringTag = "[object String]",
-        symbolTag = "[object Symbol]",
-        undefinedTag = "[object Undefined]",
-        weakMapTag = "[object WeakMap]",
-        weakSetTag = "[object WeakSet]";
-      var arrayBufferTag = "[object ArrayBuffer]",
-        dataViewTag = "[object DataView]",
-        float32Tag = "[object Float32Array]",
-        float64Tag = "[object Float64Array]",
-        int8Tag = "[object Int8Array]",
-        int16Tag = "[object Int16Array]",
-        int32Tag = "[object Int32Array]",
-        uint8Tag = "[object Uint8Array]",
-        uint8ClampedTag = "[object Uint8ClampedArray]",
-        uint16Tag = "[object Uint16Array]",
-        uint32Tag = "[object Uint32Array]";
-      var reEmptyStringLeading = /\b__p \+= '';/g,
-        reEmptyStringMiddle = /\b(__p \+=) '' \+/g,
-        reEmptyStringTrailing = /(__e\(.*?\)|\b__t\)) \+\n'';/g;
-      var reEscapedHtml = /&(?:amp|lt|gt|quot|#39);/g,
-        reUnescapedHtml = /[&<>"']/g,
-        reHasEscapedHtml = RegExp(reEscapedHtml.source),
-        reHasUnescapedHtml = RegExp(reUnescapedHtml.source);
-      var reEscape = /<%-([\s\S]+?)%>/g,
-        reEvaluate = /<%([\s\S]+?)%>/g,
-        reInterpolate = /<%=([\s\S]+?)%>/g;
-      var reIsDeepProp = /\.|\[(?:[^[\]]*|(["'])(?:(?!\1)[^\\]|\\.)*?\1)\]/,
-        reIsPlainProp = /^\w*$/,
-        rePropName = /[^.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(?:\.|\[\])(?:\.|\[\]|$))/g;
-      var reRegExpChar = /[\\^$.*+?()[\]{}|]/g,
-        reHasRegExpChar = RegExp(reRegExpChar.source);
+      var argsTag = "[object Arguments]", arrayTag = "[object Array]", asyncTag = "[object AsyncFunction]", boolTag = "[object Boolean]", dateTag = "[object Date]", domExcTag = "[object DOMException]", errorTag = "[object Error]", funcTag = "[object Function]", genTag = "[object GeneratorFunction]", mapTag = "[object Map]", numberTag = "[object Number]", nullTag = "[object Null]", objectTag = "[object Object]", promiseTag = "[object Promise]", proxyTag = "[object Proxy]", regexpTag = "[object RegExp]", setTag = "[object Set]", stringTag = "[object String]", symbolTag = "[object Symbol]", undefinedTag = "[object Undefined]", weakMapTag = "[object WeakMap]", weakSetTag = "[object WeakSet]";
+      var arrayBufferTag = "[object ArrayBuffer]", dataViewTag = "[object DataView]", float32Tag = "[object Float32Array]", float64Tag = "[object Float64Array]", int8Tag = "[object Int8Array]", int16Tag = "[object Int16Array]", int32Tag = "[object Int32Array]", uint8Tag = "[object Uint8Array]", uint8ClampedTag = "[object Uint8ClampedArray]", uint16Tag = "[object Uint16Array]", uint32Tag = "[object Uint32Array]";
+      var reEmptyStringLeading = /\b__p \+= '';/g, reEmptyStringMiddle = /\b(__p \+=) '' \+/g, reEmptyStringTrailing = /(__e\(.*?\)|\b__t\)) \+\n'';/g;
+      var reEscapedHtml = /&(?:amp|lt|gt|quot|#39);/g, reUnescapedHtml = /[&<>"']/g, reHasEscapedHtml = RegExp(reEscapedHtml.source), reHasUnescapedHtml = RegExp(reUnescapedHtml.source);
+      var reEscape = /<%-([\s\S]+?)%>/g, reEvaluate = /<%([\s\S]+?)%>/g, reInterpolate = /<%=([\s\S]+?)%>/g;
+      var reIsDeepProp = /\.|\[(?:[^[\]]*|(["'])(?:(?!\1)[^\\]|\\.)*?\1)\]/, reIsPlainProp = /^\w*$/, rePropName = /[^.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(?:\.|\[\])(?:\.|\[\]|$))/g;
+      var reRegExpChar = /[\\^$.*+?()[\]{}|]/g, reHasRegExpChar = RegExp(reRegExpChar.source);
       var reTrimStart = /^\s+/;
       var reWhitespace = /\s/;
-      var reWrapComment = /\{(?:\n\/\* \[wrapped with .+\] \*\/)?\n?/,
-        reWrapDetails = /\{\n\/\* \[wrapped with (.+)\] \*/,
-        reSplitDetails = /,? & /;
+      var reWrapComment = /\{(?:\n\/\* \[wrapped with .+\] \*\/)?\n?/, reWrapDetails = /\{\n\/\* \[wrapped with (.+)\] \*/, reSplitDetails = /,? & /;
       var reAsciiWord = /[^\x00-\x2f\x3a-\x40\x5b-\x60\x7b-\x7f]+/g;
       var reForbiddenIdentifierChars = /[()=,{}\[\]\/\s]/;
       var reEscapeChar = /\\(\\)?/g;
@@ -167,65 +88,22 @@ var require_lodash = __commonJS({
       var reLatin = /[\xc0-\xd6\xd8-\xf6\xf8-\xff\u0100-\u017f]/g;
       var reNoMatch = /($^)/;
       var reUnescapedString = /['\n\r\u2028\u2029\\]/g;
-      var rsAstralRange = "\\ud800-\\udfff",
-        rsComboMarksRange = "\\u0300-\\u036f",
-        reComboHalfMarksRange = "\\ufe20-\\ufe2f",
-        rsComboSymbolsRange = "\\u20d0-\\u20ff",
-        rsComboRange = rsComboMarksRange + reComboHalfMarksRange + rsComboSymbolsRange,
-        rsDingbatRange = "\\u2700-\\u27bf",
-        rsLowerRange = "a-z\\xdf-\\xf6\\xf8-\\xff",
-        rsMathOpRange = "\\xac\\xb1\\xd7\\xf7",
-        rsNonCharRange = "\\x00-\\x2f\\x3a-\\x40\\x5b-\\x60\\x7b-\\xbf",
-        rsPunctuationRange = "\\u2000-\\u206f",
-        rsSpaceRange =
-          " \\t\\x0b\\f\\xa0\\ufeff\\n\\r\\u2028\\u2029\\u1680\\u180e\\u2000\\u2001\\u2002\\u2003\\u2004\\u2005\\u2006\\u2007\\u2008\\u2009\\u200a\\u202f\\u205f\\u3000",
-        rsUpperRange = "A-Z\\xc0-\\xd6\\xd8-\\xde",
-        rsVarRange = "\\ufe0e\\ufe0f",
-        rsBreakRange = rsMathOpRange + rsNonCharRange + rsPunctuationRange + rsSpaceRange;
-      var rsApos = "['\u2019]",
-        rsAstral = "[" + rsAstralRange + "]",
-        rsBreak = "[" + rsBreakRange + "]",
-        rsCombo = "[" + rsComboRange + "]",
-        rsDigits = "\\d+",
-        rsDingbat = "[" + rsDingbatRange + "]",
-        rsLower = "[" + rsLowerRange + "]",
-        rsMisc = "[^" + rsAstralRange + rsBreakRange + rsDigits + rsDingbatRange + rsLowerRange + rsUpperRange + "]",
-        rsFitz = "\\ud83c[\\udffb-\\udfff]",
-        rsModifier = "(?:" + rsCombo + "|" + rsFitz + ")",
-        rsNonAstral = "[^" + rsAstralRange + "]",
-        rsRegional = "(?:\\ud83c[\\udde6-\\uddff]){2}",
-        rsSurrPair = "[\\ud800-\\udbff][\\udc00-\\udfff]",
-        rsUpper = "[" + rsUpperRange + "]",
-        rsZWJ = "\\u200d";
-      var rsMiscLower = "(?:" + rsLower + "|" + rsMisc + ")",
-        rsMiscUpper = "(?:" + rsUpper + "|" + rsMisc + ")",
-        rsOptContrLower = "(?:" + rsApos + "(?:d|ll|m|re|s|t|ve))?",
-        rsOptContrUpper = "(?:" + rsApos + "(?:D|LL|M|RE|S|T|VE))?",
-        reOptMod = rsModifier + "?",
-        rsOptVar = "[" + rsVarRange + "]?",
-        rsOptJoin =
-          "(?:" + rsZWJ + "(?:" + [rsNonAstral, rsRegional, rsSurrPair].join("|") + ")" + rsOptVar + reOptMod + ")*",
-        rsOrdLower = "\\d*(?:1st|2nd|3rd|(?![123])\\dth)(?=\\b|[A-Z_])",
-        rsOrdUpper = "\\d*(?:1ST|2ND|3RD|(?![123])\\dTH)(?=\\b|[a-z_])",
-        rsSeq = rsOptVar + reOptMod + rsOptJoin,
-        rsEmoji = "(?:" + [rsDingbat, rsRegional, rsSurrPair].join("|") + ")" + rsSeq,
-        rsSymbol = "(?:" + [rsNonAstral + rsCombo + "?", rsCombo, rsRegional, rsSurrPair, rsAstral].join("|") + ")";
+      var rsAstralRange = "\\ud800-\\udfff", rsComboMarksRange = "\\u0300-\\u036f", reComboHalfMarksRange = "\\ufe20-\\ufe2f", rsComboSymbolsRange = "\\u20d0-\\u20ff", rsComboRange = rsComboMarksRange + reComboHalfMarksRange + rsComboSymbolsRange, rsDingbatRange = "\\u2700-\\u27bf", rsLowerRange = "a-z\\xdf-\\xf6\\xf8-\\xff", rsMathOpRange = "\\xac\\xb1\\xd7\\xf7", rsNonCharRange = "\\x00-\\x2f\\x3a-\\x40\\x5b-\\x60\\x7b-\\xbf", rsPunctuationRange = "\\u2000-\\u206f", rsSpaceRange = " \\t\\x0b\\f\\xa0\\ufeff\\n\\r\\u2028\\u2029\\u1680\\u180e\\u2000\\u2001\\u2002\\u2003\\u2004\\u2005\\u2006\\u2007\\u2008\\u2009\\u200a\\u202f\\u205f\\u3000", rsUpperRange = "A-Z\\xc0-\\xd6\\xd8-\\xde", rsVarRange = "\\ufe0e\\ufe0f", rsBreakRange = rsMathOpRange + rsNonCharRange + rsPunctuationRange + rsSpaceRange;
+      var rsApos = "['\u2019]", rsAstral = "[" + rsAstralRange + "]", rsBreak = "[" + rsBreakRange + "]", rsCombo = "[" + rsComboRange + "]", rsDigits = "\\d+", rsDingbat = "[" + rsDingbatRange + "]", rsLower = "[" + rsLowerRange + "]", rsMisc = "[^" + rsAstralRange + rsBreakRange + rsDigits + rsDingbatRange + rsLowerRange + rsUpperRange + "]", rsFitz = "\\ud83c[\\udffb-\\udfff]", rsModifier = "(?:" + rsCombo + "|" + rsFitz + ")", rsNonAstral = "[^" + rsAstralRange + "]", rsRegional = "(?:\\ud83c[\\udde6-\\uddff]){2}", rsSurrPair = "[\\ud800-\\udbff][\\udc00-\\udfff]", rsUpper = "[" + rsUpperRange + "]", rsZWJ = "\\u200d";
+      var rsMiscLower = "(?:" + rsLower + "|" + rsMisc + ")", rsMiscUpper = "(?:" + rsUpper + "|" + rsMisc + ")", rsOptContrLower = "(?:" + rsApos + "(?:d|ll|m|re|s|t|ve))?", rsOptContrUpper = "(?:" + rsApos + "(?:D|LL|M|RE|S|T|VE))?", reOptMod = rsModifier + "?", rsOptVar = "[" + rsVarRange + "]?", rsOptJoin = "(?:" + rsZWJ + "(?:" + [rsNonAstral, rsRegional, rsSurrPair].join("|") + ")" + rsOptVar + reOptMod + ")*", rsOrdLower = "\\d*(?:1st|2nd|3rd|(?![123])\\dth)(?=\\b|[A-Z_])", rsOrdUpper = "\\d*(?:1ST|2ND|3RD|(?![123])\\dTH)(?=\\b|[a-z_])", rsSeq = rsOptVar + reOptMod + rsOptJoin, rsEmoji = "(?:" + [rsDingbat, rsRegional, rsSurrPair].join("|") + ")" + rsSeq, rsSymbol = "(?:" + [rsNonAstral + rsCombo + "?", rsCombo, rsRegional, rsSurrPair, rsAstral].join("|") + ")";
       var reApos = RegExp(rsApos, "g");
       var reComboMark = RegExp(rsCombo, "g");
       var reUnicode = RegExp(rsFitz + "(?=" + rsFitz + ")|" + rsSymbol + rsSeq, "g");
-      var reUnicodeWord = RegExp(
-        [
-          rsUpper + "?" + rsLower + "+" + rsOptContrLower + "(?=" + [rsBreak, rsUpper, "$"].join("|") + ")",
-          rsMiscUpper + "+" + rsOptContrUpper + "(?=" + [rsBreak, rsUpper + rsMiscLower, "$"].join("|") + ")",
-          rsUpper + "?" + rsMiscLower + "+" + rsOptContrLower,
-          rsUpper + "+" + rsOptContrUpper,
-          rsOrdUpper,
-          rsOrdLower,
-          rsDigits,
-          rsEmoji,
-        ].join("|"),
-        "g"
-      );
+      var reUnicodeWord = RegExp([
+        rsUpper + "?" + rsLower + "+" + rsOptContrLower + "(?=" + [rsBreak, rsUpper, "$"].join("|") + ")",
+        rsMiscUpper + "+" + rsOptContrUpper + "(?=" + [rsBreak, rsUpper + rsMiscLower, "$"].join("|") + ")",
+        rsUpper + "?" + rsMiscLower + "+" + rsOptContrLower,
+        rsUpper + "+" + rsOptContrUpper,
+        rsOrdUpper,
+        rsOrdLower,
+        rsDigits,
+        rsEmoji
+      ].join("|"), "g");
       var reHasUnicode = RegExp("[" + rsZWJ + rsAstralRange + rsComboRange + rsVarRange + "]");
       var reHasUnicodeWord = /[a-z][A-Z]|[A-Z]{2}[a-z]|[0-9][a-zA-Z]|[a-zA-Z][0-9]|[^a-zA-Z0-9 ]/;
       var contextProps = [
@@ -258,60 +136,14 @@ var require_lodash = __commonJS({
         "clearTimeout",
         "isFinite",
         "parseInt",
-        "setTimeout",
+        "setTimeout"
       ];
       var templateCounter = -1;
       var typedArrayTags = {};
-      typedArrayTags[float32Tag] =
-        typedArrayTags[float64Tag] =
-        typedArrayTags[int8Tag] =
-        typedArrayTags[int16Tag] =
-        typedArrayTags[int32Tag] =
-        typedArrayTags[uint8Tag] =
-        typedArrayTags[uint8ClampedTag] =
-        typedArrayTags[uint16Tag] =
-        typedArrayTags[uint32Tag] =
-          true;
-      typedArrayTags[argsTag] =
-        typedArrayTags[arrayTag] =
-        typedArrayTags[arrayBufferTag] =
-        typedArrayTags[boolTag] =
-        typedArrayTags[dataViewTag] =
-        typedArrayTags[dateTag] =
-        typedArrayTags[errorTag] =
-        typedArrayTags[funcTag] =
-        typedArrayTags[mapTag] =
-        typedArrayTags[numberTag] =
-        typedArrayTags[objectTag] =
-        typedArrayTags[regexpTag] =
-        typedArrayTags[setTag] =
-        typedArrayTags[stringTag] =
-        typedArrayTags[weakMapTag] =
-          false;
+      typedArrayTags[float32Tag] = typedArrayTags[float64Tag] = typedArrayTags[int8Tag] = typedArrayTags[int16Tag] = typedArrayTags[int32Tag] = typedArrayTags[uint8Tag] = typedArrayTags[uint8ClampedTag] = typedArrayTags[uint16Tag] = typedArrayTags[uint32Tag] = true;
+      typedArrayTags[argsTag] = typedArrayTags[arrayTag] = typedArrayTags[arrayBufferTag] = typedArrayTags[boolTag] = typedArrayTags[dataViewTag] = typedArrayTags[dateTag] = typedArrayTags[errorTag] = typedArrayTags[funcTag] = typedArrayTags[mapTag] = typedArrayTags[numberTag] = typedArrayTags[objectTag] = typedArrayTags[regexpTag] = typedArrayTags[setTag] = typedArrayTags[stringTag] = typedArrayTags[weakMapTag] = false;
       var cloneableTags = {};
-      cloneableTags[argsTag] =
-        cloneableTags[arrayTag] =
-        cloneableTags[arrayBufferTag] =
-        cloneableTags[dataViewTag] =
-        cloneableTags[boolTag] =
-        cloneableTags[dateTag] =
-        cloneableTags[float32Tag] =
-        cloneableTags[float64Tag] =
-        cloneableTags[int8Tag] =
-        cloneableTags[int16Tag] =
-        cloneableTags[int32Tag] =
-        cloneableTags[mapTag] =
-        cloneableTags[numberTag] =
-        cloneableTags[objectTag] =
-        cloneableTags[regexpTag] =
-        cloneableTags[setTag] =
-        cloneableTags[stringTag] =
-        cloneableTags[symbolTag] =
-        cloneableTags[uint8Tag] =
-        cloneableTags[uint8ClampedTag] =
-        cloneableTags[uint16Tag] =
-        cloneableTags[uint32Tag] =
-          true;
+      cloneableTags[argsTag] = cloneableTags[arrayTag] = cloneableTags[arrayBufferTag] = cloneableTags[dataViewTag] = cloneableTags[boolTag] = cloneableTags[dateTag] = cloneableTags[float32Tag] = cloneableTags[float64Tag] = cloneableTags[int8Tag] = cloneableTags[int16Tag] = cloneableTags[int32Tag] = cloneableTags[mapTag] = cloneableTags[numberTag] = cloneableTags[objectTag] = cloneableTags[regexpTag] = cloneableTags[setTag] = cloneableTags[stringTag] = cloneableTags[symbolTag] = cloneableTags[uint8Tag] = cloneableTags[uint8ClampedTag] = cloneableTags[uint16Tag] = cloneableTags[uint32Tag] = true;
       cloneableTags[errorTag] = cloneableTags[funcTag] = cloneableTags[weakMapTag] = false;
       var deburredLetters = {
         // Latin-1 Supplement block.
@@ -505,21 +337,21 @@ var require_lodash = __commonJS({
         "\u0152": "Oe",
         "\u0153": "oe",
         "\u0149": "'n",
-        "\u017F": "s",
+        "\u017F": "s"
       };
       var htmlEscapes = {
         "&": "&amp;",
         "<": "&lt;",
         ">": "&gt;",
         '"': "&quot;",
-        "'": "&#39;",
+        "'": "&#39;"
       };
       var htmlUnescapes = {
         "&amp;": "&",
         "&lt;": "<",
         "&gt;": ">",
         "&quot;": '"',
-        "&#39;": "'",
+        "&#39;": "'"
       };
       var stringEscapes = {
         "\\": "\\",
@@ -527,10 +359,9 @@ var require_lodash = __commonJS({
         "\n": "n",
         "\r": "r",
         "\u2028": "u2028",
-        "\u2029": "u2029",
+        "\u2029": "u2029"
       };
-      var freeParseFloat = parseFloat,
-        freeParseInt = parseInt;
+      var freeParseFloat = parseFloat, freeParseInt = parseInt;
       var freeGlobal = typeof global == "object" && global && global.Object === Object && global;
       var freeSelf = typeof self == "object" && self && self.Object === Object && self;
       var root = freeGlobal || freeSelf || Function("return this")();
@@ -538,21 +369,17 @@ var require_lodash = __commonJS({
       var freeModule = freeExports && typeof module == "object" && module && !module.nodeType && module;
       var moduleExports = freeModule && freeModule.exports === freeExports;
       var freeProcess = moduleExports && freeGlobal.process;
-      var nodeUtil = (function () {
+      var nodeUtil = (function() {
         try {
           var types = freeModule && freeModule.require && freeModule.require("util").types;
           if (types) {
             return types;
           }
           return freeProcess && freeProcess.binding && freeProcess.binding("util");
-        } catch (e) {}
+        } catch (e) {
+        }
       })();
-      var nodeIsArrayBuffer = nodeUtil && nodeUtil.isArrayBuffer,
-        nodeIsDate = nodeUtil && nodeUtil.isDate,
-        nodeIsMap = nodeUtil && nodeUtil.isMap,
-        nodeIsRegExp = nodeUtil && nodeUtil.isRegExp,
-        nodeIsSet = nodeUtil && nodeUtil.isSet,
-        nodeIsTypedArray = nodeUtil && nodeUtil.isTypedArray;
+      var nodeIsArrayBuffer = nodeUtil && nodeUtil.isArrayBuffer, nodeIsDate = nodeUtil && nodeUtil.isDate, nodeIsMap = nodeUtil && nodeUtil.isMap, nodeIsRegExp = nodeUtil && nodeUtil.isRegExp, nodeIsSet = nodeUtil && nodeUtil.isSet, nodeIsTypedArray = nodeUtil && nodeUtil.isTypedArray;
       function apply(func, thisArg, args) {
         switch (args.length) {
           case 0:
@@ -567,8 +394,7 @@ var require_lodash = __commonJS({
         return func.apply(thisArg, args);
       }
       function arrayAggregator(array, setter, iteratee, accumulator) {
-        var index = -1,
-          length = array == null ? 0 : array.length;
+        var index = -1, length = array == null ? 0 : array.length;
         while (++index < length) {
           var value = array[index];
           setter(accumulator, value, iteratee(value), array);
@@ -576,8 +402,7 @@ var require_lodash = __commonJS({
         return accumulator;
       }
       function arrayEach(array, iteratee) {
-        var index = -1,
-          length = array == null ? 0 : array.length;
+        var index = -1, length = array == null ? 0 : array.length;
         while (++index < length) {
           if (iteratee(array[index], index, array) === false) {
             break;
@@ -595,8 +420,7 @@ var require_lodash = __commonJS({
         return array;
       }
       function arrayEvery(array, predicate) {
-        var index = -1,
-          length = array == null ? 0 : array.length;
+        var index = -1, length = array == null ? 0 : array.length;
         while (++index < length) {
           if (!predicate(array[index], index, array)) {
             return false;
@@ -605,10 +429,7 @@ var require_lodash = __commonJS({
         return true;
       }
       function arrayFilter(array, predicate) {
-        var index = -1,
-          length = array == null ? 0 : array.length,
-          resIndex = 0,
-          result = [];
+        var index = -1, length = array == null ? 0 : array.length, resIndex = 0, result = [];
         while (++index < length) {
           var value = array[index];
           if (predicate(value, index, array)) {
@@ -622,8 +443,7 @@ var require_lodash = __commonJS({
         return !!length && baseIndexOf(array, value, 0) > -1;
       }
       function arrayIncludesWith(array, value, comparator) {
-        var index = -1,
-          length = array == null ? 0 : array.length;
+        var index = -1, length = array == null ? 0 : array.length;
         while (++index < length) {
           if (comparator(value, array[index])) {
             return true;
@@ -632,26 +452,21 @@ var require_lodash = __commonJS({
         return false;
       }
       function arrayMap(array, iteratee) {
-        var index = -1,
-          length = array == null ? 0 : array.length,
-          result = Array(length);
+        var index = -1, length = array == null ? 0 : array.length, result = Array(length);
         while (++index < length) {
           result[index] = iteratee(array[index], index, array);
         }
         return result;
       }
       function arrayPush(array, values) {
-        var index = -1,
-          length = values.length,
-          offset = array.length;
+        var index = -1, length = values.length, offset = array.length;
         while (++index < length) {
           array[offset + index] = values[index];
         }
         return array;
       }
       function arrayReduce(array, iteratee, accumulator, initAccum) {
-        var index = -1,
-          length = array == null ? 0 : array.length;
+        var index = -1, length = array == null ? 0 : array.length;
         if (initAccum && length) {
           accumulator = array[++index];
         }
@@ -671,8 +486,7 @@ var require_lodash = __commonJS({
         return accumulator;
       }
       function arraySome(array, predicate) {
-        var index = -1,
-          length = array == null ? 0 : array.length;
+        var index = -1, length = array == null ? 0 : array.length;
         while (++index < length) {
           if (predicate(array[index], index, array)) {
             return true;
@@ -689,7 +503,7 @@ var require_lodash = __commonJS({
       }
       function baseFindKey(collection, predicate, eachFunc) {
         var result;
-        eachFunc(collection, function (value, key2, collection2) {
+        eachFunc(collection, function(value, key2, collection2) {
           if (predicate(value, key2, collection2)) {
             result = key2;
             return false;
@@ -698,8 +512,7 @@ var require_lodash = __commonJS({
         return result;
       }
       function baseFindIndex(array, predicate, fromIndex, fromRight) {
-        var length = array.length,
-          index = fromIndex + (fromRight ? 1 : -1);
+        var length = array.length, index = fromIndex + (fromRight ? 1 : -1);
         while (fromRight ? index-- : ++index < length) {
           if (predicate(array[index], index, array)) {
             return index;
@@ -711,8 +524,7 @@ var require_lodash = __commonJS({
         return value === value ? strictIndexOf(array, value, fromIndex) : baseFindIndex(array, baseIsNaN, fromIndex);
       }
       function baseIndexOfWith(array, value, fromIndex, comparator) {
-        var index = fromIndex - 1,
-          length = array.length;
+        var index = fromIndex - 1, length = array.length;
         while (++index < length) {
           if (comparator(array[index], value)) {
             return index;
@@ -728,18 +540,18 @@ var require_lodash = __commonJS({
         return length ? baseSum(array, iteratee) / length : NAN;
       }
       function baseProperty(key2) {
-        return function (object) {
+        return function(object) {
           return object == null ? undefined2 : object[key2];
         };
       }
       function basePropertyOf(object) {
-        return function (key2) {
+        return function(key2) {
           return object == null ? undefined2 : object[key2];
         };
       }
       function baseReduce(collection, iteratee, accumulator, initAccum, eachFunc) {
-        eachFunc(collection, function (value, index, collection2) {
-          accumulator = initAccum ? ((initAccum = false), value) : iteratee(accumulator, value, index, collection2);
+        eachFunc(collection, function(value, index, collection2) {
+          accumulator = initAccum ? (initAccum = false, value) : iteratee(accumulator, value, index, collection2);
         });
         return accumulator;
       }
@@ -752,9 +564,7 @@ var require_lodash = __commonJS({
         return array;
       }
       function baseSum(array, iteratee) {
-        var result,
-          index = -1,
-          length = array.length;
+        var result, index = -1, length = array.length;
         while (++index < length) {
           var current = iteratee(array[index]);
           if (current !== undefined2) {
@@ -764,15 +574,14 @@ var require_lodash = __commonJS({
         return result;
       }
       function baseTimes(n, iteratee) {
-        var index = -1,
-          result = Array(n);
+        var index = -1, result = Array(n);
         while (++index < n) {
           result[index] = iteratee(index);
         }
         return result;
       }
       function baseToPairs(object, props) {
-        return arrayMap(props, function (key2) {
+        return arrayMap(props, function(key2) {
           return [key2, object[key2]];
         });
       }
@@ -780,12 +589,12 @@ var require_lodash = __commonJS({
         return string ? string.slice(0, trimmedEndIndex(string) + 1).replace(reTrimStart, "") : string;
       }
       function baseUnary(func) {
-        return function (value) {
+        return function(value) {
           return func(value);
         };
       }
       function baseValues(object, props) {
-        return arrayMap(props, function (key2) {
+        return arrayMap(props, function(key2) {
           return object[key2];
         });
       }
@@ -793,19 +602,19 @@ var require_lodash = __commonJS({
         return cache.has(key2);
       }
       function charsStartIndex(strSymbols, chrSymbols) {
-        var index = -1,
-          length = strSymbols.length;
-        while (++index < length && baseIndexOf(chrSymbols, strSymbols[index], 0) > -1) {}
+        var index = -1, length = strSymbols.length;
+        while (++index < length && baseIndexOf(chrSymbols, strSymbols[index], 0) > -1) {
+        }
         return index;
       }
       function charsEndIndex(strSymbols, chrSymbols) {
         var index = strSymbols.length;
-        while (index-- && baseIndexOf(chrSymbols, strSymbols[index], 0) > -1) {}
+        while (index-- && baseIndexOf(chrSymbols, strSymbols[index], 0) > -1) {
+        }
         return index;
       }
       function countHolders(array, placeholder) {
-        var length = array.length,
-          result = 0;
+        var length = array.length, result = 0;
         while (length--) {
           if (array[length] === placeholder) {
             ++result;
@@ -828,31 +637,26 @@ var require_lodash = __commonJS({
         return reHasUnicodeWord.test(string);
       }
       function iteratorToArray(iterator) {
-        var data,
-          result = [];
+        var data, result = [];
         while (!(data = iterator.next()).done) {
           result.push(data.value);
         }
         return result;
       }
       function mapToArray(map) {
-        var index = -1,
-          result = Array(map.size);
-        map.forEach(function (value, key2) {
+        var index = -1, result = Array(map.size);
+        map.forEach(function(value, key2) {
           result[++index] = [key2, value];
         });
         return result;
       }
       function overArg(func, transform) {
-        return function (arg) {
+        return function(arg) {
           return func(transform(arg));
         };
       }
       function replaceHolders(array, placeholder) {
-        var index = -1,
-          length = array.length,
-          resIndex = 0,
-          result = [];
+        var index = -1, length = array.length, resIndex = 0, result = [];
         while (++index < length) {
           var value = array[index];
           if (value === placeholder || value === PLACEHOLDER) {
@@ -863,24 +667,21 @@ var require_lodash = __commonJS({
         return result;
       }
       function setToArray(set3) {
-        var index = -1,
-          result = Array(set3.size);
-        set3.forEach(function (value) {
+        var index = -1, result = Array(set3.size);
+        set3.forEach(function(value) {
           result[++index] = value;
         });
         return result;
       }
       function setToPairs(set3) {
-        var index = -1,
-          result = Array(set3.size);
-        set3.forEach(function (value) {
+        var index = -1, result = Array(set3.size);
+        set3.forEach(function(value) {
           result[++index] = [value, value];
         });
         return result;
       }
       function strictIndexOf(array, value, fromIndex) {
-        var index = fromIndex - 1,
-          length = array.length;
+        var index = fromIndex - 1, length = array.length;
         while (++index < length) {
           if (array[index] === value) {
             return index;
@@ -905,12 +706,13 @@ var require_lodash = __commonJS({
       }
       function trimmedEndIndex(string) {
         var index = string.length;
-        while (index-- && reWhitespace.test(string.charAt(index))) {}
+        while (index-- && reWhitespace.test(string.charAt(index))) {
+        }
         return index;
       }
       var unescapeHtmlChar = basePropertyOf(htmlUnescapes);
       function unicodeSize(string) {
-        var result = (reUnicode.lastIndex = 0);
+        var result = reUnicode.lastIndex = 0;
         while (reUnicode.test(string)) {
           ++result;
         }
@@ -922,89 +724,40 @@ var require_lodash = __commonJS({
       function unicodeWords(string) {
         return string.match(reUnicodeWord) || [];
       }
-      var runInContext = function runInContext2(context) {
+      var runInContext = (function runInContext2(context) {
         context = context == null ? root : _.defaults(root.Object(), context, _.pick(root, contextProps));
-        var Array2 = context.Array,
-          Date2 = context.Date,
-          Error2 = context.Error,
-          Function2 = context.Function,
-          Math2 = context.Math,
-          Object2 = context.Object,
-          RegExp2 = context.RegExp,
-          String2 = context.String,
-          TypeError2 = context.TypeError;
-        var arrayProto = Array2.prototype,
-          funcProto = Function2.prototype,
-          objectProto = Object2.prototype;
+        var Array2 = context.Array, Date2 = context.Date, Error2 = context.Error, Function2 = context.Function, Math2 = context.Math, Object2 = context.Object, RegExp2 = context.RegExp, String2 = context.String, TypeError2 = context.TypeError;
+        var arrayProto = Array2.prototype, funcProto = Function2.prototype, objectProto = Object2.prototype;
         var coreJsData = context["__core-js_shared__"];
         var funcToString = funcProto.toString;
         var hasOwnProperty = objectProto.hasOwnProperty;
         var idCounter = 0;
-        var maskSrcKey = (function () {
-          var uid = /[^.]+$/.exec((coreJsData && coreJsData.keys && coreJsData.keys.IE_PROTO) || "");
+        var maskSrcKey = (function() {
+          var uid = /[^.]+$/.exec(coreJsData && coreJsData.keys && coreJsData.keys.IE_PROTO || "");
           return uid ? "Symbol(src)_1." + uid : "";
         })();
         var nativeObjectToString = objectProto.toString;
         var objectCtorString = funcToString.call(Object2);
         var oldDash = root._;
         var reIsNative = RegExp2(
-          "^" +
-            funcToString
-              .call(hasOwnProperty)
-              .replace(reRegExpChar, "\\$&")
-              .replace(/hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g, "$1.*?") +
-            "$"
+          "^" + funcToString.call(hasOwnProperty).replace(reRegExpChar, "\\$&").replace(/hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g, "$1.*?") + "$"
         );
-        var Buffer2 = moduleExports ? context.Buffer : undefined2,
-          Symbol2 = context.Symbol,
-          Uint8Array2 = context.Uint8Array,
-          allocUnsafe = Buffer2 ? Buffer2.allocUnsafe : undefined2,
-          getPrototype = overArg(Object2.getPrototypeOf, Object2),
-          objectCreate = Object2.create,
-          propertyIsEnumerable = objectProto.propertyIsEnumerable,
-          splice = arrayProto.splice,
-          spreadableSymbol = Symbol2 ? Symbol2.isConcatSpreadable : undefined2,
-          symIterator = Symbol2 ? Symbol2.iterator : undefined2,
-          symToStringTag = Symbol2 ? Symbol2.toStringTag : undefined2;
-        var defineProperty = (function () {
+        var Buffer2 = moduleExports ? context.Buffer : undefined2, Symbol2 = context.Symbol, Uint8Array2 = context.Uint8Array, allocUnsafe = Buffer2 ? Buffer2.allocUnsafe : undefined2, getPrototype = overArg(Object2.getPrototypeOf, Object2), objectCreate = Object2.create, propertyIsEnumerable = objectProto.propertyIsEnumerable, splice = arrayProto.splice, spreadableSymbol = Symbol2 ? Symbol2.isConcatSpreadable : undefined2, symIterator = Symbol2 ? Symbol2.iterator : undefined2, symToStringTag = Symbol2 ? Symbol2.toStringTag : undefined2;
+        var defineProperty = (function() {
           try {
             var func = getNative(Object2, "defineProperty");
             func({}, "", {});
             return func;
-          } catch (e) {}
+          } catch (e) {
+          }
         })();
-        var ctxClearTimeout = context.clearTimeout !== root.clearTimeout && context.clearTimeout,
-          ctxNow = Date2 && Date2.now !== root.Date.now && Date2.now,
-          ctxSetTimeout = context.setTimeout !== root.setTimeout && context.setTimeout;
-        var nativeCeil = Math2.ceil,
-          nativeFloor = Math2.floor,
-          nativeGetSymbols = Object2.getOwnPropertySymbols,
-          nativeIsBuffer = Buffer2 ? Buffer2.isBuffer : undefined2,
-          nativeIsFinite = context.isFinite,
-          nativeJoin = arrayProto.join,
-          nativeKeys = overArg(Object2.keys, Object2),
-          nativeMax = Math2.max,
-          nativeMin = Math2.min,
-          nativeNow = Date2.now,
-          nativeParseInt = context.parseInt,
-          nativeRandom = Math2.random,
-          nativeReverse = arrayProto.reverse;
-        var DataView = getNative(context, "DataView"),
-          Map2 = getNative(context, "Map"),
-          Promise2 = getNative(context, "Promise"),
-          Set2 = getNative(context, "Set"),
-          WeakMap = getNative(context, "WeakMap"),
-          nativeCreate = getNative(Object2, "create");
+        var ctxClearTimeout = context.clearTimeout !== root.clearTimeout && context.clearTimeout, ctxNow = Date2 && Date2.now !== root.Date.now && Date2.now, ctxSetTimeout = context.setTimeout !== root.setTimeout && context.setTimeout;
+        var nativeCeil = Math2.ceil, nativeFloor = Math2.floor, nativeGetSymbols = Object2.getOwnPropertySymbols, nativeIsBuffer = Buffer2 ? Buffer2.isBuffer : undefined2, nativeIsFinite = context.isFinite, nativeJoin = arrayProto.join, nativeKeys = overArg(Object2.keys, Object2), nativeMax = Math2.max, nativeMin = Math2.min, nativeNow = Date2.now, nativeParseInt = context.parseInt, nativeRandom = Math2.random, nativeReverse = arrayProto.reverse;
+        var DataView = getNative(context, "DataView"), Map2 = getNative(context, "Map"), Promise2 = getNative(context, "Promise"), Set2 = getNative(context, "Set"), WeakMap = getNative(context, "WeakMap"), nativeCreate = getNative(Object2, "create");
         var metaMap = WeakMap && new WeakMap();
         var realNames = {};
-        var dataViewCtorString = toSource(DataView),
-          mapCtorString = toSource(Map2),
-          promiseCtorString = toSource(Promise2),
-          setCtorString = toSource(Set2),
-          weakMapCtorString = toSource(WeakMap);
-        var symbolProto = Symbol2 ? Symbol2.prototype : undefined2,
-          symbolValueOf = symbolProto ? symbolProto.valueOf : undefined2,
-          symbolToString = symbolProto ? symbolProto.toString : undefined2;
+        var dataViewCtorString = toSource(DataView), mapCtorString = toSource(Map2), promiseCtorString = toSource(Promise2), setCtorString = toSource(Set2), weakMapCtorString = toSource(WeakMap);
+        var symbolProto = Symbol2 ? Symbol2.prototype : undefined2, symbolValueOf = symbolProto ? symbolProto.valueOf : undefined2, symbolToString = symbolProto ? symbolProto.toString : undefined2;
         function lodash(value) {
           if (isObjectLike(value) && !isArray(value) && !(value instanceof LazyWrapper)) {
             if (value instanceof LodashWrapper) {
@@ -1016,9 +769,10 @@ var require_lodash = __commonJS({
           }
           return new LodashWrapper(value);
         }
-        var baseCreate = /* @__PURE__ */ (function () {
-          function object() {}
-          return function (proto) {
+        var baseCreate = /* @__PURE__ */ (function() {
+          function object() {
+          }
+          return function(proto) {
             if (!isObject(proto)) {
               return {};
             }
@@ -1031,7 +785,8 @@ var require_lodash = __commonJS({
             return result2;
           };
         })();
-        function baseLodash() {}
+        function baseLodash() {
+        }
         function LodashWrapper(value, chainAll) {
           this.__wrapped__ = value;
           this.__actions__ = [];
@@ -1046,43 +801,43 @@ var require_lodash = __commonJS({
            * @memberOf _.templateSettings
            * @type {RegExp}
            */
-          escape: reEscape,
+          "escape": reEscape,
           /**
            * Used to detect code to be evaluated.
            *
            * @memberOf _.templateSettings
            * @type {RegExp}
            */
-          evaluate: reEvaluate,
+          "evaluate": reEvaluate,
           /**
            * Used to detect `data` property values to inject.
            *
            * @memberOf _.templateSettings
            * @type {RegExp}
            */
-          interpolate: reInterpolate,
+          "interpolate": reInterpolate,
           /**
            * Used to reference the data object in the template text.
            *
            * @memberOf _.templateSettings
            * @type {string}
            */
-          variable: "",
+          "variable": "",
           /**
            * Used to import variables into the compiled template.
            *
            * @memberOf _.templateSettings
            * @type {Object}
            */
-          imports: {
+          "imports": {
             /**
              * A reference to the `lodash` function.
              *
              * @memberOf _.templateSettings.imports
              * @type {Function}
              */
-            _: lodash,
-          },
+            "_": lodash
+          }
         };
         lodash.prototype = baseLodash.prototype;
         lodash.prototype.constructor = lodash;
@@ -1119,52 +874,35 @@ var require_lodash = __commonJS({
           return result2;
         }
         function lazyValue() {
-          var array = this.__wrapped__.value(),
-            dir = this.__dir__,
-            isArr = isArray(array),
-            isRight = dir < 0,
-            arrLength = isArr ? array.length : 0,
-            view = getView(0, arrLength, this.__views__),
-            start = view.start,
-            end = view.end,
-            length = end - start,
-            index = isRight ? end : start - 1,
-            iteratees = this.__iteratees__,
-            iterLength = iteratees.length,
-            resIndex = 0,
-            takeCount = nativeMin(length, this.__takeCount__);
-          if (!isArr || (!isRight && arrLength == length && takeCount == length)) {
+          var array = this.__wrapped__.value(), dir = this.__dir__, isArr = isArray(array), isRight = dir < 0, arrLength = isArr ? array.length : 0, view = getView(0, arrLength, this.__views__), start = view.start, end = view.end, length = end - start, index = isRight ? end : start - 1, iteratees = this.__iteratees__, iterLength = iteratees.length, resIndex = 0, takeCount = nativeMin(length, this.__takeCount__);
+          if (!isArr || !isRight && arrLength == length && takeCount == length) {
             return baseWrapperValue(array, this.__actions__);
           }
           var result2 = [];
-          outer: while (length-- && resIndex < takeCount) {
-            index += dir;
-            var iterIndex = -1,
-              value = array[index];
-            while (++iterIndex < iterLength) {
-              var data = iteratees[iterIndex],
-                iteratee2 = data.iteratee,
-                type = data.type,
-                computed = iteratee2(value);
-              if (type == LAZY_MAP_FLAG) {
-                value = computed;
-              } else if (!computed) {
-                if (type == LAZY_FILTER_FLAG) {
-                  continue outer;
-                } else {
-                  break outer;
+          outer:
+            while (length-- && resIndex < takeCount) {
+              index += dir;
+              var iterIndex = -1, value = array[index];
+              while (++iterIndex < iterLength) {
+                var data = iteratees[iterIndex], iteratee2 = data.iteratee, type = data.type, computed = iteratee2(value);
+                if (type == LAZY_MAP_FLAG) {
+                  value = computed;
+                } else if (!computed) {
+                  if (type == LAZY_FILTER_FLAG) {
+                    continue outer;
+                  } else {
+                    break outer;
+                  }
                 }
               }
+              result2[resIndex++] = value;
             }
-            result2[resIndex++] = value;
-          }
           return result2;
         }
         LazyWrapper.prototype = baseCreate(baseLodash.prototype);
         LazyWrapper.prototype.constructor = LazyWrapper;
         function Hash(entries) {
-          var index = -1,
-            length = entries == null ? 0 : entries.length;
+          var index = -1, length = entries == null ? 0 : entries.length;
           this.clear();
           while (++index < length) {
             var entry = entries[index];
@@ -1204,8 +942,7 @@ var require_lodash = __commonJS({
         Hash.prototype.has = hashHas;
         Hash.prototype.set = hashSet;
         function ListCache(entries) {
-          var index = -1,
-            length = entries == null ? 0 : entries.length;
+          var index = -1, length = entries == null ? 0 : entries.length;
           this.clear();
           while (++index < length) {
             var entry = entries[index];
@@ -1217,8 +954,7 @@ var require_lodash = __commonJS({
           this.size = 0;
         }
         function listCacheDelete(key2) {
-          var data = this.__data__,
-            index = assocIndexOf(data, key2);
+          var data = this.__data__, index = assocIndexOf(data, key2);
           if (index < 0) {
             return false;
           }
@@ -1232,16 +968,14 @@ var require_lodash = __commonJS({
           return true;
         }
         function listCacheGet(key2) {
-          var data = this.__data__,
-            index = assocIndexOf(data, key2);
+          var data = this.__data__, index = assocIndexOf(data, key2);
           return index < 0 ? undefined2 : data[index][1];
         }
         function listCacheHas(key2) {
           return assocIndexOf(this.__data__, key2) > -1;
         }
         function listCacheSet(key2, value) {
-          var data = this.__data__,
-            index = assocIndexOf(data, key2);
+          var data = this.__data__, index = assocIndexOf(data, key2);
           if (index < 0) {
             ++this.size;
             data.push([key2, value]);
@@ -1256,8 +990,7 @@ var require_lodash = __commonJS({
         ListCache.prototype.has = listCacheHas;
         ListCache.prototype.set = listCacheSet;
         function MapCache(entries) {
-          var index = -1,
-            length = entries == null ? 0 : entries.length;
+          var index = -1, length = entries == null ? 0 : entries.length;
           this.clear();
           while (++index < length) {
             var entry = entries[index];
@@ -1267,9 +1000,9 @@ var require_lodash = __commonJS({
         function mapCacheClear() {
           this.size = 0;
           this.__data__ = {
-            hash: new Hash(),
-            map: new (Map2 || ListCache)(),
-            string: new Hash(),
+            "hash": new Hash(),
+            "map": new (Map2 || ListCache)(),
+            "string": new Hash()
           };
         }
         function mapCacheDelete(key2) {
@@ -1284,8 +1017,7 @@ var require_lodash = __commonJS({
           return getMapData(this, key2).has(key2);
         }
         function mapCacheSet(key2, value) {
-          var data = getMapData(this, key2),
-            size2 = data.size;
+          var data = getMapData(this, key2), size2 = data.size;
           data.set(key2, value);
           this.size += data.size == size2 ? 0 : 1;
           return this;
@@ -1296,8 +1028,7 @@ var require_lodash = __commonJS({
         MapCache.prototype.has = mapCacheHas;
         MapCache.prototype.set = mapCacheSet;
         function SetCache(values2) {
-          var index = -1,
-            length = values2 == null ? 0 : values2.length;
+          var index = -1, length = values2 == null ? 0 : values2.length;
           this.__data__ = new MapCache();
           while (++index < length) {
             this.add(values2[index]);
@@ -1313,7 +1044,7 @@ var require_lodash = __commonJS({
         SetCache.prototype.add = SetCache.prototype.push = setCacheAdd;
         SetCache.prototype.has = setCacheHas;
         function Stack(entries) {
-          var data = (this.__data__ = new ListCache(entries));
+          var data = this.__data__ = new ListCache(entries);
           this.size = data.size;
         }
         function stackClear() {
@@ -1321,8 +1052,7 @@ var require_lodash = __commonJS({
           this.size = 0;
         }
         function stackDelete(key2) {
-          var data = this.__data__,
-            result2 = data["delete"](key2);
+          var data = this.__data__, result2 = data["delete"](key2);
           this.size = data.size;
           return result2;
         }
@@ -1353,24 +1083,13 @@ var require_lodash = __commonJS({
         Stack.prototype.has = stackHas;
         Stack.prototype.set = stackSet;
         function arrayLikeKeys(value, inherited) {
-          var isArr = isArray(value),
-            isArg = !isArr && isArguments(value),
-            isBuff = !isArr && !isArg && isBuffer(value),
-            isType = !isArr && !isArg && !isBuff && isTypedArray(value),
-            skipIndexes = isArr || isArg || isBuff || isType,
-            result2 = skipIndexes ? baseTimes(value.length, String2) : [],
-            length = result2.length;
+          var isArr = isArray(value), isArg = !isArr && isArguments(value), isBuff = !isArr && !isArg && isBuffer(value), isType = !isArr && !isArg && !isBuff && isTypedArray(value), skipIndexes = isArr || isArg || isBuff || isType, result2 = skipIndexes ? baseTimes(value.length, String2) : [], length = result2.length;
           for (var key2 in value) {
-            if (
-              (inherited || hasOwnProperty.call(value, key2)) &&
-              !(
-                skipIndexes && // Safari 9 has enumerable `arguments.length` in strict mode.
-                (key2 == "length" || // Node.js 0.10 has enumerable non-index properties on buffers.
-                  (isBuff && (key2 == "offset" || key2 == "parent")) || // PhantomJS 2 has enumerable non-index properties on typed arrays.
-                  (isType && (key2 == "buffer" || key2 == "byteLength" || key2 == "byteOffset")) || // Skip index properties.
-                  isIndex(key2, length))
-              )
-            ) {
+            if ((inherited || hasOwnProperty.call(value, key2)) && !(skipIndexes && // Safari 9 has enumerable `arguments.length` in strict mode.
+            (key2 == "length" || // Node.js 0.10 has enumerable non-index properties on buffers.
+            isBuff && (key2 == "offset" || key2 == "parent") || // PhantomJS 2 has enumerable non-index properties on typed arrays.
+            isType && (key2 == "buffer" || key2 == "byteLength" || key2 == "byteOffset") || // Skip index properties.
+            isIndex(key2, length)))) {
               result2.push(key2);
             }
           }
@@ -1387,16 +1106,13 @@ var require_lodash = __commonJS({
           return shuffleSelf(copyArray(array));
         }
         function assignMergeValue(object, key2, value) {
-          if ((value !== undefined2 && !eq(object[key2], value)) || (value === undefined2 && !(key2 in object))) {
+          if (value !== undefined2 && !eq(object[key2], value) || value === undefined2 && !(key2 in object)) {
             baseAssignValue(object, key2, value);
           }
         }
         function assignValue(object, key2, value) {
           var objValue = object[key2];
-          if (
-            !(hasOwnProperty.call(object, key2) && eq(objValue, value)) ||
-            (value === undefined2 && !(key2 in object))
-          ) {
+          if (!(hasOwnProperty.call(object, key2) && eq(objValue, value)) || value === undefined2 && !(key2 in object)) {
             baseAssignValue(object, key2, value);
           }
         }
@@ -1410,7 +1126,7 @@ var require_lodash = __commonJS({
           return -1;
         }
         function baseAggregator(collection, setter, iteratee2, accumulator) {
-          baseEach(collection, function (value, key2, collection2) {
+          baseEach(collection, function(value, key2, collection2) {
             setter(accumulator, value, iteratee2(value), collection2);
           });
           return accumulator;
@@ -1424,20 +1140,17 @@ var require_lodash = __commonJS({
         function baseAssignValue(object, key2, value) {
           if (key2 == "__proto__" && defineProperty) {
             defineProperty(object, key2, {
-              configurable: true,
-              enumerable: true,
-              value: value,
-              writable: true,
+              "configurable": true,
+              "enumerable": true,
+              "value": value,
+              "writable": true
             });
           } else {
             object[key2] = value;
           }
         }
         function baseAt(object, paths) {
-          var index = -1,
-            length = paths.length,
-            result2 = Array2(length),
-            skip = object == null;
+          var index = -1, length = paths.length, result2 = Array2(length), skip = object == null;
           while (++index < length) {
             result2[index] = skip ? undefined2 : get2(object, paths[index]);
           }
@@ -1455,10 +1168,7 @@ var require_lodash = __commonJS({
           return number;
         }
         function baseClone(value, bitmask, customizer2, key2, object, stack) {
-          var result2,
-            isDeep = bitmask & CLONE_DEEP_FLAG,
-            isFlat = bitmask & CLONE_FLAT_FLAG,
-            isFull = bitmask & CLONE_SYMBOLS_FLAG;
+          var result2, isDeep = bitmask & CLONE_DEEP_FLAG, isFlat = bitmask & CLONE_FLAT_FLAG, isFull = bitmask & CLONE_SYMBOLS_FLAG;
           if (customizer2) {
             result2 = object ? customizer2(value, key2, object, stack) : customizer2(value);
           }
@@ -1475,17 +1185,14 @@ var require_lodash = __commonJS({
               return copyArray(value, result2);
             }
           } else {
-            var tag = getTag(value),
-              isFunc = tag == funcTag || tag == genTag;
+            var tag = getTag(value), isFunc = tag == funcTag || tag == genTag;
             if (isBuffer(value)) {
               return cloneBuffer(value, isDeep);
             }
-            if (tag == objectTag || tag == argsTag || (isFunc && !object)) {
+            if (tag == objectTag || tag == argsTag || isFunc && !object) {
               result2 = isFlat || isFunc ? {} : initCloneObject(value);
               if (!isDeep) {
-                return isFlat
-                  ? copySymbolsIn(value, baseAssignIn(result2, value))
-                  : copySymbols(value, baseAssign(result2, value));
+                return isFlat ? copySymbolsIn(value, baseAssignIn(result2, value)) : copySymbols(value, baseAssign(result2, value));
               }
             } else {
               if (!cloneableTags[tag]) {
@@ -1501,17 +1208,17 @@ var require_lodash = __commonJS({
           }
           stack.set(value, result2);
           if (isSet(value)) {
-            value.forEach(function (subValue) {
+            value.forEach(function(subValue) {
               result2.add(baseClone(subValue, bitmask, customizer2, subValue, value, stack));
             });
           } else if (isMap(value)) {
-            value.forEach(function (subValue, key3) {
+            value.forEach(function(subValue, key3) {
               result2.set(key3, baseClone(subValue, bitmask, customizer2, key3, value, stack));
             });
           }
-          var keysFunc = isFull ? (isFlat ? getAllKeysIn : getAllKeys) : isFlat ? keysIn : keys;
+          var keysFunc = isFull ? isFlat ? getAllKeysIn : getAllKeys : isFlat ? keysIn : keys;
           var props = isArr ? undefined2 : keysFunc(value);
-          arrayEach(props || value, function (subValue, key3) {
+          arrayEach(props || value, function(subValue, key3) {
             if (props) {
               key3 = subValue;
               subValue = value[key3];
@@ -1522,7 +1229,7 @@ var require_lodash = __commonJS({
         }
         function baseConforms(source) {
           var props = keys(source);
-          return function (object) {
+          return function(object) {
             return baseConformsTo(object, source, props);
           };
         }
@@ -1533,10 +1240,8 @@ var require_lodash = __commonJS({
           }
           object = Object2(object);
           while (length--) {
-            var key2 = props[length],
-              predicate = source[key2],
-              value = object[key2];
-            if ((value === undefined2 && !(key2 in object)) || !predicate(value)) {
+            var key2 = props[length], predicate = source[key2], value = object[key2];
+            if (value === undefined2 && !(key2 in object) || !predicate(value)) {
               return false;
             }
           }
@@ -1546,17 +1251,12 @@ var require_lodash = __commonJS({
           if (typeof func != "function") {
             throw new TypeError2(FUNC_ERROR_TEXT);
           }
-          return setTimeout(function () {
+          return setTimeout(function() {
             func.apply(undefined2, args);
           }, wait);
         }
         function baseDifference(array, values2, iteratee2, comparator) {
-          var index = -1,
-            includes2 = arrayIncludes,
-            isCommon = true,
-            length = array.length,
-            result2 = [],
-            valuesLength = values2.length;
+          var index = -1, includes2 = arrayIncludes, isCommon = true, length = array.length, result2 = [], valuesLength = values2.length;
           if (!length) {
             return result2;
           }
@@ -1571,46 +1271,40 @@ var require_lodash = __commonJS({
             isCommon = false;
             values2 = new SetCache(values2);
           }
-          outer: while (++index < length) {
-            var value = array[index],
-              computed = iteratee2 == null ? value : iteratee2(value);
-            value = comparator || value !== 0 ? value : 0;
-            if (isCommon && computed === computed) {
-              var valuesIndex = valuesLength;
-              while (valuesIndex--) {
-                if (values2[valuesIndex] === computed) {
-                  continue outer;
+          outer:
+            while (++index < length) {
+              var value = array[index], computed = iteratee2 == null ? value : iteratee2(value);
+              value = comparator || value !== 0 ? value : 0;
+              if (isCommon && computed === computed) {
+                var valuesIndex = valuesLength;
+                while (valuesIndex--) {
+                  if (values2[valuesIndex] === computed) {
+                    continue outer;
+                  }
                 }
+                result2.push(value);
+              } else if (!includes2(values2, computed, comparator)) {
+                result2.push(value);
               }
-              result2.push(value);
-            } else if (!includes2(values2, computed, comparator)) {
-              result2.push(value);
             }
-          }
           return result2;
         }
         var baseEach = createBaseEach(baseForOwn);
         var baseEachRight = createBaseEach(baseForOwnRight, true);
         function baseEvery(collection, predicate) {
           var result2 = true;
-          baseEach(collection, function (value, index, collection2) {
+          baseEach(collection, function(value, index, collection2) {
             result2 = !!predicate(value, index, collection2);
             return result2;
           });
           return result2;
         }
         function baseExtremum(array, iteratee2, comparator) {
-          var index = -1,
-            length = array.length;
+          var index = -1, length = array.length;
           while (++index < length) {
-            var value = array[index],
-              current = iteratee2(value);
-            if (
-              current != null &&
-              (computed === undefined2 ? current === current && !isSymbol(current) : comparator(current, computed))
-            ) {
-              var computed = current,
-                result2 = value;
+            var value = array[index], current = iteratee2(value);
+            if (current != null && (computed === undefined2 ? current === current && !isSymbol(current) : comparator(current, computed))) {
+              var computed = current, result2 = value;
             }
           }
           return result2;
@@ -1633,7 +1327,7 @@ var require_lodash = __commonJS({
         }
         function baseFilter(collection, predicate) {
           var result2 = [];
-          baseEach(collection, function (value, index, collection2) {
+          baseEach(collection, function(value, index, collection2) {
             if (predicate(value, index, collection2)) {
               result2.push(value);
             }
@@ -1641,8 +1335,7 @@ var require_lodash = __commonJS({
           return result2;
         }
         function baseFlatten(array, depth, predicate, isStrict, result2) {
-          var index = -1,
-            length = array.length;
+          var index = -1, length = array.length;
           predicate || (predicate = isFlattenable);
           result2 || (result2 = []);
           while (++index < length) {
@@ -1668,14 +1361,13 @@ var require_lodash = __commonJS({
           return object && baseForRight(object, iteratee2, keys);
         }
         function baseFunctions(object, props) {
-          return arrayFilter(props, function (key2) {
+          return arrayFilter(props, function(key2) {
             return isFunction(object[key2]);
           });
         }
         function baseGet(object, path) {
           path = castPath(path, object);
-          var index = 0,
-            length = path.length;
+          var index = 0, length = path.length;
           while (object != null && index < length) {
             object = object[toKey(path[index++])];
           }
@@ -1704,49 +1396,39 @@ var require_lodash = __commonJS({
           return number >= nativeMin(start, end) && number < nativeMax(start, end);
         }
         function baseIntersection(arrays, iteratee2, comparator) {
-          var includes2 = comparator ? arrayIncludesWith : arrayIncludes,
-            length = arrays[0].length,
-            othLength = arrays.length,
-            othIndex = othLength,
-            caches = Array2(othLength),
-            maxLength = Infinity,
-            result2 = [];
+          var includes2 = comparator ? arrayIncludesWith : arrayIncludes, length = arrays[0].length, othLength = arrays.length, othIndex = othLength, caches = Array2(othLength), maxLength = Infinity, result2 = [];
           while (othIndex--) {
             var array = arrays[othIndex];
             if (othIndex && iteratee2) {
               array = arrayMap(array, baseUnary(iteratee2));
             }
             maxLength = nativeMin(array.length, maxLength);
-            caches[othIndex] =
-              !comparator && (iteratee2 || (length >= 120 && array.length >= 120))
-                ? new SetCache(othIndex && array)
-                : undefined2;
+            caches[othIndex] = !comparator && (iteratee2 || length >= 120 && array.length >= 120) ? new SetCache(othIndex && array) : undefined2;
           }
           array = arrays[0];
-          var index = -1,
-            seen = caches[0];
-          outer: while (++index < length && result2.length < maxLength) {
-            var value = array[index],
-              computed = iteratee2 ? iteratee2(value) : value;
-            value = comparator || value !== 0 ? value : 0;
-            if (!(seen ? cacheHas(seen, computed) : includes2(result2, computed, comparator))) {
-              othIndex = othLength;
-              while (--othIndex) {
-                var cache = caches[othIndex];
-                if (!(cache ? cacheHas(cache, computed) : includes2(arrays[othIndex], computed, comparator))) {
-                  continue outer;
+          var index = -1, seen = caches[0];
+          outer:
+            while (++index < length && result2.length < maxLength) {
+              var value = array[index], computed = iteratee2 ? iteratee2(value) : value;
+              value = comparator || value !== 0 ? value : 0;
+              if (!(seen ? cacheHas(seen, computed) : includes2(result2, computed, comparator))) {
+                othIndex = othLength;
+                while (--othIndex) {
+                  var cache = caches[othIndex];
+                  if (!(cache ? cacheHas(cache, computed) : includes2(arrays[othIndex], computed, comparator))) {
+                    continue outer;
+                  }
                 }
+                if (seen) {
+                  seen.push(computed);
+                }
+                result2.push(value);
               }
-              if (seen) {
-                seen.push(computed);
-              }
-              result2.push(value);
             }
-          }
           return result2;
         }
         function baseInverter(object, setter, iteratee2, accumulator) {
-          baseForOwn(object, function (value, key2, object2) {
+          baseForOwn(object, function(value, key2, object2) {
             setter(accumulator, iteratee2(value), key2, object2);
           });
           return accumulator;
@@ -1770,21 +1452,16 @@ var require_lodash = __commonJS({
           if (value === other) {
             return true;
           }
-          if (value == null || other == null || (!isObjectLike(value) && !isObjectLike(other))) {
+          if (value == null || other == null || !isObjectLike(value) && !isObjectLike(other)) {
             return value !== value && other !== other;
           }
           return baseIsEqualDeep(value, other, bitmask, customizer2, baseIsEqual, stack);
         }
         function baseIsEqualDeep(object, other, bitmask, customizer2, equalFunc, stack) {
-          var objIsArr = isArray(object),
-            othIsArr = isArray(other),
-            objTag = objIsArr ? arrayTag : getTag(object),
-            othTag = othIsArr ? arrayTag : getTag(other);
+          var objIsArr = isArray(object), othIsArr = isArray(other), objTag = objIsArr ? arrayTag : getTag(object), othTag = othIsArr ? arrayTag : getTag(other);
           objTag = objTag == argsTag ? objectTag : objTag;
           othTag = othTag == argsTag ? objectTag : othTag;
-          var objIsObj = objTag == objectTag,
-            othIsObj = othTag == objectTag,
-            isSameTag = objTag == othTag;
+          var objIsObj = objTag == objectTag, othIsObj = othTag == objectTag, isSameTag = objTag == othTag;
           if (isSameTag && isBuffer(object)) {
             if (!isBuffer(other)) {
               return false;
@@ -1794,16 +1471,12 @@ var require_lodash = __commonJS({
           }
           if (isSameTag && !objIsObj) {
             stack || (stack = new Stack());
-            return objIsArr || isTypedArray(object)
-              ? equalArrays(object, other, bitmask, customizer2, equalFunc, stack)
-              : equalByTag(object, other, objTag, bitmask, customizer2, equalFunc, stack);
+            return objIsArr || isTypedArray(object) ? equalArrays(object, other, bitmask, customizer2, equalFunc, stack) : equalByTag(object, other, objTag, bitmask, customizer2, equalFunc, stack);
           }
           if (!(bitmask & COMPARE_PARTIAL_FLAG)) {
-            var objIsWrapped = objIsObj && hasOwnProperty.call(object, "__wrapped__"),
-              othIsWrapped = othIsObj && hasOwnProperty.call(other, "__wrapped__");
+            var objIsWrapped = objIsObj && hasOwnProperty.call(object, "__wrapped__"), othIsWrapped = othIsObj && hasOwnProperty.call(other, "__wrapped__");
             if (objIsWrapped || othIsWrapped) {
-              var objUnwrapped = objIsWrapped ? object.value() : object,
-                othUnwrapped = othIsWrapped ? other.value() : other;
+              var objUnwrapped = objIsWrapped ? object.value() : object, othUnwrapped = othIsWrapped ? other.value() : other;
               stack || (stack = new Stack());
               return equalFunc(objUnwrapped, othUnwrapped, bitmask, customizer2, stack);
             }
@@ -1818,9 +1491,7 @@ var require_lodash = __commonJS({
           return isObjectLike(value) && getTag(value) == mapTag;
         }
         function baseIsMatch(object, source, matchData, customizer2) {
-          var index = matchData.length,
-            length = index,
-            noCustomizer = !customizer2;
+          var index = matchData.length, length = index, noCustomizer = !customizer2;
           if (object == null) {
             return !length;
           }
@@ -1833,9 +1504,7 @@ var require_lodash = __commonJS({
           }
           while (++index < length) {
             data = matchData[index];
-            var key2 = data[0],
-              objValue = object[key2],
-              srcValue = data[1];
+            var key2 = data[0], objValue = object[key2], srcValue = data[1];
             if (noCustomizer && data[2]) {
               if (objValue === undefined2 && !(key2 in object)) {
                 return false;
@@ -1845,11 +1514,7 @@ var require_lodash = __commonJS({
               if (customizer2) {
                 var result2 = customizer2(objValue, srcValue, key2, object, source, stack);
               }
-              if (
-                !(result2 === undefined2
-                  ? baseIsEqual(srcValue, objValue, COMPARE_PARTIAL_FLAG | COMPARE_UNORDERED_FLAG, customizer2, stack)
-                  : result2)
-              ) {
+              if (!(result2 === undefined2 ? baseIsEqual(srcValue, objValue, COMPARE_PARTIAL_FLAG | COMPARE_UNORDERED_FLAG, customizer2, stack) : result2)) {
                 return false;
               }
             }
@@ -1900,8 +1565,7 @@ var require_lodash = __commonJS({
           if (!isObject(object)) {
             return nativeKeysIn(object);
           }
-          var isProto = isPrototype(object),
-            result2 = [];
+          var isProto = isPrototype(object), result2 = [];
           for (var key2 in object) {
             if (!(key2 == "constructor" && (isProto || !hasOwnProperty.call(object, key2)))) {
               result2.push(key2);
@@ -1913,9 +1577,8 @@ var require_lodash = __commonJS({
           return value < other;
         }
         function baseMap(collection, iteratee2) {
-          var index = -1,
-            result2 = isArrayLike(collection) ? Array2(collection.length) : [];
-          baseEach(collection, function (value, key2, collection2) {
+          var index = -1, result2 = isArrayLike(collection) ? Array2(collection.length) : [];
+          baseEach(collection, function(value, key2, collection2) {
             result2[++index] = iteratee2(value, key2, collection2);
           });
           return result2;
@@ -1925,7 +1588,7 @@ var require_lodash = __commonJS({
           if (matchData.length == 1 && matchData[0][2]) {
             return matchesStrictComparable(matchData[0][0], matchData[0][1]);
           }
-          return function (object) {
+          return function(object) {
             return object === source || baseIsMatch(object, source, matchData);
           };
         }
@@ -1933,40 +1596,30 @@ var require_lodash = __commonJS({
           if (isKey(path) && isStrictComparable(srcValue)) {
             return matchesStrictComparable(toKey(path), srcValue);
           }
-          return function (object) {
+          return function(object) {
             var objValue = get2(object, path);
-            return objValue === undefined2 && objValue === srcValue
-              ? hasIn(object, path)
-              : baseIsEqual(srcValue, objValue, COMPARE_PARTIAL_FLAG | COMPARE_UNORDERED_FLAG);
+            return objValue === undefined2 && objValue === srcValue ? hasIn(object, path) : baseIsEqual(srcValue, objValue, COMPARE_PARTIAL_FLAG | COMPARE_UNORDERED_FLAG);
           };
         }
         function baseMerge(object, source, srcIndex, customizer2, stack) {
           if (object === source) {
             return;
           }
-          baseFor(
-            source,
-            function (srcValue, key2) {
-              stack || (stack = new Stack());
-              if (isObject(srcValue)) {
-                baseMergeDeep(object, source, key2, srcIndex, baseMerge, customizer2, stack);
-              } else {
-                var newValue = customizer2
-                  ? customizer2(safeGet(object, key2), srcValue, key2 + "", object, source, stack)
-                  : undefined2;
-                if (newValue === undefined2) {
-                  newValue = srcValue;
-                }
-                assignMergeValue(object, key2, newValue);
+          baseFor(source, function(srcValue, key2) {
+            stack || (stack = new Stack());
+            if (isObject(srcValue)) {
+              baseMergeDeep(object, source, key2, srcIndex, baseMerge, customizer2, stack);
+            } else {
+              var newValue = customizer2 ? customizer2(safeGet(object, key2), srcValue, key2 + "", object, source, stack) : undefined2;
+              if (newValue === undefined2) {
+                newValue = srcValue;
               }
-            },
-            keysIn
-          );
+              assignMergeValue(object, key2, newValue);
+            }
+          }, keysIn);
         }
         function baseMergeDeep(object, source, key2, srcIndex, mergeFunc, customizer2, stack) {
-          var objValue = safeGet(object, key2),
-            srcValue = safeGet(source, key2),
-            stacked = stack.get(srcValue);
+          var objValue = safeGet(object, key2), srcValue = safeGet(source, key2), stacked = stack.get(srcValue);
           if (stacked) {
             assignMergeValue(object, key2, stacked);
             return;
@@ -1974,9 +1627,7 @@ var require_lodash = __commonJS({
           var newValue = customizer2 ? customizer2(objValue, srcValue, key2 + "", object, source, stack) : undefined2;
           var isCommon = newValue === undefined2;
           if (isCommon) {
-            var isArr = isArray(srcValue),
-              isBuff = !isArr && isBuffer(srcValue),
-              isTyped = !isArr && !isBuff && isTypedArray(srcValue);
+            var isArr = isArray(srcValue), isBuff = !isArr && isBuffer(srcValue), isTyped = !isArr && !isBuff && isTypedArray(srcValue);
             newValue = srcValue;
             if (isArr || isBuff || isTyped) {
               if (isArray(objValue)) {
@@ -2020,9 +1671,9 @@ var require_lodash = __commonJS({
         }
         function baseOrderBy(collection, iteratees, orders) {
           if (iteratees.length) {
-            iteratees = arrayMap(iteratees, function (iteratee2) {
+            iteratees = arrayMap(iteratees, function(iteratee2) {
               if (isArray(iteratee2)) {
-                return function (value) {
+                return function(value) {
                   return baseGet(value, iteratee2.length === 1 ? iteratee2[0] : iteratee2);
                 };
               }
@@ -2033,28 +1684,25 @@ var require_lodash = __commonJS({
           }
           var index = -1;
           iteratees = arrayMap(iteratees, baseUnary(getIteratee()));
-          var result2 = baseMap(collection, function (value, key2, collection2) {
-            var criteria = arrayMap(iteratees, function (iteratee2) {
+          var result2 = baseMap(collection, function(value, key2, collection2) {
+            var criteria = arrayMap(iteratees, function(iteratee2) {
               return iteratee2(value);
             });
-            return { criteria: criteria, index: ++index, value: value };
+            return { "criteria": criteria, "index": ++index, "value": value };
           });
-          return baseSortBy(result2, function (object, other) {
+          return baseSortBy(result2, function(object, other) {
             return compareMultiple(object, other, orders);
           });
         }
         function basePick(object, paths) {
-          return basePickBy(object, paths, function (value, path) {
+          return basePickBy(object, paths, function(value, path) {
             return hasIn(object, path);
           });
         }
         function basePickBy(object, paths, predicate) {
-          var index = -1,
-            length = paths.length,
-            result2 = {};
+          var index = -1, length = paths.length, result2 = {};
           while (++index < length) {
-            var path = paths[index],
-              value = baseGet(object, path);
+            var path = paths[index], value = baseGet(object, path);
             if (predicate(value, path)) {
               baseSet(result2, castPath(path, object), value);
             }
@@ -2062,15 +1710,12 @@ var require_lodash = __commonJS({
           return result2;
         }
         function basePropertyDeep(path) {
-          return function (object) {
+          return function(object) {
             return baseGet(object, path);
           };
         }
         function basePullAll(array, values2, iteratee2, comparator) {
-          var indexOf2 = comparator ? baseIndexOfWith : baseIndexOf,
-            index = -1,
-            length = values2.length,
-            seen = array;
+          var indexOf2 = comparator ? baseIndexOfWith : baseIndexOf, index = -1, length = values2.length, seen = array;
           if (array === values2) {
             values2 = copyArray(values2);
           }
@@ -2078,9 +1723,7 @@ var require_lodash = __commonJS({
             seen = arrayMap(array, baseUnary(iteratee2));
           }
           while (++index < length) {
-            var fromIndex = 0,
-              value = values2[index],
-              computed = iteratee2 ? iteratee2(value) : value;
+            var fromIndex = 0, value = values2[index], computed = iteratee2 ? iteratee2(value) : value;
             while ((fromIndex = indexOf2(seen, computed, fromIndex, comparator)) > -1) {
               if (seen !== array) {
                 splice.call(seen, fromIndex, 1);
@@ -2091,8 +1734,7 @@ var require_lodash = __commonJS({
           return array;
         }
         function basePullAt(array, indexes) {
-          var length = array ? indexes.length : 0,
-            lastIndex = length - 1;
+          var length = array ? indexes.length : 0, lastIndex = length - 1;
           while (length--) {
             var index = indexes[length];
             if (length == lastIndex || index !== previous) {
@@ -2110,9 +1752,7 @@ var require_lodash = __commonJS({
           return lower + nativeFloor(nativeRandom() * (upper - lower + 1));
         }
         function baseRange(start, end, step, fromRight) {
-          var index = -1,
-            length = nativeMax(nativeCeil((end - start) / (step || 1)), 0),
-            result2 = Array2(length);
+          var index = -1, length = nativeMax(nativeCeil((end - start) / (step || 1)), 0), result2 = Array2(length);
           while (length--) {
             result2[fromRight ? length : ++index] = start;
             start += step;
@@ -2150,13 +1790,9 @@ var require_lodash = __commonJS({
             return object;
           }
           path = castPath(path, object);
-          var index = -1,
-            length = path.length,
-            lastIndex = length - 1,
-            nested = object;
+          var index = -1, length = path.length, lastIndex = length - 1, nested = object;
           while (nested != null && ++index < length) {
-            var key2 = toKey(path[index]),
-              newValue = value;
+            var key2 = toKey(path[index]), newValue = value;
             if (key2 === "__proto__" || key2 === "constructor" || key2 === "prototype") {
               return object;
             }
@@ -2172,28 +1808,23 @@ var require_lodash = __commonJS({
           }
           return object;
         }
-        var baseSetData = !metaMap
-          ? identity
-          : function (func, data) {
-              metaMap.set(func, data);
-              return func;
-            };
-        var baseSetToString = !defineProperty
-          ? identity
-          : function (func, string) {
-              return defineProperty(func, "toString", {
-                configurable: true,
-                enumerable: false,
-                value: constant(string),
-                writable: true,
-              });
-            };
+        var baseSetData = !metaMap ? identity : function(func, data) {
+          metaMap.set(func, data);
+          return func;
+        };
+        var baseSetToString = !defineProperty ? identity : function(func, string) {
+          return defineProperty(func, "toString", {
+            "configurable": true,
+            "enumerable": false,
+            "value": constant(string),
+            "writable": true
+          });
+        };
         function baseShuffle(collection) {
           return shuffleSelf(values(collection));
         }
         function baseSlice(array, start, end) {
-          var index = -1,
-            length = array.length;
+          var index = -1, length = array.length;
           if (start < 0) {
             start = -start > length ? 0 : length + start;
           }
@@ -2201,7 +1832,7 @@ var require_lodash = __commonJS({
           if (end < 0) {
             end += length;
           }
-          length = start > end ? 0 : (end - start) >>> 0;
+          length = start > end ? 0 : end - start >>> 0;
           start >>>= 0;
           var result2 = Array2(length);
           while (++index < length) {
@@ -2211,19 +1842,17 @@ var require_lodash = __commonJS({
         }
         function baseSome(collection, predicate) {
           var result2;
-          baseEach(collection, function (value, index, collection2) {
+          baseEach(collection, function(value, index, collection2) {
             result2 = predicate(value, index, collection2);
             return !result2;
           });
           return !!result2;
         }
         function baseSortedIndex(array, value, retHighest) {
-          var low = 0,
-            high = array == null ? low : array.length;
+          var low = 0, high = array == null ? low : array.length;
           if (typeof value == "number" && value === value && high <= HALF_MAX_ARRAY_LENGTH) {
             while (low < high) {
-              var mid = (low + high) >>> 1,
-                computed = array[mid];
+              var mid = low + high >>> 1, computed = array[mid];
               if (computed !== null && !isSymbol(computed) && (retHighest ? computed <= value : computed < value)) {
                 low = mid + 1;
               } else {
@@ -2235,23 +1864,14 @@ var require_lodash = __commonJS({
           return baseSortedIndexBy(array, value, identity, retHighest);
         }
         function baseSortedIndexBy(array, value, iteratee2, retHighest) {
-          var low = 0,
-            high = array == null ? 0 : array.length;
+          var low = 0, high = array == null ? 0 : array.length;
           if (high === 0) {
             return 0;
           }
           value = iteratee2(value);
-          var valIsNaN = value !== value,
-            valIsNull = value === null,
-            valIsSymbol = isSymbol(value),
-            valIsUndefined = value === undefined2;
+          var valIsNaN = value !== value, valIsNull = value === null, valIsSymbol = isSymbol(value), valIsUndefined = value === undefined2;
           while (low < high) {
-            var mid = nativeFloor((low + high) / 2),
-              computed = iteratee2(array[mid]),
-              othIsDefined = computed !== undefined2,
-              othIsNull = computed === null,
-              othIsReflexive = computed === computed,
-              othIsSymbol = isSymbol(computed);
+            var mid = nativeFloor((low + high) / 2), computed = iteratee2(array[mid]), othIsDefined = computed !== undefined2, othIsNull = computed === null, othIsReflexive = computed === computed, othIsSymbol = isSymbol(computed);
             if (valIsNaN) {
               var setLow = retHighest || othIsReflexive;
             } else if (valIsUndefined) {
@@ -2274,13 +1894,9 @@ var require_lodash = __commonJS({
           return nativeMin(high, MAX_ARRAY_INDEX);
         }
         function baseSortedUniq(array, iteratee2) {
-          var index = -1,
-            length = array.length,
-            resIndex = 0,
-            result2 = [];
+          var index = -1, length = array.length, resIndex = 0, result2 = [];
           while (++index < length) {
-            var value = array[index],
-              computed = iteratee2 ? iteratee2(value) : value;
+            var value = array[index], computed = iteratee2 ? iteratee2(value) : value;
             if (!index || !eq(computed, seen)) {
               var seen = computed;
               result2[resIndex++] = value === 0 ? 0 : value;
@@ -2311,12 +1927,7 @@ var require_lodash = __commonJS({
           return result2 == "0" && 1 / value == -INFINITY ? "-0" : result2;
         }
         function baseUniq(array, iteratee2, comparator) {
-          var index = -1,
-            includes2 = arrayIncludes,
-            length = array.length,
-            isCommon = true,
-            result2 = [],
-            seen = result2;
+          var index = -1, includes2 = arrayIncludes, length = array.length, isCommon = true, result2 = [], seen = result2;
           if (comparator) {
             isCommon = false;
             includes2 = arrayIncludesWith;
@@ -2331,34 +1942,33 @@ var require_lodash = __commonJS({
           } else {
             seen = iteratee2 ? [] : result2;
           }
-          outer: while (++index < length) {
-            var value = array[index],
-              computed = iteratee2 ? iteratee2(value) : value;
-            value = comparator || value !== 0 ? value : 0;
-            if (isCommon && computed === computed) {
-              var seenIndex = seen.length;
-              while (seenIndex--) {
-                if (seen[seenIndex] === computed) {
-                  continue outer;
+          outer:
+            while (++index < length) {
+              var value = array[index], computed = iteratee2 ? iteratee2(value) : value;
+              value = comparator || value !== 0 ? value : 0;
+              if (isCommon && computed === computed) {
+                var seenIndex = seen.length;
+                while (seenIndex--) {
+                  if (seen[seenIndex] === computed) {
+                    continue outer;
+                  }
                 }
+                if (iteratee2) {
+                  seen.push(computed);
+                }
+                result2.push(value);
+              } else if (!includes2(seen, computed, comparator)) {
+                if (seen !== result2) {
+                  seen.push(computed);
+                }
+                result2.push(value);
               }
-              if (iteratee2) {
-                seen.push(computed);
-              }
-              result2.push(value);
-            } else if (!includes2(seen, computed, comparator)) {
-              if (seen !== result2) {
-                seen.push(computed);
-              }
-              result2.push(value);
             }
-          }
           return result2;
         }
         function baseUnset(object, path) {
           path = castPath(path, object);
-          var index = -1,
-            length = path.length;
+          var index = -1, length = path.length;
           if (!length) {
             return true;
           }
@@ -2378,36 +1988,28 @@ var require_lodash = __commonJS({
           return baseSet(object, path, updater(baseGet(object, path)), customizer2);
         }
         function baseWhile(array, predicate, isDrop, fromRight) {
-          var length = array.length,
-            index = fromRight ? length : -1;
-          while ((fromRight ? index-- : ++index < length) && predicate(array[index], index, array)) {}
-          return isDrop
-            ? baseSlice(array, fromRight ? 0 : index, fromRight ? index + 1 : length)
-            : baseSlice(array, fromRight ? index + 1 : 0, fromRight ? length : index);
+          var length = array.length, index = fromRight ? length : -1;
+          while ((fromRight ? index-- : ++index < length) && predicate(array[index], index, array)) {
+          }
+          return isDrop ? baseSlice(array, fromRight ? 0 : index, fromRight ? index + 1 : length) : baseSlice(array, fromRight ? index + 1 : 0, fromRight ? length : index);
         }
         function baseWrapperValue(value, actions) {
           var result2 = value;
           if (result2 instanceof LazyWrapper) {
             result2 = result2.value();
           }
-          return arrayReduce(
-            actions,
-            function (result3, action) {
-              return action.func.apply(action.thisArg, arrayPush([result3], action.args));
-            },
-            result2
-          );
+          return arrayReduce(actions, function(result3, action) {
+            return action.func.apply(action.thisArg, arrayPush([result3], action.args));
+          }, result2);
         }
         function baseXor(arrays, iteratee2, comparator) {
           var length = arrays.length;
           if (length < 2) {
             return length ? baseUniq(arrays[0]) : [];
           }
-          var index = -1,
-            result2 = Array2(length);
+          var index = -1, result2 = Array2(length);
           while (++index < length) {
-            var array = arrays[index],
-              othIndex = -1;
+            var array = arrays[index], othIndex = -1;
             while (++othIndex < length) {
               if (othIndex != index) {
                 result2[index] = baseDifference(result2[index] || array, arrays[othIndex], iteratee2, comparator);
@@ -2417,10 +2019,7 @@ var require_lodash = __commonJS({
           return baseUniq(baseFlatten(result2, 1), iteratee2, comparator);
         }
         function baseZipObject(props, values2, assignFunc) {
-          var index = -1,
-            length = props.length,
-            valsLength = values2.length,
-            result2 = {};
+          var index = -1, length = props.length, valsLength = values2.length, result2 = {};
           while (++index < length) {
             var value = index < valsLength ? values2[index] : undefined2;
             assignFunc(result2, props[index], value);
@@ -2445,17 +2044,14 @@ var require_lodash = __commonJS({
           end = end === undefined2 ? length : end;
           return !start && end >= length ? array : baseSlice(array, start, end);
         }
-        var clearTimeout =
-          ctxClearTimeout ||
-          function (id) {
-            return root.clearTimeout(id);
-          };
+        var clearTimeout = ctxClearTimeout || function(id) {
+          return root.clearTimeout(id);
+        };
         function cloneBuffer(buffer, isDeep) {
           if (isDeep) {
             return buffer.slice();
           }
-          var length = buffer.length,
-            result2 = allocUnsafe ? allocUnsafe(length) : new buffer.constructor(length);
+          var length = buffer.length, result2 = allocUnsafe ? allocUnsafe(length) : new buffer.constructor(length);
           buffer.copy(result2);
           return result2;
         }
@@ -2482,41 +2078,19 @@ var require_lodash = __commonJS({
         }
         function compareAscending(value, other) {
           if (value !== other) {
-            var valIsDefined = value !== undefined2,
-              valIsNull = value === null,
-              valIsReflexive = value === value,
-              valIsSymbol = isSymbol(value);
-            var othIsDefined = other !== undefined2,
-              othIsNull = other === null,
-              othIsReflexive = other === other,
-              othIsSymbol = isSymbol(other);
-            if (
-              (!othIsNull && !othIsSymbol && !valIsSymbol && value > other) ||
-              (valIsSymbol && othIsDefined && othIsReflexive && !othIsNull && !othIsSymbol) ||
-              (valIsNull && othIsDefined && othIsReflexive) ||
-              (!valIsDefined && othIsReflexive) ||
-              !valIsReflexive
-            ) {
+            var valIsDefined = value !== undefined2, valIsNull = value === null, valIsReflexive = value === value, valIsSymbol = isSymbol(value);
+            var othIsDefined = other !== undefined2, othIsNull = other === null, othIsReflexive = other === other, othIsSymbol = isSymbol(other);
+            if (!othIsNull && !othIsSymbol && !valIsSymbol && value > other || valIsSymbol && othIsDefined && othIsReflexive && !othIsNull && !othIsSymbol || valIsNull && othIsDefined && othIsReflexive || !valIsDefined && othIsReflexive || !valIsReflexive) {
               return 1;
             }
-            if (
-              (!valIsNull && !valIsSymbol && !othIsSymbol && value < other) ||
-              (othIsSymbol && valIsDefined && valIsReflexive && !valIsNull && !valIsSymbol) ||
-              (othIsNull && valIsDefined && valIsReflexive) ||
-              (!othIsDefined && valIsReflexive) ||
-              !othIsReflexive
-            ) {
+            if (!valIsNull && !valIsSymbol && !othIsSymbol && value < other || othIsSymbol && valIsDefined && valIsReflexive && !valIsNull && !valIsSymbol || othIsNull && valIsDefined && valIsReflexive || !othIsDefined && valIsReflexive || !othIsReflexive) {
               return -1;
             }
           }
           return 0;
         }
         function compareMultiple(object, other, orders) {
-          var index = -1,
-            objCriteria = object.criteria,
-            othCriteria = other.criteria,
-            length = objCriteria.length,
-            ordersLength = orders.length;
+          var index = -1, objCriteria = object.criteria, othCriteria = other.criteria, length = objCriteria.length, ordersLength = orders.length;
           while (++index < length) {
             var result2 = compareAscending(objCriteria[index], othCriteria[index]);
             if (result2) {
@@ -2530,14 +2104,7 @@ var require_lodash = __commonJS({
           return object.index - other.index;
         }
         function composeArgs(args, partials, holders, isCurried) {
-          var argsIndex = -1,
-            argsLength = args.length,
-            holdersLength = holders.length,
-            leftIndex = -1,
-            leftLength = partials.length,
-            rangeLength = nativeMax(argsLength - holdersLength, 0),
-            result2 = Array2(leftLength + rangeLength),
-            isUncurried = !isCurried;
+          var argsIndex = -1, argsLength = args.length, holdersLength = holders.length, leftIndex = -1, leftLength = partials.length, rangeLength = nativeMax(argsLength - holdersLength, 0), result2 = Array2(leftLength + rangeLength), isUncurried = !isCurried;
           while (++leftIndex < leftLength) {
             result2[leftIndex] = partials[leftIndex];
           }
@@ -2552,15 +2119,7 @@ var require_lodash = __commonJS({
           return result2;
         }
         function composeArgsRight(args, partials, holders, isCurried) {
-          var argsIndex = -1,
-            argsLength = args.length,
-            holdersIndex = -1,
-            holdersLength = holders.length,
-            rightIndex = -1,
-            rightLength = partials.length,
-            rangeLength = nativeMax(argsLength - holdersLength, 0),
-            result2 = Array2(rangeLength + rightLength),
-            isUncurried = !isCurried;
+          var argsIndex = -1, argsLength = args.length, holdersIndex = -1, holdersLength = holders.length, rightIndex = -1, rightLength = partials.length, rangeLength = nativeMax(argsLength - holdersLength, 0), result2 = Array2(rangeLength + rightLength), isUncurried = !isCurried;
           while (++argsIndex < rangeLength) {
             result2[argsIndex] = args[argsIndex];
           }
@@ -2576,8 +2135,7 @@ var require_lodash = __commonJS({
           return result2;
         }
         function copyArray(source, array) {
-          var index = -1,
-            length = source.length;
+          var index = -1, length = source.length;
           array || (array = Array2(length));
           while (++index < length) {
             array[index] = source[index];
@@ -2587,8 +2145,7 @@ var require_lodash = __commonJS({
         function copyObject(source, props, object, customizer2) {
           var isNew = !object;
           object || (object = {});
-          var index = -1,
-            length = props.length;
+          var index = -1, length = props.length;
           while (++index < length) {
             var key2 = props[index];
             var newValue = customizer2 ? customizer2(object[key2], source[key2], key2, object, source) : undefined2;
@@ -2610,20 +2167,15 @@ var require_lodash = __commonJS({
           return copyObject(source, getSymbolsIn(source), object);
         }
         function createAggregator(setter, initializer) {
-          return function (collection, iteratee2) {
-            var func = isArray(collection) ? arrayAggregator : baseAggregator,
-              accumulator = initializer ? initializer() : {};
+          return function(collection, iteratee2) {
+            var func = isArray(collection) ? arrayAggregator : baseAggregator, accumulator = initializer ? initializer() : {};
             return func(collection, setter, getIteratee(iteratee2, 2), accumulator);
           };
         }
         function createAssigner(assigner) {
-          return baseRest(function (object, sources) {
-            var index = -1,
-              length = sources.length,
-              customizer2 = length > 1 ? sources[length - 1] : undefined2,
-              guard = length > 2 ? sources[2] : undefined2;
-            customizer2 =
-              assigner.length > 3 && typeof customizer2 == "function" ? (length--, customizer2) : undefined2;
+          return baseRest(function(object, sources) {
+            var index = -1, length = sources.length, customizer2 = length > 1 ? sources[length - 1] : undefined2, guard = length > 2 ? sources[2] : undefined2;
+            customizer2 = assigner.length > 3 && typeof customizer2 == "function" ? (length--, customizer2) : undefined2;
             if (guard && isIterateeCall(sources[0], sources[1], guard)) {
               customizer2 = length < 3 ? undefined2 : customizer2;
               length = 1;
@@ -2639,16 +2191,14 @@ var require_lodash = __commonJS({
           });
         }
         function createBaseEach(eachFunc, fromRight) {
-          return function (collection, iteratee2) {
+          return function(collection, iteratee2) {
             if (collection == null) {
               return collection;
             }
             if (!isArrayLike(collection)) {
               return eachFunc(collection, iteratee2);
             }
-            var length = collection.length,
-              index = fromRight ? length : -1,
-              iterable = Object2(collection);
+            var length = collection.length, index = fromRight ? length : -1, iterable = Object2(collection);
             while (fromRight ? index-- : ++index < length) {
               if (iteratee2(iterable[index], index, iterable) === false) {
                 break;
@@ -2658,11 +2208,8 @@ var require_lodash = __commonJS({
           };
         }
         function createBaseFor(fromRight) {
-          return function (object, iteratee2, keysFunc) {
-            var index = -1,
-              iterable = Object2(object),
-              props = keysFunc(object),
-              length = props.length;
+          return function(object, iteratee2, keysFunc) {
+            var index = -1, iterable = Object2(object), props = keysFunc(object), length = props.length;
             while (length--) {
               var key2 = props[fromRight ? length : ++index];
               if (iteratee2(iterable[key2], key2, iterable) === false) {
@@ -2673,8 +2220,7 @@ var require_lodash = __commonJS({
           };
         }
         function createBind(func, bitmask, thisArg) {
-          var isBind = bitmask & WRAP_BIND_FLAG,
-            Ctor = createCtor(func);
+          var isBind = bitmask & WRAP_BIND_FLAG, Ctor = createCtor(func);
           function wrapper() {
             var fn = this && this !== root && this instanceof wrapper ? Ctor : func;
             return fn.apply(isBind ? thisArg : this, arguments);
@@ -2682,7 +2228,7 @@ var require_lodash = __commonJS({
           return wrapper;
         }
         function createCaseFirst(methodName) {
-          return function (string) {
+          return function(string) {
             string = toString(string);
             var strSymbols = hasUnicode(string) ? stringToArray(string) : undefined2;
             var chr = strSymbols ? strSymbols[0] : string.charAt(0);
@@ -2691,12 +2237,12 @@ var require_lodash = __commonJS({
           };
         }
         function createCompounder(callback) {
-          return function (string) {
+          return function(string) {
             return arrayReduce(words(deburr(string).replace(reApos, "")), callback, "");
           };
         }
         function createCtor(Ctor) {
-          return function () {
+          return function() {
             var args = arguments;
             switch (args.length) {
               case 0:
@@ -2716,25 +2262,18 @@ var require_lodash = __commonJS({
               case 7:
                 return new Ctor(args[0], args[1], args[2], args[3], args[4], args[5], args[6]);
             }
-            var thisBinding = baseCreate(Ctor.prototype),
-              result2 = Ctor.apply(thisBinding, args);
+            var thisBinding = baseCreate(Ctor.prototype), result2 = Ctor.apply(thisBinding, args);
             return isObject(result2) ? result2 : thisBinding;
           };
         }
         function createCurry(func, bitmask, arity) {
           var Ctor = createCtor(func);
           function wrapper() {
-            var length = arguments.length,
-              args = Array2(length),
-              index = length,
-              placeholder = getHolder(wrapper);
+            var length = arguments.length, args = Array2(length), index = length, placeholder = getHolder(wrapper);
             while (index--) {
               args[index] = arguments[index];
             }
-            var holders =
-              length < 3 && args[0] !== placeholder && args[length - 1] !== placeholder
-                ? []
-                : replaceHolders(args, placeholder);
+            var holders = length < 3 && args[0] !== placeholder && args[length - 1] !== placeholder ? [] : replaceHolders(args, placeholder);
             length -= holders.length;
             if (length < arity) {
               return createRecurry(
@@ -2756,12 +2295,12 @@ var require_lodash = __commonJS({
           return wrapper;
         }
         function createFind(findIndexFunc) {
-          return function (collection, predicate, fromIndex) {
+          return function(collection, predicate, fromIndex) {
             var iterable = Object2(collection);
             if (!isArrayLike(collection)) {
               var iteratee2 = getIteratee(predicate, 3);
               collection = keys(collection);
-              predicate = function (key2) {
+              predicate = function(key2) {
                 return iteratee2(iterable[key2], key2, iterable);
               };
             }
@@ -2770,10 +2309,8 @@ var require_lodash = __commonJS({
           };
         }
         function createFlow(fromRight) {
-          return flatRest(function (funcs) {
-            var length = funcs.length,
-              index = length,
-              prereq = LodashWrapper.prototype.thru;
+          return flatRest(function(funcs) {
+            var length = funcs.length, index = length, prereq = LodashWrapper.prototype.thru;
             if (fromRight) {
               funcs.reverse();
             }
@@ -2789,28 +2326,19 @@ var require_lodash = __commonJS({
             index = wrapper ? index : length;
             while (++index < length) {
               func = funcs[index];
-              var funcName = getFuncName(func),
-                data = funcName == "wrapper" ? getData(func) : undefined2;
-              if (
-                data &&
-                isLaziable(data[0]) &&
-                data[1] == (WRAP_ARY_FLAG | WRAP_CURRY_FLAG | WRAP_PARTIAL_FLAG | WRAP_REARG_FLAG) &&
-                !data[4].length &&
-                data[9] == 1
-              ) {
+              var funcName = getFuncName(func), data = funcName == "wrapper" ? getData(func) : undefined2;
+              if (data && isLaziable(data[0]) && data[1] == (WRAP_ARY_FLAG | WRAP_CURRY_FLAG | WRAP_PARTIAL_FLAG | WRAP_REARG_FLAG) && !data[4].length && data[9] == 1) {
                 wrapper = wrapper[getFuncName(data[0])].apply(wrapper, data[3]);
               } else {
                 wrapper = func.length == 1 && isLaziable(func) ? wrapper[funcName]() : wrapper.thru(func);
               }
             }
-            return function () {
-              var args = arguments,
-                value = args[0];
+            return function() {
+              var args = arguments, value = args[0];
               if (wrapper && args.length == 1 && isArray(value)) {
                 return wrapper.plant(value).value();
               }
-              var index2 = 0,
-                result2 = length ? funcs[index2].apply(this, args) : value;
+              var index2 = 0, result2 = length ? funcs[index2].apply(this, args) : value;
               while (++index2 < length) {
                 result2 = funcs[index2].call(this, result2);
               }
@@ -2818,34 +2346,15 @@ var require_lodash = __commonJS({
             };
           });
         }
-        function createHybrid(
-          func,
-          bitmask,
-          thisArg,
-          partials,
-          holders,
-          partialsRight,
-          holdersRight,
-          argPos,
-          ary2,
-          arity
-        ) {
-          var isAry = bitmask & WRAP_ARY_FLAG,
-            isBind = bitmask & WRAP_BIND_FLAG,
-            isBindKey = bitmask & WRAP_BIND_KEY_FLAG,
-            isCurried = bitmask & (WRAP_CURRY_FLAG | WRAP_CURRY_RIGHT_FLAG),
-            isFlip = bitmask & WRAP_FLIP_FLAG,
-            Ctor = isBindKey ? undefined2 : createCtor(func);
+        function createHybrid(func, bitmask, thisArg, partials, holders, partialsRight, holdersRight, argPos, ary2, arity) {
+          var isAry = bitmask & WRAP_ARY_FLAG, isBind = bitmask & WRAP_BIND_FLAG, isBindKey = bitmask & WRAP_BIND_KEY_FLAG, isCurried = bitmask & (WRAP_CURRY_FLAG | WRAP_CURRY_RIGHT_FLAG), isFlip = bitmask & WRAP_FLIP_FLAG, Ctor = isBindKey ? undefined2 : createCtor(func);
           function wrapper() {
-            var length = arguments.length,
-              args = Array2(length),
-              index = length;
+            var length = arguments.length, args = Array2(length), index = length;
             while (index--) {
               args[index] = arguments[index];
             }
             if (isCurried) {
-              var placeholder = getHolder(wrapper),
-                holdersCount = countHolders(args, placeholder);
+              var placeholder = getHolder(wrapper), holdersCount = countHolders(args, placeholder);
             }
             if (partials) {
               args = composeArgs(args, partials, holders, isCurried);
@@ -2869,8 +2378,7 @@ var require_lodash = __commonJS({
                 arity - length
               );
             }
-            var thisBinding = isBind ? thisArg : this,
-              fn = isBindKey ? thisBinding[func] : func;
+            var thisBinding = isBind ? thisArg : this, fn = isBindKey ? thisBinding[func] : func;
             length = args.length;
             if (argPos) {
               args = reorder(args, argPos);
@@ -2888,12 +2396,12 @@ var require_lodash = __commonJS({
           return wrapper;
         }
         function createInverter(setter, toIteratee) {
-          return function (object, iteratee2) {
+          return function(object, iteratee2) {
             return baseInverter(object, setter, toIteratee(iteratee2), {});
           };
         }
         function createMathOperation(operator, defaultValue) {
-          return function (value, other) {
+          return function(value, other) {
             var result2;
             if (value === undefined2 && other === undefined2) {
               return defaultValue;
@@ -2918,11 +2426,11 @@ var require_lodash = __commonJS({
           };
         }
         function createOver(arrayFunc) {
-          return flatRest(function (iteratees) {
+          return flatRest(function(iteratees) {
             iteratees = arrayMap(iteratees, baseUnary(getIteratee()));
-            return baseRest(function (args) {
+            return baseRest(function(args) {
               var thisArg = this;
-              return arrayFunc(iteratees, function (iteratee2) {
+              return arrayFunc(iteratees, function(iteratee2) {
                 return apply(iteratee2, thisArg, args);
               });
             });
@@ -2938,15 +2446,9 @@ var require_lodash = __commonJS({
           return hasUnicode(chars) ? castSlice(stringToArray(result2), 0, length).join("") : result2.slice(0, length);
         }
         function createPartial(func, bitmask, thisArg, partials) {
-          var isBind = bitmask & WRAP_BIND_FLAG,
-            Ctor = createCtor(func);
+          var isBind = bitmask & WRAP_BIND_FLAG, Ctor = createCtor(func);
           function wrapper() {
-            var argsIndex = -1,
-              argsLength = arguments.length,
-              leftIndex = -1,
-              leftLength = partials.length,
-              args = Array2(leftLength + argsLength),
-              fn = this && this !== root && this instanceof wrapper ? Ctor : func;
+            var argsIndex = -1, argsLength = arguments.length, leftIndex = -1, leftLength = partials.length, args = Array2(leftLength + argsLength), fn = this && this !== root && this instanceof wrapper ? Ctor : func;
             while (++leftIndex < leftLength) {
               args[leftIndex] = partials[leftIndex];
             }
@@ -2958,7 +2460,7 @@ var require_lodash = __commonJS({
           return wrapper;
         }
         function createRange(fromRight) {
-          return function (start, end, step) {
+          return function(start, end, step) {
             if (step && typeof step != "number" && isIterateeCall(start, end, step)) {
               end = step = undefined2;
             }
@@ -2969,12 +2471,12 @@ var require_lodash = __commonJS({
             } else {
               end = toFinite(end);
             }
-            step = step === undefined2 ? (start < end ? 1 : -1) : toFinite(step);
+            step = step === undefined2 ? start < end ? 1 : -1 : toFinite(step);
             return baseRange(start, end, step, fromRight);
           };
         }
         function createRelationalOperation(operator) {
-          return function (value, other) {
+          return function(value, other) {
             if (!(typeof value == "string" && typeof other == "string")) {
               value = toNumber(value);
               other = toNumber(other);
@@ -2983,11 +2485,7 @@ var require_lodash = __commonJS({
           };
         }
         function createRecurry(func, bitmask, wrapFunc, placeholder, thisArg, partials, holders, argPos, ary2, arity) {
-          var isCurry = bitmask & WRAP_CURRY_FLAG,
-            newHolders = isCurry ? holders : undefined2,
-            newHoldersRight = isCurry ? undefined2 : holders,
-            newPartials = isCurry ? partials : undefined2,
-            newPartialsRight = isCurry ? undefined2 : partials;
+          var isCurry = bitmask & WRAP_CURRY_FLAG, newHolders = isCurry ? holders : undefined2, newHoldersRight = isCurry ? undefined2 : holders, newPartials = isCurry ? partials : undefined2, newPartialsRight = isCurry ? undefined2 : partials;
           bitmask |= isCurry ? WRAP_PARTIAL_FLAG : WRAP_PARTIAL_RIGHT_FLAG;
           bitmask &= ~(isCurry ? WRAP_PARTIAL_RIGHT_FLAG : WRAP_PARTIAL_FLAG);
           if (!(bitmask & WRAP_CURRY_BOUND_FLAG)) {
@@ -3003,7 +2501,7 @@ var require_lodash = __commonJS({
             newHoldersRight,
             argPos,
             ary2,
-            arity,
+            arity
           ];
           var result2 = wrapFunc.apply(undefined2, newData);
           if (isLaziable(func)) {
@@ -3014,25 +2512,22 @@ var require_lodash = __commonJS({
         }
         function createRound(methodName) {
           var func = Math2[methodName];
-          return function (number, precision) {
+          return function(number, precision) {
             number = toNumber(number);
             precision = precision == null ? 0 : nativeMin(toInteger(precision), 292);
             if (precision && nativeIsFinite(number)) {
-              var pair = (toString(number) + "e").split("e"),
-                value = func(pair[0] + "e" + (+pair[1] + precision));
+              var pair = (toString(number) + "e").split("e"), value = func(pair[0] + "e" + (+pair[1] + precision));
               pair = (toString(value) + "e").split("e");
               return +(pair[0] + "e" + (+pair[1] - precision));
             }
             return func(number);
           };
         }
-        var createSet = !(Set2 && 1 / setToArray(new Set2([, -0]))[1] == INFINITY)
-          ? noop
-          : function (values2) {
-              return new Set2(values2);
-            };
+        var createSet = !(Set2 && 1 / setToArray(new Set2([, -0]))[1] == INFINITY) ? noop : function(values2) {
+          return new Set2(values2);
+        };
         function createToPairs(keysFunc) {
-          return function (object) {
+          return function(object) {
             var tag = getTag(object);
             if (tag == mapTag) {
               return mapToArray(object);
@@ -3057,12 +2552,22 @@ var require_lodash = __commonJS({
           arity = arity === undefined2 ? arity : toInteger(arity);
           length -= holders ? holders.length : 0;
           if (bitmask & WRAP_PARTIAL_RIGHT_FLAG) {
-            var partialsRight = partials,
-              holdersRight = holders;
+            var partialsRight = partials, holdersRight = holders;
             partials = holders = undefined2;
           }
           var data = isBindKey ? undefined2 : getData(func);
-          var newData = [func, bitmask, thisArg, partials, holders, partialsRight, holdersRight, argPos, ary2, arity];
+          var newData = [
+            func,
+            bitmask,
+            thisArg,
+            partials,
+            holders,
+            partialsRight,
+            holdersRight,
+            argPos,
+            ary2,
+            arity
+          ];
           if (data) {
             mergeData(newData, data);
           }
@@ -3071,8 +2576,7 @@ var require_lodash = __commonJS({
           thisArg = newData[2];
           partials = newData[3];
           holders = newData[4];
-          arity = newData[9] =
-            newData[9] === undefined2 ? (isBindKey ? 0 : func.length) : nativeMax(newData[9] - length, 0);
+          arity = newData[9] = newData[9] === undefined2 ? isBindKey ? 0 : func.length : nativeMax(newData[9] - length, 0);
           if (!arity && bitmask & (WRAP_CURRY_FLAG | WRAP_CURRY_RIGHT_FLAG)) {
             bitmask &= ~(WRAP_CURRY_FLAG | WRAP_CURRY_RIGHT_FLAG);
           }
@@ -3080,10 +2584,7 @@ var require_lodash = __commonJS({
             var result2 = createBind(func, bitmask, thisArg);
           } else if (bitmask == WRAP_CURRY_FLAG || bitmask == WRAP_CURRY_RIGHT_FLAG) {
             result2 = createCurry(func, bitmask, arity);
-          } else if (
-            (bitmask == WRAP_PARTIAL_FLAG || bitmask == (WRAP_BIND_FLAG | WRAP_PARTIAL_FLAG)) &&
-            !holders.length
-          ) {
+          } else if ((bitmask == WRAP_PARTIAL_FLAG || bitmask == (WRAP_BIND_FLAG | WRAP_PARTIAL_FLAG)) && !holders.length) {
             result2 = createPartial(func, bitmask, thisArg, partials);
           } else {
             result2 = createHybrid.apply(undefined2, newData);
@@ -3092,7 +2593,7 @@ var require_lodash = __commonJS({
           return setWrapToString(setter(result2, newData), func, bitmask);
         }
         function customDefaultsAssignIn(objValue, srcValue, key2, object) {
-          if (objValue === undefined2 || (eq(objValue, objectProto[key2]) && !hasOwnProperty.call(object, key2))) {
+          if (objValue === undefined2 || eq(objValue, objectProto[key2]) && !hasOwnProperty.call(object, key2)) {
             return srcValue;
           }
           return objValue;
@@ -3109,9 +2610,7 @@ var require_lodash = __commonJS({
           return isPlainObject(value) ? undefined2 : value;
         }
         function equalArrays(array, other, bitmask, customizer2, equalFunc, stack) {
-          var isPartial = bitmask & COMPARE_PARTIAL_FLAG,
-            arrLength = array.length,
-            othLength = other.length;
+          var isPartial = bitmask & COMPARE_PARTIAL_FLAG, arrLength = array.length, othLength = other.length;
           if (arrLength != othLength && !(isPartial && othLength > arrLength)) {
             return false;
           }
@@ -3120,18 +2619,13 @@ var require_lodash = __commonJS({
           if (arrStacked && othStacked) {
             return arrStacked == other && othStacked == array;
           }
-          var index = -1,
-            result2 = true,
-            seen = bitmask & COMPARE_UNORDERED_FLAG ? new SetCache() : undefined2;
+          var index = -1, result2 = true, seen = bitmask & COMPARE_UNORDERED_FLAG ? new SetCache() : undefined2;
           stack.set(array, other);
           stack.set(other, array);
           while (++index < arrLength) {
-            var arrValue = array[index],
-              othValue = other[index];
+            var arrValue = array[index], othValue = other[index];
             if (customizer2) {
-              var compared = isPartial
-                ? customizer2(othValue, arrValue, index, other, array, stack)
-                : customizer2(arrValue, othValue, index, array, other, stack);
+              var compared = isPartial ? customizer2(othValue, arrValue, index, other, array, stack) : customizer2(arrValue, othValue, index, array, other, stack);
             }
             if (compared !== undefined2) {
               if (compared) {
@@ -3141,16 +2635,11 @@ var require_lodash = __commonJS({
               break;
             }
             if (seen) {
-              if (
-                !arraySome(other, function (othValue2, othIndex) {
-                  if (
-                    !cacheHas(seen, othIndex) &&
-                    (arrValue === othValue2 || equalFunc(arrValue, othValue2, bitmask, customizer2, stack))
-                  ) {
-                    return seen.push(othIndex);
-                  }
-                })
-              ) {
+              if (!arraySome(other, function(othValue2, othIndex) {
+                if (!cacheHas(seen, othIndex) && (arrValue === othValue2 || equalFunc(arrValue, othValue2, bitmask, customizer2, stack))) {
+                  return seen.push(othIndex);
+                }
+              })) {
                 result2 = false;
                 break;
               }
@@ -3172,10 +2661,7 @@ var require_lodash = __commonJS({
               object = object.buffer;
               other = other.buffer;
             case arrayBufferTag:
-              if (
-                object.byteLength != other.byteLength ||
-                !equalFunc(new Uint8Array2(object), new Uint8Array2(other))
-              ) {
+              if (object.byteLength != other.byteLength || !equalFunc(new Uint8Array2(object), new Uint8Array2(other))) {
                 return false;
               }
               return true;
@@ -3213,11 +2699,7 @@ var require_lodash = __commonJS({
           return false;
         }
         function equalObjects(object, other, bitmask, customizer2, equalFunc, stack) {
-          var isPartial = bitmask & COMPARE_PARTIAL_FLAG,
-            objProps = getAllKeys(object),
-            objLength = objProps.length,
-            othProps = getAllKeys(other),
-            othLength = othProps.length;
+          var isPartial = bitmask & COMPARE_PARTIAL_FLAG, objProps = getAllKeys(object), objLength = objProps.length, othProps = getAllKeys(other), othLength = othProps.length;
           if (objLength != othLength && !isPartial) {
             return false;
           }
@@ -3239,37 +2721,19 @@ var require_lodash = __commonJS({
           var skipCtor = isPartial;
           while (++index < objLength) {
             key2 = objProps[index];
-            var objValue = object[key2],
-              othValue = other[key2];
+            var objValue = object[key2], othValue = other[key2];
             if (customizer2) {
-              var compared = isPartial
-                ? customizer2(othValue, objValue, key2, other, object, stack)
-                : customizer2(objValue, othValue, key2, object, other, stack);
+              var compared = isPartial ? customizer2(othValue, objValue, key2, other, object, stack) : customizer2(objValue, othValue, key2, object, other, stack);
             }
-            if (
-              !(compared === undefined2
-                ? objValue === othValue || equalFunc(objValue, othValue, bitmask, customizer2, stack)
-                : compared)
-            ) {
+            if (!(compared === undefined2 ? objValue === othValue || equalFunc(objValue, othValue, bitmask, customizer2, stack) : compared)) {
               result2 = false;
               break;
             }
             skipCtor || (skipCtor = key2 == "constructor");
           }
           if (result2 && !skipCtor) {
-            var objCtor = object.constructor,
-              othCtor = other.constructor;
-            if (
-              objCtor != othCtor &&
-              "constructor" in object &&
-              "constructor" in other &&
-              !(
-                typeof objCtor == "function" &&
-                objCtor instanceof objCtor &&
-                typeof othCtor == "function" &&
-                othCtor instanceof othCtor
-              )
-            ) {
+            var objCtor = object.constructor, othCtor = other.constructor;
+            if (objCtor != othCtor && ("constructor" in object && "constructor" in other) && !(typeof objCtor == "function" && objCtor instanceof objCtor && typeof othCtor == "function" && othCtor instanceof othCtor)) {
               result2 = false;
             }
           }
@@ -3286,18 +2750,13 @@ var require_lodash = __commonJS({
         function getAllKeysIn(object) {
           return baseGetAllKeys(object, keysIn, getSymbolsIn);
         }
-        var getData = !metaMap
-          ? noop
-          : function (func) {
-              return metaMap.get(func);
-            };
+        var getData = !metaMap ? noop : function(func) {
+          return metaMap.get(func);
+        };
         function getFuncName(func) {
-          var result2 = func.name + "",
-            array = realNames[result2],
-            length = hasOwnProperty.call(realNames, result2) ? array.length : 0;
+          var result2 = func.name + "", array = realNames[result2], length = hasOwnProperty.call(realNames, result2) ? array.length : 0;
           while (length--) {
-            var data = array[length],
-              otherFunc = data.func;
+            var data = array[length], otherFunc = data.func;
             if (otherFunc == null || otherFunc == func) {
               return data.name;
             }
@@ -3318,11 +2777,9 @@ var require_lodash = __commonJS({
           return isKeyable(key2) ? data[typeof key2 == "string" ? "string" : "hash"] : data.map;
         }
         function getMatchData(object) {
-          var result2 = keys(object),
-            length = result2.length;
+          var result2 = keys(object), length = result2.length;
           while (length--) {
-            var key2 = result2[length],
-              value = object[key2];
+            var key2 = result2[length], value = object[key2];
             result2[length] = [key2, value, isStrictComparable(value)];
           }
           return result2;
@@ -3332,12 +2789,12 @@ var require_lodash = __commonJS({
           return baseIsNative(value) ? value : undefined2;
         }
         function getRawTag(value) {
-          var isOwn = hasOwnProperty.call(value, symToStringTag),
-            tag = value[symToStringTag];
+          var isOwn = hasOwnProperty.call(value, symToStringTag), tag = value[symToStringTag];
           try {
             value[symToStringTag] = undefined2;
             var unmasked = true;
-          } catch (e) {}
+          } catch (e) {
+          }
           var result2 = nativeObjectToString.call(value);
           if (unmasked) {
             if (isOwn) {
@@ -3348,39 +2805,27 @@ var require_lodash = __commonJS({
           }
           return result2;
         }
-        var getSymbols = !nativeGetSymbols
-          ? stubArray
-          : function (object) {
-              if (object == null) {
-                return [];
-              }
-              object = Object2(object);
-              return arrayFilter(nativeGetSymbols(object), function (symbol) {
-                return propertyIsEnumerable.call(object, symbol);
-              });
-            };
-        var getSymbolsIn = !nativeGetSymbols
-          ? stubArray
-          : function (object) {
-              var result2 = [];
-              while (object) {
-                arrayPush(result2, getSymbols(object));
-                object = getPrototype(object);
-              }
-              return result2;
-            };
+        var getSymbols = !nativeGetSymbols ? stubArray : function(object) {
+          if (object == null) {
+            return [];
+          }
+          object = Object2(object);
+          return arrayFilter(nativeGetSymbols(object), function(symbol) {
+            return propertyIsEnumerable.call(object, symbol);
+          });
+        };
+        var getSymbolsIn = !nativeGetSymbols ? stubArray : function(object) {
+          var result2 = [];
+          while (object) {
+            arrayPush(result2, getSymbols(object));
+            object = getPrototype(object);
+          }
+          return result2;
+        };
         var getTag = baseGetTag;
-        if (
-          (DataView && getTag(new DataView(new ArrayBuffer(1))) != dataViewTag) ||
-          (Map2 && getTag(new Map2()) != mapTag) ||
-          (Promise2 && getTag(Promise2.resolve()) != promiseTag) ||
-          (Set2 && getTag(new Set2()) != setTag) ||
-          (WeakMap && getTag(new WeakMap()) != weakMapTag)
-        ) {
-          getTag = function (value) {
-            var result2 = baseGetTag(value),
-              Ctor = result2 == objectTag ? value.constructor : undefined2,
-              ctorString = Ctor ? toSource(Ctor) : "";
+        if (DataView && getTag(new DataView(new ArrayBuffer(1))) != dataViewTag || Map2 && getTag(new Map2()) != mapTag || Promise2 && getTag(Promise2.resolve()) != promiseTag || Set2 && getTag(new Set2()) != setTag || WeakMap && getTag(new WeakMap()) != weakMapTag) {
+          getTag = function(value) {
+            var result2 = baseGetTag(value), Ctor = result2 == objectTag ? value.constructor : undefined2, ctorString = Ctor ? toSource(Ctor) : "";
             if (ctorString) {
               switch (ctorString) {
                 case dataViewCtorString:
@@ -3399,11 +2844,9 @@ var require_lodash = __commonJS({
           };
         }
         function getView(start, end, transforms) {
-          var index = -1,
-            length = transforms.length;
+          var index = -1, length = transforms.length;
           while (++index < length) {
-            var data = transforms[index],
-              size2 = data.size;
+            var data = transforms[index], size2 = data.size;
             switch (data.type) {
               case "drop":
                 start += size2;
@@ -3419,7 +2862,7 @@ var require_lodash = __commonJS({
                 break;
             }
           }
-          return { start: start, end: end };
+          return { "start": start, "end": end };
         }
         function getWrapDetails(source) {
           var match = source.match(reWrapDetails);
@@ -3427,9 +2870,7 @@ var require_lodash = __commonJS({
         }
         function hasPath(object, path, hasFunc) {
           path = castPath(path, object);
-          var index = -1,
-            length = path.length,
-            result2 = false;
+          var index = -1, length = path.length, result2 = false;
           while (++index < length) {
             var key2 = toKey(path[index]);
             if (!(result2 = object != null && hasFunc(object, key2))) {
@@ -3444,8 +2885,7 @@ var require_lodash = __commonJS({
           return !!length && isLength(length) && isIndex(key2, length) && (isArray(object) || isArguments(object));
         }
         function initCloneArray(array) {
-          var length = array.length,
-            result2 = new array.constructor(length);
+          var length = array.length, result2 = new array.constructor(length);
           if (length && typeof array[0] == "string" && hasOwnProperty.call(array, "index")) {
             result2.index = array.index;
             result2.input = array.input;
@@ -3453,9 +2893,7 @@ var require_lodash = __commonJS({
           return result2;
         }
         function initCloneObject(object) {
-          return typeof object.constructor == "function" && !isPrototype(object)
-            ? baseCreate(getPrototype(object))
-            : {};
+          return typeof object.constructor == "function" && !isPrototype(object) ? baseCreate(getPrototype(object)) : {};
         }
         function initCloneByTag(object, tag, isDeep) {
           var Ctor = object.constructor;
@@ -3506,24 +2944,14 @@ var require_lodash = __commonJS({
         function isIndex(value, length) {
           var type = typeof value;
           length = length == null ? MAX_SAFE_INTEGER : length;
-          return (
-            !!length &&
-            (type == "number" || (type != "symbol" && reIsUint.test(value))) &&
-            value > -1 &&
-            value % 1 == 0 &&
-            value < length
-          );
+          return !!length && (type == "number" || type != "symbol" && reIsUint.test(value)) && (value > -1 && value % 1 == 0 && value < length);
         }
         function isIterateeCall(value, index, object) {
           if (!isObject(object)) {
             return false;
           }
           var type = typeof index;
-          if (
-            type == "number"
-              ? isArrayLike(object) && isIndex(index, object.length)
-              : type == "string" && index in object
-          ) {
+          if (type == "number" ? isArrayLike(object) && isIndex(index, object.length) : type == "string" && index in object) {
             return eq(object[index], value);
           }
           return false;
@@ -3536,17 +2964,14 @@ var require_lodash = __commonJS({
           if (type == "number" || type == "symbol" || type == "boolean" || value == null || isSymbol(value)) {
             return true;
           }
-          return reIsPlainProp.test(value) || !reIsDeepProp.test(value) || (object != null && value in Object2(object));
+          return reIsPlainProp.test(value) || !reIsDeepProp.test(value) || object != null && value in Object2(object);
         }
         function isKeyable(value) {
           var type = typeof value;
-          return type == "string" || type == "number" || type == "symbol" || type == "boolean"
-            ? value !== "__proto__"
-            : value === null;
+          return type == "string" || type == "number" || type == "symbol" || type == "boolean" ? value !== "__proto__" : value === null;
         }
         function isLaziable(func) {
-          var funcName = getFuncName(func),
-            other = lodash[funcName];
+          var funcName = getFuncName(func), other = lodash[funcName];
           if (typeof other != "function" || !(funcName in LazyWrapper.prototype)) {
             return false;
           }
@@ -3561,15 +2986,14 @@ var require_lodash = __commonJS({
         }
         var isMaskable = coreJsData ? isFunction : stubFalse;
         function isPrototype(value) {
-          var Ctor = value && value.constructor,
-            proto = (typeof Ctor == "function" && Ctor.prototype) || objectProto;
+          var Ctor = value && value.constructor, proto = typeof Ctor == "function" && Ctor.prototype || objectProto;
           return value === proto;
         }
         function isStrictComparable(value) {
           return value === value && !isObject(value);
         }
         function matchesStrictComparable(key2, srcValue) {
-          return function (object) {
+          return function(object) {
             if (object == null) {
               return false;
             }
@@ -3577,7 +3001,7 @@ var require_lodash = __commonJS({
           };
         }
         function memoizeCapped(func) {
-          var result2 = memoize(func, function (key2) {
+          var result2 = memoize(func, function(key2) {
             if (cache.size === MAX_MEMOIZE_SIZE) {
               cache.clear();
             }
@@ -3587,16 +3011,8 @@ var require_lodash = __commonJS({
           return result2;
         }
         function mergeData(data, source) {
-          var bitmask = data[1],
-            srcBitmask = source[1],
-            newBitmask = bitmask | srcBitmask,
-            isCommon = newBitmask < (WRAP_BIND_FLAG | WRAP_BIND_KEY_FLAG | WRAP_ARY_FLAG);
-          var isCombo =
-            (srcBitmask == WRAP_ARY_FLAG && bitmask == WRAP_CURRY_FLAG) ||
-            (srcBitmask == WRAP_ARY_FLAG && bitmask == WRAP_REARG_FLAG && data[7].length <= source[8]) ||
-            (srcBitmask == (WRAP_ARY_FLAG | WRAP_REARG_FLAG) &&
-              source[7].length <= source[8] &&
-              bitmask == WRAP_CURRY_FLAG);
+          var bitmask = data[1], srcBitmask = source[1], newBitmask = bitmask | srcBitmask, isCommon = newBitmask < (WRAP_BIND_FLAG | WRAP_BIND_KEY_FLAG | WRAP_ARY_FLAG);
+          var isCombo = srcBitmask == WRAP_ARY_FLAG && bitmask == WRAP_CURRY_FLAG || srcBitmask == WRAP_ARY_FLAG && bitmask == WRAP_REARG_FLAG && data[7].length <= source[8] || srcBitmask == (WRAP_ARY_FLAG | WRAP_REARG_FLAG) && source[7].length <= source[8] && bitmask == WRAP_CURRY_FLAG;
           if (!(isCommon || isCombo)) {
             return data;
           }
@@ -3644,11 +3060,8 @@ var require_lodash = __commonJS({
         }
         function overRest(func, start, transform2) {
           start = nativeMax(start === undefined2 ? func.length - 1 : start, 0);
-          return function () {
-            var args = arguments,
-              index = -1,
-              length = nativeMax(args.length - start, 0),
-              array = Array2(length);
+          return function() {
+            var args = arguments, index = -1, length = nativeMax(args.length - start, 0), array = Array2(length);
             while (++index < length) {
               array[index] = args[start + index];
             }
@@ -3665,9 +3078,7 @@ var require_lodash = __commonJS({
           return path.length < 2 ? object : baseGet(object, baseSlice(path, 0, -1));
         }
         function reorder(array, indexes) {
-          var arrLength = array.length,
-            length = nativeMin(indexes.length, arrLength),
-            oldArray = copyArray(array);
+          var arrLength = array.length, length = nativeMin(indexes.length, arrLength), oldArray = copyArray(array);
           while (length--) {
             var index = indexes[length];
             array[length] = isIndex(index, arrLength) ? oldArray[index] : undefined2;
@@ -3684,22 +3095,18 @@ var require_lodash = __commonJS({
           return object[key2];
         }
         var setData = shortOut(baseSetData);
-        var setTimeout =
-          ctxSetTimeout ||
-          function (func, wait) {
-            return root.setTimeout(func, wait);
-          };
+        var setTimeout = ctxSetTimeout || function(func, wait) {
+          return root.setTimeout(func, wait);
+        };
         var setToString = shortOut(baseSetToString);
         function setWrapToString(wrapper, reference, bitmask) {
           var source = reference + "";
           return setToString(wrapper, insertWrapDetails(source, updateWrapDetails(getWrapDetails(source), bitmask)));
         }
         function shortOut(func) {
-          var count = 0,
-            lastCalled = 0;
-          return function () {
-            var stamp = nativeNow(),
-              remaining = HOT_SPAN - (stamp - lastCalled);
+          var count = 0, lastCalled = 0;
+          return function() {
+            var stamp = nativeNow(), remaining = HOT_SPAN - (stamp - lastCalled);
             lastCalled = stamp;
             if (remaining > 0) {
               if (++count >= HOT_COUNT) {
@@ -3712,25 +3119,22 @@ var require_lodash = __commonJS({
           };
         }
         function shuffleSelf(array, size2) {
-          var index = -1,
-            length = array.length,
-            lastIndex = length - 1;
+          var index = -1, length = array.length, lastIndex = length - 1;
           size2 = size2 === undefined2 ? length : size2;
           while (++index < size2) {
-            var rand = baseRandom(index, lastIndex),
-              value = array[rand];
+            var rand = baseRandom(index, lastIndex), value = array[rand];
             array[rand] = array[index];
             array[index] = value;
           }
           array.length = size2;
           return array;
         }
-        var stringToPath = memoizeCapped(function (string) {
+        var stringToPath = memoizeCapped(function(string) {
           var result2 = [];
           if (string.charCodeAt(0) === 46) {
             result2.push("");
           }
-          string.replace(rePropName, function (match, number, quote, subString) {
+          string.replace(rePropName, function(match, number, quote, subString) {
             result2.push(quote ? subString.replace(reEscapeChar, "$1") : number || match);
           });
           return result2;
@@ -3746,15 +3150,17 @@ var require_lodash = __commonJS({
           if (func != null) {
             try {
               return funcToString.call(func);
-            } catch (e) {}
+            } catch (e) {
+            }
             try {
               return func + "";
-            } catch (e) {}
+            } catch (e) {
+            }
           }
           return "";
         }
         function updateWrapDetails(details, bitmask) {
-          arrayEach(wrapFlags, function (pair) {
+          arrayEach(wrapFlags, function(pair) {
             var value = "_." + pair[0];
             if (bitmask & pair[1] && !arrayIncludes(details, value)) {
               details.push(value);
@@ -3782,19 +3188,14 @@ var require_lodash = __commonJS({
           if (!length || size2 < 1) {
             return [];
           }
-          var index = 0,
-            resIndex = 0,
-            result2 = Array2(nativeCeil(length / size2));
+          var index = 0, resIndex = 0, result2 = Array2(nativeCeil(length / size2));
           while (index < length) {
-            result2[resIndex++] = baseSlice(array, index, (index += size2));
+            result2[resIndex++] = baseSlice(array, index, index += size2);
           }
           return result2;
         }
         function compact(array) {
-          var index = -1,
-            length = array == null ? 0 : array.length,
-            resIndex = 0,
-            result2 = [];
+          var index = -1, length = array == null ? 0 : array.length, resIndex = 0, result2 = [];
           while (++index < length) {
             var value = array[index];
             if (value) {
@@ -3808,36 +3209,28 @@ var require_lodash = __commonJS({
           if (!length) {
             return [];
           }
-          var args = Array2(length - 1),
-            array = arguments[0],
-            index = length;
+          var args = Array2(length - 1), array = arguments[0], index = length;
           while (index--) {
             args[index - 1] = arguments[index];
           }
           return arrayPush(isArray(array) ? copyArray(array) : [array], baseFlatten(args, 1));
         }
-        var difference7 = baseRest(function (array, values2) {
-          return isArrayLikeObject(array)
-            ? baseDifference(array, baseFlatten(values2, 1, isArrayLikeObject, true))
-            : [];
+        var difference7 = baseRest(function(array, values2) {
+          return isArrayLikeObject(array) ? baseDifference(array, baseFlatten(values2, 1, isArrayLikeObject, true)) : [];
         });
-        var differenceBy = baseRest(function (array, values2) {
+        var differenceBy = baseRest(function(array, values2) {
           var iteratee2 = last(values2);
           if (isArrayLikeObject(iteratee2)) {
             iteratee2 = undefined2;
           }
-          return isArrayLikeObject(array)
-            ? baseDifference(array, baseFlatten(values2, 1, isArrayLikeObject, true), getIteratee(iteratee2, 2))
-            : [];
+          return isArrayLikeObject(array) ? baseDifference(array, baseFlatten(values2, 1, isArrayLikeObject, true), getIteratee(iteratee2, 2)) : [];
         });
-        var differenceWith = baseRest(function (array, values2) {
+        var differenceWith = baseRest(function(array, values2) {
           var comparator = last(values2);
           if (isArrayLikeObject(comparator)) {
             comparator = undefined2;
           }
-          return isArrayLikeObject(array)
-            ? baseDifference(array, baseFlatten(values2, 1, isArrayLikeObject, true), undefined2, comparator)
-            : [];
+          return isArrayLikeObject(array) ? baseDifference(array, baseFlatten(values2, 1, isArrayLikeObject, true), undefined2, comparator) : [];
         });
         function drop(array, n, guard) {
           var length = array == null ? 0 : array.length;
@@ -3913,9 +3306,7 @@ var require_lodash = __commonJS({
           return baseFlatten(array, depth);
         }
         function fromPairs2(pairs) {
-          var index = -1,
-            length = pairs == null ? 0 : pairs.length,
-            result2 = {};
+          var index = -1, length = pairs == null ? 0 : pairs.length, result2 = {};
           while (++index < length) {
             var pair = pairs[index];
             baseAssignValue(result2, pair[0], pair[1]);
@@ -3940,13 +3331,12 @@ var require_lodash = __commonJS({
           var length = array == null ? 0 : array.length;
           return length ? baseSlice(array, 0, -1) : [];
         }
-        var intersection = baseRest(function (arrays) {
+        var intersection = baseRest(function(arrays) {
           var mapped = arrayMap(arrays, castArrayLikeObject);
           return mapped.length && mapped[0] === arrays[0] ? baseIntersection(mapped) : [];
         });
-        var intersectionBy = baseRest(function (arrays) {
-          var iteratee2 = last(arrays),
-            mapped = arrayMap(arrays, castArrayLikeObject);
+        var intersectionBy = baseRest(function(arrays) {
+          var iteratee2 = last(arrays), mapped = arrayMap(arrays, castArrayLikeObject);
           if (iteratee2 === last(mapped)) {
             iteratee2 = undefined2;
           } else {
@@ -3954,9 +3344,8 @@ var require_lodash = __commonJS({
           }
           return mapped.length && mapped[0] === arrays[0] ? baseIntersection(mapped, getIteratee(iteratee2, 2)) : [];
         });
-        var intersectionWith = baseRest(function (arrays) {
-          var comparator = last(arrays),
-            mapped = arrayMap(arrays, castArrayLikeObject);
+        var intersectionWith = baseRest(function(arrays) {
+          var comparator = last(arrays), mapped = arrayMap(arrays, castArrayLikeObject);
           comparator = typeof comparator == "function" ? comparator : undefined2;
           if (comparator) {
             mapped.pop();
@@ -3980,9 +3369,7 @@ var require_lodash = __commonJS({
             index = toInteger(fromIndex);
             index = index < 0 ? nativeMax(length + index, 0) : nativeMin(index, length - 1);
           }
-          return value === value
-            ? strictLastIndexOf(array, value, index)
-            : baseFindIndex(array, baseIsNaN, index, true);
+          return value === value ? strictLastIndexOf(array, value, index) : baseFindIndex(array, baseIsNaN, index, true);
         }
         function nth(array, n) {
           return array && array.length ? baseNth(array, toInteger(n)) : undefined2;
@@ -3992,24 +3379,16 @@ var require_lodash = __commonJS({
           return array && array.length && values2 && values2.length ? basePullAll(array, values2) : array;
         }
         function pullAllBy(array, values2, iteratee2) {
-          return array && array.length && values2 && values2.length
-            ? basePullAll(array, values2, getIteratee(iteratee2, 2))
-            : array;
+          return array && array.length && values2 && values2.length ? basePullAll(array, values2, getIteratee(iteratee2, 2)) : array;
         }
         function pullAllWith(array, values2, comparator) {
-          return array && array.length && values2 && values2.length
-            ? basePullAll(array, values2, undefined2, comparator)
-            : array;
+          return array && array.length && values2 && values2.length ? basePullAll(array, values2, undefined2, comparator) : array;
         }
-        var pullAt = flatRest(function (array, indexes) {
-          var length = array == null ? 0 : array.length,
-            result2 = baseAt(array, indexes);
-          basePullAt(
-            array,
-            arrayMap(indexes, function (index) {
-              return isIndex(index, length) ? +index : index;
-            }).sort(compareAscending)
-          );
+        var pullAt = flatRest(function(array, indexes) {
+          var length = array == null ? 0 : array.length, result2 = baseAt(array, indexes);
+          basePullAt(array, arrayMap(indexes, function(index) {
+            return isIndex(index, length) ? +index : index;
+          }).sort(compareAscending));
           return result2;
         });
         function remove(array, predicate) {
@@ -4017,9 +3396,7 @@ var require_lodash = __commonJS({
           if (!(array && array.length)) {
             return result2;
           }
-          var index = -1,
-            indexes = [],
-            length = array.length;
+          var index = -1, indexes = [], length = array.length;
           predicate = getIteratee(predicate, 3);
           while (++index < length) {
             var value = array[index];
@@ -4112,17 +3489,17 @@ var require_lodash = __commonJS({
         function takeWhile(array, predicate) {
           return array && array.length ? baseWhile(array, getIteratee(predicate, 3)) : [];
         }
-        var union = baseRest(function (arrays) {
+        var union = baseRest(function(arrays) {
           return baseUniq(baseFlatten(arrays, 1, isArrayLikeObject, true));
         });
-        var unionBy = baseRest(function (arrays) {
+        var unionBy = baseRest(function(arrays) {
           var iteratee2 = last(arrays);
           if (isArrayLikeObject(iteratee2)) {
             iteratee2 = undefined2;
           }
           return baseUniq(baseFlatten(arrays, 1, isArrayLikeObject, true), getIteratee(iteratee2, 2));
         });
-        var unionWith = baseRest(function (arrays) {
+        var unionWith = baseRest(function(arrays) {
           var comparator = last(arrays);
           comparator = typeof comparator == "function" ? comparator : undefined2;
           return baseUniq(baseFlatten(arrays, 1, isArrayLikeObject, true), undefined2, comparator);
@@ -4142,13 +3519,13 @@ var require_lodash = __commonJS({
             return [];
           }
           var length = 0;
-          array = arrayFilter(array, function (group) {
+          array = arrayFilter(array, function(group) {
             if (isArrayLikeObject(group)) {
               length = nativeMax(group.length, length);
               return true;
             }
           });
-          return baseTimes(length, function (index) {
+          return baseTimes(length, function(index) {
             return arrayMap(array, baseProperty(index));
           });
         }
@@ -4160,24 +3537,24 @@ var require_lodash = __commonJS({
           if (iteratee2 == null) {
             return result2;
           }
-          return arrayMap(result2, function (group) {
+          return arrayMap(result2, function(group) {
             return apply(iteratee2, undefined2, group);
           });
         }
-        var without = baseRest(function (array, values2) {
+        var without = baseRest(function(array, values2) {
           return isArrayLikeObject(array) ? baseDifference(array, values2) : [];
         });
-        var xor = baseRest(function (arrays) {
+        var xor = baseRest(function(arrays) {
           return baseXor(arrayFilter(arrays, isArrayLikeObject));
         });
-        var xorBy = baseRest(function (arrays) {
+        var xorBy = baseRest(function(arrays) {
           var iteratee2 = last(arrays);
           if (isArrayLikeObject(iteratee2)) {
             iteratee2 = undefined2;
           }
           return baseXor(arrayFilter(arrays, isArrayLikeObject), getIteratee(iteratee2, 2));
         });
-        var xorWith = baseRest(function (arrays) {
+        var xorWith = baseRest(function(arrays) {
           var comparator = last(arrays);
           comparator = typeof comparator == "function" ? comparator : undefined2;
           return baseXor(arrayFilter(arrays, isArrayLikeObject), undefined2, comparator);
@@ -4189,9 +3566,8 @@ var require_lodash = __commonJS({
         function zipObjectDeep(props, values2) {
           return baseZipObject(props || [], values2 || [], baseSet);
         }
-        var zipWith2 = baseRest(function (arrays) {
-          var length = arrays.length,
-            iteratee2 = length > 1 ? arrays[length - 1] : undefined2;
+        var zipWith2 = baseRest(function(arrays) {
+          var length = arrays.length, iteratee2 = length > 1 ? arrays[length - 1] : undefined2;
           iteratee2 = typeof iteratee2 == "function" ? (arrays.pop(), iteratee2) : undefined2;
           return unzipWith(arrays, iteratee2);
         });
@@ -4207,23 +3583,20 @@ var require_lodash = __commonJS({
         function thru(value, interceptor) {
           return interceptor(value);
         }
-        var wrapperAt = flatRest(function (paths) {
-          var length = paths.length,
-            start = length ? paths[0] : 0,
-            value = this.__wrapped__,
-            interceptor = function (object) {
-              return baseAt(object, paths);
-            };
+        var wrapperAt = flatRest(function(paths) {
+          var length = paths.length, start = length ? paths[0] : 0, value = this.__wrapped__, interceptor = function(object) {
+            return baseAt(object, paths);
+          };
           if (length > 1 || this.__actions__.length || !(value instanceof LazyWrapper) || !isIndex(start)) {
             return this.thru(interceptor);
           }
           value = value.slice(start, +start + (length ? 1 : 0));
           value.__actions__.push({
-            func: thru,
-            args: [interceptor],
-            thisArg: undefined2,
+            "func": thru,
+            "args": [interceptor],
+            "thisArg": undefined2
           });
-          return new LodashWrapper(value, this.__chain__).thru(function (array) {
+          return new LodashWrapper(value, this.__chain__).thru(function(array) {
             if (length && !array.length) {
               array.push(undefined2);
             }
@@ -4240,16 +3613,14 @@ var require_lodash = __commonJS({
           if (this.__values__ === undefined2) {
             this.__values__ = toArray(this.value());
           }
-          var done = this.__index__ >= this.__values__.length,
-            value = done ? undefined2 : this.__values__[this.__index__++];
-          return { done: done, value: value };
+          var done = this.__index__ >= this.__values__.length, value = done ? undefined2 : this.__values__[this.__index__++];
+          return { "done": done, "value": value };
         }
         function wrapperToIterator() {
           return this;
         }
         function wrapperPlant(value) {
-          var result2,
-            parent2 = this;
+          var result2, parent2 = this;
           while (parent2 instanceof baseLodash) {
             var clone3 = wrapperClone(parent2);
             clone3.__index__ = 0;
@@ -4274,9 +3645,9 @@ var require_lodash = __commonJS({
             }
             wrapped = wrapped.reverse();
             wrapped.__actions__.push({
-              func: thru,
-              args: [reverse],
-              thisArg: undefined2,
+              "func": thru,
+              "args": [reverse],
+              "thisArg": undefined2
             });
             return new LodashWrapper(wrapped, this.__chain__);
           }
@@ -4285,7 +3656,7 @@ var require_lodash = __commonJS({
         function wrapperValue() {
           return baseWrapperValue(this.__wrapped__, this.__actions__);
         }
-        var countBy2 = createAggregator(function (result2, value, key2) {
+        var countBy2 = createAggregator(function(result2, value, key2) {
           if (hasOwnProperty.call(result2, key2)) {
             ++result2[key2];
           } else {
@@ -4323,7 +3694,7 @@ var require_lodash = __commonJS({
           var func = isArray(collection) ? arrayEachRight : baseEachRight;
           return func(collection, getIteratee(iteratee2, 3));
         }
-        var groupBy2 = createAggregator(function (result2, value, key2) {
+        var groupBy2 = createAggregator(function(result2, value, key2) {
           if (hasOwnProperty.call(result2, key2)) {
             result2[key2].push(value);
           } else {
@@ -4337,20 +3708,16 @@ var require_lodash = __commonJS({
           if (fromIndex < 0) {
             fromIndex = nativeMax(length + fromIndex, 0);
           }
-          return isString(collection)
-            ? fromIndex <= length && collection.indexOf(value, fromIndex) > -1
-            : !!length && baseIndexOf(collection, value, fromIndex) > -1;
+          return isString(collection) ? fromIndex <= length && collection.indexOf(value, fromIndex) > -1 : !!length && baseIndexOf(collection, value, fromIndex) > -1;
         }
-        var invokeMap = baseRest(function (collection, path, args) {
-          var index = -1,
-            isFunc = typeof path == "function",
-            result2 = isArrayLike(collection) ? Array2(collection.length) : [];
-          baseEach(collection, function (value) {
+        var invokeMap = baseRest(function(collection, path, args) {
+          var index = -1, isFunc = typeof path == "function", result2 = isArrayLike(collection) ? Array2(collection.length) : [];
+          baseEach(collection, function(value) {
             result2[++index] = isFunc ? apply(path, value, args) : baseInvoke(value, path, args);
           });
           return result2;
         });
-        var keyBy2 = createAggregator(function (result2, value, key2) {
+        var keyBy2 = createAggregator(function(result2, value, key2) {
           baseAssignValue(result2, key2, value);
         });
         function map(collection, iteratee2) {
@@ -4370,22 +3737,17 @@ var require_lodash = __commonJS({
           }
           return baseOrderBy(collection, iteratees, orders);
         }
-        var partition = createAggregator(
-          function (result2, value, key2) {
-            result2[key2 ? 0 : 1].push(value);
-          },
-          function () {
-            return [[], []];
-          }
-        );
+        var partition = createAggregator(function(result2, value, key2) {
+          result2[key2 ? 0 : 1].push(value);
+        }, function() {
+          return [[], []];
+        });
         function reduce(collection, iteratee2, accumulator) {
-          var func = isArray(collection) ? arrayReduce : baseReduce,
-            initAccum = arguments.length < 3;
+          var func = isArray(collection) ? arrayReduce : baseReduce, initAccum = arguments.length < 3;
           return func(collection, getIteratee(iteratee2, 4), accumulator, initAccum, baseEach);
         }
         function reduceRight(collection, iteratee2, accumulator) {
-          var func = isArray(collection) ? arrayReduceRight : baseReduce,
-            initAccum = arguments.length < 3;
+          var func = isArray(collection) ? arrayReduceRight : baseReduce, initAccum = arguments.length < 3;
           return func(collection, getIteratee(iteratee2, 4), accumulator, initAccum, baseEachRight);
         }
         function reject(collection, predicate) {
@@ -4429,7 +3791,7 @@ var require_lodash = __commonJS({
           }
           return func(collection, getIteratee(predicate, 3));
         }
-        var sortBy2 = baseRest(function (collection, iteratees) {
+        var sortBy2 = baseRest(function(collection, iteratees) {
           if (collection == null) {
             return [];
           }
@@ -4441,17 +3803,15 @@ var require_lodash = __commonJS({
           }
           return baseOrderBy(collection, baseFlatten(iteratees, 1), []);
         });
-        var now =
-          ctxNow ||
-          function () {
-            return root.Date.now();
-          };
+        var now = ctxNow || function() {
+          return root.Date.now();
+        };
         function after(n, func) {
           if (typeof func != "function") {
             throw new TypeError2(FUNC_ERROR_TEXT);
           }
           n = toInteger(n);
-          return function () {
+          return function() {
             if (--n < 1) {
               return func.apply(this, arguments);
             }
@@ -4468,7 +3828,7 @@ var require_lodash = __commonJS({
             throw new TypeError2(FUNC_ERROR_TEXT);
           }
           n = toInteger(n);
-          return function () {
+          return function() {
             if (--n > 0) {
               result2 = func.apply(this, arguments);
             }
@@ -4478,7 +3838,7 @@ var require_lodash = __commonJS({
             return result2;
           };
         }
-        var bind = baseRest(function (func, thisArg, partials) {
+        var bind = baseRest(function(func, thisArg, partials) {
           var bitmask = WRAP_BIND_FLAG;
           if (partials.length) {
             var holders = replaceHolders(partials, getHolder(bind));
@@ -4486,7 +3846,7 @@ var require_lodash = __commonJS({
           }
           return createWrap(func, bitmask, thisArg, partials, holders);
         });
-        var bindKey = baseRest(function (object, key2, partials) {
+        var bindKey = baseRest(function(object, key2, partials) {
           var bitmask = WRAP_BIND_FLAG | WRAP_BIND_KEY_FLAG;
           if (partials.length) {
             var holders = replaceHolders(partials, getHolder(bindKey));
@@ -4496,45 +3856,18 @@ var require_lodash = __commonJS({
         });
         function curry(func, arity, guard) {
           arity = guard ? undefined2 : arity;
-          var result2 = createWrap(
-            func,
-            WRAP_CURRY_FLAG,
-            undefined2,
-            undefined2,
-            undefined2,
-            undefined2,
-            undefined2,
-            arity
-          );
+          var result2 = createWrap(func, WRAP_CURRY_FLAG, undefined2, undefined2, undefined2, undefined2, undefined2, arity);
           result2.placeholder = curry.placeholder;
           return result2;
         }
         function curryRight(func, arity, guard) {
           arity = guard ? undefined2 : arity;
-          var result2 = createWrap(
-            func,
-            WRAP_CURRY_RIGHT_FLAG,
-            undefined2,
-            undefined2,
-            undefined2,
-            undefined2,
-            undefined2,
-            arity
-          );
+          var result2 = createWrap(func, WRAP_CURRY_RIGHT_FLAG, undefined2, undefined2, undefined2, undefined2, undefined2, arity);
           result2.placeholder = curryRight.placeholder;
           return result2;
         }
         function debounce(func, wait, options) {
-          var lastArgs,
-            lastThis,
-            maxWait,
-            result2,
-            timerId,
-            lastCallTime,
-            lastInvokeTime = 0,
-            leading = false,
-            maxing = false,
-            trailing = true;
+          var lastArgs, lastThis, maxWait, result2, timerId, lastCallTime, lastInvokeTime = 0, leading = false, maxing = false, trailing = true;
           if (typeof func != "function") {
             throw new TypeError2(FUNC_ERROR_TEXT);
           }
@@ -4546,8 +3879,7 @@ var require_lodash = __commonJS({
             trailing = "trailing" in options ? !!options.trailing : trailing;
           }
           function invokeFunc(time) {
-            var args = lastArgs,
-              thisArg = lastThis;
+            var args = lastArgs, thisArg = lastThis;
             lastArgs = lastThis = undefined2;
             lastInvokeTime = time;
             result2 = func.apply(thisArg, args);
@@ -4559,20 +3891,12 @@ var require_lodash = __commonJS({
             return leading ? invokeFunc(time) : result2;
           }
           function remainingWait(time) {
-            var timeSinceLastCall = time - lastCallTime,
-              timeSinceLastInvoke = time - lastInvokeTime,
-              timeWaiting = wait - timeSinceLastCall;
+            var timeSinceLastCall = time - lastCallTime, timeSinceLastInvoke = time - lastInvokeTime, timeWaiting = wait - timeSinceLastCall;
             return maxing ? nativeMin(timeWaiting, maxWait - timeSinceLastInvoke) : timeWaiting;
           }
           function shouldInvoke(time) {
-            var timeSinceLastCall = time - lastCallTime,
-              timeSinceLastInvoke = time - lastInvokeTime;
-            return (
-              lastCallTime === undefined2 ||
-              timeSinceLastCall >= wait ||
-              timeSinceLastCall < 0 ||
-              (maxing && timeSinceLastInvoke >= maxWait)
-            );
+            var timeSinceLastCall = time - lastCallTime, timeSinceLastInvoke = time - lastInvokeTime;
+            return lastCallTime === undefined2 || timeSinceLastCall >= wait || timeSinceLastCall < 0 || maxing && timeSinceLastInvoke >= maxWait;
           }
           function timerExpired() {
             var time = now();
@@ -4600,8 +3924,7 @@ var require_lodash = __commonJS({
             return timerId === undefined2 ? result2 : trailingEdge(now());
           }
           function debounced() {
-            var time = now(),
-              isInvoking = shouldInvoke(time);
+            var time = now(), isInvoking = shouldInvoke(time);
             lastArgs = arguments;
             lastThis = this;
             lastCallTime = time;
@@ -4624,23 +3947,21 @@ var require_lodash = __commonJS({
           debounced.flush = flush;
           return debounced;
         }
-        var defer = baseRest(function (func, args) {
+        var defer = baseRest(function(func, args) {
           return baseDelay(func, 1, args);
         });
-        var delay = baseRest(function (func, wait, args) {
+        var delay = baseRest(function(func, wait, args) {
           return baseDelay(func, toNumber(wait) || 0, args);
         });
         function flip(func) {
           return createWrap(func, WRAP_FLIP_FLAG);
         }
         function memoize(func, resolver) {
-          if (typeof func != "function" || (resolver != null && typeof resolver != "function")) {
+          if (typeof func != "function" || resolver != null && typeof resolver != "function") {
             throw new TypeError2(FUNC_ERROR_TEXT);
           }
-          var memoized = function () {
-            var args = arguments,
-              key2 = resolver ? resolver.apply(this, args) : args[0],
-              cache = memoized.cache;
+          var memoized = function() {
+            var args = arguments, key2 = resolver ? resolver.apply(this, args) : args[0], cache = memoized.cache;
             if (cache.has(key2)) {
               return cache.get(key2);
             }
@@ -4656,7 +3977,7 @@ var require_lodash = __commonJS({
           if (typeof predicate != "function") {
             throw new TypeError2(FUNC_ERROR_TEXT);
           }
-          return function () {
+          return function() {
             var args = arguments;
             switch (args.length) {
               case 0:
@@ -4674,30 +3995,26 @@ var require_lodash = __commonJS({
         function once(func) {
           return before(2, func);
         }
-        var overArgs = castRest(function (func, transforms) {
-          transforms =
-            transforms.length == 1 && isArray(transforms[0])
-              ? arrayMap(transforms[0], baseUnary(getIteratee()))
-              : arrayMap(baseFlatten(transforms, 1), baseUnary(getIteratee()));
+        var overArgs = castRest(function(func, transforms) {
+          transforms = transforms.length == 1 && isArray(transforms[0]) ? arrayMap(transforms[0], baseUnary(getIteratee())) : arrayMap(baseFlatten(transforms, 1), baseUnary(getIteratee()));
           var funcsLength = transforms.length;
-          return baseRest(function (args) {
-            var index = -1,
-              length = nativeMin(args.length, funcsLength);
+          return baseRest(function(args) {
+            var index = -1, length = nativeMin(args.length, funcsLength);
             while (++index < length) {
               args[index] = transforms[index].call(this, args[index]);
             }
             return apply(func, this, args);
           });
         });
-        var partial = baseRest(function (func, partials) {
+        var partial = baseRest(function(func, partials) {
           var holders = replaceHolders(partials, getHolder(partial));
           return createWrap(func, WRAP_PARTIAL_FLAG, undefined2, partials, holders);
         });
-        var partialRight = baseRest(function (func, partials) {
+        var partialRight = baseRest(function(func, partials) {
           var holders = replaceHolders(partials, getHolder(partialRight));
           return createWrap(func, WRAP_PARTIAL_RIGHT_FLAG, undefined2, partials, holders);
         });
-        var rearg = flatRest(function (func, indexes) {
+        var rearg = flatRest(function(func, indexes) {
           return createWrap(func, WRAP_REARG_FLAG, undefined2, undefined2, undefined2, indexes);
         });
         function rest(func, start) {
@@ -4712,9 +4029,8 @@ var require_lodash = __commonJS({
             throw new TypeError2(FUNC_ERROR_TEXT);
           }
           start = start == null ? 0 : nativeMax(toInteger(start), 0);
-          return baseRest(function (args) {
-            var array = args[start],
-              otherArgs = castSlice(args, 0, start);
+          return baseRest(function(args) {
+            var array = args[start], otherArgs = castSlice(args, 0, start);
             if (array) {
               arrayPush(otherArgs, array);
             }
@@ -4722,8 +4038,7 @@ var require_lodash = __commonJS({
           });
         }
         function throttle(func, wait, options) {
-          var leading = true,
-            trailing = true;
+          var leading = true, trailing = true;
           if (typeof func != "function") {
             throw new TypeError2(FUNC_ERROR_TEXT);
           }
@@ -4732,9 +4047,9 @@ var require_lodash = __commonJS({
             trailing = "trailing" in options ? !!options.trailing : trailing;
           }
           return debounce(func, wait, {
-            leading: leading,
-            maxWait: wait,
-            trailing: trailing,
+            "leading": leading,
+            "maxWait": wait,
+            "trailing": trailing
           });
         }
         function unary(func) {
@@ -4768,25 +4083,17 @@ var require_lodash = __commonJS({
           return source == null || baseConformsTo(object, source, keys(source));
         }
         function eq(value, other) {
-          return value === other || (value !== value && other !== other);
+          return value === other || value !== value && other !== other;
         }
         var gt = createRelationalOperation(baseGt);
-        var gte = createRelationalOperation(function (value, other) {
+        var gte = createRelationalOperation(function(value, other) {
           return value >= other;
         });
-        var isArguments = baseIsArguments(
-          /* @__PURE__ */ (function () {
-            return arguments;
-          })()
-        )
-          ? baseIsArguments
-          : function (value) {
-              return (
-                isObjectLike(value) &&
-                hasOwnProperty.call(value, "callee") &&
-                !propertyIsEnumerable.call(value, "callee")
-              );
-            };
+        var isArguments = baseIsArguments(/* @__PURE__ */ (function() {
+          return arguments;
+        })()) ? baseIsArguments : function(value) {
+          return isObjectLike(value) && hasOwnProperty.call(value, "callee") && !propertyIsEnumerable.call(value, "callee");
+        };
         var isArray = Array2.isArray;
         var isArrayBuffer = nodeIsArrayBuffer ? baseUnary(nodeIsArrayBuffer) : baseIsArrayBuffer;
         function isArrayLike(value) {
@@ -4796,7 +4103,7 @@ var require_lodash = __commonJS({
           return isObjectLike(value) && isArrayLike(value);
         }
         function isBoolean(value) {
-          return value === true || value === false || (isObjectLike(value) && baseGetTag(value) == boolTag);
+          return value === true || value === false || isObjectLike(value) && baseGetTag(value) == boolTag;
         }
         var isBuffer = nativeIsBuffer || stubFalse;
         var isDate = nodeIsDate ? baseUnary(nodeIsDate) : baseIsDate;
@@ -4807,15 +4114,7 @@ var require_lodash = __commonJS({
           if (value == null) {
             return true;
           }
-          if (
-            isArrayLike(value) &&
-            (isArray(value) ||
-              typeof value == "string" ||
-              typeof value.splice == "function" ||
-              isBuffer(value) ||
-              isTypedArray(value) ||
-              isArguments(value))
-          ) {
+          if (isArrayLike(value) && (isArray(value) || typeof value == "string" || typeof value.splice == "function" || isBuffer(value) || isTypedArray(value) || isArguments(value))) {
             return !value.length;
           }
           var tag = getTag(value);
@@ -4845,11 +4144,7 @@ var require_lodash = __commonJS({
             return false;
           }
           var tag = baseGetTag(value);
-          return (
-            tag == errorTag ||
-            tag == domExcTag ||
-            (typeof value.message == "string" && typeof value.name == "string" && !isPlainObject(value))
-          );
+          return tag == errorTag || tag == domExcTag || typeof value.message == "string" && typeof value.name == "string" && !isPlainObject(value);
         }
         function isFinite(value) {
           return typeof value == "number" && nativeIsFinite(value);
@@ -4898,7 +4193,7 @@ var require_lodash = __commonJS({
           return value == null;
         }
         function isNumber(value) {
-          return typeof value == "number" || (isObjectLike(value) && baseGetTag(value) == numberTag);
+          return typeof value == "number" || isObjectLike(value) && baseGetTag(value) == numberTag;
         }
         function isPlainObject(value) {
           if (!isObjectLike(value) || baseGetTag(value) != objectTag) {
@@ -4917,10 +4212,10 @@ var require_lodash = __commonJS({
         }
         var isSet = nodeIsSet ? baseUnary(nodeIsSet) : baseIsSet;
         function isString(value) {
-          return typeof value == "string" || (!isArray(value) && isObjectLike(value) && baseGetTag(value) == stringTag);
+          return typeof value == "string" || !isArray(value) && isObjectLike(value) && baseGetTag(value) == stringTag;
         }
         function isSymbol(value) {
-          return typeof value == "symbol" || (isObjectLike(value) && baseGetTag(value) == symbolTag);
+          return typeof value == "symbol" || isObjectLike(value) && baseGetTag(value) == symbolTag;
         }
         var isTypedArray = nodeIsTypedArray ? baseUnary(nodeIsTypedArray) : baseIsTypedArray;
         function isUndefined(value) {
@@ -4933,7 +4228,7 @@ var require_lodash = __commonJS({
           return isObjectLike(value) && baseGetTag(value) == weakSetTag;
         }
         var lt = createRelationalOperation(baseLt);
-        var lte = createRelationalOperation(function (value, other) {
+        var lte = createRelationalOperation(function(value, other) {
           return value <= other;
         });
         function toArray(value) {
@@ -4946,8 +4241,7 @@ var require_lodash = __commonJS({
           if (symIterator && value[symIterator]) {
             return iteratorToArray(value[symIterator]());
           }
-          var tag = getTag(value),
-            func = tag == mapTag ? mapToArray : tag == setTag ? setToArray : values;
+          var tag = getTag(value), func = tag == mapTag ? mapToArray : tag == setTag ? setToArray : values;
           return func(value);
         }
         function toFinite(value) {
@@ -4962,9 +4256,8 @@ var require_lodash = __commonJS({
           return value === value ? value : 0;
         }
         function toInteger(value) {
-          var result2 = toFinite(value),
-            remainder = result2 % 1;
-          return result2 === result2 ? (remainder ? result2 - remainder : result2) : 0;
+          var result2 = toFinite(value), remainder = result2 % 1;
+          return result2 === result2 ? remainder ? result2 - remainder : result2 : 0;
         }
         function toLength(value) {
           return value ? baseClamp(toInteger(value), 0, MAX_ARRAY_LENGTH) : 0;
@@ -4985,11 +4278,7 @@ var require_lodash = __commonJS({
           }
           value = baseTrim(value);
           var isBinary = reIsBinary.test(value);
-          return isBinary || reIsOctal.test(value)
-            ? freeParseInt(value.slice(2), isBinary ? 2 : 8)
-            : reIsBadHex.test(value)
-            ? NAN
-            : +value;
+          return isBinary || reIsOctal.test(value) ? freeParseInt(value.slice(2), isBinary ? 2 : 8) : reIsBadHex.test(value) ? NAN : +value;
         }
         function toPlainObject(value) {
           return copyObject(value, keysIn(value));
@@ -5000,7 +4289,7 @@ var require_lodash = __commonJS({
         function toString(value) {
           return value == null ? "" : baseToString(value);
         }
-        var assign = createAssigner(function (object, source) {
+        var assign = createAssigner(function(object, source) {
           if (isPrototype(source) || isArrayLike(source)) {
             copyObject(source, keys(source), object);
             return;
@@ -5011,13 +4300,13 @@ var require_lodash = __commonJS({
             }
           }
         });
-        var assignIn = createAssigner(function (object, source) {
+        var assignIn = createAssigner(function(object, source) {
           copyObject(source, keysIn(source), object);
         });
-        var assignInWith = createAssigner(function (object, source, srcIndex, customizer2) {
+        var assignInWith = createAssigner(function(object, source, srcIndex, customizer2) {
           copyObject(source, keysIn(source), object, customizer2);
         });
-        var assignWith = createAssigner(function (object, source, srcIndex, customizer2) {
+        var assignWith = createAssigner(function(object, source, srcIndex, customizer2) {
           copyObject(source, keys(source), object, customizer2);
         });
         var at = flatRest(baseAt);
@@ -5025,7 +4314,7 @@ var require_lodash = __commonJS({
           var result2 = baseCreate(prototype);
           return properties == null ? result2 : baseAssign(result2, properties);
         }
-        var defaults = baseRest(function (object, sources) {
+        var defaults = baseRest(function(object, sources) {
           object = Object2(object);
           var index = -1;
           var length = sources.length;
@@ -5041,14 +4330,14 @@ var require_lodash = __commonJS({
             while (++propsIndex < propsLength) {
               var key2 = props[propsIndex];
               var value = object[key2];
-              if (value === undefined2 || (eq(value, objectProto[key2]) && !hasOwnProperty.call(object, key2))) {
+              if (value === undefined2 || eq(value, objectProto[key2]) && !hasOwnProperty.call(object, key2)) {
                 object[key2] = source[key2];
               }
             }
           }
           return object;
         });
-        var defaultsDeep = baseRest(function (args) {
+        var defaultsDeep = baseRest(function(args) {
           args.push(undefined2, customDefaultsMerge);
           return apply(mergeWith2, undefined2, args);
         });
@@ -5086,13 +4375,13 @@ var require_lodash = __commonJS({
         function hasIn(object, path) {
           return object != null && hasPath(object, path, baseHasIn);
         }
-        var invert = createInverter(function (result2, value, key2) {
+        var invert = createInverter(function(result2, value, key2) {
           if (value != null && typeof value.toString != "function") {
             value = nativeObjectToString.call(value);
           }
           result2[value] = key2;
         }, constant(identity));
-        var invertBy = createInverter(function (result2, value, key2) {
+        var invertBy = createInverter(function(result2, value, key2) {
           if (value != null && typeof value.toString != "function") {
             value = nativeObjectToString.call(value);
           }
@@ -5112,7 +4401,7 @@ var require_lodash = __commonJS({
         function mapKeys(object, iteratee2) {
           var result2 = {};
           iteratee2 = getIteratee(iteratee2, 3);
-          baseForOwn(object, function (value, key2, object2) {
+          baseForOwn(object, function(value, key2, object2) {
             baseAssignValue(result2, iteratee2(value, key2, object2), value);
           });
           return result2;
@@ -5120,24 +4409,24 @@ var require_lodash = __commonJS({
         function mapValues(object, iteratee2) {
           var result2 = {};
           iteratee2 = getIteratee(iteratee2, 3);
-          baseForOwn(object, function (value, key2, object2) {
+          baseForOwn(object, function(value, key2, object2) {
             baseAssignValue(result2, key2, iteratee2(value, key2, object2));
           });
           return result2;
         }
-        var merge3 = createAssigner(function (object, source, srcIndex) {
+        var merge3 = createAssigner(function(object, source, srcIndex) {
           baseMerge(object, source, srcIndex);
         });
-        var mergeWith2 = createAssigner(function (object, source, srcIndex, customizer2) {
+        var mergeWith2 = createAssigner(function(object, source, srcIndex, customizer2) {
           baseMerge(object, source, srcIndex, customizer2);
         });
-        var omit = flatRest(function (object, paths) {
+        var omit = flatRest(function(object, paths) {
           var result2 = {};
           if (object == null) {
             return result2;
           }
           var isDeep = false;
-          paths = arrayMap(paths, function (path) {
+          paths = arrayMap(paths, function(path) {
             path = castPath(path, object);
             isDeep || (isDeep = path.length > 1);
             return path;
@@ -5155,25 +4444,24 @@ var require_lodash = __commonJS({
         function omitBy(object, predicate) {
           return pickBy(object, negate(getIteratee(predicate)));
         }
-        var pick2 = flatRest(function (object, paths) {
+        var pick2 = flatRest(function(object, paths) {
           return object == null ? {} : basePick(object, paths);
         });
         function pickBy(object, predicate) {
           if (object == null) {
             return {};
           }
-          var props = arrayMap(getAllKeysIn(object), function (prop) {
+          var props = arrayMap(getAllKeysIn(object), function(prop) {
             return [prop];
           });
           predicate = getIteratee(predicate);
-          return basePickBy(object, props, function (value, path) {
+          return basePickBy(object, props, function(value, path) {
             return predicate(value, path[0]);
           });
         }
         function result(object, path, defaultValue) {
           path = castPath(path, object);
-          var index = -1,
-            length = path.length;
+          var index = -1, length = path.length;
           if (!length) {
             length = 1;
             object = undefined2;
@@ -5198,8 +4486,7 @@ var require_lodash = __commonJS({
         var toPairs = createToPairs(keys);
         var toPairsIn = createToPairs(keysIn);
         function transform(object, iteratee2, accumulator) {
-          var isArr = isArray(object),
-            isArrLike = isArr || isBuffer(object) || isTypedArray(object);
+          var isArr = isArray(object), isArrLike = isArr || isBuffer(object) || isTypedArray(object);
           iteratee2 = getIteratee(iteratee2, 4);
           if (accumulator == null) {
             var Ctor = object && object.constructor;
@@ -5211,7 +4498,7 @@ var require_lodash = __commonJS({
               accumulator = {};
             }
           }
-          (isArrLike ? arrayEach : baseForOwn)(object, function (value, index, object2) {
+          (isArrLike ? arrayEach : baseForOwn)(object, function(value, index, object2) {
             return iteratee2(accumulator, value, index, object2);
           });
           return accumulator;
@@ -5294,7 +4581,7 @@ var require_lodash = __commonJS({
           }
           return baseRandom(lower, upper);
         }
-        var camelCase = createCompounder(function (result2, word, index) {
+        var camelCase = createCompounder(function(result2, word, index) {
           word = word.toLowerCase();
           return result2 + (index ? capitalize(word) : word);
         });
@@ -5322,10 +4609,10 @@ var require_lodash = __commonJS({
           string = toString(string);
           return string && reHasRegExpChar.test(string) ? string.replace(reRegExpChar, "\\$&") : string;
         }
-        var kebabCase = createCompounder(function (result2, word, index) {
+        var kebabCase = createCompounder(function(result2, word, index) {
           return result2 + (index ? "-" : "") + word.toLowerCase();
         });
-        var lowerCase = createCompounder(function (result2, word, index) {
+        var lowerCase = createCompounder(function(result2, word, index) {
           return result2 + (index ? " " : "") + word.toLowerCase();
         });
         var lowerFirst = createCaseFirst("toLowerCase");
@@ -5368,11 +4655,10 @@ var require_lodash = __commonJS({
           return baseRepeat(toString(string), n);
         }
         function replace() {
-          var args = arguments,
-            string = toString(args[0]);
+          var args = arguments, string = toString(args[0]);
           return args.length < 3 ? string : string.replace(args[1], args[2]);
         }
-        var snakeCase = createCompounder(function (result2, word, index) {
+        var snakeCase = createCompounder(function(result2, word, index) {
           return result2 + (index ? "_" : "") + word.toLowerCase();
         });
         function split(string, separator, limit) {
@@ -5384,7 +4670,7 @@ var require_lodash = __commonJS({
             return [];
           }
           string = toString(string);
-          if (string && (typeof separator == "string" || (separator != null && !isRegExp(separator)))) {
+          if (string && (typeof separator == "string" || separator != null && !isRegExp(separator))) {
             separator = baseToString(separator);
             if (!separator && hasUnicode(string)) {
               return castSlice(stringToArray(string), 0, limit);
@@ -5392,7 +4678,7 @@ var require_lodash = __commonJS({
           }
           return string.split(separator, limit);
         }
-        var startCase = createCompounder(function (result2, word, index) {
+        var startCase = createCompounder(function(result2, word, index) {
           return result2 + (index ? " " : "") + upperFirst(word);
         });
         function startsWith(string, target, position) {
@@ -5408,56 +4694,35 @@ var require_lodash = __commonJS({
           }
           string = toString(string);
           options = assignWith({}, options, settings, customDefaultsAssignIn);
-          var imports = assignWith({}, options.imports, settings.imports, customDefaultsAssignIn),
-            importsKeys = keys(imports),
-            importsValues = baseValues(imports, importsKeys);
-          arrayEach(importsKeys, function (key2) {
+          var imports = assignWith({}, options.imports, settings.imports, customDefaultsAssignIn), importsKeys = keys(imports), importsValues = baseValues(imports, importsKeys);
+          arrayEach(importsKeys, function(key2) {
             if (reForbiddenIdentifierChars.test(key2)) {
               throw new Error2(INVALID_TEMPL_IMPORTS_ERROR_TEXT);
             }
           });
-          var isEscaping,
-            isEvaluating,
-            index = 0,
-            interpolate = options.interpolate || reNoMatch,
-            source = "__p += '";
+          var isEscaping, isEvaluating, index = 0, interpolate = options.interpolate || reNoMatch, source = "__p += '";
           var reDelimiters = RegExp2(
-            (options.escape || reNoMatch).source +
-              "|" +
-              interpolate.source +
-              "|" +
-              (interpolate === reInterpolate ? reEsTemplate : reNoMatch).source +
-              "|" +
-              (options.evaluate || reNoMatch).source +
-              "|$",
+            (options.escape || reNoMatch).source + "|" + interpolate.source + "|" + (interpolate === reInterpolate ? reEsTemplate : reNoMatch).source + "|" + (options.evaluate || reNoMatch).source + "|$",
             "g"
           );
-          var sourceURL =
-            "//# sourceURL=" +
-            (hasOwnProperty.call(options, "sourceURL")
-              ? (options.sourceURL + "").replace(/\s/g, " ")
-              : "lodash.templateSources[" + ++templateCounter + "]") +
-            "\n";
-          string.replace(
-            reDelimiters,
-            function (match, escapeValue, interpolateValue, esTemplateValue, evaluateValue, offset) {
-              interpolateValue || (interpolateValue = esTemplateValue);
-              source += string.slice(index, offset).replace(reUnescapedString, escapeStringChar);
-              if (escapeValue) {
-                isEscaping = true;
-                source += "' +\n__e(" + escapeValue + ") +\n'";
-              }
-              if (evaluateValue) {
-                isEvaluating = true;
-                source += "';\n" + evaluateValue + ";\n__p += '";
-              }
-              if (interpolateValue) {
-                source += "' +\n((__t = (" + interpolateValue + ")) == null ? '' : __t) +\n'";
-              }
-              index = offset + match.length;
-              return match;
+          var sourceURL = "//# sourceURL=" + (hasOwnProperty.call(options, "sourceURL") ? (options.sourceURL + "").replace(/\s/g, " ") : "lodash.templateSources[" + ++templateCounter + "]") + "\n";
+          string.replace(reDelimiters, function(match, escapeValue, interpolateValue, esTemplateValue, evaluateValue, offset) {
+            interpolateValue || (interpolateValue = esTemplateValue);
+            source += string.slice(index, offset).replace(reUnescapedString, escapeStringChar);
+            if (escapeValue) {
+              isEscaping = true;
+              source += "' +\n__e(" + escapeValue + ") +\n'";
             }
-          );
+            if (evaluateValue) {
+              isEvaluating = true;
+              source += "';\n" + evaluateValue + ";\n__p += '";
+            }
+            if (interpolateValue) {
+              source += "' +\n((__t = (" + interpolateValue + ")) == null ? '' : __t) +\n'";
+            }
+            index = offset + match.length;
+            return match;
+          });
           source += "';\n";
           var variable = hasOwnProperty.call(options, "variable") && options.variable;
           if (!variable) {
@@ -5465,22 +4730,9 @@ var require_lodash = __commonJS({
           } else if (reForbiddenIdentifierChars.test(variable)) {
             throw new Error2(INVALID_TEMPL_VAR_ERROR_TEXT);
           }
-          source = (isEvaluating ? source.replace(reEmptyStringLeading, "") : source)
-            .replace(reEmptyStringMiddle, "$1")
-            .replace(reEmptyStringTrailing, "$1;");
-          source =
-            "function(" +
-            (variable || "obj") +
-            ") {\n" +
-            (variable ? "" : "obj || (obj = {});\n") +
-            "var __t, __p = ''" +
-            (isEscaping ? ", __e = _.escape" : "") +
-            (isEvaluating
-              ? ", __j = Array.prototype.join;\nfunction print() { __p += __j.call(arguments, '') }\n"
-              : ";\n") +
-            source +
-            "return __p\n}";
-          var result2 = attempt(function () {
+          source = (isEvaluating ? source.replace(reEmptyStringLeading, "") : source).replace(reEmptyStringMiddle, "$1").replace(reEmptyStringTrailing, "$1;");
+          source = "function(" + (variable || "obj") + ") {\n" + (variable ? "" : "obj || (obj = {});\n") + "var __t, __p = ''" + (isEscaping ? ", __e = _.escape" : "") + (isEvaluating ? ", __j = Array.prototype.join;\nfunction print() { __p += __j.call(arguments, '') }\n" : ";\n") + source + "return __p\n}";
+          var result2 = attempt(function() {
             return Function2(importsKeys, sourceURL + "return " + source).apply(undefined2, importsValues);
           });
           result2.source = source;
@@ -5503,10 +4755,7 @@ var require_lodash = __commonJS({
           if (!string || !(chars = baseToString(chars))) {
             return string;
           }
-          var strSymbols = stringToArray(string),
-            chrSymbols = stringToArray(chars),
-            start = charsStartIndex(strSymbols, chrSymbols),
-            end = charsEndIndex(strSymbols, chrSymbols) + 1;
+          var strSymbols = stringToArray(string), chrSymbols = stringToArray(chars), start = charsStartIndex(strSymbols, chrSymbols), end = charsEndIndex(strSymbols, chrSymbols) + 1;
           return castSlice(strSymbols, start, end).join("");
         }
         function trimEnd(string, chars, guard) {
@@ -5517,8 +4766,7 @@ var require_lodash = __commonJS({
           if (!string || !(chars = baseToString(chars))) {
             return string;
           }
-          var strSymbols = stringToArray(string),
-            end = charsEndIndex(strSymbols, stringToArray(chars)) + 1;
+          var strSymbols = stringToArray(string), end = charsEndIndex(strSymbols, stringToArray(chars)) + 1;
           return castSlice(strSymbols, 0, end).join("");
         }
         function trimStart(string, chars, guard) {
@@ -5529,13 +4777,11 @@ var require_lodash = __commonJS({
           if (!string || !(chars = baseToString(chars))) {
             return string;
           }
-          var strSymbols = stringToArray(string),
-            start = charsStartIndex(strSymbols, stringToArray(chars));
+          var strSymbols = stringToArray(string), start = charsStartIndex(strSymbols, stringToArray(chars));
           return castSlice(strSymbols, start).join("");
         }
         function truncate(string, options) {
-          var length = DEFAULT_TRUNC_LENGTH,
-            omission = DEFAULT_TRUNC_OMISSION;
+          var length = DEFAULT_TRUNC_LENGTH, omission = DEFAULT_TRUNC_OMISSION;
           if (isObject(options)) {
             var separator = "separator" in options ? options.separator : separator;
             length = "length" in options ? toInteger(options.length) : length;
@@ -5563,13 +4809,12 @@ var require_lodash = __commonJS({
           }
           if (isRegExp(separator)) {
             if (string.slice(end).search(separator)) {
-              var match,
-                substring = result2;
+              var match, substring = result2;
               if (!separator.global) {
                 separator = RegExp2(separator.source, toString(reFlags.exec(separator)) + "g");
               }
               separator.lastIndex = 0;
-              while ((match = separator.exec(substring))) {
+              while (match = separator.exec(substring)) {
                 var newEnd = match.index;
               }
               result2 = result2.slice(0, newEnd === undefined2 ? end : newEnd);
@@ -5586,7 +4831,7 @@ var require_lodash = __commonJS({
           string = toString(string);
           return string && reHasEscapedHtml.test(string) ? string.replace(reEscapedHtml, unescapeHtmlChar) : string;
         }
-        var upperCase = createCompounder(function (result2, word, index) {
+        var upperCase = createCompounder(function(result2, word, index) {
           return result2 + (index ? " " : "") + word.toUpperCase();
         });
         var upperFirst = createCaseFirst("toUpperCase");
@@ -5598,32 +4843,29 @@ var require_lodash = __commonJS({
           }
           return string.match(pattern) || [];
         }
-        var attempt = baseRest(function (func, args) {
+        var attempt = baseRest(function(func, args) {
           try {
             return apply(func, undefined2, args);
           } catch (e) {
             return isError(e) ? e : new Error2(e);
           }
         });
-        var bindAll = flatRest(function (object, methodNames) {
-          arrayEach(methodNames, function (key2) {
+        var bindAll = flatRest(function(object, methodNames) {
+          arrayEach(methodNames, function(key2) {
             key2 = toKey(key2);
             baseAssignValue(object, key2, bind(object[key2], object));
           });
           return object;
         });
         function cond(pairs) {
-          var length = pairs == null ? 0 : pairs.length,
-            toIteratee = getIteratee();
-          pairs = !length
-            ? []
-            : arrayMap(pairs, function (pair) {
-                if (typeof pair[1] != "function") {
-                  throw new TypeError2(FUNC_ERROR_TEXT);
-                }
-                return [toIteratee(pair[0]), pair[1]];
-              });
-          return baseRest(function (args) {
+          var length = pairs == null ? 0 : pairs.length, toIteratee = getIteratee();
+          pairs = !length ? [] : arrayMap(pairs, function(pair) {
+            if (typeof pair[1] != "function") {
+              throw new TypeError2(FUNC_ERROR_TEXT);
+            }
+            return [toIteratee(pair[0]), pair[1]];
+          });
+          return baseRest(function(args) {
             var index = -1;
             while (++index < length) {
               var pair = pairs[index];
@@ -5637,7 +4879,7 @@ var require_lodash = __commonJS({
           return baseConforms(baseClone(source, CLONE_DEEP_FLAG));
         }
         function constant(value) {
-          return function () {
+          return function() {
             return value;
           };
         }
@@ -5658,37 +4900,34 @@ var require_lodash = __commonJS({
         function matchesProperty(path, srcValue) {
           return baseMatchesProperty(path, baseClone(srcValue, CLONE_DEEP_FLAG));
         }
-        var method = baseRest(function (path, args) {
-          return function (object) {
+        var method = baseRest(function(path, args) {
+          return function(object) {
             return baseInvoke(object, path, args);
           };
         });
-        var methodOf = baseRest(function (object, args) {
-          return function (path) {
+        var methodOf = baseRest(function(object, args) {
+          return function(path) {
             return baseInvoke(object, path, args);
           };
         });
         function mixin(object, source, options) {
-          var props = keys(source),
-            methodNames = baseFunctions(source, props);
+          var props = keys(source), methodNames = baseFunctions(source, props);
           if (options == null && !(isObject(source) && (methodNames.length || !props.length))) {
             options = source;
             source = object;
             object = this;
             methodNames = baseFunctions(source, keys(source));
           }
-          var chain2 = !(isObject(options) && "chain" in options) || !!options.chain,
-            isFunc = isFunction(object);
-          arrayEach(methodNames, function (methodName) {
+          var chain2 = !(isObject(options) && "chain" in options) || !!options.chain, isFunc = isFunction(object);
+          arrayEach(methodNames, function(methodName) {
             var func = source[methodName];
             object[methodName] = func;
             if (isFunc) {
-              object.prototype[methodName] = function () {
+              object.prototype[methodName] = function() {
                 var chainAll = this.__chain__;
                 if (chain2 || chainAll) {
-                  var result2 = object(this.__wrapped__),
-                    actions = (result2.__actions__ = copyArray(this.__actions__));
-                  actions.push({ func: func, args: arguments, thisArg: object });
+                  var result2 = object(this.__wrapped__), actions = result2.__actions__ = copyArray(this.__actions__);
+                  actions.push({ "func": func, "args": arguments, "thisArg": object });
                   result2.__chain__ = chainAll;
                   return result2;
                 }
@@ -5704,10 +4943,11 @@ var require_lodash = __commonJS({
           }
           return this;
         }
-        function noop() {}
+        function noop() {
+        }
         function nthArg(n) {
           n = toInteger(n);
-          return baseRest(function (args) {
+          return baseRest(function(args) {
             return baseNth(args, n);
           });
         }
@@ -5718,7 +4958,7 @@ var require_lodash = __commonJS({
           return isKey(path) ? baseProperty(toKey(path)) : basePropertyDeep(path);
         }
         function propertyOf(object) {
-          return function (path) {
+          return function(path) {
             return object == null ? undefined2 : baseGet(object, path);
           };
         }
@@ -5744,8 +4984,7 @@ var require_lodash = __commonJS({
           if (n < 1 || n > MAX_SAFE_INTEGER) {
             return [];
           }
-          var index = MAX_ARRAY_LENGTH,
-            length = nativeMin(n, MAX_ARRAY_LENGTH);
+          var index = MAX_ARRAY_LENGTH, length = nativeMin(n, MAX_ARRAY_LENGTH);
           iteratee2 = getIteratee(iteratee2);
           n -= MAX_ARRAY_LENGTH;
           var result2 = baseTimes(length, iteratee2);
@@ -5764,11 +5003,11 @@ var require_lodash = __commonJS({
           var id = ++idCounter;
           return toString(prefix) + id;
         }
-        var add2 = createMathOperation(function (augend, addend) {
+        var add2 = createMathOperation(function(augend, addend) {
           return augend + addend;
         }, 0);
         var ceil = createRound("ceil");
-        var divide = createMathOperation(function (dividend, divisor) {
+        var divide = createMathOperation(function(dividend, divisor) {
           return dividend / divisor;
         }, 1);
         var floor = createRound("floor");
@@ -5790,11 +5029,11 @@ var require_lodash = __commonJS({
         function minBy2(array, iteratee2) {
           return array && array.length ? baseExtremum(array, getIteratee(iteratee2, 2), baseLt) : undefined2;
         }
-        var multiply = createMathOperation(function (multiplier, multiplicand) {
+        var multiply = createMathOperation(function(multiplier, multiplicand) {
           return multiplier * multiplicand;
         }, 1);
         var round = createRound("round");
-        var subtract = createMathOperation(function (minuend, subtrahend) {
+        var subtract = createMathOperation(function(minuend, subtrahend) {
           return minuend - subtrahend;
         }, 0);
         function sum3(array) {
@@ -6109,87 +5348,82 @@ var require_lodash = __commonJS({
         lodash.each = forEach;
         lodash.eachRight = forEachRight;
         lodash.first = head;
-        mixin(
-          lodash,
-          (function () {
-            var source = {};
-            baseForOwn(lodash, function (func, methodName) {
-              if (!hasOwnProperty.call(lodash.prototype, methodName)) {
-                source[methodName] = func;
-              }
-            });
-            return source;
-          })(),
-          { chain: false }
-        );
+        mixin(lodash, (function() {
+          var source = {};
+          baseForOwn(lodash, function(func, methodName) {
+            if (!hasOwnProperty.call(lodash.prototype, methodName)) {
+              source[methodName] = func;
+            }
+          });
+          return source;
+        })(), { "chain": false });
         lodash.VERSION = VERSION;
-        arrayEach(["bind", "bindKey", "curry", "curryRight", "partial", "partialRight"], function (methodName) {
+        arrayEach(["bind", "bindKey", "curry", "curryRight", "partial", "partialRight"], function(methodName) {
           lodash[methodName].placeholder = lodash;
         });
-        arrayEach(["drop", "take"], function (methodName, index) {
-          LazyWrapper.prototype[methodName] = function (n) {
+        arrayEach(["drop", "take"], function(methodName, index) {
+          LazyWrapper.prototype[methodName] = function(n) {
             n = n === undefined2 ? 1 : nativeMax(toInteger(n), 0);
             var result2 = this.__filtered__ && !index ? new LazyWrapper(this) : this.clone();
             if (result2.__filtered__) {
               result2.__takeCount__ = nativeMin(n, result2.__takeCount__);
             } else {
               result2.__views__.push({
-                size: nativeMin(n, MAX_ARRAY_LENGTH),
-                type: methodName + (result2.__dir__ < 0 ? "Right" : ""),
+                "size": nativeMin(n, MAX_ARRAY_LENGTH),
+                "type": methodName + (result2.__dir__ < 0 ? "Right" : "")
               });
             }
             return result2;
           };
-          LazyWrapper.prototype[methodName + "Right"] = function (n) {
+          LazyWrapper.prototype[methodName + "Right"] = function(n) {
             return this.reverse()[methodName](n).reverse();
           };
         });
-        arrayEach(["filter", "map", "takeWhile"], function (methodName, index) {
-          var type = index + 1,
-            isFilter = type == LAZY_FILTER_FLAG || type == LAZY_WHILE_FLAG;
-          LazyWrapper.prototype[methodName] = function (iteratee2) {
+        arrayEach(["filter", "map", "takeWhile"], function(methodName, index) {
+          var type = index + 1, isFilter = type == LAZY_FILTER_FLAG || type == LAZY_WHILE_FLAG;
+          LazyWrapper.prototype[methodName] = function(iteratee2) {
             var result2 = this.clone();
             result2.__iteratees__.push({
-              iteratee: getIteratee(iteratee2, 3),
-              type: type,
+              "iteratee": getIteratee(iteratee2, 3),
+              "type": type
             });
             result2.__filtered__ = result2.__filtered__ || isFilter;
             return result2;
           };
         });
-        arrayEach(["head", "last"], function (methodName, index) {
+        arrayEach(["head", "last"], function(methodName, index) {
           var takeName = "take" + (index ? "Right" : "");
-          LazyWrapper.prototype[methodName] = function () {
+          LazyWrapper.prototype[methodName] = function() {
             return this[takeName](1).value()[0];
           };
         });
-        arrayEach(["initial", "tail"], function (methodName, index) {
+        arrayEach(["initial", "tail"], function(methodName, index) {
           var dropName = "drop" + (index ? "" : "Right");
-          LazyWrapper.prototype[methodName] = function () {
+          LazyWrapper.prototype[methodName] = function() {
             return this.__filtered__ ? new LazyWrapper(this) : this[dropName](1);
           };
         });
-        LazyWrapper.prototype.compact = function () {
+        LazyWrapper.prototype.compact = function() {
           return this.filter(identity);
         };
-        LazyWrapper.prototype.find = function (predicate) {
+        LazyWrapper.prototype.find = function(predicate) {
           return this.filter(predicate).head();
         };
-        LazyWrapper.prototype.findLast = function (predicate) {
+        LazyWrapper.prototype.findLast = function(predicate) {
           return this.reverse().find(predicate);
         };
-        LazyWrapper.prototype.invokeMap = baseRest(function (path, args) {
+        LazyWrapper.prototype.invokeMap = baseRest(function(path, args) {
           if (typeof path == "function") {
             return new LazyWrapper(this);
           }
-          return this.map(function (value) {
+          return this.map(function(value) {
             return baseInvoke(value, path, args);
           });
         });
-        LazyWrapper.prototype.reject = function (predicate) {
+        LazyWrapper.prototype.reject = function(predicate) {
           return this.filter(negate(getIteratee(predicate)));
         };
-        LazyWrapper.prototype.slice = function (start, end) {
+        LazyWrapper.prototype.slice = function(start, end) {
           start = toInteger(start);
           var result2 = this;
           if (result2.__filtered__ && (start > 0 || end < 0)) {
@@ -6206,81 +5440,67 @@ var require_lodash = __commonJS({
           }
           return result2;
         };
-        LazyWrapper.prototype.takeRightWhile = function (predicate) {
+        LazyWrapper.prototype.takeRightWhile = function(predicate) {
           return this.reverse().takeWhile(predicate).reverse();
         };
-        LazyWrapper.prototype.toArray = function () {
+        LazyWrapper.prototype.toArray = function() {
           return this.take(MAX_ARRAY_LENGTH);
         };
-        baseForOwn(LazyWrapper.prototype, function (func, methodName) {
-          var checkIteratee = /^(?:filter|find|map|reject)|While$/.test(methodName),
-            isTaker = /^(?:head|last)$/.test(methodName),
-            lodashFunc = lodash[isTaker ? "take" + (methodName == "last" ? "Right" : "") : methodName],
-            retUnwrapped = isTaker || /^find/.test(methodName);
+        baseForOwn(LazyWrapper.prototype, function(func, methodName) {
+          var checkIteratee = /^(?:filter|find|map|reject)|While$/.test(methodName), isTaker = /^(?:head|last)$/.test(methodName), lodashFunc = lodash[isTaker ? "take" + (methodName == "last" ? "Right" : "") : methodName], retUnwrapped = isTaker || /^find/.test(methodName);
           if (!lodashFunc) {
             return;
           }
-          lodash.prototype[methodName] = function () {
-            var value = this.__wrapped__,
-              args = isTaker ? [1] : arguments,
-              isLazy = value instanceof LazyWrapper,
-              iteratee2 = args[0],
-              useLazy = isLazy || isArray(value);
-            var interceptor = function (value2) {
+          lodash.prototype[methodName] = function() {
+            var value = this.__wrapped__, args = isTaker ? [1] : arguments, isLazy = value instanceof LazyWrapper, iteratee2 = args[0], useLazy = isLazy || isArray(value);
+            var interceptor = function(value2) {
               var result3 = lodashFunc.apply(lodash, arrayPush([value2], args));
               return isTaker && chainAll ? result3[0] : result3;
             };
             if (useLazy && checkIteratee && typeof iteratee2 == "function" && iteratee2.length != 1) {
               isLazy = useLazy = false;
             }
-            var chainAll = this.__chain__,
-              isHybrid = !!this.__actions__.length,
-              isUnwrapped = retUnwrapped && !chainAll,
-              onlyLazy = isLazy && !isHybrid;
+            var chainAll = this.__chain__, isHybrid = !!this.__actions__.length, isUnwrapped = retUnwrapped && !chainAll, onlyLazy = isLazy && !isHybrid;
             if (!retUnwrapped && useLazy) {
               value = onlyLazy ? value : new LazyWrapper(this);
               var result2 = func.apply(value, args);
-              result2.__actions__.push({ func: thru, args: [interceptor], thisArg: undefined2 });
+              result2.__actions__.push({ "func": thru, "args": [interceptor], "thisArg": undefined2 });
               return new LodashWrapper(result2, chainAll);
             }
             if (isUnwrapped && onlyLazy) {
               return func.apply(this, args);
             }
             result2 = this.thru(interceptor);
-            return isUnwrapped ? (isTaker ? result2.value()[0] : result2.value()) : result2;
+            return isUnwrapped ? isTaker ? result2.value()[0] : result2.value() : result2;
           };
         });
-        arrayEach(["pop", "push", "shift", "sort", "splice", "unshift"], function (methodName) {
-          var func = arrayProto[methodName],
-            chainName = /^(?:push|sort|unshift)$/.test(methodName) ? "tap" : "thru",
-            retUnwrapped = /^(?:pop|shift)$/.test(methodName);
-          lodash.prototype[methodName] = function () {
+        arrayEach(["pop", "push", "shift", "sort", "splice", "unshift"], function(methodName) {
+          var func = arrayProto[methodName], chainName = /^(?:push|sort|unshift)$/.test(methodName) ? "tap" : "thru", retUnwrapped = /^(?:pop|shift)$/.test(methodName);
+          lodash.prototype[methodName] = function() {
             var args = arguments;
             if (retUnwrapped && !this.__chain__) {
               var value = this.value();
               return func.apply(isArray(value) ? value : [], args);
             }
-            return this[chainName](function (value2) {
+            return this[chainName](function(value2) {
               return func.apply(isArray(value2) ? value2 : [], args);
             });
           };
         });
-        baseForOwn(LazyWrapper.prototype, function (func, methodName) {
+        baseForOwn(LazyWrapper.prototype, function(func, methodName) {
           var lodashFunc = lodash[methodName];
           if (lodashFunc) {
             var key2 = lodashFunc.name + "";
             if (!hasOwnProperty.call(realNames, key2)) {
               realNames[key2] = [];
             }
-            realNames[key2].push({ name: methodName, func: lodashFunc });
+            realNames[key2].push({ "name": methodName, "func": lodashFunc });
           }
         });
-        realNames[createHybrid(undefined2, WRAP_BIND_KEY_FLAG).name] = [
-          {
-            name: "wrapper",
-            func: undefined2,
-          },
-        ];
+        realNames[createHybrid(undefined2, WRAP_BIND_KEY_FLAG).name] = [{
+          "name": "wrapper",
+          "func": undefined2
+        }];
         LazyWrapper.prototype.clone = lazyClone;
         LazyWrapper.prototype.reverse = lazyReverse;
         LazyWrapper.prototype.value = lazyValue;
@@ -6296,11 +5516,11 @@ var require_lodash = __commonJS({
           lodash.prototype[symIterator] = wrapperToIterator;
         }
         return lodash;
-      };
+      });
       var _ = runInContext();
       if (typeof define == "function" && typeof define.amd == "object" && define.amd) {
         root._ = _;
-        define(function () {
+        define(function() {
           return _;
         });
       } else if (freeModule) {
@@ -6310,28 +5530,27 @@ var require_lodash = __commonJS({
         root._ = _;
       }
     }).call(exports);
-  },
+  }
 });
 
 // engine/node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/index.js
 var require_lodash2 = __commonJS({
   "engine/node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/index.js"(exports, module) {
     module.exports = require_lodash();
-  },
+  }
 });
 
 // engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/lib/alea.js
 var require_alea = __commonJS({
   "engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/lib/alea.js"(exports, module) {
-    (function (global2, module2, define2) {
+    (function(global2, module2, define2) {
       function Alea(seed) {
-        var me = this,
-          mash = Mash();
-        me.next = function () {
+        var me = this, mash = Mash();
+        me.next = function() {
           var t = 2091639 * me.s0 + me.c * 23283064365386963e-26;
           me.s0 = me.s1;
           me.s1 = me.s2;
-          return (me.s2 = t - (me.c = t | 0));
+          return me.s2 = t - (me.c = t | 0);
         };
         me.c = 1;
         me.s0 = mash(" ");
@@ -6359,19 +5578,17 @@ var require_alea = __commonJS({
         return t;
       }
       function impl(seed, opts) {
-        var xg = new Alea(seed),
-          state = opts && opts.state,
-          prng = xg.next;
-        prng.int32 = function () {
-          return (xg.next() * 4294967296) | 0;
+        var xg = new Alea(seed), state = opts && opts.state, prng = xg.next;
+        prng.int32 = function() {
+          return xg.next() * 4294967296 | 0;
         };
-        prng.double = function () {
-          return prng() + ((prng() * 2097152) | 0) * 11102230246251565e-32;
+        prng.double = function() {
+          return prng() + (prng() * 2097152 | 0) * 11102230246251565e-32;
         };
         prng.quick = prng;
         if (state) {
           if (typeof state == "object") copy(state, xg);
-          prng.state = function () {
+          prng.state = function() {
             return copy(xg, {});
           };
         }
@@ -6379,7 +5596,7 @@ var require_alea = __commonJS({
       }
       function Mash() {
         var n = 4022871197;
-        var mash = function (data) {
+        var mash = function(data) {
           data = data.toString();
           for (var i = 0; i < data.length; i++) {
             n += data.charCodeAt(i);
@@ -6398,7 +5615,7 @@ var require_alea = __commonJS({
       if (module2 && module2.exports) {
         module2.exports = impl;
       } else if (define2 && define2.amd) {
-        define2(function () {
+        define2(function() {
           return impl;
         });
       } else {
@@ -6411,26 +5628,25 @@ var require_alea = __commonJS({
       typeof define == "function" && define
       // present with an AMD loader
     );
-  },
+  }
 });
 
 // engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/lib/xor128.js
 var require_xor128 = __commonJS({
   "engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/lib/xor128.js"(exports, module) {
-    (function (global2, module2, define2) {
+    (function(global2, module2, define2) {
       function XorGen(seed) {
-        var me = this,
-          strseed = "";
+        var me = this, strseed = "";
         me.x = 0;
         me.y = 0;
         me.z = 0;
         me.w = 0;
-        me.next = function () {
-          var t = me.x ^ (me.x << 11);
+        me.next = function() {
+          var t = me.x ^ me.x << 11;
           me.x = me.y;
           me.y = me.z;
           me.z = me.w;
-          return (me.w ^= (me.w >>> 19) ^ t ^ (t >>> 8));
+          return me.w ^= me.w >>> 19 ^ t ^ t >>> 8;
         };
         if (seed === (seed | 0)) {
           me.x = seed;
@@ -6450,16 +5666,12 @@ var require_xor128 = __commonJS({
         return t;
       }
       function impl(seed, opts) {
-        var xg = new XorGen(seed),
-          state = opts && opts.state,
-          prng = function () {
-            return (xg.next() >>> 0) / 4294967296;
-          };
-        prng.double = function () {
+        var xg = new XorGen(seed), state = opts && opts.state, prng = function() {
+          return (xg.next() >>> 0) / 4294967296;
+        };
+        prng.double = function() {
           do {
-            var top = xg.next() >>> 11,
-              bot = (xg.next() >>> 0) / 4294967296,
-              result = (top + bot) / (1 << 21);
+            var top = xg.next() >>> 11, bot = (xg.next() >>> 0) / 4294967296, result = (top + bot) / (1 << 21);
           } while (result === 0);
           return result;
         };
@@ -6467,7 +5679,7 @@ var require_xor128 = __commonJS({
         prng.quick = prng;
         if (state) {
           if (typeof state == "object") copy(state, xg);
-          prng.state = function () {
+          prng.state = function() {
             return copy(xg, {});
           };
         }
@@ -6476,7 +5688,7 @@ var require_xor128 = __commonJS({
       if (module2 && module2.exports) {
         module2.exports = impl;
       } else if (define2 && define2.amd) {
-        define2(function () {
+        define2(function() {
           return impl;
         });
       } else {
@@ -6489,23 +5701,22 @@ var require_xor128 = __commonJS({
       typeof define == "function" && define
       // present with an AMD loader
     );
-  },
+  }
 });
 
 // engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/lib/xorwow.js
 var require_xorwow = __commonJS({
   "engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/lib/xorwow.js"(exports, module) {
-    (function (global2, module2, define2) {
+    (function(global2, module2, define2) {
       function XorGen(seed) {
-        var me = this,
-          strseed = "";
-        me.next = function () {
-          var t = me.x ^ (me.x >>> 2);
+        var me = this, strseed = "";
+        me.next = function() {
+          var t = me.x ^ me.x >>> 2;
           me.x = me.y;
           me.y = me.z;
           me.z = me.w;
           me.w = me.v;
-          return ((me.d = (me.d + 362437) | 0) + (me.v = me.v ^ (me.v << 4) ^ (t ^ (t << 1)))) | 0;
+          return (me.d = me.d + 362437 | 0) + (me.v = me.v ^ me.v << 4 ^ (t ^ t << 1)) | 0;
         };
         me.x = 0;
         me.y = 0;
@@ -6520,7 +5731,7 @@ var require_xorwow = __commonJS({
         for (var k = 0; k < strseed.length + 64; k++) {
           me.x ^= strseed.charCodeAt(k) | 0;
           if (k == strseed.length) {
-            me.d = (me.x << 10) ^ (me.x >>> 4);
+            me.d = me.x << 10 ^ me.x >>> 4;
           }
           me.next();
         }
@@ -6535,16 +5746,12 @@ var require_xorwow = __commonJS({
         return t;
       }
       function impl(seed, opts) {
-        var xg = new XorGen(seed),
-          state = opts && opts.state,
-          prng = function () {
-            return (xg.next() >>> 0) / 4294967296;
-          };
-        prng.double = function () {
+        var xg = new XorGen(seed), state = opts && opts.state, prng = function() {
+          return (xg.next() >>> 0) / 4294967296;
+        };
+        prng.double = function() {
           do {
-            var top = xg.next() >>> 11,
-              bot = (xg.next() >>> 0) / 4294967296,
-              result = (top + bot) / (1 << 21);
+            var top = xg.next() >>> 11, bot = (xg.next() >>> 0) / 4294967296, result = (top + bot) / (1 << 21);
           } while (result === 0);
           return result;
         };
@@ -6552,7 +5759,7 @@ var require_xorwow = __commonJS({
         prng.quick = prng;
         if (state) {
           if (typeof state == "object") copy(state, xg);
-          prng.state = function () {
+          prng.state = function() {
             return copy(xg, {});
           };
         }
@@ -6561,7 +5768,7 @@ var require_xorwow = __commonJS({
       if (module2 && module2.exports) {
         module2.exports = impl;
       } else if (define2 && define2.amd) {
-        define2(function () {
+        define2(function() {
           return impl;
         });
       } else {
@@ -6574,51 +5781,45 @@ var require_xorwow = __commonJS({
       typeof define == "function" && define
       // present with an AMD loader
     );
-  },
+  }
 });
 
 // engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/lib/xorshift7.js
 var require_xorshift7 = __commonJS({
   "engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/lib/xorshift7.js"(exports, module) {
-    (function (global2, module2, define2) {
+    (function(global2, module2, define2) {
       function XorGen(seed) {
         var me = this;
-        me.next = function () {
-          var X = me.x,
-            i = me.i,
-            t,
-            v,
-            w;
+        me.next = function() {
+          var X = me.x, i = me.i, t, v, w;
           t = X[i];
           t ^= t >>> 7;
-          v = t ^ (t << 24);
-          t = X[(i + 1) & 7];
-          v ^= t ^ (t >>> 10);
-          t = X[(i + 3) & 7];
-          v ^= t ^ (t >>> 3);
-          t = X[(i + 4) & 7];
-          v ^= t ^ (t << 7);
-          t = X[(i + 7) & 7];
-          t = t ^ (t << 13);
-          v ^= t ^ (t << 9);
+          v = t ^ t << 24;
+          t = X[i + 1 & 7];
+          v ^= t ^ t >>> 10;
+          t = X[i + 3 & 7];
+          v ^= t ^ t >>> 3;
+          t = X[i + 4 & 7];
+          v ^= t ^ t << 7;
+          t = X[i + 7 & 7];
+          t = t ^ t << 13;
+          v ^= t ^ t << 9;
           X[i] = v;
-          me.i = (i + 1) & 7;
+          me.i = i + 1 & 7;
           return v;
         };
         function init(me2, seed2) {
-          var j,
-            w,
-            X = [];
+          var j, w, X = [];
           if (seed2 === (seed2 | 0)) {
             w = X[0] = seed2;
           } else {
             seed2 = "" + seed2;
             for (j = 0; j < seed2.length; ++j) {
-              X[j & 7] = (X[j & 7] << 15) ^ ((seed2.charCodeAt(j) + X[(j + 1) & 7]) << 13);
+              X[j & 7] = X[j & 7] << 15 ^ seed2.charCodeAt(j) + X[j + 1 & 7] << 13;
             }
           }
           while (X.length < 8) X.push(0);
-          for (j = 0; j < 8 && X[j] === 0; ++j);
+          for (j = 0; j < 8 && X[j] === 0; ++j) ;
           if (j == 8) w = X[7] = -1;
           else w = X[j];
           me2.x = X;
@@ -6635,17 +5836,13 @@ var require_xorshift7 = __commonJS({
         return t;
       }
       function impl(seed, opts) {
-        if (seed == null) seed = +(/* @__PURE__ */ new Date());
-        var xg = new XorGen(seed),
-          state = opts && opts.state,
-          prng = function () {
-            return (xg.next() >>> 0) / 4294967296;
-          };
-        prng.double = function () {
+        if (seed == null) seed = +/* @__PURE__ */ new Date();
+        var xg = new XorGen(seed), state = opts && opts.state, prng = function() {
+          return (xg.next() >>> 0) / 4294967296;
+        };
+        prng.double = function() {
           do {
-            var top = xg.next() >>> 11,
-              bot = (xg.next() >>> 0) / 4294967296,
-              result = (top + bot) / (1 << 21);
+            var top = xg.next() >>> 11, bot = (xg.next() >>> 0) / 4294967296, result = (top + bot) / (1 << 21);
           } while (result === 0);
           return result;
         };
@@ -6653,7 +5850,7 @@ var require_xorshift7 = __commonJS({
         prng.quick = prng;
         if (state) {
           if (state.x) copy(state, xg);
-          prng.state = function () {
+          prng.state = function() {
             return copy(xg, {});
           };
         }
@@ -6662,7 +5859,7 @@ var require_xorshift7 = __commonJS({
       if (module2 && module2.exports) {
         module2.exports = impl;
       } else if (define2 && define2.amd) {
-        define2(function () {
+        define2(function() {
           return impl;
         });
       } else {
@@ -6675,40 +5872,30 @@ var require_xorshift7 = __commonJS({
       typeof define == "function" && define
       // present with an AMD loader
     );
-  },
+  }
 });
 
 // engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/lib/xor4096.js
 var require_xor4096 = __commonJS({
   "engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/lib/xor4096.js"(exports, module) {
-    (function (global2, module2, define2) {
+    (function(global2, module2, define2) {
       function XorGen(seed) {
         var me = this;
-        me.next = function () {
-          var w = me.w,
-            X = me.X,
-            i = me.i,
-            t,
-            v;
-          me.w = w = (w + 1640531527) | 0;
-          v = X[(i + 34) & 127];
-          t = X[(i = (i + 1) & 127)];
+        me.next = function() {
+          var w = me.w, X = me.X, i = me.i, t, v;
+          me.w = w = w + 1640531527 | 0;
+          v = X[i + 34 & 127];
+          t = X[i = i + 1 & 127];
           v ^= v << 13;
           t ^= t << 17;
           v ^= v >>> 15;
           t ^= t >>> 12;
           v = X[i] = v ^ t;
           me.i = i;
-          return (v + (w ^ (w >>> 16))) | 0;
+          return v + (w ^ w >>> 16) | 0;
         };
         function init(me2, seed2) {
-          var t,
-            v,
-            i,
-            j,
-            w,
-            X = [],
-            limit = 128;
+          var t, v, i, j, w, X = [], limit = 128;
           if (seed2 === (seed2 | 0)) {
             v = seed2;
             seed2 = null;
@@ -6725,18 +5912,18 @@ var require_xor4096 = __commonJS({
             v ^= v << 4;
             v ^= v >>> 13;
             if (j >= 0) {
-              w = (w + 1640531527) | 0;
+              w = w + 1640531527 | 0;
               t = X[j & 127] ^= v + w;
               i = 0 == t ? i + 1 : 0;
             }
           }
           if (i >= 128) {
-            X[((seed2 && seed2.length) || 0) & 127] = -1;
+            X[(seed2 && seed2.length || 0) & 127] = -1;
           }
           i = 127;
           for (j = 4 * 128; j > 0; --j) {
-            v = X[(i + 34) & 127];
-            t = X[(i = (i + 1) & 127)];
+            v = X[i + 34 & 127];
+            t = X[i = i + 1 & 127];
             v ^= v << 13;
             t ^= t << 17;
             v ^= v >>> 15;
@@ -6755,18 +5942,15 @@ var require_xor4096 = __commonJS({
         t.X = f.X.slice();
         return t;
       }
+      ;
       function impl(seed, opts) {
-        if (seed == null) seed = +(/* @__PURE__ */ new Date());
-        var xg = new XorGen(seed),
-          state = opts && opts.state,
-          prng = function () {
-            return (xg.next() >>> 0) / 4294967296;
-          };
-        prng.double = function () {
+        if (seed == null) seed = +/* @__PURE__ */ new Date();
+        var xg = new XorGen(seed), state = opts && opts.state, prng = function() {
+          return (xg.next() >>> 0) / 4294967296;
+        };
+        prng.double = function() {
           do {
-            var top = xg.next() >>> 11,
-              bot = (xg.next() >>> 0) / 4294967296,
-              result = (top + bot) / (1 << 21);
+            var top = xg.next() >>> 11, bot = (xg.next() >>> 0) / 4294967296, result = (top + bot) / (1 << 21);
           } while (result === 0);
           return result;
         };
@@ -6774,7 +5958,7 @@ var require_xor4096 = __commonJS({
         prng.quick = prng;
         if (state) {
           if (state.X) copy(state, xg);
-          prng.state = function () {
+          prng.state = function() {
             return copy(xg, {});
           };
         }
@@ -6783,7 +5967,7 @@ var require_xor4096 = __commonJS({
       if (module2 && module2.exports) {
         module2.exports = impl;
       } else if (define2 && define2.amd) {
-        define2(function () {
+        define2(function() {
           return impl;
         });
       } else {
@@ -6797,36 +5981,32 @@ var require_xor4096 = __commonJS({
       typeof define == "function" && define
       // present with an AMD loader
     );
-  },
+  }
 });
 
 // engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/lib/tychei.js
 var require_tychei = __commonJS({
   "engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/lib/tychei.js"(exports, module) {
-    (function (global2, module2, define2) {
+    (function(global2, module2, define2) {
       function XorGen(seed) {
-        var me = this,
-          strseed = "";
-        me.next = function () {
-          var b = me.b,
-            c = me.c,
-            d = me.d,
-            a = me.a;
-          b = (b << 25) ^ (b >>> 7) ^ c;
-          c = (c - d) | 0;
-          d = (d << 24) ^ (d >>> 8) ^ a;
-          a = (a - b) | 0;
-          me.b = b = (b << 20) ^ (b >>> 12) ^ c;
-          me.c = c = (c - d) | 0;
-          me.d = (d << 16) ^ (c >>> 16) ^ a;
-          return (me.a = (a - b) | 0);
+        var me = this, strseed = "";
+        me.next = function() {
+          var b = me.b, c = me.c, d = me.d, a = me.a;
+          b = b << 25 ^ b >>> 7 ^ c;
+          c = c - d | 0;
+          d = d << 24 ^ d >>> 8 ^ a;
+          a = a - b | 0;
+          me.b = b = b << 20 ^ b >>> 12 ^ c;
+          me.c = c = c - d | 0;
+          me.d = d << 16 ^ c >>> 16 ^ a;
+          return me.a = a - b | 0;
         };
         me.a = 0;
         me.b = 0;
         me.c = 2654435769 | 0;
         me.d = 1367130551;
         if (seed === Math.floor(seed)) {
-          me.a = (seed / 4294967296) | 0;
+          me.a = seed / 4294967296 | 0;
           me.b = seed | 0;
         } else {
           strseed += seed;
@@ -6843,17 +6023,14 @@ var require_tychei = __commonJS({
         t.d = f.d;
         return t;
       }
+      ;
       function impl(seed, opts) {
-        var xg = new XorGen(seed),
-          state = opts && opts.state,
-          prng = function () {
-            return (xg.next() >>> 0) / 4294967296;
-          };
-        prng.double = function () {
+        var xg = new XorGen(seed), state = opts && opts.state, prng = function() {
+          return (xg.next() >>> 0) / 4294967296;
+        };
+        prng.double = function() {
           do {
-            var top = xg.next() >>> 11,
-              bot = (xg.next() >>> 0) / 4294967296,
-              result = (top + bot) / (1 << 21);
+            var top = xg.next() >>> 11, bot = (xg.next() >>> 0) / 4294967296, result = (top + bot) / (1 << 21);
           } while (result === 0);
           return result;
         };
@@ -6861,7 +6038,7 @@ var require_tychei = __commonJS({
         prng.quick = prng;
         if (state) {
           if (typeof state == "object") copy(state, xg);
-          prng.state = function () {
+          prng.state = function() {
             return copy(xg, {});
           };
         }
@@ -6870,7 +6047,7 @@ var require_tychei = __commonJS({
       if (module2 && module2.exports) {
         module2.exports = impl;
       } else if (define2 && define2.amd) {
-        define2(function () {
+        define2(function() {
           return impl;
         });
       } else {
@@ -6883,35 +6060,24 @@ var require_tychei = __commonJS({
       typeof define == "function" && define
       // present with an AMD loader
     );
-  },
+  }
 });
 
 // engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/seedrandom.js
 var require_seedrandom = __commonJS({
   "engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/seedrandom.js"(exports, module) {
-    (function (pool, math) {
-      var global2 = this,
-        width = 256,
-        chunks = 6,
-        digits = 52,
-        rngname = "random",
-        startdenom = math.pow(width, chunks),
-        significance = math.pow(2, digits),
-        overflow = significance * 2,
-        mask = width - 1,
-        nodecrypto;
+    (function(pool, math) {
+      var global2 = this, width = 256, chunks = 6, digits = 52, rngname = "random", startdenom = math.pow(width, chunks), significance = math.pow(2, digits), overflow = significance * 2, mask = width - 1, nodecrypto;
       function seedrandom4(seed, options, callback) {
         var key2 = [];
         options = options == true ? { entropy: true } : options || {};
-        var shortseed = mixkey(
-          flatten3(options.entropy ? [seed, tostring(pool)] : seed == null ? autoseed() : seed, 3),
-          key2
-        );
+        var shortseed = mixkey(flatten3(
+          options.entropy ? [seed, tostring(pool)] : seed == null ? autoseed() : seed,
+          3
+        ), key2);
         var arc4 = new ARC4(key2);
-        var prng = function () {
-          var n = arc4.g(chunks),
-            d = startdenom,
-            x = 0;
+        var prng = function() {
+          var n = arc4.g(chunks), d = startdenom, x = 0;
           while (n < significance) {
             n = (n + x) * width;
             d *= width;
@@ -6924,41 +6090,37 @@ var require_seedrandom = __commonJS({
           }
           return (n + x) / d;
         };
-        prng.int32 = function () {
+        prng.int32 = function() {
           return arc4.g(4) | 0;
         };
-        prng.quick = function () {
+        prng.quick = function() {
           return arc4.g(4) / 4294967296;
         };
         prng.double = prng;
         mixkey(tostring(arc4.S), pool);
-        return (
-          options.pass ||
-          callback ||
-          function (prng2, seed2, is_math_call, state) {
-            if (state) {
-              if (state.S) {
-                copy(state, arc4);
-              }
-              prng2.state = function () {
-                return copy(arc4, {});
-              };
+        return (options.pass || callback || function(prng2, seed2, is_math_call, state) {
+          if (state) {
+            if (state.S) {
+              copy(state, arc4);
             }
-            if (is_math_call) {
-              math[rngname] = prng2;
-              return seed2;
-            } else return prng2;
+            prng2.state = function() {
+              return copy(arc4, {});
+            };
           }
-        )(prng, shortseed, "global" in options ? options.global : this == math, options.state);
+          if (is_math_call) {
+            math[rngname] = prng2;
+            return seed2;
+          } else return prng2;
+        })(
+          prng,
+          shortseed,
+          "global" in options ? options.global : this == math,
+          options.state
+        );
       }
       math["seed" + rngname] = seedrandom4;
       function ARC4(key2) {
-        var t,
-          keylen = key2.length,
-          me = this,
-          i = 0,
-          j = (me.i = me.j = 0),
-          s = (me.S = []);
+        var t, keylen = key2.length, me = this, i = 0, j = me.i = me.j = 0, s = me.S = [];
         if (!keylen) {
           key2 = [keylen++];
         }
@@ -6966,18 +6128,14 @@ var require_seedrandom = __commonJS({
           s[i] = i++;
         }
         for (i = 0; i < width; i++) {
-          s[i] = s[(j = mask & (j + key2[i % keylen] + (t = s[i])))];
+          s[i] = s[j = mask & j + key2[i % keylen] + (t = s[i])];
           s[j] = t;
         }
-        (me.g = function (count) {
-          var t2,
-            r = 0,
-            i2 = me.i,
-            j2 = me.j,
-            s11 = me.S;
+        (me.g = function(count) {
+          var t2, r = 0, i2 = me.i, j2 = me.j, s11 = me.S;
           while (count--) {
-            t2 = s11[(i2 = mask & (i2 + 1))];
-            r = r * width + s11[mask & ((s11[i2] = s11[(j2 = mask & (j2 + t2))]) + (s11[j2] = t2))];
+            t2 = s11[i2 = mask & i2 + 1];
+            r = r * width + s11[mask & (s11[i2] = s11[j2 = mask & j2 + t2]) + (s11[j2] = t2)];
           }
           me.i = i2;
           me.j = j2;
@@ -6990,25 +6148,23 @@ var require_seedrandom = __commonJS({
         t.S = f.S.slice();
         return t;
       }
+      ;
       function flatten3(obj, depth) {
-        var result = [],
-          typ = typeof obj,
-          prop;
+        var result = [], typ = typeof obj, prop;
         if (depth && typ == "object") {
           for (prop in obj) {
             try {
               result.push(flatten3(obj[prop], depth - 1));
-            } catch (e) {}
+            } catch (e) {
+            }
           }
         }
         return result.length ? result : typ == "string" ? obj : obj + "\0";
       }
       function mixkey(seed, key2) {
-        var stringseed = seed + "",
-          smear,
-          j = 0;
+        var stringseed = seed + "", smear, j = 0;
         while (j < stringseed.length) {
-          key2[mask & j] = mask & ((smear ^= key2[mask & j] * 19) + stringseed.charCodeAt(j++));
+          key2[mask & j] = mask & (smear ^= key2[mask & j] * 19) + stringseed.charCodeAt(j++);
         }
         return tostring(key2);
       }
@@ -7023,9 +6179,8 @@ var require_seedrandom = __commonJS({
           }
           return tostring(out);
         } catch (e) {
-          var browser = global2.navigator,
-            plugins = browser && browser.plugins;
-          return [+(/* @__PURE__ */ new Date()), global2, plugins, global2.screen, tostring(pool)];
+          var browser = global2.navigator, plugins = browser && browser.plugins;
+          return [+/* @__PURE__ */ new Date(), global2, plugins, global2.screen, tostring(pool)];
         }
       }
       function tostring(a) {
@@ -7036,9 +6191,10 @@ var require_seedrandom = __commonJS({
         module.exports = seedrandom4;
         try {
           nodecrypto = __require("crypto");
-        } catch (ex) {}
+        } catch (ex) {
+        }
       } else if (typeof define == "function" && define.amd) {
-        define(function () {
+        define(function() {
           return seedrandom4;
         });
       }
@@ -7048,7 +6204,7 @@ var require_seedrandom = __commonJS({
       Math
       // math: package containing random, pow, and seedrandom
     );
-  },
+  }
 });
 
 // engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/index.js
@@ -7068,39 +6224,33 @@ var require_seedrandom2 = __commonJS({
     sr.xor4096 = xor4096;
     sr.tychei = tychei;
     module.exports = sr;
-  },
+  }
 });
 
 // engine/node_modules/.pnpm/shuffle-seed@1.1.6/node_modules/shuffle-seed/shuffle-seed.js
 var require_shuffle_seed = __commonJS({
   "engine/node_modules/.pnpm/shuffle-seed@1.1.6/node_modules/shuffle-seed/shuffle-seed.js"(exports, module) {
-    (function () {
+    (function() {
       var self2 = {};
       if (Math.seedrandom) seedrandom = Math.seedrandom;
-      var isArray = function ($) {
+      var isArray = function($) {
         return Object.prototype.toString.call($) === "[object Array]";
       };
-      var extend = function (obj) {
+      var extend = function(obj) {
         for (var i = 1; i < arguments.length; i++) for (var key2 in arguments[i]) obj[key2] = arguments[i][key2];
         return obj;
       };
-      var seedify = function (seed) {
+      var seedify = function(seed) {
         if (/(number|string)/i.test(Object.prototype.toString.call(seed).match(/^\[object (.*)\]$/)[1])) return seed;
-        if (isNaN(seed))
-          return Number(
-            String((this.strSeed = seed))
-              .split("")
-              .map(function (x) {
-                return x.charCodeAt(0);
-              })
-              .join("")
-          );
+        if (isNaN(seed)) return Number(String(this.strSeed = seed).split("").map(function(x) {
+          return x.charCodeAt(0);
+        }).join(""));
         return seed;
       };
-      var seedRand = function (func, min, max) {
+      var seedRand = function(func, min, max) {
         return Math.floor(func() * (max - min + 1)) + min;
       };
-      self2.shuffle = function (arr, seed) {
+      self2.shuffle = function(arr, seed) {
         if (!isArray(arr)) return null;
         seed = seedify(seed) || "none";
         var size = arr.length;
@@ -7116,7 +6266,7 @@ var require_shuffle_seed = __commonJS({
         }
         return resp;
       };
-      self2.unshuffle = function (arr, seed) {
+      self2.unshuffle = function(arr, seed) {
         if (!isArray(arr)) return null;
         seed = seedify(seed) || "none";
         var size = arr.length;
@@ -7142,7 +6292,7 @@ var require_shuffle_seed = __commonJS({
         this["shuffleSeed"] = self2;
       }
     }).call(exports);
-  },
+  }
 });
 
 // engine/node_modules/.pnpm/shuffle-seed@1.1.6/node_modules/shuffle-seed/index.js
@@ -7151,7 +6301,7 @@ var require_shuffle_seed2 = __commonJS({
     var seedrandom4 = require_seedrandom2();
     var self2 = require_shuffle_seed();
     module.exports = self2;
-  },
+  }
 });
 
 // engine/node_modules/.pnpm/eventemitter3@3.1.2/node_modules/eventemitter3/index.js
@@ -7160,7 +6310,8 @@ var require_eventemitter3 = __commonJS({
     "use strict";
     var has = Object.prototype.hasOwnProperty;
     var prefix = "~";
-    function Events() {}
+    function Events() {
+    }
     if (Object.create) {
       Events.prototype = /* @__PURE__ */ Object.create(null);
       if (!new Events().__proto__) prefix = false;
@@ -7174,9 +6325,8 @@ var require_eventemitter3 = __commonJS({
       if (typeof fn !== "function") {
         throw new TypeError("The listener must be a function");
       }
-      var listener = new EE(fn, context || emitter, once),
-        evt = prefix ? prefix + event : event;
-      if (!emitter._events[evt]) (emitter._events[evt] = listener), emitter._eventsCount++;
+      var listener = new EE(fn, context || emitter, once), evt = prefix ? prefix + event : event;
+      if (!emitter._events[evt]) emitter._events[evt] = listener, emitter._eventsCount++;
       else if (!emitter._events[evt].fn) emitter._events[evt].push(listener);
       else emitter._events[evt] = [emitter._events[evt], listener];
       return emitter;
@@ -7190,11 +6340,9 @@ var require_eventemitter3 = __commonJS({
       this._eventsCount = 0;
     }
     EventEmitter3.prototype.eventNames = function eventNames() {
-      var names = [],
-        events,
-        name;
+      var names = [], events, name;
       if (this._eventsCount === 0) return names;
-      for (name in (events = this._events)) {
+      for (name in events = this._events) {
         if (has.call(events, name)) names.push(prefix ? name.slice(1) : name);
       }
       if (Object.getOwnPropertySymbols) {
@@ -7203,8 +6351,7 @@ var require_eventemitter3 = __commonJS({
       return names;
     };
     EventEmitter3.prototype.listeners = function listeners(event) {
-      var evt = prefix ? prefix + event : event,
-        handlers = this._events[evt];
+      var evt = prefix ? prefix + event : event, handlers = this._events[evt];
       if (!handlers) return [];
       if (handlers.fn) return [handlers.fn];
       for (var i = 0, l = handlers.length, ee = new Array(l); i < l; i++) {
@@ -7213,8 +6360,7 @@ var require_eventemitter3 = __commonJS({
       return ee;
     };
     EventEmitter3.prototype.listenerCount = function listenerCount(event) {
-      var evt = prefix ? prefix + event : event,
-        listeners = this._events[evt];
+      var evt = prefix ? prefix + event : event, listeners = this._events[evt];
       if (!listeners) return 0;
       if (listeners.fn) return 1;
       return listeners.length;
@@ -7222,10 +6368,7 @@ var require_eventemitter3 = __commonJS({
     EventEmitter3.prototype.emit = function emit(event, a1, a2, a3, a4, a5) {
       var evt = prefix ? prefix + event : event;
       if (!this._events[evt]) return false;
-      var listeners = this._events[evt],
-        len = arguments.length,
-        args,
-        i;
+      var listeners = this._events[evt], len = arguments.length, args, i;
       if (listeners.fn) {
         if (listeners.once) this.removeListener(event, listeners.fn, void 0, true);
         switch (len) {
@@ -7247,8 +6390,7 @@ var require_eventemitter3 = __commonJS({
         }
         listeners.fn.apply(listeners.context, args);
       } else {
-        var length = listeners.length,
-          j;
+        var length = listeners.length, j;
         for (i = 0; i < length; i++) {
           if (listeners[i].once) this.removeListener(event, listeners[i].fn, void 0, true);
           switch (len) {
@@ -7265,10 +6407,9 @@ var require_eventemitter3 = __commonJS({
               listeners[i].fn.call(listeners[i].context, a1, a2, a3);
               break;
             default:
-              if (!args)
-                for (j = 1, args = new Array(len - 1); j < len; j++) {
-                  args[j - 1] = arguments[j];
-                }
+              if (!args) for (j = 1, args = new Array(len - 1); j < len; j++) {
+                args[j - 1] = arguments[j];
+              }
               listeners[i].fn.apply(listeners[i].context, args);
           }
         }
@@ -7295,7 +6436,7 @@ var require_eventemitter3 = __commonJS({
         }
       } else {
         for (var i = 0, events = [], length = listeners.length; i < length; i++) {
-          if (listeners[i].fn !== fn || (once && !listeners[i].once) || (context && listeners[i].context !== context)) {
+          if (listeners[i].fn !== fn || once && !listeners[i].once || context && listeners[i].context !== context) {
             events.push(listeners[i]);
           }
         }
@@ -7322,7 +6463,7 @@ var require_eventemitter3 = __commonJS({
     if ("undefined" !== typeof module) {
       module.exports = EventEmitter3;
     }
-  },
+  }
 });
 
 // engine/node_modules/.pnpm/semver-compare@1.0.0/node_modules/semver-compare/index.js
@@ -7341,7 +6482,7 @@ var require_semver_compare = __commonJS({
       }
       return 0;
     };
-  },
+  }
 });
 
 // engine/src/engine.ts
@@ -7353,20 +6494,18 @@ var version = "4.8.51";
 
 // engine/src/algorithms/preference-split-auction.ts
 import assert from "node:assert";
-var PREFERENCE_SPLIT_PLAYERS = 4;
-var DEFAULT_PREFERENCE_SPLIT_BUDGET = 40;
+var MIN_PREFERENCE_SPLIT_PLAYERS = 2;
+var PREFERENCE_SPLIT_BUDGET_PER_PLAYER = 20;
+function defaultPreferenceSplitBudget(players) {
+  return PREFERENCE_SPLIT_BUDGET_PER_PLAYER * players;
+}
 var MIN_PREFERENCE_SPLIT_BUDGET = 1;
 var MAX_PREFERENCE_SPLIT_BUDGET = 999;
 function roundVictoryPoints(value) {
   return Math.floor(value + 0.5);
 }
 function isValidPreferenceSplitBudget(budget) {
-  return (
-    typeof budget === "number" &&
-    Number.isInteger(budget) &&
-    budget >= MIN_PREFERENCE_SPLIT_BUDGET &&
-    budget <= MAX_PREFERENCE_SPLIT_BUDGET
-  );
+  return typeof budget === "number" && Number.isInteger(budget) && budget >= MIN_PREFERENCE_SPLIT_BUDGET && budget <= MAX_PREFERENCE_SPLIT_BUDGET;
 }
 function preferenceSplitBidError(entries, factions2, budget) {
   if (!isValidPreferenceSplitBudget(budget)) {
@@ -7394,9 +6533,7 @@ function preferenceSplitBidError(entries, factions2, budget) {
   }
   const total = entries.reduce((sum3, e) => sum3 + e.points, 0);
   if (total !== budget) {
-    return total < budget
-      ? `You still have ${budget - total} of your ${budget} bid points left to spend`
-      : `You have spent ${total - budget} more than your ${budget} bid points`;
+    return total < budget ? `You still have ${budget - total} of your ${budget} bid points left to spend` : `You have spent ${total - budget} more than your ${budget} bid points`;
   }
   return null;
 }
@@ -7413,12 +6550,12 @@ function pick(count, random) {
 }
 function resolvePreferenceSplitAuction(factions2, players, bids, budget, random = Math.random) {
   assert(
-    players.length === PREFERENCE_SPLIT_PLAYERS,
-    `The Preference Split Auction needs exactly ${PREFERENCE_SPLIT_PLAYERS} players, got ${players.length}`
+    players.length >= MIN_PREFERENCE_SPLIT_PLAYERS,
+    `The Preference Split Auction needs at least ${MIN_PREFERENCE_SPLIT_PLAYERS} players, got ${players.length}`
   );
   assert(
-    factions2.length === PREFERENCE_SPLIT_PLAYERS,
-    `The Preference Split Auction needs exactly ${PREFERENCE_SPLIT_PLAYERS} factions, got ${factions2.length}`
+    factions2.length === players.length,
+    `The Preference Split Auction needs one faction per player - got ${factions2.length} factions for ${players.length} players`
   );
   assert(new Set(factions2).size === factions2.length, "The factions up for auction have to be distinct");
   assert(isValidPreferenceSplitBudget(budget), `Invalid bid budget ${budget}`);
@@ -7450,7 +6587,7 @@ function resolvePreferenceSplitAuction(factions2, players, bids, budget, random 
       total,
       average: total / players.length,
       rank: 0,
-      tiedWith: [],
+      tiedWith: []
     };
   });
   const byTotal = [...summaries].sort((a, b) => b.total - a.total);
@@ -7482,19 +6619,15 @@ function resolvePreferenceSplitAuction(factions2, players, bids, budget, random 
     const tiedPlayers = eligible.filter((player) => bidOf(player, summary.faction) === highest);
     const winner = tiedPlayers.length === 1 ? tiedPlayers[0] : tiedPlayers[pick(tiedPlayers.length, random)];
     remaining.splice(remaining.indexOf(winner), 1);
-    const winnerBid = bidOf(winner, summary.faction);
-    const basePrice = summary.average;
-    const rawPayment = Math.min(basePrice, winnerBid);
     return {
       faction: summary.faction,
       rank: summary.rank,
       eligible,
       winner,
-      winnerBid,
-      basePrice,
-      rawPayment,
-      payment: roundVictoryPoints(rawPayment),
-      tiedPlayers: tiedPlayers.length > 1 ? tiedPlayers : [],
+      winnerBid: bidOf(winner, summary.faction),
+      basePrice: summary.average,
+      payment: roundVictoryPoints(summary.average),
+      tiedPlayers: tiedPlayers.length > 1 ? tiedPlayers : []
     };
   });
   assert(remaining.length === 0, "The auction left a player without a faction");
@@ -7508,8 +6641,8 @@ function resolvePreferenceSplitAuction(factions2, players, bids, budget, random 
   );
   for (const allocation of allocations) {
     assert(
-      allocation.payment <= allocation.winnerBid,
-      `${allocation.faction} would cost more than its winner bid on it`
+      allocation.payment === roundVictoryPoints(allocation.basePrice),
+      `${allocation.faction} was not priced at its average`
     );
   }
   return {
@@ -7517,7 +6650,7 @@ function resolvePreferenceSplitAuction(factions2, players, bids, budget, random 
     players: [...players],
     order: ordered.map((summary) => summary.faction),
     factions: ordered,
-    allocations,
+    allocations
   };
 }
 
@@ -7564,7 +6697,7 @@ function hasExpansion(expansions, expansion) {
       "i" /* Ice */,
       "g" /* Gaia */,
       "m" /* Transdim */,
-      "l" /* Lost */,
+      "l" /* Lost */
     ];
     if (hasExpansion(expansions, 4 /* LostFleet */)) {
       ret.push("p" /* Protoplanet */, "a" /* Asteroid */);
@@ -7581,7 +6714,7 @@ function hasExpansion(expansions, expansion) {
       "int" /* Intelligence */,
       "gaia" /* GaiaProject */,
       "eco" /* Economy */,
-      "sci" /* Science */,
+      "sci" /* Science */
     ];
     if (hasExpansion(expansions, 2 /* Frontiers */)) {
       ret.push("dip" /* Diplomacy */);
@@ -7810,15 +6943,10 @@ var Faction = /* @__PURE__ */ ((Faction7) => {
       "firaks" /* Firaks */,
       "bescods" /* Bescods */,
       "nevlas" /* Nevlas */,
-      "itars" /* Itars */,
+      "itars" /* Itars */
     ];
     if (hasExpansion(expansions, 4 /* LostFleet */)) {
-      ret.push(
-        "tinkeroids" /* Tinkeroids */,
-        "darkanians" /* Darkanians */,
-        "moweyds" /* Moweyds */,
-        "space-giants" /* SpaceGiants */
-      );
+      ret.push("tinkeroids" /* Tinkeroids */, "darkanians" /* Darkanians */, "moweyds" /* Moweyds */, "space-giants" /* SpaceGiants */);
     }
     return ret;
   }
@@ -7875,15 +7003,10 @@ var Booster = /* @__PURE__ */ ((Booster11) => {
       "booster7" /* Booster7 */,
       "booster8" /* Booster8 */,
       "booster9" /* Booster9 */,
-      "booster10" /* Booster10 */,
+      "booster10" /* Booster10 */
     ];
     if (hasExpansion(expansions, 4 /* LostFleet */)) {
-      ret.push(
-        "booster-lostfleet-former" /* LostFleetFormer */,
-        "booster-lostfleet-planet" /* LostFleetPlanet */,
-        "booster-lostfleet-deep" /* LostFleetDeep */,
-        "booster-lostfleet-instant" /* LostFleetInstant */
-      );
+      ret.push("booster-lostfleet-former" /* LostFleetFormer */, "booster-lostfleet-planet" /* LostFleetPlanet */, "booster-lostfleet-deep" /* LostFleetDeep */, "booster-lostfleet-instant" /* LostFleetInstant */);
     }
     return ret;
   }
@@ -7937,7 +7060,7 @@ var TechPos = /* @__PURE__ */ ((TechPos4) => {
       "tech-sci",
       "tech-free1",
       "tech-free2",
-      "tech-free3",
+      "tech-free3"
     ];
     if (hasExpansion(expansions, 2 /* Frontiers */)) {
       ret.push("tech-dip" /* Diplomacy */);
@@ -8010,7 +7133,7 @@ var AdvTechTile = /* @__PURE__ */ ((AdvTechTile3) => {
       "advtech12" /* AdvTech12 */,
       "advtech13" /* AdvTech13 */,
       "advtech14" /* AdvTech14 */,
-      "advtech15" /* AdvTech15 */,
+      "advtech15" /* AdvTech15 */
     ];
     if (hasExpansion(expansions, 4 /* LostFleet */)) {
       ret.push(
@@ -8081,7 +7204,9 @@ var BoardAction = /* @__PURE__ */ ((BoardAction5) => {
 })(BoardAction || {});
 ((BoardAction5) => {
   function values(expansions = 0 /* None */) {
-    const ret = Object.values(BoardAction5).filter((val) => typeof val === "string" && /^power[0-9]/.test(val));
+    const ret = Object.values(BoardAction5).filter(
+      (val) => typeof val === "string" && /^power[0-9]/.test(val)
+    );
     if (!hasExpansion(expansions, 4 /* LostFleet */)) {
       ret.push("qic1" /* Qic1 */, "qic2" /* Qic2 */, "qic3" /* Qic3 */);
     }
@@ -8142,14 +7267,10 @@ var FinalTile = /* @__PURE__ */ ((FinalTile5) => {
       "planetType" /* PlanetType */,
       "gaia" /* Gaia */,
       "sector" /* Sector */,
-      "satellite" /* Satellite */,
+      "satellite" /* Satellite */
     ];
     if (hasExpansion(expansions, 4 /* LostFleet */)) {
-      ret.push(
-        "asteroid" /* Asteroid */,
-        "piAcademyDistance" /* PlanetaryInstituteAcademyDistance */,
-        "deepSpaceSector" /* DeepSpaceSector */
-      );
+      ret.push("asteroid" /* Asteroid */, "piAcademyDistance" /* PlanetaryInstituteAcademyDistance */, "deepSpaceSector" /* DeepSpaceSector */);
     }
     return ret;
   }
@@ -8193,7 +7314,7 @@ var TinkeringTile = /* @__PURE__ */ ((TinkeringTile6) => {
       "tinkering-qic1" /* Qic1 */,
       "tinkering-step3" /* Step3 */,
       "tinkering-knowledge3" /* Knowledge3 */,
-      "tinkering-qic2" /* Qic2 */,
+      "tinkering-qic2" /* Qic2 */
     ];
   }
   TinkeringTile6.values = values;
@@ -8253,7 +7374,7 @@ var SpaceshipFederation = /* @__PURE__ */ ((SpaceshipFederation6) => {
       "ship-fed-range" /* Range */,
       "ship-fed-tech" /* Tech */,
       "ship-fed-terraform" /* Terraform */,
-      "ship-fed-vp" /* Vp */,
+      "ship-fed-vp" /* Vp */
     ];
   }
   SpaceshipFederation6.values = values;
@@ -8292,7 +7413,7 @@ var ArtifactToken = /* @__PURE__ */ ((ArtifactToken5) => {
       "artifact-federation" /* Federation */,
       "artifact-gaiaproject" /* GaiaProject */,
       "artifact-planettypes" /* PlanetTypes */,
-      "artifact-deepspace" /* DeepSpace */,
+      "artifact-deepspace" /* DeepSpace */
     ];
   }
   ArtifactToken5.values = values;
@@ -8307,23 +7428,23 @@ var spaceshipActionEffects = {
   ["twilight" /* Twilight */]: {
     qic: [">fed"],
     power: [],
-    knowledge: ["3range"],
+    knowledge: ["3range"]
   },
   ["rebellion" /* Rebellion */]: {
     qic: ["tech"],
     power: [],
-    knowledge: ["2c,1q"],
+    knowledge: ["2c,1q"]
   },
   ["tfmars" /* TFMars */]: {
     qic: ["2vp", "tt > vp"],
     power: [],
-    credit: [],
+    credit: []
   },
   ["eclipse" /* Eclipse */]: {
     qic: ["2vp", "pt > vp"],
     power: [],
-    credit: [],
-  },
+    credit: []
+  }
 };
 var spaceshipBoards = {
   ["twilight" /* Twilight */]: {
@@ -8331,8 +7452,8 @@ var spaceshipBoards = {
     actions: [
       { type: "qic", cost: "3q", effect: "Re-score (re-trigger) a Federation token you already own" },
       { type: "power", cost: "3pw,2o", effect: "Build a Research Lab" },
-      { type: "knowledge", cost: "1k", effect: "+3 range for Build a Mine, Gaiaforming, or Exploring a spaceship" },
-    ],
+      { type: "knowledge", cost: "1k", effect: "+3 range for Build a Mine, Gaiaforming, or Exploring a spaceship" }
+    ]
   },
   ["rebellion" /* Rebellion */]: {
     hasStandardTechSlot: true,
@@ -8341,10 +7462,10 @@ var spaceshipBoards = {
       {
         type: "power",
         cost: "3pw,1o",
-        effect: "Build a Trading Station, ignoring the usual adjacent-mine requirement",
+        effect: "Build a Trading Station, ignoring the usual adjacent-mine requirement"
       },
-      { type: "knowledge", cost: "2k", effect: "Gain 2 credits and 1 Q.I.C." },
-    ],
+      { type: "knowledge", cost: "2k", effect: "Gain 2 credits and 1 Q.I.C." }
+    ]
   },
   ["tfmars" /* TFMars */]: {
     hasStandardTechSlot: true,
@@ -8353,19 +7474,19 @@ var spaceshipBoards = {
       {
         type: "power",
         cost: "2pw",
-        effect: "Instant Gaiaforming: convert a transdim planet in range into a Gaia planet",
+        effect: "Instant Gaiaforming: convert a transdim planet in range into a Gaia planet"
       },
-      { type: "credit", cost: "3c", effect: "Terraform 1 step and build a mine" },
-    ],
+      { type: "credit", cost: "3c", effect: "Terraform 1 step and build a mine" }
+    ]
   },
   ["eclipse" /* Eclipse */]: {
     hasStandardTechSlot: true,
     actions: [
       { type: "qic", cost: "2q", effect: "Gain 2 VP plus 1 VP per planet type colonized" },
       { type: "power", cost: "3pw,2k", effect: "Advance 1 level on any Research track" },
-      { type: "credit", cost: "6c", effect: "Place a free Mine on an Asteroid in range" },
-    ],
-  },
+      { type: "credit", cost: "6c", effect: "Place a free Mine on an Asteroid in range" }
+    ]
+  }
 };
 var EXPLORATION_CHARGE_TRACK = [0, 2, 2, 3];
 function artifactSlotCount(ship, nbPlayers) {
@@ -8375,20 +7496,16 @@ function shipsInPlay(expansions, nbPlayers) {
   return Spaceship.values(expansions).filter((ship) => nbPlayers > 2 || ship !== "rebellion" /* Rebellion */);
 }
 function claimableSpaceshipFederations(explorationShips, spaceshipFederations) {
-  return Spaceship.values(4 /* LostFleet */)
-    .filter((ship) => explorationShips[ship] !== void 0 && spaceshipFederations[ship] !== void 0)
-    .map((ship) => ({
-      ship,
-      federation: spaceshipFederations[ship],
-    }));
+  return Spaceship.values(4 /* LostFleet */).filter((ship) => explorationShips[ship] !== void 0 && spaceshipFederations[ship] !== void 0).map((ship) => ({
+    ship,
+    federation: spaceshipFederations[ship]
+  }));
 }
 function claimableSpaceshipTechs(explorationShips, spaceshipTechs) {
-  return Spaceship.values(4 /* LostFleet */)
-    .filter((ship) => explorationShips[ship] !== void 0 && (spaceshipTechs[ship]?.count ?? 0) > 0)
-    .map((ship) => ({
-      ship,
-      tile: spaceshipTechs[ship].tile,
-    }));
+  return Spaceship.values(4 /* LostFleet */).filter((ship) => explorationShips[ship] !== void 0 && (spaceshipTechs[ship]?.count ?? 0) > 0).map((ship) => ({
+    ship,
+    tile: spaceshipTechs[ship].tile
+  }));
 }
 
 // engine/src/setup.ts
@@ -8401,15 +7518,12 @@ function techFactory(engine, type, tilePos, techTiles, count) {
       }
     },
     nextAvailable: () => {
-      const used = tilePos
-        .map((p) => engine.tiles.techs[p])
-        .filter((t) => t)
-        .map((t) => t.tile);
+      const used = tilePos.map((p) => engine.tiles.techs[p]).filter((t) => t).map((t) => t.tile);
       for (const pos of tilePos) {
         if (!engine.tiles.techs[pos]) {
           return {
             position: pos,
-            options: techTiles.filter((t) => !used.includes(t)),
+            options: techTiles.filter((t) => !used.includes(t))
           };
         }
       }
@@ -8417,7 +7531,7 @@ function techFactory(engine, type, tilePos, techTiles, count) {
     },
     applyOption: (option, position) => {
       engine.tiles.techs[position] = { tile: option, count };
-    },
+    }
   };
 }
 function shipAssignmentFactory(type, positions, pool, target) {
@@ -8434,7 +7548,7 @@ function shipAssignmentFactory(type, positions, pool, target) {
         if (target[pos] === void 0) {
           return {
             position: pos,
-            options: pool.filter((o) => !used.includes(o)),
+            options: pool.filter((o) => !used.includes(o))
           };
         }
       }
@@ -8442,7 +7556,7 @@ function shipAssignmentFactory(type, positions, pool, target) {
     },
     applyOption: (option, position) => {
       target[position] = option;
-    },
+    }
   };
 }
 function spaceshipTechAssignmentFactory(positions, pool, target, count) {
@@ -8459,7 +7573,7 @@ function spaceshipTechAssignmentFactory(positions, pool, target, count) {
         if (target[pos] === void 0) {
           return {
             position: pos,
-            options: pool.filter((o) => !used.includes(o)),
+            options: pool.filter((o) => !used.includes(o))
           };
         }
       }
@@ -8468,9 +7582,9 @@ function spaceshipTechAssignmentFactory(positions, pool, target, count) {
     applyOption: (option, position) => {
       target[position] = {
         tile: option,
-        count,
+        count
       };
-    },
+    }
   };
 }
 function scoringFactory(engine, type, available, used, targetSize) {
@@ -8480,22 +7594,18 @@ function scoringFactory(engine, type, available, used, targetSize) {
       used.length = 0;
     },
     nextAvailable: () => {
-      return used.length === targetSize
-        ? null
-        : {
-            position: used.length + 1,
-            options: available.filter((a) => !used.includes(a)),
-          };
+      return used.length === targetSize ? null : {
+        position: used.length + 1,
+        options: available.filter((a) => !used.includes(a))
+      };
     },
     applyOption: (option) => {
       used.push(option);
-    },
+    }
   };
 }
 function usedSectorNames(map) {
-  return Array.from(map.grid.values())
-    .map((g) => g.data.sector)
-    .map((s) => s);
+  return Array.from(map.grid.values()).map((g) => g.data.sector).map((s) => s);
 }
 function unusedMapTiles(map) {
   const names = usedSectorNames(map);
@@ -8521,14 +7631,14 @@ var getFactories = (engine, nbPlayers = engine.players.length) => [
         const b = left[0];
         return {
           position: used + 1,
-          options: left,
+          options: left
         };
       }
       return null;
     },
     applyOption: (option) => {
       engine.tiles.boosters[option] = true;
-    },
+    }
   },
   techFactory(
     engine,
@@ -8553,17 +7663,15 @@ var getFactories = (engine, nbPlayers = engine.players.length) => [
       }
     },
     nextAvailable: () => {
-      return engine.terraformingFederation
-        ? null
-        : {
-            position: 1,
-            options: Federation.values(engine.expansions),
-          };
+      return engine.terraformingFederation ? null : {
+        position: 1,
+        options: Federation.values(engine.expansions)
+      };
     },
     applyOption: (option) => {
       engine.terraformingFederation = option;
       engine.tiles.federations[engine.terraformingFederation] -= 1;
-    },
+    }
   },
   scoringFactory(
     engine,
@@ -8606,19 +7714,17 @@ var getFactories = (engine, nbPlayers = engine.players.length) => [
     nextAvailable: () => {
       const used = engine.map.grid.size / 19;
       const nbSectors = engine.map.configuration().nbSectors;
-      return used === nbSectors
-        ? null
-        : {
-            position: used + 1,
-            options: unusedMapTiles(engine.map).map((t) => t.name),
-          };
+      return used === nbSectors ? null : {
+        position: used + 1,
+        options: unusedMapTiles(engine.map).map((t) => t.name)
+      };
     },
     applyOption: (option) => {
       const used = usedSectorNames(engine.map);
       const tiles = engine.map.configuration().sectors.filter((s) => used.includes(s.name) || s.name === option);
       setMap(engine, tiles);
-    },
-  },
+    }
+  }
 ];
 function applyRandomBoardSetup(engine, seed, nbPlayers) {
   const factories = getFactories(engine, nbPlayers).filter((f) => f.type !== "mapTile" /* MapTile */);
@@ -8634,8 +7740,7 @@ function applyRandomBoardSetup(engine, seed, nbPlayers) {
     }
   }
   if (hasExpansion(engine.expansions, 4 /* LostFleet */)) {
-    engine.scoringExtensionSide =
-      nbPlayers <= 2 || engine.map.rng() < 0.5 ? "vp" /* VictoryPoints */ : "ships" /* ExploredShips */;
+    engine.scoringExtensionSide = nbPlayers <= 2 || engine.map.rng() < 0.5 ? "vp" /* VictoryPoints */ : "ships" /* ExploredShips */;
     engine.lostFleetEconomySide = engine.map.rng() < 0.5 ? "pw" /* Power */ : "vp" /* VictoryPoints */;
   }
 }
@@ -8651,7 +7756,7 @@ function nextAvailableSetupOption(engine) {
       return {
         type: factory.type,
         position: o.position,
-        options: o.options,
+        options: o.options
       };
     }
   }
@@ -8691,12 +7796,7 @@ var ConversionPool = class {
     this.push(table, player);
   }
   push(table, player) {
-    this.actions.push(
-      ...freeActionData(
-        Object.keys(table).map((k) => Number(k)),
-        player
-      )
-    );
+    this.actions.push(...freeActionData(Object.keys(table).map((k) => Number(k)), player));
   }
   remove(action) {
     const conversion = freeActionConversions[action];
@@ -8711,33 +7811,33 @@ var freeActions = {
   [3 /* PowerToCredit */]: { cost: "1pw", income: "1c" },
   [6 /* KnowledgeToCredit */]: { cost: "1k", income: "1c" },
   [7 /* OreToCredit */]: { cost: "1o", income: "1c" },
-  [5 /* OreToToken */]: { cost: "1o", income: "1t" },
+  [5 /* OreToToken */]: { cost: "1o", income: "1t" }
 };
 var freeActionsHadschHallas = {
   [8 /* CreditToQic */]: { cost: "4c", income: "1q" },
   [9 /* CreditToOre */]: { cost: "3c", income: "1o" },
-  [10 /* CreditToKnowledge */]: { cost: "4c", income: "1k" },
+  [10 /* CreditToKnowledge */]: { cost: "4c", income: "1k" }
 };
 var freeActionsTerrans = {
   [11 /* GaiaTokenToQic */]: { cost: "4tg", income: "1q" },
   [13 /* GaiaTokenToOre */]: { cost: "3tg", income: "1o" },
   [12 /* GaiaTokenToKnowledge */]: { cost: "4tg", income: "1k" },
-  [14 /* GaiaTokenToCredit */]: { cost: "1tg", income: "1c" },
+  [14 /* GaiaTokenToCredit */]: { cost: "1tg", income: "1c" }
 };
 var freeActionsItars = { [15 /* GaiaTokenToTech */]: { cost: "4tg", income: "tech" } };
 var freeActionsNevlas = {
-  [16 /* PowerToGaiaForKnowledge */]: { cost: "1t-a3", income: "1k" },
+  [16 /* PowerToGaiaForKnowledge */]: { cost: "1t-a3", income: "1k" }
 };
 var freeActionsNevlasPI = {
   [18 /* PowerTo2Credit */]: { cost: "2pw", income: "2c" },
   // this is for convenience
   [17 /* PowerToOreAndCredit */]: { cost: "4pw", income: "1o,1c" },
-  [19 /* PowerTo2Ore */]: { cost: "6pw", income: "2o" },
+  [19 /* PowerTo2Ore */]: { cost: "6pw", income: "2o" }
 };
 var freeActionsBaltaks = { [20 /* GaiaFormerToQic */]: { cost: "1gf", income: "1q" } };
 var freeActionsTaklons = { [21 /* PowerTo3Credit */]: { cost: "3pw", income: "3c" } };
 var freeActionsXenos = {
-  [22 /* OreToPowerTokenArea3 */]: { cost: "1o", income: "1ta3" },
+  [22 /* OreToPowerTokenArea3 */]: { cost: "1o", income: "1ta3" }
 };
 var freeActionConversions = Object.assign(
   {},
@@ -8761,7 +7861,7 @@ var boardActions = {
   ["power7" /* Power7 */]: { cost: "3pw", income: ["2t"] },
   ["qic1" /* Qic1 */]: { cost: "4q", income: ["tech"] },
   ["qic2" /* Qic2 */]: { cost: "3q", income: [">fed"] },
-  ["qic3" /* Qic3 */]: { cost: "2q", income: ["3vp", "pt > vp"] },
+  ["qic3" /* Qic3 */]: { cost: "2q", income: ["3vp", "pt > vp"] }
 };
 
 // engine/src/player-data.ts
@@ -8829,15 +7929,12 @@ var Reward = class _Reward {
    */
   static merge(...rewards) {
     const grouped = (0, import_lodash.groupBy)([].concat(...rewards), "type");
-    return Object.keys(grouped)
-      .map(
-        (key2) =>
-          new _Reward(
-            grouped[key2].reduce((val, rew) => val + rew.count, 0),
-            key2
-          )
+    return Object.keys(grouped).map(
+      (key2) => new _Reward(
+        grouped[key2].reduce((val, rew) => val + rew.count, 0),
+        key2
       )
-      .filter((rew) => !rew.isEmpty());
+    ).filter((rew) => !rew.isEmpty());
   }
   static negative(rewards) {
     return rewards.map((reward) => new _Reward(-reward.count, reward.type));
@@ -8913,10 +8010,7 @@ function findOperator(spec) {
 var tradeSource = "trade";
 var tradeCostSource = "tradeCost";
 function isTileOrBoosterSource(source) {
-  return (
-    typeof source === "string" &&
-    (source.startsWith("booster") || source.startsWith("tech-") || source.startsWith("adv-"))
-  );
+  return typeof source === "string" && (source.startsWith("booster") || source.startsWith("tech-") || source.startsWith("adv-"));
 }
 var Event = class _Event {
   constructor(spec, source) {
@@ -8984,7 +8078,7 @@ var roundScorings = {
   // Lost Fleet (RULES_CLARIFICATIONS.md §G4)
   ["lflab4" /* LfLab4 */]: ["lab >> 4vp"],
   ["lfsector3" /* LfSector3 */]: ["newsector >> 3vp"],
-  ["lfplanet3" /* LfPlanet3 */]: ["newplanet >> 3vp"],
+  ["lfplanet3" /* LfPlanet3 */]: ["newplanet >> 3vp"]
 };
 function roundScoringEvents(tile, round) {
   const roundScoring = roundScorings[tile];
@@ -9000,9 +8094,9 @@ var finalScorings = {
   ["asteroid" /* Asteroid */]: { condition: "ast" /* Asteroid */, neutralPlayer: 3 },
   ["piAcademyDistance" /* PlanetaryInstituteAcademyDistance */]: {
     condition: "pi-ac-dist" /* PlanetaryInstituteAcademyDistance */,
-    neutralPlayer: 8,
+    neutralPlayer: 8
   },
-  ["deepSpaceSector" /* DeepSpaceSector */]: { condition: "ds" /* DeepSpaceSector */, neutralPlayer: 3 },
+  ["deepSpaceSector" /* DeepSpaceSector */]: { condition: "ds" /* DeepSpaceSector */, neutralPlayer: 3 }
 };
 function finalScoringNeutralPlayer(tile, expansions) {
   if (tile === "planetType" /* PlanetType */ && hasExpansion(expansions, 4 /* LostFleet */)) {
@@ -9018,12 +8112,12 @@ function finalRankings(finalTiles, collection, expansions = 0 /* None */) {
     const players = (0, import_lodash2.sortBy)(collection, (player) => player.finalCount(tile)).reverse();
     const rankings = players.map((pl) => ({
       player: pl,
-      count: pl.finalCount(tile),
+      count: pl.finalCount(tile)
     }));
     if (collection.length === 2) {
       rankings.push({
         player: null,
-        count: finalScoringNeutralPlayer(tile, expansions),
+        count: finalScoringNeutralPlayer(tile, expansions)
       });
       rankings.sort((pl1, pl2) => pl2.count - pl1.count);
     }
@@ -9040,12 +8134,7 @@ function gainFinalScoringVictoryPoints(allRankings, player) {
     if (ranking.player && count > 0) {
       const VPs = [18, 12, 6, 0, 0, 0];
       player.gainRewards(
-        [
-          new Reward(
-            Math.floor((0, import_lodash2.sum)(VPs.slice(first, first + ties)) / ties),
-            "vp" /* VictoryPoint */
-          ),
-        ],
+        [new Reward(Math.floor((0, import_lodash2.sum)(VPs.slice(first, first + ties)) / ties), "vp" /* VictoryPoint */)],
         `final${index + 1}`
       );
     }
@@ -9074,7 +8163,7 @@ var Hex = class {
     return 0 - this.q - this.r;
   }
   rotateRight(times = 1, _center) {
-    times = ((times % 6) + 6) % 6;
+    times = (times % 6 + 6) % 6;
     const center = _center ? { q: _center.q, r: _center.r } : { q: 0, r: 0 };
     if (center) {
       [this.q, this.r] = [this.q - center.q, this.r - center.r];
@@ -9115,15 +8204,15 @@ var Hex = class {
       q: this.q,
       r: this.r,
       s: this.s,
-      data: this.data,
+      data: this.data
     };
   }
   /**
-   * Creates an hexagon of radius r around options.center, feeding the data supplied.
-   *
+   * Creates an hexagon of radius r around options.center, feeding the data supplied. 
+   * 
    * A radius of 0 gives a single hexagon
-   * @param radius
-   * @param options
+   * @param radius 
+   * @param options 
    */
   static hexagon(radius, options) {
     const { center, data } = loadDefaults(options, { data: [], center: { q: 0, r: 0, s: 0 } });
@@ -9137,14 +8226,14 @@ var Hex = class {
   }
   /**
    * Creates a ring of radius r around options.center, feeding the data supplied
-   *
-   * @param radius
+   * 
+   * @param radius 
    * @param options
    */
   static ring(radius, options) {
     const { center, data } = loadDefaults(options, { data: [], center: { q: 0, r: 0, s: 0 } });
     const ret = [];
-    const feed = () => (ret.length < data.length ? data[ret.length] : void 0);
+    const feed = () => ret.length < data.length ? data[ret.length] : void 0;
     for (let [q, r] = [radius, 0]; q >= 0; q--, r++) {
       ret.push(new this(q, r, feed()));
     }
@@ -9172,8 +8261,8 @@ var Hex = class {
   /**
    * Creates a child class that extends Hex, and initializes by default
    * with data = `defaultData`
-   *
-   * @param defaultData
+   * 
+   * @param defaultData 
    */
   static extend(defaultData) {
     return class ExtendedHex extends this {
@@ -9190,21 +8279,27 @@ var Hex = class {
 
 // engine/node_modules/.pnpm/hexagrid@2.1.1/node_modules/hexagrid/src/direction.ts
 var Direction = /* @__PURE__ */ ((Direction2) => {
-  Direction2[(Direction2["North"] = 1)] = "North";
-  Direction2[(Direction2["NorthEast"] = 2)] = "NorthEast";
-  Direction2[(Direction2["SouthEast"] = 4)] = "SouthEast";
-  Direction2[(Direction2["South"] = 8)] = "South";
-  Direction2[(Direction2["SouthWest"] = 16)] = "SouthWest";
-  Direction2[(Direction2["NorthWest"] = 32)] = "NorthWest";
+  Direction2[Direction2["North"] = 1] = "North";
+  Direction2[Direction2["NorthEast"] = 2] = "NorthEast";
+  Direction2[Direction2["SouthEast"] = 4] = "SouthEast";
+  Direction2[Direction2["South"] = 8] = "South";
+  Direction2[Direction2["SouthWest"] = 16] = "SouthWest";
+  Direction2[Direction2["NorthWest"] = 32] = "NorthWest";
   return Direction2;
 })(Direction || {});
 ((Direction2) => {
   function list() {
-    return [1 /* North */, 2 /* NorthEast */, 4 /* SouthEast */, 8 /* South */, 16 /* SouthWest */, 32 /* NorthWest */];
+    return [
+      1 /* North */,
+      2 /* NorthEast */,
+      4 /* SouthEast */,
+      8 /* South */,
+      16 /* SouthWest */,
+      32 /* NorthWest */
+    ];
   }
   Direction2.list = list;
-  Direction2.all =
-    1 /* North */ | 2 /* NorthEast */ | 4 /* SouthEast */ | 8 /* South */ | 16 /* SouthWest */ | 32 /* NorthWest */;
+  Direction2.all = 1 /* North */ | 2 /* NorthEast */ | 4 /* SouthEast */ | 8 /* South */ | 16 /* SouthWest */ | 32 /* NorthWest */;
 })(Direction || (Direction = {}));
 
 // engine/node_modules/.pnpm/hexagrid@2.1.1/node_modules/hexagrid/src/cubecoordinates.ts
@@ -9461,15 +8556,13 @@ var Grid = class {
     const hexSet = new Set(hexes);
     const groups = [];
     for (const hex of hexes) {
-      if (
-        (() => {
-          for (const group of groups) {
-            if (group.has(hex)) {
-              return true;
-            }
+      if ((() => {
+        for (const group of groups) {
+          if (group.has(hex)) {
+            return true;
           }
-        })()
-      ) {
+        }
+      })()) {
         continue;
       }
       const newGroup = /* @__PURE__ */ new Set([hex]);
@@ -9531,7 +8624,7 @@ var CUBE_DIRECTIONS = [
   { q: -1, r: 1, s: 0 },
   { q: -1, r: 0, s: 1 },
   { q: 0, r: -1, s: 1 },
-  { q: 1, r: -1, s: 0 },
+  { q: 1, r: -1, s: 0 }
 ];
 function key(c) {
   return `${c.q}x${c.r}`;
@@ -9573,7 +8666,7 @@ function lostFleetSectorCenters(nbPlayers) {
     add(hubB, shiftedOffset(0)),
     add(hubB, shiftedOffset(1)),
     add(hubA, shiftedOffset(1)),
-    add(hubB, shiftedOffset(4)),
+    add(hubB, shiftedOffset(4))
   ];
 }
 function buildHalo(centers) {
@@ -9684,15 +8777,13 @@ function isNewLostFleetSector(occupied, hex) {
 }
 function colonizedDeepSpaceSectorCount(hexes) {
   return (0, import_lodash3.uniq)(
-    hexes
-      .filter((hex) => classifySectorId(hex.data.sector) === "deepSpace" /* DeepSpace */)
-      .map((hex) => lostFleetSectorKey(hex))
+    hexes.filter((hex) => classifySectorId(hex.data.sector) === "deepSpace" /* DeepSpace */).map((hex) => lostFleetSectorKey(hex))
   ).length;
 }
-var P = "p"; /* Protoplanet */
-var A = "a"; /* Asteroid */
-var M = "m"; /* Transdim */
-var B = "e"; /* Empty */
+var P = "p" /* Protoplanet */;
+var A = "a" /* Asteroid */;
+var M = "m" /* Transdim */;
+var B = "e" /* Empty */;
 var DEEP_SPACE_TILES = [
   { id: 11, a: [P, A, B], b: [A, B, B] },
   { id: 12, a: [M, P, B], b: [A, B, B] },
@@ -9701,13 +8792,13 @@ var DEEP_SPACE_TILES = [
   { id: 15, a: [P, B, B], b: [P, B, A] },
   { id: 16, a: [B, B, P], b: [A, B, A] },
   { id: 17, a: [M, B, B], b: [B, A, B] },
-  { id: 18, a: [P, B, B], b: [A, B, B] },
+  { id: 18, a: [P, B, B], b: [A, B, B] }
 ];
 var DEEP_SPACE_TILES_2P = [11, 12, 13, 14, 15, 16];
 var INTERSPACE_SETS = {
   2: { asteroid: 2, protoplanet: 1, spaceships: 3, excludedShips: ["rebellion" /* Rebellion */], blank: 0, total: 6 },
   3: { asteroid: 2, protoplanet: 1, spaceships: 4, excludedShips: [], blank: 1, total: 8 },
-  4: { asteroid: 4, protoplanet: 1, spaceships: 4, excludedShips: [], blank: 1, total: 10 },
+  4: { asteroid: 4, protoplanet: 1, spaceships: 4, excludedShips: [], blank: 1, total: 10 }
 };
 function interspaceSet(nbPlayers) {
   const set3 = INTERSPACE_SETS[Math.min(Math.max(nbPlayers, 2), 4)];
@@ -9747,9 +8838,7 @@ var GaiaHex = class extends Hex {
   }
   /** Space stations are not structures, so a trading station built near one will still be isolated */
   hasStructure() {
-    return (
-      this.occupied() && this.data.building !== "gf" /* GaiaFormer */ && this.data.building !== "sp" /* SpaceStation */
-    );
+    return this.occupied() && this.data.building !== "gf" /* GaiaFormer */ && this.data.building !== "sp" /* SpaceStation */;
   }
   /**
    * Can the player use this hex as a starting point to create new buildings?
@@ -9843,7 +8932,7 @@ var suffixes = {
   "-1x0": "B3",
   "0x-1": "B4",
   "1x-1": "B5",
-  "0x0": "C",
+  "0x0": "C"
 };
 var reverseSuffixes = Object.keys(suffixes).reduce((acc, key2) => ({ ...acc, [suffixes[key2]]: key2 }), {});
 function magnitude(q, r) {
@@ -9897,9 +8986,7 @@ function officialCenterTileOrder(nbPlayers, rng) {
 }
 function generateSectorGrid(nbPlayers, rng, officialCenterSectors = false) {
   const centers = lostFleetSectorCenters(nbPlayers);
-  const tiles = officialCenterSectors
-    ? officialCenterTileOrder(nbPlayers, rng)
-    : import_shuffle_seed2.default.shuffle(lostFleetSectorTiles(nbPlayers), rng());
+  const tiles = officialCenterSectors ? officialCenterTileOrder(nbPlayers, rng) : import_shuffle_seed2.default.shuffle(lostFleetSectorTiles(nbPlayers), rng());
   const sectors2 = [];
   const grids = tiles.map((tile, i) => {
     const rotation = Math.floor(rng() * 6);
@@ -9917,7 +9004,7 @@ function interspaceTags(nbPlayers, rng) {
     ...ships.map((spaceship) => ({ planet: "e" /* Empty */, spaceship })),
     ...Array(set3.asteroid).fill({ planet: "a" /* Asteroid */ }),
     ...Array(set3.protoplanet).fill({ planet: "p" /* Protoplanet */ }),
-    ...Array(set3.blank).fill({ planet: "e" /* Empty */ }),
+    ...Array(set3.blank).fill({ planet: "e" /* Empty */ })
   ];
   return tags;
 }
@@ -9966,8 +9053,7 @@ function placeInterspaceTiles(grid, nbPlayers, rng) {
 function placeDeepSpaceTiles(grid, nbPlayers, rng) {
   const centers = lostFleetSectorCenters(nbPlayers);
   const notches = findDeepSpaceNotches(centers);
-  const tilePool =
-    nbPlayers <= 2 ? DEEP_SPACE_TILES.filter((t) => DEEP_SPACE_TILES_2P.includes(t.id)) : DEEP_SPACE_TILES;
+  const tilePool = nbPlayers <= 2 ? DEEP_SPACE_TILES.filter((t) => DEEP_SPACE_TILES_2P.includes(t.id)) : DEEP_SPACE_TILES;
   const tiles = import_shuffle_seed2.default.shuffle(tilePool, rng());
   notches.forEach((notch, i) => {
     const tile = tiles[i];
@@ -9981,12 +9067,7 @@ function placeDeepSpaceTiles(grid, nbPlayers, rng) {
 function isValidBoard(grid) {
   for (const hex of grid.values()) {
     for (const neighbour of grid.neighbours(hex)) {
-      if (
-        hex.data.planet !== "m" /* Transdim */ &&
-        hex.data.planet !== "e" /* Empty */ &&
-        hex.data.planet !== "g" /* Gaia */ &&
-        hex.data.planet === neighbour.data.planet
-      ) {
+      if (hex.data.planet !== "m" /* Transdim */ && hex.data.planet !== "e" /* Empty */ && hex.data.planet !== "g" /* Gaia */ && hex.data.planet === neighbour.data.planet) {
         return false;
       }
     }
@@ -10025,36 +9106,32 @@ var s9 = { name: "9", map: "emieeeeeseev,eegete,e".replace(/,/g, "") };
 var s10 = { name: "10", map: "emmeeeeoreee,eegeed,e".replace(/,/g, "") };
 var sectors = (0, import_lodash4.keyBy)([s1, s2, s3, s4, s5, s5b, s6, s6b, s7, s7b, s8, s9, s10], "name");
 var reverseSide = (side) => {
-  return (
-    side[0] +
-    side.slice(1, 12).split("").reverse().join("") +
-    side[12] +
-    side.slice(13, 18).split("").reverse().join("") +
-    side[18]
-  );
+  return side[0] + side.slice(1, 12).split("").reverse().join("") + side[12] + side.slice(13, 18).split("").reverse().join("") + side[18];
 };
 var rSectors = (0, import_lodash4.keyBy)(
   [s1, s2, s3, s4, s5, s5b, s6, s6b, s7, s7b, s8, s9, s10].map((s) => ({ name: s.name, map: reverseSide(s.map) })),
   "name"
 );
-var smallCenters = ["5x-2", "2x3", "3x-5", "0x0", "-3x5", "-2x-3", "-5x2"].map((coord) => CubeCoordinates.parse(coord));
-var bigCenters = ["5x-2", "2x3", "-1x8", "3x-5", "0x0", "-3x5", "-6x10", "-2x-3", "-5x2", "-8x7"].map((coord) =>
-  CubeCoordinates.parse(coord)
+var smallCenters = ["5x-2", "2x3", "3x-5", "0x0", "-3x5", "-2x-3", "-5x2"].map(
+  (coord) => CubeCoordinates.parse(coord)
+);
+var bigCenters = ["5x-2", "2x3", "-1x8", "3x-5", "0x0", "-3x5", "-6x10", "-2x-3", "-5x2", "-8x7"].map(
+  (coord) => CubeCoordinates.parse(coord)
 );
 var smallConfiguration = {
   sectors: [s1, s2, s3, s4, s5b, s6b, s7b],
   nbSectors: 7,
-  centers: [{ q: 0, r: 0, s: 0 }],
+  centers: [{ q: 0, r: 0, s: 0 }]
 };
 var bigConfiguration = {
   sectors: [s1, s2, s3, s4, s5, s6, s7, s8, s9, s10],
   nbSectors: 10,
-  centers: [{ q: 0, r: 0, s: 0 }],
+  centers: [{ q: 0, r: 0, s: 0 }]
 };
 var xConfiguration = {
   sectors: [s1, s2, s3, s4, s5, s6, s7, s8],
   nbSectors: 8,
-  centers: [{ q: 0, r: 0, s: 0 }],
+  centers: [{ q: 0, r: 0, s: 0 }]
 };
 for (let i = 0; i < 6; i++) {
   const hex = new Hex(5, -2);
@@ -10067,7 +9144,7 @@ function lostFleetConfiguration(nbPlayers) {
   return {
     sectors: [],
     nbSectors: lostFleetSectorCenters(nbPlayers).length,
-    centers: lostFleetSectorCenters(nbPlayers),
+    centers: lostFleetSectorCenters(nbPlayers)
   };
 }
 xConfiguration.centers.splice(xConfiguration.centers.length - 1);
@@ -10110,7 +9187,7 @@ var SpaceMap = class _SpaceMap {
       "9876",
       "yellow-paint-8951",
       "green-jeans-8458",
-      "Fastgame01",
+      "Fastgame01"
     ].includes(seed);
     do {
       this.generate(this.randomTiles(), () => Math.floor(this.rng() * 6), mirror);
@@ -10139,7 +9216,7 @@ var SpaceMap = class _SpaceMap {
       "curious-stay-2150",
       "Three",
       "GaiaRocks",
-      "SalmurOnTheBoard",
+      "SalmurOnTheBoard"
     ].includes(this.seed);
     const [hexagon, ...hexagons] = conf.sectors.map((val, i) => {
       const def = (conf.mirror || oldGen ? rSectors : sectors)[val.sector].map;
@@ -10159,20 +9236,11 @@ var SpaceMap = class _SpaceMap {
     for (const hex of this.grid.values()) {
       for (const nb of this.grid.neighbours(hex)) {
         if (germanRules) {
-          if (
-            hex.data.planet !== "m" /* Transdim */ &&
-            hex.data.planet !== "e" /* Empty */ &&
-            hex.data.planet !== "g" /* Gaia */ &&
-            hex.data.planet === nb.data.planet
-          ) {
+          if (hex.data.planet !== "m" /* Transdim */ && hex.data.planet !== "e" /* Empty */ && hex.data.planet !== "g" /* Gaia */ && hex.data.planet === nb.data.planet) {
             return false;
           }
         } else {
-          if (
-            hex.data.sector !== nb.data.sector &&
-            hex.data.planet !== "e" /* Empty */ &&
-            hex.data.planet === nb.data.planet
-          ) {
+          if (hex.data.sector !== nb.data.sector && hex.data.planet !== "e" /* Empty */ && hex.data.planet === nb.data.planet) {
             return false;
           }
         }
@@ -10189,9 +9257,9 @@ var SpaceMap = class _SpaceMap {
       sectors: tiles.map((side, i) => ({
         sector: side.name,
         rotation: rotation(),
-        center: centers[i],
+        center: centers[i]
       })),
-      mirror,
+      mirror
     };
     this.load(this.placement);
   }
@@ -10290,7 +9358,7 @@ var SpaceMap = class _SpaceMap {
     return {
       q: center.q + relative.q,
       r: center.r + relative.r,
-      s: center.s + relative.s,
+      s: center.s + relative.s
     };
   }
   getS(coords) {
@@ -10320,9 +9388,7 @@ function minimumPathLength(groups) {
   for (let i = 0; i < groups.length; i++) {
     for (let j = i + 1; j < groups.length; j++) {
       const [group1, group2] = [groups[i], groups[j]];
-      const shortest =
-        Math.min(...(0, import_lodash5.flatten)(group1.map((x) => group2.map((y) => CubeCoordinates.distance(x, y))))) -
-        1;
+      const shortest = Math.min(...(0, import_lodash5.flatten)(group1.map((x) => group2.map((y) => CubeCoordinates.distance(x, y))))) - 1;
       shortestPaths.get(group1).set(group2, shortest);
     }
   }
@@ -10333,31 +9399,16 @@ function minimumPathLength(groups) {
       for (let j = i + 1; j < groups.length; j++) {
         for (let k = j + 1; k < groups.length; k++) {
           const [group1, group2, group3] = [groups[i], groups[j], groups[k]];
-          if (
-            shortestPaths.get(group1).get(group2) + shortestPaths.get(group2).get(group3) <
-            shortestPaths.get(group1).get(group3)
-          ) {
-            shortestPaths
-              .get(group1)
-              .set(group3, shortestPaths.get(group1).get(group2) + shortestPaths.get(group2).get(group3));
+          if (shortestPaths.get(group1).get(group2) + shortestPaths.get(group2).get(group3) < shortestPaths.get(group1).get(group3)) {
+            shortestPaths.get(group1).set(group3, shortestPaths.get(group1).get(group2) + shortestPaths.get(group2).get(group3));
             modified = true;
           }
-          if (
-            shortestPaths.get(group1).get(group2) + shortestPaths.get(group1).get(group3) <
-            shortestPaths.get(group2).get(group3)
-          ) {
-            shortestPaths
-              .get(group2)
-              .set(group3, shortestPaths.get(group1).get(group2) + shortestPaths.get(group1).get(group3));
+          if (shortestPaths.get(group1).get(group2) + shortestPaths.get(group1).get(group3) < shortestPaths.get(group2).get(group3)) {
+            shortestPaths.get(group2).set(group3, shortestPaths.get(group1).get(group2) + shortestPaths.get(group1).get(group3));
             modified = true;
           }
-          if (
-            shortestPaths.get(group1).get(group3) + shortestPaths.get(group2).get(group3) <
-            shortestPaths.get(group1).get(group2)
-          ) {
-            shortestPaths
-              .get(group1)
-              .set(group2, shortestPaths.get(group1).get(group3) + shortestPaths.get(group2).get(group3));
+          if (shortestPaths.get(group1).get(group3) + shortestPaths.get(group2).get(group3) < shortestPaths.get(group1).get(group2)) {
+            shortestPaths.get(group1).set(group2, shortestPaths.get(group1).get(group3) + shortestPaths.get(group2).get(group3));
             modified = true;
           }
         }
@@ -10412,7 +9463,7 @@ function shortestPath(starts, dests, grid, costOf = (hex) => 1) {
         }
         const extendedPath = {
           cost: curPath.cost + costOf(neighbour),
-          path: [...curPath.path, neighbour],
+          path: [...curPath.path, neighbour]
         };
         pathTo.set(neighbour, extendedPath);
         toExpandNext.push(neighbour);
@@ -10421,7 +9472,7 @@ function shortestPath(starts, dests, grid, costOf = (hex) => 1) {
           bestPath = extendedPath;
           minDistance = distanceToNextDest(extendedPath.path.slice(1, -1), [
             extendedPath.path[0],
-            extendedPath.path[extendedPath.path.length - 1],
+            extendedPath.path[extendedPath.path.length - 1]
           ]);
         }
       }
@@ -10463,11 +9514,7 @@ function spanningTreeWithHeuristic(destGroups, grid, maxAdditional = -1, costOf 
   if (destGroups.length > 2) {
     startingPoints.push(
       ...[...grid.values()].filter(
-        (hex) =>
-          !destHexesSet.has(hex) &&
-          (0, import_lodash7.inRange)(hex.q, minQ + 1, maxQ) &&
-          (0, import_lodash7.inRange)(hex.r, minR + 1, maxR) &&
-          (0, import_lodash7.inRange)(hex.s, minS + 1, maxS)
+        (hex) => !destHexesSet.has(hex) && (0, import_lodash7.inRange)(hex.q, minQ + 1, maxQ) && (0, import_lodash7.inRange)(hex.r, minR + 1, maxR) && (0, import_lodash7.inRange)(hex.s, minS + 1, maxS)
       )
     );
   }
@@ -10489,14 +9536,12 @@ function spanningTreeWithHeuristic(destGroups, grid, maxAdditional = -1, costOf 
     let toReach = (0, import_lodash7.difference)(destHexes, hexes);
     do {
       const hexSet = new Set(hexes);
-      const path = shortestPath(hexes, toReach, grid, (hex) => (hexSet.has(hex) ? 0 : costOf(hex)));
+      const path = shortestPath(hexes, toReach, grid, (hex) => hexSet.has(hex) ? 0 : costOf(hex));
       if (!path) {
         hexes = void 0;
         break;
       }
-      hexes = (0, import_lodash7.uniq)(
-        hexes.concat(path.path.slice(1, -1), groupAround(path.path[path.path.length - 1]))
-      );
+      hexes = (0, import_lodash7.uniq)(hexes.concat(path.path.slice(1, -1), groupAround(path.path[path.path.length - 1])));
       cost = (0, import_lodash7.sumBy)(hexes, costOf);
       toReach = (0, import_lodash7.difference)(toReach, hexes);
     } while (cost < minScore && toReach.length > 0);
@@ -10515,8 +9560,7 @@ function spanningTreeWithHeuristic(destGroups, grid, maxAdditional = -1, costOf 
 var TERRAFORMING_COST = 3;
 var QIC_RANGE_UPGRADE = 2;
 function terraformingCost(d, steps, replay) {
-  const oreNeeded = (temporaryStep) =>
-    (TERRAFORMING_COST - d.terraformCostDiscount) * Math.max(steps - temporaryStep, 0);
+  const oreNeeded = (temporaryStep) => (TERRAFORMING_COST - d.terraformCostDiscount) * Math.max(steps - temporaryStep, 0);
   const cost = oreNeeded(d.temporaryStep);
   if (!replay && d.temporaryStep > 0 && oreNeeded(0) === cost) {
     return null;
@@ -10525,9 +9569,7 @@ function terraformingCost(d, steps, replay) {
 }
 function qicForDistance(map, hex, pl, replay, temporaryRange = pl.data.temporaryRange) {
   const distance = (acceptGaiaFormer) => {
-    const hexes = acceptGaiaFormer
-      ? Array.from(map.grid.values()).filter((loc) => loc.data.player === pl.player)
-      : pl.data.occupied.filter((loc) => acceptGaiaFormer || loc.isRangeStartingPoint(pl.player));
+    const hexes = acceptGaiaFormer ? Array.from(map.grid.values()).filter((loc) => loc.data.player === pl.player) : pl.data.occupied.filter((loc) => acceptGaiaFormer || loc.isRangeStartingPoint(pl.player));
     return Math.min(...hexes.map((loc) => map.distance(hex, loc)));
   };
   function qic(temporaryRange2, distance2) {
@@ -10542,7 +9584,7 @@ function qicForDistance(map, hex, pl, replay, temporaryRange = pl.data.temporary
   return {
     amount: qicNeeded,
     distance: d,
-    warning: qicWithGaiaFormer < qicNeeded ? "gaia-former-would-extend-range" /* gaiaFormerWouldExtendRange */ : null,
+    warning: qicWithGaiaFormer < qicNeeded ? "gaia-former-would-extend-range" /* gaiaFormerWouldExtendRange */ : null
   };
 }
 
@@ -10555,11 +9597,11 @@ var ambas = {
   standard: {
     buildings: {
       ["PI" /* PlanetaryInstitute */]: {
-        income: [["+4pw", "+2t", "=> swap-PI"]],
-      },
+        income: [["+4pw", "+2t", "=> swap-PI"]]
+      }
     },
-    income: ["3k,4o,15c,q,up-nav", "+2o,k"],
-  },
+    income: ["3k,4o,15c,q,up-nav", "+2o,k"]
+  }
 };
 var ambas_default = ambas;
 
@@ -10570,26 +9612,26 @@ var baltaks = {
     buildings: {
       ["ac2" /* Academy2 */]: {
         cost: "6c,6o",
-        income: [["=>4c", "tech"]],
-      },
+        income: [["=>4c", "tech"]]
+      }
     },
     income: ["3k,4o,15c,up-gaia", "+o,k"],
     power: {
-      area2: 2,
+      area2: 2
     },
     handlers: {
-      freeActionChoice: (player, pool) => pool.push(freeActionsBaltaks, player),
-    },
+      freeActionChoice: (player, pool) => pool.push(freeActionsBaltaks, player)
+    }
   },
   variants: [
     {
       type: "beta",
       board: {
-        income: ["3k,4o,15c,up-gaia,up-int", "+o,k"],
+        income: ["3k,4o,15c,up-gaia,up-int", "+o,k"]
       },
-      version: 0,
-    },
-  ],
+      version: 0
+    }
+  ]
 };
 var baltaks_default = baltaks;
 
@@ -10599,44 +9641,44 @@ var bescods = {
   standard: {
     buildings: {
       ["ts" /* TradingStation */]: {
-        income: [["+k"], ["+k"], ["+k"], ["+k"]],
+        income: [["+k"], ["+k"], ["+k"], ["+k"]]
       },
       ["lab" /* ResearchLab */]: {
         income: [
           ["+3c", "tech"],
           ["+4c", "tech"],
-          ["+5c", "tech"],
-        ],
+          ["+5c", "tech"]
+        ]
       },
       ["PI" /* PlanetaryInstitute */]: {
-        income: [["+4pw", "+2t"]],
-      },
+        income: [["+4pw", "+2t"]]
+      }
     },
-    income: ["3k,4o,15c,q", "+o", "=> up-lowest"],
+    income: ["3k,4o,15c,q", "+o", "=> up-lowest"]
   },
   variants: [
     {
       type: "more-balanced",
       board: {
-        income: ["2k,4o,15c,q", "+o", "=> up-lowest"],
+        income: ["2k,4o,15c,q", "+o", "=> up-lowest"]
       },
-      version: 0,
+      version: 0
     },
     {
       type: "beta",
       version: 0,
       board: {
-        income: ["k,4o,15c,q,up-sci", "+o", "=> up-lowest"],
-      },
+        income: ["k,4o,15c,q,up-sci", "+o", "=> up-lowest"]
+      }
     },
     {
       type: "beta",
       version: 2,
       board: {
-        income: ["k,4o,15c,q,up-sci,up-sci", "+o", "=> up-lowest"],
-      },
-    },
-  ],
+        income: ["k,4o,15c,q,up-sci,up-sci", "+o", "=> up-lowest"]
+      }
+    }
+  ]
 };
 var bescods_default = bescods;
 
@@ -10652,12 +9694,12 @@ var darkanians = {
     income: ["3k,7o,15c,q,up-nav,up-eco", "+o,k"],
     power: {
       area1: 4,
-      area2: 2,
+      area2: 2
     },
     handlers: {
-      [`build-${"m" /* Mine */}`]: (player, hex) => gainSectorBonus(player, hex),
-    },
-  },
+      [`build-${"m" /* Mine */}`]: (player, hex) => gainSectorBonus(player, hex)
+    }
+  }
 };
 var darkanians_default = darkanians;
 
@@ -10667,10 +9709,10 @@ var firaks = {
   standard: {
     buildings: {
       ["PI" /* PlanetaryInstitute */]: {
-        income: [["+4pw", "+t", "=> down-lab"]],
-      },
+        income: [["+4pw", "+t", "=> down-lab"]]
+      }
     },
-    income: ["2k,3o,15c,q", "+o,2k"],
+    income: ["2k,3o,15c,q", "+o,2k"]
   },
   variants: [
     {
@@ -10679,26 +9721,26 @@ var firaks = {
         income: ["2k,4o,15c,q", "+o,2k"],
         power: {
           area1: 4,
-          area2: 2,
-        },
+          area2: 2
+        }
       },
-      version: 0,
+      version: 0
     },
     {
       type: "beta",
       version: 0,
       board: {
-        income: ["2k,3o,15c,q,up-sci", "+o,2k"],
-      },
+        income: ["2k,3o,15c,q,up-sci", "+o,2k"]
+      }
     },
     {
       type: "beta",
       version: 2,
       board: {
-        income: ["2k,3o,15c,q,up-eco", "+o,2k"],
-      },
-    },
-  ],
+        income: ["2k,3o,15c,q,up-eco", "+o,2k"]
+      }
+    }
+  ]
 };
 var firaks_default = firaks;
 
@@ -10714,25 +9756,25 @@ var geodens = {
     income: ["3k,4o,15c,q,up-terra", "+o,k"],
     handlers: {
       [`build-${"m" /* Mine */}`]: (player, hex) => gainExtraKnowledge(player, hex),
-      [`build-${"colony" /* Colony */}`]: (player, hex) => gainExtraKnowledge(player, hex),
-    },
+      [`build-${"colony" /* Colony */}`]: (player, hex) => gainExtraKnowledge(player, hex)
+    }
   },
   variants: [
     {
       type: "beta",
       version: 0,
       board: {
-        income: ["3k,4o,15c,q,up-terra,up-terra", "+o,k"],
-      },
+        income: ["3k,4o,15c,q,up-terra,up-terra", "+o,k"]
+      }
     },
     {
       type: "beta",
       version: 2,
       board: {
-        income: ["5k,4o,15c,q,up-terra,up-terra", "+o,k"],
-      },
-    },
-  ],
+        income: ["5k,4o,15c,q,up-terra,up-terra", "+o,k"]
+      }
+    }
+  ]
 };
 var geodens_default = geodens;
 
@@ -10754,39 +9796,39 @@ var gleens = {
   standard: {
     buildings: {
       ["PI" /* PlanetaryInstitute */]: {
-        income: [["+4pw", "+o"]],
-      },
+        income: [["+4pw", "+o"]]
+      }
     },
     income: ["3k,4o,15c,up-nav", "+o,k"],
     handlers: {
       [`build-${"PI" /* PlanetaryInstitute */}`]: (player) => player.gainFederationToken("gleens" /* Gleens */),
       [`build-${"m" /* Mine */}`]: (player, hex) => gaiaVp(hex, player),
-      [`build-${"colony" /* Colony */}`]: (player, hex) => gaiaVp(hex, player),
-    },
+      [`build-${"colony" /* Colony */}`]: (player, hex) => gaiaVp(hex, player)
+    }
   },
   variants: [
     {
       type: "more-balanced",
       board: {
-        income: ["3k,4o,15c,q,up-nav", "+o,k"],
+        income: ["3k,4o,15c,q,up-nav", "+o,k"]
       },
-      version: 0,
+      version: 0
     },
     {
       type: "beta",
       version: 0,
       board: {
-        income: ["3k,4o,15c,up-nav,up-nav", "+o,k"],
-      },
+        income: ["3k,4o,15c,up-nav,up-nav", "+o,k"]
+      }
     },
     {
       type: "beta",
       version: 2,
       board: {
-        income: ["3k,4o,15c,up-nav,up-nav,up-nav", "+o,k"],
-      },
-    },
-  ],
+        income: ["3k,4o,15c,up-nav,up-nav,up-nav", "+o,k"]
+      }
+    }
+  ]
 };
 var gleens_default = gleens;
 
@@ -10800,18 +9842,18 @@ var hadschHallas = {
         if (player.data.hasPlanetaryInstitute()) {
           pool.push(freeActionsHadschHallas, player);
         }
-      },
-    },
+      }
+    }
   },
   variants: [
     {
       type: "beta",
       board: {
-        income: ["3k,4o,15c,q,up-eco,up-eco", "+o,k,3c"],
+        income: ["3k,4o,15c,q,up-eco,up-eco", "+o,k,3c"]
       },
-      version: 0,
-    },
-  ],
+      version: 0
+    }
+  ]
 };
 var hadsch_hallas_default = hadschHallas;
 
@@ -10821,18 +9863,18 @@ var itars = {
   standard: {
     buildings: {
       ["ac1" /* Academy1 */]: {
-        income: [["+3k", "tech"]],
-      },
+        income: [["+3k", "tech"]]
+      }
     },
     income: ["3k,5o,15c,q", "+o,k,t"],
     power: {
-      area1: 4,
+      area1: 4
     },
     handlers: {
       burn: (player, amount) => {
         player.gainRewards([new Reward(amount, "tg" /* GainTokenGaiaArea */)], "itars" /* Itars */);
-      },
-    },
+      }
+    }
   },
   variants: [
     {
@@ -10841,17 +9883,17 @@ var itars = {
         income: ["3k,5o,15c,q", "+o,k"],
         buildings: {
           ["ac1" /* Academy1 */]: {
-            income: [["+2k", "tech"]],
+            income: [["+2k", "tech"]]
           },
           ["PI" /* PlanetaryInstitute */]: {
             cost: "6c,4o",
-            income: [["+4pw", "+2t"]],
-          },
-        },
+            income: [["+4pw", "+2t"]]
+          }
+        }
       },
-      version: 0,
-    },
-  ],
+      version: 0
+    }
+  ]
 };
 var itars_default = itars;
 
@@ -10861,15 +9903,15 @@ var ivits = {
   standard: {
     power: {
       area1: 2,
-      area2: 2,
+      area2: 2
     },
     buildings: {
       ["PI" /* PlanetaryInstitute */]: {
         cost: "~",
-        income: [["+4pw", "+t", "=> space-station"]],
-      },
+        income: [["+4pw", "+t", "=> space-station"]]
+      }
     },
-    income: ["3k,4o,15c,q", "+o,k,q"],
+    income: ["3k,4o,15c,q", "+o,k,q"]
   },
   variants: [
     {
@@ -10881,13 +9923,13 @@ var ivits = {
         buildings: {
           ["PI" /* PlanetaryInstitute */]: {
             cost: "~",
-            income: [["+4pw", "=> space-station"]],
-          },
-        },
+            income: [["+4pw", "=> space-station"]]
+          }
+        }
       },
-      version: 0,
-    },
-  ],
+      version: 0
+    }
+  ]
 };
 var ivits_default = ivits;
 
@@ -10913,17 +9955,17 @@ var lantids = {
   standard: {
     buildings: {
       ["PI" /* PlanetaryInstitute */]: {
-        income: [["+4pw"]],
-      },
+        income: [["+4pw"]]
+      }
     },
     income: ["3k,4o,13c,q", "+o,k"],
     power: {
       area1: 4,
-      area2: 0,
+      area2: 0
     },
     handlers: {
-      [`build-${"m" /* Mine */}`]: (player, hex) => gainAdjustedPiBonus(player, hex),
-    },
+      [`build-${"m" /* Mine */}`]: (player, hex) => gainAdjustedPiBonus(player, hex)
+    }
   },
   variants: [
     {
@@ -10932,19 +9974,19 @@ var lantids = {
         income: ["3k,4o,15c,q", "+o,k"],
         power: {
           area1: 4,
-          area2: 2,
-        },
+          area2: 2
+        }
       },
-      version: 0,
+      version: 0
     },
     {
       type: "beta",
       board: {
-        income: ["3k,4o,13c,q,up-eco,up-eco", "+o,k"],
+        income: ["3k,4o,13c,q,up-eco,up-eco", "+o,k"]
       },
-      version: 0,
-    },
-  ],
+      version: 0
+    }
+  ]
 };
 var lantids_default = lantids;
 
@@ -10955,14 +9997,14 @@ var moweyds = {
     income: ["5k,6o,15c,2q,up-gaia", "+o,k"],
     power: {
       area1: 4,
-      area2: 4,
+      area2: 4
     },
     buildings: {
       ["PI" /* PlanetaryInstitute */]: {
-        income: [["+4pw", "+t", "=> power-ring"]],
-      },
-    },
-  },
+        income: [["+4pw", "+t", "=> power-ring"]]
+      }
+    }
+  }
 };
 var moweyds_default = moweyds;
 
@@ -10972,19 +10014,19 @@ var nevlas = {
   standard: {
     buildings: {
       ["ts" /* TradingStation */]: {
-        income: [["+3c"], ["+4c"], ["+4c"], ["+5c"]],
+        income: [["+3c"], ["+4c"], ["+4c"], ["+5c"]]
       },
       ["lab" /* ResearchLab */]: {
         income: [
           ["+2pw", "tech"],
           ["+2pw", "tech"],
-          ["+2pw", "tech"],
-        ],
-      },
+          ["+2pw", "tech"]
+        ]
+      }
     },
     income: ["2k,4o,15c,q,up-sci", "+o,k"],
     handlers: {
-      [`build-${"PI" /* PlanetaryInstitute */}`]: (player) => (player.data.tokenModifier = 2),
+      [`build-${"PI" /* PlanetaryInstitute */}`]: (player) => player.data.tokenModifier = 2,
       freeActionChoice: (player, pool) => {
         pool.push(freeActionsNevlas, player);
         if (player.data.hasPlanetaryInstitute()) {
@@ -10996,9 +10038,9 @@ var nevlas = {
             }
           }
         }
-      },
-    },
-  },
+      }
+    }
+  }
 };
 var nevlas_default = nevlas;
 
@@ -11012,15 +10054,15 @@ var spaceGiants = {
     income: ["3k,6o,15c,q,up-nav", "+o,k", "=> 2step"],
     power: {
       area1: 4,
-      area2: 4,
+      area2: 4
     },
     buildings: {
       ["PI" /* PlanetaryInstitute */]: {
         // standard +4pw income buffed to +6pw, plus an immediate tech tile of choice (once only)
-        income: [["+6pw", "+t", "tech"]],
-      },
-    },
-  },
+        income: [["+6pw", "+t", "tech"]]
+      }
+    }
+  }
 };
 var space_giants_default = spaceGiants;
 
@@ -11030,9 +10072,9 @@ var taklons = {
   standard: {
     brainstone: "area1" /* Area1 */,
     handlers: {
-      freeActionChoice: (player, pool) => pool.push(freeActionsTaklons, player),
-    },
-  },
+      freeActionChoice: (player, pool) => pool.push(freeActionsTaklons, player)
+    }
+  }
 };
 var taklons_default = taklons;
 
@@ -11045,7 +10087,7 @@ var terrans = {
   standard: {
     income: ["3k,4o,15c,q,up-gaia", "+o,k"],
     power: {
-      area1: 4,
+      area1: 4
     },
     handlers: {
       discardGaia: (player, amount) => {
@@ -11053,26 +10095,26 @@ var terrans = {
       },
       "gaiaPhase-tokensMovedFromGaia": (player, amount) => {
         terranCharge(player, amount);
-      },
-    },
+      }
+    }
   },
   variants: [
     {
       type: "beta",
       version: 0,
       board: {
-        income: ["3k,4o,15c,q,up-gaia,up-nav", "+o,k"],
-      },
+        income: ["3k,4o,15c,q,up-gaia,up-nav", "+o,k"]
+      }
     },
     {
       type: "beta",
       version: 2,
       board: {
-        income: ["3k,4o,15c,q,up-gaia", "+o,k"],
+        income: ["3k,4o,15c,q,up-gaia", "+o,k"]
         //vanilla
-      },
-    },
-  ],
+      }
+    }
+  ]
 };
 var terrans_default = terrans;
 
@@ -11083,9 +10125,9 @@ var tinkeroids = {
     income: ["2k,4o,15c,q,up-sci", "+o,k"],
     power: {
       area1: 4,
-      area2: 2,
-    },
-  },
+      area2: 2
+    }
+  }
 };
 var tinkeroids_default = tinkeroids;
 
@@ -11120,40 +10162,40 @@ var defaultBoard = {
   buildings: {
     ["m" /* Mine */]: {
       cost: "2c,o",
-      income: [["+o"], ["+o"], [], ["+o"], ["+o"], ["+o"], ["+o"], ["+o"]],
+      income: [["+o"], ["+o"], [], ["+o"], ["+o"], ["+o"], ["+o"], ["+o"]]
     },
     ["ts" /* TradingStation */]: {
       cost: "3c,2o",
       isolatedCost: "6c,2o",
-      income: [["+3c"], ["+4c"], ["+4c"], ["+5c"]],
+      income: [["+3c"], ["+4c"], ["+4c"], ["+5c"]]
     },
     ["lab" /* ResearchLab */]: {
       cost: "5c,3o",
       income: [
         ["+k", "tech"],
         ["+k", "tech"],
-        ["+k", "tech"],
-      ],
+        ["+k", "tech"]
+      ]
     },
     ["ac1" /* Academy1 */]: {
       cost: "6c,6o",
-      income: [["+2k", "tech"]],
+      income: [["+2k", "tech"]]
     },
     ["ac2" /* Academy2 */]: {
       cost: "6c,6o",
-      income: [["=>q", "tech"]],
+      income: [["=>q", "tech"]]
     },
     ["PI" /* PlanetaryInstitute */]: {
       cost: "6c,4o",
-      income: [["+4pw", "+t"]],
+      income: [["+4pw", "+t"]]
     },
     ["gf" /* GaiaFormer */]: {
       cost: `${GAIA_FORMER_COST}t->tg`,
-      income: [[], [], []],
+      income: [[], [], []]
     },
     ["sp" /* SpaceStation */]: {
       cost: "~",
-      income: [[], [], [], [], [], []],
+      income: [[], [], [], [], [], []]
     },
     //frontiers
     ["colony" /* Colony */]: {
@@ -11161,49 +10203,49 @@ var defaultBoard = {
       income: [
         ["+3c", "+3pw", "+3vp", "2vp"],
         ["+3c", "+3pw", "+4vp", "2vp"],
-        ["+3c", "+3pw", "+5vp", "2vp"],
-      ],
+        ["+3c", "+3pw", "+5vp", "2vp"]
+      ]
     },
     ["customsPost" /* CustomsPost */]: {
       cost: "2c",
-      income: [["+2c"], ["+2c"], ["+2c"], ["+2c"], ["+2c"]],
+      income: [["+2c"], ["+2c"], ["+2c"], ["+2c"], ["+2c"]]
     },
     ["colonyShip" /* ColonyShip */]: {
       cost: "4c,3o",
-      income: [[], [], []],
+      income: [[], [], []]
     },
     ["constructionShip" /* ConstructionShip */]: {
       cost: "3c,2o",
-      income: [[], [], []],
+      income: [[], [], []]
     },
     ["researchShip" /* ResearchShip */]: {
       cost: "3c,2o",
-      income: [[], [], []],
+      income: [[], [], []]
     },
     ["tradeShip" /* TradeShip */]: {
       cost: "5c,1o",
-      income: [[], [], []],
+      income: [[], [], []]
     },
     ["scout" /* Scout */]: {
       cost: "1c,1o",
-      income: [[], [], []],
+      income: [[], [], []]
     },
     ["frigate" /* Frigate */]: {
       cost: "3c,2o",
-      income: [[], [], []],
+      income: [[], [], []]
     },
     ["battleShip" /* BattleShip */]: {
       cost: "5c,5o",
-      income: [[], [], []],
-    },
+      income: [[], [], []]
+    }
   },
   income: ["3k,4o,15c,q", "+o,k"],
   power: {
     area1: 2,
-    area2: 4,
+    area2: 4
   },
   brainstone: null,
-  handlers: {},
+  handlers: {}
 };
 var FactionBoard = class {
   constructor(input, variant, expansion) {
@@ -11243,8 +10285,8 @@ var xenos = {
   standard: {
     buildings: {
       ["PI" /* PlanetaryInstitute */]: {
-        income: [["+4pw", "+q"]],
-      },
+        income: [["+4pw", "+q"]]
+      }
     },
     income: ["3k,4o,15c,q,up-int", "+o,k"],
     handlers: {
@@ -11253,8 +10295,8 @@ var xenos = {
           pool.remove(5 /* OreToToken */);
           pool.push(freeActionsXenos, player);
         }
-      },
-    },
+      }
+    }
   },
   variants: [
     {
@@ -11262,20 +10304,20 @@ var xenos = {
       board: {
         buildings: {
           ["PI" /* PlanetaryInstitute */]: {
-            income: [["+4pw", "+q", "+t"]],
-          },
-        },
+            income: [["+4pw", "+q", "+t"]]
+          }
+        }
       },
-      version: 0,
+      version: 0
     },
     {
       type: "beta",
       board: {
-        income: ["3k,4o,15c,q,up-int,up-int", "+o,k"],
+        income: ["3k,4o,15c,q,up-int,up-int", "+o,k"]
       },
-      version: 0,
-    },
-  ],
+      version: 0
+    }
+  ]
 };
 var xenos_default = xenos;
 
@@ -11298,7 +10340,7 @@ var factionBoards = {
   ["tinkeroids" /* Tinkeroids */]: tinkeroids_default,
   ["darkanians" /* Darkanians */]: darkanians_default,
   ["moweyds" /* Moweyds */]: moweyds_default,
-  ["space-giants" /* SpaceGiants */]: space_giants_default,
+  ["space-giants" /* SpaceGiants */]: space_giants_default
 };
 function factionVariantBoard(customization, faction) {
   if (!customization) {
@@ -11321,10 +10363,7 @@ function factionVariantBoard(customization, faction) {
 }
 function latestVariantVersion(variant) {
   return Math.max(
-    ...Object.values(factionBoards)
-      .flatMap((x) => x.variants?.filter((x2) => x2.type === variant))
-      .filter(Boolean)
-      .map((x) => x.version ?? 0),
+    ...Object.values(factionBoards).flatMap((x) => x.variants?.filter((x2) => x2.type === variant)).filter(Boolean).map((x) => x.version ?? 0),
     0
   );
 }
@@ -11342,88 +10381,78 @@ var lostFleetTerraformingBoardPlanets = [
   "d" /* Desert */,
   "s" /* Swamp */,
   "t" /* Titanium */,
-  "i" /* Ice */,
+  "i" /* Ice */
 ];
 var factions = {
   ["terrans" /* Terrans */]: {
-    planet: "r" /* Terra */,
+    planet: "r" /* Terra */
   },
   ["lantids" /* Lantids */]: {
-    planet: "r" /* Terra */,
+    planet: "r" /* Terra */
   },
   ["xenos" /* Xenos */]: {
-    planet: "d" /* Desert */,
+    planet: "d" /* Desert */
   },
   ["gleens" /* Gleens */]: {
-    planet: "d" /* Desert */,
+    planet: "d" /* Desert */
   },
   ["taklons" /* Taklons */]: {
-    planet: "s" /* Swamp */,
+    planet: "s" /* Swamp */
   },
   ["ambas" /* Ambas */]: {
-    planet: "s" /* Swamp */,
+    planet: "s" /* Swamp */
   },
   ["hadsch-hallas" /* HadschHallas */]: {
-    planet: "o" /* Oxide */,
+    planet: "o" /* Oxide */
   },
   ["ivits" /* Ivits */]: {
-    planet: "o" /* Oxide */,
+    planet: "o" /* Oxide */
   },
   ["geodens" /* Geodens */]: {
-    planet: "v" /* Volcanic */,
+    planet: "v" /* Volcanic */
   },
   ["baltaks" /* BalTaks */]: {
-    planet: "v" /* Volcanic */,
+    planet: "v" /* Volcanic */
   },
   ["firaks" /* Firaks */]: {
-    planet: "t" /* Titanium */,
+    planet: "t" /* Titanium */
   },
   ["bescods" /* Bescods */]: {
-    planet: "t" /* Titanium */,
+    planet: "t" /* Titanium */
   },
   ["nevlas" /* Nevlas */]: {
-    planet: "i" /* Ice */,
+    planet: "i" /* Ice */
   },
   ["itars" /* Itars */]: {
-    planet: "i" /* Ice */,
+    planet: "i" /* Ice */
   },
   ["tinkeroids" /* Tinkeroids */]: {
-    planet: "a" /* Asteroid */,
+    planet: "a" /* Asteroid */
   },
   // No home terrain planet (Lost Fleet) - `planet` here only drives the same-color
   // oppositeFaction() exclusivity below, not terraforming (see terraformingStepsRequired()
   // in planets.ts, which special-cases these factions instead of reading factionPlanet()).
   ["darkanians" /* Darkanians */]: {
-    planet: "a" /* Asteroid */,
+    planet: "a" /* Asteroid */
   },
   ["moweyds" /* Moweyds */]: {
-    planet: "p" /* Protoplanet */,
+    planet: "p" /* Protoplanet */
   },
   ["space-giants" /* SpaceGiants */]: {
-    planet: "p" /* Protoplanet */,
-  },
+    planet: "p" /* Protoplanet */
+  }
 };
 function isTerraformingBoardFaction(faction) {
   return faction === "tinkeroids" /* Tinkeroids */ || faction === "moweyds" /* Moweyds */;
 }
 function isBaseGameFaction(faction) {
-  return ![
-    "tinkeroids" /* Tinkeroids */,
-    "darkanians" /* Darkanians */,
-    "moweyds" /* Moweyds */,
-    "space-giants" /* SpaceGiants */,
-  ].includes(faction);
+  return !["tinkeroids" /* Tinkeroids */, "darkanians" /* Darkanians */, "moweyds" /* Moweyds */, "space-giants" /* SpaceGiants */].includes(faction);
 }
 function lostFleetTerraformingBoard(seed) {
-  return import_shuffle_seed4.default.shuffle(
-    [...lostFleetTerraformingBoardPlanets],
-    `${seed}-lost-fleet-terraforming-board`
-  );
+  return import_shuffle_seed4.default.shuffle([...lostFleetTerraformingBoardPlanets], `${seed}-lost-fleet-terraforming-board`);
 }
 function lostFleetTerraformingCost3Planets(players, turnOrder, board) {
-  const specialPlayers = turnOrder
-    .map((player) => players.find((pl) => pl.player === player))
-    .filter((pl) => !!pl && isTerraformingBoardFaction(pl.faction));
+  const specialPlayers = turnOrder.map((player) => players.find((pl) => pl.player === player)).filter((pl) => !!pl && isTerraformingBoardFaction(pl.faction));
   if (specialPlayers.length === 0) {
     return {};
   }
@@ -11552,17 +10581,10 @@ function isOutclassedBy(fed, comparison) {
   }
   const fedPlanets = fed.hexes.filter((hex) => hex.hasPlanet());
   const compPlanets = comparison.hexes.filter((hex) => hex.hasPlanet());
-  if (
-    fed.planets > comparison.planets &&
-    fed.satellites > comparison.satellites &&
-    (0, import_lodash12.difference)(compPlanets, fedPlanets).length === 0
-  ) {
+  if (fed.planets > comparison.planets && fed.satellites > comparison.satellites && (0, import_lodash12.difference)(compPlanets, fedPlanets).length === 0) {
     return true;
   }
-  if (
-    fedPlanets.length === compPlanets.length &&
-    (0, import_lodash12.difference)(fedPlanets, compPlanets).length === 0
-  ) {
+  if (fedPlanets.length === compPlanets.length && (0, import_lodash12.difference)(fedPlanets, compPlanets).length === 0) {
     if (fed.satellites > comparison.satellites) {
       return true;
     }
@@ -11620,7 +10642,7 @@ var IncomeSelection = class _IncomeSelection {
 function descriptions(gainTokens, chargePowers) {
   return [
     ...gainTokens.map((ev) => ev.rewards.find((rw) => rw.type === "t" /* GainToken */)),
-    ...chargePowers.map((ev) => ev.rewards.find((rw) => rw.type === "pw" /* ChargePower */)),
+    ...chargePowers.map((ev) => ev.rewards.find((rw) => rw.type === "pw" /* ChargePower */))
   ];
 }
 function remainingChargesAfterIncome(data, gainTokens, chargePowers) {
@@ -11639,8 +10661,8 @@ function runIncomeSimulation(data, beforeCharge, chargePowers, allGainTokens) {
   return { waste, power: data.power, events: beforeCharge.concat(chargePowers).concat(gainAfterCharge) };
 }
 function calculateAutoIncome(data, gainTokens, chargePowers) {
-  const possibleSequences = combinations(gainTokens).map((beforeCharge) =>
-    runIncomeSimulation(data.clone(), beforeCharge, chargePowers, gainTokens)
+  const possibleSequences = combinations(gainTokens).map(
+    (beforeCharge) => runIncomeSimulation(data.clone(), beforeCharge, chargePowers, gainTokens)
   );
   let minWaste = Infinity;
   for (const s of possibleSequences) {
@@ -11682,7 +10704,7 @@ function terraformingStepsRequired(faction, targetPlanet, cost3Planets = []) {
     "d" /* Desert */,
     "s" /* Swamp */,
     "t" /* Titanium */,
-    "i" /* Ice */,
+    "i" /* Ice */
   ];
   if (targetPlanet === "g" /* Gaia */ || targetPlanet === "m" /* Transdim */ || targetPlanet === "a" /* Asteroid */) {
     return 0;
@@ -11699,8 +10721,7 @@ function terraformingStepsRequired(faction, targetPlanet, cost3Planets = []) {
   if (faction === "tinkeroids" /* Tinkeroids */ || faction === "moweyds" /* Moweyds */) {
     return cost3Planets.includes(targetPlanet) ? 3 : 1;
   }
-  let dist2 =
-    planetCycle.findIndex((pc) => pc === targetPlanet) - planetCycle.findIndex((pc) => pc === factionPlanet(faction));
+  let dist2 = planetCycle.findIndex((pc) => pc === targetPlanet) - planetCycle.findIndex((pc) => pc === factionPlanet(faction));
   if (dist2 > 3) {
     dist2 -= 7;
   } else if (dist2 < -3) {
@@ -11721,7 +10742,7 @@ var planetNames = {
   ["m" /* Transdim */]: "transdim",
   ["v" /* Volcanic */]: "volcanic",
   ["p" /* Protoplanet */]: "protoplanet",
-  ["a" /* Asteroid */]: "asteroid",
+  ["a" /* Asteroid */]: "asteroid"
 };
 
 // engine/src/research-tracks.ts
@@ -11738,8 +10759,8 @@ var researchTracks = {
     ["+2pw", "tradeBonus"],
     ["+3pw", "tradeDiscount", "3pw"],
     ["+4pw", "tradeBonus"],
-    ["+6pw", "tradeBonus", "tradeDiscount"],
-  ],
+    ["+6pw", "tradeBonus", "tradeDiscount"]
+  ]
 };
 var frontiersEco = [
   ["tradeShip"],
@@ -11747,7 +10768,7 @@ var frontiersEco = [
   ["+2c,1o,1pw"],
   ["+3c,1o,1pw", "3pw", "tradeShip"],
   ["+4c,2o,2pw"],
-  ["6c,3o,6pw"],
+  ["6c,3o,6pw"]
 ];
 var lostFleetEcoPw = [
   researchTracks["eco" /* Economy */][0],
@@ -11755,7 +10776,7 @@ var lostFleetEcoPw = [
   researchTracks["eco" /* Economy */][2],
   ["+2c,1o,3pw", "3pw"],
   ["+2c,2o,2pw"],
-  researchTracks["eco" /* Economy */][5],
+  researchTracks["eco" /* Economy */][5]
 ];
 var lostFleetEcoVp = [
   researchTracks["eco" /* Economy */][0],
@@ -11763,15 +10784,10 @@ var lostFleetEcoVp = [
   researchTracks["eco" /* Economy */][2],
   ["+3c,1o,1vp", "3pw"],
   ["+4c,2o,1vp"],
-  researchTracks["eco" /* Economy */][5],
+  researchTracks["eco" /* Economy */][5]
 ];
 function researchEvents(field, level, expansion, lostFleetEconomySide) {
-  const spec =
-    field === "eco" /* Economy */ && hasExpansion(expansion, 2 /* Frontiers */)
-      ? frontiersEco[level]
-      : field === "eco" /* Economy */ && hasExpansion(expansion, 4 /* LostFleet */)
-      ? (lostFleetEconomySide === "vp" /* VictoryPoints */ ? lostFleetEcoVp : lostFleetEcoPw)[level]
-      : researchTracks[field][level];
+  const spec = field === "eco" /* Economy */ && hasExpansion(expansion, 2 /* Frontiers */) ? frontiersEco[level] : field === "eco" /* Economy */ && hasExpansion(expansion, 4 /* LostFleet */) ? (lostFleetEconomySide === "vp" /* VictoryPoints */ ? lostFleetEcoVp : lostFleetEcoPw)[level] : researchTracks[field][level];
   return spec.map((s) => new Event(s, field)).filter((e) => e.rewards.every((r) => isResourceUsed(r.type, expansion)));
 }
 function lastTile(field) {
@@ -11796,7 +10812,7 @@ var boosterSpec = {
   ["booster-lostfleet-former" /* LostFleetFormer */]: ["+o", "gf | 3vp"],
   ["booster-lostfleet-planet" /* LostFleetPlanet */]: ["+o", "pt | vp"],
   ["booster-lostfleet-deep" /* LostFleetDeep */]: ["+3c", "ds | 2vp"],
-  ["booster-lostfleet-instant" /* LostFleetInstant */]: ["+2pw", "=> instant-gaiaforming"],
+  ["booster-lostfleet-instant" /* LostFleetInstant */]: ["+2pw", "=> instant-gaiaforming"]
 };
 function boosterEvents(booster) {
   return Event.parse(boosterSpec[booster], booster);
@@ -11810,7 +10826,7 @@ var federationSpec = {
   ["fed4" /* Fed4 */]: "7vp,2o",
   ["fed5" /* Fed5 */]: "7vp,6c",
   ["fed6" /* Fed6 */]: "6vp,2k",
-  ["gleens" /* Gleens */]: "o,k,2c",
+  ["gleens" /* Gleens */]: "o,k,2c"
 };
 function federationRewards(federation) {
   return Reward.parse(federationSpec[federation]);
@@ -11825,12 +10841,10 @@ var spaceshipFederationSpec = {
   ["ship-fed-knowledge" /* Knowledge */]: "Immediately gain 4 VP and 4 knowledge.",
   ["ship-fed-orequic" /* OreQic */]: "Immediately gain 4 VP, 2 ore, and 1 Q.I.C.",
   ["ship-fed-power" /* PowerTokens */]: "Immediately gain 7 VP and 2 power tokens placed directly into Area III.",
-  ["ship-fed-range" /* Range */]:
-    "Once: receive a Build a Mine action of limitless range without paying the build cost; ore still pays for terraforming, Q.I.C. still required for Gaia planets.",
+  ["ship-fed-range" /* Range */]: "Once: receive a Build a Mine action of limitless range without paying the build cost; ore still pays for terraforming, Q.I.C. still required for Gaia planets.",
   ["ship-fed-tech" /* Tech */]: "Once: receive 1 Tech tile of choice (same rules as Upgrade Existing Structures).",
-  ["ship-fed-terraform" /* Terraform */]:
-    "Once: receive a Build a Mine action with up to 3 free terraforming steps without paying the build cost; Q.I.C.s may still increase range.",
-  ["ship-fed-vp" /* Vp */]: "Immediately gain 12 VP.",
+  ["ship-fed-terraform" /* Terraform */]: "Once: receive a Build a Mine action with up to 3 free terraforming steps without paying the build cost; Q.I.C.s may still increase range.",
+  ["ship-fed-vp" /* Vp */]: "Immediately gain 12 VP."
 };
 var spaceshipFederationRewards = {
   ["ship-fed-credit" /* Credit */]: "8vp,8c",
@@ -11838,7 +10852,7 @@ var spaceshipFederationRewards = {
   ["ship-fed-orequic" /* OreQic */]: "4vp,2o,q",
   ["ship-fed-power" /* PowerTokens */]: "7vp",
   ["ship-fed-tech" /* Tech */]: "tech",
-  ["ship-fed-vp" /* Vp */]: "12vp",
+  ["ship-fed-vp" /* Vp */]: "12vp"
 };
 
 // engine/src/tiles/techs.ts
@@ -11874,7 +10888,7 @@ var techTileSpec = {
   ["advtech-deep" /* Deep */]: ["ds > 4vp"],
   ["advtech-deeppass" /* DeepPass */]: ["ds | 2vp"],
   ["advtech-qaction" /* QAction */]: ["shipq >> 4vp"],
-  ["advtech-terra" /* Terra */]: ["step >> 2vp"],
+  ["advtech-terra" /* Terra */]: ["step >> 2vp"]
 };
 function techTileEventWithSource(tile, source) {
   return Event.parse(techTileSpec[tile], source);
@@ -11889,7 +10903,10 @@ function techTileEvents(chooseTechTile) {
   if (isSpaceshipTechTile(chooseTechTile.tile)) {
     return [];
   }
-  return techTileEventWithSource(chooseTechTile.tile, techTileEventSource(chooseTechTile.pos));
+  return techTileEventWithSource(
+    chooseTechTile.tile,
+    techTileEventSource(chooseTechTile.pos)
+  );
 }
 function isAdvanced(pos) {
   return pos.startsWith("adv");
@@ -11903,13 +10920,7 @@ var MAX_SATELLITES = 25;
 var defaultAutoCharge = 1;
 var defaultAutoChargeTargetSpendablePower = 0;
 var Settings = class {
-  constructor(
-    autoChargePower2 = defaultAutoCharge,
-    autoChargeTargetSpendablePower = defaultAutoChargeTargetSpendablePower,
-    autoIncome2 = false,
-    autoBrainstone2 = false,
-    itarsAutoChargeToArea3 = false
-  ) {
+  constructor(autoChargePower2 = defaultAutoCharge, autoChargeTargetSpendablePower = defaultAutoChargeTargetSpendablePower, autoIncome2 = false, autoBrainstone2 = false, itarsAutoChargeToArea3 = false) {
     this.autoChargePower = autoChargePower2;
     this.autoChargeTargetSpendablePower = autoChargeTargetSpendablePower;
     this.autoIncome = autoIncome2;
@@ -11932,7 +10943,7 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
       [">>" /* Trigger */]: [],
       ["=>" /* Activate */]: [],
       ["|" /* Pass */]: [],
-      ["PA->4pw" /* FourPowerBuildings */]: [],
+      ["PA->4pw" /* FourPowerBuildings */]: []
     };
     // Did we decline the last offer?
     this.declined = false;
@@ -11959,9 +10970,7 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
    * Advanced-Tech-tile-granted special action is already shown on its own component.
    */
   get actionsWithoutTile() {
-    return this.events["=>" /* Activate */]
-      .filter((event) => !isTileOrBoosterSource(event.source))
-      .map((event) => event.action());
+    return this.events["=>" /* Activate */].filter((event) => !isTileOrBoosterSource(event.source)).map((event) => event.action());
   }
   progress(finalTile) {
     return this.eventConditionCount(finalScorings[finalTile].condition);
@@ -11986,17 +10995,17 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
       dropped: this.dropped,
       variant: this.variant && {
         board: this.variant.board,
-        version: this.variant.version,
+        version: this.variant.version
       },
-      factionLoaded: !!this.board,
+      factionLoaded: !!this.board
     };
     if (this.federationCache) {
       json.federationCache = {
         availableSatellites: this.federationCache.availableSatellites,
         federations: this.federationCache.federations.map((fedInfo) => ({
           ...fedInfo,
-          hexes: fedInfo.hexes.map((h) => h.toString()),
-        })),
+          hexes: fedInfo.hexes.map((h) => h.toString())
+        }))
       };
     }
     return json;
@@ -12011,7 +11020,7 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
       if (data.factionVariant) {
         player.variant = {
           board: data.factionVariant,
-          version: data.factionVariantVersion,
+          version: data.factionVariantVersion
         };
       } else {
         player.variant = data.variant;
@@ -12072,7 +11081,11 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
   hasActiveBooster(type) {
     return this.events["=>" /* Activate */].some((e) => !e.activated && e.rewards.some((r) => r.type === type));
   }
-  canBuild(map, hex, targetPlanet, building, lastRound, replay, { isolated, addedCost, existingBuilding } = {}) {
+  canBuild(map, hex, targetPlanet, building, lastRound, replay, {
+    isolated,
+    addedCost,
+    existingBuilding
+  } = {}) {
     if (this.data.buildings[building] >= this.maxBuildings(building)) {
       return null;
     }
@@ -12087,11 +11100,7 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
     }
     const buildActionUsed = this.data.temporaryStep > 0 || this.data.temporaryRange > 0;
     const warnings = [];
-    if (
-      addedCost.some((c) => c.type === "q" /* Qic */ && c.count > 0) &&
-      this.hasActiveBooster("range" /* TemporaryRange */) &&
-      !buildActionUsed
-    ) {
+    if (addedCost.some((c) => c.type === "q" /* Qic */ && c.count > 0) && this.hasActiveBooster("range" /* TemporaryRange */) && !buildActionUsed) {
       warnings.push("range-booster-not-used" /* rangeBoosterNotUsed */);
     }
     let steps = 0;
@@ -12135,10 +11144,7 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
     }
     const cost = Reward.merge(this.board.cost(building, isolated), addedCost);
     const creditCost = (r) => r.filter((r2) => r2.type === "c" /* Credit */)[0].count;
-    if (
-      building === "ts" /* TradingStation */ &&
-      creditCost(cost) === creditCost(this.board.buildings["ts" /* TradingStation */].isolatedCost)
-    ) {
+    if (building === "ts" /* TradingStation */ && creditCost(cost) === creditCost(this.board.buildings["ts" /* TradingStation */].isolatedCost)) {
       warnings.push("expensive-trade-station" /* expensiveTradingStation */);
     }
     const toGaia = cost.find((r) => r.type === "t->tg" /* MoveTokenToGaiaArea */);
@@ -12156,13 +11162,11 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
         }
       }
     }
-    return !this.data.canPay(cost)
-      ? null
-      : {
-          cost,
-          steps,
-          warnings,
-        };
+    return !this.data.canPay(cost) ? null : {
+      cost,
+      steps,
+      warnings
+    };
   }
   maxBuildings(building) {
     switch (building) {
@@ -12180,7 +11184,7 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
   loadFaction(board, expansions, skipIncome = false, nbPlayers, lostFleetEconomySide) {
     this.variant = {
       board: board?.board,
-      version: board?.version,
+      version: board?.version
     };
     this.loadBoard(
       factionBoard(this.faction, this.variant.board, expansions),
@@ -12243,7 +11247,7 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
   }
   removeRoundBoosterEvents(type) {
     const events = boosterEvents(this.data.tiles.booster).filter(
-      (ev) => (type && ev.operator === "+") /* Income */ || (!type && ev.operator !== "+") /* Income */
+      (ev) => type && ev.operator === "+" /* Income */ || !type && ev.operator !== "+" /* Income */
     );
     for (const event of events) {
       this.removeEvent(event);
@@ -12424,14 +11428,10 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
     return IncomeSelection.create(this.data, this.settings, this.events["+" /* Income */], additionalEvents);
   }
   canGaiaTerrans() {
-    return (
-      this.data.gaiaPowerTokens() > 0 && this.faction === "terrans" /* Terrans */ && this.data.hasPlanetaryInstitute()
-    );
+    return this.data.gaiaPowerTokens() > 0 && this.faction === "terrans" /* Terrans */ && this.data.hasPlanetaryInstitute();
   }
   canGaiaItars() {
-    return (
-      this.data.gaiaPowerTokens() >= 4 && this.faction === "itars" /* Itars */ && this.data.hasPlanetaryInstitute()
-    );
+    return this.data.gaiaPowerTokens() >= 4 && this.faction === "itars" /* Itars */ && this.data.hasPlanetaryInstitute();
   }
   canUpgradeResearch(field) {
     if (this.data.research[field] === lastTile(field)) {
@@ -12441,11 +11441,7 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
     if (keyNeeded(field, destTile) && !this.data.hasGreenFederation()) {
       return false;
     }
-    if (
-      this.faction === "baltaks" /* BalTaks */ &&
-      !this.data.hasPlanetaryInstitute() &&
-      field === "nav" /* Navigation */
-    ) {
+    if (this.faction === "baltaks" /* BalTaks */ && !this.data.hasPlanetaryInstitute() && field === "nav" /* Navigation */) {
       return false;
     }
     return true;
@@ -12481,10 +11477,7 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
   }
   receiveBuildingTriggerIncome(building, planet, isAdditionalMine) {
     for (const event of this.events[">>" /* Trigger */]) {
-      if (
-        Condition.matchesBuilding(event.condition, building, planet) &&
-        (!isAdditionalMine || event.condition === "m") /* Mine */
-      ) {
+      if (Condition.matchesBuilding(event.condition, building, planet) && (!isAdditionalMine || event.condition === "m" /* Mine */)) {
         this.gainRewards(event.rewards, event.source);
       }
     }
@@ -12541,16 +11534,12 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
     if (baseValue === 0) {
       return 0;
     }
-    const hasSpecialOperator =
-      options?.hasSpecialOperator ?? this.events["PA->4pw" /* FourPowerBuildings */].length > 0;
+    const hasSpecialOperator = options?.hasSpecialOperator ?? this.events["PA->4pw" /* FourPowerBuildings */].length > 0;
     if (baseValue === 3 && hasSpecialOperator) {
       baseValue = 4;
     }
     const hasPlanetaryInstitute = options?.hasPlanetaryInstitute ?? this.data.hasPlanetaryInstitute();
-    const addedBescods =
-      this.faction === "bescods" /* Bescods */ && hasPlanetaryInstitute && hex?.data?.planet === "t" /* Titanium */
-        ? 1
-        : 0;
+    const addedBescods = this.faction === "bescods" /* Bescods */ && hasPlanetaryInstitute && hex?.data?.planet === "t" /* Titanium */ ? 1 : 0;
     const addedPowerRing = hex?.data?.powerRing === this.player ? 2 : 0;
     return baseValue + addedBescods + addedPowerRing;
   }
@@ -12569,7 +11558,7 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
   gainFederationToken(federation) {
     this.data.tiles.federations.push({
       tile: federation,
-      green: isGreen(federation),
+      green: isGreen(federation)
     });
     this.gainRewards(federationRewards(federation), "federation" /* FormFederation */);
     this.receiveTriggerIncome("fed" /* Federation */);
@@ -12577,7 +11566,7 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
   gainSpaceshipFederationToken(federation) {
     this.data.spaceshipFederations.push({
       tile: federation,
-      green: true,
+      green: true
     });
     const rewardSpec = spaceshipFederationRewards[federation];
     if (rewardSpec) {
@@ -12592,13 +11581,7 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
     if (this.faction === "terrans" /* Terrans */ && reward.type === "tg" /* GainTokenGaiaArea */) {
       return new Reward(-reward.count, "tg->t" /* MoveTokenFromGaiaAreaToArea1 */);
     }
-    if (
-      gleensQic &&
-      source !== "beginGame" /* BeginGame */ &&
-      this.faction === "gleens" /* Gleens */ &&
-      this.data.buildings["ac2" /* Academy2 */] === 0 &&
-      reward.type === "q" /* Qic */
-    ) {
+    if (gleensQic && source !== "beginGame" /* BeginGame */ && this.faction === "gleens" /* Gleens */ && this.data.buildings["ac2" /* Academy2 */] === 0 && reward.type === "q" /* Qic */) {
       return new Reward(reward.count, "o" /* Ore */);
     }
     return reward;
@@ -12616,9 +11599,7 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
     return new Reward(1, "q" /* Qic */);
   }
   needsTinkeringTileChoice(round) {
-    return (
-      this.faction === "tinkeroids" /* Tinkeroids */ && round >= 1 && round <= 6 && !this.data.currentTinkeringTile
-    );
+    return this.faction === "tinkeroids" /* Tinkeroids */ && round >= 1 && round <= 6 && !this.data.currentTinkeringTile;
   }
   availableTinkeringTiles(round) {
     return tinkeringTilesForRound(round).filter((tile) => !this.data.usedTinkeringTiles.includes(tile));
@@ -12633,9 +11614,7 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
     if (!this.data.currentTinkeringTile) {
       return;
     }
-    this.removeEvent(
-      new Event(`=> ${tinkeringTileSpec(this.data.currentTinkeringTile)}`, "tinkeroids" /* Tinkeroids */)
-    );
+    this.removeEvent(new Event(`=> ${tinkeringTileSpec(this.data.currentTinkeringTile)}`, "tinkeroids" /* Tinkeroids */));
     this.data.usedTinkeringTiles.push(this.data.currentTinkeringTile);
     this.data.currentTinkeringTile = null;
   }
@@ -12650,28 +11629,20 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
       case "lab" /* ResearchLab */:
         return this.data.buildings["lab" /* ResearchLab */];
       case "PA" /* BigBuilding */:
-        return (
-          this.data.buildings["ac1" /* Academy1 */] +
-          this.data.buildings["ac2" /* Academy2 */] +
-          this.data.buildings["PI" /* PlanetaryInstitute */] +
-          this.data.buildings["colony" /* Colony */]
-        );
+        return this.data.buildings["ac1" /* Academy1 */] + this.data.buildings["ac2" /* Academy2 */] + this.data.buildings["PI" /* PlanetaryInstitute */] + this.data.buildings["colony" /* Colony */];
       case "fed" /* Federation */:
         return this.data.tiles.federations.length + this.data.spaceshipFederations.length;
       case "g" /* Gaia */:
         return this.ownedPlanets.filter((hex) => hex.data.planet === "g" /* Gaia */).length;
       case "pt" /* PlanetType */:
-        return (0, import_lodash13.uniq)([
-          ...this.ownedPlanets.map((hex) => hex.data.planet),
-          ...this.data.artifactPlanetTypes,
-        ]).length;
+        return (0, import_lodash13.uniq)([...this.ownedPlanets.map((hex) => hex.data.planet), ...this.data.artifactPlanetTypes]).length;
       case "tt" /* TechTile */:
         return this.data.tiles.techs.filter((tech) => !isAdvanced(tech.pos)).length;
       case "s" /* Sector */:
         return (0, import_lodash13.uniq)(
-          this.data.occupied
-            .filter((hex) => hex.colonizedBy(this.player) && classifySectorId(hex.data.sector) === "space" /* Space */)
-            .map((hex) => hex.data.sector)
+          this.data.occupied.filter(
+            (hex) => hex.colonizedBy(this.player) && classifySectorId(hex.data.sector) === "space" /* Space */
+          ).map((hex) => hex.data.sector)
         ).length;
       case "st" /* Structure */:
         return this.data.occupied.filter((hex) => hex.colonizedBy(this.player)).length;
@@ -12685,8 +11656,8 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
         return (0, import_lodash13.sum)(this.data.occupied.map((hex) => this.buildingValue(hex, { federation: true })));
       case "stfedvalue" /* StructureFedValue */:
         return (0, import_lodash13.sum)(
-          this.data.occupied.map((hex) =>
-            hex.belongsToFederationOf(this.player) ? this.buildingValue(hex, { federation: true }) : 0
+          this.data.occupied.map(
+            (hex) => hex.belongsToFederationOf(this.player) ? this.buildingValue(hex, { federation: true }) : 0
           )
         );
       case "a" /* AdvanceResearch */:
@@ -12694,17 +11665,9 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
       case "L" /* HighestResearchLevel */:
         return Math.max(...Object.values(this.data.research));
       case "gf" /* GaiaFormer */:
-        return (
-          this.data.gaiaformers -
-          this.data.gaiaformersInGaia -
-          this.data.gaiaformersUsedForAsteroid +
-          this.data.gaiaformersUsedForOther
-        );
+        return this.data.gaiaformers - this.data.gaiaformersInGaia - this.data.gaiaformersUsedForAsteroid + this.data.gaiaformersUsedForOther;
       case "ast" /* Asteroid */:
-        return (
-          this.ownedPlanets.filter((hex) => hex.data.planet === "a" /* Asteroid */).length +
-          this.data.artifactPlanetTypes.filter((planet) => planet === "a" /* Asteroid */).length
-        );
+        return this.ownedPlanets.filter((hex) => hex.data.planet === "a" /* Asteroid */).length + this.data.artifactPlanetTypes.filter((planet) => planet === "a" /* Asteroid */).length;
       case "ds" /* DeepSpaceSector */:
         return colonizedDeepSpaceSectorCount(this.ownedPlanets);
       case "pi-ac-dist" /* PlanetaryInstituteAcademyDistance */: {
@@ -12738,15 +11701,15 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
     const hexes = this.data.occupied.filter((hex) => !excluded.has(hex));
     const buildingGroups = this.buildingGroups(hexes, map);
     const buildingGroupsList = (0, import_lodash13.uniq)([...buildingGroups.values()]);
-    const values = buildingGroupsList.map((buildings) =>
-      (0, import_lodash13.sum)(buildings.map((node) => this.buildingValue(node, { federation: true })))
+    const values = buildingGroupsList.map(
+      (buildings) => (0, import_lodash13.sum)(buildings.map((node) => this.buildingValue(node, { federation: true })))
     );
     let combinations2 = this.possibleCombinationsForFederations(
       (0, import_lodash13.zipWith)(buildingGroupsList, values, (val1, val2) => ({ hexes: val1, value: val2 }))
     );
     if (this.faction === "ivits" /* Ivits */ && this.data.federationCount > 0) {
-      combinations2 = combinations2.filter((combination) =>
-        combination.some((hexList) => hexList[0].belongsToFederationOf(this.player))
+      combinations2 = combinations2.filter(
+        (combination) => combination.some((hexList) => hexList[0].belongsToFederationOf(this.player))
       );
     }
     const federations = [];
@@ -12756,7 +11719,7 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
       const buildingsInDestGroups = new Set([].concat(...destGroups));
       const flexibleExcluded = new Set(
         [].concat(
-          ...this.data.occupied.map((hex) => (buildingsInDestGroups.has(hex) ? [] : [hex, ...map.grid.neighbours(hex)]))
+          ...this.data.occupied.map((hex) => buildingsInDestGroups.has(hex) ? [] : [hex, ...map.grid.neighbours(hex)])
         )
       );
       const allHexes = [...map.grid.values()].filter(
@@ -12764,8 +11727,7 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
       );
       const workingGrid = new Grid(
         ...allHexes.map(
-          (hex) =>
-            new Hex(hex.q, hex.r, { cost: occupiedSet.has(hex) || hex.belongsToFederationOf(this.player) ? 0 : 1 })
+          (hex) => new Hex(hex.q, hex.r, { cost: occupiedSet.has(hex) || hex.belongsToFederationOf(this.player) ? 0 : 1 })
         )
       );
       const convertedDestGroups = destGroups.map((destGroup) => destGroup.map((hex) => workingGrid.get(hex)));
@@ -12774,8 +11736,7 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
         const allHexes2 = [...map.grid.values()].filter((hex) => !excluded.has(hex) && !flexibleExcluded.has(hex));
         const workingGrid2 = new Grid(
           ...allHexes2.map(
-            (hex) =>
-              new Hex(hex.q, hex.r, { cost: occupiedSet.has(hex) || hex.belongsToFederationOf(this.player) ? 0 : 1 })
+            (hex) => new Hex(hex.q, hex.r, { cost: occupiedSet.has(hex) || hex.belongsToFederationOf(this.player) ? 0 : 1 })
           )
         );
         const convertedDestGroups2 = destGroups.map((destGroup) => destGroup.map((hex) => workingGrid2.get(hex)));
@@ -12797,22 +11758,13 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
             map
           )
         );
-      } else if (
-        tree.minCost <= maxSatellites &&
-        ((maxSatellites >= 7 && combination.length >= 4) || this.faction === "ivits") /* Ivits */
-      ) {
+      } else if (tree.minCost <= maxSatellites && (maxSatellites >= 7 && combination.length >= 4 || this.faction === "ivits" /* Ivits */)) {
         custom = true;
       }
     }
     const uniqFederations = (0, import_lodash13.uniqWith)(federations, (fed1, fed2) => {
-      const fed1coords = fed1
-        .map((x) => x.toString())
-        .sort()
-        .join(",");
-      const fed2coords = fed2
-        .map((x) => x.toString())
-        .sort()
-        .join(",");
+      const fed1coords = fed1.map((x) => x.toString()).sort().join(",");
+      const fed2coords = fed2.map((x) => x.toString()).sort().join(",");
       return fed1coords === fed2coords;
     });
     const fedsWithInfo = uniqFederations.map((federation) => this.federationInfo(federation));
@@ -12829,7 +11781,7 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
     this.federationCache = {
       availableSatellites: maxSatellites,
       federations: feds,
-      custom: custom && feds.length === 0,
+      custom: custom && feds.length === 0
     };
     return feds;
   }
@@ -12851,7 +11803,7 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
       satellites: satellites.length,
       newSatellites,
       planets: nPlanets,
-      powerValue,
+      powerValue
     };
   }
   formFederation(hexes, token) {
@@ -12898,10 +11850,9 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
       const occupiedSet = new Set(this.data.occupied);
       const workingGrid = new Grid(
         ...allHexes.map(
-          (hex) =>
-            new Hex(hex.q, hex.r, {
-              cost: occupiedSet.has(hex) || hex.belongsToFederationOf(this.player) ? 0 : 1,
-            })
+          (hex) => new Hex(hex.q, hex.r, {
+            cost: occupiedSet.has(hex) || hex.belongsToFederationOf(this.player) ? 0 : 1
+          })
         )
       );
       const allGroups = [
@@ -12910,7 +11861,7 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
             (hx) => hx.belongsToFederationOf(this.player) || this.buildingValue(hx, { federation: true }) > 0
           ),
           map
-        ).values(),
+        ).values()
       ];
       const groups = (0, import_lodash13.uniq)(allGroups);
       const convertedDestGroups = groups.map((destGroup) => destGroup.map((hex) => workingGrid.get(hex)));
@@ -12926,9 +11877,7 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
       }
     }
     assert9(
-      this.faction !== "ivits" /* Ivits */ ||
-        this.data.federationCount === 0 ||
-        hexes.some((hex) => hex.belongsToFederationOf(this.player)),
+      this.faction !== "ivits" /* Ivits */ || this.data.federationCount === 0 || hexes.some((hex) => hex.belongsToFederationOf(this.player)),
       "Ivits must extend their first federation"
     );
     return info;
@@ -12982,11 +11931,7 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
         if (!ret.includes(hx2)) {
           if ((hx2.belongsToFederationOf(this.player) || this.buildingValue(hx2, { federation: true })) > 0) {
             addHex(hx2);
-          } else if (
-            this.faction === "ivits" /* Ivits */ &&
-            hx2.belongsToFederationOf(this.player) &&
-            hx.belongsToFederationOf(this.player)
-          ) {
+          } else if (this.faction === "ivits" /* Ivits */ && hx2.belongsToFederationOf(this.player) && hx.belongsToFederationOf(this.player)) {
             addHex(hx2);
           }
         }
@@ -13021,142 +11966,31 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
   }
 };
 
-// engine/src/available/types.ts
-var ISOLATED_DISTANCE = 3;
-var UPGRADE_RESEARCH_COST = new Reward(4, "k" /* Knowledge */);
-var Offer = class {
-  constructor(offer, cost) {
-    this.offer = offer;
-    this.cost = cost;
-  }
-};
-
-// engine/src/available/research.ts
-function canResearchField(engine, player, field) {
-  const destTile = player.data.research[field] + 1;
-  if (destTile === lastTile(field) && engine.players.some((p) => p.data.research[field] === destTile)) {
-    return false;
-  }
-  return player.canUpgradeResearch(field);
-}
-function possibleResearchAreas(engine, player, cost, data) {
-  const commands = [];
-  const tracks = [];
-  const pl = engine.player(player);
-  const fields = ResearchField.values(engine.expansions);
-  if (cost === null || pl.data.canPay([cost])) {
-    let avFields = fields;
-    if (data) {
-      if (data.bescods) {
-        const minArea = Math.min(...fields.map((field) => pl.data.research[field]));
-        avFields = fields.filter((field) => pl.data.research[field] === minArea);
-      } else if (data.pos) {
-        avFields = [data.pos];
-      }
-    }
-    for (const field of avFields) {
-      if (canResearchField(engine, pl, field)) {
-        tracks.push({
-          field,
-          to: pl.data.research[field] + 1,
-          cost: cost?.toString() ?? "",
-        });
-      }
-    }
-  }
-  if (tracks.length > 0) {
-    commands.push({
-      name: "up" /* UpgradeResearch */,
-      player,
-      data: { tracks },
-    });
-  }
-  if (cost !== UPGRADE_RESEARCH_COST) {
-    commands.push({
-      name: "decline" /* Decline */,
-      player,
-      data: { offers: [new Offer("up" /* UpgradeResearch */, null)] },
-    });
-  }
-  return commands;
-}
-function possibleCoverTechTiles(engine, player) {
-  const commands = [];
-  const tiles = engine.player(player).data.tiles.techs.filter((tl) => tl.enabled && !isAdvanced(tl.pos));
-  commands.push({
-    name: "cover" /* ChooseCoverTechTile */,
-    player,
-    data: { tiles },
-  });
-  return commands;
-}
-function canTakeAdvancedTechTile(engine, data, tilePos) {
-  if (engine.tiles.techs[tilePos].count <= 0) {
-    return false;
-  }
-  if (!data.hasGreenFederation()) {
-    return false;
-  }
-  if (tilePos === "adv-ext" /* ScoringExtension */) {
-    const meetsExtensionCondition =
-      engine.scoringExtensionSide === "ships" /* ExploredShips */
-        ? data.exploredShipsCount() >= 3
-        : data.victoryPoints >= 25;
-    if (!meetsExtensionCondition) {
-      return false;
-    }
-  } else if (data.research[tilePos.slice("adv-".length)] < 4) {
-    return false;
-  }
-  if (!data.tiles.techs.some((tech) => tech.enabled && !isAdvanced(tech.pos))) {
-    return false;
-  }
-  return true;
-}
-function possibleTechTiles(engine, player) {
-  const commands = [];
-  const tiles = [];
-  const data = engine.players[player].data;
-  for (const tilePos of TechTilePos.values(engine.expansions)) {
-    if (!data.tiles.techs.find((tech) => tech.tile === engine.tiles.techs[tilePos].tile)) {
-      tiles.push({
-        tile: engine.tiles.techs[tilePos].tile,
-        pos: tilePos,
-      });
-    }
-  }
-  for (const tilePos of AdvTechTilePos.values(engine.expansions)) {
-    if (canTakeAdvancedTechTile(engine, data, tilePos)) {
-      tiles.push({
-        tile: engine.tiles.techs[tilePos].tile,
-        pos: tilePos,
-      });
-    }
-  }
-  for (const claimableTech of claimableSpaceshipTechs(data.explorationShips, engine.tiles.spaceshipTechs)) {
-    if (!data.tiles.techs.find((tech) => tech.tile === claimableTech.tile)) {
-      tiles.push({
-        tile: claimableTech.tile,
-        pos: claimableTech.ship,
-      });
-    }
-  }
-  if (tiles.length > 0) {
-    commands.push({
-      name: "tech" /* ChooseTechTile */,
-      player,
-      data: { tiles },
-    });
-  }
-  return commands;
-}
-
-// engine/src/move/phase.ts
-var import_lodash15 = __toESM(require_lodash2());
-import assert12 from "node:assert";
-
 // engine/src/algorithms/silent-auction.ts
 import assert10 from "node:assert";
+var MAX_SILENT_BID = 40;
+function silentAuctionBidError(entries, factions2, maxBid = MAX_SILENT_BID) {
+  if (entries.length !== factions2.length) {
+    return `You have to bid on all ${factions2.length} factions up for auction`;
+  }
+  const seen = /* @__PURE__ */ new Set();
+  for (const entry of entries) {
+    if (!factions2.includes(entry.faction)) {
+      return `${entry.faction} is not up for auction`;
+    }
+    if (seen.has(entry.faction)) {
+      return `You can only bid once on ${entry.faction}`;
+    }
+    seen.add(entry.faction);
+    if (!Number.isInteger(entry.points) || entry.points < 0) {
+      return `Every bid has to be a whole, non-negative number of victory points`;
+    }
+    if (entry.points > maxBid) {
+      return `A bid cannot be higher than ${maxBid} victory points`;
+    }
+  }
+  return null;
+}
 function resolveSilentAuction(factions2, seatOrder, bids, nominatedFaction, random = Math.random) {
   const maxBid = (player, faction) => bids.find((b) => b.player === player && b.faction === faction)?.max ?? 0;
   const price = new Map(factions2.map((f) => [f, 0]));
@@ -13216,6 +12050,137 @@ function resolveSilentAuction(factions2, seatOrder, bids, nominatedFaction, rand
   return { winners: new Map(factions2.map((f) => [f, leader.get(f)])), prices: price, log };
 }
 
+// engine/src/available/types.ts
+var ISOLATED_DISTANCE = 3;
+var UPGRADE_RESEARCH_COST = new Reward(4, "k" /* Knowledge */);
+var Offer = class {
+  constructor(offer, cost) {
+    this.offer = offer;
+    this.cost = cost;
+  }
+};
+
+// engine/src/available/research.ts
+function canResearchField(engine, player, field) {
+  const destTile = player.data.research[field] + 1;
+  if (destTile === lastTile(field) && engine.players.some((p) => p.data.research[field] === destTile)) {
+    return false;
+  }
+  return player.canUpgradeResearch(field);
+}
+function possibleResearchAreas(engine, player, cost, data) {
+  const commands = [];
+  const tracks = [];
+  const pl = engine.player(player);
+  const fields = ResearchField.values(engine.expansions);
+  if (cost === null || pl.data.canPay([cost])) {
+    let avFields = fields;
+    if (data) {
+      if (data.bescods) {
+        const minArea = Math.min(...fields.map((field) => pl.data.research[field]));
+        avFields = fields.filter((field) => pl.data.research[field] === minArea);
+      } else if (data.pos) {
+        avFields = [data.pos];
+      }
+    }
+    for (const field of avFields) {
+      if (canResearchField(engine, pl, field)) {
+        tracks.push({
+          field,
+          to: pl.data.research[field] + 1,
+          cost: cost?.toString() ?? ""
+        });
+      }
+    }
+  }
+  if (tracks.length > 0) {
+    commands.push({
+      name: "up" /* UpgradeResearch */,
+      player,
+      data: { tracks }
+    });
+  }
+  if (cost !== UPGRADE_RESEARCH_COST) {
+    commands.push({
+      name: "decline" /* Decline */,
+      player,
+      data: { offers: [new Offer("up" /* UpgradeResearch */, null)] }
+    });
+  }
+  return commands;
+}
+function possibleCoverTechTiles(engine, player) {
+  const commands = [];
+  const tiles = engine.player(player).data.tiles.techs.filter((tl) => tl.enabled && !isAdvanced(tl.pos));
+  commands.push({
+    name: "cover" /* ChooseCoverTechTile */,
+    player,
+    data: { tiles }
+  });
+  return commands;
+}
+function canTakeAdvancedTechTile(engine, data, tilePos) {
+  if (engine.tiles.techs[tilePos].count <= 0) {
+    return false;
+  }
+  if (!data.hasGreenFederation()) {
+    return false;
+  }
+  if (tilePos === "adv-ext" /* ScoringExtension */) {
+    const meetsExtensionCondition = engine.scoringExtensionSide === "ships" /* ExploredShips */ ? data.exploredShipsCount() >= 3 : data.victoryPoints >= 25;
+    if (!meetsExtensionCondition) {
+      return false;
+    }
+  } else if (data.research[tilePos.slice("adv-".length)] < 4) {
+    return false;
+  }
+  if (!data.tiles.techs.some((tech) => tech.enabled && !isAdvanced(tech.pos))) {
+    return false;
+  }
+  return true;
+}
+function possibleTechTiles(engine, player) {
+  const commands = [];
+  const tiles = [];
+  const data = engine.players[player].data;
+  for (const tilePos of TechTilePos.values(engine.expansions)) {
+    if (!data.tiles.techs.find((tech) => tech.tile === engine.tiles.techs[tilePos].tile)) {
+      tiles.push({
+        tile: engine.tiles.techs[tilePos].tile,
+        pos: tilePos
+      });
+    }
+  }
+  for (const tilePos of AdvTechTilePos.values(engine.expansions)) {
+    if (canTakeAdvancedTechTile(engine, data, tilePos)) {
+      tiles.push({
+        tile: engine.tiles.techs[tilePos].tile,
+        pos: tilePos
+      });
+    }
+  }
+  for (const claimableTech of claimableSpaceshipTechs(data.explorationShips, engine.tiles.spaceshipTechs)) {
+    if (!data.tiles.techs.find((tech) => tech.tile === claimableTech.tile)) {
+      tiles.push({
+        tile: claimableTech.tile,
+        pos: claimableTech.ship
+      });
+    }
+  }
+  if (tiles.length > 0) {
+    commands.push({
+      name: "tech" /* ChooseTechTile */,
+      player,
+      data: { tiles }
+    });
+  }
+  return commands;
+}
+
+// engine/src/move/phase.ts
+var import_lodash15 = __toESM(require_lodash2());
+import assert12 from "node:assert";
+
 // engine/src/move/setup.ts
 var import_lodash14 = __toESM(require_lodash2());
 import assert11 from "node:assert";
@@ -13234,12 +12199,9 @@ function moveInit(engine, players, seed) {
     "Custom (drafted) board setup is not supported with the Lost Fleet expansion"
   );
   if (engine.options.auction === "preference-split" /* PreferenceSplit */) {
+    const budget = engine.options.auctionBudget ?? defaultPreferenceSplitBudget(players);
     assert11(
-      players === PREFERENCE_SPLIT_PLAYERS,
-      `The Preference Split Auction needs exactly ${PREFERENCE_SPLIT_PLAYERS} players and ${PREFERENCE_SPLIT_PLAYERS} factions, got ${players} players`
-    );
-    assert11(
-      isValidPreferenceSplitBudget(engine.preferenceSplitBudget),
+      isValidPreferenceSplitBudget(budget),
       `The Preference Split Auction's bid budget must be a whole number between ${MIN_PREFERENCE_SPLIT_BUDGET} and ${MAX_PREFERENCE_SPLIT_BUDGET}, got ${engine.options.auctionBudget}`
     );
     assert11(
@@ -13289,10 +12251,7 @@ function moveRotateSectors(engine, command, player, ...params) {
   for (let i = 0; i < params.length; i += 2) {
     pairs.push([params[i], params[i + 1]]);
   }
-  assert11(
-    (0, import_lodash14.uniq)(pairs.map((pair) => pair[0])).length === params.length / 2,
-    "Duplicate rotations are not allowed"
-  );
+  assert11((0, import_lodash14.uniq)(pairs.map((pair) => pair[0])).length === params.length / 2, "Duplicate rotations are not allowed");
   for (const pair of pairs) {
     engine.map.rotateSector(pair[0], +pair[1]);
   }
@@ -13329,25 +12288,23 @@ function moveBanFaction(engine, command, player, faction) {
 }
 function moveSilentBid(engine, command, player, ...params) {
   assert11(params.length % 2 === 0, "The silentBid command needs an even number of parameters");
-  const pairs = [];
+  const entries = [];
   for (let i = 0; i < params.length; i += 2) {
-    pairs.push([params[i], params[i + 1]]);
+    assert11(/^\d+$/.test(params[i + 1]), `"${params[i + 1]}" is not a whole, non-negative bid`);
+    entries.push({ faction: params[i], points: +params[i + 1] });
   }
   assert11(
-    (0, import_lodash14.uniq)(pairs.map((pair) => pair[0])).length === pairs.length,
+    (0, import_lodash14.uniq)(entries.map((entry) => entry.faction)).length === entries.length,
     "Duplicate factions are not allowed in a silent bid"
   );
-  if (!engine.replay) {
-    const bidsAC = command.data.bids;
-    assert11(pairs.length === bidsAC.length, "You have to submit a bid for every faction up for auction");
-    for (const [faction, bid] of pairs) {
-      const bidAC = bidsAC.find((b) => b.faction === faction);
-      assert11(bidAC, `${faction} is not up for auction`);
-      assert11(bidAC.bid.includes(+bid), "You have to bid a legal amount");
-    }
-  }
-  for (const [faction, bid] of pairs) {
-    engine.silentAuctionBids.push({ player, faction, max: +bid });
+  assert11(
+    !engine.silentAuctionBids.some((bid) => bid.player === player),
+    `Player ${player} has already submitted their bids`
+  );
+  const error = silentAuctionBidError(entries, engine.setup);
+  assert11(error === null, error);
+  for (const entry of entries) {
+    engine.silentAuctionBids.push({ player, faction: entry.faction, max: entry.points });
   }
 }
 function movePreferenceBid(engine, command, player, ...params) {
@@ -13379,10 +12336,7 @@ function phaseSetupInit(engine, move) {
 }
 function phaseSetupBoard(engine, move) {
   engine.loadTurnMoves(move, { split: false, processFirst: true });
-  if (
-    possibleSetupBoardActions(engine, engine.currentPlayer).length === 0 ||
-    move.includes("rotate" /* RotateSectors */)
-  ) {
+  if (possibleSetupBoardActions(engine, engine.currentPlayer).length === 0 || move.includes("rotate" /* RotateSectors */)) {
     beginSetupFactionPhaseOrBan(engine);
   }
 }
@@ -13466,10 +12420,9 @@ function resolvePreferenceSplitPhase(engine) {
   }
 }
 function moveToNextPlayerWithoutAChosenFaction(engine) {
-  const player = [
-    ...(0, import_lodash15.range)(engine.currentPlayer + 1, engine.players.length),
-    ...(0, import_lodash15.range)(0, engine.currentPlayer),
-  ].find((player2) => !engine.players.some((pl) => pl.player === player2 && pl.faction));
+  const player = [...(0, import_lodash15.range)(engine.currentPlayer + 1, engine.players.length), ...(0, import_lodash15.range)(0, engine.currentPlayer)].find(
+    (player2) => !engine.players.some((pl) => pl.player === player2 && pl.faction)
+  );
   if (player !== void 0) {
     engine.currentPlayer = player;
   } else {
@@ -13549,7 +12502,7 @@ function beginSetupBoardPhase(engine) {
   }
 }
 function beginSetupFactionPhaseOrBan(engine) {
-  const banPhase = engine.options.banPhase ?? engine.options.auction === "silent"; /* Silent */
+  const banPhase = engine.options.banPhase ?? engine.options.auction === "silent" /* Silent */;
   if (banPhase) {
     beginSetupFactionBanPhase(engine);
   } else {
@@ -13614,10 +12567,7 @@ function beginSetupBuildingPhase(engine) {
   const baseSetupTurnOrder = engine.turnOrderAfterSetupAuction.filter(
     (player) => lostFleetSetupStage(engine.players[player].faction) === 1
   );
-  const reverseSetupTurnOrder = baseSetupTurnOrder
-    .slice()
-    .reverse()
-    .filter((player) => startingSetupPlacements(engine.players[player].faction) >= 2);
+  const reverseSetupTurnOrder = baseSetupTurnOrder.slice().reverse().filter((player) => startingSetupPlacements(engine.players[player].faction) >= 2);
   const extraSetupTurnOrder = baseSetupTurnOrder.filter(
     (player) => startingSetupPlacements(engine.players[player].faction) >= 3
   );
@@ -13705,11 +12655,7 @@ function beginGaiaPhase(engine) {
   engine.addAdvancedLog({ phase: "roundGaia" /* RoundGaia */ });
   engine.tempTurnOrder = [...engine.turnOrder];
   for (const hex of engine.map.toJSON()) {
-    if (
-      hex.data.planet === "m" /* Transdim */ &&
-      hex.data.player !== void 0 &&
-      hex.data.building === "gf" /* GaiaFormer */
-    ) {
+    if (hex.data.planet === "m" /* Transdim */ && hex.data.player !== void 0 && hex.data.building === "gf" /* GaiaFormer */) {
       hex.data.planet = "g" /* Gaia */;
     }
   }
@@ -13751,10 +12697,7 @@ function finalScoringPhase(engine) {
     gainFinalScoringVictoryPoints(allRankings, player);
     player.data.gainResearchVictoryPoints();
     player.data.finalResourceHandling();
-    player.gainRewards(
-      [new Reward(Math.max(Math.floor(-1 * player.data.bid)), "vp" /* VictoryPoint */)],
-      "bid" /* Bid */
-    );
+    player.gainRewards([new Reward(Math.max(Math.floor(-1 * player.data.bid)), "vp" /* VictoryPoint */)], "bid" /* Bid */);
   }
 }
 function beginLeechingPhase(engine) {
@@ -13774,11 +12717,11 @@ function beginLeechingPhase(engine) {
       pl.data.leechPossible = 0;
       continue;
     }
-    pl.data.leechPossible = leechPossible(engine, sourceHex, (hex) =>
-      pl.buildingValue(engine.map.grid.get(hex), {
-        building:
-          hex.buildingOf(pl.player) ??
-          (hex.customPosts.some((c) => c === pl.player) ? "customsPost" /* CustomsPost */ : null),
+    pl.data.leechPossible = leechPossible(
+      engine,
+      sourceHex,
+      (hex) => pl.buildingValue(engine.map.grid.get(hex), {
+        building: hex.buildingOf(pl.player) ?? (hex.customPosts.some((c) => c === pl.player) ? "customsPost" /* CustomsPost */ : null)
       })
     );
     if (pl.canLeech()) {
@@ -13832,20 +12775,18 @@ var artifactTokenSpec = {
   ["artifact-knowledgeqic" /* KnowledgeQic */]: "Immediately gain 3 knowledge + 1 Q.I.C.",
   ["artifact-creditlarge" /* CreditLarge */]: "Immediately gain 5 credits + 2 ore.",
   ["artifact-power" /* Power */]: "Ongoing: gain an extra 2 power every income phase, placed directly in Area III.",
-  ["artifact-asteroid" /* Asteroid */]:
-    "Immediately and only once gain 7 VP; counts as building a mine and colonizing an Asteroid (no sector allocation, no mine physically placed).",
-  ["artifact-protoplanet" /* Protoplanet */]:
-    "Immediately and only once gain 7 VP; counts as building a mine and colonizing a Protoplanet (no sector allocation, no 6 VP protoplanet bonus, no mine physically placed).",
-  ["artifact-researchlevel" /* ResearchLevel */]:
+  ["artifact-asteroid" /* Asteroid */]: "Immediately and only once gain 7 VP; counts as building a mine and colonizing an Asteroid (no sector allocation, no mine physically placed).",
+  ["artifact-protoplanet" /* Protoplanet */]: "Immediately and only once gain 7 VP; counts as building a mine and colonizing a Protoplanet (no sector allocation, no 6 VP protoplanet bonus, no mine physically placed).",
+  ["artifact-researchlevel" /* ResearchLevel */]: (
     // VERIFY: rules text's owner-comment on which Research Area this token uses was cut off mid-sentence
     // (RULES_CLARIFICATIONS.md §G6); assuming ResearchField.Science as the closest match to "Knowledge-themed".
-    "Immediately and only once gain 3 VP per level reached in the matching Research Area.",
-  ["artifact-researchtracks" /* ResearchTracks */]:
-    "Immediately and only once gain 3 VP for each Research Area at level 3 or higher.",
+    "Immediately and only once gain 3 VP per level reached in the matching Research Area."
+  ),
+  ["artifact-researchtracks" /* ResearchTracks */]: "Immediately and only once gain 3 VP for each Research Area at level 3 or higher.",
   ["artifact-federation" /* Federation */]: "Re-score (re-trigger) a Federation token you already own.",
   ["artifact-gaiaproject" /* GaiaProject */]: "Immediately and only once gain 3 VP per step up the Gaiaforming track.",
   ["artifact-planettypes" /* PlanetTypes */]: "Immediately and only once gain 3 VP + 1 VP per planet type colonized.",
-  ["artifact-deepspace" /* DeepSpace */]: "Immediately and only once gain 3 VP per Deep Space sector colonized.",
+  ["artifact-deepspace" /* DeepSpace */]: "Immediately and only once gain 3 VP per Deep Space sector colonized."
 };
 var artifactTokenRewards = {
   ["artifact-knowledgeore" /* KnowledgeOre */]: "+k,o",
@@ -13856,7 +12797,7 @@ var artifactTokenRewards = {
   // (actions.ts's OreToPowerTokenArea3, "1ta3"), just as a recurring Income-operator reward
   // instead of a one-time grant.
   ["artifact-power" /* Power */]: "+2ta3",
-  ["artifact-federation" /* Federation */]: ">fed",
+  ["artifact-federation" /* Federation */]: ">fed"
 };
 
 // engine/src/buildings.ts
@@ -13867,13 +12808,9 @@ function upgradedBuildings(currentBuilding, faction) {
     case "m" /* Mine */:
       return ["ts" /* TradingStation */];
     case "ts" /* TradingStation */:
-      return faction === "bescods" /* Bescods */
-        ? ["ac1" /* Academy1 */, "ac2" /* Academy2 */, "lab" /* ResearchLab */]
-        : ["PI" /* PlanetaryInstitute */, "lab" /* ResearchLab */];
+      return faction === "bescods" /* Bescods */ ? ["ac1" /* Academy1 */, "ac2" /* Academy2 */, "lab" /* ResearchLab */] : ["PI" /* PlanetaryInstitute */, "lab" /* ResearchLab */];
     case "lab" /* ResearchLab */:
-      return faction === "bescods" /* Bescods */
-        ? ["PI" /* PlanetaryInstitute */]
-        : ["ac1" /* Academy1 */, "ac2" /* Academy2 */];
+      return faction === "bescods" /* Bescods */ ? ["PI" /* PlanetaryInstitute */] : ["ac1" /* Academy1 */, "ac2" /* Academy2 */];
   }
   return [];
 }
@@ -13902,7 +12839,7 @@ function newAvailableBuilding(building, hex, canBuild, upgrade) {
     cost: Reward.toString(canBuild.cost),
     warnings: canBuild.warnings,
     steps: canBuild.steps,
-    upgrade,
+    upgrade
   };
 }
 function addPossibleNewPlanet(map, hex, pl, planet, building, buildings, lastRound, replay) {
@@ -13911,7 +12848,7 @@ function addPossibleNewPlanet(map, hex, pl, planet, building, buildings, lastRou
     return;
   }
   const check = pl.canBuild(map, hex, planet, building, lastRound, replay, {
-    addedCost: [new Reward(qicNeeded.amount, "q" /* Qic */)],
+    addedCost: [new Reward(qicNeeded.amount, "q" /* Qic */)]
   });
   if (check) {
     switch (pl.faction) {
@@ -13922,10 +12859,7 @@ function addPossibleNewPlanet(map, hex, pl, planet, building, buildings, lastRou
         break;
       case "lantids" /* Lantids */:
         if (hex.occupied() && building === "m" /* Mine */) {
-          if (
-            pl.data.occupied.filter((hex2) => hex2.data.additionalMine !== void 0).length ===
-            pl.maxBuildings("m" /* Mine */) - 1
-          ) {
+          if (pl.data.occupied.filter((hex2) => hex2.data.additionalMine !== void 0).length === pl.maxBuildings("m" /* Mine */) - 1) {
             check.warnings.push("lantids-deadlock" /* lantidsDeadlock */);
           }
           if (!pl.data.hasPlanetaryInstitute()) {
@@ -13979,7 +12913,7 @@ function possibleBuildings(engine, player) {
       for (const upgrade of upgraded) {
         const check = pl.canBuild(map, hex, hex.data.planet, upgrade, engine.isLastRound, engine.replay, {
           isolated,
-          existingBuilding: building,
+          existingBuilding: building
         });
         if (check) {
           buildings.push(newAvailableBuilding(upgrade, hex, check, true));
@@ -13987,7 +12921,7 @@ function possibleBuildings(engine, player) {
       }
     } else if (pl.canOccupy(hex)) {
       const planet = hex.occupied() ? pl.planet : hex.data.planet;
-      const building2 = hex.data.planet === "m" /* Transdim */ ? "gf" /* GaiaFormer */ : "m"; /* Mine */
+      const building2 = hex.data.planet === "m" /* Transdim */ ? "gf" /* GaiaFormer */ : "m" /* Mine */;
       addPossibleNewPlanet(map, hex, pl, planet, building2, buildings, engine.isLastRound, engine.replay);
     }
   }
@@ -13996,9 +12930,9 @@ function possibleBuildings(engine, player) {
       {
         name: "build" /* Build */,
         player,
-        data: { buildings: (0, import_lodash16.uniq)(buildings) },
+        data: { buildings: (0, import_lodash16.uniq)(buildings) }
         //ship locations may be duplicated
-      },
+      }
     ];
   }
   return [];
@@ -14011,16 +12945,7 @@ function possibleSpaceStations(engine, player) {
     if (hex.hasSpaceship() || hex.occupied() || hex.hasPlanet() || hex.belongsToFederationOf(player)) {
       continue;
     }
-    addPossibleNewPlanet(
-      map,
-      hex,
-      pl,
-      pl.planet,
-      "sp" /* SpaceStation */,
-      buildings,
-      engine.isLastRound,
-      engine.replay
-    );
+    addPossibleNewPlanet(map, hex, pl, pl.planet, "sp" /* SpaceStation */, buildings, engine.isLastRound, engine.replay);
   }
   if (buildings.length > 0) {
     return [{ name: "build" /* Build */, player, data: { buildings } }];
@@ -14064,10 +12989,10 @@ function possibleLabDowngrades(engine, player) {
           building: "ts" /* TradingStation */,
           coordinates: hex.toString(),
           cost: "~",
-          downgrade: true,
-        })),
-      },
-    },
+          downgrade: true
+        }))
+      }
+    }
   ];
 }
 function possibleSpaceLostPlanet(engine, player) {
@@ -14086,14 +13011,14 @@ function possibleSpaceLostPlanet(engine, player) {
     spaces.push({
       coordinates: hex.toString(),
       cost: qicNeeded.amount > 0 ? new Reward(qicNeeded.amount, "q" /* Qic */).toString() : "~",
-      warnings: qicNeeded.warning ? [qicNeeded.warning] : null,
+      warnings: qicNeeded.warning ? [qicNeeded.warning] : null
     });
   }
   if (spaces.length > 0) {
     commands.push({
       name: "lostPlanet" /* PlaceLostPlanet */,
       player,
-      data: { spaces },
+      data: { spaces }
     });
   }
   return commands;
@@ -14107,9 +13032,7 @@ function possiblePISwaps(engine, player) {
       buildings.push({
         building: "m" /* Mine */,
         coordinates: hex.toString(),
-        warnings: hex.belongsToFederationOf(player)
-          ? ["ambas-swap-into-federation" /* ambasSwapIntoFederation */]
-          : null,
+        warnings: hex.belongsToFederationOf(player) ? ["ambas-swap-into-federation" /* ambasSwapIntoFederation */] : null
       });
     }
   }
@@ -14117,7 +13040,7 @@ function possiblePISwaps(engine, player) {
     commands.push({
       name: "swap-PI" /* PISwap */,
       player,
-      data: { buildings },
+      data: { buildings }
     });
   }
   return commands;
@@ -14133,40 +13056,40 @@ var tradeOptions = [
     domestic: true,
     free: true,
     base: Reward.parse("1o"),
-    bonus: [],
+    bonus: []
   },
   {
     buildings: ["m" /* Mine */],
     base: [],
     bonus: Reward.parse("1c,1o"),
-    build: "customsPost" /* CustomsPost */,
+    build: "customsPost" /* CustomsPost */
   },
   {
     buildings: ["ts" /* TradingStation */],
     base: Reward.parse("5c"),
-    bonus: Reward.parse("3c,1pw"),
+    bonus: Reward.parse("3c,1pw")
   },
   {
     buildings: ["lab" /* ResearchLab */],
     base: Reward.parse("2k"),
-    bonus: Reward.parse("1k"),
+    bonus: Reward.parse("1k")
   },
   {
     buildings: ["ac1" /* Academy1 */, "ac2" /* Academy2 */],
     base: Reward.parse("2k"),
     bonus: Reward.parse("1k"),
-    researchAdvancementBonus: true,
+    researchAdvancementBonus: true
   },
   {
     buildings: ["PI" /* PlanetaryInstitute */],
     base: Reward.parse("1t,2pw"),
-    bonus: Reward.parse("4pw"),
+    bonus: Reward.parse("4pw")
   },
   {
     buildings: ["colony" /* Colony */],
     base: Reward.parse("3vp"),
-    bonus: Reward.parse("2vp"),
-  },
+    bonus: Reward.parse("2vp")
+  }
 ];
 function shipsInHex(location, data) {
   return data.players.flatMap((p) => p.data.ships).filter((s) => s.location === location);
@@ -14186,10 +13109,7 @@ function possibleShips(pl, engine, map, hex) {
   return buildings;
 }
 function shipTargets(source, hex, range4, targets, engine) {
-  if (
-    !targets.find((t) => t.coordinates === hex) &&
-    (shipsInHex(hex, engine).length < MAX_SHIPS_PER_HEX || source === hex)
-  ) {
+  if (!targets.find((t) => t.coordinates === hex) && (shipsInHex(hex, engine).length < MAX_SHIPS_PER_HEX || source === hex)) {
     targets.push({ coordinates: hex });
   }
   if (range4 === 0) {
@@ -14211,13 +13131,13 @@ function possibleShipActionsOfType(engine, ship, shipLocation, type, allowDeclin
   if (locations.length > 0) {
     actions.push({
       type,
-      locations,
+      locations
     });
   }
   if (allowDecline) {
     actions.push({
       type: "nothing" /* Nothing */,
-      locations: [],
+      locations: []
     });
   }
   return actions;
@@ -14243,13 +13163,13 @@ function tradeLocation(cost, rewards, target) {
   return {
     ...target,
     tradeCost: cost.toStringWithZero(),
-    rewards: rewards.map((r) => r.toStringWithZero()).join(","),
+    rewards: rewards.map((r) => r.toStringWithZero()).join(",")
   };
 }
 function possibleBuilding(engine, h, player, building, rewards, cost) {
   const p = engine.player(player);
   const canBuildAfterTrade = p.canBuild(engine.map, h, h.data.planet, building, engine.isLastRound, engine.replay, {
-    addedCost: Reward.negative(rewards),
+    addedCost: Reward.negative(rewards)
   });
   if (canBuildAfterTrade) {
     canBuildAfterTrade.cost = p.board.cost(building, false);
@@ -14276,9 +13196,7 @@ function tradeLocations(h, player, engine) {
       const cost = tradeCost(guest, option);
       if (engine.player(player).data.canPay([cost])) {
         const rewards = tradeRewards(option, guest, host);
-        return option.build
-          ? possibleBuilding(engine, h, player, option.build, rewards, cost)
-          : [tradeLocation(cost, rewards, { coordinates: h.toString() })];
+        return option.build ? possibleBuilding(engine, h, player, option.build, rewards, cost) : [tradeLocation(cost, rewards, { coordinates: h.toString() })];
       }
     }
   }
@@ -14287,22 +13205,10 @@ function tradeLocations(h, player, engine) {
 function colonyActions(engine, ship, h) {
   const player = engine.player(ship.player);
   const existingBuilding = h.buildingOf(player.player);
-  if (
-    h.hasPlanet() &&
-    h.data.planet !== "m" /* Transdim */ &&
-    (!h.occupied() || existingBuilding === "gf") /* GaiaFormer */
-  ) {
-    const check = player.canBuild(
-      engine.map,
-      h,
-      h.data.planet,
-      "colony" /* Colony */,
-      engine.isLastRound,
-      engine.replay,
-      {
-        existingBuilding,
-      }
-    );
+  if (h.hasPlanet() && h.data.planet !== "m" /* Transdim */ && (!h.occupied() || existingBuilding === "gf" /* GaiaFormer */)) {
+    const check = player.canBuild(engine.map, h, h.data.planet, "colony" /* Colony */, engine.isLastRound, engine.replay, {
+      existingBuilding
+    });
     if (check) {
       return [newAvailableBuilding("colony" /* Colony */, h, check, false)];
     }
@@ -14321,17 +13227,20 @@ function possibleShipActions(engine, ship, shipLocation, requireTemporaryStep) {
         (h) => colonyActions(engine, ship, h)
       );
     case "tradeShip" /* TradeShip */:
-      return possibleShipActionsOfType(engine, ship, shipLocation, "trade" /* Trade */, true, (h) =>
-        tradeLocations(h, ship.player, engine)
+      return possibleShipActionsOfType(
+        engine,
+        ship,
+        shipLocation,
+        "trade" /* Trade */,
+        true,
+        (h) => tradeLocations(h, ship.player, engine)
       );
   }
   return [];
 }
 function possibleShipMovements(engine, player, requireTemporaryStep) {
   const pl = engine.player(player);
-  const ships = pl.data.ships.filter(
-    (s) => !s.moved && (!requireTemporaryStep || s.type === "colonyShip") /* ColonyShip */
-  );
+  const ships = pl.data.ships.filter((s) => !s.moved && (!requireTemporaryStep || s.type === "colonyShip" /* ColonyShip */));
   if (ships.length === 0) {
     return [];
   }
@@ -14340,19 +13249,15 @@ function possibleShipMovements(engine, player, requireTemporaryStep) {
     {
       name: "move" /* MoveShip */,
       player,
-      data: ships
-        .map((s) => ({
-          ship: s.type,
-          source: s.location,
-          targets: shipTargets(s.location, s.location, shipRange, [], engine)
-            .map((t) => ({
-              location: t,
-              actions: possibleShipActions(engine, s, t.coordinates, requireTemporaryStep),
-            }))
-            .filter((t) => t.actions.length > 0),
-        }))
-        .filter((d) => d.targets.length > 0),
-    },
+      data: ships.map((s) => ({
+        ship: s.type,
+        source: s.location,
+        targets: shipTargets(s.location, s.location, shipRange, [], engine).map((t) => ({
+          location: t,
+          actions: possibleShipActions(engine, s, t.coordinates, requireTemporaryStep)
+        })).filter((t) => t.actions.length > 0)
+      })).filter((d) => d.targets.length > 0)
+    }
   ];
 }
 
@@ -14363,7 +13268,7 @@ var MAX_KNOWLEDGE = 15;
 var resourceLimits = {
   ["o" /* Ore */]: MAX_ORE,
   ["c" /* Credit */]: MAX_CREDIT,
-  ["k" /* Knowledge */]: MAX_KNOWLEDGE,
+  ["k" /* Knowledge */]: MAX_KNOWLEDGE
 };
 var Power = class {
   constructor(area1 = 0, area2 = 0, area3 = 0, gaia = 0) {
@@ -14381,7 +13286,7 @@ function powerLogString(power, brainstoneArea) {
     areaString("area1" /* Area1 */, power.area1),
     areaString("area2" /* Area2 */, power.area2),
     areaString("area3" /* Area3 */, power.area3),
-    areaString("gaia" /* Gaia */, power.gaia),
+    areaString("gaia" /* Gaia */, power.gaia)
   ];
   return result.join("/");
 }
@@ -14407,7 +13312,7 @@ var PlayerData2 = class _PlayerData extends import_eventemitter32.EventEmitter {
       gaia: 0,
       eco: 0,
       sci: 0,
-      dip: 0,
+      dip: 0
     };
     this.range = 1;
     this.shipRange = 2;
@@ -14435,7 +13340,7 @@ var PlayerData2 = class _PlayerData extends import_eventemitter32.EventEmitter {
     this.tiles = {
       booster: null,
       techs: [],
-      federations: [],
+      federations: []
     };
     /** Number of federations built (used for ivits) */
     this.federationCount = 0;
@@ -14507,14 +13412,14 @@ var PlayerData2 = class _PlayerData extends import_eventemitter32.EventEmitter {
       tradeDiscount: this.tradeDiscount,
       tradeShips: this.tradeShips,
       temporaryRange: this.temporaryRange,
-      temporaryStep: this.temporaryStep,
+      temporaryStep: this.temporaryStep
     };
     return ret;
   }
   initialPowerRewards(board) {
     const rewards = [
       new Reward(board.power.area1 + board.power.area2, "t" /* GainToken */),
-      new Reward(board.power.area2, "pw" /* ChargePower */),
+      new Reward(board.power.area2, "pw" /* ChargePower */)
     ];
     if (board.brainstone !== null) {
       assert13(board.brainstone === "area1" /* Area1 */, "other initial areas for brainstone are not supported");
@@ -14532,8 +13437,8 @@ var PlayerData2 = class _PlayerData extends import_eventemitter32.EventEmitter {
     const d = {
       choices: choices.map((a) => ({
         area: a,
-        warning: a === "area1" /* Area1 */ ? area1Warning : void 0,
-      })),
+        warning: a === "area1" /* Area1 */ ? area1Warning : void 0
+      }))
     };
     this.emit("brainstone", d);
   }
@@ -14594,7 +13499,7 @@ var PlayerData2 = class _PlayerData extends import_eventemitter32.EventEmitter {
         this.qics += count;
         break;
       case "t" /* GainToken */:
-        count > 0 ? (this.power.area1 += count) : this.discardPower(-count);
+        count > 0 ? this.power.area1 += count : this.discardPower(-count);
         break;
       case "ta3" /* GainTokenArea3 */:
         this.power.area3 += count;
@@ -14696,12 +13601,7 @@ var PlayerData2 = class _PlayerData extends import_eventemitter32.EventEmitter {
       case "t-a3" /* MoveTokenFromArea3ToGaia */:
         return this.power.area3;
       case "gf" /* GaiaFormer */:
-        return (
-          this.gaiaformers -
-          this.gaiaformersInGaia -
-          this.buildings["gf" /* GaiaFormer */] -
-          this.gaiaformersUsedForAsteroid
-        );
+        return this.gaiaformers - this.gaiaformersInGaia - this.buildings["gf" /* GaiaFormer */] - this.gaiaformersUsedForAsteroid;
     }
     return 0;
   }
@@ -14868,7 +13768,7 @@ var PlayerData2 = class _PlayerData extends import_eventemitter32.EventEmitter {
       area2: area2ToGaia,
       area3: area3ToGaia,
       gaia: 0,
-      brainstone: movedBrainstone,
+      brainstone: movedBrainstone
     };
     this.emit("move-tokens", event);
   }
@@ -14928,10 +13828,7 @@ var PlayerData2 = class _PlayerData extends import_eventemitter32.EventEmitter {
     }
     const creditGain = this.spendablePowerTokens();
     if (creditGain > 0) {
-      gain(
-        new Reward(-creditGain / this.tokenModifier, "pw" /* ChargePower */),
-        new Reward(creditGain, "c" /* Credit */)
-      );
+      gain(new Reward(-creditGain / this.tokenModifier, "pw" /* ChargePower */), new Reward(creditGain, "c" /* Credit */));
     }
     const qics = this.qics;
     if (qics > 0) {
@@ -14945,22 +13842,16 @@ var PlayerData2 = class _PlayerData extends import_eventemitter32.EventEmitter {
   }
   gainResearchVictoryPoints() {
     for (const research of ResearchField.values(6 /* All */)) {
-      this.gainReward(
-        new Reward(Math.max(this.research[research] - 2, 0) * 4, "vp" /* VictoryPoint */),
-        false,
-        research
-      );
+      this.gainReward(new Reward(Math.max(this.research[research] - 2, 0) * 4, "vp" /* VictoryPoint */), false, research);
     }
   }
   removeGreenFederation() {
-    if (
-      this.tiles.federations.some((fed) => {
-        if (fed.green) {
-          fed.green = false;
-          return true;
-        }
-      })
-    ) {
+    if (this.tiles.federations.some((fed) => {
+      if (fed.green) {
+        fed.green = false;
+        return true;
+      }
+    })) {
       return;
     }
     this.spaceshipFederations.some((fed) => {
@@ -15003,58 +13894,33 @@ function possibleSpaceshipActions(engine, player) {
       if (engine.spaceshipActions[ship]?.[action.type] !== void 0) {
         continue;
       }
-      if (
-        ship === "tfmars" /* TFMars */ &&
-        action.type === "power" &&
-        possibleInstantGaiaforming(engine, player).length === 0
-      ) {
+      if (ship === "tfmars" /* TFMars */ && action.type === "power" && possibleInstantGaiaforming(engine, player).length === 0) {
         continue;
       }
-      if (
-        (ship === "eclipse" /* Eclipse */ || ship === "tfmars") /* TFMars */ &&
-        action.type === "credit" &&
-        possibleSpaceshipBuildMine(engine, player, { ship }).length === 0
-      ) {
+      if ((ship === "eclipse" /* Eclipse */ || ship === "tfmars" /* TFMars */) && action.type === "credit" && possibleSpaceshipBuildMine(engine, player, { ship }).length === 0) {
         continue;
       }
-      if (
-        ship === "twilight" /* Twilight */ &&
-        action.type === "power" &&
-        possibleSpaceshipUpgradeBuilding(engine, player, {
-          from: "ts" /* TradingStation */,
-          to: "lab" /* ResearchLab */,
-        }).length === 0
-      ) {
+      if (ship === "twilight" /* Twilight */ && action.type === "power" && possibleSpaceshipUpgradeBuilding(engine, player, {
+        from: "ts" /* TradingStation */,
+        to: "lab" /* ResearchLab */
+      }).length === 0) {
         continue;
       }
-      if (
-        ship === "rebellion" /* Rebellion */ &&
-        action.type === "power" &&
-        possibleSpaceshipUpgradeBuilding(engine, player, { from: "m" /* Mine */, to: "ts" /* TradingStation */ })
-          .length === 0
-      ) {
+      if (ship === "rebellion" /* Rebellion */ && action.type === "power" && possibleSpaceshipUpgradeBuilding(engine, player, { from: "m" /* Mine */, to: "ts" /* TradingStation */ }).length === 0) {
         continue;
       }
-      if (
-        ship === "eclipse" /* Eclipse */ &&
-        action.type === "power" &&
-        !possibleResearchAreas(engine, player, null).some((c) => c.name === "up" /* UpgradeResearch */)
-      ) {
+      if (ship === "eclipse" /* Eclipse */ && action.type === "power" && !possibleResearchAreas(engine, player, null).some((c) => c.name === "up" /* UpgradeResearch */)) {
         continue;
       }
       if (!pl.data.canPay(Reward.parse(action.cost))) {
         continue;
       }
-      const noOwnedFederation =
-        ship === "twilight" /* Twilight */ &&
-        action.type === "qic" &&
-        pl.data.tiles.federations.length === 0 &&
-        pl.data.spaceshipFederations.length === 0;
+      const noOwnedFederation = ship === "twilight" /* Twilight */ && action.type === "qic" && pl.data.tiles.federations.length === 0 && pl.data.spaceshipFederations.length === 0;
       actions.push({
         ship,
         type: action.type,
         cost: action.cost,
-        ...(noOwnedFederation ? { warnings: ["no-owned-federation-to-rescore" /* noOwnedFederationToRescore */] } : {}),
+        ...noOwnedFederation ? { warnings: ["no-owned-federation-to-rescore" /* noOwnedFederationToRescore */] } : {}
       });
     }
   }
@@ -15065,8 +13931,8 @@ function possibleSpaceshipActions(engine, player) {
     {
       name: "spaceshipAction" /* SpaceshipAction */,
       player,
-      data: { actions },
-    },
+      data: { actions }
+    }
   ];
 }
 function possibleInstantGaiaforming(engine, player) {
@@ -15086,7 +13952,7 @@ function possibleInstantGaiaforming(engine, player) {
     spaces.push({
       coordinates: hex.toString(),
       cost: qicNeeded.amount > 0 ? new Reward(qicNeeded.amount, "q" /* Qic */).toString() : "~",
-      warnings: qicNeeded.warning ? [qicNeeded.warning] : null,
+      warnings: qicNeeded.warning ? [qicNeeded.warning] : null
     });
   }
   if (spaces.length === 0) {
@@ -15141,7 +14007,7 @@ function possibleSpaceshipBuildMine(engine, player, data) {
       warnings: qicNeeded.warning ? [qicNeeded.warning] : null,
       // §C4: Eclipse's Credit action places the mine on an Asteroid with "the 6 credits [as] the
       // entire cost" — explicitly distinct from §E2's Gaiaformer-consuming route.
-      consumesAsteroidGaiaformer: data.ship === "eclipse" /* Eclipse */ ? false : void 0,
+      consumesAsteroidGaiaformer: data.ship === "eclipse" /* Eclipse */ ? false : void 0
     });
   }
   if (buildings.length === 0) {
@@ -15159,7 +14025,7 @@ function possibleSpaceshipUpgradeBuilding(engine, player, data) {
           building: data.to,
           coordinates: hex.toString(),
           cost: "~",
-          upgrade: true,
+          upgrade: true
         });
       }
     }
@@ -15181,20 +14047,13 @@ function possibleSpecialActions(engine, player) {
   const pl = engine.player(player);
   for (const event of pl.events["=>" /* Activate */]) {
     if (!event.activated) {
-      if (
-        event.rewards[0].type === "down-lab" /* DowngradeLab */ &&
-        (pl.data.buildings["lab" /* ResearchLab */] === 0 ||
-          pl.data.buildings["ts" /* TradingStation */] >= pl.maxBuildings("ts" /* TradingStation */))
-      ) {
+      if (event.rewards[0].type === "down-lab" /* DowngradeLab */ && (pl.data.buildings["lab" /* ResearchLab */] === 0 || pl.data.buildings["ts" /* TradingStation */] >= pl.maxBuildings("ts" /* TradingStation */))) {
         continue;
       }
       if (event.rewards[0].type === "swap-PI" /* PISwap */ && pl.data.buildings["m" /* Mine */] === 0) {
         continue;
       }
-      if (
-        event.rewards[0].type === "instant-gaiaforming" /* InstantGaiaforming */ &&
-        possibleInstantGaiaforming(engine, player).length === 0
-      ) {
+      if (event.rewards[0].type === "instant-gaiaforming" /* InstantGaiaforming */ && possibleInstantGaiaforming(engine, player).length === 0) {
         continue;
       }
       if (!pl.data.canPay(Reward.negative(event.rewards.filter((rw) => rw.count < 0)))) {
@@ -15203,7 +14062,7 @@ function possibleSpecialActions(engine, player) {
       specialacts.push({
         income: event.action().rewards,
         // Reward.toString(event.rewards),
-        spec: event.spec,
+        spec: event.spec
       });
     }
   }
@@ -15211,7 +14070,7 @@ function possibleSpecialActions(engine, player) {
     commands.push({
       name: "special" /* Special */,
       player,
-      data: { specialacts },
+      data: { specialacts }
     });
   }
   return commands;
@@ -15251,10 +14110,7 @@ function possibleBoardActions(actions, p, replay) {
     return p.data.getResources(type) < resourceLimits[type];
   };
   let poweracts = BoardAction.values().filter(
-    (pwract) =>
-      actions[pwract] === null &&
-      p.data.canPay(Reward.parse(boardActions[pwract].cost)) &&
-      boardActions[pwract].income.some((income) => Reward.parse(income).some((reward) => replay || canGain(reward)))
+    (pwract) => actions[pwract] === null && p.data.canPay(Reward.parse(boardActions[pwract].cost)) && boardActions[pwract].income.some((income) => Reward.parse(income).some((reward) => replay || canGain(reward)))
   );
   if (p.data.tiles.federations.length === 0) {
     poweracts = poweracts.filter((act) => act !== "qic2" /* Qic2 */);
@@ -15264,13 +14120,13 @@ function possibleBoardActions(actions, p, replay) {
       poweracts: poweracts.map((act) => ({
         name: act,
         cost: boardActions[act].cost,
-        income: boardActions[act].income,
-      })),
+        income: boardActions[act].income
+      }))
     };
     commands.push({
       name: "action" /* Action */,
       player: p.player,
-      data,
+      data
     });
   }
   return commands;
@@ -15287,7 +14143,7 @@ function possibleFreeActions(pl) {
     commands.push({
       name: "burn" /* BurnPower */,
       player: pl.player,
-      data: (0, import_lodash18.range)(1, pl.data.burnablePower() + 1),
+      data: (0, import_lodash18.range)(1, pl.data.burnablePower() + 1)
     });
   }
   return commands;
@@ -15301,7 +14157,7 @@ function freeActionData(availableFreeActions, player) {
       acts.push({
         cost: conversion.cost,
         income: conversion.income,
-        range: maxPay > 1 ? (0, import_lodash18.range)(1, maxPay + 1) : void 0,
+        range: maxPay > 1 ? (0, import_lodash18.range)(1, maxPay + 1) : void 0
       });
     }
   }
@@ -15313,8 +14169,8 @@ function transformToSpendCommand(actions, player) {
       name: "spend" /* Spend */,
       player: player.player,
       data: {
-        acts: actions.actions,
-      },
+        acts: actions.actions
+      }
     };
   }
   return null;
@@ -15331,7 +14187,7 @@ function possibleGaiaFreeActions(engine, player) {
     commands.push({
       name: "decline" /* Decline */,
       player,
-      data: { offers: [new Offer("tech" /* TechTile */, new Reward(4, "tg" /* GainTokenGaiaArea */).toString())] },
+      data: { offers: [new Offer("tech" /* TechTile */, new Reward(4, "tg" /* GainTokenGaiaArea */).toString())] }
     });
   }
   return commands;
@@ -15356,10 +14212,7 @@ function possibleArtifactTokens(engine, player) {
   const pl = engine.player(player);
   const tokens = engine.tiles.artifacts;
   const ownsAnyFederationToken = pl.data.tiles.federations.length > 0 || pl.data.spaceshipFederations.length > 0;
-  const noEffectTokens =
-    !ownsAnyFederationToken && tokens.includes("artifact-federation" /* Federation */)
-      ? ["artifact-federation" /* Federation */]
-      : void 0;
+  const noEffectTokens = !ownsAnyFederationToken && tokens.includes("artifact-federation" /* Federation */) ? ["artifact-federation" /* Federation */] : void 0;
   return [{ name: "chooseArtifactToken" /* ChooseArtifactToken */, player, data: { tokens, noEffectTokens } }];
 }
 
@@ -15372,7 +14225,9 @@ function spaceshipHex(map, ship) {
   return [...map.grid.values()].find((hex) => hex.data.spaceship === ship);
 }
 function nextFreeExplorationSlot(players, ship) {
-  const occupiedSlots = new Set(players.map((pl) => pl.data.explorationShips[ship]).filter((slot) => slot !== void 0));
+  const occupiedSlots = new Set(
+    players.map((pl) => pl.data.explorationShips[ship]).filter((slot) => slot !== void 0)
+  );
   for (let slot = 1; slot <= EXPLORATION_CHARGE_TRACK.length; slot++) {
     if (!occupiedSlots.has(slot)) {
       return slot;
@@ -15386,15 +14241,14 @@ function qicForExplorationDistance(map, hex, pl, replay, temporaryRange = pl.dat
     return null;
   }
   const distance = Math.min(...origins.map((loc) => map.distance(hex, loc)));
-  const qic = (rangeBoost) =>
-    Math.max(Math.ceil((distance - effectiveRange(pl.data) - rangeBoost) / QIC_RANGE_UPGRADE2), 0);
+  const qic = (rangeBoost) => Math.max(Math.ceil((distance - effectiveRange(pl.data) - rangeBoost) / QIC_RANGE_UPGRADE2), 0);
   const amount = qic(temporaryRange);
   if (!replay && temporaryRange > 0 && qic(0) === amount) {
     return null;
   }
   return {
     amount,
-    distance,
+    distance
   };
 }
 function explorationCost(pl) {
@@ -15465,7 +14319,7 @@ function possibleExplorations(engine, player) {
       cost: Reward.toString(cost),
       charge: EXPLORATION_CHARGE_TRACK[slot - 1],
       slot,
-      adjustments: explorationCostAdjustments(pl),
+      adjustments: explorationCostAdjustments(pl)
     });
   }
   if (ships.length === 0) {
@@ -15475,8 +14329,8 @@ function possibleExplorations(engine, player) {
     {
       name: "explore" /* Explore */,
       player,
-      data: { ships },
-    },
+      data: { ships }
+    }
   ];
 }
 
@@ -15487,25 +14341,23 @@ function federationWarnings(p, fed) {
   if (p.faction !== "ivits" /* Ivits */ && fed.newSatellites > p.data.power.area1) {
     ret.push("federation-with-charged-tokens" /* federationWithChargedTokens */);
   }
-  if (
-    p.faction === "ambas" /* Ambas */ &&
-    !fed.hexes.some((h) => h.buildingOf(p.player) === "PI" /* PlanetaryInstitute */)
-  ) {
+  if (p.faction === "ambas" /* Ambas */ && !fed.hexes.some((h) => h.buildingOf(p.player) === "PI" /* PlanetaryInstitute */)) {
     ret.push("ambas-federation-without-PI" /* ambasFederationWithoutPi */);
   }
   return ret;
 }
 function possibleFederations(engine, player) {
   const commands = Array();
-  const possiblePoolTiles = Object.keys(engine.tiles.federations)
-    .filter((key2) => engine.tiles.federations[key2] > 0)
-    .map((f) => f);
+  const possiblePoolTiles = Object.keys(engine.tiles.federations).filter((key2) => engine.tiles.federations[key2] > 0).map((f) => f);
   const p = engine.player(player);
   const claimableFederations = claimableSpaceshipFederations(
     p.data.explorationShips,
     engine.tiles.spaceshipFederations
   );
-  const possibleTiles = [...possiblePoolTiles, ...claimableFederations.map((entry) => entry.federation)];
+  const possibleTiles = [
+    ...possiblePoolTiles,
+    ...claimableFederations.map((entry) => entry.federation)
+  ];
   if (possibleTiles.length > 0) {
     if (engine.options.noFedCheck || engine.replay) {
       commands.push({
@@ -15514,8 +14366,8 @@ function possibleFederations(engine, player) {
         data: {
           tiles: possibleTiles,
           federations: [],
-          claimableFederations,
-        },
+          claimableFederations
+        }
       });
     } else {
       const possibleFeds = p.availableFederations(engine.map, engine.options.flexibleFederations);
@@ -15527,14 +14379,11 @@ function possibleFederations(engine, player) {
             tiles: possibleTiles,
             federations: possibleFeds.map((fed) => ({
               ...fed,
-              hexes: fed.hexes
-                .map((hex) => hex.toString())
-                .sort()
-                .join(","),
-              warnings: federationWarnings(p, fed),
+              hexes: fed.hexes.map((hex) => hex.toString()).sort().join(","),
+              warnings: federationWarnings(p, fed)
             })),
-            claimableFederations,
-          },
+            claimableFederations
+          }
         });
       }
     }
@@ -15543,13 +14392,11 @@ function possibleFederations(engine, player) {
 }
 function possibleFederationTiles(engine, player, from) {
   const commands = [];
-  const possibleTiles = Object.keys(engine.tiles.federations)
-    .filter((key2) => engine.tiles.federations[key2] > 0)
-    .map((f) => f);
+  const possibleTiles = Object.keys(engine.tiles.federations).filter((key2) => engine.tiles.federations[key2] > 0).map((f) => f);
   const pl = engine.player(player);
   const playerTiles = (0, import_lodash19.uniq)([
     ...pl.data.tiles.federations.map((fed) => fed.tile),
-    ...pl.data.spaceshipFederations.map((fed) => fed.tile),
+    ...pl.data.spaceshipFederations.map((fed) => fed.tile)
   ]);
   if (from === "player" && playerTiles.length === 0) {
     return commands;
@@ -15560,8 +14407,8 @@ function possibleFederationTiles(engine, player, from) {
     data: {
       tiles: from === "player" ? playerTiles : possibleTiles,
       // Tiles that are rescored just add the rewards, but don't take the token
-      rescore: from === "player",
-    },
+      rescore: from === "player"
+    }
   });
   return commands;
 }
@@ -15617,7 +14464,7 @@ function possibleFreeBuildMine(engine, player, discount) {
       coordinates: hex.toString(),
       cost: Reward.toString(mergedRewards),
       steps,
-      warnings: qicWarning ? [qicWarning] : null,
+      warnings: qicWarning ? [qicWarning] : null
     });
   }
   if (buildings.length === 0) {
@@ -15628,7 +14475,7 @@ function possibleFreeBuildMine(engine, player, discount) {
 function possibleFederationTokenBuildMine(engine, player, data) {
   return possibleFreeBuildMine(engine, player, {
     terraformDiscount: data.federation === "ship-fed-terraform" /* Terraform */ ? 3 : 0,
-    waiveRangeQic: data.federation === "ship-fed-range" /* Range */,
+    waiveRangeQic: data.federation === "ship-fed-range" /* Range */
   });
 }
 function possibleSpaceshipTechTileBuildMine(engine, player) {
@@ -15653,8 +14500,8 @@ function possibleLeech(engine, player) {
         )
       );
     }
-    ["charge" /* ChargePower */, "decline" /* Decline */].map((name) =>
-      commands.push({
+    ["charge" /* ChargePower */, "decline" /* Decline */].map(
+      (name) => commands.push({
         name,
         player,
         data: {
@@ -15663,8 +14510,8 @@ function possibleLeech(engine, player) {
           // Kept for compatibility with older viewer
           cost: offers[0].cost,
           // new format
-          offers,
-        },
+          offers
+        }
       })
     );
   }
@@ -15685,13 +14532,11 @@ function getTaklonsExtraLeechOffers(earlyLeechValue, lateLeechValue) {
 // engine/src/available/round.ts
 function possibleRoundBoosters(engine, player) {
   const commands = [];
-  const boosters = engine.isLastRound
-    ? []
-    : Booster.values(engine.expansions).filter((booster) => engine.tiles.boosters[booster]);
+  const boosters = engine.isLastRound ? [] : Booster.values(engine.expansions).filter((booster) => engine.tiles.boosters[booster]);
   commands.push({
     name: engine.phase === "setupBooster" /* SetupBooster */ ? "booster" /* ChooseRoundBooster */ : "pass" /* Pass */,
     player,
-    data: { boosters },
+    data: { boosters }
   });
   return commands;
 }
@@ -15703,7 +14548,7 @@ function possibleIncomes(engine, player) {
     commands.push({
       name: "income" /* ChooseIncome */,
       player,
-      data: s.descriptions.map((d) => d.toString()),
+      data: s.descriptions.map((d) => d.toString())
     });
   }
   return commands;
@@ -15711,12 +14556,11 @@ function possibleIncomes(engine, player) {
 
 // engine/src/available/setup.ts
 var import_lodash20 = __toESM(require_lodash2());
-var MAX_SILENT_BID = 40;
 function chooseFactionOrBid(engine, player) {
   const chooseFaction = {
     name: "faction" /* ChooseFaction */,
     player,
-    data: choosableFactions(engine),
+    data: choosableFactions(engine)
   };
   if (engine.options.auction === "bid-while-choosing" /* BidWhileChoosing */) {
     return [...possibleBids(engine, player), chooseFaction];
@@ -15729,8 +14573,7 @@ function choosableFactions(engine) {
     if (engine.options.auction && engine.options.auction !== "choose-bid" /* ChooseBid */) {
       factions2 = (0, import_lodash20.difference)(engine.randomFactions, engine.setup);
     } else {
-      factions2 =
-        engine.randomFactions.length > engine.setup.length ? [engine.randomFactions[engine.setup.length]] : [];
+      factions2 = engine.randomFactions.length > engine.setup.length ? [engine.randomFactions[engine.setup.length]] : [];
     }
   } else {
     factions2 = remainingFactions(engine.setup, engine.expansions);
@@ -15746,15 +14589,15 @@ function possibleFactionBans(engine, player) {
 function possibleSilentBids(engine, player) {
   const bids = engine.setup.map((faction) => ({
     faction,
-    bid: (0, import_lodash20.range)(0, MAX_SILENT_BID + 1),
+    bid: (0, import_lodash20.range)(0, MAX_SILENT_BID + 1)
   }));
-  return [{ name: "silentBid" /* SilentBid */, player, data: { bids } }];
+  return [{ name: "silentBid" /* SilentBid */, player, data: { maxBid: MAX_SILENT_BID, factions: [...engine.setup], bids } }];
 }
 function possiblePreferenceBids(engine, player) {
   const budget = engine.preferenceSplitBudget;
   const bids = engine.setup.map((faction) => ({
     faction,
-    bid: (0, import_lodash20.range)(0, budget + 1),
+    bid: (0, import_lodash20.range)(0, budget + 1)
   }));
   return [{ name: "preferenceBid" /* PreferenceBid */, player, data: { budget, factions: [...engine.setup], bids } }];
 }
@@ -15762,19 +14605,17 @@ function possibleBids(engine, player) {
   const commands = [];
   const bids = [];
   for (const faction of engine.setup) {
-    const bid = engine.players.find((pl) => pl.faction === faction)
-      ? engine.players.find((pl) => pl.faction === faction).data.bid
-      : -1;
+    const bid = engine.players.find((pl) => pl.faction === faction) ? engine.players.find((pl) => pl.faction === faction).data.bid : -1;
     bids.push({
       faction,
-      bid: (0, import_lodash20.range)(bid + 1, bid + 10),
+      bid: (0, import_lodash20.range)(bid + 1, bid + 10)
     });
   }
   if (bids.length > 0) {
     commands.push({
       name: "bid" /* Bid */,
       player,
-      data: { bids },
+      data: { bids }
     });
   }
   return commands;
@@ -15839,7 +14680,7 @@ function generate(engine, subPhase = null, data) {
         ...possibleFreeActions(engine.player(player)),
         ...possibleRoundBoosters(engine, player),
         ...possibleSpaceshipActions(engine, player),
-        ...possibleExamineArtifact(engine, player),
+        ...possibleExamineArtifact(engine, player)
       ];
     }
     case "afterMove" /* AfterMove */:
@@ -15870,15 +14711,12 @@ function generate(engine, subPhase = null, data) {
       for (const hex of engine.map.toJSON()) {
         if (hex.data.planet === planet && !hex.data.building) {
           buildings.push({
-            building:
-              faction === "ivits" /* Ivits */ || faction === "tinkeroids" /* Tinkeroids */
-                ? "PI" /* PlanetaryInstitute */
-                : "m" /* Mine */,
+            building: faction === "ivits" /* Ivits */ || faction === "tinkeroids" /* Tinkeroids */ ? "PI" /* PlanetaryInstitute */ : "m" /* Mine */,
             coordinates: hex.toString(),
             cost: "~",
             // §B1/§B2: starting buildings are placed, not built via the "Build a Mine" action —
             // no Gaiaformer is consumed on a home Asteroid (factions own 0 Gaiaformers at setup).
-            consumesAsteroidGaiaformer: false,
+            consumesAsteroidGaiaformer: false
           });
         }
       }
@@ -15975,9 +14813,7 @@ function moveChooseTinkeringTile(engine, command, player, tile) {
 }
 function movePlacePowerRing(engine, command, player, location) {
   const parsed = engine.map.parse(location);
-  const space = command.data.spaces.find((entry) =>
-    (0, import_lodash21.isEqual)(engine.map.parse(entry.coordinates), parsed)
-  );
+  const space = command.data.spaces.find((entry) => (0, import_lodash21.isEqual)(engine.map.parse(entry.coordinates), parsed));
   assert14(space, `Impossible to place a Power Ring at ${location}`);
   const pl = engine.player(player);
   const hex = engine.map.getS(location);
@@ -16045,8 +14881,7 @@ function applyArtifactToken(engine, player, token) {
   }
 }
 function applyArtifactPlanetType(pl, planet) {
-  const alreadyColonized =
-    pl.ownedPlanets.some((hex) => hex.data.planet === planet) || pl.data.artifactPlanetTypes.includes(planet);
+  const alreadyColonized = pl.ownedPlanets.some((hex) => hex.data.planet === planet) || pl.data.artifactPlanetTypes.includes(planet);
   pl.gainRewards([new Reward(7, "vp" /* VictoryPoint */)], "twilight" /* Twilight */);
   pl.data.artifactPlanetTypes.push(planet);
   if (!alreadyColonized) {
@@ -16108,7 +14943,7 @@ var chargeRules = [
   (r) => allowBasedOnTargetPower(r.player),
   (r) => askOrDeclineBasedOnCost(r.minCharge, r.maxCharge, r.player.settings.autoChargePower),
   askForItars,
-  () => "yes" /* Yes */,
+  () => "yes" /* Yes */
 ];
 function decideChargeRequest(r) {
   let noYes = false;
@@ -16171,12 +15006,7 @@ function askOrDeclineBasedOnCost(minCharge, maxCharge, autoCharge) {
   return "undecided" /* Undecided */;
 }
 function askForItars(r) {
-  if (
-    r.player.faction === "itars" /* Itars */ &&
-    !r.player.settings.itarsAutoChargeToArea3 &&
-    !autoChargeItars(r.player.data.power.area1, r.minCharge) &&
-    !r.isLastRound
-  ) {
+  if (r.player.faction === "itars" /* Itars */ && !r.player.settings.itarsAutoChargeToArea3 && !autoChargeItars(r.player.data.power.area1, r.minCharge) && !r.isLastRound) {
     return "ask" /* Ask */;
   }
   return "undecided" /* Undecided */;
@@ -16196,11 +15026,20 @@ function autoMove(engine, partialMove, options) {
   const copy = () => _copy || (_copy = Engine3.fromData(JSON.parse(JSON.stringify(engine))));
   const copyOrThis = () => _copy || engine;
   const functions = [
-    ["faction" /* ChooseFaction */, (cmd) => autoChooseFaction(copyOrThis(), cmd)],
-    ["charge" /* ChargePower */, (cmd) => autoChargePower(copyOrThis(), cmd)],
+    [
+      "faction" /* ChooseFaction */,
+      (cmd) => autoChooseFaction(copyOrThis(), cmd)
+    ],
+    [
+      "charge" /* ChargePower */,
+      (cmd) => autoChargePower(copyOrThis(), cmd)
+    ],
     ["income" /* ChooseIncome */, () => autoIncome(copyOrThis())],
-    ["brainstone" /* BrainStone */, (cmd) => autoBrainstone(copyOrThis(), cmd)],
-    ...(options?.autoPass ? [[void 0, () => autoPass(copyOrThis())]] : []),
+    [
+      "brainstone" /* BrainStone */,
+      (cmd) => autoBrainstone(copyOrThis(), cmd)
+    ],
+    ...options?.autoPass ? [[void 0, () => autoPass(copyOrThis())]] : []
   ];
   if (partialMove) {
     copy().move(partialMove);
@@ -16285,7 +15124,7 @@ function autoBrainstone(engine, cmd) {
     if (choices.some((choice) => choice === "gaia" /* Gaia */ || choice === "discard")) {
       return false;
     }
-    const dest = choices.includes("area3" /* Area3 */) ? "area3" /* Area3 */ : "area2"; /* Area2 */
+    const dest = choices.includes("area3" /* Area3 */) ? "area3" /* Area3 */ : "area2" /* Area2 */;
     return `${"brainstone" /* BrainStone */} ${dest}`;
   }
   return false;
@@ -16311,21 +15150,14 @@ function autoPass(engine) {
   } else if (engine.availableCommands.some((cmd) => cmd.name === "brainstone" /* BrainStone */)) {
     const cmd = engine.findAvailableCommand(engine.playerToMove, "brainstone" /* BrainStone */);
     return `${"brainstone" /* BrainStone */} ${cmd.data.choices[0].area}`;
-  } else if (
-    engine.availableCommands.some(
-      (cmd) => cmd.name === "spend" /* Spend */ && cmd.data.acts[0].cost.includes("tg" /* GainTokenGaiaArea */)
-    )
-  ) {
-    return `${"spend" /* Spend */} ${pl.data.power.gaia}${"tg" /* GainTokenGaiaArea */} for ${pl.data.power.gaia}${
-      "c" /* Credit */
-    }`;
+  } else if (engine.availableCommands.some(
+    (cmd) => cmd.name === "spend" /* Spend */ && cmd.data.acts[0].cost.includes("tg" /* GainTokenGaiaArea */)
+  )) {
+    return `${"spend" /* Spend */} ${pl.data.power.gaia}${"tg" /* GainTokenGaiaArea */} for ${pl.data.power.gaia}${"c" /* Credit */}`;
   } else {
     assert16(
       false,
-      "Can't automove for player " +
-        (engine.playerToMove + 1) +
-        ", available command: " +
-        engine.availableCommands[0].name
+      "Can't automove for player " + (engine.playerToMove + 1) + ", available command: " + engine.availableCommands[0].name
     );
   }
 }
@@ -16358,10 +15190,7 @@ function placeBuilding(engine, pl, building) {
     building.steps,
     building.consumesAsteroidGaiaformer ?? true
   );
-  if (
-    (engine.phase === "roundMove" /* RoundMove */ || engine.phase === "roundShip") /* RoundShip */ &&
-    !isShip(building.building)
-  ) {
+  if ((engine.phase === "roundMove" /* RoundMove */ || engine.phase === "roundShip" /* RoundShip */) && !isShip(building.building)) {
     engine.leechSources.unshift({ player: pl.player, coordinates: building.coordinates });
   }
 }
@@ -16438,15 +15267,8 @@ function moveFormFederation(engine, command, player, hexes, tile) {
     pl.completeFederation(fedInfo.hexes);
     pl.gainSpaceshipFederationToken(claimedShip.federation);
     delete engine.tiles.spaceshipFederations[claimedShip.ship];
-    if (
-      claimedShip.federation === "ship-fed-range" /* Range */ ||
-      claimedShip.federation === "ship-fed-terraform" /* Terraform */
-    ) {
-      engine.processNextMove(
-        "federationTokenBuildMine" /* FederationTokenBuildMine */,
-        { federation: claimedShip.federation },
-        false
-      );
+    if (claimedShip.federation === "ship-fed-range" /* Range */ || claimedShip.federation === "ship-fed-terraform" /* Terraform */) {
+      engine.processNextMove("federationTokenBuildMine" /* FederationTokenBuildMine */, { federation: claimedShip.federation }, false);
     }
   }
 }
@@ -16461,15 +15283,12 @@ function moveChargePower(engine, command, player, income) {
     leechCommand.offers = [
       {
         offer: legacy.offer,
-        cost: legacy.cost,
-      },
+        cost: legacy.cost
+      }
     ];
   }
   const offer = leechCommand.offers.find((ofr) => ofr.offer === income);
-  assert20(
-    offer,
-    `Cannot leech ${income}. Possible leeches: ${leechCommand.offers.map((ofr) => ofr.offer).join(" - ")}`
-  );
+  assert20(offer, `Cannot leech ${income}. Possible leeches: ${leechCommand.offers.map((ofr) => ofr.offer).join(" - ")}`);
   engine.player(player).gainRewards(leechRewards, "charge" /* ChargePower */);
   engine.player(player).payCosts(Reward.parse(offer.cost), "charge" /* ChargePower */);
 }
@@ -16540,7 +15359,8 @@ function movePass(engine, command, player, booster) {
   engine.passedPlayers.push(player);
   engine.turnOrder.splice(engine.turnOrder.indexOf(player), 1);
 }
-function moveEndTurn(engine, command, player) {}
+function moveEndTurn(engine, command, player) {
+}
 function moveChooseIncome(engine, command, player, income) {
   const incomes = command.data;
   const incomeRewards = income.split(",");
@@ -16621,7 +15441,7 @@ function moveSpaceshipAction(engine, command, player, ship, type) {
     engine.processNextMove("instantGaiaforming" /* InstantGaiaforming */, null, false);
     return;
   }
-  if ((ship === "eclipse" /* Eclipse */ || ship === "tfmars") /* TFMars */ && type === "credit") {
+  if ((ship === "eclipse" /* Eclipse */ || ship === "tfmars" /* TFMars */) && type === "credit") {
     engine.processNextMove("spaceshipBuildMine" /* SpaceshipBuildMine */, { ship }, false);
     return;
   }
@@ -16656,10 +15476,9 @@ function moveGaiaFormTransdim(engine, command, player, location) {
 
 // engine/src/engine.ts
 var LEECHING_DISTANCE = 2;
+var premovePreviewablePhases = ["roundMove" /* RoundMove */, "roundLeech" /* RoundLeech */, "roundIncome" /* RoundIncome */, "roundGaia" /* RoundGaia */];
 var replaceRegex = new RegExp(
-  `\\b((${"pass" /* Pass */}|${"swap-PI" /* PISwap */}|${"gf" /* GaiaFormer */}|${
-    "federation" /* FormFederation */
-  } [^ ]+|${"up" /* UpgradeResearch */}) ?([^. ]+)?)(\\.|$)`,
+  `\\b((${"pass" /* Pass */}|${"swap-PI" /* PISwap */}|${"gf" /* GaiaFormer */}|${"federation" /* FormFederation */} [^ ]+|${"up" /* UpgradeResearch */}) ?([^. ]+)?)(\\.|$)`,
   "g"
 );
 var powerRegex = new RegExp(
@@ -16669,12 +15488,9 @@ function createMoveToShow(move, player, map, executeMove) {
   let moveToGaia = null;
   const data = player.data;
   const oldPower = powerLogString(data.power, data.brainstone);
-  const listener = (event) => (moveToGaia = event);
+  const listener = (event) => moveToGaia = event;
   const formerBooster = data.tiles.booster;
-  const formerPI =
-    player.faction === "ambas" /* Ambas */ && move.includes("swap-PI" /* PISwap */)
-      ? [...map.grid.values()].find((h) => h.buildingOf(player.player) === "PI" /* PlanetaryInstitute */)
-      : null;
+  const formerPI = player.faction === "ambas" /* Ambas */ && move.includes("swap-PI" /* PISwap */) ? [...map.grid.values()].find((h) => h.buildingOf(player.player) === "PI" /* PlanetaryInstitute */) : null;
   data.on("move-tokens", listener);
   try {
     executeMove();
@@ -16684,12 +15500,9 @@ function createMoveToShow(move, player, map, executeMove) {
   const addDetails = () => {
     return move.replace(replaceRegex, (match, moveWithoutEnding, command, commandArgument, moveEnding) => {
       if (moveToGaia) {
-        const powerUsage = Object.entries(moveToGaia)
-          .map(([area, amt]) => {
-            return amt > 0 ? area + ": " + amt : "";
-          })
-          .filter((s) => s.length > 0)
-          .join(", ");
+        const powerUsage = Object.entries(moveToGaia).map(([area, amt]) => {
+          return amt > 0 ? area + ": " + amt : "";
+        }).filter((s) => s.length > 0).join(", ");
         return `${moveWithoutEnding} using ${powerUsage}${moveEnding}`;
       }
       switch (command) {
@@ -16741,7 +15554,7 @@ var Engine3 = class _Engine {
       federations: {},
       spaceshipTechs: {},
       spaceshipFederations: {},
-      artifacts: [],
+      artifacts: []
     };
     this.boardActions = {};
     this.spaceshipActions = {};
@@ -16779,9 +15592,11 @@ var Engine3 = class _Engine {
   }
   // be more permissive during replay
   /** The Preference Split Auction's per-player bid budget, defaulted once so every layer
-   * (move validation, available commands, the viewer's form) reads the same number. */
+   * (move validation, available commands, the viewer's form) reads the same number. The default
+   * scales with the player count - see `defaultPreferenceSplitBudget`. Only safe to read once
+   * `players` is populated; `moveInit` resolves the same default from its own argument instead. */
   get preferenceSplitBudget() {
-    return this.options.auctionBudget ?? DEFAULT_PREFERENCE_SPLIT_BUDGET;
+    return this.options.auctionBudget ?? defaultPreferenceSplitBudget(this.players.length);
   }
   get expansions() {
     return 0 | (this.options.frontiers ? 2 /* Frontiers */ : 0) | (this.options.lostFleet ? 4 /* LostFleet */ : 0);
@@ -16799,9 +15614,7 @@ var Engine3 = class _Engine {
       }
     }
     if (players && this.options.factionVariantVersion === void 0) {
-      const versions = players
-        .filter((p) => p.factionVariantVersion !== void 0 && p.factionVariantVersion !== null)
-        .map((p) => p.factionVariantVersion);
+      const versions = players.filter((p) => p.factionVariantVersion !== void 0 && p.factionVariantVersion !== null).map((p) => p.factionVariantVersion);
       this.options.factionVariantVersion = Math.max(...versions, 0);
     }
   }
@@ -16809,7 +15622,7 @@ var Engine3 = class _Engine {
     return {
       variant: this.options.factionVariant,
       version: this.options.factionVariantVersion,
-      players: this.players.length,
+      players: this.players.length
     };
   }
   isVersionOrLater(version2) {
@@ -16846,10 +15659,7 @@ var Engine3 = class _Engine {
       execute();
     }
     if (!this.replay) {
-      assert25(
-        this.turnMoves.length === 0,
-        "Unnecessary commands at the end of the turn: " + this.turnMoves.join(". ")
-      );
+      assert25(this.turnMoves.length === 0, "Unnecessary commands at the end of the turn: " + this.turnMoves.join(". "));
     }
     this.pendingMove = this.newTurn ? "" : move;
     this.moveHistory.push(moveToShow);
@@ -16875,21 +15685,15 @@ var Engine3 = class _Engine {
     }
     if (lastEntry && lastEntry.player === player && lastEntry.move === move) {
       if (amount) {
-        (0, import_lodash24.set)(
-          lastEntry,
-          `changes.${source}.${resource}`,
-          (lastEntry.changes?.[source]?.[resource] ?? 0) + amount
-        );
+        (0, import_lodash24.set)(lastEntry, `changes.${source}.${resource}`, (lastEntry.changes?.[source]?.[resource] ?? 0) + amount);
       }
     } else {
       this.addAdvancedLog({
         player,
         move,
-        changes: amount
-          ? {
-              [source]: { [resource]: amount },
-            }
-          : void 0,
+        changes: amount ? {
+          [source]: { [resource]: amount }
+        } : void 0
       });
     }
   }
@@ -16900,7 +15704,7 @@ var Engine3 = class _Engine {
     return this.availableCommands || this.generateAvailableCommands(subphase, data);
   }
   generateAvailableCommands(subphase = null, data) {
-    return (this.availableCommands = generate(this, subphase, data));
+    return this.availableCommands = generate(this, subphase, data);
   }
   findAvailableCommand(player, command) {
     this.availableCommands = this.availableCommands || this.generateAvailableCommands();
@@ -16919,66 +15723,84 @@ var Engine3 = class _Engine {
     this.availableCommand = null;
   }
   /**
+   * "Premove" support (PREMOVE_PLAN.md §2): forces THIS engine - always a disposable preview clone,
+   * never a real game state - into "it is `seat`'s ordinary move-phase turn right now".
+   *
+   * The phase override is the part that's easy to miss: `available-command.ts`'s generator branches
+   * on `engine.phase` first, so a clone left in `RoundLeech` (or `RoundIncome`/`RoundGaia`) answers
+   * with that phase's decision - or with nothing at all once its `tempTurnOrder` no longer names the
+   * forced seat - instead of the move the seat will actually get. That's what previously emptied the
+   * command list for a Sequential premove chained after one that offers an opponent a leech.
+   */
+  forcePremovePreviewTurn(seat) {
+    this.phase = "roundMove" /* RoundMove */;
+    this.currentPlayer = seat;
+    this.tempCurrentPlayer = void 0;
+    this.clearAvailableCommands();
+  }
+  /**
    * "Premove" support (PREMOVE_PLAN.md §2): what `seat` could legally do right now if it were their
    * turn, without it actually being their turn. Returns `null` (premove not offered) when it already
-   * is their turn (the real buttons apply), when they've already passed this round (nothing to
-   * premove into), or before round 1 / outside `RoundMove` (setup/income/gaia/leech/scoring/
-   * endgame/auction all have a differently-shaped "next turn" that isn't well-defined to preview).
+   * is their turn (the real buttons apply - including a leech/income decision they owe this instant),
+   * when they've already passed this round (nothing to premove into), or before round 1 / outside a
+   * running round (setup/scoring/endgame/auction all have a differently-shaped "next turn" that isn't
+   * well-defined to preview).
+   *
+   * The other phases a running round can rest in - `RoundLeech` while someone answers a charge offer,
+   * `RoundIncome`/`RoundGaia` while someone makes a start-of-round choice - DO preview (2026-08-06).
+   * They're exactly when an off-turn player wants to queue a premove and used to be offered nothing
+   * at all, and the seat's own next turn is still an ordinary move-phase turn in the same round.
+   * Income the seat hasn't collected yet is simply absent from the preview, which offers fewer
+   * options rather than illegal ones; the resolver still refuses to fire outside a genuine
+   * `Phase.RoundMove` turn and revalidates the move when that turn arrives.
    *
    * Never mutates `this` - operates on a disposable clone, exactly like every other preview/replay
    * path in this engine (`fromData(JSON.parse(JSON.stringify(...)))`).
    */
   previewAvailableCommandsFor(seat) {
-    if (
-      this.round < 1 /* Round1 */ ||
-      this.phase !== "roundMove" /* RoundMove */ ||
-      seat === this.playerToMove ||
-      this.passedPlayers?.includes(seat)
-    ) {
+    if (this.round < 1 /* Round1 */ || !premovePreviewablePhases.includes(this.phase) || seat === this.playerToMove || this.passedPlayers?.includes(seat)) {
       return null;
     }
     const clone2 = _Engine.fromData(JSON.parse(JSON.stringify(this)));
-    clone2.currentPlayer = seat;
-    clone2.tempCurrentPlayer = void 0;
-    return clone2.generateAvailableCommands();
+    clone2.forcePremovePreviewTurn(seat);
+    try {
+      return clone2.generateAvailableCommands();
+    } catch {
+      return null;
+    }
   }
   addPlayer(player) {
     this.players.push(player);
-    player.data.on(`gain-${"tech" /* TechTile */}`, (count, source) =>
-      this.processNextMove(
-        "chooseTechTile" /* ChooseTechTile */,
-        null,
-        source === "qic1" /* Qic1 */ || source === "rebellion" /* Rebellion */
-      )
+    player.data.on(
+      `gain-${"tech" /* TechTile */}`,
+      (count, source) => this.processNextMove("chooseTechTile" /* ChooseTechTile */, null, source === "qic1" /* Qic1 */ || source === "rebellion" /* Rebellion */)
     );
-    player.data.on(`gain-${"instant-gaiaforming" /* InstantGaiaforming */}`, () =>
-      this.processNextMove("instantGaiaforming" /* InstantGaiaforming */, null, true)
+    player.data.on(
+      `gain-${"instant-gaiaforming" /* InstantGaiaforming */}`,
+      () => this.processNextMove("instantGaiaforming" /* InstantGaiaforming */, null, true)
     );
-    player.data.on(`gain-${"step" /* TemporaryStep */}`, () =>
-      this.processNextMove("buildMine" /* BuildMine */, null, true)
-    );
+    player.data.on(`gain-${"step" /* TemporaryStep */}`, () => this.processNextMove("buildMine" /* BuildMine */, null, true));
     player.data.on(`gain-${"range" /* TemporaryRange */}`, (count) => {
       this.processNextMove("buildMineOrGaiaFormer" /* BuildMineOrGaiaFormer */, null, true);
     });
-    player.data.on(`gain-${"fed" /* RescoreFederation */}`, () =>
-      this.processNextMove("rescoreFederationTile" /* RescoreFederationTile */, null, false)
+    player.data.on(
+      `gain-${"fed" /* RescoreFederation */}`,
+      () => this.processNextMove("rescoreFederationTile" /* RescoreFederationTile */, null, false)
     );
-    player.data.on(`gain-${"artifact" /* GainArtifact */}`, () =>
-      this.processNextMove("chooseArtifactToken" /* ChooseArtifactToken */, null, true)
+    player.data.on(
+      `gain-${"artifact" /* GainArtifact */}`,
+      () => this.processNextMove("chooseArtifactToken" /* ChooseArtifactToken */, null, true)
     );
-    player.data.on(`gain-${"power-ring" /* PowerRing */}`, () =>
-      this.processNextMove("placePowerRing" /* PlacePowerRing */, null, true)
-    );
+    player.data.on(`gain-${"power-ring" /* PowerRing */}`, () => this.processNextMove("placePowerRing" /* PlacePowerRing */, null, true));
     player.data.on(`gain-${"swap-PI" /* PISwap */}`, () => this.processNextMove("swap-PI" /* PISwap */, null, true));
-    player.data.on(`gain-${"space-station" /* SpaceStation */}`, () =>
-      this.processNextMove("spaceStation" /* SpaceStation */, null, true)
-    );
+    player.data.on(`gain-${"space-station" /* SpaceStation */}`, () => this.processNextMove("spaceStation" /* SpaceStation */, null, true));
     player.data.on(`gain-${"down-lab" /* DowngradeLab */}`, () => {
       this.processNextMove("down-lab" /* DowngradeLab */, null, true);
       this.processNextMove("upgradeResearch" /* UpgradeResearch */, null, false);
     });
-    player.data.on(`gain-${"up-lowest" /* UpgradeLowest */}`, () =>
-      this.processNextMove("upgradeResearch" /* UpgradeResearch */, { bescods: true }, true)
+    player.data.on(
+      `gain-${"up-lowest" /* UpgradeLowest */}`,
+      () => this.processNextMove("upgradeResearch" /* UpgradeResearch */, { bescods: true }, true)
     );
     player.data.on("brainstone", (data) => this.processNextMove("brainStone" /* BrainStone */, data));
     player.data.on("beforeResearchUpgrade", (field) => {
@@ -17001,10 +15823,16 @@ var Engine3 = class _Engine {
       "burn-token" /* BurnToken */,
       "brainstone" /* Brainstone */,
       "tg->t" /* MoveTokenFromGaiaAreaToArea1 */,
-      "gf->t" /* MoveGaiaFormerFromGaiaAreaToArea1 */,
+      "gf->t" /* MoveGaiaFormerFromGaiaAreaToArea1 */
     ]) {
-      player.data.on(`gain-${resource}`, (amount, source) => this.log(player.player, resource, amount, source));
-      player.data.on(`pay-${resource}`, (amount, source) => this.log(player.player, resource, -amount, source));
+      player.data.on(
+        `gain-${resource}`,
+        (amount, source) => this.log(player.player, resource, amount, source)
+      );
+      player.data.on(
+        `pay-${resource}`,
+        (amount, source) => this.log(player.player, resource, -amount, source)
+      );
     }
   }
   player(player) {
@@ -17072,7 +15900,7 @@ var Engine3 = class _Engine {
     const customization = {
       variant: engine.options.factionVariant,
       players: data.players.length,
-      version: engine.options.factionVariantVersion,
+      version: engine.options.factionVariantVersion
     };
     for (const player of data.players) {
       engine.addPlayer(
@@ -17105,16 +15933,15 @@ var Engine3 = class _Engine {
   toJSON() {
     const proto = Object.getPrototypeOf(this);
     const jsonObj = Object.assign({}, this);
-    Object.entries(Object.getOwnPropertyDescriptors(proto))
-      .filter(([key2, descriptor]) => typeof descriptor.get === "function")
-      .map(([key2, descriptor]) => {
-        if (descriptor && key2[0] !== "_") {
-          try {
-            const val = this[key2];
-            jsonObj[key2] = val;
-          } catch (error) {}
+    Object.entries(Object.getOwnPropertyDescriptors(proto)).filter(([key2, descriptor]) => typeof descriptor.get === "function").map(([key2, descriptor]) => {
+      if (descriptor && key2[0] !== "_") {
+        try {
+          const val = this[key2];
+          jsonObj[key2] = val;
+        } catch (error) {
         }
-      });
+      }
+    });
     return jsonObj;
   }
   replayedTo(move = Infinity, keepReplayMode = false) {
@@ -17127,7 +15954,7 @@ var Engine3 = class _Engine {
       if (oldPlayers[i].factionVariant && !oldPlayers[i].variant) {
         engine.players[i].variant = {
           board: oldPlayers[i].factionVariant,
-          version: oldPlayers[i].factionVersion,
+          version: oldPlayers[i].factionVersion
         };
       } else {
         engine.players[i].variant = oldPlayers[i].variant;
@@ -17152,10 +15979,7 @@ var Engine3 = class _Engine {
     return _Engine.fromData(state);
   }
   static parseMoves(moves) {
-    return moves
-      .trim()
-      .split("\n")
-      .map((move) => move.trim());
+    return moves.trim().split("\n").map((move) => move.trim());
   }
   /**
    * Load turn moves.
@@ -17163,13 +15987,10 @@ var Engine3 = class _Engine {
    * @param move The move string to process. Can contain multiple moves separated by a dot
    * @param params params.processFirst indicates to process the first move. params.split is set to true if leftover commands are allowed
    */
-  loadTurnMoves(
-    move,
-    params = {
-      split: true,
-      processFirst: false,
-    }
-  ) {
+  loadTurnMoves(move, params = {
+    split: true,
+    processFirst: false
+  }) {
     this.oldPhase = this.phase;
     const playerS = move.substr(0, move.indexOf(" "));
     let player;
@@ -17193,10 +16014,7 @@ var Engine3 = class _Engine {
     if (!split) {
       assert25(processFirst);
     }
-    this.turnMoves = move
-      .substr(playerS.length)
-      .split(".")
-      .map((x) => x.trim());
+    this.turnMoves = move.substr(playerS.length).split(".").map((x) => x.trim());
     if (processFirst) {
       this.processNextMove();
       assert25(
@@ -17238,7 +16056,7 @@ var Engine3 = class _Engine {
       ["roundIncome" /* RoundIncome */]: phaseRoundIncome,
       ["roundGaia" /* RoundGaia */]: phaseRoundGaia,
       ["roundMove" /* RoundMove */]: phaseRoundMove,
-      ["roundLeech" /* RoundLeech */]: phaseRoundLeech,
+      ["roundLeech" /* RoundLeech */]: phaseRoundLeech
     };
     try {
       phaseRegistry[this.phase](this, move);
@@ -17257,7 +16075,7 @@ var Engine3 = class _Engine {
     const split = move.split(" ");
     return {
       command: split[0] || "endturn" /* EndTurn */,
-      args: split.slice(1),
+      args: split.slice(1)
     };
   }
   processNextMove(subphase, data, required = false) {
@@ -17273,7 +16091,7 @@ var Engine3 = class _Engine {
     }
     if (this.turnMoves.length === 0) {
       throw Object.assign(new Error("Missing command to end turn"), {
-        availableCommands: this.availableCommands,
+        availableCommands: this.availableCommands
       });
     }
     const move = this.parseMove(this.turnMoves.shift());
@@ -17321,7 +16139,7 @@ var Engine3 = class _Engine {
       ["endturn" /* EndTurn */]: moveEndTurn,
       ["income" /* ChooseIncome */]: moveChooseIncome,
       ["examineArtifact" /* ExamineArtifact */]: moveExamineArtifact,
-      ["chooseArtifactToken" /* ChooseArtifactToken */]: moveChooseArtifactToken,
+      ["chooseArtifactToken" /* ChooseArtifactToken */]: moveChooseArtifactToken
     };
     moveRegistry[move.command](this, this.avCommand(), this.playerToMove, ...move.args);
     return move;
@@ -17395,7 +16213,12 @@ function autoDecideChargePower(engine, autoChargePower2, isEligibleSeat = () => 
   }
   return engine.moveHistory.length > before ? engine.moveHistory.slice(before).join(". ") : null;
 }
-export { Engine3 as Engine, Phase, autoDecideChargePower, parseAutoChargePreference };
+export {
+  Engine3 as Engine,
+  Phase,
+  autoDecideChargePower,
+  parseAutoChargePreference
+};
 /*! Bundled license information:
 
 lodash/lodash.js:

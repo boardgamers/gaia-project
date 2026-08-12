@@ -7,6 +7,7 @@ import {
   MIN_PREFERENCE_SPLIT_BUDGET,
   preferenceSplitBidError,
 } from "../algorithms/preference-split-auction";
+import { silentAuctionBidError } from "../algorithms/silent-auction";
 import { AvailableCommand } from "../available/types";
 import Engine, { AuctionVariant } from "../engine";
 import { BoardAction, Command, Faction, Player as PlayerEnum } from "../enums";
@@ -185,6 +186,12 @@ export function moveBanFaction(
  * A Silent Auction bid submission: one player privately entering their entire max-VP-bid vector
  * (one amount per faction up for auction) in a single move, e.g.
  * "p1 silentBid itars 15 taklons 10 xenos 0".
+ *
+ * Validated through the shared `silentAuctionBidError` rather than only against `command.data`,
+ * for the same reason `movePreferenceBid` is: in hosted play these moves are appended by the
+ * server (from `auction_sealed_bids`) rather than composed by a client on turn, and the
+ * available-command check is skipped on replay - so this is the one check a hand-edited or
+ * server-built move log still has to pass.
  */
 export function moveSilentBid(
   engine: Engine,
@@ -194,28 +201,26 @@ export function moveSilentBid(
 ) {
   assert(params.length % 2 === 0, "The silentBid command needs an even number of parameters");
 
-  const pairs: Array<[string, string]> = [];
+  const entries: { faction: string; points: number }[] = [];
   for (let i = 0; i < params.length; i += 2) {
-    pairs.push([params[i], params[i + 1]]);
+    assert(/^\d+$/.test(params[i + 1]), `"${params[i + 1]}" is not a whole, non-negative bid`);
+    entries.push({ faction: params[i], points: +params[i + 1] });
   }
 
   assert(
-    uniq(pairs.map((pair) => pair[0])).length === pairs.length,
+    uniq(entries.map((entry) => entry.faction)).length === entries.length,
     "Duplicate factions are not allowed in a silent bid"
   );
+  assert(
+    !engine.silentAuctionBids.some((bid) => bid.player === player),
+    `Player ${player} has already submitted their bids`
+  );
 
-  if (!engine.replay) {
-    const bidsAC = command.data.bids;
-    assert(pairs.length === bidsAC.length, "You have to submit a bid for every faction up for auction");
-    for (const [faction, bid] of pairs) {
-      const bidAC = bidsAC.find((b) => b.faction === faction);
-      assert(bidAC, `${faction} is not up for auction`);
-      assert(bidAC.bid.includes(+bid), "You have to bid a legal amount");
-    }
-  }
+  const error = silentAuctionBidError(entries, engine.setup);
+  assert(error === null, error);
 
-  for (const [faction, bid] of pairs) {
-    engine.silentAuctionBids.push({ player, faction: faction as Faction, max: +bid });
+  for (const entry of entries) {
+    engine.silentAuctionBids.push({ player, faction: entry.faction as Faction, max: entry.points });
   }
 }
 

@@ -90,11 +90,12 @@ export type State = {
   offlineMirror: boolean;
   chessBackend: ChessBackend | null;
   /**
-   * Preference Split Auction (engine AuctionVariant.PreferenceSplit) - hosted mode only, same
-   * injection contract as the backends above. Non-null means bids are collected server-side, where
-   * a player can only ever read their own until every seat has submitted (see migration
-   * 20260805120000). Null means offline/hot-seat play, where the bid form submits an ordinary
-   * `preferenceBid` move for whichever seat is on turn and secrecy is pass-the-device.
+   * The simultaneous-bid auctions (`AuctionVariant.PreferenceSplit` and `AuctionVariant.Silent`) -
+   * hosted mode only, same injection contract as the backends above. Non-null means bids are
+   * collected server-side, where a player can only ever read their own until every seat has
+   * submitted (migrations 20260805120000 / 20260812130000). Null means offline/hot-seat play, where
+   * the bid form submits an ordinary move for whichever seat is on turn and secrecy is
+   * pass-the-device.
    */
   sealedBidBackend: SealedBidBackend | null;
   /** Submission progress pushed by the host while the bid phase is open. Progress only - it never
@@ -112,7 +113,8 @@ export type NotesBackend = {
 };
 
 export type SealedBidBackend = {
-  /** Submits this seat's whole split. Rejects (server-side) unless it is a legal split of the budget. */
+  /** Submits this seat's whole submission. Rejects (server-side) unless it is legal for the game's
+   * auction variant - a split totalling the budget, or bids within the Silent Auction's ceiling. */
   submit: (seat: number, bids: SealedBidEntry[]) => Promise<void>;
   /** Re-reads submission progress; also what closes the auction once the last seat is in. */
   refresh: () => Promise<void>;

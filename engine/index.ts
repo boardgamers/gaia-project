@@ -23,6 +23,14 @@ export {
   resolvePreferenceSplitAuction,
   roundVictoryPoints,
 } from "./src/algorithms/preference-split-auction";
+export {
+  MAX_SILENT_BID,
+  SilentAuctionBid,
+  SilentAuctionResult,
+  SilentAuctionStep,
+  resolveSilentAuction,
+  silentAuctionBidError,
+} from "./src/algorithms/silent-auction";
 export { conversionToFreeAction } from "./src/available/actions";
 export { canResearchField, canTakeAdvancedTechTile } from "./src/available/research";
 export { shipsInHex } from "./src/available/ships";

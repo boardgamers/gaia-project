@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { Faction, Player as PlayerEnum } from "../enums";
-import { resolveSilentAuction, SilentAuctionBid } from "./silent-auction";
+import { MAX_SILENT_BID, resolveSilentAuction, SilentAuctionBid, silentAuctionBidError } from "./silent-auction";
 
 describe("resolveSilentAuction", () => {
   // Reproduces the worked example from the community "Faction Auction" guide
@@ -83,5 +83,57 @@ describe("resolveSilentAuction", () => {
     expect(result.winners.get(Faction.Taklons)).to.equal(B);
     expect(result.prices.get(Faction.Itars)).to.equal(0);
     expect(result.prices.get(Faction.Taklons)).to.equal(0);
+  });
+});
+
+// The one rule set every layer checks a submission against: the engine's `moveSilentBid`, the bid
+// form's submit button, and - mirrored in SQL - `submit_sealed_bid`, which is what actually guards
+// a hosted submission because the bids never reach the engine until the reveal.
+describe("silentAuctionBidError", () => {
+  const factions = [Faction.Itars, Faction.Taklons, Faction.Xenos];
+  const bid = (itars: number, taklons: number, xenos: number) => [
+    { faction: Faction.Itars as string, points: itars },
+    { faction: Faction.Taklons as string, points: taklons },
+    { faction: Faction.Xenos as string, points: xenos },
+  ];
+
+  it("accepts any independent whole bids from 0 up to the ceiling - there is no budget", () => {
+    // Unlike the Preference Split, nothing here has to add up: these three totals are 40, 0 and 120.
+    expect(silentAuctionBidError(bid(15, 15, 10), factions)).to.equal(null);
+    expect(silentAuctionBidError(bid(0, 0, 0), factions)).to.equal(null);
+    expect(silentAuctionBidError(bid(MAX_SILENT_BID, MAX_SILENT_BID, MAX_SILENT_BID), factions)).to.equal(null);
+  });
+
+  it("requires exactly one bid on every faction up for auction", () => {
+    expect(silentAuctionBidError(bid(1, 2, 3).slice(0, 2), factions)).to.match(/all 3 factions/);
+    expect(silentAuctionBidError([...bid(1, 2, 3), { faction: Faction.Gleens, points: 4 }], factions)).to.match(
+      /all 3 factions/
+    );
+    expect(
+      silentAuctionBidError(
+        [
+          { faction: Faction.Itars, points: 1 },
+          { faction: Faction.Itars, points: 2 },
+          { faction: Faction.Xenos, points: 3 },
+        ],
+        factions
+      )
+    ).to.match(/only bid once/);
+    expect(
+      silentAuctionBidError(
+        [
+          { faction: Faction.Itars, points: 1 },
+          { faction: Faction.Taklons, points: 2 },
+          { faction: Faction.Gleens, points: 3 },
+        ],
+        factions
+      )
+    ).to.match(/not up for auction/);
+  });
+
+  it("rejects a bid that is negative, fractional, or above the ceiling", () => {
+    expect(silentAuctionBidError(bid(-1, 0, 0), factions)).to.match(/whole, non-negative/);
+    expect(silentAuctionBidError(bid(1.5, 0, 0), factions)).to.match(/whole, non-negative/);
+    expect(silentAuctionBidError(bid(MAX_SILENT_BID + 1, 0, 0), factions)).to.match(/higher than 40/);
   });
 });

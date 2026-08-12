@@ -173,7 +173,10 @@ describe("SetupStatus", () => {
     wrapper.destroy();
   });
 
-  it("tracks who has submitted their secret bids, without ever showing the bids", () => {
+  it("leaves the Silent Auction's secret-bid round to its own panel, which already has a roster", () => {
+    // Both simultaneous bid rounds behave the same way here (see the Preference Split's own case
+    // below). Hot-seat: the strip itself still shows, because the device really is passed around,
+    // but the roster belongs to SilentAuctionBid.vue - two on one screen would just be noise.
     const engine = silentAuctionEngine([
       "p1 banFaction terrans",
       "p2 banFaction lantids",
@@ -186,11 +189,31 @@ describe("SetupStatus", () => {
     expect(engine.phase).to.equal(Phase.SetupSilentBid);
 
     const wrapper = mountFor(engine);
-    expect(roster(wrapper)).to.deep.equal(["✔ Itars", "▸ Taklons", "· Xenos"]);
-    expect(wrapper.text()).to.contain("Secret bids");
-    expect(wrapper.text()).to.contain("1 of 3 in");
+    expect(wrapper.text()).to.contain("to submit their secret bids");
+    expect(roster(wrapper)).to.deep.equal([]);
     // The one thing this must never leak.
     expect(wrapper.text()).to.not.contain("17");
+    wrapper.destroy();
+  });
+
+  it("says nothing at all while a hosted sealed auction is open, where nobody is 'on turn'", () => {
+    // Every seat bids at once, so naming one of them would be actively wrong - and the bid panel
+    // right below reports what is really happening (n of 3 in).
+    const engine = silentAuctionEngine([
+      "p1 banFaction terrans",
+      "p2 banFaction lantids",
+      "p3 banFaction gleens",
+      "p1 faction itars",
+      "p2 faction taklons",
+      "p3 faction xenos",
+    ]);
+    engine.generateAvailableCommandsIfNeeded();
+    const store = makeStore();
+    store.commit("receiveData", engine);
+    store.commit("setSealedBidBackend", { submit: async () => undefined, refresh: async () => undefined });
+
+    const wrapper = mount(SetupStatus, { store, attachTo: document.body });
+    expect(wrapper.find(".setup-status").exists()).to.equal(false);
     wrapper.destroy();
   });
 

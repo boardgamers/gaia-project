@@ -19,9 +19,12 @@ export type GameRow = {
   latest_move_committed_at?: string | null;
   last_turn_reminder_at?: string | null;
   turn_reminder_count?: number | null;
-  // When the Preference Split Auction's bid phase was announced (migration 20260808120000), and
-  // null once `reveal_sealed_bids` has closed it. The bid phase's own "turn start".
+  // When a sealed-bid auction's bid phase was announced (migration 20260808120000), and null once
+  // `reveal_sealed_bids` has closed it. The bid phase's own "turn start".
   sealed_bid_announced_at?: string | null;
+  // The game's stored EngineOptions. Only `auction` is read here, to word the bid-phase push for
+  // the right variant; absent on the rows the chess/renju paths load.
+  options?: { auction?: string | null } | null;
 };
 
 export type SubscriptionRow = {
@@ -336,11 +339,13 @@ export function deviceHasGameOpen(
  * the person actually playing on it; it self-corrects the first time that device loads a game.
  */
 /**
- * The Preference Split Auction's bid phase (`type: "auction_bid"`, migration 20260808120000), and
- * the sweep's re-nudge for the same phase.
+ * A sealed-bid auction's bid phase (`type: "auction_bid"`, migration 20260808120000), and the
+ * sweep's re-nudge for the same phase. Covers both simultaneous-bid variants - the Preference
+ * Split and, since migration 20260812130000, the Silent Auction - which differ here only in what
+ * the push calls the thing the player owes.
  *
- * Every other push in this file describes one seat acting in turn. This one is the exception the
- * variant is built around: every player bids at the same time, into `auction_sealed_bids` rather
+ * Every other push in this file describes one seat acting in turn. This one is the exception those
+ * variants are built around: every player bids at the same time, into `auction_sealed_bids` rather
  * than the move log, so `current_seat` never moves and the ordinary turn push fires for exactly one
  * of them. `pendingSeats` is whoever still owes a submission - the auction cannot resolve until all
  * of them are in, so they are all "on turn" in every sense that matters to a notification.
@@ -358,6 +363,10 @@ export function buildSealedBidNotifications(
   if (game.status !== "active") {
     return [];
   }
+  // A Silent Auction bid is a max-VP valuation per faction; a Preference Split bid is one budget
+  // divided up. Unknown/absent options fall back to the split wording, which is what every game
+  // that could reach this code path before 20260812130000 was.
+  const call = game.options?.auction === "silent" ? "submit your secret bids" : "split your bid points";
   const pending = new Set(pendingSeats);
   return game.players
     .filter((p) => p.user_id !== null && pending.has(p.seat))
@@ -366,7 +375,7 @@ export function buildSealedBidNotifications(
       title: "GP: Fight Club",
       body:
         variant === "open"
-          ? `Faction auction in ${gameLabel(game, p.user_id!)} - split your bid points.`
+          ? `Faction auction in ${gameLabel(game, p.user_id!)} - ${call}.`
           : `Still waiting on your auction bid in ${gameLabel(game, p.user_id!)}.`,
       tag: `turn-${game.id}`,
       kind: "turn" as const,
@@ -613,8 +622,8 @@ export type AuctionReminderRow = {
 };
 
 /**
- * planTurnReminder's counterpart for an open Preference Split auction: should THIS seat, which
- * still owes a bid, be re-nudged right now?
+ * planTurnReminder's counterpart for an open sealed-bid auction: should THIS seat, which still
+ * owes a bid, be re-nudged right now?
  *
  * Kept per-seat rather than per-game (which is all `games.last_turn_reminder_at` /
  * `turn_reminder_count` can express) because an open auction has up to five people on turn at once,

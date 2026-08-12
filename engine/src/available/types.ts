@@ -173,7 +173,7 @@ interface CommandData {
   [Command.RotateSectors]: never;
   [Command.Setup]: AvailableSetupOption;
   [Command.PreferenceBid]: { budget: number; factions: Faction[]; bids: PossibleBid[] };
-  [Command.SilentBid]: { bids: PossibleBid[] };
+  [Command.SilentBid]: { maxBid: number; factions: Faction[]; bids: PossibleBid[] };
   [Command.Special]: { specialacts: { income: string; spec: string }[] };
   [Command.Spend]: AvailableFreeActionData;
   [Command.SpaceshipAction]: AvailableSpaceshipBoardActionData;

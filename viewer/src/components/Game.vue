@@ -32,10 +32,12 @@
           <SilentAuctionSummary />
           <PreferenceSplitSummary />
           <SetupStatus />
-          <!-- The Preference Split Auction's bid form lives here rather than in Commands: every
-               seat bids at once, so it must render for players the engine's turn pointer is not
-               currently on (which is what gates Commands' `canPlay`). -->
+          <!-- Both simultaneous-bid auctions' forms live here rather than in Commands: every seat
+               bids at once, so they must render for players the engine's turn pointer is not
+               currently on (which is what gates Commands' `canPlay`). Only one of them can ever be
+               visible - each renders only during its own variant's bid round. -->
           <PreferenceSplitBid @command="handleCommand" />
+          <SilentAuctionBid @command="handleCommand" />
           <!-- Mobile only (`setupActionsAtTop`): during round 0 the pick/ban buttons move up here,
                directly under the status strip, instead of sitting below the whole map+research row
                where they normally live. Desktop keeps them in the commands column, unchanged. The
@@ -308,6 +310,7 @@ import TurnOrder from "./TurnOrder.vue";
 import SetupStatus from "./SetupStatus.vue";
 import FactionBrowser from "./FactionBrowser.vue";
 import PreferenceSplitBid from "./PreferenceSplitBid.vue";
+import SilentAuctionBid from "./SilentAuctionBid.vue";
 import PreferenceSplitSummary from "./PreferenceSplitSummary.vue";
 import SilentAuctionSummary from "./SilentAuctionSummary.vue";
 import { BASE_RESEARCH_BOARD_HEIGHT, isBeforeRound1, researchBoardHeight } from "../logic/utils";
@@ -359,6 +362,7 @@ const BOARD_ACTION_BASE_X = -20;
     SilentAuctionSummary,
     PreferenceSplitSummary,
     PreferenceSplitBid,
+    SilentAuctionBid,
     Rules,
     Table,
     PremoveBar,

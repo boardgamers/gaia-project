@@ -1,7 +1,22 @@
 {
-  "version": "5.55.3",
+  "version": "5.56.0",
   "releasedAt": "2026-08-12",
   "entries": [
+    {
+      "version": "5.56.0",
+      "releasedAt": "2026-08-12",
+      "kind": "update",
+      "title": "Silent Auction: everyone bids at the same time",
+      "impact": "",
+      "changes": [
+        "In a Silent Auction, all players now submit their secret bids at the same time instead of one after another.",
+        "Silent Auction bids moved onto the Preference Split's server-enforced sealed-bid path (auction_sealed_bids, migration 20260812130000); shared SealedBidPanel/logic-sealed-bid; new SilentAuctionBid.vue replaces the on-turn-only form in Commands.vue.",
+        "moveSilentBid now validates through silentAuctionBidError on the replay path and refuses a repeat submission from a seat."
+      ],
+      "userChanges": [
+        "In a Silent Auction, all players now submit their secret bids at the same time instead of one after another."
+      ]
+    },
     {
       "version": "5.55.3",
       "releasedAt": "2026-08-12",

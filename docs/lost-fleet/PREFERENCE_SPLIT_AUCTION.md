@@ -111,8 +111,9 @@ order) mapped to each faction's final owner.
 | Available command                        | `engine/src/available/setup.ts` (`possiblePreferenceBids`)                                                                                                        |
 | Server-side sealed bidding               | `supabase/migrations/20260805120000_preference_split_sealed_bids.sql`                                                                                             |
 | Bid-phase notifications                  | `supabase/migrations/20260808120000_auction_bid_notifications.sql`, `supabase/functions/notify/logic.ts` (`buildSealedBidNotifications`, `planSealedBidReminder`) |
-| Hosted orchestration                     | `viewer/src/hosted/host.ts` (`submitSealedBid`, `refreshSealedBids`, `sealedBidMove`)                                                                             |
-| Bid form                                 | `viewer/src/components/PreferenceSplitBid.vue`                                                                                                                    |
+| Hosted orchestration                     | `viewer/src/hosted/host.ts` (`submitSealedBid`, `refreshSealedBids`)                                                                                              |
+| Which round is sealed, and its command   | `viewer/src/logic/sealed-bid.ts` (`sealedBidPhase`, `sealedBidMove`, `isLegacySequentialBidRound`)                                                                |
+| Bid form (shared half / this variant)    | `viewer/src/components/SealedBidPanel.ts`, `PreferenceSplitBid.vue`                                                                                               |
 | Reveal / result                          | `viewer/src/components/PreferenceSplitLog.vue`, `PreferenceSplitSummary.vue`                                                                                      |
 | In-app rules                             | `viewer/src/components/PreferenceSplitInfo.vue`                                                                                                                   |
 | Setup                                    | `viewer/src/hosted/new-game.ts`, `viewer/src/hosted/CreateGame.vue`                                                                                               |
@@ -120,8 +121,16 @@ order) mapped to each faction's final owner.
 ## How secrecy is enforced
 
 The engine is client-side and authoritative, and every committed move lands in `public.moves`,
-which every seated player can read. That is fine for the Silent Auction, whose bids are entered
-strictly one seat at a time, but not here: every player bids simultaneously.
+which every seated player can read. That is fine for an ordinary turn, but not for a round where
+every player bids simultaneously.
+
+> **Shared with the Silent Auction since 2026-08-12 (PROGRESS #157).** Everything in this section
+> is now the mechanism for both variants, not just this one: `auction_sealed_bids` is keyed by game
+> and seat and holds an opaque `bids` payload, and `sealed_bid_variant(options)` decides which
+> rules `submit_sealed_bid` enforces and which command (`preferenceBid` / `silentBid`)
+> `reveal_sealed_bids` writes. On the client, `viewer/src/logic/sealed-bid.ts` is the single source
+> of truth for "is this a simultaneous bid round", and `SealedBidPanel.ts` is the shared half of
+> both bid forms.
 
 So in hosted play, a `preferenceBid` move **does not exist** while the auction is open. Submissions
 go to `public.auction_sealed_bids` through `submit_sealed_bid()`, behind an RLS policy that returns
@@ -152,16 +161,15 @@ you submit. Own submissions are folded in locally so the roster never lags the 5
 /hot-seat play — which has no poll — derives the same roster from `preferenceSplitBids`, the engine's
 own record of which seats have bid.
 
-The same idea covers the other round-0 phases where every player owes exactly one thing — the ban
-round, the pick round and the **Silent Auction's** secret-bid round — as a compact chip row in
-`SetupStatus.vue` (see PROGRESS #142). That one is deliberately absent during hosted Preference
-Split bidding, because the panel above already carries it; and absent from `Phase.SetupAuction`
-(Choose-Then-Bid / Bid-While-Choosing), because a player there bids repeatedly and can be outbid
-again, so "done" is not a state that exists.
+The same idea covers the other round-0 phase where every player owes exactly one thing — the pick
+round — as a compact chip row in `SetupStatus.vue` (see PROGRESS #142). That row is deliberately
+absent from **both** simultaneous bid rounds, because each variant's own panel already carries the
+roster; and absent from `Phase.SetupAuction` (Choose-Then-Bid / Bid-While-Choosing), because a
+player there bids repeatedly and can be outbid again, so "done" is not a state that exists.
 
 **Offline / hot-seat play** has no server, so there is nothing to enforce: the bid form falls back
 to an ordinary `preferenceBid` move for the seat on turn, and secrecy is pass-the-device — the same
-model the Silent Auction already uses offline.
+model the Silent Auction uses offline.
 
 ## Notifications during the auction
 
@@ -226,9 +234,13 @@ stored decision, not a re-derivation of it.
 
 ## Adding another auction variant later
 
-Nothing here is hardcoded to this mechanism. A new variant needs: a value in `AuctionVariant`, a
-`Phase`/`Command` pair, a resolver under `engine/src/algorithms/`, a branch in `phaseSetupFaction`,
-an entry in `AUCTION_VARIANT_OPTIONS` (with `playerCounts` if it is restricted to certain player counts — no
+Nothing here is hardcoded to this mechanism, and the Silent Auction moving onto it (PROGRESS #157)
+is the proof. A new variant needs: a value in `AuctionVariant`, a `Phase`/`Command` pair, a resolver
+under `engine/src/algorithms/`, a branch in `phaseSetupFaction`, an entry in
+`AUCTION_VARIANT_OPTIONS` (with `playerCounts` if it is restricted to certain player counts — no
 variant uses that today, but the gating machinery is still there and tested), and — only if it needs
-simultaneous secret input — reuse of the `auction_sealed_bids` table, which is keyed by game and
-seat and holds an opaque `bids` JSON payload, not anything specific to this variant.
+simultaneous secret input — reuse of the `auction_sealed_bids` table plus: a case in
+`sealed_bid_variant()`/`sealed_bid_command()`, its own branch of `submit_sealed_bid`'s validation, a
+case in `sealedBidPhase`, and a `SealedBidPanel` subclass supplying `variant`, `commandName` and
+`submissionError`. The table itself is keyed by game and seat and holds an opaque `bids` JSON
+payload, not anything specific to any variant.

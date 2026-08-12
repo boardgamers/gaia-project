@@ -6442,6 +6442,84 @@ pin_preference_split_budget_search_path` (the one function in the set without a 
       shortcut still fires for a keystroke aimed at the page, and does not for a letter or an Enter
       typed into a textarea); full viewer suite **870 passing**.
 
+157.  ✅ **The Silent Auction's secret bids are simultaneous now, like the Preference Split's
+      (2026-08-12, viewer v5.56.0).** Owner request. The two variants ask for the same thing in the
+      same round — one secret valuation of every picked faction, from every player, revealed only
+      once the last one lands — but only the Preference Split ever collected them at the same time.
+      The Silent Auction, which shipped first, walked the table one seat at a time, so a three- or
+      four-player bid round took a turn per player, each waiting on the one before, for information
+      nobody is allowed to act on anyway. Sequential entry was never a secrecy hole (by the time a
+      committed `silentBid` move is readable you have already submitted your own); it was purely a
+      pace problem, and an asymmetry between two rounds that are the same round.
+
+      **Nothing about the engine's resolution changed.** `phaseSetupSilentBid` already derived
+      absolutely nothing until the last submission, exactly like `phaseSetupPreferenceBid` — which
+      is what made this a plumbing change rather than a rules one. The ascending-auction algorithm,
+      its tiebreaks, its seeded PRNG draw and the resulting prices are untouched, and the move text
+      (`p1 silentBid itars 15 xenos 0 taklons 10`) is byte-identical, so every recorded game replays
+      to the same result.
+
+      **What moved is where a submission lives before the reveal.** Both variants now share one
+      sealed-bid path end to end:
+
+      - Migration `20260812130000_silent_auction_sealed_bids.sql` generalizes the four RPCs from
+        "the Preference Split's table" to "the sealed bid table", keyed by
+        `sealed_bid_variant(options)`. `submit_sealed_bid` applies the right rule per variant (a
+        split must total the budget; a silent bid is independent, capped at
+        `silent_auction_max_bid()` = 40, with no total at all), `sealed_bid_status` reports
+        `variant`/`budget`/`max_bid`, and `reveal_sealed_bids` writes
+        `sealed_bid_command(variant)` — `silentBid` or `preferenceBid` — into the moves it appends.
+        Everything structural is unchanged and shared: one row per (game, seat), RLS showing a
+        player only their own row until `sealed_bids_complete()`, no write policies at all, and one
+        transaction appending every seat's move in seat order.
+      - `viewer/src/logic/sealed-bid.ts` is the client's single source of truth for "is this a
+        simultaneous bid round, and what are its moves called", used by the host, both bid panels,
+        the setup strip and Commands.
+      - `SealedBidPanel.ts` holds everything the two bid forms do identically — which seats this
+        device may submit for, the 5s progress poll, the per-player roster, the hosted-vs-offline
+        submit path — and `PreferenceSplitBid.vue` / the new `SilentAuctionBid.vue` supply only
+        what a legal submission is and how the form reads. The Silent Auction's form therefore
+        moved out of `Commands.vue` (rendered only for the seat the engine points at) and up into
+        Game.vue's round-0 strip, which is the actual change a player sees.
+      - Announcements and reminders needed no new machinery: `announce_sealed_bid_auction` and the
+        `notify` sweep were already keyed on `sealed_bid_announced_at` rather than on the variant.
+        Only the wording is variant-aware now ("submit your secret bids" vs "split your bid
+        points").
+
+      **The one compatibility hazard, handled.** The hosted app replays a game's entire stored move
+      history through current code with no version gate (see #66's revert), so a Silent Auction
+      caught mid-round by this change already has some seats' bids in `public.moves`. Asking those
+      seats again through the sealed table would record them twice. `isLegacySequentialBidRound`
+      detects exactly that state (phase `SetupSilentBid` with a non-empty `silentAuctionBids`) and
+      keeps such a game on the old path — the host never touches the sealed table, the new panel
+      hides itself, and `Commands.vue`'s original on-turn form is still there to finish it.
+      `submit_sealed_bid` refuses the same games server-side as a second barrier. Offline/hot-seat
+      play is deliberately NOT that case: there a bid is a move by design, so the shared panel keeps
+      its ordinary `$emit("command")` fallback and secrecy stays pass-the-device.
+
+      Also hardened while passing through: `moveSilentBid` now validates through the shared
+      `silentAuctionBidError` (whole, non-negative, ≤ 40, every auctioned faction exactly once) on
+      the replay path too, not just against the available command, and refuses a second submission
+      from a seat — the same treatment `movePreferenceBid` already had, and it matters more now
+      that the server, not a client on turn, is what writes those move lines.
+
+      **Tests:** engine `silent-auction.spec.ts` **6 passing** (3 baseline, +3 for
+      `silentAuctionBidError`), `silent-auction-variant.spec.ts` **9 passing** (5 baseline, +4 for
+      the simultaneous round: nothing derived before the last submission, a repeat submission
+      refused, illegal bids rejected on replay, the ceiling/factions on the available command);
+      new `SilentAuctionBid.spec.ts` **13 passing**; `host.spec.ts` gained a Silent Auction
+      sealed-bidding block (6 cases: the reveal's move text, unreadable-until-complete then
+      resolve, exactly-once under two clients, the bid-round announcement, the per-bid cap with no
+      total, and the legacy game left alone); `notify/logic.spec.ts` **71 passing** (+1 for the
+      silent wording); `Commands.spec.ts`, `SetupStatus.spec.ts` and `FactionBrowser.spec.ts`
+      updated to the new split of responsibilities. Full viewer suite and the engine suite minus
+      `src/ai/**` both green.
+
+      **Not yet applied live:** migration `20260812130000` still has to be applied to
+      `mitawjpdxkheascdiffz`, and a Silent Auction created before it is applied will fail to submit
+      (`sealed_bid_status` would not report the variant and `submit_sealed_bid` would reject the
+      game). Apply it before the next hosted Silent Auction is created.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

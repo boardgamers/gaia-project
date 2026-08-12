@@ -672,7 +672,7 @@ describe("turn reminders", () => {
   });
 
   // ---------------------------------------------------------------------------
-  // Preference Split Auction: the simultaneous bid phase (migration 20260808120000)
+  // Sealed-bid auctions: the simultaneous bid phase (migration 20260808120000)
   // ---------------------------------------------------------------------------
 
   describe("buildSealedBidNotifications", () => {
@@ -705,6 +705,14 @@ describe("turn reminders", () => {
         ["turn-game-1", "turn-game-1"]
       );
       assert.match(notifications[0].body, /^Faction auction in your game with Ann, Cy - split your bid points\.$/);
+    });
+
+    it("asks a Silent Auction for bids rather than a split", () => {
+      // Same phase, same push, different thing being asked for: the Silent Auction wants one
+      // max-VP valuation per faction, not one budget divided up.
+      const [notification] = buildSealedBidNotifications(auctionGame({ options: { auction: "silent" } }), [0]);
+
+      assert.match(notification.body, /- submit your secret bids\.$/);
     });
 
     it("uses the waiting wording for a re-nudge", () => {

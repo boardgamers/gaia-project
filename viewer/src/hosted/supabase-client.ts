@@ -111,14 +111,18 @@ export function createSupabaseBackend(client: SupabaseClient): HostedBackend {
     markPremoveFailureRead: (id): Promise<void> => unwrap(client.rpc("mark_premove_failure_read", { p_id: id })),
     setAutoCharge: (gameId, seat, pref): Promise<void> =>
       unwrap(client.rpc("set_auto_charge", { p_game_id: gameId, p_seat: seat, p_pref: pref })),
-    // Preference Split Auction (migration 20260805120000). Note that nothing here ever selects
-    // from `auction_sealed_bids` directly: `sealed_bid_status` returns progress only, and the
-    // points themselves are read exclusively by the server, inside `reveal_sealed_bids`.
+    // Sealed-bid auctions (migrations 20260805120000 / 20260812130000). Note that nothing here
+    // ever selects from `auction_sealed_bids` directly: `sealed_bid_status` returns progress only,
+    // and the points themselves are read exclusively by the server, inside `reveal_sealed_bids`.
     fetchSealedBidStatus: async (gameId): Promise<SealedBidStatus> => {
       const raw = await unwrap<any>(client.rpc("sealed_bid_status", { p_game_id: gameId }));
       return {
         playerCount: raw?.player_count ?? 0,
-        budget: raw?.budget ?? 0,
+        // `variant`/`max_bid` are absent from a database that predates 20260812130000, where every
+        // sealed auction was a Preference Split - which is exactly what `?? null` then reports.
+        variant: raw?.variant ?? null,
+        budget: raw?.budget ?? null,
+        maxBid: raw?.max_bid ?? null,
         submittedSeats: raw?.submitted_seats ?? [],
       };
     },

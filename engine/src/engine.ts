@@ -97,7 +97,8 @@ export enum AuctionVariant {
   /**
    * Sealed-bid ("Silent Auction") variant: a sequential ban round (one forced ban per player),
    * then a sequential pick round (one distinct faction per player), then every player privately
-   * submits a max-VP bid for each picked faction. Once everyone has submitted, an ascending-auction
+   * and SIMULTANEOUSLY submits a max-VP bid for each picked faction (hosted play collects those
+   * in `auction_sealed_bids`, exactly as the Preference Split does). Once everyone has submitted, an ascending-auction
    * algorithm (see algorithms/silent-auction.ts) automatically assigns each player the faction that
    * maximizes their own value, at the lowest price nobody else was willing to beat.
    */

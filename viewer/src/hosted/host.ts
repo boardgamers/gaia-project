@@ -1,9 +1,10 @@
-import Engine, { Phase } from "@gaia-project/engine";
+import Engine, { Command, Phase } from "@gaia-project/engine";
 import { AutoCharge } from "@gaia-project/engine/src/player";
 import { factionName } from "../data/factions";
 import { autoDecideChargePower } from "../logic/auto-decide";
 import { ownTurn, parseCommands, parsedMove } from "../logic/recent";
 import { PremoveResolution, resolvePremoveQueue } from "../logic/premove-resolver";
+import { isLegacySequentialBidRound, sealedBidMove, sealedBidPhase } from "../logic/sealed-bid";
 import {
   CommitTurnArgs,
   GameRow,
@@ -53,15 +54,7 @@ export function initMoveLine(game: GameRow): string {
   return `init ${game.player_count} ${game.seed}`;
 }
 
-/**
- * The move line one sealed Preference Split submission becomes at reveal time. Must stay
- * byte-identical to what `reveal_sealed_bids` builds server-side (migration 20260805120000): the
- * server writes the authoritative text, and this only reproduces it locally to work out which seat
- * the game lands on once the auction has resolved.
- */
-export function sealedBidMove(seat: number, bids: SealedBidEntry[]): string {
-  return `p${seat + 1} preferenceBid ${bids.map((b) => `${b.faction} ${b.points}`).join(" ")}`;
-}
+export { sealedBidMove };
 
 /**
  * Engine-safe copy of the stored game options. The engine writes the
@@ -246,7 +239,7 @@ export class HostedGameHost {
   // Serializes submit/remote/resync so an in-flight commit can't interleave
   // with a realtime apply on the same engine.
   private queue: Promise<void> = Promise.resolve();
-  // Preference Split Auction - true while this client is closing the auction, see refreshSealedBidState.
+  // Sealed-bid auctions - true while this client is closing the auction, see refreshSealedBidState.
   private revealing = false;
 
   constructor(
@@ -282,19 +275,22 @@ export class HostedGameHost {
       this.engine = this.buildEngine(game, moves);
       this.emitState(this.engine);
       await this.refreshPremoveState();
-      // Also the fallback that closes a Preference Split auction whose last submitter went away
-      // before the reveal landed: every client that opens the game re-checks.
+      // Also the fallback that closes a sealed-bid auction whose last submitter went away before
+      // the reveal landed: every client that opens the game re-checks.
       await this.refreshSealedBidState();
       await this.resolveAutoDecisions();
     });
   }
 
   /**
-   * Preference Split Auction (engine AuctionVariant.PreferenceSplit).
+   * The simultaneous bid round of either sealed-bid auction variant - the Preference Split's
+   * (`AuctionVariant.PreferenceSplit`) and, since migration 20260812130000, the Silent Auction's
+   * (`AuctionVariant.Silent`). `logic/sealed-bid.ts` is what decides which round an engine state is
+   * in, and what its moves are called.
    *
-   * The bid phase is the one part of a hosted game that does NOT go through `submitMove`: every
-   * player bids at the same time and none of them may see another's numbers, so the submissions are
-   * held server-side (`auction_sealed_bids`) instead of being committed as moves. Once the server
+   * That round is the one part of a hosted game that does NOT go through `submitMove`: every player
+   * bids at the same time and none of them may see another's numbers, so the submissions are held
+   * server-side (`auction_sealed_bids`) instead of being committed as moves. Once the server
    * reports every seat in, ANY client may close the auction - `reveal_sealed_bids` appends every
    * move in one transaction, and its seq check makes that exactly-once even if several clients
    * notice at the same instant (the losers get `seq_conflict` and simply resync into the result).
@@ -317,8 +313,9 @@ export class HostedGameHost {
 
   private async refreshSealedBidState(): Promise<void> {
     // `revealing` keeps the reveal -> resync -> refresh chain from re-entering itself if the reveal
-    // could not land (the phase would still be SetupPreferenceBid with every seat submitted).
-    if (!this.engine || this.engine.phase !== Phase.SetupPreferenceBid || this.revealing) {
+    // could not land (the phase would still be the bid phase with every seat submitted).
+    const sealed = sealedBidPhase(this.engine);
+    if (!sealed || isLegacySequentialBidRound(this.engine) || this.revealing) {
       return;
     }
     let status: SealedBidStatus;
@@ -348,14 +345,14 @@ export class HostedGameHost {
     if (status.playerCount > 0 && status.submittedSeats.length >= status.playerCount) {
       this.revealing = true;
       try {
-        await this.revealSealedBids();
+        await this.revealSealedBids(sealed.command);
       } finally {
         this.revealing = false;
       }
     }
   }
 
-  private async revealSealedBids(): Promise<void> {
+  private async revealSealedBids(command: Command): Promise<void> {
     // The server builds the move text itself, from the rows it stores - nothing about the bids is
     // taken from this client. All it contributes is `nextSeat`, the seat the engine lands on once
     // the auction has resolved, which can only be known by actually replaying it. That is the same
@@ -372,7 +369,7 @@ export class HostedGameHost {
       const replayed = new Engine(
         [
           ...this.engine.moveHistory,
-          ...[...rows].sort((a, b) => a.seat - b.seat).map((row) => sealedBidMove(row.seat, row.bids)),
+          ...[...rows].sort((a, b) => a.seat - b.seat).map((row) => sealedBidMove(row.seat, row.bids, command)),
         ],
         engineOptions(this.game) as any
       );
@@ -578,8 +575,8 @@ export class HostedGameHost {
       this.emitState(copy);
     }
     await this.refreshPremoveState();
-    // The move just committed may have been the last faction pick, i.e. the one that opens the
-    // Preference Split bid phase. A no-op in every other phase (see refreshSealedBidState).
+    // The move just committed may have been the last faction pick, i.e. the one that opens a
+    // sealed-bid auction's bid phase. A no-op in every other phase (see refreshSealedBidState).
     await this.refreshSealedBidState();
     // After emitting, not before: a chained auto-decision computes/commits/emits its own
     // further state, which must never be overwritten by this call's own (now-stale) copy.
@@ -645,8 +642,8 @@ export class HostedGameHost {
             // A moves row arrived (PREMOVE_PLAN.md §3's refresh rule) - a committed turn, ours or
             // not, is exactly the moment the server may have consumed (or newly offered) a premove.
             await this.refreshPremoveState();
-            // ...and, if it was another player's final faction pick, the moment the Preference Split
-            // bid phase opened for us. A no-op in every other phase.
+            // ...and, if it was another player's final faction pick, the moment a sealed-bid
+            // auction's bid phase opened for us. A no-op in every other phase.
             await this.refreshSealedBidState();
             // A remote move can hand control straight to one of the local user's own seats
             // (a leech interrupt), so this is a real trigger point too, not just submitMove.
@@ -718,7 +715,7 @@ export class HostedGameHost {
       this.emitState(this.engine);
     }
     await this.refreshPremoveState();
-    // Catching up after a reconnect can land straight in the Preference Split bid phase; the
+    // Catching up after a reconnect can land straight in a sealed bid phase; the
     // `revealing` guard inside is what keeps the reveal -> resync -> refresh chain from re-entering.
     await this.refreshSealedBidState();
     await this.resolveAutoDecisions();

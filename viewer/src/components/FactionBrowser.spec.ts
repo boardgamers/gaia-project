@@ -9,10 +9,13 @@ import FactionBrowser from "./FactionBrowser.vue";
 Vue.use(BootstrapVue);
 
 describe("FactionBrowser", () => {
-  function mountFor(engine: Engine, onTurn = false) {
+  function mountFor(engine: Engine, onTurn = false, seat?: number) {
     engine.generateAvailableCommandsIfNeeded();
     const store = makeStore();
     store.commit("receiveData", engine);
+    if (seat !== undefined) {
+      store.commit("player", { index: seat });
+    }
     return mount(FactionBrowser, { store, propsData: { onTurn }, attachTo: document.body });
   }
 
@@ -115,21 +118,29 @@ describe("FactionBrowser", () => {
     wrapper.destroy();
   });
 
-  it("keeps the auctioned factions readable while an off-turn player waits out the bidding", () => {
+  it("keeps the auctioned factions readable for a spectator during the secret-bid round", () => {
+    // A spectator (seat -1) is the one viewer with no bid panel of their own there, so this row is
+    // the only way for them to read the factions being fought over.
     const bidding = picking(picks);
     expect(bidding.phase).to.equal(Phase.SetupSilentBid);
 
-    const wrapper = mountFor(bidding);
+    const wrapper = mountFor(bidding, false, -1);
     expect(wrapper.text()).to.contain("Up for auction");
     expect(wrapper.findAll(".faction-browser__taken .btn").length).to.equal(3);
     wrapper.destroy();
   });
 
-  it("leaves the silent bid form alone for the player on turn", () => {
-    // Commands.vue's bid form already carries a sheet button per faction there.
-    const wrapper = mountFor(picking(picks), true);
-    expect(wrapper.find(".faction-browser").exists()).to.equal(false);
-    wrapper.destroy();
+  it("leaves the silent bid form alone for everyone holding a seat, on turn or not", () => {
+    // SilentAuctionBid.vue carries a sheet button per faction and, since bidding became
+    // simultaneous, renders for every seat at once - so this row would be the same buttons twice.
+    for (const [onTurn, seat] of [
+      [true, 0],
+      [false, 2],
+    ] as [boolean, number][]) {
+      const wrapper = mountFor(picking(picks), onTurn, seat);
+      expect(wrapper.find(".faction-browser").exists()).to.equal(false);
+      wrapper.destroy();
+    }
   });
 
   it("keeps the picked factions readable during a classic bidding auction, on turn included", () => {

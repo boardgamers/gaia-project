@@ -411,7 +411,7 @@ async function mountGameInstance(
       onPremoveState: (premoves, failures) => {
         emitter.emit("premoveState", { premoves, failures });
       },
-      // Preference Split Auction - submission progress for the bid panel. Straight into the store
+      // Sealed-bid auctions - submission progress for the bid panel. Straight into the store
       // (like the injected backends above) rather than through a launcher event: it is hosted-only
       // state that no other viewer mode has an equivalent of.
       onSealedBidState: (status) => {
@@ -432,7 +432,7 @@ async function mountGameInstance(
     }
   );
 
-  // Preference Split Auction - the bid panel's only way to reach the server. Injected the same way
+  // Sealed-bid auctions - the bid panels' only way to reach the server. Injected the same way
   // the notes/chess/renju backends are, so the reusable viewer never imports Supabase itself.
   emitter.store.commit("setSealedBidBackend", {
     submit: (seat: number, bids: { faction: string; points: number }[]) => host.submitSealedBid(seat, bids),

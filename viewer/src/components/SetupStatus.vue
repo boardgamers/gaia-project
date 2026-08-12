@@ -78,6 +78,7 @@
 import Engine, { AuctionVariant, Phase, Player, PlayerEnum } from "@gaia-project/engine";
 import { Component, Vue } from "vue-property-decorator";
 import { factionName } from "../data/factions";
+import { isLegacySequentialBidRound, sealedBidPhase } from "../logic/sealed-bid";
 import { isBeforeRound1 } from "../logic/utils";
 import BanPhaseInfo from "./BanPhaseInfo.vue";
 import PreferenceSplitInfo from "./PreferenceSplitInfo.vue";
@@ -107,20 +108,19 @@ const assignments: { [phase: string]: [string, string] } = {
  *   There a player bids repeatedly and can be outbid again afterwards, so a done/waiting mark would
  *   be actively wrong - what matters there is who currently leads which faction at what price,
  *   which the turn-order circles and the auction's own buttons already show.
- * - `SetupPreferenceBid` is absent too, but for the opposite reason: its submissions are
- *   simultaneous rather than sequential, and `PreferenceSplitBid.vue` already carries the same
- *   roster inside the bid form itself (fed by the server's sealed-bid status in hosted play).
- *   Rendering it here as well would put two of them on one screen.
+ * - both simultaneous bid rounds (`SetupPreferenceBid`, `SetupSilentBid`) are absent too, but for
+ *   the opposite reason: their submissions all happen at once, and each variant's bid panel
+ *   (`PreferenceSplitBid.vue` / `SilentAuctionBid.vue`) already carries the same roster inside the
+ *   form itself, fed by the server's sealed-bid status in hosted play. Rendering it here as well
+ *   would put two of them on one screen.
  */
 const rosterLabels: { [phase: string]: string } = {
   [Phase.SetupFaction]: "Picks",
-  [Phase.SetupSilentBid]: "Secret bids",
 };
 
 /** The state each roster phase reports, in the third person, for the chip's tooltip/aria-label. */
 const rosterStates: { [phase: string]: [string, string] } = {
   [Phase.SetupFaction]: ["has picked a faction", "has not picked yet"],
-  [Phase.SetupSilentBid]: ["has submitted their secret bids", "has not submitted their bids yet"],
 };
 
 @Component({ components: { BanPhaseInfo, PreferenceSplitInfo, SilentAuctionInfo } })
@@ -143,10 +143,11 @@ export default class SetupStatus extends Vue {
 
   get visible(): boolean {
     const data = this.gameData;
-    // Hosted Preference Split bidding is simultaneous: naming one seat as "on turn" there would be
-    // actively wrong, and the bid panel right below says what is actually happening (n of 4 in).
-    // Hot-seat play keeps the line, because there the device really does get passed around.
-    if (data?.phase === Phase.SetupPreferenceBid && this.$store.state.sealedBidBackend) {
+    // Hosted sealed bidding (either variant) is simultaneous: naming one seat as "on turn" there
+    // would be actively wrong, and the bid panel right below says what is actually happening
+    // (n of 4 in). Hot-seat play keeps the line, because there the device really is passed around,
+    // and so does a legacy sequential Silent Auction, which genuinely still bids one seat at a time.
+    if (sealedBidPhase(data) && this.$store.state.sealedBidBackend && !isLegacySequentialBidRound(data)) {
       return false;
     }
     return (
@@ -196,9 +197,7 @@ export default class SetupStatus extends Vue {
    * "how many moves have been made" counter:
    *
    * - a pick sets `player.faction`, which is order-independent - Bid-While-Choosing interleaves
-   *   picks with bids, so a positional rule would be wrong there;
-   * - a silent bid appends that seat's rows to `silentAuctionBids`. Only their presence is read,
-   *   never the numbers.
+   *   picks with bids, so a positional rule would be wrong there.
    */
   get roster(): { seat: number; name: string; done: boolean; onTurn: boolean; mine: boolean; label: string }[] {
     const data = this.gameData;
@@ -232,19 +231,18 @@ export default class SetupStatus extends Vue {
         // Truthiness, not `!== undefined`: an unpicked seat's faction is `null` (Player's own
         // initializer), and the Silent Auction resets it to `undefined` when it reassigns.
         return !!data.players[seat]?.faction;
-      case Phase.SetupSilentBid:
-        return (data.silentAuctionBids ?? []).some((bid) => (bid.player as number) === seat);
       default:
         return false;
     }
   }
 
+  // Deliberately NOT during `SetupSilentBid`: SilentAuctionBid.vue renders this very modal there,
+  // and two copies of one `b-modal` id on a page make the button open whichever one Bootstrap-Vue
+  // happens to have registered last. Same reason SetupPreferenceBid is missing below.
   get showSilentAuctionInfo(): boolean {
     return (
       this.gameData.options.auction === AuctionVariant.Silent &&
-      (this.gameData.phase === Phase.SetupFactionBan ||
-        this.gameData.phase === Phase.SetupFaction ||
-        this.gameData.phase === Phase.SetupSilentBid)
+      (this.gameData.phase === Phase.SetupFactionBan || this.gameData.phase === Phase.SetupFaction)
     );
   }
 

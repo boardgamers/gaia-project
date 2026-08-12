@@ -42,7 +42,9 @@ import FactionSheetButton from "./FactionSheetButton.vue";
 
 /** The round-0 phases where a faction sheet is otherwise unreachable. `SetupPreferenceBid` is
  * deliberately absent: PreferenceSplitBid.vue renders the same sheet buttons for every seat there,
- * so a second copy of them would just be a duplicate row above its bid form. */
+ * so a second copy of them would just be a duplicate row above its bid form. `SetupSilentBid` is
+ * listed but self-suppresses the same way for anyone holding a seat - see `visible` - because a
+ * spectator, who has no bid panel of their own, is the one viewer it still helps there. */
 const browsePhases: Phase[] = [Phase.SetupFactionBan, Phase.SetupFaction, Phase.SetupAuction, Phase.SetupSilentBid];
 
 @Component({ components: { FactionSheetButton } })
@@ -94,9 +96,11 @@ export default class FactionBrowser extends Vue {
     if (!browsePhases.includes(phase)) {
       return false;
     }
-    // The Silent Auction's own bid form (Commands.vue) already carries a sheet button per picked
-    // faction, so for the player on turn there this row would be the same buttons twice.
-    if (this.onTurn && phase === Phase.SetupSilentBid) {
+    // The Silent Auction's own bid form (SilentAuctionBid.vue) already carries a sheet button per
+    // picked faction, and since bidding became simultaneous it renders for every seat at once, not
+    // just the one on turn - so this row would be the same buttons twice for everybody who has a
+    // seat. A spectator has no bid panel, and keeps it.
+    if (phase === Phase.SetupSilentBid && this.$store.state.player?.index !== -1) {
       return false;
     }
     return this.showOffered || this.taken.length > 0;

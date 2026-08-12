@@ -1,6 +1,8 @@
 // Row shapes mirror supabase/migrations/0001_multiplayer.sql (current_round/faction/score added
 // in 0009_lobby_round_faction_score_cache.sql).
 
+import { SealedBidVariant } from "../logic/sealed-bid";
+
 export type GameRow = {
   id: string;
   name: string;
@@ -69,15 +71,21 @@ export type PremoveMode = "sequential" | "priority";
 export type PremoveRow = { seat: number; seq: number; move: string; mode: PremoveMode; queued_move_count: number };
 export type PremoveFailureRow = { id: string; seat: number; move: string; reason: string; read_at: string | null };
 
-// Preference Split Auction (engine AuctionVariant.PreferenceSplit) - the sealed-bid side channel.
-// Bids do NOT go through commitTurn while the auction is open: they are held server-side
-// (auction_sealed_bids, migration 20260805120000) where RLS shows a player only their own row, and
-// become four ordinary moves in one transaction once everybody has submitted. See that migration's
-// header for why the ordinary move log cannot be used here.
+// The sealed-bid side channel, shared by both simultaneous-bid auction variants: the Preference
+// Split (AuctionVariant.PreferenceSplit) and the Silent Auction (AuctionVariant.Silent, migration
+// 20260812130000). Bids do NOT go through commitTurn while the auction is open: they are held
+// server-side (auction_sealed_bids, migration 20260805120000) where RLS shows a player only their
+// own row, and become one ordinary move per seat in one transaction once everybody has submitted.
+// See that migration's header for why the ordinary move log cannot be used here.
 export type SealedBidEntry = { faction: string; points: number };
 export type SealedBidStatus = {
   playerCount: number;
-  budget: number;
+  /** Which auction is being bid on, so a panel can tell it is looking at its own game's status. */
+  variant: SealedBidVariant | null;
+  /** Preference Split only - the exact total every submission has to add up to. Null for silent. */
+  budget: number | null;
+  /** Silent Auction only - the ceiling on any single bid. Null for preference-split. */
+  maxBid: number | null;
   /** Which seats have submitted. Progress only - never carries anybody's points. */
   submittedSeats: number[];
 };

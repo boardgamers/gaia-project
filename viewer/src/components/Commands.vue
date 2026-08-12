@@ -150,6 +150,10 @@
           :key="faction"
         />
       </div>
+      <!-- Legacy only. The Silent Auction's bid round is simultaneous as of 2026-08-12 and its form
+           is SilentAuctionBid.vue, up in Game.vue's round-0 strip - see `isSilentBidding`, which is
+           true only for a hosted game that had already started recording its bids one seat at a
+           time when that changed, and which therefore has to finish that way. -->
       <div v-if="isSilentBidding" class="silent-bid-form">
         <p class="text-muted small">
           Privately enter the most VP you're willing to pay for each faction - bid highest on the one you want most, and
@@ -243,6 +247,7 @@ import { autoClickStrategy } from "../logic/buttons/autoClick";
 import RichTextView from "./Resources/RichTextView.vue";
 import StickyResourceBar from "./StickyResourceBar.vue";
 import { richText, RichText, richTextPlanet } from "../graphics/rich-text";
+import { isLegacySequentialBidRound } from "../logic/sealed-bid";
 import { chargePowerToPay } from "../logic/utils";
 import { zoomCompensationTransform } from "../logic/zoom-compensation";
 import { factionColor } from "../graphics/utils";
@@ -389,7 +394,12 @@ export default class Commands extends Vue implements CommandController {
         return;
       }
       if (command.name === Command.SilentBid) {
-        this.title("Submit your Silent Auction bids");
+        // The form is SilentAuctionBid.vue, up in Game.vue's round-0 strip - every seat bids at
+        // once, so it cannot live in this on-turn-only panel. Just say where it is (unless this is
+        // one of the legacy sequential games that still bids from right here).
+        this.title(
+          this.isSilentBidding ? "Submit your Silent Auction bids" : "Submit your secret bids in the panel above"
+        );
         this.silentBidValues = Object.fromEntries(command.data.bids.map((pos) => [pos.faction, 0]));
         return;
       }
@@ -426,8 +436,14 @@ export default class Commands extends Vue implements CommandController {
     return this.availableCommands?.find((c) => c.name === Command.SilentBid) ?? null;
   }
 
+  /**
+   * Only the legacy turn-by-turn Silent Auction still bids from this panel. Every other case -
+   * a hosted game that started bidding after migration 20260812130000, and all offline/hot-seat
+   * play - goes through SilentAuctionBid.vue instead, which renders for every seat at once rather
+   * than just the one the engine's turn pointer names.
+   */
   get isSilentBidding() {
-    return !!this.silentBidCommand;
+    return !!this.silentBidCommand && !!this.$store.state.sealedBidBackend && isLegacySequentialBidRound(this.engine);
   }
 
   get autoChargePower(): string {

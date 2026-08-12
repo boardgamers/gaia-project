@@ -1,11 +1,11 @@
 import { difference, range } from "lodash";
+import { MAX_SILENT_BID } from "../algorithms/silent-auction";
 import Engine, { AuctionVariant } from "../engine";
 import { Command, Faction, Player } from "../enums";
 import { remainingFactions } from "../factions";
 import { AvailableCommand, PossibleBid } from "./types";
 
-/** Upper bound offered for a Silent Auction max-VP bid; a generous ceiling, not a real cap. */
-export const MAX_SILENT_BID = 40;
+export { MAX_SILENT_BID };
 
 export function chooseFactionOrBid(
   engine: Engine,
@@ -48,13 +48,20 @@ export function possibleFactionBans(engine: Engine, player: Player): AvailableCo
   return [{ name: Command.BanFaction, player, data: banableFactions(engine) }];
 }
 
+/**
+ * Silent Auction: one independent max-VP bid per faction up for auction, 0 to `MAX_SILENT_BID`
+ * each. `factions` and `maxBid` travel with the command for the same reason the Preference Split's
+ * `budget`/`factions` do - the bid panel renders for seats the engine's turn pointer is not on
+ * (every player submits at the same time), so it must not have to re-derive them from the engine's
+ * turn state.
+ */
 export function possibleSilentBids(engine: Engine, player: Player): AvailableCommand<Command.SilentBid>[] {
   const bids: PossibleBid[] = engine.setup.map((faction) => ({
     faction,
     bid: range(0, MAX_SILENT_BID + 1),
   }));
 
-  return [{ name: Command.SilentBid, player, data: { bids } }];
+  return [{ name: Command.SilentBid, player, data: { maxBid: MAX_SILENT_BID, factions: [...engine.setup], bids } }];
 }
 
 /**

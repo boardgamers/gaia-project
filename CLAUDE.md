@@ -96,10 +96,21 @@ PREFERENCE_SPLIT_AUCTION.md`. Unlike the Silent Auction, its secrecy is **server
   `mitawjpdxkheascdiffz`: both columns, `auction_bid_reminders`, `announce_sealed_bid_auction()` and
   `mark_device_viewing()` all exist. The Silent Auction was never affected (sequential moves).
 - A "Silent Auction" faction-selection variant (`AuctionVariant.Silent`, PROGRESS #61) is
-  implemented and tested: sequential ban → sequential pick → sequential private bid submission →
-  automatic ascending-auction resolution (`algorithms/silent-auction.ts`), with a setup picker
-  (`hosted/CreateGame.vue`), ban/pick/bid UI (`Commands.vue`), and a statistics-panel log
+  implemented and tested: sequential ban → sequential pick → **simultaneous** private bid
+  submission → automatic ascending-auction resolution (`algorithms/silent-auction.ts`), with a setup
+  picker (`hosted/CreateGame.vue`), a ban/pick UI (`Commands.vue`), the bid form
+  (`SilentAuctionBid.vue`, in Game.vue's round-0 strip) and a statistics-panel log
   (`Charts.vue` → `SilentAuctionLog.vue`).
+- **Its bid round moved onto the Preference Split's sealed-bid path on 2026-08-12 (PROGRESS #157),**
+  so the two variants now share one mechanism end to end: `auction_sealed_bids` +
+  `submit_sealed_bid`/`sealed_bid_status`/`reveal_sealed_bids`, keyed by
+  `sealed_bid_variant(options)`, with `viewer/src/logic/sealed-bid.ts` as the client's single source
+  of truth and `SealedBidPanel.ts` as the shared half of both bid forms. Nothing in the resolution
+  changed and the move text is byte-identical, so recorded games replay unchanged. **Migration
+  `20260812130000_silent_auction_sealed_bids.sql` is NOT applied live yet** — apply it before the
+  next hosted Silent Auction is created. A Silent Auction that was already bidding one seat at a
+  time when this landed finishes that way (`isLegacySequentialBidRound`), because the hosted app
+  replays whole move histories with no version gate.
 - Engine: 599/599 tests passing. Viewer: 308/308 tests passing (as of 2026-07-05 — trust
   `PROGRESS.md`'s "Testing" section over this line if they disagree).
 - A "Gaia 4" UI polish pass (2026-07-04, PROGRESS.md #66) fixed 11 owner-reported viewer bugs:

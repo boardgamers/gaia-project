@@ -1,4 +1,4 @@
-import Engine from "@gaia-project/engine";
+import Engine, { Command } from "@gaia-project/engine";
 import { expect } from "chai";
 import {
   AutoDecideConfig,
@@ -227,14 +227,26 @@ class FakeBackend implements HostedBackend {
     this.autoCharge[seat] = pref;
   }
 
-  // Preference Split Auction (migration 20260805120000). Faithful to the real RPCs in the ways the
-  // host depends on: one submission per seat, nothing readable until every seat is in, and a reveal
-  // that is exactly-once by sequence number.
+  // Sealed-bid auctions (migrations 20260805120000 / 20260812130000). Faithful to the real RPCs in
+  // the ways the host depends on: one submission per seat, nothing readable until every seat is in,
+  // a reveal that is exactly-once by sequence number, and the variant deciding what the appended
+  // moves are called.
+  private get sealedVariant(): "preference-split" | "silent" {
+    return this.game.options?.auction === "silent" ? "silent" : "preference-split";
+  }
+
+  private get sealedCommand(): string {
+    return this.sealedVariant === "silent" ? "silentBid" : "preferenceBid";
+  }
+
   async fetchSealedBidStatus(): Promise<SealedBidStatus> {
     this.sealedBidStatusCalls++;
+    const silent = this.sealedVariant === "silent";
     return {
       playerCount: this.game.player_count,
-      budget: (this.game.options?.auctionBudget as number) ?? 40,
+      variant: this.sealedVariant,
+      budget: silent ? null : (this.game.options?.auctionBudget as number) ?? 40,
+      maxBid: silent ? 40 : null,
       submittedSeats: [...this.sealedBids.keys()].sort((a, b) => a - b),
     };
   }
@@ -254,10 +266,21 @@ class FakeBackend implements HostedBackend {
     if (this.sealedBids.has(seat)) {
       throw new Error(`seat ${seat} has already submitted its bids`);
     }
-    const budget = (this.game.options?.auctionBudget as number) ?? 40;
-    const total = bids.reduce((sum, b) => sum + b.points, 0);
-    if (total !== budget) {
-      throw new Error(`your bids must add up to exactly ${budget} points, got ${total}`);
+    if (this.moves.some((m) => m.move.includes(` ${this.sealedCommand} `))) {
+      throw new Error("this auction is already being resolved move by move");
+    }
+    if (this.sealedVariant === "silent") {
+      // No budget here: each bid is an independent maximum, capped on its own.
+      const over = bids.find((b) => b.points > 40);
+      if (over) {
+        throw new Error("no single bid may exceed 40 points");
+      }
+    } else {
+      const budget = (this.game.options?.auctionBudget as number) ?? 40;
+      const total = bids.reduce((sum, b) => sum + b.points, 0);
+      if (total !== budget) {
+        throw new Error(`your bids must add up to exactly ${budget} points, got ${total}`);
+      }
     }
     this.sealedBids.set(seat, bids);
     return this.sealedBids.size;
@@ -273,7 +296,7 @@ class FakeBackend implements HostedBackend {
 
   async revealSealedBids(_gameId: string, seq: number, nextSeat: number): Promise<number> {
     this.revealCalls++;
-    if (this.moves.some((m) => m.move.includes(" preferenceBid "))) {
+    if (this.moves.some((m) => m.move.includes(` ${this.sealedCommand} `))) {
       return 0;
     }
     if (this.sealedBids.size < this.game.player_count) {
@@ -288,7 +311,7 @@ class FakeBackend implements HostedBackend {
         game_id: this.game.id,
         seq: next,
         seat,
-        move: `p${seat + 1} preferenceBid ${bids.map((b) => `${b.faction} ${b.points}`).join(" ")}`,
+        move: `p${seat + 1} ${this.sealedCommand} ${bids.map((b) => `${b.faction} ${b.points}`).join(" ")}`,
       });
       next++;
     }
@@ -1201,7 +1224,9 @@ describe("Preference Split Auction (sealed bidding)", () => {
   }
 
   it("builds the same move line the server writes at reveal time", () => {
-    expect(sealedBidMove(2, SPLITS[2])).to.equal("p3 preferenceBid itars 2 taklons 6 xenos 10 terrans 22");
+    expect(sealedBidMove(2, SPLITS[2], Command.PreferenceBid)).to.equal(
+      "p3 preferenceBid itars 2 taklons 6 xenos 10 terrans 22"
+    );
   });
 
   it("keeps every submission unreadable until the last one lands", async () => {
@@ -1381,6 +1406,170 @@ describe("Preference Split Auction (sealed bidding)", () => {
     }
     expect(failed).to.match(/already submitted/);
     expect(backend.sealedBids.get(0)).to.deep.equal(SPLITS[0]);
+    expect(errors).to.deep.equal([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// The Silent Auction on the same sealed path (migration 20260812130000)
+// ---------------------------------------------------------------------------
+//
+// Its bid round asks for exactly what the Preference Split's does - one secret valuation of every
+// picked faction from every player, revealed only once the last one lands - and used to collect it
+// one committed move at a time, which made a round nobody can react to take a turn per player.
+// These cover what is genuinely different: the moves the reveal writes are `silentBid`, each bid
+// stands on its own instead of totalling a budget, and a game that had already started bidding the
+// old way must not be dragged onto the new path.
+describe("Silent Auction (sealed bidding)", () => {
+  const SILENT_SETUP = [
+    "p1 banFaction terrans",
+    "p2 banFaction lantids",
+    "p3 banFaction hadsch-hallas",
+    "p1 faction itars",
+    "p2 faction xenos",
+    "p3 faction taklons",
+  ];
+
+  const BIDS: SealedBidEntry[][] = [
+    [
+      { faction: "itars", points: 15 },
+      { faction: "xenos", points: 3 },
+      { faction: "taklons", points: 10 },
+    ],
+    [
+      { faction: "itars", points: 8 },
+      { faction: "xenos", points: 12 },
+      { faction: "taklons", points: 0 },
+    ],
+    [
+      { faction: "itars", points: 2 },
+      { faction: "xenos", points: 4 },
+      { faction: "taklons", points: 14 },
+    ],
+  ];
+
+  function silentGameRow(): GameRow {
+    return { ...gameRow(), seed: "lf-silent-sealed", player_count: 3, options: { auction: "silent" } };
+  }
+
+  function silentPlayerRows(): PlayerRow[] {
+    return [0, 1, 2].map((seat) => ({
+      game_id: "game-1",
+      seat,
+      invited_email: `p${seat}@example.com`,
+      user_id: `user-${seat}`,
+      display_name: `Player ${seat + 1}`,
+      faction: null,
+      score: null,
+    }));
+  }
+
+  function silentBackend(extraMoves: string[] = []): FakeBackend {
+    const backend = new FakeBackend(silentGameRow(), silentPlayerRows());
+    backend.seedMoves([...SILENT_SETUP, ...extraMoves]);
+    return backend;
+  }
+
+  it("builds the same move line the server writes at reveal time", () => {
+    expect(sealedBidMove(1, BIDS[1], Command.SilentBid)).to.equal("p2 silentBid itars 8 xenos 12 taklons 0");
+  });
+
+  it("keeps every submission unreadable until the last one lands, then resolves the auction", async () => {
+    const backend = silentBackend();
+    const { host, errors } = makeHost(backend);
+    await host.load();
+    expect(host.engine.phase).to.equal("setupSilentBid");
+
+    for (const seat of [0, 1]) {
+      await host.submitSealedBid(seat, BIDS[seat]);
+    }
+    // Two seats in: nothing in the move log, and nothing readable back out of the table either.
+    expect(backend.moves.filter((m) => m.move.includes("silentBid"))).to.have.length(0);
+    expect(await backend.fetchSealedBids()).to.deep.equal([]);
+    expect(host.engine.phase).to.equal("setupSilentBid");
+
+    await host.submitSealedBid(2, BIDS[2]);
+
+    // All three appended at once, in seat order, as ordinary moves - and the auction has resolved.
+    expect(backend.moves.slice(-3).map((m) => m.move)).to.deep.equal([
+      "p1 silentBid itars 15 xenos 3 taklons 10",
+      "p2 silentBid itars 8 xenos 12 taklons 0",
+      "p3 silentBid itars 2 xenos 4 taklons 14",
+    ]);
+    expect(host.engine.phase).to.equal("setupBuilding");
+    expect(host.engine.players.every((pl) => !!pl.faction)).to.equal(true);
+    expect(errors).to.deep.equal([]);
+  });
+
+  it("reveals exactly once when two clients notice the last submission together", async () => {
+    const backend = silentBackend();
+    const first = makeHost(backend);
+    const second = makeHost(backend);
+    await first.host.load();
+    await second.host.load();
+
+    for (const seat of [0, 1, 2]) {
+      await backend.submitSealedBid("game-1", seat, BIDS[seat]);
+    }
+    await Promise.all([first.host.refreshSealedBids(), second.host.refreshSealedBids()]);
+
+    expect(backend.moves.filter((m) => m.move.includes("silentBid"))).to.have.length(3);
+    expect(first.errors).to.deep.equal([]);
+    expect(second.errors).to.deep.equal([]);
+  });
+
+  it("announces the open bid round, so every player is told rather than just the one on turn", async () => {
+    const backend = new FakeBackend(silentGameRow(), silentPlayerRows());
+    backend.seedMoves(SILENT_SETUP.slice(0, 5));
+    const { host, errors } = makeHost(backend);
+    await host.load();
+    expect(backend.announced).to.equal(false); // still picking factions
+
+    await host.submitMove("p3 faction taklons");
+
+    expect(host.engine.phase).to.equal("setupSilentBid");
+    expect(backend.announced).to.equal(true);
+    expect(errors).to.deep.equal([]);
+  });
+
+  it("caps a single bid but never asks it to total anything", async () => {
+    const backend = silentBackend();
+    const { host, errors } = makeHost(backend);
+    await host.load();
+
+    let failed = "";
+    try {
+      await host.submitSealedBid(0, [
+        { faction: "itars", points: 41 },
+        { faction: "xenos", points: 0 },
+        { faction: "taklons", points: 0 },
+      ]);
+    } catch (err) {
+      failed = err instanceof Error ? err.message : String(err);
+    }
+    expect(failed).to.match(/exceed 40/);
+    expect(backend.sealedBids.size).to.equal(0);
+
+    // All zeroes is a perfectly legal set of bids - there is no budget to meet.
+    await host.submitSealedBid(0, [
+      { faction: "itars", points: 0 },
+      { faction: "xenos", points: 0 },
+      { faction: "taklons", points: 0 },
+    ]);
+    expect(backend.sealedBids.size).to.equal(1);
+    expect(errors).to.deep.equal([]);
+  });
+
+  it("leaves a game that already bid one seat at a time alone", async () => {
+    // The compatibility case: this game's first bid is in `public.moves`, so replaying it already
+    // has seat 0 recorded. Touching the sealed table would record that seat twice.
+    const backend = silentBackend(["p1 silentBid itars 15 xenos 3 taklons 10"]);
+    const { host, errors } = makeHost(backend);
+    await host.load();
+
+    expect(host.engine.phase).to.equal("setupSilentBid");
+    expect(backend.sealedBidStatusCalls).to.equal(0);
+    expect(backend.announced).to.equal(false);
     expect(errors).to.deep.equal([]);
   });
 });

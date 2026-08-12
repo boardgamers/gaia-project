@@ -133,8 +133,8 @@ Deno.serve(async (req) => {
     }
     notifications = buildRenjuTurnNotification(board as RenjuBoardRow, game as GameRow);
   } else if (type === "auction_bid") {
-    // The Preference Split Auction opened its bid phase (announce_sealed_bid_auction stamped the
-    // game row). Everyone who hasn't submitted yet is on turn - which, at announcement time, is
+    // A sealed-bid auction opened its bid phase (announce_sealed_bid_auction stamped the game
+    // row). Everyone who hasn't submitted yet is on turn - which, at announcement time, is
     // normally everyone, but a player who managed to bid before this call lands is correctly left
     // out rather than told to do what they just did.
     notifications = buildSealedBidNotifications(game as GameRow, await pendingBidSeats(supabase, game as GameRow));
@@ -264,7 +264,7 @@ async function pushToSubscription(
   }
 }
 
-/** Seats of `game` that still owe a Preference Split submission (empty once the auction is full). */
+/** Seats of `game` that still owe a sealed submission (empty once the auction is full). */
 async function pendingBidSeats(supabase: SupabaseClient, game: GameRow): Promise<number[]> {
   const { data, error } = await supabase.from("auction_sealed_bids").select("seat").eq("game_id", game.id);
   if (error) {
@@ -280,8 +280,8 @@ async function pendingBidSeats(supabase: SupabaseClient, game: GameRow): Promise
 // to the per-turn cap and their local quiet hours (planTurnReminder). Loads its own config/state
 // with the service role - it never runs the game engine.
 //
-// Second pass (migration 20260808120000): the same treatment for an open Preference Split auction,
-// which no amount of `current_seat` watching can cover - see sweepSealedBidAuctions.
+// Second pass (migration 20260808120000): the same treatment for an open sealed-bid auction, which
+// no amount of `current_seat` watching can cover - see sweepSealedBidAuctions.
 async function runReminderSweep(supabase: SupabaseClient): Promise<Response> {
   const { data: cfg, error: cfgError } = await supabase.from("app_config").select("value").eq("key", "vapid").single();
   if (cfgError || !cfg) {
@@ -403,8 +403,8 @@ async function runReminderSweep(supabase: SupabaseClient): Promise<Response> {
 }
 
 /**
- * The reminder sweep's second pass: re-nudge everyone who still owes a bid in an open Preference
- * Split auction (migration 20260808120000).
+ * The reminder sweep's second pass: re-nudge everyone who still owes a bid in an open sealed-bid
+ * auction (migration 20260808120000).
  *
  * Structurally different from the turn pass above for one reason: an open auction has up to five
  * people on turn simultaneously, so the decision, the cap and the cadence are all per SEAT
