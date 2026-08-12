@@ -85,6 +85,7 @@ import { RichText } from "../graphics/rich-text";
 import { PlayerColumn } from "src/logic/table/types";
 import { logPlayerTables } from "../logic/table/player";
 import { cellStyle } from "../logic/table/util";
+import { isTypingTarget } from "../logic/typing-target";
 
 type LogScope = "recent" | "all";
 @Component({
@@ -101,6 +102,10 @@ export default class AdvancedLog extends Vue {
 
   mounted() {
     const keyListener = (e) => {
+      // "h"/"y" typed into a chat composer or a bid box must stay in it - see logic/typing-target.ts.
+      if (isTypingTarget(e.target)) {
+        return;
+      }
       switch (e.key) {
         case "h":
           this.toggleLog();

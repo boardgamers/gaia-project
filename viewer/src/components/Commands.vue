@@ -247,6 +247,7 @@ import { chargePowerToPay } from "../logic/utils";
 import { zoomCompensationTransform } from "../logic/zoom-compensation";
 import { factionColor } from "../graphics/utils";
 import { supportsHoverTooltips } from "../logic/tooltip";
+import { isTypingTarget } from "../logic/typing-target";
 
 let show = false;
 
@@ -740,6 +741,11 @@ export default class Commands extends Vue implements CommandController {
 
   mounted() {
     const keyListener = (e) => {
+      // Escape dismisses whatever text field has focus (or its autocomplete) before it means
+      // "undo my move" - see logic/typing-target.ts.
+      if (isTypingTarget(e.target)) {
+        return;
+      }
       if (e.key == "Escape" && this.canUndo) {
         this.undo();
       }

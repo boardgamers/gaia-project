@@ -1,7 +1,21 @@
 {
-  "version": "5.55.2",
+  "version": "5.55.3",
   "releasedAt": "2026-08-12",
   "entries": [
+    {
+      "version": "5.55.3",
+      "releasedAt": "2026-08-12",
+      "kind": "fix",
+      "title": "Typing in chat stays in chat",
+      "impact": "",
+      "changes": [
+        "Fixed typing in the chat firing the game's keyboard shortcuts behind it - during setup a letter would open the faction whose name starts with it, as if the tap had gone through the keyboard and the chat window onto a faction button",
+        "The same shielding now covers every text field in the viewer: the lobby chat, the silent-auction and Preference Split bid boxes, the sidebar notes and the hosted forms"
+      ],
+      "userChanges": [
+        "Fixed typing in the chat firing the game's keyboard shortcuts behind it - during setup a letter would open the faction whose name starts with it"
+      ]
+    },
     {
       "version": "5.55.2",
       "releasedAt": "2026-08-12",

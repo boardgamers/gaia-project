@@ -6416,6 +6416,32 @@ pin_preference_split_budget_search_path` (the one function in the set without a 
       and under the bid buttons during the auction, and the sheet opens with full colours and a
       Close-only footer.
 
+156.  ✅ **Typing in chat fired the game's keyboard shortcuts behind it (2026-08-12, viewer
+      v5.55.3).** Owner report, verbatim: "Når er I chat og prøver at type og klikker på et bogstav
+      så åbner den en faction?? Som om at klikket rammer helt om bag tasteturet og chat vinduet og
+      rammer en faction knap." No click was involved and nothing leaked through the popup — the
+      keystroke itself was the event. `MoveButton.vue` registers each button's shortcut on `window`,
+      and `addDefaultShortcuts` (`logic/buttons/shortcuts.ts`) auto-assigns every unlabelled button
+      the first letter of its label, so during setup the faction buttons own "a", "b", "f", "t"…
+      `window` sees every keystroke in the document, including the ones aimed at the chat composer,
+      so typing "a" ran `handleButtonClick` on Ambas. The same listener also clicks the first
+      `.btn-primary` on Enter, and `AdvancedLog.vue` ("h"/"y") and `Commands.vue` (Escape → undo)
+      have the same shape.
+
+      Fixed in the listeners, not in the inputs: new `viewer/src/logic/typing-target.ts` exports
+      `isTypingTarget(target)` (textarea, select, text-ish `<input>`, contenteditable — but not
+      checkbox/radio/button inputs, whose activation keys are their own), and all three global
+      listeners return early on it. Per-input `@keydown.stop` — which is what `LostFleetNotes.vue`
+      does, and which is left in place — shields only the one field it is written on, and the viewer
+      keeps growing text fields: two chat composers, the silent-auction bid boxes, the Preference
+      Split bid boxes, the lobby search and the sign-in forms were all unshielded. **Extend
+      `typing-target.ts`, and use it in any future `window`-level key handler.** Client-only, no
+      schema change.
+
+      **Tests:** new `logic/typing-target.spec.ts` (3) and `components/MoveButton.spec.ts` (3 — the
+      shortcut still fires for a keystroke aimed at the page, and does not for a letter or an Enter
+      typed into a textarea); full viewer suite **870 passing**.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

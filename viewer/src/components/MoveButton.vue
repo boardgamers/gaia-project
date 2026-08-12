@@ -58,6 +58,7 @@ import SpecialAction from "./SpecialAction.vue";
 import { CommandController, MoveButtonController } from "../logic/buttons/types";
 import { callOnShow, buttonRichTextLabel } from "../logic/buttons/utils";
 import { enabledButtonWarnings } from "../data/warnings";
+import { isTypingTarget } from "../logic/typing-target";
 import RichTextView from "./Resources/RichTextView.vue";
 
 @Component({
@@ -84,6 +85,11 @@ export default class MoveButton extends Vue implements MoveButtonController {
 
   mounted() {
     const keyListener = (e) => {
+      // The caret is in a text field (a chat composer, a bid box, the notes pad) - those keystrokes
+      // are the user typing, not a move shortcut. See logic/typing-target.ts.
+      if (isTypingTarget(e.target)) {
+        return;
+      }
       const b = this.button;
       if (b.hide) {
         return;
