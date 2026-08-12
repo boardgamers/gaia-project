@@ -185,6 +185,28 @@ export async function replay(engine: Engine, { to = Infinity } = { to: Infinity 
   return engine;
 }
 
+export function moveAI(engine: Engine, player: number) {
+  if (!(engine instanceof Engine)) {
+    engine = Engine.fromData(engine);
+  }
+
+  if (engine.ended || engine.playerToMove !== player) {
+    return engine;
+  }
+
+  const round = engine.round;
+
+  if (engine.moveAI()) {
+    afterMove(engine, round);
+    engine.generateAvailableCommandsIfNeeded();
+    // resolve forced / trivial decisions (free leech, income, ...) so the game
+    // can advance to the next bot move
+    automove(engine);
+  }
+
+  return engine;
+}
+
 export async function dropPlayer(engine: Engine, player: number) {
   engine = engine instanceof Engine ? engine : Engine.fromData(engine);
 

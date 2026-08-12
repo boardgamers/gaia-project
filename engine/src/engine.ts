@@ -25,6 +25,7 @@ import Event, { EventSource } from "./events";
 import { factionVariantBoard, latestVariantVersion } from "./faction-boards";
 import SpaceMap, { MapConfiguration } from "./map";
 import { moveAction, moveBurn, movePiSwap, moveSpecial, moveSpend } from "./move/actions";
+import { appendCommand, moveAI as generateAIMove } from "./move/ai";
 import { autoMove } from "./move/auto";
 import { moveBuild, moveLostPlanet } from "./move/buildings";
 import { moveChooseFederationTile, moveFormFederation } from "./move/federation";
@@ -560,6 +561,72 @@ export default class Engine {
   /** Automatically generate moves based on player settings */
   autoMove(partialMove?: string, options?: { autoPass?: boolean }): boolean {
     return autoMove(this, partialMove, options);
+  }
+
+  /**
+   * Execute a random legal move for the current player ("dumb AF" bot, used by
+   * the platform to drive bot players).
+   *
+   * Returns `true` if a move was made, `false` if there is nothing to play (game
+   * ended, no player to move) or if no move could be completed: a random move
+   * can be a dead end (e.g. upgrading a mine with no ore left to rebuild), in
+   * which case the engine is left unchanged.
+   */
+  moveAI(): boolean {
+    if (this.ended || this.playerToMove === undefined) {
+      return false;
+    }
+
+    // Simulate the whole turn on copies: a random move can be a dead end (e.g.
+    // upgrading a mine with no ore left to rebuild), and an incomplete move
+    // cannot be undone. A turn is built as a single dot-separated move - the
+    // only way to execute several commands in one turn. The salt makes each
+    // attempt draw different random choices.
+    for (let attempt = 0; attempt < 20; attempt++) {
+      const move = generateAIMove(this, this.playerToMove, attempt);
+
+      if (!move) {
+        return false;
+      }
+
+      let completed = false;
+
+      // A command can trigger follow-up decisions for the same player (e.g.
+      // choosing a tech tile after building a research lab): keep appending
+      // random commands to the move until the turn is complete
+      let fullMove = move;
+      for (let safeguard = 0; safeguard < 20; safeguard++) {
+        const copy = Engine.fromData(JSON.parse(JSON.stringify(this)));
+
+        try {
+          copy.move(fullMove);
+        } catch {
+          // Illegal or incomplete move
+          break;
+        }
+
+        if (copy.newTurn || copy.ended) {
+          completed = true;
+          break;
+        }
+
+        const command = appendCommand(copy, copy.playerToMove, safeguard);
+        if (!command) {
+          break;
+        }
+
+        // Append to the simulated move; the next iteration re-checks it
+        fullMove = `${fullMove}. ${command}`;
+      }
+
+      if (completed) {
+        // The turn can be completed: replay it on the real engine
+        this.move(fullMove);
+        return true;
+      }
+    }
+
+    return false;
   }
 
   static fromData(data: Record<string, any>): Engine {
