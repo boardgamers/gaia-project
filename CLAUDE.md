@@ -174,13 +174,17 @@ PREFERENCE_SPLIT_AUCTION.md`. Unlike the Silent Auction, its secrecy is **server
   saving notification settings works.
 - **Renju is a 19x19 board as of PROGRESS #153 (viewer v5.55.0)** — it was 15x15 before. The client
   half is one constant (`RENJU_SIZE` in `viewer/src/logic/renju.ts`); the database half is migration
-  `20260812120000_renju_19x19.sql`, which is **written but NOT applied live** as of 2026-08-12. The
-  two halves must land together: a client sized for one grid ignores a board string of the other
-  size (`RenjuBoard.vue::applyRow`), so apply the migration when the matching viewer build reaches
-  `master`/production, not before. It converts the 10 existing rows rather than wiping them
-  (re-centred +2/+2, `last_move`/`prev_move` re-indexed), with the push trigger disabled around the
-  UPDATE. Both `renjuMover` copies (`hosted/game-bar.ts`, `notify/logic.ts`) are deliberately
-  size-agnostic now, so the pulse and the pushes survive either rollout order.
+  `20260812120000_renju_19x19.sql`, and **both halves are live** (v5.55.0 deployed to production
+  2026-08-12, migration applied immediately after, ledger version `20260812101933 renju_19x19`).
+  Verified against the live objects: all 10 rows are 361 characters, `renju_start_board()` returns
+  361, the three check constraints read 361, the push trigger is back on, and `move_renju` derives
+  its index bound from `length(board)`. They had to land in that order and close together, because a
+  client sized for one grid ignores a board string of the other size (`RenjuBoard.vue::applyRow`).
+  The one in-progress position was re-centred (+2/+2) rather than wiped — its stones moved 160/176 →
+  240/260 with `last_move`/`prev_move` following — and the push trigger was disabled around that
+  UPDATE so nobody was notified. Both `renjuMover` copies (`hosted/game-bar.ts`, `notify/logic.ts`)
+  are deliberately size-agnostic now, so the pulse and the pushes survive any future size change in
+  either rollout order.
 - Renju marks BOTH colours' latest stones as of PROGRESS #125 (viewer v5.45.3), and an uncommitted
   first tap no longer hides those markers. **Its migration `20260729120000_renju_previous_move.sql`
   (`renju_board.prev_move`, plus `move_renju`/`reset_renju`) is live too** (applied 2026-07-29,

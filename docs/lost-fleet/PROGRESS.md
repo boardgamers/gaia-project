@@ -74,8 +74,8 @@ release.json`) has two audiences and they must not blur together: a "What's new"
   diverged, and unfinished local turns are never overwritten. Previously mirrored Gaia and sidebar
   copies also open without account locks.
 - **Research board renju:** implemented in viewer v5.39.0 (#115), on a **19x19** board since #153
-  (v5.55.0 — it was 15x15 before that; migration `20260812120000_renju_19x19.sql` re-centres any
-  position that was already in progress, and must land together with the matching viewer build). The
+  (v5.55.0 — it was 15x15 before that; migration `20260812120000_renju_19x19.sql` is applied and live
+  as ledger version `20260812101933`, and it re-centred the one position that was in progress). The
   research panel swipes between
   the research board and a shared standard-gomoku board (exactly five wins, overline does not),
   reusing the chess drawer's gesture through `logic/panel-swipe.ts`. Stones need two taps. Hosted
@@ -6332,9 +6332,14 @@ pin_preference_split_budget_search_path` (the one function in the set without a 
       no mover at all, i.e. silently drops every renju push. Both now accept any square grid of at
       least 5, which is all that counting stones requires, and neither needs touching again.
 
-      **Rollout order matters for this one:** a client sized for one grid ignores the other's board
-      string (`RenjuBoard.vue::applyRow`), so the migration is applied when the matching viewer build
-      goes live, not before. Live at the time of writing: 10 renju rows, all 15x15, one with stones.
+      **Rollout order mattered for this one:** a client sized for one grid ignores the other's board
+      string (`RenjuBoard.vue::applyRow`), so the migration had to follow the viewer, not lead it.
+      Shipped in that order and both halves are live — v5.55.0 deployed to production (verified by
+      reading `release.json` off `gaia-lost-fleet.vercel.app`), then the migration applied, ledger
+      version `20260812101933 renju_19x19`. Verified against the live objects afterwards: all 10 rows
+      361 characters, `renju_start_board()` 361, all three constraints reading 361, the push trigger
+      back on, and `move_renju` deriving its bound from `length(board)`. The one position with stones
+      re-centred exactly as intended — 160/176 → 240/260, with `last_move`/`prev_move` following.
 
       **Tests:** new `panel-dock.spec.ts` (4 cases, pinning the "applies at mount, not only on
       change" contract); `renju*.spec.ts` **49 passing** on the bigger grid, with the wrap-around and
