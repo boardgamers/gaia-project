@@ -112,11 +112,20 @@ PREFERENCE_SPLIT_AUCTION.md`. Unlike the Silent Auction, its secrecy is **server
   live catalog. Note the ledger version does not match the repo filename — normal drift here, check
   the ledger. A Silent Auction that was already bidding one seat at a
   time when this landed finishes that way (`isLegacySequentialBidRound`), because the hosted app
-  replays whole move histories with no version gate — which is exactly what the live `Amber Drift`
-  game does, having reached its bid round a few hours before the migration landed. Don't verify
+  replays whole move histories with no version gate. The live `Amber Drift` game was in exactly that
+  state — one sequentially committed bid — and was **reset onto the new path on owner instruction**
+  rather than left to finish sequentially, since the point of the change is that everybody bids at
+  once: move 8 deleted, `move_count`/`current_seat` put back to 7/0 in one transaction with
+  `games_notify_update` and `games_resolve_automation` disabled so nobody was pushed, and
+  `sealed_bid_announced_at` left null so the first client to open it announces the round. If you hit
+  this situation again, that rollback is the fix, not the legacy guard. Don't verify
   these RPCs by calling `sealed_bid_status()`/`submit_sealed_bid()` over MCP: they gate on
   `is_game_member(auth.uid())` and a service-role connection has no `auth.uid()`, so they raise
   "not a member of this game" either way — inspect the catalog instead.
+- **`moves` is readable by any approved account, not just game members** (`moves_select` uses
+  `is_approved()`). That is why a sequentially committed `silentBid` was a real secrecy leak and not
+  just a pace problem, contrary to the line in migration `20260812130000`'s header comment.
+  Tightening it to members-only is still open.
 - Engine: 599/599 tests passing. Viewer: 308/308 tests passing (as of 2026-07-05 — trust
   `PROGRESS.md`'s "Testing" section over this line if they disagree).
 - A "Gaia 4" UI polish pass (2026-07-04, PROGRESS.md #66) fixed 11 owner-reported viewer bugs:

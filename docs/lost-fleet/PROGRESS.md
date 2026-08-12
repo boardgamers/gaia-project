@@ -6544,15 +6544,39 @@ pin_preference_split_budget_search_path` (the one function in the set without a 
       deployment), and `Supabase - Deploy Edge Function` succeeded, taking `notify` 14 → 19 and
       `resolve-automation` 4 → 7. No 401, so the `SUPABASE_ACCESS_TOKEN` secret is still valid.
 
-      **The one live Silent Auction was already past the switch, and correctly stayed on the old
-      path.** `Amber Drift` (3 players, `2f1e70c1-…`) reached its bid round before the migration
-      landed, and seat 0 submitted sequentially at seq 8, so `silentAuctionBids` is non-empty and
-      `isLegacySequentialBidRound` keeps the whole game on `Commands.vue`'s turn-by-turn form.
-      `submit_sealed_bid` refuses it server-side as the second barrier, and it has no
-      `auction_sealed_bids` rows. It finishes the way it started, exactly as designed, and needs
-      nothing done to it. Incidental confirmation found while reading that move: the old client
-      wrote a faction-name mover prefix where `reveal_sealed_bids` writes `p<n>`, and
-      `loadTurnMoves` accepts both, so the reveal's move text parses to the same player either way.
+      **The one live Silent Auction had crossed the line first, and was reset onto the new path on
+      owner instruction.** `Amber Drift` (3 players, `2f1e70c1-…`) reached its bid round a few hours
+      before the migration landed, and seat 0 committed a bid the old way at seq 8. That made
+      `silentAuctionBids` non-empty, which is exactly what `isLegacySequentialBidRound` looks for, so
+      both guards pinned the game to `Commands.vue`'s turn-by-turn form — the design's intended
+      outcome, but not the wanted one: the whole point of the change is that everybody bids at once,
+      and that game would have finished without ever doing so.
+
+      So the bid round was rolled back to its pre-bid state instead. Move 8 was deleted and the game
+      row restored to `move_count` 7 / `current_seat` 0, with `last_committed_by` and
+      `latest_move_committed_at` put back to move 7's values, in one transaction with
+      `games_notify_update` and `games_resolve_automation` disabled around it so the rollback pushed
+      nobody and kicked no automation (the same trick the renju 19x19 conversion used; both triggers
+      were verified enabled again afterwards, along with the other three). `sealed_bid_announced_at`
+      was left null on purpose, so the first client to open the game announces the round through
+      `announce_sealed_bid_auction` and all three players get the bid-round push — which is the
+      notification that should have fired here in the first place. Seat 0 re-enters their bid; the
+      deleted line was `itars silentBid itars 10 ivits 0 space-giants 10`, recorded here in case it
+      is ever wanted. Verified after the write: 7 move rows, `max_seq` 7, no `silentBid` moves, no
+      `auction_sealed_bids` rows, and no queued premoves for the game.
+
+      **Worth knowing before trusting the "sequential entry is not a secrecy problem" line** in the
+      migration's own header comment: it is not quite right. `moves` has one select policy,
+      `moves_select`, whose expression is `is_approved()` — not game membership — so a committed
+      `silentBid` sat readable by every approved account on the instance, including the seats that
+      had not bid yet. The argument that you cannot read one until you have submitted your own holds
+      only for what the UI chooses to render, not for the row. That is an argument for the sealed
+      table beyond pace, and it is the reason resetting this game was worth the disruption. Whether
+      to tighten `moves_select` to members-only is untouched and still open.
+
+      Incidental confirmation found while reading that deleted move: the old client wrote a
+      faction-name mover prefix where `reveal_sealed_bids` writes `p<n>`, and `loadTurnMoves`
+      accepts both, so the reveal's move text parses to the same player either way.
 
 ## Still MISSING — only one art-only item left
 
