@@ -4,9 +4,12 @@
        FactionBrowser.vue (off-turn ban/pick browsing) and by Commands.vue's Silent Auction bid form,
        where the factions being bid on are otherwise unreadable plain text. -->
   <span class="faction-sheet-button">
-    <b-btn class="faction-sheet-button__btn" @click="open = true">
+    <b-btn class="faction-sheet-button__btn" :aria-label="ariaLabel" @click="open = true">
       {{ label }}
       <i :class="`planet ${planet}`" :style="{ color: color }"></i>
+      <!-- Who currently holds this faction, for the browser's "already picked" row. Kept inside the
+           button so the name travels with the faction on a wrapped, multi-column row. -->
+      <small v-if="note" class="faction-sheet-button__note">{{ note }}</small>
     </b-btn>
     <b-modal
       :id="`faction-sheet-${faction}`"
@@ -35,6 +38,10 @@ export default class FactionSheetButton extends Vue {
   @Prop()
   faction: Faction;
 
+  /** Optional trailing caption, e.g. the player holding this faction. Purely informational. */
+  @Prop()
+  note: string;
+
   open = false;
 
   get gameData(): Engine {
@@ -43,6 +50,12 @@ export default class FactionSheetButton extends Vue {
 
   get label(): string {
     return factionName(this.faction);
+  }
+
+  get ariaLabel(): string {
+    return this.note
+      ? `${this.label} (${this.note}) - read its faction sheet`
+      : `${this.label} - read its faction sheet`;
   }
 
   get planet() {
@@ -81,5 +94,13 @@ export default class FactionSheetButton extends Vue {
 .faction-sheet-button__btn i.planet::before {
   content: "\25cf";
   font-size: 18px;
+}
+
+.faction-sheet-button__note {
+  display: block;
+  font-weight: 400;
+  font-size: 11px;
+  line-height: 1.1;
+  opacity: 0.75;
 }
 </style>

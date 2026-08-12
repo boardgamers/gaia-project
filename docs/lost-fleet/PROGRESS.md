@@ -6383,6 +6383,39 @@ pin_preference_split_budget_search_path` (the one function in the set without a 
       another game, ignore for the game on screen, load with no game mounted, load for a non-`?game=`
       target, load for another origin); viewer suite **858 passing**.
 
+155.  ✅ **A picked faction's sheet stays reachable during setup (2026-08-12, viewer v5.55.2).**
+      Owner report: during faction picking, whichever auction type, a faction that has been picked
+      can no longer be opened — the bid form's faction names are real buttons, but the picked ones
+      elsewhere are not. Root cause is simply that the picker offers exactly the factions still
+      available: the moment one is picked it leaves `choosableFactions()`, so from that instant
+      nothing on screen can open its sheet — not even for the player who just picked it, and not
+      during the whole auction phase that then bids on precisely those factions.
+
+      `FactionBrowser.vue` grew a second row for them, built from `engine.setup` (the pick order)
+      rather than from `players[].faction`, because Choose-Then-Bid leaves a picked faction
+      unassigned until somebody bids on it. Each button carries whoever holds it right now, worded
+      by variant: a plain name where a pick is final, and "<name> leads" in Bid-While-Choosing and
+      Choose-Then-Bid, where holding a faction only means holding the highest bid on it so far. The
+      row's own label follows the same split ("Already picked" vs "Up for auction").
+
+      The component is no longer off-turn-only: `Game.vue` now mounts it in both round-0 slots
+      (mobile's under the status strip, desktop's in the commands column) with a new `onTurn` prop,
+      which suppresses the offered-factions half so the player on turn sees the picked row alone,
+      right under the real picker. It also renders through `SetupAuction` and `SetupSilentBid` now,
+      where the bid buttons are plain "Bid 1 for terrans" labels with no sheet behind them.
+      `SetupPreferenceBid` is deliberately excluded (PreferenceSplitBid.vue already shows the same
+      sheet buttons to every seat), as is the Silent Auction's bid form for the player on turn, for
+      the same no-duplicate-row reason. No engine or schema change — this is all read-only rendering
+      of state the viewer already had.
+
+      **Tests:** `FactionBrowser.spec.ts` **10 passing** (4 kept, 6 new: the picked row exists and
+      opens a sheet, it appears on turn without the offered list, it names the holder, it survives
+      into the silent-bid wait and the classic auction with the "leads" wording, and it still
+      renders nothing once setup moves on); full viewer suite **864 passing** on the rebased tree. Browser-checked at
+      1400px in a self-contained Choose-Then-Bid game: the row sits under the picker during picking
+      and under the bid buttons during the auction, and the sheet opens with full colours and a
+      Close-only footer.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

@@ -48,7 +48,9 @@
             :hide-spacer="true"
             @sticky-bar-height="stickyBarHeight = $event"
           />
-          <FactionBrowser v-else-if="setupActionsAtTop" />
+          <!-- Rendered next to the picker as well, not only instead of it: the picker drops a
+               faction the moment it is picked, and this is what keeps its sheet reachable. -->
+          <FactionBrowser v-if="setupActionsAtTop" :on-turn="canPlay" />
         </div>
       </div>
       <div
@@ -217,10 +219,12 @@
             Played automatically from your queue{{ premovePlayedNoticeSuffix }}: {{ premovePlayedNotice.move }}
             <button type="button" class="btn btn-link btn-sm p-0" @click="dismissPremovePlayedNotice">Dismiss</button>
           </div>
-          <!-- Desktop's off-turn round-0 slot (mobile's is up under the status strip). Placed after
-               the block above rather than inside its v-if/v-else-if chain, so the offline-mirror
-               "waiting for X" message still gets to render alongside it. -->
-          <FactionBrowser v-if="!canPlay && !setupActionsAtTop" />
+          <!-- Desktop's round-0 slot (mobile's is up under the status strip). Placed after the
+               block above rather than inside its v-if/v-else-if chain, so the offline-mirror
+               "waiting for X" message still gets to render alongside it. Rendered on turn too (it
+               then shows only the already-picked factions, which the picker above no longer
+               offers). -->
+          <FactionBrowser v-if="!setupActionsAtTop" :on-turn="canPlay" />
         </div>
       </div>
       <AdvancedLog

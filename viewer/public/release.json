@@ -1,7 +1,21 @@
 {
-  "version": "5.55.1",
+  "version": "5.55.2",
   "releasedAt": "2026-08-12",
   "entries": [
+    {
+      "version": "5.55.2",
+      "releasedAt": "2026-08-12",
+      "kind": "update",
+      "title": "Readable picked factions",
+      "impact": "",
+      "changes": [
+        "Factions that have already been picked stay clickable during setup - tap one to read its faction sheet, whichever auction type you play",
+        "FactionBrowser now renders for the player on turn as well, and during the classic and silent bidding phases, showing every faction in engine.setup with its current holder"
+      ],
+      "userChanges": [
+        "Factions that have already been picked stay clickable during setup - tap one to read its faction sheet, whichever auction type you play"
+      ]
+    },
     {
       "version": "5.55.1",
       "releasedAt": "2026-08-12",

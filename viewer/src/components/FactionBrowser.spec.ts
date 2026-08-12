@@ -9,14 +9,20 @@ import FactionBrowser from "./FactionBrowser.vue";
 Vue.use(BootstrapVue);
 
 describe("FactionBrowser", () => {
-  function mountFor(engine: Engine) {
+  function mountFor(engine: Engine, onTurn = false) {
     engine.generateAvailableCommandsIfNeeded();
     const store = makeStore();
     store.commit("receiveData", engine);
-    return mount(FactionBrowser, { store, attachTo: document.body });
+    return mount(FactionBrowser, { store, propsData: { onTurn }, attachTo: document.body });
   }
 
   const banning = () => new Engine(["init 3 faction-browser"], { auction: AuctionVariant.Silent });
+
+  const bans = ["p1 banFaction terrans", "p2 banFaction lantids", "p3 banFaction gleens"];
+  const picks = ["p1 faction itars", "p2 faction taklons", "p3 faction xenos"];
+
+  const picking = (moves: string[] = []) =>
+    new Engine(["init 3 faction-browser", ...bans, ...moves], { auction: AuctionVariant.Silent });
 
   it("offers every faction the player on turn is being offered", () => {
     const engine = banning();
@@ -62,10 +68,7 @@ describe("FactionBrowser", () => {
   });
 
   it("says 'pick' during the faction pick phase", () => {
-    const engine = new Engine(
-      ["init 3 faction-browser", "p1 banFaction terrans", "p2 banFaction lantids", "p3 banFaction gleens"],
-      { auction: AuctionVariant.Silent }
-    );
+    const engine = picking();
     expect(engine.phase).to.equal(Phase.SetupFaction);
 
     const wrapper = mountFor(engine);
@@ -73,22 +76,86 @@ describe("FactionBrowser", () => {
     wrapper.destroy();
   });
 
-  it("renders nothing outside the ban and pick phases", () => {
-    const bidding = new Engine(
-      [
-        "init 3 faction-browser",
-        "p1 banFaction terrans",
-        "p2 banFaction lantids",
-        "p3 banFaction gleens",
-        "p1 faction itars",
-        "p2 faction taklons",
-        "p3 faction xenos",
-      ],
-      { auction: AuctionVariant.Silent }
+  it("keeps an already picked faction's sheet reachable", async () => {
+    const engine = picking(["p1 faction itars"]);
+    expect(engine.phase).to.equal(Phase.SetupFaction);
+
+    const wrapper = mountFor(engine);
+    const taken = wrapper.findAll(".faction-browser__taken .btn");
+    expect(taken.length, "the one picked faction should still have a button").to.equal(1);
+    expect(taken.at(0).text()).to.contain("Itars");
+    // The picker itself no longer offers it, which is the whole point of the row.
+    expect(engine.availableCommands.find((c) => c.name === Command.ChooseFaction)!.data as Faction[]).to.not.contain(
+      Faction.Itars
     );
+
+    await taken.at(0).trigger("click");
+    await Vue.nextTick();
+    await Vue.nextTick();
+    expect(document.body.querySelector(".modal"), "clicking a picked faction should open its sheet").to.not.equal(null);
+    wrapper.destroy();
+  });
+
+  it("shows the picked factions to the player on turn as well, without the offered list", () => {
+    const wrapper = mountFor(picking(["p1 faction itars"]), true);
+
+    expect(wrapper.findAll(".faction-browser__taken .btn").length).to.equal(1);
+    // The real picker is on screen next to it in that case, so this must not repeat it.
+    expect(wrapper.text()).to.not.contain("Not your turn");
+    expect(wrapper.findAll(".faction-browser__buttons .btn").length).to.equal(1);
+    wrapper.destroy();
+  });
+
+  it("names the player holding each picked faction", () => {
+    const engine = picking(["p1 faction itars"]);
+    engine.players[0].name = "Alice";
+
+    const wrapper = mountFor(engine);
+    expect(wrapper.find(".faction-browser__taken .btn").text()).to.contain("Alice");
+    wrapper.destroy();
+  });
+
+  it("keeps the auctioned factions readable while an off-turn player waits out the bidding", () => {
+    const bidding = picking(picks);
     expect(bidding.phase).to.equal(Phase.SetupSilentBid);
 
     const wrapper = mountFor(bidding);
+    expect(wrapper.text()).to.contain("Up for auction");
+    expect(wrapper.findAll(".faction-browser__taken .btn").length).to.equal(3);
+    wrapper.destroy();
+  });
+
+  it("leaves the silent bid form alone for the player on turn", () => {
+    // Commands.vue's bid form already carries a sheet button per faction there.
+    const wrapper = mountFor(picking(picks), true);
+    expect(wrapper.find(".faction-browser").exists()).to.equal(false);
+    wrapper.destroy();
+  });
+
+  it("keeps the picked factions readable during a classic bidding auction, on turn included", () => {
+    // The bid buttons there are plain "Bid 1 for terrans" labels with no sheet behind them, so the
+    // player about to spend VP has nothing else to read the faction from.
+    const engine = new Engine(
+      ["init 2 faction-browser", "p1 faction terrans", "p2 faction xenos", "p1 bid terrans 0"],
+      { auction: AuctionVariant.ChooseBid }
+    );
+    expect(engine.phase).to.equal(Phase.SetupAuction);
+
+    const wrapper = mountFor(engine, true);
+    expect(wrapper.text()).to.contain("Up for auction");
+    expect(wrapper.findAll(".faction-browser__taken .btn").length).to.equal(2);
+    // Holding a faction there is only holding the highest bid on it so far, and the faction nobody
+    // has bid on yet is held by nobody.
+    expect(wrapper.findAll(".faction-browser__taken .btn").at(0).text()).to.contain("Player 1 leads");
+    expect(wrapper.findAll(".faction-browser__taken .btn").at(1).text()).to.not.contain("leads");
+    wrapper.destroy();
+  });
+
+  it("renders nothing once setup has moved past the faction phases", () => {
+    const building = new Engine(["init 2 faction-browser", "p1 faction terrans", "p2 faction xenos"]);
+    expect(building.phase).to.equal(Phase.SetupBuilding);
+
+    const wrapper = mountFor(building);
     expect(wrapper.find(".faction-browser").exists()).to.equal(false);
     wrapper.destroy();
   });
