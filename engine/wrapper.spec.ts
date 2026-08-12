@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { PlayerEnum } from ".";
 import Beta2 from "./fixtures/Beta-2.json";
 import Engine from "./src/engine";
-import { automove, move, replay, setPlayerSettings } from "./wrapper";
+import { automove, move, moveAI, replay, setPlayerSettings, toSave } from "./wrapper";
 
 describe("wrapper", () => {
   describe("automove", () => {
@@ -142,6 +142,67 @@ describe("wrapper", () => {
   describe("replay", () => {
     it("should replay a game with beta variants", () => {
       expect(() => replay(Engine.fromData(Beta2))).to.not.throw();
+    });
+  });
+
+  describe("moveAI", () => {
+    it("should make a move for the current player, given serialized data", () => {
+      const engine = new Engine(["init 2 randomSeed"]);
+      engine.generateAvailableCommandsIfNeeded();
+
+      const data = JSON.parse(JSON.stringify(engine));
+      const newEngine = moveAI(data, 0);
+
+      expect(newEngine.moveHistory.length).to.equal(2);
+      expect(newEngine.playerToMove).to.equal(1);
+    });
+
+    it("should return a saveable state", () => {
+      const engine = new Engine(["init 2 randomSeed"]);
+      engine.generateAvailableCommandsIfNeeded();
+
+      const newEngine = moveAI(JSON.parse(JSON.stringify(engine)), 0);
+
+      expect(toSave(newEngine)).to.not.equal(undefined);
+    });
+
+    it("should do nothing when it is not the player's turn", () => {
+      const engine = new Engine(["init 2 randomSeed"]);
+      engine.generateAvailableCommandsIfNeeded();
+
+      const newEngine = moveAI(JSON.parse(JSON.stringify(engine)), 1);
+
+      expect(newEngine.moveHistory.length).to.equal(1);
+    });
+
+    it("should let bots play a full game through the wrapper", function () {
+      this.timeout(60000);
+
+      let engine = new Engine(["init 2 randomSeed"]);
+
+      // like on the platform, players have auto-charge settings
+      for (let player = 0; player < engine.players.length; player++) {
+        engine = setPlayerSettings(engine, player, { autoCharge: "1" });
+      }
+      engine.generateAvailableCommandsIfNeeded();
+
+      let moves = 0;
+      while (!engine.ended && moves < 2000) {
+        const historyLength = engine.moveHistory.length;
+
+        // the platform hands the wrapper serialized data
+        engine = moveAI(JSON.parse(JSON.stringify(engine)), engine.playerToMove);
+
+        if (engine.moveHistory.length === historyLength) {
+          // the current player cannot move: it played itself into a dead end.
+          // On the platform it would be dropped by the other players
+          engine.players[engine.playerToMove].dropped = true;
+          automove(engine);
+        }
+        moves++;
+      }
+
+      expect(engine.ended).to.be.true;
     });
   });
 });
