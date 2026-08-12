@@ -48,8 +48,8 @@
     "@types/seedrandom": "^2.4.27",
     "@types/semver-compare": "^1.0.1",
     "@types/shuffle-seed": "^1.1.0",
-    "@typescript-eslint/eslint-plugin": "^2.31.0",
-    "@typescript-eslint/parser": "^2.31.0",
+    "@typescript-eslint/eslint-plugin": "^4.33.0",
+    "@typescript-eslint/parser": "^4.33.0",
     "chai": "^4.1.2",
     "eslint": "^6.8.0",
     "eslint-plugin-import": "^2.20.2",
@@ -58,6 +58,6 @@
     "eslint-plugin-standard": "^4.0.1",
     "mocha": "^5.2.0",
     "ts-node": "^5.0.1",
-    "typescript": "^3.8.3"
+    "typescript": "^4.9.5"
   }
 }
