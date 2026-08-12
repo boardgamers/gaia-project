@@ -150,25 +150,34 @@ self.addEventListener("notificationclick", (event) => {
   const url = (event.notification.data && event.notification.data.url) || "/?lobby=1";
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((windows) => {
-      const targetPath = new URL(url, self.location.origin).pathname + new URL(url, self.location.origin).search;
-      for (const client of windows) {
-        const clientUrl = new URL(client.url);
-        if (clientUrl.pathname + clientUrl.search === targetPath && "focus" in client) {
-          return client.focus();
-        }
+      // Installed/standalone PWAs are commonly single-instance: if a window exists at all,
+      // `clients.openWindow(url)` often just refocuses it at whatever URL it already had (e.g. the
+      // lobby, or the game you were already in) instead of actually navigating - that's the
+      // "notification click doesn't take me to that game" bug. So focus a window and ask the app to
+      // resolve the target itself (push.ts's registerServiceWorkerNavigationListener, which reaches
+      // another game by in-place swap rather than a reload), falling back to openWindow only when
+      // there is no window yet to receive that message.
+      if (windows.length === 0) {
+        return self.clients.openWindow(url);
       }
-      // No window is already showing this exact game. Installed/standalone PWAs are commonly
-      // single-instance: if a window exists at all, `clients.openWindow(url)` often just refocuses
-      // it at whatever URL it already had (e.g. the lobby) instead of actually navigating - that's
-      // the "notification click lands on the lobby" bug. Ask the app to navigate itself instead
-      // (push.ts's registerServiceWorkerNavigationListener), falling back to openWindow only when
-      // no window exists yet to receive that message.
-      if (windows.length > 0) {
-        const client = windows[0];
-        client.postMessage({ type: "navigate", url });
-        return "focus" in client ? client.focus() : undefined;
-      }
-      return self.clients.openWindow(url);
+      const target = new URL(url, self.location.origin);
+      const targetPath = target.pathname + target.search;
+      // Which window to hand it to, best first: one that says it is already on this exact URL, else
+      // the one the user is actually looking at. `client.url` is specified as the client's CREATION
+      // URL, so a window moved to another game by the in-app switch (`history.pushState`) can still
+      // report the game it was loaded with - hence "says". That's precisely why the message is
+      // posted even to an exact-URL match instead of just focusing it: only the page itself knows
+      // which game it is really showing, and it no-ops if that is already this one.
+      const client =
+        windows.find((candidate) => {
+          const clientUrl = new URL(candidate.url);
+          return clientUrl.pathname + clientUrl.search === targetPath;
+        }) ||
+        windows.find((candidate) => candidate.focused) ||
+        windows.find((candidate) => candidate.visibilityState === "visible") ||
+        windows[0];
+      client.postMessage({ type: "navigate", url });
+      return "focus" in client ? client.focus() : undefined;
     })
   );
 });

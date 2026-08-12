@@ -1,5 +1,44 @@
 import { expect } from "chai";
-import { disablePushNotifications } from "./push";
+import { disablePushNotifications, resolvePushTarget } from "./push";
+
+describe("resolvePushTarget", () => {
+  const inGame = "https://play.example/?game=aaa";
+
+  it("swaps in place when a push points at another game and a game is mounted", () => {
+    expect(resolvePushTarget("https://play.example/?game=bbb", inGame, true)).to.deep.equal({
+      action: "swap-game",
+      gameId: "bbb",
+    });
+  });
+
+  it("does nothing for a push about the game already on screen", () => {
+    expect(resolvePushTarget("https://play.example/?game=aaa", inGame, false)).to.deep.equal({ action: "ignore" });
+  });
+
+  it("loads the page when no game is mounted to swap into", () => {
+    expect(resolvePushTarget("https://play.example/?game=bbb", "https://play.example/?lobby=1", false)).to.deep.equal({
+      action: "load",
+      href: "https://play.example/?game=bbb",
+    });
+  });
+
+  it("loads the page for a target that isn't a game", () => {
+    expect(resolvePushTarget("/?lobby=1", inGame, true)).to.deep.equal({
+      action: "load",
+      href: "https://play.example/?lobby=1",
+    });
+  });
+
+  // The site_url the notify function builds push URLs from can differ from the origin this window
+  // was opened on (a preview deployment, a renamed domain). Sessions are per-origin, so that has to
+  // be a real navigation, never an in-place swap onto the wrong host's game id.
+  it("loads the page for a game on another origin", () => {
+    expect(resolvePushTarget("https://other.example/?game=bbb", inGame, true)).to.deep.equal({
+      action: "load",
+      href: "https://other.example/?game=bbb",
+    });
+  });
+});
 
 describe("disablePushNotifications", () => {
   const originalServiceWorker = (navigator as any).serviceWorker;

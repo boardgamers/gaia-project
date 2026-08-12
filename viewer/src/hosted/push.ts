@@ -100,14 +100,77 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
 }
 
 /**
+ * Set by `hosted.ts`'s `launchGame` while a game is mounted: swaps the board to `gameId` in place
+ * (the same path GameNavPanel.vue's rows take) and returns whether it took the navigation. Null
+ * whenever no game is mounted - the lobby, sign-in, self-contained play - in which case a push
+ * target is reached by an ordinary page load instead.
+ */
+type InAppGameNavigation = (gameId: string) => boolean;
+
+let inAppGameNavigation: InAppGameNavigation | null = null;
+
+export function setInAppGameNavigation(handler: InAppGameNavigation | null): void {
+  inAppGameNavigation = handler;
+}
+
+export type PushTarget =
+  /** Already exactly here - the service worker's `focus()` was the whole navigation. */
+  | { action: "ignore" }
+  /** Another game, with a game already mounted: swap the board in place. */
+  | { action: "swap-game"; gameId: string }
+  /** Anything else: an ordinary page load, which is what this always used to do. */
+  | { action: "load"; href: string };
+
+/**
+ * Where a clicked push notification should take a window currently at `currentHref`. Pure, so the
+ * decision can be tested without a service worker or a real navigation.
+ *
+ * "You're in a game, and it's now your turn in a DIFFERENT one" is the case this exists for: a page
+ * load to reach the other game re-fetches and re-replays its entire move history behind a
+ * "Loading game…" spinner, which is neither immediate nor kind to a half-composed turn in the game
+ * being left. When a game is mounted, hand the switch to it instead (`canSwapGame`) - that swap is
+ * the same operation as clicking the game in the left menu, and updates the URL itself. A push for
+ * the game already on screen must resolve to `ignore` rather than reloading the board.
+ */
+export function resolvePushTarget(rawUrl: string, currentHref: string, canSwapGame: boolean): PushTarget {
+  const current = new URL(currentHref);
+  const target = new URL(rawUrl, current.origin);
+  if (target.href === current.href) {
+    return { action: "ignore" };
+  }
+  const gameId = target.searchParams.get("game");
+  // Same document, only a different `game` - i.e. exactly what the in-place swap covers. A target on
+  // another origin or path (a different deployment, a future route) is left to a real load.
+  if (canSwapGame && gameId && target.origin === current.origin && target.pathname === current.pathname) {
+    return { action: "swap-game", gameId };
+  }
+  return { action: "load", href: target.href };
+}
+
+/** Applies `resolvePushTarget` to this window, and reports what it did. */
+export function navigateToPushTarget(rawUrl: string): PushTarget {
+  const target = resolvePushTarget(rawUrl, window.location.href, inAppGameNavigation !== null);
+  if (target.action === "ignore") {
+    return target;
+  }
+  if (target.action === "swap-game" && inAppGameNavigation!(target.gameId)) {
+    return target;
+  }
+  // Either an ordinary load, or a mounted game that declined the swap - reach it the old way.
+  const href = new URL(rawUrl, window.location.origin).href;
+  window.location.href = href;
+  return { action: "load", href };
+}
+
+/**
  * Tapping a push notification should land on the specific game it's about, not the lobby. `sw.js`'s
- * `notificationclick` handler tries `clients.openWindow(url)` for that, but installed/standalone
- * PWAs are commonly single-instance: if an app window is already open (even on a different page,
- * even backgrounded), the browser just refocuses it instead of navigating it - `openWindow`'s target
- * URL is silently ignored. As a fallback for exactly that case, the service worker also posts a
- * `{type: "navigate", url}` message to the client it focused; this listens for that and completes
- * the navigation client-side. A full reload (rather than an in-app route change) because `hosted.ts`
- * has no SPA router - it decides what to mount once, from `location.search`, at boot.
+ * `notificationclick` handler can't do that on its own: installed/standalone PWAs are commonly
+ * single-instance, so `clients.openWindow(url)` just refocuses the existing window at whatever URL
+ * it already had, and `client.url` is specified as the client's *creation* URL - which goes stale
+ * the moment the in-app game switch (`history.pushState`) moves this window to another game, so the
+ * worker can't reliably tell which game a window is showing either. The worker therefore focuses its
+ * best guess and always posts a `{type: "navigate", url}` message to it; this listener is what
+ * actually resolves the target, from a window that does know where it is.
  */
 export function registerServiceWorkerNavigationListener(): void {
   if (!("serviceWorker" in navigator)) {
@@ -116,10 +179,7 @@ export function registerServiceWorkerNavigationListener(): void {
   navigator.serviceWorker.addEventListener("message", (event) => {
     const data = event.data;
     if (data && data.type === "navigate" && typeof data.url === "string") {
-      const target = new URL(data.url, window.location.origin);
-      if (target.href !== window.location.href) {
-        window.location.href = target.href;
-      }
+      navigateToPushTarget(data.url);
     }
   });
 }

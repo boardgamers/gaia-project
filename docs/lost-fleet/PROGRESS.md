@@ -6348,6 +6348,41 @@ pin_preference_split_budget_search_path` (the one function in the set without a 
       board-size rollout keeps resolving a mover on either grid, and a non-grid string still resolves
       none).
 
+154.  ✅ **Tapping "your turn in another game" now takes you to that game (2026-08-12, viewer
+      v5.55.1).** Owner report: while you are in a game and a notification for a DIFFERENT game
+      arrives, clicking it should move you to that game immediately.
+
+      The push payload was never the problem — `notify` has always sent `url: <site>/?game=<id>` on
+      every turn/chat/side-game/reminder push. The delivery side was. `sw.js`'s `notificationclick`
+      first looked for a window whose URL already matched the target and focused it, and otherwise
+      posted a `{type: "navigate", url}` message to `windows[0]` for the page to act on
+      (`clients.openWindow` cannot be trusted on its own: an installed, single-instance PWA usually
+      just refocuses the existing window at whatever URL it already had). Two things were wrong with
+      that once the in-app game switch existed (#66's `launchGame`):
+
+      - **`client.url` is specified as the client's _creation_ URL**, so a window that has since been
+        swapped to another game by `history.pushState` can still report the game it was loaded with.
+        The exact-URL branch could therefore focus a window and stop, leaving a board for a different
+        game on screen and nothing else happening — a click that visibly did nothing.
+      - **`windows[0]`** is not necessarily the window the user is looking at, so on a multi-window
+        desktop the message could go to a background window.
+
+      Now the worker always posts the message — including to an exact-URL match, since only the page
+      itself knows which game it is really showing — and picks its target best-first: a window
+      claiming that URL, else a `focused` one, else a `visible` one, else `windows[0]`. The page is
+      the authority on what to do with it: `push.ts`'s `resolvePushTarget` (pure, unit-tested)
+      compares the target with `window.location.href` and returns `ignore` (a push for the game
+      already on screen must never reload the board), `swap-game`, or `load`. `swap-game` runs only
+      when a game is mounted — `hosted.ts`'s `launchGame` registers `setInAppGameNavigation`, which
+      is the same in-place swap GameNavPanel's rows use, so the other game's board appears without a
+      page load and without re-replaying its move history behind a "Loading game…" spinner. The
+      lobby, sign-in, self-contained play and any cross-origin target (a preview deployment, where
+      sessions are per-origin anyway) still take the ordinary full load.
+
+      **Tests:** `push.spec.ts` **8 passing** (3 baseline, +5 for the target decision: swap for
+      another game, ignore for the game on screen, load with no game mounted, load for a non-`?game=`
+      target, load for another origin); viewer suite **858 passing**.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

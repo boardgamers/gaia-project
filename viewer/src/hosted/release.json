@@ -1,7 +1,19 @@
 {
-  "version": "5.55.0",
+  "version": "5.55.1",
   "releasedAt": "2026-08-12",
   "entries": [
+    {
+      "version": "5.55.1",
+      "releasedAt": "2026-08-12",
+      "kind": "fix",
+      "title": "Notification opens that game",
+      "impact": "",
+      "changes": [
+        "Tapping a turn/chat notification for another game while a game is open now switches straight to that game in place, instead of relying on the browser to navigate a window it often just refocuses",
+        "Fixed a notification click being able to focus a window that had already been switched to a different game, leaving the wrong board on screen"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.55.0",
       "releasedAt": "2026-08-12",

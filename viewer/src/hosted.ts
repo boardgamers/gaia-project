@@ -28,7 +28,12 @@ import Lobby from "./hosted/Lobby.vue";
 import OpenLobbyGame from "./hosted/OpenLobbyGame.vue";
 import { syncPanelOpen } from "./hosted/panel-dock";
 import PendingApproval from "./hosted/PendingApproval.vue";
-import { backfillSubscriptionTimezone, currentPushEndpoint, isPushEnabled } from "./hosted/push";
+import {
+  backfillSubscriptionTimezone,
+  currentPushEndpoint,
+  isPushEnabled,
+  setInAppGameNavigation,
+} from "./hosted/push";
 import { isOnline, PresenceState, trackPresence, usersInGame } from "./hosted/presence";
 import SignIn from "./hosted/SignIn.vue";
 import { createSupabaseBackend, getSupabaseClient, subscribeMoves, SupabaseClient } from "./hosted/supabase-client";
@@ -668,13 +673,24 @@ async function launchGame(root: Element, client: SupabaseClient, session: any, i
     return switchChain;
   };
 
-  nav.currentGameId = currentGameId;
-  nav.$on("select-game", (gameId: string) => {
+  const goToGame = (gameId: string) => {
     if (gameId === currentGameId) {
       return;
     }
     history.pushState({}, "", `?game=${gameId}`);
     swapTo(gameId);
+  };
+
+  nav.currentGameId = currentGameId;
+  nav.$on("select-game", goToGame);
+
+  // Tapping "your turn in <other game>" while this game is open goes through the very same swap
+  // (push.ts's navigateToPushTarget), so it lands on that game immediately instead of reloading the
+  // page and replaying its whole move history behind a spinner. Only registered here, inside a
+  // mounted game - from the lobby a push target is just an ordinary page load.
+  setInAppGameNavigation((gameId: string) => {
+    goToGame(gameId);
+    return true;
   });
 
   // Browser back/forward after an in-app switch (pushState above) - `location.search` is already
