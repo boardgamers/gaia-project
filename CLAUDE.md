@@ -107,10 +107,16 @@ PREFERENCE_SPLIT_AUCTION.md`. Unlike the Silent Auction, its secrecy is **server
   `sealed_bid_variant(options)`, with `viewer/src/logic/sealed-bid.ts` as the client's single source
   of truth and `SealedBidPanel.ts` as the shared half of both bid forms. Nothing in the resolution
   changed and the move text is byte-identical, so recorded games replay unchanged. **Migration
-  `20260812130000_silent_auction_sealed_bids.sql` is NOT applied live yet** — apply it before the
-  next hosted Silent Auction is created. A Silent Auction that was already bidding one seat at a
+  `20260812130000_silent_auction_sealed_bids.sql` IS applied live** on `mitawjpdxkheascdiffz`
+  (2026-08-12, ledger version `20260812152252 silent_auction_sealed_bids`) and verified against the
+  live catalog. Note the ledger version does not match the repo filename — normal drift here, check
+  the ledger. A Silent Auction that was already bidding one seat at a
   time when this landed finishes that way (`isLegacySequentialBidRound`), because the hosted app
-  replays whole move histories with no version gate.
+  replays whole move histories with no version gate — which is exactly what the live `Amber Drift`
+  game does, having reached its bid round a few hours before the migration landed. Don't verify
+  these RPCs by calling `sealed_bid_status()`/`submit_sealed_bid()` over MCP: they gate on
+  `is_game_member(auth.uid())` and a service-role connection has no `auth.uid()`, so they raise
+  "not a member of this game" either way — inspect the catalog instead.
 - Engine: 599/599 tests passing. Viewer: 308/308 tests passing (as of 2026-07-05 — trust
   `PROGRESS.md`'s "Testing" section over this line if they disagree).
 - A "Gaia 4" UI polish pass (2026-07-04, PROGRESS.md #66) fixed 11 owner-reported viewer bugs:

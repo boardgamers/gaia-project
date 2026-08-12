@@ -6515,10 +6515,44 @@ pin_preference_split_budget_search_path` (the one function in the set without a 
       updated to the new split of responsibilities. Full viewer suite and the engine suite minus
       `src/ai/**` both green.
 
-      **Not yet applied live:** migration `20260812130000` still has to be applied to
-      `mitawjpdxkheascdiffz`, and a Silent Auction created before it is applied will fail to submit
-      (`sealed_bid_status` would not report the variant and `submit_sealed_bid` would reject the
-      game). Apply it before the next hosted Silent Auction is created.
+      **Applied live and verified (2026-08-12).** Migration `20260812130000` is on
+      `mitawjpdxkheascdiffz` under ledger version `20260812152252 silent_auction_sealed_bids` — the
+      version `apply_migration` generated, which does not match the repo filename. That drift is
+      normal here, so check the ledger and never infer from the filename. Verified against the live
+      catalog rather than trusted from a successful apply: `sealed_bid_variant`,
+      `sealed_bid_command` and `silent_auction_max_bid` all exist and answer correctly (silent →
+      `silent` / `silentBid`, preference-split → `preference-split` / `preferenceBid`, choose-bid
+      and a variantless options blob → null, max bid 40); `submit_sealed_bid` mentions
+      `sealed_bid_variant` and `silent_auction_max_bid` and no longer carries the old
+      not-a-Preference-Split rejection string; `reveal_sealed_bids` builds its move text from
+      `sealed_bid_command(...)` with no literal `preferenceBid` left; `announce_sealed_bid_auction`
+      tests for a null `sealed_bid_variant(...)` instead of comparing to `'preference-split'`; and
+      all seven functions are `authenticated`-only with `anon` revoked.
+
+      Do NOT verify these by CALLING `sealed_bid_status()` or `submit_sealed_bid()` over MCP. They
+      gate on `is_game_member(auth.uid())`, and a service-role connection has no `auth.uid()`, so
+      they raise "not a member of this game" whether or not the migration worked. Inspect the
+      catalog instead.
+
+      Regression-checked on the live Preference Split game `Solar Comet` at the same time, since the
+      two variants' paths are meant to be byte-identical: `preference_split_budget`'s definition
+      hashes unchanged, it still returns 60 for a 3-player game, and its three
+      `auction_sealed_bids` rows hash unchanged.
+
+      Both deploys that rode along with a7d532c are live too. Vercel production serves v5.56.0
+      (`/release.json` fetched from the production domain, not merely inferred from a READY
+      deployment), and `Supabase - Deploy Edge Function` succeeded, taking `notify` 14 → 19 and
+      `resolve-automation` 4 → 7. No 401, so the `SUPABASE_ACCESS_TOKEN` secret is still valid.
+
+      **The one live Silent Auction was already past the switch, and correctly stayed on the old
+      path.** `Amber Drift` (3 players, `2f1e70c1-…`) reached its bid round before the migration
+      landed, and seat 0 submitted sequentially at seq 8, so `silentAuctionBids` is non-empty and
+      `isLegacySequentialBidRound` keeps the whole game on `Commands.vue`'s turn-by-turn form.
+      `submit_sealed_bid` refuses it server-side as the second barrier, and it has no
+      `auction_sealed_bids` rows. It finishes the way it started, exactly as designed, and needs
+      nothing done to it. Incidental confirmation found while reading that move: the old client
+      wrote a faction-name mover prefix where `reveal_sealed_bids` writes `p<n>`, and
+      `loadTurnMoves` accepts both, so the reveal's move text parses to the same player either way.
 
 ## Still MISSING — only one art-only item left
 
