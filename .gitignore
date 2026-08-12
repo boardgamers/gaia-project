@@ -2,3 +2,4 @@ node_modules
 batch/replay/
 batch/dist/
 .pnpm-store
+.playwright-mcp/
