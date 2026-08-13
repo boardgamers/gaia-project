@@ -209,6 +209,11 @@ export function latestMoveSummary(engine: Engine, move: string): string | null {
     case "faction":
       detail = primary.args[0] ? `pick ${compactFactionLabel(primary.args[0])}.` : "pick faction.";
       break;
+    case "silentBid":
+      // The raw move contains the player's complete faction/VP vector. Lobby summaries are shared
+      // with every viewer, so describe the submission without copying any of those private values.
+      detail = "submitted silent bids.";
+      break;
     default:
       detail = `${primary.command}${primary.args.length > 0 ? ` ${primary.args.join(" ")}` : ""}`.trim();
       if (!detail.endsWith(".")) {

@@ -363,6 +363,11 @@ function compactMoveSummary(move: string): string | null {
     case "faction":
       detail = primary[2] ? `pick ${compactFactionLabel(primary[2])}.` : "pick faction.";
       break;
+    case "silentBid":
+      // Legacy games without a cached summary are reconstructed from raw move rows. Never copy a
+      // Silent Auction's faction/VP vector into the shared lobby row while doing that fallback.
+      detail = "submitted silent bids.";
+      break;
     default:
       detail = primary.slice(1).join(" ");
       if (detail && !detail.endsWith(".")) {

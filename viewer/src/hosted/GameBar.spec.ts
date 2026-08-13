@@ -37,6 +37,24 @@ describe("GameBar", () => {
     expect(wrapper.find(".game-bar__summary").text()).to.contain("Terrans up int.");
   });
 
+  it("redacts a raw Silent Auction bid vector already cached on the game row", () => {
+    const wrapper = mount(GameBar, {
+      propsData: {
+        game: game({
+          options: { auction: "silent" },
+          latest_move_summary: "Itars silentBid itars 10 ivits 0 space-giants 10.",
+        }),
+        myUserId: "user-me",
+      },
+    });
+    const summary = wrapper.find(".game-bar__summary").text();
+
+    expect(summary).to.contain("Itars submitted silent bids.");
+    expect(summary).not.to.contain("silentBid");
+    expect(summary).not.to.contain("ivits 0");
+    expect(summary).not.to.contain("space-giants 10");
+  });
+
   it("shows claimed/total seats instead of a round badge for an open game", () => {
     const wrapper = mount(GameBar, {
       propsData: {

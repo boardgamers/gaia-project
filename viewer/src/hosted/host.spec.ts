@@ -596,6 +596,9 @@ describe("hosted game host", () => {
     expect(latestMoveSummary(engine, "terrans action power4.")).to.equal("Terrans power action 4.");
     expect(latestMoveSummary(engine, "terrans federation 1A4,9A9,9B4,9C fed4.")).to.equal("Terrans form fed.");
     expect(latestMoveSummary(engine, "terrans explore tfmars. endturn")).to.equal("Terrans explore tfmars.");
+    expect(latestMoveSummary(engine, "itars silentBid itars 10 ivits 0 space-giants 10.")).to.equal(
+      "Itars submitted silent bids."
+    );
   });
 
   it("reports the leech decider as next seat when a build interrupts turn order (§J2)", async () => {

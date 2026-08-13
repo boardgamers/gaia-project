@@ -163,14 +163,30 @@ export function isTestGame(game: any): boolean {
   return userIds.length > 0 && new Set(userIds).size < players.length;
 }
 
+function safeCachedSummary(game: any, summary: string | null | undefined): string | null {
+  if (!summary) {
+    return null;
+  }
+  if (game.options?.auction !== "silent" || !/\bsilentBid\b/i.test(summary)) {
+    return summary;
+  }
+
+  // Defense in depth for rows cached before the producer/fallback fixes: the old default summary
+  // copied the complete raw `silentBid <faction> <vp> ...` command. Preserve only the public actor.
+  const actor = summary.slice(0, summary.search(/\bsilentBid\b/i)).trim();
+  // Cached summaries have already passed through compactFactionLabel at their producer, so this is
+  // display text (for example "Space Giants" or "P1"), not a raw faction slug.
+  return actor ? `${actor} submitted silent bids.` : "Silent bids submitted.";
+}
+
 export function summaryForGame(game: any): string | null {
   if (game.status === "open") {
     // Only a join event (join_open_game_seat writes latest_move_summary directly - see
     // 0029_join_event_summary.sql) is expected here; there's no move-log fallback to try since
     // commit_turn never runs before the game goes active.
-    return game.latest_move_summary || null;
+    return safeCachedSummary(game, game.latest_move_summary);
   }
-  return game.latest_move_summary || game._fallback_latest_move_summary || null;
+  return safeCachedSummary(game, game.latest_move_summary || game._fallback_latest_move_summary);
 }
 
 export function formatMoveAge(value: string | null | undefined): string | null {

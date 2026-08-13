@@ -1185,6 +1185,50 @@ describe("Lobby", () => {
     expect(wrapper.find(".game-bar__summary").text()).to.equal("55m ago Ivits up int.");
   });
 
+  it("redacts Silent Auction values while compacting a legacy move fallback", async () => {
+    const { client } = makeClient(
+      [
+        {
+          id: "g-silent-fallback",
+          name: "Silent fallback",
+          created_by: "user-admin",
+          player_count: 3,
+          options: { auction: "silent" },
+          status: "active",
+          current_seat: 1,
+          latest_move_summary: null,
+          players: [
+            {
+              seat: 0,
+              invited_email: "kim.pham.nguyen2@gmail.com",
+              user_id: "user-admin",
+              display_name: "Admin",
+              faction: "itars",
+              score: 10,
+            },
+          ],
+        },
+      ],
+      [
+        {
+          game_id: "g-silent-fallback",
+          seq: 8,
+          move: "itars silentBid itars 10 ivits 0 space-giants 10.",
+          committed_at: "2026-07-08T11:05:00Z",
+        },
+      ]
+    );
+    const wrapper = mount(Lobby, { propsData: { client, session: adminSession } });
+    await Vue.nextTick();
+    await Vue.nextTick();
+
+    wrapper.setData({ activeTab: "mine" });
+    await Vue.nextTick();
+
+    expect((wrapper.vm as any).games[0]._fallback_latest_move_summary).to.equal("Itars submitted silent bids.");
+    expect(wrapper.find(".game-bar__summary").text()).to.equal("55m ago Itars submitted silent bids.");
+  });
+
   it("overlaps avatars and splits 3-4 player games into two rows", async () => {
     const { client } = makeClient([
       {
