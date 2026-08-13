@@ -52,6 +52,20 @@ describe("PreferenceSplitLog", () => {
     expect(rows.some((row) => row.includes("Xenos") && row.includes("35") && row.includes("8.75"))).to.equal(true);
   });
 
+  it("leads with a compact final lineup instead of making players hunt through the bid details", () => {
+    const { container } = mount();
+    const cards = Array.from(container.querySelectorAll(".preference-result-card")).map(
+      (card) => card.textContent ?? ""
+    );
+
+    expect(cards).to.have.length(4);
+    expect(cards[0]).to.contain("Terrans");
+    expect(cards[0]).to.contain("Player 4");
+    expect(cards[0]).to.contain("Bid 25");
+    expect(cards[0]).to.contain("13");
+    expect(container.querySelectorAll("table")).to.have.length(1);
+  });
+
   it("explains each allocation and the price it produced", () => {
     const { container } = mount();
     const timeline = Array.from(container.querySelectorAll(".preference-split-log__timeline li")).map(

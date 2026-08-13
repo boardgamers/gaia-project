@@ -1,7 +1,20 @@
 {
-  "version": "5.56.2",
+  "version": "5.56.3",
   "releasedAt": "2026-08-13",
   "entries": [
+    {
+      "version": "5.56.3",
+      "releasedAt": "2026-08-13",
+      "kind": "update",
+      "title": "Compact Preference Split summary",
+      "impact": "",
+      "changes": [
+        "The Preference Split auction now has a compact result-first summary with clearer rankings, bids, prices, and allocation details."
+      ],
+      "userChanges": [
+        "The Preference Split auction now has a compact result-first summary with clearer rankings, bids, prices, and allocation details."
+      ]
+    },
     {
       "version": "5.56.2",
       "releasedAt": "2026-08-13",
