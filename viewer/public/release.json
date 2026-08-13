@@ -1,7 +1,21 @@
 {
-  "version": "5.56.1",
+  "version": "5.56.2",
   "releasedAt": "2026-08-13",
   "entries": [
+    {
+      "version": "5.56.2",
+      "releasedAt": "2026-08-13",
+      "kind": "update",
+      "title": "Compact Silent Auction summary",
+      "impact": "",
+      "changes": [
+        "The Silent Auction log is now a compact result-first summary with clearer bids, picks, bans, and resolution details.",
+        "Scoped move-button active styling so it no longer colors unrelated active panels."
+      ],
+      "userChanges": [
+        "The Silent Auction log is now a compact result-first summary with clearer bids, picks, bans, and resolution details."
+      ]
+    },
     {
       "version": "5.56.1",
       "releasedAt": "2026-08-13",

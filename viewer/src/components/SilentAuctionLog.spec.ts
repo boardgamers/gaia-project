@@ -9,8 +9,8 @@ import SilentAuctionLog from "./SilentAuctionLog.vue";
 Vue.use(BootstrapVue);
 
 describe("SilentAuctionLog", () => {
-  it("shows the bans, picks, bid matrix, resolution trace, and final result", () => {
-    const engine = new Engine(
+  function resolvedAuction() {
+    return new Engine(
       [
         "init 3 djfjjv4k",
         "p1 banFaction terrans",
@@ -25,6 +25,10 @@ describe("SilentAuctionLog", () => {
       ],
       { auction: AuctionVariant.Silent }
     );
+  }
+
+  it("shows a compact result, draft, bid matrix, and complete resolution trail", () => {
+    const engine = resolvedAuction();
 
     const store = makeStore();
     store.commit("receiveData", engine);
@@ -44,7 +48,28 @@ describe("SilentAuctionLog", () => {
     expect(engine.players[0].faction).to.equal(Faction.Taklons);
     expect(engine.players[0].data.bid).to.equal(2);
 
-    const rows = Array.from(container.querySelectorAll("tbody tr")).map((row) => row.textContent);
-    expect(rows.some((row) => row?.includes("Taklons") && row?.includes("2"))).to.equal(true);
+    const resultCards = Array.from(container.querySelectorAll(".auction-result-card"));
+    expect(resultCards).to.have.length(3);
+    expect(resultCards.map((card) => card.getAttribute("data-turn-order"))).to.deep.equal(["1", "2", "3"]);
+
+    const taklonsResult = resultCards.find((card) => card.textContent?.includes("Taklons"));
+    expect(taklonsResult?.textContent).to.include("Player 1");
+    expect(taklonsResult?.textContent).to.include("2");
+
+    expect(container.querySelectorAll(".auction-draft__row")).to.have.length(3);
+    expect(container.querySelectorAll("table")).to.have.length(1);
+    expect(container.querySelectorAll(".auction-bids tbody tr")).to.have.length(3);
+    expect(container.querySelectorAll(".auction-bids__winner")).to.have.length(3);
+    expect(container.querySelectorAll(".auction-resolution__step")).to.have.length(engine.silentAuctionLog.length);
+  });
+
+  it("can omit its duplicate title inside the post-auction summary modal", () => {
+    const store = makeStore();
+    store.commit("receiveData", resolvedAuction());
+
+    const { container } = render(SilentAuctionLog, { props: { hideTitle: true }, store });
+
+    expect(container.querySelector(".silent-auction-log__header")).to.equal(null);
+    expect(container.querySelectorAll(".auction-result-card")).to.have.length(3);
   });
 });

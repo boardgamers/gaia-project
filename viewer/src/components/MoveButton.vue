@@ -201,7 +201,7 @@ export default class MoveButton extends Vue implements MoveButtonController {
   display: flex;
 }
 
-.active {
+.move-button.active {
   background-color: var(--primary) !important;
   color: white !important;
 }
