@@ -171,7 +171,11 @@ export default Vue.extend({
         pin: this.viewportPin,
         innerHeight: typeof window === "undefined" ? 0 : window.innerHeight,
       });
-      return { bottom: `${geometry.bottom}px`, maxHeight: `${geometry.maxHeight}px` };
+      return {
+        bottom: `${geometry.bottom}px`,
+        height: `${geometry.maxHeight}px`,
+        maxHeight: `${geometry.maxHeight}px`,
+      };
     },
     toggleStyle(): Record<string, string> {
       const geometry = chatPopupGeometry({
@@ -533,8 +537,8 @@ export default Vue.extend({
   flex-direction: column;
 
   // Popup on mobile, same shell as ChatNotesPanel.vue's (see the comment there): full width, above
-  // the toggle, only as tall as the space above it, with `bottom`/`max-height` coming in inline
-  // from chat-popup.ts.
+  // the toggle, and fixed to the available height supplied by chat-popup.ts so message count never
+  // changes the size of the window.
   @media (max-width: 767px) {
     left: 0;
     right: 0;
@@ -572,7 +576,9 @@ export default Vue.extend({
 }
 
 .lobby-chat__messages {
-  flex: 1;
+  // The panel owns the size; message count only changes this region's scrollable overflow.
+  flex: 1 1 0;
+  min-height: 0;
   overflow-y: auto;
   padding: 0.6rem;
   display: flex;
@@ -592,6 +598,12 @@ export default Vue.extend({
   // resolves to 0 as soon as the content is taller than the box. See ChatNotesPanel.vue.
   > *:first-child {
     margin-top: auto;
+  }
+
+  // Flex children shrink by default. A long thread must scroll, not compress every bubble and read
+  // receipt into an unreadable strip.
+  > * {
+    flex-shrink: 0;
   }
 }
 

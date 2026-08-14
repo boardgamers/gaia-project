@@ -230,7 +230,11 @@ export default Vue.extend({
         pin: this.viewportPin,
         innerHeight: typeof window === "undefined" ? 0 : window.innerHeight,
       });
-      return { bottom: `${geometry.bottom}px`, maxHeight: `${geometry.maxHeight}px` };
+      return {
+        bottom: `${geometry.bottom}px`,
+        height: `${geometry.maxHeight}px`,
+        maxHeight: `${geometry.maxHeight}px`,
+      };
     },
     toggleStyle(): Record<string, string> {
       const geometry = chatPopupGeometry({
@@ -666,9 +670,8 @@ export default Vue.extend({
   // full page width, but hanging above the floating toggle and only as tall as the space above it,
   // so the toggle stays visible and one tap minimizes it. `top`/`bottom`/`max-height` come from
   // chat-popup.ts as inline styles - the toggle's own offset is measured off the live sticky bar
-  // and an on-screen keyboard shifts both - leaving only the popup's LOOK here. Height is
-  // content-driven up to that max, so a two-message thread is a small card rather than a tall
-  // empty box.
+  // and an on-screen keyboard shifts both - leaving only the popup's LOOK here. The inline height
+  // is fixed to the available space so message count never collapses the thread into a flat card.
   @media (max-width: 767px) {
     left: 0;
     right: 0;
@@ -734,7 +737,9 @@ export default Vue.extend({
 }
 
 .chat-notes__messages {
-  flex: 1;
+  // The panel owns the size; message count only changes this region's scrollable overflow.
+  flex: 1 1 0;
+  min-height: 0;
   overflow-y: auto;
   // Keeps a flick that reaches either end of the thread from chaining out into the page behind the
   // overlay - both because scrolling the board under an open chat is the same "interacting with
@@ -756,6 +761,12 @@ export default Vue.extend({
   // than the box, leaving an ordinary scrollable overflow.
   > *:first-child {
     margin-top: auto;
+  }
+
+  // Flex children shrink by default. A long thread must scroll, not compress every bubble and read
+  // receipt into an unreadable strip.
+  > * {
+    flex-shrink: 0;
   }
 }
 

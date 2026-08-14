@@ -1,7 +1,18 @@
 {
-  "version": "5.57.0",
+  "version": "5.57.1",
   "releasedAt": "2026-08-14",
   "entries": [
+    {
+      "version": "5.57.1",
+      "releasedAt": "2026-08-14",
+      "kind": "fix",
+      "title": "Keep chat panels readable",
+      "impact": "",
+      "changes": [
+        "Kept lobby and in-game chat at a stable height and made long histories scroll instead of flattening messages"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.57.0",
       "releasedAt": "2026-08-14",

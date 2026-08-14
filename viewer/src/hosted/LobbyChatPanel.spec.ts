@@ -252,7 +252,7 @@ describe("LobbyChatPanel", () => {
     expect(document.documentElement.classList.contains("chat-popup-open")).to.equal(false);
   });
 
-  it("hangs the mobile popup above the toggle rather than filling the screen", async () => {
+  it("keeps the mobile popup at a fixed available height above the toggle", async () => {
     const wrapper = mount(LobbyChatPanel as any, {
       propsData: { client: makeClient(), userId: "user-1" },
     });
@@ -260,6 +260,7 @@ describe("LobbyChatPanel", () => {
     // 24px toggle offset + a 48px toggle + a 10px gap (see chat-popup.ts).
     expect((wrapper.vm as any).panelStyle.bottom).to.equal("82px");
     expect((wrapper.vm as any).panelStyle.maxHeight).to.equal(`${window.innerHeight - 82 - 64}px`);
+    expect((wrapper.vm as any).panelStyle.height).to.equal((wrapper.vm as any).panelStyle.maxHeight);
 
     // Desktop keeps the docked full-height strip - no popup geometry there.
     (wrapper.vm as any).isDesktop = true;

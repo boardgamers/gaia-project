@@ -588,6 +588,7 @@ describe("ChatNotesPanel", () => {
     // a strip of the game visible - i.e. it does not fill the screen.
     expect(panelStyle().bottom).to.equal("82px");
     expect(panelStyle().maxHeight).to.equal(`${window.innerHeight - 82 - 64}px`);
+    expect(panelStyle().height).to.equal(panelStyle().maxHeight);
     expect(toggleStyle().bottom).to.equal("24px");
 
     // An ordinary scroll on iOS (address bar sliding away, elastic overscroll at the end of the
@@ -608,6 +609,7 @@ describe("ChatNotesPanel", () => {
     const keyboardInset = window.innerHeight - 400;
     expect(panelStyle().bottom).to.equal(`${82 + keyboardInset}px`);
     expect(panelStyle().maxHeight).to.equal(`${380 - 82 - 64}px`);
+    expect(panelStyle().height).to.equal(panelStyle().maxHeight);
     expect(toggleStyle().bottom).to.equal(`${24 + keyboardInset}px`);
 
     // ...and back down once it closes.
