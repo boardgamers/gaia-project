@@ -45,9 +45,9 @@ describe("OpponentMovesNotice", () => {
     const { view } = setup();
 
     expect(view.getByText("Since your last turn:")).to.not.equal(null);
-    expect(view.getByText("Xenos up nav.")).to.not.equal(null);
-    expect(view.getByText("Geoden power action 4.")).to.not.equal(null);
-    expect(view.getByText("Nevlas pass booster3.")).to.not.equal(null);
+    expect(view.getByText("Xenos: NAV↑")).to.not.equal(null);
+    expect(view.getByText("Geoden: PA +7c")).to.not.equal(null);
+    expect(view.getByText("Nevlas: pass → B(1q/2c)")).to.not.equal(null);
     expect(view.container.querySelectorAll(".opponent-moves-notice__container")).to.have.length(1);
     expect(view.container.querySelectorAll(".opponent-moves-notice__dismiss")).to.have.length(1);
 

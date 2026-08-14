@@ -498,7 +498,7 @@ describe("Lobby", () => {
     expect(presenceDots.at(0).classes()).to.contain("game-bar__presence--yellow");
     expect(presenceDots.at(1).classes()).to.contain("game-bar__presence--green");
     expect(wrapper.text()).to.contain("55m ago");
-    expect(wrapper.text()).to.contain("Terrans build mine sector 3.");
+    expect(wrapper.text()).to.contain("Terrans: m @ S3");
     expect(wrapper.text()).to.not.contain("your turn");
     expect(wrapper.text()).to.not.contain("Bob to move");
   });
@@ -553,7 +553,7 @@ describe("Lobby", () => {
 
     expect(wrapper.find(".game-bar").classes()).to.contain("game-bar--my-turn");
     expect(wrapper.text()).to.contain("3h ago");
-    expect(wrapper.text()).to.contain("Hadsch Hallas power action 6.");
+    expect(wrapper.text()).to.contain("Hadsch Hallas: PA step");
   });
 
   // Owner-reported 2026-08-10 ("it is not my turn in Solar Comet, why is the game bar pulsing
@@ -813,7 +813,7 @@ describe("Lobby", () => {
     await Vue.nextTick();
 
     expect(wrapper.text()).to.contain("3h ago");
-    expect(wrapper.text()).to.contain("Hadsch Hallas power action 6.");
+    expect(wrapper.text()).to.contain("Hadsch Hallas: PA step");
   });
 
   it("shows no round badge or player chips for a game with no cached lobby data yet", async () => {
@@ -905,7 +905,7 @@ describe("Lobby", () => {
     let titles = wrapper.findAll(".game-bar__title").wrappers.map((node) => node.text());
     expect(titles).to.deep.equal(["My gameStandard"]);
     let summaries = wrapper.findAll(".game-bar__summary").wrappers.map((node) => node.text());
-    expect(summaries).to.deep.equal(["55m ago Terrans up int."]);
+    expect(summaries).to.deep.equal(["55m ago Terrans: QIC↑"]);
 
     const lobbyTab = wrapper
       .findAll("button")
@@ -930,7 +930,7 @@ describe("Lobby", () => {
     titles = wrapper.findAll(".game-bar__title").wrappers.map((node) => node.text());
     expect(titles).to.deep.equal(["Their gameSilent Auction"]);
     summaries = wrapper.findAll(".game-bar__summary").wrappers.map((node) => node.text());
-    expect(summaries).to.deep.equal(["2h ago Xenos pass booster3."]);
+    expect(summaries).to.deep.equal(["2h ago Xenos: pass → B(1q/2c)"]);
 
     const finishedTab = wrapper
       .findAll("button")
@@ -942,7 +942,7 @@ describe("Lobby", () => {
     titles = wrapper.findAll(".game-bar__title").wrappers.map((node) => node.text());
     expect(titles).to.deep.equal(["Finished theirsSilent Auction"]);
     summaries = wrapper.findAll(".game-bar__summary").wrappers.map((node) => node.text());
-    expect(summaries).to.deep.equal(["2d ago Nevlas form fed."]);
+    expect(summaries).to.deep.equal(["2d ago Nevlas: fed"]);
   });
 
   it("never pins the browsed tab into the URL, so returning to the main menu always lands on My games", async () => {
@@ -1182,7 +1182,7 @@ describe("Lobby", () => {
     wrapper.setData({ activeTab: "mine" });
     await Vue.nextTick();
 
-    expect(wrapper.find(".game-bar__summary").text()).to.equal("55m ago Ivits up int.");
+    expect(wrapper.find(".game-bar__summary").text()).to.equal("55m ago Ivits: QIC↑");
   });
 
   it("redacts Silent Auction values while compacting a legacy move fallback", async () => {
@@ -1225,8 +1225,8 @@ describe("Lobby", () => {
     wrapper.setData({ activeTab: "mine" });
     await Vue.nextTick();
 
-    expect((wrapper.vm as any).games[0]._fallback_latest_move_summary).to.equal("Itars submitted silent bids.");
-    expect(wrapper.find(".game-bar__summary").text()).to.equal("55m ago Itars submitted silent bids.");
+    expect((wrapper.vm as any).games[0]._fallback_latest_move_summary).to.equal("Itars: bids in");
+    expect(wrapper.find(".game-bar__summary").text()).to.equal("55m ago Itars: bids in");
   });
 
   it("overlaps avatars and splits 3-4 player games into two rows", async () => {
@@ -1512,7 +1512,7 @@ describe("Lobby", () => {
 
     expect(wrapper.text()).to.contain("R4");
     expect(wrapper.text()).to.contain("55m ago");
-    expect(wrapper.text()).to.contain("Terrans up int.");
+    expect(wrapper.text()).to.contain("Terrans: QIC↑");
     expect(wrapper.findAll(".game-bar__player").length).to.equal(2);
   });
 

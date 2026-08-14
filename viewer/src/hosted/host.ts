@@ -1,8 +1,7 @@
 import Engine, { Command, Phase } from "@gaia-project/engine";
 import { AutoCharge } from "@gaia-project/engine/src/player";
-import { factionName } from "../data/factions";
 import { autoDecideChargePower } from "../logic/auto-decide";
-import { ownTurn, parseCommands, parsedMove } from "../logic/recent";
+import { compactMoveSummary } from "../logic/move-summary";
 import { PremoveResolution, resolvePremoveQueue } from "../logic/premove-resolver";
 import { isLegacySequentialBidRound, sealedBidMove, sealedBidPhase } from "../logic/sealed-bid";
 import {
@@ -110,119 +109,8 @@ export function playerUpdates(engine: Engine): PlayerUpdate[] {
     .map((pl) => ({ seat: pl.player, faction: pl.faction, score: pl.data.victoryPoints }));
 }
 
-const summaryBuildingNames: Record<string, string> = {
-  m: "mine",
-  t: "ts",
-  l: "lab",
-  i: "PI",
-  k: "academy",
-  q: "academy",
-  g: "gaia former",
-  spaceStation: "space station",
-};
-
-function compactFactionLabel(raw: string): string {
-  try {
-    return factionName(raw as any);
-  } catch {
-    return raw
-      .split("-")
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-      .join(" ");
-  }
-}
-
-function powerOrQicActionLabel(action: string): string | null {
-  const match = action.match(/^(power|qic)(\d+)$/);
-  return match ? `${match[1]} action ${match[2]}.` : null;
-}
-
-function sectorLabelFromLocation(engine: Engine, location: string): string | null {
-  try {
-    const hex = engine.map.getS(location);
-    if (hex?.data?.sector) {
-      return hex.data.sector;
-    }
-  } catch {
-    // Fall through to coordinate parsing below.
-  }
-
-  const baseSector = location.match(/^(\d+)/);
-  return baseSector ? baseSector[1] : null;
-}
-
 export function latestMoveSummary(engine: Engine, move: string): string | null {
-  const commands = parseCommands(move);
-  if (commands.length === 0) {
-    return null;
-  }
-
-  // A move made up entirely of leech/income decisions (charge/brainstone/income/decline) isn't a
-  // "turn" in the lobby-summary sense - skip it so `commit_turn`'s coalesce leaves the previously
-  // committed main-action summary in place instead of overwriting it with e.g. "White charge 3.".
-  if (!ownTurn(parsedMove(move))) {
-    return null;
-  }
-
-  const actor = compactFactionLabel(commands[0].faction);
-  const primary =
-    commands.find((command) =>
-      ["build", "up", "explore", "federation", "action", "spaceshipAction", "pass", "banFaction", "faction"].includes(
-        command.command as string
-      )
-    ) ?? commands[0];
-
-  let detail: string | null = null;
-  switch (primary.command as string) {
-    case "build": {
-      const building = summaryBuildingNames[primary.args[0]] ?? primary.args[0];
-      if (primary.args[0] === "m" && primary.args[1]) {
-        const location = primary.args[1].replace(/\.+$/, "");
-        const sector = sectorLabelFromLocation(engine, location);
-        detail = sector ? `build mine sector ${sector}.` : "build mine.";
-      } else {
-        detail = `build ${building}.`;
-      }
-      break;
-    }
-    case "up":
-      detail = primary.args[0] ? `up ${primary.args[0]}.` : "up.";
-      break;
-    case "explore":
-      detail = primary.args[0] ? `explore ${primary.args[0]}.` : "explore.";
-      break;
-    case "federation":
-      detail = "form fed.";
-      break;
-    case "action":
-      detail = primary.args[0] ? powerOrQicActionLabel(primary.args[0]) ?? `${primary.args[0]}.` : "action.";
-      break;
-    case "spaceshipAction":
-      detail = primary.args[0] && primary.args[1] ? `${primary.args[0]} ${primary.args[1]}.` : "ship action.";
-      break;
-    case "pass":
-      detail = primary.args[0] ? `pass ${primary.args[0]}.` : "pass.";
-      break;
-    case "banFaction":
-      detail = primary.args[0] ? `ban ${compactFactionLabel(primary.args[0])}.` : "ban faction.";
-      break;
-    case "faction":
-      detail = primary.args[0] ? `pick ${compactFactionLabel(primary.args[0])}.` : "pick faction.";
-      break;
-    case "silentBid":
-      // The raw move contains the player's complete faction/VP vector. Lobby summaries are shared
-      // with every viewer, so describe the submission without copying any of those private values.
-      detail = "submitted silent bids.";
-      break;
-    default:
-      detail = `${primary.command}${primary.args.length > 0 ? ` ${primary.args.join(" ")}` : ""}`.trim();
-      if (!detail.endsWith(".")) {
-        detail += ".";
-      }
-      break;
-  }
-
-  return detail ? `${actor} ${detail}` : null;
+  return compactMoveSummary(move, engine);
 }
 
 /**

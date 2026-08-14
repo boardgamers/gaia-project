@@ -1,4 +1,5 @@
 import { factionName } from "../data/factions";
+import { normalizeCachedMoveSummary } from "../logic/move-summary";
 import { presenceStatus, PresenceState } from "./presence";
 
 /**
@@ -167,16 +168,9 @@ function safeCachedSummary(game: any, summary: string | null | undefined): strin
   if (!summary) {
     return null;
   }
-  if (game.options?.auction !== "silent" || !/\bsilentBid\b/i.test(summary)) {
-    return summary;
-  }
-
-  // Defense in depth for rows cached before the producer/fallback fixes: the old default summary
-  // copied the complete raw `silentBid <faction> <vp> ...` command. Preserve only the public actor.
-  const actor = summary.slice(0, summary.search(/\bsilentBid\b/i)).trim();
-  // Cached summaries have already passed through compactFactionLabel at their producer, so this is
-  // display text (for example "Space Giants" or "P1"), not a raw faction slug.
-  return actor ? `${actor} submitted silent bids.` : "Silent bids submitted.";
+  // Includes defense-in-depth redaction for legacy Silent Auction rows, then modernizes old cached
+  // prose immediately instead of waiting for another move to replace it.
+  return normalizeCachedMoveSummary(summary);
 }
 
 export function summaryForGame(game: any): string | null {

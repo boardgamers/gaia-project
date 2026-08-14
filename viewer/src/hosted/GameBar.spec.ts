@@ -34,7 +34,7 @@ describe("GameBar", () => {
     const wrapper = mount(GameBar, { propsData: { game: game({}), myUserId: "user-me" } });
     expect(wrapper.find(".game-bar__round").text()).to.equal("R3");
     expect(wrapper.find(".game-bar__title").text()).to.contain("My game");
-    expect(wrapper.find(".game-bar__summary").text()).to.contain("Terrans up int.");
+    expect(wrapper.find(".game-bar__summary").text()).to.contain("Terrans: QIC↑");
   });
 
   it("redacts a raw Silent Auction bid vector already cached on the game row", () => {
@@ -49,7 +49,7 @@ describe("GameBar", () => {
     });
     const summary = wrapper.find(".game-bar__summary").text();
 
-    expect(summary).to.contain("Itars submitted silent bids.");
+    expect(summary).to.contain("Itars: bids in");
     expect(summary).not.to.contain("silentBid");
     expect(summary).not.to.contain("ivits 0");
     expect(summary).not.to.contain("space-giants 10");

@@ -506,7 +506,7 @@ describe("hosted game host", () => {
     expect(commit.move).to.equal("p1 faction terrans");
     expect(commit.finished).to.equal(false);
     expect(commit.nextSeat).to.equal(host.engine.playerToMove);
-    expect(commit.latestMoveSummary).to.equal("P1 pick Terrans.");
+    expect(commit.latestMoveSummary).to.equal("P1: pick Terrans");
     expect(host.committedMoveCount).to.equal(1);
   });
 
@@ -591,14 +591,12 @@ describe("hosted game host", () => {
     const engine = new Engine(["init 2 randomSeed2", "p1 faction terrans", "p2 faction geodens"]);
     engine.generateAvailableCommandsIfNeeded();
 
-    expect(latestMoveSummary(engine, "terrans up int.")).to.equal("Terrans up int.");
-    expect(latestMoveSummary(engine, "terrans build m 8A2.")).to.equal("Terrans build mine sector 8.");
-    expect(latestMoveSummary(engine, "terrans action power4.")).to.equal("Terrans power action 4.");
-    expect(latestMoveSummary(engine, "terrans federation 1A4,9A9,9B4,9C fed4.")).to.equal("Terrans form fed.");
-    expect(latestMoveSummary(engine, "terrans explore tfmars. endturn")).to.equal("Terrans explore tfmars.");
-    expect(latestMoveSummary(engine, "itars silentBid itars 10 ivits 0 space-giants 10.")).to.equal(
-      "Itars submitted silent bids."
-    );
+    expect(latestMoveSummary(engine, "terrans up int.")).to.equal("Terrans: QIC↑");
+    expect(latestMoveSummary(engine, "terrans build m 8A2.")).to.equal("Terrans: m @ 8A2");
+    expect(latestMoveSummary(engine, "terrans action power4.")).to.equal("Terrans: PA +7c");
+    expect(latestMoveSummary(engine, "terrans federation 1A4,9A9,9B4,9C fed4.")).to.equal("Terrans: fed → 7vp/2o");
+    expect(latestMoveSummary(engine, "terrans explore tfmars. endturn")).to.equal("Terrans: explore TFM");
+    expect(latestMoveSummary(engine, "itars silentBid itars 10 ivits 0 space-giants 10.")).to.equal("Itars: bids in");
   });
 
   it("reports the leech decider as next seat when a build interrupts turn order (§J2)", async () => {

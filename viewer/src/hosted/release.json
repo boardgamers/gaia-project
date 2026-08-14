@@ -1,7 +1,19 @@
 {
-  "version": "5.57.1",
+  "version": "5.57.2",
   "releasedAt": "2026-08-14",
   "entries": [
+    {
+      "version": "5.57.2",
+      "releasedAt": "2026-08-14",
+      "kind": "update",
+      "title": "Compact move summaries",
+      "impact": "",
+      "changes": [
+        "Move summaries now use compact Gaia shorthand such as m, ts, PI, ac1/ac2, c, o and QIC↑.",
+        "One shared formatter now powers hosted games, recap notices, lobby fallbacks and offline imports."
+      ],
+      "userChanges": ["Move summaries now use compact Gaia shorthand such as m, ts, PI, ac1/ac2, c, o and QIC↑."]
+    },
     {
       "version": "5.57.1",
       "releasedAt": "2026-08-14",

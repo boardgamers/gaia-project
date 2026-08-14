@@ -1,4 +1,5 @@
 import Engine from "@gaia-project/engine";
+import { compactMoveSummary } from "./logic/move-summary";
 
 export const OFFLINE_GAME_STORAGE_KEY = "gaia-offline-game-v1";
 export const OFFLINE_GAME_SAVED_EVENT = "gaia-offline-game-saved";
@@ -304,7 +305,12 @@ export function offlineGameListRow(game: StoredOfflineGame): OfflineGameListRow 
   const data = game.engineData ?? {};
   const players = Array.isArray(data.players) ? data.players : [];
   const history = Array.isArray(data.moveHistory) ? data.moveHistory : [];
-  const lastMove = history.length > 1 ? String(history[history.length - 1]).replace(/\.$/, "") : null;
+  const latestSummary =
+    history
+      .slice(1)
+      .reverse()
+      .map((move: unknown) => compactMoveSummary(String(move), data as Engine))
+      .find((summary: string | null) => summary !== null) ?? null;
   return {
     id: game.id,
     name: game.name,
@@ -315,7 +321,7 @@ export function offlineGameListRow(game: StoredOfflineGame): OfflineGameListRow 
     current_seat: Number.isInteger(data.currentPlayer) ? data.currentPlayer : null,
     move_count: history.length,
     current_round: Number.isInteger(data.round) && data.round > 0 ? data.round : null,
-    latest_move_summary: lastMove,
+    latest_move_summary: latestSummary,
     latest_move_committed_at: game.savedAt,
     mirror_of: game.mirrorOf ?? null,
     players: players.map((player: any, seat: number) => ({

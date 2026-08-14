@@ -239,7 +239,6 @@ import Vue from "vue";
 import { PresenceState, trackPresence } from "./presence";
 import { backfillSubscriptionTimezone, isPushEnabled } from "./push";
 import CreditsContent from "../components/CreditsContent.vue";
-import { factionName } from "../data/factions";
 import { isAdminEmail } from "./admin";
 import GameBar from "./GameBar.vue";
 import {
@@ -257,6 +256,7 @@ import {
   summaryForGame as summaryForGameShared,
 } from "./game-bar";
 import { hasPendingTurn as hasPendingTurnShared } from "./turn-kinds";
+import { compactMoveSummary } from "../logic/move-summary";
 import InfoModal from "./InfoModal.vue";
 import NotificationSettings from "./NotificationSettings.vue";
 import { fetchMyNickname, setMyNickname } from "./profile";
@@ -267,117 +267,6 @@ const SWIPE_ACTION_WIDTH = 88;
 
 /** How long `scheduleRefresh` swallows further reload signals after acting on one. */
 const REFRESH_COALESCE_MS = 250;
-
-function compactFactionLabel(raw: string): string {
-  if (!raw) {
-    return "";
-  }
-  if (raw.startsWith("p") && /^p\d+$/.test(raw)) {
-    return raw.toUpperCase();
-  }
-  try {
-    return factionName(raw as any);
-  } catch {
-    return raw
-      .split("-")
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-      .join(" ");
-  }
-}
-
-function powerOrQicActionLabel(action: string): string | null {
-  const match = action.match(/^(power|qic)(\d+)$/);
-  return match ? `${match[1]} action ${match[2]}.` : null;
-}
-
-// Same set as the engine's Command.ChargePower/BrainStone/ChooseIncome/Decline (logic/recent.ts's
-// `outOfTurn`) - kept as raw string literals here since this fallback path deliberately has no
-// @gaia-project/engine dependency (parses the raw move text only).
-const OUT_OF_TURN_COMMANDS = ["charge", "brainstone", "income", "decline"];
-
-function compactMoveSummary(move: string): string | null {
-  const trimmed = (move ?? "").trim();
-  if (!trimmed) {
-    return null;
-  }
-  const parts = trimmed
-    .split(".")
-    .map((part) => part.trim())
-    .filter((part) => !!part);
-  if (parts.length === 0) {
-    return null;
-  }
-  const commands = parts.map((part) => part.split(/\s+/));
-  // A move made up entirely of leech/income decisions isn't a "turn" for lobby-summary purposes -
-  // skip it so the previously shown main-action summary stays put instead of being overwritten.
-  if (commands.every((tokens) => OUT_OF_TURN_COMMANDS.includes(tokens[1]))) {
-    return null;
-  }
-  const actor = compactFactionLabel(commands[0][0]);
-  const primary =
-    commands.find((tokens) =>
-      ["build", "up", "explore", "federation", "action", "spaceshipAction", "pass", "banFaction", "faction"].includes(
-        tokens[1]
-      )
-    ) ?? commands[0];
-  let detail: string | null = null;
-
-  switch (primary[1]) {
-    case "build": {
-      const kind = primary[2];
-      if (kind === "m" && primary[3]) {
-        const sector = primary[3].match(/^(\d+|DS\d+|IS\d+)/)?.[1];
-        detail = sector ? `build mine sector ${sector}.` : "build mine.";
-      } else if (kind === "t") {
-        detail = "build ts.";
-      } else if (kind === "l") {
-        detail = "build lab.";
-      } else if (kind === "i") {
-        detail = "build PI.";
-      } else {
-        detail = `build ${kind ?? ""}.`.replace(/\s+\./, ".");
-      }
-      break;
-    }
-    case "up":
-      detail = primary[2] ? `up ${primary[2]}.` : "up.";
-      break;
-    case "explore":
-      detail = primary[2] ? `explore ${primary[2]}.` : "explore.";
-      break;
-    case "federation":
-      detail = "form fed.";
-      break;
-    case "action":
-      detail = primary[2] ? powerOrQicActionLabel(primary[2]) ?? `${primary[2]}.` : "action.";
-      break;
-    case "spaceshipAction":
-      detail = primary[2] && primary[3] ? `${primary[2]} ${primary[3]}.` : "ship action.";
-      break;
-    case "pass":
-      detail = primary[2] ? `pass ${primary[2]}.` : "pass.";
-      break;
-    case "banFaction":
-      detail = primary[2] ? `ban ${compactFactionLabel(primary[2])}.` : "ban faction.";
-      break;
-    case "faction":
-      detail = primary[2] ? `pick ${compactFactionLabel(primary[2])}.` : "pick faction.";
-      break;
-    case "silentBid":
-      // Legacy games without a cached summary are reconstructed from raw move rows. Never copy a
-      // Silent Auction's faction/VP vector into the shared lobby row while doing that fallback.
-      detail = "submitted silent bids.";
-      break;
-    default:
-      detail = primary.slice(1).join(" ");
-      if (detail && !detail.endsWith(".")) {
-        detail += ".";
-      }
-      break;
-  }
-
-  return detail ? `${actor} ${detail}` : null;
-}
 
 type ReleaseEntry = {
   version: string;
