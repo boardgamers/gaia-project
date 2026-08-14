@@ -14,6 +14,7 @@ import HostedBar from "./hosted/HostedBar.vue";
 import ImportOfflineGame from "./hosted/ImportOfflineGame.vue";
 import LobbyChatPanel from "./hosted/LobbyChatPanel.vue";
 import NotificationSettings from "./hosted/NotificationSettings.vue";
+import OpponentMovesNotice from "./hosted/OpponentMovesNotice.vue";
 import { HostedGameHost, seatToLock } from "./hosted/host";
 import {
   convertHostedGameToPassAndPlay,
@@ -72,6 +73,10 @@ async function mountGameInstance(
 ): Promise<() => void> {
   const cleanups: Array<() => void> = [];
   const barEl = document.createElement("div");
+  // One joined recap of the opponents' turns since this viewer's previous turn. It shares the
+  // game store mounted below, and sits immediately under HostedBar so three opponents never turn
+  // into three separately dismissible notices in a four-player game.
+  const opponentMovesNoticeEl = document.createElement("div");
   // Sits directly under the top banner (barEl) - a dismissible "X just entered the game" line shown
   // when another player opens this game while you're already in it (driven by the presence watcher
   // below). Its own element so it stays pinned under the bar, above the loading spinner/board.
@@ -91,6 +96,7 @@ async function mountGameInstance(
   loadingEl.className = "text-muted text-center py-5";
   loadingEl.textContent = "Loading game…";
   slot.appendChild(barEl);
+  slot.appendChild(opponentMovesNoticeEl);
   slot.appendChild(entryNoticeEl);
   slot.appendChild(loadingEl);
   slot.appendChild(gameWrapperEl);
@@ -102,6 +108,10 @@ async function mountGameInstance(
   // reads engine/presence state via `this.$store`, which only works if `bar`'s root Vue instance is
   // given this same store at construction (Vuex injects `$store` from the root's `store` option).
   const emitter = launch("#hosted-game", Game);
+  const opponentMovesNoticeRoot = new Vue({
+    store: emitter.store,
+    render: (h) => h(OpponentMovesNotice),
+  }).$mount(opponentMovesNoticeEl);
   emitter.once("ready", () => {
     loadingEl.remove();
     gameWrapperEl.style.display = "";
@@ -470,6 +480,7 @@ async function mountGameInstance(
     bar.$destroy();
     chatNotesRoot.$destroy();
     entryNoticeRoot.$destroy();
+    opponentMovesNoticeRoot.$destroy();
     emitter.app.$destroy();
   };
 
