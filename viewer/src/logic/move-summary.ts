@@ -33,13 +33,13 @@ const BUILDING_LABELS: Record<string, string> = {
 };
 
 const TRACK_LABELS: Record<string, string> = {
-  [ResearchField.Terraforming]: "TF↑",
-  [ResearchField.Navigation]: "NAV↑",
-  [ResearchField.Intelligence]: "QIC↑",
-  [ResearchField.GaiaProject]: "GAIA↑",
-  [ResearchField.Economy]: "ECO↑",
-  [ResearchField.Science]: "SCI↑",
-  [ResearchField.Diplomacy]: "DIP↑",
+  [ResearchField.Terraforming]: "terra",
+  [ResearchField.Navigation]: "nav",
+  [ResearchField.Intelligence]: "int",
+  [ResearchField.GaiaProject]: "Gaia",
+  [ResearchField.Economy]: "eco",
+  [ResearchField.Science]: "sci",
+  [ResearchField.Diplomacy]: "dip",
 };
 
 const SHIP_LABELS: Record<string, string> = {
@@ -66,17 +66,34 @@ const BOOSTER_LABELS: Record<string, string> = {
   [Booster.LostFleetInstant]: "2pw/instant Gaia",
 };
 
+const BOOSTER_CODES: Record<string, string> = {
+  [Booster.Booster1]: "B1",
+  [Booster.Booster2]: "B2",
+  [Booster.Booster3]: "B3",
+  [Booster.Booster4]: "B4",
+  [Booster.Booster5]: "B5",
+  [Booster.Booster6]: "B6",
+  [Booster.Booster7]: "B7",
+  [Booster.Booster8]: "B8",
+  [Booster.Booster9]: "B9",
+  [Booster.Booster10]: "B10",
+  [Booster.LostFleetFormer]: "B-GF",
+  [Booster.LostFleetPlanet]: "B-planet",
+  [Booster.LostFleetDeep]: "B-DS",
+  [Booster.LostFleetInstant]: "B-Gaia",
+};
+
 const BOARD_ACTION_LABELS: Record<string, string> = {
-  power1: "PA +3k",
-  power2: "PA +2 steps",
-  power3: "PA +2o",
-  power4: "PA +7c",
-  power5: "PA +2k",
-  power6: "PA step",
-  power7: "PA +2t",
-  qic1: "QA tech",
-  qic2: "QA re-fed",
-  qic3: "QA vp/planet",
+  power1: "PA1 +3k",
+  power2: "PA2 +2 steps",
+  power3: "PA3 +2o",
+  power4: "PA4 +7c",
+  power5: "PA5 +2k",
+  power6: "PA6 step",
+  power7: "PA7 +2t",
+  qic1: "QA1 tech",
+  qic2: "QA2 re-fed",
+  qic3: "QA3 vp/planet",
 };
 
 const CONSEQUENTIAL_COMMANDS = new Set<string>([
@@ -141,12 +158,12 @@ function compactEffect(value: string): string {
 function buildingSummary(command: CommandObject): string {
   const building = BUILDING_LABELS[cleanArg(command.args[0])] ?? (cleanArg(command.args[0]) || "build");
   const location = cleanArg(command.args[1]);
-  return location ? `${building} @ ${location}` : building;
+  return location ? `build ${building} @ ${location}` : `build ${building}`;
 }
 
 function researchSummary(command: CommandObject): string {
   const track = cleanArg(command.args[0]);
-  return TRACK_LABELS[track] ?? `${track.toUpperCase()}↑`;
+  return `up ${TRACK_LABELS[track] ?? track}`.trim();
 }
 
 function boosterSummary(raw: string | undefined): string | null {
@@ -154,7 +171,9 @@ function boosterSummary(raw: string | undefined): string | null {
   if (!booster) {
     return null;
   }
-  return `B(${BOOSTER_LABELS[booster] ?? booster})`;
+  const code = BOOSTER_CODES[booster] ?? booster;
+  const effect = BOOSTER_LABELS[booster];
+  return effect ? `${code} (${effect})` : code;
 }
 
 function federationChoice(command: CommandObject): FederationChoice | null {
@@ -208,7 +227,7 @@ function boardActionSummary(command: CommandObject, commands: CommandObject[], e
 
   if (action === "qic2" && fedTile) {
     const reward = federationReward(federationChoice(fedTile));
-    return reward ? `${base} → ${reward}` : base;
+    return reward ? `${base} (${reward})` : base;
   }
   if (action === "qic1") {
     return [base, techSummary(tech, engine), research ? researchSummary(research) : null].filter(Boolean).join(" · ");
@@ -256,7 +275,7 @@ function consequentialSummary(command: CommandObject): string {
       return `explore ${SHIP_LABELS[cleanArg(command.args[0])] ?? cleanArg(command.args[0])}`;
     case Command.FormFederation: {
       const reward = federationReward(federationChoice(command));
-      return reward ? `fed → ${reward}` : "fed";
+      return reward ? `form fed (${reward})` : "form fed";
     }
     case Command.GaiaFormTransdim:
       return `GF @ ${cleanArg(command.args[0])}`;
@@ -300,14 +319,14 @@ function setupOrFallbackSummary(command: CommandObject, commands: CommandObject[
       return boosterSummary(command.args[0]) ?? "B";
     case Command.Pass: {
       const booster = boosterSummary(command.args[0]);
-      return booster ? `pass → ${booster}` : "pass";
+      return booster ? `pass ${booster}` : "pass";
     }
     case Command.Action:
       return boardActionSummary(command, commands, engine);
     case Command.SpaceshipAction:
       return standaloneSpaceshipAction(command, commands);
     case Command.Special:
-      return command.args[0] ? `SA ${compactEffect(cleanArg(command.args[0]))}` : "SA";
+      return command.args[0] ? `special ${compactEffect(cleanArg(command.args[0]))}` : "special";
     case Command.ExamineArtifact:
       return "artifact";
     case Command.ChooseArtifactToken:
@@ -365,29 +384,85 @@ export function compactMoveSummary(move: string, engine?: Engine | null): string
   return detail ? `${actor}: ${detail}` : null;
 }
 
+function normalizeReleasedCompactSummary(summary: string): string {
+  const match = summary.match(/^(.+?):\s*(.+)$/);
+  if (!match) {
+    return summary;
+  }
+
+  let detail = match[2];
+  const oldTracks: Record<string, string> = {
+    "TF↑": "up terra",
+    "NAV↑": "up nav",
+    "QIC↑": "up int",
+    "GAIA↑": "up Gaia",
+    "ECO↑": "up eco",
+    "SCI↑": "up sci",
+    "DIP↑": "up dip",
+  };
+  for (const [oldLabel, newLabel] of Object.entries(oldTracks)) {
+    detail = detail.split(oldLabel).join(newLabel);
+  }
+
+  const oldActions: Record<string, string> = {
+    "PA +3k": BOARD_ACTION_LABELS.power1,
+    "PA +2 steps": BOARD_ACTION_LABELS.power2,
+    "PA +2o": BOARD_ACTION_LABELS.power3,
+    "PA +7c": BOARD_ACTION_LABELS.power4,
+    "PA +2k": BOARD_ACTION_LABELS.power5,
+    "PA step": BOARD_ACTION_LABELS.power6,
+    "PA +2t": BOARD_ACTION_LABELS.power7,
+    "QA tech": BOARD_ACTION_LABELS.qic1,
+    "QA re-fed": BOARD_ACTION_LABELS.qic2,
+    "QA vp/planet": BOARD_ACTION_LABELS.qic3,
+  };
+  for (const [oldLabel, newLabel] of Object.entries(oldActions)) {
+    detail = detail.replace(oldLabel, newLabel);
+  }
+
+  detail = detail.replace(
+    /(^| → )(m|ts|rl|PI|ac1|ac2|GF|SS)(?= @| ·|$)/g,
+    (_whole, prefix: string, building: string) => `${prefix}build ${building}`
+  );
+  detail = detail.replace(/(^| → )fed → ([^·]+)(?= ·|$)/g, "$1form fed ($2)");
+  detail = detail.replace(/(^| → )fed(?= ·|$)/g, "$1form fed");
+  detail = detail.replace(/^pass → B\((.+)\)$/, (_whole, effect: string) => {
+    const booster = Object.keys(BOOSTER_LABELS).find((key) => BOOSTER_LABELS[key] === effect);
+    return `pass ${booster ? boosterSummary(booster) : `B(${effect})`}`;
+  });
+
+  return `${match[1]}: ${detail}`;
+}
+
 /** Immediately modernize old cached summaries without waiting for that game to receive a new move. */
 export function normalizeCachedMoveSummary(summary: string): string {
   const trimmed = (summary ?? "").trim();
   if (!trimmed) {
     return trimmed;
   }
+  if (trimmed.includes(":")) {
+    return normalizeReleasedCompactSummary(trimmed);
+  }
 
   const patterns: Array<[RegExp, (match: RegExpMatchArray) => string]> = [
     [/^(.+?) submitted silent bids\.?$/i, (m) => `${m[1]}: bids in`],
-    [/^(.+?) up (terra|nav|int|gaia|eco|sci|dip)\.?$/i, (m) => `${m[1]}: ${TRACK_LABELS[m[2].toLowerCase()]}`],
-    [/^(.+?) build mine sector (\S+?)\.?$/i, (m) => `${m[1]}: m @ S${cleanArg(m[2])}`],
-    [/^(.+?) build (ts|lab|PI|academy)\.?$/i, (m) => `${m[1]}: ${BUILDING_LABELS[m[2]] ?? m[2]}`],
+    [/^(.+?) up (terra|nav|int|gaia|eco|sci|dip)\.?$/i, (m) => `${m[1]}: up ${TRACK_LABELS[m[2].toLowerCase()]}`],
+    [/^(.+?) build mine sector (\S+?)\.?$/i, (m) => `${m[1]}: build m @ S${cleanArg(m[2])}`],
+    [
+      /^(.+?) build (ts|lab|PI|academy)\.?$/i,
+      (m) => `${m[1]}: build ${BUILDING_LABELS[m[2]] ?? BUILDING_LABELS[m[2].toLowerCase()] ?? m[2]}`,
+    ],
     [
       /^(.+?) (power|qic) action (\d+)\.?$/i,
       (m) =>
         `${m[1]}: ${BOARD_ACTION_LABELS[`${m[2].toLowerCase()}${m[3]}`] ?? `${m[2] === "qic" ? "QA" : "PA"}${m[3]}`}`,
     ],
-    [/^(.+?) form fed\.?$/i, (m) => `${m[1]}: fed`],
+    [/^(.+?) form fed\.?$/i, (m) => `${m[1]}: form fed`],
     [
       /^(.+?) explore (twilight|rebellion|tfmars|eclipse)\.?$/i,
       (m) => `${m[1]}: explore ${SHIP_LABELS[m[2].toLowerCase()]}`,
     ],
-    [/^(.+?) pass(?: (booster\d+))?\.?$/i, (m) => `${m[1]}: pass${m[2] ? ` → ${boosterSummary(m[2])}` : ""}`],
+    [/^(.+?) pass(?: (booster\d+))?\.?$/i, (m) => `${m[1]}: pass${m[2] ? ` ${boosterSummary(m[2])}` : ""}`],
     [/^(.+?) (pick|ban) (.+?)\.?$/i, (m) => `${m[1]}: ${m[2].toLowerCase()} ${m[3]}`],
   ];
 

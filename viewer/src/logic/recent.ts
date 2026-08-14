@@ -32,15 +32,18 @@ export function parseCommands(move: string): CommandObject[] {
     });
 }
 
-export function movesToHexes(data: Engine, moves: CommandObject[]): GaiaHex[] {
-  return moves.flatMap((c) => {
-    if (c.command == Command.Build) {
-      const coord = c.args[1].replace(".", "");
-      const hex = data.map.getS(coord);
-      return [hex];
+export function buildingMovesByHex(data: Engine, moves: CommandObject[]): Map<GaiaHex, CommandObject> {
+  const result = new Map<GaiaHex, CommandObject>();
+  for (const command of moves) {
+    if (command.command === Command.Build && command.args[1]) {
+      result.set(data.map.getS(command.args[1].replace(".", "")), command);
     }
-    return [];
-  });
+  }
+  return result;
+}
+
+export function movesToHexes(data: Engine, moves: CommandObject[]): GaiaHex[] {
+  return [...buildingMovesByHex(data, moves).keys()];
 }
 
 const outOfTurn = [Command.ChargePower, Command.BrainStone, Command.ChooseIncome, Command.Decline];
@@ -79,6 +82,11 @@ export function recentMoves(player: PlayerEnum, logEntries: LogEntry[], moveHist
   return firstMove != null
     ? { index: firstMove, moves: moves.slice(firstMove, lastMove), allMoves: moves }
     : { index: -1, moves: [], allMoves: moves };
+}
+
+/** The recap window starts after the viewer's previous own turn and ignores leech/income replies. */
+export function opponentMovesSinceLastTurn(recent: MovesSlice): ParsedMove[] {
+  return recent.moves.slice(1).filter(ownTurn);
 }
 
 export function roundMoves(logEntries: LogEntry[], moveHistory: string[]) {

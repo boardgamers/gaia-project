@@ -1,6 +1,6 @@
 import { LogEntry, PlayerEnum } from "@gaia-project/engine";
 import { expect } from "chai";
-import { markBuilding, ownTurn, parseCommands, parsedMove, recentMoves } from "./recent";
+import { markBuilding, opponentMovesSinceLastTurn, ownTurn, parseCommands, parsedMove, recentMoves } from "./recent";
 
 describe("Moves", () => {
   describe("recentMoves", () => {
@@ -98,6 +98,24 @@ describe("Moves", () => {
         );
       });
     }
+  });
+
+  it("returns only opponent turns after the viewer's previous turn", () => {
+    const slice = {
+      index: 1,
+      moves: [
+        parsedMove("terrans up gaia"),
+        parsedMove("xenos charge 2pw"),
+        parsedMove("xenos build m 8A2"),
+        parsedMove("geodens build ts 3A4"),
+      ],
+      allMoves: [],
+    };
+
+    expect(opponentMovesSinceLastTurn(slice).map((move) => move.move)).to.deep.equal([
+      "xenos build m 8A2",
+      "geodens build ts 3A4",
+    ]);
   });
 
   describe("markBuilding", () => {

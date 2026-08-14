@@ -5,6 +5,7 @@ import Engine, {
   GaiaHex,
   LostFleetSectorType,
   Planet,
+  PlayerEnum,
 } from "@gaia-project/engine";
 import { render } from "@testing-library/vue";
 import { expect } from "chai";
@@ -46,6 +47,39 @@ describe("SpaceMap", () => {
     // (~4,500 nodes for ~90 hexes) instead of being hoisted into FederationGradients.vue.
     expect(container.querySelectorAll("defs").length).to.equal(3);
     expect(container.querySelector("#federation-gradient-line-r")).to.not.be.null;
+  });
+
+  it("marks opponent mine placements and building upgrades since the viewer's previous turn", () => {
+    const engine = loadFixtureEngine();
+    const [ownHex, mineHex, upgradeHex] = [...engine.map.grid.values()].slice(0, 3);
+    const ownFaction = engine.players[PlayerEnum.Player1].faction;
+    const opponentFaction = engine.players[PlayerEnum.Player2].faction;
+    (engine as any).moveHistory = [
+      `init ${engine.players.length} recent-build-map`,
+      `${ownFaction} build m ${ownHex}`,
+      `${opponentFaction} build m ${mineHex}`,
+      `${opponentFaction} build ts ${upgradeHex}`,
+    ];
+    (engine as any).advancedLog = [
+      { player: PlayerEnum.Player1, move: 1 },
+      { player: PlayerEnum.Player2, move: 2 },
+      { player: PlayerEnum.Player2, move: 3 },
+      { player: PlayerEnum.Player1 },
+    ];
+
+    const store = makeStore();
+    store.commit("player", { index: PlayerEnum.Player1 });
+    store.commit("receiveData", engine);
+
+    const { container } = render(SpaceMap, { store });
+    const markers = [...container.querySelectorAll(".recent-opponent-building")];
+
+    expect(markers.map((marker) => marker.getAttribute("data-recent-opponent-building"))).to.deep.equal(["m", "ts"]);
+    expect(markers.map((marker) => marker.closest(".space-hex-cell")?.id)).to.deep.equal([
+      mineHex.toString(),
+      upgradeHex.toString(),
+    ]);
+    expect(markers.some((marker) => marker.closest(".space-hex-cell")?.id === ownHex.toString())).to.equal(false);
   });
 
   it("renders Lost Fleet Interspace and Deep Space hexes in addition to the base sectors", () => {

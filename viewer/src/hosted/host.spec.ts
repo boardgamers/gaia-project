@@ -591,10 +591,10 @@ describe("hosted game host", () => {
     const engine = new Engine(["init 2 randomSeed2", "p1 faction terrans", "p2 faction geodens"]);
     engine.generateAvailableCommandsIfNeeded();
 
-    expect(latestMoveSummary(engine, "terrans up int.")).to.equal("Terrans: QIC↑");
-    expect(latestMoveSummary(engine, "terrans build m 8A2.")).to.equal("Terrans: m @ 8A2");
-    expect(latestMoveSummary(engine, "terrans action power4.")).to.equal("Terrans: PA +7c");
-    expect(latestMoveSummary(engine, "terrans federation 1A4,9A9,9B4,9C fed4.")).to.equal("Terrans: fed → 7vp/2o");
+    expect(latestMoveSummary(engine, "terrans up int.")).to.equal("Terrans: up int");
+    expect(latestMoveSummary(engine, "terrans build m 8A2.")).to.equal("Terrans: build m @ 8A2");
+    expect(latestMoveSummary(engine, "terrans action power4.")).to.equal("Terrans: PA4 +7c");
+    expect(latestMoveSummary(engine, "terrans federation 1A4,9A9,9B4,9C fed4.")).to.equal("Terrans: form fed (7vp/2o)");
     expect(latestMoveSummary(engine, "terrans explore tfmars. endturn")).to.equal("Terrans: explore TFM");
     expect(latestMoveSummary(engine, "itars silentBid itars 10 ivits 0 space-giants 10.")).to.equal("Itars: bids in");
   });

@@ -109,6 +109,6 @@ describe("buildImportGameParams", () => {
     expect(params.p_finished).to.equal(false);
     expect(params.p_current_seat).to.equal(0);
     expect(params.p_current_round).to.equal(1);
-    expect(params.p_latest_move_summary).to.equal("Terrans: B(1q/2c)");
+    expect(params.p_latest_move_summary).to.equal("Terrans: B3 (1q/2c)");
   });
 });

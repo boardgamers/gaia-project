@@ -12,9 +12,11 @@ import { ChessBackend } from "./logic/chess-backend";
 import { RenjuBackend } from "./logic/renju-backend";
 import { UltimateTicTacToeBackend } from "./logic/ultimate-tic-tac-toe-backend";
 import {
+  buildingMovesByHex,
   CommandObject,
   MovesSlice,
   movesToHexes,
+  opponentMovesSinceLastTurn,
   parseCommands,
   parseMoves,
   recentMoves,
@@ -414,6 +416,10 @@ const gaiaViewer = {
     },
     recentHexes: (state: State, getters): Set<GaiaHex> => {
       return new Set(movesToHexes(state.data, getters.recentCommands));
+    },
+    recentOpponentBuildings: (state: State, getters): Map<GaiaHex, CommandObject> => {
+      const commands = opponentMovesSinceLastTurn(getters.recentMoves).flatMap((move) => move.commands);
+      return buildingMovesByHex(state.data, commands);
     },
     currentRoundHexes: (state: State, getters): Set<GaiaHex> => {
       return new Set(movesToHexes(state.data, getters.currentRoundCommands));

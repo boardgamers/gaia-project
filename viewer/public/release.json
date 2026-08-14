@@ -1,7 +1,22 @@
 {
-  "version": "5.57.2",
+  "version": "5.57.3",
   "releasedAt": "2026-08-14",
   "entries": [
+    {
+      "version": "5.57.3",
+      "releasedAt": "2026-08-14",
+      "kind": "update",
+      "title": "Clearer move recaps",
+      "impact": "",
+      "changes": [
+        "Move recaps now use the same compact action language as the game log.",
+        "Recent opponent mines and building upgrades are highlighted on the map."
+      ],
+      "userChanges": [
+        "Move recaps now use the same compact action language as the game log.",
+        "Recent opponent mines and building upgrades are highlighted on the map."
+      ]
+    },
     {
       "version": "5.57.2",
       "releasedAt": "2026-08-14",

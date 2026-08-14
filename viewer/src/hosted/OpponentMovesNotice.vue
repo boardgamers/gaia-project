@@ -22,7 +22,7 @@
 <script lang="ts">
 import Engine, { Phase, PlayerEnum } from "@gaia-project/engine";
 import Vue from "vue";
-import { MovesSlice, ownTurn, recentMoves } from "../logic/recent";
+import { MovesSlice, opponentMovesSinceLastTurn, recentMoves } from "../logic/recent";
 import { latestMoveSummary } from "./host";
 
 type OpponentMove = { raw: string; summary: string };
@@ -52,9 +52,7 @@ export default Vue.extend({
       // recentMoves intentionally includes this player's own previous turn as its first item so
       // the board can highlight from that point onward. The recap starts immediately AFTER it,
       // then drops leech/income-only interruptions: those are decisions, not opponents' turns.
-      return this.recentMoveSlice.moves
-        .slice(1)
-        .filter(ownTurn)
+      return opponentMovesSinceLastTurn(this.recentMoveSlice)
         .map((move) => ({ raw: move.move, summary: latestMoveSummary(this.engine, move.move) }))
         .filter((move): move is OpponentMove => move.summary !== null);
     },

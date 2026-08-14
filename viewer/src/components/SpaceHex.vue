@@ -115,6 +115,13 @@
         <Planet :planet="playerPlanet(p)" :transform="radiusTransform(p, 0.35)" />
       </g>
     </g>
+    <use
+      v-if="recentOpponentBuilding"
+      xlink:href="#space-hex"
+      class="recent-opponent-building"
+      :data-recent-opponent-building="recentOpponentBuilding.args[0]"
+      pointer-events="none"
+    />
   </g>
 </template>
 
@@ -152,6 +159,7 @@ import { splitCostBonus } from "../data/resources";
 import { spaceshipColors } from "../data/spaceships";
 import { max } from "lodash";
 import { factionPiecePlanet } from "../graphics/utils";
+import { CommandObject } from "../logic/recent";
 
 type BuildingOverride = { building: BuildingEnum; player: PlayerEnum };
 @Component<SpaceHex>({
@@ -531,6 +539,10 @@ export default class SpaceHex extends Vue {
     return this.$store.getters.currentRoundHexes.has(hex);
   }
 
+  get recentOpponentBuilding(): CommandObject | null {
+    return this.$store.getters.recentOpponentBuildings.get(this.hex) ?? null;
+  }
+
   get selection(): HexSelection | null {
     return this.context().highlighted.hexes;
   }
@@ -560,6 +572,9 @@ export default class SpaceHex extends Vue {
     }
     if (highlightHex?.rewards) {
       messages.push(`Reward: ${highlightHex.rewards}`);
+    }
+    if (this.recentOpponentBuilding) {
+      messages.push(`Recent opponent move: build ${this.recentOpponentBuilding.args[0]}`);
     }
 
     const buildingLabel = (player: Player, building: BuildingEnum) => {
@@ -662,6 +677,16 @@ svg {
     stroke-width: 0.1;
     fill: none;
     pointer-events: none;
+  }
+
+  .recent-opponent-building {
+    fill: none;
+    stroke: var(--recent);
+    stroke-width: 0.13;
+    stroke-dasharray: 0.22 0.08;
+    stroke-linejoin: round;
+    pointer-events: none;
+    filter: drop-shadow(0 0 0.08px #000) drop-shadow(0 0 0.12px var(--recent));
   }
 
   .space-hex-power-ring {

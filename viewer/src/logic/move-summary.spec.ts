@@ -4,12 +4,12 @@ import { compactMoveSummary, normalizeCachedMoveSummary } from "./move-summary";
 
 describe("compact move summaries", () => {
   it("uses compact Gaia notation for common turns", () => {
-    expect(compactMoveSummary("terrans up int.")).to.equal("Terrans: QIC↑");
-    expect(compactMoveSummary("terrans build m 8A2.")).to.equal("Terrans: m @ 8A2");
-    expect(compactMoveSummary("hadsch-hallas build lab 3A4.")).to.equal("Hadsch Hallas: rl @ 3A4");
-    expect(compactMoveSummary("geodens action power4.")).to.equal("Geoden: PA +7c");
-    expect(compactMoveSummary("nevlas federation 1A4,9A9,9B4,9C fed4.")).to.equal("Nevlas: fed → 7vp/2o");
-    expect(compactMoveSummary("xenos pass booster3.")).to.equal("Xenos: pass → B(1q/2c)");
+    expect(compactMoveSummary("terrans up gaia.")).to.equal("Terrans: up Gaia");
+    expect(compactMoveSummary("terrans build m 8A2.")).to.equal("Terrans: build m @ 8A2");
+    expect(compactMoveSummary("hadsch-hallas build lab 3A4.")).to.equal("Hadsch Hallas: build rl @ 3A4");
+    expect(compactMoveSummary("geodens action power4.")).to.equal("Geoden: PA4 +7c");
+    expect(compactMoveSummary("nevlas federation 1A4,9A9,9B4,9C fed4.")).to.equal("Nevlas: form fed (7vp/2o)");
+    expect(compactMoveSummary("xenos pass booster3.")).to.equal("Xenos: pass B3 (1q/2c)");
     expect(compactMoveSummary("terrans explore tfmars. endturn")).to.equal("Terrans: explore TFM");
   });
 
@@ -20,9 +20,11 @@ describe("compact move summaries", () => {
   });
 
   it("keeps the source and result of compound actions", () => {
-    expect(compactMoveSummary("terrans burn 1. action power6. build m 8A2.")).to.equal("Terrans: PA step → m @ 8A2");
+    expect(compactMoveSummary("terrans burn 1. action power6. build m 8A2.")).to.equal(
+      "Terrans: PA6 step → build m @ 8A2"
+    );
     expect(compactMoveSummary("space-giants spaceshipAction eclipse power. up int. endturn")).to.equal(
-      "Space Giants: Eclipse PA → QIC↑"
+      "Space Giants: Eclipse PA → up int"
     );
     expect(compactMoveSummary("moweyds spaceshipAction tfmars qic. endturn")).to.equal(
       "Moweyds: TFM QA → 2vp + 1vp/tech"
@@ -34,10 +36,10 @@ describe("compact move summaries", () => {
     (engine.tiles.techs as any).terra = { tile: TechTile.Tech1, count: 4 };
 
     expect(compactMoveSummary("terrans build lab 3A4. tech terra. up sci.", engine)).to.equal(
-      "Terrans: rl @ 3A4 · tech 1o/1q · SCI↑"
+      "Terrans: build rl @ 3A4 · tech 1o/1q · up sci"
     );
     expect(compactMoveSummary("terrans action qic1. tech terra. up int.", engine)).to.equal(
-      "Terrans: QA tech · tech 1o/1q · QIC↑"
+      "Terrans: QA1 tech · tech 1o/1q · up int"
     );
   });
 
@@ -46,10 +48,14 @@ describe("compact move summaries", () => {
   });
 
   it("modernizes legacy cached prose immediately", () => {
-    expect(normalizeCachedMoveSummary("Terrans up int.")).to.equal("Terrans: QIC↑");
-    expect(normalizeCachedMoveSummary("Terrans build mine sector 8.")).to.equal("Terrans: m @ S8");
-    expect(normalizeCachedMoveSummary("Hadsch Hallas build lab.")).to.equal("Hadsch Hallas: rl");
-    expect(normalizeCachedMoveSummary("Geoden power action 4.")).to.equal("Geoden: PA +7c");
+    expect(normalizeCachedMoveSummary("Terrans up int.")).to.equal("Terrans: up int");
+    expect(normalizeCachedMoveSummary("Terrans build mine sector 8.")).to.equal("Terrans: build m @ S8");
+    expect(normalizeCachedMoveSummary("Hadsch Hallas build lab.")).to.equal("Hadsch Hallas: build rl");
+    expect(normalizeCachedMoveSummary("Geoden power action 4.")).to.equal("Geoden: PA4 +7c");
     expect(normalizeCachedMoveSummary("Itars silentBid itars 10 ivits 0 space-giants 10.")).to.equal("Itars: bids in");
+    expect(normalizeCachedMoveSummary("Terrans: QIC↑")).to.equal("Terrans: up int");
+    expect(normalizeCachedMoveSummary("Terrans: m @ 8A2")).to.equal("Terrans: build m @ 8A2");
+    expect(normalizeCachedMoveSummary("Nevlas: fed → 7vp/2o")).to.equal("Nevlas: form fed (7vp/2o)");
+    expect(normalizeCachedMoveSummary("Xenos: pass → B(1q/2c)")).to.equal("Xenos: pass B3 (1q/2c)");
   });
 });
