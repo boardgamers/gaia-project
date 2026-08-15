@@ -6656,6 +6656,15 @@ pin_preference_split_budget_search_path` (the one function in the set without a 
       Giants' gold-outlined special octagon with its used X, the mine it built filled gold, the
       Terrans' ringed artifact, and their shuttle's gold-bordered Twilight slot.
 
+160.  ✅ **The player token sat low in a spaceship board's exploration slot (2026-08-15, viewer
+      v5.57.6).** Owner report. `LostFleetShips.vue` drew it at `translate(0, 0.95) scale(0.35)`,
+      apparently copied from the power-cost icon beside it, which needs a y-nudge because it carries
+      text (glyphs sit on a baseline). `Token` is a plain circle centered on its own (0,0), like the
+      slot circle it sits in, so the nudge was pure offset — measured in a real browser at 1.21 px
+      below center on a 20.4 px slot, i.e. a visibly uneven ring. Now `scale(0.35)` alone, re-measured
+      at dx/dy 0 on all three occupied slots. `LostFleetShips.spec.ts` asserts the transform is scale
+      only, since the failure mode is someone re-adding a translate.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

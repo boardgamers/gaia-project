@@ -73,8 +73,13 @@ describe("LostFleetShips", () => {
     const { container } = render(LostFleetShips, { store });
 
     const twilight = container.querySelector(`svg.lost-fleet-ship[data-ship="${Spaceship.Twilight}"]`);
-    expect(twilight.querySelector('[data-slot="1"] .player-token')).to.not.equal(null);
+    const token = twilight.querySelector('[data-slot="1"] .player-token');
+    expect(token).to.not.equal(null);
     expect(twilight.querySelector('[data-slot="2"] .player-token')).to.equal(null);
+
+    // The token is a plain circle centered on its own (0,0), and so is the slot circle it sits in -
+    // scale only, because any translate visibly pushes the token off the slot's center.
+    expect(token.parentElement.getAttribute("transform")).to.equal("scale(0.35)");
 
     const usedAction = twilight.querySelector('[data-action="qic"]');
     expect(usedAction.classList.contains("used")).to.equal(true);

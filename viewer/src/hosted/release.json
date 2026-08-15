@@ -1,7 +1,16 @@
 {
-  "version": "5.57.5",
+  "version": "5.57.6",
   "releasedAt": "2026-08-15",
   "entries": [
+    {
+      "version": "5.57.6",
+      "releasedAt": "2026-08-15",
+      "kind": "fix",
+      "title": "Centered slot tokens",
+      "impact": "",
+      "changes": ["Fixed the player token sitting slightly low in a spaceship board's exploration slot"],
+      "userChanges": []
+    },
     {
       "version": "5.57.5",
       "releasedAt": "2026-08-15",

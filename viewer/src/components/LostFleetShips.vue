@@ -216,7 +216,10 @@
                 <!-- the free (0-power) slot shows no number at all - a bare circle reads as "free". -->
                 <Resource v-if="slot.cost > 0" kind="pw" :count="slot.cost" transform="translate(0, 2) scale(0.62)" />
               </template>
-              <Token v-else :faction="slot.player.faction" transform="translate(0, 0.95) scale(0.35)" />
+              <!-- No y-nudge: Token is a plain circle centered on its own (0,0), so any translate
+                   pushes it off the slot circle's center. (The power-cost icon above needs one
+                   because it carries text, whose glyphs sit on a baseline.) -->
+              <Token v-else :faction="slot.player.faction" transform="scale(0.35)" />
             </g>
           </g>
         </svg>
