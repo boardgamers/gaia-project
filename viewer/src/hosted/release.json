@@ -1,7 +1,32 @@
 {
-  "version": "5.58.0",
+  "version": "5.59.0",
   "releasedAt": "2026-08-15",
   "entries": [
+    {
+      "version": "5.59.0",
+      "releasedAt": "2026-08-15",
+      "kind": "update",
+      "title": "Premove redesign",
+      "impact": "",
+      "changes": [
+        "The whole premove flow now lives in the bottom bar - queuing a move, editing the queue and arming a cancel rule no longer bounce you between a popup, a banner at the top of the page and the bar",
+        "Your queued moves are all listed at once, each showing what it does and whether it can still play, instead of one at a time behind numbered tabs",
+        "Sequential and Priority are now Chain and Fallback, each with a line saying what it does; switching between them asks first, in the bar",
+        "Cancel triggers are now called cancel rules, and an opponent whose turn it is can finally be picked to watch - they used to be greyed out and labelled 'passed'",
+        "What happened while you were away - a cancelled queue, a premove that could not be played, one that was played for you - is reported in the bar instead of further up the page",
+        "The 'How premoves work' reference is now a short scannable list instead of six paragraphs",
+        "Fixed the premove bar's buttons rendering unstyled on desktop, which left them near-invisible in dark mode",
+        "Fixed the premove bar showing two stacked sticky bars when a queued seat started composing a cancel rule"
+      ],
+      "userChanges": [
+        "The whole premove flow now lives in the bottom bar - queuing a move, editing the queue and arming a cancel rule no longer bounce you between a popup, a banner at the top of the page and the bar",
+        "Your queued moves are all listed at once, each showing what it does and whether it can still play, instead of one at a time behind numbered tabs",
+        "Sequential and Priority are now Chain and Fallback, each with a line saying what it does; switching between them asks first, in the bar",
+        "Cancel triggers are now called cancel rules, and an opponent whose turn it is can finally be picked to watch - they used to be greyed out and labelled 'passed'",
+        "What happened while you were away - a cancelled queue, a premove that could not be played, one that was played for you - is reported in the bar instead of further up the page",
+        "The 'How premoves work' reference is now a short scannable list instead of six paragraphs"
+      ]
+    },
     {
       "version": "5.58.0",
       "releasedAt": "2026-08-15",
