@@ -1,6 +1,17 @@
-import { LogEntry, PlayerEnum } from "@gaia-project/engine";
+import { LogEntry, PlayerEnum, ResearchField } from "@gaia-project/engine";
 import { expect } from "chai";
-import { markBuilding, opponentMovesSinceLastTurn, ownTurn, parseCommands, parsedMove, recentMoves } from "./recent";
+import {
+  boardActionMoves,
+  markBuilding,
+  opponentMovesSinceLastTurn,
+  ownTurn,
+  parseCommands,
+  parsedMove,
+  recentMoves,
+  researchMovesByFaction,
+  spaceshipActionKey,
+  spaceshipActionMoves,
+} from "./recent";
 
 describe("Moves", () => {
   describe("recentMoves", () => {
@@ -116,6 +127,31 @@ describe("Moves", () => {
       "xenos build m 8A2",
       "geodens build ts 3A4",
     ]);
+  });
+
+  describe("boards touched by a move", () => {
+    const commands = [
+      parsedMove("xenos up nav"),
+      parsedMove("geodens action power3. build m 3A4"),
+      parsedMove("terrans spaceshipAction twilight power. build lab 4B2"),
+      parsedMove("terrans up terra."),
+    ].flatMap((move) => move.commands);
+
+    it("groups research upgrades by faction", () => {
+      const research = researchMovesByFaction(commands);
+
+      expect([...research.keys()]).to.deep.equal(["xenos", "terrans"]);
+      expect([...research.get("xenos")]).to.deep.equal([ResearchField.Navigation]);
+      expect([...research.get("terrans")]).to.deep.equal([ResearchField.Terraforming]);
+    });
+
+    it("collects power/QIC actions", () => {
+      expect([...boardActionMoves(commands)]).to.deep.equal(["power3"]);
+    });
+
+    it("collects spaceship actions by ship and type", () => {
+      expect([...spaceshipActionMoves(commands)]).to.deep.equal([spaceshipActionKey("twilight", "power")]);
+    });
   });
 
   describe("markBuilding", () => {

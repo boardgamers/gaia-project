@@ -2,6 +2,16 @@
   <g :id="`${hex}`" class="space-hex-cell">
     <title v-text="tooltip" />
     <use xlink:href="#space-hex" :class="polygonClasses(hex)" @click="hexClick(hex)" />
+    <!-- An opponent built here since the viewer's last turn: fill the whole cell gold. Drawn right on
+         top of the cell's own fill and before everything else, so the federation lines, the planet and
+         the buildings still read normally on top of it. -->
+    <use
+      v-if="recentOpponentBuilding"
+      xlink:href="#space-hex"
+      class="recent-opponent-building"
+      :data-recent-opponent-building="recentOpponentBuilding.args[0]"
+      pointer-events="none"
+    />
     <use
       v-for="(l, i) in federationLines"
       :key="`fl-${i}`"
@@ -115,13 +125,6 @@
         <Planet :planet="playerPlanet(p)" :transform="radiusTransform(p, 0.35)" />
       </g>
     </g>
-    <use
-      v-if="recentOpponentBuilding"
-      xlink:href="#space-hex"
-      class="recent-opponent-building"
-      :data-recent-opponent-building="recentOpponentBuilding.args[0]"
-      pointer-events="none"
-    />
   </g>
 </template>
 
@@ -680,13 +683,9 @@ svg {
   }
 
   .recent-opponent-building {
-    fill: none;
-    stroke: var(--recent);
-    stroke-width: 0.13;
-    stroke-dasharray: 0.22 0.08;
-    stroke-linejoin: round;
+    fill: var(--recent);
+    stroke: none;
     pointer-events: none;
-    filter: drop-shadow(0 0 0.08px #000) drop-shadow(0 0 0.12px var(--recent));
   }
 
   .space-hex-power-ring {

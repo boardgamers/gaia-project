@@ -104,11 +104,6 @@ export default class SpecialAction extends Vue {
 <style lang="scss">
 g {
   &.specialAction {
-    &.recent > polygon {
-      stroke-width: 2;
-      stroke: var(--recent);
-    }
-
     & > polygon {
       stroke: black;
       stroke-width: 0.5;
@@ -118,6 +113,15 @@ g {
     &.board > polygon:not(.planet-fill) {
       fill: var(--ui-board-action);
       stroke: var(--ui-board-action-border);
+    }
+
+    // Gold outline: the viewer's own recent-action trail, or an opponent's action since the viewer's
+    // last turn. A used octagon is faction-colored (planet-fill), but one whose round has since reset
+    // is not - the second selector repeats the .board rule's own specificity so that case stays marked.
+    &.recent > polygon,
+    &.recent.board > polygon:not(.planet-fill) {
+      stroke-width: 2;
+      stroke: var(--recent);
     }
 
     &.highlighted > polygon {

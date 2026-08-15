@@ -85,6 +85,32 @@ describe("LostFleetShips", () => {
     expect(readyAction.querySelectorAll("line").length).to.equal(0);
   });
 
+  it("outlines a ship action an opponent took since the viewer's last turn", () => {
+    const engine = new Engine(["init 2 lost-fleet-ships-spec", "p1 faction terrans", "p2 faction hadsch-hallas"], {
+      lostFleet: true,
+    });
+    engine.spaceshipActions[Spaceship.Twilight] = { power: engine.players[1].player };
+    (engine as any).moveHistory = [
+      "init 2 lost-fleet-ships-spec",
+      `${Faction.Terrans} build m 1A1`,
+      `${Faction.HadschHallas} spaceshipAction ${Spaceship.Twilight} power`,
+    ];
+    (engine as any).advancedLog = [{ player: 0, move: 1 }, { player: 1, move: 2 }, { player: 0 }];
+
+    const store = makeStore();
+    store.commit("player", { index: 0 });
+    store.commit("receiveData", engine);
+
+    const { container } = render(LostFleetShips, { store });
+
+    const twilight = container.querySelector(`svg.lost-fleet-ship[data-ship="${Spaceship.Twilight}"]`);
+    expect(twilight.querySelector('[data-action="power"] g.specialAction.recent')).to.not.equal(null);
+    expect(twilight.querySelector('[data-action="qic"] g.specialAction.recent')).to.equal(null);
+    expect(
+      container.querySelector(`svg.lost-fleet-ship[data-ship="${Spaceship.Eclipse}"] g.specialAction.recent`)
+    ).to.equal(null);
+  });
+
   it("excludes Rebellion in 2-player games", () => {
     const engine = new Engine(["init 2 lost-fleet-ships-spec"], { lostFleet: true });
     const store = makeStore();

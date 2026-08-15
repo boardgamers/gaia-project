@@ -1,4 +1,13 @@
-import Engine, { Command, Faction, GaiaHex, LogEntry, PlayerEnum, ResearchField } from "@gaia-project/engine";
+import Engine, {
+  BoardAction,
+  Command,
+  Faction,
+  GaiaHex,
+  LogEntry,
+  PlayerEnum,
+  ResearchField,
+  Spaceship,
+} from "@gaia-project/engine";
 import { findLast, findLastIndex } from "lodash";
 
 export type CommandObject = { faction: Faction; command: Command; args: string[] };
@@ -44,6 +53,52 @@ export function buildingMovesByHex(data: Engine, moves: CommandObject[]): Map<Ga
 
 export function movesToHexes(data: Engine, moves: CommandObject[]): GaiaHex[] {
   return [...buildingMovesByHex(data, moves).keys()];
+}
+
+/** A move's last argument can keep the "." that separates it from the next command, e.g. "build m 3A4.". */
+function cleanArg(arg: string | undefined): string {
+  return (arg ?? "").replace(/\.+$/, "");
+}
+
+/** Which research tracks each faction advanced - keyed like `researchClasses` so both can mark the same token. */
+export function researchMovesByFaction(moves: CommandObject[]): Map<Faction, Set<ResearchField>> {
+  const result = new Map<Faction, Set<ResearchField>>();
+  for (const command of moves) {
+    if (command.command === Command.UpgradeResearch && command.args[0]) {
+      if (!result.has(command.faction)) {
+        result.set(command.faction, new Set());
+      }
+      result.get(command.faction).add(cleanArg(command.args[0]) as ResearchField);
+    }
+  }
+  return result;
+}
+
+/** The power / QIC actions taken on the research board. */
+export function boardActionMoves(moves: CommandObject[]): Set<BoardAction> {
+  const result = new Set<BoardAction>();
+  for (const command of moves) {
+    if (command.command === Command.Action && command.args[0]) {
+      result.add(cleanArg(command.args[0]) as BoardAction);
+    }
+  }
+  return result;
+}
+
+/** A spaceship action octagon is addressed by both its ship and its type, e.g. "twilight-power". */
+export function spaceshipActionKey(ship: Spaceship | string, type: string): string {
+  return `${ship}-${type}`;
+}
+
+/** The Lost Fleet spaceship-board actions taken, as `spaceshipActionKey` keys. */
+export function spaceshipActionMoves(moves: CommandObject[]): Set<string> {
+  const result = new Set<string>();
+  for (const command of moves) {
+    if (command.command === Command.SpaceshipAction && command.args[0] && command.args[1]) {
+      result.add(spaceshipActionKey(cleanArg(command.args[0]), cleanArg(command.args[1])));
+    }
+  }
+  return result;
 }
 
 const outOfTurn = [Command.ChargePower, Command.BrainStone, Command.ChooseIncome, Command.Decline];

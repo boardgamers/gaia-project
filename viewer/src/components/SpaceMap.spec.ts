@@ -80,6 +80,14 @@ describe("SpaceMap", () => {
       upgradeHex.toString(),
     ]);
     expect(markers.some((marker) => marker.closest(".space-hex-cell")?.id === ownHex.toString())).to.equal(false);
+
+    // The mark fills the cell, so it has to be drawn before the cell's content (planet, buildings,
+    // ships) rather than over it - otherwise the fill would hide what was just built there.
+    for (const marker of markers) {
+      const children = [...marker.closest(".space-hex-cell").children];
+      const content = children.find((child) => child.tagName === "g");
+      expect(children.indexOf(marker)).to.be.lessThan(children.indexOf(content));
+    }
   });
 
   it("renders Lost Fleet Interspace and Deep Space hexes in addition to the base sectors", () => {

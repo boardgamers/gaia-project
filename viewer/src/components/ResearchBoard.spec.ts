@@ -1,10 +1,48 @@
-import Engine, { ResearchField, ScoringBoardExtensionSide } from "@gaia-project/engine";
+import Engine, { PlayerEnum, ResearchField, ScoringBoardExtensionSide } from "@gaia-project/engine";
 import { render } from "@testing-library/vue";
 import { expect } from "chai";
+import fs from "fs";
 import { makeStore } from "../store";
 import ResearchBoard from "./ResearchBoard.vue";
 
 describe("ResearchBoard", () => {
+  it("puts a gold dot on the token of a track an opponent advanced since the viewer's last turn", () => {
+    // A real, fully set-up game: every player has a faction and a token on each track, which is what
+    // ResearchTile needs to draw them at all.
+    const engine = Engine.fromData(JSON.parse(fs.readFileSync("../engine/fixtures/Beta-2.json").toString()));
+    const ownFaction = engine.players[PlayerEnum.Player1].faction;
+    const opponentFaction = engine.players[PlayerEnum.Player2].faction;
+    (engine as any).moveHistory = [
+      `init ${engine.players.length} recent-research`,
+      `${ownFaction} up ${ResearchField.Economy}`,
+      `${opponentFaction} up ${ResearchField.Navigation}`,
+    ];
+    (engine as any).advancedLog = [
+      { player: PlayerEnum.Player1, move: 1 },
+      { player: PlayerEnum.Player2, move: 2 },
+      { player: PlayerEnum.Player1 },
+    ];
+
+    const store = makeStore();
+    store.commit("player", { index: PlayerEnum.Player1 });
+    store.commit("receiveData", engine);
+
+    const { container } = render(ResearchBoard, { store });
+    const dots = [...container.querySelectorAll("circle.research-tile.last-move")];
+
+    // only the opponent's track, and only their own token on it - not the viewer's own upgrade
+    expect(dots.length).to.equal(1);
+    const tile = dots[0].closest(`g.${ResearchField.Navigation}`);
+    expect(tile).to.not.be.null;
+
+    // ResearchTile lays its tiles out by level (y=278 at level 0, 0 at level 5) and its tokens out by
+    // seat (x = 10 + 13 * seat), so both coordinates confirm the dot landed on the right token.
+    const levelY = [278, 240, 202, 146, 108, 0];
+    const level = engine.players[PlayerEnum.Player2].data.research[ResearchField.Navigation];
+    expect(tile.getAttribute("transform")).to.equal(`translate(0, ${levelY[level]})`);
+    expect(dots[0].closest("g[transform]").getAttribute("transform")).to.contain("translate(23, ");
+  });
+
   it("does not add the 7th (Scoring Board Extension) column for a base game", () => {
     const engine = new Engine(["init 2 base-game-seed"]);
     const store = makeStore();

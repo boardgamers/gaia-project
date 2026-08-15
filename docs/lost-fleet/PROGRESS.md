@@ -6578,6 +6578,42 @@ pin_preference_split_budget_search_path` (the one function in the set without a 
       faction-name mover prefix where `reveal_sealed_bids` writes `p<n>`, and `loadTurnMoves`
       accepts both, so the reveal's move text parses to the same player either way.
 
+158.  ✅ **The "since your last turn" mark now covers every board it can happen on, and fills the hex
+      (2026-08-15, viewer v5.57.4).** Owner request. The mark shipped in v5.57.3 as a gold dashed
+      outline drawn only around a hex an opponent had built on; it now reads as gold on whichever
+      board the move actually touched:
+
+      - **Map hex** — filled gold instead of outlined. The fill element moved to just after the
+        cell's own polygon (before the federation lines, planet, buildings and ships), so the
+        content still draws on top of it and the hex reads as "something happened here" without
+        hiding what.
+      - **Research board** — a gold dot in the middle of that player's own token, reusing the exact
+        circle `ResearchTile.vue` already draws for the opt-in own-move trail, under a `last-move`
+        class whose rule comes last so it wins when a token qualifies for both.
+      - **Power / Q.I.C. action and Lost Fleet ship action** — the octagon is outlined gold through
+        `SpecialAction.vue`'s existing `recent` prop. Its rule gained a second, `.board`-specificity
+        selector: a used octagon is faction-colored (`planet-fill`) and was already fine, but one
+        whose round has since reset is not, and the board-action border rule would otherwise have
+        outranked the gold.
+
+      One store getter per board (`recentOpponentBuildings` / `recentOpponentResearch` /
+      `recentOpponentBoardActions` / `recentOpponentShipActions`), all derived from the same
+      `recentOpponentCommands` list, with the extraction itself in `logic/recent.ts` next to
+      `buildingMovesByHex`. Like the original, none of it is gated on `highlightRecentActions` —
+      that preference is the opt-in trail of your OWN moves; this is the "what did I miss" mark and
+      is always on. Faction/tech special actions are deliberately not covered (the owner listed
+      hexes, research, power and ship actions); a move that is only a special action still shows in
+      the recap notice.
+
+      **Tests:** `recent.spec.ts` 13 passing (+3 for the new extractors), plus one render case each
+      in `SpaceMap.spec.ts` (the fill is drawn before the cell's content), `ResearchBoard.spec.ts`
+      (one dot, on the right level and the right seat's token), `BoardAction.spec.ts` (outlined vs
+      untouched) and `LostFleetShips.spec.ts`. Full viewer suite green at 914 passing. Also verified
+      in a real browser against `?scenario=lost-fleet-overview`, driving three turns per checkpoint
+      so the mark had an opponent move to point at: gold-filled hex with the mine still visible, a
+      gold dot inside the Space Giants' eco token, and gold outlines on both a power octagon and
+      T F Mars's ship-action octagon.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

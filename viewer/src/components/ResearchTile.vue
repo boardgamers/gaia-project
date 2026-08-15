@@ -189,6 +189,12 @@ export default class ResearchTile extends Vue {
     if (c) {
       classes.push(c);
     }
+    // An opponent advanced this track since the viewer's last turn - a gold dot in the middle of the
+    // token they moved. Its rule comes last in the stylesheet, so it wins over "recent"/"current-round"
+    // when the same token qualifies for both.
+    if (this.$store.getters.recentOpponentResearch.get(player.faction)?.has(this.field)) {
+      classes.push("last-move");
+    }
     return classes.join(" ");
   }
 
@@ -262,6 +268,12 @@ svg {
     display: block;
     stroke: transparent;
     fill: var(--current-round);
+  }
+
+  circle.research-tile.last-move {
+    display: block;
+    stroke: black;
+    fill: var(--recent);
   }
 
   .research-tile {

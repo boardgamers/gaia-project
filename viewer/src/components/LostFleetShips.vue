@@ -54,6 +54,7 @@
               :class="{ faded: actionUser(ship, action.type) != null }"
               :action="actionIncome(ship, action.type)"
               :planet="actionPlanet(ship, action.type)"
+              :recent="recentOpponentAction(ship, action.type)"
               :board="true"
               x="-20"
               y="-25"
@@ -293,6 +294,7 @@ import Token from "./Token.vue";
 import UsedActionMark from "./UsedActionMark.vue";
 import UltimateTicTacToeBoard from "./UltimateTicTacToeBoard.vue";
 import { tooltipTriggerConfig } from "../logic/tooltip";
+import { spaceshipActionKey } from "../logic/recent";
 import PanelSwipe from "../logic/panel-swipe";
 import { UltimatePanelMode, UltimateTicTacToeBackend } from "../logic/ultimate-tic-tac-toe-backend";
 import { localUltimatePanelStorageKey } from "../logic/ultimate-tic-tac-toe";
@@ -598,6 +600,12 @@ export default class LostFleetShips extends Mixins(PanelSwipe) {
   actionUser(ship: Spaceship, type: SpaceshipActionType): Player | null {
     const player = this.engine.spaceshipActions[ship]?.[type];
     return player === undefined ? null : this.engine.player(player as PlayerEnum);
+  }
+
+  /** Gold outline on the octagon an opponent used since the viewer's last turn - the ship-board half of
+   * the same "what did I miss" marker the map hexes and research tokens carry. */
+  recentOpponentAction(ship: Spaceship, type: SpaceshipActionType): boolean {
+    return this.$store.getters.recentOpponentShipActions.has(spaceshipActionKey(ship, type));
   }
 
   /** Colors a taken ship action's octagon by the taking player's faction, like base-game BoardAction. */

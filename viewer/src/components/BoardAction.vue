@@ -87,7 +87,12 @@ export default class BoardAction extends Vue {
     return this.$store.state.context.highlighted.boardActions.has(this.action);
   }
 
+  /** Gold outline: either the viewer's own opt-in recent-action trail, or an opponent taking this
+   * action since the viewer's last turn (that one is always shown, see the store's getter). */
   get recent(): boolean {
+    if (this.$store.getters.recentOpponentBoardActions.has(this.action)) {
+      return true;
+    }
     const moves = this.$store.getters.recentCommands;
     return moves.some((c) => c.command == Command.Action && (c.args[0] as BoardActionEnum) === this.action);
   }

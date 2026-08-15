@@ -1,7 +1,20 @@
 {
-  "version": "5.57.3",
-  "releasedAt": "2026-08-14",
+  "version": "5.57.4",
+  "releasedAt": "2026-08-15",
   "entries": [
+    {
+      "version": "5.57.4",
+      "releasedAt": "2026-08-15",
+      "kind": "update",
+      "title": "Bolder last-move marks",
+      "impact": "",
+      "changes": [
+        "An opponent's last move is now marked in gold on the board it happened on: the hex is filled, their research token gets a dot, and a power or ship action is outlined."
+      ],
+      "userChanges": [
+        "An opponent's last move is now marked in gold on the board it happened on: the hex is filled, their research token gets a dot, and a power or ship action is outlined."
+      ]
+    },
     {
       "version": "5.57.3",
       "releasedAt": "2026-08-14",

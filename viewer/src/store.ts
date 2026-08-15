@@ -12,6 +12,7 @@ import { ChessBackend } from "./logic/chess-backend";
 import { RenjuBackend } from "./logic/renju-backend";
 import { UltimateTicTacToeBackend } from "./logic/ultimate-tic-tac-toe-backend";
 import {
+  boardActionMoves,
   buildingMovesByHex,
   CommandObject,
   MovesSlice,
@@ -21,7 +22,9 @@ import {
   parseMoves,
   recentMoves,
   researchClasses,
+  researchMovesByFaction,
   roundMoves,
+  spaceshipActionMoves,
 } from "./logic/recent";
 
 Vue.use(Vuex);
@@ -417,10 +420,20 @@ const gaiaViewer = {
     recentHexes: (state: State, getters): Set<GaiaHex> => {
       return new Set(movesToHexes(state.data, getters.recentCommands));
     },
-    recentOpponentBuildings: (state: State, getters): Map<GaiaHex, CommandObject> => {
-      const commands = opponentMovesSinceLastTurn(getters.recentMoves).flatMap((move) => move.commands);
-      return buildingMovesByHex(state.data, commands);
-    },
+    // Everything an opponent did since the viewer's own previous turn, marked in gold on the board it
+    // happened on: the hex itself, the research token, the power/QIC octagon, the ship-action octagon.
+    // Deliberately NOT gated on highlightRecentActions - this is the "what did I miss" marker, not the
+    // opt-in own-move trail.
+    recentOpponentCommands: (state: State, getters): CommandObject[] =>
+      opponentMovesSinceLastTurn(getters.recentMoves).flatMap((move) => move.commands),
+    recentOpponentBuildings: (state: State, getters): Map<GaiaHex, CommandObject> =>
+      buildingMovesByHex(state.data, getters.recentOpponentCommands),
+    recentOpponentResearch: (state: State, getters): Map<Faction, Set<ResearchField>> =>
+      researchMovesByFaction(getters.recentOpponentCommands),
+    recentOpponentBoardActions: (state: State, getters): Set<BoardAction> =>
+      boardActionMoves(getters.recentOpponentCommands),
+    recentOpponentShipActions: (state: State, getters): Set<string> =>
+      spaceshipActionMoves(getters.recentOpponentCommands),
     currentRoundHexes: (state: State, getters): Set<GaiaHex> => {
       return new Set(movesToHexes(state.data, getters.currentRoundCommands));
     },
