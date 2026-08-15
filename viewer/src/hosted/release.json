@@ -1,7 +1,20 @@
 {
-  "version": "5.57.6",
+  "version": "5.57.7",
   "releasedAt": "2026-08-15",
   "entries": [
+    {
+      "version": "5.57.7",
+      "releasedAt": "2026-08-15",
+      "kind": "update",
+      "title": "Tile marks",
+      "impact": "",
+      "changes": [
+        "A tech tile, federation token or booster an opponent just took is marked in gold - the tech tile both on the research board and on their player board."
+      ],
+      "userChanges": [
+        "A tech tile, federation token or booster an opponent just took is marked in gold - the tech tile both on the research board and on their player board."
+      ]
+    },
     {
       "version": "5.57.6",
       "releasedAt": "2026-08-15",

@@ -11,7 +11,7 @@
     v-b-tooltip.nofade="tooltipTriggerConfig()"
     :title="tooltip"
   >
-    <g :class="['federationTile', { disabled }]">
+    <g :class="['federationTile', { disabled, 'last-move': lastMove }]">
       <image xlink:href="../assets/conditions/federation.svg" :height=739/636*50 v-if="!disabled" style="color: #247B0A"
       width=50 x=-25 y=-25 :filter=filter /> <image xlink:href="../assets/conditions/federation-used.svg"
       v-if="disabled" :height=739/636*50 style="color: #247B0A" width=50 x=-25 y=-25 :filter=filter />
@@ -76,7 +76,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { Federation as FederationEnum, Reward, SpaceshipFederation } from "@gaia-project/engine";
+import { Federation as FederationEnum, PlayerEnum, Reward, SpaceshipFederation } from "@gaia-project/engine";
 import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
 import { spaceshipFederationSpec } from "@gaia-project/engine/src/tiles/spaceship-federations";
 import Building from "./Building.vue";
@@ -107,6 +107,23 @@ export default class FederationTile extends Vue {
    * neither of which a bare `rewardsOverride: Reward[]` carries enough information for. */
   @Prop()
   spaceshipFederation?: SpaceshipFederation;
+
+  /** Whose board this token sits on. Unset in the shared pool and on a ship's own Federation slot. */
+  @Prop()
+  player?: PlayerEnum;
+
+  /**
+   * An opponent claimed this token since the viewer's last turn - marked both on the pool stack it
+   * came from (which has no owner, so any taker counts) and on the taker's own player board.
+   */
+  get lastMove(): boolean {
+    const tile = this.spaceshipFederation ?? this.federation;
+    const takers = tile !== undefined ? this.$store.getters.recentOpponentFederationTiles?.get(tile) : undefined;
+    if (!takers) {
+      return false;
+    }
+    return this.player === undefined || takers.has(this.$store.state.data.players[this.player]?.faction);
+  }
 
   get rewards(): Reward[] {
     if (this.rewardsOverride) {
@@ -158,6 +175,12 @@ g {
       stroke: black;
       stroke-width: 0.5px;
     }
+  }
+
+  // Claimed by an opponent since the viewer's last turn. The token's art is an <image>, so there is
+  // no shape to stroke - a stacked gold drop-shadow hugs the token's own silhouette instead.
+  &.federationTile.last-move {
+    filter: drop-shadow(0 0 1px var(--recent)) drop-shadow(0 0 2px var(--recent)) drop-shadow(0 0 3px var(--recent));
   }
 }
 </style>

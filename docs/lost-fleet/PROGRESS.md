@@ -6665,6 +6665,43 @@ pin_preference_split_budget_search_path` (the one function in the set without a 
       at dx/dy 0 on all three occupied slots. `LostFleetShips.spec.ts` asserts the transform is scale
       only, since the failure mode is someone re-adding a translate.
 
+161.  ✅ **The three tiles that change hands are marked too, in both places they appear (2026-08-15,
+      viewer v5.57.7).** Owner follow-up to #159's "still unmarked, deliberately" list, with an
+      explicit requirement for tech tiles: _"both the ones on the research board as well as on the
+      player board should be outlined so it's visible both places."_
+
+      A tile is the one thing that shows up twice — in the pool it came from, which nobody owns, and
+      on the board of whoever took it. So these getters are keyed the other way round from #159's
+      (tile → the factions that claimed it, `factionsByCommandArg`), and the components ask the
+      question that fits where they are: a pool copy asks "did anyone?", a player's copy "did they?".
+      Both `TechTile.vue` and `FederationTile.vue` read that themselves rather than being handed a
+      class, which is what makes every copy mark from one place — `TechTile` gained no new prop at
+      all (`player` already told it whose board it is), `FederationTile` only had to declare the
+      `player` PlayerInfo was already passing it. `TechTile` skips the mark when `commandOverride` or
+      `tileOverride` is set: those are inline icons in a button or a log line, not tiles on a board.
+
+      - **Tech tile** (`tech <pos>`) — research board (incl. the free tiles and `adv-ext`), a ship's
+        Standard Tech slot, and the taker's player board.
+      - **Federation token** — the pool stack and the taker's board. Collected from BOTH
+        `fedtile <tile>` and the second argument of `federation <hexes> <tile>`, since forming a
+        federation names its token there rather than through a separate command.
+      - **Round booster** (`booster <b>`, `pass <b>`) — the taker's board only, and not by omission:
+        the booster they took is no longer in the pool, the one they returned is.
+
+      **Two contrast problems, both found by looking at a real render rather than at the DOM.** A
+      federation token is an `<image>` with no shape to stroke, so it gets a stacked gold
+      `drop-shadow` that hugs its silhouette. And a gold border on a tech tile is invisible on the
+      Economy track, whose own color IS gold — so tech tiles and boosters carry the same gold halo
+      outside the tile in addition to the border, which is what always reads. The halo sits on the
+      `<svg>`, leaving the border rect's own `url(#shadow-1)` filter attribute alone.
+
+      **Tests:** new `FederationTile.spec.ts` (3: pool copy marked for any taker, other stacks not,
+      a player's copy only for the taker), plus cases in `ResearchBoard.spec.ts` (the pool position)
+      and `PlayerInfo.spec.ts` (all three tiles at once, and the viewer's own board never marked).
+      Full viewer suite green at 926 passing. Verified in a browser by pasting a prepared state
+      through the viewer's own Load modal — a `?state=` URL for it is 43 KB, past what the dev
+      server accepts in a request line.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

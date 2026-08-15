@@ -110,11 +110,15 @@ svg {
       stroke-width: 2px;
     }
 
-    // Set from the player board when this booster's own special action was used by an opponent since
-    // the viewer's last turn - the octagon for it lives inside the booster art, so the tile is marked.
-    &.last-move .booster-background {
-      stroke: var(--recent);
-      stroke-width: 3px;
+    // Taken by an opponent since the viewer's last turn, or used for their special action, whose
+    // octagon lives inside the booster art. Bordered and haloed like a marked tech tile.
+    &.last-move {
+      filter: drop-shadow(0 0 2px var(--recent)) drop-shadow(0 0 3px var(--recent));
+
+      .booster-background {
+        stroke: var(--recent);
+        stroke-width: 3px;
+      }
     }
 
     &.disabled {

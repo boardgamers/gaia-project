@@ -1,6 +1,6 @@
 <template>
   <svg
-    :class="['techTile', pos, { highlighted, covered, advanced: isAdvanced }]"
+    :class="['techTile', pos, { highlighted, covered, advanced: isAdvanced, 'last-move': lastMove }]"
     v-if="this.count"
     v-b-tooltip.nofade.html="tooltipTriggerConfig()"
     :title="tooltip"
@@ -109,6 +109,24 @@ export default class TechTile extends Vue {
 
   get highlighted() {
     return this.$store.state.context.highlighted.techs.has(this.pos) || this.commandOverride;
+  }
+
+  /**
+   * An opponent claimed this tile since the viewer's last turn. Marked on every copy of it: the pool
+   * position on the research board (or a ship's Standard Tech slot), which has no owner and so marks
+   * for any taker, and the copy on the taker's own player board, which marks only for them.
+   */
+  get lastMove(): boolean {
+    // An override means this is an inline icon inside a button or a log line (RichTextView), not a
+    // tile sitting on a board.
+    if (this.commandOverride || this.tileOverride) {
+      return false;
+    }
+    const takers = this.$store.getters.recentOpponentTechTiles?.get(this.pos as string);
+    if (!takers) {
+      return false;
+    }
+    return this.player === undefined || takers.has(this.engine.players[this.player]?.faction);
   }
 
   get tileObject() {
@@ -283,11 +301,18 @@ svg {
       stroke-width: 2px;
     }
 
-    // Set from the player board when this tile's own special action was used by an opponent since
-    // the viewer's last turn - the octagon for it lives inside the tile art, so the tile is marked.
-    &.last-move .tech-border {
-      stroke: var(--recent);
-      stroke-width: 3px;
+    // Claimed by an opponent since the viewer's last turn, or (set from the player board) used for
+    // their special action, whose octagon lives inside the tile art. The border alone is not enough:
+    // the Economy track's own color is gold, so a gold border on it is invisible - the halo outside
+    // the tile is what always reads. The halo goes on the <svg>, leaving the border rect's own
+    // `url(#shadow-1)` filter attribute alone.
+    &.last-move {
+      filter: drop-shadow(0 0 2px var(--recent)) drop-shadow(0 0 3px var(--recent));
+
+      .tech-border {
+        stroke: var(--recent);
+        stroke-width: 3px;
+      }
     }
 
     &.covered {

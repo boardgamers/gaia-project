@@ -181,7 +181,7 @@
             x="-30"
             y="-60"
             height="120"
-            :class="{ 'last-move': recentSpecialBooster }"
+            :class="{ 'last-move': recentBooster }"
             :booster="playerData.tiles.booster"
             :disabled="passed"
             :special-action-used="boosterSpecialActionUsed"
@@ -290,6 +290,7 @@
         :spaceship-federation="fed.tile"
         :rewardsOverride="shipFederationRewards(fed.tile)"
         :used="!fed.green"
+        :player="player.player"
         :numTiles="1"
         filter="url(#shadow-1)"
       />
@@ -470,9 +471,16 @@ export default class PlayerInfo extends Vue {
     return this.recentOpponentSpecialSources.has(String(techTileEventSource(pos)));
   }
 
-  get recentSpecialBooster(): boolean {
+  /** Their booster was used for a special action, or taken from the pool, since the viewer's turn. */
+  get recentBooster(): boolean {
     const booster = this.playerData?.tiles?.booster;
-    return !!booster && this.recentOpponentSpecialSources.has(booster);
+    if (!booster) {
+      return false;
+    }
+    return (
+      this.recentOpponentSpecialSources.has(booster) ||
+      (this.$store.getters.recentOpponentBoosters.get(booster)?.has(this.faction) ?? false)
+    );
   }
 
   recentArtifact(artifact: ArtifactToken): boolean {

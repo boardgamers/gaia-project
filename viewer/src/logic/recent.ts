@@ -141,6 +141,30 @@ export function commandArgsByFaction<T extends string>(
   return result;
 }
 
+/** One command and the argument of it that names a tile. */
+export type TileArg = { command: Command; index?: number };
+
+/**
+ * The mirror of `commandArgsByFaction`: which factions claimed each tile. Tiles show up twice - once
+ * in the shared pool (research board, sidebar, ship board) where nobody owns them, and once on the
+ * board of whoever took one - so a pool copy asks "did anyone?" and a player's copy "did they?".
+ */
+export function factionsByCommandArg(moves: CommandObject[], slots: TileArg[]): Map<string, Set<Faction>> {
+  const result = new Map<string, Set<Faction>>();
+  for (const move of moves) {
+    for (const slot of slots) {
+      const value = move.command === slot.command ? cleanArg(move.args[slot.index ?? 0]) : "";
+      if (value) {
+        if (!result.has(value)) {
+          result.set(value, new Set());
+        }
+        result.get(value).add(move.faction);
+      }
+    }
+  }
+  return result;
+}
+
 /** The power / QIC actions taken on the research board. */
 export function boardActionMoves(moves: CommandObject[]): Set<BoardAction> {
   const result = new Set<BoardAction>();

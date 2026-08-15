@@ -15,6 +15,7 @@ import {
   boardActionMoves,
   CommandObject,
   commandArgsByFaction,
+  factionsByCommandArg,
   hexMovesByHex,
   MovesSlice,
   movesToHexes,
@@ -443,6 +444,22 @@ const gaiaViewer = {
       commandArgsByFaction<Spaceship>(getters.recentOpponentCommands, Command.Explore),
     recentOpponentArtifacts: (state: State, getters): Map<Faction, Set<ArtifactToken>> =>
       commandArgsByFaction<ArtifactToken>(getters.recentOpponentCommands, Command.ChooseArtifactToken),
+    // Tiles are marked in both places they appear - the pool they came from and the board of whoever
+    // took one - so these are keyed by tile, with the factions that claimed it.
+    recentOpponentTechTiles: (state: State, getters): Map<string, Set<Faction>> =>
+      factionsByCommandArg(getters.recentOpponentCommands, [{ command: Command.ChooseTechTile }]),
+    recentOpponentFederationTiles: (state: State, getters): Map<string, Set<Faction>> =>
+      factionsByCommandArg(getters.recentOpponentCommands, [
+        // forming a federation names its token as the move's second argument; every other way of
+        // gaining or re-scoring one goes through fedtile
+        { command: Command.FormFederation, index: 1 },
+        { command: Command.ChooseFederationTile },
+      ]),
+    recentOpponentBoosters: (state: State, getters): Map<string, Set<Faction>> =>
+      factionsByCommandArg(getters.recentOpponentCommands, [
+        { command: Command.ChooseRoundBooster },
+        { command: Command.Pass },
+      ]),
     currentRoundHexes: (state: State, getters): Set<GaiaHex> => {
       return new Set(movesToHexes(state.data, getters.currentRoundCommands));
     },

@@ -3,10 +3,13 @@ import {
   ArtifactToken,
   Booster,
   Faction,
+  Federation,
   Planet,
   Spaceship,
   SpaceshipFederation,
   SpaceshipTechTile,
+  TechTile,
+  TechTilePos,
 } from "@gaia-project/engine/src/enums";
 import { boosterEvents } from "@gaia-project/engine/src/tiles/boosters";
 import { fireEvent, render } from "@testing-library/vue";
@@ -228,6 +231,31 @@ describe("PlayerInfo last-move marks", () => {
 
     const { container: own } = render(PlayerInfo, { props: { player: engine.players[0] }, store });
     expect(own.querySelector("svg.booster.last-move"), "the viewer's own board is never marked").to.equal(null);
+  });
+
+  it("marks a tech tile, a federation token and a booster claimed since the viewer's last turn", () => {
+    const engine = opponentEngine([
+      `${Faction.HadschHallas} build lab 1A2. tech ${TechTilePos.Economy}`,
+      `${Faction.HadschHallas} federation 1A2,1A3 ${Federation.Fed2}`,
+      `${Faction.HadschHallas} pass ${Booster.Booster5}`,
+    ]);
+    const opponent = engine.players[1];
+    opponent.data.tiles.techs.push({ tile: TechTile.Tech1, pos: TechTilePos.Economy, enabled: true });
+    opponent.data.tiles.federations.push({ tile: Federation.Fed2, green: true });
+    opponent.data.tiles.booster = Booster.Booster5;
+    engine.players[0].data.tiles.techs.push({ tile: TechTile.Tech2, pos: TechTilePos.Science, enabled: true });
+
+    const store = makeStore();
+    store.commit("player", { index: 0 });
+    store.commit("receiveData", engine);
+
+    const { container } = render(PlayerInfo, { props: { player: opponent }, store });
+    expect(container.querySelector(`svg.techTile.${TechTilePos.Economy}.last-move`)).to.not.equal(null);
+    expect(container.querySelector("g.federationTile.last-move")).to.not.equal(null);
+    expect(container.querySelector("svg.booster.last-move")).to.not.equal(null);
+
+    const { container: own } = render(PlayerInfo, { props: { player: engine.players[0] }, store });
+    expect(own.querySelectorAll(".last-move").length, "the viewer's own board is never marked").to.equal(0);
   });
 
   it("outlines a faction's own special-action octagon", () => {

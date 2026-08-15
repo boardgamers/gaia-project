@@ -1,4 +1,4 @@
-import Engine, { PlayerEnum, ResearchField, ScoringBoardExtensionSide } from "@gaia-project/engine";
+import Engine, { PlayerEnum, ResearchField, ScoringBoardExtensionSide, TechTilePos } from "@gaia-project/engine";
 import { render } from "@testing-library/vue";
 import { expect } from "chai";
 import fs from "fs";
@@ -41,6 +41,26 @@ describe("ResearchBoard", () => {
     const level = engine.players[PlayerEnum.Player2].data.research[ResearchField.Navigation];
     expect(tile.getAttribute("transform")).to.equal(`translate(0, ${levelY[level]})`);
     expect(dots[0].closest("g[transform]").getAttribute("transform")).to.contain("translate(23, ");
+  });
+
+  it("marks the pool position a tech tile was taken from, for any taker", () => {
+    const engine = new Engine(["init 2 recent-tech-pool", "p1 faction terrans", "p2 faction hadsch-hallas"]);
+    (engine as any).moveHistory = [
+      "init 2 recent-tech-pool",
+      "terrans build m 1A1",
+      `hadsch-hallas build lab 1A2. tech ${TechTilePos.Economy}`,
+    ];
+    (engine as any).advancedLog = [{ player: 0, move: 1 }, { player: 1, move: 2 }, { player: 0 }];
+
+    const store = makeStore();
+    store.commit("player", { index: PlayerEnum.Player1 });
+    store.commit("receiveData", engine);
+
+    const { container } = render(ResearchBoard, { store });
+
+    // the research board's copy has no owner, so it marks whoever took from that stack
+    expect(container.querySelector(`svg.techTile.${TechTilePos.Economy}.last-move`)).to.not.equal(null);
+    expect(container.querySelectorAll("svg.techTile.last-move").length).to.equal(1);
   });
 
   it("does not add the 7th (Scoring Board Extension) column for a base game", () => {
