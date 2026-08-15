@@ -6867,6 +6867,16 @@ pin_preference_split_budget_search_path` (the one function in the set without a 
       **Naming cleanup:** `cancelTriggerModalStage` became `cancelTriggerStage` and
       `closeCancelTriggerModal` became `closeCancelTriggerStep`, since there is no modal any more.
 
+      **The ⓘ reference was rewritten to be scannable** (owner follow-up): six dense paragraphs
+      became six short headed lists, one fact per line, because the rules people actually need —
+      what gets dropped and when, and when a rule fires — were buried inside the reasoning for them.
+      Nothing was dropped: the cascade rules, "only illegal entries are skipped", mode switching
+      clearing the queue, auto-charge being needed offline, effect-not-route matching with the
+      Economy example and its narrow alternative, plumbing being ignored, the N−1 VP threshold, and
+      "only moves made after you arm a rule count" all survive as single lines. Its style block sits
+      outside `.premove-bar` on purpose — `b-modal` moves its content to the end of the document, so
+      a nested selector would never match it.
+
       **Tests:** new `CancelTriggerPicker.spec.ts` (3: on-turn badged and pickable, passed badged
       and still pickable, neither-state unbadged — it pins the engine's turn pointer and
       `passedPlayers` directly rather than driving a real game into that shape, so the test is about

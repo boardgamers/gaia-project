@@ -248,46 +248,56 @@
          sticky-sheet layout for the same reason as the header above. -->
     <StickyResourceBar v-if="showResourceBar" :player="myPlayer" class="premove-bar__resource-row" />
 
-    <b-modal id="premove-info" size="lg" title="Premove modes" ok-only>
-      <p>
-        <b>Chain</b> queues your next turns in order: entry 2 is previewed assuming entry 1 already landed, and so on.
-        It's throughput — more of your own turns get played while you're away. If an early link breaks (the board
-        changed enough that it's no longer legal), everything queued behind it is discarded too, since it was planned
-        assuming that link would land. Editing a link has the same effect as breaking it, for the same reason.
-      </p>
-      <p>
-        <b>Fallback</b> is up to 3 ranked alternatives for your <i>single</i> upcoming turn. The first one that's still
-        legal when your turn arrives is the one that plays; the rest are discarded. It's insurance — useful for "pass
-        taking booster A, or B, or C" or any contested claim (federation token, advanced tech, artifact) where you want
-        a fallback instead of a single bet. Editing one rank never affects the others.
-      </p>
-      <p class="text-muted small">
-        Neither mode can tell "still legal" from "still a good idea" — Fallback only falls through on an
-        <i>illegal</i> option, not a merely worse one. Switching between modes clears your current queue, since the two
-        interpret the queue differently. A pending charge/leech decision before your turn still needs auto-charge
-        enabled to resolve automatically while you're offline.
-      </p>
-      <p>
-        <b>Cancel rules.</b> A rule watches one opponent and, if they do the thing you picked, clears your whole premove
-        queue — it never plays anything, it only cancels. You can arm as many as you like, on different opponents; any
-        one of them firing clears everything, including your other rules.
-      </p>
-      <p>
-        Rules match on <b>what happened, not how</b>. Power burns and free-action conversions are ignored, so "spend 2
-        power, then build a mine at 3A4" matches a plain "build a mine at 3A4". More usefully:
-        <b
-          >"advances Economy" fires whether they got that step from a tech tile, a research power action, or a faction's
-          own special action</b
-        >
-        — the route doesn't matter, the result does. If you want the narrow version, watch "takes the tech tile at eco"
-        instead.
-      </p>
-      <p class="text-muted small">
-        You can also cancel on a <b>power charge</b> instead of on an opponent's move — useful because leeching changes
-        your power bowls and costs VP, which is exactly the kind of "still legal, but I'd play something else now" shift
-        a premove can't notice on its own. Pick whether it counts offers you turned down, and a minimum size — charging
-        N power costs N-1 VP, so 2 is the first one that costs you anything. Only moves made after you arm a rule count.
-      </p>
+    <!-- One fact per line. This used to be six dense paragraphs that buried the rules people
+         actually need (what gets dropped, and when a rule fires) inside the reasoning for them. -->
+    <b-modal id="premove-info" size="lg" title="How premoves work" ok-only>
+      <div class="premove-info">
+        <h6>Chain — your next turns, in order</h6>
+        <ul>
+          <li>Each entry is planned as if the one before it already played.</li>
+          <li>If an entry becomes illegal, it and everything after it is dropped.</li>
+          <li>Editing an entry drops the ones after it, for the same reason.</li>
+        </ul>
+
+        <h6>Fallback — up to 3 alternatives for one turn</h6>
+        <ul>
+          <li>The first one still legal plays. The rest are dropped.</li>
+          <li>Editing one never affects the others.</li>
+          <li>Use it for contested picks: a booster, federation token, advanced tech, artifact.</li>
+        </ul>
+
+        <h6>Both modes</h6>
+        <ul>
+          <li>Queued moves play on your turn even with the app closed.</li>
+          <li>Only <i>illegal</i> entries are skipped. A merely worse move still plays.</li>
+          <li>Switching mode clears the queue.</li>
+          <li>A power-charge decision before your turn needs auto-charge on to resolve while you're offline.</li>
+        </ul>
+
+        <h6>Cancel rules — clear the queue when something happens</h6>
+        <ul>
+          <li>A rule never plays a move. It only cancels.</li>
+          <li>Arm as many as you like. Any one firing clears everything, including your other rules.</li>
+          <li>Only moves made after you arm a rule count.</li>
+        </ul>
+
+        <h6>Rules match on what happened, not how</h6>
+        <ul>
+          <li>
+            "Advances Economy" fires whether the step came from a tech tile, a power action or a special action. To
+            watch one route only, pick "takes the tech tile at eco" instead.
+          </li>
+          <li>
+            Power burns and conversions are ignored: "spend 2pw, then build a mine at 3A4" matches "builds m 3A4".
+          </li>
+        </ul>
+
+        <h6>Cancelling on your own power charge</h6>
+        <ul>
+          <li>Charging N power costs N−1 VP, so 2 is the first amount that costs you anything.</li>
+          <li>Choose whether offers you decline count too.</li>
+        </ul>
+      </div>
     </b-modal>
   </div>
 </template>
@@ -1058,6 +1068,31 @@ export default class PremoveBar extends Vue {
     border-radius: 8px;
     background: linear-gradient(180deg, var(--ui-keycap-gradient-start) 0%, var(--ui-keycap-gradient-end) 100%);
     color: var(--ui-secondary-text);
+  }
+}
+
+// The ⓘ modal's content: scannable rather than readable - one fact per line under short headings.
+// Deliberately NOT nested inside `.premove-bar` above, because b-modal moves its content to the end
+// of <body>, outside this component's root element, so a nested selector would never match.
+.premove-info {
+  h6 {
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin: 0.9rem 0 0.3rem;
+  }
+
+  h6:first-child {
+    margin-top: 0;
+  }
+
+  ul {
+    margin: 0;
+    padding-left: 1.1rem;
+  }
+
+  li {
+    font-size: 0.85rem;
+    line-height: 1.45;
   }
 }
 
