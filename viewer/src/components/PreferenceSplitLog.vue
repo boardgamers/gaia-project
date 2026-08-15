@@ -13,9 +13,15 @@
         <h2 id="preference-split-heading">Preference Split summary</h2>
       </div>
       <div class="preference-split-log__metrics" aria-label="Auction totals">
-        <span><strong>{{ result.players.length }}</strong> players</span>
-        <span><strong>{{ result.budget }}</strong> points each</span>
-        <span><strong>{{ result.factions.length }}</strong> factions</span>
+        <span
+          ><strong>{{ result.players.length }}</strong> players</span
+        >
+        <span
+          ><strong>{{ result.budget }}</strong> points each</span
+        >
+        <span
+          ><strong>{{ result.factions.length }}</strong> factions</span
+        >
       </div>
     </header>
 
@@ -268,9 +274,9 @@ export default class PreferenceSplitLog extends Vue {
         faction: this.factionLabel(allocation.faction),
         color: factionColor(allocation.faction),
         payment: allocation.payment,
-        headline: `${this.playerLabel(allocation.winner)} wins it with a bid of ${
-          allocation.winnerBid
-        }, and pays ${allocation.payment} VP`,
+        headline: `${this.playerLabel(allocation.winner)} wins it with a bid of ${allocation.winnerBid}, and pays ${
+          allocation.payment
+        } VP`,
         detail:
           `Still in the running: ${allocation.eligible.map((player) => this.playerLabel(player)).join(", ")}. ` +
           `Every bid on it was ${bids}, so the average is ${price} - rounded to ${allocation.payment}.` +
@@ -732,7 +738,6 @@ export default class PreferenceSplitLog extends Vue {
   span {
     color: var(--ui-text-muted);
   }
-
 }
 
 .preference-resolution__detail {
