@@ -1,12 +1,11 @@
 <template>
   <div class="cancel-trigger-leech-config">
-    <h5 class="mb-2">⚡ Cancel if a power charge is …</h5>
     <div class="mb-2">
-      <label class="d-block">
+      <label class="d-block mb-1">
         <input type="radio" value="offered" v-model="mode" class="mr-1" />
         offered to me
       </label>
-      <label class="d-block">
+      <label class="d-block mb-1">
         <input type="radio" value="gained" v-model="mode" class="mr-1" />
         taken by me
       </label>
@@ -17,25 +16,23 @@
       power
     </div>
 
-    <div class="cancel-trigger-leech-config__preview text-muted small mt-2">{{ previewText }}</div>
-
-    <div class="mt-3 d-flex flex-wrap">
-      <button type="button" class="btn btn-warning btn-sm mr-2 mb-1" :disabled="minPower < 1" @click="arm">
-        Arm trigger
-      </button>
-      <button type="button" class="btn btn-link btn-sm mb-1" @click="$emit('cancel')">Cancel</button>
-    </div>
+    <div class="cancel-trigger-leech-config__preview text-muted small">{{ previewText }}</div>
   </div>
 </template>
 
 <script lang="ts">
 import Engine from "@gaia-project/engine";
-import { Component, Prop, Vue } from "vue-property-decorator";
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { moveAtoms } from "../logic/premove-cancel-trigger";
 
 // §2.6/§8.4 - no composing, no refine: the config IS the trigger. Default mode 'gained' with
 // minPower 2 (charging N power costs N-1 VP, so 2 is the first threshold that costs anything -
 // owner decision, not optional, see §2.6).
+//
+// Body-only: the sheet that hosts this step (PremoveBar) draws the title in its header band and the
+// Arm/Back pair in its footer, so every step of the cancel-trigger flow confirms from the same spot
+// instead of each one growing its own buttons wherever it happens to be rendered. This component
+// therefore just reports its current value upward via `input` and never arms anything itself.
 @Component
 export default class CancelTriggerLeechConfig extends Vue {
   @Prop()
@@ -93,11 +90,16 @@ export default class CancelTriggerLeechConfig extends Vue {
     } so far this game.`;
   }
 
-  arm() {
-    if (this.minPower < 1) {
-      return;
-    }
-    this.$emit("arm", { mode: this.mode, minPower: this.minPower });
+  mounted() {
+    this.emitState();
+  }
+
+  /** Reports the current config to the host sheet, or `null` while it isn't armable - the footer's
+   * "Arm rule" button is disabled on exactly that null. */
+  @Watch("mode")
+  @Watch("minPower")
+  emitState() {
+    this.$emit("input", this.minPower >= 1 ? { mode: this.mode, minPower: this.minPower } : null);
   }
 }
 </script>

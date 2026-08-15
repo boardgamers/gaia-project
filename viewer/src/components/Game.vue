@@ -148,27 +148,12 @@
              above now (see the map+research row), not here, so this row's remaining col-md-5 is
              simply left empty on desktop. -->
         <div :class="commandsColumnClass">
-          <div v-if="premoveMode" class="alert alert-info premove-banner">
-            <strong>{{ premoveEditSeq !== null ? "EDITING PREMOVE" : "PREMOVE" }}</strong> — plays automatically on your
-            turn.
-            <div class="small" v-if="!premoveReady">Build the move you want, then end the turn to queue it.</div>
-            <div class="small text-warning" v-if="premoveComposeCaveat">{{ premoveComposeCaveat }}</div>
-            <div class="small text-warning" v-if="premoveEditDownstreamCount > 0">
-              This will also discard the {{ premoveEditDownstreamCount }} premove{{
-                premoveEditDownstreamCount === 1 ? "" : "s"
-              }}
-              queued after it.
-            </div>
-          </div>
-          <!-- Cancel trigger compose (§8.3) - deliberately amber/warning rather than the premove
-               banner's blue: the board looks exactly like composing your own move otherwise, and
-               this is the one visual cue telling the two apart. -->
-          <div v-if="cancelTriggerComposeActive" class="alert alert-warning premove-banner">
-            <strong>CANCEL TRIGGER — playing as {{ cancelTriggerWatchedFactionName }}</strong>
-            <div class="small" v-if="!cancelTriggerReady">
-              Build the move you want to watch for, then end the turn to continue.
-            </div>
-          </div>
+          <!-- The two `alert` banners that used to sit here - one blue for composing a premove, one
+               amber for composing a cancel rule - are gone. They described what the bottom bar was
+               doing while living at the top of the page, which on a phone is usually scrolled out of
+               sight while you compose against it. Both now render inside Commands.vue's own sticky
+               bar header (`premove-context`), so the status and the buttons it describes are the
+               same object. -->
           <Commands
             @command="handleCommand"
             v-if="canPlay && !setupActionsAtTop"
@@ -179,6 +164,7 @@
             :premove-confirm-label="
               cancelTriggerComposeActive ? 'Continue' : premoveEditSeq !== null ? 'Save changes' : 'Queue now'
             "
+            :premove-context="premoveContext"
             @cancel-premove="cancelTriggerComposeActive ? cancelCancelTriggerCompose() : cancelPremoveMode()"
             @confirm-premove="cancelTriggerComposeActive ? confirmCancelTriggerCompose() : queueCurrentPremove()"
             @sticky-bar-height="stickyBarHeight = $event"
@@ -193,78 +179,38 @@
             Waiting for {{ turnPlayer.name || "the other player" }}. This is your offline copy of an online game, so you
             play only your own seats here; their move arrives the next time you open the game with a connection.
           </div>
-          <div
-            v-else-if="turnPlayer && !ended && premoveOffered && !premoveExplainerDismissed"
-            class="text-muted small"
-          >
-            Premoves play automatically when your turn comes, even if you're offline. If the board changed and your move
-            is no longer legal, it's skipped and we'll notify you.
-            <button type="button" class="btn btn-link btn-sm p-0" @click="dismissPremoveExplainer">Got it</button>
-          </div>
-          <div v-if="showPremoveBar && !premoveMode" class="mt-2">
+          <!-- The premove sheet: the ONE surface the off-turn flow lives on. The cancel-rule
+               `b-modal` that used to follow this block is gone - its three stages are steps inside
+               the sheet now (`stage`), so the flow never leaves the bottom of the screen. The
+               cascade / failure / played-automatically `alert`s that used to follow it are gone for
+               the same reason: they rendered in this in-flow column, i.e. above a sheet pinned to the
+               bottom of the viewport, which is precisely where they would not be read. They are
+               notices inside the sheet body now. -->
+          <div v-if="showPremoveSheet" class="mt-2">
             <PremoveBar
               :seat="myLockedSeat"
               :compose-mode-preference="premoveModePreference"
               :sticky-mobile="!canPlay"
               :bottom-offset="0"
+              :stage="cancelTriggerStage"
+              :watched-seat="cancelTriggerWatchedSeat"
+              :draft-move="cancelTriggerDraftMove"
+              :editing-atoms="cancelTriggerEditingAtoms"
+              :editing-leech-config="cancelTriggerEditingLeechConfig"
+              :edit-cascade-notice="premoveEditCascadeNotice"
               @mode-preference="setPremoveModePreference"
               @start-new="onStartNewPremove"
               @start-edit="startEditPremove"
               @start-cancel-trigger="startCancelTriggerPicker"
               @start-edit-cancel-trigger="startEditCancelTrigger"
-              @bar-height="premoveBarHeight = $event"
-            />
-          </div>
-          <b-modal
-            id="cancel-trigger-modal"
-            v-model="cancelTriggerModalOpen"
-            hide-footer
-            hide-header
-            size="lg"
-            dialog-class="gaia-viewer-modal"
-          >
-            <CancelTriggerPicker
-              v-if="cancelTriggerModalStage === 'picker'"
-              :seat="myLockedSeat"
               @pick-opponent="pickCancelTriggerOpponent"
               @pick-leech="pickCancelTriggerLeech"
-              @cancel="closeCancelTriggerModal"
+              @arm-refine="armCancelTriggerFromRefine"
+              @arm-leech="armLeechTrigger"
+              @close-cancel-trigger="closeCancelTriggerStep"
+              @dismiss-cascade="premoveEditCascadeNotice = null"
+              @bar-height="premoveBarHeight = $event"
             />
-            <CancelTriggerLeechConfig
-              v-else-if="cancelTriggerModalStage === 'leech'"
-              :seat="myLockedSeat"
-              :initial-config="cancelTriggerEditingLeechConfig"
-              @arm="armLeechTrigger"
-              @cancel="closeCancelTriggerModal"
-            />
-            <CancelTriggerRefine
-              v-else-if="cancelTriggerModalStage === 'refine'"
-              :move="cancelTriggerDraftMove"
-              :watched-seat="cancelTriggerWatchedSeat"
-              :initial-atoms="cancelTriggerEditingAtoms"
-              @arm="armCancelTriggerFromRefine"
-              @cancel="closeCancelTriggerModal"
-            />
-          </b-modal>
-          <div v-if="premoveEditCascadeNotice !== null" class="alert alert-light small mt-2 py-1 px-2">
-            Premove updated - {{ premoveEditCascadeNotice }} queued move{{
-              premoveEditCascadeNotice === 1 ? "" : "s"
-            }}
-            after it {{ premoveEditCascadeNotice === 1 ? "was" : "were" }} discarded since they depended on it.
-            <button type="button" class="btn btn-link btn-sm p-0" @click="premoveEditCascadeNotice = null">
-              Dismiss
-            </button>
-          </div>
-          <div v-if="myUnreadFailures.length" class="alert alert-warning premove-failures small mt-2">
-            <div v-for="f in myUnreadFailures" :key="f.id">
-              <template v-if="f.kind === 'cancelled'">Cancelled — {{ f.reason }}</template>
-              <template v-else>Your premove couldn't be played: {{ f.reason }}</template>
-              <button type="button" class="btn btn-link btn-sm p-0" @click="markFailureRead(f.id)">Dismiss</button>
-            </div>
-          </div>
-          <div v-if="premovePlayedNotice" class="alert alert-light premove-played small mt-2 py-1 px-2">
-            Played automatically from your queue{{ premovePlayedNoticeSuffix }}: {{ premovePlayedNotice.move }}
-            <button type="button" class="btn btn-link btn-sm p-0" @click="dismissPremovePlayedNotice">Dismiss</button>
           </div>
           <!-- Desktop's round-0 slot (mobile's is up under the status strip). Placed after the
                block above rather than inside its v-if/v-else-if chain, so the offline-mirror
@@ -373,18 +319,15 @@ import {
   CancelTriggerKind,
   CancelTriggerLeechConfig as CancelTriggerLeechConfigType,
   CancelTriggerRow,
-  PremoveFailureRow,
   PremoveMode,
   PremoveRow,
 } from "../hosted/types";
 import { buildSequentialChainPreview } from "../logic/premove-preview";
+// The three CancelTrigger* step components are registered by PremoveBar now, not here - they render
+// inside the sheet rather than in a modal this component owned.
 import PremoveBar from "./PremoveBar.vue";
 import AutoLeechFab from "./AutoLeechFab.vue";
-import CancelTriggerPicker from "./CancelTriggerPicker.vue";
-import CancelTriggerRefine from "./CancelTriggerRefine.vue";
-import CancelTriggerLeechConfig from "./CancelTriggerLeechConfig.vue";
 
-const PREMOVE_EXPLAINER_DISMISSED_KEY = "premoveExplainerDismissed";
 const PREMOVE_MODE_PREFERENCE_KEY = "premoveModePreference";
 
 // The base-game power/QIC action row is drawn with BoardAction.vue, which wraps every octagon in an
@@ -424,9 +367,6 @@ const BOARD_ACTION_BASE_X = -20;
     Table,
     PremoveBar,
     AutoLeechFab,
-    CancelTriggerPicker,
-    CancelTriggerRefine,
-    CancelTriggerLeechConfig,
     Charts: () => import("./Charts.vue"),
   },
 })
@@ -469,22 +409,21 @@ export default class Game extends Vue {
   // downstream entries - the count is captured at confirm time since the rows are already gone by
   // the time the notice renders.
   premoveEditCascadeNotice: number | null = null;
-  premoveExplainerDismissed =
-    typeof localStorage !== "undefined" && localStorage.getItem(PREMOVE_EXPLAINER_DISMISSED_KEY) === "true";
   // Phase 3 (§10.1/§10.6) - which mode a FRESH queue (no existing rows yet) should be composed
   // into; once a seat has rows, their shared `mode` column is authoritative instead (see
-  // PremoveModal's own `mode` getter). Remembered per-browser like the explainer dismissal above.
+  // PremoveBar's own `mode` getter). Remembered per-browser.
   premoveModePreference: PremoveMode =
     (typeof localStorage !== "undefined" && (localStorage.getItem(PREMOVE_MODE_PREFERENCE_KEY) as PremoveMode)) ||
     "sequential";
 
-  // Premove cancel triggers (§8) - the picker/leech-config/refine screens share one modal
-  // (`cancelTriggerModalStage`); composing a move trigger takes the board over the same way
+  // Premove cancel rules (§8) - the picker/leech-config/refine screens are steps of the premove
+  // sheet's body (`cancelTriggerStage`, passed to PremoveBar as `stage`); they used to be three
+  // screens of a b-modal owned here. Composing a move rule takes the board over the same way
   // premove composing does (`cancelTriggerComposeSeat`/`cancelTriggerBackup`/
   // `cancelTriggerComposeBase` mirror premoveSeat/premoveBackup/premoveComposeBase above, but
   // forced to the WATCHED opponent's seat against a resource-relaxed clone instead of this
   // session's own seat).
-  cancelTriggerModalStage: "picker" | "leech" | "refine" | null = null;
+  cancelTriggerStage: "picker" | "leech" | "refine" | null = null;
   cancelTriggerWatchedSeat: number | null = null;
   cancelTriggerComposeSeat: number | null = null;
   cancelTriggerBackup: Engine = null;
@@ -537,8 +476,8 @@ export default class Game extends Vue {
           this.cancelTriggerBackup = null;
           this.cancelTriggerComposeBase = null;
           this.cancelTriggerReady = false;
-          if (this.cancelTriggerModalStage === "refine") {
-            this.cancelTriggerModalStage = null;
+          if (this.cancelTriggerStage === "refine") {
+            this.cancelTriggerStage = null;
           }
         }
         this.handleData(Engine.fromData(payload));
@@ -896,6 +835,64 @@ export default class Game extends Vue {
     );
   }
 
+  /**
+   * Whether the premove sheet renders at all. Two rules, both about keeping exactly one sheet on
+   * screen:
+   *
+   *  - a cancel-rule step (`cancelTriggerStage`) shows the sheet even when there is nothing
+   *    queued, because those steps live inside it now rather than in a modal of their own;
+   *  - composing anything hides it, because Commands.vue's own sticky bar IS the sheet during
+   *    compose (it carries the move buttons, the confirm pair and now the status band too). Without
+   *    the second rule a seat with a queued premove got both bars stacked on top of each other while
+   *    composing a cancel rule - `canPlay` is forced true during that compose, so Commands renders,
+   *    while `myQueuedPremoves.length > 0` kept this one alive as well.
+   */
+  get showPremoveSheet(): boolean {
+    if (this.premoveMode || this.cancelTriggerComposeActive) {
+      return false;
+    }
+    return this.showPremoveBar || this.cancelTriggerStage !== null;
+  }
+
+  /** The status line + caveats Commands.vue's sticky bar header shows while the board is taken over
+   * for composing. This is the content of the two `alert` banners that used to sit at the top of the
+   * commands column, moved onto the bar it was describing all along. */
+  get premoveContext(): { title: string; notes: string[]; variant: "premove" | "trigger" } | null {
+    if (this.cancelTriggerComposeActive) {
+      return {
+        variant: "trigger",
+        title: `Cancel rule — playing as ${this.cancelTriggerWatchedFactionName}`,
+        notes: this.cancelTriggerReady ? [] : ["Build the move to watch for, then end the turn to continue."],
+      };
+    }
+    if (!this.premoveMode) {
+      return null;
+    }
+    const notes: string[] = [];
+    if (!this.premoveReady) {
+      notes.push("Build the move you want, then end the turn to queue it.");
+    }
+    if (this.premoveComposeCaveat) {
+      notes.push(this.premoveComposeCaveat);
+    }
+    if (this.premoveEditDownstreamCount > 0) {
+      notes.push(
+        `This also discards the ${this.premoveEditDownstreamCount} entr${
+          this.premoveEditDownstreamCount === 1 ? "y" : "ies"
+        } queued after it.`
+      );
+    }
+    const modeLabel = this.effectivePremoveMode === "sequential" ? "chain" : "fallback";
+    return {
+      variant: "premove",
+      title:
+        this.premoveEditSeq !== null
+          ? "Editing a queued move"
+          : `Adding move ${Math.min(this.myQueuedPremoves.length + 1, 3)} of 3 · ${modeLabel}`,
+      notes,
+    };
+  }
+
   /** Composing a premove while the game is paused on someone else's charge/income decision is
    * allowed (Engine.previewAvailableCommandsFor), but the preview is built as if that decision were
    * already settled - say so rather than let the board quietly disagree with what lands later.
@@ -920,20 +917,9 @@ export default class Game extends Vue {
     return this.myQueuedPremoves.filter((p) => p.seq > this.premoveEditSeq).length;
   }
 
-  get premovePlayedNotice(): { seat: number; move: string; rank?: number; totalRanks?: number } | null {
-    return this.$store.state.premovePlayedNotice ?? null;
-  }
-
-  get premovePlayedNoticeSuffix(): string {
-    const notice = this.premovePlayedNotice;
-    return notice?.rank && notice.totalRanks && notice.totalRanks > 1
-      ? ` (priority ${notice.rank} of ${notice.totalRanks})`
-      : "";
-  }
-
-  dismissPremovePlayedNotice() {
-    this.$store.commit("dismissPremovePlayedNotice");
-  }
+  // The "played automatically" / failure / cancelled notices used to be read and dismissed here.
+  // They are rendered by PremoveBar now (straight off the store), so that everything reporting what
+  // happened while you were away arrives on the sheet rather than in this in-flow column.
 
   setPremoveModePreference(mode: PremoveMode) {
     this.premoveModePreference = mode;
@@ -942,11 +928,7 @@ export default class Game extends Vue {
     }
   }
 
-  get myUnreadFailures(): PremoveFailureRow[] {
-    return (this.$store.state.premoveFailures as PremoveFailureRow[]) ?? [];
-  }
-
-  /** Starts composing a brand-new queued entry (PremoveBar's "+ Sequential"/"+ Priority" buttons).
+  /** Starts composing a brand-new queued entry (the sheet's "+ Add move" button).
    * `switchingModes` is true when the caller just triggered a mode switch (which clears the
    * existing queue via a separate async dispatch) - in that case `priorMoves` is forced empty
    * rather than read from `myQueuedPremoves`, since those rows may not have been cancelled in the
@@ -1061,33 +1043,12 @@ export default class Game extends Vue {
     this.cancelPremoveMode();
   }
 
-  markFailureRead(id: string) {
-    this.$store.dispatch("markPremoveFailureRead", id);
-  }
-
-  dismissPremoveExplainer() {
-    this.premoveExplainerDismissed = true;
-    if (typeof localStorage !== "undefined") {
-      localStorage.setItem(PREMOVE_EXPLAINER_DISMISSED_KEY, "true");
-    }
-  }
-
   // ---------------------------------------------------------------------------
-  // Premove cancel triggers (§8)
+  // Premove cancel rules (§8)
   // ---------------------------------------------------------------------------
 
   get cancelTriggerComposeActive(): boolean {
     return this.cancelTriggerComposeSeat !== null;
-  }
-
-  get cancelTriggerModalOpen(): boolean {
-    return this.cancelTriggerModalStage !== null;
-  }
-
-  set cancelTriggerModalOpen(open: boolean) {
-    if (!open) {
-      this.closeCancelTriggerModal();
-    }
   }
 
   get cancelTriggerWatchedFactionName(): string {
@@ -1107,17 +1068,17 @@ export default class Game extends Vue {
     return ((this.$store.state.cancelTriggers as CancelTriggerRow[]) ?? []).filter((t) => t.seat === seat);
   }
 
-  /** PremoveBar's "⚠ Cancel trigger" button - opens the single picker screen (§8.2). */
+  /** The sheet's "⚠ Cancel if…" button - swaps its body to the picker step (§8.2). */
   startCancelTriggerPicker() {
     this.cancelTriggerEditingSeq = null;
     this.cancelTriggerEditingAtoms = [];
     this.cancelTriggerEditingLeechConfig = null;
-    this.cancelTriggerModalStage = "picker";
+    this.cancelTriggerStage = "picker";
   }
 
-  /** PremoveBar's armed-list "Edit" - reopens the config step (leech) or the refine step (move,
+  /** The sheet's armed-rules "Edit" - reopens the config step (leech) or the refine step (move,
    * skipping re-composing the board since the move text is already stored) pre-filled with the
-   * trigger's current selection. */
+   * rule's current selection. */
   startEditCancelTrigger(seq: number) {
     const row = this.myCancelTriggers.find((t) => t.seq === seq);
     if (!row) {
@@ -1126,27 +1087,27 @@ export default class Game extends Vue {
     this.cancelTriggerEditingSeq = seq;
     if (row.kind === "leech") {
       this.cancelTriggerEditingLeechConfig = row.config as CancelTriggerLeechConfigType;
-      this.cancelTriggerModalStage = "leech";
+      this.cancelTriggerStage = "leech";
     } else {
       this.cancelTriggerWatchedSeat = row.watched_seat;
       this.cancelTriggerDraftMove = row.move;
       this.cancelTriggerEditingAtoms = row.atoms;
-      this.cancelTriggerModalStage = "refine";
+      this.cancelTriggerStage = "refine";
     }
   }
 
-  closeCancelTriggerModal() {
-    this.cancelTriggerModalStage = null;
+  closeCancelTriggerStep() {
+    this.cancelTriggerStage = null;
   }
 
   pickCancelTriggerLeech() {
-    this.cancelTriggerModalStage = "leech";
+    this.cancelTriggerStage = "leech";
   }
 
   /** Picker's faction chip - closes the picker and starts composing on the board, playing as the
    * watched opponent against a resource-relaxed clone (§8.3). */
   pickCancelTriggerOpponent(seat: number) {
-    this.cancelTriggerModalStage = null;
+    this.cancelTriggerStage = null;
     this.cancelTriggerBackup = JSON.parse(JSON.stringify(this.engine));
     this.cancelTriggerWatchedSeat = seat;
     this.cancelTriggerComposeSeat = seat;
@@ -1216,7 +1177,7 @@ export default class Game extends Vue {
     this.cancelTriggerBackup = null;
     this.cancelTriggerComposeBase = null;
     this.handleData(Engine.fromData(backup));
-    this.cancelTriggerModalStage = "refine";
+    this.cancelTriggerStage = "refine";
   }
 
   armCancelTriggerFromRefine(atoms: string[]) {
@@ -1273,7 +1234,7 @@ export default class Game extends Vue {
   }
 
   private resetCancelTriggerState() {
-    this.cancelTriggerModalStage = null;
+    this.cancelTriggerStage = null;
     this.cancelTriggerWatchedSeat = null;
     this.cancelTriggerDraftMove = "";
     this.cancelTriggerEditingSeq = null;

@@ -1,6 +1,6 @@
 <template>
   <div class="cancel-trigger-refine">
-    <h5 class="mb-2">Which part of this should cancel my premoves?</h5>
+    <div class="cancel-trigger-refine__hint">Which part of this should cancel my queue?</div>
     <div v-for="(candidate, i) in candidates" :key="candidate.exact" class="cancel-trigger-refine__row mb-2">
       <label class="d-flex align-items-center mb-1">
         <input type="checkbox" class="mr-2" v-model="selected[i]" />
@@ -27,13 +27,6 @@
     </div>
 
     <div class="cancel-trigger-refine__preview text-muted small mt-2">{{ previewText }}</div>
-
-    <div class="mt-3 d-flex flex-wrap">
-      <button type="button" class="btn btn-warning btn-sm mr-2 mb-1" :disabled="armDisabled" @click="arm">
-        Arm trigger
-      </button>
-      <button type="button" class="btn btn-link btn-sm mb-1" @click="$emit('cancel')">Cancel</button>
-    </div>
   </div>
 </template>
 
@@ -46,6 +39,10 @@ import { atomMatches, candidateAtoms, moveAtoms } from "../logic/premove-cancel-
 // pre-selected (Arm stays disabled until at least one atom is chosen) UNLESS the composed move
 // produced exactly one candidate atom, which pre-selects itself since there's no ambiguity to ask
 // about. Each selection can be loosened to its "any" form where one exists (§2.4).
+//
+// Body-only, same split as CancelTriggerLeechConfig: the host sheet (PremoveBar) owns the header
+// band and the Arm/Back footer, so this component only reports its current atom selection upward via
+// `input` and never arms anything itself.
 @Component
 export default class CancelTriggerRefine extends Vue {
   @Prop()
@@ -94,8 +91,17 @@ export default class CancelTriggerRefine extends Vue {
       .filter((atom): atom is string => atom !== null);
   }
 
-  get armDisabled(): boolean {
-    return this.selectedAtoms.length === 0;
+  mounted() {
+    this.emitState();
+  }
+
+  /** Reports the current selection to the host sheet. Watching the computed rather than emitting
+   * from each control keeps the "exact/any" toggle and the checkboxes on one path. Not `immediate`:
+   * `onMoveChanged` seeds `selected`/`loose` from its own immediate watcher, and the two would race
+   * on first render - `mounted()` above covers the initial value instead. */
+  @Watch("selectedAtoms")
+  emitState() {
+    this.$emit("input", this.selectedAtoms);
   }
 
   /** The watched opponent's own committed move lines so far (moveHistory carries the faction name,
@@ -134,18 +140,17 @@ export default class CancelTriggerRefine extends Vue {
       total === 1 ? "" : "s"
     }.`;
   }
-
-  arm() {
-    if (this.armDisabled) {
-      return;
-    }
-    this.$emit("arm", this.selectedAtoms);
-  }
 }
 </script>
 
 <style lang="scss" scoped>
 .cancel-trigger-refine__toggle .btn {
   padding: 0.1rem 0.5rem;
+}
+
+.cancel-trigger-refine__hint {
+  font-size: 0.78rem;
+  color: var(--ui-text-muted);
+  margin-bottom: 0.4rem;
 }
 </style>

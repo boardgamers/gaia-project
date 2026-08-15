@@ -6803,6 +6803,81 @@ pin_preference_split_budget_search_path` (the one function in the set without a 
       **971/971** (927 baseline + 44 new). No engine files touched, so the engine/AI suites were
       correctly out of scope and not run.
 
+163.  ✅ **The premove flow is one sheet now, and the picker stopped calling the on-turn opponent
+      "passed" (2026-08-15).** Owner-driven redesign session. The feature worked; the flow around it
+      did not. Arming a cancel rule walked the player across four surfaces for one task — the sticky
+      sheet at the bottom, a modal in the middle of the screen, an alert banner at the top of
+      `Game.vue`'s commands column, and `Commands.vue`'s own sticky bar for the confirm buttons —
+      i.e. bottom → centre → top → bottom → centre again. Everything that is not the on-turn move
+      buttons now renders in the sheet, which has a fixed anatomy: header band (what is happening),
+      body (the only part that swaps), footer (one primary action, one escape), resource strip.
+
+      **The bug the owner reported, and why it was worse than it looked.** In the live Amber Drift
+      game the cancel-rule picker showed "Itars — passed", greyed out and unclickable, while Itars
+      was in fact the player the game was waiting on (`current_seat` 0 = `itars`, round 1).
+      `CancelTriggerPicker.vue` derived its "passed" flag from `previewAvailableCommandsFor`
+      returning null, but that method returns null for **five** distinct reasons and only one of
+      them is "passed" — the branch actually firing was the seat being `playerToMove`. The method
+      answers "can _I_ premove?", where "it is already your turn" correctly means no; reused to ask
+      "is this opponent still going to act?" it silently inverted into a lie. The effect was that
+      the opponent you are most likely to want to watch — the one you are sitting off-turn waiting
+      for — was the only one you could not pick. Nothing downstream ever needed them excluded:
+      `pickCancelTriggerOpponent` composes against its own clone with `forcePremovePreviewTurn`, so
+      an on-turn opponent works fine. Now the flag comes from `passedPlayers`, an on-turn opponent
+      is badged "on turn", and **every chip stays clickable** — including a genuinely passed one,
+      since a rule armed now is still live next round and so is the queue it guards.
+
+      **The other six problems, all layout rather than missing features.** (2) Three unrelated
+      actions all read "Cancel" — arming a watcher, deleting a queued entry, abandoning a compose;
+      the owner called the trigger button "cancel premove" in their own report, which is that
+      collision demonstrated. (3) The queue caps at three entries but showed one at a time, behind
+      tabs labelled "Premove 1/2/3" — a label with no information in it, costing a tap per entry.
+      (4) Mode was an invisible global: the two "+" buttons looked like two ways to add a move but
+      one of them wiped the queue, behind a raw `window.confirm`, and `canStartNew` returned true
+      for the opposite mode so both always looked equally safe. (5) The bar's own render guard
+      unmounted it while composing, hiding the very entries a Sequential chain is planned against.
+      (6) The cascade, failure and played-automatically notices rendered as in-flow alerts in the
+      commands column — above a sheet pinned to the bottom of the viewport, which is exactly where
+      they would not be read. (7) Four controls of completely different weight sat in one wrapping
+      row at identical emphasis.
+
+      **What replaced them.** Tabs and the detail pane became a list of self-describing rows
+      carrying their own move text and their own live legality chip (next / then / backup /
+      blocked), expanding in place for Edit, reorder and Remove, with the Sequential cascade warning
+      on the row that causes it. Mode became a labelled Chain/Fallback segmented control with a
+      plain-language line under it, beside a single "+ Add move"; switching with a non-empty queue
+      asks inline in the sheet instead of via `window.confirm`. The three cancel-rule screens became
+      body steps driven by a `stage` prop — the modal is deleted, and the picker, refine and leech
+      components are body-only now, reporting their value upward via `input` while the sheet owns
+      the title and the Arm/Back footer, so every step confirms from one place. All notices moved
+      into the sheet body. Armed rules sit in a fold that defaults **open**, since a forgotten rule
+      silently wipes the queue. Renames: "Cancel trigger" to "Cancel if…", "Cancel premove" on a row
+      to "Remove", "Cancel premove" while composing to "Discard", and Sequential/Priority to
+      Chain/Fallback.
+
+      **The compose banners moved onto the bar they were describing.** `Commands.vue` gained one
+      `premoveContext` prop (title, notes, variant) rendered in its own sticky-bar header band —
+      amber for a cancel rule, the ordinary banner colour for a premove, since the board looks
+      identical in both and that tint is the only cue — plus a notes block above the confirm pair.
+      The desktop title carries the same line, where the bar is in flow and there is no band. Both
+      alerts in `Game.vue` are gone. `showPremoveSheet` also hides the sheet whenever a compose is
+      active, which fixed a real latent bug: `canPlay` is forced true during a cancel-rule compose,
+      so a seat with a queued premove used to get **both** sticky bars stacked at once.
+
+      **Naming cleanup:** `cancelTriggerModalStage` became `cancelTriggerStage` and
+      `closeCancelTriggerModal` became `closeCancelTriggerStep`, since there is no modal any more.
+
+      **Tests:** new `CancelTriggerPicker.spec.ts` (3: on-turn badged and pickable, passed badged
+      and still pickable, neither-state unbadged — it pins the engine's turn pointer and
+      `passedPlayers` directly rather than driving a real game into that shape, so the test is about
+      the mapping that regressed); `PremoveBar.spec.ts` (+5: mode choice separated from the add
+      action, the steps rendering in the sheet with band and footer following, Arm gated on the
+      refine step's reported selection, the queue list showing every entry's move text, the played
+      notice inside the sheet); `CancelTriggerRefine.spec.ts` reworked onto the `input` contract;
+      `Game.spec.ts` updated for the new labels plus the one-bar-at-a-time assertion. **Full viewer
+      suite green at 978 passing.** No engine or backend files touched — no schema change, no Edge
+      Function redeploy, and the engine/AI suites correctly out of scope and not run.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

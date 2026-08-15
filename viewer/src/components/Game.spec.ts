@@ -548,8 +548,10 @@ describe("Game", () => {
       const vm = mountAsSeat(1);
 
       expect(vm.premoveOffered).to.equal(true);
-      expect(vm.$el.textContent).to.contain("+ Sequential");
-      expect(vm.$el.textContent).to.contain("+ Priority");
+      expect(vm.$el.textContent).to.contain("+ Add move");
+      // Mode is a labelled choice beside the add action now, not two separate "+" buttons.
+      expect(vm.$el.textContent).to.contain("Chain");
+      expect(vm.$el.textContent).to.contain("Fallback");
 
       vm.$el.remove();
       vm.$destroy();
@@ -571,12 +573,17 @@ describe("Game", () => {
       expect(vm.canPlay).to.equal(false);
       expect(vm.premoveOffered).to.equal(true);
       expect(vm.showPremoveBar).to.equal(true);
-      expect(vm.$el.textContent).to.contain("+ Sequential");
+      expect(vm.$el.textContent).to.contain("+ Add move");
 
       // ...and composing from there says so, rather than quietly previewing a board that is still
-      // waiting on an answer.
+      // waiting on an answer. The caveat rides in the sticky bar's own header context now, not in a
+      // banner at the top of the page.
       vm.onStartNewPremove({ mode: "sequential", switchingModes: false });
       expect(vm.premoveComposeCaveat).to.contain("power-charge decision");
+      expect(vm.premoveContext.notes.join(" ")).to.contain("power-charge decision");
+      // Composing hands the screen to Commands.vue's bar, so the sheet stands down - exactly one
+      // sticky bar at a time.
+      expect(vm.showPremoveSheet).to.equal(false);
 
       vm.$el.remove();
       vm.$destroy();
@@ -734,10 +741,10 @@ describe("Game", () => {
       it("full compose -> refine -> arm flow watches the picked opponent's seat", () => {
         const vm = mountAsSeat(1); // nevlas; terrans (seat 0) is on turn
         vm.startCancelTriggerPicker();
-        expect(vm.cancelTriggerModalStage).to.equal("picker");
+        expect(vm.cancelTriggerStage).to.equal("picker");
 
         vm.pickCancelTriggerOpponent(0);
-        expect(vm.cancelTriggerModalStage).to.equal(null);
+        expect(vm.cancelTriggerStage).to.equal(null);
         expect(vm.cancelTriggerComposeActive).to.equal(true);
         // Composing plays as the WATCHED seat (terrans), not this session's own locked seat.
         expect(vm.canPlay).to.equal(true);
@@ -751,7 +758,7 @@ describe("Game", () => {
 
         // Leaves the board exactly as it was for real - no leech offer, no move recorded.
         expect(vm.cancelTriggerComposeActive).to.equal(false);
-        expect(vm.cancelTriggerModalStage).to.equal("refine");
+        expect(vm.cancelTriggerStage).to.equal("refine");
         expect(vm.engine.phase).to.equal(Phase.RoundMove);
         expect(vm.engine.playerToMove).to.equal(0);
         expect(vm.canPlay).to.equal(false);
@@ -770,7 +777,7 @@ describe("Game", () => {
             },
           },
         ]);
-        expect(vm.cancelTriggerModalStage).to.equal(null);
+        expect(vm.cancelTriggerStage).to.equal(null);
 
         vm.$el.remove();
         vm.$destroy();
@@ -781,7 +788,7 @@ describe("Game", () => {
         vm.startCancelTriggerPicker();
         vm.pickCancelTriggerLeech();
 
-        expect(vm.cancelTriggerModalStage).to.equal("leech");
+        expect(vm.cancelTriggerStage).to.equal("leech");
         expect(vm.cancelTriggerComposeActive).to.equal(false);
 
         const dispatched = spyDispatch(vm);
@@ -800,7 +807,7 @@ describe("Game", () => {
             },
           },
         ]);
-        expect(vm.cancelTriggerModalStage).to.equal(null);
+        expect(vm.cancelTriggerStage).to.equal(null);
 
         vm.$el.remove();
         vm.$destroy();

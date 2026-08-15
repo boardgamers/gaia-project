@@ -98,28 +98,129 @@ describe("PremoveBar", () => {
     }
   });
 
-  it("shows three action buttons: + Sequential, + Priority, ⚠ Cancel trigger", () => {
+  // Mode used to be two "+" buttons that each ALSO rewrote a queue-wide setting (and one of which
+  // silently discarded the queue). It's a labelled two-way choice now, with a single add action
+  // beside it, so "which mode am I in" and "add a move" stop being the same click.
+  it("separates the mode choice from the single add action", () => {
     const wrapper = mount(PremoveBar, {
       propsData: { seat: 0, composeModePreference: "sequential", stickyMobile: false },
       store: makeStore(),
     });
     try {
-      const labels = wrapper.findAll(".premove-bar__action-button").wrappers.map((w) => w.text().trim());
-      expect(labels).to.deep.equal(["+ Sequential", "+ Priority", "⚠ Cancel trigger"]);
+      const modes = wrapper.findAll(".premove-bar__segment-option").wrappers.map((w) => w.text().trim());
+      expect(modes).to.deep.equal(["Chain", "Fallback"]);
+      expect(wrapper.find(".premove-bar__segment-option--on").text().trim()).to.equal("Chain");
+
+      const actions = wrapper.findAll(".premove-bar__action-button").wrappers.map((w) => w.text().trim());
+      expect(actions).to.deep.equal(["+ Add move", "⚠ Cancel if…"]);
     } finally {
       wrapper.destroy();
     }
   });
 
-  it("emits start-cancel-trigger when the third button is clicked", async () => {
+  it("emits start-cancel-trigger from the ⚠ Cancel if… button", async () => {
     const wrapper = mount(PremoveBar, {
       propsData: { seat: 0, composeModePreference: "sequential", stickyMobile: false },
       store: makeStore(),
     });
     try {
       const buttons = wrapper.findAll(".premove-bar__action-button");
-      await buttons.at(2).trigger("click");
+      await buttons.at(1).trigger("click");
       expect(wrapper.emitted("start-cancel-trigger")).to.have.length(1);
+    } finally {
+      wrapper.destroy();
+    }
+  });
+
+  // The cancel-rule steps used to be a b-modal in Game.vue, which threw the player from the bottom
+  // of the screen to the middle of it in the middle of one task. They render in the sheet now.
+  it("renders the cancel-rule steps inside the sheet, with the band and footer following the step", () => {
+    const store = makeStore();
+    store.commit("receiveData", new Engine(SETUP_MOVES));
+    const wrapper = mount(PremoveBar, {
+      propsData: { seat: 0, composeModePreference: "sequential", stickyMobile: true, stage: "picker" },
+      store,
+    });
+    try {
+      expect(wrapper.find(".cancel-trigger-picker").exists()).to.be.true;
+      expect(wrapper.find(".premove-bar__sheet-title").text()).to.equal("Cancel my queue if…");
+      // The picker's own chips are the action, so the footer offers only the escape.
+      const footer = wrapper.findAll(".premove-bar__foot .premove-bar__action-button");
+      expect(footer.wrappers.map((w) => w.text().trim())).to.deep.equal(["Back"]);
+    } finally {
+      wrapper.destroy();
+    }
+  });
+
+  it("keeps Arm rule disabled until the refine step reports a selection", async () => {
+    const store = makeStore();
+    store.commit("receiveData", new Engine(SETUP_MOVES));
+    const wrapper = mount(PremoveBar, {
+      propsData: {
+        seat: 0,
+        composeModePreference: "sequential",
+        stickyMobile: true,
+        stage: "refine",
+        watchedSeat: 1,
+        draftMove: "nevlas build lab 7A6. tech eco. up eco",
+      },
+      store,
+    });
+    try {
+      const arm = () => wrapper.findAll(".premove-bar__foot .premove-bar__action-button").at(0);
+      expect(wrapper.find(".premove-bar__sheet-title").text()).to.equal("Cancel if Nevlas…");
+      expect(arm().attributes("disabled")).to.equal("disabled");
+
+      (wrapper.findComponent({ name: "CancelTriggerRefine" }).vm as any).selected = [true, false, false];
+      await wrapper.vm.$nextTick();
+      await wrapper.vm.$nextTick();
+      expect(arm().attributes("disabled")).to.equal(undefined);
+
+      await arm().trigger("click");
+      expect(wrapper.emitted("arm-refine")).to.deep.equal([[["build:lab:7A6"]]]);
+    } finally {
+      wrapper.destroy();
+    }
+  });
+
+  // Every entry readable at once, carrying its own move text - it used to be a tab strip labelled
+  // "Premove 1/2/3" that revealed one entry at a time.
+  it("lists every queued entry with its move text and its own legality state", () => {
+    const store = makeStore();
+    store.commit("receiveData", new Engine(SETUP_MOVES));
+    store.commit("premoveState", {
+      premoves: [
+        { seat: 0, seq: 1, move: "terrans build m -2x2", mode: "sequential", queued_move_count: 5 },
+        { seat: 0, seq: 2, move: "terrans burn 1", mode: "sequential", queued_move_count: 5 },
+      ],
+      failures: [],
+    });
+    const wrapper = mount(PremoveBar, {
+      propsData: { seat: 0, composeModePreference: "sequential", stickyMobile: false },
+      store,
+    });
+    try {
+      const moves = wrapper.findAll(".premove-bar__entry-move").wrappers.map((w) => w.text().trim());
+      expect(moves).to.deep.equal(["terrans build m -2x2", "terrans burn 1"]);
+      // Each row states its own status rather than hiding it behind a tap.
+      expect(wrapper.findAll(".premove-bar__entry-state")).to.have.length(2);
+    } finally {
+      wrapper.destroy();
+    }
+  });
+
+  // The cascade / failure / played-automatically notices used to render in Game.vue's in-flow
+  // column, i.e. up the page, above a sheet pinned to the bottom of the viewport.
+  it("shows the 'played automatically' notice inside the sheet", () => {
+    const store = makeStore();
+    store.commit("receiveData", new Engine(SETUP_MOVES));
+    store.commit("premovePlayed", { seat: 0, move: "terrans build m -2x2" });
+    const wrapper = mount(PremoveBar, {
+      propsData: { seat: 0, composeModePreference: "sequential", stickyMobile: true },
+      store,
+    });
+    try {
+      expect(wrapper.find(".premove-bar__notice--ok").text()).to.contain("terrans build m -2x2");
     } finally {
       wrapper.destroy();
     }

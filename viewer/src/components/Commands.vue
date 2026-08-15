@@ -3,7 +3,10 @@
     <div id="move-title" class="d-flex align-items-center" :class="{ 'hide-on-mobile-sticky': showStickyMobileBar }">
       <h5 class="mb-0">
         <span v-if="init">Pick the number of players</span>
-        <RichTextView :content="statusLine" />
+        <!-- Desktop's counterpart of the sticky band below: the bar is in flow here, so this is
+             where a compose takeover has to announce itself. -->
+        <template v-if="premoveContext">{{ premoveContext.title }}</template>
+        <RichTextView v-else :content="statusLine" />
       </h5>
       <!-- The Silent Auction / ban-phase explainer buttons used to sit here. They now live in
            SetupStatus.vue's round-0 strip at the top of the page (Game.vue), which - unlike this
@@ -46,9 +49,19 @@
            starts, instead of duplicating it on screen. Placed first (above the action buttons) so
            whose-turn/what's-happening is the first thing read when the bar comes into view, not
            buried below a scrollable list of buttons. -->
-      <div v-if="showStickyMobileBar" class="sticky-bar-title d-flex align-items-center">
+      <div
+        v-if="showStickyMobileBar"
+        class="sticky-bar-title d-flex align-items-center"
+        :class="premoveContext ? `sticky-bar-title--${premoveContext.variant}` : null"
+      >
+        <!-- While the board is taken over to compose a premove or a cancel rule, this band carries
+             what that compose is FOR. It used to be an `alert` at the top of Game.vue's commands
+             column - i.e. describing this bar from the other end of the page, usually scrolled out
+             of sight on a phone. Amber for a cancel rule, the ordinary banner colour for a premove:
+             the board looks identical in both, and this is the one cue telling them apart. -->
         <h5 class="mb-0">
-          <RichTextView :content="statusLine" />
+          <template v-if="premoveContext">{{ premoveContext.title }}</template>
+          <RichTextView v-else :content="statusLine" />
         </h5>
         <!-- No explainer buttons here either: this bar is round-1+ only (showStickyMobileBar), so
              they could never show during the ban/pick/bid phases anyway. See SetupStatus.vue. -->
@@ -102,6 +115,12 @@
           </template>
         </b-btn>
       </div>
+      <!-- The compose caveats ("build the move, then end the turn", the leech/income preview
+           warnings, the cascade warning). Same block as the title above: they belong next to the
+           buttons they qualify, not in a banner at the top of the page. -->
+      <div v-if="premoveContext && premoveContext.notes.length > 0" class="premove-context-notes">
+        <div v-for="(note, i) in premoveContext.notes" :key="i">{{ note }}</div>
+      </div>
       <div v-if="showPremoveConfirm || showPremoveCancel" class="d-flex flex-wrap align-content-stretch">
         <b-btn
           v-if="showPremoveConfirm"
@@ -110,12 +129,15 @@
         >
           {{ premoveConfirmLabel }}
         </b-btn>
+        <!-- "Discard", not "Cancel premove": this abandons what you are composing, while "Cancel
+             if…" in the sheet ARMS a rule and "Remove" deletes a queued entry. Three unrelated
+             actions all reading "cancel" is what made the flow ambiguous. -->
         <b-btn
           v-if="showPremoveCancel"
           :class="['mr-2', 'mb-2', 'move-button', 'premove-inline-action']"
           @click="$emit('cancel-premove')"
         >
-          Cancel premove
+          Discard
         </b-btn>
       </div>
       <div v-if="isChoosingFaction" class="d-flex flex-wrap align-content-stretch faction-picker-buttons">
@@ -334,6 +356,13 @@ export default class Commands extends Vue implements CommandController {
 
   @Prop({ default: "Queue now" })
   premoveConfirmLabel: string;
+
+  /** What this bar is being borrowed for, while the board is taken over to compose a premove or a
+   * cancel rule (Game.vue's `premoveContext`). Null during ordinary play, when the bar shows the
+   * game's own status line instead. Carrying it here rather than in a separate banner is what keeps
+   * the whole premove flow on one surface. */
+  @Prop({ default: null })
+  premoveContext: { title: string; notes: string[]; variant: "premove" | "trigger" } | null;
 
   get controller() {
     return this;
@@ -1111,6 +1140,19 @@ export default class Commands extends Vue implements CommandController {
   }
 }
 
+// The compose caveats. Unlike the title band above these are NOT sticky-bar-only: on desktop the
+// bar is in flow and there is no band to carry them, so they are the only place the caveats appear.
+.premove-context-notes {
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--ui-text-muted);
+  margin-bottom: 0.4rem;
+
+  > div + div {
+    margin-top: 0.15rem;
+  }
+}
+
 // One fixed-width column for the faction buttons and one for the number boxes, so the bid inputs
 // line up instead of stepping in and out with each faction name's length.
 .silent-bid-faction {
@@ -1270,6 +1312,13 @@ $mobile-sticky-actions-max-height: 40vh;
     height: 4px;
     border-radius: 2px;
     background: rgba(255, 255, 255, 0.28);
+  }
+
+  // Amber while composing a cancel rule, so the takeover is distinguishable from composing an
+  // ordinary premove - the board itself looks identical in both. Matches PremoveBar's own
+  // `__band--amber`, since the two bands are halves of the same flow.
+  &--trigger {
+    background: linear-gradient(135deg, #a97514 0%, #8a6410 100%);
   }
 
   // Small enough that the status text stays on one (or two, at most) lines instead of the default

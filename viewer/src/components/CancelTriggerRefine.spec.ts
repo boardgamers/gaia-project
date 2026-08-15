@@ -28,7 +28,7 @@ describe("CancelTriggerRefine", () => {
       const inner = wrapper.vm as any;
       expect(inner.candidates.length).to.be.greaterThan(1);
       expect(inner.selected.every((s: boolean) => s === false)).to.equal(true);
-      expect(inner.armDisabled).to.equal(true);
+      expect(inner.selectedAtoms).to.deep.equal([]);
     } finally {
       wrapper.destroy();
     }
@@ -40,20 +40,24 @@ describe("CancelTriggerRefine", () => {
       const inner = wrapper.vm as any;
       expect(inner.candidates.length).to.equal(1);
       expect(inner.selected).to.deep.equal([true]);
-      expect(inner.armDisabled).to.equal(false);
+      expect(inner.selectedAtoms).to.deep.equal(["pass:booster3"]);
     } finally {
       wrapper.destroy();
     }
   });
 
-  it("Arm is disabled until at least one atom is selected, then enabled", async () => {
+  // The host sheet's footer disables "Arm rule" on exactly an empty selection, so what this asserts
+  // is that the empty->non-empty transition is reported upward at all.
+  it("reports the selection upward as it changes, so the sheet's Arm button can follow it", async () => {
     const wrapper = mountRefine("terrans build lab 7A6. tech eco. up eco");
     try {
       const inner = wrapper.vm as any;
-      expect(inner.armDisabled).to.equal(true);
+      expect(wrapper.emitted("input")).to.deep.equal([[[]]]);
+
       inner.selected = [true, false, false];
       await wrapper.vm.$nextTick();
-      expect(inner.armDisabled).to.equal(false);
+      expect(inner.selectedAtoms.length).to.equal(1);
+      expect(wrapper.emitted("input")!.slice(-1)).to.deep.equal([[["build:lab:7A6"]]]);
     } finally {
       wrapper.destroy();
     }
@@ -75,12 +79,14 @@ describe("CancelTriggerRefine", () => {
     }
   });
 
-  it("emits arm with the selected atoms", async () => {
+  // The component no longer draws its own Arm/Cancel pair - the sheet that hosts it owns the footer,
+  // so every step of the flow confirms from the same place. Its contract is the `input` it reports.
+  it("emits the pre-selected atom on mount, without an Arm button of its own", async () => {
     const wrapper = mountRefine("terrans pass booster3");
     try {
-      wrapper.find("button.btn-warning").trigger("click");
       await wrapper.vm.$nextTick();
-      expect(wrapper.emitted("arm")).to.deep.equal([[["pass:booster3"]]]);
+      expect(wrapper.emitted("input")).to.deep.equal([[["pass:booster3"]]]);
+      expect(wrapper.find("button.btn-warning").exists()).to.equal(false);
     } finally {
       wrapper.destroy();
     }
