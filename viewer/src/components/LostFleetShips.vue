@@ -205,6 +205,7 @@
               v-for="slot in explorationSlots(ship)"
               :key="slot.index"
               class="lost-fleet-ship__slot"
+              :class="{ 'last-move': recentOpponentExploration(ship, slot) }"
               :data-slot="slot.index"
               :transform="`translate(${slotTabX(slot.index)}, ${slotY})`"
               v-b-tooltip.nofade="tooltipTriggerConfig()"
@@ -661,6 +662,14 @@ export default class LostFleetShips extends Mixins(PanelSwipe) {
     return federation ? spaceshipFederationSpec[federation] : "Federation token already claimed";
   }
 
+  /** The shuttle an opponent deployed since the viewer's last turn - marked on the slot it landed in. */
+  recentOpponentExploration(ship: Spaceship, slot: { player: Player | null }): boolean {
+    if (!slot.player) {
+      return false;
+    }
+    return this.$store.getters.recentOpponentExplorations.get(slot.player.faction)?.has(ship) ?? false;
+  }
+
   explorationSlots(ship: Spaceship): Array<{ index: number; cost: number; player: Player | null }> {
     return EXPLORATION_CHARGE_TRACK.map((cost, index) => ({
       index: index + 1,
@@ -814,6 +823,12 @@ svg.lost-fleet-ship {
     fill: #eef2f8;
     stroke: #b8c2d4;
     stroke-width: 1;
+  }
+
+  // The slot an opponent's exploration shuttle landed in since the viewer's last turn.
+  .lost-fleet-ship__slot.last-move .lost-fleet-ship__slot-bg {
+    stroke: var(--recent);
+    stroke-width: 2.5;
   }
 
   .lost-fleet-ship__cost {

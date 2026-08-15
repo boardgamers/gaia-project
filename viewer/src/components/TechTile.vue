@@ -283,6 +283,13 @@ svg {
       stroke-width: 2px;
     }
 
+    // Set from the player board when this tile's own special action was used by an opponent since
+    // the viewer's last turn - the octagon for it lives inside the tile art, so the tile is marked.
+    &.last-move .tech-border {
+      stroke: var(--recent);
+      stroke-width: 3px;
+    }
+
     &.covered {
       opacity: 0.5;
     }

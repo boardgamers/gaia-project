@@ -136,6 +136,13 @@ g {
 
     &.disabled {
       opacity: 0.5;
+
+      // A used action an opponent took since the viewer's last turn: half opacity washes the gold
+      // mark out to olive, so keep it near-full. The "used" X is drawn outside this group, so the
+      // octagon still reads as used.
+      &.recent {
+        opacity: 0.9;
+      }
     }
   }
 }

@@ -1,5 +1,13 @@
-import Engine, { Operator } from "@gaia-project/engine";
-import { Booster, Planet, Spaceship, SpaceshipFederation, SpaceshipTechTile } from "@gaia-project/engine/src/enums";
+import Engine, { Event, Operator } from "@gaia-project/engine";
+import {
+  ArtifactToken,
+  Booster,
+  Faction,
+  Planet,
+  Spaceship,
+  SpaceshipFederation,
+  SpaceshipTechTile,
+} from "@gaia-project/engine/src/enums";
 import { boosterEvents } from "@gaia-project/engine/src/tiles/boosters";
 import { fireEvent, render } from "@testing-library/vue";
 import { expect } from "chai";
@@ -185,5 +193,74 @@ describe("PlayerInfo terraforming strip", () => {
     expect(after.querySelector("svg.booster g.specialAction.disabled"), "marked used after activation").to.not.equal(
       null
     );
+  });
+});
+
+describe("PlayerInfo last-move marks", () => {
+  function opponentEngine(moves: string[]) {
+    const engine = new Engine(["init 2 player-info-last-move", "p1 faction terrans", "p2 faction hadsch-hallas"], {
+      lostFleet: true,
+    });
+    (engine as any).moveHistory = ["init 2 player-info-last-move", `${Faction.Terrans} build m 1A1`, ...moves];
+    (engine as any).advancedLog = [
+      { player: 0, move: 1 },
+      ...moves.map((_move, i) => ({ player: 1, move: i + 2 })),
+      { player: 0 },
+    ];
+    return engine;
+  }
+
+  it("marks the tile a special action came from, since the octagon lives inside the tile art", () => {
+    const engine = opponentEngine([]);
+    const opponent = engine.players[1];
+    opponent.data.tiles.booster = Booster.Booster4;
+    opponent.loadEvents(boosterEvents(Booster.Booster4));
+    const rewards = opponent.events[Operator.Activate].find((e) => e.source === Booster.Booster4).action().rewards;
+    (engine as any).moveHistory.push(`${Faction.HadschHallas} special ${rewards}`);
+    (engine as any).advancedLog.splice(1, 0, { player: 1, move: 2 });
+
+    const store = makeStore();
+    store.commit("player", { index: 0 });
+    store.commit("receiveData", engine);
+
+    const { container } = render(PlayerInfo, { props: { player: opponent }, store });
+    expect(container.querySelector("svg.booster.last-move")).to.not.equal(null);
+
+    const { container: own } = render(PlayerInfo, { props: { player: engine.players[0] }, store });
+    expect(own.querySelector("svg.booster.last-move"), "the viewer's own board is never marked").to.equal(null);
+  });
+
+  it("outlines a faction's own special-action octagon", () => {
+    const engine = opponentEngine([`${Faction.HadschHallas} special 4pw`]);
+    const opponent = engine.players[1];
+    // a non-tile Activate event is exactly what `actionsWithoutTile` draws as an octagon
+    opponent.loadEvents(Event.parse(["=> 4pw"], Faction.HadschHallas));
+
+    const store = makeStore();
+    store.commit("player", { index: 0 });
+    store.commit("receiveData", engine);
+
+    const { container } = render(PlayerInfo, { props: { player: opponent }, store });
+    expect(container.querySelector("g.specialAction.recent")).to.not.equal(null);
+  });
+
+  it("rings an artifact taken since the viewer's last turn", () => {
+    const engine = opponentEngine([`${Faction.HadschHallas} examineArtifact. chooseArtifactToken artifact-power`]);
+    const opponent = engine.players[1];
+    opponent.data.artifacts = [ArtifactToken.Credit, ArtifactToken.Power];
+
+    const store = makeStore();
+    store.commit("player", { index: 0 });
+    store.commit("receiveData", engine);
+
+    const { container } = render(PlayerInfo, { props: { player: opponent }, store });
+
+    expect(
+      container.querySelector(`[data-artifact="${ArtifactToken.Power}"]`).classList.contains("last-move")
+    ).to.equal(true);
+    expect(
+      container.querySelector(`[data-artifact="${ArtifactToken.Credit}"]`).classList.contains("last-move"),
+      "an artifact they already had is not marked"
+    ).to.equal(false);
   });
 });

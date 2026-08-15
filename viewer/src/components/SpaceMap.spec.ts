@@ -49,9 +49,9 @@ describe("SpaceMap", () => {
     expect(container.querySelector("#federation-gradient-line-r")).to.not.be.null;
   });
 
-  it("marks opponent mine placements and building upgrades since the viewer's previous turn", () => {
+  it("marks every hex an opponent's moves touched since the viewer's previous turn", () => {
     const engine = loadFixtureEngine();
-    const [ownHex, mineHex, upgradeHex] = [...engine.map.grid.values()].slice(0, 3);
+    const [ownHex, mineHex, upgradeHex, gaiaHex, fedHexA, fedHexB] = [...engine.map.grid.values()].slice(0, 6);
     const ownFaction = engine.players[PlayerEnum.Player1].faction;
     const opponentFaction = engine.players[PlayerEnum.Player2].faction;
     (engine as any).moveHistory = [
@@ -59,11 +59,15 @@ describe("SpaceMap", () => {
       `${ownFaction} build m ${ownHex}`,
       `${opponentFaction} build m ${mineHex}`,
       `${opponentFaction} build ts ${upgradeHex}`,
+      `${opponentFaction} gaiaFormTransdim ${gaiaHex}`,
+      `${opponentFaction} federation ${fedHexA},${fedHexB} fed2`,
     ];
     (engine as any).advancedLog = [
       { player: PlayerEnum.Player1, move: 1 },
       { player: PlayerEnum.Player2, move: 2 },
       { player: PlayerEnum.Player2, move: 3 },
+      { player: PlayerEnum.Player2, move: 4 },
+      { player: PlayerEnum.Player2, move: 5 },
       { player: PlayerEnum.Player1 },
     ];
 
@@ -72,12 +76,22 @@ describe("SpaceMap", () => {
     store.commit("receiveData", engine);
 
     const { container } = render(SpaceMap, { store });
-    const markers = [...container.querySelectorAll(".recent-opponent-building")];
+    const markers = [...container.querySelectorAll(".recent-opponent-move")];
 
-    expect(markers.map((marker) => marker.getAttribute("data-recent-opponent-building"))).to.deep.equal(["m", "ts"]);
+    // a build, instant gaiaforming, and every member hex of a newly formed federation
+    expect(markers.map((marker) => marker.getAttribute("data-recent-opponent-move"))).to.deep.equal([
+      "build",
+      "build",
+      "gaiaFormTransdim",
+      "federation",
+      "federation",
+    ]);
     expect(markers.map((marker) => marker.closest(".space-hex-cell")?.id)).to.deep.equal([
       mineHex.toString(),
       upgradeHex.toString(),
+      gaiaHex.toString(),
+      fedHexA.toString(),
+      fedHexB.toString(),
     ]);
     expect(markers.some((marker) => marker.closest(".space-hex-cell")?.id === ownHex.toString())).to.equal(false);
 

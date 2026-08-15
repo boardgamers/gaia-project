@@ -6614,6 +6614,48 @@ pin_preference_split_budget_search_path` (the one function in the set without a 
       gold dot inside the Space Giants' eco token, and gold outlines on both a power octagon and
       T F Mars's ship-action octagon.
 
+159.  ✅ **…and it now covers every move type that has somewhere to point at (2026-08-15, viewer
+      v5.57.5).** Owner follow-up to #158, asking what happens for special actions, gaiaformers,
+      federations, artifacts and explorations. Only the first needed new UI thinking; the rest are
+      the same two mechanisms pointed at more commands:
+
+      - **Special action** — gold outline, like the power and ship actions. A faction's own octagons
+        (`actionsWithoutTile`) take it directly; a tile- or booster-sourced action has no octagon of
+        its own outside the tile art, so the **tile** is outlined instead, matched through
+        `Event.source` (`techTileEventSource(pos)` for tech tiles, the Booster enum for boosters) —
+        the same `source` match `boosterSpecialActionUsed` already used. A used octagon is drawn at
+        `opacity: 0.5`, which washed gold out to olive, so a `recent` one is raised to 0.9; its
+        "used" X is drawn outside that group and still reads.
+      - **Gaiaformer** — already covered: placing one is a `build gf` move, so the hex was filling
+        gold from #158. `gaiaFormTransdim` (T F Mars's instant gaiaforming) was not, and now is,
+        along with `lostPlanet` and `placePowerRing` — same family, same one-line entry in the new
+        `hexArg` table.
+      - **Federation** — every member hex of the new federation fills gold (the move's first
+        argument is one comma-separated coordinate list). The federation lines still draw on top.
+      - **Artifact** — the token taken is ringed on the player board. Its own art is gold already,
+        so the ring is separated from it by a second ring in the page background color
+        (`box-shadow`, which also leaves the row's layout untouched).
+      - **Explore** — the exploration slot the shuttle landed in gets a gold border on the ship
+        board, matched by ship + the claiming player.
+
+      `buildingMovesByHex` became `hexMovesByHex` (plus `hexMoveLabel` for the hex tooltip), and the
+      four per-player marks share one `commandArgsByFaction` extractor. The hex lookup is wrapped in
+      a try/catch: `map.parse()` asserts on anything that isn't a coordinate, and this runs while
+      rendering an arbitrary recorded history, where a throw blanks the map (#66).
+
+      **Still unmarked, deliberately:** taking a tech tile or a federation tile, and the round
+      booster swapped on a pass — each is a tile changing hands rather than a move landing somewhere
+      on a board. They stay visible in the recap notice and the log.
+
+      **Tests:** `recent.spec.ts` 16 passing (+3: the new extractors, every hex-marking command, and
+      a non-coordinate argument going unmarked instead of throwing); `PlayerInfo.spec.ts` 12 passing
+      (+3: the faction octagon, the source-matched booster, the ringed artifact); plus new cases in
+      `LostFleetShips.spec.ts` (the explored slot) and `SpaceMap.spec.ts` (build + gaiaforming +
+      both federation members, in that DOM order). Full viewer suite green at 921 passing. Verified
+      in a real browser on `?scenario=lost-fleet-overview` across six driven turns: the Space
+      Giants' gold-outlined special octagon with its used X, the mine it built filled gold, the
+      Terrans' ringed artifact, and their shuttle's gold-bordered Twilight slot.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

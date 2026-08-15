@@ -1,5 +1,5 @@
 import Engine, { BoardAction, Command, Faction, GaiaHex, Player, ResearchField } from "@gaia-project/engine";
-import { AnyTechTilePos, Spaceship } from "@gaia-project/engine/src/enums";
+import { AnyTechTilePos, ArtifactToken, Spaceship } from "@gaia-project/engine/src/enums";
 import { CubeCoordinates } from "hexagrid";
 import Vue, { markRaw } from "vue";
 import Vuex from "vuex";
@@ -13,8 +13,9 @@ import { RenjuBackend } from "./logic/renju-backend";
 import { UltimateTicTacToeBackend } from "./logic/ultimate-tic-tac-toe-backend";
 import {
   boardActionMoves,
-  buildingMovesByHex,
   CommandObject,
+  commandArgsByFaction,
+  hexMovesByHex,
   MovesSlice,
   movesToHexes,
   opponentMovesSinceLastTurn,
@@ -22,7 +23,6 @@ import {
   parseMoves,
   recentMoves,
   researchClasses,
-  researchMovesByFaction,
   roundMoves,
   spaceshipActionMoves,
 } from "./logic/recent";
@@ -421,19 +421,28 @@ const gaiaViewer = {
       return new Set(movesToHexes(state.data, getters.recentCommands));
     },
     // Everything an opponent did since the viewer's own previous turn, marked in gold on the board it
-    // happened on: the hex itself, the research token, the power/QIC octagon, the ship-action octagon.
+    // happened on: the hexes it touched, the research token, the power/QIC octagon, the ship-action
+    // octagon, their own special action, their exploration shuttle, the artifact they took.
     // Deliberately NOT gated on highlightRecentActions - this is the "what did I miss" marker, not the
     // opt-in own-move trail.
     recentOpponentCommands: (state: State, getters): CommandObject[] =>
       opponentMovesSinceLastTurn(getters.recentMoves).flatMap((move) => move.commands),
-    recentOpponentBuildings: (state: State, getters): Map<GaiaHex, CommandObject> =>
-      buildingMovesByHex(state.data, getters.recentOpponentCommands),
+    recentOpponentHexes: (state: State, getters): Map<GaiaHex, CommandObject> =>
+      hexMovesByHex(state.data, getters.recentOpponentCommands),
     recentOpponentResearch: (state: State, getters): Map<Faction, Set<ResearchField>> =>
-      researchMovesByFaction(getters.recentOpponentCommands),
+      commandArgsByFaction<ResearchField>(getters.recentOpponentCommands, Command.UpgradeResearch),
     recentOpponentBoardActions: (state: State, getters): Set<BoardAction> =>
       boardActionMoves(getters.recentOpponentCommands),
     recentOpponentShipActions: (state: State, getters): Set<string> =>
       spaceshipActionMoves(getters.recentOpponentCommands),
+    // Keyed by the reward spec the move carries ("special 4pw"), which is how PlayerInfo already
+    // matches a command to one of a player's own action octagons.
+    recentOpponentSpecialActions: (state: State, getters): Map<Faction, Set<string>> =>
+      commandArgsByFaction(getters.recentOpponentCommands, Command.Special),
+    recentOpponentExplorations: (state: State, getters): Map<Faction, Set<Spaceship>> =>
+      commandArgsByFaction<Spaceship>(getters.recentOpponentCommands, Command.Explore),
+    recentOpponentArtifacts: (state: State, getters): Map<Faction, Set<ArtifactToken>> =>
+      commandArgsByFaction<ArtifactToken>(getters.recentOpponentCommands, Command.ChooseArtifactToken),
     currentRoundHexes: (state: State, getters): Set<GaiaHex> => {
       return new Set(movesToHexes(state.data, getters.currentRoundCommands));
     },

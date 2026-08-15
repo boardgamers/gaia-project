@@ -111,6 +111,34 @@ describe("LostFleetShips", () => {
     ).to.equal(null);
   });
 
+  it("marks the slot an opponent's exploration shuttle landed in since the viewer's last turn", () => {
+    const engine = new Engine(["init 2 lost-fleet-ships-spec", "p1 faction terrans", "p2 faction hadsch-hallas"], {
+      lostFleet: true,
+    });
+    engine.players[0].data.explorationShips[Spaceship.Twilight] = 1;
+    engine.players[1].data.explorationShips[Spaceship.Twilight] = 2;
+    engine.players[1].data.explorationShips[Spaceship.Eclipse] = 1;
+    (engine as any).moveHistory = [
+      "init 2 lost-fleet-ships-spec",
+      `${Faction.Terrans} explore ${Spaceship.Twilight}`,
+      `${Faction.HadschHallas} explore ${Spaceship.Twilight}`,
+    ];
+    (engine as any).advancedLog = [{ player: 0, move: 1 }, { player: 1, move: 2 }, { player: 0 }];
+
+    const store = makeStore();
+    store.commit("player", { index: 0 });
+    store.commit("receiveData", engine);
+
+    const { container } = render(LostFleetShips, { store });
+    const twilight = container.querySelector(`svg.lost-fleet-ship[data-ship="${Spaceship.Twilight}"]`);
+
+    // only the opponent's slot on the ship they just explored - not the viewer's own slot 1, and not
+    // the same opponent's older shuttle on another ship
+    expect(twilight.querySelector('[data-slot="2"]').classList.contains("last-move")).to.equal(true);
+    expect(twilight.querySelector('[data-slot="1"]').classList.contains("last-move")).to.equal(false);
+    expect(container.querySelectorAll(".lost-fleet-ship__slot.last-move").length).to.equal(1);
+  });
+
   it("excludes Rebellion in 2-player games", () => {
     const engine = new Engine(["init 2 lost-fleet-ships-spec"], { lostFleet: true });
     const store = makeStore();

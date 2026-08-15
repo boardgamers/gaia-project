@@ -60,15 +60,82 @@ function cleanArg(arg: string | undefined): string {
   return (arg ?? "").replace(/\.+$/, "");
 }
 
-/** Which research tracks each faction advanced - keyed like `researchClasses` so both can mark the same token. */
-export function researchMovesByFaction(moves: CommandObject[]): Map<Faction, Set<ResearchField>> {
-  const result = new Map<Faction, Set<ResearchField>>();
-  for (const command of moves) {
-    if (command.command === Command.UpgradeResearch && command.args[0]) {
-      if (!result.has(command.faction)) {
-        result.set(command.faction, new Set());
+/** Which argument of a command names the hex it happened on. */
+const hexArg: Partial<Record<Command, number>> = {
+  [Command.Build]: 1,
+  [Command.GaiaFormTransdim]: 0,
+  [Command.PlaceLostPlanet]: 0,
+  [Command.PlacePowerRing]: 0,
+};
+
+/**
+ * Every hex a move put something on: a building or gaiaformer, instant gaiaforming, the Lost Planet,
+ * a Power Ring, and all the members of a newly formed federation (whose own argument is one
+ * comma-separated list of coordinates).
+ */
+export function hexMovesByHex(data: Engine, moves: CommandObject[]): Map<GaiaHex, CommandObject> {
+  const result = new Map<GaiaHex, CommandObject>();
+  const add = (coordinate: string, command: CommandObject) => {
+    // map.parse() asserts on anything that isn't a coordinate. This runs while rendering an
+    // arbitrary recorded move history, where a throw would blank the whole map (see PROGRESS #66),
+    // so an unrecognized argument just goes unmarked.
+    try {
+      const hex = data.map.getS(cleanArg(coordinate));
+      if (hex) {
+        result.set(hex, command);
       }
-      result.get(command.faction).add(cleanArg(command.args[0]) as ResearchField);
+    } catch {
+      // not a hex - nothing to mark
+    }
+  };
+  for (const command of moves) {
+    const index = hexArg[command.command];
+    if (index !== undefined && command.args[index]) {
+      add(command.args[index], command);
+    } else if (command.command === Command.FormFederation && command.args[0]) {
+      for (const coordinate of cleanArg(command.args[0]).split(",")) {
+        add(coordinate, command);
+      }
+    }
+  }
+  return result;
+}
+
+/** How a hex-marking move reads in that hex's tooltip. */
+export function hexMoveLabel(command: CommandObject): string {
+  switch (command.command as Command) {
+    case Command.Build:
+      return `build ${cleanArg(command.args[0])}`;
+    case Command.GaiaFormTransdim:
+      return "gaiaform";
+    case Command.PlaceLostPlanet:
+      return "place the Lost Planet";
+    case Command.PlacePowerRing:
+      return "place a Power Ring";
+    case Command.FormFederation:
+      return "form a federation";
+    default:
+      return cleanArg(command.command as string);
+  }
+}
+
+/**
+ * One command's first (or `index`-th) argument, grouped by the faction that played it - for every
+ * mark that belongs to a specific player's own piece: their research token, their special action,
+ * their exploration shuttle, their artifact.
+ */
+export function commandArgsByFaction<T extends string>(
+  moves: CommandObject[],
+  command: Command,
+  index = 0
+): Map<Faction, Set<T>> {
+  const result = new Map<Faction, Set<T>>();
+  for (const move of moves) {
+    if (move.command === command && move.args[index]) {
+      if (!result.has(move.faction)) {
+        result.set(move.faction, new Set());
+      }
+      result.get(move.faction).add(cleanArg(move.args[index]) as T);
     }
   }
   return result;

@@ -181,6 +181,7 @@
             x="-30"
             y="-60"
             height="120"
+            :class="{ 'last-move': recentSpecialBooster }"
             :booster="playerData.tiles.booster"
             :disabled="passed"
             :special-action-used="boosterSpecialActionUsed"
@@ -296,13 +297,15 @@
         v-for="tech in playerData.tiles.techs"
         :covered="!tech.enabled"
         class="mb-1 mr-1"
+        :class="{ 'last-move': recentSpecialTile(tech.pos) }"
         :key="tech.pos"
         :pos="tech.pos"
         :player="player.player"
       />
       <span
         v-for="(artifact, i) in playerData.artifacts"
-        class="mb-1 mr-1 d-inline-flex"
+        class="mb-1 mr-1 d-inline-flex player-artifact"
+        :class="{ 'last-move': recentArtifact(artifact) }"
         :key="'artifact-' + i"
         :data-artifact="artifact"
       >
@@ -317,6 +320,7 @@
 import Vue from "vue";
 import { Component, Prop, Watch } from "vue-property-decorator";
 import Engine, {
+  ArtifactToken,
   Building,
   effectiveRange,
   Expansion,
@@ -327,6 +331,8 @@ import Engine, {
   Player,
   SpaceshipFederation,
 } from "@gaia-project/engine";
+import { AnyTechTilePos } from "@gaia-project/engine/src/enums";
+import { techTileEventSource } from "@gaia-project/engine/src/tiles/techs";
 import { spaceshipFederationDisplayRewards } from "../data/federations";
 import { factionColor } from "../graphics/utils";
 import TechTile from "./TechTile.vue";
@@ -430,8 +436,47 @@ export default class PlayerInfo extends Vue {
 
   recentAction(i: number): boolean {
     const action = this.player.actionsWithoutTile[i];
+    if (this.recentOpponentSpecials.has(action.rewards)) {
+      return true;
+    }
     const commands = this.$store.getters.recentActions.get(this.faction) ?? [];
     return commands.some((c) => c.args[0] === action.rewards);
+  }
+
+  /** The reward specs of this player's special actions taken since the viewer's last turn. */
+  get recentOpponentSpecials(): Set<string> {
+    return this.$store.getters.recentOpponentSpecialActions.get(this.faction) ?? new Set<string>();
+  }
+
+  /**
+   * Which tile a recent special action came from, so the gold mark lands on the tech tile or booster
+   * that carries it - `actionsWithoutTile` only covers the faction's own (PI, ability) octagons.
+   * Matched by `source` the same way `boosterSpecialActionUsed` does.
+   */
+  get recentOpponentSpecialSources(): Set<string> {
+    const rewards = this.recentOpponentSpecials;
+    if (rewards.size === 0) {
+      return new Set<string>();
+    }
+    return new Set(
+      this.player.events[Operator.Activate]
+        .filter((event) => rewards.has(event.action().rewards))
+        .map((event) => String(event.source))
+    );
+  }
+
+  /** A tech tile's events are tagged with `tech-<pos>` (standard) or the pos itself (advanced). */
+  recentSpecialTile(pos: AnyTechTilePos): boolean {
+    return this.recentOpponentSpecialSources.has(String(techTileEventSource(pos)));
+  }
+
+  get recentSpecialBooster(): boolean {
+    const booster = this.playerData?.tiles?.booster;
+    return !!booster && this.recentOpponentSpecialSources.has(booster);
+  }
+
+  recentArtifact(artifact: ArtifactToken): boolean {
+    return this.$store.getters.recentOpponentArtifacts.get(this.faction)?.has(artifact) ?? false;
   }
 
   planetFill(planet: string) {
@@ -672,6 +717,14 @@ export default class PlayerInfo extends Vue {
 <style lang="scss">
 .popover {
   max-width: 674px !important;
+}
+
+// An artifact taken since the viewer's last turn. The token's own art is already gold, so the mark
+// is a gold ring separated from it by a dark one - two flat box-shadow rings, which also keeps the
+// row's layout identical to an unmarked token.
+.player-artifact.last-move {
+  border-radius: 999px;
+  box-shadow: 0 0 0 2px var(--ui-bg), 0 0 0 4px var(--recent);
 }
 
 .player-avatar {

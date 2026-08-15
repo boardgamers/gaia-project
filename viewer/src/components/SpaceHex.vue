@@ -2,14 +2,14 @@
   <g :id="`${hex}`" class="space-hex-cell">
     <title v-text="tooltip" />
     <use xlink:href="#space-hex" :class="polygonClasses(hex)" @click="hexClick(hex)" />
-    <!-- An opponent built here since the viewer's last turn: fill the whole cell gold. Drawn right on
-         top of the cell's own fill and before everything else, so the federation lines, the planet and
-         the buildings still read normally on top of it. -->
+    <!-- An opponent's move since the viewer's last turn landed on this hex: fill the whole cell gold.
+         Drawn right on top of the cell's own fill and before everything else, so the federation lines,
+         the planet and the buildings still read normally on top of it. -->
     <use
-      v-if="recentOpponentBuilding"
+      v-if="recentOpponentMove"
       xlink:href="#space-hex"
-      class="recent-opponent-building"
-      :data-recent-opponent-building="recentOpponentBuilding.args[0]"
+      class="recent-opponent-move"
+      :data-recent-opponent-move="recentOpponentMove.command"
       pointer-events="none"
     />
     <use
@@ -162,7 +162,7 @@ import { splitCostBonus } from "../data/resources";
 import { spaceshipColors } from "../data/spaceships";
 import { max } from "lodash";
 import { factionPiecePlanet } from "../graphics/utils";
-import { CommandObject } from "../logic/recent";
+import { CommandObject, hexMoveLabel } from "../logic/recent";
 
 type BuildingOverride = { building: BuildingEnum; player: PlayerEnum };
 @Component<SpaceHex>({
@@ -542,8 +542,8 @@ export default class SpaceHex extends Vue {
     return this.$store.getters.currentRoundHexes.has(hex);
   }
 
-  get recentOpponentBuilding(): CommandObject | null {
-    return this.$store.getters.recentOpponentBuildings.get(this.hex) ?? null;
+  get recentOpponentMove(): CommandObject | null {
+    return this.$store.getters.recentOpponentHexes.get(this.hex) ?? null;
   }
 
   get selection(): HexSelection | null {
@@ -576,8 +576,8 @@ export default class SpaceHex extends Vue {
     if (highlightHex?.rewards) {
       messages.push(`Reward: ${highlightHex.rewards}`);
     }
-    if (this.recentOpponentBuilding) {
-      messages.push(`Recent opponent move: build ${this.recentOpponentBuilding.args[0]}`);
+    if (this.recentOpponentMove) {
+      messages.push(`Recent opponent move: ${hexMoveLabel(this.recentOpponentMove)}`);
     }
 
     const buildingLabel = (player: Player, building: BuildingEnum) => {
@@ -682,7 +682,7 @@ svg {
     pointer-events: none;
   }
 
-  .recent-opponent-building {
+  .recent-opponent-move {
     fill: var(--recent);
     stroke: none;
     pointer-events: none;

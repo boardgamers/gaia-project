@@ -1,7 +1,20 @@
 {
-  "version": "5.57.4",
+  "version": "5.57.5",
   "releasedAt": "2026-08-15",
   "entries": [
+    {
+      "version": "5.57.5",
+      "releasedAt": "2026-08-15",
+      "kind": "update",
+      "title": "Fuller last-move marks",
+      "impact": "",
+      "changes": [
+        "The gold \"since your last turn\" mark now also covers special actions, gaiaforming, new federations, explorations and artifacts."
+      ],
+      "userChanges": [
+        "The gold \"since your last turn\" mark now also covers special actions, gaiaforming, new federations, explorations and artifacts."
+      ]
+    },
     {
       "version": "5.57.4",
       "releasedAt": "2026-08-15",
