@@ -1,3 +1,4 @@
+import Engine from "@gaia-project/engine";
 import { mount } from "@vue/test-utils";
 import BootstrapVue from "bootstrap-vue";
 import { expect } from "chai";
@@ -6,6 +7,14 @@ import { makeStore } from "../store";
 import PremoveBar from "./PremoveBar.vue";
 
 Vue.use(BootstrapVue);
+
+const SETUP_MOVES = [
+  "init 2 randomSeed",
+  "p1 faction terrans",
+  "p2 faction nevlas",
+  "terrans build m -1x2",
+  "nevlas build m -1x0",
+];
 
 describe("PremoveBar", () => {
   it("clears zoom compensation after a pinch leaves only a tiny scale residue", () => {
@@ -86,6 +95,101 @@ describe("PremoveBar", () => {
     } finally {
       sticky.destroy();
       inFlow.destroy();
+    }
+  });
+
+  it("shows three action buttons: + Sequential, + Priority, ⚠ Cancel trigger", () => {
+    const wrapper = mount(PremoveBar, {
+      propsData: { seat: 0, composeModePreference: "sequential", stickyMobile: false },
+      store: makeStore(),
+    });
+    try {
+      const labels = wrapper.findAll(".premove-bar__action-button").wrappers.map((w) => w.text().trim());
+      expect(labels).to.deep.equal(["+ Sequential", "+ Priority", "⚠ Cancel trigger"]);
+    } finally {
+      wrapper.destroy();
+    }
+  });
+
+  it("emits start-cancel-trigger when the third button is clicked", async () => {
+    const wrapper = mount(PremoveBar, {
+      propsData: { seat: 0, composeModePreference: "sequential", stickyMobile: false },
+      store: makeStore(),
+    });
+    try {
+      const buttons = wrapper.findAll(".premove-bar__action-button");
+      await buttons.at(2).trigger("click");
+      expect(wrapper.emitted("start-cancel-trigger")).to.have.length(1);
+    } finally {
+      wrapper.destroy();
+    }
+  });
+
+  it("lists armed triggers (move and leech kind) with Edit/Remove, and removing dispatches disarmCancelTrigger", async () => {
+    const store = makeStore();
+    store.commit("receiveData", new Engine(SETUP_MOVES));
+    store.commit("cancelTriggerState", [
+      {
+        seat: 0,
+        seq: 1,
+        kind: "move",
+        watched_seat: 1,
+        move: "",
+        atoms: ["up:eco"],
+        config: {},
+        match: "any",
+        armed_from_move_count: 0,
+      },
+      {
+        seat: 0,
+        seq: 2,
+        kind: "leech",
+        watched_seat: 0,
+        move: "",
+        atoms: [],
+        config: { mode: "gained", minPower: 2 },
+        match: "any",
+        armed_from_move_count: 0,
+      },
+    ]);
+    const dispatched: any[] = [];
+    store.dispatch = (type: string, payload: any) => {
+      dispatched.push({ type, payload });
+      return Promise.resolve();
+    };
+    const wrapper = mount(PremoveBar, {
+      propsData: { seat: 0, composeModePreference: "sequential", stickyMobile: false },
+      store,
+    });
+    try {
+      const rows = wrapper.findAll(".premove-bar__trigger-row");
+      expect(rows).to.have.length(2);
+      expect(rows.at(0).text()).to.contain("Nevlas");
+      expect(rows.at(0).text()).to.contain("advances Economy");
+      expect(rows.at(1).text()).to.contain("Power charge ≥ 2 taken by me");
+
+      await rows.at(1).find("button.btn-link:last-child").trigger("click");
+      expect(dispatched).to.deep.equal([{ type: "disarmCancelTrigger", payload: { seat: 0, seq: 2 } }]);
+    } finally {
+      wrapper.destroy();
+    }
+  });
+
+  it("the fired-state header reads 'Cancelled - <reason>' once a cancel trigger has matched", () => {
+    const store = makeStore();
+    store.commit("receiveData", new Engine(SETUP_MOVES));
+    store.commit("premoveState", {
+      premoves: [],
+      failures: [{ id: "1", seat: 0, move: "", reason: "Nevlas advanced Economy", read_at: null, kind: "cancelled" }],
+    });
+    const wrapper = mount(PremoveBar, {
+      propsData: { seat: 0, composeModePreference: "sequential", stickyMobile: true },
+      store,
+    });
+    try {
+      expect(wrapper.find(".premove-bar__sheet-title").text()).to.equal("Cancelled — Nevlas advanced Economy");
+    } finally {
+      wrapper.destroy();
     }
   });
 });

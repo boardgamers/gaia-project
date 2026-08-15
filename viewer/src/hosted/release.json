@@ -1,7 +1,24 @@
 {
-  "version": "5.57.8",
+  "version": "5.58.0",
   "releasedAt": "2026-08-15",
   "entries": [
+    {
+      "version": "5.58.0",
+      "releasedAt": "2026-08-15",
+      "kind": "update",
+      "title": "Premove cancel triggers",
+      "impact": "",
+      "changes": [
+        "New: cancel triggers. Arm a trigger to watch one opponent's move (or a power charge coming your way) - if it happens, your whole premove queue is cleared instead of playing something you'd no longer choose.",
+        "Triggers match on what an opponent DID, not the exact move text - e.g. watching \"advances Economy\" fires whether they got there from a tech tile, a research power action, or a faction special action.",
+        "Added premove_cancel_triggers table + 5 RPCs (arm/disarm/disarm-all/edit/resolve-match), a shared engine-agnostic matcher (viewer/src/logic/premove-cancel-trigger.ts) imported identically by host.ts's fast path and resolve-automation's offline path, and a resolve-automation notify re-invoke so the suppressed turn push fires once the queue is actually cleared.",
+        "PremoveBar now has a third '⚠ Cancel trigger' button, an armed-triggers list, and a fired-state header; new CancelTriggerPicker/CancelTriggerRefine/CancelTriggerLeechConfig components handle the picker, opt-in atom refine step, and inline leech config."
+      ],
+      "userChanges": [
+        "New: cancel triggers. Arm a trigger to watch one opponent's move (or a power charge coming your way) - if it happens, your whole premove queue is cleared instead of playing something you'd no longer choose.",
+        "Triggers match on what an opponent DID, not the exact move text - e.g. watching \"advances Economy\" fires whether they got there from a tech tile, a research power action, or a faction special action."
+      ]
+    },
     {
       "version": "5.57.8",
       "releasedAt": "2026-08-15",

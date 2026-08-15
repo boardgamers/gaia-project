@@ -6,7 +6,16 @@ import Vuex from "vuex";
 import { ButtonData, GameContext, HexSelection, HighlightHex, SpecialActionIncome } from "./data";
 import { FastConversionEvent, MapMode } from "./data/actions";
 import { PresenceState } from "./hosted/presence";
-import { PremoveFailureRow, PremoveMode, PremoveRow, SealedBidEntry, SealedBidStatus } from "./hosted/types";
+import {
+  CancelTriggerKind,
+  CancelTriggerLeechConfig,
+  CancelTriggerRow,
+  PremoveFailureRow,
+  PremoveMode,
+  PremoveRow,
+  SealedBidEntry,
+  SealedBidStatus,
+} from "./hosted/types";
 import { ExecuteBack, FastConversionTooltips } from "./logic/buttons/types";
 import { ChessBackend } from "./logic/chess-backend";
 import { RenjuBackend } from "./logic/renju-backend";
@@ -76,6 +85,11 @@ export type State = {
    * fast-path success; null once dismissed or superseded. Never sourced from a push - see
    * host.ts's onPremovePlayed doc comment. */
   premovePlayedNotice: { seat: number; move: string; rank?: number; totalRanks?: number } | null;
+  /** Premove cancel triggers - hosted mode only, always empty in self-contained hot-seat play. */
+  cancelTriggers: CancelTriggerRow[];
+  /** Quiet, in-app-only "cancelled by trigger" toast for the most recent fast-path match; null once
+   * dismissed or superseded (mirrors premovePlayedNotice above). */
+  cancelTriggerFiredNotice: { seat: number; reason: string } | null;
   /** Hosted mode only - seat -> user id, for matching a seat to its presence entry below. Never
    * populated in self-contained hot-seat play (no accounts/seats to map). */
   seatUsers: Record<number, string | null>;
@@ -190,6 +204,8 @@ const gaiaViewer = {
       premoves: [],
       premoveFailures: [],
       premovePlayedNotice: null,
+      cancelTriggers: [],
+      cancelTriggerFiredNotice: null,
       seatUsers: {},
       seatLastActive: {},
       presence: {},
@@ -321,6 +337,18 @@ const gaiaViewer = {
       state.premovePlayedNotice = null;
     },
 
+    cancelTriggerState(state: State, triggers: CancelTriggerRow[]) {
+      state.cancelTriggers = triggers;
+    },
+
+    cancelTriggerFired(state: State, data: { seat: number; reason: string }) {
+      state.cancelTriggerFiredNotice = data;
+    },
+
+    dismissCancelTriggerFiredNotice(state: State) {
+      state.cancelTriggerFiredNotice = null;
+    },
+
     seatUsers(state: State, data: Record<number, string | null>) {
       state.seatUsers = data;
     },
@@ -375,6 +403,9 @@ const gaiaViewer = {
     // reaches the launcher's "move" forwarding (see Game.vue's own subscribeAction handler, which
     // intercepts this type before it would otherwise be a no-op here).
     premoveMove(context: any, move: string) {},
+    // Cancel trigger compose mode (Game.vue) - same "accumulates against a preview clone only,
+    // intercepted locally, never reaches the launcher's real move forwarding" shape as premoveMove.
+    cancelTriggerMove(context: any, move: string) {},
     queuePremove(context: any, payload: { seat: number; move: string; mode: PremoveMode }) {},
     cancelPremove(context: any, payload: { seat: number; seq: number }) {},
     // Premove UI redesign (Gaia 9) - update-in-place ("stage until confirmed", see host.ts).
@@ -384,6 +415,30 @@ const gaiaViewer = {
     // Phase 3 (§10.4), priority mode only.
     reorderPremove(context: any, payload: { seat: number; seq: number; direction: "up" | "down" }) {},
     markPremoveFailureRead(context: any, id: string) {},
+    // Premove cancel triggers - same "no body, forwarded by launcher.ts's subscribeAction" shape.
+    armCancelTrigger(
+      context: any,
+      payload: {
+        seat: number;
+        watchedSeat: number;
+        move: string;
+        atoms: string[];
+        kind: CancelTriggerKind;
+        config: CancelTriggerLeechConfig | Record<string, never>;
+      }
+    ) {},
+    disarmCancelTrigger(context: any, payload: { seat: number; seq: number }) {},
+    disarmAllCancelTriggers(context: any, payload: { seat: number }) {},
+    editCancelTrigger(
+      context: any,
+      payload: {
+        seat: number;
+        seq: number;
+        move: string;
+        atoms: string[];
+        config: CancelTriggerLeechConfig | Record<string, never>;
+      }
+    ) {},
     replayInfo(context: any, info: { start: number; end: number; current: number }) {},
     // ^ up - down v
     externalData(context: any, data: Engine) {},

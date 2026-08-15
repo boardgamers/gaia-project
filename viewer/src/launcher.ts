@@ -93,6 +93,9 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
   item.addListener("premoveState", (data) => store.commit("premoveState", data));
   // Phase 3 (§10.6) - hosted-mode-only quiet success notice.
   item.addListener("premovePlayed", (data) => store.commit("premovePlayed", data));
+  // Premove cancel triggers - hosted-mode-only, same shape as the two listeners above.
+  item.addListener("cancelTriggerState", (data) => store.commit("cancelTriggerState", data));
+  item.addListener("cancelTriggerFired", (data) => store.commit("cancelTriggerFired", data));
   item.addListener("replay:start", () => {
     store.dispatch("replayStart");
     replaying = true;
@@ -140,7 +143,11 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
       type === "editPremove" ||
       type === "cancelAllPremoves" ||
       type === "reorderPremove" ||
-      type === "markPremoveFailureRead"
+      type === "markPremoveFailureRead" ||
+      type === "armCancelTrigger" ||
+      type === "disarmCancelTrigger" ||
+      type === "disarmAllCancelTriggers" ||
+      type === "editCancelTrigger"
     ) {
       item.emit(type, payload);
       return;

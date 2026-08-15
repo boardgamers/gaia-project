@@ -548,8 +548,8 @@ describe("Game", () => {
       const vm = mountAsSeat(1);
 
       expect(vm.premoveOffered).to.equal(true);
-      expect(vm.$el.textContent).to.contain("Sequential premove");
-      expect(vm.$el.textContent).to.contain("Priority premove");
+      expect(vm.$el.textContent).to.contain("+ Sequential");
+      expect(vm.$el.textContent).to.contain("+ Priority");
 
       vm.$el.remove();
       vm.$destroy();
@@ -571,7 +571,7 @@ describe("Game", () => {
       expect(vm.canPlay).to.equal(false);
       expect(vm.premoveOffered).to.equal(true);
       expect(vm.showPremoveBar).to.equal(true);
-      expect(vm.$el.textContent).to.contain("Sequential premove");
+      expect(vm.$el.textContent).to.contain("+ Sequential");
 
       // ...and composing from there says so, rather than quietly previewing a board that is still
       // waiting on an answer.
@@ -718,6 +718,121 @@ describe("Game", () => {
 
       vm.$el.remove();
       vm.$destroy();
+    });
+
+    describe("cancel triggers", () => {
+      function spyDispatch(vm: any): any[] {
+        const dispatched: any[] = [];
+        const originalDispatch = vm.$store.dispatch.bind(vm.$store);
+        vm.$store.dispatch = (type: string, payload: unknown) => {
+          dispatched.push({ type, payload });
+          return originalDispatch(type, payload);
+        };
+        return dispatched;
+      }
+
+      it("full compose -> refine -> arm flow watches the picked opponent's seat", () => {
+        const vm = mountAsSeat(1); // nevlas; terrans (seat 0) is on turn
+        vm.startCancelTriggerPicker();
+        expect(vm.cancelTriggerModalStage).to.equal("picker");
+
+        vm.pickCancelTriggerOpponent(0);
+        expect(vm.cancelTriggerModalStage).to.equal(null);
+        expect(vm.cancelTriggerComposeActive).to.equal(true);
+        // Composing plays as the WATCHED seat (terrans), not this session's own locked seat.
+        expect(vm.canPlay).to.equal(true);
+        expect(vm.engine.playerToMove).to.equal(0);
+
+        vm.applyCancelTriggerMove("terrans build m 3B0.");
+        expect(vm.cancelTriggerReady).to.equal(true);
+
+        const dispatched = spyDispatch(vm);
+        vm.confirmCancelTriggerCompose();
+
+        // Leaves the board exactly as it was for real - no leech offer, no move recorded.
+        expect(vm.cancelTriggerComposeActive).to.equal(false);
+        expect(vm.cancelTriggerModalStage).to.equal("refine");
+        expect(vm.engine.phase).to.equal(Phase.RoundMove);
+        expect(vm.engine.playerToMove).to.equal(0);
+        expect(vm.canPlay).to.equal(false);
+
+        vm.armCancelTriggerFromRefine(["build:m:3B0"]);
+        expect(dispatched).to.deep.equal([
+          {
+            type: "armCancelTrigger",
+            payload: {
+              seat: 1,
+              watchedSeat: 0,
+              move: "terrans build m 3B0.",
+              atoms: ["build:m:3B0"],
+              kind: "move",
+              config: {},
+            },
+          },
+        ]);
+        expect(vm.cancelTriggerModalStage).to.equal(null);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("the leech chip arms a leech trigger directly, without ever touching the board", () => {
+        const vm = mountAsSeat(1);
+        vm.startCancelTriggerPicker();
+        vm.pickCancelTriggerLeech();
+
+        expect(vm.cancelTriggerModalStage).to.equal("leech");
+        expect(vm.cancelTriggerComposeActive).to.equal(false);
+
+        const dispatched = spyDispatch(vm);
+        vm.armLeechTrigger({ mode: "gained", minPower: 2 });
+
+        expect(dispatched).to.deep.equal([
+          {
+            type: "armCancelTrigger",
+            payload: {
+              seat: 1,
+              watchedSeat: 1,
+              move: "",
+              atoms: [],
+              kind: "leech",
+              config: { mode: "gained", minPower: 2 },
+            },
+          },
+        ]);
+        expect(vm.cancelTriggerModalStage).to.equal(null);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("cancelling mid-compose restores the real board and dispatches nothing", () => {
+        const vm = mountAsSeat(1);
+        const beforeMoveHistoryLength = vm.engine.moveHistory.length;
+        const beforeCredits = vm.engine.players[0].data.credits;
+        const beforeMines = vm.engine.players[0].data.buildings.m;
+
+        vm.pickCancelTriggerOpponent(0);
+        // The resource-relaxed clone really did relax terrans' credits while composing.
+        expect(vm.engine.players[0].data.credits).to.equal(30);
+        vm.applyCancelTriggerMove("terrans build m 3B0.");
+
+        const dispatched = spyDispatch(vm);
+        vm.cancelCancelTriggerCompose();
+
+        expect(dispatched).to.deep.equal([]);
+        expect(vm.cancelTriggerComposeActive).to.equal(false);
+        // Real state restored: nothing was appended to the move log, and the relaxed resources
+        // (and the build itself) never leaked into the real board.
+        expect(vm.engine.moveHistory.length).to.equal(beforeMoveHistoryLength);
+        expect(vm.engine.playerToMove).to.equal(0);
+        expect(vm.engine.phase).to.equal(Phase.RoundMove);
+        expect(vm.engine.players[0].data.credits).to.equal(beforeCredits);
+        expect(vm.engine.players[0].data.buildings.m).to.equal(beforeMines);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
     });
   });
 

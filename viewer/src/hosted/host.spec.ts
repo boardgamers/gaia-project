@@ -10,6 +10,9 @@ import {
   seatToLock,
 } from "./host";
 import {
+  CancelTriggerKind,
+  CancelTriggerLeechConfig,
+  CancelTriggerRow,
   CommitTurnArgs,
   GameRow,
   HostedBackend,
@@ -321,8 +324,106 @@ class FakeBackend implements HostedBackend {
   }
 
   // Test helper mirroring what resolve-automation (or a genuinely failed fast-path) would do.
-  seedPremoveFailure(seat: number, move: string, reason: string): void {
-    this.premoveFailures.push({ id: String(this.nextFailureId++), seat, move, reason, read_at: null });
+  seedPremoveFailure(seat: number, move: string, reason: string, kind: "failure" | "cancelled" = "failure"): void {
+    this.premoveFailures.push({ id: String(this.nextFailureId++), seat, move, reason, read_at: null, kind });
+  }
+
+  // Premove cancel triggers (migration 20260815090000). Faithful to arm_cancel_trigger/
+  // disarm_all_cancel_triggers/resolve_cancel_trigger_match in the ways host.ts depends on.
+  cancelTriggers: CancelTriggerRow[] = [];
+  resolveCancelTriggerMatchCalls = 0;
+
+  async fetchCancelTriggers(): Promise<CancelTriggerRow[]> {
+    return this.cancelTriggers.map((t) => ({ ...t }));
+  }
+
+  async armCancelTrigger(
+    _gameId: string,
+    seat: number,
+    watchedSeat: number,
+    move: string,
+    atoms: string[],
+    kind: CancelTriggerKind,
+    config: CancelTriggerLeechConfig | Record<string, never>
+  ): Promise<number> {
+    const forSeat = this.cancelTriggers.filter((t) => t.seat === seat);
+    const seq = (forSeat.length ? forSeat[forSeat.length - 1].seq : 0) + 1;
+    this.cancelTriggers.push({
+      seat,
+      seq,
+      kind,
+      watched_seat: watchedSeat,
+      move,
+      atoms,
+      config,
+      match: "any",
+      armed_from_move_count: this.moves.length,
+    });
+    return seq;
+  }
+
+  async disarmCancelTrigger(_gameId: string, seat: number, seq: number): Promise<void> {
+    this.cancelTriggers = this.cancelTriggers.filter((t) => !(t.seat === seat && t.seq === seq));
+  }
+
+  async disarmAllCancelTriggers(_gameId: string, seat: number): Promise<void> {
+    this.cancelTriggers = this.cancelTriggers.filter((t) => t.seat !== seat);
+  }
+
+  async editCancelTrigger(
+    _gameId: string,
+    seat: number,
+    seq: number,
+    move: string,
+    atoms: string[],
+    config: CancelTriggerLeechConfig | Record<string, never>
+  ): Promise<void> {
+    const row = this.cancelTriggers.find((t) => t.seat === seat && t.seq === seq);
+    if (!row) {
+      throw new Error("no such armed trigger");
+    }
+    row.move = move;
+    row.atoms = atoms;
+    row.config = config;
+    row.armed_from_move_count = this.moves.length;
+  }
+
+  // Mirrors resolve_cancel_trigger_match's own race-arbitration doc comment: the delete IS the
+  // arbiter, so a second call against an already-empty set of triggers for this seat loses.
+  async resolveCancelTriggerMatch(_gameId: string, seat: number, reason: string): Promise<boolean> {
+    this.resolveCancelTriggerMatchCalls++;
+    const hadTriggers = this.cancelTriggers.some((t) => t.seat === seat);
+    if (!hadTriggers) {
+      return false;
+    }
+    this.cancelTriggers = this.cancelTriggers.filter((t) => t.seat !== seat);
+    this.premoves = this.premoves.filter((p) => p.seat !== seat);
+    this.premoveFailures.push({
+      id: String(this.nextFailureId++),
+      seat,
+      move: "",
+      reason,
+      read_at: null,
+      kind: "cancelled",
+    });
+    return true;
+  }
+
+  // Test helper - arms a trigger directly, bypassing the RPC's own validation (this fake exists to
+  // exercise host.ts's wiring, not to re-prove the migration's own asserts).
+  seedCancelTrigger(row: Partial<CancelTriggerRow> & { seat: number; watched_seat: number }): void {
+    const forSeat = this.cancelTriggers.filter((t) => t.seat === row.seat);
+    const seq = row.seq ?? (forSeat.length ? forSeat[forSeat.length - 1].seq : 0) + 1;
+    this.cancelTriggers.push({
+      kind: "move",
+      move: "",
+      atoms: [],
+      config: {},
+      match: "any",
+      armed_from_move_count: 0,
+      ...row,
+      seq,
+    });
   }
 }
 
@@ -331,6 +432,7 @@ function makeHost(backend: FakeBackend, autoDecide?: AutoDecideConfig) {
   const committed: any[] = [];
   const errors: string[] = [];
   const sealedBidStates: SealedBidStatus[] = [];
+  const cancelTriggerFires: { seat: number; reason: string }[] = [];
   const host = new HostedGameHost(
     backend,
     "game-1",
@@ -339,10 +441,11 @@ function makeHost(backend: FakeBackend, autoDecide?: AutoDecideConfig) {
       onCommittedState: (data) => committed.push(data),
       onError: (message) => errors.push(message),
       onSealedBidState: (status) => sealedBidStates.push(status),
+      onCancelTriggerFired: (seat, reason) => cancelTriggerFires.push({ seat, reason }),
     },
     autoDecide
   );
-  return { host, states, committed, errors, sealedBidStates };
+  return { host, states, committed, errors, sealedBidStates, cancelTriggerFires };
 }
 
 describe("seat locking rule", () => {
@@ -1030,6 +1133,100 @@ describe("hosted game host", () => {
 
       expect(errors).to.have.length(1);
       expect(errors[0]).to.contain("auto-charge preference");
+    });
+
+    describe("cancel triggers", () => {
+      it("a matched trigger clears the queue and commits nothing, instead of playing the premove", async () => {
+        const backend = new FakeBackend(gameRow(), playerRows());
+        backend.seedMoves(SETUP_MOVES);
+        const { host, cancelTriggerFires } = makeHost(backend, {
+          isMySeat: (seat) => seat === 1, // this browser is nevlas
+          getAutoChargePower: () => "ask",
+        });
+        await host.load();
+        // Nevlas (seat 1) watches terrans (seat 0) for any mine build.
+        await host.armCancelTrigger(1, 0, "", ["build:m:*"], "move", {});
+        await host.queuePremove(1, NEVLAS_PREMOVE);
+
+        // Terrans builds a mine at 3B0 - matches the armed atom, and also offers nevlas a leech.
+        await host.submitMove(BUILD_TRIGGERING_LEECH);
+        expect(backend.commits).to.have.length(1);
+        await host.submitMove("nevlas decline");
+
+        // The leech decline is its own commit; the fast-path never plays NEVLAS_PREMOVE behind it.
+        expect(backend.commits).to.have.length(2);
+        expect(backend.commits.some((c) => c.move === NEVLAS_PREMOVE)).to.equal(false);
+        expect(host.premoves).to.deep.equal([]);
+        expect(backend.cancelTriggers).to.deep.equal([]);
+        expect(cancelTriggerFires).to.have.length(1);
+        expect(cancelTriggerFires[0].seat).to.equal(1);
+        expect(cancelTriggerFires[0].reason).to.contain("Terrans");
+      });
+
+      it("an unmatched trigger leaves the queue alone - the premove still fires normally", async () => {
+        const backend = new FakeBackend(gameRow(), playerRows());
+        backend.seedMoves(SETUP_MOVES);
+        const { host } = makeHost(backend, {
+          isMySeat: (seat) => seat === 1,
+          getAutoChargePower: () => "ask",
+        });
+        await host.load();
+        // Watches terrans for advancing Economy - terrans building a mine below never fires this.
+        await host.armCancelTrigger(1, 0, "", ["up:eco"], "move", {});
+        await host.queuePremove(1, NEVLAS_PREMOVE);
+
+        await host.submitMove(BUILD_TRIGGERING_LEECH);
+        await host.submitMove("nevlas decline");
+
+        expect(backend.commits[2].move).to.equal(NEVLAS_PREMOVE);
+        expect(host.premoves).to.deep.equal([]);
+        // The trigger is untouched - only a MATCH disarms it.
+        expect(backend.cancelTriggers).to.have.length(1);
+      });
+
+      it("a match on a seat other than the one it watches is ignored", async () => {
+        const backend = new FakeBackend(gameRow(), playerRows());
+        backend.seedMoves(SETUP_MOVES);
+        const { host } = makeHost(backend, {
+          isMySeat: (seat) => seat === 1,
+          getAutoChargePower: () => "ask",
+        });
+        await host.load();
+        // watched_seat is nevlas's OWN seat, not terrans' - terrans' matching build must never fire it.
+        backend.seedCancelTrigger({ seat: 1, watched_seat: 1, kind: "move", atoms: ["build:m:*"] });
+        await host.load();
+        await host.queuePremove(1, NEVLAS_PREMOVE);
+
+        await host.submitMove(BUILD_TRIGGERING_LEECH);
+        await host.submitMove("nevlas decline");
+
+        expect(backend.commits[2].move).to.equal(NEVLAS_PREMOVE);
+        expect(backend.cancelTriggers).to.have.length(1);
+      });
+
+      it("a leech-kind trigger fires on the owner's own charge/decline and clears the queue", async () => {
+        const backend = new FakeBackend(gameRow(), playerRows());
+        backend.seedMoves(SETUP_MOVES);
+        const { host, cancelTriggerFires } = makeHost(backend, {
+          isMySeat: (seat) => seat === 1,
+          getAutoChargePower: () => "ask",
+        });
+        await host.load();
+        // Nevlas watches their OWN seat for any charge of 1+ power (this fixture's build only ever
+        // offers 1pw - see BUILD_TRIGGERING_LEECH's own available-commands, checked directly).
+        await host.armCancelTrigger(1, 1, "", [], "leech", { mode: "gained", minPower: 1 });
+        await host.queuePremove(1, NEVLAS_PREMOVE);
+
+        await host.submitMove(BUILD_TRIGGERING_LEECH);
+        // Nevlas takes the charge this time (rather than declining) - matches the leech trigger.
+        await host.submitMove("nevlas charge 1pw");
+
+        expect(backend.commits.some((c) => c.move === NEVLAS_PREMOVE)).to.equal(false);
+        expect(host.premoves).to.deep.equal([]);
+        expect(backend.cancelTriggers).to.deep.equal([]);
+        expect(cancelTriggerFires).to.have.length(1);
+        expect(cancelTriggerFires[0].reason).to.contain("you");
+      });
     });
 
     describe("Phase 3: multi-slot queues", () => {

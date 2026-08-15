@@ -1,5 +1,6 @@
 import { supabaseConfig } from "./config";
 import {
+  CancelTriggerRow,
   CommitTurnArgs,
   GameRow,
   HostedBackend,
@@ -93,7 +94,7 @@ export function createSupabaseBackend(client: SupabaseClient): HostedBackend {
       unwrap(
         client
           .from("premove_failures")
-          .select("id,seat,move,reason,read_at")
+          .select("id,seat,move,reason,read_at,kind")
           .eq("game_id", gameId)
           .is("read_at", null)
           .order("created_at")
@@ -134,6 +135,45 @@ export function createSupabaseBackend(client: SupabaseClient): HostedBackend {
       unwrap(client.from("auction_sealed_bids").select("seat,bids").eq("game_id", gameId).order("seat")),
     revealSealedBids: (gameId, seq, nextSeat): Promise<number> =>
       unwrap(client.rpc("reveal_sealed_bids", { p_game_id: gameId, p_seq: seq, p_next_seat: nextSeat })),
+    // Premove cancel triggers (migration 20260815090000). RLS scopes selects to the caller's own
+    // seats the same way premoves does, so no seat filter here either.
+    fetchCancelTriggers: (gameId): Promise<CancelTriggerRow[]> =>
+      unwrap(
+        client
+          .from("premove_cancel_triggers")
+          .select("seat,seq,kind,watched_seat,move,atoms,config,match,armed_from_move_count")
+          .eq("game_id", gameId)
+          .order("seq")
+      ),
+    armCancelTrigger: (gameId, seat, watchedSeat, move, atoms, kind, config): Promise<number> =>
+      unwrap(
+        client.rpc("arm_cancel_trigger", {
+          p_game_id: gameId,
+          p_seat: seat,
+          p_watched_seat: watchedSeat,
+          p_move: move,
+          p_atoms: atoms,
+          p_kind: kind,
+          p_config: config,
+        })
+      ),
+    disarmCancelTrigger: (gameId, seat, seq): Promise<void> =>
+      unwrap(client.rpc("disarm_cancel_trigger", { p_game_id: gameId, p_seat: seat, p_seq: seq })),
+    disarmAllCancelTriggers: (gameId, seat): Promise<void> =>
+      unwrap(client.rpc("disarm_all_cancel_triggers", { p_game_id: gameId, p_seat: seat })),
+    editCancelTrigger: (gameId, seat, seq, move, atoms, config): Promise<void> =>
+      unwrap(
+        client.rpc("edit_cancel_trigger", {
+          p_game_id: gameId,
+          p_seat: seat,
+          p_seq: seq,
+          p_move: move,
+          p_atoms: atoms,
+          p_config: config,
+        })
+      ),
+    resolveCancelTriggerMatch: (gameId, seat, reason): Promise<boolean> =>
+      unwrap(client.rpc("resolve_cancel_trigger_match", { p_game_id: gameId, p_seat: seat, p_reason: reason })),
   };
 }
 

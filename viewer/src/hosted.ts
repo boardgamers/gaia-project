@@ -21,6 +21,7 @@ import {
   mirrorOfflineGameId,
   refreshHostedPassAndPlayFromOnline,
 } from "./hosted/offline-mirror";
+import { CancelTriggerKind, CancelTriggerLeechConfig } from "./hosted/types";
 import { localChessLastMoveStorageKey, localChessStorageKey } from "./logic/chess";
 import { localRenjuStorageKey } from "./logic/renju";
 import { localUltimateStorageKey } from "./logic/ultimate-tic-tac-toe";
@@ -432,6 +433,12 @@ async function mountGameInstance(
       onPremovePlayed: (seat, move, info) => {
         emitter.emit("premovePlayed", { seat, move, ...info });
       },
+      onCancelTriggerState: (triggers) => {
+        emitter.emit("cancelTriggerState", triggers);
+      },
+      onCancelTriggerFired: (seat, reason) => {
+        emitter.emit("cancelTriggerFired", { seat, reason });
+      },
     },
     {
       // "Auto leech" (host.ts's AutoDecideConfig) - never decide on behalf of a seat that isn't
@@ -536,6 +543,46 @@ async function mountGameInstance(
     host.reorderPremove(seat, seq, direction)
   );
   emitter.on("markPremoveFailureRead", (id: string) => host.markPremoveFailureRead(id));
+
+  // Premove cancel triggers - same seat-explicit shape as the premove listeners above.
+  emitter.on(
+    "armCancelTrigger",
+    ({
+      seat,
+      watchedSeat,
+      move,
+      atoms,
+      kind,
+      config,
+    }: {
+      seat: number;
+      watchedSeat: number;
+      move: string;
+      atoms: string[];
+      kind: CancelTriggerKind;
+      config: CancelTriggerLeechConfig | Record<string, never>;
+    }) => host.armCancelTrigger(seat, watchedSeat, move, atoms, kind, config)
+  );
+  emitter.on("disarmCancelTrigger", ({ seat, seq }: { seat: number; seq: number }) =>
+    host.disarmCancelTrigger(seat, seq)
+  );
+  emitter.on("disarmAllCancelTriggers", ({ seat }: { seat: number }) => host.disarmAllCancelTriggers(seat));
+  emitter.on(
+    "editCancelTrigger",
+    ({
+      seat,
+      seq,
+      move,
+      atoms,
+      config,
+    }: {
+      seat: number;
+      seq: number;
+      move: string;
+      atoms: string[];
+      config: CancelTriggerLeechConfig | Record<string, never>;
+    }) => host.editCancelTrigger(seat, seq, move, atoms, config)
+  );
 
   // Phase 2 (offline auto-leech) - push the local preference to the server for each of this
   // user's own seats: once now (covers a preference already set from a previous game via

@@ -39,7 +39,7 @@
         :disabled="!canStartNew('sequential')"
         @click="requestStartNew('sequential')"
       >
-        + Sequential premove
+        + Sequential
       </button>
       <button
         type="button"
@@ -47,11 +47,36 @@
         :disabled="!canStartNew('priority')"
         @click="requestStartNew('priority')"
       >
-        + Priority premove
+        + Priority
+      </button>
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-warning premove-bar__action-button mr-2 mb-2"
+        @click="$emit('start-cancel-trigger')"
+      >
+        ⚠ Cancel trigger
       </button>
       <button type="button" class="btn btn-link btn-sm p-0 mb-2 premove-bar__info-link" v-b-modal.premove-info>
-        ⓘ What's the difference?
+        ⓘ How premoves work
       </button>
+    </div>
+
+    <div v-if="cancelTriggerRows.length > 0" class="premove-bar__triggers small mt-2">
+      <div
+        v-for="trigger in cancelTriggerRows"
+        :key="trigger.seq"
+        class="premove-bar__trigger-row d-flex align-items-center"
+      >
+        <span class="flex-grow-1">{{ triggerLabel(trigger) }}</span>
+        <button
+          type="button"
+          class="btn btn-link btn-sm p-0 mr-2"
+          @click="$emit('start-edit-cancel-trigger', trigger.seq)"
+        >
+          Edit
+        </button>
+        <button type="button" class="btn btn-link btn-sm p-0" @click="removeTrigger(trigger.seq)">Remove</button>
+      </div>
     </div>
 
     <div v-if="selectedRow" class="premove-bar__detail small">
@@ -132,6 +157,28 @@
         interpret the queue differently. A pending charge/leech decision before your turn still needs auto-charge
         enabled to resolve automatically while you're offline.
       </p>
+      <p>
+        <b>Cancel triggers.</b> A trigger watches one opponent and, if they do the thing you picked, clears your whole
+        premove queue - it never plays anything, it only cancels. You can arm as many as you like, on different
+        opponents; any one of them firing clears everything, including your other triggers.
+      </p>
+      <p>
+        Triggers match on <b>what happened, not how</b>. Power burns and free-action conversions are ignored, so "spend
+        2 power, then build a mine at 3A4" matches a plain "build a mine at 3A4". More usefully:
+        <b
+          >"advances Economy" fires whether they got that step from a tech tile, a research power action, or a faction's
+          own special action</b
+        >
+        - the route doesn't matter, the result does. If you want the narrow version, watch "takes the tech tile at eco"
+        instead.
+      </p>
+      <p class="text-muted small">
+        You can also cancel on a <b>power charge</b> instead of on an opponent's move - useful because leeching changes
+        your power bowls and costs VP, which is exactly the kind of "still legal, but I'd play something else now" shift
+        a premove can't notice on its own. Pick whether it counts offers you turned down, and a minimum size - charging
+        N power costs N-1 VP, so 2 is the first one that costs you anything. Only moves made after you arm a trigger
+        count.
+      </p>
     </b-modal>
   </div>
 </template>
@@ -139,10 +186,44 @@
 <script lang="ts">
 import Engine, { Player, PlayerEnum } from "@gaia-project/engine";
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import { PremoveMode, PremoveRow } from "../hosted/types";
+import { factionName } from "../data/factions";
+import { researchData } from "../data/research";
+import {
+  CancelTriggerLeechConfig,
+  CancelTriggerRow,
+  PremoveFailureRow,
+  PremoveMode,
+  PremoveRow,
+} from "../hosted/types";
 import { buildSequentialChainPreview } from "../logic/premove-preview";
 import { zoomCompensationTransform } from "../logic/zoom-compensation";
 import StickyResourceBar from "./StickyResourceBar.vue";
+
+/** Present-tense text for one armed atom, for the armed-triggers list (§8.5) - a present-tense
+ * cousin of host.ts's own past-tense describeMatchedAtom (that one narrates something that already
+ * happened; this one describes what's still being watched for). */
+function describeAtomPresent(atom: string): string {
+  const [command, ...rest] = atom.split(":");
+  const trackName = (code: string) => researchData[code as never]?.name ?? code;
+  switch (command) {
+    case "build":
+      return rest[1] === "*" ? `builds ${rest[0]} anywhere` : `builds ${rest[0]} at ${rest[1]}`;
+    case "up":
+      return rest[0] === "*" ? "advances research" : `advances ${trackName(rest[0])}`;
+    case "tech":
+      return rest[0] === "*" ? "takes any tech tile" : `takes the tech tile at ${trackName(rest[0])}`;
+    case "action":
+      return rest[0] === "*" ? "takes a board action" : `takes board action ${rest[0]}`;
+    case "special":
+      return "uses a special action";
+    case "pass":
+      return rest[0] === "*" ? "passes" : `passes, taking booster ${rest[0]}`;
+    case "federation":
+      return "forms a federation";
+    default:
+      return atom;
+  }
+}
 
 @Component({ components: { StickyResourceBar } })
 export default class PremoveBar extends Vue {
@@ -179,6 +260,35 @@ export default class PremoveBar extends Vue {
 
   get mode(): PremoveMode {
     return this.rows.length > 0 ? this.rows[0].mode : this.composeModePreference;
+  }
+
+  get cancelTriggerRows(): CancelTriggerRow[] {
+    return ((this.$store.state.cancelTriggers as CancelTriggerRow[]) ?? [])
+      .filter((t) => t.seat === this.seat)
+      .sort((a, b) => a.seq - b.seq);
+  }
+
+  triggerLabel(trigger: CancelTriggerRow): string {
+    if (trigger.kind === "leech") {
+      const config = trigger.config as CancelTriggerLeechConfig;
+      return `⚡ Power charge ≥ ${config.minPower} ${config.mode === "offered" ? "offered to me" : "taken by me"}`;
+    }
+    const faction = this.engine.players[trigger.watched_seat]?.faction;
+    const label = faction ? factionName(faction) : "Opponent";
+    return `⚠ ${label} ${trigger.atoms.map(describeAtomPresent).join(" or ")}`;
+  }
+
+  removeTrigger(seq: number) {
+    this.$store.dispatch("disarmCancelTrigger", { seat: this.seat, seq });
+  }
+
+  /** §8.5 - the most recent "cancelled" notice for this seat, if any (already in chronological
+   * order - fetchPremoveFailures orders by created_at). Drives the fired-state header override. */
+  get cancelledNotice(): PremoveFailureRow | null {
+    const notices = ((this.$store.state.premoveFailures as PremoveFailureRow[]) ?? []).filter(
+      (f) => f.seat === this.seat && f.kind === "cancelled"
+    );
+    return notices.length > 0 ? notices[notices.length - 1] : null;
   }
 
   get selectedRow(): PremoveRow | null {
@@ -273,9 +383,13 @@ export default class PremoveBar extends Vue {
     return `Priority ${firstLegalIndex + 1} will play: ${this.rows[firstLegalIndex].move}`;
   }
 
-  /** The header band's single line, ranked by what the player most needs to read at a glance:
-   * what is about to play > what is queued but stuck > an invitation to queue something. */
+  /** The header band's single line, ranked by what the player most needs to read at a glance: a
+   * just-fired cancel trigger (§8.5) > what is about to play > what is queued but stuck > an
+   * invitation to queue something. */
   get sheetTitle(): string {
+    if (this.cancelledNotice) {
+      return `Cancelled — ${this.cancelledNotice.reason}`;
+    }
     if (this.rows.length === 0) {
       return "Plan your next turn";
     }
@@ -476,6 +590,16 @@ export default class PremoveBar extends Vue {
 
   &__detail-actions {
     gap: 0.15rem;
+  }
+
+  &__triggers {
+    border-top: 1px solid var(--ui-border);
+    padding-top: 0.4rem;
+  }
+
+  &__trigger-row {
+    padding: 0.15rem 0;
+    gap: 0.3rem;
   }
 }
 

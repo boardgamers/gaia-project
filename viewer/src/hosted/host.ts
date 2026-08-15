@@ -1,10 +1,18 @@
-import Engine, { Command, Phase } from "@gaia-project/engine";
+import Engine, { Command, Phase, ResearchField } from "@gaia-project/engine";
 import { AutoCharge } from "@gaia-project/engine/src/player";
 import { autoDecideChargePower } from "../logic/auto-decide";
+import { factionName } from "../data/factions";
+import { researchData } from "../data/research";
 import { compactMoveSummary } from "../logic/move-summary";
+import {
+  CancelTriggerRow as MatcherCancelTriggerRow,
+  matchCancelTriggers,
+  SeatedMove,
+} from "../logic/premove-cancel-trigger";
 import { PremoveResolution, resolvePremoveQueue } from "../logic/premove-resolver";
 import { isLegacySequentialBidRound, sealedBidMove, sealedBidPhase } from "../logic/sealed-bid";
 import {
+  CancelTriggerRow,
   CommitTurnArgs,
   GameRow,
   HostedBackend,
@@ -33,6 +41,65 @@ function isSeatOwnershipError(err: unknown): boolean {
  * them is a pass (§8/§10.7: a manual pass always clears the seat's queue, regardless of mode). */
 function isPassMove(move: string): boolean {
   return move.split(". ").some((part) => part.trim().split(/\s+/)[1] === "pass");
+}
+
+/** DB row (types.ts, snake_case) -> the matcher's own camelCase shape (premove-cancel-trigger.ts). */
+function toMatcherTriggers(rows: CancelTriggerRow[]): MatcherCancelTriggerRow[] {
+  return rows.map((r) => ({
+    seq: r.seq,
+    kind: r.kind,
+    watchedSeat: r.watched_seat,
+    move: r.move,
+    atoms: r.atoms,
+    config: r.config,
+    match: r.match,
+    armedFromMoveCount: r.armed_from_move_count,
+  }));
+}
+
+/** Plain-language text for one matched atom, for the cancelled-notice/fired-state copy (§8.5) - a
+ * looser cousin of the matcher module's own candidateAtoms labels (that one describes a move being
+ * COMPOSED; this one describes one that already happened, so it reads in the past tense). */
+function describeMatchedAtom(atom: string): string {
+  const [command, ...rest] = atom.split(":");
+  const trackName = (code: string) => researchData[code as ResearchField]?.name ?? code;
+  switch (command) {
+    case "build":
+      return `built ${rest[0] ?? "something"} at ${rest[1] ?? "a hex"}`;
+    case "up":
+      return `advanced ${trackName(rest[0])}`;
+    case "tech":
+      return `took the tech tile at ${trackName(rest[0])}`;
+    case "action":
+      return `took board action ${rest[0] ?? ""}`.trim();
+    case "special":
+      return `used a special action`;
+    case "pass":
+      return `passed, taking booster ${rest[0] ?? ""}`.trim();
+    case "federation":
+      return "formed a federation";
+    case "charge":
+      return `charged ${rest[0] ?? "power"}`;
+    case "decline":
+      return `declined ${rest[0] ?? "power"}`;
+    default:
+      return `played ${atom}`;
+  }
+}
+
+/** The premove_failures.reason text for a fired cancel trigger (§8.5's "Cancelled - ..." copy):
+ * third person for a 'move' trigger (names the watched opponent), first person for 'leech'. */
+function describeCancelTriggerReason(
+  trigger: MatcherCancelTriggerRow,
+  atom: string,
+  watchedPlayer: { faction?: string; name?: string } | null
+): string {
+  const description = describeMatchedAtom(atom);
+  if (trigger.kind === "leech") {
+    return `you ${description}`;
+  }
+  const label = watchedPlayer?.faction ? factionName(watchedPlayer.faction as any) : watchedPlayer?.name ?? "Opponent";
+  return `${label} ${description}`;
 }
 
 /**
@@ -128,6 +195,13 @@ export class HostedGameHost {
   players: PlayerRow[] = [];
   premoves: PremoveRow[] = [];
   premoveFailures: PremoveFailureRow[] = [];
+  cancelTriggers: CancelTriggerRow[] = [];
+
+  // Seat-tagged committed move log, kept in lockstep with `this.engine` by every path that advances
+  // it (load/resync full-refetch it; a local commit/applied remote move appends the one new row) -
+  // the shared cancel-trigger matcher needs each move's SEAT, which a bare `engine.moveHistory`
+  // string doesn't carry (only the faction name prefix, not the numeric seat a trigger watches).
+  private committedMoves: SeatedMove[] = [];
 
   // Serializes submit/remote/resync so an in-flight commit can't interleave
   // with a realtime apply on the same engine.
@@ -165,6 +239,7 @@ export class HostedGameHost {
       await this.repairMoveCountIfNeeded(game, moves);
       this.game = game;
       this.players = players;
+      this.committedMoves = [...moves].sort((a, b) => a.seq - b.seq);
       this.engine = this.buildEngine(game, moves);
       this.emitState(this.engine);
       await this.refreshPremoveState();
@@ -339,6 +414,49 @@ export class HostedGameHost {
     });
   }
 
+  /** Arms a new cancel trigger (§3/§4a). Discards the new seq the same way queuePremove discards
+   * its own - the caller re-renders from the refreshed `cancelTriggers` list, not a return value. */
+  armCancelTrigger(
+    seat: number,
+    watchedSeat: number,
+    move: string,
+    atoms: string[],
+    kind: "move" | "leech",
+    config: CancelTriggerRow["config"] = {}
+  ): Promise<void> {
+    return this.enqueue(async () => {
+      await this.backend.armCancelTrigger(this.gameId, seat, watchedSeat, move, atoms, kind, config);
+      await this.refreshPremoveState();
+    });
+  }
+
+  disarmCancelTrigger(seat: number, seq: number): Promise<void> {
+    return this.enqueue(async () => {
+      await this.backend.disarmCancelTrigger(this.gameId, seat, seq);
+      await this.refreshPremoveState();
+    });
+  }
+
+  disarmAllCancelTriggers(seat: number): Promise<void> {
+    return this.enqueue(async () => {
+      await this.backend.disarmAllCancelTriggers(this.gameId, seat);
+      await this.refreshPremoveState();
+    });
+  }
+
+  editCancelTrigger(
+    seat: number,
+    seq: number,
+    move: string,
+    atoms: string[],
+    config: CancelTriggerRow["config"]
+  ): Promise<void> {
+    return this.enqueue(async () => {
+      await this.backend.editCancelTrigger(this.gameId, seat, seq, move, atoms, config);
+      await this.refreshPremoveState();
+    });
+  }
+
   /**
    * Phase 2 (offline auto-leech) - persists the local auto-charge preference for `seat` so
    * resolve-automation can honor it while this session isn't around to run the client-side
@@ -426,6 +544,9 @@ export class HostedGameHost {
       this.engine = copy;
       this.emitState(copy);
       emittedCommittedState = true;
+      // Kept in lockstep with the optimistic engine update above - a real commit failure below
+      // falls through to resyncNow(), which fully rebuilds this from a fresh fetch anyway.
+      this.committedMoves = [...this.committedMoves, { seq: args.seq, seat, move }];
       try {
         await this.backend.commitTurn(args);
       } catch (err) {
@@ -526,6 +647,7 @@ export class HostedGameHost {
           if (copy.newTurn) {
             this.engine = copy;
             this.emitState(copy);
+            this.committedMoves = [...this.committedMoves, { seq: row.seq, seat: row.seat, move: row.move }];
             // Phase 3 (§10.7) - this move came from somewhere other than our own fast-path (another
             // device, or the offline edge function): reconcile a stale queue the same way a manual
             // move does. Idempotent when the edge function already consumed the row(s) itself.
@@ -604,6 +726,7 @@ export class HostedGameHost {
       });
     this.game = game;
     if (!unchanged) {
+      this.committedMoves = ordered;
       this.engine = this.buildEngine(game, ordered);
       this.emitState(this.engine);
     }
@@ -670,6 +793,36 @@ export class HostedGameHost {
       if (rows.length === 0) {
         return;
       }
+
+      // Cancel triggers (before resolving the queue itself, per the design's ordering, mirrored
+      // exactly in resolve-automation/logic.ts so online/offline never disagree about whether a
+      // queue survived) - gated on a non-empty queue above since a match with nothing queued has
+      // no effect to apply (nothing to cancel) and would only disarm protection prematurely.
+      const armedTriggers = this.cancelTriggers.filter((t) => t.seat === seat);
+      if (armedTriggers.length > 0) {
+        const match = matchCancelTriggers(toMatcherTriggers(armedTriggers), this.committedMoves, this.engine.map);
+        if (match) {
+          const watchedEnginePlayer = this.engine.players[match.trigger.watchedSeat];
+          const watchedRow = this.players.find((p) => p.seat === match.trigger.watchedSeat);
+          const reason = describeCancelTriggerReason(match.trigger, match.atom, {
+            faction: watchedEnginePlayer?.faction,
+            name: watchedRow?.display_name,
+          });
+          let won = false;
+          try {
+            won = await this.backend.resolveCancelTriggerMatch(this.gameId, seat, reason);
+          } catch {
+            // Best-effort - see resolve_cancel_trigger_match's own doc comment on the race it
+            // arbitrates. A failure here just leaves the trigger armed to try again next time.
+          }
+          await this.refreshPremoveState();
+          if (won) {
+            this.callbacks.onCancelTriggerFired?.(seat, reason);
+          }
+          return;
+        }
+      }
+
       const mode = rows[0].mode;
       const decision: PremoveResolution = resolvePremoveQueue(() => this.clone(), seat, rows, mode);
       if (decision.outcome !== "success") {
@@ -697,13 +850,16 @@ export class HostedGameHost {
 
   private async refreshPremoveState(): Promise<void> {
     try {
-      const [premoves, failures] = await Promise.all([
+      const [premoves, failures, cancelTriggers] = await Promise.all([
         this.backend.fetchPremoves(this.gameId),
         this.backend.fetchPremoveFailures(this.gameId),
+        this.backend.fetchCancelTriggers(this.gameId),
       ]);
       this.premoves = premoves;
       this.premoveFailures = failures;
+      this.cancelTriggers = cancelTriggers;
       this.callbacks.onPremoveState?.(premoves, failures);
+      this.callbacks.onCancelTriggerState?.(cancelTriggers);
     } catch {
       // Best-effort display data - never blocks gameplay if it fails to load.
     }

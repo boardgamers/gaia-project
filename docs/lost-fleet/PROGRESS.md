@@ -6702,6 +6702,107 @@ pin_preference_split_budget_search_path` (the one function in the set without a 
       through the viewer's own Load modal — a `?state=` URL for it is 43 KB, past what the dev
       server accepts in a request line.
 
+162.  ✅ **Premove cancel triggers, extending the premove design (2026-08-15, viewer v5.58.0).**
+      Owner-approved design session. A cancel trigger watches for something happening while a premove
+      queue is armed and, if it does, clears the whole queue instead of letting it fire — it never
+      plays a move, only cancels. Two kinds share one table and one resolution path: `move` (watches
+      one named opponent seat for a move matching a set of selected atoms) and `leech` (a condition on
+      the owner's own seat — a power charge offered to/taken by them, at or above a threshold). Any
+      number of triggers can be armed at once, on either kind; any one matching cancels everything,
+      including the seat's other triggers.
+
+      **Matching is on effect, not on the literal move string** — the hardest part of the design.
+      `viewer/src/logic/premove-cancel-trigger.ts` normalizes a committed move into a set of "atoms"
+      (`command:arg1:arg2`, hex args canonicalized through `map.getS(...).toString()` so `-1x2` /
+      `3A4` / Lost Fleet's `IS3`/`DS14_0` all compare equal), with an opt-in composer path
+      (`candidateAtoms`) that drops plumbing commands (`spend`/`burn`/`brainstone`/`charge`/`decline`/
+      `income`/`endturn`) and offers a loosened `*` form for the seven command shapes that have one
+      (`build` keeps its building type and drops only the hex; `up`/`tech`/`action`/`special`/`pass`/
+      `federation` collapse entirely). Actual-move normalization (`moveAtoms`) never drops plumbing —
+      only the composer does — which is what lets a leech trigger's `charge`/`decline` scan run
+      through the exact same code path. Verified against the engine's real research-track behavior:
+      `up:eco` fires identically whether the step came from a tech tile, a "free" tile, or a faction's
+      own special action, since all three routes emit their own `up <track>` follow-up.
+
+      **Deliberately engine-agnostic** (no `@gaia-project/engine` import, and no import of
+      `viewer/src/logic/recent.ts` either, since that pulls in the engine's real `Command` enum) —
+      `resolve-automation`'s edge function bundle has no static engine dependency of its own (it loads
+      the engine dynamically via `_shared/engine.bundle.js`), so the matcher duplicates the small
+      slice of `recent.ts`'s move-parsing it needs as plain strings instead, mirroring
+      `premove-resolver.ts`'s own documented reasoning for the same constraint.
+
+      **Data model:** new table `premove_cancel_triggers` (migration
+      `20260815090000_premove_cancel_triggers.sql`) plus a `kind` column on `premove_failures` (so a
+      fired notice reads "Cancelled — …" instead of "your premove couldn't be played"), RLS scoped via
+      the existing `is_seat_owner()`. Four RPCs match the design doc's spec exactly
+      (`arm_cancel_trigger`, `disarm_cancel_trigger`, `disarm_all_cancel_triggers`,
+      `edit_cancel_trigger`); a fifth, `resolve_cancel_trigger_match`, was added beyond the spec to
+      close a real race the design didn't fully address — the client fast-path and the offline edge
+      function can both observe the same match at nearly the same instant, and unlike a committed move
+      there is no `seq` to arbitrate a winner with. Its own `delete ... from premove_cancel_triggers`
+      IS the arbiter: whichever caller's delete actually removes rows is the one that goes on to clear
+      the queue and write the notice; the loser (0 rows deleted) does nothing further, so the notice/
+      push fires exactly once. **All 5 RPCs and the table are applied live** on `mitawjpdxkheascdiffz`
+      and verified against the live catalog (`to_regprocedure` for all five signatures, `list_tables`
+      for the table + `kind` column) — the security advisor's only new findings are the same
+      "authenticated can execute this SECURITY DEFINER function" INFO/WARN class every existing
+      premove RPC already carries by the same intentional design, not a new gap.
+
+      **Both fire paths import the identical matcher**, with identical ordering relative to the
+      existing queue resolution — `viewer/src/hosted/host.ts`'s `resolveAutoDecisions()` (client fast
+      path) and `supabase/functions/resolve-automation/logic.ts`'s `resolveOneAutomatedTurn()`
+      (offline path) both: fetch the seat's premove queue first (a match with nothing queued has
+      nothing to cancel, so evaluation is gated on a non-empty queue), then check armed triggers
+      against the committed-move log before ever calling `resolvePremoveQueue`. `host.ts` gained a new
+      `committedMoves: SeatedMove[]` field (seat-tagged, unlike the bare strings in
+      `engine.moveHistory`) kept in lockstep with every commit/remote-move-apply, since the matcher
+      needs to know WHO played each move, not just what. On a match, `resolve-automation` also
+      re-invokes `notify` with `{game_id, type: "update"}` after the premove rows are gone, closing a
+      gap the design doc called out explicitly: `notify`'s turn-push suppression reads the `premoves`
+      table, so the immediate "your turn" push would otherwise be silently lost the instant a trigger
+      fires while the player is offline (the hourly reminder would eventually rescue it, the
+      spec's whole point was not to need that). Verified there is no separate "already notified" stamp
+      on the `type: "update"` path that would swallow the second call — the only guard is
+      `hasQueuedPremove`, already false by the time this fires — so no `notify` redeploy was needed.
+      **`resolve-automation` is redeployed** (now serving `premove-cancel-trigger.ts` alongside the
+      existing `premove-resolver.ts` dependency, same `_shared/engine.bundle.js`, no engine rebuild
+      needed since nothing in `engine/` changed).
+
+      **UI:** `PremoveBar.vue`'s two buttons shortened to `+ Sequential`/`+ Priority` with a third
+      `⚠ Cancel trigger` alongside; a new picker screen (`CancelTriggerPicker.vue`) offers one chip
+      per opponent (greyed out and labelled "passed" where `previewAvailableCommandsFor` returns null)
+      plus a visually distinct `⚡ If leech gained` chip at the end of the same row. Composing a move
+      trigger reuses `Game.vue`'s existing premove-compose machinery (`buildSequentialChainPreview`,
+      `Commands.vue`'s cancel/confirm buttons) but forced onto the WATCHED opponent's seat against a
+      resource-relaxed clone (credits/ore/knowledge/QIC/power inflated so affordability never limits
+      what can be described), under an amber "CANCEL TRIGGER — playing as …" banner instead of the
+      blue premove one — `canPlay` gained a bypass for this mode, since the composed clone's forced
+      seat is never this session's own locked seat. Confirming leaves the board exactly as it was
+      (never touches `public.moves`) and opens `CancelTriggerRefine.vue`: nothing is pre-selected
+      unless the move produced exactly one candidate atom, Arm stays disabled until a selection
+      exists, each candidate can toggle exact/any, and a live "would have fired on N of the last M
+      moves" preview recomputes from the atom set already in memory. The leech chip skips composing
+      entirely for `CancelTriggerLeechConfig.vue`'s inline offered/taken + minimum-power form, default
+      `{mode: "gained", minPower: 2}` (charging N power costs N−1 VP, so 2 is the first threshold that
+      costs anything — not optional per the design). Both refine screens support "Edit" from the
+      armed-triggers list, pre-filling the existing selection instead of recomposing from scratch. The
+      existing premove info modal gained a third section on cancel triggers rather than a second ⓘ
+      link.
+
+      **Tests:** `premove-cancel-trigger.spec.ts` (28 cases: plumbing dropped from candidates but not
+      from actual-move normalization, the three real `up eco` routes, hex-notation equivalence via a
+      real engine map, `*` loosening, `armed_from_move_count` bound, watched-seat isolation, multi-
+      trigger OR-ing, leech mode/threshold cases including an opponent's charge never firing the
+      owner's own trigger, and a mixed move+leech pair where whichever matches first wins and both are
+      deleted), `CancelTriggerRefine.spec.ts` (5), `PremoveBar.spec.ts` (+4: three buttons, armed
+      list, fired-state header), `Game.spec.ts` (+3: full compose → refine → arm flow through a real
+      mount, the leech chip arming directly with no board touched, cancelling mid-compose restoring
+      the real board with nothing dispatched), `host.spec.ts` (+4: matched trigger clears the queue
+      and commits nothing, unmatched trigger leaves the queue alone, a trigger watching the wrong seat
+      is ignored, a leech-kind trigger fires on the owner's own charge). Full viewer suite green at
+      **971/971** (927 baseline + 44 new). No engine files touched, so the engine/AI suites were
+      correctly out of scope and not run.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

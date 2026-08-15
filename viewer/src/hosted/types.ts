@@ -69,7 +69,36 @@ export type CommitTurnArgs = {
 // sequential mode, priority-rank in priority mode.
 export type PremoveMode = "sequential" | "priority";
 export type PremoveRow = { seat: number; seq: number; move: string; mode: PremoveMode; queued_move_count: number };
-export type PremoveFailureRow = { id: string; seat: number; move: string; reason: string; read_at: string | null };
+export type PremoveFailureRow = {
+  id: string;
+  seat: number;
+  move: string;
+  reason: string;
+  read_at: string | null;
+  // 'cancelled' (added for premove cancel triggers) reads differently in the UI ("cancelled by
+  // trigger" rather than "your premove couldn't be played") - see PremoveBar/Game.vue.
+  kind: "failure" | "cancelled";
+};
+
+// Premove cancel triggers - a trigger watches one opponent's moves (kind='move') or the owner's
+// own power charges (kind='leech') and, if it matches, clears the owner's entire premove queue
+// instead of ever playing anything. Row shape mirrors
+// supabase/migrations/20260815090000_premove_cancel_triggers.sql; the shared matcher
+// (logic/premove-cancel-trigger.ts) uses its own camelCase CancelTriggerRow shape instead - callers
+// adapt between the two (see host.ts's cancelTriggerRowsFor).
+export type CancelTriggerKind = "move" | "leech";
+export type CancelTriggerLeechConfig = { mode: "gained" | "offered"; minPower: number };
+export type CancelTriggerRow = {
+  seat: number;
+  seq: number;
+  kind: CancelTriggerKind;
+  watched_seat: number;
+  move: string;
+  atoms: string[];
+  config: CancelTriggerLeechConfig | Record<string, never>;
+  match: "any" | "all";
+  armed_from_move_count: number;
+};
 
 // The sealed-bid side channel, shared by both simultaneous-bid auction variants: the Preference
 // Split (AuctionVariant.PreferenceSplit) and the Silent Auction (AuctionVariant.Silent, migration
@@ -129,6 +158,32 @@ export interface HostedBackend {
   /** Appends every sealed bid to the move log at once. Returns the number of moves appended, or 0
    * if another client had already done it. Throws `seq_conflict` when this client was racing one. */
   revealSealedBids(gameId: string, seq: number, nextSeat: number): Promise<number>;
+  // Premove cancel triggers - RLS scopes selects to the caller's own seats, same as premoves.
+  fetchCancelTriggers(gameId: string): Promise<CancelTriggerRow[]>;
+  armCancelTrigger(
+    gameId: string,
+    seat: number,
+    watchedSeat: number,
+    move: string,
+    atoms: string[],
+    kind: CancelTriggerKind,
+    config: CancelTriggerLeechConfig | Record<string, never>
+  ): Promise<number>;
+  disarmCancelTrigger(gameId: string, seat: number, seq: number): Promise<void>;
+  disarmAllCancelTriggers(gameId: string, seat: number): Promise<void>;
+  editCancelTrigger(
+    gameId: string,
+    seat: number,
+    seq: number,
+    move: string,
+    atoms: string[],
+    config: CancelTriggerLeechConfig | Record<string, never>
+  ): Promise<void>;
+  /** The atomic "a match just fired" step (migration 20260815090000's own doc comment explains the
+   * race it closes). Returns whether THIS call is the one that actually applied the cancellation -
+   * false means another evaluator (another tab's fast-path, or the offline edge function) already
+   * got there first, so the caller does nothing further (no toast, no second notice). */
+  resolveCancelTriggerMatch(gameId: string, seat: number, reason: string): Promise<boolean>;
 }
 
 export type HostedCallbacks = {
@@ -153,4 +208,10 @@ export type HostedCallbacks = {
    * refresh, since the consumed row simply vanished). Quiet, in-app only: a log tag / subtle toast,
    * never a push (successes don't push - only failures do, via the existing premove_failures infra). */
   onPremovePlayed?: (seat: number, move: string, info: { rank?: number; totalRanks?: number }) => void;
+  /** Refetched alongside premoves/failures (same refresh points). */
+  onCancelTriggerState?: (triggers: CancelTriggerRow[]) => void;
+  /** Fired when THIS session's fast-path is the one that actually applied a cancel-trigger match
+   * (resolveCancelTriggerMatch returned true) - the toast (§8.5). The offline edge function's own
+   * matches are noticed the same way any premove_failures row is: via onPremoveState. */
+  onCancelTriggerFired?: (seat: number, reason: string) => void;
 };

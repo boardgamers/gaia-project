@@ -160,16 +160,27 @@
               queued after it.
             </div>
           </div>
+          <!-- Cancel trigger compose (§8.3) - deliberately amber/warning rather than the premove
+               banner's blue: the board looks exactly like composing your own move otherwise, and
+               this is the one visual cue telling the two apart. -->
+          <div v-if="cancelTriggerComposeActive" class="alert alert-warning premove-banner">
+            <strong>CANCEL TRIGGER — playing as {{ cancelTriggerWatchedFactionName }}</strong>
+            <div class="small" v-if="!cancelTriggerReady">
+              Build the move you want to watch for, then end the turn to continue.
+            </div>
+          </div>
           <Commands
             @command="handleCommand"
             v-if="canPlay && !setupActionsAtTop"
             :currentMove="currentMove"
             :hide-spacer="true"
-            :show-premove-cancel="premoveMode"
-            :show-premove-confirm="premoveMode && premoveReady"
-            :premove-confirm-label="premoveEditSeq !== null ? 'Save changes' : 'Queue now'"
-            @cancel-premove="cancelPremoveMode"
-            @confirm-premove="queueCurrentPremove"
+            :show-premove-cancel="premoveMode || cancelTriggerComposeActive"
+            :show-premove-confirm="(premoveMode && premoveReady) || (cancelTriggerComposeActive && cancelTriggerReady)"
+            :premove-confirm-label="
+              cancelTriggerComposeActive ? 'Continue' : premoveEditSeq !== null ? 'Save changes' : 'Queue now'
+            "
+            @cancel-premove="cancelTriggerComposeActive ? cancelCancelTriggerCompose() : cancelPremoveMode()"
+            @confirm-premove="cancelTriggerComposeActive ? confirmCancelTriggerCompose() : queueCurrentPremove()"
             @sticky-bar-height="stickyBarHeight = $event"
           />
           <!-- The old "Current player" heading + circle here was redundant with the turn-order
@@ -199,9 +210,42 @@
               @mode-preference="setPremoveModePreference"
               @start-new="onStartNewPremove"
               @start-edit="startEditPremove"
+              @start-cancel-trigger="startCancelTriggerPicker"
+              @start-edit-cancel-trigger="startEditCancelTrigger"
               @bar-height="premoveBarHeight = $event"
             />
           </div>
+          <b-modal
+            id="cancel-trigger-modal"
+            v-model="cancelTriggerModalOpen"
+            hide-footer
+            hide-header
+            size="lg"
+            dialog-class="gaia-viewer-modal"
+          >
+            <CancelTriggerPicker
+              v-if="cancelTriggerModalStage === 'picker'"
+              :seat="myLockedSeat"
+              @pick-opponent="pickCancelTriggerOpponent"
+              @pick-leech="pickCancelTriggerLeech"
+              @cancel="closeCancelTriggerModal"
+            />
+            <CancelTriggerLeechConfig
+              v-else-if="cancelTriggerModalStage === 'leech'"
+              :seat="myLockedSeat"
+              :initial-config="cancelTriggerEditingLeechConfig"
+              @arm="armLeechTrigger"
+              @cancel="closeCancelTriggerModal"
+            />
+            <CancelTriggerRefine
+              v-else-if="cancelTriggerModalStage === 'refine'"
+              :move="cancelTriggerDraftMove"
+              :watched-seat="cancelTriggerWatchedSeat"
+              :initial-atoms="cancelTriggerEditingAtoms"
+              @arm="armCancelTriggerFromRefine"
+              @cancel="closeCancelTriggerModal"
+            />
+          </b-modal>
           <div v-if="premoveEditCascadeNotice !== null" class="alert alert-light small mt-2 py-1 px-2">
             Premove updated - {{ premoveEditCascadeNotice }} queued move{{
               premoveEditCascadeNotice === 1 ? "" : "s"
@@ -213,7 +257,8 @@
           </div>
           <div v-if="myUnreadFailures.length" class="alert alert-warning premove-failures small mt-2">
             <div v-for="f in myUnreadFailures" :key="f.id">
-              Your premove couldn't be played: {{ f.reason }}
+              <template v-if="f.kind === 'cancelled'">Cancelled — {{ f.reason }}</template>
+              <template v-else>Your premove couldn't be played: {{ f.reason }}</template>
               <button type="button" class="btn btn-link btn-sm p-0" @click="markFailureRead(f.id)">Dismiss</button>
             </div>
           </div>
@@ -291,6 +336,7 @@ import Engine, {
   EngineOptions,
   Phase,
   Player,
+  PlayerEnum,
   Round,
   ResearchField,
 } from "@gaia-project/engine";
@@ -322,10 +368,21 @@ import { currentPlayer } from "@gaia-project/engine/wrapper";
 import { UiMode } from "../store";
 import Table from "./Table.vue";
 import { orderedPlayers } from "../data/player";
-import { PremoveFailureRow, PremoveMode, PremoveRow } from "../hosted/types";
+import { factionName } from "../data/factions";
+import {
+  CancelTriggerKind,
+  CancelTriggerLeechConfig as CancelTriggerLeechConfigType,
+  CancelTriggerRow,
+  PremoveFailureRow,
+  PremoveMode,
+  PremoveRow,
+} from "../hosted/types";
 import { buildSequentialChainPreview } from "../logic/premove-preview";
 import PremoveBar from "./PremoveBar.vue";
 import AutoLeechFab from "./AutoLeechFab.vue";
+import CancelTriggerPicker from "./CancelTriggerPicker.vue";
+import CancelTriggerRefine from "./CancelTriggerRefine.vue";
+import CancelTriggerLeechConfig from "./CancelTriggerLeechConfig.vue";
 
 const PREMOVE_EXPLAINER_DISMISSED_KEY = "premoveExplainerDismissed";
 const PREMOVE_MODE_PREFERENCE_KEY = "premoveModePreference";
@@ -367,6 +424,9 @@ const BOARD_ACTION_BASE_X = -20;
     Table,
     PremoveBar,
     AutoLeechFab,
+    CancelTriggerPicker,
+    CancelTriggerRefine,
+    CancelTriggerLeechConfig,
     Charts: () => import("./Charts.vue"),
   },
 })
@@ -418,6 +478,25 @@ export default class Game extends Vue {
     (typeof localStorage !== "undefined" && (localStorage.getItem(PREMOVE_MODE_PREFERENCE_KEY) as PremoveMode)) ||
     "sequential";
 
+  // Premove cancel triggers (§8) - the picker/leech-config/refine screens share one modal
+  // (`cancelTriggerModalStage`); composing a move trigger takes the board over the same way
+  // premove composing does (`cancelTriggerComposeSeat`/`cancelTriggerBackup`/
+  // `cancelTriggerComposeBase` mirror premoveSeat/premoveBackup/premoveComposeBase above, but
+  // forced to the WATCHED opponent's seat against a resource-relaxed clone instead of this
+  // session's own seat).
+  cancelTriggerModalStage: "picker" | "leech" | "refine" | null = null;
+  cancelTriggerWatchedSeat: number | null = null;
+  cancelTriggerComposeSeat: number | null = null;
+  cancelTriggerBackup: Engine = null;
+  cancelTriggerComposeBase: Engine = null;
+  cancelTriggerReady = false;
+  cancelTriggerDraftMove = "";
+  // null while composing a brand-new trigger; the existing row's seq while editing one (mirrors
+  // premoveEditSeq above).
+  cancelTriggerEditingSeq: number | null = null;
+  cancelTriggerEditingAtoms: string[] = [];
+  cancelTriggerEditingLeechConfig: CancelTriggerLeechConfigType | null = null;
+
   @Prop()
   options: EngineOptions;
 
@@ -450,11 +529,27 @@ export default class Game extends Vue {
           this.premoveReady = false;
           this.premoveEditSeq = null;
         }
+        // Same reasoning for a cancel-trigger move in progress - only the board-takeover half,
+        // since the modal (picker/leech-config, which don't depend on stale board state) can stay
+        // open. A refine screen mid-edit is genuinely stale too, so that closes as well.
+        if (this.cancelTriggerComposeSeat !== null) {
+          this.cancelTriggerComposeSeat = null;
+          this.cancelTriggerBackup = null;
+          this.cancelTriggerComposeBase = null;
+          this.cancelTriggerReady = false;
+          if (this.cancelTriggerModalStage === "refine") {
+            this.cancelTriggerModalStage = null;
+          }
+        }
         this.handleData(Engine.fromData(payload));
         return;
       }
       if (type === "premoveMove") {
         this.applyPremoveMove(payload as string);
+        return;
+      }
+      if (type === "cancelTriggerMove") {
+        this.applyCancelTriggerMove(payload as string);
         return;
       }
       if (type === "replayStart") {
@@ -688,6 +783,13 @@ export default class Game extends Vue {
   get canPlay() {
     if (this.ended) {
       return false;
+    }
+
+    // Composing a cancel trigger plays as the WATCHED opponent's seat, forced onto a disposable
+    // clone (§8.3) - never this session's own locked seat, so the ordinary check below would
+    // always read false while composing one.
+    if (this.cancelTriggerComposeSeat !== null) {
+      return true;
     }
 
     const lockedSeat = this.$store.state.player?.index;
@@ -970,6 +1072,215 @@ export default class Game extends Vue {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Premove cancel triggers (§8)
+  // ---------------------------------------------------------------------------
+
+  get cancelTriggerComposeActive(): boolean {
+    return this.cancelTriggerComposeSeat !== null;
+  }
+
+  get cancelTriggerModalOpen(): boolean {
+    return this.cancelTriggerModalStage !== null;
+  }
+
+  set cancelTriggerModalOpen(open: boolean) {
+    if (!open) {
+      this.closeCancelTriggerModal();
+    }
+  }
+
+  get cancelTriggerWatchedFactionName(): string {
+    const seat = this.cancelTriggerWatchedSeat;
+    if (seat === null) {
+      return "";
+    }
+    const faction = this.engine.players[seat]?.faction;
+    return faction ? factionName(faction) : `seat ${seat}`;
+  }
+
+  get myCancelTriggers(): CancelTriggerRow[] {
+    const seat = this.myLockedSeat;
+    if (seat === undefined) {
+      return [];
+    }
+    return ((this.$store.state.cancelTriggers as CancelTriggerRow[]) ?? []).filter((t) => t.seat === seat);
+  }
+
+  /** PremoveBar's "⚠ Cancel trigger" button - opens the single picker screen (§8.2). */
+  startCancelTriggerPicker() {
+    this.cancelTriggerEditingSeq = null;
+    this.cancelTriggerEditingAtoms = [];
+    this.cancelTriggerEditingLeechConfig = null;
+    this.cancelTriggerModalStage = "picker";
+  }
+
+  /** PremoveBar's armed-list "Edit" - reopens the config step (leech) or the refine step (move,
+   * skipping re-composing the board since the move text is already stored) pre-filled with the
+   * trigger's current selection. */
+  startEditCancelTrigger(seq: number) {
+    const row = this.myCancelTriggers.find((t) => t.seq === seq);
+    if (!row) {
+      return;
+    }
+    this.cancelTriggerEditingSeq = seq;
+    if (row.kind === "leech") {
+      this.cancelTriggerEditingLeechConfig = row.config as CancelTriggerLeechConfigType;
+      this.cancelTriggerModalStage = "leech";
+    } else {
+      this.cancelTriggerWatchedSeat = row.watched_seat;
+      this.cancelTriggerDraftMove = row.move;
+      this.cancelTriggerEditingAtoms = row.atoms;
+      this.cancelTriggerModalStage = "refine";
+    }
+  }
+
+  closeCancelTriggerModal() {
+    this.cancelTriggerModalStage = null;
+  }
+
+  pickCancelTriggerLeech() {
+    this.cancelTriggerModalStage = "leech";
+  }
+
+  /** Picker's faction chip - closes the picker and starts composing on the board, playing as the
+   * watched opponent against a resource-relaxed clone (§8.3). */
+  pickCancelTriggerOpponent(seat: number) {
+    this.cancelTriggerModalStage = null;
+    this.cancelTriggerBackup = JSON.parse(JSON.stringify(this.engine));
+    this.cancelTriggerWatchedSeat = seat;
+    this.cancelTriggerComposeSeat = seat;
+    this.cancelTriggerReady = false;
+
+    const clone = Engine.fromData(JSON.parse(JSON.stringify(this.engine)));
+    // Resource-relaxed: inflate credits/ore/knowledge/QIC/power so affordability never limits what
+    // can be described - the line is only ever pattern-matched afterward, never executed (§8.3).
+    const data = clone.players[seat]?.data;
+    if (data) {
+      data.credits = 30;
+      data.ores = 15;
+      data.knowledge = 15;
+      data.qics = 10;
+      data.power.area1 = 4;
+      data.power.area2 = 4;
+      data.power.area3 = 4;
+    }
+    clone.forcePremovePreviewTurn(seat as PlayerEnum);
+    clone.generateAvailableCommands();
+
+    this.cancelTriggerComposeBase = JSON.parse(JSON.stringify(clone));
+    this.handleData(clone);
+  }
+
+  /** Mirrors applyPremoveMove - always replays the full accumulated move string from the stable
+   * compose-base snapshot, never from `this.engine` (which handleData mutates on every partial
+   * call) nor from `cancelTriggerBackup` (which lacks the forced-turn override). */
+  applyCancelTriggerMove(move: string) {
+    const copy = Engine.fromData(JSON.parse(JSON.stringify(this.cancelTriggerComposeBase)));
+    if (move) {
+      try {
+        copy.move(move);
+        copy.generateAvailableCommandsIfNeeded();
+      } catch {
+        return;
+      }
+    }
+    this.cancelTriggerReady = copy.newTurn;
+    if (copy.newTurn) {
+      this.cancelTriggerDraftMove = move;
+    }
+    this.handleData(copy);
+  }
+
+  cancelCancelTriggerCompose() {
+    if (!this.cancelTriggerBackup) {
+      return;
+    }
+    const backup = this.cancelTriggerBackup;
+    this.cancelTriggerComposeSeat = null;
+    this.cancelTriggerBackup = null;
+    this.cancelTriggerComposeBase = null;
+    this.cancelTriggerReady = false;
+    this.cancelTriggerWatchedSeat = null;
+    this.handleData(Engine.fromData(backup));
+  }
+
+  /** Board's "Continue" confirm - leaves the board (restoring the real state) and opens the refine
+   * step (§2.3) rather than arming anything yet. */
+  confirmCancelTriggerCompose() {
+    if (!this.cancelTriggerReady || !this.cancelTriggerBackup) {
+      return;
+    }
+    const backup = this.cancelTriggerBackup;
+    this.cancelTriggerComposeSeat = null;
+    this.cancelTriggerBackup = null;
+    this.cancelTriggerComposeBase = null;
+    this.handleData(Engine.fromData(backup));
+    this.cancelTriggerModalStage = "refine";
+  }
+
+  armCancelTriggerFromRefine(atoms: string[]) {
+    const seat = this.myLockedSeat;
+    const watchedSeat = this.cancelTriggerWatchedSeat;
+    if (seat === undefined || watchedSeat === null) {
+      return;
+    }
+    if (this.cancelTriggerEditingSeq !== null) {
+      this.$store.dispatch("editCancelTrigger", {
+        seat,
+        seq: this.cancelTriggerEditingSeq,
+        move: this.cancelTriggerDraftMove,
+        atoms,
+        config: {},
+      });
+    } else {
+      this.$store.dispatch("armCancelTrigger", {
+        seat,
+        watchedSeat,
+        move: this.cancelTriggerDraftMove,
+        atoms,
+        kind: "move" as CancelTriggerKind,
+        config: {},
+      });
+    }
+    this.resetCancelTriggerState();
+  }
+
+  armLeechTrigger(config: CancelTriggerLeechConfigType) {
+    const seat = this.myLockedSeat;
+    if (seat === undefined) {
+      return;
+    }
+    if (this.cancelTriggerEditingSeq !== null) {
+      this.$store.dispatch("editCancelTrigger", {
+        seat,
+        seq: this.cancelTriggerEditingSeq,
+        move: "",
+        atoms: [],
+        config,
+      });
+    } else {
+      this.$store.dispatch("armCancelTrigger", {
+        seat,
+        watchedSeat: seat,
+        move: "",
+        atoms: [],
+        kind: "leech" as CancelTriggerKind,
+        config,
+      });
+    }
+    this.resetCancelTriggerState();
+  }
+
+  private resetCancelTriggerState() {
+    this.cancelTriggerModalStage = null;
+    this.cancelTriggerWatchedSeat = null;
+    this.cancelTriggerDraftMove = "";
+    this.cancelTriggerEditingSeq = null;
+    this.cancelTriggerEditingAtoms = [];
+    this.cancelTriggerEditingLeechConfig = null;
+  }
+
   handleData(data: Engine, keepMoveHistory?: boolean) {
     for (const sector of document.getElementsByClassName("sector") as any as Element[]) {
       sector.classList.add("notransition");
@@ -1010,6 +1321,8 @@ export default class Game extends Vue {
       this.addMove(this.currentMove + ".");
       if (this.premoveMode && this.premoveReady) {
         this.queueCurrentPremove();
+      } else if (this.cancelTriggerComposeActive && this.cancelTriggerReady) {
+        this.confirmCancelTriggerCompose();
       }
       return;
     }
@@ -1053,10 +1366,13 @@ export default class Game extends Vue {
 
   addMove(command: string) {
     this.$store.commit("clearContext");
-    // Premove (PREMOVE_PLAN.md): while composing a premove, commands accumulate against the
-    // preview clone only (handled locally by this component's own subscribeAction handler above)
-    // and never reach the launcher's real "move" forwarding to the backend.
-    this.$store.dispatch(this.premoveMode ? "premoveMove" : "move", command);
+    // Premove (PREMOVE_PLAN.md) / cancel-trigger compose (§8.3): while composing either, commands
+    // accumulate against a preview clone only (handled locally by this component's own
+    // subscribeAction handler above) and never reach the launcher's real "move" forwarding to the
+    // backend - critical for cancel-trigger compose, which plays as an OPPONENT's seat and must
+    // never actually commit anything on their behalf.
+    const type = this.premoveMode ? "premoveMove" : this.cancelTriggerComposeActive ? "cancelTriggerMove" : "move";
+    this.$store.dispatch(type, command);
   }
 }
 </script>

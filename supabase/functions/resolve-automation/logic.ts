@@ -15,7 +15,17 @@
 // into resolvePremoveQueue, a shared helper also imported by host.ts's client fast-path, so online
 // and offline resolution can never drift - this file's own job is now just: fetch the seat's queue,
 // hand it to the resolver, and translate its decision into commits/deletes/failure rows.
+//
+// Premove cancel triggers (migration 20260815090000) added a check that runs BEFORE the queue is
+// resolved, in identical order to host.ts's own resolveAutoDecisions - both import the same
+// matchCancelTriggers so online/offline can never disagree about whether a queue survived.
 
+import {
+  CancelTriggerRow as MatcherCancelTriggerRow,
+  matchCancelTriggers,
+  MapLike,
+  SeatedMove,
+} from "../../../viewer/src/logic/premove-cancel-trigger.ts";
 import { INCOMPLETE_TURN_REASON, resolvePremoveQueue } from "../../../viewer/src/logic/premove-resolver.ts";
 
 export type GameRow = {
@@ -26,9 +36,83 @@ export type GameRow = {
   move_count: number;
 };
 
-export type MoveRow = { seq: number; move: string };
+export type MoveRow = { seq: number; seat: number; move: string };
 export type PremoveMode = "sequential" | "priority";
 export type PremoveRow = { seq: number; move: string; mode: PremoveMode };
+
+// Premove cancel triggers - DB row shape (snake_case, mirrors the migration), converted to the
+// matcher module's own camelCase CancelTriggerRow via toMatcherTrigger below (same split host.ts's
+// own toMatcherTriggers uses).
+export type CancelTriggerDbRow = {
+  seq: number;
+  kind: "move" | "leech";
+  watched_seat: number;
+  move: string;
+  atoms: string[];
+  config: Record<string, unknown>;
+  match: "any" | "all";
+  armed_from_move_count: number;
+};
+
+function toMatcherTrigger(row: CancelTriggerDbRow): MatcherCancelTriggerRow {
+  return {
+    seq: row.seq,
+    kind: row.kind,
+    watchedSeat: row.watched_seat,
+    move: row.move,
+    atoms: row.atoms,
+    config: row.config as unknown as MatcherCancelTriggerRow["config"],
+    match: row.match,
+    armedFromMoveCount: row.armed_from_move_count,
+  };
+}
+
+/** Plain-language text for the premove_failures.reason of a fired cancel trigger - a self-contained
+ * cousin of host.ts's own describeCancelTriggerReason (duplicated rather than imported: this file
+ * cannot pull in anything that drags a static "@gaia-project/engine" dependency into the edge
+ * function's bundle, which viewer/src/data/factions.ts and .../research.ts both do). Cosmetic only -
+ * never used for matching, so a simpler capitalization here costs nothing functionally. */
+function capitalize(word: string): string {
+  return word.length > 0 ? word.charAt(0).toUpperCase() + word.slice(1) : word;
+}
+
+function describeMatchedAtom(atom: string): string {
+  const [command, ...rest] = atom.split(":");
+  switch (command) {
+    case "build":
+      return `built ${rest[0] ?? "something"} at ${rest[1] ?? "a hex"}`;
+    case "up":
+      return `advanced ${rest[0] ?? "a track"}`;
+    case "tech":
+      return `took the tech tile at ${rest[0] ?? "a track"}`;
+    case "action":
+      return `took board action ${rest[0] ?? ""}`.trim();
+    case "special":
+      return "used a special action";
+    case "pass":
+      return `passed, taking booster ${rest[0] ?? ""}`.trim();
+    case "federation":
+      return "formed a federation";
+    case "charge":
+      return `charged ${rest[0] ?? "power"}`;
+    case "decline":
+      return `declined ${rest[0] ?? "power"}`;
+    default:
+      return `played ${atom}`;
+  }
+}
+
+function describeCancelTriggerReason(
+  trigger: MatcherCancelTriggerRow,
+  atom: string,
+  watchedFaction: string | undefined
+): string {
+  const description = describeMatchedAtom(atom);
+  if (trigger.kind === "leech") {
+    return `you ${description}`;
+  }
+  return `${watchedFaction ? capitalize(watchedFaction) : "Opponent"} ${description}`;
+}
 
 export type PlayerUpdate = { seat: number; faction: string; score: number };
 
@@ -58,6 +142,7 @@ export type EngineInstance = {
   newTurn: boolean;
   moveHistory: string[];
   players: { player: number; faction?: string; data: { victoryPoints: number } }[];
+  map: MapLike;
   generateAvailableCommandsIfNeeded(): unknown;
   move(line: string): void;
   player(seat: number): { settings: { autoChargePower: unknown } };
@@ -71,9 +156,25 @@ export type Backend = {
    * nothing is queued. */
   fetchPremoveQueue(gameId: string, seat: number): Promise<PremoveRow[]>;
   deletePremove(gameId: string, seat: number, seq: number): Promise<void>;
-  insertPremoveFailure(gameId: string, seat: number, move: string, reason: string): Promise<void>;
+  insertPremoveFailure(
+    gameId: string,
+    seat: number,
+    move: string,
+    reason: string,
+    kind?: "failure" | "cancelled"
+  ): Promise<void>;
   commitAutomatedTurn(args: CommitAutomatedTurnArgs): Promise<void>;
   fetchAutoCharge(gameId: string, seat: number): Promise<string>;
+  /** Every cancel trigger armed by this seat (the owner). Empty when none are armed. */
+  fetchCancelTriggers(gameId: string, seat: number): Promise<CancelTriggerDbRow[]>;
+  /** Deletes every one of the seat's cancel trigger rows, returning how many were actually deleted -
+   * the race arbiter (see migration 20260815090000's own doc comment): 0 means the client fast-path
+   * (or a duplicate trigger delivery) already won this exact match and this call has nothing to do. */
+  deleteCancelTriggers(gameId: string, seat: number): Promise<number>;
+  /** Re-invokes `notify` with {game_id, type: "update"} after the queue's premove rows are gone, so
+   * the "your turn" push - suppressed while they existed - fires now instead of being lost (§7).
+   * Best-effort: a failure here costs a notification, never the cancellation itself. */
+  notifyGameUpdate(gameId: string): Promise<void>;
 };
 
 export type Result =
@@ -83,6 +184,8 @@ export type Result =
   | { outcome: "premove-failed"; reason: string }
   | { outcome: "premove-incomplete-turn" }
   | { outcome: "committed"; seq: number; rank?: number; totalRanks?: number }
+  | { outcome: "premoves-cancelled"; reason: string }
+  | { outcome: "cancel-trigger-already-handled" }
   | { outcome: "seq-conflict" }
   | { outcome: "replay-failed"; reason: string }
   | { outcome: "leech-ask" }
@@ -146,6 +249,38 @@ export async function resolveOneAutomatedTurn(
   if (queue.length === 0) {
     return { outcome: "no-premove-queued" };
   }
+
+  // Cancel triggers (same ordering as host.ts's resolveAutoDecisions: before resolving the queue,
+  // gated on a non-empty queue - a match with nothing queued has no effect to apply).
+  const triggers = await backend.fetchCancelTriggers(gameId, seat);
+  if (triggers.length > 0) {
+    const seatedMoves: SeatedMove[] = ordered.map((m) => ({ seq: m.seq, seat: m.seat, move: m.move }));
+    const match = matchCancelTriggers(triggers.map(toMatcherTrigger), seatedMoves, engine.map);
+    if (match) {
+      const deleted = await backend.deleteCancelTriggers(gameId, seat);
+      if (deleted === 0) {
+        // Someone else (the client fast-path, or a duplicate trigger delivery) already won this
+        // exact match - see deleteCancelTriggers' own doc comment. Nothing further to do.
+        return { outcome: "cancel-trigger-already-handled" };
+      }
+      for (const row of queue) {
+        await backend.deletePremove(gameId, seat, row.seq);
+      }
+      const watchedFaction = engine.players.find((pl) => pl.player === match.trigger.watchedSeat)?.faction;
+      const reason = describeCancelTriggerReason(match.trigger, match.atom, watchedFaction);
+      await backend.insertPremoveFailure(gameId, seat, "", reason, "cancelled");
+      // The premove rows are gone now, so notify's own suppression check (which reads the premoves
+      // table) passes and the ordinary "your turn" push goes out - the immediate push that would
+      // otherwise have been lost (§7). Best-effort - see notifyGameUpdate's own doc comment.
+      try {
+        await backend.notifyGameUpdate(gameId);
+      } catch {
+        // non-critical
+      }
+      return { outcome: "premoves-cancelled", reason };
+    }
+  }
+
   const mode = queue[0].mode;
 
   const resolution = resolvePremoveQueue(
