@@ -64,4 +64,28 @@ describe("PremoveBar", () => {
       }
     }
   });
+
+  // The bottom-sheet chrome (dark header band + grab handle) belongs to the off-turn sticky layout
+  // only - the in-flow desktop card keeps the plain `__will-fire` line instead. Both live in the
+  // same stylesheet and are toggled by the media query, so what's asserted here is the DOM half of
+  // that split: the header exists to be styled at all only while the bar is in sticky mode.
+  it("renders the bottom-sheet header only in sticky-mobile mode", () => {
+    const sticky = mount(PremoveBar, {
+      propsData: { seat: 0, composeModePreference: "sequential", stickyMobile: true },
+      store: makeStore(),
+    });
+    const inFlow = mount(PremoveBar, {
+      propsData: { seat: 0, composeModePreference: "sequential", stickyMobile: false },
+      store: makeStore(),
+    });
+
+    try {
+      expect(sticky.find(".premove-bar__sheet-title").exists()).to.be.true;
+      expect(sticky.find(".premove-bar__sheet-title").text()).to.equal("Plan your next turn");
+      expect(inFlow.find(".premove-bar__sheet-title").exists()).to.be.false;
+    } finally {
+      sticky.destroy();
+      inFlow.destroy();
+    }
+  });
 });

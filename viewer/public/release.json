@@ -1,7 +1,21 @@
 {
-  "version": "5.57.7",
+  "version": "5.57.8",
   "releasedAt": "2026-08-15",
   "entries": [
+    {
+      "version": "5.57.8",
+      "releasedAt": "2026-08-15",
+      "kind": "update",
+      "title": "Off-turn premove sheet",
+      "impact": "",
+      "changes": [
+        "The off-turn premove bar is now the same bottom sheet as the on-turn one on mobile, with your resources along the bottom",
+        "PremoveBar reuses Commands.vue's sticky-bar chrome (header band, grab handle, 40vh cap, transform-origin) instead of a near-copy that had drifted"
+      ],
+      "userChanges": [
+        "The off-turn premove bar is now the same bottom sheet as the on-turn one on mobile, with your resources along the bottom"
+      ]
+    },
     {
       "version": "5.57.7",
       "releasedAt": "2026-08-15",

@@ -4,6 +4,17 @@
     :class="['premove-bar', { 'premove-bar--sticky-mobile': stickyMobile }]"
     :style="{ '--premove-bottom-offset': `${bottomOffset}px` }"
   >
+    <!-- The sheet's own dark header band, the exact counterpart of Commands.vue's
+         `#move-buttons .sticky-bar-title` on-turn bar: same gradient/grab-handle/full-bleed
+         treatment, carrying the one line that matters here ("Next: ..." / "Priority 2 will play:
+         ...") the way that one carries the on-turn status line. Rendered whenever the bar is in
+         off-turn mode but CSS-hidden until the narrow-viewport media query actually pins the bar,
+         since the in-flow desktop card is not a bottom sheet and shows `__will-fire` below
+         instead - same both-in-the-DOM/CSS-toggled split Commands.vue uses for #move-title. -->
+    <div v-if="stickyMobile" class="premove-bar__sheet-title d-flex align-items-center">
+      <h5 class="mb-0">{{ sheetTitle }}</h5>
+    </div>
+
     <div v-if="willFireLine" class="premove-bar__will-fire small">{{ willFireLine }}</div>
 
     <div v-if="rows.length > 0" class="premove-bar__tabs d-flex flex-wrap" role="tablist">
@@ -96,6 +107,12 @@
       fully automate.
     </div>
 
+    <!-- Last row of the sheet, same slot and same hairline-divider treatment as the on-turn bar's
+         own StickyResourceBar - what you can afford is exactly what a premove has to be planned
+         against, and off-turn it is otherwise a scroll away up the page. Hidden outside the
+         sticky-sheet layout for the same reason as the header above. -->
+    <StickyResourceBar v-if="showResourceBar" :player="myPlayer" class="premove-bar__resource-row" />
+
     <b-modal id="premove-info" size="lg" title="Premove modes" ok-only>
       <p>
         <b>Sequential</b> is a chain of your next turns: entry 2 is previewed assuming entry 1 already landed, and so
@@ -120,13 +137,14 @@
 </template>
 
 <script lang="ts">
-import Engine, { PlayerEnum } from "@gaia-project/engine";
+import Engine, { Player, PlayerEnum } from "@gaia-project/engine";
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { PremoveMode, PremoveRow } from "../hosted/types";
 import { buildSequentialChainPreview } from "../logic/premove-preview";
 import { zoomCompensationTransform } from "../logic/zoom-compensation";
+import StickyResourceBar from "./StickyResourceBar.vue";
 
-@Component
+@Component({ components: { StickyResourceBar } })
 export default class PremoveBar extends Vue {
   @Prop()
   seat: number;
@@ -253,6 +271,25 @@ export default class PremoveBar extends Vue {
       return null;
     }
     return `Priority ${firstLegalIndex + 1} will play: ${this.rows[firstLegalIndex].move}`;
+  }
+
+  /** The header band's single line, ranked by what the player most needs to read at a glance:
+   * what is about to play > what is queued but stuck > an invitation to queue something. */
+  get sheetTitle(): string {
+    if (this.rows.length === 0) {
+      return "Plan your next turn";
+    }
+    return this.willFireLine ?? `${this.rows.length} queued - none can play right now`;
+  }
+
+  /** The seat this bar belongs to, guarded: `seat` can be undefined (nobody locked to a seat) and
+   * the spec mounts this component against an engine with no players at all. */
+  get myPlayer(): Player | null {
+    return this.engine.players?.[this.seat] ?? null;
+  }
+
+  get showResourceBar(): boolean {
+    return this.stickyMobile && !!this.myPlayer?.faction;
   }
 
   canStartNew(candidateMode: PremoveMode): boolean {
@@ -390,6 +427,16 @@ export default class PremoveBar extends Vue {
     color: var(--ui-secondary-text);
   }
 
+  // Both of these belong to the bottom-sheet layout only - the in-flow desktop card is an ordinary
+  // panel, where a full-bleed dark banner and a duplicate resource strip would both be wrong. They
+  // need !important to be hidden: each element also carries Bootstrap's .d-flex utility ("display:
+  // flex !important"), which would otherwise win outright - the same footgun Commands.vue documents
+  // on its own .sticky-bar-title/#move-title pair.
+  &__sheet-title,
+  &__resource-row {
+    display: none !important;
+  }
+
   &__tabs {
     margin: -1.2rem 0 0.55rem;
     gap: 0.3rem;
@@ -443,15 +490,83 @@ export default class PremoveBar extends Vue {
     right: 0;
     bottom: var(--premove-bottom-offset, 0px);
     z-index: 1030;
-    max-height: 35vh;
+    // Same cap as Commands.vue's $mobile-sticky-actions-max-height, so a long premove list and a
+    // long move-button list stop growing at the same point instead of two different ones.
+    max-height: 40vh;
     overflow-y: auto;
     margin: 0;
+    // Anchors the JS counter-transform (the visualViewport listener in mounted() below, shared with
+    // Commands.vue through zoomCompensationTransform) at the corner this bar is actually positioned
+    // from - without it the browser scales/translates about the element's centre and a pinch-zoom
+    // walks the bar off the bottom edge. Commands.vue sets the identical origin on its own bar.
+    transform-origin: left bottom;
     padding: 0.7rem calc(0.5rem + env(safe-area-inset-right)) calc(0.45rem + env(safe-area-inset-bottom) + 8px)
       calc(0.5rem + env(safe-area-inset-left));
     border-radius: 16px 16px 0 0;
     border: 0;
     background: linear-gradient(180deg, var(--ui-panel-gradient-start) 0%, var(--ui-panel-gradient-end) 100%);
     box-shadow: 0 -12px 28px var(--ui-shadow), 0 -1px 0 var(--ui-divider-highlight);
+
+    // The sheet header, byte-for-byte the geometry of Commands.vue's `.sticky-bar-title`: full-bleed
+    // to the sheet's rounded top corners (negative margins cancelling this container's own padding,
+    // including the safe-area insets), pulled up over the padding that leaves room for the grab
+    // handle it draws at its own top edge.
+    .premove-bar__sheet-title {
+      display: flex !important;
+      position: relative;
+      margin: calc(-0.7rem) calc(-0.5rem - env(safe-area-inset-right)) 0.4rem calc(-0.5rem - env(safe-area-inset-left));
+      padding: 0.65rem calc(0.7rem + env(safe-area-inset-right)) 0.35rem calc(0.7rem + env(safe-area-inset-left));
+      border-radius: 16px 16px 0 0;
+      background: linear-gradient(135deg, var(--ui-banner-start) 0%, var(--ui-banner-end) 100%);
+      color: var(--ui-banner-text);
+
+      &::before {
+        content: "";
+        position: absolute;
+        top: 0.35rem;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 32px;
+        height: 4px;
+        border-radius: 2px;
+        background: rgba(255, 255, 255, 0.28);
+      }
+
+      h5 {
+        font-size: 0.85rem;
+        font-weight: 600;
+        line-height: 1.2;
+        color: inherit;
+        // The move text in "Next: terrans build m -1x2" is arbitrarily long; ellipsize rather than
+        // let it wrap the header to three lines, which is exactly the height problem the on-turn
+        // bar's own 0.85rem h5 was introduced to solve. The full text stays readable in the tab
+        // detail below.
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+
+    // Already said by the header band above - showing it twice is what Commands.vue avoids with
+    // #move-title.hide-on-mobile-sticky, same idea from the other side.
+    .premove-bar__will-fire {
+      display: none;
+    }
+
+    // The tabs sit as "folder tabs" straddling the in-flow card's top edge (hence the negative
+    // margin in the base rule). Inside the sheet that edge is the header band, so they hang below
+    // it normally instead of being pulled up into it.
+    .premove-bar__tabs {
+      margin-top: 0;
+    }
+
+    // Same slot, divider and spacing the on-turn bar gives its own resource strip.
+    .premove-bar__resource-row {
+      display: flex !important;
+      margin-top: 0.35rem;
+      padding-top: 0.3rem;
+      border-top: 1px solid var(--ui-border);
+    }
 
     // Same "keycap" treatment Commands.vue applies to its own move buttons, scoped to this same
     // sticky-bar context only (so the desktop/in-flow premove card keeps plain Bootstrap buttons,
