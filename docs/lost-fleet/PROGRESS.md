@@ -6877,6 +6877,25 @@ pin_preference_split_budget_search_path` (the one function in the set without a 
       outside `.premove-bar` on purpose — `b-modal` moves its content to the end of the document, so
       a nested selector would never match it.
 
+      **Then it was checked on desktop in a real browser, which found a bug no spec could (owner
+      follow-up).** Every button in the sheet was rendering as unstyled Bootstrap: transparent
+      background, `#212529` text. The sheet's buttons carry `.btn` as well as their own class, and
+      `.btn` sets colour at one-class specificity from a stylesheet that loads after the component's,
+      so a bare `.premove-bar__action-button` ties and loses. The previous design never hit this
+      because it took its colour from Bootstrap's own `btn-secondary`/`btn-outline-warning` variants;
+      this one uses the app's semantic tokens, so it has to win the cascade itself. The button rules
+      are descendant selectors now (`.premove-bar .premove-bar__action-button`). In dark mode the
+      symptom was severe — "+ Add move" and "Arm rule" were near-invisible against the panel — and it
+      was invisible to the test suite, which asserts DOM and not paint. Two more things came out of
+      the same pass: the hardcoded hexes for the legality chips and notices became the theme's
+      semantic tokens (`--ui-success`/`--ui-warning`/`--ui-danger` and their `-bg`/`-border`/`-text`
+      variants), which is what makes them adapt to dark at all; and the amber/red band tints existed
+      only inside the sticky-mobile media query, so on desktop — where the bar is an in-flow card
+      with no band — "Cancel my queue if…" and "Cancelled — …" read exactly like an ordinary status
+      line. They now tint the inline title instead. Verified at 560px, the real width of Game.vue's
+      commands column, in both themes: no horizontal overflow in any of the seven states, no console
+      errors, and the ⓘ reference fits without scrolling.
+
       **Tests:** new `CancelTriggerPicker.spec.ts` (3: on-turn badged and pickable, passed badged
       and still pickable, neither-state unbadged — it pins the engine's turn pointer and
       `passedPlayers` directly rather than driving a real game into that shape, so the test is about

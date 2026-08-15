@@ -51,9 +51,8 @@
              of the screen, which is the one place they were guaranteed not to be read. -->
         <div v-if="editCascadeNotice !== null" class="premove-bar__notice">
           <span class="flex-grow-1"
-            >Premove updated — {{ editCascadeNotice }} queued move{{ editCascadeNotice === 1 ? "" : "s" }} after it
-            {{ editCascadeNotice === 1 ? "was" : "were" }} discarded, since
-            {{ editCascadeNotice === 1 ? "it" : "they" }} depended on it.</span
+            >Premove updated — the {{ editCascadeNotice }} entr{{ editCascadeNotice === 1 ? "y" : "ies" }} after it
+            {{ editCascadeNotice === 1 ? "was" : "were" }} discarded, since they depended on it.</span
           >
           <button type="button" class="premove-bar__notice-x" @click="$emit('dismiss-cascade')">✕</button>
         </div>
@@ -812,6 +811,17 @@ export default class PremoveBar extends Vue {
     margin-bottom: 0.35rem;
     font-weight: 600;
     color: var(--ui-secondary-text);
+
+    // Desktop has no header band to tint (the bar is an in-flow card, not a bottom sheet), so the
+    // amber/red semantics the sheet carries in its band have to land on this line instead -
+    // otherwise "Cancel my queue if…" and "Cancelled — …" read exactly like an ordinary status.
+    &.premove-bar__band--amber {
+      color: var(--ui-warning);
+    }
+
+    &.premove-bar__band--stop {
+      color: var(--ui-danger);
+    }
   }
 
   // Both of these belong to the bottom-sheet layout only - the in-flow desktop card is an ordinary
@@ -887,11 +897,11 @@ export default class PremoveBar extends Vue {
     overflow: hidden;
 
     &--next {
-      border-left-color: #2f8f6b;
+      border-left-color: var(--ui-success);
     }
 
     &--blocked {
-      border-left-color: #b3564b;
+      border-left-color: var(--ui-danger);
     }
   }
 
@@ -932,17 +942,17 @@ export default class PremoveBar extends Vue {
     text-transform: uppercase;
     border-radius: 20px;
     padding: 0.1rem 0.4rem;
-    background: var(--ui-surface-alt, rgba(128, 128, 128, 0.16));
+    background: var(--ui-surface-muted);
     color: var(--ui-text-muted);
 
     &--next {
-      background: rgba(47, 143, 107, 0.16);
-      color: #2f8f6b;
+      background: var(--ui-success-bg);
+      color: var(--ui-success-text);
     }
 
     &--blocked {
-      background: rgba(179, 86, 75, 0.16);
-      color: #b3564b;
+      background: var(--ui-danger-bg);
+      color: var(--ui-danger-text);
     }
   }
 
@@ -976,18 +986,21 @@ export default class PremoveBar extends Vue {
     background: var(--ui-surface);
 
     &--warn {
-      border-color: #c9962f;
-      background: rgba(201, 150, 47, 0.12);
+      border-color: var(--ui-warning-border);
+      background: var(--ui-warning-bg);
+      color: var(--ui-warning-text);
     }
 
     &--stop {
-      border-color: #b3564b;
-      background: rgba(179, 86, 75, 0.12);
+      border-color: var(--ui-danger-border);
+      background: var(--ui-danger-bg);
+      color: var(--ui-danger-text);
     }
 
     &--ok {
-      border-color: #2f8f6b;
-      background: rgba(47, 143, 107, 0.1);
+      border-color: var(--ui-success-border);
+      background: var(--ui-success-bg);
+      color: var(--ui-success-text);
     }
   }
 
@@ -1012,16 +1025,35 @@ export default class PremoveBar extends Vue {
     margin-top: 0.1rem;
   }
 
-  &__action-button--primary {
+  // These carry Bootstrap's `.btn` as well, and `.btn` sets `color: #212529` + a transparent
+  // background at one-class specificity from a stylesheet that loads after this one - so a bare
+  // `.premove-bar__action-button` ties and loses, and every button here rendered as unstyled
+  // Bootstrap (invisible against the dark panel). Written as descendant selectors (`& &__…`, i.e.
+  // `.premove-bar .premove-bar__action-button`) to outrank it. The previous design sidestepped this
+  // by using Bootstrap's own `btn-secondary`/`btn-outline-warning` variants for colour; this one
+  // uses the app's semantic tokens instead, so it has to win the cascade itself.
+  //
+  // Order still matters below: base first, --primary/--amber after, since those now tie with it.
+  & &__action-button,
+  & &__mini-button {
+    font-size: 0.76rem;
+    padding: 0.25rem 0.6rem;
+    border: 1px solid var(--ui-border-strong);
+    border-radius: 8px;
+    background: linear-gradient(180deg, var(--ui-keycap-gradient-start) 0%, var(--ui-keycap-gradient-end) 100%);
+    color: var(--ui-secondary-text);
+  }
+
+  & &__action-button--primary {
     background: var(--ui-banner-start);
     border-color: var(--ui-banner-start);
     color: var(--ui-banner-text);
   }
 
-  &__action-button--amber {
-    border-color: #c9962f;
-    color: #8a6410;
-    background: rgba(201, 150, 47, 0.14);
+  & &__action-button--amber {
+    border-color: var(--ui-warning-border);
+    color: var(--ui-warning-text);
+    background: var(--ui-warning-bg);
   }
 
   &__foot {
@@ -1056,18 +1088,6 @@ export default class PremoveBar extends Vue {
     padding: 0.15rem 0;
     gap: 0.3rem;
     align-items: center;
-  }
-
-  // Plain Bootstrap buttons on the in-flow desktop card; the keycap treatment below is scoped to
-  // the sticky sheet only, matching how ordinary move buttons look outside Commands.vue's own bar.
-  &__action-button,
-  &__mini-button {
-    font-size: 0.76rem;
-    padding: 0.25rem 0.6rem;
-    border: 1px solid var(--ui-border-strong);
-    border-radius: 8px;
-    background: linear-gradient(180deg, var(--ui-keycap-gradient-start) 0%, var(--ui-keycap-gradient-end) 100%);
-    color: var(--ui-secondary-text);
   }
 }
 
@@ -1189,11 +1209,12 @@ export default class PremoveBar extends Vue {
     }
 
     // Same "keycap" treatment Commands.vue applies to its own move buttons, scoped to this same
-    // sticky-bar context only.
+    // sticky-bar context only. Deliberately sets no border-color: this selector outranks the
+    // --primary/--amber modifiers above (two classes vs one), so re-stating the neutral border here
+    // would strip the amber rule button's own outline on mobile and nowhere else.
     .premove-bar__action-button,
     .premove-bar__mini-button {
       border-radius: 10px;
-      border-color: var(--ui-border-strong);
       box-shadow: 0 1px 2px var(--ui-shadow-soft);
       transition: transform 0.08s ease-out, box-shadow 0.08s ease-out;
 
