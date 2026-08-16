@@ -23,7 +23,7 @@
 </template>
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import Engine, { Player, Phase } from "@gaia-project/engine";
+import Engine, { Player, Phase, Round } from "@gaia-project/engine";
 import PlayerCircle from "./PlayerCircle.vue";
 import { phaseBeforeSetupBuilding } from "../logic/utils";
 import { presenceStatus, PresenceStatus } from "../hosted/presence";
@@ -67,7 +67,16 @@ export default class TurnOrder extends Vue {
     return data.turnOrder.map((player) => data.players[player]);
   }
 
+  // Guarded on round (not just `?? []`): `passedPlayers` only has real meaning once round-move
+  // phase exists, but analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §3.1) pre-seeds it
+  // during setup already, to steer the engine's own round-1 turn-order fallback ahead of time
+  // (applySoloRoundFlow, viewer/src/logic/analysis.ts) - without this guard that pre-seed made the
+  // analysis seat visually appear to have "passed" from the very start of a setup-phase entry,
+  // before a single faction was even picked.
   get passedPlayers(): Player[] {
+    if (this.gameData.round < Round.Round1) {
+      return [];
+    }
     return (this.gameData.passedPlayers ?? []).map((player) => this.gameData.player(player));
   }
 }

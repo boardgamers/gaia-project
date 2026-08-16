@@ -1228,6 +1228,22 @@ describe("Game", () => {
         vm.$destroy();
       });
     });
+
+    describe("Phase 5 - visual treatment (§5)", () => {
+      it("adds analysis-mode-active to the root classes only while active, scoping the dimmed map stripes (§5.2/§2.10)", () => {
+        const vm = mountAsSeat(0);
+        expect(vm.classes).to.not.include("analysis-mode-active");
+
+        vm.enterAnalysisMode();
+        expect(vm.classes).to.include("analysis-mode-active");
+
+        vm.exitAnalysisMode();
+        expect(vm.classes).to.not.include("analysis-mode-active");
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+    });
   });
 
   describe("round 0 action placement", () => {

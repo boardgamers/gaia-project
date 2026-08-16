@@ -1,7 +1,22 @@
 {
-  "version": "5.62.0",
+  "version": "5.63.0",
   "releasedAt": "2026-08-16",
   "entries": [
+    {
+      "version": "5.63.0",
+      "releasedAt": "2026-08-16",
+      "kind": "update",
+      "title": "Analysis mode: hazard stripes and the counter panel",
+      "impact": "",
+      "changes": [
+        "Analysis mode now looks unmistakably not-live: yellow/black hazard stripes on the board header (full strength, tap it to exit) and a dimmed version through the map's inter-sector gaps. A compact net-cost readout sits in the header at all times, and a full breakdown panel (per-resource, the power bowl before/after, the feasibility verdict, and Undo/Reset/Exit) is pinned above the board.",
+        "Added AnalysisPanel.vue (the full-breakdown surface) and wired Commands.vue's sticky header with an --analysis variant (hazard-stripe background, scrimmed text, click-to-exit) that takes over the auto-leech dropdown's slot for the counter headline while analysis mode is active - on both the mobile sticky bar and the desktop #move-title, which needed the same treatment since it never becomes the sticky bar.",
+        "Fixed a real regression found via a live-browser check with Playwright: entering analysis mode during setup made the turn-order banner show a duplicate player circle, because applySoloRoundFlow's passedPlayers pre-seed (needed to steer the engine's own round-1 turn-order fallback) was being read by TurnOrder.vue as a real passed player before round 1 existed. TurnOrder.vue's passedPlayers getter is now guarded on round >= 1."
+      ],
+      "userChanges": [
+        "Analysis mode now looks unmistakably not-live: yellow/black hazard stripes on the board header (full strength, tap it to exit) and a dimmed version through the map's inter-sector gaps. A compact net-cost readout sits in the header at all times, and a full breakdown panel (per-resource, the power bowl before/after, the feasibility verdict, and Undo/Reset/Exit) is pinned above the board."
+      ]
+    },
     {
       "version": "5.62.0",
       "releasedAt": "2026-08-16",

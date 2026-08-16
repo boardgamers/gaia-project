@@ -763,6 +763,25 @@ kbd {
     0 4px 14px var(--ui-map-shadow);
 }
 
+// Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §5.2/§2.10) - dimmed yellow/black hazard
+// stripes, much lower contrast than Commands.vue's header treatment, read through the SVG's
+// transparent inter-sector gaps and frame the board as "not live" without fighting planet colours
+// over what can be a long session. Scoped under .analysis-mode-active (Game.vue's own root class
+// while analysisMode is true) - the .space-map/.space-map-canvas rule above is shared with setup
+// and open-game previews, so an unscoped rule here would hazard-tape every one of those too.
+// Layered as background-image on top of the existing background-color rather than overriding it,
+// so this is purely additive.
+.analysis-mode-active .space-map,
+.analysis-mode-active .space-map-canvas {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(245, 197, 24, 0.13) 0px,
+    rgba(245, 197, 24, 0.13) 16px,
+    rgba(20, 20, 20, 0.13) 16px,
+    rgba(20, 20, 20, 0.13) 32px
+  );
+}
+
 :root[data-theme="dark"] .space-map .space-hex,
 :root[data-theme="dark"] .space-map-canvas .space-hex {
   stroke: #7a879d;

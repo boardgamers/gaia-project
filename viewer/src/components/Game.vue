@@ -6,74 +6,24 @@
     <Rules id="rules" />
     <Rules id="trade" type="trade" />
 
-    <!-- Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md) - enter/exit/undo/reset controls plus
-         Phase 2's resource-diff counter (§4), still in plain form. The striped visual treatment and
-         the counter's real surfaces (headline in the sticky header, full breakdown pinned to the
-         map) are Phase 5 - this bar is a functional placeholder until then. -->
+    <!-- Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md) - the full-breakdown surface (§5.3's
+         second surface: per-resource, the power bowl, the feasibility verdict, Reset/Undo/Exit).
+         The compact always-visible headline is Commands.vue's own striped header instead
+         (§2.9/§5.1/§5.3's first surface) - the two never disagree since both read the same
+         analysisCounter. -->
     <div v-if="analysisMode || analysisOffered" class="row">
       <div class="col-12">
-        <b-alert
-          :show="true"
-          :variant="analysisMode ? 'warning' : 'light'"
-          class="analysis-mode-bar d-flex align-items-center flex-wrap"
-        >
-          <template v-if="analysisMode">
-            <strong class="mr-2">ANALYSIS — not saved</strong>
-            <span class="mr-2 small text-muted">
-              {{ analysisEntries.length }} move{{ analysisEntries.length === 1 ? "" : "s" }}
-            </span>
-            <span v-if="analysisCounter" class="mr-2 small analysis-counter">
-              <span :class="{ 'text-danger': analysisCounter.credits.displayed < 0 }"
-                >c {{ analysisCounter.credits.displayed }}</span
-              >
-              <span :class="{ 'text-danger': analysisCounter.ores.displayed < 0 }"
-                >o {{ analysisCounter.ores.displayed }}</span
-              >
-              <span :class="{ 'text-danger': analysisCounter.knowledge.displayed < 0 }"
-                >k {{ analysisCounter.knowledge.displayed }}</span
-              >
-              <span :class="{ 'text-danger': analysisCounter.qics.displayed < 0 }"
-                >q {{ analysisCounter.qics.displayed }}</span
-              >
-              <span :class="{ 'text-danger': analysisCounter.victoryPoints.displayed < 0 }"
-                >vp {{ analysisCounter.victoryPoints.displayed }}</span
-              >
-              <span
-                >pw {{ analysisCounter.power.after.area1 }}/{{ analysisCounter.power.after.area2 }}/{{
-                  analysisCounter.power.after.area3
-                }}</span
-              >
-              <strong v-if="!analysisCounter.feasible" class="text-danger ml-1">
-                infeasible from move {{ analysisCounter.infeasibleFromMove }}
-              </strong>
-            </span>
-            <b-button
-              size="sm"
-              class="mr-2"
-              variant="outline-secondary"
-              :disabled="analysisEntries.length === 0"
-              @click="undoLastAnalysisEntry"
-            >
-              Undo last move
-            </b-button>
-            <b-button
-              size="sm"
-              class="mr-2"
-              variant="outline-secondary"
-              :disabled="analysisEntries.length === 0"
-              @click="resetAnalysisLine"
-            >
-              Reset
-            </b-button>
-            <b-button size="sm" variant="secondary" @click="exitAnalysisMode">Exit analysis mode</b-button>
-            <div v-if="analysisPassCapped" class="w-100 small text-muted mt-1">
-              Two-round cap reached — Pass is hidden here; Exit or Reset to start a new line.
-            </div>
-          </template>
-          <b-button v-else size="sm" variant="outline-secondary" @click="enterAnalysisMode"
-            >Enter analysis mode</b-button
-          >
-        </b-alert>
+        <AnalysisPanel
+          :active="analysisMode"
+          :offered="analysisOffered"
+          :move-count="analysisEntries.length"
+          :counter="analysisCounter"
+          :pass-capped="analysisPassCapped"
+          @enter="enterAnalysisMode"
+          @exit="exitAnalysisMode"
+          @undo="undoLastAnalysisEntry"
+          @reset="resetAnalysisLine"
+        />
       </div>
     </div>
 
@@ -119,6 +69,9 @@
             @command="handleCommand"
             :currentMove="currentMove"
             :hide-spacer="true"
+            :analysis-mode="analysisMode"
+            :analysis-counter="analysisCounter"
+            @analysis-exit="exitAnalysisMode"
             @sticky-bar-height="stickyBarHeight = $event"
           />
           <!-- Rendered next to the picker as well, not only instead of it: the picker drops a
@@ -236,6 +189,9 @@
               cancelTriggerComposeActive ? 'Continue' : premoveEditSeq !== null ? 'Save changes' : 'Queue now'
             "
             :premove-context="premoveContext"
+            :analysis-mode="analysisMode"
+            :analysis-counter="analysisCounter"
+            @analysis-exit="exitAnalysisMode"
             @cancel-premove="cancelTriggerComposeActive ? cancelCancelTriggerCompose() : cancelPremoveMode()"
             @confirm-premove="cancelTriggerComposeActive ? confirmCancelTriggerCompose() : queueCurrentPremove()"
             @sticky-bar-height="stickyBarHeight = $event"
@@ -336,7 +292,14 @@
       <SetupStatus v-if="!ended" />
       <SpaceMap v-if="hasMap" :class="['mb-1', 'space-map', 'col-md-7']" />
       <AdvancedLog :currentMove="currentMove" :hideLog.sync="hideLog" v-if="logPlacement === 'top'" />
-      <Commands @command="handleCommand" v-if="canPlay" :currentMove="currentMove" />
+      <Commands
+        @command="handleCommand"
+        v-if="canPlay"
+        :currentMove="currentMove"
+        :analysis-mode="analysisMode"
+        :analysis-counter="analysisCounter"
+        @analysis-exit="exitAnalysisMode"
+      />
       <Table />
       <AdvancedLog :currentMove="currentMove" :hideLog.sync="hideLog" v-if="logPlacement === 'bottom'" />
     </div>
@@ -358,6 +321,7 @@ import Engine, {
   ResearchField,
 } from "@gaia-project/engine";
 import AdvancedLog from "./AdvancedLog.vue";
+import AnalysisPanel from "./AnalysisPanel.vue";
 import BoardAction from "./BoardAction.vue";
 import Commands from "./Commands.vue";
 import Pool from "./Pool.vue";
@@ -431,6 +395,7 @@ const BOARD_ACTION_BASE_X = -20;
 @Component<Game>({
   components: {
     AdvancedLog,
+    AnalysisPanel,
     BoardAction,
     Commands,
     PlayerInfo,
@@ -902,6 +867,12 @@ export default class Game extends Vue {
       if (preferences.accessibleSpaceMap) {
         classes.push("accessible-space-map");
       }
+    }
+    // Analysis mode (§5.2/§2.10) - scopes the dimmed map stripes (theme.scss) to only this live
+    // game, not every setup/open-game preview that shares the same .space-map/.space-map-canvas
+    // background rule.
+    if (this.analysisMode) {
+      classes.push("analysis-mode-active");
     }
     return classes;
   }

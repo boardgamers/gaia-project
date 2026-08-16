@@ -1,11 +1,19 @@
 <template>
   <div id="move">
-    <div id="move-title" class="d-flex align-items-center" :class="{ 'hide-on-mobile-sticky': showStickyMobileBar }">
+    <div
+      id="move-title"
+      class="d-flex align-items-center"
+      :class="{ 'hide-on-mobile-sticky': showStickyMobileBar, 'move-title--analysis': analysisMode }"
+      @click="analysisMode ? $emit('analysis-exit') : undefined"
+    >
       <h5 class="mb-0">
         <span v-if="init">Pick the number of players</span>
         <!-- Desktop's counterpart of the sticky band below: the bar is in flow here, so this is
-             where a compose takeover has to announce itself. -->
-        <template v-if="premoveContext">{{ premoveContext.title }}</template>
+             where a compose takeover has to announce itself. Analysis mode wins over premove/
+             cancel-trigger context since the three board-takeover modes are mutually exclusive
+             (§3.6) - this is just the render-time ordering, not an extra exclusion check. -->
+        <template v-if="analysisMode">ANALYSIS — not saved</template>
+        <template v-else-if="premoveContext">{{ premoveContext.title }}</template>
         <RichTextView v-else :content="statusLine" />
       </h5>
       <!-- The Silent Auction / ban-phase explainer buttons used to sit here. They now live in
@@ -41,6 +49,30 @@
           {{ opt.text }}
         </b-dropdown-item>
       </b-dropdown>
+      <!-- The counter headline (§2.9/§5.3) - takes over the slot the auto-leech dropdown gives up
+           during analysis mode, since opponent decisions are auto-resolved there regardless of that
+           preference. Real numbers (§4.2): negative and highlighted once the line has overdrawn a
+           resource against what this seat actually started with. -->
+      <div v-else-if="showAnalysisCounterHeadline" class="ml-auto analysis-counter-headline" @click.stop>
+        <span :class="{ 'analysis-counter-headline__negative': analysisCounter.credits.displayed < 0 }"
+          >{{ analysisCounter.credits.displayed }}c</span
+        >
+        <span :class="{ 'analysis-counter-headline__negative': analysisCounter.ores.displayed < 0 }"
+          >{{ analysisCounter.ores.displayed }}o</span
+        >
+        <span :class="{ 'analysis-counter-headline__negative': analysisCounter.knowledge.displayed < 0 }"
+          >{{ analysisCounter.knowledge.displayed }}k</span
+        >
+        <span :class="{ 'analysis-counter-headline__negative': analysisCounter.qics.displayed < 0 }"
+          >{{ analysisCounter.qics.displayed }}q</span
+        >
+        <span :class="{ 'analysis-counter-headline__negative': analysisCounter.victoryPoints.displayed < 0 }"
+          >{{ analysisCounter.victoryPoints.displayed }}vp</span
+        >
+        <strong v-if="!analysisCounter.feasible" class="analysis-counter-headline__infeasible"
+          >infeasible from {{ analysisCounter.infeasibleFromMove }}</strong
+        >
+      </div>
     </div>
     <div id="move-buttons" ref="moveButtons" :class="{ 'mobile-sticky-actions': showStickyMobileBar }">
       <!-- Same status line as #move-title above, shown only inside the mobile sticky bar (once it's
@@ -52,15 +84,24 @@
       <div
         v-if="showStickyMobileBar"
         class="sticky-bar-title d-flex align-items-center"
-        :class="premoveContext ? `sticky-bar-title--${premoveContext.variant}` : null"
+        :class="
+          analysisMode
+            ? 'sticky-bar-title--analysis'
+            : premoveContext
+            ? `sticky-bar-title--${premoveContext.variant}`
+            : null
+        "
+        @click="analysisMode ? $emit('analysis-exit') : undefined"
       >
         <!-- While the board is taken over to compose a premove or a cancel rule, this band carries
              what that compose is FOR. It used to be an `alert` at the top of Game.vue's commands
              column - i.e. describing this bar from the other end of the page, usually scrolled out
-             of sight on a phone. Amber for a cancel rule, the ordinary banner colour for a premove:
-             the board looks identical in both, and this is the one cue telling them apart. -->
+             of sight on a phone. Amber for a cancel rule, the ordinary banner colour for a premove,
+             hazard stripes for analysis (§5.1) - the board looks identical otherwise, and this is
+             the one cue telling them apart. -->
         <h5 class="mb-0">
-          <template v-if="premoveContext">{{ premoveContext.title }}</template>
+          <template v-if="analysisMode">ANALYSIS — not saved</template>
+          <template v-else-if="premoveContext">{{ premoveContext.title }}</template>
           <RichTextView v-else :content="statusLine" />
         </h5>
         <!-- No explainer buttons here either: this bar is round-1+ only (showStickyMobileBar), so
@@ -90,6 +131,26 @@
             {{ opt.text }}
           </b-dropdown-item>
         </b-dropdown>
+        <div v-else-if="showAnalysisCounterHeadline" class="ml-auto analysis-counter-headline" @click.stop>
+          <span :class="{ 'analysis-counter-headline__negative': analysisCounter.credits.displayed < 0 }"
+            >{{ analysisCounter.credits.displayed }}c</span
+          >
+          <span :class="{ 'analysis-counter-headline__negative': analysisCounter.ores.displayed < 0 }"
+            >{{ analysisCounter.ores.displayed }}o</span
+          >
+          <span :class="{ 'analysis-counter-headline__negative': analysisCounter.knowledge.displayed < 0 }"
+            >{{ analysisCounter.knowledge.displayed }}k</span
+          >
+          <span :class="{ 'analysis-counter-headline__negative': analysisCounter.qics.displayed < 0 }"
+            >{{ analysisCounter.qics.displayed }}q</span
+          >
+          <span :class="{ 'analysis-counter-headline__negative': analysisCounter.victoryPoints.displayed < 0 }"
+            >{{ analysisCounter.victoryPoints.displayed }}vp</span
+          >
+          <strong v-if="!analysisCounter.feasible" class="analysis-counter-headline__infeasible"
+            >infeasible from {{ analysisCounter.infeasibleFromMove }}</strong
+          >
+        </div>
       </div>
       <div v-if="init" class="d-flex flex-wrap align-content-stretch">
         <MoveButton
@@ -275,6 +336,7 @@ import { zoomCompensationTransform } from "../logic/zoom-compensation";
 import { factionColor } from "../graphics/utils";
 import { supportsHoverTooltips } from "../logic/tooltip";
 import { isTypingTarget } from "../logic/typing-target";
+import { AnalysisCounter } from "../logic/analysis";
 
 let show = false;
 
@@ -363,6 +425,19 @@ export default class Commands extends Vue implements CommandController {
    * the whole premove flow on one surface. */
   @Prop({ default: null })
   premoveContext: { title: string; notes: string[]; variant: "premove" | "trigger" } | null;
+
+  /** Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §5) - true for the whole time the board is
+   * taken over, not just while a turn is mid-compose (unlike premoveContext above), since the
+   * striped header must read "not live" from the moment of entry through every turn played inside
+   * it. Drives the header stripes (§5.1), replaces the auto-leech slot with the counter headline
+   * (§2.9/§5.3), and makes tapping the header exit (§5.4). */
+  @Prop({ default: false })
+  analysisMode: boolean;
+
+  /** The live diff counter (§4.3), or null before the sandbox wallet exists yet (setup-phase entry,
+   * before round 1 - Phase 4). Only ever set while analysisMode is also true. */
+  @Prop({ default: null })
+  analysisCounter: AnalysisCounter | null;
 
   get controller() {
     return this;
@@ -560,11 +635,26 @@ export default class Commands extends Vue implements CommandController {
 
   /** Auto-leech is a per-round-action preference - hide it during player-count/faction-picking/
    * banning/silent-auction-bidding/initial-building setup, same "round 1+" boundary as
-   * showStickyMobileBar, so it doesn't show before there's anything to leech from. */
+   * showStickyMobileBar, so it doesn't show before there's anything to leech from. Also meaningless
+   * during analysis mode (§2.9) - opponent decisions are auto-resolved there regardless of this
+   * preference - which is what frees up that slot for the counter headline instead (§5.3). */
   get showAutoLeechSelect(): boolean {
     return (
-      !this.init && !this.isChoosingFaction && !this.isBanningFaction && !this.isSilentBidding && this.engine.round >= 1
+      !this.init &&
+      !this.isChoosingFaction &&
+      !this.isBanningFaction &&
+      !this.isSilentBidding &&
+      this.engine.round >= 1 &&
+      !this.analysisMode
     );
+  }
+
+  /** The counter headline (§5.3) - compact net deltas plus the feasibility verdict, shown in the
+   * slot the auto-leech dropdown gives up during analysis mode. Null (not just gated on
+   * analysisMode) until the sandbox wallet exists - a setup-phase entry (Phase 4) has nothing to
+   * diff yet. */
+  get showAnalysisCounterHeadline(): boolean {
+    return this.analysisMode && !!this.analysisCounter;
   }
 
   /** The viewing user's own player (not necessarily whoever's turn it is), same "viewing seat"
@@ -1285,6 +1375,28 @@ $mobile-sticky-actions-max-height: 40vh;
   border-top: 1px solid var(--ui-border);
 }
 
+// Analysis mode on desktop (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §5.1): the standalone #move-title
+// never becomes the mobile sticky bar's #move-buttons band above, so without its own striping,
+// desktop would be the one place analysis mode looked like live play. Same stripes/scrim/click-to-
+// exit as the mobile band's &--analysis variant - kept as a standalone rule (not shared via a mixin)
+// since #move-title's own box model (in-flow, no grab handle, no border-radius) differs enough that
+// a shared mixin would need as many overrides as it saved.
+#move-title.move-title--analysis {
+  background: repeating-linear-gradient(45deg, #1c1c1c 0px, #1c1c1c 12px, #f5c518 12px, #f5c518 24px);
+  cursor: pointer;
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+
+  h5 {
+    display: inline-block;
+    background: rgba(0, 0, 0, 0.82);
+    color: #fff;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    margin: 0;
+  }
+}
+
 // The status strip is the sheet's own dark "header" band - deliberately contrasting with the light
 // button/resource area below it, both to visually anchor "this is the important line" and to
 // guarantee text contrast outright rather than relying on a thin accent line against a
@@ -1321,6 +1433,16 @@ $mobile-sticky-actions-max-height: 40vh;
     background: linear-gradient(135deg, #a97514 0%, #8a6410 100%);
   }
 
+  // Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §5.1) - full-strength yellow/black hazard
+  // stripes, unmissable at a glance, since this is the ONE header state where the board underneath
+  // is genuinely not the live game. Stripes live in `background` (not `::before`, which is the grab
+  // handle above - §2.9) so the two never fight for the same layer. Clickable to exit (§5.4) - the
+  // map-anchored control can scroll off-screen on mobile, so the header is the reliable way out.
+  &--analysis {
+    background: repeating-linear-gradient(45deg, #1c1c1c 0px, #1c1c1c 12px, #f5c518 12px, #f5c518 24px);
+    cursor: pointer;
+  }
+
   // Small enough that the status text stays on one (or two, at most) lines instead of the default
   // h5 size wrapping across several - that wrapping used to be what made this banner so tall.
   h5 {
@@ -1328,6 +1450,17 @@ $mobile-sticky-actions-max-height: 40vh;
     font-weight: 600;
     line-height: 1.2;
     color: inherit;
+  }
+
+  // Raw text directly on the diagonal stripes above is unreadable either color it uses - a solid
+  // scrim behind just the text (not the whole bar, which would hide the stripes entirely) keeps
+  // both legible at once.
+  &--analysis h5 {
+    display: inline-block;
+    background: rgba(0, 0, 0, 0.82);
+    color: #fff;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
   }
 
   // The auto-leech dropdown defaults to Bootstrap's grey outline styling, which reads as a muddy
@@ -1366,6 +1499,33 @@ $mobile-sticky-actions-max-height: 40vh;
       background: rgba(255, 255, 255, 0.18);
       border-color: rgba(255, 255, 255, 0.42);
     }
+  }
+}
+
+// The counter headline (§2.9/§5.3) - compact net deltas plus the feasibility verdict, in the slot
+// the auto-leech dropdown gives up during analysis mode. Same scrim reasoning as the h5 title text
+// above: it sits on the same striped background, in both #move-title (desktop) and .sticky-bar-title
+// (mobile), so it gets the identical treatment rather than a third one-off style.
+.analysis-counter-headline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(0, 0, 0, 0.82);
+  color: #fff;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: default;
+
+  &__negative {
+    color: #ff8a80;
+  }
+
+  &__infeasible {
+    color: #ff8a80;
   }
 }
 

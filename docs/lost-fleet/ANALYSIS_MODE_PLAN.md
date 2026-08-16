@@ -1,31 +1,39 @@
 # Analysis Mode — Implementation Plan (ready for handoff)
 
-> Status: **Phases 1-4 done (viewer v5.62.0, 2026-08-16, PROGRESS.md #166-168) — board takeover +
+> Status: **Phases 1-5 done (viewer v5.63.0, 2026-08-16, PROGRESS.md #166-169) — board takeover +
 > line + replay + enter/exit/undo/reset/persistence, the sandbox wallet + resource-diff counter, real
-> solo round flow (Pass/income/Gaia, the two-round cap, opponent decision auto-resolution), and
-> setup-phase pass-and-play (opponent mine placement, faction pick, sealed-bid auctions).** Phases
-> 5-7 remain: see §7's phasing table. Every open question in this document was put to the owner and
-> answered; §1 is the record of those decisions and should not be relitigated. §2 is a traced account
-> of how the existing code actually works — every file:line in it was read, not recalled, so a fresh
-> session (Sonnet is fine) can execute this plan without re-deriving the mechanics, though
-> PROGRESS.md #167-168 found and corrected two real gaps along the way, both recorded in
-> `applySoloRoundFlow`'s own doc comment (`viewer/src/logic/analysis.ts`) as well as here:
+> solo round flow (Pass/income/Gaia, the two-round cap, opponent decision auto-resolution),
+> setup-phase pass-and-play (opponent mine placement, faction pick, sealed-bid auctions), and the
+> hazard-stripe visual treatment with the counter's two real surfaces (header headline + full
+> breakdown panel).** Phases 6-7 remain: see §7's phasing table. Every open question in this document
+> was put to the owner and answered; §1 is the record of those decisions and should not be
+> relitigated. §2 is a traced account of how the existing code actually works — every file:line in it
+> was read, not recalled, so a fresh session (Sonnet is fine) can execute this plan without
+> re-deriving the mechanics, though PROGRESS.md #167-169 found and corrected three real gaps along
+> the way:
 >
 > - Shrinking `turnOrderAfterSetupAuction` (via `engine.setup`) for `beginRoundStartPhase`'s benefit,
 >   as §2.5 originally said to, would have also broken `beginLeechingPhase`'s unrelated use of the
 >   same getter for table-seating order — so the solo switch shrinks `turnOrder` directly instead,
 >   and steers `beginRoundStartPhase`'s own fallback via `passedPlayers`, never touching
->   `engine.setup`.
+>   `engine.setup`. Recorded in `applySoloRoundFlow`'s own doc comment (`viewer/src/logic/analysis.ts`).
 > - Pre-seeding `passedPlayers` unconditionally (needed to make a **setup**-phase entry's eventual
 >   round-1 transition resolve correctly) breaks a **mid-round** entry instead: `passedPlayers` is
 >   also the current round's own live pass accumulator, so seeding it non-empty while a round is
 >   already under way double-counts this seat's own next pass. The fix checks whether round 1 has
 >   ever started (`passedPlayers === undefined`) before pre-seeding, and otherwise resets it to a
 >   fresh `[]`, matching what `beginRoundStartPhase` itself always does at an ordinary round
->   boundary.
+>   boundary. Same file, same doc comment.
+> - That same `passedPlayers` pre-seed had a UI-side consequence unit tests never caught: entering
+>   analysis mode during setup made `TurnOrder.vue` show a duplicate player circle, since its own
+>   `passedPlayers` getter had no round guard (real games never populate that field before round 1,
+>   so this was never exercised before). Found via a live-browser check (Playwright against the dev
+>   server) in Phase 5 - fixed by gating that getter on `round >= Round.Round1`.
 >
-> **Continue at Phase 5** (visual treatment + the counter's real surfaces, §5) — Phases 2-4 already
-> built the resource counter and the sticky-header/map-overlay placement is what's left of §5.3.
+> **Continue at Phase 6** (staleness handling §3.5 + the leech adjustment stepper §4.4). Phase 5
+> deliberately left the map-corner entry/exit button (§5.4) unbuilt - see PROGRESS.md #169's scope
+> note for why - the controls live in the new `AnalysisPanel.vue` instead, which is where Phase 6's
+> leech stepper and Phase 7's Commit button should be added too.
 >
 > Read `CLAUDE.md` and `PROGRESS.md`'s **Working agreements** first. This plan touches the viewer and
 > makes one small engine change; it touches no database object and no Edge Function.

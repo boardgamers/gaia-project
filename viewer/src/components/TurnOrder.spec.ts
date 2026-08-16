@@ -68,3 +68,33 @@ describe("TurnOrder presence dots", () => {
     expect(dots[1].classList.contains("yellow")).to.equal(true);
   });
 });
+
+describe("TurnOrder passedPlayers (docs/lost-fleet/ANALYSIS_MODE_PLAN.md)", () => {
+  it("never shows a passed player before round 1, even if passedPlayers is non-empty", () => {
+    // Real games never populate `passedPlayers` before round 1 (only beginRoundStartPhase does,
+    // once per round transition) - this fixture reproduces analysis mode's own setup-phase pre-seed
+    // (applySoloRoundFlow), which is exactly the scenario that regressed without this guard: seat 0
+    // visibly "passed" from the moment analysis mode was entered, before a single faction was
+    // picked.
+    const engine = new Engine(["init 2 turn-order-passed-guard"]);
+    engine.passedPlayers = [0];
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(TurnOrder, { store });
+
+    expect(container.querySelectorAll(".player-circle__name").length).to.equal(2);
+  });
+
+  it("shows a passed player once round 1 has genuinely started", () => {
+    const engine = new Engine(["init 2 turn-order-passed-guard"]);
+    engine.round = 1;
+    engine.passedPlayers = [0];
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(TurnOrder, { store });
+
+    expect(container.querySelectorAll(".player-circle__name").length).to.equal(3);
+  });
+});

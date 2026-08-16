@@ -555,6 +555,53 @@ describe("Commands", () => {
     expect(container.querySelector("#move-buttons .sticky-bar-title .auto-leech-select")).to.not.equal(null);
   });
 
+  it("hides the auto-leech select during analysis mode, showing the counter headline in its place instead (§2.9/§5.3)", () => {
+    const engine = createLostFleetRoundMoveEngine();
+    const store = makeStore();
+    store.commit("receiveData", engine);
+    const counter = {
+      credits: { net: -4, displayed: 16 },
+      ores: { net: 0, displayed: 10 },
+      knowledge: { net: -4, displayed: 6 },
+      qics: { net: 1, displayed: 1 },
+      victoryPoints: { net: 0, displayed: 30 },
+      power: { before: { area1: 0, area2: 0, area3: 0, gaia: 0 }, after: { area1: 0, area2: 0, area3: 0, gaia: 0 } },
+      feasible: true,
+      infeasibleFromMove: null,
+    };
+
+    const { container } = render(Commands, {
+      props: { currentMove: "", analysisMode: true, analysisCounter: counter },
+      store,
+    });
+
+    expect(container.querySelector(".auto-leech-select")).to.equal(null);
+    const headlines = container.querySelectorAll(".analysis-counter-headline");
+    expect(headlines.length).to.equal(2); // one in #move-title, one in the mobile sticky bar
+    expect(container.querySelector("#move-title .analysis-counter-headline").textContent).to.contain("16c");
+  });
+
+  it("stripes the header and reads ANALYSIS — not saved during analysis mode, emitting analysis-exit when tapped (§5.1/§5.4)", async () => {
+    const engine = createLostFleetRoundMoveEngine();
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container, emitted } = render(Commands, {
+      props: { currentMove: "", analysisMode: true },
+      store,
+    });
+
+    expect(container.querySelector("#move-title").textContent).to.contain("ANALYSIS — not saved");
+    expect(container.querySelector("#move-title").classList.contains("move-title--analysis")).to.equal(true);
+    expect(
+      container.querySelector("#move-buttons .sticky-bar-title").classList.contains("sticky-bar-title--analysis")
+    ).to.equal(true);
+
+    await fireEvent.click(container.querySelector("#move-title"));
+
+    expect(emitted()["analysis-exit"]).to.have.length(1);
+  });
+
   it("drives the mobile sticky-bar spacer's height from a CSS custom property, not a direct inline height", () => {
     // The spacer must render as ~0 height on wide viewports (nothing fixed-position there to
     // compensate for) and only take up real space under the narrow-viewport media query - a
