@@ -406,6 +406,10 @@ const gaiaViewer = {
     // Cancel trigger compose mode (Game.vue) - same "accumulates against a preview clone only,
     // intercepted locally, never reaches the launcher's real move forwarding" shape as premoveMove.
     cancelTriggerMove(context: any, move: string) {},
+    // Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md) - the third board-takeover mode, same
+    // "accumulates against a local clone only, intercepted by Game.vue, never reaches the
+    // launcher's real move forwarding" shape as premoveMove/cancelTriggerMove above.
+    analysisMove(context: any, move: string) {},
     queuePremove(context: any, payload: { seat: number; move: string; mode: PremoveMode }) {},
     cancelPremove(context: any, payload: { seat: number; seq: number }) {},
     // Premove UI redesign (Gaia 9) - update-in-place ("stage until confirmed", see host.ts).

@@ -6,6 +6,48 @@
     <Rules id="rules" />
     <Rules id="trade" type="trade" />
 
+    <!-- Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md) - Phase 1's bare enter/exit/undo/reset
+         controls. The striped visual treatment (§5) and the resource-diff counter (§4) are later
+         phases; this is deliberately plain so the board-takeover plumbing is testable on its own. -->
+    <div v-if="analysisMode || analysisOffered" class="row">
+      <div class="col-12">
+        <b-alert
+          :show="true"
+          :variant="analysisMode ? 'warning' : 'light'"
+          class="analysis-mode-bar d-flex align-items-center flex-wrap"
+        >
+          <template v-if="analysisMode">
+            <strong class="mr-2">ANALYSIS — not saved</strong>
+            <span class="mr-2 small text-muted">
+              {{ analysisEntries.length }} move{{ analysisEntries.length === 1 ? "" : "s" }}
+            </span>
+            <b-button
+              size="sm"
+              class="mr-2"
+              variant="outline-secondary"
+              :disabled="analysisEntries.length === 0"
+              @click="undoLastAnalysisEntry"
+            >
+              Undo last move
+            </b-button>
+            <b-button
+              size="sm"
+              class="mr-2"
+              variant="outline-secondary"
+              :disabled="analysisEntries.length === 0"
+              @click="resetAnalysisLine"
+            >
+              Reset
+            </b-button>
+            <b-button size="sm" variant="secondary" @click="exitAnalysisMode">Exit analysis mode</b-button>
+          </template>
+          <b-button v-else size="sm" variant="outline-secondary" @click="enterAnalysisMode"
+            >Enter analysis mode</b-button
+          >
+        </b-alert>
+      </div>
+    </div>
+
     <template v-if="uiMode === 'graphical'">
       <!-- Turn Order, at the very top of the page (PROGRESS.md Gaia 9) - it used to live further
            down, sharing a row with Commands and order-flipping against it on mobile; a fixed top
@@ -323,6 +365,7 @@ import {
   PremoveRow,
 } from "../hosted/types";
 import { buildSequentialChainPreview } from "../logic/premove-preview";
+import { AnalysisEntry, loadAnalysisLine, replayAnalysisLine, saveAnalysisLine } from "../logic/analysis";
 // The three CancelTrigger* step components are registered by PremoveBar now, not here - they render
 // inside the sheet rather than in a modal this component owned.
 import PremoveBar from "./PremoveBar.vue";
@@ -436,6 +479,25 @@ export default class Game extends Vue {
   cancelTriggerEditingAtoms: string[] = [];
   cancelTriggerEditingLeechConfig: CancelTriggerLeechConfigType | null = null;
 
+  // Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md) - a non-committing local sandbox: "you
+  // press a button, the board becomes yours" (§0). Follows the same "stash the real engine, take
+  // the board over, replay from a stable base, restore on exit" shape as premove/cancel-trigger
+  // above, but the stable base is `analysisOrigin` (the engine at the moment analysis mode was
+  // entered), and the accumulated result is a persisted LINE of many completed turns
+  // (`analysisEntries`), not one queued move. `analysisComposeBase` is origin + every committed
+  // entry replayed on top - the base the currently in-progress turn composes against, mirroring
+  // premoveComposeBase's role for premove. There is no separate "ready"/"confirm" step the way
+  // premove has: the moment a turn completes (`newTurn`) it is appended to the line automatically,
+  // same as self-contained.ts's own `engine = copy` on a completed move.
+  analysisMode = false;
+  analysisBackup: Engine = null;
+  analysisOrigin: Engine = null;
+  analysisComposeBase: Engine = null;
+  analysisSeat: number = null;
+  analysisBaseRound: number = null;
+  analysisBaseMoveCount: number = null;
+  analysisEntries: AnalysisEntry[] = [];
+
   @Prop()
   options: EngineOptions;
 
@@ -480,6 +542,16 @@ export default class Game extends Vue {
             this.cancelTriggerStage = null;
           }
         }
+        // Analysis mode (§3.5/§3.6) - unlike premove/cancel-trigger above, the LINE survives this
+        // (decision #2: exiting keeps it, only the live takeover ends) - it was already persisted
+        // to localStorage as each entry committed, so nothing here needs to save it again.
+        if (this.analysisMode) {
+          this.analysisMode = false;
+          this.analysisBackup = null;
+          this.analysisOrigin = null;
+          this.analysisComposeBase = null;
+          this.analysisSeat = null;
+        }
         this.handleData(Engine.fromData(payload));
         return;
       }
@@ -489,6 +561,10 @@ export default class Game extends Vue {
       }
       if (type === "cancelTriggerMove") {
         this.applyCancelTriggerMove(payload as string);
+        return;
+      }
+      if (type === "analysisMove") {
+        this.applyAnalysisMove(payload as string);
         return;
       }
       if (type === "replayStart") {
@@ -642,11 +718,17 @@ export default class Game extends Vue {
   /** Someone else is on turn in an offline copy of an online game - nothing to play, and nothing
    * else (premove bar, Commands) would otherwise appear to say why. */
   get offlineMirrorWaiting(): boolean {
-    return !!this.$store.state.offlineMirror && !!this.turnPlayer && !this.ended && !this.canPlay;
+    return !this.analysisMode && !!this.$store.state.offlineMirror && !!this.turnPlayer && !this.ended && !this.canPlay;
   }
 
   get showOffTurnAutoLeechFab(): boolean {
-    return !this.canPlay && !this.ended && this.engine.round >= Round.Round1 && this.myLockedSeat !== undefined;
+    return (
+      !this.analysisMode &&
+      !this.canPlay &&
+      !this.ended &&
+      this.engine.round >= Round.Round1 &&
+      this.myLockedSeat !== undefined
+    );
   }
 
   get offTurnAutoLeechBottomOffset(): number {
@@ -801,6 +883,7 @@ export default class Game extends Vue {
   get premoveOffered(): boolean {
     return (
       !this.premoveMode &&
+      !this.analysisMode &&
       !this.canPlay &&
       !this.ended &&
       this.engine.round >= Round.Round1 &&
@@ -828,6 +911,7 @@ export default class Game extends Vue {
 
   get showPremoveBar(): boolean {
     return (
+      !this.analysisMode &&
       this.engine.round >= Round.Round1 &&
       this.myLockedSeat !== undefined &&
       !this.ended &&
@@ -1242,6 +1326,121 @@ export default class Game extends Vue {
     this.cancelTriggerEditingLeechConfig = null;
   }
 
+  // ---------------------------------------------------------------------------
+  // Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md)
+  // ---------------------------------------------------------------------------
+
+  /** The entry button's gate: only offered on this seat's own real turn (round 1+), matching the
+   * feature's entry point ("you press a button, the board becomes yours"). Setup-phase entry
+   * (decision #6) and round-flow beyond your own turn (decision #9) are later phases. Excludes the
+   * other two board-takeover modes (§3.6) - premove/cancel-trigger compose force `canPlay` true via
+   * a forced-turn clone, which would otherwise make this readable as offered mid-compose. This is
+   * the ONLY mutual-exclusion mechanism (matching how premove/cancel-trigger already stay exclusive
+   * of each other purely through `showPremoveSheet`'s visibility gating, not a runtime cancel) -
+   * hiding the entry point is enough, since nothing can dispatch `analysisMode` without it. */
+  get analysisOffered(): boolean {
+    return (
+      !this.analysisMode &&
+      !this.premoveMode &&
+      !this.cancelTriggerComposeActive &&
+      !this.ended &&
+      this.engine.round >= Round.Round1 &&
+      this.canPlay
+    );
+  }
+
+  enterAnalysisMode() {
+    if (this.analysisMode || !this.analysisOffered) {
+      return;
+    }
+    const seat = this.myLockedSeat !== undefined ? this.myLockedSeat : this.engine.playerToMove;
+    if (seat === undefined || seat === null) {
+      return;
+    }
+    this.analysisBackup = JSON.parse(JSON.stringify(this.engine));
+    this.analysisOrigin = Engine.fromData(JSON.parse(JSON.stringify(this.engine)));
+    this.analysisSeat = seat;
+    this.analysisBaseRound = this.engine.round;
+    this.analysisBaseMoveCount = this.engine.moveHistory.length;
+    // Staleness handling (§3.5) beyond "discard on any mismatch" is Phase 6 - a stored line whose
+    // baseMoveCount no longer matches the live game just starts fresh rather than replaying.
+    const stored = loadAnalysisLine(seat);
+    const entries = stored && stored.baseMoveCount === this.analysisBaseMoveCount ? stored.entries : [];
+    this.analysisMode = true;
+    this.setAnalysisEntries(entries);
+  }
+
+  /** Decision #2 - discards the board preview but keeps the line (already persisted as each entry
+   * committed); re-entering restores it. */
+  exitAnalysisMode() {
+    if (!this.analysisMode) {
+      return;
+    }
+    const backup = this.analysisBackup;
+    this.analysisMode = false;
+    this.analysisBackup = null;
+    this.analysisOrigin = null;
+    this.analysisComposeBase = null;
+    this.analysisSeat = null;
+    this.handleData(Engine.fromData(backup));
+  }
+
+  /** Mirrors applyPremoveMove/applyCancelTriggerMove - always replays the full accumulated move
+   * string from the stable compose-base snapshot. Unlike those two, there is no manual confirm: the
+   * instant a turn completes it is committed to the line, exactly as self-contained.ts's own `move`
+   * handler commits a completed turn to the real engine. */
+  applyAnalysisMove(move: string) {
+    if (!this.analysisComposeBase) {
+      return;
+    }
+    const copy = Engine.fromData(JSON.parse(JSON.stringify(this.analysisComposeBase)));
+    if (move) {
+      try {
+        copy.move(move);
+        copy.generateAvailableCommandsIfNeeded();
+      } catch {
+        return;
+      }
+      if (copy.newTurn) {
+        this.setAnalysisEntries([...this.analysisEntries, { kind: "move", move }]);
+        return;
+      }
+    }
+    this.handleData(copy);
+  }
+
+  /** Undo (§1 decision #3) - pop the last entry, replay. */
+  undoLastAnalysisEntry() {
+    if (!this.analysisMode || this.analysisEntries.length === 0) {
+      return;
+    }
+    this.setAnalysisEntries(this.analysisEntries.slice(0, -1));
+  }
+
+  /** Reset (§1 decision #3) - clear the line, replay nothing (back to analysisOrigin as-is). */
+  resetAnalysisLine() {
+    if (!this.analysisMode || this.analysisEntries.length === 0) {
+      return;
+    }
+    this.setAnalysisEntries([]);
+  }
+
+  /** The single path that changes `analysisEntries`: replays the given entries from
+   * `analysisOrigin` (never mutates an Engine in place - see replayAnalysisLine), persists the
+   * result, and updates the displayed board. Undo/Reset/a newly-committed turn all go through this,
+   * so they can never disagree about what the line replays to. */
+  private setAnalysisEntries(entries: AnalysisEntry[]) {
+    const { engine } = replayAnalysisLine(this.analysisOrigin, entries);
+    this.analysisEntries = entries;
+    this.analysisComposeBase = JSON.parse(JSON.stringify(engine));
+    saveAnalysisLine(this.analysisSeat, {
+      entries,
+      baseRound: this.analysisBaseRound,
+      baseMoveCount: this.analysisBaseMoveCount,
+    });
+    this.handleData(engine);
+  }
+
   handleData(data: Engine, keepMoveHistory?: boolean) {
     for (const sector of document.getElementsByClassName("sector") as any as Element[]) {
       sector.classList.add("notransition");
@@ -1332,7 +1531,13 @@ export default class Game extends Vue {
     // subscribeAction handler above) and never reach the launcher's real "move" forwarding to the
     // backend - critical for cancel-trigger compose, which plays as an OPPONENT's seat and must
     // never actually commit anything on their behalf.
-    const type = this.premoveMode ? "premoveMove" : this.cancelTriggerComposeActive ? "cancelTriggerMove" : "move";
+    const type = this.analysisMode
+      ? "analysisMove"
+      : this.premoveMode
+      ? "premoveMove"
+      : this.cancelTriggerComposeActive
+      ? "cancelTriggerMove"
+      : "move";
     this.$store.dispatch(type, command);
   }
 }

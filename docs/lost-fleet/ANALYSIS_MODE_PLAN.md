@@ -1,10 +1,11 @@
 # Analysis Mode — Implementation Plan (ready for handoff)
 
-> Status: **design finalized by an owner brainstorm (2026-08-16), nothing built yet.** Every open
-> question in this document was put to the owner and answered; §1 is the record of those decisions
-> and should not be relitigated. §2 is a traced account of how the existing code actually works —
-> every file:line in it was read, not recalled, so a fresh session (Sonnet is fine) can execute this
-> plan without re-deriving the mechanics. **Start at Phase 1.**
+> Status: **Phase 1 done (viewer v5.60.0, 2026-08-16, PROGRESS.md #166) — board takeover + line +
+> replay + enter/exit/undo/reset/persistence, no unlock yet.** Phases 2-7 remain: see §7's phasing
+> table. Every open question in this document was put to the owner and answered; §1 is the record of
+> those decisions and should not be relitigated. §2 is a traced account of how the existing code
+> actually works — every file:line in it was read, not recalled, so a fresh session (Sonnet is fine)
+> can execute this plan without re-deriving the mechanics. **Continue at Phase 2.**
 >
 > Read `CLAUDE.md` and `PROGRESS.md`'s **Working agreements** first. This plan touches the viewer and
 > makes one small engine change; it touches no database object and no Edge Function.

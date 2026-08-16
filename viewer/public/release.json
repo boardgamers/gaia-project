@@ -1,7 +1,22 @@
 {
-  "version": "5.59.2",
+  "version": "5.60.0",
   "releasedAt": "2026-08-16",
   "entries": [
+    {
+      "version": "5.60.0",
+      "releasedAt": "2026-08-16",
+      "kind": "update",
+      "title": "Analysis mode (early)",
+      "impact": "",
+      "changes": [
+        "Added an early Analysis mode: from your own turn, enter a private sandbox copy of the board to try out a sequence of moves, with Undo last move and Reset controls. Nothing you do there is saved to the real game unless you leave. It doesn't unlock extra resources or let you continue past your own turn yet - that's coming next.",
+        "Added the board-takeover machinery for Analysis mode (Phase 1 of docs/lost-fleet/ANALYSIS_MODE_PLAN.md): a new analysisMove Vuex action, Game.vue enter/exit/undo/reset/apply methods that clone the engine and replay a line of committed turns from a stable origin snapshot, and viewer/src/logic/analysis.ts (localStorage persistence per game+seat, plus the pure replay helper).",
+        "Excluded analysis mode from premove/cancel-trigger's off-turn UI (premoveOffered, showPremoveBar, showOffTurnAutoLeechFab, offlineMirrorWaiting) so the three board-takeover modes stay mutually exclusive."
+      ],
+      "userChanges": [
+        "Added an early Analysis mode: from your own turn, enter a private sandbox copy of the board to try out a sequence of moves, with Undo last move and Reset controls. Nothing you do there is saved to the real game unless you leave. It doesn't unlock extra resources or let you continue past your own turn yet - that's coming next."
+      ]
+    },
     {
       "version": "5.59.2",
       "releasedAt": "2026-08-16",

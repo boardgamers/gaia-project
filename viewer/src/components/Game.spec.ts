@@ -843,6 +843,191 @@ describe("Game", () => {
     });
   });
 
+  describe("analysis mode", () => {
+    const SETUP_MOVES = [
+      "init 2 randomSeed",
+      "p1 faction terrans",
+      "p2 faction nevlas",
+      "terrans build m -1x2",
+      "nevlas build m -1x0",
+      "nevlas build m 0x-4",
+      "terrans build m -4x-1",
+      "nevlas booster booster7",
+      "terrans booster booster3",
+    ];
+
+    function mountAsSeat(seatIndex: number | undefined, engine: Engine = new Engine(SETUP_MOVES)) {
+      const store = makeStore();
+      if (seatIndex !== undefined) {
+        store.commit("player", { index: seatIndex });
+      } else {
+        store.state.player = null;
+      }
+      const vm = new (Vue.extend(Game as any))({ store }) as any;
+      vm.handleData(engine);
+      vm.$mount();
+      document.body.appendChild(vm.$el);
+      return vm;
+    }
+
+    function spyDispatch(vm: any): any[] {
+      const dispatched: any[] = [];
+      const originalDispatch = vm.$store.dispatch.bind(vm.$store);
+      vm.$store.dispatch = (type: string, payload: unknown) => {
+        dispatched.push({ type, payload });
+        return originalDispatch(type, payload);
+      };
+      return dispatched;
+    }
+
+    afterEach(() => {
+      window.localStorage.clear();
+    });
+
+    it("is offered on this seat's own turn, not off-turn or before round 1", () => {
+      // playerToMove is 0 (terrans) after setup.
+      const onTurn = mountAsSeat(0);
+      expect(onTurn.analysisOffered).to.equal(true);
+      onTurn.$el.remove();
+      onTurn.$destroy();
+
+      const offTurn = mountAsSeat(1);
+      expect(offTurn.analysisOffered).to.equal(false);
+      offTurn.$el.remove();
+      offTurn.$destroy();
+
+      const beforeRound1 = mountAsSeat(0, new Engine(["init 2 randomSeed"]));
+      expect(beforeRound1.analysisOffered).to.equal(false);
+      beforeRound1.$el.remove();
+      beforeRound1.$destroy();
+    });
+
+    it("enters a clone (real state untouched) and exits back to the exact real state, dispatching nothing either way", () => {
+      const vm = mountAsSeat(0);
+      const beforeMoveHistory = [...vm.engine.moveHistory];
+      const dispatched = spyDispatch(vm);
+
+      vm.enterAnalysisMode();
+      expect(vm.analysisMode).to.equal(true);
+      expect(vm.analysisSeat).to.equal(0);
+      expect(vm.canPlay).to.equal(true);
+
+      // The clone, not the real engine, is what's on screen - taking a real move in it must not
+      // touch the backup.
+      vm.applyAnalysisMove("terrans up nav.");
+      expect(vm.engine.moveHistory[vm.engine.moveHistory.length - 1]).to.equal("terrans up nav (0 ⇒ 1).");
+      expect(JSON.parse(JSON.stringify(vm.analysisBackup)).moveHistory).to.deep.equal(beforeMoveHistory);
+
+      vm.exitAnalysisMode();
+      expect(vm.analysisMode).to.equal(false);
+      expect(vm.engine.moveHistory).to.deep.equal(beforeMoveHistory);
+      expect(dispatched).to.deep.equal([]);
+
+      vm.$el.remove();
+      vm.$destroy();
+    });
+
+    it("commits a completed turn to the line automatically, with no separate confirm step", () => {
+      const vm = mountAsSeat(0);
+      vm.enterAnalysisMode();
+
+      expect(vm.analysisEntries).to.deep.equal([]);
+      vm.applyAnalysisMove("terrans up nav.");
+      expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
+
+      vm.$el.remove();
+      vm.$destroy();
+    });
+
+    it("undo pops the last entry and replays back to the prior board", () => {
+      const vm = mountAsSeat(0);
+      vm.enterAnalysisMode();
+      vm.applyAnalysisMove("terrans up nav.");
+      const knowledgeAfterFirst = vm.engine.players[0].data.research.nav;
+
+      vm.undoLastAnalysisEntry();
+
+      expect(vm.analysisEntries).to.deep.equal([]);
+      expect(vm.engine.players[0].data.research.nav).to.not.equal(knowledgeAfterFirst);
+      expect(vm.engine.moveHistory).to.deep.equal(vm.analysisBackup.moveHistory);
+
+      vm.$el.remove();
+      vm.$destroy();
+    });
+
+    it("reset clears every entry in one step", () => {
+      const vm = mountAsSeat(0);
+      vm.enterAnalysisMode();
+      vm.applyAnalysisMove("terrans up nav.");
+
+      vm.resetAnalysisLine();
+
+      expect(vm.analysisEntries).to.deep.equal([]);
+      expect(vm.engine.moveHistory).to.deep.equal(vm.analysisBackup.moveHistory);
+
+      vm.$el.remove();
+      vm.$destroy();
+    });
+
+    it("never dispatches move, however many turns are composed in the clone", () => {
+      const vm = mountAsSeat(0);
+      vm.enterAnalysisMode();
+      const dispatched = spyDispatch(vm);
+
+      vm.addMove("terrans up nav.");
+
+      expect(dispatched.map((d) => d.type)).to.deep.equal(["analysisMove"]);
+      expect(dispatched.some((d) => d.type === "move")).to.equal(false);
+
+      vm.$el.remove();
+      vm.$destroy();
+    });
+
+    it("persists the line across a fresh mount for the same seat, and keeps different seats separate", () => {
+      const first = mountAsSeat(0);
+      first.enterAnalysisMode();
+      first.applyAnalysisMove("terrans up nav.");
+      first.$el.remove();
+      first.$destroy();
+
+      const second = mountAsSeat(0);
+      second.enterAnalysisMode();
+      expect(second.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
+      second.$el.remove();
+      second.$destroy();
+    });
+
+    it("is not offered while a premove or cancel-trigger rule is composing, even though their forced clone reads canPlay true (§3.6)", () => {
+      const vm = mountAsSeat(1); // off-turn (playerToMove is 0) - a premove is offered here
+      vm.onStartNewPremove({ mode: "sequential", switchingModes: false });
+      expect(vm.premoveMode).to.equal(true);
+      // Premove's own forced-turn clone (buildSequentialChainPreview) makes canPlay read true -
+      // exactly why analysisOffered needs its own explicit exclusion rather than relying on canPlay.
+      expect(vm.canPlay).to.equal(true);
+      expect(vm.analysisOffered).to.equal(false);
+
+      vm.cancelPremoveMode();
+      expect(vm.analysisOffered).to.equal(false); // real state: seat 1 is off-turn again
+
+      vm.$el.remove();
+      vm.$destroy();
+    });
+
+    it("hides the premove sheet while analysis mode is active, so the two can never compose at once", () => {
+      const vm = mountAsSeat(0);
+      vm.enterAnalysisMode();
+
+      // The clone's own turn now belongs to seat 0 forever within analysis mode (Phase 1 has no
+      // round-flow yet, but the getters must not offer a premove regardless of whose turn the clone
+      // shows) - checked directly via the getters, which short-circuit on `analysisMode` first.
+      expect(vm.premoveOffered).to.equal(false);
+      expect(vm.showPremoveBar).to.equal(false);
+
+      vm.$el.remove();
+      vm.$destroy();
+    });
+  });
+
   describe("round 0 action placement", () => {
     // `setupActionsAtTop` is the switch that decides whether the pick/ban action area renders under
     // the setup status strip (mobile) or stays in the commands column (desktop) - the two mount

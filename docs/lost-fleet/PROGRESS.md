@@ -6975,6 +6975,52 @@ pin_preference_split_budget_search_path` (the one function in the set without a 
       "+1" hint renders too. **Full viewer suite green at 983 passing.** No engine or backend files
       touched.
 
+166.  ✅ **Analysis mode Phase 1 (docs/lost-fleet/ANALYSIS_MODE_PLAN.md, viewer v5.60.0, 2026-08-16):
+      board-takeover plumbing only, no unlock yet.** A new "Enter analysis mode" control (plain for
+      now - the striped visual treatment is Phase 5) clones the live engine on your own turn and
+      swaps `state.data` to it, the same "stash the real state, take the board over, restore on
+      exit" shape premove compose and cancel-trigger compose already use, via a third no-op Vuex
+      action (`analysisMove`, `store.ts`) intercepted in `Game.vue`'s own `subscribeAction` handler -
+      never `move`, so nothing ever reaches the launcher's real move forwarding. Unlike premove there
+      is no manual confirm: the instant a turn completes it commits automatically to a **line**
+      (`analysisEntries`, an ordered list of completed-turn move strings), mirroring how
+      `self-contained.ts`'s own `move` handler commits a finished turn to the real engine.
+      `viewer/src/logic/analysis.ts` holds the pure pieces - `replayAnalysisLine(origin, entries)`
+      (replays onto a fresh clone, stopping at the first entry that has gone illegal rather than
+      throwing) and `loadAnalysisLine`/`saveAnalysisLine` (localStorage only, keyed by
+      `location.search` + seat, same convention `LostFleetNotes.vue` already uses for
+      self-contained games with no game id) - so Undo (pop the last entry) and Reset (clear the
+      list) both just replay through the same function, and the line survives a page reload **and**
+      exiting analysis mode (decision #2: exit discards only the live takeover, never the persisted
+      line). Analysis mode, premove compose and cancel-trigger compose are kept mutually exclusive
+      the same way premove/cancel-trigger already stay exclusive of each other - by gating
+      visibility (`analysisOffered`, `premoveOffered`, `showPremoveBar`, `showOffTurnAutoLeechFab`,
+      `offlineMirrorWaiting` all now also check `!analysisMode`/`!premoveMode`/
+      `!cancelTriggerComposeActive`), not a runtime cancel-call, since premove/cancel-trigger's own
+      forced-turn preview clone makes `canPlay` read true mid-compose and would otherwise make
+      "Enter analysis mode" look offered while one of the other two is already running.
+
+      **Deliberately not yet in scope** (later phases per the plan's own phasing table): no sandbox
+      wallet/uncapped resources (Phase 2 - the `player-data.ts` `MAX_CREDIT`/`MAX_ORE`/
+      `MAX_KNOWLEDGE` gain-clamp fix lives there), no turn-order shrink so a hosted seat's own turn
+      is the only turn Phase 1 can compose (Phase 3), no setup-phase entry or opponent mine
+      placement (Phase 4), no striped visual treatment or resource-diff counter (Phase 5), no
+      staleness prompt beyond "discard a stored line whose `baseMoveCount` no longer matches" (Phase
+      6 - decision #2's "re-anchor and show a notice" nuance isn't built yet), no leech-assumption
+      stepper (Phase 6), no commit-to-premove path (Phase 7). Entering requires round 1+ and it
+      being genuinely your turn (`canPlay`); an opponent leech pause mid-composition isn't
+      auto-resolved yet (`engine.autoMove()`, §2.8) - that's also Phase 3, so a hosted session can
+      stall there until it lands (self-contained/hot-seat play can just click through it manually,
+      same as real pass-and-play already requires).
+
+      **Tests:** new `viewer/src/logic/analysis.spec.ts` (7 cases - replay happy path, stop-on-
+      illegal-entry, origin left untouched, empty-line no-op, and the localStorage round-trip/
+      per-seat isolation) plus a new "analysis mode" describe block in `Game.spec.ts` (10 cases -
+      the offered/not-offered gate, enter+exit restoring the exact real state while dispatching
+      nothing, auto-commit with no confirm step, undo, reset, the `analysisMove`-only isolation
+      check, cross-mount persistence, and the mutual-exclusion gate against premove's forced-clone
+      `canPlay`). **Full viewer suite green at 999 passing.** No engine or backend files touched.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
