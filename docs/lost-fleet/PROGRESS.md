@@ -7420,6 +7420,18 @@ section originally said Chunk 2 must also carry the _full_ `planets.ts` terrafor
 
 ## Next actions
 
+**Open 2026-08-16: Analysis Mode — design finalized, nothing built.** A "calculator" sandbox on the
+live board: press a button, take turn after turn as yourself unrestricted by what you can afford, and
+a counter reports what the whole chain of actions costs; exit and the real game is untouched. The
+full plan, including a traced account of the existing mechanics it builds on, is
+`docs/lost-fleet/ANALYSIS_MODE_PLAN.md` — it is self-contained and meant to be executed by a fresh
+session starting at its Phase 1. Every design question was put to the owner and answered; that
+document's §1 is the record. Entirely client-side: no migration, RPC or Edge Function. Two findings
+worth knowing before touching it: affordability is enforced in the engine's available-command
+_generation_ (so a UI flag cannot unlock it), and `player-data.ts`'s `MAX_CREDIT`/`MAX_ORE`/
+`MAX_KNOWLEDGE` clamps apply on _gain_, which silently destroys an inflated sandbox wallet the moment
+anything grants a resource.
+
 **Done 2026-07-11 follow-up: ship boards were still leaving a resize-dependent whitespace gap.**
 The fix just below put the ship boards in their own Bootstrap row, sharing it with the Commands
 column - but a _separate_ row only starts once BOTH columns of the row above it (map + research)

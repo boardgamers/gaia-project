@@ -1,0 +1,492 @@
+# Analysis Mode — Implementation Plan (ready for handoff)
+
+> Status: **design finalized by an owner brainstorm (2026-08-16), nothing built yet.** Every open
+> question in this document was put to the owner and answered; §1 is the record of those decisions
+> and should not be relitigated. §2 is a traced account of how the existing code actually works —
+> every file:line in it was read, not recalled, so a fresh session (Sonnet is fine) can execute this
+> plan without re-deriving the mechanics. **Start at Phase 1.**
+>
+> Read `CLAUDE.md` and `PROGRESS.md`'s **Working agreements** first. This plan touches the viewer and
+> makes one small engine change; it touches no database object and no Edge Function.
+
+---
+
+## 0. What this feature is
+
+**Analysis mode** turns the live board into a local sandbox. You press a button, the board becomes
+yours, and you take turn after turn as yourself — unrestricted by what you can currently afford —
+while a counter tells you what the whole chain of actions costs. Then you leave, and the real game is
+exactly as you left it.
+
+The question it answers is _"can I actually afford this line, and what does it leave me with?"_ — the
+thing players currently work out on paper.
+
+It is **not** an AI, an evaluator, or a hint system. It executes exactly the moves you click.
+
+Scope: hosted and self-contained/offline modes both. Nothing about it is server-side.
+
+---
+
+## 1. Owner decisions (settled — do not relitigate)
+
+| #   | Question                                 | Decision                                                                                          |
+| --- | ---------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| 1   | Do opponents move?                       | **No** — with exactly one exception, opponent mine placement during setup (see #7).               |
+| 2   | What does exit do?                       | **Discard the board preview, keep the line.** Re-entering restores it.                            |
+| 3   | Reset / undo                             | Both. A **Reset** button and an **Undo last move** button.                                        |
+| 4   | Where is the line stored?                | localStorage, per game, per seat. **Never the database.** Store move strings, never engine state. |
+| 5   | Name                                     | "Analysis mode". Header text reads `ANALYSIS — not saved`.                                        |
+| 6   | Round 0 / setup                          | Playable. Pick any faction, place mines, take a booster, play on.                                 |
+| 7   | Opponent mines in setup                  | **Yes** — placed by you, in real setup turn order, so trading-station adjacency is realistic.     |
+| 8   | Already past faction pick?               | Faction pool restricts itself to what is actually available. Falls out for free — see §2.6.       |
+| 9   | Income / Gaia / pass / round transitions | Work normally, via the engine's own code. See §3.1.                                               |
+| 10  | How far can a line run?                  | **Current round + one more round. Hard cap.**                                                     |
+| 11  | Shared single-use resources              | **Out of scope.** Do not build "assume this board action is taken". Document the limitation.      |
+| 12  | Leech power you would realistically gain | **In scope.** A manual "assume I leech N power" adjustment. See §4.4.                             |
+| 13  | Commit the line for real                 | **In scope**, capped at 4 moves. See §6.                                                          |
+| 14  | Visual treatment                         | Yellow/black hazard stripes: full strength on the sticky header, dimmed on the map. See §5.       |
+
+---
+
+## 2. How the existing code works (traced, not recalled)
+
+Do not skip this section. Three of the five hard parts of this feature are already solved somewhere
+in the codebase, and two of the traps below will silently produce wrong numbers if you miss them.
+
+### 2.1 The viewer is a renderer; moves leave through one funnel
+
+`state.data` is an `Engine`, replaced wholesale on every update and wrapped in `markRaw`
+(`viewer/src/store.ts:228`) so Vue never deep-observes it. Moves leave the viewer at
+`viewer/src/launcher.ts:129`:
+
+```ts
+if (type === "move") { ...; item.emit("move", payload); return; }
+```
+
+The host (`self-contained.ts` or `hosted.ts`) applies that move to the real engine and emits the new
+state back. **Anything that must not reach the real game simply must not dispatch the `move` action.**
+
+### 2.2 Board takeover already exists — twice
+
+Both premove compose and cancel-trigger compose already do "stash the real engine, take the board
+over, play against a throwaway clone, restore on exit":
+
+- `Game.vue:994` — `applyPremoveMove()`
+- `Game.vue:1139` — `applyCancelTriggerMove()`
+- `Game.vue:1335` — the dispatch switch that routes a click to `premoveMove` / `cancelTriggerMove`
+  instead of `move`
+- `store.ts:401-408` — the three no-body actions those ride on
+
+Analysis mode is the third instance of this pattern. Follow it: add an `analysisMove` action, route
+to it in the `Game.vue:1335` switch, intercept it in the `created()` subscribeAction block near
+`Game.vue:486`.
+
+**Replay from a stable base, never from `this.engine`.** `Game.vue:1003` has the comment explaining
+why — `handleData()` commits the partial-move-applied result back into `this.engine` on every call, so
+cloning from it re-executes an already-applied partial move and throws. This bit premove once already.
+
+### 2.3 Resources: affordability is enforced in command _generation_
+
+`canPay` / `hasResource` (`player-data.ts:433` and `:395`) gate roughly ten call sites across
+`engine/src/available/*.ts` — actions, research, federations, ships, spaceship-actions, artifacts.
+
+There is no "ignore cost" flag. **If you cannot pay, the button is never generated.** The only way to
+offer an unaffordable move is to make the engine believe you can afford it. That is exactly what
+cancel-trigger compose does at `Game.vue:1109`:
+
+```ts
+data.credits = 30; data.ores = 15; data.knowledge = 15;
+data.qics = 10; data.power.area1 = 4; ...
+```
+
+### 2.4 TRAP: the resource caps will silently eat your grant
+
+`player-data.ts:28-30`:
+
+```ts
+const MAX_ORE = 15;
+const MAX_CREDIT = 30;
+const MAX_KNOWLEDGE = 15;
+```
+
+They are applied **on gain**, in `gainRewards`:
+
+```ts
+this.credits = Math.min(MAX_CREDIT, this.credits + count);
+```
+
+Set `credits = 200`, then gain 1 credit from a power action, and you get `Math.min(30, 201)` = **30**.
+170 credits vanish with no error. Note the cancel-trigger grant above sits at _exactly_ the caps —
+whoever wrote it hit this wall.
+
+This lands precisely on the feature's headline case ("take a power action, watch the counter"). It is
+fixed in Phase 2 and is the one engine change in this plan.
+
+### 2.5 Round flow: shrinking the turn order gives you everything
+
+This is the key architectural finding. `move/round.ts:34-35` — passing does:
+
+```ts
+engine.passedPlayers.push(player);
+engine.turnOrder.splice(engine.turnOrder.indexOf(player), 1);
+```
+
+and `move/phase.ts:219` reacts:
+
+```ts
+if (executedCommand === Command.Pass) {
+  if (engine.turnOrder.length === 0) { cleanUpPhase(engine); return; }
+```
+
+So with `turnOrder = [mySeat]`, your pass empties the list and triggers the engine's real
+`cleanUpPhase` (`phase.ts:517`) → `beginRoundStartPhase` (`:405`) → `beginIncomePhase` (`:469`) →
+`beginGaiaPhase` (`:487`) → back to `RoundMove` (`:513`). Round scoring tiles, booster return,
+power/QIC action resets, income selection, Gaia phase — all genuine engine code.
+
+And `beginRoundStartPhase` sets `turnOrder = passedPlayers` — which is `[mySeat]` again. **The solo
+loop is self-sustaining.**
+
+Two things to know:
+
+- `phase.ts:405` and `phase.ts:366` both fall back to `turnOrderAfterSetupAuction`, so that list must
+  be shrunk too, or it re-expands your turn order.
+- Do **not** use `forcePremovePreviewTurn` (`engine.ts:598`) for this. It sets `phase = RoundMove`
+  unconditionally, which by definition skips income, Gaia and round transitions — the exact opposite
+  of decision #9. It stays useful only for the one-shot preview it was written for.
+
+### 2.6 Setup already does what decision #7 wants — if you leave it alone
+
+`beginSetupBuildingPhase` (`phase.ts:366`) builds the setup turn order including Lost Fleet expansion
+stages, the reverse-order second mine, and Ivits' late placement. `beginSetupBoosterPhase` (`:399`)
+does the reverse booster order.
+
+**Do not shrink the turn order during setup.** Run setup as pass-and-play — you make every seat's
+choices, which _is_ opponent mine placement, in the correct order, with zero special-casing. Shrink to
+`[mySeat]` only when round 1's move phase begins (§3.1).
+
+Decision #8 also falls out for free: start the clone from the live state and the engine's own
+available-commands already offer only the factions still available.
+
+### 2.7 Auction phases: null the sealed-bid backend
+
+`store.ts:113-120` documents it: a non-null `sealedBidBackend` means bids are collected server-side;
+**null means offline/hot-seat play, where the bid form submits an ordinary move.** So analysis mode
+forces it to null, you enter every seat's bid locally, and analysis never touches
+`auction_sealed_bids`.
+
+### 2.8 Opponent decisions can be auto-resolved
+
+`engine.autoMove()` (`engine.ts:767`, implementation in `move/auto.ts`) already has handlers for
+`autoChooseFaction`, `autoChargePower`, `autoIncome` and `autoBrainstone`.
+
+This matters because of **leech**: `beginLeechingPhase` (`phase.ts:561`) switches to
+`Phase.RoundLeech` and waits for opponents to answer a charge offer. Without handling, analysis mode
+stalls on your very first mine.
+
+### 2.9 The sticky header already supports context variants
+
+`Commands.vue:55`:
+
+```html
+:class="premoveContext ? `sticky-bar-title--${premoveContext.variant}` : null"
+```
+
+with `#move-buttons .sticky-bar-title` at `Commands.vue:1296` and the amber `&--trigger` variant at
+`:1320`. Analysis mode is one more variant.
+
+Two things not to break:
+
+- The `::before` pseudo-element (`Commands.vue:1305-1315`) is the bottom-sheet **grab handle**. Put
+  stripes in `background`, not `::before`.
+- The auto-leech dropdown (`Commands.vue:76`, `class="ml-auto auto-leech-select"`) is **meaningless in
+  analysis mode** (opponent decisions are auto-resolved) — that slot is where the counter goes (§5.3).
+
+### 2.10 The map surface is on the container, and it is shared
+
+`theme.scss:755`:
+
+```scss
+.space-map,
+.space-map-canvas {
+  background-color: var(--ui-map-canvas);
+```
+
+The comment above it notes _"The SVG's transparent inter-sector gaps reveal this material"_ — so
+striping this rule makes stripes show through the gaps between sectors, framing the board while
+leaving hexes legible. That is the desired effect.
+
+**But that rule is explicitly shared with setup and open-game previews.** Scope the striping under an
+analysis-mode class or every lobby preview turns into hazard tape.
+
+Map corners, for button placement: faction wheel occupies a top-left pocket, the chart button
+(`SpaceMap.vue:49`) and terraform swatches (`:55`) occupy a top-right band, the colour legend runs
+down the left. **Bottom-right and top-centre are free.** `bounds` (`SpaceMap.vue:389`) reserves
+footprints so hexes do not overlap map UI, and `SpaceMap.spec.ts` tests that clearance — a new
+occupant must be added to that reservation logic.
+
+### 2.11 The premove queue caps at 3
+
+`PremoveBar.vue:179` — `:disabled="rows.length >= 3"`. This is what bounds the commit path in §6.
+
+---
+
+## 3. Architecture
+
+### 3.1 The analysis clone
+
+On entry:
+
+1. Snapshot the real engine (`analysisBackup`), exactly as `premoveBackup` does.
+2. Clone it: `Engine.fromData(JSON.parse(JSON.stringify(engine)))`.
+3. Record `baseRound = clone.round` and `baseMoveCount = engine.moveHistory.length`.
+4. Mark the clone `analysis = true` (§3.4) and grant the sandbox wallet (§4.1) — **only if already in
+   `RoundMove`**; during setup the grant is withheld (it would allow builds setup does not permit).
+5. Force `sealedBidBackend = null` in the store (§2.7).
+6. `generateAvailableCommandsIfNeeded()` and hand it to `handleData()`.
+
+The **solo switch** — setting `turnOrder = [mySeat]` and `turnOrderAfterSetupAuction = [mySeat]` — is
+applied lazily, the first time the clone reaches `Phase.RoundMove` with `round >= 1`. Before that
+point setup runs pass-and-play (§2.6).
+
+### 3.2 The line
+
+The line is an **ordered list of entries**, not just move strings, because §4.4's leech adjustment
+must survive replay:
+
+```ts
+type AnalysisEntry = { kind: "move"; move: string } | { kind: "adjust"; charge: number };
+```
+
+Every change replays the whole line from the entry snapshot. This is the established pattern
+(`Game.vue:1003`) and it gives **Undo** (pop the last entry, replay) and **Reset** (clear, replay
+nothing) for free. Replaying at most two rounds is cheap — the engine replays entire games routinely.
+
+After each replayed move, resolve any opponent-side pause via `autoMove()` until control returns to
+you (§2.8). Setup-phase building placement is the one deliberate exception — that pause is yours to
+answer.
+
+### 3.3 Persistence
+
+Key on game id + seat. Store **only** the entry list plus `baseRound` and `baseMoveCount` — never a
+serialized engine. This sidesteps engine schema drift in localStorage and makes it structurally
+impossible for the §3.4 flag to round-trip into anything real.
+
+### 3.4 The uncapped flag
+
+Add a non-serialized `analysis` flag to `PlayerData` (or thread it from the engine) and make the three
+clamps in `gainRewards` conditional on it:
+
+```ts
+this.credits = this.analysis ? this.credits + count : Math.min(MAX_CREDIT, this.credits + count);
+```
+
+Set it **after** `Engine.fromData`, and confirm it does not appear in `toJSON` (`player-data.ts:167`).
+An engine spec should assert both: uncapped gain works when the flag is set, and the flag never
+survives a `toJSON` → `fromData` round trip.
+
+### 3.5 Staleness on re-entry
+
+Compare stored `baseMoveCount` against the live `moveHistory.length`:
+
+| Situation                   | Behaviour                                                                          |
+| --------------------------- | ---------------------------------------------------------------------------------- |
+| Unchanged                   | Restore the line silently.                                                         |
+| Only opponents moved        | Replay; keep the valid prefix, stop at the first entry that throws; show a notice. |
+| **Your own seat moved**     | **Prompt to keep or clear.** Do not silently replay.                               |
+| Live game advanced past cap | Clear the line; the two-round window has moved on.                                 |
+
+The third row matters: the common case is "I analysed a line, then played it", and silently replaying
+it would double the move or throw.
+
+Note that a mid-analysis `externalData` arrival must **not** nuke the line the way premove does at
+`Game.vue:461-483`. Keep the line; re-anchor and show a notice.
+
+### 3.6 Isolation
+
+Non-negotiable, in rough order of danger:
+
+- Never dispatch `move` — use `analysisMove` (§2.2).
+- Exclude analysis state from `HostedGameHost.onCommittedState` — `CLAUDE.md` names it as the hook for
+  anything that saves or exports hosted state.
+- Exclude it from the offline mirror (`hosted/offline-mirror.ts`), or a sandbox line could be written
+  into the offline copy and uploaded.
+- Analysis mode, premove compose and cancel-trigger compose must be **mutually exclusive**. Three
+  board-takeover modes contending for `state.data` is a bug farm. Entering one disables the others.
+
+### 3.7 The two-round cap
+
+Allow Pass while `clone.round < baseRound + 1`; suppress it after, with a short explanation in the
+panel. Entering during setup gives you setup plus round 1.
+
+**Round 6 is the deliberate exception**: passing there hits `finalScoringPhase` (`phase.ts:542`) and
+ends the game. Allow it — seeing a line's final score is genuinely useful — but make it explicit
+rather than incidental, and make sure the EndGame state does not fire real game-over UI.
+
+---
+
+## 4. Resource accounting
+
+### 4.1 The sandbox wallet
+
+Once the clone is flagged (§3.4) the caps are gone, so grant generously — enough that affordability
+never blocks a button. Record the granted amount per resource as `grant`.
+
+### 4.2 Display: real numbers, negative when overdrawn
+
+Displayed value = `cloneValue − grant`. So a player with 3 credits who spends 10 shows **−7**, in red.
+Negative means "this line is not affordable as it stands", which is the answer players actually want.
+
+### 4.3 The counter itself
+
+Diff-based, never accumulated: `net = current − baseline`, per resource. Gains from power actions,
+income and leech then fall out automatically as negative usage with no special-casing.
+
+Three things to surface:
+
+- **Per-resource net** — c / o / k / q / VP, plus power as a **bowl-state delta** (`4/2/3 → 2/2/1`)
+  rather than an invented scalar, since power is derived (`player-data.ts:456-462`), not stored.
+- **Feasibility verdict** — not a single number. If you overdraw at entry 4, everything after it is
+  hypothetical: say **"infeasible from move 4"**, not "short 6c".
+- **Per-round breakdown** once a line crosses a round boundary, since income muddies a cumulative
+  total.
+
+### 4.4 The leech adjustment (decision #12)
+
+Because opponents never build, you never gain the leech power you would realistically collect, so
+analysis is **pessimistic on power**. Provide a small stepper — "assume I leech N power" — which
+appends an `{ kind: "adjust", charge: N }` entry to the line. On replay it applies as a
+`Resource.ChargePower` gain to your player data. It is an explicit, visible line item, never silent.
+
+### 4.5 Known limitation (decision #11 — document, do not build)
+
+Board actions, tech tiles, boosters and federation tiles are **shared, single-use** pools. With
+opponents frozen, analysis shows all of them available, so a line built on the 7-credit power action
+assumes nobody takes it first. This is deliberately out of scope. State it in the panel's help text so
+the number is not over-trusted.
+
+---
+
+## 5. Visual design
+
+The board must be unmistakably not-live at a glance. The treatment is **yellow/black diagonal hazard
+stripes**, at two different strengths.
+
+### 5.1 Header — full strength
+
+A new `&--analysis` variant beside `&--trigger` (`Commands.vue:1320`), using a
+`repeating-linear-gradient` at 45°. Text reads `ANALYSIS — not saved`. Keep the grab handle (§2.9) and
+ensure text contrast against the stripes — a solid or scrimmed text backing, not raw text on stripes.
+
+Desktop does not render the sticky bar (`showStickyMobileBar`), so give the standalone `#move-title`
+the same treatment, or desktop is the one place analysis mode looks like live play.
+
+### 5.2 Map — dimmed
+
+Same gradient, **much lower contrast**, on the `theme.scss:755` rule, scoped under an analysis-mode
+class (§2.10). Stripes read through the inter-sector gaps and frame the board without fighting planet
+colours or straining the eye over a long session. Verify in both light and dark themes — the block
+right below that rule adjusts hex strokes per theme.
+
+### 5.3 Where the counter goes
+
+The owner's instinct that `StickyResourceBar` is too tight is right — it is already ten SVG icons
+wide on a phone, and adding deltas would double it.
+
+**Recommendation — split by urgency, using two surfaces that already exist:**
+
+- **Headline in the striped header**, in the slot freed by the auto-leech dropdown (§2.9). Compact:
+  net deltas plus the feasibility verdict. This is the surface that is _always_ visible on mobile,
+  which matters because the map scrolls away.
+- **Full breakdown as a compact HTML overlay pinned to the map's top-centre** — genuinely free space
+  (§2.10), and it reads well against the dimmed stripes. Per-resource, per-round, plus the leech
+  stepper and Reset / Undo / Commit controls.
+
+On desktop both are visible at once; on mobile the header carries you when the map is scrolled off.
+
+### 5.4 Entering and leaving
+
+Enter via a button at the **map's bottom-right** (free, §2.10 — remember to extend the `bounds`
+reservation). Exit from either that button **or by tapping the striped header**, since on mobile the
+map is often scrolled and a map-anchored control can be off-screen when you want out.
+
+---
+
+## 6. Committing a line (decision #13)
+
+The natural end of an analysis is "yes, do that". The premove system already provides the machinery.
+
+**The line becomes: move 1 committed live, moves 2..N queued as Sequential premoves.** This is not a
+workaround — in a real game opponents move between your turns, so anything past move 1 _is_ a premove
+by definition.
+
+The cap therefore is not arbitrary: `PremoveBar.vue:179` caps the queue at 3 rows, so **4 moves total**
+(1 live + 3 queued). Offer the first 4 and grey out the rest.
+
+Hard constraints:
+
+- **Only an affordable prefix may be committed.** Track per-entry feasibility during replay; if the
+  line went negative at entry 3, only entries 1-2 are committable. A line that only worked because of
+  the sandbox grant must never be committable.
+- Premoves are **hosted-only**. In self-contained/offline play, offer move 1 only.
+- `{ kind: "adjust" }` entries are analysis-only fiction — they are never committed, and an entry
+  after one is only committable if it is still affordable without the assumed leech.
+- Committing exits analysis mode and clears the line.
+
+---
+
+## 7. Suggested phasing
+
+Each phase should end green and be independently useful.
+
+| Phase | Scope                                                                                                   |
+| ----- | ------------------------------------------------------------------------------------------------------- |
+| **1** | Board takeover + line + replay. Enter/exit, `analysisMove`, undo, reset, persistence. No unlock yet.    |
+| **2** | The engine `analysis` flag (§3.4) + sandbox wallet + the diff counter. This is where it becomes useful. |
+| **3** | Round flow: solo turn-order switch, pass, income/Gaia, the two-round cap, opponent auto-resolve.        |
+| **4** | Setup-phase play: pass-and-play setup, opponent mines, null sealed-bid backend.                         |
+| **5** | Visual treatment (§5) and the counter surfaces.                                                         |
+| **6** | Staleness handling (§3.5) and the leech adjustment (§4.4).                                              |
+| **7** | The commit path (§6).                                                                                   |
+
+Phases 1-3 are the feature. 4-7 can each be cut without invalidating what is built.
+
+---
+
+## 8. Testing
+
+Per `CLAUDE.md`'s testing table — **run only what the change can break**, and always append
+`--reporter min`:
+
+- Viewer work (most phases): the touched component specs, then the viewer suite **once**, at the end.
+- The engine change in Phase 2: the affected engine specs, then the engine suite **minus `src/ai/**`\*\*.
+- **Never the offline-AI suite.** It is unrelated to this feature, takes many minutes, and is
+  OOM-killed partway through in this container.
+
+Specs worth adding:
+
+- Engine: uncapped gain with the flag set; the flag not surviving a `toJSON` → `fromData` round trip.
+- Solo round flow: pass with `turnOrder = [seat]` reaches the next round's `RoundMove` with income
+  applied.
+- Line replay: undo, reset, truncation at a since-illegal entry, and the three staleness cases.
+- Counter: a power action produces a **negative** net cost (this is the case §2.4's trap breaks).
+- Isolation: an analysis move never dispatches `move`, and never reaches `onCommittedState`.
+
+---
+
+## 9. Before committing
+
+- Run **`pnpm run prettier`** from the repo root. The `All` workflow gates `prettier --check` on every
+  push to every branch, and `master` is the production/Vercel target.
+- Add the changelog entry through `node scripts/update-viewer-release.js`, never by hand-editing
+  `release.json`. This is user-facing, so it needs a `user:` entry as well as `dev:` ones.
+- Update `PROGRESS.md`'s "Done so far" and this document's status header.
+
+---
+
+## 10. Out of scope
+
+- Any AI, evaluation or move suggestion.
+- Shared single-use resource contention (§4.5) — deliberate, decision #11.
+- Opponent moves outside setup mine placement.
+- Sharing or exporting a line (the `?state=` URL loader and game chat would make this natural later).
+- Any database object, RPC, migration or Edge Function. **This feature is entirely client-side.**
