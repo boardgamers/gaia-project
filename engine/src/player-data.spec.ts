@@ -1,7 +1,8 @@
 import { expect } from "chai";
 import "mocha";
-import { PowerArea, Spaceship, SpaceshipTechTile } from "./enums";
+import { PowerArea, Resource, Spaceship, SpaceshipTechTile } from "./enums";
 import PlayerData, { effectiveRange } from "./player-data";
+import Reward from "./reward";
 
 describe("PlayerData", () => {
   it("should export to JSON", () => {
@@ -69,6 +70,51 @@ describe("PlayerData", () => {
       expect(data.power.area3).to.equal(2);
       expect(data.brainstone).to.equal(PowerArea.Area3);
       expect(charged).to.equal(5);
+    });
+  });
+
+  describe("analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §3.4)", () => {
+    it("clamps credit/ore/knowledge gains at their caps when the flag is unset", () => {
+      const data = new PlayerData();
+      data.credits = 25;
+      data.ores = 10;
+      data.knowledge = 10;
+
+      data.gainRewards([
+        new Reward(10, Resource.Credit),
+        new Reward(10, Resource.Ore),
+        new Reward(10, Resource.Knowledge),
+      ]);
+
+      expect(data.credits).to.equal(30);
+      expect(data.ores).to.equal(15);
+      expect(data.knowledge).to.equal(15);
+    });
+
+    it("gains credits/ore/knowledge past the normal caps once the flag is set", () => {
+      const data = new PlayerData();
+      data.analysis = true;
+      data.credits = 25;
+      data.ores = 10;
+      data.knowledge = 10;
+
+      data.gainRewards([
+        new Reward(10, Resource.Credit),
+        new Reward(10, Resource.Ore),
+        new Reward(10, Resource.Knowledge),
+      ]);
+
+      expect(data.credits).to.equal(35);
+      expect(data.ores).to.equal(20);
+      expect(data.knowledge).to.equal(20);
+    });
+
+    it("does not survive a toJSON -> clone round trip", () => {
+      const data = new PlayerData();
+      data.analysis = true;
+
+      expect(data.toJSON()).to.not.have.property("analysis");
+      expect(data.clone().analysis).to.equal(false);
     });
   });
 

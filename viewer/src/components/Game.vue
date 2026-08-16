@@ -6,9 +6,10 @@
     <Rules id="rules" />
     <Rules id="trade" type="trade" />
 
-    <!-- Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md) - Phase 1's bare enter/exit/undo/reset
-         controls. The striped visual treatment (§5) and the resource-diff counter (§4) are later
-         phases; this is deliberately plain so the board-takeover plumbing is testable on its own. -->
+    <!-- Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md) - enter/exit/undo/reset controls plus
+         Phase 2's resource-diff counter (§4), still in plain form. The striped visual treatment and
+         the counter's real surfaces (headline in the sticky header, full breakdown pinned to the
+         map) are Phase 5 - this bar is a functional placeholder until then. -->
     <div v-if="analysisMode || analysisOffered" class="row">
       <div class="col-12">
         <b-alert
@@ -20,6 +21,31 @@
             <strong class="mr-2">ANALYSIS — not saved</strong>
             <span class="mr-2 small text-muted">
               {{ analysisEntries.length }} move{{ analysisEntries.length === 1 ? "" : "s" }}
+            </span>
+            <span v-if="analysisCounter" class="mr-2 small analysis-counter">
+              <span :class="{ 'text-danger': analysisCounter.credits.displayed < 0 }"
+                >c {{ analysisCounter.credits.displayed }}</span
+              >
+              <span :class="{ 'text-danger': analysisCounter.ores.displayed < 0 }"
+                >o {{ analysisCounter.ores.displayed }}</span
+              >
+              <span :class="{ 'text-danger': analysisCounter.knowledge.displayed < 0 }"
+                >k {{ analysisCounter.knowledge.displayed }}</span
+              >
+              <span :class="{ 'text-danger': analysisCounter.qics.displayed < 0 }"
+                >q {{ analysisCounter.qics.displayed }}</span
+              >
+              <span :class="{ 'text-danger': analysisCounter.victoryPoints.displayed < 0 }"
+                >vp {{ analysisCounter.victoryPoints.displayed }}</span
+              >
+              <span
+                >pw {{ analysisCounter.power.after.area1 }}/{{ analysisCounter.power.after.area2 }}/{{
+                  analysisCounter.power.after.area3
+                }}</span
+              >
+              <strong v-if="!analysisCounter.feasible" class="text-danger ml-1">
+                infeasible from move {{ analysisCounter.infeasibleFromMove }}
+              </strong>
             </span>
             <b-button
               size="sm"
@@ -40,6 +66,9 @@
               Reset
             </b-button>
             <b-button size="sm" variant="secondary" @click="exitAnalysisMode">Exit analysis mode</b-button>
+            <div v-if="analysisPassCapped" class="w-100 small text-muted mt-1">
+              Two-round cap reached — Pass is hidden here; Exit or Reset to start a new line.
+            </div>
           </template>
           <b-button v-else size="sm" variant="outline-secondary" @click="enterAnalysisMode"
             >Enter analysis mode</b-button
@@ -365,7 +394,20 @@ import {
   PremoveRow,
 } from "../hosted/types";
 import { buildSequentialChainPreview } from "../logic/premove-preview";
-import { AnalysisEntry, loadAnalysisLine, replayAnalysisLine, saveAnalysisLine } from "../logic/analysis";
+import {
+  AnalysisCounter,
+  AnalysisEntry,
+  AnalysisResourceSnapshot,
+  AnalysisWallet,
+  applySoloRoundFlow,
+  computeAnalysisCounter,
+  grantSandboxWallet,
+  loadAnalysisLine,
+  markAnalysisSeat,
+  passAllowed,
+  replayAnalysisLine,
+  saveAnalysisLine,
+} from "../logic/analysis";
 // The three CancelTrigger* step components are registered by PremoveBar now, not here - they render
 // inside the sheet rather than in a modal this component owned.
 import PremoveBar from "./PremoveBar.vue";
@@ -497,6 +539,12 @@ export default class Game extends Vue {
   analysisBaseRound: number = null;
   analysisBaseMoveCount: number = null;
   analysisEntries: AnalysisEntry[] = [];
+  // Phase 2 (§4) - the sandbox wallet granted on entry (null until entry, since it's derived from
+  // the real state at that moment - see enterAnalysisMode) and one resource snapshot per
+  // successfully applied line entry, both kept in memory only (never persisted - §3.3 stores only
+  // the entry list, and both of these are cheaply re-derived from it on every replay).
+  analysisWallet: AnalysisWallet = null;
+  analysisSnapshots: AnalysisResourceSnapshot[] = [];
 
   @Prop()
   options: EngineOptions;
@@ -1349,6 +1397,30 @@ export default class Game extends Vue {
     );
   }
 
+  /** Phase 2 (§4) - null while there is no wallet to diff against (not yet entered, or entry
+   * happened outside RoundMove - see enterAnalysisMode). Recomputed from `analysisComposeBase`
+   * (already up to date after every setAnalysisEntries call) rather than cached, since it is cheap
+   * and this keeps it structurally impossible to disagree with what is on screen. */
+  get analysisCounter(): AnalysisCounter | null {
+    if (!this.analysisMode || !this.analysisWallet || !this.analysisComposeBase) {
+      return null;
+    }
+    const data = this.analysisComposeBase.players[this.analysisSeat]?.data;
+    if (!data) {
+      return null;
+    }
+    return computeAnalysisCounter(data, this.analysisWallet, this.analysisSnapshots);
+  }
+
+  /** The two-round cap (§3.7) - true once Pass has been stripped from the current position's
+   * available commands, so the panel can explain why the button is gone instead of leaving it
+   * looking like it simply vanished. */
+  get analysisPassCapped(): boolean {
+    return (
+      this.analysisMode && this.analysisBaseRound !== null && !passAllowed(this.engine.round, this.analysisBaseRound)
+    );
+  }
+
   enterAnalysisMode() {
     if (this.analysisMode || !this.analysisOffered) {
       return;
@@ -1362,6 +1434,23 @@ export default class Game extends Vue {
     this.analysisSeat = seat;
     this.analysisBaseRound = this.engine.round;
     this.analysisBaseMoveCount = this.engine.moveHistory.length;
+    // Sandbox wallet (§3.1 step 4/§4.1) - only granted when entry lands already in RoundMove; a
+    // setup-phase entry (Phase 4) withholds it, since extra resources would allow builds setup does
+    // not permit. Phase 1's entry gate (`analysisOffered` below) currently only ever offers entry at
+    // round 1+ while it's genuinely this seat's move-phase turn, so this is expected to always fire
+    // today - the phase check stays as a defensive guard against a future looser entry gate.
+    const enteringAtRoundMove = this.analysisOrigin.phase === Phase.RoundMove;
+    this.analysisWallet = enteringAtRoundMove ? grantSandboxWallet(this.analysisOrigin, seat) : null;
+    // Solo round flow (§2.5/§3.1) - see applySoloRoundFlow's own doc comment for why this only
+    // needs to run once, here, rather than on every replay step. Both this and the wallet grant
+    // above mutate player/engine state the real game's own `availableCommands` snapshot (copied
+    // onto analysisOrigin by Engine.fromData) doesn't know about yet, so force a fresh regenerate
+    // afterward - Commands.vue reads that array directly, uncached.
+    if (enteringAtRoundMove) {
+      applySoloRoundFlow(this.analysisOrigin, seat);
+      this.analysisOrigin.clearAvailableCommands();
+      this.analysisOrigin.generateAvailableCommands();
+    }
     // Staleness handling (§3.5) beyond "discard on any mismatch" is Phase 6 - a stored line whose
     // baseMoveCount no longer matches the live game just starts fresh rather than replaying.
     const stored = loadAnalysisLine(seat);
@@ -1382,6 +1471,8 @@ export default class Game extends Vue {
     this.analysisOrigin = null;
     this.analysisComposeBase = null;
     this.analysisSeat = null;
+    this.analysisWallet = null;
+    this.analysisSnapshots = [];
     this.handleData(Engine.fromData(backup));
   }
 
@@ -1393,7 +1484,10 @@ export default class Game extends Vue {
     if (!this.analysisComposeBase) {
       return;
     }
-    const copy = Engine.fromData(JSON.parse(JSON.stringify(this.analysisComposeBase)));
+    const copy = markAnalysisSeat(
+      Engine.fromData(JSON.parse(JSON.stringify(this.analysisComposeBase))),
+      this.analysisSeat
+    );
     if (move) {
       try {
         copy.move(move);
@@ -1430,8 +1524,14 @@ export default class Game extends Vue {
    * result, and updates the displayed board. Undo/Reset/a newly-committed turn all go through this,
    * so they can never disagree about what the line replays to. */
   private setAnalysisEntries(entries: AnalysisEntry[]) {
-    const { engine } = replayAnalysisLine(this.analysisOrigin, entries);
+    const { engine, snapshots } = replayAnalysisLine(
+      this.analysisOrigin,
+      entries,
+      this.analysisSeat,
+      this.analysisBaseRound
+    );
     this.analysisEntries = entries;
+    this.analysisSnapshots = snapshots;
     this.analysisComposeBase = JSON.parse(JSON.stringify(engine));
     saveAnalysisLine(this.analysisSeat, {
       entries,
@@ -1546,6 +1646,14 @@ export default class Game extends Vue {
 <style lang="scss">
 @import "../stylesheets/frontend.scss";
 @import "../stylesheets/planets.css";
+
+// Phase 2's plain counter readout (§4) - superseded by the proper sticky-header/map-overlay
+// surfaces in Phase 5; this just needs its per-resource spans to not run into each other.
+.analysis-counter {
+  display: inline-flex;
+  gap: 0.5rem;
+  font-variant-numeric: tabular-nums;
+}
 
 .space-map,
 .scoring-research-board {

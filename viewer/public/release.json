@@ -1,7 +1,24 @@
 {
-  "version": "5.60.0",
+  "version": "5.61.0",
   "releasedAt": "2026-08-16",
   "entries": [
+    {
+      "version": "5.61.0",
+      "releasedAt": "2026-08-16",
+      "kind": "update",
+      "title": "Analysis mode: unlimited resources and round flow",
+      "impact": "",
+      "changes": [
+        "Analysis mode now lets you actually take a power action or build past what you could currently afford - the sandbox grants a generous wallet so nothing blocks a button, and a live counter (shown in the analysis bar) tracks the real cost/gain against your true starting resources, going negative in red once a line overdraws them.",
+        "Analysis mode now plays through a full solo round: Pass, income, and the Gaia phase all work via the real game rules, capped at your current round plus one bonus round (round 6 is the exception - passing there shows the real final score). Opponent decisions your own moves trigger, like a leech charge offer, are answered automatically so the line never stalls.",
+        "Added the analysis flag to PlayerData (player-data.ts) - a non-serialized flag that lifts the MAX_CREDIT/MAX_ORE/MAX_KNOWLEDGE gain clamps in gainReward for a sandbox clone only, confirmed not to survive a toJSON -> fromData round trip.",
+        "Added the sandbox wallet grant, the diff-based resource counter, the solo turn-order switch (applySoloRoundFlow), the two-round Pass cap (stripCappedPass), and opponent decision auto-resolution (resolveOpponentDecisions) to viewer/src/logic/analysis.ts, all wired into Game.vue's analysis mode entry/replay pipeline."
+      ],
+      "userChanges": [
+        "Analysis mode now lets you actually take a power action or build past what you could currently afford - the sandbox grants a generous wallet so nothing blocks a button, and a live counter (shown in the analysis bar) tracks the real cost/gain against your true starting resources, going negative in red once a line overdraws them.",
+        "Analysis mode now plays through a full solo round: Pass, income, and the Gaia phase all work via the real game rules, capped at your current round plus one bonus round (round 6 is the exception - passing there shows the real final score). Opponent decisions your own moves trigger, like a leech charge offer, are answered automatically so the line never stalls."
+      ]
+    },
     {
       "version": "5.60.0",
       "releasedAt": "2026-08-16",

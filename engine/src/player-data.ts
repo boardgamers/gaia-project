@@ -159,6 +159,15 @@ export default class PlayerData extends EventEmitter {
   temporaryStep = 0;
   canUpgradeResearch = true;
   turns = 0;
+  /**
+   * Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §3.4) - true only on a disposable sandbox
+   * clone, never on a real game's player data. Lifts the MAX_ORE/MAX_CREDIT/MAX_KNOWLEDGE gain
+   * clamps below so a granted sandbox wallet survives spending it back up via a power action, tech
+   * tile, etc. Deliberately absent from toJSON() (like the other internal variables above), so it
+   * can never round-trip through a serialize/deserialize into a real game - the viewer re-applies it
+   * to a fresh clone on every replay step instead of relying on it surviving.
+   */
+  analysis = false;
   // when picking rewards
   toPick: { rewards: Reward[]; count: number; source: EventSource } = undefined;
 
@@ -294,13 +303,13 @@ export default class PlayerData extends EventEmitter {
 
     switch (resource) {
       case Resource.Ore:
-        this.ores = Math.min(MAX_ORE, this.ores + count);
+        this.ores = this.analysis ? this.ores + count : Math.min(MAX_ORE, this.ores + count);
         break;
       case Resource.Credit:
-        this.credits = Math.min(MAX_CREDIT, this.credits + count);
+        this.credits = this.analysis ? this.credits + count : Math.min(MAX_CREDIT, this.credits + count);
         break;
       case Resource.Knowledge:
-        this.knowledge = Math.min(MAX_KNOWLEDGE, this.knowledge + count);
+        this.knowledge = this.analysis ? this.knowledge + count : Math.min(MAX_KNOWLEDGE, this.knowledge + count);
         break;
       case Resource.VictoryPoint:
         this.victoryPoints += count;

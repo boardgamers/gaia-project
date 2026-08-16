@@ -1,11 +1,18 @@
 # Analysis Mode — Implementation Plan (ready for handoff)
 
-> Status: **Phase 1 done (viewer v5.60.0, 2026-08-16, PROGRESS.md #166) — board takeover + line +
-> replay + enter/exit/undo/reset/persistence, no unlock yet.** Phases 2-7 remain: see §7's phasing
-> table. Every open question in this document was put to the owner and answered; §1 is the record of
-> those decisions and should not be relitigated. §2 is a traced account of how the existing code
-> actually works — every file:line in it was read, not recalled, so a fresh session (Sonnet is fine)
-> can execute this plan without re-deriving the mechanics. **Continue at Phase 2.**
+> Status: **Phases 1-3 done (viewer v5.61.0, 2026-08-16, PROGRESS.md #166-167) — board takeover +
+> line + replay + enter/exit/undo/reset/persistence, the sandbox wallet + resource-diff counter, and
+> real solo round flow (Pass/income/Gaia, the two-round cap, opponent decision auto-resolution).**
+> Phases 4-7 remain: see §7's phasing table. Every open question in this document was put to the
+> owner and answered; §1 is the record of those decisions and should not be relitigated. §2 is a
+> traced account of how the existing code actually works — every file:line in it was read, not
+> recalled, so a fresh session (Sonnet is fine) can execute this plan without re-deriving the
+> mechanics, though PROGRESS.md #167 found and corrected one real gap in §2.5's own trace: shrinking
+> `turnOrderAfterSetupAuction` (via `engine.setup`) for `beginRoundStartPhase`'s benefit would have
+> also broken `beginLeechingPhase`'s unrelated use of the same getter for table-seating order, so the
+> solo switch shrinks only `turnOrder`/`passedPlayers`, never `engine.setup`. **Continue at Phase
+> 4** — see its note below on what still needs deciding for a setup-phase entry given that
+> correction.
 >
 > Read `CLAUDE.md` and `PROGRESS.md`'s **Working agreements** first. This plan touches the viewer and
 > makes one small engine change; it touches no database object and no Edge Function.
@@ -154,6 +161,25 @@ Two things to know:
 - Do **not** use `forcePremovePreviewTurn` (`engine.ts:598`) for this. It sets `phase = RoundMove`
   unconditionally, which by definition skips income, Gaia and round transitions — the exact opposite
   of decision #9. It stays useful only for the one-shot preview it was written for.
+
+**Correction, found implementing Phase 3 (PROGRESS.md #167) — do not shrink `turnOrderAfterSetupAuction`
+after all.** It has no setter; the only way to "shrink" it is mutating its backing `engine.setup`
+array. But `beginLeechingPhase` (`phase.ts:561`) reads the SAME getter via `playersInTableOrderFrom`
+for a completely different purpose — table-seating order, used to find who a new building offers
+leech to. Shrink `engine.setup` and `canLeechPlayers` is always empty from that point on, so a real
+leech offer (the "your very first mine" scenario §2.8 is about) never happens at all — the exact
+opposite of what the feature needs to demonstrate. The actual fix ships in `applySoloRoundFlow`
+(`viewer/src/logic/analysis.ts`): shrink `turnOrder` and clear `passedPlayers` only, applied once
+from `enterAnalysisMode` (today's entry gate always already lands at `Phase.RoundMove`, round ≥ 1,
+so `beginRoundStartPhase`'s `turnOrderAfterSetupAuction` fallback — which only fires when
+`passedPlayers` is still `undefined`, i.e. only on the real game's own setup→round1 transition — has
+already happened before analysis mode exists; `engine.setup` never needs touching in that case).
+**Phase 4 still needs to work this out for a setup-phase entry**, where `analysisOrigin` starts
+before that transition: applying the same `turnOrder=[seat]`/`passedPlayers=[]` reset needs to
+happen lazily, mid-replay, at the exact point the clone first reaches round 1's `beginRoundStartPhase`
+— probably by pre-seeding `passedPlayers = [seat]` right before that transition fires, so the
+`|| turnOrderAfterSetupAuction` fallback never triggers, rather than shrinking `setup` and risking
+the same leech-adjacency breakage for round 1 itself.
 
 ### 2.6 Setup already does what decision #7 wants — if you leave it alone
 

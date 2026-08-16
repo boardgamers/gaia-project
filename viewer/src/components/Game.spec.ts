@@ -1026,6 +1026,133 @@ describe("Game", () => {
       vm.$el.remove();
       vm.$destroy();
     });
+
+    describe("Phase 2 - sandbox wallet and diff counter (§4)", () => {
+      it("grants a generous sandbox wallet on entry and marks the seat's data uncapped", () => {
+        const vm = mountAsSeat(0);
+        const realCredits = vm.engine.players[0].data.credits;
+
+        vm.enterAnalysisMode();
+
+        expect(vm.analysisWallet).to.not.equal(null);
+        expect(vm.analysisWallet.baseline.credits).to.equal(realCredits);
+        expect(vm.engine.players[0].data.credits).to.be.at.least(30);
+        expect(vm.engine.players[0].data.analysis).to.equal(true);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("starts the counter at net zero, feasible, with no moves played", () => {
+        const vm = mountAsSeat(0);
+        vm.enterAnalysisMode();
+
+        expect(vm.analysisCounter.credits.net).to.equal(0);
+        expect(vm.analysisCounter.qics.net).to.equal(0);
+        expect(vm.analysisCounter.feasible).to.equal(true);
+        expect(vm.analysisCounter.infeasibleFromMove).to.equal(null);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("reflects a paid move's real cost and reward as net deltas, even though the sandbox wallet absorbed both", () => {
+        const vm = mountAsSeat(0);
+        const realKnowledge = vm.engine.players[0].data.knowledge;
+        const realQics = vm.engine.players[0].data.qics;
+        vm.enterAnalysisMode();
+
+        // Any research upgrade costs a flat 4 knowledge (UPGRADE_RESEARCH_COST); navigation's first
+        // level also grants 1 QIC as a level bonus (research-tracks.ts). The move succeeds because
+        // the wallet made it affordable, but the counter must still show the real cost AND reward -
+        // this is exactly §2.4's trap (a reward landing right as the wallet sits at/above the real
+        // cap) and §4.3's "gains fall out automatically as negative usage, no special-casing".
+        vm.applyAnalysisMove("terrans up nav.");
+
+        expect(vm.analysisCounter.knowledge.net).to.equal(-4);
+        expect(vm.analysisCounter.knowledge.displayed).to.equal(realKnowledge - 4);
+        expect(vm.analysisCounter.qics.net).to.equal(1);
+        expect(vm.analysisCounter.qics.displayed).to.equal(realQics + 1);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("clears the wallet and counter on exit, so a stale counter never lingers over the real board", () => {
+        const vm = mountAsSeat(0);
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("terrans up nav.");
+
+        vm.exitAnalysisMode();
+
+        expect(vm.analysisWallet).to.equal(null);
+        expect(vm.analysisCounter).to.equal(null);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+    });
+
+    describe("Phase 3 - round flow (§2.5/§2.8/§3.7)", () => {
+      it("shrinks turnOrder to just this seat on entry", () => {
+        const vm = mountAsSeat(0);
+
+        vm.enterAnalysisMode();
+
+        expect(vm.engine.turnOrder).to.deep.equal([0]);
+        expect(vm.engine.passedPlayers).to.deep.equal([]);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("a solo pass reaches round 2's RoundMove via the engine's real phase transitions, self-sustaining turnOrder", () => {
+        const vm = mountAsSeat(0);
+        vm.enterAnalysisMode();
+        const boosterCmd = vm.engine.findAvailableCommand(0, Command.Pass);
+        const booster = boosterCmd.data.boosters[0];
+
+        vm.applyAnalysisMove(`terrans pass ${booster}`);
+
+        expect(vm.engine.phase).to.equal(Phase.RoundMove);
+        expect(vm.engine.round).to.equal(2);
+        expect(vm.engine.turnOrder).to.deep.equal([0]);
+        expect(vm.canPlay).to.equal(true);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("hides Pass once the line has used its one bonus round (the two-round cap, §3.7)", () => {
+        const vm = mountAsSeat(0);
+        vm.enterAnalysisMode();
+        expect(vm.engine.availableCommands.some((c) => c.name === Command.Pass)).to.equal(true);
+        const booster = vm.engine.findAvailableCommand(0, Command.Pass).data.boosters[0];
+
+        vm.applyAnalysisMove(`terrans pass ${booster}`); // round 1 -> round 2, the one bonus round
+
+        expect(vm.analysisPassCapped).to.equal(true);
+        expect(vm.engine.availableCommands.some((c) => c.name === Command.Pass)).to.equal(false);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("auto-resolves an opponent's leech offer triggered by the analysis player's own move (§2.8)", () => {
+        const vm = mountAsSeat(0);
+        vm.enterAnalysisMode(); // the sandbox wallet (§4.1) already covers the trading-station cost
+
+        vm.applyAnalysisMove("terrans build ts -1x2.");
+
+        // Without §2.8's resolution this would still be paused on Phase.RoundLeech with nevlas (1)
+        // on turn, waiting for an answer nobody in analysis mode can ever give.
+        expect(vm.engine.phase).to.not.equal(Phase.RoundLeech);
+        expect(vm.canPlay).to.equal(true);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+    });
   });
 
   describe("round 0 action placement", () => {
