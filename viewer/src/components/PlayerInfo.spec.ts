@@ -241,6 +241,27 @@ describe("PlayerInfo during a sealed-bid auction's bid phase", () => {
     expect(texts).to.include("1");
   });
 
+  it("shows the faction's real base per-round income hints, not blank, before the board loads", () => {
+    const engine = bidPhaseEngine("player-info-unloaded-income", [
+      Faction.Moweyds,
+      Faction.Tinkeroids,
+      Faction.Bescods,
+    ]);
+
+    const player = engine.players[0];
+    expect(player.board, "board is not loaded yet").to.equal(null);
+
+    const store = makeStore();
+    store.commit("receiveData", engine);
+    const { container } = render(PlayerInfo, { props: { player }, store });
+    const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent?.trim());
+
+    // Moweyds' standard board round income is "+o,k": +1 ore and +1 knowledge every round,
+    // regardless of buildings placed - shown as a "+1" next to the ore/knowledge resource icons.
+    const plusOnes = texts.filter((t) => t === "+1");
+    expect(plusOnes.length, "ore and knowledge income hints").to.equal(2);
+  });
+
   it("shows resolved 1-step/3-step terraforming markers for Moweyds before the board loads", () => {
     const engine = bidPhaseEngine("player-info-unloaded-terraform", [
       Faction.Moweyds,

@@ -42,3 +42,19 @@ export function loadedFactionPreviewPlayer(faction: Faction): Player {
   }
   return player;
 }
+
+/**
+ * The player to actually read for display purposes: `player` itself once its board has loaded, or
+ * the cached preview player for the same faction while it hasn't (see `loadedFactionPreviewPlayer`).
+ * Every place that reads a live-game `Player`'s `.data`/`.resourceIncome()`/etc. purely for display
+ * (not to act on the real seat) should go through this instead of the live player directly, so
+ * research-track positions, resource/power-bowl counts and passive income all already reflect the
+ * faction's real starting state throughout the pick/ban/bid setup phases - not just once the auction
+ * resolves and `endSetupFactionPhase` finally calls `loadFaction()` on the real player.
+ */
+export function effectivePreviewPlayer(player: Player): Player {
+  if (player.board || !player.faction) {
+    return player;
+  }
+  return loadedFactionPreviewPlayer(player.faction);
+}

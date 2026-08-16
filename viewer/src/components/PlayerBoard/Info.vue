@@ -154,6 +154,7 @@ import Engine, {
 import VictoryPoint from "../Resources/VictoryPoint.vue";
 import { FastConversionEvent, MapMode, MapModeType } from "../../data/actions";
 import { factionName } from "../../data/factions";
+import { effectivePreviewPlayer } from "../../data/faction-preview";
 import { showIncome } from "../../data/resources";
 import { leechNetwork, sectors } from "../../data/stats";
 import { CellStyle } from "../../graphics/colors";
@@ -234,8 +235,12 @@ export default class PlayerBoardInfo extends Vue {
     );
   }
 
+  // `this.player` stays the real seat (identity/click behavior); read the passive round income
+  // from the effective (possibly not-yet-loaded-board) player so it shows the faction's real base
+  // income - e.g. "+1o,1k" - throughout the pick/ban/bid setup phases too, not just once the board
+  // actually loads.
   income(resource: ResourceEnum) {
-    return this.player.resourceIncome(resource);
+    return effectivePreviewPlayer(this.player).resourceIncome(resource);
   }
 
   get showIncome() {

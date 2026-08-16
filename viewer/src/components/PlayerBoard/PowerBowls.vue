@@ -38,6 +38,7 @@ import { Component, Prop } from "vue-property-decorator";
 import Resource from "../Resource.vue";
 import Engine, { Faction, Player, PlayerData, Resource as ResourceEnum } from "@gaia-project/engine";
 import PowerBowl from "./PowerBowl.vue";
+import { effectivePreviewPlayer } from "../../data/faction-preview";
 import { showIncome } from "../../data/resources";
 
 @Component<PowerBowls>({
@@ -83,8 +84,10 @@ export default class PowerBowls extends Vue {
     return 0.86602540378;
   }
 
+  // `this.player` stays the real seat; read the passive round income (the bowl I/III "+X" hints)
+  // from the effective (possibly not-yet-loaded-board) player, same reasoning as PlayerBoard/Info.vue.
   income(resource: ResourceEnum) {
-    return this.player.resourceIncome(resource);
+    return effectivePreviewPlayer(this.player).resourceIncome(resource);
   }
 }
 </script>

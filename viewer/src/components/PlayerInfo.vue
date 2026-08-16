@@ -348,7 +348,7 @@ import PowerBowls from "./PlayerBoard/PowerBowls.vue";
 import Rules from "./Rules.vue";
 import { factionData, factionName, planetsWithSteps } from "../data/factions";
 import { terraformCost3Set } from "../data/faction-overview";
-import { loadedFactionPreviewPlayer } from "../data/faction-preview";
+import { effectivePreviewPlayer } from "../data/faction-preview";
 import { MapMode, MapModeType } from "../data/actions";
 import { mapModeTypeOptions } from "../data/stats";
 import { gameSeed } from "../logic/utils";
@@ -393,13 +393,7 @@ export default class PlayerInfo extends Vue {
   // shows what it will actually start with, exactly like the physical board does the moment a
   // faction is settled.
   get playerData() {
-    if (this.player?.board) {
-      return this.player.data;
-    }
-    if (this.faction) {
-      return loadedFactionPreviewPlayer(this.faction).data;
-    }
-    return this.player?.data;
+    return this.player ? effectivePreviewPlayer(this.player).data : undefined;
   }
 
   get playerRange(): number {

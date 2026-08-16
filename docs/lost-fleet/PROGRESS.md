@@ -6943,6 +6943,38 @@ pin_preference_split_budget_search_path` (the one function in the set without a 
       `up-gaia` starting income) render, plus the correct 3-cost/4-cost terraforming split instead of
       all-1-cost. **Full viewer suite green at 980 passing.** No engine or backend files touched.
 
+165.  ✅ **The shared research board and the player boards' base-income hints had the same
+      unloaded-board bug as #164, one session later (owner follow-up, 2026-08-16): "everyone has
+      basic 1 ore except ambas" - the round income row and power-bowl income hints were blank for
+      every faction throughout the pick/ban/bid setup phases, and the shared research board (not the
+      per-player board's small track, already fixed by #164) still parked every token at level 0
+      regardless of a faction's starting research bump.** Same root cause, two more call sites:
+      `ResearchTile.vue`'s `players` getter filters `engine.players` by
+      `player.data.research[field] === level` directly, and `PlayerBoard/Info.vue`'s and
+      `PlayerBoard/PowerBowls.vue`'s `income()` methods call `player.resourceIncome()` directly -
+      both read the real (possibly still-unloaded) player instead of going through the
+      `loadedFactionPreviewPlayer` fallback #164 added, so both stayed wrong even after that fix
+      landed. Extracted the fallback into a new shared `effectivePreviewPlayer(player)`
+      (`viewer/src/data/faction-preview.ts`): the real player once `player.board` is loaded, else the
+      cached preview player for the same faction. `PlayerInfo.vue`'s `playerData` getter now just
+      delegates to it (was the same logic inlined). `ResearchTile.vue` reads the effective player's
+      research level for the level filter (the rendered token itself still stays the real
+      player/seat, so identity and click behavior are untouched); both `income()` methods read the
+      effective player's `resourceIncome()` the same way, while the `player` prop they already had
+      stays real everywhere else (bowl identity, `showIncome`, click targets). Every faction's
+      standard board carries "+o,k" round income (i.e. +1 ore, +1 knowledge, every round, before any
+      building is placed) except Ambas at "+2o,k" and Firaks at "+o,2k" - the owner's "everyone has
+      basic 1 ore except Ambas" is the shape of it, not the exact number (Ambas still gets ore
+      income, just 2 instead of 1).
+
+      **Tests:** new `ResearchTile.spec.ts` (the same Preference Split bid-phase engine as #164's
+      fixture) asserts Moweyds' token renders at Gaia Project level 1, not level 0, while Tinkeroids/
+      Bescods correctly stay at level 0; a new `PlayerInfo.spec.ts` case asserts the "+1" ore/
+      knowledge income hints render (not blank) in the same unloaded state; a new
+      `PowerBowls.spec.ts` case (Itars, whose round income includes a bowl-I power token) asserts its
+      "+1" hint renders too. **Full viewer suite green at 983 passing.** No engine or backend files
+      touched.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

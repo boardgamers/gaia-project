@@ -75,6 +75,7 @@ import Engine, {
   researchEvents,
 } from "@gaia-project/engine";
 import { researchEventsWithCounters, researchLevelDesc } from "../data/research";
+import { effectivePreviewPlayer } from "../data/faction-preview";
 import Token from "./Token.vue";
 import FederationTile from "./FederationTile.vue";
 import Planet from "./Planet.vue";
@@ -198,10 +199,15 @@ export default class ResearchTile extends Vue {
     return classes.join(" ");
   }
 
+  // A player whose faction is picked but not yet loaded (still true throughout the pick/ban/bid
+  // setup phases - see `effectivePreviewPlayer`) has `player.data.research[field]` stuck at the
+  // unloaded default of 0, which would draw their token on the base tile regardless of a starting
+  // research bump like Moweyds'/Terrans' "up-gaia". Read the position from the effective (possibly
+  // preview) player instead, while the token itself still renders for the real player/seat.
   get players(): Array<{ player: Player; class: string }> {
     const players = this.engine.players;
     return players
-      .filter((player) => player.faction && player.data.research[this.field] === this.level)
+      .filter((player) => player.faction && effectivePreviewPlayer(player).data.research[this.field] === this.level)
       .map((p) => ({ player: p, class: this.tokenClass(p) }));
   }
 
