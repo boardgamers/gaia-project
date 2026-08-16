@@ -1,7 +1,18 @@
 {
-  "version": "5.59.1",
+  "version": "5.59.2",
   "releasedAt": "2026-08-16",
   "entries": [
+    {
+      "version": "5.59.2",
+      "releasedAt": "2026-08-16",
+      "kind": "fix",
+      "title": "Research board and income display fix",
+      "impact": "",
+      "changes": [
+        "Fixed the shared research board and player boards' round-income hints showing blank/incorrect during the faction pick/ban/bid setup phases"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.59.1",
       "releasedAt": "2026-08-16",
