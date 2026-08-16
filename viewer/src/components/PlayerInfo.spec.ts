@@ -1,9 +1,10 @@
-import Engine, { Event, Operator } from "@gaia-project/engine";
+import Engine, { AuctionVariant, Event, Operator } from "@gaia-project/engine";
 import {
   ArtifactToken,
   Booster,
   Faction,
   Federation,
+  Phase,
   Planet,
   Spaceship,
   SpaceshipFederation,
@@ -196,6 +197,68 @@ describe("PlayerInfo terraforming strip", () => {
     expect(after.querySelector("svg.booster g.specialAction.disabled"), "marked used after activation").to.not.equal(
       null
     );
+  });
+});
+
+function bowlCount(container: HTMLElement, area: 1 | 2): string | undefined {
+  return container.querySelector(`.power-bowl--${area} text`)?.textContent?.trim();
+}
+
+describe("PlayerInfo during a sealed-bid auction's bid phase", () => {
+  // The Preference Split/Silent Auction bid phase: every player has already picked a faction
+  // (`engine.setup`/`pl.faction` are set), but nothing loads the board - `pl.board` stays null and
+  // `pl.data` stays default PlayerData - until the auction resolves and `endSetupFactionPhase` runs.
+  // This is exactly the state a real bidding-phase game sits in while waiting on sealed bids.
+  function bidPhaseEngine(seed: string, factions: [Faction, Faction, Faction]) {
+    const engine = new Engine(
+      [`init 3 ${seed}`, `p1 faction ${factions[0]}`, `p2 faction ${factions[1]}`, `p3 faction ${factions[2]}`],
+      { auction: AuctionVariant.PreferenceSplit, auctionBudget: 30, lostFleet: true }
+    );
+    expect(engine.phase).to.equal(Phase.SetupPreferenceBid);
+    return engine;
+  }
+
+  it("shows the faction's real starting resources, power bowls and research bump instead of all-zero defaults", () => {
+    const engine = bidPhaseEngine("player-info-unloaded", [Faction.Moweyds, Faction.Tinkeroids, Faction.Bescods]);
+
+    const player = engine.players[0];
+    expect(player.faction).to.equal(Faction.Moweyds);
+    expect(player.board, "board is not loaded yet").to.equal(null);
+    expect(player.data.credits, "unloaded PlayerData default").to.equal(0);
+
+    const store = makeStore();
+    store.commit("receiveData", engine);
+    const { container } = render(PlayerInfo, { props: { player }, store });
+    const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent?.trim());
+
+    // Moweyds' standard board: income "5k,6o,15c,2q,up-gaia", power area1=4/area2=4.
+    expect(texts).to.include("15"); // credits
+    expect(texts).to.include("6"); // ore
+    expect(texts).to.include("5"); // knowledge
+    expect(bowlCount(container, 1), "power bowl I").to.equal("4");
+    expect(bowlCount(container, 2), "power bowl II").to.equal("4");
+    // The Gaia Project research field ("gaia") starts bumped to level 1 via "up-gaia".
+    expect(texts).to.include("1");
+  });
+
+  it("shows resolved 1-step/3-step terraforming markers for Moweyds before the board loads", () => {
+    const engine = bidPhaseEngine("player-info-unloaded-terraform", [
+      Faction.Moweyds,
+      Faction.Tinkeroids,
+      Faction.Bescods,
+    ]);
+
+    const player = engine.players[0];
+    expect(player.board, "board is not loaded yet").to.equal(null);
+    expect(player.data.lostFleetCost3Planets).to.deep.equal([]);
+
+    const store = makeStore();
+    store.commit("receiveData", engine);
+    const { container } = render(PlayerInfo, { props: { player }, store });
+
+    // All 7 planets defaulting to 1-step (the bug: an empty cost3Planets set) would leave none here.
+    expect(container.querySelectorAll('[data-terraforming-step="3"]').length).to.equal(3);
+    expect(container.querySelectorAll('[data-terraforming-step="1"]').length).to.equal(4);
   });
 });
 

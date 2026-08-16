@@ -203,7 +203,7 @@
           />
         </g>
 
-        <PowerBowls :transform="`translate(30,${height - 7})`" :player="player" />
+        <PowerBowls :transform="`translate(30,${height - 7})`" :player="player" :data="playerData" />
 
         <g transform="translate(29.3, 4.7) scale(0.9) translate(0, 1)">
           <g v-for="i in [0, 1, 2, 3]" :key="i" :transform="`translate(${(i - 2) * 3.8}, 0)`">
@@ -334,6 +334,7 @@ import Engine, {
 } from "@gaia-project/engine";
 import { AnyTechTilePos } from "@gaia-project/engine/src/enums";
 import { techTileEventSource } from "@gaia-project/engine/src/tiles/techs";
+import { lostFleetTerraformingBoard } from "@gaia-project/engine/src/factions";
 import { spaceshipFederationDisplayRewards } from "../data/federations";
 import { factionColor } from "../graphics/utils";
 import TechTile from "./TechTile.vue";
@@ -346,8 +347,11 @@ import PlayerBoardInfo from "./PlayerBoard/Info.vue";
 import PowerBowls from "./PlayerBoard/PowerBowls.vue";
 import Rules from "./Rules.vue";
 import { factionData, factionName, planetsWithSteps } from "../data/factions";
+import { terraformCost3Set } from "../data/faction-overview";
+import { loadedFactionPreviewPlayer } from "../data/faction-preview";
 import { MapMode, MapModeType } from "../data/actions";
 import { mapModeTypeOptions } from "../data/stats";
+import { gameSeed } from "../logic/utils";
 
 type TerraformingMarker = {
   planet: Planet;
@@ -382,7 +386,19 @@ export default class PlayerInfo extends Vue {
 
   protected selectedMapModeType: MapModeType = MapModeType.default;
 
+  // While a faction is only picked but not yet loaded (`pl.board` stays null until the auction
+  // resolves and `endSetupFactionPhase` runs - true for every setup pick/ban/bid phase), `pl.data`
+  // is still all starting-PlayerData defaults: no starting resources, empty power bowls, research
+  // at level 0. Fall back to a genuinely loaded preview player for the same faction so the board
+  // shows what it will actually start with, exactly like the physical board does the moment a
+  // faction is settled.
   get playerData() {
+    if (this.player?.board) {
+      return this.player.data;
+    }
+    if (this.faction) {
+      return loadedFactionPreviewPlayer(this.faction).data;
+    }
     return this.player?.data;
   }
 
@@ -498,8 +514,24 @@ export default class PlayerInfo extends Vue {
     return spaceshipFederationDisplayRewards(federation);
   }
 
+  // The real 3-cost set once it's resolved (`pl.data.lostFleetCost3Planets`, set in
+  // `endSetupFactionPhase`), or - while the faction is only picked and that hasn't run yet - the
+  // same provisional set `terraformCost3Set` derives from the live game's already-known opponents,
+  // so a Tinkeroids/Moweyds board shows correct 1-cost/3-cost markers throughout the pick/bid
+  // phases instead of defaulting every planet to 1-cost. A no-op for every other faction.
+  get lostFleetCost3Planets(): Planet[] {
+    return terraformCost3Set(this.engine, this.faction, this.lostFleetTerraformBoard);
+  }
+
+  get lostFleetTerraformBoard(): Planet[] {
+    if (!this.isLostFleet) {
+      return [];
+    }
+    return lostFleetTerraformingBoard(gameSeed(this.engine));
+  }
+
   planetsWithSteps(steps: number) {
-    return planetsWithSteps(this.faction, steps, this.playerData?.lostFleetCost3Planets ?? []);
+    return planetsWithSteps(this.faction, steps, this.lostFleetCost3Planets);
   }
 
   terraformingMarkers(steps: number): TerraformingMarker[] {

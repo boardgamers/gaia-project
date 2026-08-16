@@ -1,4 +1,4 @@
-import Engine, { Expansion, Faction, factionPlanet } from "@gaia-project/engine";
+import Engine, { Expansion, Faction, factionPlanet, Player } from "@gaia-project/engine";
 
 /**
  * A fresh single-faction engine, stopped right after faction selection (no buildings placed yet,
@@ -21,4 +21,24 @@ export function factionPreviewEngine(faction: Faction): Engine {
   return new Engine([`init 2 faction-preview-${faction}`, `p1 faction ${faction}`, `p2 faction ${filler}`], {
     lostFleet: true,
   });
+}
+
+const loadedPlayerCache = new Map<Faction, Player>();
+
+/**
+ * A genuine, fully-loaded Player for `faction` - the same starting resources, power bowls and
+ * research bumps the physical faction board shows once `Player.loadFaction()` has run. Used to
+ * render a real (non-preview) player's board while their own faction is picked but not yet loaded:
+ * during the pick/ban/bid setup phases, `pl.faction` is already set but `pl.board` is still null
+ * (`loadFaction()` only runs once the auction resolves, in `endSetupFactionPhase`), so `pl.data`
+ * itself is still all starting-PlayerData defaults. The result only depends on the faction, never on
+ * the live game, so it's cached and safe to share across every board that needs it.
+ */
+export function loadedFactionPreviewPlayer(faction: Faction): Player {
+  let player = loadedPlayerCache.get(faction);
+  if (!player) {
+    player = factionPreviewEngine(faction).players[0];
+    loadedPlayerCache.set(faction, player);
+  }
+  return player;
 }

@@ -10,19 +10,19 @@
     />
     <circle :r="2 * r * spacing" fill="none" />
     <g>
-      <PowerBowl :player="player" area="gaia" class="gaia-bowl" gaia="true" />
+      <PowerBowl :player="player" :data="resolvedData" area="gaia" class="gaia-bowl" gaia="true" />
     </g>
     <g :transform="`translate(${-r * spacing}, ${2 * r * sin60 * spacing})`">
-      <PowerBowl :player="player" area="area1" class="power-bowl power-bowl--1" />
+      <PowerBowl :player="player" :data="resolvedData" area="area1" class="power-bowl power-bowl--1" />
       <text y="1.7" transform="scale(0.7)" v-if="showIncome && income('t')">+{{ income("t") }}</text>
       <text class="label" x="-2.6">I</text>
     </g>
     <g :transform="`translate(${-r * spacing}, ${-2 * r * sin60 * spacing})`">
-      <PowerBowl :player="player" area="area2" class="power-bowl power-bowl--2" />
+      <PowerBowl :player="player" :data="resolvedData" area="area2" class="power-bowl power-bowl--2" />
       <text class="label" x="-2.6">II</text>
     </g>
     <g :transform="`translate(${2 * r * spacing}, 0)`">
-      <PowerBowl :player="player" area="area3" class="power-bowl power-bowl--3" />
+      <PowerBowl :player="player" :data="resolvedData" area="area3" class="power-bowl power-bowl--3" />
       <text y="1.7" transform="scale(0.7)" v-if="showIncome && income('ta3')">+{{ income("ta3") }}</text>
       <text class="label" y="2.6" x="0">III</text>
     </g>
@@ -36,7 +36,7 @@
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import Resource from "../Resource.vue";
-import Engine, { Faction, Player, Resource as ResourceEnum } from "@gaia-project/engine";
+import Engine, { Faction, Player, PlayerData, Resource as ResourceEnum } from "@gaia-project/engine";
 import PowerBowl from "./PowerBowl.vue";
 import { showIncome } from "../../data/resources";
 
@@ -49,6 +49,15 @@ import { showIncome } from "../../data/resources";
 export default class PowerBowls extends Vue {
   @Prop()
   player: Player;
+
+  // Bowl counts to render, kept independent of `player` so a caller can show a different faction's
+  // starting values (see PowerBowl.vue). Defaults to the player's own data.
+  @Prop()
+  data: PlayerData;
+
+  get resolvedData(): PlayerData {
+    return this.data ?? this.player.data;
+  }
 
   get engine(): Engine {
     return this.$store.state.data;

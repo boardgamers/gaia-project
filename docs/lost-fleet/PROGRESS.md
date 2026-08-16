@@ -6907,6 +6907,42 @@ pin_preference_split_budget_search_path` (the one function in the set without a 
       suite green at 978 passing.** No engine or backend files touched — no schema change, no Edge
       Function redeploy, and the engine/AI suites correctly out of scope and not run.
 
+164.  ✅ **A real player board showed all-zero resources, empty power bowls, level-0 research and
+      every planet at 1-cost throughout the faction pick/ban/bid setup phases (owner report, game
+      "Ivory Beacon", 2026-08-16).** Root cause: a faction pick only sets `pl.faction` (via
+      `executeBid` in `engine/src/move/setup.ts`) — `pl.board` stays `null` and `pl.data` stays
+      default `PlayerData` until `endSetupFactionPhase` runs, which only happens once every player
+      has picked **and**, with an auction variant, the auction has resolved (`engine/src/move/phase.ts`).
+      `PlayerInfo.vue` (the real, non-preview board shown in `Game.vue` for every seated player at
+      all times) read `player.data` and `player.data.lostFleetCost3Planets` directly, so throughout
+      `SetupFaction`/`SetupFactionBan`/`SetupSilentBid`/`SetupPreferenceBid`/`SetupAuction` every
+      board showed the unloaded PlayerData defaults, and for Moweyds/Tinkeroids (whose terraform
+      cost depends on `lostFleetCost3Planets`, empty until load) every planet defaulted to 1-step
+      since `terraformingStepsRequired` treats an empty cost3 set as "nothing costs 3."
+      `BuildingGroup.vue` already had the right pattern for this exact situation (fall back to
+      `factionBoard(faction, ...)` when `player.board` is still `null`) — extended the same idea to
+      the rest of the board. Terraforming markers now call the existing `terraformCost3Set()`
+      (`viewer/src/data/faction-overview.ts` — already used by the faction pick/ban preview card)
+      directly, which already self-selects the real resolved set once `lostFleetCost3Planets` is
+      populated or a live, correctly-provisional set (from opponents already known in the live game)
+      before then. Resources/power bowls/research bump now come from a new
+      `loadedFactionPreviewPlayer(faction)` (`viewer/src/data/faction-preview.ts`, cached per
+      faction) — a genuine `Player` run all the way through the real engine's `loadFaction()` in a
+      throwaway 2-player game, reused whenever the real player's own `pl.board` is still `null`.
+      `PlayerInfo.vue`'s `playerData` getter falls back to it; `PowerBowls.vue`/`PowerBowl.vue`
+      gained a `data` prop (separate from `player`, which stays real so clicks/tooltips still target
+      the actual seat) so the bowl counts can come from that preview player without touching seat
+      identity. `PowerBowl.vue` also gained its own local `Resource` registration — it only worked
+      before via global registration in `launcher.ts`, invisible in the real app but making the
+      component non-self-contained (and untestable in isolation).
+
+      **Tests:** new `PlayerInfo.spec.ts` describe block builds a real
+      `AuctionVariant.PreferenceSplit` engine stopped right after all 3 picks (matching the reported
+      state exactly: bid phase open, board not loaded) and asserts Moweyds' real starting resources
+      (15c/6o/5k), power bowls (4/4) and Gaia Project research bump (level 1, from the board's
+      `up-gaia` starting income) render, plus the correct 3-cost/4-cost terraforming split instead of
+      all-1-cost. **Full viewer suite green at 980 passing.** No engine or backend files touched.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

@@ -15,9 +15,9 @@
       :transform="`translate(${power > 0 ? 0.9 : 0}, ${yPos}) scale(0.11)`"
     />
     <Resource
-      v-if="gaia && player.data.gaiaformersInGaia > 0"
+      v-if="gaia && data.gaiaformersInGaia > 0"
       :kind="'gf'"
-      :count="player.data.gaiaformersInGaia"
+      :count="data.gaiaformersInGaia"
       :faction="player.faction"
       :transform="`translate(0, 0.7) scale(0.09)`"
     />
@@ -27,16 +27,28 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import Engine, { Player, PowerArea } from "@gaia-project/engine";
+import Engine, { Player, PlayerData, PowerArea } from "@gaia-project/engine";
 import { FastConversionEvent } from "../../data/actions";
+import Resource from "../Resource.vue";
 
-@Component
+@Component({
+  components: {
+    Resource,
+  },
+})
 export default class PowerBowl extends Vue {
   @Prop()
   area: PowerArea;
 
   @Prop()
   player: Player;
+
+  // The bowl counts/brainstone/gaiaformers to render - kept separate from `player` so a caller can
+  // show a different faction's starting values (e.g. a not-yet-loaded real board during the faction
+  // pick/bid setup phases) while `player` itself still drives identity-bound behavior (whose turn it
+  // is, which seat a click should act on).
+  @Prop()
+  data: PlayerData;
 
   get r() {
     return 2;
@@ -62,11 +74,11 @@ export default class PowerBowl extends Vue {
   }
 
   get yPos() {
-    return this.area == PowerArea.Gaia && this.player.data.gaiaformersInGaia > 0 ? -0.5 : 0;
+    return this.area == PowerArea.Gaia && this.data.gaiaformersInGaia > 0 ? -0.5 : 0;
   }
 
   get power() {
-    return this.player.data.power[this.area];
+    return this.data.power[this.area];
   }
 
   get gaia() {
@@ -74,7 +86,7 @@ export default class PowerBowl extends Vue {
   }
 
   get brainstone(): boolean {
-    return this.player.data.brainstone === this.area;
+    return this.data.brainstone === this.area;
   }
 }
 </script>
