@@ -26,11 +26,15 @@ const SETUP_MOVES = [
   "terrans booster booster3",
 ];
 
+// Same fixture, one move short - terrans still owes their own booster pick (Phase.SetupBooster),
+// so this is mid-setup rather than already at Phase.RoundMove.
+const PARTIAL_SETUP_MOVES = SETUP_MOVES.slice(0, -1);
+
 describe("replayAnalysisLine", () => {
   it("replays a legal line onto a fresh clone of the origin", () => {
     const origin = new Engine(SETUP_MOVES);
     const entries: AnalysisEntry[] = [{ kind: "move", move: "terrans up nav." }];
-    const { engine, applied } = replayAnalysisLine(origin, entries, 0, 1);
+    const { engine, applied } = replayAnalysisLine(origin, entries, 0, 1, null);
     expect(applied).to.equal(1);
     expect(engine.moveHistory[engine.moveHistory.length - 1]).to.equal("terrans up nav (0 ⇒ 1).");
   });
@@ -42,7 +46,7 @@ describe("replayAnalysisLine", () => {
       { kind: "move", move: "terrans build m 99x99." },
       { kind: "move", move: "nevlas up nav." },
     ];
-    const { engine, applied } = replayAnalysisLine(origin, entries, 0, 1);
+    const { engine, applied } = replayAnalysisLine(origin, entries, 0, 1, null);
     expect(applied).to.equal(1);
     expect(engine.moveHistory[engine.moveHistory.length - 1]).to.equal("terrans up nav (0 ⇒ 1).");
   });
@@ -50,13 +54,13 @@ describe("replayAnalysisLine", () => {
   it("leaves the original engine untouched", () => {
     const origin = new Engine(SETUP_MOVES);
     const before = JSON.stringify(origin);
-    replayAnalysisLine(origin, [{ kind: "move", move: "terrans up nav." }], 0, 1);
+    replayAnalysisLine(origin, [{ kind: "move", move: "terrans up nav." }], 0, 1, null);
     expect(JSON.stringify(origin)).to.equal(before);
   });
 
   it("returns the origin itself, unmodified, for an empty line", () => {
     const origin = new Engine(SETUP_MOVES);
-    const { engine, applied, snapshots } = replayAnalysisLine(origin, [], 0, 1);
+    const { engine, applied, snapshots } = replayAnalysisLine(origin, [], 0, 1, null);
     expect(applied).to.equal(0);
     expect(engine.moveHistory).to.deep.equal(origin.moveHistory);
     expect(snapshots).to.deep.equal([]);
@@ -64,21 +68,62 @@ describe("replayAnalysisLine", () => {
 
   it("marks the seat's player data uncapped on the replayed engine", () => {
     const origin = new Engine(SETUP_MOVES);
-    const { engine } = replayAnalysisLine(origin, [{ kind: "move", move: "terrans up nav." }], 0, 1);
+    const { engine } = replayAnalysisLine(origin, [{ kind: "move", move: "terrans up nav." }], 0, 1, null);
     expect(engine.players[0].data.analysis).to.equal(true);
   });
 
   it("collects one resource snapshot per successfully applied entry, matching the resulting engine", () => {
     const origin = new Engine(SETUP_MOVES);
-    const { engine, snapshots } = replayAnalysisLine(origin, [{ kind: "move", move: "terrans up nav." }], 0, 1);
+    const { engine, snapshots } = replayAnalysisLine(origin, [{ kind: "move", move: "terrans up nav." }], 0, 1, null);
     expect(snapshots).to.have.length(1);
     expect(snapshots[0].credits).to.equal(engine.players[0].data.credits);
     expect(snapshots[0].knowledge).to.equal(engine.players[0].data.knowledge);
   });
+
+  describe("lazy wallet grant for a setup-phase entry (Phase 4, §3.1)", () => {
+    it("stays null while the line is still in setup", () => {
+      const origin = new Engine(PARTIAL_SETUP_MOVES);
+      applySoloRoundFlow(origin, 0); // pre-seeds passedPlayers, mirroring enterAnalysisMode
+      expect(origin.phase).to.not.equal(Phase.RoundMove);
+
+      const { wallet } = replayAnalysisLine(origin, [], 0, 1, null);
+
+      expect(wallet).to.equal(null);
+    });
+
+    it("grants the wallet the moment the line's own pass-and-play reaches round 1's RoundMove", () => {
+      const origin = new Engine(PARTIAL_SETUP_MOVES);
+      applySoloRoundFlow(origin, 0);
+      const entries: AnalysisEntry[] = [{ kind: "move", move: "terrans booster booster3" }]; // last setup move
+
+      const { engine, wallet } = replayAnalysisLine(origin, entries, 0, 1, null);
+
+      expect(engine.phase).to.equal(Phase.RoundMove);
+      expect(engine.round).to.equal(1);
+      expect(wallet).to.not.equal(null);
+      expect(engine.players[0].data.credits).to.be.at.least(30);
+    });
+
+    it("keeps the already-granted wallet across a later replay instead of re-granting", () => {
+      const origin = new Engine(PARTIAL_SETUP_MOVES);
+      applySoloRoundFlow(origin, 0);
+      const first = replayAnalysisLine(origin, [{ kind: "move", move: "terrans booster booster3" }], 0, 1, null);
+
+      const second = replayAnalysisLine(
+        origin,
+        [{ kind: "move", move: "terrans booster booster3" }],
+        0,
+        1,
+        first.wallet
+      );
+
+      expect(second.wallet).to.deep.equal(first.wallet);
+    });
+  });
 });
 
 describe("applySoloRoundFlow", () => {
-  it("shrinks turnOrder to just the seat and clears passedPlayers, without touching engine.setup", () => {
+  it("shrinks turnOrder to just the seat and resets passedPlayers fresh, without touching engine.setup", () => {
     const engine = new Engine(SETUP_MOVES);
     expect(engine.phase).to.equal(Phase.RoundMove);
     const realSetup = [...engine.setup];
@@ -86,6 +131,8 @@ describe("applySoloRoundFlow", () => {
     applySoloRoundFlow(engine, 0);
 
     expect(engine.turnOrder).to.deep.equal([0]);
+    // Empty, not [0] - passedPlayers is also the CURRENT round's live accumulator (movePass pushes
+    // onto it), so seeding it non-empty here would double-count this seat's own next pass.
     expect(engine.passedPlayers).to.deep.equal([]);
     expect(engine.currentPlayer).to.equal(0);
     expect(engine.setup).to.deep.equal(realSetup); // untouched - see beginLeechingPhase note
@@ -104,11 +151,26 @@ describe("applySoloRoundFlow", () => {
     expect(engine.turnOrder).to.deep.equal([0]); // self-sustaining, no re-expansion to both seats
   });
 
-  it("does nothing outside Phase.RoundMove or before round 1", () => {
-    const engine = new Engine(["init 2 randomSeed"]);
-    const before = JSON.stringify(engine);
+  it("leaves turnOrder untouched during setup (pass-and-play, §2.6), only pre-seeding passedPlayers", () => {
+    const engine = new Engine(["init 2 randomSeed", "p1 faction terrans", "p2 faction nevlas"]);
+    expect(engine.phase).to.not.equal(Phase.RoundMove);
+    const realTurnOrder = [...engine.turnOrder];
+
     applySoloRoundFlow(engine, 0);
-    expect(JSON.stringify(engine)).to.equal(before);
+
+    expect(engine.turnOrder).to.deep.equal(realTurnOrder); // untouched - real setup order stays
+    expect(engine.passedPlayers).to.deep.equal([0]); // takes effect later, at round 1's own transition
+  });
+
+  it("the setup pre-seed correctly resolves beginRoundStartPhase's fallback once round 1 begins", () => {
+    const engine = new Engine(SETUP_MOVES.slice(0, -1)); // terrans still owes their own booster pick
+    applySoloRoundFlow(engine, 0);
+
+    engine.move("terrans booster booster3"); // completes setup -> triggers beginRoundStartPhase
+
+    expect(engine.phase).to.equal(Phase.RoundMove);
+    expect(engine.round).to.equal(1);
+    expect(engine.turnOrder).to.deep.equal([0]); // passedPlayers=[0] resolved the fallback, not the real 2p list
   });
 });
 

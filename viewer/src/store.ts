@@ -108,6 +108,12 @@ export type State = {
    * limited to the seats this account holds, so the board explains itself when it is someone
    * else's turn instead of simply offering nothing. False for ordinary pass-and-play. */
   offlineMirror: boolean;
+  /** True while a local Analysis mode sandbox has taken the board over
+   * (docs/lost-fleet/ANALYSIS_MODE_PLAN.md). Set/cleared by Game.vue's enterAnalysisMode/
+   * exitAnalysisMode. Exists as store state (not just a Game.vue field) because SealedBidPanel.ts's
+   * `mySeats` needs it too - during setup pass-and-play (§2.6/decision #7) the analysis player must
+   * be able to submit every seat's auction bid locally, not just their own locked seat's. */
+  analysisMode: boolean;
   chessBackend: ChessBackend | null;
   /**
    * The simultaneous-bid auctions (`AuctionVariant.PreferenceSplit` and `AuctionVariant.Silent`) -
@@ -211,6 +217,7 @@ const gaiaViewer = {
       presence: {},
       notesBackend: null,
       offlineMirror: false,
+      analysisMode: false,
       chessBackend: null,
       sealedBidBackend: null,
       sealedBidStatus: null,
@@ -367,6 +374,9 @@ const gaiaViewer = {
 
     setOfflineMirror(state: State, mirrored: boolean) {
       state.offlineMirror = mirrored;
+    },
+    setAnalysisMode(state: State, active: boolean) {
+      state.analysisMode = active;
     },
     setChessBackend(state: State, backend: ChessBackend | null) {
       state.chessBackend = backend;

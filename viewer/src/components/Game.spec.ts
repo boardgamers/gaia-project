@@ -884,7 +884,7 @@ describe("Game", () => {
       window.localStorage.clear();
     });
 
-    it("is offered on this seat's own turn, not off-turn or before round 1", () => {
+    it("is offered on this seat's own turn, round 1+ or during setup (decision #6), never off-turn", () => {
       // playerToMove is 0 (terrans) after setup.
       const onTurn = mountAsSeat(0);
       expect(onTurn.analysisOffered).to.equal(true);
@@ -896,10 +896,14 @@ describe("Game", () => {
       offTurn.$el.remove();
       offTurn.$destroy();
 
-      const beforeRound1 = mountAsSeat(0, new Engine(["init 2 randomSeed"]));
-      expect(beforeRound1.analysisOffered).to.equal(false);
-      beforeRound1.$el.remove();
-      beforeRound1.$destroy();
+      // Phase 4 (§2.6/decision #6): "Round 0 / setup. Playable." - a fresh game's very first
+      // faction pick is this seat's own turn, so entry is offered there too now.
+      const duringSetup = mountAsSeat(0, new Engine(["init 2 randomSeed"]));
+      expect(duringSetup.engine.round).to.equal(0);
+      expect(duringSetup.canPlay).to.equal(true);
+      expect(duringSetup.analysisOffered).to.equal(true);
+      duringSetup.$el.remove();
+      duringSetup.$destroy();
     });
 
     it("enters a clone (real state untouched) and exits back to the exact real state, dispatching nothing either way", () => {
@@ -1148,6 +1152,77 @@ describe("Game", () => {
         // on turn, waiting for an answer nobody in analysis mode can ever give.
         expect(vm.engine.phase).to.not.equal(Phase.RoundLeech);
         expect(vm.canPlay).to.equal(true);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+    });
+
+    describe("Phase 4 - setup-phase play (§2.6/§2.7/decision #7)", () => {
+      // Both factions picked; it is genuinely terrans' (this session's own locked seat 0) turn to
+      // place the first setup mine next.
+      const PARTIAL_SETUP_MOVES = ["init 2 randomSeed", "p1 faction terrans", "p2 faction nevlas"];
+
+      it("is offered during setup, not just round 1+", () => {
+        const vm = mountAsSeat(0, new Engine(PARTIAL_SETUP_MOVES));
+        expect(vm.engine.round).to.equal(0);
+        expect(vm.engine.playerToMove).to.equal(0);
+        expect(vm.analysisOffered).to.equal(true);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("lets this seat place an opponent's setup mine, pass-and-play (decision #7)", () => {
+        const vm = mountAsSeat(0, new Engine(PARTIAL_SETUP_MOVES));
+        vm.enterAnalysisMode();
+
+        vm.applyAnalysisMove("terrans build m -1x2"); // this seat's own first mine
+        expect(vm.engine.playerToMove).to.equal(1); // nevlas's turn next, inside the clone
+        expect(vm.canPlay).to.equal(true); // forced true during analysis mode - not this seat's turn
+
+        vm.applyAnalysisMove("nevlas build m -1x0"); // the "opponent" action
+
+        expect(vm.analysisEntries.map((e: { move: string }) => e.move)).to.deep.equal([
+          "terrans build m -1x2",
+          "nevlas build m -1x0",
+        ]);
+        expect(vm.engine.map.getS("-1x0").buildingOf(1)).to.not.equal(undefined);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("withholds the sandbox wallet during setup, granting it lazily once round 1 begins", () => {
+        // terrans still owes their own booster pick - the last setup move before round 1.
+        const vm = mountAsSeat(0, new Engine(SETUP_MOVES.slice(0, -1)));
+        vm.enterAnalysisMode();
+        expect(vm.analysisWallet).to.equal(null);
+        expect(vm.analysisBaseRound).to.equal(1); // §3.7 - "setup gives you setup plus round 1"
+
+        vm.applyAnalysisMove("terrans booster booster3");
+
+        expect(vm.engine.phase).to.equal(Phase.RoundMove);
+        expect(vm.engine.round).to.equal(1);
+        expect(vm.analysisWallet).to.not.equal(null);
+        expect(vm.engine.players[0].data.credits).to.be.at.least(30);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("nulls the sealed-bid backend for the duration and restores it on exit (§2.7)", () => {
+        const vm = mountAsSeat(0, new Engine(PARTIAL_SETUP_MOVES));
+        const backend = { submit: async () => {}, refresh: async () => {} };
+        vm.$store.commit("setSealedBidBackend", backend);
+
+        vm.enterAnalysisMode();
+        expect(vm.$store.state.sealedBidBackend).to.equal(null);
+        expect(vm.$store.state.analysisMode).to.equal(true);
+
+        vm.exitAnalysisMode();
+        expect(vm.$store.state.sealedBidBackend).to.equal(backend);
+        expect(vm.$store.state.analysisMode).to.equal(false);
 
         vm.$el.remove();
         vm.$destroy();

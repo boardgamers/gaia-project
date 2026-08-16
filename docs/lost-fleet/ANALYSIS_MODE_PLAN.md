@@ -1,18 +1,31 @@
 # Analysis Mode — Implementation Plan (ready for handoff)
 
-> Status: **Phases 1-3 done (viewer v5.61.0, 2026-08-16, PROGRESS.md #166-167) — board takeover +
-> line + replay + enter/exit/undo/reset/persistence, the sandbox wallet + resource-diff counter, and
-> real solo round flow (Pass/income/Gaia, the two-round cap, opponent decision auto-resolution).**
-> Phases 4-7 remain: see §7's phasing table. Every open question in this document was put to the
-> owner and answered; §1 is the record of those decisions and should not be relitigated. §2 is a
-> traced account of how the existing code actually works — every file:line in it was read, not
-> recalled, so a fresh session (Sonnet is fine) can execute this plan without re-deriving the
-> mechanics, though PROGRESS.md #167 found and corrected one real gap in §2.5's own trace: shrinking
-> `turnOrderAfterSetupAuction` (via `engine.setup`) for `beginRoundStartPhase`'s benefit would have
-> also broken `beginLeechingPhase`'s unrelated use of the same getter for table-seating order, so the
-> solo switch shrinks only `turnOrder`/`passedPlayers`, never `engine.setup`. **Continue at Phase
-> 4** — see its note below on what still needs deciding for a setup-phase entry given that
-> correction.
+> Status: **Phases 1-4 done (viewer v5.62.0, 2026-08-16, PROGRESS.md #166-168) — board takeover +
+> line + replay + enter/exit/undo/reset/persistence, the sandbox wallet + resource-diff counter, real
+> solo round flow (Pass/income/Gaia, the two-round cap, opponent decision auto-resolution), and
+> setup-phase pass-and-play (opponent mine placement, faction pick, sealed-bid auctions).** Phases
+> 5-7 remain: see §7's phasing table. Every open question in this document was put to the owner and
+> answered; §1 is the record of those decisions and should not be relitigated. §2 is a traced account
+> of how the existing code actually works — every file:line in it was read, not recalled, so a fresh
+> session (Sonnet is fine) can execute this plan without re-deriving the mechanics, though
+> PROGRESS.md #167-168 found and corrected two real gaps along the way, both recorded in
+> `applySoloRoundFlow`'s own doc comment (`viewer/src/logic/analysis.ts`) as well as here:
+>
+> - Shrinking `turnOrderAfterSetupAuction` (via `engine.setup`) for `beginRoundStartPhase`'s benefit,
+>   as §2.5 originally said to, would have also broken `beginLeechingPhase`'s unrelated use of the
+>   same getter for table-seating order — so the solo switch shrinks `turnOrder` directly instead,
+>   and steers `beginRoundStartPhase`'s own fallback via `passedPlayers`, never touching
+>   `engine.setup`.
+> - Pre-seeding `passedPlayers` unconditionally (needed to make a **setup**-phase entry's eventual
+>   round-1 transition resolve correctly) breaks a **mid-round** entry instead: `passedPlayers` is
+>   also the current round's own live pass accumulator, so seeding it non-empty while a round is
+>   already under way double-counts this seat's own next pass. The fix checks whether round 1 has
+>   ever started (`passedPlayers === undefined`) before pre-seeding, and otherwise resets it to a
+>   fresh `[]`, matching what `beginRoundStartPhase` itself always does at an ordinary round
+>   boundary.
+>
+> **Continue at Phase 5** (visual treatment + the counter's real surfaces, §5) — Phases 2-4 already
+> built the resource counter and the sticky-header/map-overlay placement is what's left of §5.3.
 >
 > Read `CLAUDE.md` and `PROGRESS.md`'s **Working agreements** first. This plan touches the viewer and
 > makes one small engine change; it touches no database object and no Edge Function.

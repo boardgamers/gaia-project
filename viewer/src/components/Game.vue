@@ -382,7 +382,7 @@ import { parseCommands } from "../logic/recent";
 import { LogPlacement } from "../data";
 import { ExecuteBack } from "../logic/buttons/types";
 import { currentPlayer } from "@gaia-project/engine/wrapper";
-import { UiMode } from "../store";
+import { SealedBidBackend, UiMode } from "../store";
 import Table from "./Table.vue";
 import { orderedPlayers } from "../data/player";
 import { factionName } from "../data/factions";
@@ -545,6 +545,11 @@ export default class Game extends Vue {
   // the entry list, and both of these are cheaply re-derived from it on every replay).
   analysisWallet: AnalysisWallet = null;
   analysisSnapshots: AnalysisResourceSnapshot[] = [];
+  // Phase 4 (§2.7) - the real sealed-bid backend, stashed on entry and restored on exit, so a
+  // simultaneous auction phase (Preference Split/Silent) submits ordinary local moves instead of
+  // going through the server while composing inside the sandbox - the same "stash, take over,
+  // restore" shape as analysisBackup above, applied to this one piece of global store state.
+  analysisSealedBidBackendBackup: SealedBidBackend | null = null;
 
   @Prop()
   options: EngineOptions;
@@ -592,13 +597,20 @@ export default class Game extends Vue {
         }
         // Analysis mode (§3.5/§3.6) - unlike premove/cancel-trigger above, the LINE survives this
         // (decision #2: exiting keeps it, only the live takeover ends) - it was already persisted
-        // to localStorage as each entry committed, so nothing here needs to save it again.
+        // to localStorage as each entry committed, so nothing here needs to save it again. Mirrors
+        // exitAnalysisMode's own cleanup (sealed-bid backend restore, analysisMode store flag) since
+        // this is the OTHER path back to the real board, not just a "discard the preview" click.
         if (this.analysisMode) {
           this.analysisMode = false;
           this.analysisBackup = null;
           this.analysisOrigin = null;
           this.analysisComposeBase = null;
           this.analysisSeat = null;
+          this.analysisWallet = null;
+          this.analysisSnapshots = [];
+          this.$store.commit("setSealedBidBackend", this.analysisSealedBidBackendBackup);
+          this.analysisSealedBidBackendBackup = null;
+          this.$store.commit("setAnalysisMode", false);
         }
         this.handleData(Engine.fromData(payload));
         return;
@@ -858,6 +870,13 @@ export default class Game extends Vue {
     // clone (§8.3) - never this session's own locked seat, so the ordinary check below would
     // always read false while composing one.
     if (this.cancelTriggerComposeSeat !== null) {
+      return true;
+    }
+
+    // Analysis mode's setup-phase pass-and-play (§2.6/decision #7) walks EVERY seat's turn inside
+    // the clone - a real locked seat would otherwise hide Commands entirely the moment the clone's
+    // playerToMove moves to an opponent's setup turn.
+    if (this.analysisMode) {
       return true;
     }
 
@@ -1378,23 +1397,17 @@ export default class Game extends Vue {
   // Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md)
   // ---------------------------------------------------------------------------
 
-  /** The entry button's gate: only offered on this seat's own real turn (round 1+), matching the
-   * feature's entry point ("you press a button, the board becomes yours"). Setup-phase entry
-   * (decision #6) and round-flow beyond your own turn (decision #9) are later phases. Excludes the
-   * other two board-takeover modes (§3.6) - premove/cancel-trigger compose force `canPlay` true via
-   * a forced-turn clone, which would otherwise make this readable as offered mid-compose. This is
-   * the ONLY mutual-exclusion mechanism (matching how premove/cancel-trigger already stay exclusive
-   * of each other purely through `showPremoveSheet`'s visibility gating, not a runtime cancel) -
-   * hiding the entry point is enough, since nothing can dispatch `analysisMode` without it. */
+  /** The entry button's gate: offered on this seat's own real turn, matching the feature's entry
+   * point ("you press a button, the board becomes yours") - round 1+ move-phase turns per Phase 3,
+   * and (Phase 4, decision #6) any setup sub-phase too: "pick any faction, place mines, take a
+   * booster, play on." Excludes the other two board-takeover modes (§3.6) - premove/cancel-trigger
+   * compose force `canPlay` true via a forced-turn clone, which would otherwise make this readable
+   * as offered mid-compose. This is the ONLY mutual-exclusion mechanism (matching how premove/
+   * cancel-trigger already stay exclusive of each other purely through `showPremoveSheet`'s
+   * visibility gating, not a runtime cancel) - hiding the entry point is enough, since nothing can
+   * dispatch `analysisMode` without it. */
   get analysisOffered(): boolean {
-    return (
-      !this.analysisMode &&
-      !this.premoveMode &&
-      !this.cancelTriggerComposeActive &&
-      !this.ended &&
-      this.engine.round >= Round.Round1 &&
-      this.canPlay
-    );
+    return !this.analysisMode && !this.premoveMode && !this.cancelTriggerComposeActive && !this.ended && this.canPlay;
   }
 
   /** Phase 2 (§4) - null while there is no wallet to diff against (not yet entered, or entry
@@ -1432,25 +1445,29 @@ export default class Game extends Vue {
     this.analysisBackup = JSON.parse(JSON.stringify(this.engine));
     this.analysisOrigin = Engine.fromData(JSON.parse(JSON.stringify(this.engine)));
     this.analysisSeat = seat;
-    this.analysisBaseRound = this.engine.round;
+    // §3.7 - "setup gives you setup plus round 1": a setup-phase entry (round 0) counts as if it
+    // started at round 1 for the two-round cap and staleness purposes, since setup is not itself a
+    // playable "round" to spend that budget on.
+    this.analysisBaseRound = Math.max(this.engine.round, Round.Round1);
     this.analysisBaseMoveCount = this.engine.moveHistory.length;
     // Sandbox wallet (§3.1 step 4/§4.1) - only granted when entry lands already in RoundMove; a
-    // setup-phase entry (Phase 4) withholds it, since extra resources would allow builds setup does
-    // not permit. Phase 1's entry gate (`analysisOffered` below) currently only ever offers entry at
-    // round 1+ while it's genuinely this seat's move-phase turn, so this is expected to always fire
-    // today - the phase check stays as a defensive guard against a future looser entry gate.
+    // setup-phase entry (§2.6/decision #6) withholds it, since extra resources would allow builds
+    // setup does not permit.
     const enteringAtRoundMove = this.analysisOrigin.phase === Phase.RoundMove;
     this.analysisWallet = enteringAtRoundMove ? grantSandboxWallet(this.analysisOrigin, seat) : null;
-    // Solo round flow (§2.5/§3.1) - see applySoloRoundFlow's own doc comment for why this only
-    // needs to run once, here, rather than on every replay step. Both this and the wallet grant
-    // above mutate player/engine state the real game's own `availableCommands` snapshot (copied
-    // onto analysisOrigin by Engine.fromData) doesn't know about yet, so force a fresh regenerate
-    // afterward - Commands.vue reads that array directly, uncached.
-    if (enteringAtRoundMove) {
-      applySoloRoundFlow(this.analysisOrigin, seat);
-      this.analysisOrigin.clearAvailableCommands();
-      this.analysisOrigin.generateAvailableCommands();
-    }
+    // Solo round flow (§2.5/§3.1) - safe to call unconditionally, setup or not: pre-seeding
+    // `passedPlayers` is a no-op until the engine's own `beginRoundStartPhase` next consults it
+    // (still ahead for a setup entry, already past for a round >= 1 one), and the turnOrder shrink +
+    // available-commands regenerate inside it only fire when already in RoundMove - which also
+    // covers refreshing the stale pre-wallet-grant command list Engine.fromData copied over.
+    applySoloRoundFlow(this.analysisOrigin, seat);
+    // Sealed-bid auctions (§2.7) - null the real backend for the duration, so a Preference Split/
+    // Silent bid phase submits an ordinary local move instead of going through the server; restored
+    // on exit. `analysisMode` (store state, not just this component) is what SealedBidPanel.ts's
+    // `mySeats` reads to let every seat's bid be entered here, not just this session's locked one.
+    this.analysisSealedBidBackendBackup = this.$store.state.sealedBidBackend;
+    this.$store.commit("setSealedBidBackend", null);
+    this.$store.commit("setAnalysisMode", true);
     // Staleness handling (§3.5) beyond "discard on any mismatch" is Phase 6 - a stored line whose
     // baseMoveCount no longer matches the live game just starts fresh rather than replaying.
     const stored = loadAnalysisLine(seat);
@@ -1473,6 +1490,9 @@ export default class Game extends Vue {
     this.analysisSeat = null;
     this.analysisWallet = null;
     this.analysisSnapshots = [];
+    this.$store.commit("setSealedBidBackend", this.analysisSealedBidBackendBackup);
+    this.analysisSealedBidBackendBackup = null;
+    this.$store.commit("setAnalysisMode", false);
     this.handleData(Engine.fromData(backup));
   }
 
@@ -1524,14 +1544,16 @@ export default class Game extends Vue {
    * result, and updates the displayed board. Undo/Reset/a newly-committed turn all go through this,
    * so they can never disagree about what the line replays to. */
   private setAnalysisEntries(entries: AnalysisEntry[]) {
-    const { engine, snapshots } = replayAnalysisLine(
+    const { engine, snapshots, wallet } = replayAnalysisLine(
       this.analysisOrigin,
       entries,
       this.analysisSeat,
-      this.analysisBaseRound
+      this.analysisBaseRound,
+      this.analysisWallet
     );
     this.analysisEntries = entries;
     this.analysisSnapshots = snapshots;
+    this.analysisWallet = wallet;
     this.analysisComposeBase = JSON.parse(JSON.stringify(engine));
     saveAnalysisLine(this.analysisSeat, {
       entries,

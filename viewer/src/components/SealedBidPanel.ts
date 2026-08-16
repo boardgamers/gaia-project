@@ -107,6 +107,9 @@ export default class SealedBidPanel extends Vue {
   /**
    * Every seat this device may submit for, in the order it should be asked for them.
    *
+   * - Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §2.6/decision #7) takes the board over
+   *   entirely, same as setup building placement's own pass-and-play - every seat's bid is yours to
+   *   enter, regardless of any real locked seat, so this check comes first.
    * - A locked seat (`player.index` >= 0) is the ordinary hosted case: exactly that one, whoever
    *   the engine's turn pointer currently happens to be on. That is what makes the submissions
    *   genuinely simultaneous.
@@ -120,6 +123,9 @@ export default class SealedBidPanel extends Vue {
    *   around and the engine's own order decides.
    */
   get mySeats(): number[] {
+    if (this.$store.state.analysisMode) {
+      return (this.gameData?.players ?? []).map((_, index: number) => index);
+    }
     const locked = this.$store.state.player?.index;
     if (typeof locked === "number") {
       return locked >= 0 ? [locked] : [];

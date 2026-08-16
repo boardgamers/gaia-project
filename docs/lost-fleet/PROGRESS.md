@@ -7021,79 +7021,23 @@ pin_preference_split_budget_search_path` (the one function in the set without a 
       check, cross-mount persistence, and the mutual-exclusion gate against premove's forced-clone
       `canPlay`). **Full viewer suite green at 999 passing.** No engine or backend files touched.
 
-167.  ✅ **Analysis mode Phases 2-3 (docs/lost-fleet/ANALYSIS_MODE_PLAN.md, viewer v5.61.0,
-      2026-08-16): the sandbox wallet, the resource-diff counter, and real solo round flow.** This is
-      where the feature stops being "replay the same turn you could already afford" and starts being
-      the actual point of it.
+167.  ✅ **Analysis mode Phases 2-3 (docs/lost-fleet/ANALYSIS_MODE_PLAN.md, viewer v5.61.0, 2026-08-16): the sandbox wallet, the resource-diff counter, and real solo round flow.** This is where the feature stops being "replay the same turn you could already afford" and starts being the actual point of it.
 
-            **Phase 2 - the one engine change (§2.4/§3.4):** `PlayerData` (`engine/player-data.ts`) gets a
-            non-serialized `analysis` flag (grouped with the file's other internal-only fields like
-            `brainstoneDest`) that makes the `MAX_CREDIT`/`MAX_ORE`/`MAX_KNOWLEDGE` clamps in `gainReward`
-            conditional: `this.credits = this.analysis ? this.credits + count : Math.min(MAX_CREDIT, ...)`.
-            Confirmed via test that it is absent from `toJSON()` and does not survive a `clone()` (which
-            round-trips through `toJSON`) - it can only ever be true on a disposable sandbox clone, and only
-            because `analysis.ts` re-applies it (`markAnalysisSeat`) after every single
-            `Engine.fromData(JSON.parse(JSON.stringify(...)))` reconstruction in the replay pipeline, since
-            the flag can never itself survive that round trip. `grantSandboxWallet(engine, seat)` grants a
-            generous wallet (30c/15o/15k/10q/4pw-per-area, the same numbers the cancel-trigger clone
-            already uses for the same "affordability must never block a button" purpose) as a direct field
-            assignment - `Math.max` against whatever the seat already legitimately has, so a resource with
-            no engine cap (qics) is only ever added to, never reduced - and returns `{ baseline, grant }`
-            for the counter below. `computeAnalysisCounter` is a pure diff: `net = current − grant −
+      **Phase 2 - the one engine change (§2.4/§3.4):** `PlayerData` (`engine/player-data.ts`) gets a non-serialized `analysis` flag (grouped with the file's other internal-only fields like `brainstoneDest`) that makes the `MAX_CREDIT`/`MAX_ORE`/`MAX_KNOWLEDGE` clamps in `gainReward` conditional on it. Confirmed via test that it is absent from `toJSON()` and does not survive a `clone()` (which round-trips through `toJSON`) - it can only ever be true on a disposable sandbox clone, and only because `analysis.ts` re-applies it (`markAnalysisSeat`) after every single `Engine.fromData(JSON.parse(JSON.stringify(...)))` reconstruction in the replay pipeline, since the flag can never itself survive that round trip. `grantSandboxWallet(engine, seat)` grants a generous wallet (30c/15o/15k/10q/4pw-per-area, the same numbers the cancel-trigger clone already uses for the same "affordability must never block a button" purpose) as a direct field assignment - capped below with `Math.max` against whatever the seat already legitimately has, so a resource with no engine cap (qics) is only ever added to, never reduced - and returns a baseline/grant pair for the counter below. `computeAnalysisCounter` is a pure diff (current minus grant minus baseline), matching §4.2's own worked example: 3 real credits, spend 10 from the granted wallet, shows **−7** in red. It also reports a power bowl-state before/after (not an invented scalar) and a feasibility verdict computed by scanning one resource snapshot per replayed line entry for the first move that overdrew credits/ores/knowledge/qics/VP. Surfaced for now as a plain inline readout in the existing analysis bar - the real striped-header/map-overlay placement from §5.3 is Phase 5.
 
-      baseline`, `displayed = current − grant`(§4.2's own worked example - 3 real credits, spend 10
-      from the granted wallet, shows **−7** in red), plus a power bowl-state before/after (not an
-      invented scalar) and a`feasible`/`infeasibleFromMove` verdict computed by scanning one resource
-      snapshot per replayed line entry for the first move that overdrew credits/ores/knowledge/qics/
-      VP. Surfaced for now as a plain inline readout in the existing analysis bar (`analysisCounter`
-      getter) - the real striped-header/map-overlay placement from §5.3 is Phase 5.
+      **Phase 3 - round flow (§2.5/§2.8/§3.7):** `applySoloRoundFlow(engine, seat)` shrinks `turnOrder` to `[seat]` and clears `passedPlayers`, called once from `enterAnalysisMode` (today's entry gate always lands exactly at `Phase.RoundMove`, round 1+, so this only ever needs to fire there). A solo pass then empties `turnOrder`, and the engine's own real round-cleanup/income/Gaia phase chain runs untouched - `beginRoundStartPhase`'s own fallback (now always resolving to `[seat]`) is what makes the loop self-sustaining round after round. **Deliberately does NOT touch `engine.setup`** (the array backing the `turnOrderAfterSetupAuction` getter, which has no setter): tracing `beginLeechingPhase` found it uses that SAME getter for table-seating order when deciding who a new building offers leech to - shrinking it would have made every future leech offer silently vanish instead of genuinely pausing, which is exactly backwards from what the feature needs to demonstrate on a player's first mine. This is a real correction against a literal reading of the plan's §2.5 (which named the getter as needing a shrink without cross-referencing `beginLeechingPhase`'s separate use of it) - `applySoloRoundFlow`'s own doc comment records the trace. The two-round cap (§3.7, decision #10) is `stripCappedPass`: Pass stays available while still in the round the line started on, is removed from available commands once the line has used its one bonus round, and reappears for the round-6 exception (passing there is what shows a line's real final score). Opponent decisions your own move pauses on - a leech charge offer being the one the plan called out as the actual stall risk - are resolved by `resolveOpponentDecisions`: `engine.autoMove()` first (the existing faction-aware heuristics a real auto-leech setting already uses), then a plain Decline for anything its cost heuristics can't confidently decide on their own, capped at 50 iterations so a genuinely unresolvable state can't spin forever.
 
-            **Phase 3 - round flow (§2.5/§2.8/§3.7):** `applySoloRoundFlow(engine, seat)` shrinks
-            `turnOrder` to `[seat]` and clears `passedPlayers`, called once from `enterAnalysisMode`
-            (today's entry gate always lands exactly at `Phase.RoundMove`, round ≥ 1, so this only ever
-            needs to fire there - a future setup-phase entry, Phase 4, would need it applied lazily mid-
-            replay instead). A solo pass then empties `turnOrder`, and the engine's own real
-            `cleanUpPhase → beginRoundStartPhase → beginIncomePhase → beginGaiaPhase → RoundMove` runs
-            untouched - `beginRoundStartPhase`'s `turnOrder = passedPlayers` (now always `[seat]`) is what
-            makes the loop self-sustaining round after round. **Deliberately does NOT touch
-            `engine.setup`** (the array backing the `turnOrderAfterSetupAuction` getter, which has no
-            setter): tracing `beginLeechingPhase` (`move/phase.ts`) found it uses that SAME getter for
-            table-seating order when deciding who a new building offers leech to
-            (`playersInTableOrderFrom`) - shrinking it would have made every future leech offer silently
-            vanish instead of genuinely pausing, which is exactly backwards from what the feature needs to
-            demonstrate on a player's first mine. This is a real correction against a literal reading of
-            the plan's §2.5 (which named `turnOrderAfterSetupAuction` as needing a shrink without cross-
-            referencing `beginLeechingPhase`'s separate use of it) - `applySoloRoundFlow`'s own doc comment
-            records the trace. The two-round cap (§3.7, decision #10) is `stripCappedPass`: Pass stays
-            available while `round < baseRound + 1`, is removed from `availableCommands` once the line has
-            used its one bonus round, and reappears for the round-6 exception (passing there is what shows
-            a line's real final score). Opponent decisions your own move pauses on - a leech charge offer
-            being the one the plan called out as the actual stall risk - are resolved by
-            `resolveOpponentDecisions`: `engine.autoMove()` first (the existing faction-aware heuristics a
-            real auto-leech setting already uses), then a plain Decline for anything its cost heuristics
-            can't confidently decide on their own (an opponent's default `autoChargePower` threshold asks
-            rather than decides above 1 power, which a typical leech offer already exceeds), capped at 50
-            iterations so a genuinely unresolvable state can't spin forever.
+      **Tests:** new `player-data.spec.ts` cases (clamped vs. uncapped gain, the flag not surviving a `toJSON`/`clone` round trip); new `analysis.spec.ts` cases for `markAnalysisSeat`, `grantSandboxWallet` (including the never-reduce-qics case), `computeAnalysisCounter` (the §4.2 worked example, the power bowl state), `applySoloRoundFlow`, `stripCappedPass`, and `resolveOpponentDecisions` (a real leech pause, borrowed from `engine.spec.ts`'s own "paused on a leech decision" fixture, resolves back to the analysis seat). New `Game.spec.ts` cases wire the same scenarios through the full component (wallet grant on entry, counter reflecting a real research-upgrade's cost AND reward simultaneously, wallet/counter cleared on exit, `turnOrder` shrunk on entry, a solo pass reaching round 2, Pass hidden past the cap, an opponent leech auto-resolving through `applyAnalysisMove`). **Engine suite minus the AI/fuzz directories: 684 passing** - the AI suite was not run, per the owner's standing instruction, since nothing touched it. 8 pre-existing failures in `resolve-automation-logic.spec.ts` (a Supabase mock-harness gap, unrelated) were verified present on the Phase-1 baseline with this session's changes stashed out, before and after. Viewer specs for the touched files run green; the full viewer suite runs once at the end of the Phase 2-7 session, not after every phase.
 
-            **Tests:** new `player-data.spec.ts` cases (clamped vs. uncapped gain, the flag not surviving a
-            `toJSON`/`clone` round trip); new `analysis.spec.ts` cases for `markAnalysisSeat`,
-            `grantSandboxWallet` (including the never-reduce-qics case), `computeAnalysisCounter` (the
-            §4.2 worked example, the power bowl state), `applySoloRoundFlow` (shrinks without touching
-            `engine.setup`; a solo pass genuinely reaches round 2's `RoundMove`; a no-op outside
-            `RoundMove`/round 1), `stripCappedPass`, and `resolveOpponentDecisions` (a real leech pause,
-            borrowed from `engine.spec.ts`'s own "paused on a leech decision" fixture, resolves back to the
-            analysis seat). New `Game.spec.ts` cases wire the same scenarios through the full component
-            (wallet grant on entry, counter reflecting a real research-upgrade's cost AND reward
-            simultaneously, wallet/counter cleared on exit, `turnOrder` shrunk on entry, a solo pass
-            reaching round 2, Pass hidden past the cap, an opponent leech auto-resolving through
-            `applyAnalysisMove`). **Engine suite minus `src/ai/**`/`src/fuzz/**`: 684 passing** - the AI
-            suite was not run, per the owner's standing instruction, since nothing touched it. 8 pre-
-            existing failures in `resolve-automation-logic.spec.ts` (`backend.fetchCancelTriggers is not a
+168.  ✅ **Analysis mode Phase 4 (docs/lost-fleet/ANALYSIS_MODE_PLAN.md, viewer v5.62.0, 2026-08-16): setup-phase play.** Entry (`analysisOffered`) no longer requires round 1+ - it is offered whenever it is genuinely this seat's own turn, in any phase (decision #6: "pick any faction, place mines, take a booster, play on"). `canPlay` gets an early `analysisMode` override, since setup pass-and-play walks every seat's turn inside the clone and a real locked seat would otherwise hide the Commands panel the moment the clone's turn pointer moves to an opponent's setup action - the same override premove/cancel-trigger's own forced-turn clones already needed.
 
-      function`, a Supabase mock-harness gap) are unrelated to this change - verified present on the
-      Phase-1 baseline with this session's changes stashed out, before and after. Viewer specs for
-      the two touched files run green; the full viewer suite runs once at the end of the Phase 2-7
-      session, not after every phase.
+      `applySoloRoundFlow` had to be revisited to make a setup-phase entry safe: unconditionally pre-seeding `passedPlayers = [seat]` (my first attempt) turned out to double the analysis seat's own pass into `[seat, seat]` once a round was already under way, since `passedPlayers` is also the CURRENT round's own live accumulator that `movePass` pushes onto - `beginRoundStartPhase` always resets it to `[]` right after consuming it, so the pre-seed is only safe while it is still genuinely unset (`undefined`, i.e. round 1 has never started). The corrected function checks for exactly that: pre-seed only when unset (steering the real engine's fallback the one time it actually needs steering, still ahead if `engine` is mid-setup), and reset to a fresh `[]` (not the seed value) when already mid-round. New `analysis.spec.ts` cases cover both the setup and mid-round paths directly, including the double-pass regression itself.
+
+      The sandbox wallet grant is now lazy too, since a setup-phase entry cannot get it at `enterAnalysisMode` time (§2.6: extra resources would allow builds setup does not permit). `replayAnalysisLine` grants it itself the first time the replayed line's own pass-and-play reaches round 1's `RoundMove` - deterministic, since replay always starts fresh from the same origin, so no state needs tracking outside one replay pass. `enterAnalysisMode` also clamps `analysisBaseRound` to at least round 1 for the two-round cap and staleness purposes, matching §3.7's "setup gives you setup plus round 1."
+
+      Sealed-bid auctions (§2.7): `enterAnalysisMode` stashes and nulls `state.sealedBidBackend`, restored on exit (and on the `externalData` interrupt path, which mirrors the same cleanup), so a Preference Split/Silent bid phase submits an ordinary local move instead of going through the server. A real hosted locked seat would still narrow `SealedBidPanel.ts`'s own `mySeats` to just that seat regardless of the backend, so a new `store.state.analysisMode` flag (set/cleared alongside the backend swap) lets `mySeats` widen to every seat during analysis mode - the same "every seat is yours to walk through" contract setup building placement already gets for free.
+
+      **Tests:** new `analysis.spec.ts` cases for the corrected `applySoloRoundFlow` (setup vs. mid-round behavior, the fallback resolving correctly once round 1 begins) and the lazy wallet grant (stays null in setup, grants on the round-1 transition, does not re-grant on a later replay); new `Game.spec.ts` "Phase 4" cases (offered during setup, placing an opponent's setup mine via pass-and-play, the lazy wallet grant through the full component, the sealed-bid backend stash/restore); a new `SilentAuctionBid.spec.ts` case confirms `analysisMode` widens seat scope the same way a lock-free hosted test game already does. Touched-file viewer specs green (118 across `analysis.spec.ts`, `Game.spec.ts`, `SetupStatus.spec.ts`, `SilentAuctionBid.spec.ts`, `PreferenceSplitBid.spec.ts`); the full viewer suite still runs once at the end of the Phase 2-7 session.
 
 ## Still MISSING — only one art-only item left
 

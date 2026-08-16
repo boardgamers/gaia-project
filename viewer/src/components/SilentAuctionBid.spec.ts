@@ -228,6 +228,29 @@ describe("SilentAuctionBid", () => {
     ]);
   });
 
+  it("renders every seat during analysis mode, even with a real locked seat (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §2.6/decision #7)", async () => {
+    const { store, submitted } = biddingStore({ hosted: true, seat: 0 });
+    store.commit("setAnalysisMode", true);
+    const { container } = render(SilentAuctionBid, { store });
+
+    // Same "asked for each seat, one at a time" shape as the test-game (seat: null) case above -
+    // analysis mode widens mySeats the same way, so this seat's own lock no longer narrows it.
+    expect(container.textContent).to.contain("Player 1");
+    await fill(container, [15, 0, 10]);
+    await fireEvent.click(submitButton(container));
+
+    expect(submitted).to.deep.equal([
+      {
+        seat: 0,
+        bids: [
+          { faction: "itars", points: 15 },
+          { faction: "xenos", points: 0 },
+          { faction: "taklons", points: 10 },
+        ],
+      },
+    ]);
+  });
+
   it("shows the waiting screen in a test game only once every seat is in", () => {
     const { store } = biddingStore({ hosted: true, seat: null, submittedSeats: [0, 1, 2] });
     const { container } = render(SilentAuctionBid, { store });

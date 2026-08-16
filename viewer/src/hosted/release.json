@@ -1,7 +1,24 @@
 {
-  "version": "5.61.0",
+  "version": "5.62.0",
   "releasedAt": "2026-08-16",
   "entries": [
+    {
+      "version": "5.62.0",
+      "releasedAt": "2026-08-16",
+      "kind": "update",
+      "title": "Analysis mode: setup pass-and-play",
+      "impact": "",
+      "changes": [
+        "Analysis mode can now be entered during setup, too: pick any faction, place opponents' starting mines and your own in real setup turn order, and take a booster - the whole board is yours to walk through, then it hands off into round 1 the same way, wallet and all.",
+        "Simultaneous-bid auction phases (Preference Split, Silent Auction) now work inside analysis mode as well - enter every seat's bid locally instead of going through the server.",
+        "applySoloRoundFlow (viewer/src/logic/analysis.ts) now handles a setup-phase entry too: it pre-seeds passedPlayers so the real engine's own beginRoundStartPhase fallback resolves to the solo turn order the first time round 1 begins, without ever touching engine.setup (which beginLeechingPhase also reads for table-seating order, unrelated to turn order).",
+        "replayAnalysisLine grants the sandbox wallet lazily the first time a setup-entered line's own replay reaches round 1's RoundMove, instead of only at entry; Game.vue's canPlay and analysisOffered no longer require round >= 1, and a new store.state.analysisMode flag lets SealedBidPanel.ts's mySeats widen to every seat during analysis mode regardless of this session's own locked seat."
+      ],
+      "userChanges": [
+        "Analysis mode can now be entered during setup, too: pick any faction, place opponents' starting mines and your own in real setup turn order, and take a booster - the whole board is yours to walk through, then it hands off into round 1 the same way, wallet and all.",
+        "Simultaneous-bid auction phases (Preference Split, Silent Auction) now work inside analysis mode as well - enter every seat's bid locally instead of going through the server."
+      ]
+    },
     {
       "version": "5.61.0",
       "releasedAt": "2026-08-16",

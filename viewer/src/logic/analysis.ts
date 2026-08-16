@@ -223,27 +223,44 @@ export function saveAnalysisLine(seat: number, line: AnalysisLine): void {
 }
 
 /**
- * The solo switch (§2.5/§3.1) - shrinks `turnOrder` to just `seat` and clears `passedPlayers`, so a
- * pass empties the list and triggers the engine's own real `cleanUpPhase` -> `beginRoundStartPhase`
- * -> `beginIncomePhase` -> `beginGaiaPhase` -> back to `RoundMove` (move/phase.ts), all genuine
- * engine code. `beginRoundStartPhase`'s own `turnOrder = passedPlayers` (now always `[seat]`, since
- * only this seat ever passes again) keeps the loop self-sustaining from here on - this only needs
- * to run once, which is why it is called directly from `enterAnalysisMode` rather than on every
- * replay step (today's entry gate only ever offers entry already at `Phase.RoundMove`, round >= 1).
+ * The solo switch (§2.5/§3.1) - makes every future round, from wherever `engine` is right now,
+ * yours alone, via two pieces:
  *
- * Deliberately does NOT touch `engine.setup` (the backing array behind the `turnOrderAfterSetupAuction`
- * getter, which has no setter). `beginRoundStartPhase` does fall back to it when `passedPlayers` is
- * still `undefined`, but that fallback only ever fires on the real game's own setup -> round 1
- * transition, which - for entry always at round >= 1 - has already happened before analysis mode
- * exists. `turnOrderAfterSetupAuction` is also `beginLeechingPhase`'s table-seating order for who a
- * new building offers leech to (`playersInTableOrderFrom`, engine.ts) - shrinking it would make
- * every future leech offer silently vanish instead of genuinely pausing for `resolveOpponentDecisions`
- * (§2.8) to resolve, which defeats the point of decision #9 (income/Gaia/pass work via real engine
- * code) and directly contradicts what analysis mode needs to demonstrate on a player's very first
- * mine.
+ * 1. If round 1 has never started (`engine.passedPlayers` is still its declared-but-unassigned
+ *    `undefined` - the real engine never touches it before the first `beginRoundStartPhase` call),
+ *    pre-seed `passedPlayers = [seat]`. This is what steers `beginRoundStartPhase`'s own
+ *    `turnOrder = passedPlayers || turnOrderAfterSetupAuction` fallback (`phase.ts:405`) the one
+ *    time it actually consults an unset value - the real setup -> round 1 transition, still ahead
+ *    if `engine` is mid-setup. **Must not fire once a round is already under way**: `passedPlayers`
+ *    is also the CURRENT round's own live accumulator (`movePass` pushes onto it as players pass),
+ *    so seeding it non-empty there would double-count this seat's own next pass into
+ *    `[seat, seat]` the moment it happens.
+ * 2. If `engine` is already sitting in `Phase.RoundMove` (entry landed mid-round, or the setup ->
+ *    round 1 transition above already ran), `turnOrder` is still the real multiplayer list for the
+ *    round in progress - shrink it directly, and reset `passedPlayers` to a fresh `[]` so this
+ *    seat's own future pass accumulates cleanly (mirrors what `beginRoundStartPhase` itself already
+ *    does at every ordinary round boundary).
+ *
+ * Either way, the loop is self-sustaining from here: `beginRoundStartPhase`'s
+ * `turnOrder = passedPlayers` at every later boundary reads back exactly `[seat]`, since only this
+ * seat ever passes again - this function only ever needs to run once (from `enterAnalysisMode`),
+ * never on every replay step.
+ *
+ * Deliberately does NOT touch `engine.setup` (the array backing the `turnOrderAfterSetupAuction`
+ * getter, which has no setter - the fallback above can only be steered via `passedPlayers`).
+ * `beginLeechingPhase` (`phase.ts:561`) reads that SAME getter for a completely different purpose -
+ * table-seating order, for who a new building offers leech to (`playersInTableOrderFrom`,
+ * engine.ts) - so shrinking it would make every future leech offer silently vanish instead of
+ * genuinely pausing for `resolveOpponentDecisions` (§2.8) to resolve. That would defeat the point of
+ * decision #9 (income/Gaia/pass work via real engine code) and directly contradict what analysis
+ * mode needs to demonstrate on a player's very first mine, in *either* the round-flow (Phase 3) or
+ * setup-entry (Phase 4) case - `engine.setup` stays real, untouched, for the life of the clone.
  */
 export function applySoloRoundFlow(engine: Engine, seat: number): void {
-  if (engine.phase !== Phase.RoundMove || engine.round < Round.Round1) {
+  if (engine.passedPlayers === undefined) {
+    engine.passedPlayers = [seat];
+  }
+  if (engine.phase !== Phase.RoundMove) {
     return;
   }
   engine.turnOrder = [seat];
@@ -315,18 +332,34 @@ export function resolveOpponentDecisions(engine: Engine, seat: number): void {
  * depend on where the line has gotten to. `snapshots` carries one resource snapshot per
  * successfully applied entry, in order - `computeAnalysisCounter`'s only use for it is finding the
  * first entry that made the line infeasible (§4.3).
+ *
+ * `initialWallet` is whatever `enterAnalysisMode` already had (non-null if entry landed directly in
+ * `Phase.RoundMove`, null for a setup-phase entry). When it is null, this function grants the
+ * wallet itself (Phase 4, §3.1) the first time the replayed line's own pass-and-play finishes setup
+ * and reaches round 1's move phase - since replay always starts fresh from the same `origin`, that
+ * moment falls at the same point in `entries` on every call, so no separate "already granted" state
+ * needs to be tracked outside this one pass. The returned `wallet` is what the caller should keep
+ * for its next call (and for `computeAnalysisCounter`).
  */
 export function replayAnalysisLine(
   origin: Engine,
   entries: AnalysisEntry[],
   seat: number,
-  baseRound: number
-): { engine: Engine; applied: number; snapshots: AnalysisResourceSnapshot[] } {
+  baseRound: number,
+  initialWallet: AnalysisWallet | null
+): {
+  engine: Engine;
+  applied: number;
+  snapshots: AnalysisResourceSnapshot[];
+  wallet: AnalysisWallet | null;
+} {
   let engine = markAnalysisSeat(Engine.fromData(JSON.parse(JSON.stringify(origin))), seat);
+  let wallet = initialWallet;
   stripCappedPass(engine, baseRound);
   let applied = 0;
   const snapshots: AnalysisResourceSnapshot[] = [];
   for (const entry of entries) {
+    const wasRoundMove = engine.phase === Phase.RoundMove;
     const copy = markAnalysisSeat(Engine.fromData(JSON.parse(JSON.stringify(engine))), seat);
     try {
       copy.move(entry.move);
@@ -335,6 +368,11 @@ export function replayAnalysisLine(
       break;
     }
     resolveOpponentDecisions(copy, seat);
+    if (!wallet && !wasRoundMove && copy.phase === Phase.RoundMove) {
+      wallet = grantSandboxWallet(copy, seat);
+      copy.clearAvailableCommands();
+      copy.generateAvailableCommands();
+    }
     stripCappedPass(copy, baseRound);
     engine = copy;
     applied++;
@@ -343,5 +381,5 @@ export function replayAnalysisLine(
       snapshots.push(snapshotResources(data));
     }
   }
-  return { engine, applied, snapshots };
+  return { engine, applied, snapshots, wallet };
 }
