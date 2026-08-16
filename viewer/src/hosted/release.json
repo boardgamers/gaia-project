@@ -1,7 +1,23 @@
 {
-  "version": "5.63.0",
+  "version": "5.64.0",
   "releasedAt": "2026-08-16",
   "entries": [
+    {
+      "version": "5.64.0",
+      "releasedAt": "2026-08-16",
+      "kind": "update",
+      "title": "Analysis mode: staleness handling and the leech adjustment stepper",
+      "impact": "",
+      "changes": [
+        "Analysis mode now handles a changed board on re-entry: an untouched line restores silently, a line that still applies after only opponents moved auto-replays with a notice, and a line is never silently replayed over your own real moves - you get an explicit Restore/Discard prompt instead. A line whose two-round window the live game has already passed is cleared with a notice.",
+        "Analysis mode also has a leech adjustment stepper (\"assume I leech N power\") next to the power bowl, since opponents never build in the sandbox and so never trigger a real leech offer - it's applied as an explicit, undoable line entry, never a silent assumption.",
+        "AnalysisEntry is now a union of a move entry and an adjust entry, applied on replay as a direct Resource.ChargePower gain rather than a move string. setAnalysisEntries trims a line down to the prefix that actually replayed before persisting it, so a partially-stale restored line does not keep carrying its dead tail into future Undo/Reset/save calls."
+      ],
+      "userChanges": [
+        "Analysis mode now handles a changed board on re-entry: an untouched line restores silently, a line that still applies after only opponents moved auto-replays with a notice, and a line is never silently replayed over your own real moves - you get an explicit Restore/Discard prompt instead. A line whose two-round window the live game has already passed is cleared with a notice.",
+        "Analysis mode also has a leech adjustment stepper (\"assume I leech N power\") next to the power bowl, since opponents never build in the sandbox and so never trigger a real leech offer - it's applied as an explicit, undoable line entry, never a silent assumption."
+      ]
+    },
     {
       "version": "5.63.0",
       "releasedAt": "2026-08-16",

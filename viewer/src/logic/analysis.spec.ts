@@ -7,6 +7,7 @@ import {
   grantSandboxWallet,
   loadAnalysisLine,
   markAnalysisSeat,
+  moveBelongsToSeat,
   replayAnalysisLine,
   resolveOpponentDecisions,
   saveAnalysisLine,
@@ -119,6 +120,70 @@ describe("replayAnalysisLine", () => {
 
       expect(second.wallet).to.deep.equal(first.wallet);
     });
+  });
+
+  describe("adjust entries - the leech adjustment stepper (§4.4, decision #12)", () => {
+    it("applies a leech adjustment as a direct power gain, not a move", () => {
+      const origin = new Engine(SETUP_MOVES);
+      applySoloRoundFlow(origin, 0);
+      const wallet = grantSandboxWallet(origin, 0); // area1/2/3 all >= 4 after the grant
+      const before = { ...origin.players[0].data.power };
+      const entries: AnalysisEntry[] = [{ kind: "adjust", charge: 2 }];
+
+      const { engine, applied, snapshots } = replayAnalysisLine(origin, entries, 0, 1, wallet);
+
+      expect(applied).to.equal(1);
+      expect(snapshots).to.have.length(1);
+      // chargePower moves tokens up a level - the receiving areas grow by the charge regardless of
+      // which levels exactly moved, and moveHistory gains nothing since no `.move()` ever ran.
+      const after = engine.players[0].data.power;
+      expect(after.area2 + after.area3).to.equal(before.area2 + before.area3 + 2);
+      expect(engine.moveHistory).to.deep.equal(origin.moveHistory);
+    });
+
+    it("stops the line at a non-positive adjust entry, exactly like an illegal move", () => {
+      const origin = new Engine(SETUP_MOVES);
+      applySoloRoundFlow(origin, 0);
+      const wallet = grantSandboxWallet(origin, 0);
+      const entries: AnalysisEntry[] = [
+        { kind: "adjust", charge: 0 },
+        { kind: "move", move: "terrans up nav." },
+      ];
+
+      const { applied } = replayAnalysisLine(origin, entries, 0, 1, wallet);
+
+      expect(applied).to.equal(0);
+    });
+
+    it("mixes move and adjust entries in one line", () => {
+      const origin = new Engine(SETUP_MOVES);
+      applySoloRoundFlow(origin, 0);
+      const wallet = grantSandboxWallet(origin, 0);
+      const entries: AnalysisEntry[] = [
+        { kind: "move", move: "terrans up nav." },
+        { kind: "adjust", charge: 3 },
+      ];
+
+      const { applied, snapshots } = replayAnalysisLine(origin, entries, 0, 1, wallet);
+
+      expect(applied).to.equal(2);
+      expect(snapshots).to.have.length(2);
+    });
+  });
+});
+
+describe("moveBelongsToSeat", () => {
+  it("matches a move by its faction name", () => {
+    const engine = new Engine(SETUP_MOVES);
+    expect(moveBelongsToSeat(engine, "terrans up nav.", 0)).to.equal(true);
+    expect(moveBelongsToSeat(engine, "terrans up nav.", 1)).to.equal(false);
+  });
+
+  it("matches a move by its p<N> prefix, for before factions are even assigned", () => {
+    const engine = new Engine(["init 2 randomSeed"]);
+    expect(moveBelongsToSeat(engine, "p1 faction terrans", 0)).to.equal(true);
+    expect(moveBelongsToSeat(engine, "p2 faction nevlas", 0)).to.equal(false);
+    expect(moveBelongsToSeat(engine, "p2 faction nevlas", 1)).to.equal(true);
   });
 });
 

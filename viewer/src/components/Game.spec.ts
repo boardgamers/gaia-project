@@ -1244,6 +1244,199 @@ describe("Game", () => {
         vm.$destroy();
       });
     });
+
+    describe("Phase 6 - staleness on re-entry (§3.5)", () => {
+      it("restores a stored line silently, with no notice, when nothing changed since it was saved", () => {
+        const first = mountAsSeat(0);
+        first.enterAnalysisMode();
+        first.applyAnalysisMove("terrans up nav.");
+        first.$el.remove();
+        first.$destroy();
+
+        const second = mountAsSeat(0); // same base engine/moveHistory as `first` - baseMoveCount unchanged
+        second.enterAnalysisMode();
+
+        expect(second.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
+        expect(second.analysisNotice).to.equal(null);
+        expect(second.analysisPendingRestore).to.equal(null);
+
+        second.$el.remove();
+        second.$destroy();
+      });
+
+      it("auto-replays a stored line and shows a notice when only opponents moved since it was saved", () => {
+        const first = mountAsSeat(0);
+        first.enterAnalysisMode();
+        first.applyAnalysisMove("terrans up nav.");
+        const savedBaseMoveCount = first.analysisBaseMoveCount;
+        first.$el.remove();
+        first.$destroy();
+
+        // A real opponent (nevlas, seat 1) move landed on the live game since the line was saved -
+        // pushed directly onto moveHistory rather than actually played, since resolveAnalysisStaleness
+        // only ever reads the move strings' leading tokens, never re-executes them.
+        const liveEngine = new Engine(SETUP_MOVES);
+        liveEngine.moveHistory.push("nevlas up nav (0 ⇒ 1).");
+        expect(liveEngine.moveHistory.length).to.be.greaterThan(savedBaseMoveCount);
+
+        const second = mountAsSeat(0, liveEngine);
+        second.enterAnalysisMode();
+
+        expect(second.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
+        expect(second.analysisPendingRestore).to.equal(null);
+        expect(second.analysisNotice).to.contain("Opponents moved");
+
+        second.$el.remove();
+        second.$destroy();
+      });
+
+      it("holds the stored line for an explicit prompt, not a silent replay, when this seat's own moves happened since it was saved", () => {
+        const first = mountAsSeat(0);
+        first.enterAnalysisMode();
+        first.applyAnalysisMove("terrans up nav.");
+        first.$el.remove();
+        first.$destroy();
+
+        const liveEngine = new Engine(SETUP_MOVES);
+        liveEngine.moveHistory.push("terrans up nav (0 ⇒ 1)."); // this seat's own real move since it was saved
+
+        const second = mountAsSeat(0, liveEngine);
+        second.enterAnalysisMode();
+
+        expect(second.analysisEntries).to.deep.equal([]); // NOT auto-replayed
+        expect(second.analysisPendingRestore).to.not.equal(null);
+        expect(second.analysisPendingRestore.entries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
+
+        second.restoreAnalysisLine();
+        expect(second.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
+        expect(second.analysisPendingRestore).to.equal(null);
+
+        second.$el.remove();
+        second.$destroy();
+      });
+
+      it("discardPendingAnalysisLine clears the prompt and starts fresh instead of restoring", () => {
+        const first = mountAsSeat(0);
+        first.enterAnalysisMode();
+        first.applyAnalysisMove("terrans up nav.");
+        first.$el.remove();
+        first.$destroy();
+
+        const liveEngine = new Engine(SETUP_MOVES);
+        liveEngine.moveHistory.push("terrans up nav (0 ⇒ 1).");
+
+        const second = mountAsSeat(0, liveEngine);
+        second.enterAnalysisMode();
+        expect(second.analysisPendingRestore).to.not.equal(null);
+
+        second.discardPendingAnalysisLine();
+
+        expect(second.analysisPendingRestore).to.equal(null);
+        expect(second.analysisEntries).to.deep.equal([]);
+
+        second.$el.remove();
+        second.$destroy();
+      });
+
+      it("clears a stored line whose two-round window the live game has already moved past", () => {
+        const first = mountAsSeat(0);
+        first.enterAnalysisMode();
+        first.applyAnalysisMove("terrans up nav.");
+        first.$el.remove();
+        first.$destroy();
+
+        const liveEngine = new Engine(SETUP_MOVES);
+        liveEngine.moveHistory.push("nevlas up nav (0 ⇒ 1).");
+        liveEngine.round = 3; // baseRound was 1, so round > baseRound + 1 - the window has moved on
+
+        const second = mountAsSeat(0, liveEngine);
+        second.enterAnalysisMode();
+
+        expect(second.analysisEntries).to.deep.equal([]);
+        expect(second.analysisPendingRestore).to.equal(null);
+        expect(second.analysisNotice).to.contain("no longer applies");
+
+        second.$el.remove();
+        second.$destroy();
+      });
+
+      it("setAnalysisEntries trims analysisEntries down to the prefix that actually replayed", () => {
+        const vm = mountAsSeat(0);
+        vm.enterAnalysisMode();
+
+        const applied = vm.setAnalysisEntries([
+          { kind: "move", move: "terrans up nav." },
+          { kind: "move", move: "terrans build m 99x99." }, // illegal - no such hex
+        ]);
+
+        expect(applied).to.equal(1);
+        expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("dismissAnalysisNotice clears a shown notice", () => {
+        const vm = mountAsSeat(0);
+        vm.analysisNotice = "something happened";
+
+        vm.dismissAnalysisNotice();
+
+        expect(vm.analysisNotice).to.equal(null);
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("keeps the persisted line but explains the forced exit when real state arrives mid-analysis (§3.5's externalData note)", () => {
+        const vm = mountAsSeat(0);
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("terrans up nav.");
+
+        vm.$store.dispatch("externalData", JSON.parse(JSON.stringify(vm.analysisBackup)));
+
+        expect(vm.analysisMode).to.equal(false);
+        expect(vm.analysisNotice).to.contain("saved line is still there");
+        vm.$el.remove();
+        vm.$destroy();
+
+        const second = mountAsSeat(0);
+        second.enterAnalysisMode();
+        expect(second.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
+        second.$el.remove();
+        second.$destroy();
+      });
+    });
+
+    describe("Phase 6 - leech adjustment (§4.4, decision #12)", () => {
+      it("appends an adjust entry and reflects it directly in the power bowl, not as a move", () => {
+        const vm = mountAsSeat(0);
+        vm.enterAnalysisMode();
+        const before = vm.analysisCounter.power.after;
+
+        vm.applyAnalysisAdjust(2);
+
+        expect(vm.analysisEntries).to.deep.equal([{ kind: "adjust", charge: 2 }]);
+        const after = vm.analysisCounter.power.after;
+        expect(after.area2 + after.area3).to.equal(before.area2 + before.area3 + 2);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("ignores a non-positive or non-integer charge instead of appending a broken entry", () => {
+        const vm = mountAsSeat(0);
+        vm.enterAnalysisMode();
+
+        vm.applyAnalysisAdjust(0);
+        vm.applyAnalysisAdjust(-1);
+        vm.applyAnalysisAdjust(1.5);
+
+        expect(vm.analysisEntries).to.deep.equal([]);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+    });
   });
 
   describe("round 0 action placement", () => {

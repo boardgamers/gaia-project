@@ -1,16 +1,17 @@
 # Analysis Mode — Implementation Plan (ready for handoff)
 
-> Status: **Phases 1-5 done (viewer v5.63.0, 2026-08-16, PROGRESS.md #166-169) — board takeover +
+> Status: **Phases 1-6 done (viewer v5.64.0, 2026-08-16, PROGRESS.md #166-170) — board takeover +
 > line + replay + enter/exit/undo/reset/persistence, the sandbox wallet + resource-diff counter, real
 > solo round flow (Pass/income/Gaia, the two-round cap, opponent decision auto-resolution),
-> setup-phase pass-and-play (opponent mine placement, faction pick, sealed-bid auctions), and the
+> setup-phase pass-and-play (opponent mine placement, faction pick, sealed-bid auctions), the
 > hazard-stripe visual treatment with the counter's two real surfaces (header headline + full
-> breakdown panel).** Phases 6-7 remain: see §7's phasing table. Every open question in this document
-> was put to the owner and answered; §1 is the record of those decisions and should not be
-> relitigated. §2 is a traced account of how the existing code actually works — every file:line in it
-> was read, not recalled, so a fresh session (Sonnet is fine) can execute this plan without
-> re-deriving the mechanics, though PROGRESS.md #167-169 found and corrected three real gaps along
-> the way:
+> breakdown panel), staleness handling on re-entry (§3.5's four-row table, including the own-seat
+> Restore/Discard prompt and the `externalData` re-anchor notice), and the leech adjustment stepper
+> (§4.4).** Phase 7 remains: see §7's phasing table. Every open question in this document was put to
+> the owner and answered; §1 is the record of those decisions and should not be relitigated. §2 is a
+> traced account of how the existing code actually works — every file:line in it was read, not
+> recalled, so a fresh session (Sonnet is fine) can execute this plan without re-deriving the
+> mechanics, though PROGRESS.md #167-169 found and corrected three real gaps along the way:
 >
 > - Shrinking `turnOrderAfterSetupAuction` (via `engine.setup`) for `beginRoundStartPhase`'s benefit,
 >   as §2.5 originally said to, would have also broken `beginLeechingPhase`'s unrelated use of the
@@ -30,10 +31,14 @@
 >   so this was never exercised before). Found via a live-browser check (Playwright against the dev
 >   server) in Phase 5 - fixed by gating that getter on `round >= Round.Round1`.
 >
-> **Continue at Phase 6** (staleness handling §3.5 + the leech adjustment stepper §4.4). Phase 5
-> deliberately left the map-corner entry/exit button (§5.4) unbuilt - see PROGRESS.md #169's scope
-> note for why - the controls live in the new `AnalysisPanel.vue` instead, which is where Phase 6's
-> leech stepper and Phase 7's Commit button should be added too.
+> **Continue at Phase 7** (the commit path, §6): move 1 committed live, moves 2-4 queued as
+> Sequential premoves via the existing premove machinery (capped at 4 total per `PremoveBar.vue`'s
+> 3-row queue cap), only an affordable prefix committable, `adjust` entries never committed
+> (`entries.filter(e => e.kind === "move")` before handing anything to the premove queue), committing
+> exits analysis mode and clears the line, and premoves are hosted-only (self-contained/offline offers
+> move 1 only). Phase 5 deliberately left the map-corner entry/exit button (§5.4) unbuilt - see
+> PROGRESS.md #169's scope note for why - the controls live in `AnalysisPanel.vue` instead, which is
+> where Phase 6's leech stepper landed and where Phase 7's Commit button should go too.
 >
 > Read `CLAUDE.md` and `PROGRESS.md`'s **Working agreements** first. This plan touches the viewer and
 > makes one small engine change; it touches no database object and no Edge Function.

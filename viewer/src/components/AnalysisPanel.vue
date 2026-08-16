@@ -1,5 +1,17 @@
 <template>
-  <div v-if="active || offered" class="analysis-panel" :class="{ 'analysis-panel--active': active }">
+  <div
+    v-if="active || offered || notice || pendingRestore"
+    class="analysis-panel"
+    :class="{ 'analysis-panel--active': active }"
+  >
+    <!-- Staleness on re-entry (§3.5) - a one-line explanation of what resolveAnalysisStaleness did
+         (or why a mid-analysis externalData arrival just closed the takeover), shown regardless of
+         active/offered so it survives past the exit it might be describing. -->
+    <div v-if="notice" class="analysis-panel__banner">
+      <span class="flex-grow-1">{{ notice }}</span>
+      <button type="button" class="analysis-panel__banner-x" @click="$emit('dismiss-notice')">✕</button>
+    </div>
+
     <template v-if="active">
       <div class="analysis-panel__header">
         <strong class="analysis-panel__title">Analysis</strong>
@@ -13,6 +25,21 @@
           </b-button>
           <b-button size="sm" variant="secondary" @click="$emit('exit')">Exit analysis mode</b-button>
         </div>
+      </div>
+
+      <!-- The "own seat moved since this was saved" row of §3.5's table - prompts instead of
+           silently replaying, mirroring PremoveBar.vue's inline mode-switch confirm rather than a
+           raw window.confirm. -->
+      <div v-if="pendingRestore" class="analysis-panel__banner analysis-panel__banner--confirm">
+        <span class="flex-grow-1">
+          A saved analysis line ({{ pendingRestore.entries.length }} move{{
+            pendingRestore.entries.length === 1 ? "" : "s"
+          }}) exists from before your last move.
+        </span>
+        <b-button size="sm" variant="outline-secondary" class="mr-1" @click="$emit('restore')">
+          Restore anyway
+        </b-button>
+        <b-button size="sm" variant="outline-secondary" @click="$emit('discard-restore')">Discard</b-button>
       </div>
 
       <!-- Full breakdown (§5.3, second surface) - the headline in Commands.vue's striped header is
@@ -36,6 +63,26 @@
             {{ counter.power.after.area1 }}/{{ counter.power.after.area2 }}/{{ counter.power.after.area3 }}
           </span>
         </div>
+
+        <!-- The leech adjustment stepper (§4.4, decision #12) - opponents never build in analysis
+             mode, so a line never gains the leech power a real opponent's building would have
+             realistically offered. This is how the player adds that back in themselves, explicitly. -->
+        <div class="analysis-panel__adjust">
+          <label for="analysis-adjust-charge" class="analysis-panel__adjust-label">Assume I leech</label>
+          <input
+            id="analysis-adjust-charge"
+            type="number"
+            min="1"
+            max="12"
+            v-model.number="adjustCharge"
+            class="analysis-panel__adjust-input"
+          />
+          <span>power</span>
+          <b-button size="sm" variant="outline-secondary" :disabled="!adjustValid" @click="submitAdjust">
+            Add
+          </b-button>
+        </div>
+
         <div class="analysis-panel__verdict" :class="{ 'analysis-panel__verdict--infeasible': !counter.feasible }">
           <template v-if="counter.feasible">Feasible so far.</template>
           <template v-else>
@@ -57,13 +104,15 @@
         could actually take them first — this line assumes nobody beats you to any of them.
       </div>
     </template>
-    <b-button v-else size="sm" variant="outline-secondary" @click="$emit('enter')">Enter analysis mode</b-button>
+    <b-button v-else-if="offered" size="sm" variant="outline-secondary" @click="$emit('enter')">
+      Enter analysis mode
+    </b-button>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
-import { AnalysisCounter, AnalysisResourceDelta } from "../logic/analysis";
+import { AnalysisCounter, AnalysisLine, AnalysisResourceDelta } from "../logic/analysis";
 
 export default Vue.extend({
   name: "AnalysisPanel",
@@ -73,6 +122,13 @@ export default Vue.extend({
     moveCount: { type: Number, default: 0 },
     counter: { type: Object as () => AnalysisCounter | null, default: null },
     passCapped: { type: Boolean, default: false },
+    notice: { type: String, default: null },
+    pendingRestore: { type: Object as () => AnalysisLine | null, default: null },
+  },
+  data() {
+    return {
+      adjustCharge: 1,
+    };
   },
   computed: {
     resourceRows(): { label: string; value: AnalysisResourceDelta }[] {
@@ -88,10 +144,20 @@ export default Vue.extend({
         { label: "VP", value: counter.victoryPoints },
       ];
     },
+    adjustValid(): boolean {
+      const charge = this.adjustCharge as number;
+      return Number.isInteger(charge) && charge > 0;
+    },
   },
   methods: {
     formatSigned(value: number): string {
       return value > 0 ? `+${value}` : `${value}`;
+    },
+    submitAdjust() {
+      if (!this.adjustValid) {
+        return;
+      }
+      this.$emit("adjust", this.adjustCharge);
     },
   },
 });
@@ -137,6 +203,38 @@ export default Vue.extend({
   margin-left: auto;
 }
 
+// §3.5 staleness banners - kept neutral (ui-surface/ui-border) rather than reusing the panel's own
+// warning tint, since .analysis-panel--active already sits on that background and a same-toned
+// banner would lose contrast against it.
+.analysis-panel__banner {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  line-height: 1.3;
+  border: 1px solid var(--ui-border);
+  border-radius: 0.45rem;
+  padding: 0.4rem 0.5rem;
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  margin-bottom: 0.5rem;
+}
+
+.analysis-panel__banner--confirm {
+  flex-wrap: wrap;
+}
+
+.analysis-panel__banner-x {
+  border: 0;
+  background: transparent;
+  color: var(--ui-text-muted);
+  font-size: 0.75rem;
+  line-height: 1;
+  padding: 0.15rem 0.25rem;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
 .analysis-panel__breakdown {
   display: flex;
   flex-wrap: wrap;
@@ -177,6 +275,29 @@ export default Vue.extend({
   font-weight: 400;
   opacity: 0.7;
   margin-left: 0.15rem;
+}
+
+// The leech adjustment stepper (§4.4) - deliberately plain (no warning tint), since it is not a
+// notice or a warning, just a small input sitting alongside the resource rows above it.
+.analysis-panel__adjust {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-basis: 100%;
+  font-size: 0.8rem;
+}
+
+.analysis-panel__adjust-label {
+  margin: 0;
+}
+
+.analysis-panel__adjust-input {
+  width: 3.5rem;
+  padding: 0.1rem 0.3rem;
+  border: 1px solid var(--ui-border);
+  border-radius: 0.3rem;
+  background: var(--ui-surface);
+  color: var(--ui-text);
 }
 
 .analysis-panel__verdict {

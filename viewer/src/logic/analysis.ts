@@ -1,14 +1,27 @@
-import Engine, { Command, Phase, Round } from "@gaia-project/engine";
+import Engine, { Command, Phase, Resource, Reward, Round } from "@gaia-project/engine";
 
 // Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md) - a local, non-committing sandbox clone of
 // the board. The "line" is the ordered list of turns played inside it. Persistence is localStorage
 // only, per game + seat (§3.3/§3.4) - never the database, and never a serialized engine (schema
 // drift would corrupt a stored save; storing move strings and replaying them sidesteps that).
 
-export interface AnalysisEntry {
+/** A real, engine-validated turn. */
+export interface AnalysisMoveEntry {
   kind: "move";
   move: string;
 }
+
+/** The leech adjustment (§4.4, decision #12) - opponents never build in analysis mode, so a line
+ * never gains the leech power a real opponent's building would realistically have offered. This is
+ * an explicit, visible "assume I leech N power" line item the player adds themselves, never an
+ * automatic guess. Applied on replay as a direct `Resource.ChargePower` gain (below), not a move
+ * string - there is no engine command for "leech power with no offer to answer". */
+export interface AnalysisAdjustEntry {
+  kind: "adjust";
+  charge: number;
+}
+
+export type AnalysisEntry = AnalysisMoveEntry | AnalysisAdjustEntry;
 
 /** Structural shape shared by a real `PlayerData` instance and its plain-JSON'd form (the shape
  * `analysisComposeBase` etc. are stored as, per Game.vue's "replay from a stable base" pattern) -
@@ -319,6 +332,39 @@ export function resolveOpponentDecisions(engine: Engine, seat: number): void {
   }
 }
 
+/** Applies a leech adjustment (§4.4) directly to `seat`'s player data - `gainRewards`, not `.move()`,
+ * since there is no move string for "gain power with nobody having offered it". `forced: true` skips
+ * `gainRewards`' brainstone-destination interrupt (it would otherwise wait on a UI event that nothing
+ * in analysis mode's replay loop can answer) and falls back to its normal heuristic placement, which
+ * is exactly what a real leech resolved via `autoMove()` elsewhere in this file already does. Throws
+ * on a non-positive or non-integer charge, exactly like an illegal move string throwing from
+ * `engine.move()` - the caller (`replayAnalysisLine`) already treats "this entry threw" as "stop the
+ * line here", so an invalid adjust entry is handled identically to an invalid move entry. */
+function applyLeechAdjustment(engine: Engine, seat: number, charge: number): void {
+  if (!Number.isInteger(charge) || charge <= 0) {
+    throw new Error(`Invalid analysis leech adjustment: ${charge}`);
+  }
+  const data = engine.players[seat]?.data;
+  if (!data) {
+    throw new Error(`No player data for seat ${seat}`);
+  }
+  data.gainRewards([new Reward(charge, Resource.ChargePower)], true, Command.ChargePower);
+}
+
+/** Whether a real (already-committed) `move` string from `engine.moveHistory` was made by `seat` -
+ * used for §3.5's staleness check, to tell "only opponents moved since this line was saved" apart
+ * from "I moved myself" (the row that needs a keep/clear prompt instead of a silent replay). Mirrors
+ * the exact prefix format `engine.ts`'s own `loadTurnMoves` parses a move's acting player from
+ * (`p<N>`, 1-indexed, or the player's faction name) rather than inventing a second convention. */
+export function moveBelongsToSeat(engine: Engine, move: string, seat: number): boolean {
+  const spaceIndex = move.indexOf(" ");
+  const token = spaceIndex === -1 ? move : move.slice(0, spaceIndex);
+  if (/^p[1-7]$/.test(token)) {
+    return +token[1] - 1 === seat;
+  }
+  return engine.players[seat]?.faction === token;
+}
+
 /**
  * Replays `entries` onto a fresh clone of `origin`, in order, stopping at the first one that
  * throws instead of crashing the caller - the only way to "un-apply" a command on an Engine
@@ -362,8 +408,18 @@ export function replayAnalysisLine(
     const wasRoundMove = engine.phase === Phase.RoundMove;
     const copy = markAnalysisSeat(Engine.fromData(JSON.parse(JSON.stringify(engine))), seat);
     try {
-      copy.move(entry.move);
-      copy.generateAvailableCommandsIfNeeded();
+      if (entry.kind === "move") {
+        copy.move(entry.move);
+        copy.generateAvailableCommandsIfNeeded();
+      } else {
+        // Unlike a move, nothing here runs the engine's own phase machinery, so the position's
+        // available commands (still whatever `engine` had before this gain) need an explicit
+        // refresh - the same reason grantSandboxWallet's call site below regenerates after its own
+        // direct resource injection.
+        applyLeechAdjustment(copy, seat, entry.charge);
+        copy.clearAvailableCommands();
+        copy.generateAvailableCommands();
+      }
     } catch {
       break;
     }

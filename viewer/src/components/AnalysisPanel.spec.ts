@@ -85,4 +85,82 @@ describe("AnalysisPanel", () => {
     const { container } = render(AnalysisPanel, { props: { active: true, offered: false } });
     expect(container.textContent).to.contain("only one player could actually take them first");
   });
+
+  describe("Phase 6 - staleness notice and pending-restore prompt (§3.5)", () => {
+    it("shows a dismissible notice regardless of active/offered, and emits dismiss-notice", async () => {
+      const { container, emitted } = render(AnalysisPanel, {
+        props: { active: false, offered: false, notice: "Opponents moved since this line was saved." },
+      });
+
+      expect(container.textContent).to.contain("Opponents moved since this line was saved.");
+
+      await fireEvent.click(container.querySelector(".analysis-panel__banner-x"));
+
+      expect(emitted()["dismiss-notice"]).to.have.length(1);
+    });
+
+    it("shows nothing when neither active, offered, notice nor pendingRestore is set", () => {
+      const { container } = render(AnalysisPanel, { props: { active: false, offered: false } });
+      expect(container.querySelector(".analysis-panel")).to.equal(null);
+    });
+
+    it("prompts to restore or discard a pending stored line, only while active, and emits both answers", async () => {
+      const pendingRestore = { entries: [{ kind: "move", move: "terrans up nav." }], baseRound: 1, baseMoveCount: 9 };
+      const { container, emitted } = render(AnalysisPanel, {
+        props: { active: true, offered: false, pendingRestore },
+      });
+
+      expect(container.textContent).to.contain("1 move");
+      expect(container.textContent).to.contain("exists from before your last move");
+
+      const buttons = Array.from(container.querySelectorAll("button"));
+      await fireEvent.click(buttons.find((b) => b.textContent.includes("Restore anyway")));
+      await fireEvent.click(buttons.find((b) => b.textContent.includes("Discard")));
+
+      expect(emitted().restore).to.have.length(1);
+      expect(emitted()["discard-restore"]).to.have.length(1);
+    });
+
+    it("does not show the pending-restore prompt while merely offered, not active", () => {
+      const pendingRestore = { entries: [{ kind: "move", move: "terrans up nav." }], baseRound: 1, baseMoveCount: 9 };
+      const { container } = render(AnalysisPanel, {
+        props: { active: false, offered: true, pendingRestore },
+      });
+      expect(container.textContent).to.not.contain("exists from before your last move");
+    });
+  });
+
+  describe("Phase 6 - the leech adjustment stepper (§4.4, decision #12)", () => {
+    it("emits adjust with the entered charge when Add is clicked", async () => {
+      const { container, emitted } = render(AnalysisPanel, {
+        props: { active: true, offered: false, moveCount: 0, counter: COUNTER },
+      });
+
+      const input = container.querySelector("#analysis-adjust-charge") as HTMLInputElement;
+      await fireEvent.update(input, "3");
+      const addButton = Array.from(container.querySelectorAll("button")).find((b) => b.textContent.includes("Add"));
+      await fireEvent.click(addButton);
+
+      expect(emitted().adjust).to.deep.equal([[3]]);
+    });
+
+    it("disables Add for a non-positive charge", async () => {
+      const { container } = render(AnalysisPanel, {
+        props: { active: true, offered: false, moveCount: 0, counter: COUNTER },
+      });
+
+      const input = container.querySelector("#analysis-adjust-charge") as HTMLInputElement;
+      await fireEvent.update(input, "0");
+      const addButton = Array.from(container.querySelectorAll("button")).find((b) => b.textContent.includes("Add"));
+
+      expect((addButton as HTMLButtonElement).disabled).to.equal(true);
+    });
+
+    it("does not render the stepper before a sandbox wallet exists (counter null)", () => {
+      const { container } = render(AnalysisPanel, {
+        props: { active: true, offered: false, moveCount: 0, counter: null },
+      });
+      expect(container.querySelector("#analysis-adjust-charge")).to.equal(null);
+    });
+  });
 });

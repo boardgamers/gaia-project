@@ -11,7 +11,7 @@
          The compact always-visible headline is Commands.vue's own striped header instead
          (§2.9/§5.1/§5.3's first surface) - the two never disagree since both read the same
          analysisCounter. -->
-    <div v-if="analysisMode || analysisOffered" class="row">
+    <div v-if="analysisMode || analysisOffered || analysisNotice || analysisPendingRestore" class="row">
       <div class="col-12">
         <AnalysisPanel
           :active="analysisMode"
@@ -19,10 +19,16 @@
           :move-count="analysisEntries.length"
           :counter="analysisCounter"
           :pass-capped="analysisPassCapped"
+          :notice="analysisNotice"
+          :pending-restore="analysisPendingRestore"
           @enter="enterAnalysisMode"
           @exit="exitAnalysisMode"
           @undo="undoLastAnalysisEntry"
           @reset="resetAnalysisLine"
+          @adjust="applyAnalysisAdjust"
+          @dismiss-notice="dismissAnalysisNotice"
+          @restore="restoreAnalysisLine"
+          @discard-restore="discardPendingAnalysisLine"
         />
       </div>
     </div>
@@ -361,6 +367,7 @@ import { buildSequentialChainPreview } from "../logic/premove-preview";
 import {
   AnalysisCounter,
   AnalysisEntry,
+  AnalysisLine,
   AnalysisResourceSnapshot,
   AnalysisWallet,
   applySoloRoundFlow,
@@ -368,6 +375,7 @@ import {
   grantSandboxWallet,
   loadAnalysisLine,
   markAnalysisSeat,
+  moveBelongsToSeat,
   passAllowed,
   replayAnalysisLine,
   saveAnalysisLine,
@@ -515,6 +523,14 @@ export default class Game extends Vue {
   // going through the server while composing inside the sandbox - the same "stash, take over,
   // restore" shape as analysisBackup above, applied to this one piece of global store state.
   analysisSealedBidBackendBackup: SealedBidBackend | null = null;
+  // Phase 6 (§3.5) - staleness on re-entry. `analysisNotice` is a one-line, dismissible explanation
+  // shown after the line was auto-replayed against a changed board (or cleared, or a forced exit
+  // happened) - null the rest of the time. `analysisPendingRestore` holds a stored line that was
+  // deliberately NOT auto-replayed because this seat's own real moves happened since it was saved
+  // (the one row of §3.5's table that must prompt instead of silently replaying); non-null only
+  // while that prompt is showing.
+  analysisNotice: string | null = null;
+  analysisPendingRestore: AnalysisLine | null = null;
 
   @Prop()
   options: EngineOptions;
@@ -565,6 +581,10 @@ export default class Game extends Vue {
         // to localStorage as each entry committed, so nothing here needs to save it again. Mirrors
         // exitAnalysisMode's own cleanup (sealed-bid backend restore, analysisMode store flag) since
         // this is the OTHER path back to the real board, not just a "discard the preview" click.
+        // §3.5's "re-anchor and show a notice" (as opposed to premove's silent nuke): the line's
+        // baseMoveCount still anchors it to this seat's own future moves, so re-entering runs it
+        // straight back through resolveAnalysisStaleness's normal table - nothing needs to happen to
+        // the stored line itself here, only a notice explaining why the takeover just closed.
         if (this.analysisMode) {
           this.analysisMode = false;
           this.analysisBackup = null;
@@ -573,6 +593,9 @@ export default class Game extends Vue {
           this.analysisSeat = null;
           this.analysisWallet = null;
           this.analysisSnapshots = [];
+          this.analysisPendingRestore = null;
+          this.analysisNotice =
+            "A new move arrived, so analysis mode closed. Your saved line is still there - Enter analysis mode to continue where you left off.";
           this.$store.commit("setSealedBidBackend", this.analysisSealedBidBackendBackup);
           this.analysisSealedBidBackendBackup = null;
           this.$store.commit("setAnalysisMode", false);
@@ -1439,12 +1462,82 @@ export default class Game extends Vue {
     this.analysisSealedBidBackendBackup = this.$store.state.sealedBidBackend;
     this.$store.commit("setSealedBidBackend", null);
     this.$store.commit("setAnalysisMode", true);
-    // Staleness handling (§3.5) beyond "discard on any mismatch" is Phase 6 - a stored line whose
-    // baseMoveCount no longer matches the live game just starts fresh rather than replaying.
-    const stored = loadAnalysisLine(seat);
-    const entries = stored && stored.baseMoveCount === this.analysisBaseMoveCount ? stored.entries : [];
     this.analysisMode = true;
-    this.setAnalysisEntries(entries);
+    this.analysisNotice = null;
+    this.analysisPendingRestore = null;
+    this.resolveAnalysisStaleness(seat, loadAnalysisLine(seat));
+  }
+
+  /**
+   * Staleness on re-entry (§3.5). Compares the stored line's `baseMoveCount` against the live
+   * game's current `moveHistory.length` and picks one of four behaviours - `entries`/`baseRound`/
+   * `baseMoveCount` on `this` are already set by the caller by this point, so this only ever needs
+   * to decide what to replay (if anything) and what, if anything, to tell the player about it:
+   *
+   * - Unchanged (`baseMoveCount` matches) - restore silently, no notice.
+   * - The live game has already moved past the stored line's own two-round window
+   *   (`this.engine.round > stored.baseRound + 1`) - clear it; that window is gone regardless of who
+   *   moved, so there is nothing left worth replaying.
+   * - Only opponents moved since the line was saved - replay automatically (§2.5's solo round flow
+   *   makes this safe regardless of how many real opponent turns happened in between), keeping
+   *   whichever prefix still applies, with a notice either way.
+   * - This seat's own real moves happened since the line was saved - the common "I analysed a line,
+   *   then played it" case, where silently replaying it would double the move or throw. Enter with
+   *   an empty line and hold the stored one in `analysisPendingRestore` for the player to explicitly
+   *   restore or discard instead (mirrors PremoveBar.vue's inline mode-switch confirm, not a raw
+   *   `window.confirm`).
+   */
+  private resolveAnalysisStaleness(seat: number, stored: AnalysisLine | null) {
+    if (!stored || stored.entries.length === 0) {
+      this.setAnalysisEntries([]);
+      return;
+    }
+    if (stored.baseMoveCount === this.analysisBaseMoveCount) {
+      this.setAnalysisEntries(stored.entries);
+      return;
+    }
+    if (this.engine.round > stored.baseRound + 1) {
+      this.setAnalysisEntries([]);
+      this.analysisNotice =
+        "Your saved analysis line was from an earlier round and no longer applies, so it was cleared.";
+      return;
+    }
+    const newMoves = this.engine.moveHistory.slice(stored.baseMoveCount);
+    if (newMoves.some((move) => moveBelongsToSeat(this.engine, move, seat))) {
+      this.setAnalysisEntries([]);
+      this.analysisPendingRestore = stored;
+      return;
+    }
+    const applied = this.setAnalysisEntries(stored.entries);
+    this.analysisNotice =
+      applied < stored.entries.length
+        ? `Opponents moved since this line was saved. Replayed ${applied} of ${stored.entries.length} moves - the rest no longer applied.`
+        : "Opponents moved since this line was saved - replayed against the current board.";
+  }
+
+  /** The player's answer to `analysisPendingRestore`'s prompt: replay the stored line anyway. */
+  restoreAnalysisLine() {
+    const stored = this.analysisPendingRestore;
+    if (!stored) {
+      return;
+    }
+    this.analysisPendingRestore = null;
+    const applied = this.setAnalysisEntries(stored.entries);
+    this.analysisNotice =
+      applied < stored.entries.length
+        ? `Restored ${applied} of ${stored.entries.length} moves from your saved line - the rest no longer applied.`
+        : null;
+  }
+
+  /** The player's other answer to `analysisPendingRestore`'s prompt: start fresh instead. The empty
+   * line `resolveAnalysisStaleness` already entered with was persisted the moment it called
+   * `setAnalysisEntries([])`, so there is nothing left to overwrite here. */
+  discardPendingAnalysisLine() {
+    this.analysisPendingRestore = null;
+  }
+
+  dismissAnalysisNotice() {
+    this.analysisNotice = null;
   }
 
   /** Decision #2 - discards the board preview but keeps the line (already persisted as each entry
@@ -1461,6 +1554,7 @@ export default class Game extends Vue {
     this.analysisSeat = null;
     this.analysisWallet = null;
     this.analysisSnapshots = [];
+    this.analysisPendingRestore = null;
     this.$store.commit("setSealedBidBackend", this.analysisSealedBidBackendBackup);
     this.analysisSealedBidBackendBackup = null;
     this.$store.commit("setAnalysisMode", false);
@@ -1494,6 +1588,19 @@ export default class Game extends Vue {
     this.handleData(copy);
   }
 
+  /** The leech adjustment stepper (§4.4, decision #12) - appends an `{ kind: "adjust", charge }`
+   * entry, applied on replay as a direct power gain (see analysis.ts's `applyLeechAdjustment`)
+   * rather than a move string, since there is no move for "gain power with nobody having offered
+   * it". Only offered once a sandbox wallet exists (AnalysisPanel.vue gates its stepper on
+   * `counter`), so `analysisComposeBase` is always set here in practice, but this checks anyway
+   * rather than assume the caller got the gating right. */
+  applyAnalysisAdjust(charge: number) {
+    if (!this.analysisComposeBase || !Number.isInteger(charge) || charge <= 0) {
+      return;
+    }
+    this.setAnalysisEntries([...this.analysisEntries, { kind: "adjust", charge }]);
+  }
+
   /** Undo (§1 decision #3) - pop the last entry, replay. */
   undoLastAnalysisEntry() {
     if (!this.analysisMode || this.analysisEntries.length === 0) {
@@ -1513,25 +1620,34 @@ export default class Game extends Vue {
   /** The single path that changes `analysisEntries`: replays the given entries from
    * `analysisOrigin` (never mutates an Engine in place - see replayAnalysisLine), persists the
    * result, and updates the displayed board. Undo/Reset/a newly-committed turn all go through this,
-   * so they can never disagree about what the line replays to. */
-  private setAnalysisEntries(entries: AnalysisEntry[]) {
-    const { engine, snapshots, wallet } = replayAnalysisLine(
+   * so they can never disagree about what the line replays to.
+   *
+   * Trims `entries` down to the prefix that actually replayed (`applied`, always the full list
+   * during ordinary play - a just-appended or just-undone entry always replays cleanly against the
+   * same `analysisOrigin` it was validated against) before storing it as `analysisEntries` and
+   * persisting it, so a §3.5 re-entry that only partially replays a stale stored line doesn't keep
+   * carrying its dead tail forward into every subsequent Undo/Reset/save. Returns `applied` so
+   * `resolveAnalysisStaleness`/`restoreAnalysisLine` can tell whether anything had to be dropped. */
+  private setAnalysisEntries(entries: AnalysisEntry[]): number {
+    const { engine, applied, snapshots, wallet } = replayAnalysisLine(
       this.analysisOrigin,
       entries,
       this.analysisSeat,
       this.analysisBaseRound,
       this.analysisWallet
     );
-    this.analysisEntries = entries;
+    const kept = entries.slice(0, applied);
+    this.analysisEntries = kept;
     this.analysisSnapshots = snapshots;
     this.analysisWallet = wallet;
     this.analysisComposeBase = JSON.parse(JSON.stringify(engine));
     saveAnalysisLine(this.analysisSeat, {
-      entries,
+      entries: kept,
       baseRound: this.analysisBaseRound,
       baseMoveCount: this.analysisBaseMoveCount,
     });
     this.handleData(engine);
+    return applied;
   }
 
   handleData(data: Engine, keepMoveHistory?: boolean) {
