@@ -3,9 +3,12 @@ import { expect } from "chai";
 import {
   AnalysisEntry,
   applySoloRoundFlow,
+  clearAnalysisLine,
+  committableAnalysisMoves,
   computeAnalysisCounter,
   grantSandboxWallet,
   loadAnalysisLine,
+  MAX_COMMITTABLE_MOVES,
   markAnalysisSeat,
   moveBelongsToSeat,
   replayAnalysisLine,
@@ -377,5 +380,70 @@ describe("analysis line persistence", () => {
 
   it("returns null when nothing is stored", () => {
     expect(loadAnalysisLine(0)).to.equal(null);
+  });
+
+  it("clearAnalysisLine removes a stored line outright, not just empties it", () => {
+    saveAnalysisLine(0, { entries: [{ kind: "move", move: "terrans up nav." }], baseRound: 1, baseMoveCount: 9 });
+    clearAnalysisLine(0);
+    expect(loadAnalysisLine(0)).to.equal(null);
+  });
+});
+
+describe("committableAnalysisMoves (§6, decision #13)", () => {
+  it("commits the full move-only line when every move stays affordable without the sandbox grant", () => {
+    const origin = new Engine(SETUP_MOVES);
+    applySoloRoundFlow(origin, 0);
+    const entries: AnalysisEntry[] = [{ kind: "move", move: "terrans up nav." }];
+
+    const moves = committableAnalysisMoves(origin, entries, 0, 1);
+
+    expect(moves).to.deep.equal(["terrans up nav."]);
+  });
+
+  it("excludes adjust entries from the committable result entirely, never counting them as a move", () => {
+    const origin = new Engine(SETUP_MOVES);
+    applySoloRoundFlow(origin, 0);
+    const entries: AnalysisEntry[] = [
+      { kind: "move", move: "terrans up nav." },
+      { kind: "adjust", charge: 2 },
+    ];
+
+    const moves = committableAnalysisMoves(origin, entries, 0, 1);
+
+    expect(moves).to.deep.equal(["terrans up nav."]);
+  });
+
+  it("does not commit a move that only worked because of the real baseline covering it - the seat's true starting resources, not the sandbox grant, decide committability", () => {
+    const origin = new Engine(SETUP_MOVES);
+    applySoloRoundFlow(origin, 0);
+    origin.player(0).data.credits = 0;
+    origin.player(0).data.ores = 0; // nothing real to spend - only the sandbox grant can pay for this
+    const entries: AnalysisEntry[] = [{ kind: "move", move: "terrans build ts -1x2." }];
+
+    const moves = committableAnalysisMoves(origin, entries, 0, 1);
+
+    expect(moves).to.deep.equal([]);
+  });
+
+  it("commits every setup-phase move as-is, since setup carries no cost (no wallet is ever granted)", () => {
+    const origin = new Engine(["init 2 randomSeed", "p1 faction terrans", "p2 faction nevlas"]);
+    applySoloRoundFlow(origin, 0);
+    const entries: AnalysisEntry[] = [{ kind: "move", move: "terrans build m -1x2" }];
+
+    const moves = committableAnalysisMoves(origin, entries, 0, 1);
+
+    expect(moves).to.deep.equal(["terrans build m -1x2"]);
+  });
+
+  it("returns nothing for a line with no move entries at all", () => {
+    const origin = new Engine(SETUP_MOVES);
+    applySoloRoundFlow(origin, 0);
+
+    expect(committableAnalysisMoves(origin, [], 0, 1)).to.deep.equal([]);
+    expect(committableAnalysisMoves(origin, [{ kind: "adjust", charge: 1 }], 0, 1)).to.deep.equal([]);
+  });
+
+  it("caps at 1 live move plus PremoveBar.vue's 3-row queue limit (§6)", () => {
+    expect(MAX_COMMITTABLE_MOVES).to.equal(4);
   });
 });

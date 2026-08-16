@@ -163,4 +163,43 @@ describe("AnalysisPanel", () => {
       expect(container.querySelector("#analysis-adjust-charge")).to.equal(null);
     });
   });
+
+  describe("Phase 7 - the commit path (§6, decision #13)", () => {
+    function commitButton(container: HTMLElement): HTMLButtonElement {
+      return Array.from(container.querySelectorAll("button")).find((b) =>
+        b.textContent.includes("ommit")
+      ) as HTMLButtonElement;
+    }
+
+    it("is not shown at all for an empty line", () => {
+      const { container } = render(AnalysisPanel, { props: { active: true, offered: false, moveCount: 0 } });
+      expect(commitButton(container)).to.equal(undefined);
+    });
+
+    it("is disabled with an explanatory label when nothing in the line is committable", () => {
+      const { container } = render(AnalysisPanel, {
+        props: { active: true, offered: false, moveCount: 1, committableMoves: 0 },
+      });
+      const button = commitButton(container);
+      expect(button.textContent).to.contain("Nothing committable yet");
+      expect(button.disabled).to.equal(true);
+    });
+
+    it("labels a single committable move distinctly from several, and emits commit when clicked", async () => {
+      const single = render(AnalysisPanel, {
+        props: { active: true, offered: false, moveCount: 1, committableMoves: 1 },
+      });
+      expect(commitButton(single.container).textContent).to.contain("Commit this move");
+      expect(commitButton(single.container).disabled).to.equal(false);
+
+      const { container, emitted } = render(AnalysisPanel, {
+        props: { active: true, offered: false, moveCount: 3, committableMoves: 3 },
+      });
+      expect(commitButton(container).textContent).to.contain("Commit 3 moves (1 live + 2 queued)");
+
+      await fireEvent.click(commitButton(container));
+
+      expect(emitted().commit).to.have.length(1);
+    });
+  });
 });

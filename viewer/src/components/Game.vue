@@ -21,6 +21,7 @@
           :pass-capped="analysisPassCapped"
           :notice="analysisNotice"
           :pending-restore="analysisPendingRestore"
+          :committable-moves="analysisCommittableMoves.length"
           @enter="enterAnalysisMode"
           @exit="exitAnalysisMode"
           @undo="undoLastAnalysisEntry"
@@ -29,6 +30,7 @@
           @dismiss-notice="dismissAnalysisNotice"
           @restore="restoreAnalysisLine"
           @discard-restore="discardPendingAnalysisLine"
+          @commit="commitAnalysisLine"
         />
       </div>
     </div>
@@ -371,6 +373,8 @@ import {
   AnalysisResourceSnapshot,
   AnalysisWallet,
   applySoloRoundFlow,
+  clearAnalysisLine,
+  committableAnalysisMoves,
   computeAnalysisCounter,
   grantSandboxWallet,
   loadAnalysisLine,
@@ -1426,6 +1430,58 @@ export default class Game extends Vue {
     return (
       this.analysisMode && this.analysisBaseRound !== null && !passAllowed(this.engine.round, this.analysisBaseRound)
     );
+  }
+
+  /** §6/decision #13's commit path affordability gate, capped further for what this app can actually
+   * offer: self-contained/hot-seat play has no premove queue at all, so it only ever gets move 1
+   * (§6: "Premoves are hosted-only. In self-contained/offline play, offer move 1 only."); hosted play
+   * is also capped by whatever premove room this seat already has left in the real (not analysis)
+   * queue, so committing a line never tries to push the real queue over its own 3-row limit. */
+  get analysisCommittableMoves(): string[] {
+    if (!this.analysisMode || !this.analysisOrigin || this.analysisSeat === null) {
+      return [];
+    }
+    const moves = committableAnalysisMoves(
+      this.analysisOrigin,
+      this.analysisEntries,
+      this.analysisSeat,
+      this.analysisBaseRound
+    );
+    if (!this.isHostedMode) {
+      return moves.slice(0, 1);
+    }
+    const queuedForSeat = ((this.$store.state.premoves as PremoveRow[]) ?? []).filter(
+      (p) => p.seat === this.analysisSeat
+    ).length;
+    return moves.slice(0, 1 + Math.max(0, 3 - queuedForSeat));
+  }
+
+  /**
+   * Decision #13/§6 - the commit path. Exits analysis mode FIRST, discarding the takeover back to
+   * the exact real pre-commit state (nothing else could have changed it while analysis mode was
+   * active - any real external change would already have force-exited via the `externalData`
+   * handler), then dispatches move 1 through the SAME `"move"` pipeline a manually-typed turn
+   * already uses (`addMove`) rather than reimplementing its hosted-round-trip/self-contained-
+   * persistence behaviour locally, exactly like `queueCurrentPremove` already dispatches through
+   * `queuePremove` before calling `cancelPremoveMode`. Moves 2..N (hosted only) queue as Sequential
+   * premoves the same way. Unlike a normal exit (decision #2), a commit clears the persisted line -
+   * there is nothing left to come back to once part of it has actually been played for real.
+   */
+  commitAnalysisLine() {
+    if (!this.analysisMode) {
+      return;
+    }
+    const seat = this.analysisSeat;
+    const moves = this.analysisCommittableMoves;
+    if (moves.length === 0) {
+      return;
+    }
+    clearAnalysisLine(seat);
+    this.exitAnalysisMode();
+    this.$store.dispatch("move", moves[0]);
+    for (const move of moves.slice(1)) {
+      this.$store.dispatch("queuePremove", { seat, move, mode: "sequential" });
+    }
   }
 
   enterAnalysisMode() {

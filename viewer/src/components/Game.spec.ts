@@ -1437,6 +1437,101 @@ describe("Game", () => {
         vm.$destroy();
       });
     });
+
+    describe("Phase 7 - the commit path (§6, decision #13)", () => {
+      it("commits move 1 live only in self-contained/hot-seat play, never queuing anything", () => {
+        const vm = mountAsSeat(0);
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("terrans up nav.");
+        const dispatched = spyDispatch(vm);
+
+        vm.commitAnalysisLine();
+
+        expect(dispatched).to.deep.equal([{ type: "move", payload: "terrans up nav." }]);
+        expect(vm.analysisMode).to.equal(false);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("clears the persisted line on commit, unlike a normal exit which keeps it (decision #2 vs §6)", () => {
+        const first = mountAsSeat(0);
+        first.enterAnalysisMode();
+        first.applyAnalysisMove("terrans up nav.");
+        first.commitAnalysisLine();
+        first.$el.remove();
+        first.$destroy();
+
+        const second = mountAsSeat(0);
+        second.enterAnalysisMode();
+        expect(second.analysisEntries).to.deep.equal([]);
+        second.$el.remove();
+        second.$destroy();
+      });
+
+      it("does nothing when nothing in the line is committable", () => {
+        const vm = mountAsSeat(0);
+        vm.enterAnalysisMode();
+        const dispatched = spyDispatch(vm);
+
+        vm.commitAnalysisLine();
+
+        expect(dispatched).to.deep.equal([]);
+        expect(vm.analysisMode).to.equal(true); // never exited - there was nothing to commit
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("commits move 1 live and queues the rest as Sequential premoves in hosted mode", () => {
+        const originalSearch = window.location.search;
+        window.history.pushState({}, "", "?game=some-game-id");
+        try {
+          const vm = mountAsSeat(0);
+          vm.enterAnalysisMode();
+          vm.applyAnalysisMove("terrans up nav.");
+          vm.applyAnalysisMove("terrans up nav.");
+          const committable = vm.analysisCommittableMoves;
+          expect(committable).to.have.length(2); // both stay affordable off the 15-knowledge sandbox grant
+          const dispatched = spyDispatch(vm);
+
+          vm.commitAnalysisLine();
+
+          expect(dispatched[0]).to.deep.equal({ type: "move", payload: committable[0] });
+          expect(dispatched.slice(1)).to.deep.equal([
+            { type: "queuePremove", payload: { seat: 0, move: committable[1], mode: "sequential" } },
+          ]);
+
+          vm.$el.remove();
+          vm.$destroy();
+        } finally {
+          window.history.pushState({}, "", `${window.location.pathname}${originalSearch}`);
+        }
+      });
+
+      it("caps queueing by the real premove queue's own remaining room, not just §6's flat 3-row limit", () => {
+        const originalSearch = window.location.search;
+        window.history.pushState({}, "", "?game=some-game-id");
+        try {
+          const vm = mountAsSeat(0);
+          vm.enterAnalysisMode();
+          vm.applyAnalysisMove("terrans up nav.");
+          vm.applyAnalysisMove("terrans up nav.");
+          // Two premove slots already taken for this seat outside analysis mode - only one more fits.
+          vm.$store.state.premoves = [
+            { seat: 0, seq: 1, move: "terrans pass booster1", mode: "sequential", queued_move_count: 1 },
+            { seat: 0, seq: 2, move: "terrans pass booster2", mode: "sequential", queued_move_count: 1 },
+          ];
+
+          expect(vm.analysisCommittableMoves).to.have.length(2); // 1 live + only 1 queue slot left
+
+          vm.$el.remove();
+          vm.$destroy();
+        } finally {
+          window.history.pushState({}, "", `${window.location.pathname}${originalSearch}`);
+        }
+      });
+    });
   });
 
   describe("round 0 action placement", () => {

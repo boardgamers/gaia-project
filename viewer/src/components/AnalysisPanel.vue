@@ -23,6 +23,19 @@
           <b-button size="sm" variant="outline-secondary" :disabled="moveCount === 0" @click="$emit('reset')">
             Reset
           </b-button>
+          <!-- The commit path (§6, decision #13) - move 1 committed live, the rest (hosted only)
+               queued as Sequential premoves. Only offered once there is something in the line at
+               all; disabled rather than hidden once committableMoves is 0, so "nothing here is
+               affordable for real" reads as a state of this line, not as the button vanishing. -->
+          <b-button
+            v-if="moveCount > 0"
+            size="sm"
+            variant="success"
+            :disabled="committableMoves === 0"
+            @click="$emit('commit')"
+          >
+            {{ commitLabel }}
+          </b-button>
           <b-button size="sm" variant="secondary" @click="$emit('exit')">Exit analysis mode</b-button>
         </div>
       </div>
@@ -124,6 +137,7 @@ export default Vue.extend({
     passCapped: { type: Boolean, default: false },
     notice: { type: String, default: null },
     pendingRestore: { type: Object as () => AnalysisLine | null, default: null },
+    committableMoves: { type: Number, default: 0 },
   },
   data() {
     return {
@@ -147,6 +161,16 @@ export default Vue.extend({
     adjustValid(): boolean {
       const charge = this.adjustCharge as number;
       return Number.isInteger(charge) && charge > 0;
+    },
+    commitLabel(): string {
+      const n = this.committableMoves as number;
+      if (n === 0) {
+        return "Nothing committable yet";
+      }
+      if (n === 1) {
+        return "Commit this move";
+      }
+      return `Commit ${n} moves (1 live + ${n - 1} queued)`;
     },
   },
   methods: {

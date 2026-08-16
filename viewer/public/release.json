@@ -1,7 +1,21 @@
 {
-  "version": "5.64.0",
+  "version": "5.65.0",
   "releasedAt": "2026-08-16",
   "entries": [
+    {
+      "version": "5.65.0",
+      "releasedAt": "2026-08-16",
+      "kind": "update",
+      "title": "Analysis mode: commit a line for real",
+      "impact": "",
+      "changes": [
+        "Analysis mode now has a commit path - once you like a line, hit Commit to actually play it: move 1 is committed live right away, and (in hosted games) up to 3 more queue as Sequential premoves so they play themselves as your turns come around. Only the moves that are genuinely affordable off your real resources (not the sandbox top-up) are ever offered, and any leech-adjustment entries are never committed - they were only ever a what-if.",
+        "Added committableAnalysisMoves(), which re-checks affordability against a fresh wallet with every adjust entry stripped out before deciding how much of a line can be committed, and clearAnalysisLine() to drop a line's persisted storage once it has actually been played. Fixed a real bug found while testing this: committableAnalysisMoves's own affordability replay never granted a wallet at all for a line that starts already in RoundMove, since replayAnalysisLine's lazy wallet grant only fires on the transition into RoundMove, not when the origin already starts there - it now grants eagerly up front for that case, matching what enterAnalysisMode already does for the same situation."
+      ],
+      "userChanges": [
+        "Analysis mode now has a commit path - once you like a line, hit Commit to actually play it: move 1 is committed live right away, and (in hosted games) up to 3 more queue as Sequential premoves so they play themselves as your turns come around. Only the moves that are genuinely affordable off your real resources (not the sandbox top-up) are ever offered, and any leech-adjustment entries are never committed - they were only ever a what-if."
+      ]
+    },
     {
       "version": "5.64.0",
       "releasedAt": "2026-08-16",

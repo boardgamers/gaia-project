@@ -1,17 +1,19 @@
 # Analysis Mode — Implementation Plan (ready for handoff)
 
-> Status: **Phases 1-6 done (viewer v5.64.0, 2026-08-16, PROGRESS.md #166-170) — board takeover +
-> line + replay + enter/exit/undo/reset/persistence, the sandbox wallet + resource-diff counter, real
-> solo round flow (Pass/income/Gaia, the two-round cap, opponent decision auto-resolution),
-> setup-phase pass-and-play (opponent mine placement, faction pick, sealed-bid auctions), the
-> hazard-stripe visual treatment with the counter's two real surfaces (header headline + full
-> breakdown panel), staleness handling on re-entry (§3.5's four-row table, including the own-seat
-> Restore/Discard prompt and the `externalData` re-anchor notice), and the leech adjustment stepper
-> (§4.4).** Phase 7 remains: see §7's phasing table. Every open question in this document was put to
-> the owner and answered; §1 is the record of those decisions and should not be relitigated. §2 is a
-> traced account of how the existing code actually works — every file:line in it was read, not
-> recalled, so a fresh session (Sonnet is fine) can execute this plan without re-deriving the
-> mechanics, though PROGRESS.md #167-169 found and corrected three real gaps along the way:
+> Status: **Phases 1-7 all done (viewer v5.65.0, 2026-08-16, PROGRESS.md #166-171) — the whole
+> feature is landed.** Board takeover + line + replay + enter/exit/undo/reset/persistence, the
+> sandbox wallet + resource-diff counter, real solo round flow (Pass/income/Gaia, the two-round cap,
+> opponent decision auto-resolution), setup-phase pass-and-play (opponent mine placement, faction
+> pick, sealed-bid auctions), the hazard-stripe visual treatment with the counter's two real surfaces
+> (header headline + full breakdown panel), staleness handling on re-entry (§3.5's four-row table,
+> including the own-seat Restore/Discard prompt and the `externalData` re-anchor notice), the leech
+> adjustment stepper (§4.4), and the commit path (§6, decision #13: move 1 live, the rest queued as
+> Sequential premoves in hosted play, gated on real affordability with every `adjust` entry stripped
+> out first). Every open question in this document was put to the owner and answered; §1 is the
+> record of those decisions and should not be relitigated. §2 is a traced account of how the existing
+> code actually works — every file:line in it was read, not recalled, so a fresh session (Sonnet is
+> fine) can execute this plan without re-deriving the mechanics, though PROGRESS.md #167-171 found and
+> corrected four real gaps along the way:
 >
 > - Shrinking `turnOrderAfterSetupAuction` (via `engine.setup`) for `beginRoundStartPhase`'s benefit,
 >   as §2.5 originally said to, would have also broken `beginLeechingPhase`'s unrelated use of the
@@ -30,15 +32,24 @@
 >   `passedPlayers` getter had no round guard (real games never populate that field before round 1,
 >   so this was never exercised before). Found via a live-browser check (Playwright against the dev
 >   server) in Phase 5 - fixed by gating that getter on `round >= Round.Round1`.
+> - Phase 7's `committableAnalysisMoves` first passed `initialWallet: null` into `replayAnalysisLine`
+>   unconditionally, assuming its lazy wallet grant would cover a fresh, adjust-stripped replay the
+>   same way it covers a setup-phase entry. It doesn't: that lazy grant only fires on the _transition_
+>   into `Phase.RoundMove`, never when `origin` already starts there - the overwhelmingly common case
+>   (anything past setup). Left unfixed, every round-flow line would have been treated as free to
+>   commit, with no affordability check at all. Caught by a test built specifically to exercise it
+>   (zero real credits/ore, a move only affordable via the sandbox top-up) before it ever shipped.
+>   Fixed by mirroring `enterAnalysisMode`'s own split: grant a fresh wallet eagerly, up front, when
+>   `origin.phase === Phase.RoundMove`, only falling through to the lazy path for a genuine
+>   setup-phase entry. Recorded in `committableAnalysisMoves`'s own doc comment.
 >
-> **Continue at Phase 7** (the commit path, §6): move 1 committed live, moves 2-4 queued as
-> Sequential premoves via the existing premove machinery (capped at 4 total per `PremoveBar.vue`'s
-> 3-row queue cap), only an affordable prefix committable, `adjust` entries never committed
-> (`entries.filter(e => e.kind === "move")` before handing anything to the premove queue), committing
-> exits analysis mode and clears the line, and premoves are hosted-only (self-contained/offline offers
-> move 1 only). Phase 5 deliberately left the map-corner entry/exit button (§5.4) unbuilt - see
-> PROGRESS.md #169's scope note for why - the controls live in `AnalysisPanel.vue` instead, which is
-> where Phase 6's leech stepper landed and where Phase 7's Commit button should go too.
+> **Nothing left to continue - this plan is complete.** Phase 5 deliberately left the map-corner
+> entry/exit button (§5.4) unbuilt - see PROGRESS.md #169's scope note for why - the controls live in
+> `AnalysisPanel.vue` instead, including Phase 6's leech stepper and Phase 7's Commit button; §5.4
+> remains a possible future polish pass if the owner wants it, but is not required for the feature to
+> work. §10's "out of scope" items (AI/move suggestion, opponents moving outside setup mine
+> placement, sharing/exporting a line, any database object/RPC/migration/Edge Function) were never in
+> scope for this plan and remain exactly that.
 >
 > Read `CLAUDE.md` and `PROGRESS.md`'s **Working agreements** first. This plan touches the viewer and
 > makes one small engine change; it touches no database object and no Edge Function.

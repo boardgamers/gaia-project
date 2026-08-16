@@ -235,6 +235,15 @@ export function saveAnalysisLine(seat: number, line: AnalysisLine): void {
   }
 }
 
+/** §6/decision #13 - committing "clears the line", unlike a normal exit (decision #2), which keeps
+ * it for later restoration. Removes the storage key outright rather than persisting an empty line,
+ * so nothing is left for a later `loadAnalysisLine` to find. */
+export function clearAnalysisLine(seat: number): void {
+  if (typeof window !== "undefined") {
+    window.localStorage.removeItem(storageKey(seat));
+  }
+}
+
 /**
  * The solo switch (§2.5/§3.1) - makes every future round, from wherever `engine` is right now,
  * yours alone, via two pieces:
@@ -438,4 +447,56 @@ export function replayAnalysisLine(
     }
   }
   return { engine, applied, snapshots, wallet };
+}
+
+/** §6's queue cap: 1 move committed live plus `PremoveBar.vue`'s own 3-row queue limit - never
+ * arbitrary, it's just what the existing premove machinery already allows. */
+export const MAX_COMMITTABLE_MOVES = 4;
+
+/**
+ * The commit path's affordability gate (§6, decision #13). Only "move" entries are ever committed -
+ * an `adjust` entry is analysis-only fiction (§4.4), so it is stripped out of the line entirely
+ * (not merely skipped-but-counted) before replaying, and consequently every move after one is only
+ * committable if it is STILL affordable **without** the leech it assumed: this replays the
+ * move-only entries completely fresh, never reusing a wallet/feasibility result that was computed
+ * with any adjust entries present.
+ *
+ * The fresh wallet has to be granted the same way `enterAnalysisMode` grants the real one: eagerly,
+ * right here, if `origin` already sits in `Phase.RoundMove` - `replayAnalysisLine`'s own lazy grant
+ * only fires on the TRANSITION into `Phase.RoundMove` (`!wasRoundMove && copy.phase ===
+ * Phase.RoundMove`), which never happens for a line whose origin already starts there, so passing a
+ * bare `null` through unconditionally would leave `wallet` permanently null for the (overwhelmingly
+ * common) case of a line that started mid-round rather than in setup.
+ *
+ * Cuts the returned prefix at the first point that goes infeasible (mirrors
+ * `computeAnalysisCounter`'s own `infeasibleFromMove`) - a line that only worked because of the
+ * sandbox grant must never be committable - and separately at wherever the move-only replay itself
+ * stops applying (`applied`, e.g. a move that depended on an adjust entry's power to even be legal,
+ * not just affordable). A line that never left setup (`wallet` stays null throughout - setup moves
+ * carry no cost, so nothing can go infeasible) commits every successfully-replayed move as-is.
+ * Either way the result never exceeds `MAX_COMMITTABLE_MOVES`.
+ */
+export function committableAnalysisMoves(
+  origin: Engine,
+  entries: AnalysisEntry[],
+  seat: number,
+  baseRound: number
+): string[] {
+  const moveEntries = entries.filter((entry): entry is AnalysisMoveEntry => entry.kind === "move");
+  if (moveEntries.length === 0) {
+    return [];
+  }
+  let replayOrigin = origin;
+  let initialWallet: AnalysisWallet | null = null;
+  if (origin.phase === Phase.RoundMove) {
+    replayOrigin = markAnalysisSeat(Engine.fromData(JSON.parse(JSON.stringify(origin))), seat);
+    initialWallet = grantSandboxWallet(replayOrigin, seat);
+  }
+  const { applied, snapshots, wallet } = replayAnalysisLine(replayOrigin, moveEntries, seat, baseRound, initialWallet);
+  if (!wallet) {
+    return moveEntries.slice(0, Math.min(applied, MAX_COMMITTABLE_MOVES)).map((entry) => entry.move);
+  }
+  const counter = computeAnalysisCounter(snapshots[snapshots.length - 1], wallet, snapshots);
+  const feasibleCount = counter.feasible ? applied : counter.infeasibleFromMove - 1;
+  return moveEntries.slice(0, Math.min(feasibleCount, MAX_COMMITTABLE_MOVES)).map((entry) => entry.move);
 }
