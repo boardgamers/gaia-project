@@ -1,7 +1,18 @@
 {
-  "version": "5.59.0",
-  "releasedAt": "2026-08-15",
+  "version": "5.59.1",
+  "releasedAt": "2026-08-16",
   "entries": [
+    {
+      "version": "5.59.1",
+      "releasedAt": "2026-08-16",
+      "kind": "fix",
+      "title": "Faction pick/bid board fix",
+      "impact": "",
+      "changes": [
+        "Fixed real player boards showing all-zero resources, empty power bowls, level-0 research and every planet at 1-cost terraforming during the faction pick/ban/bid setup phases, before the auction resolves"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.59.0",
       "releasedAt": "2026-08-15",
