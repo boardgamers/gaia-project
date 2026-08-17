@@ -1,7 +1,23 @@
 {
-  "version": "5.72.1",
+  "version": "5.72.2",
   "releasedAt": "2026-08-17",
   "entries": [
+    {
+      "version": "5.72.2",
+      "releasedAt": "2026-08-17",
+      "kind": "update",
+      "title": "Sandbox controls tidied up",
+      "impact": "",
+      "changes": [
+        "Undo, Reset and Commit on the sandbox banner now wear the same keycap surface as the action buttons, and their disabled state is legible instead of grey-on-grey",
+        "Charge 1 and Undo Charge only appear on the main action menu now - not on the booster pick, and not once you have drilled into a button",
+        "Those two buttons are wrapped like every other action button, so they get the same rounded corners",
+        "The sandbox map button is a calculator, drawn in the same style as the stats button opposite it"
+      ],
+      "userChanges": [
+        "Sandbox mode's Undo, Reset and Commit buttons are easier to read, Charge 1 and Undo Charge only show on the main action menu, and the map button is now a calculator instead of a magnifying glass"
+      ]
+    },
     {
       "version": "5.72.1",
       "releasedAt": "2026-08-17",

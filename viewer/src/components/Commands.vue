@@ -174,32 +174,41 @@
           :controller="controller"
           :key="(button.label || button.command) + '-' + i"
         />
-        <b-btn v-if="canUndo" :class="['mr-2', 'mb-2', 'move-button']" @click="undo">
-          <template>
-            <Undo v-if="canUndo" transform="scale(1.2)" />
-          </template>
-        </b-btn>
+        <!-- Wrapped in a `.move-button` div, exactly like MoveButton.vue's own root, and not merely
+             given the class: the sticky bar's keycap styling is `.move-button .btn`, i.e. a
+             DESCENDANT rule, so a b-btn that carries the class itself matches nothing and comes out
+             with Bootstrap's square-ish default corners next to properly rounded neighbours. -->
+        <div v-if="canUndo" class="move-button">
+          <b-btn :class="['mr-2', 'mb-2', 'move-button']" @click="undo">
+            <template>
+              <Undo transform="scale(1.2)" />
+            </template>
+          </b-btn>
+        </div>
         <!-- Sandbox-only power cheat: a plain button, pressable as many times as you like, that gives
              the sandbox seat 1 charged power per click (Game.vue's chargeAnalysisPower, an "adjust"
              entry - see analysis.ts). Undo Charge is the same idea in reverse: it only pops the line's
              last entry when that entry is itself a charge (Game.vue's undoAnalysisCharge), so it can
-             never accidentally discard a real move. -->
-        <b-btn
-          v-if="analysisMode"
-          :class="['mr-2', 'mb-2', 'move-button']"
-          title="Sandbox: give yourself 1 charged power"
-          @click="$emit('analysis-charge')"
-        >
-          Charge 1
-        </b-btn>
-        <b-btn
-          v-if="analysisMode"
-          :class="['mr-2', 'mb-2', 'move-button']"
-          title="Sandbox: undo the last power charge"
-          @click="$emit('analysis-undo-charge')"
-        >
-          Undo Charge
-        </b-btn>
+             never accidentally discard a real move. Both only on the top-level round-move menu - see
+             `showAnalysisChargeButtons`. -->
+        <div v-if="showAnalysisChargeButtons" class="move-button">
+          <b-btn
+            :class="['mr-2', 'mb-2', 'move-button']"
+            title="Sandbox: give yourself 1 charged power"
+            @click="$emit('analysis-charge')"
+          >
+            Charge 1
+          </b-btn>
+        </div>
+        <div v-if="showAnalysisChargeButtons" class="move-button">
+          <b-btn
+            :class="['mr-2', 'mb-2', 'move-button']"
+            title="Sandbox: undo the last power charge"
+            @click="$emit('analysis-undo-charge')"
+          >
+            Undo Charge
+          </b-btn>
+        </div>
       </div>
       <!-- The compose caveats ("build the move, then end the turn", the leech/income preview
            warnings, the cascade warning). Same block as the title above: they belong next to the
@@ -905,6 +914,25 @@ export default class Commands extends Vue implements CommandController {
 
   get canUndo() {
     return this.$store.getters.canUndo;
+  }
+
+  /**
+   * Sandbox mode's Charge 1 / Undo Charge belong on the action area's TOP-LEVEL round-move menu -
+   * the one carrying Build, Explore, Research, Special action - and nowhere else (owner
+   * instruction). They used to render beside whatever this container happened to be showing, which
+   * put "give yourself 1 charged power" on screen while the player was picking a round booster.
+   *
+   * Two conditions, because "the main menu" is two separate facts:
+   *
+   * - `buttonChain.length === 0` is what top level means literally - the chain is the drill-down
+   *   stack (`handleButtonClick` pushes, `back` pops), so anything above 0 is a sub-menu: the hexes
+   *   under Build, the tiles under a tech action, the booster list under Pass.
+   * - `Phase.RoundMove` keeps them off every other prompt that renders through this same container
+   *   at chain depth 0 - the round-0 booster pick, income and leech decisions, the faction/ban/bid
+   *   rounds. None of those is a menu where topping your power up first means anything.
+   */
+  get showAnalysisChargeButtons(): boolean {
+    return this.analysisMode && this.engine.phase === Phase.RoundMove && this.buttonChain.length === 0;
   }
 
   undo() {

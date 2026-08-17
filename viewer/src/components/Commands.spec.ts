@@ -587,6 +587,81 @@ describe("Commands", () => {
     });
   });
 
+  describe("sandbox mode's Charge 1 / Undo Charge buttons", () => {
+    /** The main menu the owner means: Research / Free action / Pass, i.e. the top-level round-move
+     * list. `new Engine(...)` leaves availableCommands null, so generate them or the menu is empty. */
+    function roundMoveMenu(): Engine {
+      const engine = createLostFleetRoundMoveEngine();
+      engine.generateAvailableCommandsIfNeeded();
+      return engine;
+    }
+
+    function sandbox(engine: Engine) {
+      const store = makeStore();
+      store.commit("receiveData", engine);
+      const { container } = render(Commands, { props: { currentMove: "", analysisMode: true }, store });
+      const labels = () =>
+        Array.from(container.querySelectorAll<HTMLButtonElement>("#move-buttons button.move-button")).map(
+          (button) => button.textContent?.trim() ?? ""
+        );
+      const button = (label: string) =>
+        Array.from(container.querySelectorAll<HTMLButtonElement>("#move-buttons button.move-button")).find(
+          (candidate) => candidate.textContent?.trim() === label
+        );
+      return { container, labels, button };
+    }
+
+    // Owner instruction: they belong on the main menu - the one with Build/Explore/Research/Special
+    // action on it - and nowhere else.
+    it("shows both on the top-level round-move menu", () => {
+      const { labels } = sandbox(roundMoveMenu());
+
+      expect(labels()).to.include("Research"); // a real menu, not an empty one
+      expect(labels()).to.include("Charge 1");
+      expect(labels()).to.include("Undo Charge");
+    });
+
+    it("hides them on the round-0 booster pick, which is not that menu", () => {
+      const engine = new Engine(["init 2 lf-no-auction", "p1 faction terrans", "p2 faction nevlas"]);
+      for (let i = 0; i < 4; i++) {
+        engine.generateAvailableCommandsIfNeeded();
+        const build = engine.availableCommands.find((c) => c.name === Command.Build);
+        const faction = engine.players[engine.playerToMove].faction;
+        engine.move(`${faction} ${Command.Build} m ${(build.data as any).buildings[0].coordinates}`);
+      }
+      engine.generateAvailableCommandsIfNeeded();
+      expect(engine.phase).to.equal(Phase.SetupBooster);
+
+      const { labels } = sandbox(engine);
+
+      expect(labels().length, "expected the booster buttons themselves").to.be.greaterThan(0);
+      expect(labels()).to.not.include("Charge 1");
+      expect(labels()).to.not.include("Undo Charge");
+    });
+
+    it("hides them once a button is drilled into (a sub-menu is not the main menu)", async () => {
+      const { labels, button } = sandbox(roundMoveMenu());
+      expect(labels()).to.include("Charge 1");
+
+      const research = button("Research");
+      expect(research, "expected a Research button to drill into").to.not.equal(undefined);
+      await fireEvent.click(research!);
+
+      expect(labels()).to.not.include("Charge 1");
+      expect(labels()).to.not.include("Undo Charge");
+    });
+
+    // The keycap styling in the sticky bar is a `.move-button .btn` DESCENDANT rule, so these have to
+    // sit inside a `.move-button` wrapper like MoveButton.vue's own root or they render with square
+    // corners next to properly rounded neighbours.
+    it("wraps them the same way MoveButton does, so they pick up the same button styling", () => {
+      const { button } = sandbox(roundMoveMenu());
+
+      expect(button("Charge 1")?.parentElement?.classList.contains("move-button")).to.equal(true);
+      expect(button("Undo Charge")?.parentElement?.classList.contains("move-button")).to.equal(true);
+    });
+  });
+
   it("hides the auto-leech select before round 1 (faction picking) - nothing to leech from yet", () => {
     const engine = new Engine(["init 2 lf-no-auction"]);
     const store = makeStore();

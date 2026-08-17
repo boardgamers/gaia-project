@@ -15,12 +15,24 @@
       stroke="black"
       transform="scale(.7) translate(4, -3.5)"
     />
-    <!-- Analysis mode's map-corner button (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §5.4) - a plain
-         magnifying glass, drawn as geometry rather than an external asset so its stroke can follow
-         `currentColor` (SpaceMap.vue's own CSS sets that per active/offered state). -->
-    <g id="analysis-magnifier">
-      <circle cx="7" cy="7" r="5.5" fill="none" stroke="currentColor" stroke-width="2.4" />
-      <line x1="11.1" y1="11.1" x2="16" y2="16" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" />
+    <!-- Sandbox mode's map-corner button (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §5.4) - a calculator
+         (owner instruction; it was a magnifying glass), drawn in the same artwork style as the stats
+         button diagonally opposite it on the map: one solid filled silhouette, screen and keys cut
+         out of the body as holes via `fill-rule="evenodd"` rather than painted in a background
+         colour, so it renders identically over the neutral badge and the warning-coloured active one.
+         Geometry rather than an external asset, so the fill follows `currentColor` - SpaceMap.vue's
+         CSS is what sets that per offered/active state. Drawn on the same ~17.5-unit box the
+         magnifier used, so the `translate(-8.75, -8.75)` that centres it in the badge is unchanged. -->
+    <g id="analysis-calculator">
+      <path
+        fill="currentColor"
+        fill-rule="evenodd"
+        d="M4.5 1 H13 A1.5 1.5 0 0 1 14.5 2.5 V15 A1.5 1.5 0 0 1 13 16.5 H4.5 A1.5 1.5 0 0 1 3 15 V2.5 A1.5 1.5 0 0 1 4.5 1 Z
+           M4.5 2.5 H13 V5.5 H4.5 Z
+           M4.5 6.5 H6.8 V8.8 H4.5 Z M7.6 6.5 H9.9 V8.8 H7.6 Z M10.7 6.5 H13 V8.8 H10.7 Z
+           M4.5 9.6 H6.8 V11.9 H4.5 Z M7.6 9.6 H9.9 V11.9 H7.6 Z M10.7 9.6 H13 V11.9 H10.7 Z
+           M4.5 12.7 H6.8 V15 H4.5 Z M7.6 12.7 H9.9 V15 H7.6 Z M10.7 12.7 H13 V15 H10.7 Z"
+      />
     </g>
   </defs>
 </template>

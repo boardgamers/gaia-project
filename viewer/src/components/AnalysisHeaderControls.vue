@@ -143,37 +143,46 @@ export default Vue.extend({
 
 // Bootstrap's outline variants are transparent by design, so Undo/Reset were reading straight off the
 // full-strength yellow/black hazard stripes behind them - §5.1's "solid text backing" applies to a
-// button label just as much as to a text run. Paint an opaque surface, a real border and a real text
-// colour, and keep them at full opacity when disabled (Bootstrap drops those to .65, which on stripes
-// is unreadable rather than merely muted). Scoped away from the Commit button, which is a solid
-// `success` variant already and must stay green.
+// button label just as much as to a text run. They are given the same keycap surface the action
+// area's own move buttons wear (Commands.vue's `.move-button .btn` block: soft top-down gradient,
+// 10px corners, a real border and a lifted edge), so the two rows of sandbox controls read as the
+// same kind of control rather than two unrelated widgets.
+//
+// Scoped away from the Commit button, which is a solid `success` variant already and must stay green.
 .analysis-controls__btn:not(.btn-success) {
-  background-color: var(--ui-surface-raised);
+  background: linear-gradient(180deg, var(--ui-keycap-gradient-start) 0%, var(--ui-keycap-gradient-end) 100%);
   border-color: var(--ui-border-strong);
-  color: var(--ui-text);
+  border-radius: 10px;
+  box-shadow: 0 1px 2px var(--ui-shadow-soft);
+  color: var(--ui-secondary-text);
 
-  &:hover,
-  &:focus,
-  &:active {
-    background-color: var(--ui-surface-hover);
+  // `:not(:disabled)` so a hover over a disabled Undo/Reset cannot out-specify the disabled rule
+  // below and repaint it as if it were pressable.
+  &:not(:disabled):hover,
+  &:not(:disabled):focus,
+  &:not(:disabled):active {
+    background: var(--ui-surface-hover);
     border-color: var(--ui-border-strong);
     color: var(--ui-text);
   }
-
-  &:disabled,
-  &.disabled {
-    opacity: 1;
-    background-color: var(--ui-surface-muted);
-    color: var(--ui-text-subtle);
-  }
 }
 
-// The Commit button keeps its green fill, but the same disabled-opacity problem applies to it.
-.analysis-controls__btn.btn-success:disabled {
+// Disabled is the state these two spend most of their life in (Undo/Reset until the line has a move
+// in it, Commit until something in it is committable), and it was the unreadable one: full opacity
+// was already being forced - Bootstrap's .65 turns stripes into mush - but over `--ui-surface-muted`
+// the label was `--ui-text-subtle`, i.e. a grey-on-grey pair sitting around 3:1 in both themes. Same
+// muted surface, a text colour that can actually be read on it.
+.analysis-controls__btn:disabled,
+.analysis-controls__btn.disabled {
   opacity: 1;
-  background-color: var(--ui-surface-muted);
+  background: var(--ui-surface-muted);
   border-color: var(--ui-border-strong);
-  color: var(--ui-text-subtle);
+  color: var(--ui-text-muted);
+}
+
+.analysis-controls__btn.btn-success {
+  border-radius: 10px;
+  box-shadow: 0 1px 2px var(--ui-shadow-soft);
 }
 
 .analysis-controls__info {

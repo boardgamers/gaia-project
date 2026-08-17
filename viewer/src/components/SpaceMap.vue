@@ -64,7 +64,7 @@
     >
       <title>{{ analysisActive ? "Exit sandbox mode" : "Enter sandbox mode" }}</title>
       <rect class="space-map__analysis-badge" x="-11" y="-11" width="22" height="22" rx="4" />
-      <use xlink:href="#analysis-magnifier" transform="translate(-8.75, -8.75)" />
+      <use xlink:href="#analysis-calculator" transform="translate(-8.75, -8.75)" />
     </g>
     <rect
       v-for="(planet, i) in terraformingColors"

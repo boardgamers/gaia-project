@@ -7369,6 +7369,46 @@ Commit · ⓘ` now lives in the hazard-striped header that already existed, with
 
       Viewer: 1149/1149 passing.
 
+186.  ✅ **Four sandbox-mode UI fixes (viewer v5.72.2, 2026-08-17, owner report).** All four are about
+      the sandbox's own controls looking and behaving like the rest of the action area.
+
+      - **The banner's Undo/Reset/Commit were hard to read.** #181 gave them an opaque surface to stop
+        them reading off the hazard stripes, and forced `opacity: 1` on the disabled state (Bootstrap's
+        `.65` turns stripes into mush) - but painted that state `--ui-text-subtle` on
+        `--ui-surface-muted`, a grey-on-grey pair sitting near 3:1 in both themes. Disabled is where
+        these two live most of the time (Undo/Reset until the line has a move in it, Commit until
+        something in it is committable), so that was the state the owner was reading. Same muted
+        surface, `--ui-text-muted` on top of it, and the enabled state now wears the action area's own
+        keycap treatment (`--ui-keycap-gradient-*`, 10px corners, `--ui-border-strong`, a soft lift) so
+        the two rows of sandbox controls read as one kind of control. The hover rule is
+        `:not(:disabled):hover`, or it would out-specify the disabled rule and repaint a dead button as
+        pressable.
+      - **Charge 1 / Undo Charge showed everywhere.** They sat in the same `v-else-if="!init"` block as
+        the generic button list, so they rendered against whatever that container happened to be
+        showing - including the round-0 booster pick. `showAnalysisChargeButtons` is
+        `analysisMode && phase === RoundMove && buttonChain.length === 0`: the chain is the drill-down
+        stack, so 0 is literally "top-level menu" (the hexes under Build and the boosters under Pass are
+        both depth 1), and the phase check covers every other prompt that renders at depth 0 - the
+        round-0 booster, income and leech decisions, the faction/ban/bid rounds.
+      - **…and their corners were square.** The sticky bar's keycap rule is `.move-button .btn`, a
+        DESCENDANT selector, and these two carried `move-button` on the `b-btn` itself, so it matched
+        nothing. Wrapped in a `<div class="move-button">` exactly like MoveButton.vue's own root. The
+        plain Undo button beside them had the identical defect and is fixed the same way.
+      - **The map button is a calculator.** `#analysis-magnifier` (a stroked outline) is now
+        `#analysis-calculator`, drawn in the artwork style of the stats button diagonally opposite it:
+        one solid filled silhouette, with the screen and the 3x3 keypad cut out as holes via
+        `fill-rule="evenodd"` rather than painted in a background colour - so it renders identically
+        over the neutral offered badge and the warning-coloured active one. Still geometry rather than
+        an external asset, so the fill keeps following `currentColor`, and still drawn on the same
+        ~17.5-unit box, so SpaceMap.vue's `translate(-8.75, -8.75)` centring is unchanged.
+
+      Four new `Commands.spec.ts` cases cover the visibility gate and the wrapper. **Test note:**
+      `createLostFleetRoundMoveEngine()` hand-mutates phase/round and leaves `availableCommands` null,
+      so a spec that needs the actual main menu has to call `generateAvailableCommandsIfNeeded()` -
+      without it the menu renders empty and a "the buttons are there" assertion passes against nothing.
+
+      Viewer: 1153/1153 passing.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
