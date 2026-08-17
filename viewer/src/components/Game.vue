@@ -22,11 +22,14 @@
           :notice="analysisNotice"
           :pending-restore="analysisPendingRestore"
           :committable-moves="analysisCommittableMoves.length"
+          :faction-choices="analysisFactionChoices"
+          :seated-lineup="analysisSeatedLineup"
           @enter="enterAnalysisMode"
           @exit="exitAnalysisMode"
           @undo="undoLastAnalysisEntry"
           @reset="resetAnalysisLine"
           @adjust="applyAnalysisAdjust"
+          @seed-faction="seedAnalysisFaction"
           @dismiss-notice="dismissAnalysisNotice"
           @restore="restoreAnalysisLine"
           @discard-restore="discardPendingAnalysisLine"
@@ -333,6 +336,7 @@ import Engine, {
   BuildWarning,
   Command,
   EngineOptions,
+  Faction,
   Phase,
   Player,
   PlayerEnum,
@@ -380,13 +384,17 @@ import { buildSequentialChainPreview } from "../logic/premove-preview";
 import {
   AnalysisCounter,
   AnalysisEntry,
+  AnalysisFactionEntry,
   AnalysisLine,
   AnalysisResourceSnapshot,
   AnalysisWallet,
+  analysisFactionPool,
   applySoloRoundFlow,
+  buildAnalysisLineup,
   clearAnalysisLine,
   committableAnalysisMoves,
   computeAnalysisCounter,
+  factionSeedAvailable,
   grantSandboxWallet,
   loadAnalysisLine,
   markAnalysisSeat,
@@ -533,6 +541,10 @@ export default class Game extends Vue {
   // the entry list, and both of these are cheaply re-derived from it on every replay).
   analysisWallet: AnalysisWallet = null;
   analysisSnapshots: AnalysisResourceSnapshot[] = [];
+  // Which snapshot the sandbox wallet first applied to - 0 for a mid-round entry (the origin
+  // already carries the grant), later for a setup-phase one, whose earlier snapshots predate it.
+  // computeAnalysisCounter skips everything before it when scanning for infeasibility.
+  analysisWalletGrantedAt = 0;
   // Phase 4 (§2.7) - the real sealed-bid backend, stashed on entry and restored on exit, so a
   // simultaneous auction phase (Preference Split/Silent) submits ordinary local moves instead of
   // going through the server while composing inside the sandbox - the same "stash, take over,
@@ -608,6 +620,7 @@ export default class Game extends Vue {
           this.analysisSeat = null;
           this.analysisWallet = null;
           this.analysisSnapshots = [];
+          this.analysisWalletGrantedAt = 0;
           this.analysisPendingRestore = null;
           this.analysisNotice =
             "A new move arrived, so analysis mode closed. Your saved line is still there - Enter analysis mode to continue where you left off.";
@@ -1455,7 +1468,7 @@ export default class Game extends Vue {
     if (!data) {
       return null;
     }
-    return computeAnalysisCounter(data, this.analysisWallet, this.analysisSnapshots);
+    return computeAnalysisCounter(data, this.analysisWallet, this.analysisSnapshots, this.analysisWalletGrantedAt);
   }
 
   /** The two-round cap (§3.7) - true once Pass has been stripped from the current position's
@@ -1655,6 +1668,7 @@ export default class Game extends Vue {
     this.analysisSeat = null;
     this.analysisWallet = null;
     this.analysisSnapshots = [];
+    this.analysisWalletGrantedAt = 0;
     this.analysisPendingRestore = null;
     this.$store.commit("setSealedBidBackend", this.analysisSealedBidBackendBackup);
     this.analysisSealedBidBackendBackup = null;
@@ -1702,6 +1716,54 @@ export default class Game extends Vue {
     this.setAnalysisEntries([...this.analysisEntries, { kind: "adjust", charge }]);
   }
 
+  /**
+   * The round-0 faction seed (§11) - "analyse as this faction". Builds the whole seat lineup here,
+   * at compose time, from the clone as it currently stands, and stores it in the entry: the pool it
+   * is drawn from changes as the line is edited, so re-deriving it on every replay could quietly
+   * hand the line a different table than the one the player set up.
+   *
+   * A line can only ever hold one seed, and only as its first entry - it is a jump straight past
+   * faction selection, so anything already played in the line was played in the setup it replaces.
+   * Rather than refuse a second one, choosing again REPLACES the line, which is what "actually, show
+   * me Itars instead" means (and how the picker is labelled once one is applied).
+   */
+  seedAnalysisFaction(faction: Faction) {
+    if (!this.analysisMode || !factionSeedAvailable(this.engine)) {
+      return;
+    }
+    let lineup: Faction[];
+    try {
+      lineup = buildAnalysisLineup(this.engine, this.analysisSeat, faction);
+    } catch {
+      return;
+    }
+    this.setAnalysisEntries([{ kind: "faction", lineup }]);
+  }
+
+  /** The faction picker's options (§11) - empty whenever the seed does not apply, which is what
+   * AnalysisPanel.vue gates the whole picker on. Names come from the viewer's own `factionName`, so
+   * the picker reads like every other faction label in the app. */
+  get analysisFactionChoices(): { faction: Faction; name: string }[] {
+    if (!this.analysisMode || !factionSeedAvailable(this.engine)) {
+      return [];
+    }
+    return analysisFactionPool(this.engine, this.analysisSeat).map((faction) => ({
+      faction,
+      name: factionName(faction),
+    }));
+  }
+
+  /** What the seeded table ended up as, for the panel to show back - "you are the Itars, they are
+   * the Terrans" - so the lineup a seed invented is visible rather than implied. Null unless a seed
+   * is actually in the line. */
+  get analysisSeatedLineup(): { name: string; mine: boolean }[] | null {
+    const seed = this.analysisEntries.find((entry) => entry.kind === "faction") as AnalysisFactionEntry | undefined;
+    if (!seed) {
+      return null;
+    }
+    return seed.lineup.map((faction, seat) => ({ name: factionName(faction), mine: seat === this.analysisSeat }));
+  }
+
   /** Undo (§1 decision #3) - pop the last entry, replay. */
   undoLastAnalysisEntry() {
     if (!this.analysisMode || this.analysisEntries.length === 0) {
@@ -1730,7 +1792,7 @@ export default class Game extends Vue {
    * carrying its dead tail forward into every subsequent Undo/Reset/save. Returns `applied` so
    * `resolveAnalysisStaleness`/`restoreAnalysisLine` can tell whether anything had to be dropped. */
   private setAnalysisEntries(entries: AnalysisEntry[]): number {
-    const { engine, applied, snapshots, wallet } = replayAnalysisLine(
+    const { engine, applied, snapshots, wallet, walletGrantedAt } = replayAnalysisLine(
       this.analysisOrigin,
       entries,
       this.analysisSeat,
@@ -1741,6 +1803,7 @@ export default class Game extends Vue {
     this.analysisEntries = kept;
     this.analysisSnapshots = snapshots;
     this.analysisWallet = wallet;
+    this.analysisWalletGrantedAt = walletGrantedAt;
     this.analysisComposeBase = JSON.parse(JSON.stringify(engine));
     saveAnalysisLine(this.analysisSeat, {
       entries: kept,

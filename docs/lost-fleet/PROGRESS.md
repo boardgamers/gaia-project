@@ -7069,6 +7069,51 @@ pin_preference_split_budget_search_path` (the one function in the set without a 
 
       **Tests:** `Game.spec.ts`'s core entry-gate case now covers a locked seat on-turn, off-turn, during setup, and hot-seat (no locked seat) all reading `analysisOffered: true`, plus a dedicated case that actually enters as an off-turn locked seat and confirms `applySoloRoundFlow` really did force the clone's `playerToMove` to that seat (not just that the gate opened) by composing and completing a real move inside. The sealed-bid case stays as its own regression test tied to the original report. A pre-existing §3.6 mutual-exclusion test had its final assertion corrected from `false` to `true` (off-turn is now genuinely offered once premove composing ends - the exclusion there was always about not composing two board-takeovers at once, not about turn order). `SpaceMap.spec.ts` gets a new describe block: hidden/neutral/active-styled rendering, the `analysis-toggle` emit on click, and (mirroring the existing faction-wheel clearance test's own methodology) a geometric no-overlap check against every hex, for all three Lost Fleet player counts, deriving the button's actual rendered bounding box from its live DOM transform rather than a hardcoded guess. Touched-file specs green at 204 (up from Phase 7's 185). **Two live-browser checks (Playwright, self-contained `?players=2&lostFleet=1`):** the map button in both states with no hex overlap, a real click entering/exiting analysis mode end to end with no console errors; and a second pass locking the session to an off-turn seat, confirming the button shows, and that a real click opens the sandbox as that seat's own turn (turn-order banner and Commands both correctly reflect the entering seat, not the real `playerToMove`) - screenshots sent to the owner as evidence both times.
 
+173.  ✅ **Analysis mode round 0: "analyse as this faction" (viewer v5.68.0, 2026-08-17).** Round 0
+      was playable before (decision #6/#7 — pass-and-play the picks, place everyone's mines, then round
+      1 solo), but you could not choose what to play: the line had to walk every seat's faction pick,
+      and in an auction game every seat's bid, whose resolution then decided your faction FOR you —
+      verified against the engine before building anything (a Preference Split line that picked terrans
+      for seat 0 resolved to nevlas). The new **faction seed** (`ANALYSIS_MODE_PLAN.md` §11) is a third
+      line-entry kind alongside `move`/`adjust`: `{ kind: "faction", lineup }` assigns a whole
+      seat-ordered lineup on the clone and takes the engine's own exit out of faction selection, so the
+      board lands directly on the first starting mine. Picking a faction an opponent holds swaps the
+      two seats (the "what if the auction lands it on me" case) rather than pulling in a stranger; the
+      lineup is built at compose time and stored in the entry, so replay always reproduces the same
+      table. One engine change: `endSetupFactionPhase` is now exported (`engine/src/move/phase.ts`,
+      re-exported from `engine/index.ts` beside `leechPossible`) — behaviour unchanged, nothing on the
+      real game path calls it from outside that module. `engine.setup` is kept consistent with the
+      lineup, because `turnOrderAfterSetupAuction` reads player order back out of it and would
+      otherwise fill with -1. UI is a select plus "Try this faction" in `AnalysisPanel.vue`, shown only
+      while the clone is still in faction selection. **Auction VP prices are deliberately not modelled**
+      (a bid only costs VP at final scoring, which a two-round line never reaches) — stated in the panel
+      rather than guessed at.
+
+174.  ✅ **…and driving that flow through a real browser found two genuine bugs in the Phase 4
+      setup-entry path, both pre-existing and both fixed here (same release).** Neither was reachable
+      often before, since a line that starts in setup was rare until round 0 became worth analysing:
+
+
+    - **The sandbox wallet evaporated after the first edit.** `replayAnalysisLine`'s lazy grant fired
+      on `!wallet`, but the caller feeds the wallet it kept back in as `initialWallet` — so from the
+      second replay onwards the grant was never re-applied to the engine, while the counter went on
+      subtracting it. Measured: 30 credits on the first pass, 17 (the seat's real total) on the
+      second, with the displayed figure dropping 17 → 4. The grant belongs to a moment INSIDE a
+      setup line and has to be re-applied on every pass, so the condition now asks whether the
+      origin is already in the round-move phase (i.e. whether it carries the grant itself) - the
+      same discriminator `committableAnalysisMoves` already used.
+    - **A false "infeasible from move 1".** The feasibility scan judged every snapshot against the
+      grant, including the setup snapshots taken before any grant existed, so a round-0 line reported
+      itself infeasible from its first move the instant it reached round 1, whatever was in it.
+      `replayAnalysisLine` now reports `walletGrantedAt` and the scan starts there.
+
+175.  ✅ **Commit-path guards for setup lines (same release).** `committableAnalysisMoves` had no seat
+      filter, so a setup line — which by decision #7 contains opponents' picks and mine placements as
+      ordinary entries — could offer somebody else's move as "move 1" on the Commit button (the server
+      would have rejected it, but the button should never have offered it). It now truncates at the
+      first move that is not this seat's, and refuses outright to commit anything from a line built on
+      a faction seed, since every move in one describes a table that does not exist.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

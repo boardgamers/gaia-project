@@ -202,4 +202,68 @@ describe("AnalysisPanel", () => {
       expect(emitted().commit).to.have.length(1);
     });
   });
+
+  describe("the round-0 faction seed picker (\u00a711)", () => {
+    const CHOICES = [
+      { faction: "terrans", name: "Terrans" },
+      { faction: "nevlas", name: "Nevlas" },
+    ];
+
+    function seedButton(container: HTMLElement): HTMLButtonElement {
+      return Array.from(container.querySelectorAll("button")).find((b) =>
+        b.textContent.includes("Try this")
+      ) as HTMLButtonElement;
+    }
+
+    it("is not rendered when the clone is past faction selection (no choices offered)", () => {
+      const { container } = render(AnalysisPanel, {
+        props: { active: true, offered: false, counter: COUNTER, factionChoices: [] },
+      });
+      expect(container.querySelector(".analysis-panel__seed")).to.equal(null);
+    });
+
+    it("offers every choice and emits seed-faction for the selected one", async () => {
+      const { container, emitted } = render(AnalysisPanel, {
+        props: { active: true, offered: false, factionChoices: CHOICES },
+      });
+
+      const options = Array.from(container.querySelectorAll("option")).map((o) => o.textContent.trim());
+      expect(options).to.deep.equal(["Terrans", "Nevlas"]);
+
+      await fireEvent.update(container.querySelector("select") as HTMLSelectElement, "nevlas");
+      await fireEvent.click(seedButton(container));
+
+      expect(emitted()["seed-faction"]).to.have.length(1);
+      expect(emitted()["seed-faction"][0]).to.deep.equal(["nevlas"]);
+    });
+
+    it("defaults to the first choice, so the button is armed without touching the select", async () => {
+      const { container, emitted } = render(AnalysisPanel, {
+        props: { active: true, offered: false, factionChoices: CHOICES },
+      });
+
+      await fireEvent.click(seedButton(container));
+
+      expect(emitted()["seed-faction"][0]).to.deep.equal(["terrans"]);
+    });
+
+    it("shows the seeded table back, marking which seat is mine, and relabels the button", () => {
+      const { container } = render(AnalysisPanel, {
+        props: {
+          active: true,
+          offered: false,
+          factionChoices: CHOICES,
+          seatedLineup: [
+            { name: "Terrans", mine: false },
+            { name: "Nevlas", mine: true },
+          ],
+        },
+      });
+
+      const lineup = container.querySelector(".analysis-panel__seed-lineup");
+      expect(lineup.textContent).to.contain("Terrans");
+      expect(lineup.textContent).to.contain("Nevlas (you)");
+      expect(seedButton(container).textContent).to.contain("Try this one instead");
+    });
+  });
 });

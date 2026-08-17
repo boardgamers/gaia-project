@@ -55,6 +55,36 @@
         <b-button size="sm" variant="outline-secondary" @click="$emit('discard-restore')">Discard</b-button>
       </div>
 
+      <!-- The round-0 faction seed (§11) - the one round-0 thing pass-and-play could not express:
+           jump straight to "I have this faction", including in an auction game, where walking every
+           seat's bid would have let the resolution decide your faction for you. Only rendered while
+           the clone is still in faction selection; from the first starting mine onwards the table is
+           settled and ordinary pass-and-play covers the rest. -->
+      <div v-if="factionChoices.length > 0" class="analysis-panel__seed">
+        <label for="analysis-seed-faction" class="analysis-panel__seed-label">Analyse as</label>
+        <select id="analysis-seed-faction" v-model="seedFaction" class="analysis-panel__seed-select">
+          <option v-for="choice in factionChoices" :key="choice.faction" :value="choice.faction">
+            {{ choice.name }}
+          </option>
+        </select>
+        <b-button size="sm" variant="outline-secondary" :disabled="!seedFaction" @click="submitSeed">
+          {{ seatedLineup ? "Try this one instead" : "Try this faction" }}
+        </b-button>
+        <span class="analysis-panel__seed-hint">
+          Skips the pick/auction in this sandbox only, then hands you every player's starting mine placement before
+          round 1 runs solo.
+        </span>
+      </div>
+      <div v-if="seatedLineup" class="analysis-panel__seed-lineup">
+        <span v-for="(entry, index) in seatedLineup" :key="index" class="analysis-panel__seed-seat">
+          <strong v-if="entry.mine">{{ entry.name }} (you)</strong>
+          <template v-else>{{ entry.name }}</template>
+        </span>
+        <span class="analysis-panel__seed-hint">
+          No auction price is charged in this line — bids only cost VP at final scoring.
+        </span>
+      </div>
+
       <!-- Full breakdown (§5.3, second surface) - the headline in Commands.vue's striped header is
            the compact, always-visible version of the same numbers; this is where every resource, the
            power bowl, and the feasibility verdict all get their own line. -->
@@ -138,11 +168,31 @@ export default Vue.extend({
     notice: { type: String, default: null },
     pendingRestore: { type: Object as () => AnalysisLine | null, default: null },
     committableMoves: { type: Number, default: 0 },
+    /** §11's picker options - empty (so the picker is not rendered at all) whenever the clone is
+     * past faction selection, which is every case except a round-0 entry. */
+    factionChoices: { type: Array as () => { faction: string; name: string }[], default: () => [] },
+    /** The table a seed produced, once one is in the line - null otherwise. */
+    seatedLineup: { type: Array as () => { name: string; mine: boolean }[] | null, default: null },
   },
   data() {
     return {
       adjustCharge: 1,
+      seedFaction: null as string | null,
     };
+  },
+  watch: {
+    // The pool shrinks and grows as the line is edited (Undo/Reset put a seeded faction back on
+    // offer), so a selection that is no longer in it would leave the button armed with a faction the
+    // picker is not showing. Default to the first option instead, matching what the closed select
+    // displays.
+    factionChoices: {
+      immediate: true,
+      handler(choices: { faction: string }[]) {
+        if (!choices.some((choice) => choice.faction === this.seedFaction)) {
+          this.seedFaction = choices.length > 0 ? choices[0].faction : null;
+        }
+      },
+    },
   },
   computed: {
     resourceRows(): { label: string; value: AnalysisResourceDelta }[] {
@@ -182,6 +232,12 @@ export default Vue.extend({
         return;
       }
       this.$emit("adjust", this.adjustCharge);
+    },
+    submitSeed() {
+      if (!this.seedFaction) {
+        return;
+      }
+      this.$emit("seed-faction", this.seedFaction);
     },
   },
 });
@@ -322,6 +378,43 @@ export default Vue.extend({
   border-radius: 0.3rem;
   background: var(--ui-surface);
   color: var(--ui-text);
+}
+
+// The round-0 faction seed (§11) - sits above the breakdown rather than inside it, since it applies
+// precisely when there is no wallet and therefore no breakdown to sit in.
+.analysis-panel__seed,
+.analysis-panel__seed-lineup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.analysis-panel__seed-label {
+  margin: 0;
+}
+
+.analysis-panel__seed-select {
+  padding: 0.1rem 0.3rem;
+  border: 1px solid var(--ui-border);
+  border-radius: 0.3rem;
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  max-width: 12rem;
+}
+
+.analysis-panel__seed-hint {
+  flex-basis: 100%;
+  opacity: 0.8;
+  font-size: 0.78rem;
+}
+
+.analysis-panel__seed-seat:not(:last-of-type)::after {
+  content: "·";
+  margin-left: 0.35rem;
+  opacity: 0.6;
 }
 
 .analysis-panel__verdict {

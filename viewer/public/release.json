@@ -1,7 +1,22 @@
 {
-  "version": "5.67.0",
+  "version": "5.68.0",
   "releasedAt": "2026-08-17",
   "entries": [
+    {
+      "version": "5.68.0",
+      "releasedAt": "2026-08-17",
+      "kind": "update",
+      "title": "Round-0 analysis: try a faction",
+      "impact": "",
+      "changes": [
+        "Analysis mode can now start in round 0 from a faction of your choice - pick one, place every player's starting mines, then play round 1 as that faction, without walking the pick or auction first",
+        "Fixed the analysis sandbox wallet silently disappearing after the first edit of a line started in setup, which also made such lines report a false 'infeasible from move 1'",
+        "An analysis line can no longer offer an opponent's setup move, or any move from a seeded table, on the commit button"
+      ],
+      "userChanges": [
+        "Analysis mode can now start in round 0 from a faction of your choice - pick one, place every player's starting mines, then play round 1 as that faction, without walking the pick or auction first"
+      ]
+    },
     {
       "version": "5.67.0",
       "releasedAt": "2026-08-17",

@@ -1,8 +1,9 @@
 # Analysis Mode — Implementation Plan (ready for handoff)
 
-> Status: **Phases 1-7 all done, plus §5.4 and off-turn entry (viewer v5.67.0, 2026-08-16,
-> PROGRESS.md #166-172) — the whole feature is landed, including the map-corner button and entry
-> that no longer requires it to genuinely be this seat's turn.** Board takeover + line + replay +
+> Status: **Phases 1-7 all done, plus §5.4, off-turn entry, and §11's round-0 faction seed (viewer
+> v5.68.0, 2026-08-17, PROGRESS.md #166-175) — the whole feature is landed, including the map-corner
+> button, entry that no longer requires it to genuinely be this seat's turn, and the ability to pick
+> which faction a round-0 line analyses.** Board takeover + line + replay +
 > enter/exit/undo/reset/persistence, the sandbox wallet + resource-diff counter, real solo round flow
 > (Pass/income/Gaia, the two-round cap, opponent decision auto-resolution), setup-phase pass-and-play
 > (opponent mine placement, faction pick, sealed-bid auctions), the hazard-stripe visual treatment
@@ -61,7 +62,12 @@
 >   worked regardless of turn either way (Phase 4 had already built that half). Recorded in
 >   `analysisOffered`'s own doc comment.
 >
-> **Nothing left to continue - this plan is complete, including §5.4.** The map-corner button lives
+> §11 was added after the fact, from an owner request that round 0 let you pick ONE faction and go —
+> and building it turned up two real bugs in Phase 4's own setup-entry path (the sandbox wallet not
+> being re-applied on later replays, and a false "infeasible from move 1"), both found by driving the
+> flow through a real browser rather than by any unit test, and both fixed. See PROGRESS.md #173-175.
+>
+> **Nothing left to continue - this plan is complete, including §5.4 and §11.** The map-corner button lives
 > in `SpaceMap.vue` (bottom-right, mirroring the chart icon's top-right placement, `bounds()` extended
 > with a second bottom-band reservation) and toggles both directions through one emit Game.vue
 > resolves against its own state; the panel's own Enter/Exit buttons and the striped-header
@@ -573,3 +579,68 @@ Specs worth adding:
 - Opponent moves outside setup mine placement.
 - Sharing or exporting a line (the `?state=` URL loader and game chat would make this natural later).
 - Any database object, RPC, migration or Edge Function. **This feature is entirely client-side.**
+
+---
+
+## 11. Round 0: the faction seed (added 2026-08-17, viewer v5.68.0)
+
+Decision #6 made round 0 playable, and decision #7 made you place everyone's starting mines. What
+neither gave you was a say in **which faction you analyse as**: the line had to walk every seat's
+pick, and in an auction game every seat's bid — after which the auction's own resolution decided your
+faction for you. (Checked against the engine, not assumed: a Preference Split line that picked
+terrans for seat 0 resolved to nevlas.) So the one question a round-0 analysis exists to answer —
+"how does this faction's opening actually play?" — was the one it could not be asked.
+
+### 11.1 The mechanism
+
+A third entry kind beside `move` and `adjust` (§3.2), and like `adjust` it is analysis-only fiction
+with no move string behind it:
+
+```ts
+{ kind: "faction"; lineup: Faction[] }   // one faction per seat, indexed by seat
+```
+
+Applying it (`applyFactionSeed`, `viewer/src/logic/analysis.ts`) assigns the lineup and then calls
+the engine's own `endSetupFactionPhase`, so faction boards load, Lost Fleet terraforming costs and
+Moweyds' starting ship are dealt out, and the setup building turn order is built by the same code a
+real game uses. **This is the one engine change**: that function is now exported
+(`engine/src/move/phase.ts`, re-exported from `engine/index.ts` beside `leechPossible`) with its
+behaviour untouched.
+
+Three things the implementation must keep right, each of which breaks silently otherwise:
+
+- **`engine.setup` has to keep matching the lineup.** `turnOrderAfterSetupAuction` is a getter that
+  reads player order back out of it by looking up who holds each faction, so a mismatch fills every
+  later turn order with -1. A seed that only permutes an already-complete pool (the auction case)
+  keeps its existing order — preserving the real table's turn order — and only a seed that changes
+  the pool itself rebuilds it in seat order.
+- **`player.variant` must be cleared**, or `endSetupFactionPhase` loads the faction board of whatever
+  faction that seat held _before_ the seed.
+- **`data.bid` is reset to 0.** A bid recorded against the old faction is meaningless against the new
+  one, and a bid only costs VP at final scoring (`finalScoringPhase`), which a two-round line never
+  reaches — so a seeded line has no auction price in it at all. Stated in the panel rather than
+  guessed at.
+
+### 11.2 Which factions are offered, and what a swap means
+
+The pool is everything the table already holds plus everything still on offer (the engine's own
+`ChooseFaction` data, so bans, expansion membership and the same-planet-colour rule are respected
+without re-deriving any of them). Both halves matter: mid-pick the available half carries the answer,
+while in an auction's bid phase every faction is already claimed and nothing is on offer — that is
+precisely the case this feature exists for.
+
+Choosing a faction an opponent currently holds **swaps the two seats** rather than pulling an
+unrelated faction in, which is what "what if the auction lands it on me" means. The lineup is built at
+compose time and stored in the entry, never re-derived on replay: the pool shrinks and grows as the
+line is edited, so re-deriving could hand a stored line a different table than the one it was set up
+with.
+
+### 11.3 Scope limits
+
+- Only from a round-0 phase before the first starting mine (`SetupBoard` … `SetupPreferenceBid`).
+  From `SetupBuilding` onwards the table is settled and pass-and-play (§2.6) already covers it;
+  reseeding there would silently discard placements already made.
+- A line holds at most one seed, always as its first entry. Choosing again replaces the line — that
+  is what "actually, show me Itars instead" means.
+- **Nothing from a seeded line is ever committable** (§6). Every move in one was played on a table
+  this seat only imagined, possibly as a faction it does not hold.

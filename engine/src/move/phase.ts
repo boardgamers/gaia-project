@@ -328,7 +328,16 @@ function beginSetupAuctionPhase(engine: Engine) {
   engine.moveToNextPlayer(engine.turnOrder, { loop: false });
 }
 
-function endSetupFactionPhase(engine: Engine) {
+/**
+ * Loads every player's faction board and hands over to the setup building phase - the one exit from
+ * round 0's faction selection, whichever route got there (plain pick, or any of the auction
+ * variants resolving). Exported for the viewer's analysis mode, which needs to take that exit
+ * directly on its throwaway sandbox clone after assigning factions itself, so a player can try out
+ * "what if I had this faction" without walking every seat's pick/ban/bid first
+ * (`viewer/src/logic/analysis.ts`'s `applyFactionSeed`, ANALYSIS_MODE_PLAN.md §11). Nothing on the
+ * real game path calls it from outside this module, and its behaviour is unchanged.
+ */
+export function endSetupFactionPhase(engine: Engine) {
   for (const pl of engine.players) {
     if (!pl.faction) {
       pl.faction = engine.setup[pl.player as PlayerEnum];
