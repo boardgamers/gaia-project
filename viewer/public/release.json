@@ -1,7 +1,18 @@
 {
-  "version": "5.68.0",
+  "version": "5.68.1",
   "releasedAt": "2026-08-17",
   "entries": [
+    {
+      "version": "5.68.1",
+      "releasedAt": "2026-08-17",
+      "kind": "fix",
+      "title": "Engine CI fix",
+      "impact": "",
+      "changes": [
+        "Fixed the resolve-automation logic tests dying on a missing fake-backend method instead of running - test-only, nothing deployed was affected"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.68.0",
       "releasedAt": "2026-08-17",

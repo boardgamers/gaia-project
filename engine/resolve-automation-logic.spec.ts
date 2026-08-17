@@ -70,6 +70,13 @@ describe("resolve-automation logic", () => {
         committed.push(args);
       },
       fetchAutoCharge: async () => "ask",
+      // These tests all predate cancel triggers being wired into resolveOneAutomatedTurn, which
+      // fetches them unconditionally - without this stub every one of them died on
+      // "backend.fetchCancelTriggers is not a function" rather than on anything they assert. Empty
+      // is the right default here: none of them queue a trigger, so "this seat has none" is the
+      // path they were written for. The real backend (resolve-automation/index.ts) implements it,
+      // so only the fake was ever behind.
+      fetchCancelTriggers: async () => [],
       ...overrides,
     };
     return { backend, deleted, failures, committed };
