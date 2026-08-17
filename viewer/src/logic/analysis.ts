@@ -385,7 +385,13 @@ export function resolveOpponentDecisions(engine: Engine, seat: number): void {
     // The round-0 booster pick (owner instruction): setup pass-and-play (§2.6/decision #7) exists so
     // the player can place everyone's starting mines, not so they have to choose a booster for each
     // opponent - an opponent's booster is worth nothing in a sandbox where they never take a turn.
-    // Taken first-available rather than randomly, so a stored line always replays the same table.
+    // Taken first-available rather than randomly, so a stored line always replays the same table -
+    // but only to satisfy the engine's own turn-order bookkeeping (phaseSetupBooster won't advance
+    // to round 1 until every seat in turnOrder has completed this move). It is immediately handed
+    // back, mirroring exactly what a real mid-round Pass does when a player gives up their old
+    // booster (player.ts's `pass()`): opponents must not actually keep a booster (owner instruction
+    // - the pool should show every tile as available except the one the sandbox seat itself
+    // picked), and this is the same undo the engine already relies on elsewhere, not a new one.
     const booster = engine.findAvailableCommand(toMove, Command.ChooseRoundBooster);
     if (booster) {
       const boosters = booster.data?.boosters ?? [];
@@ -395,6 +401,13 @@ export function resolveOpponentDecisions(engine: Engine, seat: number): void {
           boosters.map((b) => `${faction} ${Command.ChooseRoundBooster} ${b}`)
         )
       ) {
+        const player = engine.players[toMove];
+        const picked = player.data.tiles.booster;
+        if (picked !== undefined) {
+          player.removeRoundBoosterEvents();
+          player.data.tiles.booster = undefined;
+          engine.tiles.boosters[picked] = true;
+        }
         continue;
       }
     }
