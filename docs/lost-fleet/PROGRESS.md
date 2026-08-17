@@ -7320,6 +7320,55 @@ Commit · ⓘ` now lives in the hazard-striped header that already existed, with
             A spec that checks anything derived from the button list has to regenerate too, or the list is
             empty for the wrong reason and the assertion passes/fails by accident.
 
+184.  ✅ **The turn recap remembers what you have read, per move (viewer v5.72.1, 2026-08-17, owner
+      report).** "I don't want to keep closing a last turn summary which keeps showing the same
+      information because I enter the same game several times without there having been made moves
+      inbetween." The dismissal had already been moved from component `data()` into localStorage
+      earlier the same day, but it was still all-or-nothing: one signature per own-turn cycle
+      (`<seat>:<moveHistory index of my last turn>`), which meant the notice knew _that_ a cycle had
+      been dismissed and nothing about _which lines_ the player had actually read. That is wrong in
+      both directions - a cycle it had no mark for was replayed in full, and a cycle it did have a
+      mark for stayed hidden even when a new opponent turn landed in it, so those turns were never
+      recapped at all.
+
+      What is stored now is how far through `moveHistory` each seat has read:
+      `viewer/src/hosted/turn-recap-seen.ts` (`{ through, move }` per seat, under
+      `opponent-moves-notice-seen:<game>`) is the one module to extend for anything seen/unseen-shaped,
+      the same split `chat-unread.ts` already uses. `recent.ts` grew
+      `opponentTurnsSinceLastTurn`, which is the existing recap window with each move's absolute
+      `moveHistory` index attached - `opponentMovesSinceLastTurn` is now a `.map` over it, so
+      `store.ts`'s highlighting is untouched. The notice lists `unseenRecapLines(...)` and dismissing
+      marks only the lines that were on screen.
+
+      The mark carries the move string it points at, not just the index, and is discarded outright
+      when `moveHistory[through]` no longer matches it. Move indices only mean anything against the
+      history they were taken from, and a live client's history CAN be rewritten underneath it - the
+      `Amber Drift` rollback did exactly that. Showing a recap twice is a nuisance; hiding a turn that
+      was never read is a lost turn, so the tie is broken towards showing it. The previous build's
+      signature is adopted once (`adoptLegacyDismissal`, on the first render that has both a seat and a
+      window) so updating does not replay a recap that was already dismissed.
+
+      **The existing spec was red on `master` before this.** The localStorage move landed without a
+      `beforeEach` clearing it, and jsdom shares storage across cases in a file: case 1's dismissal
+      wrote signature `0:1`, and case 3's fixture happens to produce the same signature, so its notice
+      was hidden and two assertions failed. Any spec touching this module needs
+      `window.localStorage.clear()`.
+
+185.  ✅ **Two more stale specs from the same day's sandbox commits, so the viewer suite is green again
+      (2026-08-17).** Neither was a code bug - both tests still asserted the behaviour their own commit
+      had deliberately replaced, and had not been rerun.
+
+      - `analysis.spec.ts`'s round-0 flow still expected `players[1].data.tiles.booster` to hold a
+        tile, which is exactly what #181's last item stopped doing (the auto-pick is handed straight
+        back so opponents keep nothing). It now asserts the intent instead: the opponent holds no
+        booster, and the pool has exactly one tile taken - the sandbox seat's own.
+      - `Game.spec.ts`'s forced-exit case dispatched `externalData` with `analysisBackup`, i.e. an
+        IDENTICAL move history, which is precisely the no-op refetch the same morning's fix taught the
+        handler to ignore. It now appends a real opponent move, and a second case covers the fix
+        itself: an identical refetch leaves the sandbox open with its line intact.
+
+      Viewer: 1149/1149 passing.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

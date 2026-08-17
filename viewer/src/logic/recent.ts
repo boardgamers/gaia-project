@@ -230,9 +230,29 @@ export function recentMoves(player: PlayerEnum, logEntries: LogEntry[], moveHist
     : { index: -1, moves: [], allMoves: moves };
 }
 
+/** A move together with its absolute position in `moveHistory` - the only stable identity a single
+ * move has, since the same move string can legitimately be played twice. */
+export type IndexedMove = { index: number; move: ParsedMove };
+
+/**
+ * The recap window (starts after the viewer's previous own turn, ignores leech/income replies), with
+ * each move's absolute `moveHistory` index attached. `MovesSlice.moves` is already a slice starting
+ * at `recent.index`, so the index is just the offset added back on.
+ *
+ * The indices are what lets a consumer remember which recap lines have been read (hosted/
+ * turn-recap-seen.ts): "seen through move 14" survives a reload, whereas a position within the
+ * window would silently mean something else as soon as the window moves.
+ */
+export function opponentTurnsSinceLastTurn(recent: MovesSlice): IndexedMove[] {
+  return recent.moves
+    .map((move, offset) => ({ index: recent.index + offset, move }))
+    .slice(1)
+    .filter((entry) => ownTurn(entry.move));
+}
+
 /** The recap window starts after the viewer's previous own turn and ignores leech/income replies. */
 export function opponentMovesSinceLastTurn(recent: MovesSlice): ParsedMove[] {
-  return recent.moves.slice(1).filter(ownTurn);
+  return opponentTurnsSinceLastTurn(recent).map((entry) => entry.move);
 }
 
 export function roundMoves(logEntries: LogEntry[], moveHistory: string[]) {

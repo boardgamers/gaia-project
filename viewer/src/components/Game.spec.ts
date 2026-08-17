@@ -1506,12 +1506,15 @@ describe("Game", () => {
         vm.$destroy();
       });
 
-      it("keeps the persisted line but explains the forced exit when real state arrives mid-analysis (§3.5's externalData note)", () => {
+      it("keeps the persisted line but explains the forced exit when a real move arrives mid-analysis (§3.5's externalData note)", () => {
         const vm = mountAsSeat(0);
         vm.enterAnalysisMode();
         vm.applyAnalysisMove("terrans up nav.");
 
-        vm.$store.dispatch("externalData", JSON.parse(JSON.stringify(vm.analysisBackup)));
+        // A genuinely new move, i.e. an opponent actually played - what the forced exit is for.
+        const arrived = JSON.parse(JSON.stringify(vm.analysisBackup));
+        arrived.moveHistory = [...arrived.moveHistory, "nevlas up nav."];
+        vm.$store.dispatch("externalData", arrived);
 
         expect(vm.analysisMode).to.equal(false);
         expect(vm.analysisNotice).to.contain("saved line is still there");
@@ -1523,6 +1526,22 @@ describe("Game", () => {
         expect(second.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
         second.$el.remove();
         second.$destroy();
+      });
+
+      it("leaves the sandbox open when the same state is refetched (a reconnect, not a move)", () => {
+        // Minimizing the tab and reopening it dispatches externalData with the SAME real state,
+        // which used to force-close the sandbox as if somebody had moved.
+        const vm = mountAsSeat(0);
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("terrans up nav.");
+
+        vm.$store.dispatch("externalData", JSON.parse(JSON.stringify(vm.analysisBackup)));
+
+        expect(vm.analysisMode).to.equal(true);
+        expect(vm.analysisNotice).to.equal(null);
+        expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
+        vm.$el.remove();
+        vm.$destroy();
       });
     });
 

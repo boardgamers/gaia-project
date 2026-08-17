@@ -1,7 +1,21 @@
 {
-  "version": "5.72.0",
+  "version": "5.72.1",
   "releasedAt": "2026-08-17",
   "entries": [
+    {
+      "version": "5.72.1",
+      "releasedAt": "2026-08-17",
+      "kind": "fix",
+      "title": "The turn recap only shows what you have not read",
+      "impact": "",
+      "changes": [
+        "\"Since your last turn\" now remembers which opponent turns you have already dismissed, per game, so opening the same game again with nothing played in between shows nothing at all",
+        "A turn that arrives after you dismissed the recap gets its own line instead of being hidden for the rest of the rotation"
+      ],
+      "userChanges": [
+        "You no longer have to close the same \"Since your last turn\" recap every time you open a game - once dismissed, only genuinely new opponent turns bring it back"
+      ]
+    },
     {
       "version": "5.72.0",
       "releasedAt": "2026-08-17",

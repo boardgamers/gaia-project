@@ -640,7 +640,12 @@ describe("the round-0 faction seed (§11)", () => {
     expect(engine.round).to.equal(Round.Round1);
     expect(engine.turnOrder).to.deep.equal([0]); // solo from here (§2.5)
     expect(engine.playerToMove).to.equal(0);
-    expect(engine.players[1].data.tiles.booster).to.not.equal(null); // picked for them, not by me
+    // The opponent's pick was made for them only to satisfy the engine's turn-order bookkeeping and
+    // handed straight back (owner instruction, PROGRESS #181) - they must not actually keep a
+    // booster in a sandbox where they never take a turn, so the pool shows every tile except mine.
+    expect(engine.players[1].data.tiles.booster ?? null).to.equal(null);
+    expect(engine.tiles.boosters[mine]).to.equal(false);
+    expect(Object.values(engine.tiles.boosters).filter((available) => available === false)).to.have.length(1);
   });
 
   it("does the same from an auction game's bid phase, taking the faction the auction had not yet awarded", () => {
