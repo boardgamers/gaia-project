@@ -1,7 +1,18 @@
 {
-  "version": "5.69.1",
+  "version": "5.69.2",
   "releasedAt": "2026-08-17",
   "entries": [
+    {
+      "version": "5.69.2",
+      "releasedAt": "2026-08-17",
+      "kind": "fix",
+      "title": "Sticky bar position fix",
+      "impact": "",
+      "changes": [
+        "Fixed the mobile sticky action/premove bar sometimes floating in the middle of the page after minimizing and reopening the app - a stale pinch-zoom counter-transform is now cleared on resume and re-derived every frame while one is applied, and a viewport reading that no zoom can explain is rejected outright"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.69.1",
       "releasedAt": "2026-08-17",
