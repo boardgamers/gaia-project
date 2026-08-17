@@ -27,6 +27,10 @@ export interface CommandController {
 
   readonly temporaryRange: number;
 
+  /** Whether the board is a non-committing analysis sandbox (ANALYSIS_MODE_PLAN.md §12) - read by
+   * `checkAutoClick` to skip the per-move confirmation press there. */
+  readonly analysisMode: boolean;
+
   undo();
 
   handleCommand(command: string, source?: ButtonData);

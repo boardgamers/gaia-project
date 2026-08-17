@@ -555,33 +555,44 @@ describe("Commands", () => {
     expect(container.querySelector("#move-buttons .sticky-bar-title .auto-leech-select")).to.not.equal(null);
   });
 
-  it("hides the auto-leech select during analysis mode, showing the counter headline in its place instead (§2.9/§5.3)", () => {
+  it("hides the auto-leech select during analysis mode, putting the line's controls in its place instead (§2.9/§12)", () => {
     const engine = createLostFleetRoundMoveEngine();
     const store = makeStore();
     store.commit("receiveData", engine);
-    const counter = {
-      credits: { net: -4, displayed: 16 },
-      ores: { net: 0, displayed: 10 },
-      knowledge: { net: -4, displayed: 6 },
-      qics: { net: 1, displayed: 1 },
-      victoryPoints: { net: 0, displayed: 30 },
-      power: { before: { area1: 0, area2: 0, area3: 0, gaia: 0 }, after: { area1: 0, area2: 0, area3: 0, gaia: 0 } },
-      feasible: true,
-      infeasibleFromMove: null,
-    };
+    const status = { overdrawn: [{ kind: "c", amount: -7 }], assumedPower: 2 };
 
     const { container } = render(Commands, {
-      props: { currentMove: "", analysisMode: true, analysisCounter: counter },
+      props: { currentMove: "", analysisMode: true, analysisStatus: status, analysisMoveCount: 3 },
       store,
     });
 
     expect(container.querySelector(".auto-leech-select")).to.equal(null);
-    const headlines = container.querySelectorAll(".analysis-counter-headline");
-    expect(headlines.length).to.equal(2); // one in #move-title, one in the mobile sticky bar
-    expect(container.querySelector("#move-title .analysis-counter-headline").textContent).to.contain("16c");
+    const controls = container.querySelectorAll(".analysis-controls");
+    expect(controls.length).to.equal(2); // one in #move-title, one in the mobile sticky bar
+    const title = container.querySelector("#move-title .analysis-controls");
+    expect(title.textContent).to.contain("3 moves");
+    expect(title.textContent).to.contain("-7c");
+    expect(title.textContent).to.contain("+2 power");
   });
 
-  it("stripes the header and reads ANALYSIS — not saved during analysis mode, emitting analysis-exit when tapped (§5.1/§5.4)", async () => {
+  it("renders the info modal exactly once even though the controls are rendered in both headers", () => {
+    // Two copies of one b-modal id make the button open whichever Bootstrap-Vue registered first -
+    // the trap SetupStatus.vue's own comment warns about, which is why the modal lives outside
+    // AnalysisHeaderControls.vue.
+    const engine = createLostFleetRoundMoveEngine();
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(Commands, {
+      props: { currentMove: "", analysisMode: true },
+      store,
+    });
+
+    expect(container.querySelectorAll("#analysis-mode-info").length).to.be.at.most(1);
+    expect(container.querySelectorAll(".analysis-controls__info").length).to.equal(2);
+  });
+
+  it("stripes both headers and reads ANALYSIS during analysis mode, without exiting when tapped (§5.1/§12)", async () => {
     const engine = createLostFleetRoundMoveEngine();
     const store = makeStore();
     store.commit("receiveData", engine);
@@ -591,15 +602,17 @@ describe("Commands", () => {
       store,
     });
 
-    expect(container.querySelector("#move-title").textContent).to.contain("ANALYSIS — not saved");
+    expect(container.querySelector("#move-title").textContent).to.contain("ANALYSIS");
     expect(container.querySelector("#move-title").classList.contains("move-title--analysis")).to.equal(true);
     expect(
       container.querySelector("#move-buttons .sticky-bar-title").classList.contains("sticky-bar-title--analysis")
     ).to.equal(true);
 
+    // Tap-to-exit is gone (§12): the header now hosts Undo/Reset/Commit, so a press meant for one of
+    // those must never be read as "leave analysis mode". The map's corner button is the only way out.
     await fireEvent.click(container.querySelector("#move-title"));
 
-    expect(emitted()["analysis-exit"]).to.have.length(1);
+    expect(emitted()["analysis-exit"]).to.equal(undefined);
   });
 
   it("drives the mobile sticky-bar spacer's height from a CSS custom property, not a direct inline height", () => {

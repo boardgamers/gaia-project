@@ -1,9 +1,9 @@
 # Analysis Mode — Implementation Plan (ready for handoff)
 
-> Status: **Phases 1-7 all done, plus §5.4, off-turn entry, and §11's round-0 faction seed (viewer
-> v5.68.0, 2026-08-17, PROGRESS.md #166-175) — the whole feature is landed, including the map-corner
-> button, entry that no longer requires it to genuinely be this seat's turn, and the ability to pick
-> which faction a round-0 line analyses.** Board takeover + line + replay +
+> Status: **Phases 1-7 all done, plus §5.4, off-turn entry, §11's round-0 faction seed, and §12's
+> simplification pass (viewer v5.69.0, 2026-08-17, PROGRESS.md #166-179) — the whole feature is
+> landed. §12 is the one to read before touching anything here: it replaced the injected sandbox
+> wallet with lifted affordability, so several mechanisms described below no longer exist.** Board takeover + line + replay +
 > enter/exit/undo/reset/persistence, the sandbox wallet + resource-diff counter, real solo round flow
 > (Pass/income/Gaia, the two-round cap, opponent decision auto-resolution), setup-phase pass-and-play
 > (opponent mine placement, faction pick, sealed-bid auctions), the hazard-stripe visual treatment
@@ -644,3 +644,98 @@ with.
   is what "actually, show me Itars instead" means.
 - **Nothing from a seeded line is ever committable** (§6). Every move in one was played on a table
   this seat only imagined, possibly as a faction it does not hold.
+
+---
+
+## 12. The simplification pass (2026-08-17, viewer v5.69.0)
+
+Owner instruction, after playing the feature: strip the UI back to what is genuinely needed, and stop
+capping the sandbox seat's resources at a fake maximum. This turned out to be one change, not two.
+
+### 12.1 No injected wallet - lifted affordability instead
+
+Analysis mode used to make unaffordable moves clickable by **injecting resources** (30c/15o/15k/10q),
+because the engine enforces affordability at command-GENERATION time (§2.3). Everything else was
+compensation for that lie: `AnalysisWallet` recorded baseline vs grant, the counter showed
+`displayed` (clone − grant) beside `net`, and `walletGrantedAt` existed only so pre-grant snapshots
+were not judged against a grant that had not happened yet.
+
+All of it is gone. `PlayerData.hasResource` now returns true for the analysis seat on the five
+overdrawable resources (credits, ore, knowledge, QIC, power - `ANALYSIS_OVERDRAWABLE`), payment is
+already plain arithmetic, and the seat simply goes negative. Consequences worth knowing:
+
+- **The player board needed no change at all.** It reads `data.credits` and friends directly, so the
+  real number - negative when overdrawn - is what it was always going to render. `Resource.vue` marks
+  a negative count `.overdrawn` (red), which covers the board and the mobile sticky bar in one rule.
+- **The gain clamps are correct again.** MAX_CREDIT/MAX_ORE/MAX_KNOWLEDGE used to be bypassed for the
+  analysis seat so the injected wallet survived; a real player's gains cap the same way, so clamping
+  is now the faithful behaviour and the bypass was deleted.
+- **Everything that is not a spendable resource stays gated.** A Gaiaformer you do not own, or a token
+  outside the Gaia area, is a component or a board position rather than a balance to be in debt on.
+- **Two traps.** `Player.maxPayRange` is a `for(;;)` that only ends when `hasResource` says no, so it
+  needs its own ceiling (real capacity + a fixed slack) or free-action conversions hang the browser.
+  And `spendPower` moves tokens area3 → area1 with no floor, so an unpayable power cost would leave a
+  NEGATIVE bowl - see §12.2.
+- The counter is now `AnalysisStatus`: an overdraft summary plus assumed power. Nothing per-resource,
+  no snapshots, no feasibility scan.
+
+### 12.2 Power is topped up, never negative
+
+Power bowls hold tokens, not a balance, so "just let it go negative" produces a nonsense state that
+every later charge compounds. `assumePowerForAnalysis` charges the shortfall up first through the
+engine's own `chargePower`, one step at a time, and only fabricates tokens when there is genuinely
+nothing left below to lift. Either way the total lands in `analysisAssumedPower`, which the header
+shows as `+N power` - so the assumption is visible, and a line that needed it is not committable.
+
+This **replaces the manual leech stepper** (§4.4/decision #12): "assume I leech N power" was answering
+the same question by hand. `adjust` entries still replay, so lines saved before this still load.
+
+### 12.3 One bar, no panel
+
+The yellow container is deleted. Its controls live in the hazard-striped header, which already existed,
+already said "not live", and is the one thing still on screen on a phone once the map scrolls away:
+
+`ANALYSIS · N moves · [−7c] · [+2 power] · Undo · Reset · Commit · ⓘ`
+
+- `AnalysisHeaderControls.vue` is rendered by BOTH headers (desktop `#move-title`, mobile sticky bar).
+  The info modal therefore lives **outside** it (`AnalysisModeInfo.vue`, rendered once by Commands.vue):
+  two copies of one `b-modal` id make the button open whichever Bootstrap-Vue registered first, the
+  trap SetupStatus.vue's own comment warns about.
+- Every explanatory sentence moved into that modal, behind the ⓘ button.
+- `AnalysisPanel.vue` survives only for what cannot live in a one-line bar: staleness notices, the
+  saved-line prompt (both must be readable when analysis mode is NOT active, when there is no header),
+  and round 0's faction picker.
+- **The enter banner and the Exit button are gone**, and so is tap-to-exit on the header - it now hosts
+  buttons, so a press meant for Undo must never be read as "leave". The map's corner button is the only
+  way in and out.
+
+### 12.4 No confirmation press
+
+A sandbox turn fires the moment it is composed: Undo already covers a misclick, and a round-0 line
+otherwise spends a press per seat confirming placements the player has to make for everybody.
+`checkAutoClick` auto-clicks a lone `needConfirm` button when `controller.analysisMode` is set -
+warnings still block it, and ordinary single-option buttons still obey the player's own auto-click
+preference, so opening a menu never fires a move by itself.
+
+### 12.5 An opponent's leech can never strand you
+
+Reported bug: building within leech range paused the engine on `Phase.RoundLeech`, and because
+analysis mode forces `canPlay` true (§2.6, for setup pass-and-play), `Commands.vue` rendered **the
+opponent's** accept/decline prompt - with the player unable to continue their own line. Three changes,
+each of which would have been enough on its own, because this must not come back:
+
+1. `resolveOpponentDecisions` **declines first and deterministically** rather than trying
+   `engine.autoMove()` first, whose answer depended on the opponent's own auto-charge settings and
+   returned "ask" (i.e. no answer) above their comfort threshold. An opponent's leech is worth nothing
+   in a sandbox where they never build.
+2. It answers **every** offer, not just `offers[0]`, and **never throws** - it runs outside
+   `replayAnalysisLine`'s try/catch, so an exception there killed the whole click.
+3. `canPlay` gates on the analysis seat's own turn from round 1 on (round 0 keeps pass-and-play). An
+   unresolved pause now shows nothing to press instead of somebody else's decision.
+
+### 12.6 Also worth knowing
+
+`markAnalysisSeat` must be applied to `analysisOrigin` **before** `applySoloRoundFlow`, and
+`replayAnalysisLine` regenerates available commands on the initial clone: `Engine.fromData` carries
+over the command list the origin was serialized with, and that list was built while affordability
+still applied to this seat.

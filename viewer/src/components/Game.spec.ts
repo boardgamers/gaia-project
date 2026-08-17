@@ -1105,66 +1105,72 @@ describe("Game", () => {
       vm.$destroy();
     });
 
-    describe("Phase 2 - sandbox wallet and diff counter (§4)", () => {
-      it("grants a generous sandbox wallet on entry and marks the seat's data uncapped", () => {
+    describe("real resources and the compact status (§12)", () => {
+      it("leaves the seat's real resources alone on entry - nothing is injected any more", () => {
         const vm = mountAsSeat(0);
         const realCredits = vm.engine.players[0].data.credits;
 
         vm.enterAnalysisMode();
 
-        expect(vm.analysisWallet).to.not.equal(null);
-        expect(vm.analysisWallet.baseline.credits).to.equal(realCredits);
-        expect(vm.engine.players[0].data.credits).to.be.at.least(30);
+        expect(vm.engine.players[0].data.credits).to.equal(realCredits);
         expect(vm.engine.players[0].data.analysis).to.equal(true);
 
         vm.$el.remove();
         vm.$destroy();
       });
 
-      it("starts the counter at net zero, feasible, with no moves played", () => {
+      it("reports nothing overdrawn and no assumed power for an untouched line", () => {
         const vm = mountAsSeat(0);
         vm.enterAnalysisMode();
 
-        expect(vm.analysisCounter.credits.net).to.equal(0);
-        expect(vm.analysisCounter.qics.net).to.equal(0);
-        expect(vm.analysisCounter.feasible).to.equal(true);
-        expect(vm.analysisCounter.infeasibleFromMove).to.equal(null);
+        expect(vm.analysisStatus.overdrawn).to.deep.equal([]);
+        expect(vm.analysisStatus.assumedPower).to.equal(0);
 
         vm.$el.remove();
         vm.$destroy();
       });
 
-      it("reflects a paid move's real cost and reward as net deltas, even though the sandbox wallet absorbed both", () => {
+      it("spends real resources, so the board's own numbers move with the line", () => {
         const vm = mountAsSeat(0);
         const realKnowledge = vm.engine.players[0].data.knowledge;
         const realQics = vm.engine.players[0].data.qics;
         vm.enterAnalysisMode();
 
-        // Any research upgrade costs a flat 4 knowledge (UPGRADE_RESEARCH_COST); navigation's first
-        // level also grants 1 QIC as a level bonus (research-tracks.ts). The move succeeds because
-        // the wallet made it affordable, but the counter must still show the real cost AND reward -
-        // this is exactly §2.4's trap (a reward landing right as the wallet sits at/above the real
-        // cap) and §4.3's "gains fall out automatically as negative usage, no special-casing".
+        // A research upgrade costs a flat 4 knowledge (UPGRADE_RESEARCH_COST); navigation's first
+        // level also grants 1 QIC (research-tracks.ts). Both land on the real numbers now, which is
+        // what the player board renders - no wallet in between to subtract back out.
         vm.applyAnalysisMove("terrans up nav.");
 
-        expect(vm.analysisCounter.knowledge.net).to.equal(-4);
-        expect(vm.analysisCounter.knowledge.displayed).to.equal(realKnowledge - 4);
-        expect(vm.analysisCounter.qics.net).to.equal(1);
-        expect(vm.analysisCounter.qics.displayed).to.equal(realQics + 1);
+        expect(vm.engine.players[0].data.knowledge).to.equal(realKnowledge - 4);
+        expect(vm.engine.players[0].data.qics).to.equal(realQics + 1);
 
         vm.$el.remove();
         vm.$destroy();
       });
 
-      it("clears the wallet and counter on exit, so a stale counter never lingers over the real board", () => {
+      it("surfaces an overdraft once the line spends past what the seat has", () => {
+        const vm = mountAsSeat(0);
+        vm.enterAnalysisMode();
+        // Every replay restarts from analysisOrigin, so that is where a "this seat is broke" setup
+        // has to land - mutating vm.engine would be overwritten by the next replay.
+        vm.analysisOrigin.players[0].data.knowledge = 0;
+
+        vm.applyAnalysisMove("terrans up nav.");
+
+        expect(vm.analysisStatus.overdrawn).to.deep.equal([{ kind: "k", amount: -4 }]);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("clears the status on exit, so nothing stale lingers over the real board", () => {
         const vm = mountAsSeat(0);
         vm.enterAnalysisMode();
         vm.applyAnalysisMove("terrans up nav.");
 
         vm.exitAnalysisMode();
 
-        expect(vm.analysisWallet).to.equal(null);
-        expect(vm.analysisCounter).to.equal(null);
+        expect(vm.analysisStatus).to.equal(null);
 
         vm.$el.remove();
         vm.$destroy();
@@ -1179,6 +1185,44 @@ describe("Game", () => {
 
         expect(vm.engine.turnOrder).to.deep.equal([0]);
         expect(vm.engine.passedPlayers).to.deep.equal([]);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("never renders another seat's commands from round 1 on, so an unresolved leech cannot strand the player (§12)", () => {
+        // The reported bug: building within leech range paused the engine on the opponent's
+        // accept/decline prompt, and because analysis mode forces canPlay true, THAT prompt was
+        // rendered in place of the player's own commands with no way to continue. Opponent decisions
+        // are auto-declined now, but the gate is the backstop: from round 1 on, only this seat's own
+        // turn renders anything.
+        const vm = mountAsSeat(0);
+        vm.enterAnalysisMode();
+        expect(vm.canPlay).to.equal(true);
+
+        // The store's engine is markRaw'd, so a direct mutation would not re-evaluate the getter -
+        // hand the new state in the way every real update arrives instead.
+        const stranded = Engine.fromData(JSON.parse(JSON.stringify(vm.engine)));
+        stranded.turnOrder = [0, 1];
+        stranded.currentPlayer = 1; // an opponent left on turn, however that happened
+        vm.handleData(stranded);
+
+        expect(vm.canPlay).to.equal(false);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("still renders every seat's commands during setup, which is what pass-and-play needs (§2.6)", () => {
+        const vm = mountAsSeat(0, new Engine(SETUP_MOVES.slice(0, -1))); // still mid-setup
+        vm.enterAnalysisMode();
+
+        // Round 0: whoever the clone points at is whose choice the player is making.
+        const opponentsTurn = Engine.fromData(JSON.parse(JSON.stringify(vm.engine)));
+        opponentsTurn.currentPlayer = 1;
+        vm.handleData(opponentsTurn);
+
+        expect(vm.canPlay).to.equal(true);
 
         vm.$el.remove();
         vm.$destroy();
@@ -1209,7 +1253,6 @@ describe("Game", () => {
 
         vm.applyAnalysisMove(`terrans pass ${booster}`); // round 1 -> round 2, the one bonus round
 
-        expect(vm.analysisPassCapped).to.equal(true);
         expect(vm.engine.availableCommands.some((c) => c.name === Command.Pass)).to.equal(false);
 
         vm.$el.remove();
@@ -1267,19 +1310,21 @@ describe("Game", () => {
         vm.$destroy();
       });
 
-      it("withholds the sandbox wallet during setup, granting it lazily once round 1 begins", () => {
+      it("carries a setup line through to round 1 with the seat's real resources intact (§12)", () => {
         // terrans still owes their own booster pick - the last setup move before round 1.
         const vm = mountAsSeat(0, new Engine(SETUP_MOVES.slice(0, -1)));
         vm.enterAnalysisMode();
-        expect(vm.analysisWallet).to.equal(null);
         expect(vm.analysisBaseRound).to.equal(1); // §3.7 - "setup gives you setup plus round 1"
 
         vm.applyAnalysisMove("terrans booster booster3");
 
         expect(vm.engine.phase).to.equal(Phase.RoundMove);
         expect(vm.engine.round).to.equal(1);
-        expect(vm.analysisWallet).to.not.equal(null);
-        expect(vm.engine.players[0].data.credits).to.be.at.least(30);
+        // Round 1 income, and nothing else: no wallet is granted at the handover any more, so this
+        // is exactly what the same moves produce in a real game.
+        const plain = new Engine([...SETUP_MOVES.slice(0, -1), "terrans booster booster3"]);
+        expect(vm.engine.players[0].data.credits).to.equal(plain.players[0].data.credits);
+        expect(vm.analysisStatus.overdrawn).to.deep.equal([]);
 
         vm.$el.remove();
         vm.$destroy();
@@ -1481,37 +1526,10 @@ describe("Game", () => {
       });
     });
 
-    describe("Phase 6 - leech adjustment (§4.4, decision #12)", () => {
-      it("appends an adjust entry and reflects it directly in the power bowl, not as a move", () => {
-        const vm = mountAsSeat(0);
-        vm.enterAnalysisMode();
-        const before = vm.analysisCounter.power.after;
-
-        vm.applyAnalysisAdjust(2);
-
-        expect(vm.analysisEntries).to.deep.equal([{ kind: "adjust", charge: 2 }]);
-        const after = vm.analysisCounter.power.after;
-        expect(after.area2 + after.area3).to.equal(before.area2 + before.area3 + 2);
-
-        vm.$el.remove();
-        vm.$destroy();
-      });
-
-      it("ignores a non-positive or non-integer charge instead of appending a broken entry", () => {
-        const vm = mountAsSeat(0);
-        vm.enterAnalysisMode();
-
-        vm.applyAnalysisAdjust(0);
-        vm.applyAnalysisAdjust(-1);
-        vm.applyAnalysisAdjust(1.5);
-
-        expect(vm.analysisEntries).to.deep.equal([]);
-
-        vm.$el.remove();
-        vm.$destroy();
-      });
-    });
-
+    // §4.4's manual "assume I leech N power" stepper is gone from the UI (§12): the engine now tops
+    // up a power cost the seat cannot cover and reports it as assumed power, which answers the same
+    // question without a control. `adjust` entries still replay, so any line saved before this
+    // still loads - covered in analysis.spec.ts.
     describe("Phase 7 - the commit path (§6, decision #13)", () => {
       it("commits move 1 live only in self-contained/hot-seat play, never queuing anything", () => {
         const vm = mountAsSeat(0);
@@ -1563,10 +1581,14 @@ describe("Game", () => {
         try {
           const vm = mountAsSeat(0);
           vm.enterAnalysisMode();
+          // Two upgrades cost 8 knowledge. Nothing is injected any more (§12), so they are only
+          // committable if the seat can really pay for both - set that up on the origin every replay
+          // restarts from, rather than asserting against a sandbox grant that no longer exists.
+          vm.analysisOrigin.players[0].data.knowledge = 12;
           vm.applyAnalysisMove("terrans up nav.");
           vm.applyAnalysisMove("terrans up nav.");
           const committable = vm.analysisCommittableMoves;
-          expect(committable).to.have.length(2); // both stay affordable off the 15-knowledge sandbox grant
+          expect(committable).to.have.length(2);
           const dispatched = spyDispatch(vm);
 
           vm.commitAnalysisLine();
@@ -1589,6 +1611,7 @@ describe("Game", () => {
         try {
           const vm = mountAsSeat(0);
           vm.enterAnalysisMode();
+          vm.analysisOrigin.players[0].data.knowledge = 12; // both upgrades genuinely affordable (§12)
           vm.applyAnalysisMove("terrans up nav.");
           vm.applyAnalysisMove("terrans up nav.");
           // Two premove slots already taken for this seat outside analysis mode - only one more fits.

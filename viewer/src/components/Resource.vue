@@ -200,7 +200,7 @@
         kind === 'tradeBonus' ||
         kind === 'tradeDiscount'
       "
-      :class="{ plus: count === '+' }"
+      :class="{ plus: count === '+', overdrawn: typeof count === 'number' && count < 0 }"
       :text-decoration="kind === 'burn-token' ? 'line-through' : ''"
       >{{ !noPlus && (kind === "t" || kind === "ta3") && count > 0 ? "+" : "" }}{{ count }}</text
     >
@@ -262,6 +262,15 @@ export default class Resource extends Vue {
 
 <style lang="scss">
 g.resource {
+  // Analysis mode (ANALYSIS_MODE_PLAN.md §12) is the only way a resource count goes below zero: the
+  // sandbox seat keeps its real numbers and is allowed to overspend them, and this is the signal that
+  // it has. One rule covers every surface that renders a count - the player board and the mobile
+  // sticky resource bar both go through this component.
+  text.overdrawn {
+    fill: var(--oxide, #d92626);
+    font-weight: bold;
+  }
+
   &.no-tooltip {
     pointer-events: none;
   }

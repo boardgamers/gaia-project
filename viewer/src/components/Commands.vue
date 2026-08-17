@@ -4,7 +4,6 @@
       id="move-title"
       class="d-flex align-items-center"
       :class="{ 'hide-on-mobile-sticky': showStickyMobileBar, 'move-title--analysis': analysisMode }"
-      @click="analysisMode ? $emit('analysis-exit') : undefined"
     >
       <h5 class="mb-0">
         <span v-if="init">Pick the number of players</span>
@@ -12,7 +11,7 @@
              where a compose takeover has to announce itself. Analysis mode wins over premove/
              cancel-trigger context since the three board-takeover modes are mutually exclusive
              (§3.6) - this is just the render-time ordering, not an extra exclusion check. -->
-        <template v-if="analysisMode">ANALYSIS — not saved</template>
+        <template v-if="analysisMode">ANALYSIS</template>
         <template v-else-if="premoveContext">{{ premoveContext.title }}</template>
         <RichTextView v-else :content="statusLine" />
       </h5>
@@ -49,31 +48,20 @@
           {{ opt.text }}
         </b-dropdown-item>
       </b-dropdown>
-      <!-- The counter headline (§2.9/§5.3) - takes over the slot the auto-leech dropdown gives up
-           during analysis mode, since opponent decisions are auto-resolved there regardless of that
-           preference. Real numbers (§4.2): negative and highlighted once the line has overdrawn a
-           resource against what this seat actually started with. -->
-      <div v-else-if="showAnalysisCounterHeadline" class="ml-auto analysis-counter-headline" @click.stop>
-        <span :class="{ 'analysis-counter-headline__negative': analysisCounter.credits.displayed < 0 }"
-          >{{ analysisCounter.credits.displayed }}c</span
-        >
-        <span :class="{ 'analysis-counter-headline__negative': analysisCounter.ores.displayed < 0 }"
-          >{{ analysisCounter.ores.displayed }}o</span
-        >
-        <span :class="{ 'analysis-counter-headline__negative': analysisCounter.knowledge.displayed < 0 }"
-          >{{ analysisCounter.knowledge.displayed }}k</span
-        >
-        <span :class="{ 'analysis-counter-headline__negative': analysisCounter.qics.displayed < 0 }"
-          >{{ analysisCounter.qics.displayed }}q</span
-        >
-        <span :class="{ 'analysis-counter-headline__negative': analysisCounter.victoryPoints.displayed < 0 }"
-          >{{ analysisCounter.victoryPoints.displayed }}vp</span
-        >
-        <strong v-if="!analysisCounter.feasible" class="analysis-counter-headline__infeasible"
-          >infeasible from {{ analysisCounter.infeasibleFromMove }}</strong
-        >
-      </div>
+      <!-- Analysis mode's controls take over the slot the auto-leech dropdown gives up (§2.9/§12) -
+           opponent decisions are auto-resolved there regardless of that preference, and this is where
+           the deleted yellow panel's Undo/Reset/Commit now live. -->
+      <AnalysisHeaderControls
+        v-else-if="analysisMode"
+        :move-count="analysisMoveCount"
+        :status="analysisStatus"
+        :committable-moves="analysisCommittableMoves"
+        @undo="$emit('analysis-undo')"
+        @reset="$emit('analysis-reset')"
+        @commit="$emit('analysis-commit')"
+      />
     </div>
+    <AnalysisModeInfo v-if="analysisMode" />
     <div id="move-buttons" ref="moveButtons" :class="{ 'mobile-sticky-actions': showStickyMobileBar }">
       <!-- Same status line as #move-title above, shown only inside the mobile sticky bar (once it's
            actually pinned, i.e. narrow viewports - see the .sticky-bar-title/.hide-on-mobile-sticky
@@ -91,7 +79,6 @@
             ? `sticky-bar-title--${premoveContext.variant}`
             : null
         "
-        @click="analysisMode ? $emit('analysis-exit') : undefined"
       >
         <!-- While the board is taken over to compose a premove or a cancel rule, this band carries
              what that compose is FOR. It used to be an `alert` at the top of Game.vue's commands
@@ -100,7 +87,7 @@
              hazard stripes for analysis (§5.1) - the board looks identical otherwise, and this is
              the one cue telling them apart. -->
         <h5 class="mb-0">
-          <template v-if="analysisMode">ANALYSIS — not saved</template>
+          <template v-if="analysisMode">ANALYSIS</template>
           <template v-else-if="premoveContext">{{ premoveContext.title }}</template>
           <RichTextView v-else :content="statusLine" />
         </h5>
@@ -131,26 +118,15 @@
             {{ opt.text }}
           </b-dropdown-item>
         </b-dropdown>
-        <div v-else-if="showAnalysisCounterHeadline" class="ml-auto analysis-counter-headline" @click.stop>
-          <span :class="{ 'analysis-counter-headline__negative': analysisCounter.credits.displayed < 0 }"
-            >{{ analysisCounter.credits.displayed }}c</span
-          >
-          <span :class="{ 'analysis-counter-headline__negative': analysisCounter.ores.displayed < 0 }"
-            >{{ analysisCounter.ores.displayed }}o</span
-          >
-          <span :class="{ 'analysis-counter-headline__negative': analysisCounter.knowledge.displayed < 0 }"
-            >{{ analysisCounter.knowledge.displayed }}k</span
-          >
-          <span :class="{ 'analysis-counter-headline__negative': analysisCounter.qics.displayed < 0 }"
-            >{{ analysisCounter.qics.displayed }}q</span
-          >
-          <span :class="{ 'analysis-counter-headline__negative': analysisCounter.victoryPoints.displayed < 0 }"
-            >{{ analysisCounter.victoryPoints.displayed }}vp</span
-          >
-          <strong v-if="!analysisCounter.feasible" class="analysis-counter-headline__infeasible"
-            >infeasible from {{ analysisCounter.infeasibleFromMove }}</strong
-          >
-        </div>
+        <AnalysisHeaderControls
+          v-else-if="analysisMode"
+          :move-count="analysisMoveCount"
+          :status="analysisStatus"
+          :committable-moves="analysisCommittableMoves"
+          @undo="$emit('analysis-undo')"
+          @reset="$emit('analysis-reset')"
+          @commit="$emit('analysis-commit')"
+        />
       </div>
       <div v-if="init" class="d-flex flex-wrap align-content-stretch">
         <MoveButton
@@ -320,6 +296,8 @@ import { factionName, factionShortcut } from "../data/factions";
 import { FactionCustomization } from "@gaia-project/engine/src/engine";
 import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
 import { enabledButtonWarnings, isWarningEnabled } from "../data/warnings";
+import AnalysisHeaderControls from "./AnalysisHeaderControls.vue";
+import AnalysisModeInfo from "./AnalysisModeInfo.vue";
 import Undo from "./Resources/Undo.vue";
 import { ActionPayload, SubscribeActionOptions, SubscribeOptions } from "vuex";
 import { CommandController, ExecuteBack, FastConversionTooltips } from "../logic/buttons/types";
@@ -336,7 +314,7 @@ import { zoomCompensationTransform } from "../logic/zoom-compensation";
 import { factionColor } from "../graphics/utils";
 import { supportsHoverTooltips } from "../logic/tooltip";
 import { isTypingTarget } from "../logic/typing-target";
-import { AnalysisCounter } from "../logic/analysis";
+import { AnalysisStatus } from "../logic/analysis";
 
 let show = false;
 
@@ -392,6 +370,8 @@ export type EmitCommandParams = { disappear?: boolean; times?: number; warnings?
     MoveButton,
     FactionSheetButton,
     Undo,
+    AnalysisHeaderControls,
+    AnalysisModeInfo,
   },
 })
 export default class Commands extends Vue implements CommandController {
@@ -434,10 +414,18 @@ export default class Commands extends Vue implements CommandController {
   @Prop({ default: false })
   analysisMode: boolean;
 
-  /** The live diff counter (§4.3), or null before the sandbox wallet exists yet (setup-phase entry,
-   * before round 1 - Phase 4). Only ever set while analysisMode is also true. */
+  /** §12's compact status - the overdraft summary and assumed power, the two things the player board
+   * cannot show for itself. Only ever set while analysisMode is also true. */
   @Prop({ default: null })
-  analysisCounter: AnalysisCounter | null;
+  analysisStatus: AnalysisStatus | null;
+
+  /** How many entries the analysis line holds, for the header's move count and its Undo/Reset gating. */
+  @Prop({ default: 0 })
+  analysisMoveCount: number;
+
+  /** How many of those moves could actually be played for real (§6), gating the Commit button. */
+  @Prop({ default: 0 })
+  analysisCommittableMoves: number;
 
   get controller() {
     return this;
@@ -647,14 +635,6 @@ export default class Commands extends Vue implements CommandController {
       this.engine.round >= 1 &&
       !this.analysisMode
     );
-  }
-
-  /** The counter headline (§5.3) - compact net deltas plus the feasibility verdict, shown in the
-   * slot the auto-leech dropdown gives up during analysis mode. Null (not just gated on
-   * analysisMode) until the sandbox wallet exists - a setup-phase entry (Phase 4) has nothing to
-   * diff yet. */
-  get showAnalysisCounterHeadline(): boolean {
-    return this.analysisMode && !!this.analysisCounter;
   }
 
   /** The viewing user's own player (not necessarily whoever's turn it is), same "viewing seat"

@@ -161,13 +161,26 @@ export default class PlayerData extends EventEmitter {
   turns = 0;
   /**
    * Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §3.4) - true only on a disposable sandbox
-   * clone, never on a real game's player data. Lifts the MAX_ORE/MAX_CREDIT/MAX_KNOWLEDGE gain
-   * clamps below so a granted sandbox wallet survives spending it back up via a power action, tech
-   * tile, etc. Deliberately absent from toJSON() (like the other internal variables above), so it
-   * can never round-trip through a serialize/deserialize into a real game - the viewer re-applies it
-   * to a fresh clone on every replay step instead of relying on it surviving.
+   * clone, never on a real game's player data. It lifts affordability (`hasResource` below) so an
+   * unaffordable move can still be played and the debt shown, and it turns on `spendPower`'s power
+   * top-up. It deliberately does NOT lift the MAX_ORE/MAX_CREDIT/MAX_KNOWLEDGE gain clamps: analysis
+   * mode used to inject a fake wallet that those clamps ate, but a seat now keeps its real numbers,
+   * and a real player's gains cap exactly the same way - so clamping is the faithful behaviour.
+   * Deliberately absent from toJSON() (like the other internal variables above), so it can never
+   * round-trip through a serialize/deserialize into a real game - the viewer re-applies it to a fresh
+   * clone on every replay step instead of relying on it surviving.
    */
   analysis = false;
+  /**
+   * How much power the analysis sandbox has assumed this seat charged (ANALYSIS_MODE_PLAN.md §12).
+   * Power is the one overdrawable resource that cannot go negative - bowls hold tokens, not a balance
+   * - so instead of driving area 3 below zero, `spendPower` charges the shortfall up first and adds
+   *   it here, giving the UI one honest number for "this line only works if you also charge N power".
+   *
+   * Non-serialized for the same reason as `analysis` above, and recomputed from scratch on every
+   * replay, so it always describes exactly the line currently on screen.
+   */
+  analysisAssumedPower = 0;
   // when picking rewards
   toPick: { rewards: Reward[]; count: number; source: EventSource } = undefined;
 
@@ -303,13 +316,13 @@ export default class PlayerData extends EventEmitter {
 
     switch (resource) {
       case Resource.Ore:
-        this.ores = this.analysis ? this.ores + count : Math.min(MAX_ORE, this.ores + count);
+        this.ores = Math.min(MAX_ORE, this.ores + count);
         break;
       case Resource.Credit:
-        this.credits = this.analysis ? this.credits + count : Math.min(MAX_CREDIT, this.credits + count);
+        this.credits = Math.min(MAX_CREDIT, this.credits + count);
         break;
       case Resource.Knowledge:
-        this.knowledge = this.analysis ? this.knowledge + count : Math.min(MAX_KNOWLEDGE, this.knowledge + count);
+        this.knowledge = Math.min(MAX_KNOWLEDGE, this.knowledge + count);
         break;
       case Resource.VictoryPoint:
         this.victoryPoints += count;
@@ -401,9 +414,37 @@ export default class PlayerData extends EventEmitter {
     }
   }
 
+  /**
+   * The spendable resources the viewer's analysis mode (ANALYSIS_MODE_PLAN.md §12) lets a player
+   * overdraw: the four wallet resources plus power. Everything else `getResources` answers for stays
+   * genuinely gated even in analysis mode, because those are physical components or board positions
+   * rather than a stock you can be in debt on - a Gaiaformer you do not own, or a power token that is
+   * not in the Gaia area, cannot be conjured by assuming you overspent.
+   *
+   * Power is in this list, but it is the one that cannot simply go negative (bowls hold tokens, not a
+   * balance). `spendPower` tops the shortfall up instead and records it - see its own comment.
+   */
+  private static readonly ANALYSIS_OVERDRAWABLE: Resource[] = [
+    Resource.Credit,
+    Resource.Ore,
+    Resource.Knowledge,
+    Resource.Qic,
+    Resource.ChargePower,
+  ];
+
   hasResource(reward: Reward): boolean {
     const type = reward.type;
-    return type === Resource.None || this.getResources(type) >= reward.count;
+    if (type === Resource.None) {
+      return true;
+    }
+    // Analysis mode (§12): affordability is what the engine enforces at command-GENERATION time, so
+    // lifting it here is the whole mechanism behind "let me build it anyway and show me the debt".
+    // Deliberately not a resource top-up: the seat keeps its real numbers and simply goes negative,
+    // which is what the player board then displays.
+    if (this.analysis && PlayerData.ANALYSIS_OVERDRAWABLE.includes(type)) {
+      return true;
+    }
+    return this.getResources(type) >= reward.count;
   }
 
   getResources(type: Resource): number {
@@ -529,7 +570,36 @@ export default class PlayerData extends EventEmitter {
     return area1ToUp + area2ToUp + brainstoneUsage;
   }
 
+  /**
+   * Analysis mode's power top-up (§12). `hasResource` lets this seat commit to a power cost it cannot
+   * really pay, but `spendPower` below moves tokens area3 -> area1 with no floor, so an unpayable
+   * cost would leave a NEGATIVE bowl - a state the board renders as nonsense and every later charge
+   * then compounds. Instead: charge the shortfall up first, one step at a time through the engine's
+   * own `chargePower`, and only fabricate tokens when there are genuinely none left below to lift.
+   * Either way the total lands in `analysisAssumedPower`, so the assumption is shown, not hidden.
+   */
+  private assumePowerForAnalysis(power: number) {
+    // Bounded by construction (every charge moves a token up exactly one bowl), but capped anyway so
+    // an unforeseen faction/token combination can never spin here.
+    for (let i = 0; i < 100 && this.spendablePowerTokens() < power; i++) {
+      if (this.power.area1 + this.power.area2 === 0) {
+        break;
+      }
+      this.chargePower(1, true, false);
+      this.analysisAssumedPower += 1;
+    }
+    const shortfall = power - this.spendablePowerTokens();
+    if (shortfall > 0) {
+      const tokens = Math.ceil(shortfall / this.tokenModifier);
+      this.power.area3 += tokens;
+      this.analysisAssumedPower += shortfall;
+    }
+  }
+
   spendPower(power: number) {
+    if (this.analysis) {
+      this.assumePowerForAnalysis(power);
+    }
     if (this.brainstone === PowerArea.Area3) {
       let useBrainStone = true;
       const warning: BrainstoneWarning = power < 3 ? BrainstoneWarning.brainstoneChargesWasted : undefined;

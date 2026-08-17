@@ -7114,6 +7114,59 @@ pin_preference_split_budget_search_path` (the one function in the set without a 
       first move that is not this seat's, and refuses outright to commit anything from a line built on
       a faction seed, since every move in one describes a table that does not exist.
 
+176.  ✅ **Analysis mode simplification pass (viewer v5.69.0, 2026-08-17, owner instruction after
+      playing it).** Four asks - drop the enter banner, show real resources on the player board instead
+      of a capped sandbox figure, strip the yellow container's text behind an info button, and drop its
+      resource rows - turned out to share one root cause, so they landed as one change. Full account in
+      `ANALYSIS_MODE_PLAN.md` §12; the load-bearing part is §12.1.
+
+177.  ✅ **The injected sandbox wallet is gone; affordability is lifted instead.** Analysis mode used
+      to make unaffordable moves clickable by injecting 30c/15o/15k/10q, because the engine enforces
+      affordability at command-generation time - and then every displayed number had to subtract that
+      grant back out (`AnalysisWallet`, `displayed` vs `net`, `walletGrantedAt`). Now
+      `PlayerData.hasResource` simply returns true for the analysis seat on the five overdrawable
+      resources, the seat keeps its real numbers, and it goes negative when overspent. **The player
+      board needed no change at all** - it already reads the real fields, so the owner's ask fell out of
+      the deletion; `Resource.vue` marks a negative count red, covering the board and the mobile sticky
+      bar in one rule. The MAX_CREDIT/MAX_ORE/MAX_KNOWLEDGE bypass was deleted too: a real player's gains
+      cap the same way, so clamping is the faithful behaviour once nothing is injected. Components and
+      board positions (a Gaiaformer you do not own, a token outside the Gaia area) stay genuinely gated.
+      Two traps found while doing it: `Player.maxPayRange` is a `for(;;)` that only ends when
+      `hasResource` says no, so it needed its own ceiling or free-action conversions hang the browser;
+      and power cannot go negative at all, hence #178.
+
+178.  ✅ **Power is topped up, never driven negative (owner-confirmed).** Bowls hold tokens rather than
+      a balance, so `spendPower`'s unfloored `area3 -= n` would leave a nonsense state that every later
+      charge compounds. `assumePowerForAnalysis` charges the shortfall up through the engine's own
+      `chargePower` one step at a time, fabricating tokens only when there is nothing left below to
+      lift, and records the total in `analysisAssumedPower` - shown in the header as `+N power`, and
+      enough to make the line non-committable. This **replaces the manual leech stepper** (decision #12),
+      which was answering the same question by hand; `adjust` entries still replay so older saved lines
+      still load.
+
+179.  ✅ **One striped bar instead of a yellow panel, no confirmation press, and the leech stall
+      fixed.** The container is deleted: `ANALYSIS · N moves · [overdraft] · [+N power] · Undo · Reset ·
+Commit · ⓘ` now lives in the hazard-striped header that already existed, with every explanatory
+      sentence behind the info button (`AnalysisModeInfo.vue`, rendered **once** by Commands.vue -
+      `AnalysisHeaderControls.vue` renders in both headers, and two copies of one `b-modal` id open
+      whichever Bootstrap-Vue registered first). `AnalysisPanel.vue` keeps only what cannot fit a
+      one-line bar: staleness notices, the saved-line prompt, and round 0's faction picker. The enter
+      banner, the Exit button and header tap-to-exit are all gone - the map's corner button is the only
+      way in and out, per owner instruction. A sandbox turn now fires as soon as it is composed
+      (`checkAutoClick` auto-clicks a lone `needConfirm` button in analysis mode; warnings still block
+      it) - a round-0 line used to spend a press per seat confirming placements made for everybody.
+      Finally, the reported leech stall: building within leech range paused on the opponent's
+      accept/decline prompt, which analysis mode's forced `canPlay` then RENDERED, leaving the player
+      unable to continue. `resolveOpponentDecisions` now declines first and deterministically (rather
+      than depending on the opponent's own auto-charge settings, which returned "ask" above their
+      threshold), answers every offer rather than `offers[0]`, and can never throw - it runs outside
+      `replayAnalysisLine`'s try/catch, so a throw there killed the entire click. Plus a backstop:
+      `canPlay` gates on the analysis seat's own turn from round 1 on, so an unresolved pause shows
+      nothing to press instead of somebody else's decision. Round 0 keeps pass-and-play unchanged.
+      **A live-browser pass drove the whole round-0 flow** (enter from the map button, seed a faction,
+      four placements and two boosters with zero confirmation presses, into round 1 with 40 build hexes
+      offered) with no console errors.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

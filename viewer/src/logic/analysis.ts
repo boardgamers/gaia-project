@@ -40,31 +40,23 @@ export interface AnalysisFactionEntry {
 
 export type AnalysisEntry = AnalysisMoveEntry | AnalysisAdjustEntry | AnalysisFactionEntry;
 
-/** Structural shape shared by a real `PlayerData` instance and its plain-JSON'd form (the shape
- * `analysisComposeBase` etc. are stored as, per Game.vue's "replay from a stable base" pattern) -
- * every counter/wallet function below only ever needs to read these fields, never engine methods. */
-export interface AnalysisResourceSnapshot {
+/** The subset of a seat's `PlayerData` this module reads - satisfied both by a real instance and by
+ * its plain-JSON'd form (the shape `analysisComposeBase` is stored as, per Game.vue's "replay from a
+ * stable base" pattern), so nothing here ever needs an engine method. */
+export interface AnalysisResourceView {
   credits: number;
   ores: number;
   knowledge: number;
   qics: number;
-  victoryPoints: number;
-  power: { area1: number; area2: number; area3: number; gaia: number };
+  /** The engine's own tally of power the sandbox assumed this seat charged (§12) - absent on a
+   * plain-JSON'd snapshot taken before the field existed, hence optional. */
+  analysisAssumedPower?: number;
 }
 
-function snapshotResources(data: AnalysisResourceSnapshot): AnalysisResourceSnapshot {
-  return {
-    credits: data.credits,
-    ores: data.ores,
-    knowledge: data.knowledge,
-    qics: data.qics,
-    victoryPoints: data.victoryPoints,
-    power: { area1: data.power.area1, area2: data.power.area2, area3: data.power.area3, gaia: data.power.gaia },
-  };
-}
-
-/** Marks the analysis seat's player data uncapped (§3.4/engine player-data.ts's `analysis` flag) -
- * must be re-applied after every `Engine.fromData` reconstruction in this file, since the flag is
+/** Marks the analysis seat's player data as the sandbox seat (§3.4/§12, engine player-data.ts's
+ * `analysis` flag): affordability stops being enforced for it, so an unaffordable move can be played
+ * and the resulting debt shown, and `spendPower` tops up rather than driving a power bowl negative.
+ * Must be re-applied after every `Engine.fromData` reconstruction in this file, since the flag is
  * deliberately absent from `toJSON()` and so never survives a serialize/deserialize round trip. */
 export function markAnalysisSeat(engine: Engine, seat: number): Engine {
   const data = engine.players[seat]?.data;
@@ -74,156 +66,44 @@ export function markAnalysisSeat(engine: Engine, seat: number): Engine {
   return engine;
 }
 
-/** The sandbox wallet target (§4.1) - the same magic numbers Game.vue's cancel-trigger compose
- * clone already uses to relax affordability (`pickCancelTriggerOpponent`), reused here rather than
- * invented fresh. Unlike that one-shot preview, analysis mode actually executes moves through
- * `gainReward`, so it needs the engine's `analysis` flag (§2.4) to keep sitting exactly at
- * MAX_CREDIT/MAX_ORE/MAX_KNOWLEDGE from silently eating a subsequent gain. */
-const SANDBOX_WALLET: AnalysisResourceSnapshot = {
-  credits: 30,
-  ores: 15,
-  knowledge: 15,
-  qics: 10,
-  victoryPoints: 0, // unused - VP is never granted, see AnalysisWallet.grant below
-  power: { area1: 4, area2: 4, area3: 4, gaia: 0 },
-};
-
-export interface AnalysisWallet {
-  /** The real player's resources at the moment analysis mode was entered, captured before
-   * granting - the fixed point every displayed/net figure is measured against (§4.2/§4.3). */
-  baseline: AnalysisResourceSnapshot;
-  /** How much was added on top of `baseline` per resource, never subtracted (Math.max below) - a
-   * player who already owns more than the sandbox target (e.g. qics have no engine cap) keeps every
-   * bit of it rather than having analysis mode quietly take it away. victoryPoints is always 0: VP
-   * is never inflated, so its net/displayed figures are plain current-minus-baseline. */
-  grant: AnalysisResourceSnapshot;
+/** One overdrawn resource: how far below zero the line has driven it. */
+export interface AnalysisOverdraft {
+  /** The resource's single-letter icon key, matching the viewer's own `Resource` kinds. */
+  kind: "c" | "o" | "k" | "q";
+  /** Always negative - the number the player board is showing in red. */
+  amount: number;
 }
 
 /**
- * Grants the sandbox wallet (§4.1) directly on `engine`'s player data for `seat` - a direct field
- * assignment, exactly like the cancel-trigger clone's, so it bypasses `gainReward`'s caps entirely
- * regardless of the `analysis` flag. Also sets the flag itself, so every later legitimate gain
- * during play (a power action's reward, income, leech) is uncapped too. Returns `null` if the seat
- * has no player data (defensive; should not happen for a real seat index).
- */
-export function grantSandboxWallet(engine: Engine, seat: number): AnalysisWallet | null {
-  const data = engine.players[seat]?.data;
-  if (!data) {
-    return null;
-  }
-  data.analysis = true;
-  const baseline = snapshotResources(data);
-  const grant: AnalysisResourceSnapshot = {
-    credits: Math.max(0, SANDBOX_WALLET.credits - baseline.credits),
-    ores: Math.max(0, SANDBOX_WALLET.ores - baseline.ores),
-    knowledge: Math.max(0, SANDBOX_WALLET.knowledge - baseline.knowledge),
-    qics: Math.max(0, SANDBOX_WALLET.qics - baseline.qics),
-    victoryPoints: 0,
-    power: {
-      area1: Math.max(0, SANDBOX_WALLET.power.area1 - baseline.power.area1),
-      area2: Math.max(0, SANDBOX_WALLET.power.area2 - baseline.power.area2),
-      area3: Math.max(0, SANDBOX_WALLET.power.area3 - baseline.power.area3),
-      gaia: Math.max(0, SANDBOX_WALLET.power.gaia - baseline.power.gaia),
-    },
-  };
-  data.credits += grant.credits;
-  data.ores += grant.ores;
-  data.knowledge += grant.knowledge;
-  data.qics += grant.qics;
-  data.power.area1 += grant.power.area1;
-  data.power.area2 += grant.power.area2;
-  data.power.area3 += grant.power.area3;
-  data.power.gaia += grant.power.gaia;
-  return { baseline, grant };
-}
-
-export interface AnalysisResourceDelta {
-  /** current − grant − baseline (§4.3) - the line's net cost/gain for this resource so far. */
-  net: number;
-  /** current − grant (§4.2) - the real number, negative when the line has overdrawn it. */
-  displayed: number;
-}
-
-export interface AnalysisCounter {
-  credits: AnalysisResourceDelta;
-  ores: AnalysisResourceDelta;
-  knowledge: AnalysisResourceDelta;
-  qics: AnalysisResourceDelta;
-  victoryPoints: AnalysisResourceDelta;
-  /** Power as a bowl-state delta (§4.3), not an invented scalar - before/after per area, both
-   * already grant-adjusted back to real numbers. */
-  power: {
-    before: { area1: number; area2: number; area3: number; gaia: number };
-    after: { area1: number; area2: number; area3: number; gaia: number };
-  };
-  /** False once any of credits/ores/knowledge/qics/victoryPoints has gone negative in displayed
-   * terms - the sandbox wallet let the move happen, but it would not have been affordable for real. */
-  feasible: boolean;
-  /** 1-based index into the line's entries of the first move that made it infeasible; null while
-   * still feasible. */
-  infeasibleFromMove: number | null;
-}
-
-function feasibilityAt(snapshot: AnalysisResourceSnapshot, wallet: AnalysisWallet): boolean {
-  return (
-    snapshot.credits - wallet.grant.credits >= 0 &&
-    snapshot.ores - wallet.grant.ores >= 0 &&
-    snapshot.knowledge - wallet.grant.knowledge >= 0 &&
-    snapshot.qics - wallet.grant.qics >= 0 &&
-    snapshot.victoryPoints >= 0
-  );
-}
-
-/** Diff-based counter (§4.3): never accumulated, always `current − baseline`, so gains from power
- * actions/income/leech fall out automatically as negative usage with no special-casing.
- * `snapshots` is `replayAnalysisLine`'s per-entry trail (one entry per successfully applied move,
- * in order) - used only to find the first move that made the line infeasible; `current` (the live
- * compose base's resources) is always the source of truth for the headline numbers themselves.
+ * What the header needs to say about a line, and nothing more (§12).
  *
- * `walletGrantedAt` is `replayAnalysisLine`'s own report of which snapshot the sandbox wallet first
- * applied to, and snapshots before it are skipped by the feasibility scan: a setup-phase line
- * (Phase 4/§11) collects a snapshot per setup move long before any wallet exists, and subtracting a
- * grant that had not happened yet from those makes every one of them look overdrawn - which showed
- * up as a flat "infeasible from move 1" the moment a round-0 line reached round 1, no matter what
- * was in it. Defaults to 0 (scan everything), which is right for every line whose origin already
- * carried the grant. */
-export function computeAnalysisCounter(
-  current: AnalysisResourceSnapshot,
-  wallet: AnalysisWallet,
-  snapshots: AnalysisResourceSnapshot[],
-  walletGrantedAt = 0
-): AnalysisCounter {
-  const delta = (currentVal: number, grantVal: number, baseVal: number): AnalysisResourceDelta => ({
-    net: currentVal - grantVal - baseVal,
-    displayed: currentVal - grantVal,
-  });
+ * There used to be a full per-resource counter here, with a `displayed` figure (clone minus the
+ * granted sandbox wallet) beside a `net` one, plus a power bowl delta and a per-entry feasibility
+ * scan. All of it existed to undo the fake wallet analysis mode used to inject. Nothing injects
+ * anything now - the seat keeps its real resources and simply goes negative - so the player board is
+ * already showing every one of those numbers, live, in the place players actually read them. What is
+ * left is the two facts the board CANNOT show: a compact overdraft summary for when the board is
+ * scrolled off screen on mobile, and how much power the sandbox assumed you charged.
+ */
+export interface AnalysisStatus {
+  /** Empty when the line is genuinely affordable. */
+  overdrawn: AnalysisOverdraft[];
+  /** 0 unless a power cost was topped up (see engine `assumePowerForAnalysis`). */
+  assumedPower: number;
+}
 
-  let infeasibleFromMove: number | null = null;
-  for (let i = Math.max(0, walletGrantedAt); i < snapshots.length; i++) {
-    if (!feasibilityAt(snapshots[i], wallet)) {
-      infeasibleFromMove = i + 1;
-      break;
+export function computeAnalysisStatus(data: AnalysisResourceView): AnalysisStatus {
+  const overdrawn: AnalysisOverdraft[] = [];
+  const add = (kind: AnalysisOverdraft["kind"], amount: number) => {
+    if (amount < 0) {
+      overdrawn.push({ kind, amount });
     }
-  }
-
-  return {
-    credits: delta(current.credits, wallet.grant.credits, wallet.baseline.credits),
-    ores: delta(current.ores, wallet.grant.ores, wallet.baseline.ores),
-    knowledge: delta(current.knowledge, wallet.grant.knowledge, wallet.baseline.knowledge),
-    qics: delta(current.qics, wallet.grant.qics, wallet.baseline.qics),
-    victoryPoints: delta(current.victoryPoints, 0, wallet.baseline.victoryPoints),
-    power: {
-      before: { ...wallet.baseline.power },
-      after: {
-        area1: current.power.area1 - wallet.grant.power.area1,
-        area2: current.power.area2 - wallet.grant.power.area2,
-        area3: current.power.area3 - wallet.grant.power.area3,
-        gaia: current.power.gaia - wallet.grant.power.gaia,
-      },
-    },
-    feasible: infeasibleFromMove === null,
-    infeasibleFromMove,
   };
+  add("c", data.credits);
+  add("o", data.ores);
+  add("k", data.knowledge);
+  add("q", data.qics);
+  return { overdrawn, assumedPower: data.analysisAssumedPower ?? 0 };
 }
 
 export interface AnalysisLine {
@@ -462,17 +342,24 @@ export function stripCappedPass(engine: Engine, baseRound: number): void {
 }
 
 /**
- * Opponent decisions (§2.8) - your own mine can trigger a leech offer to an opponent
+ * Opponent decisions (§2.8) - your own building can trigger a leech offer to an opponent
  * (`beginLeechingPhase`, move/phase.ts), and the engine pauses on `Phase.RoundLeech` waiting for
  * their answer; other phases can similarly pause on a faction choice or a brainstone placement.
- * Since opponents never actually play in analysis mode (decision #1), this resolves any such pause
- * automatically: `engine.autoMove()` first (the same faction-aware heuristics a real auto-leech
- * setting uses), then a plain Decline - exactly the move `autoMove()` itself composes for a firm
- * "no" (move/auto.ts) - for a leech offer its cost heuristics can't confidently decide on its own
- * (`auto-charge.ts`'s `askOrDeclineBasedOnCost` returns "ask" above an opponent's configured
- * comfort threshold). Without this fallback, a leech above that threshold would stall the entire
- * line on the analysis player's very first mine. Capped at a generous iteration count so a
- * genuinely unresolvable engine state can never spin forever.
+ * Since opponents never actually play in analysis mode (decision #1), this resolves any such pause so
+ * control comes straight back to the analysis seat.
+ *
+ * **Declines first, deliberately** (owner instruction, §12). This used to try `engine.autoMove()`
+ * first and only fall back to Decline, which made the outcome depend on the opponent's own auto-charge
+ * settings and heuristics - and when those returned "ask", or when the fallback's own `engine.move`
+ * threw, the pause survived. A surviving pause is not a cosmetic problem: analysis mode forces
+ * `canPlay` true, so `Commands.vue` then renders the OPPONENT's accept/decline buttons and the player
+ * cannot continue their own line - the reported bug. An opponent's leech is worth nothing in a sandbox
+ * where they never build, so the deterministic answer is always "no thanks".
+ *
+ * Every failure here is swallowed rather than propagated: this runs OUTSIDE `replayAnalysisLine`'s own
+ * try/catch (it has to - it fixes up the state after a move rather than being one), so a throw would
+ * take out the whole click and freeze the board mid-line. Leaving a pause unresolved is survivable
+ * (Game.vue's `analysisBlockedBySeat` catches it and offers a way out); throwing is not.
  */
 export function resolveOpponentDecisions(engine: Engine, seat: number): void {
   for (let i = 0; i < 50; i++) {
@@ -480,16 +367,52 @@ export function resolveOpponentDecisions(engine: Engine, seat: number): void {
     if (toMove === undefined || toMove === seat) {
       return;
     }
-    if (engine.autoMove()) {
+    const faction = engine.players[toMove].faction ?? `p${toMove + 1}`;
+    const decline = engine.findAvailableCommand(toMove, Command.Decline);
+    if (decline) {
+      // Answer every offer on the table, not just offers[0]: a single building can offer more than
+      // one charge amount, and picking the wrong one throws rather than declining.
+      const offers = (decline.data?.offers ?? []).map((o) => o.offer);
+      if (
+        tryMoves(
+          engine,
+          offers.map((offer) => `${faction} ${Command.Decline} ${offer}`)
+        )
+      ) {
+        continue;
+      }
+    }
+    // Not a leech offer (a brainstone placement, an income choice, a faction pick): the engine's own
+    // heuristics are the right answer for those, and they cannot be expressed as a Decline.
+    try {
+      if (engine.autoMove()) {
+        continue;
+      }
+    } catch {
+      return;
+    }
+    return; // Nothing this function knows how to resolve - stop rather than guess at a move.
+  }
+}
+
+/** Plays the first of `moves` that the engine accepts, on `engine` itself; returns whether any stuck.
+ * Each attempt runs against a throwaway clone first, so a rejected guess never half-applies. */
+function tryMoves(engine: Engine, moves: string[]): boolean {
+  for (const move of moves) {
+    try {
+      const probe = Engine.fromData(JSON.parse(JSON.stringify(engine)));
+      probe.move(move);
+    } catch {
       continue;
     }
-    const decline = engine.findAvailableCommand(toMove, Command.Decline);
-    if (!decline) {
-      return; // Nothing this function knows how to resolve - stop rather than guess at a move.
+    try {
+      engine.move(move);
+      return true;
+    } catch {
+      return false;
     }
-    const faction = engine.players[toMove].faction ?? `p${toMove + 1}`;
-    engine.move(`${faction} ${Command.Decline} ${decline.data.offers[0].offer}`);
   }
+  return false;
 }
 
 /** Applies a leech adjustment (§4.4) directly to `seat`'s player data - `gainRewards`, not `.move()`,
@@ -531,70 +454,46 @@ export function moveBelongsToSeat(engine: Engine, move: string, seat: number): b
  * instance is to replay everything before it, which is what gives Undo/Reset their behavior for
  * free (pop the last entry / clear the list, then call this again).
  *
- * `seat`'s player data is re-marked uncapped (`markAnalysisSeat`, §3.4) after every reconstruction,
- * since the flag never survives the `JSON.parse(JSON.stringify(...))` round trip this function (and
- * every other clone in the analysis pipeline) relies on. After each entry lands, opponent decisions
- * are auto-resolved (§2.8) and the two-round cap's Pass suppression (§3.7) is reapplied, since both
- * depend on where the line has gotten to. `snapshots` carries one resource snapshot per
- * successfully applied entry, in order - `computeAnalysisCounter`'s only use for it is finding the
- * first entry that made the line infeasible (§4.3).
+ * `seat`'s player data is re-marked as the sandbox seat (`markAnalysisSeat`, §3.4/§12) after every
+ * reconstruction, since the flag never survives the `JSON.parse(JSON.stringify(...))` round trip this
+ * function (and every other clone in the analysis pipeline) relies on. That flag is now the whole
+ * mechanism: with affordability lifted in the engine, the seat keeps its real resources and simply
+ * goes negative, so there is no wallet to grant, carry between calls, or subtract back out - the
+ * player board reads the true numbers straight off the replayed engine.
  *
- * The sandbox wallet reaches the clone by one of two routes, and **`origin`'s own phase is what
- * decides which** - not whether `initialWallet` happens to be set:
- *
- * - A mid-round entry had the grant applied to `analysisOrigin` itself by `enterAnalysisMode`, so
- *   every clone taken from it already carries the resources. Nothing to do here.
- * - A setup-phase entry (Phase 4/§11) has an origin from before round 1 even exists, so the grant
- *   belongs to a moment INSIDE the line - the first time its own pass-and-play reaches round 1's
- *   move phase. Replay always restarts from that same untopped-up origin, so that grant has to be
- *   re-applied on **every** pass, not just the one that first discovered it.
- *
- * Keying that off `!wallet` (as this did until the round-0 faction seed made setup lines routine)
- * silently broke the second case: the caller feeds the wallet it kept back in as `initialWallet`,
- * so from the next replay onwards the grant was never applied to the engine again - the clone
- * quietly reverted to the seat's real resources while the counter went on subtracting a grant that
- * was no longer there. Every number in a setup-started line was wrong from its second edit onwards.
- *
- * `walletGrantedAt` reports which snapshot index the grant first applied to, for
- * `computeAnalysisCounter`'s feasibility scan (see its own doc comment); it is 0 whenever the origin
- * already carried the grant. The returned `wallet` is what the caller should keep for its next call.
+ * After each entry lands, opponent decisions are auto-resolved (§2.8) and the two-round cap's Pass
+ * suppression (§3.7) is reapplied, since both depend on where the line has gotten to.
  */
 export function replayAnalysisLine(
   origin: Engine,
   entries: AnalysisEntry[],
   seat: number,
-  baseRound: number,
-  initialWallet: AnalysisWallet | null
+  baseRound: number
 ): {
   engine: Engine;
   applied: number;
-  snapshots: AnalysisResourceSnapshot[];
-  wallet: AnalysisWallet | null;
-  walletGrantedAt: number;
 } {
   let engine = markAnalysisSeat(Engine.fromData(JSON.parse(JSON.stringify(origin))), seat);
-  let wallet = initialWallet;
-  // See the doc comment above: an origin already in RoundMove carries the grant in its own player
-  // data, so the lazy grant below must not fire for it; anything earlier has to (re-)apply it.
-  let granted = origin.phase === Phase.RoundMove;
-  let walletGrantedAt = 0;
+  // Regenerate before anything reads them: `Engine.fromData` carries over the command list `origin`
+  // was serialized with, and that list was built while affordability still applied to this seat. With
+  // the flag now set, the same position offers strictly more (§12) - without this an empty line shows
+  // the real game's buttons, so entering analysis mode appeared to change nothing until the first
+  // move happened to regenerate them.
+  engine.clearAvailableCommands();
+  engine.generateAvailableCommands();
   stripCappedPass(engine, baseRound);
   let applied = 0;
-  const snapshots: AnalysisResourceSnapshot[] = [];
   for (const entry of entries) {
-    const wasRoundMove = engine.phase === Phase.RoundMove;
     const copy = markAnalysisSeat(Engine.fromData(JSON.parse(JSON.stringify(engine))), seat);
     try {
       if (entry.kind === "move") {
         copy.move(entry.move);
         copy.generateAvailableCommandsIfNeeded();
       } else {
-        // Neither of the two non-move entry kinds runs the engine's own move pipeline, so the
-        // position's available commands (still whatever `engine` had beforehand) need an explicit
-        // refresh - the same reason grantSandboxWallet's call site below regenerates after its own
-        // direct resource injection. A faction seed does drive real phase machinery
-        // (`endSetupFactionPhase`), but it is reached by a direct call rather than through
-        // `Engine.move`, which is what would normally have regenerated them.
+        // Neither non-move entry kind runs the engine's own move pipeline, so the position's available
+        // commands (still whatever `engine` had beforehand) need an explicit refresh. A faction seed
+        // does drive real phase machinery (`endSetupFactionPhase`), but it is reached by a direct call
+        // rather than through `Engine.move`, which is what would normally have regenerated them.
         if (entry.kind === "faction") {
           applyFactionSeed(copy, entry.lineup);
         } else {
@@ -607,22 +506,11 @@ export function replayAnalysisLine(
       break;
     }
     resolveOpponentDecisions(copy, seat);
-    if (!granted && !wasRoundMove && copy.phase === Phase.RoundMove) {
-      wallet = grantSandboxWallet(copy, seat);
-      granted = true;
-      walletGrantedAt = snapshots.length; // this entry's own snapshot, pushed below, already has it
-      copy.clearAvailableCommands();
-      copy.generateAvailableCommands();
-    }
     stripCappedPass(copy, baseRound);
     engine = copy;
     applied++;
-    const data = engine.players[seat]?.data;
-    if (data) {
-      snapshots.push(snapshotResources(data));
-    }
   }
-  return { engine, applied, snapshots, wallet, walletGrantedAt };
+  return { engine, applied };
 }
 
 /** §6's queue cap: 1 move committed live plus `PremoveBar.vue`'s own 3-row queue limit - never
@@ -634,23 +522,13 @@ export const MAX_COMMITTABLE_MOVES = 4;
  * an `adjust` entry is analysis-only fiction (§4.4), so it is stripped out of the line entirely
  * (not merely skipped-but-counted) before replaying, and consequently every move after one is only
  * committable if it is STILL affordable **without** the leech it assumed: this replays the
- * move-only entries completely fresh, never reusing a wallet/feasibility result that was computed
- * with any adjust entries present.
+ * move-only entries completely fresh.
  *
- * The fresh wallet has to be granted the same way `enterAnalysisMode` grants the real one: eagerly,
- * right here, if `origin` already sits in `Phase.RoundMove` - `replayAnalysisLine`'s own lazy grant
- * only fires on the TRANSITION into `Phase.RoundMove` (`!wasRoundMove && copy.phase ===
- * Phase.RoundMove`), which never happens for a line whose origin already starts there, so passing a
- * bare `null` through unconditionally would leave `wallet` permanently null for the (overwhelmingly
- * common) case of a line that started mid-round rather than in setup.
- *
- * Cuts the returned prefix at the first point that goes infeasible (mirrors
- * `computeAnalysisCounter`'s own `infeasibleFromMove`) - a line that only worked because of the
- * sandbox grant must never be committable - and separately at wherever the move-only replay itself
- * stops applying (`applied`, e.g. a move that depended on an adjust entry's power to even be legal,
- * not just affordable). A line that never left setup (`wallet` stays null throughout - setup moves
- * carry no cost, so nothing can go infeasible) commits every successfully-replayed move as-is.
- * Either way the result never exceeds `MAX_COMMITTABLE_MOVES`.
+ * Affordability is now simply "did any resource end up negative" (§12) - the sandbox no longer hands
+ * the seat resources it does not have, so an overdrawn line is visible in the player data itself. The
+ * returned prefix is cut at the first move that leaves the seat overdrawn, since a line that only
+ * worked by overspending must never be committable, and separately at wherever the move-only replay
+ * stops applying (`applied`, e.g. a move that depended on an adjust entry's power to even be legal).
  *
  * Two whole-line disqualifications come first, both specific to a setup-phase line:
  *
@@ -663,6 +541,10 @@ export const MAX_COMMITTABLE_MOVES = 4;
  *   filtering them out, since committing move 3 without move 2 would not describe the same line.
  *   The replayed engine (not `origin`) resolves the faction prefixes, because a setup line is
  *   typically what assigned those factions in the first place.
+ *
+ * A power cost that had to be topped up (`analysisAssumedPower`, §12) also blocks the commit: the
+ * move is only legal in the sandbox because power was assumed, so it is exactly as hypothetical as an
+ * `adjust` entry.
  */
 export function committableAnalysisMoves(
   origin: Engine,
@@ -677,26 +559,34 @@ export function committableAnalysisMoves(
   if (moveEntries.length === 0) {
     return [];
   }
-  let replayOrigin = origin;
-  let initialWallet: AnalysisWallet | null = null;
-  if (origin.phase === Phase.RoundMove) {
-    replayOrigin = markAnalysisSeat(Engine.fromData(JSON.parse(JSON.stringify(origin))), seat);
-    initialWallet = grantSandboxWallet(replayOrigin, seat);
+  // Replay one move at a time so the cut lands on the first move that overdrew, rather than only
+  // being able to say "somewhere in this line". Each pass restarts from `origin`, exactly as every
+  // other replay in this file does.
+  let affordable = 0;
+  for (let count = 1; count <= moveEntries.length; count++) {
+    const { engine, applied } = replayAnalysisLine(origin, moveEntries.slice(0, count), seat, baseRound);
+    if (applied < count) {
+      break;
+    }
+    const data = engine.players[seat]?.data;
+    if (!data) {
+      break;
+    }
+    const status = computeAnalysisStatus(data);
+    if (status.overdrawn.length > 0 || status.assumedPower > 0) {
+      break;
+    }
+    affordable = count;
+    if (count >= MAX_COMMITTABLE_MOVES) {
+      break;
+    }
   }
-  const { engine, applied, snapshots, wallet, walletGrantedAt } = replayAnalysisLine(
-    replayOrigin,
-    moveEntries,
-    seat,
-    baseRound,
-    initialWallet
-  );
+  if (affordable === 0) {
+    return [];
+  }
+  const { engine } = replayAnalysisLine(origin, moveEntries.slice(0, affordable), seat, baseRound);
   const ownCount = ownMovePrefixLength(engine, moveEntries, seat);
-  if (!wallet) {
-    return moveEntries.slice(0, Math.min(applied, ownCount, MAX_COMMITTABLE_MOVES)).map((entry) => entry.move);
-  }
-  const counter = computeAnalysisCounter(snapshots[snapshots.length - 1], wallet, snapshots, walletGrantedAt);
-  const feasibleCount = counter.feasible ? applied : counter.infeasibleFromMove - 1;
-  return moveEntries.slice(0, Math.min(feasibleCount, ownCount, MAX_COMMITTABLE_MOVES)).map((entry) => entry.move);
+  return moveEntries.slice(0, Math.min(affordable, ownCount, MAX_COMMITTABLE_MOVES)).map((entry) => entry.move);
 }
 
 /** How many of `moveEntries` from the start belong to `seat` - see `committableAnalysisMoves`' own

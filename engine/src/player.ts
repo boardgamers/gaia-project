@@ -300,12 +300,45 @@ export default class Player extends EventEmitter {
     );
   }
 
+  /**
+   * How many times over this player can pay `cost` - the "convert up to N" range behind free-action
+   * conversions (available/actions.ts).
+   *
+   * The loop only ever ends because `hasResource` eventually says no, so analysis mode
+   * (ANALYSIS_MODE_PLAN.md §12), where `hasResource` deliberately says yes to any amount of an
+   * overdrawable resource, needs its own ceiling or this spins forever and hangs the browser. The
+   * ceiling is what the seat can really pay plus a fixed slack, so a conversion can be overdrawn
+   * like everything else while the range stays a finite, sane number of steps.
+   */
   maxPayRange(cost: Reward[]): number {
     const costs = Reward.merge(cost);
+    const limit = this.data.analysis ? this.realMaxPayRange(costs) + Player.ANALYSIS_EXTRA_PAY_RANGE : Infinity;
 
     for (let max = 0; ; max += 1) {
+      if (max >= limit) {
+        return max;
+      }
       for (const rew of costs) {
         if (!this.data.hasResource(new Reward(rew.count * (max + 1), rew.type))) {
+          return max;
+        }
+      }
+    }
+  }
+
+  /** How many extra conversion steps analysis mode offers beyond what the seat can really pay -
+   * generous enough that the range never feels clipped, small enough to stay a usable dropdown. */
+  private static readonly ANALYSIS_EXTRA_PAY_RANGE = 10;
+
+  /** `maxPayRange`'s answer ignoring the analysis overdraw, i.e. measured against real resources. */
+  private realMaxPayRange(costs: Reward[]): number {
+    for (let max = 0; ; max += 1) {
+      for (const rew of costs) {
+        const needed = new Reward(rew.count * (max + 1), rew.type);
+        if (needed.type === Resource.None) {
+          continue;
+        }
+        if (this.data.getResources(needed.type) < needed.count) {
           return max;
         }
       }

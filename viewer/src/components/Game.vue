@@ -6,34 +6,22 @@
     <Rules id="rules" />
     <Rules id="trade" type="trade" />
 
-    <!-- Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md) - the full-breakdown surface (§5.3's
-         second surface: per-resource, the power bowl, the feasibility verdict, Reset/Undo/Exit).
-         The compact always-visible headline is Commands.vue's own striped header instead
-         (§2.9/§5.1/§5.3's first surface) - the two never disagree since both read the same
-         analysisCounter. -->
-    <div v-if="analysisMode || analysisOffered || analysisNotice || analysisPendingRestore" class="row">
+    <!-- Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §12) - only staleness notices, the
+         saved-line prompt and round 0's faction picker live here now. The controls and the status
+         numbers are in Commands.vue's striped header, entering and leaving is the map's own corner
+         button, and the yellow container that used to sit here is gone. -->
+    <div v-if="analysisNotice || analysisPendingRestore || analysisFactionChoices.length > 0" class="row">
       <div class="col-12">
         <AnalysisPanel
           :active="analysisMode"
-          :offered="analysisOffered"
-          :move-count="analysisEntries.length"
-          :counter="analysisCounter"
-          :pass-capped="analysisPassCapped"
           :notice="analysisNotice"
           :pending-restore="analysisPendingRestore"
-          :committable-moves="analysisCommittableMoves.length"
           :faction-choices="analysisFactionChoices"
           :seated-lineup="analysisSeatedLineup"
-          @enter="enterAnalysisMode"
-          @exit="exitAnalysisMode"
-          @undo="undoLastAnalysisEntry"
-          @reset="resetAnalysisLine"
-          @adjust="applyAnalysisAdjust"
           @seed-faction="seedAnalysisFaction"
           @dismiss-notice="dismissAnalysisNotice"
           @restore="restoreAnalysisLine"
           @discard-restore="discardPendingAnalysisLine"
-          @commit="commitAnalysisLine"
         />
       </div>
     </div>
@@ -81,8 +69,12 @@
             :currentMove="currentMove"
             :hide-spacer="true"
             :analysis-mode="analysisMode"
-            :analysis-counter="analysisCounter"
-            @analysis-exit="exitAnalysisMode"
+            :analysis-status="analysisStatus"
+            :analysis-move-count="analysisEntries.length"
+            :analysis-committable-moves="analysisCommittableMoves.length"
+            @analysis-undo="undoLastAnalysisEntry"
+            @analysis-reset="resetAnalysisLine"
+            @analysis-commit="commitAnalysisLine"
             @sticky-bar-height="stickyBarHeight = $event"
           />
           <!-- Rendered next to the picker as well, not only instead of it: the picker drops a
@@ -206,8 +198,12 @@
             "
             :premove-context="premoveContext"
             :analysis-mode="analysisMode"
-            :analysis-counter="analysisCounter"
-            @analysis-exit="exitAnalysisMode"
+            :analysis-status="analysisStatus"
+            :analysis-move-count="analysisEntries.length"
+            :analysis-committable-moves="analysisCommittableMoves.length"
+            @analysis-undo="undoLastAnalysisEntry"
+            @analysis-reset="resetAnalysisLine"
+            @analysis-commit="commitAnalysisLine"
             @cancel-premove="cancelTriggerComposeActive ? cancelCancelTriggerCompose() : cancelPremoveMode()"
             @confirm-premove="cancelTriggerComposeActive ? confirmCancelTriggerCompose() : queueCurrentPremove()"
             @sticky-bar-height="stickyBarHeight = $event"
@@ -319,8 +315,12 @@
         v-if="canPlay"
         :currentMove="currentMove"
         :analysis-mode="analysisMode"
-        :analysis-counter="analysisCounter"
-        @analysis-exit="exitAnalysisMode"
+        :analysis-status="analysisStatus"
+        :analysis-move-count="analysisEntries.length"
+        :analysis-committable-moves="analysisCommittableMoves.length"
+        @analysis-undo="undoLastAnalysisEntry"
+        @analysis-reset="resetAnalysisLine"
+        @analysis-commit="commitAnalysisLine"
       />
       <Table />
       <AdvancedLog :currentMove="currentMove" :hideLog.sync="hideLog" v-if="logPlacement === 'bottom'" />
@@ -382,24 +382,20 @@ import {
 } from "../hosted/types";
 import { buildSequentialChainPreview } from "../logic/premove-preview";
 import {
-  AnalysisCounter,
   AnalysisEntry,
   AnalysisFactionEntry,
   AnalysisLine,
-  AnalysisResourceSnapshot,
-  AnalysisWallet,
+  AnalysisStatus,
   analysisFactionPool,
   applySoloRoundFlow,
   buildAnalysisLineup,
   clearAnalysisLine,
   committableAnalysisMoves,
-  computeAnalysisCounter,
+  computeAnalysisStatus,
   factionSeedAvailable,
-  grantSandboxWallet,
   loadAnalysisLine,
   markAnalysisSeat,
   moveBelongsToSeat,
-  passAllowed,
   replayAnalysisLine,
   saveAnalysisLine,
 } from "../logic/analysis";
@@ -539,12 +535,7 @@ export default class Game extends Vue {
   // the real state at that moment - see enterAnalysisMode) and one resource snapshot per
   // successfully applied line entry, both kept in memory only (never persisted - §3.3 stores only
   // the entry list, and both of these are cheaply re-derived from it on every replay).
-  analysisWallet: AnalysisWallet = null;
-  analysisSnapshots: AnalysisResourceSnapshot[] = [];
-  // Which snapshot the sandbox wallet first applied to - 0 for a mid-round entry (the origin
-  // already carries the grant), later for a setup-phase one, whose earlier snapshots predate it.
-  // computeAnalysisCounter skips everything before it when scanning for infeasibility.
-  analysisWalletGrantedAt = 0;
+
   // Phase 4 (§2.7) - the real sealed-bid backend, stashed on entry and restored on exit, so a
   // simultaneous auction phase (Preference Split/Silent) submits ordinary local moves instead of
   // going through the server while composing inside the sandbox - the same "stash, take over,
@@ -618,9 +609,6 @@ export default class Game extends Vue {
           this.analysisOrigin = null;
           this.analysisComposeBase = null;
           this.analysisSeat = null;
-          this.analysisWallet = null;
-          this.analysisSnapshots = [];
-          this.analysisWalletGrantedAt = 0;
           this.analysisPendingRestore = null;
           this.analysisNotice =
             "A new move arrived, so analysis mode closed. Your saved line is still there - Enter analysis mode to continue where you left off.";
@@ -891,9 +879,14 @@ export default class Game extends Vue {
 
     // Analysis mode's setup-phase pass-and-play (§2.6/decision #7) walks EVERY seat's turn inside
     // the clone - a real locked seat would otherwise hide Commands entirely the moment the clone's
-    // playerToMove moves to an opponent's setup turn.
+    // playerToMove moves to an opponent's setup turn. Round 1 onwards is the opposite: only this seat
+    // ever plays, and the only way another seat can be on turn is a decision `resolveOpponentDecisions`
+    // could not resolve (§12). Rendering their buttons there is what left a leech offer's accept/
+    // decline prompt on screen with the player unable to continue their own line - so the analysis
+    // seat's own turn is the gate from round 1 on, and an unresolved pause simply shows nothing to
+    // press rather than somebody else's decision.
     if (this.analysisMode) {
-      return true;
+      return isBeforeRound1(this.engine) || this.engine.playerToMove === this.analysisSeat;
     }
 
     const lockedSeat = this.$store.state.player?.index;
@@ -1456,28 +1449,16 @@ export default class Game extends Vue {
     return this.myLockedSeat !== undefined ? true : this.canPlay;
   }
 
-  /** Phase 2 (§4) - null while there is no wallet to diff against (not yet entered, or entry
-   * happened outside RoundMove - see enterAnalysisMode). Recomputed from `analysisComposeBase`
-   * (already up to date after every setAnalysisEntries call) rather than cached, since it is cheap
-   * and this keeps it structurally impossible to disagree with what is on screen. */
-  get analysisCounter(): AnalysisCounter | null {
-    if (!this.analysisMode || !this.analysisWallet || !this.analysisComposeBase) {
+  /** §12 - the two facts the player board cannot show for itself: a compact overdraft summary (the
+   * board has the real per-resource numbers, but it scrolls off screen on mobile) and how much power
+   * the sandbox assumed was charged. Recomputed from `analysisComposeBase` rather than cached, since
+   * it is cheap and this keeps it structurally impossible to disagree with what is on screen. */
+  get analysisStatus(): AnalysisStatus | null {
+    if (!this.analysisMode || !this.analysisComposeBase) {
       return null;
     }
     const data = this.analysisComposeBase.players[this.analysisSeat]?.data;
-    if (!data) {
-      return null;
-    }
-    return computeAnalysisCounter(data, this.analysisWallet, this.analysisSnapshots, this.analysisWalletGrantedAt);
-  }
-
-  /** The two-round cap (§3.7) - true once Pass has been stripped from the current position's
-   * available commands, so the panel can explain why the button is gone instead of leaving it
-   * looking like it simply vanished. */
-  get analysisPassCapped(): boolean {
-    return (
-      this.analysisMode && this.analysisBaseRound !== null && !passAllowed(this.engine.round, this.analysisBaseRound)
-    );
+    return data ? computeAnalysisStatus(data) : null;
   }
 
   /** §6/decision #13's commit path affordability gate, capped further for what this app can actually
@@ -1558,16 +1539,15 @@ export default class Game extends Vue {
     // playable "round" to spend that budget on.
     this.analysisBaseRound = Math.max(this.engine.round, Round.Round1);
     this.analysisBaseMoveCount = this.engine.moveHistory.length;
-    // Sandbox wallet (§3.1 step 4/§4.1) - only granted when entry lands already in RoundMove; a
-    // setup-phase entry (§2.6/decision #6) withholds it, since extra resources would allow builds
-    // setup does not permit.
-    const enteringAtRoundMove = this.analysisOrigin.phase === Phase.RoundMove;
-    this.analysisWallet = enteringAtRoundMove ? grantSandboxWallet(this.analysisOrigin, seat) : null;
     // Solo round flow (§2.5/§3.1) - safe to call unconditionally, setup or not: pre-seeding
     // `passedPlayers` is a no-op until the engine's own `beginRoundStartPhase` next consults it
     // (still ahead for a setup entry, already past for a round >= 1 one), and the turnOrder shrink +
     // available-commands regenerate inside it only fire when already in RoundMove - which also
     // covers refreshing the stale pre-wallet-grant command list Engine.fromData copied over.
+    // Mark the seat BEFORE the solo switch: `applySoloRoundFlow` regenerates the available commands
+    // for a mid-round entry, and they must be generated with affordability already lifted (§12) or
+    // the board opens showing only what this seat could really pay for.
+    markAnalysisSeat(this.analysisOrigin, seat);
     applySoloRoundFlow(this.analysisOrigin, seat);
     // Sealed-bid auctions (§2.7) - null the real backend for the duration, so a Preference Split/
     // Silent bid phase submits an ordinary local move instead of going through the server; restored
@@ -1666,9 +1646,6 @@ export default class Game extends Vue {
     this.analysisOrigin = null;
     this.analysisComposeBase = null;
     this.analysisSeat = null;
-    this.analysisWallet = null;
-    this.analysisSnapshots = [];
-    this.analysisWalletGrantedAt = 0;
     this.analysisPendingRestore = null;
     this.$store.commit("setSealedBidBackend", this.analysisSealedBidBackendBackup);
     this.analysisSealedBidBackendBackup = null;
@@ -1701,19 +1678,6 @@ export default class Game extends Vue {
       }
     }
     this.handleData(copy);
-  }
-
-  /** The leech adjustment stepper (§4.4, decision #12) - appends an `{ kind: "adjust", charge }`
-   * entry, applied on replay as a direct power gain (see analysis.ts's `applyLeechAdjustment`)
-   * rather than a move string, since there is no move for "gain power with nobody having offered
-   * it". Only offered once a sandbox wallet exists (AnalysisPanel.vue gates its stepper on
-   * `counter`), so `analysisComposeBase` is always set here in practice, but this checks anyway
-   * rather than assume the caller got the gating right. */
-  applyAnalysisAdjust(charge: number) {
-    if (!this.analysisComposeBase || !Number.isInteger(charge) || charge <= 0) {
-      return;
-    }
-    this.setAnalysisEntries([...this.analysisEntries, { kind: "adjust", charge }]);
   }
 
   /**
@@ -1792,18 +1756,14 @@ export default class Game extends Vue {
    * carrying its dead tail forward into every subsequent Undo/Reset/save. Returns `applied` so
    * `resolveAnalysisStaleness`/`restoreAnalysisLine` can tell whether anything had to be dropped. */
   private setAnalysisEntries(entries: AnalysisEntry[]): number {
-    const { engine, applied, snapshots, wallet, walletGrantedAt } = replayAnalysisLine(
+    const { engine, applied } = replayAnalysisLine(
       this.analysisOrigin,
       entries,
       this.analysisSeat,
-      this.analysisBaseRound,
-      this.analysisWallet
+      this.analysisBaseRound
     );
     const kept = entries.slice(0, applied);
     this.analysisEntries = kept;
-    this.analysisSnapshots = snapshots;
-    this.analysisWallet = wallet;
-    this.analysisWalletGrantedAt = walletGrantedAt;
     this.analysisComposeBase = JSON.parse(JSON.stringify(engine));
     saveAnalysisLine(this.analysisSeat, {
       entries: kept,

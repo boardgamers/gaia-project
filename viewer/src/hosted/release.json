@@ -1,7 +1,26 @@
 {
-  "version": "5.68.1",
+  "version": "5.69.0",
   "releasedAt": "2026-08-17",
   "entries": [
+    {
+      "version": "5.69.0",
+      "releasedAt": "2026-08-17",
+      "kind": "update",
+      "title": "Simpler analysis mode",
+      "impact": "",
+      "changes": [
+        "Analysis mode now shows your real resources on the player board and lets you overspend them - a negative number is the answer to whether a line is affordable",
+        "Analysis mode's controls moved into one bar in the striped header, with the explanations behind an info button; the yellow panel and the extra enter and exit buttons are gone",
+        "Moves in analysis mode no longer need a confirmation press - they are added to the line as soon as they are composed, and Undo covers a misclick",
+        "Fixed an opponent's power-charge offer stranding an analysis line by rendering their accept/decline prompt with no way to continue",
+        "A power cost beyond what the seat holds is now topped up and reported as assumed power instead of driving a power bowl negative"
+      ],
+      "userChanges": [
+        "Analysis mode now shows your real resources on the player board and lets you overspend them - a negative number is the answer to whether a line is affordable",
+        "Analysis mode's controls moved into one bar in the striped header, with the explanations behind an info button; the yellow panel and the extra enter and exit buttons are gone",
+        "Moves in analysis mode no longer need a confirmation press - they are added to the line as soon as they are composed, and Undo covers a misclick"
+      ]
+    },
     {
       "version": "5.68.1",
       "releasedAt": "2026-08-17",

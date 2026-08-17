@@ -8,9 +8,8 @@ import {
   buildAnalysisLineup,
   clearAnalysisLine,
   committableAnalysisMoves,
-  computeAnalysisCounter,
+  computeAnalysisStatus,
   factionSeedAvailable,
-  grantSandboxWallet,
   loadAnalysisLine,
   MAX_COMMITTABLE_MOVES,
   markAnalysisSeat,
@@ -42,7 +41,7 @@ describe("replayAnalysisLine", () => {
   it("replays a legal line onto a fresh clone of the origin", () => {
     const origin = new Engine(SETUP_MOVES);
     const entries: AnalysisEntry[] = [{ kind: "move", move: "terrans up nav." }];
-    const { engine, applied } = replayAnalysisLine(origin, entries, 0, 1, null);
+    const { engine, applied } = replayAnalysisLine(origin, entries, 0, 1);
     expect(applied).to.equal(1);
     expect(engine.moveHistory[engine.moveHistory.length - 1]).to.equal("terrans up nav (0 ⇒ 1).");
   });
@@ -54,7 +53,7 @@ describe("replayAnalysisLine", () => {
       { kind: "move", move: "terrans build m 99x99." },
       { kind: "move", move: "nevlas up nav." },
     ];
-    const { engine, applied } = replayAnalysisLine(origin, entries, 0, 1, null);
+    const { engine, applied } = replayAnalysisLine(origin, entries, 0, 1);
     expect(applied).to.equal(1);
     expect(engine.moveHistory[engine.moveHistory.length - 1]).to.equal("terrans up nav (0 ⇒ 1).");
   });
@@ -62,110 +61,79 @@ describe("replayAnalysisLine", () => {
   it("leaves the original engine untouched", () => {
     const origin = new Engine(SETUP_MOVES);
     const before = JSON.stringify(origin);
-    replayAnalysisLine(origin, [{ kind: "move", move: "terrans up nav." }], 0, 1, null);
+    replayAnalysisLine(origin, [{ kind: "move", move: "terrans up nav." }], 0, 1);
     expect(JSON.stringify(origin)).to.equal(before);
   });
 
   it("returns the origin itself, unmodified, for an empty line", () => {
     const origin = new Engine(SETUP_MOVES);
-    const { engine, applied, snapshots } = replayAnalysisLine(origin, [], 0, 1, null);
+    const { engine, applied } = replayAnalysisLine(origin, [], 0, 1);
     expect(applied).to.equal(0);
     expect(engine.moveHistory).to.deep.equal(origin.moveHistory);
-    expect(snapshots).to.deep.equal([]);
   });
 
-  it("marks the seat's player data uncapped on the replayed engine", () => {
+  it("marks the seat's player data as the sandbox seat on the replayed engine", () => {
     const origin = new Engine(SETUP_MOVES);
-    const { engine } = replayAnalysisLine(origin, [{ kind: "move", move: "terrans up nav." }], 0, 1, null);
+    const { engine } = replayAnalysisLine(origin, [{ kind: "move", move: "terrans up nav." }], 0, 1);
     expect(engine.players[0].data.analysis).to.equal(true);
   });
 
-  it("collects one resource snapshot per successfully applied entry, matching the resulting engine", () => {
-    const origin = new Engine(SETUP_MOVES);
-    const { engine, snapshots } = replayAnalysisLine(origin, [{ kind: "move", move: "terrans up nav." }], 0, 1, null);
-    expect(snapshots).to.have.length(1);
-    expect(snapshots[0].credits).to.equal(engine.players[0].data.credits);
-    expect(snapshots[0].knowledge).to.equal(engine.players[0].data.knowledge);
-  });
-
-  describe("lazy wallet grant for a setup-phase entry (Phase 4, §3.1)", () => {
-    it("stays null while the line is still in setup", () => {
-      const origin = new Engine(PARTIAL_SETUP_MOVES);
-      applySoloRoundFlow(origin, 0); // pre-seeds passedPlayers, mirroring enterAnalysisMode
-      expect(origin.phase).to.not.equal(Phase.RoundMove);
-
-      const { wallet } = replayAnalysisLine(origin, [], 0, 1, null);
-
-      expect(wallet).to.equal(null);
-    });
-
-    it("grants the wallet the moment the line's own pass-and-play reaches round 1's RoundMove", () => {
+  describe("real resources, no injected wallet (§12)", () => {
+    it("leaves a setup-phase line's resources exactly as the engine produced them", () => {
       const origin = new Engine(PARTIAL_SETUP_MOVES);
       applySoloRoundFlow(origin, 0);
       const entries: AnalysisEntry[] = [{ kind: "move", move: "terrans booster booster3" }]; // last setup move
 
-      const { engine, wallet } = replayAnalysisLine(origin, entries, 0, 1, null);
+      const { engine } = replayAnalysisLine(origin, entries, 0, 1);
 
       expect(engine.phase).to.equal(Phase.RoundMove);
       expect(engine.round).to.equal(1);
-      expect(wallet).to.not.equal(null);
-      expect(engine.players[0].data.credits).to.be.at.least(30);
+      // Round 1 income only - nothing topped it up to a sandbox figure, which is the whole point:
+      // the player board shows what this seat really holds.
+      const plain = new Engine([...PARTIAL_SETUP_MOVES, "terrans booster booster3"]);
+      expect(engine.players[0].data.credits).to.equal(plain.players[0].data.credits);
+      expect(engine.players[0].data.ores).to.equal(plain.players[0].data.ores);
     });
 
-    it("re-applies the same grant on every later replay, since the origin never carries it", () => {
-      // Regression: keying the grant off "no wallet yet" meant the caller feeding its kept wallet
-      // back in as initialWallet suppressed it from the second replay onwards - the clone silently
-      // reverted to the seat's real resources while the counter kept subtracting a grant that was
-      // no longer applied, so every number in a setup-started line was wrong from its second edit.
+    it("replays to the same resources every time, however often the line is re-walked", () => {
       const origin = new Engine(PARTIAL_SETUP_MOVES);
       applySoloRoundFlow(origin, 0);
       const entries: AnalysisEntry[] = [{ kind: "move", move: "terrans booster booster3" }];
-      const first = replayAnalysisLine(origin, entries, 0, 1, null);
 
-      const second = replayAnalysisLine(origin, entries, 0, 1, first.wallet);
+      const first = replayAnalysisLine(origin, entries, 0, 1);
+      const second = replayAnalysisLine(origin, entries, 0, 1);
 
-      expect(second.wallet).to.deep.equal(first.wallet);
       expect(second.engine.players[0].data.credits).to.equal(first.engine.players[0].data.credits);
-      expect(second.engine.players[0].data.credits).to.be.at.least(30);
     });
 
-    it("never re-grants onto an origin that already carries the wallet", () => {
-      const origin = new Engine(SETUP_MOVES); // already at RoundMove
+    it("lets the seat overspend into debt rather than refusing the move", () => {
+      const origin = new Engine(SETUP_MOVES);
       applySoloRoundFlow(origin, 0);
-      const wallet = grantSandboxWallet(origin, 0);
-      const creditsAtEntry = origin.players[0].data.credits;
+      origin.player(0).data.credits = 0;
+      origin.player(0).data.ores = 0; // cannot afford a trading station at all
 
-      const { engine, walletGrantedAt } = replayAnalysisLine(
-        origin,
-        [{ kind: "move", move: "terrans up nav." }],
-        0,
-        1,
-        wallet
-      );
+      const { engine, applied } = replayAnalysisLine(origin, [{ kind: "move", move: "terrans build ts -1x2." }], 0, 1);
 
-      expect(walletGrantedAt).to.equal(0);
-      expect(engine.players[0].data.credits).to.equal(creditsAtEntry);
+      expect(applied).to.equal(1); // the move was offered and played anyway (§12)
+      const data = engine.players[0].data;
+      expect(data.credits + data.ores).to.be.lessThan(0); // ...and the debt is real and visible
     });
 
-    it("reports the snapshot the grant landed on, so pre-wallet setup snapshots are not judged against it", () => {
-      const origin = new Engine(PARTIAL_SETUP_MOVES);
+    it("never drives a power bowl negative - a power cost beyond the seat's is topped up and counted", () => {
+      const origin = new Engine(SETUP_MOVES);
       applySoloRoundFlow(origin, 0);
-      // Two entries, the wallet arriving on the second: an opponent's booster, then this seat's own.
-      const origin2 = new Engine(PARTIAL_SETUP_MOVES.slice(0, -1));
-      applySoloRoundFlow(origin2, 0);
-      const entries: AnalysisEntry[] = [
-        { kind: "move", move: "nevlas booster booster7" },
-        { kind: "move", move: "terrans booster booster3" },
-      ];
+      const data = origin.player(0).data;
+      data.power.area1 = 0;
+      data.power.area2 = 0;
+      data.power.area3 = 0;
+      data.analysis = true;
 
-      const { snapshots, wallet, walletGrantedAt } = replayAnalysisLine(origin2, entries, 0, 1, null);
+      data.spendPower(4);
 
-      expect(snapshots).to.have.length(2);
-      expect(walletGrantedAt).to.equal(1); // the second entry's snapshot is the first with the grant
-
-      // Scanning from 0 would call the pre-grant snapshot overdrawn; scanning from the grant does not.
-      expect(computeAnalysisCounter(snapshots[1], wallet, snapshots, walletGrantedAt).feasible).to.equal(true);
-      expect(computeAnalysisCounter(snapshots[1], wallet, snapshots).infeasibleFromMove).to.equal(1);
+      expect(data.power.area1).to.be.at.least(0);
+      expect(data.power.area2).to.be.at.least(0);
+      expect(data.power.area3).to.be.at.least(0);
+      expect(data.analysisAssumedPower).to.be.at.least(4);
     });
   });
 
@@ -173,14 +141,12 @@ describe("replayAnalysisLine", () => {
     it("applies a leech adjustment as a direct power gain, not a move", () => {
       const origin = new Engine(SETUP_MOVES);
       applySoloRoundFlow(origin, 0);
-      const wallet = grantSandboxWallet(origin, 0); // area1/2/3 all >= 4 after the grant
       const before = { ...origin.players[0].data.power };
       const entries: AnalysisEntry[] = [{ kind: "adjust", charge: 2 }];
 
-      const { engine, applied, snapshots } = replayAnalysisLine(origin, entries, 0, 1, wallet);
+      const { engine, applied } = replayAnalysisLine(origin, entries, 0, 1);
 
       expect(applied).to.equal(1);
-      expect(snapshots).to.have.length(1);
       // chargePower moves tokens up a level - the receiving areas grow by the charge regardless of
       // which levels exactly moved, and moveHistory gains nothing since no `.move()` ever ran.
       const after = engine.players[0].data.power;
@@ -191,13 +157,12 @@ describe("replayAnalysisLine", () => {
     it("stops the line at a non-positive adjust entry, exactly like an illegal move", () => {
       const origin = new Engine(SETUP_MOVES);
       applySoloRoundFlow(origin, 0);
-      const wallet = grantSandboxWallet(origin, 0);
       const entries: AnalysisEntry[] = [
         { kind: "adjust", charge: 0 },
         { kind: "move", move: "terrans up nav." },
       ];
 
-      const { applied } = replayAnalysisLine(origin, entries, 0, 1, wallet);
+      const { applied } = replayAnalysisLine(origin, entries, 0, 1);
 
       expect(applied).to.equal(0);
     });
@@ -205,16 +170,14 @@ describe("replayAnalysisLine", () => {
     it("mixes move and adjust entries in one line", () => {
       const origin = new Engine(SETUP_MOVES);
       applySoloRoundFlow(origin, 0);
-      const wallet = grantSandboxWallet(origin, 0);
       const entries: AnalysisEntry[] = [
         { kind: "move", move: "terrans up nav." },
         { kind: "adjust", charge: 3 },
       ];
 
-      const { applied, snapshots } = replayAnalysisLine(origin, entries, 0, 1, wallet);
+      const { applied } = replayAnalysisLine(origin, entries, 0, 1);
 
       expect(applied).to.equal(2);
-      expect(snapshots).to.have.length(2);
     });
   });
 });
@@ -336,6 +299,47 @@ describe("resolveOpponentDecisions", () => {
     expect(origin.playerToMove).to.equal(0);
     expect(origin.phase).to.equal(Phase.RoundMove);
   });
+
+  it("declines rather than accepting, so the outcome never depends on the opponent's own settings", () => {
+    const origin = new Engine(SETUP_MOVES);
+    applySoloRoundFlow(origin, 0);
+    const powerBefore = { ...origin.player(1).data.power };
+    origin.move("terrans build ts -1x2.");
+    origin.generateAvailableCommandsIfNeeded();
+
+    resolveOpponentDecisions(origin, 0);
+
+    // A charge would have moved the opponent's tokens up; a decline leaves them exactly where they were.
+    expect(origin.player(1).data.power).to.deep.equal(powerBefore);
+  });
+
+  it("gets control back through a whole replayed line, so a leech never leaves the player stuck (§12)", () => {
+    // The reported bug: building within leech range paused the engine on the opponent's accept/decline
+    // prompt, and because analysis mode forces canPlay true, that prompt was rendered instead of the
+    // player's own commands - with no way to carry on. Whatever else changes, a replayed line has to
+    // come back to the analysis seat's own turn.
+    const origin = new Engine(SETUP_MOVES);
+    applySoloRoundFlow(origin, 0);
+
+    const { engine, applied } = replayAnalysisLine(origin, [{ kind: "move", move: "terrans build ts -1x2." }], 0, 1);
+
+    expect(applied).to.equal(1);
+    expect(engine.phase).to.equal(Phase.RoundMove);
+    expect(engine.playerToMove).to.equal(0);
+  });
+
+  it("never throws, whatever state it is handed - a throw here would kill the click mid-line", () => {
+    // resolveOpponentDecisions runs outside replayAnalysisLine's own try/catch (it fixes the state up
+    // after a move rather than being one), so an exception escaping it freezes the board.
+    const engine = new Engine(SETUP_MOVES);
+    applySoloRoundFlow(engine, 0);
+    engine.move("terrans build ts -1x2.");
+    engine.generateAvailableCommandsIfNeeded();
+    // A wrecked available-command list: whatever it tries here, it must not propagate.
+    engine.availableCommands = [{ name: Command.Decline, player: 1, data: { offers: [] } } as any];
+
+    expect(() => resolveOpponentDecisions(engine, 0)).to.not.throw();
+  });
 });
 
 describe("markAnalysisSeat", () => {
@@ -347,58 +351,37 @@ describe("markAnalysisSeat", () => {
   });
 });
 
-describe("grantSandboxWallet", () => {
-  it("grants a generous wallet and records the added amount as grant", () => {
-    const engine = new Engine(SETUP_MOVES);
-    const before = engine.players[0].data.credits;
-    const wallet = grantSandboxWallet(engine, 0);
-    expect(engine.players[0].data.analysis).to.equal(true);
-    expect(wallet.baseline.credits).to.equal(before);
-    expect(engine.players[0].data.credits).to.equal(before + wallet.grant.credits);
-    expect(engine.players[0].data.credits).to.be.at.least(30);
+describe("computeAnalysisStatus (§12)", () => {
+  const view = (over: Partial<{ credits: number; ores: number; knowledge: number; qics: number }>, power = 0) => ({
+    credits: 0,
+    ores: 0,
+    knowledge: 0,
+    qics: 0,
+    analysisAssumedPower: power,
+    ...over,
   });
 
-  it("never reduces a resource that already exceeds the sandbox target (e.g. qics)", () => {
-    const engine = new Engine(SETUP_MOVES);
-    engine.players[0].data.qics = 20; // above the 10-qic sandbox target
-    const wallet = grantSandboxWallet(engine, 0);
-    expect(wallet.grant.qics).to.equal(0);
-    expect(engine.players[0].data.qics).to.equal(20);
-  });
-});
-
-describe("computeAnalysisCounter", () => {
-  it("shows zero net and the baseline as displayed value when nothing has been spent", () => {
-    const engine = new Engine(SETUP_MOVES);
-    const before = { ...engine.players[0].data };
-    const wallet = grantSandboxWallet(engine, 0);
-    const counter = computeAnalysisCounter(engine.players[0].data, wallet, []);
-    expect(counter.credits.net).to.equal(0);
-    expect(counter.credits.displayed).to.equal(before.credits);
-    expect(counter.feasible).to.equal(true);
-    expect(counter.infeasibleFromMove).to.equal(null);
+  it("reports nothing while the line stays within what the seat really has", () => {
+    const status = computeAnalysisStatus(view({ credits: 4, ores: 2 }));
+    expect(status.overdrawn).to.deep.equal([]);
+    expect(status.assumedPower).to.equal(0);
   });
 
-  it("goes negative (in red) once the line spends more than the real baseline held (§4.2 example)", () => {
-    const engine = new Engine(SETUP_MOVES);
-    engine.players[0].data.credits = 3;
-    const wallet = grantSandboxWallet(engine, 0); // baseline.credits = 3, grant = 27 (target 30)
-    engine.players[0].data.credits -= 10; // spend 10 from the granted wallet -> 20
-    const snapshot = { ...engine.players[0].data };
-    const counter = computeAnalysisCounter(snapshot, wallet, [snapshot]);
-    expect(counter.credits.net).to.equal(-10);
-    expect(counter.credits.displayed).to.equal(-7);
-    expect(counter.feasible).to.equal(false);
-    expect(counter.infeasibleFromMove).to.equal(1);
+  it("lists every overdrawn resource, and only those", () => {
+    const status = computeAnalysisStatus(view({ credits: -7, ores: 3, knowledge: -1, qics: 0 }));
+    expect(status.overdrawn).to.deep.equal([
+      { kind: "c", amount: -7 },
+      { kind: "k", amount: -1 },
+    ]);
   });
 
-  it("reports the power bowl state before/after, grant-adjusted back to real numbers", () => {
-    const engine = new Engine(SETUP_MOVES);
-    const wallet = grantSandboxWallet(engine, 0);
-    const before = wallet.baseline.power;
-    const counter = computeAnalysisCounter(engine.players[0].data, wallet, []);
-    expect(counter.power.before).to.deep.equal(before);
-    expect(counter.power.after).to.deep.equal(before);
+  it("passes through the power the sandbox assumed was charged", () => {
+    expect(computeAnalysisStatus(view({}, 3)).assumedPower).to.equal(3);
+  });
+
+  it("treats a snapshot from before assumed power existed as zero", () => {
+    const { analysisAssumedPower, ...legacy } = view({});
+    expect(computeAnalysisStatus(legacy).assumedPower).to.equal(0);
   });
 });
 
@@ -638,7 +621,7 @@ describe("the round-0 faction seed (§11)", () => {
       { kind: "move", move: "terrans booster booster3" },
     ];
 
-    const { engine, applied, wallet } = replayAnalysisLine(origin, entries, 0, Round.Round1, null);
+    const { engine, applied, wallet } = replayAnalysisLine(origin, entries, 0, Round.Round1);
 
     expect(applied).to.equal(entries.length);
     expect(engine.phase).to.equal(Phase.RoundMove);
@@ -653,7 +636,7 @@ describe("the round-0 faction seed (§11)", () => {
     applySoloRoundFlow(origin, 0);
     const entries: AnalysisEntry[] = [{ kind: "faction", lineup: [Faction.Nevlas, Faction.Terrans] }];
 
-    const { engine, applied } = replayAnalysisLine(origin, entries, 0, Round.Round1, null);
+    const { engine, applied } = replayAnalysisLine(origin, entries, 0, Round.Round1);
 
     expect(applied).to.equal(1);
     expect(engine.phase).to.equal(Phase.SetupBuilding);
@@ -665,8 +648,8 @@ describe("the round-0 faction seed (§11)", () => {
     applySoloRoundFlow(origin, 0);
     const entries: AnalysisEntry[] = [{ kind: "faction", lineup: [Faction.Itars, Faction.Terrans] }];
 
-    const first = replayAnalysisLine(origin, entries, 0, Round.Round1, null);
-    const second = replayAnalysisLine(origin, entries, 0, Round.Round1, null);
+    const first = replayAnalysisLine(origin, entries, 0, Round.Round1);
+    const second = replayAnalysisLine(origin, entries, 0, Round.Round1);
 
     expect(first.engine.players.map((pl) => pl.faction)).to.deep.equal([Faction.Itars, Faction.Terrans]);
     expect(second.engine.players.map((pl) => pl.faction)).to.deep.equal([Faction.Itars, Faction.Terrans]);
@@ -677,7 +660,7 @@ describe("the round-0 faction seed (§11)", () => {
     applySoloRoundFlow(origin, 0);
     const before = JSON.stringify(origin);
 
-    replayAnalysisLine(origin, [{ kind: "faction", lineup: [Faction.Itars, Faction.Terrans] }], 0, Round.Round1, null);
+    replayAnalysisLine(origin, [{ kind: "faction", lineup: [Faction.Itars, Faction.Terrans] }], 0, Round.Round1);
 
     expect(JSON.stringify(origin)).to.equal(before);
   });
@@ -689,7 +672,7 @@ describe("the round-0 faction seed (§11)", () => {
       { kind: "move", move: "terrans up nav." },
     ];
 
-    const { applied } = replayAnalysisLine(origin, entries, 0, Round.Round1, null);
+    const { applied } = replayAnalysisLine(origin, entries, 0, Round.Round1);
 
     expect(applied).to.equal(0);
   });
