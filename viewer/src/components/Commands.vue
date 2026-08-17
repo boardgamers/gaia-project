@@ -746,10 +746,19 @@ export default class Commands extends Vue implements CommandController {
     return index == null ? null : this.engine.players[index];
   }
 
-  /** Same visibility rule as the auto-leech select - nothing to show before a player has a faction
-   * and the game has actually started. */
+  /** Same "has the game actually started" gating as the auto-leech select, but not its
+   * `!analysisMode` exclusion - the resource bar is a plain readout of the player board (credits/
+   * power bowls/etc), not a per-round preference, so sandbox mode should keep showing it exactly
+   * like normal play instead of losing it to the counter headline the way auto-leech does. */
   get showResourceBar(): boolean {
-    return this.showAutoLeechSelect && !!this.myPlayer?.faction;
+    return (
+      !this.init &&
+      !this.isChoosingFaction &&
+      !this.isBanningFaction &&
+      !this.isSilentBidding &&
+      this.engine.round >= 1 &&
+      !!this.myPlayer?.faction
+    );
   }
 
   /** Live-tracked rendered height of #move-buttons (already capped by its own CSS max-height +
