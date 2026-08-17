@@ -1287,6 +1287,29 @@ export default class Commands extends Vue implements CommandController {
 </script>
 
 <style lang="scss">
+// Sandbox mode's hazard stripes (ANALYSIS_MODE_PLAN.md §5.1), shared by the desktop #move-title and
+// the mobile sticky band - two separate rules with two different box models, but there is no reason
+// for them to drift apart on the one thing that has to look identical.
+//
+// Deliberately dimmer and lower-contrast than the original full-strength #1c1c1c/#f5c518 (owner
+// instruction): at the size this banner actually renders, jet black against saturated warning yellow
+// read as glare rather than as information, and the banner sits directly under the board for the
+// whole time sandbox mode is on. A muted amber on a soft charcoal still says "hazard, not the live
+// game" at a glance while being much easier to sit next to. Legibility of what is ON the stripes
+// does not depend on them: every text run carries its own scrim.
+$analysis-stripe-dark: #2e2e32;
+$analysis-stripe-light: #c2a233;
+$analysis-stripes: repeating-linear-gradient(
+  45deg,
+  $analysis-stripe-dark 0px,
+  $analysis-stripe-dark 12px,
+  $analysis-stripe-light 12px,
+  $analysis-stripe-light 24px
+);
+// Softer than the 0.82 the full-strength stripes needed - it is a text backing, and dimmer stripes
+// need less of one.
+$analysis-scrim: rgba(0, 0, 0, 0.72);
+
 // Status dot on the auto-leech dropdown button - green/pulsing while it's set to actually act on
 // its own, static red while off ("ask every time"), so the button's current state reads at a
 // glance without parsing its ("Leech: off"/"Leech: 3") text.
@@ -1483,14 +1506,14 @@ $mobile-sticky-actions-max-height: 40vh;
 // since #move-title's own box model (in-flow, no grab handle, no border-radius) differs enough that
 // a shared mixin would need as many overrides as it saved.
 #move-title.move-title--analysis {
-  background: repeating-linear-gradient(45deg, #1c1c1c 0px, #1c1c1c 12px, #f5c518 12px, #f5c518 24px);
+  background: $analysis-stripes;
   cursor: pointer;
   padding: 0.4rem 0.6rem;
   border-radius: 8px;
 
   h5 {
     display: inline-block;
-    background: rgba(0, 0, 0, 0.82);
+    background: $analysis-scrim;
     color: #fff;
     padding: 0.15rem 0.5rem;
     border-radius: 4px;
@@ -1534,13 +1557,13 @@ $mobile-sticky-actions-max-height: 40vh;
     background: linear-gradient(135deg, #a97514 0%, #8a6410 100%);
   }
 
-  // Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §5.1) - full-strength yellow/black hazard
-  // stripes, unmissable at a glance, since this is the ONE header state where the board underneath
-  // is genuinely not the live game. Stripes live in `background` (not `::before`, which is the grab
-  // handle above - §2.9) so the two never fight for the same layer. Clickable to exit (§5.4) - the
-  // map-anchored control can scroll off-screen on mobile, so the header is the reliable way out.
+  // Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §5.1) - hazard stripes, since this is the
+  // ONE header state where the board underneath is genuinely not the live game. Stripes live in
+  // `background` (not `::before`, which is the grab handle above - §2.9) so the two never fight for
+  // the same layer. Clickable to exit (§5.4) - the map-anchored control can scroll off-screen on
+  // mobile, so the header is the reliable way out.
   &--analysis {
-    background: repeating-linear-gradient(45deg, #1c1c1c 0px, #1c1c1c 12px, #f5c518 12px, #f5c518 24px);
+    background: $analysis-stripes;
     cursor: pointer;
   }
 
@@ -1558,10 +1581,28 @@ $mobile-sticky-actions-max-height: 40vh;
   // both legible at once.
   &--analysis h5 {
     display: inline-block;
-    background: rgba(0, 0, 0, 0.82);
+    background: $analysis-scrim;
     color: #fff;
     padding: 0.15rem 0.5rem;
     border-radius: 4px;
+  }
+
+  // Sandbox mode's own controls opt OUT of the translucent treatment below and keep the solid keycap
+  // surface AnalysisHeaderControls.vue gives them. Without this exclusion that rule wins outright -
+  // it is `#move-buttons .sticky-bar-title .btn-outline-secondary` (1,3,0) against a scoped
+  // component rule's (0,3,0) - which is why Undo/Reset kept rendering as transparent outlines on the
+  // stripes no matter how solid the component's own CSS made them.
+  .btn-outline-secondary:not(.analysis-controls__btn) {
+    color: var(--ui-banner-text);
+    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.08);
+
+    &:hover,
+    &:focus {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.18);
+      border-color: rgba(255, 255, 255, 0.42);
+    }
   }
 
   // The auto-leech dropdown defaults to Bootstrap's grey outline styling, which reads as a muddy
@@ -1587,19 +1628,6 @@ $mobile-sticky-actions-max-height: 40vh;
   // toggle's corner on a narrow viewport, it should render on top of it, not tangled underneath.
   .auto-leech-select ::v-deep(.dropdown-menu) {
     z-index: 1050;
-  }
-
-  .btn-outline-secondary {
-    color: var(--ui-banner-text);
-    border-color: rgba(255, 255, 255, 0.3);
-    background: rgba(255, 255, 255, 0.08);
-
-    &:hover,
-    &:focus {
-      color: #fff;
-      background: rgba(255, 255, 255, 0.18);
-      border-color: rgba(255, 255, 255, 0.42);
-    }
   }
 }
 
@@ -1708,6 +1736,17 @@ $mobile-sticky-actions-max-height: 40vh;
       // chat toggle. Reserving that space up front (padding, not the toggle's own z-index/position)
       // keeps the two apart regardless of the dropdown's open/closed state.
       padding-right: calc(4rem + env(safe-area-inset-right));
+    }
+
+    // ...except in sandbox mode, where that reservation is bought with nothing: the auto-leech
+    // dropdown it exists for is not rendered at all then (showAutoLeechSelect excludes analysis
+    // mode), and the sandbox controls that take its slot are plain buttons with no popup to collide
+    // with anything. The chat toggle floats ABOVE this bar rather than on it, so the only thing the
+    // 4rem did here was strand the controls short of the right edge - reading as neither centred nor
+    // aligned, which is exactly what the owner saw. Back to the row's ordinary padding so
+    // `margin-left: auto` lands them flush against it.
+    .sticky-bar-title--analysis {
+      padding-right: calc(0.7rem + env(safe-area-inset-right));
     }
   }
 

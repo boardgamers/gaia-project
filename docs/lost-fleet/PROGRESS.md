@@ -7409,6 +7409,37 @@ Commit · ⓘ` now lives in the hazard-striped header that already existed, with
 
       Viewer: 1153/1153 passing.
 
+187.  ✅ **The sandbox banner's buttons were never actually opaque - a specificity loss, twice
+      (viewer v5.72.3, 2026-08-17, owner screenshot).** #181 gave Undo/Reset a solid surface and #186
+      gave them a keycap one, and on a phone the owner still saw two see-through outlines on the
+      stripes. Neither fix was wrong; neither was ever reaching the element.
+      `Commands.vue` carries `#move-buttons .sticky-bar-title .btn-outline-secondary` - written for the
+      auto-leech dropdown, to stop it reading as a smudge on the dark banner - which sets
+      `background: rgba(255, 255, 255, 0.08)` at specificity **(1,3,0)**. A scoped rule in
+      `AnalysisHeaderControls.vue` is **(0,3,0)** with its `data-v` attribute. The id wins, every time,
+      no matter what the component says about itself. **Anything that restyles a control inside the
+      sticky bar has to reckon with that id-prefixed block first** - it is the highest-specificity
+      selector in the file. The rule now reads `.btn-outline-secondary:not(.analysis-controls__btn)`,
+      so the sandbox controls simply fall out of it.
+
+      Two more from the same screenshot:
+
+      - **They stopped short of the right edge**, reading as neither centred nor aligned. That was the
+        `padding-right: calc(4rem + …)` the bar reserves so the auto-leech dropdown's `dropup` menu
+        cannot land under ChatNotesPanel's floating chat toggle. In sandbox mode that reservation buys
+        nothing: `showAutoLeechSelect` excludes analysis mode, so the dropdown is not rendered, and the
+        controls that take its slot have no popup at all. `.sticky-bar-title--analysis` gets the row's
+        ordinary padding back, so `margin-left: auto` lands them flush (owner asked, and right-aligned
+        is also what the row already does with every other trailing control).
+      - **The stripes are dimmer.** `#1c1c1c`/`#f5c518` at full strength was ~10.5:1 against itself and
+        sat under the board for as long as sandbox mode was on; `#2e2e32`/`#c2a233` is ~5.4:1 and about
+        40% less luminous, still unmistakably hazard stripes. The text scrim relaxes from 0.82 to 0.72
+        to match. Both the desktop `#move-title` and the mobile band now read the same
+        `$analysis-stripes`/`$analysis-scrim` SCSS variables - the two rules stay separate (different
+        box models, per #181's note) but can no longer drift on the one thing that must look identical.
+
+      Viewer: 1153/1153 passing.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

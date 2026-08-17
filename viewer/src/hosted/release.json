@@ -1,7 +1,22 @@
 {
-  "version": "5.72.2",
+  "version": "5.72.3",
   "releasedAt": "2026-08-17",
   "entries": [
+    {
+      "version": "5.72.3",
+      "releasedAt": "2026-08-17",
+      "kind": "fix",
+      "title": "The sandbox banner calms down",
+      "impact": "",
+      "changes": [
+        "Undo, Reset and Commit are solid buttons at last - a banner rule was overriding them back to see-through outlines on the stripes",
+        "They sit flush against the right edge of the banner instead of stopping short of it",
+        "The hazard stripes are dimmer and lower-contrast, so the banner reads as a warning without glaring under the board"
+      ],
+      "userChanges": [
+        "Sandbox mode's banner is dimmer, and its Undo / Reset / Commit buttons are solid and right-aligned instead of see-through and stranded mid-bar"
+      ]
+    },
     {
       "version": "5.72.2",
       "releasedAt": "2026-08-17",
