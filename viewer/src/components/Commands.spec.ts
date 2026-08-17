@@ -575,6 +575,32 @@ describe("Commands", () => {
     expect(title.textContent).to.contain("+2 power");
   });
 
+  it("puts round 0's faction seed in the action area as one button per faction, announced in the header", async () => {
+    // Owner instruction: every sandbox press belongs in this one action area. The picker used to be a
+    // select plus a "Try this faction" button in AnalysisPanel.vue, above the map.
+    const engine = new Engine(["init 2 lf-viewer-temporary-range"]);
+    const store = makeStore();
+    store.commit("receiveData", engine);
+    const choices = [
+      { faction: Faction.Terrans, name: "Terrans" },
+      { faction: Faction.Nevlas, name: "Nevlas" },
+    ];
+
+    const { container, emitted } = render(Commands, {
+      props: { currentMove: "", analysisMode: true, analysisFactionChoices: choices },
+      store,
+    });
+
+    expect(container.querySelector("#move-title").textContent).to.contain("choose a faction to play as");
+    const buttons = Array.from(container.querySelectorAll("#move-buttons .faction-picker-buttons button"));
+    expect(buttons.map((b) => b.textContent.trim())).to.deep.equal(["Terrans", "Nevlas"]);
+
+    await fireEvent.click(buttons[1]);
+
+    expect(emitted()["analysis-seed-faction"]).to.have.length(1);
+    expect(emitted()["analysis-seed-faction"][0]).to.deep.equal([Faction.Nevlas]);
+  });
+
   it("renders the info modal exactly once even though the controls are rendered in both headers", () => {
     // Two copies of one b-modal id make the button open whichever Bootstrap-Vue registered first -
     // the trap SetupStatus.vue's own comment warns about, which is why the modal lives outside

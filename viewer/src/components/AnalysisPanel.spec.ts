@@ -6,14 +6,12 @@ import AnalysisPanel from "./AnalysisPanel.vue";
 
 Vue.use(BootstrapVue);
 
-// What is left of this surface after §12: staleness notices, the saved-line prompt and round 0's
-// faction picker. Everything else (move count, resource figures, Undo/Reset/Commit, the help text,
-// the enter and exit buttons) moved to the striped header, the player board, the info modal and the
-// map's corner button respectively - see AnalysisHeaderControls.spec.ts for the header half.
-const CHOICES = [
-  { faction: "terrans", name: "Terrans" },
-  { faction: "nevlas", name: "Nevlas" },
-];
+// What is left of this surface: staleness notices and the saved-line prompt, the only two things
+// that have to be readable while sandbox mode is NOT active. Everything else - move count, resource
+// figures, Undo/Reset/Commit, the help text, the enter and exit buttons, and round 0's faction
+// picker - lives in the striped header, the player board, the info modal, the map's corner button
+// and Commands.vue's action area respectively. See AnalysisHeaderControls.spec.ts and
+// Commands.spec.ts for those halves.
 
 describe("AnalysisPanel", () => {
   it("renders nothing at all when there is no notice, no prompt and no picker", () => {
@@ -63,60 +61,9 @@ describe("AnalysisPanel", () => {
     });
   });
 
-  describe("the round-0 faction seed picker (§11)", () => {
-    function seedButton(container: HTMLElement): HTMLButtonElement {
-      return Array.from(container.querySelectorAll("button")).find((b) =>
-        b.textContent.includes("Try this")
-      ) as HTMLButtonElement;
-    }
-
-    it("is not rendered when the clone is past faction selection (no choices offered)", () => {
-      const { container } = render(AnalysisPanel, { props: { active: true, factionChoices: [] } });
-      expect(container.querySelector(".analysis-strip__seed")).to.equal(null);
-    });
-
-    it("offers every choice and emits seed-faction for the selected one", async () => {
-      const { container, emitted } = render(AnalysisPanel, { props: { active: true, factionChoices: CHOICES } });
-
-      const options = Array.from(container.querySelectorAll("option")).map((o) => o.textContent.trim());
-      expect(options).to.deep.equal(["Terrans", "Nevlas"]);
-
-      await fireEvent.update(container.querySelector("select") as HTMLSelectElement, "nevlas");
-      await fireEvent.click(seedButton(container));
-
-      expect(emitted()["seed-faction"]).to.have.length(1);
-      expect(emitted()["seed-faction"][0]).to.deep.equal(["nevlas"]);
-    });
-
-    it("defaults to the first choice, so the button is armed without touching the select", async () => {
-      const { container, emitted } = render(AnalysisPanel, { props: { active: true, factionChoices: CHOICES } });
-
-      await fireEvent.click(seedButton(container));
-
-      expect(emitted()["seed-faction"][0]).to.deep.equal(["terrans"]);
-    });
-
-    it("shows the seeded table back, marking which seat is mine, and relabels the button", () => {
-      const { container } = render(AnalysisPanel, {
-        props: {
-          active: true,
-          factionChoices: CHOICES,
-          seatedLineup: [
-            { name: "Terrans", mine: false },
-            { name: "Nevlas", mine: true },
-          ],
-        },
-      });
-
-      const lineup = container.querySelector(".analysis-strip__lineup");
-      expect(lineup.textContent).to.contain("Terrans");
-      expect(lineup.textContent).to.contain("Nevlas (you)");
-      expect(seedButton(container).textContent).to.contain("Try this one instead");
-    });
-
-    it("does not offer the picker while analysis mode is inactive", () => {
-      const { container } = render(AnalysisPanel, { props: { active: false, factionChoices: CHOICES } });
-      expect(container.querySelector(".analysis-strip__seed")).to.equal(null);
-    });
+  it("no longer carries round 0's faction picker - that moved into Commands.vue's action area", () => {
+    const { container } = render(AnalysisPanel, { props: { active: true, notice: "something happened" } });
+    expect(container.querySelector(".analysis-strip__seed")).to.equal(null);
+    expect(container.querySelector("select")).to.equal(null);
   });
 });

@@ -1,7 +1,21 @@
 {
-  "version": "5.70.0",
+  "version": "5.71.0",
   "releasedAt": "2026-08-17",
   "entries": [
+    {
+      "version": "5.71.0",
+      "releasedAt": "2026-08-17",
+      "kind": "update",
+      "title": "Sandbox faction choice in the action bar",
+      "impact": "",
+      "changes": [
+        "Round 0's \"play as this faction\" choice moved out of its own container above the map and into the action bar, as one button per faction",
+        "The striped header announces it - \"SANDBOX - choose a faction to play as\" - and the ordinary pick, ban and bid buttons step aside while it is up, so there is only ever one question on screen"
+      ],
+      "userChanges": [
+        "Round 0's \"play as this faction\" choice is now one button per faction in the action bar, instead of a dropdown in its own box above the map"
+      ]
+    },
     {
       "version": "5.70.0",
       "releasedAt": "2026-08-17",

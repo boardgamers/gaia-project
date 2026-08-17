@@ -11,7 +11,9 @@
              where a compose takeover has to announce itself. Analysis mode wins over premove/
              cancel-trigger context since the three board-takeover modes are mutually exclusive
              (§3.6) - this is just the render-time ordering, not an extra exclusion check. -->
-        <template v-if="analysisMode">SANDBOX</template>
+        <template v-if="analysisMode"
+          >SANDBOX<template v-if="analysisSeedActive"> — choose a faction to play as</template></template
+        >
         <template v-else-if="premoveContext">{{ premoveContext.title }}</template>
         <RichTextView v-else :content="statusLine" />
       </h5>
@@ -87,7 +89,9 @@
              hazard stripes for analysis (§5.1) - the board looks identical otherwise, and this is
              the one cue telling them apart. -->
         <h5 class="mb-0">
-          <template v-if="analysisMode">SANDBOX</template>
+          <template v-if="analysisMode"
+            >SANDBOX<template v-if="analysisSeedActive"> — choose a faction to play as</template></template
+          >
           <template v-else-if="premoveContext">{{ premoveContext.title }}</template>
           <RichTextView v-else :content="statusLine" />
         </h5>
@@ -136,7 +140,30 @@
           :key="i"
         ></MoveButton>
       </div>
-      <div v-else class="d-flex flex-wrap align-content-stretch">
+      <!-- Sandbox mode's round-0 faction seed (ANALYSIS_MODE_PLAN.md §11). It used to be a labelled
+           select plus a "Try this faction" button in AnalysisPanel.vue, i.e. a second container above
+           the map, which on a phone is nowhere near where every other sandbox press happens. Owner
+           instruction: every sandbox interaction belongs in this one action area, so it is a plain
+           row of faction buttons here, announced by the striped header above ("SANDBOX — choose a
+           faction to play as"). Deliberately NOT MoveButton-driven: a seed is not an engine command
+           (see analysis.ts's `applyFactionSeed`), so it emits rather than dispatching - the markup
+           mirrors MoveButton's own so `.faction-picker-buttons` styles it identically to the real
+           pick/ban rows below.
+           While it is up it REPLACES the ordinary round-0 buttons rather than sitting beside them:
+           picking a faction here jumps straight past the pick/ban/bid the engine is offering, so
+           showing both would be offering two different answers to the same question. -->
+      <div v-if="analysisSeedActive" class="d-flex flex-wrap align-content-stretch faction-picker-buttons">
+        <div v-for="choice in analysisFactionChoices" :key="choice.faction" class="move-button">
+          <b-btn
+            :class="['mr-2', 'mb-2', 'move-button']"
+            :title="`Play the rest of round 0 and round 1 as ${choice.name}`"
+            @click="$emit('analysis-seed-faction', choice.faction)"
+          >
+            <RichTextView :content="factionPickerLabel(choice.faction)" />
+          </b-btn>
+        </div>
+      </div>
+      <div v-else-if="!init" class="d-flex flex-wrap align-content-stretch">
         <MoveButton
           v-for="(button, i) in buttons"
           :class="{ 'd-none': button.hide, shown: !button.hide, disabled: button.disabled }"
@@ -177,7 +204,10 @@
           Discard
         </b-btn>
       </div>
-      <div v-if="isChoosingFaction" class="d-flex flex-wrap align-content-stretch faction-picker-buttons">
+      <div
+        v-if="isChoosingFaction && !analysisSeedActive"
+        class="d-flex flex-wrap align-content-stretch faction-picker-buttons"
+      >
         <MoveButton
           v-for="faction in factionsToChoose.data"
           :button="{
@@ -196,7 +226,10 @@
           @cancel="updateRandomFaction"
         />
       </div>
-      <div v-if="isBanningFaction" class="d-flex flex-wrap align-content-stretch faction-picker-buttons">
+      <div
+        v-if="isBanningFaction && !analysisSeedActive"
+        class="d-flex flex-wrap align-content-stretch faction-picker-buttons"
+      >
         <MoveButton
           v-for="faction in factionToBan.data"
           :button="{
@@ -213,7 +246,7 @@
            is SilentAuctionBid.vue, up in Game.vue's round-0 strip - see `isSilentBidding`, which is
            true only for a hosted game that had already started recording its bids one seat at a
            time when that changed, and which therefore has to finish that way. -->
-      <div v-if="isSilentBidding" class="silent-bid-form">
+      <div v-if="isSilentBidding && !analysisSeedActive" class="silent-bid-form">
         <p class="text-muted small">
           Privately enter the most VP you're willing to pay for each faction - bid highest on the one you want most, and
           0 on one you'd only take for free. Bids stay hidden until everyone has submitted, then the auction resolves
@@ -426,6 +459,19 @@ export default class Commands extends Vue implements CommandController {
   /** How many of those moves could actually be played for real (§6), gating the Commit button. */
   @Prop({ default: 0 })
   analysisCommittableMoves: number;
+
+  /** §11's round-0 faction seed options (Game.vue's `analysisFactionChoices`) - empty every time the
+   * sandbox clone is past faction selection, which is every case except a round-0 entry that has not
+   * seeded yet. Non-empty is what puts this action area into "choose a faction" mode. */
+  @Prop({ default: () => [] })
+  analysisFactionChoices: { faction: Faction; name: string }[];
+
+  /** Whether the round-0 faction seed is the one thing this action area is for right now. The
+   * `analysisMode` half is not redundant: `analysisFactionChoices` is only ever populated during
+   * sandbox mode, but reading both keeps the takeover explicit at every use site. */
+  get analysisSeedActive(): boolean {
+    return this.analysisMode && this.analysisFactionChoices.length > 0;
+  }
 
   get controller() {
     return this;

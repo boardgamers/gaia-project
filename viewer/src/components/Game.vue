@@ -6,19 +6,18 @@
     <Rules id="rules" />
     <Rules id="trade" type="trade" />
 
-    <!-- Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §12) - only staleness notices, the
-         saved-line prompt and round 0's faction picker live here now. The controls and the status
-         numbers are in Commands.vue's striped header, entering and leaving is the map's own corner
-         button, and the yellow container that used to sit here is gone. -->
-    <div v-if="analysisNotice || analysisPendingRestore || analysisFactionChoices.length > 0" class="row">
+    <!-- Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §12) - only staleness notices and the
+         saved-line prompt live here now, because both have to be readable while sandbox mode is NOT
+         active, and Commands.vue is not rendered then. Everything the player actually presses inside
+         the sandbox - the controls, the status numbers, and round 0's faction choice - is in
+         Commands.vue's header and action area (owner instruction); entering and leaving is the map's
+         own corner button. -->
+    <div v-if="analysisNotice || analysisPendingRestore" class="row">
       <div class="col-12">
         <AnalysisPanel
           :active="analysisMode"
           :notice="analysisNotice"
           :pending-restore="analysisPendingRestore"
-          :faction-choices="analysisFactionChoices"
-          :seated-lineup="analysisSeatedLineup"
-          @seed-faction="seedAnalysisFaction"
           @dismiss-notice="dismissAnalysisNotice"
           @restore="restoreAnalysisLine"
           @discard-restore="discardPendingAnalysisLine"
@@ -72,6 +71,8 @@
             :analysis-status="analysisStatus"
             :analysis-move-count="analysisEntries.length"
             :analysis-committable-moves="analysisCommittableMoves.length"
+            :analysis-faction-choices="analysisFactionChoices"
+            @analysis-seed-faction="seedAnalysisFaction"
             @analysis-undo="undoLastAnalysisEntry"
             @analysis-reset="resetAnalysisLine"
             @analysis-commit="commitAnalysisLine"
@@ -201,6 +202,8 @@
             :analysis-status="analysisStatus"
             :analysis-move-count="analysisEntries.length"
             :analysis-committable-moves="analysisCommittableMoves.length"
+            :analysis-faction-choices="analysisFactionChoices"
+            @analysis-seed-faction="seedAnalysisFaction"
             @analysis-undo="undoLastAnalysisEntry"
             @analysis-reset="resetAnalysisLine"
             @analysis-commit="commitAnalysisLine"
@@ -318,6 +321,8 @@
         :analysis-status="analysisStatus"
         :analysis-move-count="analysisEntries.length"
         :analysis-committable-moves="analysisCommittableMoves.length"
+        :analysis-faction-choices="analysisFactionChoices"
+        @analysis-seed-faction="seedAnalysisFaction"
         @analysis-undo="undoLastAnalysisEntry"
         @analysis-reset="resetAnalysisLine"
         @analysis-commit="commitAnalysisLine"
@@ -383,7 +388,6 @@ import {
 import { buildSequentialChainPreview } from "../logic/premove-preview";
 import {
   AnalysisEntry,
-  AnalysisFactionEntry,
   AnalysisLine,
   AnalysisStatus,
   analysisFactionPool,
@@ -1705,8 +1709,8 @@ export default class Game extends Vue {
   }
 
   /** The faction picker's options (§11) - empty whenever the seed does not apply, which is what
-   * AnalysisPanel.vue gates the whole picker on. Names come from the viewer's own `factionName`, so
-   * the picker reads like every other faction label in the app. */
+   * Commands.vue's `analysisSeedActive` gates the whole picker on. Names come from the viewer's own
+   * `factionName`, so the picker reads like every other faction label in the app. */
   get analysisFactionChoices(): { faction: Faction; name: string }[] {
     if (!this.analysisMode || !factionSeedAvailable(this.engine)) {
       return [];
@@ -1715,17 +1719,6 @@ export default class Game extends Vue {
       faction,
       name: factionName(faction),
     }));
-  }
-
-  /** What the seeded table ended up as, for the panel to show back - "you are the Itars, they are
-   * the Terrans" - so the lineup a seed invented is visible rather than implied. Null unless a seed
-   * is actually in the line. */
-  get analysisSeatedLineup(): { name: string; mine: boolean }[] | null {
-    const seed = this.analysisEntries.find((entry) => entry.kind === "faction") as AnalysisFactionEntry | undefined;
-    if (!seed) {
-      return null;
-    }
-    return seed.lineup.map((faction, seat) => ({ name: factionName(faction), mine: seat === this.analysisSeat }));
   }
 
   /** Undo (§1 decision #3) - pop the last entry, replay. */

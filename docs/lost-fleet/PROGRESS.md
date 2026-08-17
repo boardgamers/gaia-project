@@ -7202,6 +7202,30 @@ Commit · ⓘ` now lives in the hazard-striped header that already existed, with
         opaque surface, border and text colour from the theme tokens, and disabled buttons stay at
         full opacity (Bootstrap's `.65` is unreadable on stripes rather than merely muted).
 
+181.  ✅ **Round 0's faction choice moved into the action bar (viewer v5.71.0, 2026-08-17, owner
+      instruction).** "I want all interaction for sandbox mode to be in that bottom sticky menu." The
+      §11 seed picker was a labelled `<select>` plus a "Try this faction" button inside
+      `AnalysisPanel.vue` - a second container above the map, i.e. nowhere near where every other
+      sandbox press happens, and on a phone usually scrolled out of sight. It is now a plain row of
+      faction buttons in `Commands.vue`'s action area, announced by the striped header, which reads
+      `SANDBOX — choose a faction to play as` while the picker is up (both copies - the desktop
+      `#move-title` and the mobile sticky band).
+
+      The buttons are deliberately **not** `MoveButton`-driven: a seed is not an engine command
+      (`applyFactionSeed` bypasses the move pipeline entirely), so they emit `analysis-seed-faction`
+      up to `Game.vue` instead of dispatching. Their markup mirrors `MoveButton`'s own so the existing
+      `.faction-picker-buttons` rules style them identically to the real pick/ban rows. While the
+      picker is up it **replaces** the ordinary round-0 buttons (`isChoosingFaction`,
+      `isBanningFaction`, `isSilentBidding` and the generic command list all gate on
+      `!analysisSeedActive`) rather than sitting beside them - picking here jumps straight past the
+      pick/ban/bid the engine is offering, so showing both would be two different answers to one
+      question.
+
+      `AnalysisPanel.vue` is down to staleness notices and the saved-line prompt, the only two things
+      that genuinely cannot move: both have to be readable while sandbox mode is NOT active, and
+      `Commands.vue` is not rendered then. The seeded-lineup readout ("you are the Itars, they are the
+      Terrans") went with the picker - the player board shows the same table the moment the seed lands.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
