@@ -179,6 +179,27 @@
             <Undo v-if="canUndo" transform="scale(1.2)" />
           </template>
         </b-btn>
+        <!-- Sandbox-only power cheat: a plain button, pressable as many times as you like, that gives
+             the sandbox seat 1 charged power per click (Game.vue's chargeAnalysisPower, an "adjust"
+             entry - see analysis.ts). Undo Charge is the same idea in reverse: it only pops the line's
+             last entry when that entry is itself a charge (Game.vue's undoAnalysisCharge), so it can
+             never accidentally discard a real move. -->
+        <b-btn
+          v-if="analysisMode"
+          :class="['mr-2', 'mb-2', 'move-button']"
+          title="Sandbox: give yourself 1 charged power"
+          @click="$emit('analysis-charge')"
+        >
+          Charge 1
+        </b-btn>
+        <b-btn
+          v-if="analysisMode"
+          :class="['mr-2', 'mb-2', 'move-button']"
+          title="Sandbox: undo the last power charge"
+          @click="$emit('analysis-undo-charge')"
+        >
+          Undo Charge
+        </b-btn>
       </div>
       <!-- The compose caveats ("build the move, then end the turn", the leech/income preview
            warnings, the cascade warning). Same block as the title above: they belong next to the

@@ -76,6 +76,8 @@
             @analysis-undo="undoLastAnalysisEntry"
             @analysis-reset="resetAnalysisLine"
             @analysis-commit="commitAnalysisLine"
+            @analysis-charge="chargeAnalysisPower"
+            @analysis-undo-charge="undoAnalysisCharge"
             @sticky-bar-height="stickyBarHeight = $event"
           />
           <!-- Rendered next to the picker as well, not only instead of it: the picker drops a
@@ -207,6 +209,8 @@
             @analysis-undo="undoLastAnalysisEntry"
             @analysis-reset="resetAnalysisLine"
             @analysis-commit="commitAnalysisLine"
+            @analysis-charge="chargeAnalysisPower"
+            @analysis-undo-charge="undoAnalysisCharge"
             @cancel-premove="cancelTriggerComposeActive ? cancelCancelTriggerCompose() : cancelPremoveMode()"
             @confirm-premove="cancelTriggerComposeActive ? confirmCancelTriggerCompose() : queueCurrentPremove()"
             @sticky-bar-height="stickyBarHeight = $event"
@@ -326,6 +330,8 @@
         @analysis-undo="undoLastAnalysisEntry"
         @analysis-reset="resetAnalysisLine"
         @analysis-commit="commitAnalysisLine"
+        @analysis-charge="chargeAnalysisPower"
+        @analysis-undo-charge="undoAnalysisCharge"
       />
       <Table />
       <AdvancedLog :currentMove="currentMove" :hideLog.sync="hideLog" v-if="logPlacement === 'bottom'" />
@@ -1719,6 +1725,28 @@ export default class Game extends Vue {
       faction,
       name: factionName(faction),
     }));
+  }
+
+  /** Sandbox "Charge 1" button (Commands.vue) - appends a leech adjustment entry (§4.4) each press,
+   * the same fiction the header's assumed-power summary already reads, just player-triggered instead
+   * of implicit. */
+  chargeAnalysisPower() {
+    if (!this.analysisMode) {
+      return;
+    }
+    this.setAnalysisEntries([...this.analysisEntries, { kind: "adjust", charge: 1 }]);
+  }
+
+  /** Sandbox "Undo Charge" button - unlike the generic Undo above, only pops the line's last entry
+   * when that entry is itself a charge, so it can never discard a real move played after one. */
+  undoAnalysisCharge() {
+    if (!this.analysisMode || this.analysisEntries.length === 0) {
+      return;
+    }
+    if (this.analysisEntries[this.analysisEntries.length - 1].kind !== "adjust") {
+      return;
+    }
+    this.setAnalysisEntries(this.analysisEntries.slice(0, -1));
   }
 
   /** Undo (§1 decision #3) - pop the last entry, replay. */
