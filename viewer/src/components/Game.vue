@@ -614,6 +614,20 @@ export default class Game extends Vue {
         // straight back through resolveAnalysisStaleness's normal table - nothing needs to happen to
         // the stored line itself here, only a notice explaining why the takeover just closed.
         if (this.analysisMode) {
+          // A reconnect/tab-refocus refetch dispatches this with the SAME real state as when
+          // sandbox mode was entered - not an actual new move - and used to force-close the
+          // sandbox unconditionally on every such refetch, which is the reported "minimize/reopen
+          // closes sandbox mode with no move made" bug. Only a real change in the move history means
+          // anything actually happened; an identical history is a no-op refresh and must leave the
+          // takeover alone.
+          const originHistory = this.analysisOrigin?.moveHistory ?? [];
+          const incomingHistory = payload.moveHistory ?? [];
+          const unchanged =
+            originHistory.length === incomingHistory.length &&
+            originHistory.every((move, index) => move === incomingHistory[index]);
+          if (unchanged) {
+            return;
+          }
           this.analysisMode = false;
           this.analysisBackup = null;
           this.analysisOrigin = null;

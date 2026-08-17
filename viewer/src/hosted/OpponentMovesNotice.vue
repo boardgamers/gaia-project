@@ -27,11 +27,44 @@ import { latestMoveSummary } from "./host";
 
 type OpponentMove = { raw: string; summary: string };
 
+// Same convention as analysis.ts's storageKey(): a hosted game's `?game=<id>` and a self-contained
+// game's full launch query string both already uniquely identify "this game". Persisted (not just
+// component `data()`) so a dismissal survives a remount - e.g. minimizing the tab and reopening it,
+// which can recreate this component and used to reset dismissedSignature to "", making the exact
+// same already-seen recap reappear.
+function dismissedSignatureStorageKey(): string {
+  const search = typeof window !== "undefined" ? window.location.search : "";
+  return `opponent-moves-notice-dismissed:${search}`;
+}
+
+function loadDismissedSignature(): string {
+  if (typeof window === "undefined") {
+    return "";
+  }
+  try {
+    return window.localStorage.getItem(dismissedSignatureStorageKey()) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function saveDismissedSignature(signature: string): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  try {
+    window.localStorage.setItem(dismissedSignatureStorageKey(), signature);
+  } catch {
+    // Storage can throw (private browsing, quota) - losing persistence here just means a dismissal
+    // might not survive a remount, not a functional break, so it's not worth surfacing.
+  }
+}
+
 export default Vue.extend({
   name: "OpponentMovesNotice",
   data() {
     return {
-      dismissedSignature: "",
+      dismissedSignature: loadDismissedSignature(),
     };
   },
   computed: {
@@ -76,6 +109,7 @@ export default Vue.extend({
   methods: {
     dismiss() {
       this.dismissedSignature = this.noticeSignature;
+      saveDismissedSignature(this.noticeSignature);
     },
   },
 });
