@@ -1,7 +1,37 @@
 {
-  "version": "5.65.0",
-  "releasedAt": "2026-08-16",
+  "version": "5.67.0",
+  "releasedAt": "2026-08-17",
   "entries": [
+    {
+      "version": "5.67.0",
+      "releasedAt": "2026-08-17",
+      "kind": "update",
+      "title": "Analysis mode: entry available off-turn",
+      "impact": "",
+      "changes": [
+        "Analysis mode's entry button is now available any time for a locked seat - any phase, any round, whoever's turn it currently is - not just when it happens to genuinely be your move. Composing your own turn inside the sandbox already worked correctly off-turn; only the button itself was gated too narrowly before.",
+        "analysisOffered now reads myLockedSeat !== undefined ? true : canPlay, replacing the earlier sealedBidPhase-specific fallback (removed as redundant): applySoloRoundFlow already forces the analysis clone's turn to the entering seat regardless of the real playerToMove at entry, so the entry gate no longer needs to require canPlay for a locked seat at all."
+      ],
+      "userChanges": [
+        "Analysis mode's entry button is now available any time for a locked seat - any phase, any round, whoever's turn it currently is - not just when it happens to genuinely be your move. Composing your own turn inside the sandbox already worked correctly off-turn; only the button itself was gated too narrowly before."
+      ]
+    },
+    {
+      "version": "5.66.0",
+      "releasedAt": "2026-08-17",
+      "kind": "update",
+      "title": "Analysis mode: sealed-bid entry fix and a map-corner button",
+      "impact": "",
+      "changes": [
+        "Analysis mode is now offered during a Silent Auction/Preference Split's simultaneous secret-bid round for every seated player, not just whichever seat the engine happened to be pointing at internally - composing a bid inside the sandbox already worked, only the entry button itself was missing there.",
+        "Analysis mode also has a new entry/exit button in the hexmap's bottom-right corner (mirroring the stats icon's top-right placement), in addition to the existing panel button and the striped-header tap-to-exit - a plain magnifying glass, neutral while merely offered and switching to the same warning-amber styling as the rest of the feature once active.",
+        "analysisOffered now falls back to sealedBidPhase(engine) !== null for a locked seat whenever canPlay reads false, since Commands.vue (what canPlay actually gates) is not even rendered during a simultaneous sealed-bid round. SpaceMap.vue's bounds() gets a second, independent right-edge reservation from the bottom band (bandMaxXFromBottom, mirroring the existing top-band one) so the new button never overlaps a hex, verified both by a geometric clearance test across all Lost Fleet player counts and a live-browser check."
+      ],
+      "userChanges": [
+        "Analysis mode is now offered during a Silent Auction/Preference Split's simultaneous secret-bid round for every seated player, not just whichever seat the engine happened to be pointing at internally - composing a bid inside the sandbox already worked, only the entry button itself was missing there.",
+        "Analysis mode also has a new entry/exit button in the hexmap's bottom-right corner (mirroring the stats icon's top-right placement), in addition to the existing panel button and the striped-header tap-to-exit - a plain magnifying glass, neutral while merely offered and switching to the same warning-amber styling as the rest of the feature once active."
+      ]
+    },
     {
       "version": "5.65.0",
       "releasedAt": "2026-08-16",

@@ -49,6 +49,23 @@
     <image v-if="showCharts" class="space-map__chart-button" xlink:href="../assets/other/line-chart.svg"
     :height=155/211*22 width="22" x="-11" y="-8" v-b-modal.chart-button role="button"
     :transform="`translate(${bounds.right - 1.9}, ${bounds.top + 1.4}) scale(0.1)`" />
+    <!-- Analysis mode's map-corner button (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §5.4) - the
+         bottom-right mirror of the chart icon above, same inset/scale convention, anchored to
+         bounds.bottom instead of bounds.top. One button toggles both directions: Game.vue decides
+         enter vs. exit from its own analysisMode state, so this component only ever has to say
+         "the button was pressed." -->
+    <g
+      v-if="analysisOffered || analysisActive"
+      class="space-map__analysis-button"
+      :class="{ 'space-map__analysis-button--active': analysisActive }"
+      role="button"
+      :transform="`translate(${bounds.right - 1.9}, ${bounds.bottom - 1.9}) scale(0.1)`"
+      @click="$emit('analysis-toggle')"
+    >
+      <title>{{ analysisActive ? "Exit analysis mode" : "Enter analysis mode" }}</title>
+      <rect class="space-map__analysis-badge" x="-11" y="-11" width="22" height="22" rx="4" />
+      <use xlink:href="#analysis-magnifier" transform="translate(-8.75, -8.75)" />
+    </g>
     <rect
       v-for="(planet, i) in terraformingColors"
       :key="planet"
@@ -75,7 +92,7 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { Component } from "vue-property-decorator";
+import { Component, Prop } from "vue-property-decorator";
 import Engine, {
   Expansion,
   classifySectorId,
@@ -128,6 +145,12 @@ const RIGHT_SWATCH_WIDTH = 7.5;
 const RIGHT_ICON_WIDTH = 3;
 const RIGHT_BAND_HEIGHT = 2.5;
 
+// Analysis mode's map-corner button (§5.4), anchored to bounds.bottom/bounds.right instead of
+// bounds.top/bounds.right like the chart icon above - same footprint class as RIGHT_ICON_WIDTH
+// (a single small square icon, never competing with anything else for this corner).
+const ANALYSIS_ICON_WIDTH = 3;
+const ANALYSIS_BAND_HEIGHT = 2.5;
+
 // Small safety gap kept between a hex's own edge (radius 1) and the nearest UI content edge, on
 // top of the content's own measured footprint.
 const CLEARANCE = 0.3;
@@ -161,6 +184,19 @@ function bandMaxX(points: Point[], top: number, height: number): number {
   return max;
 }
 
+/** Mirror of `bandMaxX` measuring from the BOTTOM edge instead of the top - the analysis-mode
+ * button anchors to `bounds.bottom`, so its clearance check needs hexes near the bottom-right
+ * corner, not the top-right one `bandMaxX` already covers. */
+function bandMaxXFromBottom(points: Point[], bottom: number, height: number): number {
+  let max = -Infinity;
+  for (const p of points) {
+    if (p.y >= bottom - height) {
+      max = Math.max(max, p.x);
+    }
+  }
+  return max;
+}
+
 @Component<SpaceMap>({
   components: {
     FactionWheel,
@@ -170,6 +206,14 @@ function bandMaxX(points: Point[], top: number, height: number): number {
   },
 })
 export default class SpaceMap extends Vue {
+  /** Analysis mode's map-corner button (§5.4) - both props default false so a caller that never
+   * passes them (there is none left in this codebase, but the props aren't required) renders the
+   * map exactly as it did before this button existed. `analysisOffered`/`analysisMode` are Game.vue's
+   * own single source of truth (the latter's sealed-bid-round handling in particular) - deliberately
+   * NOT re-derived here, to avoid a second copy of that logic drifting out of sync with the first. */
+  @Prop({ default: false }) analysisOffered: boolean;
+  @Prop({ default: false }) analysisActive: boolean;
+
   hexCenter(hex: CubeCoordinates) {
     return hexCenter(hex);
   }
@@ -430,7 +474,19 @@ export default class SpaceMap extends Vue {
 
     const rightWidth = this.terraformingColors.length > 0 ? RIGHT_SWATCH_WIDTH : this.showCharts ? RIGHT_ICON_WIDTH : 0;
     const rightLimitTop = bandMaxX(points, top, RIGHT_BAND_HEIGHT + hexRadius) + hexRadius + CLEARANCE + rightWidth;
-    const right = rightWidth > 0 ? Math.max(tightRight, rightLimitTop) : tightRight;
+
+    // Analysis mode's map-corner button (§5.4) - a second, independent right-edge constraint from
+    // the BOTTOM band, since it sits in the opposite corner from the chart icon/swatches above and
+    // the two bands never overlap for any board shape this game has.
+    const showAnalysisButton = this.analysisOffered || this.analysisActive;
+    const rightLimitBottom = showAnalysisButton
+      ? bandMaxXFromBottom(points, bottom, ANALYSIS_BAND_HEIGHT + hexRadius) +
+        hexRadius +
+        CLEARANCE +
+        ANALYSIS_ICON_WIDTH
+      : -Infinity;
+
+    const right = Math.max(tightRight, rightWidth > 0 ? rightLimitTop : tightRight, rightLimitBottom);
 
     if (this.isLostFleet && this.engine.players.length === 2) {
       // The 2p hex field is symmetric around x=0. Frame the wheel/UI constraints symmetrically too,

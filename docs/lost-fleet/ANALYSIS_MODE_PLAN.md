@@ -1,19 +1,22 @@
 # Analysis Mode — Implementation Plan (ready for handoff)
 
-> Status: **Phases 1-7 all done (viewer v5.65.0, 2026-08-16, PROGRESS.md #166-171) — the whole
-> feature is landed.** Board takeover + line + replay + enter/exit/undo/reset/persistence, the
-> sandbox wallet + resource-diff counter, real solo round flow (Pass/income/Gaia, the two-round cap,
-> opponent decision auto-resolution), setup-phase pass-and-play (opponent mine placement, faction
-> pick, sealed-bid auctions), the hazard-stripe visual treatment with the counter's two real surfaces
-> (header headline + full breakdown panel), staleness handling on re-entry (§3.5's four-row table,
-> including the own-seat Restore/Discard prompt and the `externalData` re-anchor notice), the leech
-> adjustment stepper (§4.4), and the commit path (§6, decision #13: move 1 live, the rest queued as
-> Sequential premoves in hosted play, gated on real affordability with every `adjust` entry stripped
-> out first). Every open question in this document was put to the owner and answered; §1 is the
-> record of those decisions and should not be relitigated. §2 is a traced account of how the existing
-> code actually works — every file:line in it was read, not recalled, so a fresh session (Sonnet is
-> fine) can execute this plan without re-deriving the mechanics, though PROGRESS.md #167-171 found and
-> corrected four real gaps along the way:
+> Status: **Phases 1-7 all done, plus §5.4 and off-turn entry (viewer v5.67.0, 2026-08-16,
+> PROGRESS.md #166-172) — the whole feature is landed, including the map-corner button and entry
+> that no longer requires it to genuinely be this seat's turn.** Board takeover + line + replay +
+> enter/exit/undo/reset/persistence, the sandbox wallet + resource-diff counter, real solo round flow
+> (Pass/income/Gaia, the two-round cap, opponent decision auto-resolution), setup-phase pass-and-play
+> (opponent mine placement, faction pick, sealed-bid auctions), the hazard-stripe visual treatment
+> with the counter's two real surfaces (header headline + full breakdown panel), staleness handling
+> on re-entry (§3.5's four-row table, including the own-seat Restore/Discard prompt and the
+> `externalData` re-anchor notice), the leech adjustment stepper (§4.4), the commit path (§6, decision
+> #13: move 1 live, the rest queued as Sequential premoves in hosted play, gated on real affordability
+> with every `adjust` entry stripped out first), and §5.4's map-corner button (bottom-right of the
+> hexmap, mirroring the chart icon's top-right placement - built in a follow-up session after being
+> deliberately deferred in Phase 5). Every open question in this document was put to the owner and
+> answered; §1 is the record of those decisions and should not be relitigated. §2 is a traced account
+> of how the existing code actually works — every file:line in it was read, not recalled, so a fresh
+> session (Sonnet is fine) can execute this plan without re-deriving the mechanics, though
+> PROGRESS.md #167-172 found and corrected five real gaps along the way:
 >
 > - Shrinking `turnOrderAfterSetupAuction` (via `engine.setup`) for `beginRoundStartPhase`'s benefit,
 >   as §2.5 originally said to, would have also broken `beginLeechingPhase`'s unrelated use of the
@@ -42,12 +45,28 @@
 >   Fixed by mirroring `enterAnalysisMode`'s own split: grant a fresh wallet eagerly, up front, when
 >   `origin.phase === Phase.RoundMove`, only falling through to the lazy path for a genuine
 >   setup-phase entry. Recorded in `committableAnalysisMoves`'s own doc comment.
+> - `analysisOffered` gated entirely on `canPlay`, which only ever reads true for whichever seat
+>   `engine.playerToMove` happens to point at - but a simultaneous sealed-bid round (Silent Auction/
+>   Preference Split) isn't gated by turn order from the player's point of view at all
+>   (`Commands.vue`, what `canPlay` actually gates, is not even rendered during one). Found from a
+>   live owner report on an actual game stuck in that exact round, first fixed narrowly (fall back to
+>   `sealedBidPhase(engine) !== null` for a locked seat) - then generalized once the owner asked for
+>   entry to be available off-turn everywhere, not just there. It turned out the narrow fix was one
+>   instance of a pattern the mechanics already supported for free: `applySoloRoundFlow` already
+>   forces the clone's turn to the entering seat outright once it reaches `Phase.RoundMove`,
+>   regardless of the real `playerToMove` at entry, and `grantSandboxWallet` has no turn dependency
+>   either - the gate was always the only turn-hostile part. `analysisOffered` now reads
+>   `myLockedSeat !== undefined ? true : canPlay`, and the now-redundant `sealedBidPhase` check was
+>   removed rather than kept alongside the broader rule. Composing a move or bid once inside already
+>   worked regardless of turn either way (Phase 4 had already built that half). Recorded in
+>   `analysisOffered`'s own doc comment.
 >
-> **Nothing left to continue - this plan is complete.** Phase 5 deliberately left the map-corner
-> entry/exit button (§5.4) unbuilt - see PROGRESS.md #169's scope note for why - the controls live in
-> `AnalysisPanel.vue` instead, including Phase 6's leech stepper and Phase 7's Commit button; §5.4
-> remains a possible future polish pass if the owner wants it, but is not required for the feature to
-> work. §10's "out of scope" items (AI/move suggestion, opponents moving outside setup mine
+> **Nothing left to continue - this plan is complete, including §5.4.** The map-corner button lives
+> in `SpaceMap.vue` (bottom-right, mirroring the chart icon's top-right placement, `bounds()` extended
+> with a second bottom-band reservation) and toggles both directions through one emit Game.vue
+> resolves against its own state; the panel's own Enter/Exit buttons and the striped-header
+> tap-to-exit from Phase 5 all still coexist with it, matching §5.4's own reasoning for more than one
+> exit path. §10's "out of scope" items (AI/move suggestion, opponents moving outside setup mine
 > placement, sharing/exporting a line, any database object/RPC/migration/Edge Function) were never in
 > scope for this plan and remain exactly that.
 >

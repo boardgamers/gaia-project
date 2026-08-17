@@ -7,7 +7,7 @@ import Engine, {
   Planet,
   PlayerEnum,
 } from "@gaia-project/engine";
-import { render } from "@testing-library/vue";
+import { fireEvent, render } from "@testing-library/vue";
 import { expect } from "chai";
 import fs from "fs";
 import { hexCenter } from "../graphics/hex";
@@ -407,5 +407,87 @@ describe("SpaceMap", () => {
     const { container } = render(SpaceMap, { store });
 
     expect(container.querySelectorAll(".finalScoringTile").length).to.equal(0);
+  });
+
+  describe("the analysis mode map-corner button (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §5.4)", () => {
+    function mountWithProps(props: { analysisOffered?: boolean; analysisActive?: boolean }) {
+      const engine = loadFixtureEngine();
+      const store = makeStore();
+      store.commit("receiveData", engine);
+      return render(SpaceMap, { store, props });
+    }
+
+    it("is hidden when neither offered nor active", () => {
+      const { container } = mountWithProps({ analysisOffered: false, analysisActive: false });
+      expect(container.querySelector(".space-map__analysis-button")).to.equal(null);
+    });
+
+    it("shows a neutral (not warning-styled) button when merely offered", () => {
+      const { container } = mountWithProps({ analysisOffered: true, analysisActive: false });
+      const button = container.querySelector(".space-map__analysis-button");
+      expect(button).to.not.equal(null);
+      expect(button.classList.contains("space-map__analysis-button--active")).to.equal(false);
+      expect(button.querySelector("title").textContent).to.equal("Enter analysis mode");
+    });
+
+    it("shows the warning-styled button and the Exit label while active", () => {
+      const { container } = mountWithProps({ analysisOffered: false, analysisActive: true });
+      const button = container.querySelector(".space-map__analysis-button");
+      expect(button).to.not.equal(null);
+      expect(button.classList.contains("space-map__analysis-button--active")).to.equal(true);
+      expect(button.querySelector("title").textContent).to.equal("Exit analysis mode");
+    });
+
+    it("emits analysis-toggle when clicked, regardless of which state it's in", async () => {
+      const { container, emitted } = mountWithProps({ analysisOffered: true, analysisActive: false });
+      const button = container.querySelector(".space-map__analysis-button");
+      await fireEvent.click(button);
+      expect(emitted()["analysis-toggle"]).to.have.length(1);
+    });
+
+    it("never overlaps a hex, for any Lost Fleet player count", () => {
+      // Same geometric-clearance methodology as the faction-wheel test above: derive the button's
+      // actual rendered bounding box from its own transform (not a hardcoded guess) and assert no
+      // hex (inflated by its own ~1-unit radius) intersects it.
+      const rotationDeg = (players: number) => (players === 3 ? 0 : 60);
+      const rotate = (x: number, y: number, deg: number) => {
+        const rad = (deg * Math.PI) / 180;
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+        return { x: x * cos - y * sin, y: x * sin + y * cos };
+      };
+
+      for (const players of [2, 3, 4]) {
+        const engine = new Engine([`init ${players} lost-fleet-space-map`], { lostFleet: true });
+        const store = makeStore();
+        store.commit("receiveData", engine);
+
+        const { container } = render(SpaceMap, { store, props: { analysisActive: true } });
+
+        const button = container.querySelector(".space-map__analysis-button");
+        expect(button, `${players}p button should render`).to.not.equal(null);
+        const match = /translate\((-?[\d.]+),\s*(-?[\d.]+)\)\s*scale\((-?[\d.]+)\)/.exec(
+          button.getAttribute("transform") ?? ""
+        );
+        expect(match, `${players}p expected an anchored+scaled transform`).to.not.equal(null);
+        const origin = { x: Number(match[1]), y: Number(match[2]) };
+        const scale = Number(match[3]);
+        // The badge rect's own local footprint is x=-11..11, y=-11..11 (see the template).
+        const buttonBox = {
+          left: origin.x - 11 * scale,
+          right: origin.x + 11 * scale,
+          top: origin.y - 11 * scale,
+          bottom: origin.y + 11 * scale,
+        };
+
+        for (const hex of engine.map.grid.values()) {
+          const raw = hexCenter(hex);
+          const c = rotate(raw.x * 1.01, raw.y * 1.01, rotationDeg(players));
+          const overlapsX = c.x + 1 > buttonBox.left && c.x - 1 < buttonBox.right;
+          const overlapsY = c.y + 1 > buttonBox.top && c.y - 1 < buttonBox.bottom;
+          expect(overlapsX && overlapsY, `${players}p button overlaps hex at (${c.x}, ${c.y})`).to.equal(false);
+        }
+      }
+    });
   });
 });

@@ -884,26 +884,97 @@ describe("Game", () => {
       window.localStorage.clear();
     });
 
-    it("is offered on this seat's own turn, round 1+ or during setup (decision #6), never off-turn", () => {
+    it("is offered to a locked seat any time - round 1+, setup, and off-turn alike - but not to an unlocked (hot-seat) seat off-turn", () => {
       // playerToMove is 0 (terrans) after setup.
       const onTurn = mountAsSeat(0);
       expect(onTurn.analysisOffered).to.equal(true);
       onTurn.$el.remove();
       onTurn.$destroy();
 
+      // Off-turn is now ALSO offered for a locked seat: applySoloRoundFlow already forces the
+      // clone's turn order to whichever seat you enter as, regardless of the real playerToMove at
+      // entry, so the entry gate no longer needs to require canPlay for a locked seat.
       const offTurn = mountAsSeat(1);
-      expect(offTurn.analysisOffered).to.equal(false);
+      expect(offTurn.canPlay).to.equal(false); // Commands.vue itself still correctly stays hidden
+      expect(offTurn.analysisOffered).to.equal(true);
       offTurn.$el.remove();
       offTurn.$destroy();
 
-      // Phase 4 (§2.6/decision #6): "Round 0 / setup. Playable." - a fresh game's very first
-      // faction pick is this seat's own turn, so entry is offered there too now.
+      // Phase 4 (§2.6/decision #6): "Round 0 / setup. Playable." - offered during setup too.
       const duringSetup = mountAsSeat(0, new Engine(["init 2 randomSeed"]));
       expect(duringSetup.engine.round).to.equal(0);
       expect(duringSetup.canPlay).to.equal(true);
       expect(duringSetup.analysisOffered).to.equal(true);
       duringSetup.$el.remove();
       duringSetup.$destroy();
+
+      // Hot-seat/pass-and-play (no locked seat) has no "my seat" identity to be off-turn from -
+      // canPlay is already unconditionally true there, so this stays offered exactly as before.
+      const hotSeat = mountAsSeat(undefined);
+      expect(hotSeat.myLockedSeat).to.equal(undefined);
+      expect(hotSeat.analysisOffered).to.equal(true);
+      hotSeat.$el.remove();
+      hotSeat.$destroy();
+    });
+
+    it("actually lets an off-turn locked seat compose and complete their own turn inside the sandbox", () => {
+      // Seat 1 (nevlas) is locked but it's genuinely seat 0's (terrans') turn right now.
+      const vm = mountAsSeat(1);
+      expect(vm.canPlay).to.equal(false);
+      expect(vm.engine.playerToMove).to.equal(0);
+
+      vm.enterAnalysisMode();
+
+      expect(vm.analysisMode).to.equal(true);
+      expect(vm.analysisSeat).to.equal(1);
+      // applySoloRoundFlow forced the clone's turn to seat 1 outright, regardless of the real
+      // playerToMove at entry - this is the actual proof the widened gate is backed by working
+      // mechanics, not just an open door to a sandbox that silently can't be used.
+      expect(vm.engine.playerToMove).to.equal(1);
+
+      vm.applyAnalysisMove("nevlas up nav.");
+      expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "nevlas up nav." }]);
+
+      vm.$el.remove();
+      vm.$destroy();
+    });
+
+    it("is offered to every locked seat during a simultaneous sealed-bid round, even though canPlay only ever reads true for one of them (the original owner-reported case)", () => {
+      // Silent Auction ban/pick, stopping right at the secret-bid phase - nobody has bid yet, so
+      // playerToMove/currentPlayer sits on whichever seat bids first (seat 0), not the OTHER locked
+      // seats this test checks.
+      const engine = new Engine(
+        [
+          "init 3 lf-silent-sealed",
+          "p1 banFaction terrans",
+          "p2 banFaction lantids",
+          "p3 banFaction hadsch-hallas",
+          "p1 faction itars",
+          "p2 faction xenos",
+          "p3 faction taklons",
+        ],
+        { auction: AuctionVariant.Silent }
+      );
+      expect(engine.phase).to.equal(Phase.SetupSilentBid);
+
+      const notOnTurn = mountAsSeat(2, engine);
+      expect(notOnTurn.canPlay).to.equal(false); // the pre-existing, still-correct behavior for Commands.vue
+      expect(notOnTurn.analysisOffered).to.equal(true); // but this seat genuinely has a bid to make right now
+      notOnTurn.$el.remove();
+      notOnTurn.$destroy();
+    });
+
+    it("toggleAnalysisMode (the map-corner button's handler, §5.4) enters when inactive and exits when active", () => {
+      const vm = mountAsSeat(0);
+
+      vm.toggleAnalysisMode();
+      expect(vm.analysisMode).to.equal(true);
+
+      vm.toggleAnalysisMode();
+      expect(vm.analysisMode).to.equal(false);
+
+      vm.$el.remove();
+      vm.$destroy();
     });
 
     it("enters a clone (real state untouched) and exits back to the exact real state, dispatching nothing either way", () => {
@@ -1011,7 +1082,10 @@ describe("Game", () => {
       expect(vm.analysisOffered).to.equal(false);
 
       vm.cancelPremoveMode();
-      expect(vm.analysisOffered).to.equal(false); // real state: seat 1 is off-turn again
+      // Off-turn is now genuinely offered for a locked seat (this session's own off-turn widening),
+      // so this reverts to true once premove composing ends - the exclusion above was specifically
+      // about NOT composing two board-takeovers at once, not about being off-turn.
+      expect(vm.analysisOffered).to.equal(true);
 
       vm.$el.remove();
       vm.$destroy();

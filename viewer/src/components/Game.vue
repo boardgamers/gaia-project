@@ -97,7 +97,12 @@
         ]"
         v-if="hasMap"
       >
-        <SpaceMap :class="['mb-1', 'space-map', 'col-md-7']" />
+        <SpaceMap
+          :class="['mb-1', 'space-map', 'col-md-7']"
+          :analysis-offered="analysisOffered"
+          :analysis-active="analysisMode"
+          @analysis-toggle="toggleAnalysisMode"
+        />
         <div class="col-md-5 game-board-side-column">
           <!-- For Lost Fleet, ResearchBoard itself grows a 7th column (Scoring Board Extension +
                round scoring tiles - see ResearchBoard.vue) in the space ScoringBoard's final
@@ -298,7 +303,13 @@
     </template>
     <div v-else class="d-flex flex-column">
       <SetupStatus v-if="!ended" />
-      <SpaceMap v-if="hasMap" :class="['mb-1', 'space-map', 'col-md-7']" />
+      <SpaceMap
+        v-if="hasMap"
+        :class="['mb-1', 'space-map', 'col-md-7']"
+        :analysis-offered="analysisOffered"
+        :analysis-active="analysisMode"
+        @analysis-toggle="toggleAnalysisMode"
+      />
       <AdvancedLog :currentMove="currentMove" :hideLog.sync="hideLog" v-if="logPlacement === 'top'" />
       <Commands
         @command="handleCommand"
@@ -1395,17 +1406,41 @@ export default class Game extends Vue {
   // Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md)
   // ---------------------------------------------------------------------------
 
-  /** The entry button's gate: offered on this seat's own real turn, matching the feature's entry
-   * point ("you press a button, the board becomes yours") - round 1+ move-phase turns per Phase 3,
-   * and (Phase 4, decision #6) any setup sub-phase too: "pick any faction, place mines, take a
-   * booster, play on." Excludes the other two board-takeover modes (§3.6) - premove/cancel-trigger
-   * compose force `canPlay` true via a forced-turn clone, which would otherwise make this readable
-   * as offered mid-compose. This is the ONLY mutual-exclusion mechanism (matching how premove/
-   * cancel-trigger already stay exclusive of each other purely through `showPremoveSheet`'s
-   * visibility gating, not a runtime cancel) - hiding the entry point is enough, since nothing can
-   * dispatch `analysisMode` without it. */
+  /**
+   * The entry button's gate. For a locked (hosted, real-account) seat this is now unconditional -
+   * available any phase, any round, **whoever's turn it currently is** - not just "round 1+
+   * move-phase turns" or "any setup sub-phase" the way it used to read. That widening turned out to
+   * be free, not a new mechanism: `applySoloRoundFlow` (§2.5/§3.1) already forces the clone's
+   * `turnOrder`/`currentPlayer` to `seat` outright the moment it reaches `Phase.RoundMove`,
+   * regardless of who the real engine's `playerToMove` was at entry, and `grantSandboxWallet` grants
+   * directly to `players[seat].data` with no turn dependency either - the ONLY thing that was ever
+   * off-turn-hostile was this gate reading `canPlay` (itself genuinely turn-gated, since it also
+   * controls `Commands.vue`). A simultaneous sealed-bid round (Silent Auction / Preference Split,
+   * §2.7) was the first off-turn case reported - `canPlay` reads false for every seat but whichever
+   * one the engine happens to be internally pointing at, even though every seated player has a
+   * decision to make at once (`SealedBidPanel.ts`'s own doc comment) - but it turned out to be one
+   * instance of a general pattern (any seat, any time) rather than a special case worth its own
+   * check. Composing a move/bid once inside already works regardless of turn (Phase 4 nulls the real
+   * sealed-bid backend and makes `SealedBidPanel.mySeats` render every seat's form during analysis
+   * mode; setup pass-and-play already walks every seat's turn per decision #7) - the gate was always
+   * the only thing standing in the way.
+   *
+   * Excludes the other two board-takeover modes (§3.6) - premove/cancel-trigger compose force
+   * `canPlay` true via a forced-turn clone, which would otherwise make this readable as offered
+   * mid-compose. This is the ONLY mutual-exclusion mechanism (matching how premove/cancel-trigger
+   * already stay exclusive of each other purely through `showPremoveSheet`'s visibility gating, not
+   * a runtime cancel) - hiding the entry point is enough, since nothing can dispatch `analysisMode`
+   * without it.
+   *
+   * Pass-and-play / hot-seat (no locked seat) keeps the old `canPlay` gate - `canPlay` itself is
+   * already unconditionally true there (no session identity to be "off turn" from; the device is
+   * simply passed to whoever's turn it is), so this reduces to "always offered" there too, just
+   * without inventing a seat picker for a mode that has no concept of "my seat" to begin with. */
   get analysisOffered(): boolean {
-    return !this.analysisMode && !this.premoveMode && !this.cancelTriggerComposeActive && !this.ended && this.canPlay;
+    if (this.analysisMode || this.premoveMode || this.cancelTriggerComposeActive || this.ended) {
+      return false;
+    }
+    return this.myLockedSeat !== undefined ? true : this.canPlay;
   }
 
   /** Phase 2 (§4) - null while there is no wallet to diff against (not yet entered, or entry
@@ -1481,6 +1516,16 @@ export default class Game extends Vue {
     this.$store.dispatch("move", moves[0]);
     for (const move of moves.slice(1)) {
       this.$store.dispatch("queuePremove", { seat, move, mode: "sequential" });
+    }
+  }
+
+  /** The map-corner button's click handler (§5.4) - one control for both directions, since
+   * SpaceMap.vue only ever needs to say "the button was pressed," not decide which way. */
+  toggleAnalysisMode() {
+    if (this.analysisMode) {
+      this.exitAnalysisMode();
+    } else {
+      this.enterAnalysisMode();
     }
   }
 

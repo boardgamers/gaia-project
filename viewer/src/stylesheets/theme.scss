@@ -801,3 +801,38 @@ kbd {
 .space-map__chart-button {
   filter: var(--ui-map-icon-filter);
 }
+
+// Analysis mode's map-corner button (§5.4) - the bottom-right mirror of the chart icon above.
+// Neutral (ui-surface/ui-border/ui-text-muted) while merely offered, so it doesn't read as a
+// warning before anything is actually happening; switches to the same warning tokens the striped
+// header/AnalysisPanel already use for the active state, tying the corner control to the rest of
+// the feature's established visual language.
+.space-map__analysis-button {
+  cursor: pointer;
+
+  .space-map__analysis-badge {
+    fill: var(--ui-surface);
+    stroke: var(--ui-border);
+    stroke-width: 1;
+    transition: fill 0.1s ease-out, stroke 0.1s ease-out;
+  }
+
+  color: var(--ui-text-muted);
+
+  &:hover .space-map__analysis-badge {
+    stroke: var(--ui-border-strong);
+  }
+}
+
+.space-map__analysis-button--active {
+  color: var(--ui-warning-text);
+
+  .space-map__analysis-badge {
+    fill: var(--ui-warning-bg);
+    stroke: var(--ui-warning-border);
+  }
+
+  &:hover .space-map__analysis-badge {
+    stroke: var(--ui-warning-border);
+  }
+}

@@ -15,6 +15,13 @@
       stroke="black"
       transform="scale(.7) translate(4, -3.5)"
     />
+    <!-- Analysis mode's map-corner button (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §5.4) - a plain
+         magnifying glass, drawn as geometry rather than an external asset so its stroke can follow
+         `currentColor` (SpaceMap.vue's own CSS sets that per active/offered state). -->
+    <g id="analysis-magnifier">
+      <circle cx="7" cy="7" r="5.5" fill="none" stroke="currentColor" stroke-width="2.4" />
+      <line x1="11.1" y1="11.1" x2="16" y2="16" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" />
+    </g>
   </defs>
 </template>
 <script lang="ts">
