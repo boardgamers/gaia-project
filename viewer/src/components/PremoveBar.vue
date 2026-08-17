@@ -314,7 +314,7 @@ import {
   PremoveRow,
 } from "../hosted/types";
 import { buildSequentialChainPreview } from "../logic/premove-preview";
-import { zoomCompensationTransform } from "../logic/zoom-compensation";
+import { attachZoomCompensation, ZoomCompensationHandle } from "../logic/zoom-compensation";
 import CancelTriggerLeechConfig from "./CancelTriggerLeechConfig.vue";
 import CancelTriggerPicker from "./CancelTriggerPicker.vue";
 import CancelTriggerRefine from "./CancelTriggerRefine.vue";
@@ -402,8 +402,7 @@ export default class PremoveBar extends Vue {
   private refineDraft: string[] = [];
   private leechDraft: CancelTriggerLeechConfigType | null = null;
   private resizeObserver: ResizeObserver | null = null;
-  private visualViewportListener: (() => void) | null = null;
-  private zoomTransformUpdater: (() => void) | null = null;
+  private zoomCompensation: ZoomCompensationHandle | null = null;
 
   readonly modeOptions: { value: PremoveMode; label: string }[] = [
     { value: "sequential", label: "Chain" },
@@ -728,55 +727,36 @@ export default class PremoveBar extends Vue {
   mounted() {
     const root = this.$refs.root as HTMLElement;
 
-    // Use the exact same compensation rule as Commands.vue's on-turn bar. Keeping a second copy of
-    // the scale/offset checks here left this off-turn bar on the old exact `scale === 1` path after
-    // Commands switched to a tolerance, so a tiny post-pinch scale residue could keep translating
-    // this fixed bar during ordinary scrolling until the app was hard-refreshed.
-    const vv = window.visualViewport;
-    const updateZoomTransform = () => {
-      if (!root || !vv) {
-        return;
-      }
-      root.style.transform = zoomCompensationTransform({
-        isStickyMobile: this.stickyMobile,
-        scale: vv.scale || 1,
-        offsetLeft: vv.offsetLeft,
-        offsetTop: vv.offsetTop,
-        height: vv.height,
-        innerHeight: window.innerHeight,
+    // Not a copy of Commands.vue's on-turn bar - literally the same mechanism, listeners included
+    // (logic/zoom-compensation.ts). Keeping a second copy of the scale/offset checks here is what
+    // left this off-turn bar on the old exact `scale === 1` path after Commands switched to a
+    // tolerance, so a tiny post-pinch scale residue could keep translating this fixed bar during
+    // ordinary scrolling until the app was hard-refreshed.
+    if (root) {
+      this.zoomCompensation = attachZoomCompensation({
+        element: root,
+        isStickyMobile: () => this.stickyMobile,
       });
-    };
-    this.zoomTransformUpdater = updateZoomTransform;
+    }
 
     if (typeof ResizeObserver !== "undefined") {
       this.resizeObserver = new ResizeObserver(() => {
         this.emitBarHeight();
-        updateZoomTransform();
+        this.zoomCompensation?.update();
       });
       this.resizeObserver.observe(root);
     }
     this.emitBarHeight();
-
-    if (root && vv) {
-      updateZoomTransform();
-      vv.addEventListener("resize", updateZoomTransform);
-      vv.addEventListener("scroll", updateZoomTransform);
-      this.visualViewportListener = () => {
-        vv.removeEventListener("resize", updateZoomTransform);
-        vv.removeEventListener("scroll", updateZoomTransform);
-        root.style.transform = "";
-      };
-    }
   }
 
   @Watch("stickyMobile")
   onStickyMobileChanged() {
-    this.zoomTransformUpdater?.();
+    this.zoomCompensation?.update();
   }
 
   beforeDestroy() {
     this.resizeObserver?.disconnect();
-    this.visualViewportListener?.();
+    this.zoomCompensation?.destroy();
     this.$emit("bar-height", 0);
   }
 

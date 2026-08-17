@@ -1,7 +1,63 @@
 {
-  "version": "5.69.0",
+  "version": "5.71.0",
   "releasedAt": "2026-08-17",
   "entries": [
+    {
+      "version": "5.71.0",
+      "releasedAt": "2026-08-17",
+      "kind": "update",
+      "title": "Sandbox faction choice in the action bar",
+      "impact": "",
+      "changes": [
+        "Round 0's \"play as this faction\" choice moved out of its own container above the map and into the action bar, as one button per faction",
+        "The striped header announces it - \"SANDBOX - choose a faction to play as\" - and the ordinary pick, ban and bid buttons step aside while it is up, so there is only ever one question on screen"
+      ],
+      "userChanges": [
+        "Round 0's \"play as this faction\" choice is now one button per faction in the action bar, instead of a dropdown in its own box above the map"
+      ]
+    },
+    {
+      "version": "5.70.0",
+      "releasedAt": "2026-08-17",
+      "kind": "update",
+      "title": "Sandbox mode",
+      "impact": "",
+      "changes": [
+        "Analysis mode is now called sandbox mode everywhere it is named on screen",
+        "Picking a booster in the sandbox shows the boosters straight away instead of needing a press to open them first, and no longer warns about your auto-leech setting - nobody leeches in a sandbox",
+        "Opponents' round boosters are picked for them in the sandbox, so setup only asks you for your own",
+        "Fixed building within leech range leaving the sandbox with no buttons at all: the opponents declined in the log, but the board never came back to your turn",
+        "The Undo, Reset and Commit buttons in the sandbox bar are opaque now, so their labels are readable over the striped header"
+      ],
+      "userChanges": [
+        "Analysis mode is now called sandbox mode everywhere it is named on screen",
+        "Picking a booster in the sandbox shows the boosters straight away, and opponents' boosters are picked for them",
+        "Fixed building within leech range leaving the sandbox stuck with no buttons at all"
+      ]
+    },
+    {
+      "version": "5.69.2",
+      "releasedAt": "2026-08-17",
+      "kind": "fix",
+      "title": "Sticky bar position fix",
+      "impact": "",
+      "changes": [
+        "Fixed the mobile sticky action/premove bar sometimes floating in the middle of the page after minimizing and reopening the app - a stale pinch-zoom counter-transform is now cleared on resume and re-derived every frame while one is applied, and a viewport reading that no zoom can explain is rejected outright"
+      ],
+      "userChanges": []
+    },
+    {
+      "version": "5.69.1",
+      "releasedAt": "2026-08-17",
+      "kind": "fix",
+      "title": "Viewer CI timeout fix",
+      "impact": "",
+      "changes": [
+        "Raised the viewer test suite's per-test timeout so a slow chart/board replay test no longer fails the build at random",
+        "Reordered the engine's affordability check so the analysis-mode branch is never consulted on the hot path"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.69.0",
       "releasedAt": "2026-08-17",

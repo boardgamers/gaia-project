@@ -7167,7 +7167,74 @@ Commit · ⓘ` now lives in the hazard-striped header that already existed, with
       four placements and two boosters with zero confirmation presses, into round 1 with 40 build hexes
       offered) with no console errors.
 
-180.  ✅ **"Sandbox mode", and four owner-reported fixes on top of it (viewer v5.70.0, 2026-08-17).**
+180.  ✅ **The sticky bar floating mid-screen, taken off the "fix it again next time" list (2026-08-16,
+      `claude/sticky-menu-float-mobile-y5icp7`, viewer v5.69.2).** Owner, with a screenshot of the
+      premove sheet hanging over the middle of the board: _"There is sometimes still a bug where the
+      sticky menu floats in the middle when scrolling down. It doesn't happen after hard refresh but
+      if you minimize the app on mobile and then open it again. Doesn't always happen so I'm not
+      sure what the trigger is. I've asked for this fix around 5 times and it still happens."_
+
+      **Why five previous fixes didn't hold.** Each one corrected the arithmetic — gate on `scale`
+      instead of on any viewport event (#21-round), use a tolerance instead of `scale === 1`
+      (post-pinch residue), skip the identity transform (the auto-leech dropdown's containing
+      block), port the same rule to `PremoveBar.vue` — and each was right about the case in front of
+      it. None of them addressed the shape of the bug, which is not "the value is computed wrongly"
+      but **"a value computed from a viewport snapshot outlives the snapshot"**. In the settled,
+      unzoomed state — i.e. nearly always — `visualViewport` fires no events at all, so once a wrong
+      transform is on the bar there is nothing whatsoever to come along and correct it. That is
+      exactly why a hard refresh fixed it and nothing else did, and why the trigger looked random:
+      any moment the metrics are transient will do, and an app resume is a guaranteed one.
+
+      **What actually happens on a minimize/reopen.** The browser reports its viewport in stages
+      while the resume animation runs, and `hosted.ts`'s own `visibilitychange` → `resync()` re-renders
+      the bar right in the middle of that. `mounted()`/the `ResizeObserver` then computes a transform
+      from a mid-flight reading — a visual viewport hundreds of px shorter than the layout viewport
+      it is anchored to — and `y = offsetTop + height - innerHeight` duly lifts a `bottom: 0` bar up
+      the page. It matches the screenshot arithmetically: the sheet sits ~267px above the bottom on a
+      393×852 viewport, page content visible below it, because the bar is still `position: fixed`,
+      just translated.
+
+      **Fixed in three layers, all in `logic/zoom-compensation.ts`, which now owns the listeners too**
+      (`attachZoomCompensation`) instead of each bar wiring its own — that duplication is what let
+      the two bars drift onto different rules once already:
+
+      1. **Never believe a reading a zoom can't explain.** Under pinch-zoom alone
+         `visualViewport.height * scale` reconstructs `window.innerHeight`. When it doesn't, something
+         other than zoom shrank the visible area (a keyboard, a mid-resume browser) and the offset
+         derived from it is not a zoom offset. Bail out — the bar scaling with the map for a moment
+         is the correct way to fail. Plus a clamp to the range the geometry actually permits.
+      2. **Self-healing.** A `requestAnimationFrame` watchdog runs **only while the bar carries a
+         transform**, re-deriving it every frame, so a wrong one survives at most a frame past the
+         metrics settling. Costs nothing in the common case, and the browser suspending animation
+         frames for a hidden page and resuming them on foreground is precisely the behaviour needed.
+      3. **Resume is a reset, not an update.** `visibilitychange`, `pageshow`, `focus`, `resize` and
+         `orientationchange` clear the transform outright — which alone is correct whenever nobody is
+         zoomed — then re-derive over a settle window (`RESUME_SETTLE_MS`), because the settled values
+         arrive with no event to announce them and have to be gone and fetched.
+
+      **The element's inline style is the state, not a remembered copy of it** — found by driving the
+      real app in a real browser, which is the only reason the fix works. The first cut cached what it
+      last wrote and skipped the DOM when the new value matched; a transform that reached the bar any
+      other way was then invisible to it and "clear it" quietly did nothing, against exactly the stale
+      value needing clearing. Reading `element.style.transform` also means the watchdog guards
+      transforms this module never wrote.
+
+      **Verified in Chromium at 393×852**, driven through setup into round 1: resting state
+      `transform: none` flush to the viewport bottom; the symptom reproduced by planting a stale
+      translate (bar 267px up, screenshot matches the owner's); healed by each of `visibilitychange`,
+      `pageshow`, `focus`, `resize`, `orientationchange` and by any viewport event; and — the
+      regression that mattered — a genuine `Emulation.setPageScaleFactor: 2` still compensated
+      (`translate(0px, -426px) scale(0.5)`, 426 × 2 = 852) and cleared again on zoom-out, so the
+      feature this transform exists for is intact.
+
+      **Tests:** `zoom-compensation.spec.ts` 6 → 21 (the new consistency gate and clamp; then the
+      lifetime half: no watchdog while idle, healing with no viewport event, clearing on foreground,
+      never writing from a hidden page's viewport, the settle window opening and closing, and the
+      two foreign-transform cases the browser found). **Full viewer suite green at 994 passing.**
+      Client-only: no engine, no schema, no Edge Function — engine/AI suites correctly out of scope
+      and not run.
+
+181.  ✅ **"Sandbox mode", and four owner-reported fixes on top of it (viewer v5.70.0, 2026-08-17).**
       All five items came from one owner report after playing a round-0 line for real.
 
       - **Renamed on screen.** Every user-facing "analysis" now reads "sandbox": the striped headers'
@@ -7202,7 +7269,7 @@ Commit · ⓘ` now lives in the hazard-striped header that already existed, with
         opaque surface, border and text colour from the theme tokens, and disabled buttons stay at
         full opacity (Bootstrap's `.65` is unreadable on stripes rather than merely muted).
 
-181.  ✅ **Round 0's faction choice moved into the action bar (viewer v5.71.0, 2026-08-17, owner
+182.  ✅ **Round 0's faction choice moved into the action bar (viewer v5.71.0, 2026-08-17, owner
       instruction).** "I want all interaction for sandbox mode to be in that bottom sticky menu." The
       §11 seed picker was a labelled `<select>` plus a "Try this faction" button inside
       `AnalysisPanel.vue` - a second container above the map, i.e. nowhere near where every other

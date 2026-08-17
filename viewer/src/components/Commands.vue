@@ -343,7 +343,7 @@ import StickyResourceBar from "./StickyResourceBar.vue";
 import { richText, RichText, richTextPlanet } from "../graphics/rich-text";
 import { isLegacySequentialBidRound } from "../logic/sealed-bid";
 import { chargePowerToPay } from "../logic/utils";
-import { zoomCompensationTransform } from "../logic/zoom-compensation";
+import { attachZoomCompensation, ZoomCompensationHandle } from "../logic/zoom-compensation";
 import { factionColor } from "../graphics/utils";
 import { supportsHoverTooltips } from "../logic/tooltip";
 import { isTypingTarget } from "../logic/typing-target";
@@ -702,7 +702,7 @@ export default class Commands extends Vue implements CommandController {
    * blanket max-height's worth of blank page whenever the button list is short. */
   private stickyBarHeight = 0;
   private stickyBarObserver: ResizeObserver | null = null;
-  private visualViewportListener: (() => void) | null = null;
+  private zoomCompensation: ZoomCompensationHandle | null = null;
 
   get titles() {
     return this.commandTitles.length === 0 ? [`Your turn - Round ${this.engine.round}`] : this.commandTitles;
@@ -928,53 +928,35 @@ export default class Commands extends Vue implements CommandController {
     // separately from the unchanged "layout" viewport `position: fixed` actually anchors to, so a
     // counter-transform (shrink back by 1/scale, then re-anchor to the visual viewport's own
     // bottom-left corner) keeps the bar's on-screen size and position constant regardless of zoom.
-    // Recalculated both on visualViewport resize/scroll (actual zoom/pan) AND inside the
-    // ResizeObserver below (covers #move-buttons first becoming the fixed sticky bar, e.g. once
-    // round 1 starts, which isn't itself a visualViewport event).
-    const vv = window.visualViewport;
-    // All the branching (is it the fixed layout? is the page actually zoomed - tolerance, NOT an
-    // exact `scale === 1`, so a post-pinch scale residue can't strand a stale offset and float the
-    // bar? is the offset a no-op?) lives in the unit-tested `zoomCompensationTransform` helper.
-    const updateZoomTransform = () => {
-      if (!moveButtons || !vv) {
-        return;
-      }
-      moveButtons.style.transform = zoomCompensationTransform({
-        isStickyMobile: this.showStickyMobileBar,
-        scale: vv.scale || 1,
-        offsetLeft: vv.offsetLeft,
-        offsetTop: vv.offsetTop,
-        height: vv.height,
-        innerHeight: window.innerHeight,
+    //
+    // ALL of it - the arithmetic, the listeners, the self-healing that stops a stale transform from
+    // floating this bar mid-screen - lives in logic/zoom-compensation.ts, shared byte-for-byte with
+    // PremoveBar.vue's off-turn bar. Keeping a second copy of the wiring here is what let the two
+    // bars drift apart last time; the only thing this component owns is when to re-measure.
+    if (moveButtons) {
+      this.zoomCompensation = attachZoomCompensation({
+        element: moveButtons,
+        isStickyMobile: () => this.showStickyMobileBar,
       });
-    };
+    }
 
     if (moveButtons && typeof ResizeObserver !== "undefined") {
       this.stickyBarObserver = new ResizeObserver(() => {
         // read the full border-box (incl. padding) so the spacer reserves the bar's real footprint
         this.stickyBarHeight = moveButtons.getBoundingClientRect().height;
         this.$emit("sticky-bar-height", this.showStickyMobileBar ? this.stickyBarHeight : 0);
-        updateZoomTransform();
+        // Covers #move-buttons first becoming the fixed sticky bar (e.g. once round 1 starts),
+        // which isn't itself a visualViewport event.
+        this.zoomCompensation?.update();
       });
       this.stickyBarObserver.observe(moveButtons);
-    }
-
-    if (moveButtons && vv) {
-      updateZoomTransform();
-      vv.addEventListener("resize", updateZoomTransform);
-      vv.addEventListener("scroll", updateZoomTransform);
-      this.visualViewportListener = () => {
-        vv.removeEventListener("resize", updateZoomTransform);
-        vv.removeEventListener("scroll", updateZoomTransform);
-        moveButtons.style.transform = "";
-      };
     }
 
     this.$on("hook:beforeDestroy", () => {
       window.removeEventListener("keydown", keyListener);
       backListener();
       this.stickyBarObserver?.disconnect();
-      this.visualViewportListener?.();
+      this.zoomCompensation?.destroy();
       this.$emit("sticky-bar-height", 0);
     });
   }
