@@ -1,7 +1,26 @@
 {
-  "version": "5.69.0",
+  "version": "5.70.0",
   "releasedAt": "2026-08-17",
   "entries": [
+    {
+      "version": "5.70.0",
+      "releasedAt": "2026-08-17",
+      "kind": "update",
+      "title": "Sandbox mode",
+      "impact": "",
+      "changes": [
+        "Analysis mode is now called sandbox mode everywhere it is named on screen",
+        "Picking a booster in the sandbox shows the boosters straight away instead of needing a press to open them first, and no longer warns about your auto-leech setting - nobody leeches in a sandbox",
+        "Opponents' round boosters are picked for them in the sandbox, so setup only asks you for your own",
+        "Fixed building within leech range leaving the sandbox with no buttons at all: the opponents declined in the log, but the board never came back to your turn",
+        "The Undo, Reset and Commit buttons in the sandbox bar are opaque now, so their labels are readable over the striped header"
+      ],
+      "userChanges": [
+        "Analysis mode is now called sandbox mode everywhere it is named on screen",
+        "Picking a booster in the sandbox shows the boosters straight away, and opponents' boosters are picked for them",
+        "Fixed building within leech range leaving the sandbox stuck with no buttons at all"
+      ]
+    },
     {
       "version": "5.69.0",
       "releasedAt": "2026-08-17",

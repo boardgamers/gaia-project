@@ -5,7 +5,7 @@
        AnalysisHeaderControls.vue - that component is rendered twice (desktop title and mobile sticky
        bar), and two copies of one b-modal id make the button open whichever Bootstrap-Vue registered
        first, which is the bug SetupStatus.vue's own comment warns about. -->
-  <b-modal id="analysis-mode-info" size="lg" title="How analysis mode works" ok-only dialog-class="gaia-viewer-modal">
+  <b-modal id="analysis-mode-info" size="lg" title="How sandbox mode works" ok-only dialog-class="gaia-viewer-modal">
     <p>
       The board is yours to play with. Nothing here is saved and nobody else can see it — leave with the button at the
       bottom right of the map and the real game is exactly as you left it.
@@ -20,8 +20,9 @@
       one, Reset clears them all.
     </p>
     <p>
-      Opponents never move, apart from the starting mines you place for them yourself during setup, and any power they
-      would be offered is declined automatically.
+      Opponents never move, apart from the starting mines you place for them yourself during setup. Their round boosters
+      are picked for them, and any power they would be offered is declined automatically, so a build never pauses on
+      somebody else's decision.
     </p>
     <p>
       A line runs to the end of the round after the one it started in. Board actions, tech tiles, boosters and

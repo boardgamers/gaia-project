@@ -365,7 +365,7 @@ export function resolveOpponentDecisions(engine: Engine, seat: number): void {
   for (let i = 0; i < 50; i++) {
     const toMove = engine.playerToMove;
     if (toMove === undefined || toMove === seat) {
-      return;
+      break;
     }
     const faction = engine.players[toMove].faction ?? `p${toMove + 1}`;
     const decline = engine.findAvailableCommand(toMove, Command.Decline);
@@ -382,6 +382,22 @@ export function resolveOpponentDecisions(engine: Engine, seat: number): void {
         continue;
       }
     }
+    // The round-0 booster pick (owner instruction): setup pass-and-play (§2.6/decision #7) exists so
+    // the player can place everyone's starting mines, not so they have to choose a booster for each
+    // opponent - an opponent's booster is worth nothing in a sandbox where they never take a turn.
+    // Taken first-available rather than randomly, so a stored line always replays the same table.
+    const booster = engine.findAvailableCommand(toMove, Command.ChooseRoundBooster);
+    if (booster) {
+      const boosters = booster.data?.boosters ?? [];
+      if (
+        tryMoves(
+          engine,
+          boosters.map((b) => `${faction} ${Command.ChooseRoundBooster} ${b}`)
+        )
+      ) {
+        continue;
+      }
+    }
     // Not a leech offer (a brainstone placement, an income choice, a faction pick): the engine's own
     // heuristics are the right answer for those, and they cannot be expressed as a Decline.
     try {
@@ -389,10 +405,34 @@ export function resolveOpponentDecisions(engine: Engine, seat: number): void {
         continue;
       }
     } catch {
-      return;
+      break;
     }
-    return; // Nothing this function knows how to resolve - stop rather than guess at a move.
+    break; // Nothing this function knows how to resolve - stop rather than guess at a move.
   }
+  abandonLeechPhase(engine, seat);
+}
+
+/**
+ * The last resort behind `resolveOpponentDecisions`' loop: if the clone is STILL sitting in
+ * `Phase.RoundLeech` once the loop has given up, force it back to the analysis seat's move phase.
+ *
+ * The loop declines through real engine code and normally lands this itself; this covers the case
+ * where some offer it does not know how to answer survives. A surviving leech pause is not cosmetic -
+ * analysis mode forces `canPlay` true, so `Commands.vue` renders the OPPONENT's accept/decline
+ * buttons and the player's own line cannot continue. Dropping the remaining sources is exactly what
+ * declining them all would have produced (a decline changes nothing but `declined`), so nothing is
+ * lost by taking the shortcut.
+ */
+function abandonLeechPhase(engine: Engine, seat: number): void {
+  if (engine.phase !== Phase.RoundLeech) {
+    return;
+  }
+  engine.leechSources = [];
+  engine.tempTurnOrder = [];
+  engine.tempCurrentPlayer = undefined;
+  engine.currentPlayer = seat;
+  engine.changePhase(Phase.RoundMove);
+  engine.clearAvailableCommands();
 }
 
 /** Plays the first of `moves` that the engine accepts, on `engine` itself; returns whether any stuck.
@@ -506,6 +546,15 @@ export function replayAnalysisLine(
       break;
     }
     resolveOpponentDecisions(copy, seat);
+    // Unconditional, and it has to come after the decisions above. `Engine.executeMove` nulls the
+    // command list after every successful move, including the declines `resolveOpponentDecisions`
+    // plays - and nothing downstream regenerates it, because `Commands.vue` reads
+    // `engine.availableCommands` straight off the store. A null list renders as an empty command area
+    // with only the Back button in it, which was the reported "I built inside leech range, the log
+    // shows the opponents declining, and then I'm stuck": the declines had worked exactly as intended
+    // and simply left the position with no commands generated for it. `stripCappedPass` below also
+    // silently did nothing whenever this happened, for the same reason.
+    copy.generateAvailableCommandsIfNeeded();
     stripCappedPass(copy, baseRound);
     engine = copy;
     applied++;

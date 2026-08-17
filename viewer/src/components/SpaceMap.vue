@@ -62,7 +62,7 @@
       :transform="`translate(${bounds.right - 1.9}, ${bounds.bottom - 1.9}) scale(0.1)`"
       @click="$emit('analysis-toggle')"
     >
-      <title>{{ analysisActive ? "Exit analysis mode" : "Enter analysis mode" }}</title>
+      <title>{{ analysisActive ? "Exit sandbox mode" : "Enter sandbox mode" }}</title>
       <rect class="space-map__analysis-badge" x="-11" y="-11" width="22" height="22" rx="4" />
       <use xlink:href="#analysis-magnifier" transform="translate(-8.75, -8.75)" />
     </g>

@@ -79,7 +79,14 @@ function passWarning(engine: Engine, player: Player, controller: CommandControll
   if (endTurn != null) {
     warnings.push(...endTurn.body);
   }
-  const autoLeechRisk = autoLeechRiskWarning(engine, player, controller.autoChargePreference());
+  // Sandbox mode (ANALYSIS_MODE_PLAN.md §2.8): opponents never build there and every leech they are
+  // offered is declined for them automatically, so there is no auto-leech risk to warn about. The
+  // warning was also what stopped `checkAutoClick` from opening this button (a warned button is never
+  // auto-clicked), which is why picking a booster in the sandbox needed an extra press to see the
+  // boosters at all.
+  const autoLeechRisk = controller.analysisMode
+    ? null
+    : autoLeechRiskWarning(engine, player, controller.autoChargePreference());
   if (autoLeechRisk != null) {
     warnings.push(autoLeechRisk);
   }

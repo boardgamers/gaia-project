@@ -11,7 +11,7 @@
              where a compose takeover has to announce itself. Analysis mode wins over premove/
              cancel-trigger context since the three board-takeover modes are mutually exclusive
              (§3.6) - this is just the render-time ordering, not an extra exclusion check. -->
-        <template v-if="analysisMode">ANALYSIS</template>
+        <template v-if="analysisMode">SANDBOX</template>
         <template v-else-if="premoveContext">{{ premoveContext.title }}</template>
         <RichTextView v-else :content="statusLine" />
       </h5>
@@ -87,7 +87,7 @@
              hazard stripes for analysis (§5.1) - the board looks identical otherwise, and this is
              the one cue telling them apart. -->
         <h5 class="mb-0">
-          <template v-if="analysisMode">ANALYSIS</template>
+          <template v-if="analysisMode">SANDBOX</template>
           <template v-else-if="premoveContext">{{ premoveContext.title }}</template>
           <RichTextView v-else :content="statusLine" />
         </h5>

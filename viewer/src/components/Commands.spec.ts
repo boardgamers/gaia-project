@@ -592,7 +592,7 @@ describe("Commands", () => {
     expect(container.querySelectorAll(".analysis-controls__info").length).to.equal(2);
   });
 
-  it("stripes both headers and reads ANALYSIS during analysis mode, without exiting when tapped (§5.1/§12)", async () => {
+  it("stripes both headers and reads SANDBOX during sandbox mode, without exiting when tapped (§5.1/§12)", async () => {
     const engine = createLostFleetRoundMoveEngine();
     const store = makeStore();
     store.commit("receiveData", engine);
@@ -602,7 +602,7 @@ describe("Commands", () => {
       store,
     });
 
-    expect(container.querySelector("#move-title").textContent).to.contain("ANALYSIS");
+    expect(container.querySelector("#move-title").textContent).to.contain("SANDBOX");
     expect(container.querySelector("#move-title").classList.contains("move-title--analysis")).to.equal(true);
     expect(
       container.querySelector("#move-buttons .sticky-bar-title").classList.contains("sticky-bar-title--analysis")

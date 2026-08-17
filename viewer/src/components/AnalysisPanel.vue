@@ -23,7 +23,7 @@
          window.confirm. -->
     <div v-if="active && pendingRestore" class="analysis-strip__banner analysis-strip__banner--confirm">
       <span class="flex-grow-1">
-        A saved analysis line ({{ pendingRestore.entries.length }} move{{
+        A saved sandbox line ({{ pendingRestore.entries.length }} move{{
           pendingRestore.entries.length === 1 ? "" : "s"
         }}) exists from before your last move.
       </span>
@@ -35,7 +35,7 @@
          or auction to everyone's starting mines. Only rendered while the clone is still in faction
          selection - from the first mine onwards the table is settled. -->
     <div v-if="active && factionChoices.length > 0" class="analysis-strip__seed">
-      <label for="analysis-seed-faction" class="analysis-strip__seed-label">Analyse as</label>
+      <label for="analysis-seed-faction" class="analysis-strip__seed-label">Play as</label>
       <select id="analysis-seed-faction" v-model="seedFaction" class="analysis-strip__seed-select">
         <option v-for="choice in factionChoices" :key="choice.faction" :value="choice.faction">
           {{ choice.name }}

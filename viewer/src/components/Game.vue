@@ -611,7 +611,7 @@ export default class Game extends Vue {
           this.analysisSeat = null;
           this.analysisPendingRestore = null;
           this.analysisNotice =
-            "A new move arrived, so analysis mode closed. Your saved line is still there - Enter analysis mode to continue where you left off.";
+            "A new move arrived, so sandbox mode closed. Your saved line is still there - Enter sandbox mode to continue where you left off.";
           this.$store.commit("setSealedBidBackend", this.analysisSealedBidBackendBackup);
           this.analysisSealedBidBackendBackup = null;
           this.$store.commit("setAnalysisMode", false);
@@ -1593,7 +1593,7 @@ export default class Game extends Vue {
     if (this.engine.round > stored.baseRound + 1) {
       this.setAnalysisEntries([]);
       this.analysisNotice =
-        "Your saved analysis line was from an earlier round and no longer applies, so it was cleared.";
+        "Your saved sandbox line was from an earlier round and no longer applies, so it was cleared.";
       return;
     }
     const newMoves = this.engine.moveHistory.slice(stored.baseMoveCount);

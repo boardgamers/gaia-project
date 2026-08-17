@@ -427,7 +427,7 @@ describe("SpaceMap", () => {
       const button = container.querySelector(".space-map__analysis-button");
       expect(button).to.not.equal(null);
       expect(button.classList.contains("space-map__analysis-button--active")).to.equal(false);
-      expect(button.querySelector("title").textContent).to.equal("Enter analysis mode");
+      expect(button.querySelector("title").textContent).to.equal("Enter sandbox mode");
     });
 
     it("shows the warning-styled button and the Exit label while active", () => {
@@ -435,7 +435,7 @@ describe("SpaceMap", () => {
       const button = container.querySelector(".space-map__analysis-button");
       expect(button).to.not.equal(null);
       expect(button.classList.contains("space-map__analysis-button--active")).to.equal(true);
-      expect(button.querySelector("title").textContent).to.equal("Exit analysis mode");
+      expect(button.querySelector("title").textContent).to.equal("Exit sandbox mode");
     });
 
     it("emits analysis-toggle when clicked, regardless of which state it's in", async () => {

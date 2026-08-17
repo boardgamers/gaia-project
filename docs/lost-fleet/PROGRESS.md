@@ -7167,6 +7167,41 @@ Commit · ⓘ` now lives in the hazard-striped header that already existed, with
       four placements and two boosters with zero confirmation presses, into round 1 with 40 build hexes
       offered) with no console errors.
 
+180.  ✅ **"Sandbox mode", and four owner-reported fixes on top of it (viewer v5.70.0, 2026-08-17).**
+      All five items came from one owner report after playing a round-0 line for real.
+
+      - **Renamed on screen.** Every user-facing "analysis" now reads "sandbox": the striped headers'
+        `ANALYSIS`, the map button's Enter/Exit titles, the info modal, the staleness notices, and the
+        round-0 picker's label ("Play as", not "Analyse as"). Identifiers, file names, CSS classes and
+        the plan document are deliberately untouched - this was a naming change, not a refactor.
+      - **The booster pick no longer needs a press to open, and no longer warns about auto-leech.**
+        Both had the same cause: `passButton` attaches `autoLeechRiskWarning` to the booster button
+        (it shares the Pass button's builder), and `checkAutoClick` refuses to auto-click any button
+        carrying an enabled warning - so the warning was simultaneously the popup the owner asked
+        about and the reason the boosters took two presses to reach. The warning is skipped outright
+        in sandbox mode, where opponents never build and every leech offer is declined for them, so
+        there is genuinely no auto-leech risk to describe. With it gone the button's existing
+        `smartAutoClick` opens the booster list on sight.
+      - **Opponents' boosters are picked for them.** Setup pass-and-play (§2.6/decision #7) exists so
+        the player can place everyone's starting mines, not so they have to choose a booster for each
+        opponent. `resolveOpponentDecisions` now answers `Command.ChooseRoundBooster` for any seat
+        that isn't the sandbox seat, taking the first available booster - deterministic, not random,
+        so a stored line replays the same table every time.
+      - **The real leech stall, finally.** #179's declines were working exactly as designed (the owner
+        could see them in the log); what was missing was that `Engine.executeMove` nulls
+        `availableCommands` after every successful move, including those declines, and nothing
+        downstream regenerates them - `Commands.vue` reads `engine.availableCommands` straight off the
+        store, so the board came back to the sandbox seat's turn with an empty command area and only
+        the Back button in it. `replayAnalysisLine` now calls `generateAvailableCommandsIfNeeded()`
+        after `resolveOpponentDecisions`, which also fixes `stripCappedPass` silently doing nothing in
+        the same situation. A new `abandonLeechPhase` backstop drops any leech pause the decline loop
+        could not answer (clearing `leechSources`/`tempTurnOrder` and returning the phase to
+        `RoundMove`), since declining every offer changes nothing but `declined` anyway.
+      - **Opaque bar buttons.** Undo/Reset are Bootstrap `outline-secondary`, i.e. transparent by
+        design, and were being read straight off the full-strength hazard stripes. They now paint an
+        opaque surface, border and text colour from the theme tokens, and disabled buttons stay at
+        full opacity (Bootstrap's `.65` is unreadable on stripes rather than merely muted).
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

@@ -61,8 +61,8 @@
       variant="link"
       size="sm"
       class="analysis-controls__info"
-      aria-label="How analysis mode works"
-      title="How analysis mode works"
+      aria-label="How sandbox mode works"
+      title="How sandbox mode works"
       @click="$bvModal.show('analysis-mode-info')"
     >
       <b-badge variant="info" pill>i</b-badge>
@@ -138,7 +138,42 @@ export default Vue.extend({
 .analysis-controls__btn {
   padding: 0.05rem 0.35rem;
   line-height: 1.2;
-  background: var(--ui-surface);
+  font-weight: 600;
+}
+
+// Bootstrap's outline variants are transparent by design, so Undo/Reset were reading straight off the
+// full-strength yellow/black hazard stripes behind them - §5.1's "solid text backing" applies to a
+// button label just as much as to a text run. Paint an opaque surface, a real border and a real text
+// colour, and keep them at full opacity when disabled (Bootstrap drops those to .65, which on stripes
+// is unreadable rather than merely muted). Scoped away from the Commit button, which is a solid
+// `success` variant already and must stay green.
+.analysis-controls__btn:not(.btn-success) {
+  background-color: var(--ui-surface-raised);
+  border-color: var(--ui-border-strong);
+  color: var(--ui-text);
+
+  &:hover,
+  &:focus,
+  &:active {
+    background-color: var(--ui-surface-hover);
+    border-color: var(--ui-border-strong);
+    color: var(--ui-text);
+  }
+
+  &:disabled,
+  &.disabled {
+    opacity: 1;
+    background-color: var(--ui-surface-muted);
+    color: var(--ui-text-subtle);
+  }
+}
+
+// The Commit button keeps its green fill, but the same disabled-opacity problem applies to it.
+.analysis-controls__btn.btn-success:disabled {
+  opacity: 1;
+  background-color: var(--ui-surface-muted);
+  border-color: var(--ui-border-strong);
+  color: var(--ui-text-subtle);
 }
 
 .analysis-controls__info {

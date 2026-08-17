@@ -326,6 +326,10 @@ describe("resolveOpponentDecisions", () => {
     expect(applied).to.equal(1);
     expect(engine.phase).to.equal(Phase.RoundMove);
     expect(engine.playerToMove).to.equal(0);
+    // ...and with commands to show for it. Declining nulls the list (Engine.executeMove does that
+    // after every move) and Commands.vue reads it straight off the store, so a null list here is a
+    // board with nothing on it but the Back button - the second half of the same reported bug.
+    expect(engine.availableCommands?.length ?? 0).to.be.greaterThan(0);
   });
 
   it("never throws, whatever state it is handed - a throw here would kill the click mid-line", () => {
@@ -612,23 +616,31 @@ describe("the round-0 faction seed (§11)", () => {
     applySoloRoundFlow(origin, 0); // what enterAnalysisMode does for a round-0 entry
     const entries: AnalysisEntry[] = [
       { kind: "faction", lineup: [Faction.Terrans, Faction.Nevlas] },
-      // Setup pass-and-play (§2.6/decision #7) - every seat's mines and booster, placed by me.
+      // Setup pass-and-play (§2.6/decision #7) - every seat's mines, placed by me. Boosters are NOT
+      // in here: opponents' picks are auto-resolved (owner instruction), so the only booster entry a
+      // round-0 line ever holds is this seat's own.
       { kind: "move", move: "terrans build m -1x2" },
       { kind: "move", move: "nevlas build m -1x0" },
       { kind: "move", move: "nevlas build m 0x-4" },
       { kind: "move", move: "terrans build m -4x-1" },
-      { kind: "move", move: "nevlas booster booster7" },
-      { kind: "move", move: "terrans booster booster3" },
     ];
 
-    const { engine, applied, wallet } = replayAnalysisLine(origin, entries, 0, Round.Round1);
+    // Whatever the opponent's auto-pick left on the table - which booster that is depends on the
+    // order `possibleRoundBoosters` happens to offer them in, and the point here is the flow.
+    const mid = replayAnalysisLine(origin, entries, 0, Round.Round1);
+    expect(mid.engine.phase).to.equal(Phase.SetupBooster);
+    expect(mid.engine.playerToMove).to.equal(0); // nevlas' pick was made for me
+    const mine = mid.engine.findAvailableCommand(0, Command.ChooseRoundBooster).data.boosters[0];
+    entries.push({ kind: "move", move: `terrans booster ${mine}` });
+
+    const { engine, applied } = replayAnalysisLine(origin, entries, 0, Round.Round1);
 
     expect(applied).to.equal(entries.length);
     expect(engine.phase).to.equal(Phase.RoundMove);
     expect(engine.round).to.equal(Round.Round1);
     expect(engine.turnOrder).to.deep.equal([0]); // solo from here (§2.5)
     expect(engine.playerToMove).to.equal(0);
-    expect(wallet).to.not.equal(null); // the sandbox wallet's lazy grant fired at the round-1 handover
+    expect(engine.players[1].data.tiles.booster).to.not.equal(null); // picked for them, not by me
   });
 
   it("does the same from an auction game's bid phase, taking the faction the auction had not yet awarded", () => {
