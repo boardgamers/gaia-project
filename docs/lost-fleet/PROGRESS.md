@@ -7293,6 +7293,33 @@ Commit · ⓘ` now lives in the hazard-striped header that already existed, with
       `Commands.vue` is not rendered then. The seeded-lineup readout ("you are the Itars, they are the
       Terrans") went with the picker - the player board shows the same table the moment the seed lands.
 
+183.  ✅ **Round 0's action area joins the frozen bottom bar on mobile (viewer v5.72.0, 2026-08-17,
+      owner instruction).** `showStickyMobileBar` was `round >= 1` and nothing else, so every round-0
+      press sat below the whole map+research row on a phone - the exact problem the bar exists to
+      solve. It now also pins for the round-0 phases whose buttons pair with looking at the map:
+      `Phase.SetupBoard` (sector rotation), `Phase.SetupBuilding` (the starting mines) and
+      `Phase.SetupBooster` (the first booster), listed as `STICKY_SETUP_PHASES`.
+
+            Faction ban, faction pick, both auction bid forms and sandbox mode's own faction seed are
+            deliberately excluded (owner instruction): wide, richly-labelled rows with their own info modals
+            and shortcut keys, read once and answered once, and none of them needs the map on screen at the
+            same time. The guard reads `!init && !isChoosingFaction && !isBanningFaction && !isSilentBidding
+
+      && !analysisSeedActive`, then `round >= 1 || (STICKY_SETUP_PHASES.includes(phase) &&
+      buttons.length > 0)` - the button count is what "when there are any buttons to be pressed" means
+      literally, so a listed phase with nothing to press never pins an empty strip.
+
+            `Game.vue`'s `setupActionsAtTop` is untouched: it decides which of the two `<Commands>` is
+            mounted during round 0 on mobile, and `.mobile-sticky-actions` is `position: fixed`, so the bar
+            pins to the bottom of the viewport regardless of where in the DOM it was mounted. The page-end
+            spacer already sizes itself from the measured `totalStickyFooterHeight`, with no round gate of
+            its own.
+
+            **Test note:** `new Engine(moves)` leaves `availableCommands` null - `executeMove` clears it
+            after every move, and the real app only ever comes through `Engine.fromData`, which regenerates.
+            A spec that checks anything derived from the button list has to regenerate too, or the list is
+            empty for the wrong reason and the assertion passes/fails by accident.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

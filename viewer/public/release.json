@@ -1,7 +1,21 @@
 {
-  "version": "5.71.0",
+  "version": "5.72.0",
   "releasedAt": "2026-08-17",
   "entries": [
+    {
+      "version": "5.72.0",
+      "releasedAt": "2026-08-17",
+      "kind": "update",
+      "title": "Round 0 in the bottom bar",
+      "impact": "",
+      "changes": [
+        "On mobile the frozen bottom action bar now also covers round 0's board rotation, starting mines and booster pick, so those buttons no longer scroll away below the map",
+        "The faction ban, faction pick, auction bids and sandbox mode's own faction choice stay full-width above the map - they are read once and answered once, and do not fit a short strip"
+      ],
+      "userChanges": [
+        "On mobile, placing your starting mines and picking your first booster now happen in the same frozen bottom bar as the rest of the game, instead of scrolling away below the map"
+      ]
+    },
     {
       "version": "5.71.0",
       "releasedAt": "2026-08-17",

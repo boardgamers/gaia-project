@@ -532,6 +532,61 @@ describe("Commands", () => {
     expect(container.querySelector("#move-title")?.classList.contains("hide-on-mobile-sticky")).to.equal(false);
   });
 
+  describe("the frozen bottom bar during round 0", () => {
+    // `new Engine(moves)` leaves availableCommands null (executeMove clears it after every move);
+    // the real app always comes through Engine.fromData, which regenerates. Mirror that here, or the
+    // button list this bar's visibility depends on is empty for the wrong reason.
+    function setupEngine(extraBuilds: number): Engine {
+      const engine = new Engine(["init 2 lf-no-auction", "p1 faction terrans", "p2 faction nevlas"]);
+      for (let i = 0; i < extraBuilds; i++) {
+        engine.generateAvailableCommandsIfNeeded();
+        const build = engine.availableCommands.find((c) => c.name === Command.Build);
+        const faction = engine.players[engine.playerToMove].faction;
+        engine.move(`${faction} ${Command.Build} m ${(build.data as any).buildings[0].coordinates}`);
+      }
+      engine.generateAvailableCommandsIfNeeded();
+      return engine;
+    }
+
+    function pinned(engine: Engine, props: Record<string, unknown> = {}): boolean {
+      const store = makeStore();
+      store.commit("receiveData", engine);
+      const { container } = render(Commands, { props: { currentMove: "", ...props }, store });
+      return container.querySelector("#move-buttons .sticky-bar-title") !== null;
+    }
+
+    // Owner instruction: the round-0 presses that pair with looking at the map - the starting mines
+    // and the booster - belong in the frozen bar too. The faction pick/ban/bid rows do not: they are
+    // read once and answered once, and are wider than the strip.
+    it("pins it for the starting mines and the booster pick", () => {
+      const mines = setupEngine(0);
+      expect(mines.phase).to.equal(Phase.SetupBuilding);
+      expect(pinned(mines), "starting mines").to.equal(true);
+
+      const boosters = setupEngine(4);
+      expect(boosters.phase).to.equal(Phase.SetupBooster);
+      expect(pinned(boosters), "booster pick").to.equal(true);
+    });
+
+    it("leaves it unpinned for the faction pick", () => {
+      const engine = Engine.fromData(JSON.parse(JSON.stringify(new Engine(["init 2 lf-no-auction"]))));
+      expect(engine.phase).to.equal(Phase.SetupFaction);
+      expect(pinned(engine)).to.equal(false);
+    });
+
+    it("leaves it unpinned for sandbox mode's own faction seed - that is a faction pick too", () => {
+      // Same position that pins above; the only difference is the seed picker taking the area over.
+      const engine = setupEngine(0);
+      expect(pinned(engine, { analysisMode: true })).to.equal(true);
+      expect(
+        pinned(engine, {
+          analysisMode: true,
+          analysisFactionChoices: [{ faction: Faction.Terrans, name: "Terrans" }],
+        })
+      ).to.equal(false);
+    });
+  });
+
   it("hides the auto-leech select before round 1 (faction picking) - nothing to leech from yet", () => {
     const engine = new Engine(["init 2 lf-no-auction"]);
     const store = makeStore();

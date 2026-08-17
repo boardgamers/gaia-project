@@ -67,8 +67,8 @@
     <div id="move-buttons" ref="moveButtons" :class="{ 'mobile-sticky-actions': showStickyMobileBar }">
       <!-- Same status line as #move-title above, shown only inside the mobile sticky bar (once it's
            actually pinned, i.e. narrow viewports - see the .sticky-bar-title/.hide-on-mobile-sticky
-           CSS) - freeing up the space #move-title used to occupy alone on mobile once round 1+
-           starts, instead of duplicating it on screen. Placed first (above the action buttons) so
+           CSS) - freeing up the space #move-title used to occupy alone on mobile wherever the bar is
+           pinned, instead of duplicating it on screen. Placed first (above the action buttons) so
            whose-turn/what's-happening is the first thing read when the bar comes into view, not
            buried below a scrollable list of buttons. -->
       <div
@@ -95,8 +95,9 @@
           <template v-else-if="premoveContext">{{ premoveContext.title }}</template>
           <RichTextView v-else :content="statusLine" />
         </h5>
-        <!-- No explainer buttons here either: this bar is round-1+ only (showStickyMobileBar), so
-             they could never show during the ban/pick/bid phases anyway. See SetupStatus.vue. -->
+        <!-- No explainer buttons here either: the bar is never pinned during the ban/pick/bid phases
+             (showStickyMobileBar excludes all three), so they could never show here. See
+             SetupStatus.vue. -->
         <b-dropdown
           v-if="showAutoLeechSelect"
           size="sm"
@@ -352,6 +353,10 @@ import { AnalysisStatus } from "../logic/analysis";
 let show = false;
 
 const statusLineSeparator = " - ";
+
+/** The round-0 phases whose action area belongs in the frozen bottom bar on mobile - see
+ * `showStickyMobileBar` for why faction ban/pick/bid are not among them. */
+const STICKY_SETUP_PHASES: Phase[] = [Phase.SetupBoard, Phase.SetupBuilding, Phase.SetupBooster];
 
 export type EmitCommandParams = { disappear?: boolean; times?: number; warnings?: BuildWarning[] };
 
@@ -661,10 +666,39 @@ export default class Commands extends Vue implements CommandController {
     return !!this.factionsToChoose;
   }
 
-  /** Frozen bottom action bar on mobile - only once real gameplay has started (round 1+), never
-   * during player-count/faction-picking/initial-building setup. */
+  /**
+   * Frozen bottom action bar on mobile. Round 1+ unconditionally, plus - since the owner asked for
+   * it - the round-0 phases whose buttons you press to put something on the board or take a tile:
+   * board rotation, the starting mines, and the round booster. Those are exactly the presses that
+   * pair with looking at the map, and having them scroll away below it was the same problem the bar
+   * exists to solve in the first place.
+   *
+   * Faction ban, faction pick, the auction bids and sandbox mode's own faction seed are deliberately
+   * excluded (owner instruction). They are wide, richly-labelled rows with their own info modals and
+   * shortcut keys, read once and answered once - pinning them into a short scrolling strip at the
+   * bottom of the screen makes them harder to read rather than easier, and none of them needs the
+   * map on screen at the same time.
+   *
+   * The `buttons.length` check is what "when there are any buttons to be pressed" means literally:
+   * a phase in the list with nothing to press must not pin an empty bar to the bottom of the screen.
+   * Reading the `buttons` getter here is safe despite its own writes to `allButtons` /
+   * `preventFirstAutoClick` - it is a cached computed the template already evaluates every render,
+   * and neither field feeds anything reactive.
+   */
   get showStickyMobileBar(): boolean {
-    return !this.init && !this.isChoosingFaction && this.engine.round >= 1;
+    if (
+      this.init ||
+      this.isChoosingFaction ||
+      this.isBanningFaction ||
+      this.isSilentBidding ||
+      this.analysisSeedActive
+    ) {
+      return false;
+    }
+    if (this.engine.round >= 1) {
+      return true;
+    }
+    return STICKY_SETUP_PHASES.includes(this.engine.phase) && this.buttons.length > 0;
   }
 
   /** Auto-leech is a per-round-action preference - hide it during player-count/faction-picking/
@@ -1360,8 +1394,9 @@ i.planet {
   }
 }
 
-// Frozen bottom action bar on mobile (round 1+ only, see Commands.vue's showStickyMobileBar) -
-// keeps refill/round-action buttons reachable without scrolling back up to the top of the page.
+// Frozen bottom action bar on mobile (round 1+, plus round 0's board-rotation/starting-mine/booster
+// phases - see Commands.vue's showStickyMobileBar) - keeps the buttons reachable without scrolling
+// back up to the top of the page.
 // The max-height + overflow-y:auto keeps a long options list (e.g. many valid mine-building
 // spots) scrollable in place instead of growing to fill/exceed the screen.
 $mobile-sticky-actions-max-height: 40vh;
