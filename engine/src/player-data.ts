@@ -437,14 +437,17 @@ export default class PlayerData extends EventEmitter {
     if (type === Resource.None) {
       return true;
     }
+    // Ordered so the real check comes first: this is one of the hottest paths in the engine (every
+    // available-command generation runs it many times over), and an affordable resource then costs
+    // exactly what it always did, with the analysis branch never consulted at all.
+    if (this.getResources(type) >= reward.count) {
+      return true;
+    }
     // Analysis mode (§12): affordability is what the engine enforces at command-GENERATION time, so
     // lifting it here is the whole mechanism behind "let me build it anyway and show me the debt".
     // Deliberately not a resource top-up: the seat keeps its real numbers and simply goes negative,
     // which is what the player board then displays.
-    if (this.analysis && PlayerData.ANALYSIS_OVERDRAWABLE.includes(type)) {
-      return true;
-    }
-    return this.getResources(type) >= reward.count;
+    return this.analysis && PlayerData.ANALYSIS_OVERDRAWABLE.includes(type);
   }
 
   getResources(type: Resource): number {

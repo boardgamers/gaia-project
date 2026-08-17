@@ -1,7 +1,19 @@
 {
-  "version": "5.69.0",
+  "version": "5.69.1",
   "releasedAt": "2026-08-17",
   "entries": [
+    {
+      "version": "5.69.1",
+      "releasedAt": "2026-08-17",
+      "kind": "fix",
+      "title": "Viewer CI timeout fix",
+      "impact": "",
+      "changes": [
+        "Raised the viewer test suite's per-test timeout so a slow chart/board replay test no longer fails the build at random",
+        "Reordered the engine's affordability check so the analysis-mode branch is never consulted on the hot path"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.69.0",
       "releasedAt": "2026-08-17",
