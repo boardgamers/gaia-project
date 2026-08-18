@@ -1125,6 +1125,67 @@ describe("Game", () => {
 
         expect(vm.analysisStatus.overdrawn).to.deep.equal([]);
         expect(vm.analysisStatus.assumedPower).to.equal(0);
+        expect(vm.analysisStatus.chargedPower).to.equal(0);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("surfaces the power the sandbox had to top up, which the player board cannot show", () => {
+        // This read 0 no matter what: the status came off `analysisComposeBase`, a plain-JSON
+        // snapshot, and `analysisAssumedPower` is deliberately absent from PlayerData.toJSON().
+        const vm = mountAsSeat(0);
+        vm.enterAnalysisMode();
+
+        vm.applyAnalysisMove("terrans action power3."); // far more power than this seat really has
+
+        expect(vm.engine.players[0].data.analysisAssumedPower).to.be.greaterThan(0);
+        expect(vm.analysisStatus.assumedPower).to.equal(vm.engine.players[0].data.analysisAssumedPower);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("keeps a running total of the Charge 1 presses, which the bowls alone cannot answer for", () => {
+        const vm = mountAsSeat(0);
+        vm.enterAnalysisMode();
+
+        vm.chargeAnalysisPower();
+        vm.chargeAnalysisPower();
+        expect(vm.analysisStatus.chargedPower).to.equal(2);
+
+        vm.undoAnalysisCharge();
+        expect(vm.analysisStatus.chargedPower).to.equal(1);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("keeps a half-composed turn alive across a Charge 1 press instead of silently dropping it", () => {
+        // The reported bug: Charge 1 replays the line from the origin, and a turn in progress is not
+        // a line entry - so pressing it after clicking into a build or an action wiped that turn out,
+        // and the bowls moved by whatever the turn had spent rather than by the 1 power charged.
+        const vm = mountAsSeat(0);
+        vm.enterAnalysisMode();
+        vm.chargeAnalysisPower();
+
+        vm.applyAnalysisMove("terrans action power3"); // no trailing "." - the turn is still open
+        expect(vm.currentMove).to.equal("terrans action power3");
+        const oresMidTurn = vm.engine.players[0].data.ores;
+
+        vm.chargeAnalysisPower();
+
+        expect(vm.currentMove).to.equal("terrans action power3");
+        expect(vm.engine.players[0].data.ores).to.equal(oresMidTurn); // the action is still applied
+        expect(vm.analysisEntries).to.deep.equal([
+          { kind: "adjust", charge: 1 },
+          { kind: "adjust", charge: 1 },
+        ]);
+        expect(vm.analysisStatus.chargedPower).to.equal(2);
+
+        vm.undoAnalysisCharge();
+        expect(vm.currentMove).to.equal("terrans action power3");
+        expect(vm.analysisEntries).to.deep.equal([{ kind: "adjust", charge: 1 }]);
 
         vm.$el.remove();
         vm.$destroy();
@@ -1506,14 +1567,15 @@ describe("Game", () => {
         vm.$destroy();
       });
 
-      it("keeps the persisted line but explains the forced exit when a real move arrives mid-analysis (§3.5's externalData note)", () => {
+      it("keeps the persisted line but explains the forced exit when this seat's OWN real move arrives mid-analysis", () => {
         const vm = mountAsSeat(0);
         vm.enterAnalysisMode();
         vm.applyAnalysisMove("terrans up nav.");
 
-        // A genuinely new move, i.e. an opponent actually played - what the forced exit is for.
+        // This seat moved for real - the line may be the very thing that was just played, so it has
+        // to go through the re-entry prompt rather than being replayed on top of itself.
         const arrived = JSON.parse(JSON.stringify(vm.analysisBackup));
-        arrived.moveHistory = [...arrived.moveHistory, "nevlas up nav."];
+        arrived.moveHistory = [...arrived.moveHistory, "terrans up nav."];
         vm.$store.dispatch("externalData", arrived);
 
         expect(vm.analysisMode).to.equal(false);
@@ -1526,6 +1588,85 @@ describe("Game", () => {
         expect(second.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
         second.$el.remove();
         second.$destroy();
+      });
+
+      it("keeps the sandbox OPEN and re-bases the line when an opponent moves - their turn does not invalidate it", () => {
+        // The reported bug: any incoming move closed sandbox mode, so a line was treated as dead
+        // because somebody built on the far side of the map.
+        const vm = mountAsSeat(0);
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("terrans up nav.");
+        const baseBefore = vm.analysisBaseMoveCount;
+
+        const arrived = JSON.parse(JSON.stringify(vm.analysisBackup));
+        arrived.moveHistory = [...arrived.moveHistory, "nevlas up nav."];
+        vm.$store.dispatch("externalData", arrived);
+
+        expect(vm.analysisMode).to.equal(true);
+        expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
+        // Re-anchored onto the new history, so the stored line is not stale next time either.
+        expect(vm.analysisBaseMoveCount).to.equal(baseBefore + 1);
+        expect(vm.analysisNotice).to.contain("still applies");
+        // Exiting now restores the NEW real board, not the one from before the opponent moved.
+        vm.exitAnalysisMode();
+        expect(vm.engine.moveHistory.length).to.equal(arrived.moveHistory.length);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("truncates and says so when an opponent's move genuinely does invalidate part of the line", () => {
+        // Seat 1 (nevlas) analyses taking a board action while seat 0 is on turn; seat 0 then takes
+        // that very action for real. Board actions are single-use, so the line really is dead.
+        const vm = mountAsSeat(1);
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("nevlas action power3.");
+        expect(vm.analysisEntries).to.have.length(1);
+
+        const real = new Engine(SETUP_MOVES);
+        real.players[0].data.power.area3 = 8; // enough for terrans to actually afford it
+        real.clearAvailableCommands();
+        real.generateAvailableCommands();
+        real.move("terrans action power3.");
+        real.generateAvailableCommandsIfNeeded();
+
+        vm.$store.dispatch("externalData", JSON.parse(JSON.stringify(real)));
+
+        expect(vm.analysisMode).to.equal(true); // still in the sandbox - just with less line
+        expect(vm.analysisEntries).to.deep.equal([]);
+        expect(vm.analysisNotice).to.contain("no longer apply");
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("still force-exits when the incoming state has left the line's two-round window behind", () => {
+        const vm = mountAsSeat(0);
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("terrans up nav.");
+
+        const arrived = JSON.parse(JSON.stringify(vm.analysisBackup));
+        arrived.moveHistory = [...arrived.moveHistory, "nevlas up nav."];
+        arrived.round = 3; // baseRound was 1 - no amount of re-basing brings that window back
+        vm.$store.dispatch("externalData", arrived);
+
+        expect(vm.analysisMode).to.equal(false);
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("still force-exits when the incoming history diverged instead of growing", () => {
+        const vm = mountAsSeat(0);
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("terrans up nav.");
+
+        const arrived = JSON.parse(JSON.stringify(vm.analysisBackup));
+        arrived.moveHistory = [...arrived.moveHistory.slice(0, -1), "nevlas up terra.", "nevlas up nav."];
+        vm.$store.dispatch("externalData", arrived);
+
+        expect(vm.analysisMode).to.equal(false);
+        vm.$el.remove();
+        vm.$destroy();
       });
 
       it("leaves the sandbox open when the same state is refetched (a reconnect, not a move)", () => {

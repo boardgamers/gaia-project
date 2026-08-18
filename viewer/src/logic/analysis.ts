@@ -57,13 +57,36 @@ export interface AnalysisResourceView {
  * `analysis` flag): affordability stops being enforced for it, so an unaffordable move can be played
  * and the resulting debt shown, and `spendPower` tops up rather than driving a power bowl negative.
  * Must be re-applied after every `Engine.fromData` reconstruction in this file, since the flag is
- * deliberately absent from `toJSON()` and so never survives a serialize/deserialize round trip. */
-export function markAnalysisSeat(engine: Engine, seat: number): Engine {
+ * deliberately absent from `toJSON()` and so never survives a serialize/deserialize round trip.
+ *
+ * `analysisAssumedPower` (the running total of that top-up) is absent from `toJSON()` for the same
+ * reason, and it is a TALLY rather than a flag - so every reconstruction has to be handed the total
+ * so far explicitly, or the count silently restarts at 0 on each clone and the header can only ever
+ * report whatever the last step happened to top up. Callers that continue an existing line pass the
+ * carried total; a genuinely fresh start passes nothing and gets 0. */
+export function markAnalysisSeat(engine: Engine, seat: number, assumedPower = 0): Engine {
   const data = engine.players[seat]?.data;
   if (data) {
     data.analysis = true;
+    data.analysisAssumedPower = assumedPower;
   }
   return engine;
+}
+
+/** The assumed-power tally carried on `seat`'s player data, for handing to the next
+ * `markAnalysisSeat` in a chain of clones. Reads 0 for a plain-JSON'd snapshot, which never carries
+ * it (see `markAnalysisSeat`). */
+export function assumedPowerOf(engine: Engine, seat: number): number {
+  return engine.players[seat]?.data.analysisAssumedPower ?? 0;
+}
+
+/** The total power the player has told the sandbox to assume they charge - the sum of the line's
+ * own `adjust` entries (§4.4), i.e. one per press of the Charge 1 button. Distinct from
+ * `analysisAssumedPower`, which is what the engine topped up on its own to cover a power cost the
+ * seat could not really pay: this one is the player's own declared leech, and it is the number they
+ * would otherwise have to keep count of in their head. */
+export function chargedPowerTotal(entries: AnalysisEntry[]): number {
+  return entries.reduce((total, entry) => (entry.kind === "adjust" ? total + entry.charge : total), 0);
 }
 
 /** One overdrawn resource: how far below zero the line has driven it. */
@@ -82,17 +105,25 @@ export interface AnalysisOverdraft {
  * scan. All of it existed to undo the fake wallet analysis mode used to inject. Nothing injects
  * anything now - the seat keeps its real resources and simply goes negative - so the player board is
  * already showing every one of those numbers, live, in the place players actually read them. What is
- * left is the two facts the board CANNOT show: a compact overdraft summary for when the board is
- * scrolled off screen on mobile, and how much power the sandbox assumed you charged.
+ * left is the three facts the board CANNOT show: a compact overdraft summary for when the board is
+ * scrolled off screen on mobile, how much power the sandbox topped up on its own, and how much the
+ * player has told it to assume they charge.
+ *
+ * The last one matters because a Charge 1 press and a power spend both just move tokens between
+ * bowls - once a later move has spent that power, the bowls can read exactly as they did before the
+ * charge, so "did my charge land?" is genuinely unanswerable from the board alone (the reported
+ * bug). The running total answers it.
  */
 export interface AnalysisStatus {
   /** Empty when the line is genuinely affordable. */
   overdrawn: AnalysisOverdraft[];
   /** 0 unless a power cost was topped up (see engine `assumePowerForAnalysis`). */
   assumedPower: number;
+  /** 0 unless the player pressed Charge 1 - see `chargedPowerTotal`. */
+  chargedPower: number;
 }
 
-export function computeAnalysisStatus(data: AnalysisResourceView): AnalysisStatus {
+export function computeAnalysisStatus(data: AnalysisResourceView, chargedPower = 0): AnalysisStatus {
   const overdrawn: AnalysisOverdraft[] = [];
   const add = (kind: AnalysisOverdraft["kind"], amount: number) => {
     if (amount < 0) {
@@ -103,7 +134,7 @@ export function computeAnalysisStatus(data: AnalysisResourceView): AnalysisStatu
   add("o", data.ores);
   add("k", data.knowledge);
   add("q", data.qics);
-  return { overdrawn, assumedPower: data.analysisAssumedPower ?? 0 };
+  return { overdrawn, assumedPower: data.analysisAssumedPower ?? 0, chargedPower };
 }
 
 export interface AnalysisLine {
@@ -514,6 +545,11 @@ export function moveBelongsToSeat(engine: Engine, move: string, seat: number): b
  * goes negative, so there is no wallet to grant, carry between calls, or subtract back out - the
  * player board reads the true numbers straight off the replayed engine.
  *
+ * The one thing that DOES have to be carried by hand across those clones is `analysisAssumedPower`:
+ * it is a tally rather than a flag, and it is dropped by the same round trip, so without threading
+ * it through each step the returned engine would only report whatever the LAST entry topped up
+ * rather than what the line as a whole assumed.
+ *
  * After each entry lands, opponent decisions are auto-resolved (§2.8) and the two-round cap's Pass
  * suppression (§3.7) is reapplied, since both depend on where the line has gotten to.
  */
@@ -526,7 +562,11 @@ export function replayAnalysisLine(
   engine: Engine;
   applied: number;
 } {
-  let engine = markAnalysisSeat(Engine.fromData(JSON.parse(JSON.stringify(origin))), seat);
+  let engine = markAnalysisSeat(
+    Engine.fromData(JSON.parse(JSON.stringify(origin))),
+    seat,
+    assumedPowerOf(origin, seat)
+  );
   // Regenerate before anything reads them: `Engine.fromData` carries over the command list `origin`
   // was serialized with, and that list was built while affordability still applied to this seat. With
   // the flag now set, the same position offers strictly more (§12) - without this an empty line shows
@@ -537,7 +577,11 @@ export function replayAnalysisLine(
   stripCappedPass(engine, baseRound);
   let applied = 0;
   for (const entry of entries) {
-    const copy = markAnalysisSeat(Engine.fromData(JSON.parse(JSON.stringify(engine))), seat);
+    const copy = markAnalysisSeat(
+      Engine.fromData(JSON.parse(JSON.stringify(engine))),
+      seat,
+      assumedPowerOf(engine, seat)
+    );
     try {
       if (entry.kind === "move") {
         copy.move(entry.move);

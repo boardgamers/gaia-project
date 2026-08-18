@@ -398,7 +398,9 @@ import {
   AnalysisStatus,
   analysisFactionPool,
   applySoloRoundFlow,
+  assumedPowerOf,
   buildAnalysisLineup,
+  chargedPowerTotal,
   clearAnalysisLine,
   committableAnalysisMoves,
   computeAnalysisStatus,
@@ -407,6 +409,7 @@ import {
   markAnalysisSeat,
   moveBelongsToSeat,
   replayAnalysisLine,
+  resolveOpponentDecisions,
   saveAnalysisLine,
 } from "../logic/analysis";
 // The three CancelTrigger* step components are registered by PremoveBar now, not here - they render
@@ -541,10 +544,12 @@ export default class Game extends Vue {
   analysisBaseRound: number = null;
   analysisBaseMoveCount: number = null;
   analysisEntries: AnalysisEntry[] = [];
-  // Phase 2 (§4) - the sandbox wallet granted on entry (null until entry, since it's derived from
-  // the real state at that moment - see enterAnalysisMode) and one resource snapshot per
-  // successfully applied line entry, both kept in memory only (never persisted - §3.3 stores only
-  // the entry list, and both of these are cheaply re-derived from it on every replay).
+  // The assumed-power tally (§12, engine `analysisAssumedPower`) as of `analysisComposeBase`. It has
+  // to be tracked separately because that base is a plain-JSON snapshot and the tally is deliberately
+  // absent from `PlayerData.toJSON()` - so a turn composed on top of the base would otherwise start
+  // counting again from 0 and hide everything the line had already assumed. Kept in memory only,
+  // like the base itself: it is re-derived on every replay.
+  analysisComposeAssumedPower = 0;
 
   // Phase 4 (§2.7) - the real sealed-bid backend, stashed on entry and restored on exit, so a
   // simultaneous auction phase (Preference Split/Silent) submits ordinary local moves instead of
@@ -628,10 +633,18 @@ export default class Game extends Vue {
           if (unchanged) {
             return;
           }
+          // An opponent's turn is not, by itself, a reason to throw the player out of the sandbox -
+          // see `reanchorAnalysisLine`. It re-bases the line onto the new real state in place and
+          // takes over the whole handler when it can, so nothing below (including the handleData at
+          // the end) runs and the takeover simply carries on.
+          if (this.reanchorAnalysisLine(payload)) {
+            return;
+          }
           this.analysisMode = false;
           this.analysisBackup = null;
           this.analysisOrigin = null;
           this.analysisComposeBase = null;
+          this.analysisComposeAssumedPower = 0;
           this.analysisSeat = null;
           this.analysisPendingRestore = null;
           this.analysisNotice =
@@ -1473,16 +1486,22 @@ export default class Game extends Vue {
     return this.myLockedSeat !== undefined ? true : this.canPlay;
   }
 
-  /** §12 - the two facts the player board cannot show for itself: a compact overdraft summary (the
-   * board has the real per-resource numbers, but it scrolls off screen on mobile) and how much power
-   * the sandbox assumed was charged. Recomputed from `analysisComposeBase` rather than cached, since
-   * it is cheap and this keeps it structurally impossible to disagree with what is on screen. */
+  /** §12 - the facts the player board cannot show for itself: a compact overdraft summary (the board
+   * has the real per-resource numbers, but it scrolls off screen on mobile), how much power the
+   * sandbox topped up on its own, and how much the player has told it to assume they charge.
+   *
+   * Read off the DISPLAYED engine, not `analysisComposeBase`. The base is a plain-JSON snapshot, and
+   * `analysisAssumedPower` does not survive `PlayerData.toJSON()` - so reading it there reported 0
+   * every single time, which is why a topped-up power cost was invisible. The displayed engine is a
+   * live one with the tally intact, and it has the second advantage of covering the turn currently
+   * being composed rather than only completed entries: overdrawing mid-compose now shows up while
+   * the move is still being built, which is when the player wants to know. */
   get analysisStatus(): AnalysisStatus | null {
-    if (!this.analysisMode || !this.analysisComposeBase) {
+    if (!this.analysisMode) {
       return null;
     }
-    const data = this.analysisComposeBase.players[this.analysisSeat]?.data;
-    return data ? computeAnalysisStatus(data) : null;
+    const data = this.engine?.players[this.analysisSeat]?.data;
+    return data ? computeAnalysisStatus(data, chargedPowerTotal(this.analysisEntries)) : null;
   }
 
   /** §6/decision #13's commit path affordability gate, capped further for what this app can actually
@@ -1587,6 +1606,81 @@ export default class Game extends Vue {
   }
 
   /**
+   * Staleness WITHOUT leaving the sandbox (§3.5) - the live counterpart to `resolveAnalysisStaleness`
+   * below, which only ever runs on re-entry.
+   *
+   * An opponent taking their turn used to close sandbox mode outright, every time, and hand back a
+   * notice saying so. But the sandbox's whole premise (§2.5's solo round flow) is that opponents do
+   * not move inside it, and a line's moves are replayed from scratch against whatever board they are
+   * given - so an opponent's turn usually changes nothing about whether the line still works. Being
+   * ejected mid-analysis because somebody else built on the far side of the map is the reported bug:
+   * the line was treated as invalidated when it plainly was not.
+   *
+   * So: re-base in place instead. The new real state becomes the origin, the line replays onto it,
+   * and the takeover carries on. Only a line that genuinely no longer applies loses anything, and
+   * then only the part that does not apply - reported honestly rather than by closing the sandbox.
+   *
+   * Three cases are deliberately NOT handled here, and fall through to the old force-exit:
+   *
+   * - **This seat's own move arrived.** The line may be the very thing that was just played (a
+   *   commit, or a premove firing), so replaying it would duplicate it. That is exactly the row of
+   *   §3.5's table that has to prompt, and the prompt lives on the re-entry path.
+   * - **The line's two-round window is gone** (`round > baseRound + 1`, decision #10), which no
+   *   amount of re-basing can bring back.
+   * - **The history diverged rather than grew** - a rollback, a different game, a re-anchor onto
+   *   something that is not a continuation of what the line was built on. Nothing here can be
+   *   trusted in that case, so it takes the conservative exit.
+   *
+   * Returns whether it took ownership of this update; false means the caller should carry on with
+   * the force-exit path.
+   */
+  private reanchorAnalysisLine(payload: any): boolean {
+    const seat = this.analysisSeat;
+    if (seat === null || !this.analysisOrigin) {
+      return false;
+    }
+    const originHistory = this.analysisOrigin.moveHistory ?? [];
+    const incomingHistory: string[] = payload.moveHistory ?? [];
+    // Strictly-further-along-the-same-history, the same test the offline mirror uses before it
+    // accepts a refresh (offline-mirror.ts's compareMoveHistories): anything else is a divergence.
+    if (
+      incomingHistory.length <= originHistory.length ||
+      !originHistory.every((move, index) => move === incomingHistory[index])
+    ) {
+      return false;
+    }
+    const incoming = markAnalysisSeat(Engine.fromData(JSON.parse(JSON.stringify(payload))), seat);
+    if (incoming.round > this.analysisBaseRound + 1) {
+      return false;
+    }
+    if (incomingHistory.slice(originHistory.length).some((move) => moveBelongsToSeat(incoming, move, seat))) {
+      return false;
+    }
+
+    this.analysisBackup = JSON.parse(JSON.stringify(payload));
+    applySoloRoundFlow(incoming, seat);
+    // Unlike `enterAnalysisMode`, nobody chose this moment: the new state can be parked on an
+    // opponent's leech answer, which the sandbox would otherwise render as the opponent's own
+    // accept/decline buttons with the player unable to continue. Resolve it up front, exactly as
+    // every replayed entry already does for the pauses its own moves cause.
+    resolveOpponentDecisions(incoming, seat);
+    this.analysisOrigin = incoming;
+    this.analysisBaseMoveCount = incomingHistory.length;
+
+    const entries = this.analysisEntries;
+    const applied = this.setAnalysisEntries(entries);
+    this.analysisNotice =
+      applied < entries.length
+        ? `Someone moved, and ${entries.length - applied} of your ${
+            entries.length
+          } sandbox moves no longer apply - the rest was replayed against the new board.`
+        : entries.length > 0
+        ? "Someone moved. Your sandbox line still applies and was replayed against the new board."
+        : null;
+    return true;
+  }
+
+  /**
    * Staleness on re-entry (§3.5). Compares the stored line's `baseMoveCount` against the live
    * game's current `moveHistory.length` and picks one of four behaviours - `entries`/`baseRound`/
    * `baseMoveCount` on `this` are already set by the caller by this point, so this only ever needs
@@ -1669,6 +1763,7 @@ export default class Game extends Vue {
     this.analysisBackup = null;
     this.analysisOrigin = null;
     this.analysisComposeBase = null;
+    this.analysisComposeAssumedPower = 0;
     this.analysisSeat = null;
     this.analysisPendingRestore = null;
     this.$store.commit("setSealedBidBackend", this.analysisSealedBidBackendBackup);
@@ -1687,7 +1782,8 @@ export default class Game extends Vue {
     }
     const copy = markAnalysisSeat(
       Engine.fromData(JSON.parse(JSON.stringify(this.analysisComposeBase))),
-      this.analysisSeat
+      this.analysisSeat,
+      this.analysisComposeAssumedPower
     );
     if (move) {
       try {
@@ -1742,13 +1838,13 @@ export default class Game extends Vue {
   }
 
   /** Sandbox "Charge 1" button (Commands.vue) - appends a leech adjustment entry (§4.4) each press,
-   * the same fiction the header's assumed-power summary already reads, just player-triggered instead
-   * of implicit. */
+   * the same fiction the header's charged total already reads, just player-triggered instead of
+   * implicit. */
   chargeAnalysisPower() {
     if (!this.analysisMode) {
       return;
     }
-    this.setAnalysisEntries([...this.analysisEntries, { kind: "adjust", charge: 1 }]);
+    this.editAnalysisLineKeepingComposedTurn([...this.analysisEntries, { kind: "adjust", charge: 1 }]);
   }
 
   /** Sandbox "Undo Charge" button - unlike the generic Undo above, only pops the line's last entry
@@ -1760,7 +1856,32 @@ export default class Game extends Vue {
     if (this.analysisEntries[this.analysisEntries.length - 1].kind !== "adjust") {
       return;
     }
-    this.setAnalysisEntries(this.analysisEntries.slice(0, -1));
+    this.editAnalysisLineKeepingComposedTurn(this.analysisEntries.slice(0, -1));
+  }
+
+  /**
+   * `setAnalysisEntries`, but the half-composed turn currently on the board survives it.
+   *
+   * A turn in progress lives only in the displayed engine plus `currentMove` - it is not a line
+   * entry until it completes - and `setAnalysisEntries` replays the line from `analysisOrigin`, so
+   * on its own it wipes that turn out. For Undo/Reset that is the point; for the two Charge buttons
+   * it is the reported bug: press Charge 1 after clicking into a build or an action and the
+   * half-built turn silently vanished, taking its resource and power changes with it, so the bowls
+   * jumped by whatever that turn had spent rather than by the 1 power just charged - looking for all
+   * the world like the charge had gone missing or arrived twice.
+   *
+   * Charging mid-turn is exactly when a player wants it ("can I afford this if I leech 1?"), and the
+   * entry lands ahead of the turn being composed, which is also where a real leech would have
+   * happened. Re-applying the same partial move string against the recharged base is all it takes:
+   * more power can only ever widen what is legal, and `applyAnalysisMove` already treats a move
+   * string it cannot replay as a no-op.
+   */
+  private editAnalysisLineKeepingComposedTurn(entries: AnalysisEntry[]) {
+    const composed = this.currentMove;
+    this.setAnalysisEntries(entries);
+    if (composed) {
+      this.applyAnalysisMove(composed);
+    }
   }
 
   /** Undo (§1 decision #3) - pop the last entry, replay. */
@@ -1800,6 +1921,8 @@ export default class Game extends Vue {
     const kept = entries.slice(0, applied);
     this.analysisEntries = kept;
     this.analysisComposeBase = JSON.parse(JSON.stringify(engine));
+    // Read off the live engine before the snapshot above can drop it - see the field's own comment.
+    this.analysisComposeAssumedPower = assumedPowerOf(engine, this.analysisSeat);
     saveAnalysisLine(this.analysisSeat, {
       entries: kept,
       baseRound: this.analysisBaseRound,

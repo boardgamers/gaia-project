@@ -1,7 +1,24 @@
 {
-  "version": "5.72.3",
-  "releasedAt": "2026-08-17",
+  "version": "5.72.4",
+  "releasedAt": "2026-08-18",
   "entries": [
+    {
+      "version": "5.72.4",
+      "releasedAt": "2026-08-18",
+      "kind": "update",
+      "title": "Sandbox charge counter and surviving opponent turns",
+      "impact": "",
+      "changes": [
+        "Sandbox mode keeps a running total of the power you have charged yourself, and shows the power it had to top up for you, in the banner",
+        "An opponent taking their turn no longer closes sandbox mode - your line is replayed against the new board and only what genuinely stopped working is dropped",
+        "Pressing Charge 1 in the middle of building a move no longer throws that half-built move away",
+        "The assumed-power figure reaches the banner at all, and now counts the whole line instead of only its last move"
+      ],
+      "userChanges": [
+        "Sandbox mode keeps a running total of the power you have charged yourself, and shows the power it had to top up for you, in the banner",
+        "An opponent taking their turn no longer closes sandbox mode - your line is replayed against the new board and only what genuinely stopped working is dropped"
+      ]
+    },
     {
       "version": "5.72.3",
       "releasedAt": "2026-08-17",

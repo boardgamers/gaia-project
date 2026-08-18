@@ -62,6 +62,16 @@
 >   worked regardless of turn either way (Phase 4 had already built that half). Recorded in
 >   `analysisOffered`'s own doc comment.
 >
+> **§4.4's `adjust` entry is back as a UI control and now has a readout** (PROGRESS.md #188, viewer
+> v5.72.4): the Charge 1 / Undo Charge buttons feed it, and the header carries a running total of
+> what has been charged that way alongside the engine's own top-up figure. Two things §12 left broken
+> were fixed with it — the top-up figure never reached the header at all (it was read off the
+> plain-JSON `analysisComposeBase`, and `analysisAssumedPower` is absent from `PlayerData.toJSON()`)
+> and it restarted on every replay step rather than counting the line, and pressing Charge 1 while a
+> turn was half-composed silently threw that turn away. **§3.5's forced exit is also narrower now:**
+> an opponent's move re-bases the line in place (`reanchorAnalysisLine`) instead of closing the
+> sandbox; only this seat's own move, a lost two-round window, or a diverged history still force-exit.
+>
 > §11 was added after the fact, from an owner request that round 0 let you pick ONE faction and go —
 > and building it turned up two real bugs in Phase 4's own setup-entry path (the sandbox wallet not
 > being re-applied on later replays, and a false "infeasible from move 1"), both found by driving the

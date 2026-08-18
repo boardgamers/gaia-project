@@ -49,6 +49,17 @@ describe("AnalysisHeaderControls", () => {
     expect(container.querySelector(".analysis-controls__assumed").textContent).to.contain("+3 power");
   });
 
+  it("keeps a running total of the Charge 1 presses, separately from the topped-up power", () => {
+    // The two are different fictions - one the player asked for, one the sandbox did on its own - so
+    // they get their own chips rather than being added together into one number.
+    const { container } = controls({ moveCount: 2, status: { overdrawn: [], assumedPower: 3, chargedPower: 2 } });
+    expect(container.querySelector(".analysis-controls__charged").textContent).to.contain("+2 charged");
+    expect(container.querySelector(".analysis-controls__assumed").textContent).to.contain("+3 power");
+
+    const none = controls({ moveCount: 2, status: { overdrawn: [], assumedPower: 0, chargedPower: 0 } });
+    expect(none.container.querySelector(".analysis-controls__charged")).to.equal(null);
+  });
+
   it("disables Undo and Reset for an empty line and emits them otherwise", async () => {
     const empty = controls({ moveCount: 0 });
     expect(button(empty.container, "Undo").disabled).to.equal(true);

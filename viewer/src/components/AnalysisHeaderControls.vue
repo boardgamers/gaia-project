@@ -8,13 +8,24 @@
     <span class="analysis-controls__moves">{{ moveCount }} {{ moveCount === 1 ? "move" : "moves" }}</span>
 
     <!-- The only numbers left. Everything per-resource is on the player board now, live, in the place
-         players already read it; these two are what the board cannot say for itself. -->
+         players already read it; these three are what the board cannot say for itself. -->
     <span
       v-if="overdrawn.length > 0"
       class="analysis-controls__overdrawn"
       title="This line spends more than you have - the player board shows the same numbers in red"
     >
       <span v-for="item in overdrawn" :key="item.kind">{{ item.amount }}{{ item.kind }}</span>
+    </span>
+    <!-- The running total of Charge 1 presses. A charge and a later power spend both just move
+         tokens between bowls, so once the line has spent it the board can read exactly as it did
+         before - which made "did my charge land?" unanswerable from the board and left the player
+         counting presses in their head. -->
+    <span
+      v-if="chargedPower > 0"
+      class="analysis-controls__charged"
+      title="Power you have told the sandbox to assume you charge (the Charge 1 button)"
+    >
+      +{{ chargedPower }} charged
     </span>
     <span
       v-if="assumedPower > 0"
@@ -88,6 +99,9 @@ export default Vue.extend({
     assumedPower(): number {
       return (this.status as AnalysisStatus | null)?.assumedPower ?? 0;
     },
+    chargedPower(): number {
+      return (this.status as AnalysisStatus | null)?.chargedPower ?? 0;
+    },
     commitTitle(): string {
       const n = this.committableMoves as number;
       return n === 0
@@ -112,6 +126,7 @@ export default Vue.extend({
 // backing to stay legible (§5.1's "solid or scrimmed text backing, not raw text on stripes").
 .analysis-controls__moves,
 .analysis-controls__overdrawn,
+.analysis-controls__charged,
 .analysis-controls__assumed {
   white-space: nowrap;
   background: rgba(0, 0, 0, 0.55);
@@ -132,6 +147,13 @@ export default Vue.extend({
 
 .analysis-controls__assumed {
   color: #ffe082;
+  font-weight: 600;
+}
+
+// Deliberately a different colour from the assumed-power chip beside it: one is power the PLAYER
+// asked the sandbox to pretend they charged, the other is power the sandbox topped up on its own.
+.analysis-controls__charged {
+  color: #80d8ff;
   font-weight: 600;
 }
 

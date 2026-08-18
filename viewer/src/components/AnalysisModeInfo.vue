@@ -16,13 +16,19 @@
       rather than a balance, so a power cost you cannot cover is topped up and counted in the header as assumed power.
     </p>
     <p>
+      Charge 1 hands you one charged power, as many times as you like, for the leech an opponent would realistically
+      have offered you. The header keeps a running total of what you have charged that way, because once a later move
+      spends it the bowls can read exactly as they did before. Undo Charge takes the last one back.
+    </p>
+    <p>
       Every move is added to the line as soon as it is complete — there is no confirmation step. Undo removes the last
       one, Reset clears them all.
     </p>
     <p>
       Opponents never move, apart from the starting mines you place for them yourself during setup. Their round boosters
       are picked for them, and any power they would be offered is declined automatically, so a build never pauses on
-      somebody else's decision.
+      somebody else's decision. If someone takes their turn in the real game while you are in here, your line is
+      replayed against the new board rather than thrown away — you are only told about it if part of it stops working.
     </p>
     <p>
       A line runs to the end of the round after the one it started in. Board actions, tech tiles, boosters and

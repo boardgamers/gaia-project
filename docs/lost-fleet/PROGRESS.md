@@ -7440,6 +7440,62 @@ Commit · ⓘ` now lives in the hazard-striped header that already existed, with
 
       Viewer: 1153/1153 passing.
 
+188.  ✅ **Sandbox mode: the charge you assume is now written down, and an opponent's turn no longer
+      kills your line (viewer v5.72.4, 2026-08-18, owner report).** Two reports, three real defects.
+
+      **1. Charge 1 threw away a half-built move.** `chargeAnalysisPower` appends an `adjust` entry
+      and goes through `setAnalysisEntries`, which replays the whole line from `analysisOrigin` - and
+      a turn in progress is not a line entry. It lives only in the displayed engine plus
+      `Game.vue`'s `currentMove`, so the replay wiped it out. Press Charge 1 after clicking into a
+      build or a power action and the turn silently vanished, taking its resource and power changes
+      with it: the bowls jumped by whatever that turn had spent rather than by the 1 power just
+      charged, which is exactly the owner's "it's like that charge never came, or it gives me one
+      more charge". Confirmed in a real browser (Playwright against the dev server, scenario
+      `lost-fleet-overview`) - a mid-compose Charge 1 took the seat from 7/5/0 back to 2/6/4 and put
+      the action's knowledge back. Fixed by `editAnalysisLineKeepingComposedTurn`, which captures
+      `currentMove`, replays the line, then re-applies that move string. Charging mid-turn is
+      precisely when a player wants it ("can I afford this if I leech 1?"), the entry lands ahead of
+      the turn being composed - where a real leech would have happened - and more power can only
+      widen what is legal. Undo/Reset deliberately do NOT get this: throwing the turn away is what
+      they are for.
+
+      **2. The assumed-power figure never reached the header, and did not count the line.** Two
+      independent bugs stacked. `analysisStatus` read `analysisComposeBase`, which is a plain-JSON
+      snapshot, and `PlayerData.analysisAssumedPower` is deliberately absent from `toJSON()` - so it
+      read `undefined ?? 0` every single time and the `+N power` chip could never appear at all.
+      Underneath that, `replayAnalysisLine` round-trips the engine through JSON between entries, so
+      the tally restarted at 0 on each one and would only ever have described the last move. The
+      getter now reads the live displayed engine (which also makes it cover the turn being composed,
+      not just completed entries), `markAnalysisSeat` takes the carried total as a third argument,
+      and the replay threads it through. Same class of bug as the `analysis` flag itself, and the
+      same fix - **anything on `PlayerData` that the sandbox needs across a clone has to be handed
+      over by hand; the round trip will not carry it.**
+
+      **3. The player's own Charge 1 presses are now counted on screen** (`AnalysisStatus.chargedPower`
+      / `chargedPowerTotal`), as a separate cyan chip beside the amber assumed-power one. The owner
+      asked for this and it is not cosmetic: a charge and a later power spend both just move tokens
+      between bowls, so once the line has spent it the board can read exactly as it did before the
+      charge - "did my charge land?" is genuinely unanswerable from the board alone. Two chips rather
+      than one sum, because they are different fictions: one the player asked for, one the sandbox
+      did on its own.
+
+      **4. An opponent's move no longer closes sandbox mode.** The `externalData` handler force-exited
+      on ANY change to `moveHistory`, so being ejected mid-analysis because somebody built on the far
+      side of the map was routine - the line was treated as invalidated when it plainly was not. The
+      sandbox's whole premise (§2.5's solo round flow) is that opponents do not move inside it and
+      that a line is replayed from scratch against whatever board it is given, so an opponent's turn
+      usually changes nothing. `reanchorAnalysisLine` now re-bases in place: the new real state
+      becomes `analysisOrigin` (after `applySoloRoundFlow` and a `resolveOpponentDecisions` pass, since
+      nobody chose this moment and the state can be parked on somebody else's leech answer), the line
+      replays onto it, `analysisBaseMoveCount` and `analysisBackup` re-anchor, and the takeover simply
+      carries on. Only what genuinely stopped working is dropped, and the notice says which.
+      Three cases deliberately still force-exit: **this seat's own move arrived** (the line may be the
+      very thing that was just played - a commit, or a premove firing - so it belongs on the re-entry
+      prompt), **the two-round window is gone** (`round > baseRound + 1`, decision #10), and **the
+      history diverged rather than grew** (same strictly-further-along test the offline mirror uses).
+
+      Viewer: 1165/1165 passing. Engine untouched.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

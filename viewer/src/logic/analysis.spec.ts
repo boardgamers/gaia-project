@@ -6,6 +6,7 @@ import {
   applyFactionSeed,
   applySoloRoundFlow,
   buildAnalysisLineup,
+  chargedPowerTotal,
   clearAnalysisLine,
   committableAnalysisMoves,
   computeAnalysisStatus,
@@ -44,6 +45,28 @@ describe("replayAnalysisLine", () => {
     const { engine, applied } = replayAnalysisLine(origin, entries, 0, 1);
     expect(applied).to.equal(1);
     expect(engine.moveHistory[engine.moveHistory.length - 1]).to.equal("terrans up nav (0 ⇒ 1).");
+  });
+
+  it("accumulates the assumed power top-up across the whole line, not just its last entry", () => {
+    // Every replay step round-trips the engine through JSON, and `analysisAssumedPower` is
+    // deliberately not serialized - so without being carried by hand the tally silently restarted on
+    // each entry and the header could only ever report what the final move happened to top up.
+    const origin = markAnalysisSeat(new Engine(SETUP_MOVES), 0);
+    applySoloRoundFlow(origin, 0);
+    const first = replayAnalysisLine(origin, [{ kind: "move", move: "terrans action power3." }], 0, 1);
+    const both = replayAnalysisLine(
+      origin,
+      [
+        { kind: "move", move: "terrans action power3." },
+        { kind: "move", move: "terrans action power4." },
+      ],
+      0,
+      1
+    );
+    const afterOne = first.engine.players[0].data.analysisAssumedPower;
+    expect(afterOne).to.be.greaterThan(0);
+    expect(both.applied).to.equal(2);
+    expect(both.engine.players[0].data.analysisAssumedPower).to.be.greaterThan(afterOne);
   });
 
   it("stops at the first entry that has gone illegal, keeping the valid prefix", () => {
@@ -353,6 +376,32 @@ describe("markAnalysisSeat", () => {
     expect(engine.players[0].data.analysis).to.equal(true);
     expect(engine.players[1].data.analysis).to.equal(false);
   });
+
+  it("carries an assumed-power total onto the clone, since toJSON() drops it", () => {
+    const engine = new Engine(SETUP_MOVES);
+    engine.players[0].data.analysisAssumedPower = 6;
+    const clone = markAnalysisSeat(Engine.fromData(JSON.parse(JSON.stringify(engine))), 0, 6);
+    expect(clone.players[0].data.analysisAssumedPower).to.equal(6);
+    // Without being handed the total, a clone restarts at 0 - which is the whole reason it has to be
+    // threaded through by hand rather than left to the serialize/deserialize round trip.
+    expect(
+      markAnalysisSeat(Engine.fromData(JSON.parse(JSON.stringify(engine))), 0).players[0].data.analysisAssumedPower
+    ).to.equal(0);
+  });
+});
+
+describe("chargedPowerTotal", () => {
+  it("sums the line's own Charge 1 presses and ignores everything else", () => {
+    expect(
+      chargedPowerTotal([
+        { kind: "adjust", charge: 1 },
+        { kind: "move", move: "terrans up nav." },
+        { kind: "adjust", charge: 2 },
+      ])
+    ).to.equal(3);
+    expect(chargedPowerTotal([{ kind: "move", move: "terrans up nav." }])).to.equal(0);
+    expect(chargedPowerTotal([])).to.equal(0);
+  });
 });
 
 describe("computeAnalysisStatus (§12)", () => {
@@ -386,6 +435,13 @@ describe("computeAnalysisStatus (§12)", () => {
   it("treats a snapshot from before assumed power existed as zero", () => {
     const { analysisAssumedPower, ...legacy } = view({});
     expect(computeAnalysisStatus(legacy).assumedPower).to.equal(0);
+  });
+
+  it("reports the charged total it is handed, separately from the topped-up one", () => {
+    const status = computeAnalysisStatus(view({}, 8), 3);
+    expect(status.assumedPower).to.equal(8);
+    expect(status.chargedPower).to.equal(3);
+    expect(computeAnalysisStatus(view({}, 8)).chargedPower).to.equal(0);
   });
 });
 
