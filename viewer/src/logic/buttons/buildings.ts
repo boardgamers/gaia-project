@@ -35,14 +35,24 @@ function buildingMenu(building: Building, faction: Faction): { richText?: RichTe
   return null;
 }
 
-function buildingLabel(bld: AvailableBuilding, faction: Faction): { richText: RichText; label: string } {
+/**
+ * The sandbox's pair of Trading Station buttons (owner instruction, 2026-08-19). Every build button
+ * in this app is icon-only - the words live in the tooltip - which is fine when each icon is a
+ * different building, and useless the moment two buttons carry the SAME Trading Station icon. So
+ * whenever the sandbox twin exists, BOTH get a visible word on the button face: you pick "cheap" or
+ * "expensive" by reading them, not by hovering. Outside sandbox mode there is no twin and the real
+ * button keeps exactly the bare icon it has always had.
+ */
+function buildingLabel(
+  bld: AvailableBuilding,
+  faction: Faction,
+  hasCheapTwin = false
+): { richText: RichText; label: string } {
   const building = bld.building;
   const name = buildingName(building, faction);
-  // The sandbox's second Trading Station. Its own label, because the two buttons are otherwise
-  // identical apart from the price shown on each hex underneath them.
   if (bld.analysisCheap) {
     return {
-      label: `Upgrade to ${name} (cheap)`,
+      label: `Cheap ${name} - sandbox only: 3c, as if an opponent's building were next door. A line holding one cannot be committed.`,
       richText: [richText("Cheap"), richTextBuilding(building, faction)],
     };
   }
@@ -53,6 +63,12 @@ function buildingLabel(bld: AvailableBuilding, faction: Faction): { richText: Ri
     if (building == Building.Mine) {
       label = "Upgrade Gaia Former to Mine";
       rich.unshift(richTextBuilding(Building.GaiaFormer, faction), richTextArrow);
+    } else if (hasCheapTwin) {
+      // No `withShortcut` here: it exists to put the shortcut's underline into the label text, and
+      // `symbolButton`'s own `tooltipWithShortcut` already does that from `button.shortcuts` - which
+      // this button still carries, so `t` keeps working and the tooltip still marks it.
+      label = `Expensive ${name} - the real price: 6c on a hex with no opponent's building next door`;
+      rich.unshift(richText("Expensive"));
     } else {
       label = withShortcut(`Upgrade to ${name}`, availableBuildingShortcut(bld, faction), ["Upgrade to"]);
     }
@@ -131,6 +147,8 @@ export function buildButtons(
 ): ButtonData[] {
   const byTypeLabel = new Map<string, AvailableBuilding[]>();
   const faction = engine.player(command.player).faction;
+  // Only true inside the sandbox, and only where a hex was isolated enough to be worth duplicating.
+  const cheapTwins = new Set(command.data.buildings.filter((b) => b.analysisCheap).map((b) => b.building as Building));
   for (const bld of command.data.buildings) {
     // `analysisCheap` is part of the key so the sandbox's neighbour-priced Trading Station becomes its
     // OWN button rather than being folded into the real one - two buttons for one hex, which is the
@@ -154,7 +172,7 @@ export function buildButtons(
   for (const s of sorted) {
     const buildings = s[1] as AvailableBuilding[];
     const b = buildings[0];
-    const label = buildingLabel(b, faction);
+    const label = buildingLabel(b, faction, cheapTwins.has(b.building));
 
     const building = b.building;
     // No shortcut for the sandbox's cheap Trading Station: it would be the same letter as the real

@@ -7613,6 +7613,19 @@ Commit · ⓘ` now lives in the hazard-striped header that already existed, with
 
       Engine: 588/588 passing (`src/**` minus `src/ai/**`, plus the root specs). Viewer: 1186/1186.
 
+191.  ✅ **…and the two Trading Station buttons now say which is which (viewer v5.72.7, 2026-08-19,
+      owner follow-up).** #190's pair shipped with only the sandbox one labelled: every build button
+      in this app is icon-only, with the words in the tooltip, which is fine while each icon is a
+      different building and useless the moment two buttons carry the SAME Trading Station icon. The
+      owner wants to choose cheap or expensive by reading them. So when the sandbox twin exists BOTH
+      get a word on the button face - **Expensive** and **Cheap** beside the icon - and the tooltips
+      carry the prices (6c isolated / 3c as if next door) plus the fact that a cheap line cannot be
+      committed. Outside sandbox mode there is no twin and the real button keeps exactly the bare icon
+      it has always had, shortcut included; the cheap one still has no shortcut, since nothing in
+      `addDefaultShortcuts` resolves a collision. `viewer/src/logic/buttons/ts-pair.spec.ts` pins all
+      five facts, including that the label lives in `richText` (the button face) and not only in the
+      tooltip - the thing that was wrong.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

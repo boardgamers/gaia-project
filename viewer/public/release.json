@@ -1,7 +1,20 @@
 {
-  "version": "5.72.6",
+  "version": "5.72.7",
   "releasedAt": "2026-08-19",
   "entries": [
+    {
+      "version": "5.72.7",
+      "releasedAt": "2026-08-19",
+      "kind": "update",
+      "title": "Sandbox: tell the two Trading Station buttons apart",
+      "impact": "",
+      "changes": [
+        "The sandbox's two Trading Station buttons are now labelled Expensive and Cheap on the button itself, instead of both showing the same bare icon"
+      ],
+      "userChanges": [
+        "The sandbox's two Trading Station buttons are now labelled Expensive and Cheap on the button itself, instead of both showing the same bare icon"
+      ]
+    },
     {
       "version": "5.72.6",
       "releasedAt": "2026-08-19",
