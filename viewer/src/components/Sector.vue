@@ -11,12 +11,12 @@
 </template>
 
 <script lang="ts">
+import { GaiaHex } from "@gaia-project/engine";
+import { CubeCoordinates, Hex } from "hexagrid";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { GaiaHex } from "@gaia-project/engine";
 import { hexCenter } from "../graphics/hex";
 import SpaceHex from "./SpaceHex.vue";
-import { CubeCoordinates, Hex } from "hexagrid";
 
 @Component<Sector>({
   components: {
@@ -44,7 +44,7 @@ export default class Sector extends Vue {
 
   get sector(): GaiaHex[] {
     const coords = Hex.hexagon(2, { center: this.center });
-    const ret = coords.map((coord) => this.map.grid.get(coord)).filter(h => h);
+    const ret = coords.map((coord) => this.map.grid.get(coord)).filter((h) => h);
 
     return ret;
   }

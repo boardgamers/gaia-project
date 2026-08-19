@@ -76,9 +76,6 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
-import Resource from "../Resource.vue";
 import Engine, {
   Building as BuildingEnum,
   factionBoard,
@@ -90,11 +87,14 @@ import Engine, {
   Resource as ResourceEnum,
   Reward,
 } from "@gaia-project/engine";
-import { CommandObject, markBuilding } from "../../logic/recent";
+import Vue from "vue";
+import { Component, Prop } from "vue-property-decorator";
 import { buildingName } from "../../data/building";
+import { CommandObject, markBuilding } from "../../logic/recent";
 import { radiusTranslate } from "../../logic/utils";
-import Planet from "../Planet.vue";
 import Building from "../Building.vue";
+import Planet from "../Planet.vue";
+import Resource from "../Resource.vue";
 
 @Component({
   components: {
@@ -172,14 +172,15 @@ export default class BuildingGroup extends Vue {
       ? b.cost.map((c) => `${c.count - this.discount}${c.type}`).join(", ")
       : b.cost.join(", ") || "~";
     const isolatedCost = b.isolatedCost ? " Isolated cost: " + (b.isolatedCost.join(", ") || "~") : "";
-    const income = building === BuildingEnum.GaiaFormer || isShip(building) ? null : (this.resources(i, true).join(", ") || "~");
+    const income =
+      building === BuildingEnum.GaiaFormer || isShip(building) ? null : this.resources(i, true).join(", ") || "~";
     const rows = [
       buildingName(building, this.faction) + (this.isDeployed(i) ? " (deployed)" : ""),
       `Cost: ${cost}${isolatedCost}`,
       income,
-      `Power Value: ${this.player.buildingValue(null, {building})}`,
+      `Power Value: ${this.player.buildingValue(null, { building })}`,
     ];
-    return rows.filter(r => r).join("<br/>");
+    return rows.filter((r) => r).join("<br/>");
   }
 
   get destroyedTooltip() {
@@ -274,8 +275,9 @@ export default class BuildingGroup extends Vue {
       if (i < this.gaia) {
         return PlanetEnum.Volcanic;
       }
-      const onGaia = [...this.engine.map.grid.values()]
-        .filter(h => h.buildingOf(this.player.player) === BuildingEnum.GaiaFormer && h.data.planet == PlanetEnum.Gaia).length;
+      const onGaia = [...this.engine.map.grid.values()].filter(
+        (h) => h.buildingOf(this.player.player) === BuildingEnum.GaiaFormer && h.data.planet == PlanetEnum.Gaia
+      ).length;
       return i < onGaia + this.gaia ? PlanetEnum.Gaia : PlanetEnum.Transdim;
     }
   }
@@ -288,7 +290,7 @@ export default class BuildingGroup extends Vue {
       if (n == 1) {
         return `scale(0.08)`;
       }
-      return radiusTranslate(.55, resource, n) + " scale(0.04)";
+      return radiusTranslate(0.55, resource, n) + " scale(0.04)";
     }
   }
 

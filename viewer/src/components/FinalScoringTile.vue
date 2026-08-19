@@ -29,12 +29,12 @@
 </template>
 
 <script lang="ts">
+import { Faction, finalScorings, FinalTile, Phase, Player } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { Faction, finalScorings, FinalTile, Phase, Player } from "@gaia-project/engine";
-import Token from "./Token.vue";
-import { factionName } from "../data/factions";
 import { MapMode, MapModeType } from "../data/actions";
+import { factionName } from "../data/factions";
+import Token from "./Token.vue";
 
 @Component<FinalScoringTile>({
   computed: {
@@ -75,7 +75,8 @@ export default class FinalScoringTile extends Vue {
   }
 
   get mapModeType(): { type: MapModeType; player: Player }[] {
-    const m = (type: MapModeType) => this.players.filter(p => p.faction != "automa").map(player => ({ type, player }));
+    const m = (type: MapModeType) =>
+      this.players.filter((p) => p.faction != "automa").map((player) => ({ type, player }));
     switch (this.tile) {
       case FinalTile.Sector:
         return m(MapModeType.sectors);
@@ -87,7 +88,7 @@ export default class FinalScoringTile extends Vue {
   }
 
   toggleMapMode(mode: MapModeType, player: Player) {
-    this.$store.commit("toggleMapMode", { type: mode, player: player.player  } as MapMode);
+    this.$store.commit("toggleMapMode", { type: mode, player: player.player } as MapMode);
   }
 
   get content() {

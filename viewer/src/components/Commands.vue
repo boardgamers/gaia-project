@@ -55,8 +55,6 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
 import Engine, {
   AdvTechTilePos,
   AvailableCommand,
@@ -72,7 +70,12 @@ import Engine, {
   SpaceMap,
   TechTilePos,
 } from "@gaia-project/engine";
-import MoveButton from "./MoveButton.vue";
+import { FactionCustomization } from "@gaia-project/engine/src/engine";
+import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
+import { CubeCoordinates } from "hexagrid";
+import Vue from "vue";
+import { Component, Prop } from "vue-property-decorator";
+import { ActionPayload, SubscribeActionOptions, SubscribeOptions } from "vuex";
 import {
   ButtonData,
   GameContext,
@@ -80,22 +83,19 @@ import {
   HighlightHex,
   ModalButtonData,
   SpecialActionIncome,
-  WarningsPreference
+  WarningsPreference,
 } from "../data";
 import { factionDesc, factionName, factionShortcut } from "../data/factions";
-import { FactionCustomization } from "@gaia-project/engine/src/engine";
-import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
 import { enabledButtonWarnings, isWarningEnabled } from "../data/warnings";
-import Undo from "./Resources/Undo.vue";
-import { ActionPayload, SubscribeActionOptions, SubscribeOptions } from "vuex";
+import { richText, RichText } from "../graphics/rich-text";
+import { autoClickStrategy } from "../logic/buttons/autoClick";
+import { commandButtons, replaceRepeat } from "../logic/buttons/commands";
 import { CommandController, ExecuteBack, FastConversionTooltips } from "../logic/buttons/types";
 import { buttonStringLabel, callOnShow } from "../logic/buttons/utils";
-import { commandButtons, replaceRepeat } from "../logic/buttons/commands";
-import { CubeCoordinates } from "hexagrid";
-import { autoClickStrategy } from "../logic/buttons/autoClick";
-import RichTextView from "./Resources/RichTextView.vue";
-import { richText, RichText } from "../graphics/rich-text";
 import { chargePowerToPay } from "../logic/utils";
+import MoveButton from "./MoveButton.vue";
+import RichTextView from "./Resources/RichTextView.vue";
+import Undo from "./Resources/Undo.vue";
 
 let show = false;
 
@@ -113,7 +113,11 @@ export type EmitCommandParams = { disappear?: boolean; times?: number; warnings?
   },
   methods: {
     tooltip(faction: Faction) {
-      return factionDesc(faction, factionVariantBoard(this.factionCustomization, faction)?.board, this.engine.expansions);
+      return factionDesc(
+        faction,
+        factionVariantBoard(this.factionCustomization, faction)?.board,
+        this.engine.expansions
+      );
     },
 
     modalDialog(title: string, msg: string): ModalButtonData {
@@ -297,12 +301,10 @@ export default class Commands extends Vue implements CommandController {
       this.$emit("command", command);
     } else {
       //decline ignores what's on the the stack (e.g. 'decline up' instead of 'up decline')
-      const commands: string[] = command.startsWith(Command.Decline) ? [command] : [...this.commandChain.filter((c) => c), command];
-      this.$emit(
-        "command",
-        `${this.playerSlug} ${commands.join(" ")}`,
-        warnings
-      );
+      const commands: string[] = command.startsWith(Command.Decline)
+        ? [command]
+        : [...this.commandChain.filter((c) => c), command];
+      this.$emit("command", `${this.playerSlug} ${commands.join(" ")}`, warnings);
     }
   }
 
@@ -486,7 +488,12 @@ export default class Commands extends Vue implements CommandController {
     this.$store.commit("highlightTechs", techs);
   }
 
-  subscribe(action: string, button: ButtonData, callback: (payload: any) => any, filter: (payload: any) => boolean = null) {
+  subscribe(
+    action: string,
+    button: ButtonData,
+    callback: (payload: any) => any,
+    filter: (payload: any) => boolean = null
+  ) {
     action = "" + action;
 
     this.unsubscribe(button);
@@ -503,13 +510,22 @@ export default class Commands extends Vue implements CommandController {
     this.$store.commit("activeButton", buttonData);
   }
 
-  subscribeHexClick(button: ButtonData, callback: (hex: GaiaHex, highlight: HighlightHex) => void, filter?: (hex: GaiaHex) => boolean) {
+  subscribeHexClick(
+    button: ButtonData,
+    callback: (hex: GaiaHex, highlight: HighlightHex) => void,
+    filter?: (hex: GaiaHex) => boolean
+  ) {
     const heightFilter = () => {
       return this.buttonChain.length == button.parents;
     };
-    this.subscribe("hexClick", button, (payload) => {
-      callback(payload.hex, payload.highlight);
-    }, payload => (filter ? filter(payload.hex) : true) && heightFilter());
+    this.subscribe(
+      "hexClick",
+      button,
+      (payload) => {
+        callback(payload.hex, payload.highlight);
+      },
+      (payload) => (filter ? filter(payload.hex) : true) && heightFilter()
+    );
   }
 
   subscribeFinal(action: string, button: ButtonData) {
@@ -523,7 +539,7 @@ export default class Commands extends Vue implements CommandController {
     button.subscription?.();
     button.subscription = null;
     button.onShowTriggered = false;
-    button.buttons?.forEach(b => this.unsubscribe(b));
+    button.buttons?.forEach((b) => this.unsubscribe(b));
   }
 
   async handleButtonClick(button: ButtonData) {
@@ -589,9 +605,11 @@ export default class Commands extends Vue implements CommandController {
   }
 
   private shouldShowModal(button: ButtonData) {
-    return this.enabledButtonWarnings(button).length > 0
-      && !this.isActiveButton(button)
-      && this.warningPreference === WarningsPreference.ModalDialog;
+    return (
+      this.enabledButtonWarnings(button).length > 0 &&
+      !this.isActiveButton(button) &&
+      this.warningPreference === WarningsPreference.ModalDialog
+    );
   }
 
   get warningPreference(): WarningsPreference {

@@ -10,9 +10,9 @@ import Engine, {
   Player,
 } from "@gaia-project/engine";
 import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
-import { sortBy } from "lodash";
 import { ButtonData, HighlightHex, HighlightHexData } from "../../data";
 import { federationData } from "../../data/federations";
+import { sortBy } from "../lodash-utils";
 import { tooltipWithShortcut } from "./shortcuts";
 import { CommandController } from "./types";
 import { autoClickButton, customHexSelection, textButton } from "./utils";

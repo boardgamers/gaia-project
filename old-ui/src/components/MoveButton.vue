@@ -36,10 +36,10 @@
 </template>
 
 <script lang="ts">
+import { GaiaHex, SpaceMap } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { GaiaHex, TechTilePos, AdvTechTilePos, Command, SpaceMap } from "@gaia-project/engine";
-import { HighlightHexData, ButtonData } from "../data";
+import { ButtonData } from "../data";
 import Booster from "./Booster.vue";
 
 @Component({

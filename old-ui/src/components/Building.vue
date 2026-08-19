@@ -15,9 +15,9 @@
 </template>
 
 <script lang="ts">
+import { Building as BuildingEnum, Faction, Planet, factionPlanet } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { Faction, Building as BuildingEnum, Planet, factionPlanet } from "@gaia-project/engine";
 import { corners } from "../graphics/hex";
 import Token from "./Token.vue";
 

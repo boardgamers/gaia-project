@@ -161,33 +161,32 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
 import Engine, {
   Building as BuildingEnum,
   Faction,
   factionPlanet,
   GaiaHex,
+  SpaceMap as ISpaceMap,
   Planet as PlanetEnum,
   Player,
   PlayerEnum,
   shipsInHex,
-  SpaceMap as ISpaceMap,
 } from "@gaia-project/engine";
-import { Direction } from "hexagrid";
-import { corners, FederationLine, playerFederationLines } from "../graphics/hex";
-import Planet from "./Planet.vue";
-import Building from "./Building.vue";
-import { buildingData, buildingName } from "../data/building";
-import planets, { planetNames } from "../data/planets";
-import { HexSelection, HighlightHex, HighlightHexData, WarningsPreference } from "../data";
-import { isWarningEnabled } from "../data/warnings";
-import { factionName } from "../data/factions";
-import { leechPlanets, radiusTranslate, upgradableBuildingsOfOtherPlayers } from "../logic/utils";
 import { Ship } from "@gaia-project/engine/src/enums";
+import Vue from "vue";
+import { Component, Prop } from "vue-property-decorator";
+import { HexSelection, HighlightHex, HighlightHexData, WarningsPreference } from "../data";
 import { MapMode, MapModeType } from "../data/actions";
+import { buildingData, buildingName } from "../data/building";
+import { factionName } from "../data/factions";
+import planets, { planetNames } from "../data/planets";
+import { isWarningEnabled } from "../data/warnings";
+import { corners, FederationLine, playerFederationLines } from "../graphics/hex";
 import { isFree } from "../logic/buttons/utils";
-import { max } from "lodash";
+import { max } from "../logic/lodash-utils";
+import { leechPlanets, radiusTranslate, upgradableBuildingsOfOtherPlayers } from "../logic/utils";
+import Building from "./Building.vue";
+import Planet from "./Planet.vue";
 
 type BuildingOverride = { building: BuildingEnum; player: PlayerEnum };
 @Component<SpaceHex>({
@@ -203,7 +202,7 @@ export default class SpaceHex extends Vue {
   @Prop()
   isCenter: boolean;
 
-  planetColors = Object.entries(planets).map(e => ({ planet: e[0], color: e[1].color }));
+  planetColors = Object.entries(planets).map((e) => ({ planet: e[0], color: e[1].color }));
 
   shipTransform(index: number): string {
     switch (this.ships.length) {
@@ -217,7 +216,7 @@ export default class SpaceHex extends Vue {
   }
 
   radiusTransform(index: number, scale: number): string {
-    return `scale(${scale}) ${radiusTranslate(.63 / scale, index, 7)}`;
+    return `scale(${scale}) ${radiusTranslate(0.63 / scale, index, 7)}`;
   }
 
   get hexCorners() {
@@ -234,7 +233,7 @@ export default class SpaceHex extends Vue {
 
   get ships(): Ship[] {
     let firstHidden = false;
-    return shipsInHex(this.hex.toString(), this.engine).filter(s => {
+    return shipsInHex(this.hex.toString(), this.engine).filter((s) => {
       if (firstHidden) {
         return true;
       }
@@ -260,18 +259,19 @@ export default class SpaceHex extends Vue {
       return null;
     }
 
-    return this.highlightedHexes?.get(hex)?.warnings
-      ?.filter(w => tooltip || isWarningEnabled(w.disableKey, this.$store.state.preferences))
+    return this.highlightedHexes
+      ?.get(hex)
+      ?.warnings?.filter((w) => tooltip || isWarningEnabled(w.disableKey, this.$store.state.preferences))
       ?.map((w) => w.message)
       ?.join(", ");
   }
 
   get highlightBuilding(): BuildingOverride | null {
-    return this.buildingOverride(this.hex, h => h.building);
+    return this.buildingOverride(this.hex, (h) => h.building);
   }
 
   get hideBuilding(): BuildingOverride | null {
-    return this.buildingOverride(this.hex, h => h.hideBuilding);
+    return this.buildingOverride(this.hex, (h) => h.hideBuilding);
   }
 
   buildingOverride(hex: GaiaHex, prop: (h: HighlightHex) => BuildingEnum | null): BuildingOverride | null {
@@ -359,16 +359,17 @@ export default class SpaceHex extends Vue {
   }
 
   get planetMapMode(): boolean {
-    return this.mapModes.filter(m => m.planet === this.planet).length > 0;
+    return this.mapModes.filter((m) => m.planet === this.planet).length > 0;
   }
 
   private playerMapMode(type: MapModeType): MapMode | null {
-    return this.mapModes.find(mode => mode.type === type);
+    return this.mapModes.find((mode) => mode.type === type);
   }
 
   get federationLines(): FederationLine[] {
-    return this.powerHighlightClass ? [] :
-      this.hex.federations.flatMap(player => playerFederationLines(this.map.grid, this.hex, this.player(player)));
+    return this.powerHighlightClass
+      ? []
+      : this.hex.federations.flatMap((player) => playerFederationLines(this.map.grid, this.hex, this.player(player)));
   }
 
   get showPlanet(): boolean {
@@ -386,12 +387,17 @@ export default class SpaceHex extends Vue {
   get mapModeHighlight(): PlayerEnum | null {
     if (this.planet === "e") {
       const sec = this.playerMapMode(MapModeType.sectors);
-      if (sec && this.player(sec.player).data.occupied.some((hex) => hex.colonizedBy(sec.player) && hex.data.sector === this.hex.data.sector)) {
+      if (
+        sec &&
+        this.player(sec.player).data.occupied.some(
+          (hex) => hex.colonizedBy(sec.player) && hex.data.sector === this.hex.data.sector
+        )
+      ) {
         return sec.player;
       }
 
       const fed = this.playerMapMode(MapModeType.federations);
-      if (fed && this.hex.federations.some(f => f === fed.player)) {
+      if (fed && this.hex.federations.some((f) => f === fed.player)) {
         return fed.player;
       }
     }
@@ -416,7 +422,9 @@ export default class SpaceHex extends Vue {
   private leechHighlightClass(mode: MapMode) {
     const hex = this.hex;
     const p = mode.player;
-    const maxLeech = max(leechPlanets(this.map, p, hex).map(lp => this.player(p).buildingValue(lp.hex, { building: lp.building })));
+    const maxLeech = max(
+      leechPlanets(this.map, p, hex).map((lp) => this.player(p).buildingValue(lp.hex, { building: lp.building }))
+    );
     if (maxLeech) {
       const otherPlayers = upgradableBuildingsOfOtherPlayers(this.engine, hex, p);
       if (otherPlayers) {
@@ -479,9 +487,9 @@ export default class SpaceHex extends Vue {
     const messages: string[] = [];
     const highlightHex = this.highlightedHexes?.get(hex);
     if (c) {
-      messages.push(highlightHex?.building
-        ? `Build ${buildingData[highlightHex.building].name} for ${c}`
-        : `Cost: ${c}`);
+      messages.push(
+        highlightHex?.building ? `Build ${buildingData[highlightHex.building].name} for ${c}` : `Cost: ${c}`
+      );
     }
     if (highlightHex?.tradeCost) {
       messages.push(`Trade Cost: ${highlightHex.tradeCost}`);
@@ -510,23 +518,19 @@ export default class SpaceHex extends Vue {
         buildings.push(buildingLabel(this.player(data.additionalMine), BuildingEnum.Mine));
       }
     } else if (this.ships) {
-      ships = this.ships.map(s => {
+      ships = this.ships.map((s) => {
         const faction = this.player(s.player).faction;
-        return (`${buildingName(s.type, faction)} (${factionName(faction)})`);
+        return `${buildingName(s.type, faction)} (${factionName(faction)})`;
       });
     }
-    buildings.push(...hex.customPosts.map(p => buildingLabel(this.player(p), BuildingEnum.CustomsPost)));
-    buildings.push(...hex.tradeTokens.map(p => `Traded: ${factionName(this.player(p).faction)}`));
+    buildings.push(...hex.customPosts.map((p) => buildingLabel(this.player(p), BuildingEnum.CustomsPost)));
+    buildings.push(...hex.tradeTokens.map((p) => `Traded: ${factionName(this.player(p).faction)}`));
     const w = this.warning(hex, true);
     if (w) {
       messages.push(`Warning: ${w}`);
     }
     const coord = `Coordinates: ${hex}`;
-    return [coord, planet]
-      .concat(buildings)
-      .concat(ships)
-      .concat(messages)
-      .join(" ");
+    return [coord, planet].concat(buildings).concat(ships).concat(messages).join(" ");
   }
 }
 </script>

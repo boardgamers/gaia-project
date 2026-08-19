@@ -18,12 +18,7 @@ import { ChartSummary, ExtractLog, ExtractLogArg, planetCounter, SimpleSourceFac
 type FinalScoringExtractLog = ExtractLog<ChartSource<FinalTile>>;
 
 export type FinalScoringContributor =
-  | "Regular Building"
-  | "Lost Planet"
-  | "Satellite"
-  | "Space Station"
-  | "Lantids Guest Mine"
-  | "Gaia Former";
+  "Regular Building" | "Lost Planet" | "Satellite" | "Space Station" | "Lantids Guest Mine" | "Gaia Former";
 
 export class FinalScoringTableRow {
   contributors: FinalScoringContributor[];

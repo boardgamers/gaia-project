@@ -29,8 +29,6 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
 import Engine, {
   AdvTechTile,
   AdvTechTilePos,
@@ -39,12 +37,14 @@ import Engine, {
   TechTile as TechTileEnum,
   TechTilePos,
 } from "@gaia-project/engine";
-import { eventDesc } from "../data/event";
-import TechContent from "./TechContent.vue";
-import { ButtonData } from "../data";
-import { prependShortcut } from "../logic/buttons/shortcuts";
-import { techTileData } from "../data/tech-tiles";
 import { techTileEventWithSource } from "@gaia-project/engine/src/tiles/techs";
+import Vue from "vue";
+import { Component, Prop } from "vue-property-decorator";
+import { ButtonData } from "../data";
+import { eventDesc } from "../data/event";
+import { techTileData } from "../data/tech-tiles";
+import { prependShortcut } from "../logic/buttons/shortcuts";
+import TechContent from "./TechContent.vue";
 
 @Component({
   components: {

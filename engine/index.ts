@@ -77,20 +77,20 @@ export { AvailableSetupOption, SetupType } from "./src/setup";
 export { finalScorings } from "./src/tiles/scoring";
 export {
   BrainstoneDest,
-  MaxLeech,
   BuildWarning,
+  Event,
+  EventSource,
+  finalRankings,
+  gainFinalScoringVictoryPoints,
+  MAX_SATELLITES,
+  MaxLeech,
+  parseLocation,
   Player,
   PlayerData,
-  Event,
+  Power,
   Reward,
   SpaceMap,
-  EventSource,
-  gainFinalScoringVictoryPoints,
-  finalRankings,
-  parseLocation,
   stdBuildingValue,
-  Power,
-  MAX_SATELLITES,
 };
 
 export default Engine;

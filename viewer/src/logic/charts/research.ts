@@ -8,8 +8,8 @@ import {
   ResearchField,
   Resource,
 } from "@gaia-project/engine";
-import { sum } from "lodash";
 import { researchColorVar, researchData } from "../../data/research";
+import { sum } from "../lodash-utils";
 import { CommandObject } from "../recent";
 import { chartPlayerBoard, ChartSource } from "./charts";
 import { ChartSummary, commandCounterArg0EqualsSource, logEntryProcessor, SimpleSourceFactory } from "./simple-charts";

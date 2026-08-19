@@ -1,6 +1,6 @@
 {
   "name": "@gaia-project/engine",
-  "version": "4.8.52",
+  "version": "4.8.53",
   "description": "Javascript engine for project gaia",
   "main": "dist/index.js",
   "types": "index.ts",
@@ -42,7 +42,7 @@
   },
   "devDependencies": {
     "@types/chai": "^4.1.2",
-    "@types/lodash": "^4.14.149",
+    "@types/lodash": "4.14.182",
     "@types/mocha": "^2.2.48",
     "@types/node": "^14.0.14",
     "@types/seedrandom": "^2.4.27",

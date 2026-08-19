@@ -32,12 +32,12 @@
 </template>
 
 <script lang="ts">
+import Engine, { Faction, Player, Resource as ResourceEnum } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import Resource from "../Resource.vue";
-import Engine, { Faction, Player, Resource as ResourceEnum } from "@gaia-project/engine";
-import PowerBowl from "./PowerBowl.vue";
 import { showIncome } from "../../data/resources";
+import Resource from "../Resource.vue";
+import PowerBowl from "./PowerBowl.vue";
 
 @Component<PowerBowls>({
   components: {

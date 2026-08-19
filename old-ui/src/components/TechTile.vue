@@ -16,11 +16,11 @@
 </template>
 
 <script lang="ts">
+import { AdvTechTilePos, Event, PlayerEnum, TechTilePos } from "@gaia-project/engine";
+import { techTileEvents } from "@gaia-project/engine/src/tiles/techs";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { PlayerEnum, Event, TechTilePos, AdvTechTilePos } from "@gaia-project/engine";
 import { eventDesc } from "../data/event";
-import { techTileEvents } from "@gaia-project/engine/src/tiles/techs";
 
 @Component<TechTile>({
   computed: {

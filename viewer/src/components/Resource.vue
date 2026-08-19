@@ -4,7 +4,7 @@
       <Qic v-if="!flat" class="qic" :transform="`translate(-0.5,0)`" />
       <rect v-else class="qic" width="14" height="14" x="-7" y="-7" />
     </template>
-    <!-- <rect v-if="kind=='q'" class="qic" width="14" height="14" x="-7" y="-7" /> -->
+    <!-- <rect v-if="kind="='q'"" class="qic" width="14" height="14" x="-7" y="-7" /> -->
     <rect v-else-if="kind === 'o'" class="ore" width="14" height="14" x="-7" y="-7" />
     <rect v-else-if="kind === 'c'" class="credit" width="16" height="16" ry="8" rx="8" x="-8" y="-8" />
     <rect v-else-if="kind === 'tradeBonus'" class="trade-bonus" width="16" height="16" ry="8" rx="8" x="-8" y="-8" />
@@ -57,12 +57,12 @@
     <g v-else-if="kind == 'swap-PI'" transform="scale(-1,1)">
       <Building faction="ambas" building="m" transform="translate(-8.5, 0) scale(1.5)" :flat="flat" />
       <Building faction="ambas" building="PI" transform="translate(6, 0) scale(1.5)" :flat="flat" />
-      <image xlink:href="../assets/resources/swap-arrow.svg" width=15 :height=129/343*15 x=-7.5 y=-14 />
+      <image xlink:href="../assets/resources/swap-arrow.svg" width="15" :height="(129 / 343) * 15" x="-7.5" y="-14" />
     </g>
     <g v-else-if="kind == 'down-lab'" transform="scale(-1,1)">
       <Building faction="firaks" building="lab" transform="translate(-7.5, 0) scale(1.5)" :flat="flat" />
       <Building faction="firaks" building="ts" transform="translate(7.5, 0) scale(-1.5,1.5)" :flat="flat" />
-      <image xlink:href="../assets/resources/arrow-charge.svg" width=15 :height=133/346*15 x=-7.5 y=-14 />
+      <image xlink:href="../assets/resources/arrow-charge.svg" width="15" :height="(133 / 346) * 15" x="-7.5" y="-14" />
     </g>
     <Building
       v-else-if="kind == 'space-station'"
@@ -75,31 +75,44 @@
       <image v-if="!flat" xlink:href="../assets/resources/dig-planet.svg" width="20" height="20" x="-10" y="-10" />
       <circle v-else r="10" :class="['planet-fill', 'dig']" />
       <template v-if="count === 1 || !count">
-        <image xlink:href='../assets/resources/dig-arrow.svg' width=14 :height=325/308*14 x=-11 y=-4 />
+        <image xlink:href="../assets/resources/dig-arrow.svg" width="14" :height="(325 / 308) * 14" x="-11" y="-4" />
       </template>
       <template v-else-if="count === 2">
-        <image xlink:href='../assets/resources/dig-arrow.svg' width=14 :height=325/308*14 x=-13 y=-7 /> <image
-        xlink:href='../assets/resources/dig-arrow.svg' width=14 :height=325/308*14 x=-9 y=-2 />
+        <image xlink:href="../assets/resources/dig-arrow.svg" width="14" :height="(325 / 308) * 14" x="-13" y="-7" />
+        <image xlink:href="../assets/resources/dig-arrow.svg" width="14" :height="(325 / 308) * 14" x="-9" y="-2" />
       </template>
     </template>
     <template v-else-if="kind === 'd'">
       <g transform="translate(3,0)">
         <image v-if="!flat" xlink:href="../assets/resources/dig-planet.svg" width="20" height="20" x="-10" y="-10" />
         <circle v-else r="10" :class="['planet-fill', 'dig']" />
-        <image xlink:href='../assets/resources/dig-arrow.svg' :height=325/308*14 width=14 x=-11 y=-4 />
+        <image xlink:href="../assets/resources/dig-arrow.svg" :height="(325 / 308) * 14" width="14" x="-11" y="-4" />
       </g>
       <g transform="translate(-7,-7)">
         <rect class="ore" width="12" height="12" x="-6" y="-6" />
         <text x="0" y="0" fill="black">{{ 3 - count }}</text>
       </g>
     </template>
-    <image v-else-if="kind === 'tech'" xlink:href='../assets/resources/tech.svg' :height=155/211*22 width=22 x=-11 y=-8
+    <image
+      v-else-if="kind === 'tech'"
+      xlink:href="../assets/resources/tech.svg"
+      :height="(155 / 211) * 22"
+      width="22"
+      x="-11"
+      y="-8"
     />
     <Federation v-else-if="kind === 'fed'" width="22" x="-11" y="-26.5" :used="true" />
     <template v-else-if="kind === 'range'">
-      <image xlink:href="../assets/resources/flat-hex.svg" :height=162/328*20 width=15 y=-9 x=-2 /> <image
-      xlink:href="../assets/resources/flat-hex.svg" :height=162/328*20 width=20 y=3 x=-10 /> <image
-      xlink:href="../assets/resources/range-arrow.svg" :height=285/164*9 width=9 y=-8 x=-2 transform="rotate(5)" />
+      <image xlink:href="../assets/resources/flat-hex.svg" :height="(162 / 328) * 20" width="15" y="-9" x="-2" />
+      <image xlink:href="../assets/resources/flat-hex.svg" :height="(162 / 328) * 20" width="20" y="3" x="-10" />
+      <image
+        xlink:href="../assets/resources/range-arrow.svg"
+        :height="(285 / 164) * 9"
+        width="9"
+        y="-8"
+        x="-2"
+        transform="rotate(5)"
+      />
       <text
         v-if="count > 1"
         x="-7"
@@ -114,13 +127,13 @@
     </template>
     <template v-else-if="kind === 'r'">
       <g transform="scale(1) translate(-13,0)">
-        <image xlink:href="../assets/resources/flat-hex.svg" :height=162/328*20 width=20 x=-10 y=-4 />
+        <image xlink:href="../assets/resources/flat-hex.svg" :height="(162 / 328) * 20" width="20" x="-10" y="-4" />
       </g>
       <g transform="scale(1) translate(13,0)">
-        <image xlink:href="../assets/resources/flat-hex.svg" :height=162/328*20 width=20 x=-10 y=-4 />
+        <image xlink:href="../assets/resources/flat-hex.svg" :height="(162 / 328) * 20" width="20" x="-10" y="-4" />
       </g>
       <g transform="translate(1,0) rotate(70)">
-        <image xlink:href="../assets/resources/range-arrow.svg" :height=285/164*9 width=10 x=-5 y=-8 />
+        <image xlink:href="../assets/resources/range-arrow.svg" :height="(285 / 164) * 9" width="10" x="-5" y="-8" />
       </g>
       <text v-if="count >= 1" x="13" y="1.2" fill="black" stroke-width="0.3" style="font-weight: bold; font-size: 10px">
         {{ count }}
@@ -128,13 +141,13 @@
     </template>
     <template v-else-if="kind === 'ship-range'">
       <g transform="scale(1) translate(-13,0)">
-        <image xlink:href="../assets/resources/flat-hex.svg" :height=162/328*20 width=20 x=-10 y=-4 />
+        <image xlink:href="../assets/resources/flat-hex.svg" :height="(162 / 328) * 20" width="20" x="-10" y="-4" />
       </g>
       <g transform="scale(1) translate(13,0)">
-        <image xlink:href="../assets/resources/flat-hex.svg" :height=162/328*20 width=20 x=-10 y=-4 />
+        <image xlink:href="../assets/resources/flat-hex.svg" :height="(162 / 328) * 20" width="20" x="-10" y="-4" />
       </g>
       <g transform="translate(1,0) rotate(70)">
-        <image xlink:href="../assets/resources/range-arrow.svg" :height=285/164*9 width=10 x=-5 y=-8 />
+        <image xlink:href="../assets/resources/range-arrow.svg" :height="(285 / 164) * 9" width="10" x="-5" y="-8" />
       </g>
       <text v-if="count >= 1" x="13" y="1.2" fill="black" stroke-width="0.3" style="font-weight: bold; font-size: 10px">
         {{ count }}
@@ -155,10 +168,21 @@
       <Token faction="bescods" transform="scale(0.15) translate(50,-24)" />
       <Token faction="bescods" transform="scale(0.15) translate(-5,26)" />
     </template>
-    <image v-if="kind === 'pw'" xlink:href='../assets/resources/power-charge.svg' :height=133/346*20 width=20
-    transform="translate(-9.5, -13.5)" /> <image v-if="kind === 'pay-pw'"
-    xlink:href='../assets/resources/power-charge.svg' :height=133/346*20 width=20 transform="translate(9.5, -13.5)
-    scale(-1,1) " />
+    <image
+      v-if="kind === 'pw'"
+      xlink:href="../assets/resources/power-charge.svg"
+      :height="(133 / 346) * 20"
+      width="20"
+      transform="translate(-9.5, -13.5)"
+    />
+    <image
+      v-if="kind === 'pay-pw'"
+      xlink:href="../assets/resources/power-charge.svg"
+      :height="(133 / 346) * 20"
+      width="20"
+      transform="translate(9.5, -13.5)
+    scale(-1,1) "
+    />
     <text
       x="0"
       y="0"
@@ -195,13 +219,13 @@
 </template>
 
 <script lang="ts">
+import { Faction, Resource as ResourceEnum } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { Faction, Resource as ResourceEnum } from "@gaia-project/engine";
 import Building from "./Building.vue";
+import Federation from "./FederationTile.vue";
 import Qic from "./Resources/Qic.vue";
 import VictoryPoint from "./Resources/VictoryPoint.vue";
-import Federation from "./FederationTile.vue";
 import Token from "./Token.vue";
 
 @Component({

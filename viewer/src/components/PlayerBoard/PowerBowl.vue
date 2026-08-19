@@ -25,9 +25,9 @@
 </template>
 
 <script lang="ts">
+import Engine, { Player, PowerArea } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import Engine, { Player, PowerArea } from "@gaia-project/engine";
 import { FastConversionEvent } from "../../data/actions";
 
 @Component

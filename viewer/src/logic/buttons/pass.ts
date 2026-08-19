@@ -23,7 +23,7 @@ export function endTurnWarning(player: Player): ButtonWarning | null {
     ({
       title: "Are you sure you want to end the turn?",
       body: [{ disableKey, message }],
-    } as ButtonWarning);
+    }) as ButtonWarning;
 
   if (player.faction == Faction.Taklons) {
     switch (player.data.brainstone) {

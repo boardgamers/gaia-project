@@ -1,7 +1,7 @@
 import Engine, { Planet } from "@gaia-project/engine";
-import { countBy } from "lodash";
 import { planetNames, remainingPlanets } from "../../data/planets";
 import { planetColorVar } from "../../graphics/colors";
+import { countBy } from "../lodash-utils";
 import { defaultBackground, emptyCell, PlayerColumn, PlayerTable } from "./types";
 
 export function planets(engine: Engine): PlayerTable {
@@ -16,7 +16,7 @@ export function planets(engine: Engine): PlayerTable {
         Array.from(engine.map.grid.values()).filter(
           (hex) => hex.data.planet !== Planet.Empty && hex.data.player == p.player
         ),
-        "data.planet"
+        (hex) => hex.data.planet
       ),
     ])
   );

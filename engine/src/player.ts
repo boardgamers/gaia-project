@@ -2,6 +2,7 @@ import assert from "assert";
 import { EventEmitter } from "eventemitter3";
 import { Grid, Hex } from "hexagrid";
 import { countBy, difference, merge, sum, uniq, uniqWith, zipWith } from "lodash";
+import { topologyOf } from "./algorithms/grid-topology";
 import spanningTree from "./algorithms/spanning-tree";
 import { ChooseTechTile } from "./available/types";
 import { stdBuildingValue } from "./buildings";
@@ -118,7 +119,10 @@ export default class Player extends EventEmitter {
   /** Is the player dropped (i.e. no move) */
   dropped?: boolean;
 
-  constructor(expansion: Expansion = Expansion.None, public player: PlayerEnum = PlayerEnum.Player1) {
+  constructor(
+    expansion: Expansion = Expansion.None,
+    public player: PlayerEnum = PlayerEnum.Player1
+  ) {
     super();
     this.data.on("advance-research", (track, dest) => this.onResearchAdvanced(track, dest, expansion));
   }
@@ -220,7 +224,7 @@ export default class Player extends EventEmitter {
     if (data.federationCache) {
       player.federationCache = data.federationCache;
       for (const fed of player.federationCache.federations) {
-        fed.hexes = ((fed.hexes as any) as string[]).map((hex) => map.getS(hex));
+        fed.hexes = (fed.hexes as any as string[]).map((hex) => map.getS(hex));
       }
     }
 
@@ -1011,6 +1015,18 @@ export default class Player extends EventEmitter {
     // We need to see if they can be connected
     const federations: GaiaHex[][] = [];
     const occupiedSet = new Set(this.data.occupied);
+    const mapTopology = topologyOf(map.grid);
+    const baseHexes = [...map.grid.values()].filter((hex) => !excluded.has(hex));
+    const buildWorkingGrid = (hexes: GaiaHex[]) =>
+      new Grid<Hex<{ cost: number }>>(
+        ...hexes.map(
+          (hex) =>
+            new Hex(hex.q, hex.r, { cost: occupiedSet.has(hex) || hex.belongsToFederationOf(this.player) ? 0 : 1 })
+        )
+      );
+    // In non-flexible mode, the primary working grid is the same for every combination,
+    // so build it only once (its memoized topology is then shared by all spanning trees)
+    const sharedGrid = flexible ? null : buildWorkingGrid(baseHexes);
 
     for (const combination of combinations) {
       const destGroups = combination;
@@ -1023,31 +1039,28 @@ export default class Player extends EventEmitter {
       // However, those possibilites are explored in another combination
       const flexibleExcluded: Set<GaiaHex> = new Set(
         [].concat(
-          ...this.data.occupied.map((hex) => (buildingsInDestGroups.has(hex) ? [] : [hex, ...map.grid.neighbours(hex)]))
+          ...this.data.occupied.map((hex) =>
+            buildingsInDestGroups.has(hex) ? [] : [hex, ...mapTopology.neighbours(hex)]
+          )
         )
       );
-      const allHexes = [...map.grid.values()].filter(
-        (hex) => !excluded.has(hex) && (!flexible || !flexibleExcluded.has(hex))
-      );
-      const workingGrid = new Grid<Hex<{ cost: number }>>(
-        ...allHexes.map(
-          (hex) =>
-            new Hex(hex.q, hex.r, { cost: occupiedSet.has(hex) || hex.belongsToFederationOf(this.player) ? 0 : 1 })
-        )
-      );
+      const workingGrid = flexible
+        ? buildWorkingGrid(baseHexes.filter((hex) => !flexibleExcluded.has(hex)))
+        : sharedGrid;
       const convertedDestGroups = destGroups.map((destGroup) => destGroup.map((hex) => workingGrid.get(hex)));
       let tree = spanningTree(convertedDestGroups, workingGrid, maxSatellites, "heuristic", (hex) => hex.data.cost);
 
-      if ("path" in tree && !flexible && flexibleExcluded.size > 0) {
+      if (
+        "path" in tree &&
+        !flexible &&
+        flexibleExcluded.size > 0 &&
+        tree.path.some((hex) => flexibleExcluded.has(map.grid.get(hex)))
+      ) {
         // In non flexible mode, we still try to suggest federations without extra planets, as long
-        // as they don't add additional satellites
-        const allHexes = [...map.grid.values()].filter((hex) => !excluded.has(hex) && !flexibleExcluded.has(hex));
-        const workingGrid = new Grid<Hex<{ cost: number }>>(
-          ...allHexes.map(
-            (hex) =>
-              new Hex(hex.q, hex.r, { cost: occupiedSet.has(hex) || hex.belongsToFederationOf(this.player) ? 0 : 1 })
-          )
-        );
+        // as they don't add additional satellites.
+        // (If the tree found above doesn't touch any extra planet, it already is such a federation
+        // and the search can be skipped.)
+        const workingGrid = buildWorkingGrid(baseHexes.filter((hex) => !flexibleExcluded.has(hex)));
         const convertedDestGroups = destGroups.map((destGroup) => destGroup.map((hex) => workingGrid.get(hex)));
         const treeWithoutOtherPlanets = spanningTree(
           convertedDestGroups,

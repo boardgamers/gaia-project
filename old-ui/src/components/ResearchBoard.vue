@@ -19,12 +19,12 @@
 </template>
 
 <script lang="ts">
+import { BoardAction as BoardActionEnum, ResearchField } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { ResearchField, BoardAction as BoardActionEnum } from "@gaia-project/engine";
+import BoardAction from "./BoardAction.vue";
 import ResearchTrack from "./ResearchTrack.vue";
 import TechTile from "./TechTile.vue";
-import BoardAction from "./BoardAction.vue";
 
 @Component({
   computed: {

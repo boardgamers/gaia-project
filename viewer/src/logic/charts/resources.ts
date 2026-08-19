@@ -1,9 +1,9 @@
 import { BoardAction, Booster, Command, Faction, Planet, Resource, Reward } from "@gaia-project/engine";
-import { sum } from "lodash";
 import { boardActionData } from "../../data/actions";
 import { boosterData } from "../../data/boosters";
 import { resourceData } from "../../data/resources";
 import { colorCodes } from "../color-codes";
+import { sum } from "../lodash-utils";
 import { ChartSource } from "./charts";
 import {
   ChartSummary,

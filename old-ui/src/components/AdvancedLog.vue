@@ -42,9 +42,9 @@
   </div>
 </template>
 <script lang="ts">
+import { LogEntry } from "@gaia-project/engine";
 import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
-import Engine, { LogEntry } from "@gaia-project/engine";
+import { Component } from "vue-property-decorator";
 
 @Component({
   computed: {

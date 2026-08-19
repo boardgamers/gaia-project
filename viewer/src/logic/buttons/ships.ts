@@ -10,10 +10,10 @@ import Engine, {
   ShipAction,
 } from "@gaia-project/engine";
 import { TradingLocation } from "@gaia-project/engine/src/available/types";
-import { sortedUniq } from "lodash";
 import { ButtonData } from "../../data";
 import { shipActionName, shipLetter } from "../../data/building";
 import { richTextBuilding } from "../../graphics/rich-text";
+import { sortedUniq } from "../lodash-utils";
 import { hexSelectionButton } from "./hex";
 import { CommandController } from "./types";
 import { hexMap, symbolButton, textButton } from "./utils";
@@ -106,7 +106,7 @@ export function moveShipButton(
           shortcuts: [shipLetter(ship).toLowerCase()],
           hexes: hexMap(
             engine,
-            command.data.filter((e) => e.ship === ship).map((l) => ({ coordinates: l.source } as AvailableHex)),
+            command.data.filter((e) => e.ship === ship).map((l) => ({ coordinates: l.source }) as AvailableHex),
             false
           ),
         }),

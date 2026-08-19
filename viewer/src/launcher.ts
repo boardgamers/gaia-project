@@ -14,7 +14,7 @@ Vue.component("TechContent", TechContent);
 Vue.component("Resource", Resource);
 
 function launch(selector: string, component: VueConstructor<Vue> = Game) {
-  let lastMovedAt: number = 0;
+  let lastMovedAt = 0;
 
   const store = makeStore();
 

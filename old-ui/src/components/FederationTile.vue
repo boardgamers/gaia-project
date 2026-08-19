@@ -20,15 +20,15 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
 import { Federation as FederationEnum } from "@gaia-project/engine";
 import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
+import Vue from "vue";
+import { Component, Prop } from "vue-property-decorator";
 
 @Component<FederationTile>({
   computed: {
     income() {
-      const [first, ...others] = federationRewards(this.federation).map(r => r.toString());
+      const [first, ...others] = federationRewards(this.federation).map((r) => r.toString());
       return others.length > 0 ? [first, others.join(", ")] : first.split("-");
     },
 

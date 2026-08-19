@@ -4,17 +4,18 @@
     "commit-msg-check": "node scripts/check-commit-msg.js",
     "lint-staged": "lint-staged",
     "postinstall": "husky install",
-    "prettier": "prettier --plugin-search-dir=. --write .",
-    "prettier-check": "prettier --plugin-search-dir=. --check ."
+    "prettier": "prettier --write .",
+    "prettier-check": "prettier --check ."
   },
   "devDependencies": {
     "husky": "^5.0.9",
     "lint-staged": "^10.5.4",
-    "prettier": "^2.2.1",
-    "prettier-plugin-organize-imports": "^1.1.1",
-    "typescript": "^4.1.5"
+    "prettier": "^3.9.6",
+    "prettier-plugin-organize-imports": "^4.3.0",
+    "typescript": "^5.9.3",
+    "vue-tsc": "^2.2.12"
   },
   "lint-staged": {
-    "*.{css,scss,graphql,html,json,js,jsx,md,mdx,ts,tsx,vue,yaml,yml}": "prettier --plugin-search-dir=. --write"
+    "*.{css,scss,graphql,html,json,js,jsx,md,mdx,ts,tsx,vue,yaml,yml}": "prettier --write"
   }
 }

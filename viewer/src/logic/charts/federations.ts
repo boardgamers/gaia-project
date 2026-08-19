@@ -12,8 +12,8 @@ import Engine, {
 } from "@gaia-project/engine";
 import SpaceMap from "@gaia-project/engine/src/map";
 import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
-import { sum } from "lodash";
 import { federationData } from "../../data/federations";
+import { sum } from "../lodash-utils";
 import { CommandObject } from "../recent";
 import { BuildingCounter } from "./buildings";
 import { ChartSource } from "./charts";

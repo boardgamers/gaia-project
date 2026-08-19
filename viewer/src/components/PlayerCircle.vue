@@ -8,8 +8,8 @@
   </g>
 </template>
 <script lang="ts">
+import Engine, { AuctionVariant, factionPlanet, Phase, Planet, Player, PlayerEnum } from "@gaia-project/engine";
 import { Component, Prop, Vue } from "vue-property-decorator";
-import Engine, { factionPlanet, AuctionVariant, Phase, Planet, Player, PlayerEnum } from "@gaia-project/engine";
 import { phaseBeforeSetupBuilding } from "../logic/utils";
 
 @Component

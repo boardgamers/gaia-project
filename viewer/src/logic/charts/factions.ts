@@ -1,7 +1,7 @@
 import { Building, Command, Faction, Planet, Resource, Reward } from "@gaia-project/engine";
-import { orderBy } from "lodash";
 import { factionName } from "../../data/factions";
 import { factionColorVar } from "../../graphics/utils";
+import { orderBy } from "../lodash-utils";
 import { deltaCounter } from "../utils";
 import { terranChargeExtractLog } from "./charge";
 import { ChartSource } from "./charts";

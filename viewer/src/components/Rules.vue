@@ -91,10 +91,10 @@
 <script lang="ts">
 import { factionDesc, factionName } from "../data/factions";
 
-import { Component, Prop, Vue } from "vue-property-decorator";
 import Engine, { Expansion, Faction, factionPlanet, factionVariantBoard } from "@gaia-project/engine";
-import { finalScoringFields, finalScoringItems } from "../logic/final-scoring-rules";
+import { Component, Prop, Vue } from "vue-property-decorator";
 import { factionColor, planetFill } from "../graphics/utils";
+import { finalScoringFields, finalScoringItems } from "../logic/final-scoring-rules";
 import { tradeHeaders, tradeRows } from "../logic/trade-rewards";
 import RichTextView from "./Resources/RichTextView.vue";
 

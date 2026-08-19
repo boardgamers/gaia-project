@@ -376,4 +376,4 @@ export default class SpaceMap {
   }
 }
 
-export { smallConfiguration, bigConfiguration };
+export { bigConfiguration, smallConfiguration };

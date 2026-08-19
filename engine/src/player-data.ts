@@ -20,7 +20,12 @@ export const resourceLimits = {
 };
 
 export class Power {
-  constructor(public area1: number = 0, public area2: number = 0, public area3: number = 0, public gaia: number = 0) {}
+  constructor(
+    public area1: number = 0,
+    public area2: number = 0,
+    public area3: number = 0,
+    public gaia: number = 0
+  ) {}
 }
 
 export function powerLogString(power: Power, brainstoneArea: PowerArea): string {

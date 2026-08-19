@@ -3,5 +3,5 @@ import launch from "./src/launcher";
 import launchSelfContained from "./src/self-contained";
 import { gaiaViewer, makeStore } from "./src/store";
 
-export { Game, gaiaViewer, makeStore, launchSelfContained };
+export { gaiaViewer, Game, launchSelfContained, makeStore };
 export default launch;

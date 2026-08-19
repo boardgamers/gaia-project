@@ -18,7 +18,7 @@
   </div>
 </template>
 <script lang="ts">
-import { Vue, Prop, Watch, Component } from "vue-property-decorator";
+import { Component, Vue } from "vue-property-decorator";
 import Game from "./Game.vue";
 
 @Component({

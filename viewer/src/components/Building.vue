@@ -32,14 +32,14 @@
 </template>
 
 <script lang="ts">
+import { Building as BuildingEnum, Faction, isShip } from "@gaia-project/engine";
+import { isAcademy } from "@gaia-project/engine/src/enums";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { Building as BuildingEnum, Expansion, Faction, isShip } from "@gaia-project/engine";
+import { shipLetter } from "../data/building";
 import { corners } from "../graphics/hex";
 import { planetClass } from "../graphics/utils";
 import Planet from "./Planet.vue";
-import { shipLetter } from "../data/building";
-import { isAcademy } from "@gaia-project/engine/src/enums";
 
 @Component<Building>({
   components: {

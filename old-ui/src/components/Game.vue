@@ -38,19 +38,18 @@
 </template>
 
 <script lang="ts">
+import Engine, { Command, EngineOptions, Phase } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import Engine, { Command, Phase, Player, EngineOptions, Expansion } from "@gaia-project/engine";
 
 import AdvancedLog from "./AdvancedLog.vue";
 import Commands from "./Commands.vue";
-import Pool from "./Pool.vue";
 import PlayerInfo from "./PlayerInfo.vue";
+import Pool from "./Pool.vue";
 import ResearchBoard from "./ResearchBoard.vue";
 import ScoringBoard from "./ScoringBoard.vue";
 import SpaceMap from "./SpaceMap.vue";
 import TurnOrder from "./TurnOrder.vue";
-import { resolve } from "dns";
 
 @Component<Game>({
   created(this: Game) {
@@ -188,7 +187,7 @@ export default class Game extends Vue {
   handleData(data: Engine, keepMoveHistory?: boolean) {
     console.log("handle data", keepMoveHistory);
 
-    for (const sector of (document.getElementsByClassName("sector") as any) as Element[]) {
+    for (const sector of document.getElementsByClassName("sector") as any as Element[]) {
       sector.classList.add("notransition");
     }
 
@@ -203,7 +202,7 @@ export default class Game extends Vue {
     }
 
     setTimeout(() => {
-      for (const sector of (document.getElementsByClassName("sector") as any) as Element[]) {
+      for (const sector of document.getElementsByClassName("sector") as any as Element[]) {
         sector.classList.remove("notransition");
       }
     });

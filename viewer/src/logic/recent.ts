@@ -1,5 +1,5 @@
 import Engine, { Command, Faction, GaiaHex, LogEntry, PlayerEnum, ResearchField } from "@gaia-project/engine";
-import { findLast, findLastIndex } from "lodash";
+import { findLast, findLastIndex } from "./lodash-utils";
 
 export type CommandObject = { faction: Faction; command: Command; args: string[] };
 

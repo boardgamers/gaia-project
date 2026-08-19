@@ -39,14 +39,14 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { Component, Prop } from 'vue-property-decorator';
-import Building from './Building.vue';
+import Vue from "vue";
+import { Component, Prop } from "vue-property-decorator";
+import Building from "./Building.vue";
 
 @Component({
   components: {
     Building,
-  }
+  },
 })
 export default class Resource extends Vue {
   @Prop()

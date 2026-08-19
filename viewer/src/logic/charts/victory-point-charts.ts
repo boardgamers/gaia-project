@@ -59,13 +59,7 @@ const otherScoring: VictoryPointAggregate = {
 };
 
 export type VictoryPointType =
-  | EventSource
-  | "chart-init"
-  | "chart-bid"
-  | "chart-spend"
-  | "chart-final1"
-  | "chart-final2"
-  | AdvTechTile;
+  EventSource | "chart-init" | "chart-bid" | "chart-spend" | "chart-final1" | "chart-final2" | AdvTechTile;
 
 export type VictoryPointSource = {
   types: VictoryPointType[];
