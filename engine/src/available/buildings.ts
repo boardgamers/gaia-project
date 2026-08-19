@@ -139,6 +139,21 @@ export function possibleBuildings(engine: Engine, player: Player): AvailableComm
         if (check) {
           buildings.push(newAvailableBuilding(upgrade, hex, check, true));
         }
+        // The sandbox's second Trading Station (owner instruction, 2026-08-19): the same hex priced
+        // as if an opponent's structure were adjacent, so a line can ask "what if I had a neighbour
+        // here" without inventing one. Only ever offered to a seat the viewer has flagged as the
+        // analysis sandbox (`PlayerData.analysis`, never serialized, never true in a real game), and
+        // only when the real price IS the isolated one - otherwise the seat already has the neighbour
+        // and the two entries would be identical.
+        if (pl.data.analysis && isolated && upgrade === Building.TradingStation) {
+          const cheap = pl.canBuild(map, hex, hex.data.planet, upgrade, engine.isLastRound, engine.replay, {
+            isolated: false,
+            existingBuilding: building,
+          });
+          if (cheap) {
+            buildings.push({ ...newAvailableBuilding(upgrade, hex, cheap, true), analysisCheap: true });
+          }
+        }
       }
     } else if (pl.canOccupy(hex)) {
       // planet without building

@@ -1044,6 +1044,78 @@ describe("Game", () => {
       vm.$destroy();
     });
 
+    // The state a live async game spends most of its time in: somebody built inside leech range and
+    // the round is parked on the opponent's accept/decline answer.
+    function leechPausedGame() {
+      const engine = new Engine(SETUP_MOVES);
+      engine.players[0].data.credits = 20;
+      engine.players[0].data.ores = 20;
+      engine.move("terrans build ts -1x2.");
+      engine.generateAvailableCommandsIfNeeded();
+      expect(engine.phase).to.equal(Phase.RoundLeech);
+      return engine;
+    }
+
+    it("opens a playable board even when the real game is parked on an opponent's leech answer", () => {
+      // Entering here used to leave the clone sitting on the opponent's prompt: canPlay false, no
+      // commands for this seat, and applyAnalysisMove a silent no-op - a sandbox with nothing in it
+      // and no way forward but leaving. enterAnalysisMode never resolved opponent decisions (only the
+      // per-entry replay did, which an empty line skips) and applySoloRoundFlow returns early outside
+      // RoundMove.
+      const vm = mountAsSeat(0, leechPausedGame());
+
+      vm.enterAnalysisMode();
+
+      expect(vm.engine.phase).to.equal(Phase.RoundMove);
+      expect(vm.engine.playerToMove).to.equal(0);
+      expect(vm.canPlay).to.equal(true);
+      vm.applyAnalysisMove("terrans up nav.");
+      expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
+
+      vm.$el.remove();
+      vm.$destroy();
+    });
+
+    it("rolls a seat that has already passed into the next round, and commits nothing from it", () => {
+      // applySoloRoundFlow used to wipe passedPlayers outright, handing back a full turn - Pass button
+      // and all - in a round this seat is out of, and reporting those moves as committable.
+      const vm = mountAsSeat(0, new Engine([...SETUP_MOVES, "terrans pass booster4"]));
+
+      vm.enterAnalysisMode();
+
+      expect(vm.analysisRolledForward).to.equal(true);
+      expect(vm.engine.round).to.equal(2);
+      expect(vm.analysisBaseRound).to.equal(2);
+      expect(vm.engine.playerToMove).to.equal(0);
+
+      vm.applyAnalysisMove("terrans up nav.");
+      expect(vm.analysisEntries).to.have.length(1);
+      expect(vm.analysisCommittableMoves).to.deep.equal([]);
+
+      vm.$el.remove();
+      vm.$destroy();
+    });
+
+    it("commits nothing off-turn in self-contained play, where there is no queue to put it in", () => {
+      // Seat 1 is locked; it is genuinely seat 0's turn. Commit used to dispatch move 1 as a live
+      // `move` the real game cannot accept - after exiting the sandbox and clearing the saved line,
+      // so the whole line was silently lost.
+      const vm = mountAsSeat(1);
+      vm.enterAnalysisMode();
+      vm.applyAnalysisMove("nevlas up nav.");
+      expect(vm.analysisSeatIsOnTurnForReal).to.equal(false);
+      expect(vm.analysisCommittableMoves).to.deep.equal([]);
+
+      const dispatched = spyDispatch(vm);
+      vm.commitAnalysisLine();
+
+      expect(dispatched).to.deep.equal([]);
+      expect(vm.analysisMode, "and the sandbox stays open, line intact").to.equal(true);
+
+      vm.$el.remove();
+      vm.$destroy();
+    });
+
     it("never dispatches move, however many turns are composed in the clone", () => {
       const vm = mountAsSeat(0);
       vm.enterAnalysisMode();
@@ -1351,21 +1423,19 @@ describe("Game", () => {
         vm.$destroy();
       });
 
-      it("lets this seat place an opponent's setup mine, pass-and-play (decision #7)", () => {
+      it("places the opponents' setup mines for them, so only this seat is ever asked (owner instruction, 2026-08-19)", () => {
+        // This used to be decision #7's pass-and-play: the player placed EVERY seat's starting mines
+        // by hand, and the opponent's move went into the line as an ordinary entry. The owner's
+        // instruction is "no mine placement for other factions" - you pick a faction and place your
+        // own - so the opponents' placements are made for them and never touch the line.
         const vm = mountAsSeat(0, new Engine(PARTIAL_SETUP_MOVES));
         vm.enterAnalysisMode();
 
         vm.applyAnalysisMove("terrans build m -1x2"); // this seat's own first mine
-        expect(vm.engine.playerToMove).to.equal(1); // nevlas's turn next, inside the clone
-        expect(vm.canPlay).to.equal(true); // forced true during analysis mode - not this seat's turn
 
-        vm.applyAnalysisMove("nevlas build m -1x0"); // the "opponent" action
-
-        expect(vm.analysisEntries.map((e: { move: string }) => e.move)).to.deep.equal([
-          "terrans build m -1x2",
-          "nevlas build m -1x0",
-        ]);
-        expect(vm.engine.map.getS("-1x0").buildingOf(1)).to.not.equal(undefined);
+        expect(vm.engine.playerToMove, "control comes straight back to me").to.equal(0);
+        expect(vm.engine.players[1].data.occupied.length, "their mines went down on their own").to.be.greaterThan(0);
+        expect(vm.analysisEntries.map((e: { move: string }) => e.move)).to.deep.equal(["terrans build m -1x2"]);
 
         vm.$el.remove();
         vm.$destroy();

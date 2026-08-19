@@ -99,6 +99,7 @@ export { federationCost, FederationInfo, parseFederationLocation } from "./src/f
 export { GaiaHex, GaiaHexData } from "./src/gaia-hex";
 export { applyChargePowers } from "./src/income";
 export { classifySectorId, LostFleetSectorType } from "./src/lost-fleet-map";
+export { ANALYSIS_CHEAP_BUILD } from "./src/move/buildings";
 export { endSetupFactionPhase, leechPossible } from "./src/move/phase";
 export { planetNames, terraformingStepsRequired } from "./src/planets";
 export { lastTile, researchEvents } from "./src/research-tracks";

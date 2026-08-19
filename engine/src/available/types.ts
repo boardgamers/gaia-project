@@ -199,6 +199,14 @@ export type AvailableBuilding = AvailableHex & {
    * setup) and Eclipse's Credit action (§C4: "the 6 credits is the entire cost").
    */
   consumesAsteroidGaiaformer?: boolean;
+  /**
+   * Viewer analysis mode only (docs/lost-fleet/ANALYSIS_MODE_PLAN.md) - the Trading Station priced as
+   * if an opponent's structure were adjacent, offered ALONGSIDE the real isolated-price one so a
+   * sandbox line can ask "what if I had a neighbour here" (owner instruction, 2026-08-19). Emitted
+   * only when the seat's `PlayerData.analysis` flag is set, i.e. never in a real game, and its move
+   * string carries the `cheap` qualifier so `moveBuild` can tell the two entries for one hex apart.
+   */
+  analysisCheap?: boolean;
 };
 export type AvailableResearchTrack = { cost: string; field: ResearchField; to: number };
 export type AvailableResearchData = { tracks: AvailableResearchTrack[] };

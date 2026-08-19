@@ -7537,6 +7537,82 @@ Commit · ⓘ` now lives in the hazard-striped header that already existed, with
 
       Viewer: 1169/1169 passing. Engine untouched.
 
+190.  ✅ **Sandbox mode audited phase by phase, and six holes closed (viewer v5.72.6, 2026-08-19, owner
+      request).** The owner asked how the sandbox behaves in each phase - ban, pick, bidding, mine
+      placement, booster, passed, on/off turn - and whether anything was missing. It was audited by
+      mounting `Game.vue` in each state and reading what the clone actually produced, not by reading
+      the code. **Two regimes:** round 0 is pass-and-play (`canPlay` forced true for every seat), and
+      round 1+ is solo (`canPlay` = the sandbox seat is on turn). Six things were wrong.
+
+      **1. Entering while the game was parked on an opponent's decision opened a dead board.** The
+      state a live async game spends most of its time in - somebody built in leech range and the
+      round waits on the answer. Measured: `canPlay` false, **zero** available commands for the seat,
+      and `applyAnalysisMove` a silent no-op. Nothing to press, no way forward but leaving.
+      `enterAnalysisMode` never called `resolveOpponentDecisions` (only the per-entry replay did, and
+      an empty line skips that loop) and `applySoloRoundFlow` returns early outside `RoundMove`. Both
+      calls are needed, and in an order neither path had: the solo flow FIRST, or an off-turn entry
+      lets `autoMove()` play an opponent's real turn - then resolve, which lands in `RoundMove` with
+      the opponent still on turn - then the solo flow AGAIN. That is `settleAnalysisClone`, now shared
+      by entry and re-anchor. `reanchorAnalysisLine` had the same bug half-fixed (it resolved, then
+      stopped one call short). Also: `analysis.ts` claimed the safety net was "Game.vue's
+      `analysisBlockedBySeat`" - **no such function has ever existed in this repo.**
+
+      **2. Committing off-turn dispatched a live move the real game cannot accept.**
+      `commitAnalysisLine` always played move 1 through `"move"` and queued the rest. Off-turn there
+      is no live move to make - and by then the sandbox had exited and `clearAnalysisLine` had wiped
+      the saved line, so the whole thing vanished. Composing off-turn is the sandbox's headline use.
+      Now `analysisSeatIsOnTurnForReal` (read off the untouched `analysisBackup`) decides: on turn,
+      unchanged; off turn, EVERY committable move queues as a premove and the cap becomes the queue's
+      own room. Self-contained has no queue, so off-turn nothing is committable at all.
+
+      **3. A seat that had already passed got a fresh turn in the round it was out of** - Pass button
+      and all - because `applySoloRoundFlow` wiped `passedPlayers` unconditionally, and those moves
+      then read as committable. `advancePastOwnPass` rolls the clone into the NEXT round instead: the
+      remaining opponents pass through real engine code, which runs the ordinary end-of-round
+      machinery and lands with `beginRoundStartPhase` reading `turnOrder = passedPlayers`, i.e. this
+      seat alone. Their boosters are handed straight back, same reason as the round-0 ones. Nothing in
+      a rolled-forward line is committable (`analysisRolledForward`) - the real game is still in the
+      round before.
+
+      **4. The ban round could not use the faction seed at all.** `FACTION_SEED_PHASES` whitelists
+      `SetupFactionBan`, but `analysisFactionPool` built its list from factions already held (none) plus
+      the `ChooseFaction` command (not offered during a ban), so it returned **empty** and the picker
+      silently never rendered. It reads the ban command's own data too now - which is the unbanned
+      pool, and shrinks with every ban already played.
+
+      **5. A hosted spectator was offered a sandbox of somebody else's seat**, Commit included.
+      `analysisOffered` fell back to `canPlay` whenever no seat was locked, which is right for
+      hot-seat (the device is passed around) and wrong for a hosted spectator. Now gated on
+      `!isHostedMode`.
+
+      **6. Owner instruction: ban/pick is one step, and you place only your own mines.** "In ban and
+      pick phase don't go through both phases. Just pick the faction you want to try to play round 0
+      and 1 with. No mine placement for other factions." With #4 fixed the picker replaces the
+      ban/pick buttons in both rounds, and `resolveOpponentDecisions` grew a `SetupBuilding` branch
+      that places opponents' starting mines from their OWN available command (first offer, so it is
+      deterministic and every rule stays the engine's). It needed its own branch because
+      `engine.autoMove()` returns **false** in that phase - there is no engine auto-play for a setup
+      placement, and the engine refuses to reach round 1 until every seat has placed. This reverses
+      decision #7's original "pass-and-play so you place every seat's mines".
+
+      **7. Owner instruction: a second, cheap Trading Station.** The sandbox now offers the same hex
+      at both prices, so a line can ask "what if I had a neighbour here" - a real one costs 3c when an
+      opponent's structure is adjacent and 6c when isolated. `AvailableBuilding.analysisCheap` marks a
+      duplicate entry emitted **only** when `PlayerData.analysis` is set (never in a real game) and
+      only for a hex whose real price IS the isolated one. Since both entries share a hex and a
+      building, the move string needs a qualifier to tell them apart: `build ts 4A4 cheap`, read
+      positionally as the argument after the location. Positional deliberately - build moves already
+      carry trailing log annotations (`build gf 6A9 using area1: 6.`) that `moveBuild` has always
+      ignored, and scanning every trailing token broke four engine specs on the first run. The
+      qualifier is purely additive, so no recorded history is affected, and a real game has no such
+      entry to match, so the move is refused there. A line holding one is not committable at all -
+      it is a fiction in exactly the way a Charge 1 `adjust` entry is.
+
+      Verified in a real browser as well as in tests: the real game shows one Trading Station button,
+      the sandbox shows two ("Cheap" + the icon), and its hexes read 3c,2o.
+
+      Engine: 588/588 passing (`src/**` minus `src/ai/**`, plus the root specs). Viewer: 1186/1186.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

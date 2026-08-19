@@ -1,4 +1,13 @@
-import Engine, { Command, endSetupFactionPhase, Faction, Phase, Resource, Reward, Round } from "@gaia-project/engine";
+import Engine, {
+  ANALYSIS_CHEAP_BUILD,
+  Command,
+  endSetupFactionPhase,
+  Faction,
+  Phase,
+  Resource,
+  Reward,
+  Round,
+} from "@gaia-project/engine";
 
 // Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md) - a local, non-committing sandbox clone of
 // the board. The "line" is the ordered list of turns played inside it. Persistence is localStorage
@@ -230,6 +239,77 @@ export function applySoloRoundFlow(engine: Engine, seat: number): void {
   engine.generateAvailableCommands();
 }
 
+/**
+ * The seat has already passed this round (owner instruction, 2026-08-19). `applySoloRoundFlow` on its
+ * own simply wiped `passedPlayers` and handed the seat a fresh turn - in a round it is out of, Pass
+ * button and all - and `committableAnalysisMoves` then reported those moves as playable for real.
+ * What a player who has passed actually wants to look at is the round they will next play.
+ *
+ * So roll the clone forward instead: every opponent still in `turnOrder` passes, through real engine
+ * code, which runs the ordinary end-of-round machinery (scoring, income, Gaia) and lands in the next
+ * round with `beginRoundStartPhase` reading `turnOrder = passedPlayers` - i.e. this seat, alone,
+ * exactly as the solo flow wants it. Opponents pass rather than being auto-played, because the
+ * sandbox's premise is that they never take a turn; their booster is handed straight back for the
+ * same reason `resolveOpponentDecisions` hands back the round-0 one (the pool must show every tile
+ * free except the one the sandbox seat itself holds).
+ *
+ * Returns whether the clone actually moved to a later round - `Game.vue` blocks Commit on that, since
+ * a line played in round N+1 describes moves the real game, still sitting in round N, cannot accept.
+ */
+export function advancePastOwnPass(engine: Engine, seat: number): boolean {
+  if (engine.phase !== Phase.RoundMove || !engine.passedPlayers?.includes(seat)) {
+    return false;
+  }
+  const startingRound = engine.round;
+  // Bounded by the table size; the loop exits on its own as soon as control is back on this seat.
+  for (let i = 0; i < 10; i++) {
+    const toMove = engine.playerToMove;
+    if (toMove === undefined || toMove === seat || engine.phase !== Phase.RoundMove) {
+      break;
+    }
+    const player = engine.players[toMove];
+    const faction = player.faction ?? `p${toMove + 1}`;
+    const boosters = engine.findAvailableCommand(toMove, Command.Pass)?.data?.boosters ?? [];
+    if (
+      !tryMoves(
+        engine,
+        boosters.map((booster) => `${faction} ${Command.Pass} ${booster}`)
+      )
+    ) {
+      break;
+    }
+    const picked = player.data.tiles.booster;
+    if (picked !== undefined) {
+      player.removeRoundBoosterEvents();
+      player.data.tiles.booster = undefined;
+      engine.tiles.boosters[picked] = true;
+    }
+    engine.generateAvailableCommandsIfNeeded();
+  }
+  return engine.round > startingRound;
+}
+
+/**
+ * Everything that has to be true of a clone before the player is handed the board: the solo turn
+ * order, opponents' pending decisions resolved, and the solo turn order again.
+ *
+ * The order is not arbitrary and the repetition is not redundant. `applySoloRoundFlow` only acts in
+ * `Phase.RoundMove`, so it has to come first for the ordinary off-turn entry (shrink the turn order
+ * and control is already back - `resolveOpponentDecisions` then finds nothing to do and cannot
+ * `autoMove()` an opponent into taking a real turn). But a clone parked anywhere else - a leech
+ * answer, an income or Gaia choice, an opponent's starting mine - needs resolving FIRST, and lands in
+ * `RoundMove` with the OPPONENT still on turn, so the solo shrink has to run again afterwards. Both
+ * calls are cheap and the second is a no-op whenever the first already landed it.
+ *
+ * Skipping the second call is exactly what left `reanchorAnalysisLine` half-fixed: it resolved the
+ * pause and then rendered the opponent's own turn.
+ */
+export function settleAnalysisClone(engine: Engine, seat: number): void {
+  applySoloRoundFlow(engine, seat);
+  resolveOpponentDecisions(engine, seat);
+  applySoloRoundFlow(engine, seat);
+}
+
 /** The round-0 phases a faction seed (§11) can be applied from - everything between the board setup
  * and the first starting mine, i.e. every phase in which who ends up with which faction is still
  * open. `SetupBuilding` onwards is deliberately excluded: factions are loaded and mines are already
@@ -272,8 +352,16 @@ export function analysisFactionPool(engine: Engine, seat: number): Faction[] {
   }
   const toMove = engine.playerToMove;
   const chooser = toMove === undefined ? seat : toMove;
-  const available = engine.findAvailableCommand(chooser, Command.ChooseFaction);
-  for (const faction of (available?.data as Faction[]) ?? []) {
+  // `BanFaction` as well as `ChooseFaction`: in the ban round nobody holds a faction yet AND nothing
+  // is on offer to choose, so reading only the latter returned an EMPTY pool and the picker silently
+  // never rendered - the one phase `FACTION_SEED_PHASES` whitelists where the seed did not work. The
+  // ban command's own data is the still-unbanned pool, which is exactly the right list, and it
+  // shrinks by one with every ban already played, so bans are respected without re-deriving them.
+  const offered = [
+    engine.findAvailableCommand(chooser, Command.ChooseFaction)?.data,
+    engine.findAvailableCommand(chooser, Command.BanFaction)?.data,
+  ];
+  for (const faction of offered.flatMap((data) => (data as Faction[]) ?? [])) {
     if (!pool.includes(faction)) {
       pool.push(faction);
     }
@@ -439,6 +527,25 @@ export function resolveOpponentDecisions(engine: Engine, seat: number): void {
           player.data.tiles.booster = undefined;
           engine.tiles.boosters[picked] = true;
         }
+        continue;
+      }
+    }
+    // Opponents' STARTING MINES (owner instruction, 2026-08-19). Setup pass-and-play used to hand the
+    // player every seat's placements to make by hand - decision #7's original reading of §2.6 - and
+    // the owner's answer is "no mine placement for other factions": you pick a faction and place your
+    // own. The engine has no auto-play for this (`autoMove()` returns false in `Phase.SetupBuilding`)
+    // and it refuses to advance to round 1 until every seat has placed, so the sandbox places them.
+    // First offer from the opponent's OWN available command, so bans/range/planet rules are the
+    // engine's to enforce and a stored line always replays the same board.
+    if (engine.phase === Phase.SetupBuilding) {
+      const build = engine.findAvailableCommand(toMove, Command.Build);
+      const offers = build?.data?.buildings ?? [];
+      if (
+        tryMoves(
+          engine,
+          offers.map((b) => `${faction} ${Command.Build} ${b.building} ${b.coordinates}`)
+        )
+      ) {
         continue;
       }
     }
@@ -661,6 +768,14 @@ export function committableAnalysisMoves(
   if (entries.some((entry) => entry.kind === "faction")) {
     return [];
   }
+  // The sandbox's cheap Trading Station (owner instruction, 2026-08-19) is a fiction in exactly the
+  // way an `adjust` entry is: it prices a hex as if an opponent's structure were adjacent when none
+  // is. A real game would charge the isolated price, so a line holding one describes moves it would
+  // not accept - the whole line is out, not just that move, since everything after it was played on
+  // credits the seat never had.
+  if (entries.some((entry) => entry.kind === "move" && isCheapAnalysisBuild(entry.move))) {
+    return [];
+  }
   const moveEntries = entries.filter((entry): entry is AnalysisMoveEntry => entry.kind === "move");
   if (moveEntries.length === 0) {
     return [];
@@ -693,6 +808,14 @@ export function committableAnalysisMoves(
   const { engine } = replayAnalysisLine(origin, moveEntries.slice(0, affordable), seat, baseRound);
   const ownCount = ownMovePrefixLength(engine, moveEntries, seat);
   return moveEntries.slice(0, Math.min(affordable, ownCount, MAX_COMMITTABLE_MOVES)).map((entry) => entry.move);
+}
+
+/** Whether `move` is a sandbox cheap-Trading-Station build (`... build ts 1x2 cheap`). Matched on the
+ * qualifier rather than on the building token, so it stays correct if the qualifier is ever offered
+ * for another building - as the last token of a turn, which is where `buildings.ts` appends it, and
+ * which no ordinary build annotation (`build gf 6A9 using area1: 6.`) ever ends with. */
+export function isCheapAnalysisBuild(move: string): boolean {
+  return move.split(".").some((turn) => turn.trim().split(/\s+/).slice(-1)[0] === ANALYSIS_CHEAP_BUILD);
 }
 
 /** How many of `moveEntries` from the start belong to `seat` - see `committableAnalysisMoves`' own

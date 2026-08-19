@@ -396,8 +396,8 @@ import {
   AnalysisEntry,
   AnalysisLine,
   AnalysisStatus,
+  advancePastOwnPass,
   analysisFactionPool,
-  applySoloRoundFlow,
   assumedPowerOf,
   buildAnalysisLineup,
   chargedPowerTotal,
@@ -409,8 +409,8 @@ import {
   markAnalysisSeat,
   moveBelongsToSeat,
   replayAnalysisLine,
-  resolveOpponentDecisions,
   saveAnalysisLine,
+  settleAnalysisClone,
 } from "../logic/analysis";
 // The three CancelTrigger* step components are registered by PremoveBar now, not here - they render
 // inside the sheet rather than in a modal this component owned.
@@ -564,6 +564,10 @@ export default class Game extends Vue {
   // while that prompt is showing.
   analysisNotice: string | null = null;
   analysisPendingRestore: AnalysisLine | null = null;
+  // The sandbox rolled the clone into a later round than the real game is in, because this seat had
+  // already passed (`advancePastOwnPass`). Nothing in such a line is committable - the real game has
+  // not reached that round - so this is what `analysisCommittableMoves` reads to say so.
+  analysisRolledForward = false;
 
   @Prop()
   options: EngineOptions;
@@ -1483,7 +1487,15 @@ export default class Game extends Vue {
     if (this.analysisMode || this.premoveMode || this.cancelTriggerComposeActive || this.ended) {
       return false;
     }
-    return this.myLockedSeat !== undefined ? true : this.canPlay;
+    if (this.myLockedSeat !== undefined) {
+      return true;
+    }
+    // No locked seat. In self-contained/hot-seat play that is everybody - the device is simply passed
+    // to whoever's turn it is - so the sandbox stays offered and enters as the seat on turn. In a
+    // HOSTED game it means a spectator, who has no seat of their own: entering would hand them a
+    // sandbox of somebody else's seat, with a Commit button that dispatches a move on that player's
+    // behalf. Nothing to analyse there, so it is not offered at all.
+    return !this.isHostedMode && this.canPlay;
   }
 
   /** §12 - the facts the player board cannot show for itself: a compact overdraft summary (the board
@@ -1510,7 +1522,7 @@ export default class Game extends Vue {
    * is also capped by whatever premove room this seat already has left in the real (not analysis)
    * queue, so committing a line never tries to push the real queue over its own 3-row limit. */
   get analysisCommittableMoves(): string[] {
-    if (!this.analysisMode || !this.analysisOrigin || this.analysisSeat === null) {
+    if (!this.analysisMode || !this.analysisOrigin || this.analysisSeat === null || this.analysisRolledForward) {
       return [];
     }
     const moves = committableAnalysisMoves(
@@ -1520,12 +1532,28 @@ export default class Game extends Vue {
       this.analysisBaseRound
     );
     if (!this.isHostedMode) {
-      return moves.slice(0, 1);
+      // Self-contained/hot-seat has no premove queue, so move 1 is the only thing that can be played
+      // - and only if the real game is actually waiting on this seat. Off-turn there is nowhere for
+      // it to go, so nothing is committable rather than "one move that will be rejected".
+      return this.analysisSeatIsOnTurnForReal ? moves.slice(0, 1) : [];
     }
     const queuedForSeat = ((this.$store.state.premoves as PremoveRow[]) ?? []).filter(
       (p) => p.seat === this.analysisSeat
     ).length;
-    return moves.slice(0, 1 + Math.max(0, 3 - queuedForSeat));
+    const room = Math.max(0, 3 - queuedForSeat);
+    // On turn: move 1 goes live and the rest fill the queue. Off turn: EVERY move has to queue, so
+    // the cap is the queue's own room. `commitAnalysisLine` splits it the same way.
+    return moves.slice(0, this.analysisSeatIsOnTurnForReal ? 1 + room : room);
+  }
+
+  /** Whether the REAL game (not the sandbox clone, whose turn order is always this seat alone) is
+   * waiting on the sandbox seat right now - i.e. whether a committed move can be played live at all.
+   * Read off `analysisBackup`, which is the untouched real state stashed at entry. */
+  get analysisSeatIsOnTurnForReal(): boolean {
+    if (!this.analysisBackup || this.analysisSeat === null) {
+      return false;
+    }
+    return Engine.fromData(JSON.parse(JSON.stringify(this.analysisBackup))).playerToMove === this.analysisSeat;
   }
 
   /**
@@ -1548,10 +1576,18 @@ export default class Game extends Vue {
     if (moves.length === 0) {
       return;
     }
+    // Composing off-turn is what the sandbox is FOR, and this used to dispatch move 1 as a live
+    // `move` regardless - a move the real game cannot accept, because it is not this seat's turn.
+    // The sandbox had already exited and cleared the saved line by then, so the whole line was
+    // silently lost. Off turn, every committable move is a premove; nothing goes live.
+    const live = this.analysisSeatIsOnTurnForReal ? moves[0] : null;
+    const queued = live === null ? moves : moves.slice(1);
     clearAnalysisLine(seat);
     this.exitAnalysisMode();
-    this.$store.dispatch("move", moves[0]);
-    for (const move of moves.slice(1)) {
+    if (live !== null) {
+      this.$store.dispatch("move", live);
+    }
+    for (const move of queued) {
       this.$store.dispatch("queuePremove", { seat, move, mode: "sequential" });
     }
   }
@@ -1577,21 +1613,25 @@ export default class Game extends Vue {
     this.analysisBackup = JSON.parse(JSON.stringify(this.engine));
     this.analysisOrigin = Engine.fromData(JSON.parse(JSON.stringify(this.engine)));
     this.analysisSeat = seat;
+    this.analysisBaseMoveCount = this.engine.moveHistory.length;
+    // Mark the seat BEFORE anything below: every step regenerates the available commands, and they
+    // must be generated with affordability already lifted (§12) or the board opens showing only what
+    // this seat could really pay for.
+    markAnalysisSeat(this.analysisOrigin, seat);
+    // Already passed this round -> roll the clone into the next one instead of handing back a turn in
+    // a round this seat is out of (owner instruction, see `advancePastOwnPass`). Must come before the
+    // solo switch, which is what used to erase the record of the pass.
+    this.analysisRolledForward = advancePastOwnPass(this.analysisOrigin, seat);
+    // Solo round flow (§2.5/§3.1) plus opponents' pending decisions - see `settleAnalysisClone` for
+    // why that is three calls and not two. Entering while the real game was parked on somebody else's
+    // leech answer (the state a live async game spends most of its time in) used to open a sandbox
+    // with no commands for this seat at all and no way to play anything.
+    settleAnalysisClone(this.analysisOrigin, seat);
     // §3.7 - "setup gives you setup plus round 1": a setup-phase entry (round 0) counts as if it
     // started at round 1 for the two-round cap and staleness purposes, since setup is not itself a
-    // playable "round" to spend that budget on.
-    this.analysisBaseRound = Math.max(this.engine.round, Round.Round1);
-    this.analysisBaseMoveCount = this.engine.moveHistory.length;
-    // Solo round flow (§2.5/§3.1) - safe to call unconditionally, setup or not: pre-seeding
-    // `passedPlayers` is a no-op until the engine's own `beginRoundStartPhase` next consults it
-    // (still ahead for a setup entry, already past for a round >= 1 one), and the turnOrder shrink +
-    // available-commands regenerate inside it only fire when already in RoundMove - which also
-    // covers refreshing the stale pre-wallet-grant command list Engine.fromData copied over.
-    // Mark the seat BEFORE the solo switch: `applySoloRoundFlow` regenerates the available commands
-    // for a mid-round entry, and they must be generated with affordability already lifted (§12) or
-    // the board opens showing only what this seat could really pay for.
-    markAnalysisSeat(this.analysisOrigin, seat);
-    applySoloRoundFlow(this.analysisOrigin, seat);
+    // playable "round" to spend that budget on. Read off the CLONE, after the steps above, so a line
+    // that was rolled past its own pass gets its two rounds from where it actually starts.
+    this.analysisBaseRound = Math.max(this.analysisOrigin.round, Round.Round1);
     // Sealed-bid auctions (§2.7) - null the real backend for the duration, so a Preference Split/
     // Silent bid phase submits an ordinary local move instead of going through the server; restored
     // on exit. `analysisMode` (store state, not just this component) is what SealedBidPanel.ts's
@@ -1658,12 +1698,12 @@ export default class Game extends Vue {
     }
 
     this.analysisBackup = JSON.parse(JSON.stringify(payload));
-    applySoloRoundFlow(incoming, seat);
     // Unlike `enterAnalysisMode`, nobody chose this moment: the new state can be parked on an
     // opponent's leech answer, which the sandbox would otherwise render as the opponent's own
-    // accept/decline buttons with the player unable to continue. Resolve it up front, exactly as
-    // every replayed entry already does for the pauses its own moves cause.
-    resolveOpponentDecisions(incoming, seat);
+    // accept/decline buttons with the player unable to continue. `settleAnalysisClone` resolves that
+    // and then re-applies the solo turn order, which resolving alone does not do - this path used to
+    // stop one call short and hand the board back with the opponent still on turn.
+    settleAnalysisClone(incoming, seat);
     this.analysisOrigin = incoming;
     this.analysisBaseMoveCount = incomingHistory.length;
 
@@ -1766,6 +1806,7 @@ export default class Game extends Vue {
     this.analysisComposeAssumedPower = 0;
     this.analysisSeat = null;
     this.analysisPendingRestore = null;
+    this.analysisRolledForward = false;
     this.$store.commit("setSealedBidBackend", this.analysisSealedBidBackendBackup);
     this.analysisSealedBidBackendBackup = null;
     this.$store.commit("setAnalysisMode", false);

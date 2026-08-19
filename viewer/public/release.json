@@ -1,7 +1,26 @@
 {
-  "version": "5.72.5",
+  "version": "5.72.6",
   "releasedAt": "2026-08-19",
   "entries": [
+    {
+      "version": "5.72.6",
+      "releasedAt": "2026-08-19",
+      "kind": "update",
+      "title": "Sandbox: pick a faction and play, not the whole table",
+      "impact": "",
+      "changes": [
+        "Sandbox mode in the ban/pick rounds now just asks which faction you want to try - and places the other factions' starting mines for you",
+        "Sandbox mode offers a second, cheaper Trading Station button, priced as if an opponent were next door",
+        "Entering the sandbox while the game was paused on someone else's leech answer opened a board with no commands on it at all",
+        "Committing a sandbox line off-turn dispatched a live move the game could not accept, losing the line",
+        "Entering the sandbox after passing handed back a turn in a round you were out of; it now rolls forward to the next round",
+        "Hosted spectators are no longer offered a sandbox of somebody else's seat"
+      ],
+      "userChanges": [
+        "Sandbox mode in the ban/pick rounds now just asks which faction you want to try - and places the other factions' starting mines for you",
+        "Sandbox mode offers a second, cheaper Trading Station button, priced as if an opponent were next door"
+      ]
+    },
     {
       "version": "5.72.5",
       "releasedAt": "2026-08-19",

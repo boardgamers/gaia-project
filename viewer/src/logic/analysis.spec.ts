@@ -1,6 +1,7 @@
 import Engine, { AuctionVariant, Command, Faction, Phase, Round } from "@gaia-project/engine";
 import { expect } from "chai";
 import {
+  advancePastOwnPass,
   AnalysisEntry,
   analysisFactionPool,
   applyFactionSeed,
@@ -11,6 +12,7 @@ import {
   committableAnalysisMoves,
   computeAnalysisStatus,
   factionSeedAvailable,
+  isCheapAnalysisBuild,
   loadAnalysisLine,
   MAX_COMMITTABLE_MOVES,
   markAnalysisSeat,
@@ -18,6 +20,7 @@ import {
   replayAnalysisLine,
   resolveOpponentDecisions,
   saveAnalysisLine,
+  settleAnalysisClone,
   stripCappedPass,
 } from "./analysis";
 
@@ -369,6 +372,115 @@ describe("resolveOpponentDecisions", () => {
   });
 });
 
+describe("opponents' own setup turns (owner instruction, 2026-08-19)", () => {
+  it("places an opponent's starting mines for them, so only this seat is ever asked", () => {
+    // Decision #7 used to read "pass-and-play: you place EVERY seat's starting mines". The owner's
+    // instruction is the opposite - "no mine placement for other factions" - and the engine will not
+    // advance to round 1 until every seat has placed, so the sandbox has to place them itself.
+    const engine = new Engine(["init 2 randomSeed", "p1 faction terrans", "p2 faction nevlas"]);
+    expect(engine.phase).to.equal(Phase.SetupBuilding);
+    markAnalysisSeat(engine, 0);
+
+    // Seat 0 places first here, so take that turn and hand control back to the opponents.
+    const first = engine.findAvailableCommand(0, Command.Build).data.buildings[0];
+    engine.move(`terrans build ${first.building} ${first.coordinates}`);
+    engine.generateAvailableCommandsIfNeeded();
+    expect(engine.playerToMove, "the opponent is up next").to.equal(1);
+
+    resolveOpponentDecisions(engine, 0);
+
+    expect(engine.playerToMove, "control comes back without asking me to place for them").to.equal(0);
+    expect(engine.player(1).data.occupied.length, "their mines went down").to.be.greaterThan(0);
+  });
+
+  it("is what `autoMove` cannot do - the engine has no auto-play for a setup placement", () => {
+    // The reason this needs its own branch rather than falling through to resolveOpponentDecisions'
+    // existing `autoMove()` step, which is what handles brainstones and income choices.
+    const engine = new Engine(["init 2 randomSeed", "p1 faction terrans", "p2 faction nevlas"]);
+    expect(engine.autoMove()).to.equal(false);
+  });
+});
+
+describe("advancePastOwnPass", () => {
+  const passedGame = () => new Engine([...SETUP_MOVES, "terrans pass booster4"]);
+
+  it("rolls a seat that has already passed into the next round instead of re-opening this one", () => {
+    const engine = passedGame();
+    expect(engine.round).to.equal(Round.Round1);
+    expect(engine.passedPlayers).to.deep.equal([0]);
+    markAnalysisSeat(engine, 0);
+
+    expect(advancePastOwnPass(engine, 0)).to.equal(true);
+
+    expect(engine.round).to.equal(Round.Round2);
+    expect(engine.phase).to.equal(Phase.RoundMove);
+    expect(engine.playerToMove).to.equal(0);
+  });
+
+  it("does not let the opponents it passed keep a booster", () => {
+    // Same reasoning as the round-0 booster hand-back: in a sandbox where opponents never take a
+    // turn, the pool must show every tile free except the one this seat itself holds.
+    const engine = passedGame();
+    markAnalysisSeat(engine, 0);
+
+    advancePastOwnPass(engine, 0);
+
+    expect(engine.player(1).data.tiles.booster ?? null).to.equal(null);
+  });
+
+  it("does nothing at all when this seat has not passed", () => {
+    const engine = new Engine(SETUP_MOVES);
+    const before = JSON.stringify(engine);
+
+    expect(advancePastOwnPass(engine, 0)).to.equal(false);
+    expect(JSON.stringify(engine)).to.equal(before);
+  });
+
+  it("does nothing outside RoundMove", () => {
+    const engine = new Engine(PARTIAL_SETUP_MOVES);
+    expect(advancePastOwnPass(engine, 0)).to.equal(false);
+  });
+});
+
+describe("settleAnalysisClone", () => {
+  it("hands back a playable board when the game is parked on an opponent's leech answer", () => {
+    // The state a live async game spends most of its time in. Entering the sandbox there used to
+    // leave the clone on the opponent's accept/decline prompt: no commands for this seat, canPlay
+    // false, nothing to press. `applySoloRoundFlow` alone cannot fix it (it only acts in RoundMove)
+    // and `resolveOpponentDecisions` alone cannot either (it lands in RoundMove with the OPPONENT on
+    // turn) - it takes both, in that order, with the solo flow applied again afterwards.
+    const engine = new Engine(SETUP_MOVES);
+    engine.player(0).data.credits = 20;
+    engine.player(0).data.ores = 20;
+    engine.move("terrans build ts -1x2.");
+    engine.generateAvailableCommandsIfNeeded();
+    expect(engine.phase).to.equal(Phase.RoundLeech);
+    expect(engine.playerToMove).to.equal(1);
+    markAnalysisSeat(engine, 0);
+
+    settleAnalysisClone(engine, 0);
+
+    expect(engine.phase).to.equal(Phase.RoundMove);
+    expect(engine.playerToMove).to.equal(0);
+    expect(engine.turnOrder).to.deep.equal([0]);
+    expect(engine.availableCommands?.filter((c) => c.player === 0).length ?? 0).to.be.greaterThan(0);
+  });
+
+  it("leaves an ordinary off-turn entry alone rather than auto-playing the opponent's turn", () => {
+    // The reason the solo flow has to run FIRST: it makes it this seat's turn immediately, so
+    // `resolveOpponentDecisions` finds nothing to resolve and never reaches its `autoMove()` step -
+    // which would otherwise have an opponent take a real turn inside the sandbox.
+    const engine = new Engine(SETUP_MOVES);
+    markAnalysisSeat(engine, 1);
+    const opponentHistory = engine.moveHistory.length;
+
+    settleAnalysisClone(engine, 1);
+
+    expect(engine.playerToMove).to.equal(1);
+    expect(engine.moveHistory.length, "no opponent move was played").to.equal(opponentHistory);
+  });
+});
+
 describe("markAnalysisSeat", () => {
   it("sets the analysis flag on the given seat's player data", () => {
     const engine = new Engine(SETUP_MOVES);
@@ -522,6 +634,16 @@ describe("committableAnalysisMoves (§6, decision #13)", () => {
     expect(moves).to.deep.equal(["terrans build m -1x2"]);
   });
 
+  it("commits nothing from a line holding a sandbox cheap Trading Station - it priced a neighbour that is not there", () => {
+    const origin = new Engine(SETUP_MOVES);
+    const entries: AnalysisEntry[] = [
+      { kind: "move", move: "terrans up nav." },
+      { kind: "move", move: "terrans build ts 4A4 cheap." },
+    ];
+
+    expect(committableAnalysisMoves(origin, entries, 0, Round.Round1)).to.deep.equal([]);
+  });
+
   it("returns nothing for a line with no move entries at all", () => {
     const origin = new Engine(SETUP_MOVES);
     applySoloRoundFlow(origin, 0);
@@ -585,6 +707,27 @@ describe("the round-0 faction seed (§11)", () => {
   });
 
   describe("analysisFactionPool", () => {
+    it("offers the whole unbanned pool during the BAN round, where nothing is claimed or on offer yet", () => {
+      // The one phase FACTION_SEED_PHASES whitelists where the picker used to render nothing at all:
+      // no seat holds a faction, and `ChooseFaction` is not among the available commands, so reading
+      // only that command produced an empty pool and the seed silently did not exist. Owner
+      // instruction, 2026-08-19: in the ban and pick rounds you should just pick the faction you want
+      // to try, not walk both phases.
+      const engine = new Engine(["init 3 lf-ban"], { auction: AuctionVariant.Silent });
+      expect(engine.phase).to.equal(Phase.SetupFactionBan);
+
+      expect(analysisFactionPool(engine, 0)).to.have.length(14);
+    });
+
+    it("drops a faction that has already been banned", () => {
+      const engine = new Engine(["init 3 lf-ban", "p1 banFaction terrans"], { auction: AuctionVariant.Silent });
+
+      const pool = analysisFactionPool(engine, 1);
+
+      expect(pool).to.have.length(13);
+      expect(pool).to.not.contain(Faction.Terrans);
+    });
+
     it("offers what is still on the table mid-pick", () => {
       const pool = analysisFactionPool(freshGame(), 0);
       expect(pool).to.include(Faction.Terrans);
@@ -667,25 +810,30 @@ describe("the round-0 faction seed (§11)", () => {
     });
   });
 
-  it("runs the whole round-0 flow: seed a faction, place everyone's mines, then round 1 solo", () => {
+  it("runs the whole round-0 flow: seed a faction, place only MY mines, then round 1 solo", () => {
     const origin = freshGame();
     applySoloRoundFlow(origin, 0); // what enterAnalysisMode does for a round-0 entry
-    const entries: AnalysisEntry[] = [
-      { kind: "faction", lineup: [Faction.Terrans, Faction.Nevlas] },
-      // Setup pass-and-play (§2.6/decision #7) - every seat's mines, placed by me. Boosters are NOT
-      // in here: opponents' picks are auto-resolved (owner instruction), so the only booster entry a
-      // round-0 line ever holds is this seat's own.
-      { kind: "move", move: "terrans build m -1x2" },
-      { kind: "move", move: "nevlas build m -1x0" },
-      { kind: "move", move: "nevlas build m 0x-4" },
-      { kind: "move", move: "terrans build m -4x-1" },
-    ];
+    // Owner instruction, 2026-08-19: "no mine placement for other factions". The line holds this
+    // seat's own placements and nothing else - opponents' starting mines and their booster are both
+    // resolved for them by `resolveOpponentDecisions` after every entry.
+    const entries: AnalysisEntry[] = [{ kind: "faction", lineup: [Faction.Terrans, Faction.Nevlas] }];
 
-    // Whatever the opponent's auto-pick left on the table - which booster that is depends on the
-    // order `possibleRoundBoosters` happens to offer them in, and the point here is the flow.
+    // Take whatever the engine offers first each time: the opponent's own mines are already down by
+    // the time this seat is asked, so a hardcoded hex could be one they were given.
+    for (let i = 0; i < 4; i++) {
+      const { engine } = replayAnalysisLine(origin, entries, 0, Round.Round1);
+      if (engine.phase !== Phase.SetupBuilding) {
+        break;
+      }
+      expect(engine.playerToMove, "only this seat is ever asked to place").to.equal(0);
+      const first = engine.findAvailableCommand(0, Command.Build).data.buildings[0];
+      entries.push({ kind: "move", move: `terrans build ${first.building} ${first.coordinates}` });
+    }
+
     const mid = replayAnalysisLine(origin, entries, 0, Round.Round1);
     expect(mid.engine.phase).to.equal(Phase.SetupBooster);
     expect(mid.engine.playerToMove).to.equal(0); // nevlas' pick was made for me
+    expect(mid.engine.players[1].data.occupied.length, "the opponent's own mines went down too").to.be.greaterThan(0);
     const mine = mid.engine.findAvailableCommand(0, Command.ChooseRoundBooster).data.boosters[0];
     entries.push({ kind: "move", move: `terrans booster ${mine}` });
 
@@ -748,5 +896,21 @@ describe("the round-0 faction seed (§11)", () => {
     const { applied } = replayAnalysisLine(origin, entries, 0, Round.Round1);
 
     expect(applied).to.equal(0);
+  });
+});
+
+describe("isCheapAnalysisBuild", () => {
+  it("matches the qualifier as the last token of a turn, which is where the viewer appends it", () => {
+    expect(isCheapAnalysisBuild("terrans build ts 4A4 cheap.")).to.equal(true);
+    expect(isCheapAnalysisBuild("terrans build ts 4A4.")).to.equal(false);
+  });
+
+  it("does not match a build move carrying an ordinary log annotation", () => {
+    // Build moves already have trailing tokens in recorded history; none of them is the qualifier.
+    expect(isCheapAnalysisBuild("itars build gf 6A9 using area1: 6.")).to.equal(false);
+  });
+
+  it("finds it in any turn of a multi-command move string", () => {
+    expect(isCheapAnalysisBuild("terrans spend 1o for 1c. build ts 4A4 cheap.")).to.equal(true);
   });
 });
