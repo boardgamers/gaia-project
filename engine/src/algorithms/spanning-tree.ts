@@ -104,6 +104,8 @@ function spanningTreeWithHeuristic<T>(
       }
       // A partial solution only helps if it can be extended into a solution cheaper
       // than the best known one, so cap the search at minScore - 1 - cost.
+      // (The -1 assumes integer hex costs — they are 0 or 1 in practice — so that
+      // "strictly cheaper than minScore" means "at least 1 cheaper".)
       const path = shortestPath<T>(hexes, toReach, grid, costs, minScore - 1 - cost);
 
       if (!path) {

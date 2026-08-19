@@ -8,8 +8,9 @@ import { topologyOf } from "./grid-topology";
  * Runs a BFS-style relaxation (all costs are non-negative, typically 0 or 1) over an
  * integer-indexed view of the grid, to keep the inner loop free of Map/Set lookups.
  *
- * @param costOf Cost of adding a hex to the path. Either a function, or a Float64Array
- * indexed like `topologyOf(grid).index()` (cheaper when calling repeatedly).
+ * @param costOf Cost of adding a hex to the path. Costs must be non-negative. Either a
+ * function, or a Float64Array indexed like `topologyOf(grid).index()` (cheaper when
+ * calling repeatedly).
  * @param maxCost Paths costing more than this are not explored. If the cheapest path
  * exceeds it, undefined is returned. Defaults to unbounded.
  */
@@ -54,7 +55,7 @@ export default function shortestPath<T>(
       continue;
     }
     costTo[i] = hexCost[i];
-    if (isDest[i]) {
+    if (isDest[i] && hexCost[i] <= maxCost) {
       return { path: [start], cost: hexCost[i] };
     }
     toExpand.push(i);
@@ -96,7 +97,7 @@ export default function shortestPath<T>(
 
     // We calculate the min distance between an hex of the path and other dest hexes
     // Better but more costly would be to use shortestPath instead of distance calculation
-    return distanceToNextDest(path.path, [path.path[0], path.path[path.path.length]]) < minDistance;
+    return distanceToNextDest(path.path, [path.path[0], path.path[path.path.length - 1]]) < minDistance;
   };
 
   while (toExpand.length > 0) {
@@ -111,7 +112,9 @@ export default function shortestPath<T>(
         const cost = curCost + hexCost[neighbour];
 
         if (cost > maxCost) {
-          // This path can never lead to a useful destination (costs are non-negative)
+          // This path can never lead to a useful destination (costs are non-negative).
+          // Note that callers deriving maxCost from a "strictly better than X" bound
+          // (e.g. spanningTree's X - 1) rely on hex costs being integers.
           continue;
         }
 
