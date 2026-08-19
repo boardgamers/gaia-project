@@ -1,7 +1,21 @@
 {
-  "version": "5.72.4",
-  "releasedAt": "2026-08-18",
+  "version": "5.72.5",
+  "releasedAt": "2026-08-19",
   "entries": [
+    {
+      "version": "5.72.5",
+      "releasedAt": "2026-08-19",
+      "kind": "update",
+      "title": "Sandbox controls move to the map corner",
+      "impact": "",
+      "changes": [
+        "Sandbox mode's Undo and Reset are now icons in the map's bottom-right corner, beside the sandbox button itself",
+        "The action area's Back button no longer wears the game's spend-power symbol, which made it look like going back cost 1 power (it never did)"
+      ],
+      "userChanges": [
+        "Sandbox mode's Undo and Reset are now icons in the map's bottom-right corner, beside the sandbox button itself"
+      ]
+    },
     {
       "version": "5.72.4",
       "releasedAt": "2026-08-18",

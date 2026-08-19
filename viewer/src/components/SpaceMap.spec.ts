@@ -410,7 +410,7 @@ describe("SpaceMap", () => {
   });
 
   describe("the analysis mode map-corner button (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §5.4)", () => {
-    function mountWithProps(props: { analysisOffered?: boolean; analysisActive?: boolean }) {
+    function mountWithProps(props: { analysisOffered?: boolean; analysisActive?: boolean; analysisCanEdit?: boolean }) {
       const engine = loadFixtureEngine();
       const store = makeStore();
       store.commit("receiveData", engine);
@@ -445,6 +445,55 @@ describe("SpaceMap", () => {
       expect(emitted()["analysis-toggle"]).to.have.length(1);
     });
 
+    it("offers Undo/Reset beside the toggle only while the sandbox is open", () => {
+      const offered = mountWithProps({ analysisOffered: true, analysisActive: false });
+      expect(offered.container.querySelector(".space-map__analysis-button--undo")).to.equal(null);
+      expect(offered.container.querySelector(".space-map__analysis-button--reset")).to.equal(null);
+
+      const { container } = mountWithProps({ analysisActive: true, analysisCanEdit: true });
+      expect(container.querySelector(".space-map__analysis-button--undo")).to.not.equal(null);
+      expect(container.querySelector(".space-map__analysis-button--reset")).to.not.equal(null);
+    });
+
+    it("keeps the toggle first in document order, so a bare .space-map__analysis-button query still finds it", () => {
+      const { container } = mountWithProps({ analysisActive: true, analysisCanEdit: true });
+      expect(container.querySelector(".space-map__analysis-button title").textContent).to.equal("Exit sandbox mode");
+    });
+
+    it("lays the three controls out right to left - toggle, Reset, Undo - all on the bottom edge", () => {
+      const { container } = mountWithProps({ analysisActive: true, analysisCanEdit: true });
+      const x = (selector: string) => {
+        const match = /translate\((-?[\d.]+),\s*(-?[\d.]+)\)/.exec(
+          container.querySelector(selector).getAttribute("transform")
+        );
+        return { x: Number(match[1]), y: Number(match[2]) };
+      };
+      const toggle = x(".space-map__analysis-button");
+      const reset = x(".space-map__analysis-button--reset");
+      const undo = x(".space-map__analysis-button--undo");
+
+      expect(undo.x).to.be.lessThan(reset.x);
+      expect(reset.x).to.be.lessThan(toggle.x);
+      expect(reset.y).to.equal(toggle.y);
+      expect(undo.y).to.equal(toggle.y);
+    });
+
+    it("emits analysis-undo / analysis-reset when they are pressable, and nothing at all for an empty line", async () => {
+      const live = mountWithProps({ analysisActive: true, analysisCanEdit: true });
+      await fireEvent.click(live.container.querySelector(".space-map__analysis-button--undo"));
+      await fireEvent.click(live.container.querySelector(".space-map__analysis-button--reset"));
+      expect(live.emitted()["analysis-undo"]).to.have.length(1);
+      expect(live.emitted()["analysis-reset"]).to.have.length(1);
+
+      // Still rendered (so the toggle beside them never shifts), but inert - CSS also takes their
+      // pointer events away, which jsdom does not apply, hence the handler's own guard.
+      const empty = mountWithProps({ analysisActive: true, analysisCanEdit: false });
+      const undo = empty.container.querySelector(".space-map__analysis-button--undo");
+      expect(undo.classList.contains("space-map__analysis-button--inert")).to.equal(true);
+      await fireEvent.click(undo);
+      expect(empty.emitted()["analysis-undo"]).to.equal(undefined);
+    });
+
     it("never overlaps a hex, for any Lost Fleet player count", () => {
       // Same geometric-clearance methodology as the faction-wheel test above: derive the button's
       // actual rendered bounding box from its own transform (not a hardcoded guess) and assert no
@@ -462,30 +511,35 @@ describe("SpaceMap", () => {
         const store = makeStore();
         store.commit("receiveData", engine);
 
-        const { container } = render(SpaceMap, { store, props: { analysisActive: true } });
+        const { container } = render(SpaceMap, { store, props: { analysisActive: true, analysisCanEdit: true } });
 
-        const button = container.querySelector(".space-map__analysis-button");
-        expect(button, `${players}p button should render`).to.not.equal(null);
-        const match = /translate\((-?[\d.]+),\s*(-?[\d.]+)\)\s*scale\((-?[\d.]+)\)/.exec(
-          button.getAttribute("transform") ?? ""
-        );
-        expect(match, `${players}p expected an anchored+scaled transform`).to.not.equal(null);
-        const origin = { x: Number(match[1]), y: Number(match[2]) };
-        const scale = Number(match[3]);
-        // The badge rect's own local footprint is x=-11..11, y=-11..11 (see the template).
-        const buttonBox = {
-          left: origin.x - 11 * scale,
-          right: origin.x + 11 * scale,
-          top: origin.y - 11 * scale,
-          bottom: origin.y + 11 * scale,
-        };
+        // All three corner controls, not just the toggle: Undo/Reset extend the row leftwards, so
+        // they are the ones actually at risk of reaching a hex.
+        const buttons = container.querySelectorAll(".space-map__analysis-button");
+        expect(buttons.length, `${players}p expected toggle + Undo + Reset`).to.equal(3);
 
-        for (const hex of engine.map.grid.values()) {
-          const raw = hexCenter(hex);
-          const c = rotate(raw.x * 1.01, raw.y * 1.01, rotationDeg(players));
-          const overlapsX = c.x + 1 > buttonBox.left && c.x - 1 < buttonBox.right;
-          const overlapsY = c.y + 1 > buttonBox.top && c.y - 1 < buttonBox.bottom;
-          expect(overlapsX && overlapsY, `${players}p button overlaps hex at (${c.x}, ${c.y})`).to.equal(false);
+        for (const button of buttons) {
+          const match = /translate\((-?[\d.]+),\s*(-?[\d.]+)\)\s*scale\((-?[\d.]+)\)/.exec(
+            button.getAttribute("transform") ?? ""
+          );
+          expect(match, `${players}p expected an anchored+scaled transform`).to.not.equal(null);
+          const origin = { x: Number(match[1]), y: Number(match[2]) };
+          const scale = Number(match[3]);
+          // The badge rect's own local footprint is x=-11..11, y=-11..11 (see the template).
+          const buttonBox = {
+            left: origin.x - 11 * scale,
+            right: origin.x + 11 * scale,
+            top: origin.y - 11 * scale,
+            bottom: origin.y + 11 * scale,
+          };
+
+          for (const hex of engine.map.grid.values()) {
+            const raw = hexCenter(hex);
+            const c = rotate(raw.x * 1.01, raw.y * 1.01, rotationDeg(players));
+            const overlapsX = c.x + 1 > buttonBox.left && c.x - 1 < buttonBox.right;
+            const overlapsY = c.y + 1 > buttonBox.top && c.y - 1 < buttonBox.bottom;
+            expect(overlapsX && overlapsY, `${players}p button overlaps hex at (${c.x}, ${c.y})`).to.equal(false);
+          }
         }
       }
     });

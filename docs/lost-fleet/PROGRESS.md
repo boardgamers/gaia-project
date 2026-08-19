@@ -7496,6 +7496,47 @@ Commit · ⓘ` now lives in the hazard-striped header that already existed, with
 
       Viewer: 1165/1165 passing. Engine untouched.
 
+189.  ✅ **The Back button stopped looking like it costs power, and Undo/Reset moved onto the map
+      (viewer v5.72.5, 2026-08-19, owner report).** Two items, one of which turned out not to be a
+      state bug at all.
+
+      **1. "In sandbox mode when pressing back it also charges 1 power?"** It does not, and never
+      did - but the button says it does. `Resources/Undo.vue` drew the Back button as a `pay-pw`
+      `Resource`: the game's own **spend power** glyph, a power token in the `--lost` colour with the
+      power-charge arrow mirrored over it, with the word "Back" written across it. That is the exact
+      symbol every power cost in the game is printed with, so on a sandbox board - where the header
+      is already reporting `+N charged` and `+N power` chips - reading it as a 1-power cost is the
+      only sensible interpretation. Verified there is no state change behind it before touching
+      anything: mounting `Game.vue`, entering the sandbox and driving the real DOM through
+      Research -> Back, Power/Q.I.C Action -> Back and Free action -> Back left the power bowls,
+      `analysisAssumedPower`, `analysisStatus` and `analysisEntries` all byte-identical. (The
+      mechanics are sound: `Commands.vue`'s `back()` sets `ExecuteBack.performed`, so `undoMove`
+      returns before it can dispatch anything.) The button is now a neutral badge with a plain undo
+      arrow on it - no resource symbol anywhere - which also fixes the same misreading on the player
+      board's own inline Back (`PlayerBoard/Info.vue` uses the same component).
+
+      **2. Undo/Reset are map-corner icons now, next to the sandbox toggle** (owner instruction),
+      instead of text buttons in the striped banner. Two new `Definitions.vue` symbols drawn on the
+      same 17.5-unit `currentColor` box as the calculator, so all three share one badge, one
+      `translate(-8.75, -8.75)` and one CSS rule: `#analysis-undo` (an arc with the arrowhead on its
+      tail, so it reads as one step rather than "restart") and `#analysis-reset` (a bin - two curved
+      arrows at 22px are not tellable apart). They render only while the sandbox is open, and stay on
+      screen but inert (`--inert`: dimmed, `pointer-events: none`, plus a guard on the handler) while
+      the line is empty, so the toggle never jumps sideways the moment the first move lands.
+      `AnalysisHeaderControls.vue` keeps the counts, the chips and Commit - Commit is the one control
+      that leaves the sandbox for the real game. **Note the tradeoff:** on a phone these two now
+      scroll away with the map, where the banner had kept them pinned.
+
+      This surfaced a real geometry bug in the corner's own clearance check. `ANALYSIS_BAND_HEIGHT`
+      was 2.5, but the badge row reaches `1.9 + 1.1 = 3.0` up from `bounds.bottom`, so hexes in that
+      0.5-unit sliver were invisible to `bandMaxXFromBottom` and could overlap an icon. It never
+      showed with one button because the row was too narrow to reach them; the 2p Lost Fleet map put
+      a hex under the widened row immediately. It is now derived from the inset and the badge's own
+      half-height rather than guessed, and `SpaceMap.spec.ts`'s hex-overlap test iterates all three
+      controls instead of only the toggle.
+
+      Viewer: 1169/1169 passing. Engine untouched.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

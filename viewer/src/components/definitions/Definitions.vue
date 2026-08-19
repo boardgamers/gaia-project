@@ -34,6 +34,32 @@
            M4.5 12.7 H6.8 V15 H4.5 Z M7.6 12.7 H9.9 V15 H7.6 Z M10.7 12.7 H13 V15 H10.7 Z"
       />
     </g>
+    <!-- Sandbox mode's two line controls, sitting beside the calculator in the map's bottom-right
+         corner (SpaceMap.vue). Same 17.5-unit box and `currentColor` fill as the calculator above,
+         so the shared `translate(-8.75, -8.75)` centres all three in the same badge and one CSS rule
+         colours them. Undo is a single step back (the arc's arrowhead is the tail, so it reads as
+         "one move", not "restart"); Reset empties the whole line, hence a bin rather than a second
+         arrow - two curved arrows at 22px are not tellable apart. -->
+    <g id="analysis-undo">
+      <path
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.4"
+        stroke-linecap="round"
+        d="M 3.75 8 A 5 5 0 1 1 12.58 11.21"
+      />
+      <polygon fill="currentColor" points="3.75,14 0.35,7.6 7.15,7.6" />
+    </g>
+    <g id="analysis-reset">
+      <path
+        fill="currentColor"
+        fill-rule="evenodd"
+        d="M6.6 1.4 H10.9 V3.4 H14.6 V5.4 H2.9 V3.4 H6.6 Z
+           M4.3 6.6 H13.2 L12.4 15.7 A1.1 1.1 0 0 1 11.3 16.7 H6.2 A1.1 1.1 0 0 1 5.1 15.7 Z
+           M6.9 8.4 H8.1 V14.8 H6.9 Z
+           M9.4 8.4 H10.6 V14.8 H9.4 Z"
+      />
+    </g>
   </defs>
 </template>
 <script lang="ts">

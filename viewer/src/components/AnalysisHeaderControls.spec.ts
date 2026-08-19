@@ -60,17 +60,10 @@ describe("AnalysisHeaderControls", () => {
     expect(none.container.querySelector(".analysis-controls__charged")).to.equal(null);
   });
 
-  it("disables Undo and Reset for an empty line and emits them otherwise", async () => {
-    const empty = controls({ moveCount: 0 });
-    expect(button(empty.container, "Undo").disabled).to.equal(true);
-    expect(button(empty.container, "Reset").disabled).to.equal(true);
-
-    const { container, emitted } = controls({ moveCount: 2 });
-    await fireEvent.click(button(container, "Undo"));
-    await fireEvent.click(button(container, "Reset"));
-
-    expect(emitted().undo).to.have.length(1);
-    expect(emitted().reset).to.have.length(1);
+  it("no longer carries Undo/Reset - they are map-corner icons beside the sandbox toggle now", () => {
+    const { container } = controls({ moveCount: 2 });
+    expect(button(container, "Undo")).to.equal(undefined);
+    expect(button(container, "Reset")).to.equal(undefined);
   });
 
   it("only offers Commit once there is a line, and disables it while nothing in it is committable", async () => {

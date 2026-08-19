@@ -35,26 +35,10 @@
       +{{ assumedPower }} power
     </span>
 
-    <b-button
-      size="sm"
-      variant="outline-secondary"
-      class="analysis-controls__btn"
-      :disabled="moveCount === 0"
-      title="Undo the last move in this line"
-      @click="$emit('undo')"
-    >
-      Undo
-    </b-button>
-    <b-button
-      size="sm"
-      variant="outline-secondary"
-      class="analysis-controls__btn"
-      :disabled="moveCount === 0"
-      title="Clear the whole line"
-      @click="$emit('reset')"
-    >
-      Reset
-    </b-button>
+    <!-- Undo/Reset used to sit here. They are icons in the map's bottom-right corner now
+         (SpaceMap.vue), beside the sandbox toggle itself, so the whole sandbox control cluster is in
+         one place; Commit stays because it is the one control that leaves the sandbox for the real
+         game, and it belongs next to the counts it acts on. -->
     <b-button
       v-if="moveCount > 0"
       size="sm"
@@ -163,37 +147,10 @@ export default Vue.extend({
   font-weight: 600;
 }
 
-// Bootstrap's outline variants are transparent by design, so Undo/Reset were reading straight off the
-// full-strength yellow/black hazard stripes behind them - §5.1's "solid text backing" applies to a
-// button label just as much as to a text run. They are given the same keycap surface the action
-// area's own move buttons wear (Commands.vue's `.move-button .btn` block: soft top-down gradient,
-// 10px corners, a real border and a lifted edge), so the two rows of sandbox controls read as the
-// same kind of control rather than two unrelated widgets.
-//
-// Scoped away from the Commit button, which is a solid `success` variant already and must stay green.
-.analysis-controls__btn:not(.btn-success) {
-  background: linear-gradient(180deg, var(--ui-keycap-gradient-start) 0%, var(--ui-keycap-gradient-end) 100%);
-  border-color: var(--ui-border-strong);
-  border-radius: 10px;
-  box-shadow: 0 1px 2px var(--ui-shadow-soft);
-  color: var(--ui-secondary-text);
-
-  // `:not(:disabled)` so a hover over a disabled Undo/Reset cannot out-specify the disabled rule
-  // below and repaint it as if it were pressable.
-  &:not(:disabled):hover,
-  &:not(:disabled):focus,
-  &:not(:disabled):active {
-    background: var(--ui-surface-hover);
-    border-color: var(--ui-border-strong);
-    color: var(--ui-text);
-  }
-}
-
-// Disabled is the state these two spend most of their life in (Undo/Reset until the line has a move
-// in it, Commit until something in it is committable), and it was the unreadable one: full opacity
-// was already being forced - Bootstrap's .65 turns stripes into mush - but over `--ui-surface-muted`
-// the label was `--ui-text-subtle`, i.e. a grey-on-grey pair sitting around 3:1 in both themes. Same
-// muted surface, a text colour that can actually be read on it.
+// Commit is disabled until something in the line is committable, and that state was the unreadable
+// one on the hazard stripes: full opacity has to be forced (Bootstrap's .65 turns stripes into mush)
+// and over `--ui-surface-muted` the label was `--ui-text-subtle`, i.e. a grey-on-grey pair sitting
+// around 3:1 in both themes. Same muted surface, a text colour that can actually be read on it.
 .analysis-controls__btn:disabled,
 .analysis-controls__btn.disabled {
   opacity: 1;

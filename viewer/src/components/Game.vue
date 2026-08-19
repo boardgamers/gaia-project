@@ -73,8 +73,6 @@
             :analysis-committable-moves="analysisCommittableMoves.length"
             :analysis-faction-choices="analysisFactionChoices"
             @analysis-seed-faction="seedAnalysisFaction"
-            @analysis-undo="undoLastAnalysisEntry"
-            @analysis-reset="resetAnalysisLine"
             @analysis-commit="commitAnalysisLine"
             @analysis-charge="chargeAnalysisPower"
             @analysis-undo-charge="undoAnalysisCharge"
@@ -99,7 +97,10 @@
           :class="['mb-1', 'space-map', 'col-md-7']"
           :analysis-offered="analysisOffered"
           :analysis-active="analysisMode"
+          :analysis-can-edit="analysisEntries.length > 0"
           @analysis-toggle="toggleAnalysisMode"
+          @analysis-undo="undoLastAnalysisEntry"
+          @analysis-reset="resetAnalysisLine"
         />
         <div class="col-md-5 game-board-side-column">
           <!-- For Lost Fleet, ResearchBoard itself grows a 7th column (Scoring Board Extension +
@@ -206,8 +207,6 @@
             :analysis-committable-moves="analysisCommittableMoves.length"
             :analysis-faction-choices="analysisFactionChoices"
             @analysis-seed-faction="seedAnalysisFaction"
-            @analysis-undo="undoLastAnalysisEntry"
-            @analysis-reset="resetAnalysisLine"
             @analysis-commit="commitAnalysisLine"
             @analysis-charge="chargeAnalysisPower"
             @analysis-undo-charge="undoAnalysisCharge"
@@ -314,7 +313,10 @@
         :class="['mb-1', 'space-map', 'col-md-7']"
         :analysis-offered="analysisOffered"
         :analysis-active="analysisMode"
+        :analysis-can-edit="analysisEntries.length > 0"
         @analysis-toggle="toggleAnalysisMode"
+        @analysis-undo="undoLastAnalysisEntry"
+        @analysis-reset="resetAnalysisLine"
       />
       <AdvancedLog :currentMove="currentMove" :hideLog.sync="hideLog" v-if="logPlacement === 'top'" />
       <Commands
@@ -327,8 +329,6 @@
         :analysis-committable-moves="analysisCommittableMoves.length"
         :analysis-faction-choices="analysisFactionChoices"
         @analysis-seed-faction="seedAnalysisFaction"
-        @analysis-undo="undoLastAnalysisEntry"
-        @analysis-reset="resetAnalysisLine"
         @analysis-commit="commitAnalysisLine"
         @analysis-charge="chargeAnalysisPower"
         @analysis-undo-charge="undoAnalysisCharge"

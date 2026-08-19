@@ -836,3 +836,13 @@ kbd {
     stroke: var(--ui-warning-border);
   }
 }
+
+// Undo/Reset with nothing in the line yet. They stay on screen rather than disappearing (so the
+// toggle beside them never jumps sideways the moment the first sandbox move lands) but must not
+// look or behave pressable - `pointer-events: none` also stops the hover rule above lighting them
+// up, which on its own would read as "this does something".
+.space-map__analysis-button--inert {
+  cursor: default;
+  opacity: 0.4;
+  pointer-events: none;
+}

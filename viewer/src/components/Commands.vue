@@ -52,14 +52,13 @@
       </b-dropdown>
       <!-- Analysis mode's controls take over the slot the auto-leech dropdown gives up (§2.9/§12) -
            opponent decisions are auto-resolved there regardless of that preference, and this is where
-           the deleted yellow panel's Undo/Reset/Commit now live. -->
+           the deleted yellow panel's counts and Commit now live (Undo/Reset moved on again, to the
+           map's bottom-right corner beside the sandbox toggle - see SpaceMap.vue). -->
       <AnalysisHeaderControls
         v-else-if="analysisMode"
         :move-count="analysisMoveCount"
         :status="analysisStatus"
         :committable-moves="analysisCommittableMoves"
-        @undo="$emit('analysis-undo')"
-        @reset="$emit('analysis-reset')"
         @commit="$emit('analysis-commit')"
       />
     </div>
@@ -128,8 +127,6 @@
           :move-count="analysisMoveCount"
           :status="analysisStatus"
           :committable-moves="analysisCommittableMoves"
-          @undo="$emit('analysis-undo')"
-          @reset="$emit('analysis-reset')"
           @commit="$emit('analysis-commit')"
         />
       </div>
