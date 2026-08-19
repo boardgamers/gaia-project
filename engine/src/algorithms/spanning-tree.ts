@@ -1,6 +1,7 @@
 import assert from "assert";
 import { Grid, Hex } from "hexagrid";
 import { difference, inRange, maxBy, minBy, sumBy, uniq } from "lodash";
+import { topologyOf } from "./grid-topology";
 import minimumPathLength from "./minimum-path-length";
 import shortestPath from "./shortest-path";
 
@@ -54,7 +55,9 @@ function spanningTreeWithHeuristic<T>(
   const [minR, maxR] = [minBy(destHexes, "r").r, maxBy(destHexes, "r").r];
   const [minS, maxS] = [minBy(destHexes, "s").s, maxBy(destHexes, "s").s];
 
-  const startingPoints: Array<Hex<T>> = [];
+  // Starting from the groups themselves usually finds a good solution right away,
+  // which then serves as an upper bound that massively prunes the remaining searches.
+  const startingPoints: Array<Hex<T>> = destGroups.map((group) => group[0]);
   if (destGroups.length > 2) {
     // We pick all the hexes that are in the middle of the federation buildings, and try to create a network from them
     startingPoints.push(
@@ -67,30 +70,41 @@ function spanningTreeWithHeuristic<T>(
       )
     );
   }
-  for (const group of destGroups) {
-    startingPoints.push(group[0]);
-  }
+
+  const topology = topologyOf(grid);
 
   const groupAround = (hex: Hex<T>) => {
     if (destGroupsMap.has(hex)) {
       return destGroupsMap.get(hex);
     } else {
       // If it's an empty hex next to buildings, include those buildings
-      return uniq([hex, ...grid.neighbours(hex).map((nb) => destGroupsMap.get(nb) ?? [])].flat(1));
+      return uniq([hex, ...topology.neighbours(hex).map((nb) => destGroupsMap.get(nb) ?? [])].flat(1));
     }
   };
 
   let minScore = maxAdditional === -1 ? grid.size + 1 : maxAdditional + 1;
   let bestSolution: Hex<T>[];
 
+  const { hexList, indexOf } = topology.index();
+  const baseCosts = new Float64Array(hexList.length);
+  for (let i = 0; i < hexList.length; i++) {
+    baseCosts[i] = costOf(hexList[i]);
+  }
+
   for (const startingPoint of startingPoints) {
     let hexes = groupAround(startingPoint);
-    let cost: number;
+    let cost = sumBy(hexes, costOf);
     let toReach = difference(destHexes, hexes);
 
     do {
-      const hexSet = new Set<Hex<T>>(hexes);
-      const path = shortestPath<T>(hexes, toReach, grid, (hex) => (hexSet.has(hex) ? 0 : costOf(hex)));
+      // Hexes already part of the tree cost nothing to pass through
+      const costs = baseCosts.slice();
+      for (const hex of hexes) {
+        costs[indexOf.get(hex)] = 0;
+      }
+      // A partial solution only helps if it can be extended into a solution cheaper
+      // than the best known one, so cap the search at minScore - 1 - cost.
+      const path = shortestPath<T>(hexes, toReach, grid, costs, minScore - 1 - cost);
 
       if (!path) {
         hexes = undefined;
@@ -102,7 +116,7 @@ function spanningTreeWithHeuristic<T>(
       toReach = difference(toReach, hexes);
     } while (cost < minScore && toReach.length > 0);
 
-    if (hexes && cost < minScore) {
+    if (hexes && cost < minScore && toReach.length === 0) {
       minScore = cost;
       bestSolution = hexes;
     }
