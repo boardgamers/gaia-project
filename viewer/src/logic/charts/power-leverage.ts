@@ -1,5 +1,5 @@
 import { Building, Command, PowerArea, Resource, Reward } from "@gaia-project/engine";
-import { sum } from "lodash";
+import { sum } from "../lodash-utils";
 import { resourceCounter } from "./resource-counter";
 import { ExtractLog } from "./simple-charts";
 

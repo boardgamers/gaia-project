@@ -1,10 +1,10 @@
 import Engine, { TechTilePos } from "@gaia-project/engine";
 import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
-import { sortBy } from "lodash";
 import { federationData } from "../../data/federations";
 import { leechNetwork, sectors } from "../../data/stats";
 import { finalScoringSources } from "../charts/final-scoring";
 import { colorCodes } from "../color-codes";
+import { sortBy } from "../lodash-utils";
 import { techCell } from "./research";
 import { InfoTableFlex, PlayerTable } from "./types";
 import { skipZero } from "./util";

@@ -1,7 +1,6 @@
 packages:
   - "viewer"
   - "engine"
-  - "old-ui"
 # pnpm 11 (resolved via corepack in CI) blocks dependency postinstall scripts by default.
 # These are all no-op or cosmetic (core-js/ejs banners, an optional native watcher);
 # allow them so `pnpm install` exits 0.

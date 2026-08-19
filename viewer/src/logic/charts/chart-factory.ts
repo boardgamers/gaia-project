@@ -13,16 +13,17 @@ import {
   ChartConfiguration,
   ChartDataset,
   ChartEvent,
+  ChartType as ChartJSType,
   LegendItem,
   LegendOptions,
   TooltipItem,
   TooltipModel,
   TooltipOptions,
 } from "chart.js";
-import { memoize, sortBy, sum, sumBy } from "lodash";
 import { factionName } from "../../data/factions";
 import { roundScoringData } from "../../data/round-scorings";
 import { playerColor, resolveColor } from "../../graphics/colors";
+import { memoize, sortBy, sum, sumBy } from "../lodash-utils";
 import {
   ChartGroup,
   chartPlayerOrder,
@@ -147,7 +148,7 @@ function newLegendOptions(provider: (index: number) => string) {
   let hovering = false;
   const tooltip = document.getElementById("tooltip");
 
-  const legendOptions: DeepPartial<LegendOptions> = {
+  const legendOptions: DeepPartial<LegendOptions<ChartJSType>> = {
     onHover(event: ChartEvent, legendItem: LegendItem) {
       const description = provider(legendItem.datasetIndex);
       if (hovering || description == null) {

@@ -43,15 +43,16 @@
     "chart.js": "^3.0.1",
     "hexagrid": "^2.1.1",
     "lodash": "^4.17.15",
-    "vue": "^2.6.11",
+    "vue": "2.6.14",
     "vuex": "^3.0.1"
   },
   "devDependencies": {
-    "@testing-library/dom": "^7.29.6",
-    "@testing-library/vue": "^5.6.1",
+    "@testing-library/dom": "7.31.2",
+    "@testing-library/vue": "5.6.1",
+    "@types/aria-query": "^4.2.2",
     "@types/chai": "^4.2.15",
-    "@types/jquery": "^3.3.1",
-    "@types/lodash": "^4.14.168",
+    "@types/jquery": "3.5.16",
+    "@types/lodash": "4.14.182",
     "@types/mocha": "^8.2.1",
     "@types/node": "^10.5.2",
     "@typescript-eslint/eslint-plugin": "^2.26.0",
@@ -79,13 +80,13 @@
     "typescript": "^3.8.3",
     "vue-class-component": "^7.2.6",
     "vue-property-decorator": "^9.1.2",
-    "vue-router": "^3.5.1",
-    "vue-template-compiler": "^2.6.11",
+    "vue-router": "3.5.4",
+    "vue-template-compiler": "2.6.14",
     "webpack": "^4.16.1"
   },
   "peerDependencies": {
     "bootstrap-vue": "^2.12.0",
-    "vue": "^2.6.11"
+    "vue": "2.6.14"
   },
   "browserslist": [
     "> 1%",

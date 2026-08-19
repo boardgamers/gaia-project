@@ -15,7 +15,7 @@ import {
 import { LogEntryChange } from "@gaia-project/engine/src/engine";
 import { tradeCostSource, tradeSource } from "@gaia-project/engine/src/events";
 import { MoveTokens } from "@gaia-project/engine/src/player-data";
-import { sum } from "lodash";
+import { sum } from "../lodash-utils";
 import { CommandObject } from "../recent";
 import { chartPlayerBoard } from "./charts";
 import { ExtractLog, ExtractLogArg } from "./simple-charts";

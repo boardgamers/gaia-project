@@ -12,10 +12,10 @@ import Engine, {
 } from "@gaia-project/engine";
 import { qicForDistance } from "@gaia-project/engine/src/cost";
 import { isAcademy } from "@gaia-project/engine/src/enums";
-import { pick, sortBy } from "lodash";
 import { ButtonData } from "../../data";
 import { availableBuildingShortcut, buildingName } from "../../data/building";
 import { RichText, richText, richTextArrow, richTextBuilding } from "../../graphics/rich-text";
+import { pick, sortBy } from "../lodash-utils";
 import { hexSelectionButton } from "./hex";
 import { withShortcut } from "./shortcuts";
 import { CommandController } from "./types";

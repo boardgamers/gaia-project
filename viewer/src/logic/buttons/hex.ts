@@ -1,9 +1,9 @@
 import { Building, GaiaHex, Resource, Reward } from "@gaia-project/engine";
 import assert from "assert";
-import { sortBy } from "lodash";
 import { ButtonData, HighlightHex } from "../../data";
 import { buildingData } from "../../data/building";
 import { RichText, richText, richTextArrow, richTextRewards } from "../../graphics/rich-text";
+import { sortBy } from "../lodash-utils";
 import { prependShortcut, tooltipWithShortcut } from "./shortcuts";
 import { CommandController } from "./types";
 import { addOnClick, addOnShow, isFree, textButton } from "./utils";

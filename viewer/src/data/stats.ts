@@ -1,5 +1,5 @@
 import Engine, { GaiaHex, Player, PlayerEnum } from "@gaia-project/engine";
-import { sum, uniq } from "lodash";
+import { sum, uniq } from "../logic/lodash-utils";
 import { leechPlanets, upgradableBuildingsOfOtherPlayers } from "../logic/utils";
 import { MapModeType } from "./actions";
 

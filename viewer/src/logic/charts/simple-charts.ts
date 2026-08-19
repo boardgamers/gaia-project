@@ -1,5 +1,5 @@
 import Engine, { Building, Command, Faction, LogEntry, Planet, Player } from "@gaia-project/engine";
-import { sum } from "lodash";
+import { sum } from "../lodash-utils";
 import { CommandObject, parseCommands } from "../recent";
 import { ChartKind } from "./chart-factory";
 import { ChartGroup, ChartSource, ChartType } from "./charts";
