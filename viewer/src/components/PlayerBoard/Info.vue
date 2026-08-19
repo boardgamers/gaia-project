@@ -44,8 +44,16 @@
           title="Leech network - number of upgradable buildings by other players within leeching distance"
           :transform="`translate(33.5,${height - 16.6}) scale(.08)`"
         >
-          <image xlink:href="../../assets/other/network.svg" :height=155/211*22 width="22" x="0" y="0"
-          transform="scale(2)" @click="toggleMapMode('leech')" style="cursor: pointer" />
+          <image
+            xlink:href="../../assets/other/network.svg"
+            :height="(155 / 211) * 22"
+            width="22"
+            x="0"
+            y="0"
+            transform="scale(2)"
+            @click="toggleMapMode('leech')"
+            style="cursor: pointer"
+          />
           <text class="board-text" transform="translate(22,38) scale(10)" text-anchor="middle">
             {{ leechNetwork }}
           </text>
@@ -66,15 +74,29 @@
           </g>
         </g>
         <g transform="translate(15.2, 1.4)" v-b-tooltip title="Satellites and space stations, satellites left ">
-          <image xlink:href="../../assets/other/satellite.svg" :height=155/211*22 width="22" x="-11" y="-8"
-          transform="scale(0.07)" />
+          <image
+            xlink:href="../../assets/other/satellite.svg"
+            :height="(155 / 211) * 22"
+            width="22"
+            x="-11"
+            y="-8"
+            transform="scale(0.07)"
+          />
           <text class="board-text" transform="translate(1,0) scale(0.8)"
             >{{ data.satellites + data.buildings.sp }}, {{ satellitesLeft }}
           </text>
         </g>
         <g transform="translate(12.4, 3.5)" v-b-tooltip title="Sectors with a colonized planet">
-          <image xlink:href="../../assets/conditions/sector.svg" :height=155/211*22 width="22" x="-11" y="-8"
-          transform="scale(0.1)" @click="toggleMapMode('sectors')" style="cursor: pointer" />
+          <image
+            xlink:href="../../assets/conditions/sector.svg"
+            :height="(155 / 211) * 22"
+            width="22"
+            x="-11"
+            y="-8"
+            transform="scale(0.1)"
+            @click="toggleMapMode('sectors')"
+            style="cursor: pointer"
+          />
           <text class="board-text" transform="translate(1.4,-.1) scale(0.8)" text-anchor="middle">{{ sectors }}</text>
         </g>
         <g
@@ -82,8 +104,16 @@
           v-b-tooltip
           title="Power value of structures in federations, outside of federations"
         >
-          <image xlink:href="../../assets/conditions/federation.svg" :height=155/211*22 width="22" x="-11" y="-8"
-          transform="scale(0.1)" @click="toggleMapMode('federations')" style="cursor: pointer" />
+          <image
+            xlink:href="../../assets/conditions/federation.svg"
+            :height="(155 / 211) * 22"
+            width="22"
+            x="-11"
+            y="-8"
+            transform="scale(0.1)"
+            @click="toggleMapMode('federations')"
+            style="cursor: pointer"
+          />
           <text class="board-text" transform="translate(1,-.1) scale(0.8)"
             >{{ player.fedValue }}, {{ player.structureValue - player.fedValue }}
           </text>
@@ -136,10 +166,6 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
-import Resource from "../Resource.vue";
-import Undo from "../Resources/Undo.vue";
 import Engine, {
   Expansion,
   Faction,
@@ -149,13 +175,17 @@ import Engine, {
   ResearchField,
   Resource as ResourceEnum,
 } from "@gaia-project/engine";
-import VictoryPoint from "../Resources/VictoryPoint.vue";
+import Vue from "vue";
+import { Component, Prop } from "vue-property-decorator";
 import { FastConversionEvent, MapMode, MapModeType } from "../../data/actions";
 import { factionName } from "../../data/factions";
+import { researchColor } from "../../data/research";
 import { showIncome } from "../../data/resources";
 import { leechNetwork, sectors } from "../../data/stats";
 import { CellStyle } from "../../graphics/colors";
-import { researchColor } from "../../data/research";
+import Resource from "../Resource.vue";
+import Undo from "../Resources/Undo.vue";
+import VictoryPoint from "../Resources/VictoryPoint.vue";
 
 @Component({
   components: {
@@ -212,7 +242,8 @@ export default class PlayerBoardInfo extends Vue {
   }
 
   get buttonTooltip() {
-    return "<ul>" +
+    return (
+      "<ul>" +
       "<li>Click on the faction name to see the faction rules (and there's a dropdown to see all faction rules)</li>" +
       "<li>Click on the buildings to see their cost, income, and power value</li>" +
       "<li>Click on the resources to get an additional resource of this kind (using the best conversion available)</li>" +
@@ -221,8 +252,9 @@ export default class PlayerBoardInfo extends Vue {
       "<li>Click on the sectors icon to highlight all colonized sectors (also works for other players)</li>" +
       "<li>Click on the federation icon to highlight all federation (also works for other players)</li>" +
       "<li>Click on the network icon (right of power bowl) to leech network - how much power can be gained if other players upgrade buildings</li>" +
-      (this.isFrontiers ? "<li>Click on the trade bonus or cost icons to see the trade rewards table</li>": "") +
-      "</ul>";
+      (this.isFrontiers ? "<li>Click on the trade bonus or cost icons to see the trade rewards table</li>" : "") +
+      "</ul>"
+    );
   }
 
   income(resource: ResourceEnum) {

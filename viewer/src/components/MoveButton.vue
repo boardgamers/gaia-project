@@ -45,18 +45,18 @@
 </template>
 
 <script lang="ts">
+import { Player } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { Player } from "@gaia-project/engine";
 import { ButtonData, WarningsPreference } from "../data";
-import Booster from "./Booster.vue";
-import TechTile from "./TechTile.vue";
-import BoardAction from "./BoardAction.vue";
-import SpecialAction from "./SpecialAction.vue";
-import { CommandController, MoveButtonController } from "../logic/buttons/types";
-import { callOnShow, buttonRichTextLabel } from "../logic/buttons/utils";
 import { enabledButtonWarnings } from "../data/warnings";
+import { CommandController, MoveButtonController } from "../logic/buttons/types";
+import { buttonRichTextLabel, callOnShow } from "../logic/buttons/utils";
+import BoardAction from "./BoardAction.vue";
+import Booster from "./Booster.vue";
 import RichTextView from "./Resources/RichTextView.vue";
+import SpecialAction from "./SpecialAction.vue";
+import TechTile from "./TechTile.vue";
 
 @Component({
   components: {
@@ -180,7 +180,10 @@ export default class MoveButton extends Vue implements MoveButtonController {
   }
 
   get variant(): string {
-    return enabledButtonWarnings(this.button, this.$store.state.preferences).length > 0 && this.warningPreference !== WarningsPreference.Tooltip ? "warning" : "secondary";
+    return enabledButtonWarnings(this.button, this.$store.state.preferences).length > 0 &&
+      this.warningPreference !== WarningsPreference.Tooltip
+      ? "warning"
+      : "secondary";
   }
 }
 </script>

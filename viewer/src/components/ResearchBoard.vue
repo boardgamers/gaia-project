@@ -47,12 +47,12 @@
 </template>
 
 <script lang="ts">
+import { ResearchField } from "@gaia-project/engine";
 import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
-import { ResearchField, BoardAction as BoardActionEnum } from "@gaia-project/engine";
+import { Component } from "vue-property-decorator";
+import BoardAction from "./BoardAction.vue";
 import ResearchTrack from "./ResearchTrack.vue";
 import TechTile from "./TechTile.vue";
-import BoardAction from "./BoardAction.vue";
 
 @Component({
   computed: {

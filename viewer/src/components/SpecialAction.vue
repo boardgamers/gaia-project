@@ -26,12 +26,12 @@
 </template>
 
 <script lang="ts">
+import Engine, { Event, Planet } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import Engine, { Event, Planet, Player } from "@gaia-project/engine";
 import { ButtonData } from "../data";
-import { specialActionButton } from "../logic/buttons/actions";
 import { enabledButtonWarnings } from "../data/warnings";
+import { specialActionButton } from "../logic/buttons/actions";
 
 @Component
 export default class SpecialAction extends Vue {
@@ -66,7 +66,7 @@ export default class SpecialAction extends Vue {
   }
 
   techEvent(act: string): Event {
-    return new Event((this.board ? '' : '>') + act);
+    return new Event((this.board ? "" : ">") + act);
   }
 
   get gameData(): Engine {

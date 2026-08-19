@@ -119,7 +119,10 @@ export default class Player extends EventEmitter {
   /** Is the player dropped (i.e. no move) */
   dropped?: boolean;
 
-  constructor(expansion: Expansion = Expansion.None, public player: PlayerEnum = PlayerEnum.Player1) {
+  constructor(
+    expansion: Expansion = Expansion.None,
+    public player: PlayerEnum = PlayerEnum.Player1
+  ) {
     super();
     this.data.on("advance-research", (track, dest) => this.onResearchAdvanced(track, dest, expansion));
   }

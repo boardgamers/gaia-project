@@ -35,18 +35,10 @@
 </template>
 
 <script lang="ts">
+import { Faction, Player, PlayerData, Resource as ResourceEnum } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import Resource from "../Resource.vue";
-import {
-  Faction,
-  Reward,
-  FactionBoard,
-  Operator,
-  Resource as ResourceEnum,
-  PlayerData,
-  Player,
-} from "@gaia-project/engine";
 
 @Component({
   components: {

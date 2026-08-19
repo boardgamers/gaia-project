@@ -271,21 +271,21 @@
 </template>
 
 <script lang="ts">
+import Engine, { Building, Expansion, factionPlanet, Planet, Player } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component, Prop, Watch } from "vue-property-decorator";
-import Engine, { Building, Expansion, factionPlanet, Planet, Player } from "@gaia-project/engine";
+import { MapMode, MapModeType } from "../data/actions";
+import { factionData, factionName, planetsWithSteps } from "../data/factions";
+import { mapModeTypeOptions } from "../data/stats";
 import { factionColor } from "../graphics/utils";
-import TechTile from "./TechTile.vue";
 import Booster from "./Booster.vue";
-import SpecialAction from "./SpecialAction.vue";
 import FederationTile from "./FederationTile.vue";
 import BuildingGroup from "./PlayerBoard/BuildingGroup.vue";
 import PlayerBoardInfo from "./PlayerBoard/Info.vue";
 import PowerBowls from "./PlayerBoard/PowerBowls.vue";
 import Rules from "./Rules.vue";
-import { factionData, factionName, planetsWithSteps } from "../data/factions";
-import { MapMode, MapModeType } from "../data/actions";
-import { mapModeTypeOptions } from "../data/stats";
+import SpecialAction from "./SpecialAction.vue";
+import TechTile from "./TechTile.vue";
 
 @Component({
   components: {

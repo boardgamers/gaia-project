@@ -28,7 +28,7 @@ export function movePass(
   engine.players[player].pass();
 
   if (!engine.isLastRound) {
-    moveChooseRoundBooster(engine, (command as any) as AvailableCommand<Command.ChooseRoundBooster>, player, booster);
+    moveChooseRoundBooster(engine, command as any as AvailableCommand<Command.ChooseRoundBooster>, player, booster);
   }
 
   engine.passedPlayers.push(player);

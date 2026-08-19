@@ -75,16 +75,16 @@
   </div>
 </template>
 <script lang="ts">
+import Engine from "@gaia-project/engine";
+import { PlayerColumn } from "src/logic/table/types";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import Engine from "@gaia-project/engine";
 import { HistoryEntry, makeHistory } from "../data/log";
-import RichTextView from "./Resources/RichTextView.vue";
-import { parseRewardsForLog } from "../logic/utils";
 import { RichText } from "../graphics/rich-text";
-import { PlayerColumn } from "src/logic/table/types";
 import { logPlayerTables } from "../logic/table/player";
 import { cellStyle } from "../logic/table/util";
+import { parseRewardsForLog } from "../logic/utils";
+import RichTextView from "./Resources/RichTextView.vue";
 
 type LogScope = "recent" | "all";
 @Component({
@@ -137,7 +137,13 @@ export default class AdvancedLog extends Vue {
   get history(): HistoryEntry[] {
     if (this.hideLog) return [];
 
-    return makeHistory(this.engine, this.$store.getters.recentMoves, this.scope == "recent", this.currentMove, this.extendedLog);
+    return makeHistory(
+      this.engine,
+      this.$store.getters.recentMoves,
+      this.scope == "recent",
+      this.currentMove,
+      this.extendedLog
+    );
   }
 
   rowSpan(entry: HistoryEntry): number {
@@ -145,7 +151,7 @@ export default class AdvancedLog extends Vue {
   }
 
   get rowHeaders(): PlayerColumn[] {
-    return this.extendedLog ? logPlayerTables(this.engine).flatMap(t => t.columns) : [];
+    return this.extendedLog ? logPlayerTables(this.engine).flatMap((t) => t.columns) : [];
   }
 
   cellStyle(c: PlayerColumn): string {
@@ -161,14 +167,19 @@ export default class AdvancedLog extends Vue {
       return [];
     }
 
-    return entry.rows ? entry.rows.flatMap(r => r.map((value, i) => ({
-        value,
-        leftBorder: i == 0,
-      })))
-      : logPlayerTables(this.engine).flatMap(t => t.columns.map((c, i) => ({
-        value: [],
-        leftBorder: i == 0,
-      })));
+    return entry.rows
+      ? entry.rows.flatMap((r) =>
+          r.map((value, i) => ({
+            value,
+            leftBorder: i == 0,
+          }))
+        )
+      : logPlayerTables(this.engine).flatMap((t) =>
+          t.columns.map((c, i) => ({
+            value: [],
+            leftBorder: i == 0,
+          }))
+        );
   }
 }
 </script>

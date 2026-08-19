@@ -15,12 +15,12 @@
   </div>
 </template>
 <script lang="ts">
-import { Component, Prop, Vue } from "vue-property-decorator";
 import { PowerArea, Resource as ResourceEnum } from "@gaia-project/engine";
-import { FastConversionEvent } from "../data/actions";
-import RichTextView from "./Resources/RichTextView.vue";
-import { UiMode } from "../store";
 import { InfoTableCell } from "src/logic/table/types";
+import { Component, Prop, Vue } from "vue-property-decorator";
+import { FastConversionEvent } from "../data/actions";
+import { UiMode } from "../store";
+import RichTextView from "./Resources/RichTextView.vue";
 @Component({
   components: { RichTextView },
 })

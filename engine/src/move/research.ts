@@ -42,7 +42,7 @@ export function moveChooseTechTile(
   // AFTER gaining the tech tile (as green federation can be flipped and lock research tracks)
   engine.processNextMove(
     SubPhase.UpgradeResearch,
-    ResearchField.values(engine.expansions).includes((pos as any) as ResearchField) ? { pos } : undefined
+    ResearchField.values(engine.expansions).includes(pos as any as ResearchField) ? { pos } : undefined
   );
 }
 

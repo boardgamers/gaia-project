@@ -21,14 +21,14 @@
 </template>
 
 <script lang="ts">
+import Engine, { Phase } from "@gaia-project/engine";
+import { roundScoringEvents } from "@gaia-project/engine/src/tiles/scoring";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import Engine, { Phase } from "@gaia-project/engine";
 import { eventDesc } from "../data/event";
 import Condition from "./Condition.vue";
-import Resource from "./Resource.vue";
 import Operator from "./Operator.vue";
-import { roundScoringEvents } from "@gaia-project/engine/src/tiles/scoring";
+import Resource from "./Resource.vue";
 
 @Component<ScoringTile>({
   components: {

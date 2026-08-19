@@ -50,31 +50,31 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
 import Engine, {
   AdvTechTilePos,
   canResearchField,
   canTakeAdvancedTechTile,
   Condition,
+  Event,
   Expansion,
   Federation,
   Operator,
   Planet as PlanetEnum,
   Player,
   PlayerEnum,
+  researchEvents,
   ResearchField,
   Resource as ResourceEnum,
-  Event,
-  researchEvents,
 } from "@gaia-project/engine";
+import Vue from "vue";
+import { Component, Prop } from "vue-property-decorator";
+import { ButtonData } from "../data";
 import { researchEventsWithCounters, researchLevelDesc } from "../data/research";
-import Token from "./Token.vue";
+import { plusReward } from "../logic/utils";
 import FederationTile from "./FederationTile.vue";
 import Planet from "./Planet.vue";
 import Resource from "./Resource.vue";
-import { ButtonData } from "../data";
-import { plusReward } from "../logic/utils";
+import Token from "./Token.vue";
 
 @Component<ResearchTile>({
   components: {
@@ -110,8 +110,8 @@ export default class ResearchTile extends Vue {
   }
 
   resourceY(index: number): number {
-    const range = this.smallRange((this.resources)[0].type);
-    return (this.height / 3) * 2 + 3 + this.resourceOffset + (range ? (index - .4) * 10 : 0);
+    const range = this.smallRange(this.resources[0].type);
+    return (this.height / 3) * 2 + 3 + this.resourceOffset + (range ? (index - 0.4) * 10 : 0);
   }
 
   scale(resource: ResourceEnum): number {
@@ -119,8 +119,10 @@ export default class ResearchTile extends Vue {
   }
 
   smallRange(resource: ResourceEnum): boolean {
-    return (resource === ResourceEnum.ShipRange || resource === ResourceEnum.Range)
-      && this.engine.expansions === Expansion.Frontiers;
+    return (
+      (resource === ResourceEnum.ShipRange || resource === ResourceEnum.Range) &&
+      this.engine.expansions === Expansion.Frontiers
+    );
   }
 
   tokenX(index: PlayerEnum) {
@@ -144,7 +146,7 @@ export default class ResearchTile extends Vue {
   get resources() {
     const events = researchEventsWithCounters(this.engine, this.field, this.level);
     const rewards = events
-      .filter(e => e.spec !== "3pw" && e.condition === Condition.None)
+      .filter((e) => e.spec !== "3pw" && e.condition === Condition.None)
       .flatMap((ev) => ev.rewards);
     if (events[0] && events[0].operator === Operator.Income) {
       rewards.unshift(plusReward);

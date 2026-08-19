@@ -47,20 +47,20 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
 import {
-  GaiaHex,
   Building as BuildingEnum,
-  Planet as PlanetEnum,
+  GaiaHex,
   SpaceMap as ISpaceMap,
+  Planet as PlanetEnum,
   factionPlanet,
 } from "@gaia-project/engine";
-import { corners } from "../graphics/hex";
-import Planet from "./Planet.vue";
-import Building from "./Building.vue";
+import Vue from "vue";
+import { Component, Prop } from "vue-property-decorator";
 import { buildingName } from "../data/building";
 import { planetNames } from "../data/planets";
+import { corners } from "../graphics/hex";
+import Building from "./Building.vue";
+import Planet from "./Planet.vue";
 
 @Component<SpaceHex>({
   components: {

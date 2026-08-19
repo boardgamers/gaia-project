@@ -30,13 +30,13 @@
 </template>
 
 <script lang="ts">
+import Engine, { factionPlanet, Planet } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component } from "vue-property-decorator";
-import { planetFill } from "../graphics/utils";
-import Engine, { factionPlanet, Planet } from "@gaia-project/engine";
-import { radiusTranslate } from "../logic/utils";
 import { MapMode } from "../data/actions";
 import { remainingPlanets } from "../data/planets";
+import { planetFill } from "../graphics/utils";
+import { radiusTranslate } from "../logic/utils";
 
 const planets = [
   Planet.Terra,
@@ -106,7 +106,7 @@ export default class FactionWheel extends Vue {
   }
 
   togglePlanetHighlight(planet: Planet) {
-    this.$store.commit("toggleMapMode", { type: "planetType", planet  } as MapMode);
+    this.$store.commit("toggleMapMode", { type: "planetType", planet } as MapMode);
   }
 }
 </script>

@@ -47,35 +47,39 @@ export type AvailableBoardActionData = {
 };
 
 export class Offer {
-  constructor(readonly offer: string, readonly cost: string) {}
+  constructor(
+    readonly offer: string,
+    readonly cost: string
+  ) {}
 }
 
 type BaseCommandData<Command extends string> = { [key in Command]?: any };
 type AvailableCommands<
   Command extends string,
   AvailableCommandData extends BaseCommandData<Command>,
-  PlayerId = number
+  PlayerId = number,
 > = {
   [command in Command]: _AvailableCommand<Command, AvailableCommandData, command, PlayerId>;
 };
 type __AvailableCommand<
   Command extends string,
   AvailableCommandData extends BaseCommandData<Command>,
-  PlayerId = number
+  PlayerId = number,
 > = AvailableCommands<Command, AvailableCommandData, PlayerId>[Command];
 type _CommandHelper<
   Command extends string,
   CommandData extends BaseCommandData<Command>,
-  move extends Command
+  move extends Command,
 > = move extends keyof CommandData ? CommandData[move] : never;
 type _AvailableCommand<
   Command extends string,
   AvailableCommandData extends BaseCommandData<Command>,
   command extends Command,
-  PlayerId = number
-> = _CommandHelper<Command, AvailableCommandData, command> extends never
-  ? { name: command; player: PlayerId }
-  : { name: command; player: PlayerId; data: _CommandHelper<Command, AvailableCommandData, command> };
+  PlayerId = number,
+> =
+  _CommandHelper<Command, AvailableCommandData, command> extends never
+    ? { name: command; player: PlayerId }
+    : { name: command; player: PlayerId; data: _CommandHelper<Command, AvailableCommandData, command> };
 type _MoveNameWithData<Command extends string, AvailableCommandData extends BaseCommandData<Command>> = {
   [command in Command]: _CommandHelper<Command, AvailableCommandData, command> extends never ? never : command;
 };

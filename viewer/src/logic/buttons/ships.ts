@@ -106,7 +106,7 @@ export function moveShipButton(
           shortcuts: [shipLetter(ship).toLowerCase()],
           hexes: hexMap(
             engine,
-            command.data.filter((e) => e.ship === ship).map((l) => ({ coordinates: l.source } as AvailableHex)),
+            command.data.filter((e) => e.ship === ship).map((l) => ({ coordinates: l.source }) as AvailableHex),
             false
           ),
         }),

@@ -5,9 +5,9 @@
 </template>
 
 <script lang="ts">
+import { Faction } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { Faction } from "@gaia-project/engine";
 import { planetClass } from "../graphics/utils";
 
 @Component

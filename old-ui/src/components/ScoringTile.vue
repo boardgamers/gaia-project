@@ -7,11 +7,11 @@
 </template>
 
 <script lang="ts">
+import { Event, Phase } from "@gaia-project/engine";
+import { roundScoringEvents } from "@gaia-project/engine/src/tiles/scoring";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { Event, Phase } from "@gaia-project/engine";
 import { eventDesc } from "../data/event";
-import { roundScoringEvents } from "@gaia-project/engine/src/tiles/scoring";
 
 @Component<ScoringTile>({
   computed: {

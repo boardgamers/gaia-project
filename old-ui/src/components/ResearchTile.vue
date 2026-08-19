@@ -46,25 +46,24 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
 import {
-  ResearchField,
-  Player,
+  Expansion,
   Federation,
-  Resource as ResourceEnum,
-  researchEvents,
-  Event,
-  Reward,
   Operator,
   Planet as PlanetEnum,
-  Expansion,
+  Player,
+  ResearchField,
+  Resource as ResourceEnum,
+  Reward,
+  researchEvents,
 } from "@gaia-project/engine";
+import Vue from "vue";
+import { Component, Prop } from "vue-property-decorator";
 import { descriptions } from "../data/research";
-import Token from "./Token.vue";
 import FederationTile from "./FederationTile.vue";
 import Planet from "./Planet.vue";
 import Resource from "./Resource.vue";
+import Token from "./Token.vue";
 
 @Component<ResearchTile>({
   computed: {
@@ -144,12 +143,12 @@ export default class ResearchTile extends Vue {
       return this.level === 0
         ? "nav 1"
         : this.level === 2
-        ? "nav 2"
-        : this.level === 4
-        ? "nav 3"
-        : this.level === 5
-        ? "nav 4"
-        : "";
+          ? "nav 2"
+          : this.level === 4
+            ? "nav 3"
+            : this.level === 5
+              ? "nav 4"
+              : "";
     }
     if (this.field === ResearchField.GaiaProject) {
       return this.level === 5 ? "4vp, g>vp" : "";

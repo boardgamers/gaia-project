@@ -19,9 +19,9 @@
 </template>
 
 <script lang="ts">
+import { BoardAction as BoardActionEnum, boardActions, Event } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { Event, BoardAction as BoardActionEnum, boardActions } from "@gaia-project/engine";
 import { eventDesc } from "../data/event";
 
 @Component<BoardAction>({

@@ -47,15 +47,15 @@
 </template>
 
 <script lang="ts">
+import Engine, { SpaceMap as SpaceMapData } from "@gaia-project/engine";
+import { CubeCoordinates } from "hexagrid";
 import Vue from "vue";
 import { Component } from "vue-property-decorator";
-import Engine, { SpaceMap as SpaceMapData } from "@gaia-project/engine";
-import { hexCenter } from "../graphics/hex";
-import Sector from "./Sector.vue";
-import { CubeCoordinates } from "hexagrid";
-import FactionWheel from "./FactionWheel.vue";
-import Definitions from "./definitions/Definitions.vue";
 import { MapMode, MapModeType } from "../data/actions";
+import { hexCenter } from "../graphics/hex";
+import FactionWheel from "./FactionWheel.vue";
+import Sector from "./Sector.vue";
+import Definitions from "./definitions/Definitions.vue";
 
 @Component<SpaceMap>({
   components: {
@@ -102,8 +102,8 @@ export default class SpaceMap extends Vue {
   }
 
   get colorLegend(): { class: string; text: string }[] {
-    if (this.mapModes.find(m => m.type === MapModeType.leech || m.type == MapModeType.federations)) {
-      return [...Array(5).keys()].map(i => ({class: `power${i + 1}`, text: String(i + 1)}));
+    if (this.mapModes.find((m) => m.type === MapModeType.leech || m.type == MapModeType.federations)) {
+      return [...Array(5).keys()].map((i) => ({ class: `power${i + 1}`, text: String(i + 1) }));
     }
     return [];
   }

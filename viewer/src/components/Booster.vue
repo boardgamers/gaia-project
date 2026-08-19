@@ -27,12 +27,12 @@
 </template>
 
 <script lang="ts">
+import Engine, { Booster as BoosterEnum, Event } from "@gaia-project/engine";
+import { boosterEvents } from "@gaia-project/engine/src/tiles/boosters";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import Engine, { Event, Booster as BoosterEnum } from "@gaia-project/engine";
 import { eventDesc } from "../data/event";
 import TechContent from "./TechContent.vue";
-import { boosterEvents } from "@gaia-project/engine/src/tiles/boosters";
 
 @Component<Booster>({
   components: {

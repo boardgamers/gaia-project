@@ -54,18 +54,18 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
-import { RichText, RichTextBuilding, RichTextElement } from "../../graphics/rich-text";
 import { Building as BuildingEnum, Faction, Resource } from "@gaia-project/engine";
 import Reward from "@gaia-project/engine/src/reward";
-import Building from "../Building.vue";
-import SpecialAction from "../SpecialAction.vue";
+import Vue from "vue";
+import { Component, Prop } from "vue-property-decorator";
 import { foregroundColor } from "../../graphics/colors";
+import { RichText, RichTextBuilding, RichTextElement } from "../../graphics/rich-text";
 import { factionColorVar } from "../../graphics/utils";
 import BoardAction from "../BoardAction.vue";
-import TechTile from "../TechTile.vue";
 import Booster from "../Booster.vue";
+import Building from "../Building.vue";
+import SpecialAction from "../SpecialAction.vue";
+import TechTile from "../TechTile.vue";
 
 @Component({
   components: { Booster, TechTile, BoardAction, Building, SpecialAction },
@@ -75,9 +75,9 @@ export default class RichTextView extends Vue {
   content: RichText;
 
   get filteredContent(): RichText {
-    return this.content.flatMap(c => {
+    return this.content.flatMap((c) => {
       if (c.rewards) {
-        return c.rewards.map(r => ({ rewards: [r] } as RichTextElement));
+        return c.rewards.map((r) => ({ rewards: [r] }) as RichTextElement);
       }
       return c;
     });
@@ -104,7 +104,7 @@ export default class RichTextView extends Vue {
   }
 
   width(rewards: Reward[]): number {
-    return rewards[0].count as any == "+" ? 15 : rewards.length * 30;
+    return (rewards[0].count as any) == "+" ? 15 : rewards.length * 30;
   }
 
   buildingResource(b: RichTextBuilding): Resource | null {
@@ -121,7 +121,7 @@ export default class RichTextView extends Vue {
   }
 
   buildingCountStyle(b: RichTextBuilding): string {
-    return `fill: ${(foregroundColor(factionColorVar(b.faction)))}; font-weight: bold;`;
+    return `fill: ${foregroundColor(factionColorVar(b.faction))}; font-weight: bold;`;
   }
 }
 </script>

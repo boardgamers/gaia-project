@@ -16,16 +16,16 @@
 </template>
 
 <script lang="ts">
+import { Event } from "@gaia-project/engine";
+import { boosterEvents } from "@gaia-project/engine/src/tiles/boosters";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { Event } from "@gaia-project/engine";
 import { eventDesc } from "../data/event";
-import { boosterEvents } from "@gaia-project/engine/src/tiles/boosters";
 
 @Component<Booster>({
   computed: {
     tileObject() {
-      return boosterEvents(this.booster).map(e => e.spec);
+      return boosterEvents(this.booster).map((e) => e.spec);
     },
 
     event1() {

@@ -13,13 +13,13 @@
 </template>
 
 <script lang="ts">
+import { GaiaHex, SpaceMap as SpaceMapData } from "@gaia-project/engine";
+import { CubeCoordinates } from "hexagrid";
 import Vue from "vue";
 import { Component } from "vue-property-decorator";
-import { GaiaHex, SpaceMap as SpaceMapData } from "@gaia-project/engine";
 import { hexCenter } from "../graphics/hex";
-import Sector from "./Sector.vue";
-import { CubeCoordinates } from "hexagrid";
 import FactionWheel from "./FactionWheel.vue";
+import Sector from "./Sector.vue";
 
 @Component<SpaceMap>({
   components: {

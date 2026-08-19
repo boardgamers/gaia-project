@@ -88,18 +88,18 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
 import {
+  Building as BuildingEnum,
+  Condition as ConditionEnum,
   Event,
   Operator as OperatorEnum,
-  Condition as ConditionEnum,
-  Building as BuildingEnum,
 } from "@gaia-project/engine";
-import Resource from "./Resource.vue";
+import Vue from "vue";
+import { Component, Prop } from "vue-property-decorator";
 import Building from "./Building.vue";
 import Condition from "./Condition.vue";
 import Operator from "./Operator.vue";
+import Resource from "./Resource.vue";
 import SpecialAction from "./SpecialAction.vue";
 
 @Component({

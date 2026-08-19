@@ -26,8 +26,15 @@
     <Resource v-else-if="condition === 'step'" kind="step" />
     <Resource v-else-if="condition === 'trade'" kind="tradeShip" />
     <g v-else-if="condition === 'mg'">
-      <image v-if="!flat" xlink:href="../assets/conditions/planet-flat.svg" :height=120/198*30 width=30 x=-12 y=-13.5
-      transform="translate(-2,0) scale(-1,-1)" />
+      <image
+        v-if="!flat"
+        xlink:href="../assets/conditions/planet-flat.svg"
+        :height="(120 / 198) * 30"
+        width="30"
+        x="-12"
+        y="-13.5"
+        transform="translate(-2,0) scale(-1,-1)"
+      />
       <circle v-else r="10" :class="['planet-fill', 'g']" transform="translate(0,0)" />
       <Building
         building="m"
@@ -57,21 +64,26 @@
       <line x1="-15" x2="15" stroke="#666" />
       <line x1="-15" x2="15" y1="-10" y2="-10" stroke="#666" />
       <line x1="-15" x2="15" y1="10" y2="10" stroke="#666" />
-      <image xlink:href="../assets/operators/trigger.svg" width=15 :height=529/328*15 :transform="`rotate(180),
-      translate(6, -8), scale(0.7)`" />
-      <!-- <text y=-1 style="font-size: 9px">3</text>
-      <text y=8.5 style="font-size: 9px">2</text>-->
+      <image
+        xlink:href="../assets/operators/trigger.svg"
+        width="15"
+        :height="(529 / 328) * 15"
+        :transform="`rotate(180),
+      translate(6, -8), scale(0.7)`"
+      />
+      <!-- <text y="-1" style="font-size: 9px">3</text>
+      <text y="8.5" style="font-size: 9px">2</text>-->
     </g>
   </g>
 </template>
 <script lang="ts">
-import { Vue, Component, Prop, Watch } from "vue-property-decorator";
-import { Condition as ConditionEnum, Building as BuildingEnum } from "@gaia-project/engine";
+import { Building as BuildingEnum, Condition as ConditionEnum } from "@gaia-project/engine";
+import { Component, Prop, Vue } from "vue-property-decorator";
 import Building from "./Building.vue";
-import Federation from "./FederationTile.vue";
-import Planet from "./Planet.vue";
 import PlanetType from "./Conditions/PlanetType.vue";
 import Sector from "./Conditions/Sector.vue";
+import Federation from "./FederationTile.vue";
+import Planet from "./Planet.vue";
 
 @Component({
   components: {

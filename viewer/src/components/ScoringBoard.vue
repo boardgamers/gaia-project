@@ -9,8 +9,8 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component } from "vue-property-decorator";
-import ScoringTile from "./ScoringTile.vue";
 import FinalScoringTile from "./FinalScoringTile.vue";
+import ScoringTile from "./ScoringTile.vue";
 
 @Component({
   components: {

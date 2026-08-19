@@ -53,8 +53,8 @@
 </template>
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import Game from "./Game.vue";
 import { LoadFromJson, LoadFromJsonType } from "../store";
+import Game from "./Game.vue";
 
 @Component({
   components: { Game },
@@ -70,7 +70,7 @@ export default class Wrapper extends Vue {
     this.$store.dispatch("loadFromJSON", {
       engineData: JSON.parse(this.text),
       type: this.loadType,
-      stopMove: this.stopMove
+      stopMove: this.stopMove,
     } as LoadFromJson);
   }
 

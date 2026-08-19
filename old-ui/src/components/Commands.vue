@@ -51,27 +51,26 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
 import Engine, {
   AvailableCommand,
   Booster,
   Building,
   Command,
-  Event,
   Expansion,
   Faction,
   factionPlanet,
   GaiaHex,
   SpaceMap,
 } from "@gaia-project/engine";
-import MoveButton from "./MoveButton.vue";
-import { buildingName } from "../data/building";
-import { ButtonData, GameContext, HighlightHexData } from "../data";
-import { eventDesc } from "../data/event";
-import { factionDesc, factionName } from "../data/factions";
 import { boosterEvents } from "@gaia-project/engine/src/tiles/boosters";
 import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
+import Vue from "vue";
+import { Component, Prop } from "vue-property-decorator";
+import { ButtonData, GameContext, HighlightHexData } from "../data";
+import { buildingName } from "../data/building";
+import { eventDesc } from "../data/event";
+import { factionDesc, factionName } from "../data/factions";
+import MoveButton from "./MoveButton.vue";
 
 @Component<Commands>({
   watch: {
@@ -308,7 +307,9 @@ export default class Commands extends Vue {
                 label: `Booster ${i + 1}`,
                 booster,
                 needConfirm: true,
-                tooltip: boosterEvents(booster).map((e) => eventDesc(e)).join("\n"),
+                tooltip: boosterEvents(booster)
+                  .map((e) => eventDesc(e))
+                  .join("\n"),
               });
             }
           });

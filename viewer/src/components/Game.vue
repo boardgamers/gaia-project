@@ -75,8 +75,6 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
 import Engine, {
   BoardAction as BoardActionEnum,
   BuildWarning,
@@ -86,24 +84,26 @@ import Engine, {
   Player,
   ResearchField,
 } from "@gaia-project/engine";
+import { currentPlayer } from "@gaia-project/engine/wrapper";
+import Vue from "vue";
+import { Component, Prop } from "vue-property-decorator";
+import { LogPlacement } from "../data";
+import { orderedPlayers } from "../data/player";
+import { ExecuteBack } from "../logic/buttons/types";
+import { parseCommands } from "../logic/recent";
+import { UiMode } from "../store";
 import AdvancedLog from "./AdvancedLog.vue";
 import BoardAction from "./BoardAction.vue";
 import Commands from "./Commands.vue";
-import Pool from "./Pool.vue";
-import Rules from "./Rules.vue";
 import PlayerCircle from "./PlayerCircle.vue";
 import PlayerInfo from "./PlayerInfo.vue";
+import Pool from "./Pool.vue";
 import ResearchBoard from "./ResearchBoard.vue";
+import Rules from "./Rules.vue";
 import ScoringBoard from "./ScoringBoard.vue";
 import SpaceMap from "./SpaceMap.vue";
-import TurnOrder from "./TurnOrder.vue";
-import { parseCommands } from "../logic/recent";
-import { LogPlacement } from "../data";
-import { ExecuteBack } from "../logic/buttons/types";
-import { currentPlayer } from "@gaia-project/engine/wrapper";
-import { UiMode } from "../store";
 import Table from "./Table.vue";
-import { orderedPlayers } from "../data/player";
+import TurnOrder from "./TurnOrder.vue";
 
 @Component<Game>({
   components: {
@@ -288,7 +288,7 @@ export default class Game extends Vue {
   }
 
   handleData(data: Engine, keepMoveHistory?: boolean) {
-    for (const sector of (document.getElementsByClassName("sector") as any) as Element[]) {
+    for (const sector of document.getElementsByClassName("sector") as any as Element[]) {
       sector.classList.add("notransition");
     }
 
@@ -305,7 +305,7 @@ export default class Game extends Vue {
     }
 
     setTimeout(() => {
-      for (const sector of (document.getElementsByClassName("sector") as any) as Element[]) {
+      for (const sector of document.getElementsByClassName("sector") as any as Element[]) {
         sector.classList.remove("notransition");
       }
     });

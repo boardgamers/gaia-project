@@ -49,12 +49,7 @@
 </template>
 
 <script lang="ts">
-import {Component, Vue} from "vue-property-decorator";
-import {ChartGroup, ChartSelect, ChartStyleDisplay, ChartType} from "../logic/charts/charts";
-import PlayerCircle from "./PlayerCircle.vue";
-import BuildingImage from "./Building.vue";
-import SpecialAction from "./SpecialAction.vue";
-import Engine, {PlayerEnum} from "@gaia-project/engine";
+import Engine, { PlayerEnum } from "@gaia-project/engine";
 import {
   BarController,
   BarElement,
@@ -70,9 +65,21 @@ import {
   Title,
   Tooltip,
 } from "chart.js";
-import {barChartKind, ChartKind, ChartKindDisplay, ChartSetup, lineChartKind, TableMeta,} from "../logic/charts/chart-factory";
-import {tableHeader, tableItems} from "../logic/charts/table";
-import {StatisticsDisplay} from "../data";
+import { Component, Vue } from "vue-property-decorator";
+import { StatisticsDisplay } from "../data";
+import {
+  barChartKind,
+  ChartKind,
+  ChartKindDisplay,
+  ChartSetup,
+  lineChartKind,
+  TableMeta,
+} from "../logic/charts/chart-factory";
+import { ChartGroup, ChartSelect, ChartStyleDisplay, ChartType } from "../logic/charts/charts";
+import { tableHeader, tableItems } from "../logic/charts/table";
+import BuildingImage from "./Building.vue";
+import PlayerCircle from "./PlayerCircle.vue";
+import SpecialAction from "./SpecialAction.vue";
 
 Chart.register(
   LineController,
@@ -157,7 +164,7 @@ export default class Charts extends Vue {
     this.loadChart();
   }
 
-    selectSelect(s: ChartSelect) {
+  selectSelect(s: ChartSelect) {
     if (this.chartSelect != s) {
       this.chartSelect = s;
       this.selectType(this.setup.types(s)?.[0] ?? null, true);
@@ -187,10 +194,8 @@ export default class Charts extends Vue {
     const data = this.gameData;
     const isChart = this.chartStyle.type == "chart";
     const colorLookup = (color: string): string => {
-      const canvas =  this.canvas();
-      return color.startsWith("--") && isChart
-        ? window.getComputedStyle(canvas).getPropertyValue(color)
-        : color;
+      const canvas = this.canvas();
+      return color.startsWith("--") && isChart ? window.getComputedStyle(canvas).getPropertyValue(color) : color;
     };
 
     if (this.chartKind === barChartKind) {

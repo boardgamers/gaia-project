@@ -55,22 +55,30 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { Component, Prop } from 'vue-property-decorator';
-import Building from '../Building.vue';
-import Resource from '../Resource.vue';
-import { Building as BuildingEnum, Faction, Reward, FactionBoard, factionBoard, Operator, Resource as ResourceEnum } from '@gaia-project/engine';
+import {
+  Building as BuildingEnum,
+  Faction,
+  FactionBoard,
+  factionBoard,
+  Operator,
+  Resource as ResourceEnum,
+  Reward,
+} from "@gaia-project/engine";
+import Vue from "vue";
+import { Component, Prop } from "vue-property-decorator";
+import Building from "../Building.vue";
+import Resource from "../Resource.vue";
 
 @Component({
   components: {
     Building,
-    Resource
+    Resource,
   },
   watch: {
-    faction (newVal) {
+    faction(newVal) {
       this.board = factionBoard(newVal);
-    }
-  }
+    },
+  },
 })
 export default class BuildingGroup extends Vue {
   @Prop()
@@ -96,48 +104,50 @@ export default class BuildingGroup extends Vue {
 
   board: FactionBoard = factionBoard(this.faction || Faction.Terrans);
 
-  get buildingList () {
+  get buildingList() {
     return [0, 1, 2, 3, 4, 5, 6, 7].slice(0, this.nBuildings);
   }
 
-  get isPI () {
+  get isPI() {
     return this.building === BuildingEnum.PlanetaryInstitute;
   }
 
-  tooltip (i: number) {
+  tooltip(i: number) {
     return "Income: " + (this.resources(i, true).join(", ") || "~");
   }
 
-  get offset () {
+  get offset() {
     return 1.4;
   }
 
-  get buildingSpacing () {
+  get buildingSpacing() {
     return 2.2;
   }
 
-  get paddingRight () {
+  get paddingRight() {
     return 0.2;
   }
 
-  get width () {
+  get width() {
     return Math.max(this.nBuildings, 2) * this.buildingSpacing + this.offset + this.paddingRight;
   }
 
-  get factionIncome (): Reward[] {
-    const income: Reward[] = [].concat(...this.board.income.filter(ev => ev.operator === Operator.Income).map(ev => ev.rewards));
+  get factionIncome(): Reward[] {
+    const income: Reward[] = [].concat(
+      ...this.board.income.filter((ev) => ev.operator === Operator.Income).map((ev) => ev.rewards)
+    );
 
-    return income.filter(rew => this.resource.includes(rew.type));
+    return income.filter((rew) => this.resource.includes(rew.type));
   }
 
-  showBuilding (i: number) {
+  showBuilding(i: number) {
     if (this.ac1 || this.ac2) {
       return i === 0 ? !this.ac1 : !this.ac2;
     }
     return i >= this.placed;
   }
 
-  resources (i: number, forced = false): Reward[] {
+  resources(i: number, forced = false): Reward[] {
     if (this.showBuilding(i) && !forced) {
       return [];
     }
@@ -149,14 +159,18 @@ export default class BuildingGroup extends Vue {
       i = 0;
     }
 
-    return [].concat(...this.board.buildings[building].income[i].filter(ev => {
-      if (ev.operator === Operator.Income) {
-        return true;
-      }
-      const rew = ev.rewards.toString();
+    return [].concat(
+      ...this.board.buildings[building].income[i]
+        .filter((ev) => {
+          if (ev.operator === Operator.Income) {
+            return true;
+          }
+          const rew = ev.rewards.toString();
 
-      return ev.operator === Operator.Activate && (rew === "q" || rew === "4c");
-    }).map(ev => ev.rewards));
+          return ev.operator === Operator.Activate && (rew === "q" || rew === "4c");
+        })
+        .map((ev) => ev.rewards)
+    );
   }
 }
 </script>

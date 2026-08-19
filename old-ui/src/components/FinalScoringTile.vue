@@ -21,11 +21,11 @@
 </template>
 
 <script lang="ts">
+import { Faction, Phase, Player, finalScorings } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { Phase, Player, finalScorings, Faction } from "@gaia-project/engine";
-import Token from "./Token.vue";
 import { factionName } from "../data/factions";
+import Token from "./Token.vue";
 
 @Component<FinalScoringTile>({
   computed: {

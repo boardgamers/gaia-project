@@ -19,8 +19,13 @@
         @click="onClick"
       />
       <g transform="translate(-15,-15)">
-        <image v-if="kind === 'power'" xlink:href="../assets/resources/power-charge.svg" width="20" :height=133/345*20
-        transform=" scale(-1,1) translate(-9, -12)" />
+        <image
+          v-if="kind === 'power'"
+          xlink:href="../assets/resources/power-charge.svg"
+          width="20"
+          :height="(133 / 345) * 20"
+          transform=" scale(-1,1) translate(-9, -12)"
+        />
         <rect
           x="-8"
           y="-8"
@@ -47,20 +52,21 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
 import Engine, {
   BoardAction as BoardActionEnum,
   boardActions,
   Command,
   factionPlanet,
   Planet,
-  PlayerEnum, Reward,
+  PlayerEnum,
+  Reward,
 } from "@gaia-project/engine";
+import Vue from "vue";
+import { Component, Prop } from "vue-property-decorator";
+import { enabledButtonWarnings } from "../data/warnings";
+import { boardActionButton } from "../logic/buttons/actions";
 import Resource from "./Resource.vue";
 import SpecialAction from "./SpecialAction.vue";
-import { boardActionButton } from "../logic/buttons/actions";
-import { enabledButtonWarnings } from "../data/warnings";
 
 @Component<BoardAction>({
   components: {

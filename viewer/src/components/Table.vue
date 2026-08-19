@@ -43,23 +43,22 @@
   </div>
 </template>
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
 import Engine, { Player, PlayerEnum, PowerArea, Resource as ResourceEnum } from "@gaia-project/engine";
-import { infoTables } from "../logic/table/info-table";
-import { orderedPlayers } from "../data/player";
-import { MapMode, MapModeType } from "../data/actions";
-import { mapModeTypeOptions } from "../data/stats";
-import { UiMode } from "../store";
-import { rotate } from "../logic/utils";
-import TableCell from "./TableCell.vue";
 import { InfoTable } from "src/logic/table/types";
+import { Component, Vue } from "vue-property-decorator";
+import { MapMode, MapModeType } from "../data/actions";
+import { orderedPlayers } from "../data/player";
+import { mapModeTypeOptions } from "../data/stats";
+import { infoTables } from "../logic/table/info-table";
+import { rotate } from "../logic/utils";
+import { UiMode } from "../store";
+import TableCell from "./TableCell.vue";
 
 @Component({
   components: {
     TableCell,
   },
 })
-
 export default class Table extends Vue {
   get engine(): Engine {
     return this.$store.state.data;
@@ -79,7 +78,7 @@ export default class Table extends Vue {
     }
 
     if (s && !passed(s)) {
-      return players.filter(p => !passed(p)).concat(...players.filter(p => passed(p)));
+      return players.filter((p) => !passed(p)).concat(...players.filter((p) => passed(p)));
     }
     return players;
   }
@@ -94,10 +93,9 @@ export default class Table extends Vue {
   }
 
   get infoTables(): InfoTable[] {
-    return infoTables(this.engine, this.orderedPlayers, this.uiMode,
-      {
-        convertTooltip: (resource, player) => this.convertTooltip(resource, player),
-      });
+    return infoTables(this.engine, this.orderedPlayers, this.uiMode, {
+      convertTooltip: (resource, player) => this.convertTooltip(resource, player),
+    });
   }
 
   get mapModeTypeOptions() {
@@ -105,7 +103,7 @@ export default class Table extends Vue {
   }
 
   selectedMapMode(player: PlayerEnum): MapModeType {
-    return this.$store.getters.mapModes.find(m => m.player === player)?.type ?? MapModeType.default;
+    return this.$store.getters.mapModes.find((m) => m.player === player)?.type ?? MapModeType.default;
   }
 
   toggleMapMode(player: PlayerEnum, mode: MapModeType) {

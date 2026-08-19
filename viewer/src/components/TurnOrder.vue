@@ -21,10 +21,10 @@
   </div>
 </template>
 <script lang="ts">
+import Engine, { Phase, Player } from "@gaia-project/engine";
 import { Component, Vue } from "vue-property-decorator";
-import Engine, { Player, Phase } from "@gaia-project/engine";
-import PlayerCircle from "./PlayerCircle.vue";
 import { phaseBeforeSetupBuilding } from "../logic/utils";
+import PlayerCircle from "./PlayerCircle.vue";
 
 @Component({
   components: { PlayerCircle },
