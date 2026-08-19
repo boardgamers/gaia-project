@@ -4,7 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       newversion:
-        description: "Semantic Version Bump Type (major minor patch)"
+        description: "Semantic Version Bump Type"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
         default: patch
 
 env:
