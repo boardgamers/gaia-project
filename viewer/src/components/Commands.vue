@@ -175,7 +175,16 @@
              given the class: the sticky bar's keycap styling is `.move-button .btn`, i.e. a
              DESCENDANT rule, so a b-btn that carries the class itself matches nothing and comes out
              with Bootstrap's square-ish default corners next to properly rounded neighbours. -->
-        <div v-if="canUndo" class="move-button">
+        <!-- `key` on these three, and it is load-bearing, not tidiness (owner-reported bug, 2026-08-19).
+             They are unkeyed sibling `v-if`s over the same `<div class="move-button">`, so Vue's
+             `sameVnode` happily patches ONE INTO ANOTHER and reuses the same DOM `<button>`, swapping
+             only its click invoker. Back is showing exactly when Charge 1 is not (`canUndo` vs
+             `showAnalysisChargeButtons`), so pressing Back turned that element into Charge 1 - and
+             because browsers run a microtask checkpoint between event listeners, Vue re-rendered
+             mid-dispatch and the still-bubbling click then ran the NEW handler. One press of Back:
+             one +1 power `adjust` entry, every time, in sandbox mode. Distinct keys make `sameVnode`
+             false, so the element is destroyed and rebuilt instead of re-pointed. -->
+        <div v-if="canUndo" key="back-button" class="move-button">
           <b-btn :class="['mr-2', 'mb-2', 'move-button']" @click="undo">
             <template>
               <Undo transform="scale(1.2)" />
@@ -188,7 +197,7 @@
              last entry when that entry is itself a charge (Game.vue's undoAnalysisCharge), so it can
              never accidentally discard a real move. Both only on the top-level round-move menu - see
              `showAnalysisChargeButtons`. -->
-        <div v-if="showAnalysisChargeButtons" class="move-button">
+        <div v-if="showAnalysisChargeButtons" key="analysis-charge" class="move-button">
           <b-btn
             :class="['mr-2', 'mb-2', 'move-button']"
             title="Sandbox: give yourself 1 charged power"
@@ -197,7 +206,7 @@
             Charge 1
           </b-btn>
         </div>
-        <div v-if="showAnalysisChargeButtons" class="move-button">
+        <div v-if="showAnalysisChargeButtons" key="analysis-undo-charge" class="move-button">
           <b-btn
             :class="['mr-2', 'mb-2', 'move-button']"
             title="Sandbox: undo the last power charge"

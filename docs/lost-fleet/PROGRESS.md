@@ -7500,8 +7500,11 @@ Commit · ⓘ` now lives in the hazard-striped header that already existed, with
       (viewer v5.72.5, 2026-08-19, owner report).** Two items, one of which turned out not to be a
       state bug at all.
 
-      **1. "In sandbox mode when pressing back it also charges 1 power?"** It does not, and never
-      did - but the button says it does. `Resources/Undo.vue` drew the Back button as a `pay-pw`
+      **⚠️ Half of this entry is wrong - see #192.** It really did charge, in sandbox mode, through a
+      DOM-reuse bug this pass did not find. The icon below was a genuine second problem, not the cause.
+
+      **1. "In sandbox mode when pressing back it also charges 1 power?"** The button also _says_ it
+      does. `Resources/Undo.vue` drew the Back button as a `pay-pw`
       `Resource`: the game's own **spend power** glyph, a power token in the `--lost` colour with the
       power-charge arrow mirrored over it, with the word "Back" written across it. That is the exact
       symbol every power cost in the game is printed with, so on a sandbox board - where the header
@@ -7625,6 +7628,41 @@ Commit · ⓘ` now lives in the hazard-striped header that already existed, with
       `addDefaultShortcuts` resolves a collision. `viewer/src/logic/buttons/ts-pair.spec.ts` pins all
       five facts, including that the label lives in `richText` (the button face) and not only in the
       tooltip - the thing that was wrong.
+
+192.  ✅ **Back really did charge 1 power - Vue was handing the click to the Charge 1 button (viewer
+      v5.72.8, 2026-08-19, owner re-report).** #189 looked at this and concluded "it never charged
+      anything, it just looked like it did". That was wrong, and the way it was wrong is worth
+      keeping: the repro was driven in jsdom with `fireEvent.click` on the `<button>` element, which
+      cannot reproduce it. Driven in a real browser it reproduces every single time -
+      `4/4/0 → 3/5/0 → 2/6/0 → 1/7/0 → 0/8/0`, one bowl-1 token per press, with a
+      `{kind:"adjust",charge:1}` appended to the line each time. That entry is the _Charge 1 button's_
+      own output, which is what named the culprit.
+
+      **The mechanism.** Back and Charge 1 are unkeyed sibling `v-if`s over the same
+      `<div class="move-button">`, and they are never on screen together - Back shows at chain depth
+
+      > 0 (`canUndo`), Charge 1 only at depth 0 (`showAnalysisChargeButtons`). So Vue's `sameVnode`
+      > (same tag, both keyless) matches them, **patches one into the other, and reuses the same DOM
+      > `<button>`, swapping only its click invoker.** Then the timing: browsers run a microtask
+      > checkpoint _between event listeners_, so when the badge's inner hit-circle handler ran `undo`
+      > and popped the chain, Vue re-rendered right there, mid-dispatch - and the still-bubbling click
+      > arrived at that same element now wired to `$emit('analysis-charge')`. Press Back, get a charge.
+
+      Fixed at the root with distinct `key`s on the three sibling divs, so the element is destroyed
+      and rebuilt instead of re-pointed. Plus `@click.stop` on the badge's hit-circle, which fixes a
+      second real bug in the same place: the circle carried its own `@click="undo"` **and** sat inside
+      a `<b-btn @click="undo">`, so one press dispatched `undo` twice - going back a level and then
+      undoing a command as well. `PlayerBoard/Info.vue` renders the badge with no wrapping button, so
+      the handler has to stay on the circle rather than move up.
+
+      **Lesson for the next one of these: jsdom does not run the microtask checkpoint between event
+      listeners, so no jsdom test can ever reproduce a mid-dispatch re-render.** The regression guard
+      is therefore written against the DOM reuse itself (remove the keys and it fails today) rather
+      than against the timing that exploits it, and the behaviour was confirmed in a real browser
+      both before and after. Verified after the fix: Back navigates and charges nothing, Charge 1 and
+      Undo Charge still work when actually pressed.
+
+      Viewer: 1195/1195 passing. Engine untouched.
 
 ## Still MISSING — only one art-only item left
 

@@ -1,7 +1,19 @@
 {
-  "version": "5.72.7",
+  "version": "5.72.8",
   "releasedAt": "2026-08-19",
   "entries": [
+    {
+      "version": "5.72.8",
+      "releasedAt": "2026-08-19",
+      "kind": "fix",
+      "title": "Back button no longer charges power in sandbox mode",
+      "impact": "",
+      "changes": [
+        "In sandbox mode, pressing the action area's Back button charged 1 power each time - Vue was reusing its DOM element as the Charge 1 button mid-click",
+        "One press of Back dispatched undo twice, going back a menu level and then undoing a command as well"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.72.7",
       "releasedAt": "2026-08-19",

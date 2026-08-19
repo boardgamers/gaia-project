@@ -1014,6 +1014,108 @@ describe("Game", () => {
       vm.$destroy();
     });
 
+    // The owner-reported bug, reproduced in a real browser: in sandbox mode every press of the action
+    // area's Back button charged 1 power. Back and "Charge 1" are unkeyed sibling `v-if`s over the
+    // same `<div class="move-button">` and are never on screen together (`canUndo` vs
+    // `showAnalysisChargeButtons`), so Vue's `sameVnode` patched one into the other and re-pointed the
+    // SAME DOM button at `$emit('analysis-charge')`. Browsers run a microtask checkpoint between event
+    // listeners, so that re-render landed mid-dispatch and the still-bubbling click ran the new
+    // handler - one `{kind:"adjust",charge:1}` entry per press.
+    //
+    // jsdom does NOT run that checkpoint between listeners, which is exactly why an earlier pass over
+    // this bug found nothing here and called it cosmetic. So the guard that matters is the second
+    // test, which asserts the DOM reuse itself rather than the timing that exploits it - remove the
+    // keys and that one fails, in jsdom, today.
+    describe("the action area's Back button (owner report, 2026-08-19)", () => {
+      // Round 2, so the top-level menu carries the sandbox Charge buttons and a submenu to go into.
+      const ROUND_2 = [...SETUP_MOVES, "terrans pass booster4", "nevlas pass booster5"];
+
+      async function sandboxInASubmenu() {
+        const vm = mountAsSeat(0, new Engine(ROUND_2));
+        vm.enterAnalysisMode();
+        await Vue.nextTick();
+        await Vue.nextTick();
+
+        const shown = () =>
+          (Array.from(document.querySelectorAll(".move-button > button")) as HTMLElement[]).filter(
+            (b) => !(b.parentElement as HTMLElement).className.includes("d-none")
+          );
+        // Both, because these buttons split their wording between the two: the sandbox Charge button
+        // says "Charge 1" in its text and something else entirely in its tooltip.
+        const titleOf = (b: HTMLElement) =>
+          `${b.getAttribute("title") ?? ""} ${b.textContent ?? ""}`.replace(/\s+/g, " ");
+
+        expect(
+          shown().some((b) => titleOf(b).includes("Charge 1")),
+          "Charge 1 is on the top menu"
+        ).to.equal(true);
+        const research = shown().find((b) => titleOf(b).includes("Research"));
+        await fireEvent.click(research!);
+        await Vue.nextTick();
+        await Vue.nextTick();
+
+        return { vm, shown, titleOf };
+      }
+
+      it("does not charge power, or touch the line at all", async () => {
+        const { vm, shown, titleOf } = await sandboxInASubmenu();
+        const powerBefore = JSON.stringify(vm.engine.players[0].data.power);
+
+        const back = shown().find((b) => titleOf(b).includes("Back"))!;
+        // The badge's own hit-circle is what a real press lands on, not the button box around it.
+        await fireEvent.click(back.querySelector("circle.undo-button") ?? back);
+        await Vue.nextTick();
+        await Vue.nextTick();
+
+        expect(vm.analysisEntries).to.deep.equal([]);
+        expect(JSON.stringify(vm.engine.players[0].data.power)).to.equal(powerBefore);
+        expect(
+          shown().some((b) => titleOf(b).includes("Charge 1")),
+          "and it really did go back"
+        ).to.equal(true);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("never lets Vue reuse Back's element as the Charge 1 button", async () => {
+        // The root cause, asserted directly: with distinct keys the element is destroyed and rebuilt
+        // rather than re-pointed, so no click can ever be delivered to the wrong handler.
+        const { vm, shown, titleOf } = await sandboxInASubmenu();
+        const backElement = shown().find((b) => titleOf(b).includes("Back"))!;
+
+        vm.undoMove();
+        await Vue.nextTick();
+        await Vue.nextTick();
+
+        const charge = shown().find((b) => titleOf(b).includes("Charge 1"));
+        expect(charge, "back to the top menu").to.not.equal(undefined);
+        expect(charge).to.not.equal(backElement);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("dispatches undo once per press, not twice", async () => {
+        // Separately real: the badge's hit-circle carried its own @click AND sat inside a b-btn with
+        // the same handler, so one press went back a level and then undid a command as well.
+        const { vm, shown, titleOf } = await sandboxInASubmenu();
+        let undos = 0;
+        const unsub = vm.$store.subscribeAction(({ type }: { type: string }) => {
+          if (type === "undo") undos++;
+        });
+
+        const back = shown().find((b) => titleOf(b).includes("Back"))!;
+        await fireEvent.click(back.querySelector("circle.undo-button") ?? back);
+
+        expect(undos).to.equal(1);
+
+        unsub();
+        vm.$el.remove();
+        vm.$destroy();
+      });
+    });
+
     it("undo pops the last entry and replays back to the prior board", () => {
       const vm = mountAsSeat(0);
       vm.enterAnalysisMode();
