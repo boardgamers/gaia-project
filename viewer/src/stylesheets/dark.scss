@@ -1,0 +1,107 @@
+// Dark theme, previously injected by the boardgamers.space host page. The platform still
+// toggles the "dark" class on <html> (live, via postMessage) and keeps the dark body
+// background itself (to avoid a flash before the viewer loads) — but nothing more, so the
+// viewer re-themes the rest of the page chrome: default text and Bootstrap-ish
+// tables/modals/forms. The viewer's own colors (board fills, faction log rows…) are
+// untouched — this only applies to classless elements so viewer-specific styling wins.
+// The dev harness (Wrapper.vue) toggles the class with its own button, and the background
+// rule below mirrors the platform's so the harness matches the real host.
+html.dark body {
+  background: #030712;
+  color: #f3f4f6;
+  scrollbar-color: #4b5563 #1f2937;
+}
+html.dark a:not([class]) {
+  color: #93c5fd;
+}
+html.dark h1:not([class]),
+html.dark h2:not([class]),
+html.dark h3:not([class]),
+html.dark h4:not([class]),
+html.dark h5:not([class]),
+html.dark h6:not([class]) {
+  color: inherit;
+}
+html.dark table:not([class]),
+html.dark .table {
+  color: inherit;
+}
+html.dark table:not([class]) td,
+html.dark table:not([class]) th,
+html.dark .table td,
+html.dark .table th,
+html.dark .table thead th {
+  border-color: #374151;
+}
+// Log rows colored inline use white for neutral rows — re-theme those, but leave
+// faction/player-colored rows alone.
+html.dark table tr[style*="background-color: white"],
+html.dark table tr[style*="background-color: rgb(255, 255, 255)"] {
+  background-color: #1f2937 !important;
+}
+html.dark table tr[style*="background-color: white"] td,
+html.dark table tr[style*="background-color: rgb(255, 255, 255)"] td {
+  color: #f3f4f6;
+}
+html.dark .table-striped tbody tr:nth-of-type(odd) {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+html.dark .table-hover tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+html.dark .modal-content,
+html.dark .dropdown-menu,
+html.dark .popover,
+html.dark .popover-body {
+  background-color: #111827;
+  color: #f3f4f6;
+  border-color: #374151;
+}
+html.dark .modal-header,
+html.dark .modal-footer {
+  border-color: #374151;
+}
+html.dark .dropdown-item {
+  color: #f3f4f6;
+}
+html.dark .dropdown-item:hover,
+html.dark .dropdown-item:focus {
+  background-color: #1f2937;
+  color: #ffffff;
+}
+html.dark .dropdown-divider {
+  border-color: #374151;
+}
+html.dark .popover-header {
+  background-color: #1f2937;
+  color: inherit;
+  border-color: #374151;
+}
+html.dark .close {
+  color: #f3f4f6;
+  text-shadow: none;
+}
+html.dark .form-control,
+html.dark .custom-select,
+html.dark .form-select,
+html.dark input:not([class]),
+html.dark select:not([class]),
+html.dark textarea:not([class]) {
+  background-color: #1f2937;
+  color: #f3f4f6;
+  border-color: #4b5563;
+}
+// SVG labels rendered alongside HTML (player names under turn-order / current-player
+// circles) default to the SVG initial fill (black). Setting fill on the svg root and
+// letting it inherit recolors only bare text — an explicit fill on the text itself
+// (attribute, inline style or viewer CSS class — e.g. white text on faction-colored
+// circles) is a direct declaration and still wins. currentColor then follows the
+// light body text color. Note: fill:currentColor on the text rule itself would still
+// clobber CSS-class fills (Blink treats that declaration as higher-priority), so it
+// must live on the svg root.
+html.dark svg:not([style]) {
+  fill: currentColor;
+}
+html.dark svg:not([style]) text:not([fill]):not([style*="fill"]) {
+  color: #f3f4f6;
+}

@@ -48,6 +48,7 @@
         <b-btn size="sm" class="mx-1" @click="replayTo(replayData.end)">⏭️</b-btn>
         <b-btn size="sm" class="ml-1" @click="endReplay">⏹️</b-btn>
       </div>
+      <b-btn size="sm" class="ml-auto" @click="toggleDark" title="Toggle dark mode">{{ dark ? "🌙" : "☀️" }}</b-btn>
     </div>
   </div>
 </template>
@@ -65,6 +66,19 @@ export default class Wrapper extends Vue {
   stopMove = "";
   text = "";
   replayData: { stard: number; end: number; current: number } | null = null;
+  dark = false;
+
+  // The dev harness plays the host page's role: it owns the "dark" class on <html>
+  // (the viewer's dark stylesheet reacts to it) and persists the choice.
+  applyDark() {
+    document.documentElement.classList.toggle("dark", this.dark);
+    localStorage.setItem("theme", this.dark ? "dark" : "light");
+  }
+
+  toggleDark() {
+    this.dark = !this.dark;
+    this.applyDark();
+  }
 
   handleOK() {
     this.$store.dispatch("loadFromJSON", {
@@ -93,6 +107,10 @@ export default class Wrapper extends Vue {
   }
 
   mounted() {
+    const stored = localStorage.getItem("theme");
+    this.dark = stored ? stored === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    this.applyDark();
+
     const unsub = this.$store.subscribeAction(({ type, payload }) => {
       if (type === "replayInfo") {
         this.replayData = payload;
