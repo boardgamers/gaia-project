@@ -7715,6 +7715,47 @@ Commit · ⓘ` now lives in the hazard-striped header that already existed, with
       was missed; only the notice itself is suppressed while unfocused. Viewer: 1211/1211 passing (no
       regressions vs. the pre-change baseline).
 
+195.  ✅ **Sandbox mode holds several lines at once, as tabs on top of the striped header (viewer
+      v5.74.0, 2026-08-20, owner request).** Full write-up:
+      `docs/lost-fleet/ANALYSIS_MODE_PLAN.md` §13. The ask was "a Save button that saves the current
+      line as a tab, so I can work out several lines and compare them"; talking it through turned it
+      into something smaller. **There is no Save button** - the line already persisted on every
+      completed turn, so nothing was ever unsaved, and a Save button would only have created a second
+      meaning of "saved" plus the question of whether unsaved work could be lost. Line 1 is there from
+      the moment the sandbox opens, `+` adds the next one (cap 5), and each line autosaves exactly as
+      the single line always did. Tabs are numbered, never named, on owner instruction. Clicking one
+      replays that line onto the board to carry on, undo or reset as normal, and which tab was open is
+      stored with the set. **Each tab also carries its own result** (VP against where the sandbox
+      started, a red `!` for a line that overspends, a `~` for one the board has moved past) - without
+      that the strip would only let you SWITCH between lines, and switching replaces the board, so
+      comparing would still mean holding line A in your head while reading line B: the exact failure
+      #188's charged-power readout was added to fix. Cheap because `AnalysisLineSet` puts
+      `baseRound`/`baseMoveCount` on the SET rather than per line - every line shares one origin, so
+      switching is a replay, staleness stays one decision for the whole set, and any line's end state
+      can be computed without leaving the one you are on. Two traps worth remembering: the striped
+      header is click-to-exit, so the strip's root needs `@click.stop` or every tab press also closes
+      the sandbox; and the per-line summaries are a refreshed field with a memo, NOT a computed getter
+
+      - `analysisOrigin` is a live `Engine` in a component field, so a getter over it re-runs on any
+        reactive change in that object graph and each run replays every line. **The stored value
+        migrates in place** (same key; the two shapes are told apart by `entries` vs `lines`), which
+        matters because `master` deploys straight to production and real in-progress games are carrying
+        a pre-tabs line right now. Committing clears every line, not just the one it played, and the
+        confirm modal says so. Driven through a real browser (Playwright) in both header layouts -
+        desktop `#move-title` and the mobile sticky band - as well as by unit tests, since §11 and §12
+        both turned up bugs only a browser found. Viewer: 1244/1244 passing (1211 before, +33 new).
+
+196.  ✅ **The sandbox header's chips are opaque (2026-08-20, viewer v5.74.0, owner-reported).** "The
+      8 moves label is transparent making it hard to read." The move count, overdraft, charged-power
+      and assumed-power chips sat on `rgba(0, 0, 0, 0.55)` and the `SANDBOX` title's scrim on
+      `rgba(0, 0, 0, 0.72)`, so the hazard diagonals ran straight through the text backing in every
+      case. Worth being precise about the cause, because it was measured: the contrast ratio was never
+      the problem - white on the 0.72 blend comes out around 9:1 - the problem is that glyphs sitting
+      on a moving diagonal pattern read as a smear at any ratio. Both are a solid `#1b1b20` now; the
+      stripes are still the whole rest of the bar, so nothing about the hazard treatment changed. This
+      is the third pass over this surface (see #182's dimmed stripes and #189's disabled-Commit fix) -
+      if a fourth is ever needed, the rule is **opaque, not another alpha**.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

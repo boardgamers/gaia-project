@@ -25,11 +25,7 @@
          replaying, mirroring PremoveBar.vue's inline mode-switch confirm rather than a raw
          window.confirm. -->
     <div v-if="active && pendingRestore" class="analysis-strip__banner analysis-strip__banner--confirm">
-      <span class="flex-grow-1">
-        A saved sandbox line ({{ pendingRestore.entries.length }} move{{
-          pendingRestore.entries.length === 1 ? "" : "s"
-        }}) exists from before your last move.
-      </span>
+      <span class="flex-grow-1"> {{ pendingRestoreLabel }} from before your last move. </span>
       <b-button size="sm" variant="outline-secondary" class="mr-1" @click="$emit('restore')">Restore anyway</b-button>
       <b-button size="sm" variant="outline-secondary" @click="$emit('discard-restore')">Discard</b-button>
     </div>
@@ -38,14 +34,30 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { AnalysisLine } from "../logic/analysis";
+import { AnalysisLineSet, analysisLineSetSize } from "../logic/analysis";
 
 export default Vue.extend({
   name: "AnalysisPanel",
   props: {
     active: { type: Boolean, default: false },
     notice: { type: String, default: null },
-    pendingRestore: { type: Object as () => AnalysisLine | null, default: null },
+    pendingRestore: { type: Object as () => AnalysisLineSet | null, default: null },
+  },
+  computed: {
+    /** Counts every move across every line (§13), not just the one that was open: Restore/Discard
+     * answers for the whole stored set, so quoting one line's length would understate what Discard
+     * is about to throw away. */
+    pendingRestoreLabel(): string {
+      const set = this.pendingRestore as AnalysisLineSet | null;
+      if (!set) {
+        return "";
+      }
+      const moves = analysisLineSetSize(set);
+      const moveText = `${moves} move${moves === 1 ? "" : "s"}`;
+      return set.lines.length > 1
+        ? `${set.lines.length} saved sandbox lines (${moveText} in total) exist`
+        : `A saved sandbox line (${moveText}) exists`;
+    },
   },
 });
 </script>

@@ -146,10 +146,72 @@ export function computeAnalysisStatus(data: AnalysisResourceView, chargedPower =
   return { overdrawn, assumedPower: data.analysisAssumedPower ?? 0, chargedPower };
 }
 
+/** The stored shape BEFORE §13's tab strip - one line per game+seat. Kept solely so
+ * `loadAnalysisLines` can migrate a value written by a viewer version that predates the tabs: master
+ * deploys straight to production, so there are real in-progress games carrying one of these right
+ * now, and dropping it on read would throw away work the player can see in the UI. */
 export interface AnalysisLine {
   entries: AnalysisEntry[];
   baseRound: number;
   baseMoveCount: number;
+}
+
+/**
+ * Several lines at once (§13) - "work out line A, work out line B, flip between them".
+ *
+ * `baseRound`/`baseMoveCount` sit on the SET, not on each line, because every line in it is rooted
+ * at the same `analysisOrigin`: the sandbox clones the board once on entry and each line is just a
+ * different sequence of turns played from that one point. That is what keeps staleness (§3.5) a
+ * single decision for the whole set rather than a per-line one, and it is why switching lines is
+ * only ever a replay - there is no second origin to rebuild.
+ *
+ * `active` is stored too, so leaving the sandbox and coming back reopens the line you were on
+ * rather than dumping you back on Line 1.
+ */
+export interface AnalysisLineSet {
+  /** Always at least one, even when that one is empty - Line 1 exists from the moment the sandbox
+   * opens, so the strip never has a zero state to design for. */
+  lines: AnalysisEntry[][];
+  /** Index into `lines`. Always in range once `normalizeAnalysisLineSet` has seen the value. */
+  active: number;
+  baseRound: number;
+  baseMoveCount: number;
+}
+
+/** How many lines the strip will hold. The cap is the header's width far more than localStorage's
+ * quota: past this the tabs stop fitting one row on a phone, and a comparison you have to scroll
+ * horizontally to read is not much of a comparison. */
+export const MAX_ANALYSIS_LINES = 5;
+
+/** Tabs are numbered, never named (owner instruction) - "Line 1", "Line 2". A name would be one more
+ * thing to type before you can get on with the actual question, and the tab already carries the only
+ * label that matters for comparing: its own outcome. */
+export function analysisLineLabel(index: number): string {
+  return `Line ${index + 1}`;
+}
+
+/** Forces the invariants the rest of the code assumes: at least one line, `active` inside it, and no
+ * more than `MAX_ANALYSIS_LINES`. Applied on every read, so a hand-edited or truncated localStorage
+ * value can never put the strip into a state with no open tab. */
+export function normalizeAnalysisLineSet(set: AnalysisLineSet): AnalysisLineSet {
+  const lines = set.lines.filter(Array.isArray).slice(0, MAX_ANALYSIS_LINES);
+  if (lines.length === 0) {
+    lines.push([]);
+  }
+  const active = Number.isInteger(set.active) ? Math.min(Math.max(set.active, 0), lines.length - 1) : 0;
+  return { ...set, lines, active };
+}
+
+/** An empty set rooted at the given base - the sandbox's opening state, and what a cleared or
+ * expired set is replaced by. */
+export function emptyAnalysisLineSet(baseRound: number, baseMoveCount: number): AnalysisLineSet {
+  return { lines: [[]], active: 0, baseRound, baseMoveCount };
+}
+
+/** Every entry across every line, for the "is there anything here at all" questions (the restore
+ * prompt's count, and whether a stored set is worth prompting about). */
+export function analysisLineSetSize(set: AnalysisLineSet): number {
+  return set.lines.reduce((total, entries) => total + entries.length, 0);
 }
 
 function storageKey(seat: number): string {
@@ -159,7 +221,15 @@ function storageKey(seat: number): string {
   return `analysis-mode:${search}:${seat}`;
 }
 
-export function loadAnalysisLine(seat: number): AnalysisLine | null {
+/**
+ * Reads the stored set, migrating a pre-tabs single line in place.
+ *
+ * Deliberately the SAME storage key as before rather than a v2 one: the two shapes are told apart by
+ * which field they carry (`entries` vs `lines`), the migration is lossless, and a second key would
+ * leave the old one behind for a later version to trip over. A stored value that is neither shape
+ * reads as "nothing stored", exactly as an unparseable one always has.
+ */
+export function loadAnalysisLines(seat: number): AnalysisLineSet | null {
   if (typeof window === "undefined") {
     return null;
   }
@@ -169,21 +239,98 @@ export function loadAnalysisLine(seat: number): AnalysisLine | null {
   }
   try {
     const parsed = JSON.parse(raw);
-    return parsed && Array.isArray(parsed.entries) ? (parsed as AnalysisLine) : null;
+    if (parsed && Array.isArray(parsed.lines)) {
+      return normalizeAnalysisLineSet(parsed as AnalysisLineSet);
+    }
+    if (parsed && Array.isArray(parsed.entries)) {
+      const line = parsed as AnalysisLine;
+      return normalizeAnalysisLineSet({
+        lines: [line.entries],
+        active: 0,
+        baseRound: line.baseRound,
+        baseMoveCount: line.baseMoveCount,
+      });
+    }
+    return null;
   } catch {
     return null;
   }
 }
 
-export function saveAnalysisLine(seat: number, line: AnalysisLine): void {
+export function saveAnalysisLines(seat: number, set: AnalysisLineSet): void {
   if (typeof window !== "undefined") {
-    window.localStorage.setItem(storageKey(seat), JSON.stringify(line));
+    window.localStorage.setItem(storageKey(seat), JSON.stringify(normalizeAnalysisLineSet(set)));
   }
+}
+
+/**
+ * What one tab has to say for itself (§13).
+ *
+ * A strip that only lets you SWITCH between lines does not actually let you compare them: the board
+ * is replaced wholesale on every switch, so line A has to be held in your head while you look at
+ * line B - which is the very thing the sandbox exists to stop you doing, and the same failure the
+ * charged-power readout was added to fix (PROGRESS #188). Carrying each line's own outcome on its
+ * own tab is what turns the strip into the comparison itself: the answer is on screen for every line
+ * at once, and switching becomes something you do to CONTINUE a line, not to read it.
+ *
+ * `victoryPoints` is a delta against the origin rather than an absolute, because the absolute is the
+ * same double-digit number on every tab and the difference between them is the whole question.
+ */
+export interface AnalysisLineSummary {
+  /** "Line 1", "Line 2" - see `analysisLineLabel`. */
+  label: string;
+  /** Entries in the line, including `adjust`/`faction` ones - the same figure the header counts. */
+  moves: number;
+  /** VP this line ends on, minus the VP the seat started the sandbox with. */
+  victoryPoints: number;
+  /** True when the line spends more than the seat has - a VP total bought with resources that do not
+   * exist is not comparable to one that is actually payable, so the tab has to say so. */
+  overdrawn: boolean;
+  /** How many entries actually replayed. Below `moves` only after a re-anchor (§3.5) dropped part of
+   * the line; the tab flags it so a truncated line is never silently compared as if it were whole. */
+  applied: number;
+}
+
+/**
+ * One tab's summary, by replaying its line against the shared origin.
+ *
+ * Every line in the set is rooted at the same `origin`, so this works for a line that is not open
+ * just as well as for the one that is - which is the point: the strip needs all of their outcomes at
+ * once. Callers are expected to memoize on (origin identity, entries), since replaying every line on
+ * every click would otherwise multiply the sandbox's per-move cost by the number of tabs
+ * (`PERFORMANCE.md`); nothing here caches on its own.
+ */
+export function summarizeAnalysisLine(
+  origin: Engine,
+  entries: AnalysisEntry[],
+  seat: number,
+  baseRound: number,
+  index: number
+): AnalysisLineSummary {
+  const baseVictoryPoints = origin.players[seat]?.data.victoryPoints ?? 0;
+  const label = analysisLineLabel(index);
+  if (entries.length === 0) {
+    return { label, moves: 0, victoryPoints: 0, overdrawn: false, applied: 0 };
+  }
+  const { engine, applied } = replayAnalysisLine(origin, entries, seat, baseRound);
+  const data = engine.players[seat]?.data;
+  return {
+    label,
+    moves: entries.length,
+    victoryPoints: (data?.victoryPoints ?? baseVictoryPoints) - baseVictoryPoints,
+    overdrawn: data ? computeAnalysisStatus(data).overdrawn.length > 0 : false,
+    applied,
+  };
 }
 
 /** §6/decision #13 - committing "clears the line", unlike a normal exit (decision #2), which keeps
  * it for later restoration. Removes the storage key outright rather than persisting an empty line,
- * so nothing is left for a later `loadAnalysisLine` to find. */
+ * so nothing is left for a later `loadAnalysisLines` to find.
+ *
+ * With §13's tab strip that means ALL lines, not just the committed one, and deliberately so: every
+ * other line in the set was an ALTERNATIVE to the move that has now been played for real, worked out
+ * from a board state the game has since left. Keeping them would leave tabs sitting there whose
+ * numbers describe a table that no longer exists. */
 export function clearAnalysisLine(seat: number): void {
   if (typeof window !== "undefined") {
     window.localStorage.removeItem(storageKey(seat));

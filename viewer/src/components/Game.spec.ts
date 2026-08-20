@@ -4,6 +4,7 @@ import { expect } from "chai";
 import Vue from "vue";
 import BootstrapVue from "bootstrap-vue";
 import { makeStore } from "../store";
+import { MAX_ANALYSIS_LINES } from "../logic/analysis";
 import Game from "./Game.vue";
 
 Vue.use(BootstrapVue);
@@ -1597,6 +1598,163 @@ describe("Game", () => {
       });
     });
 
+    // §13's line strip. Everything below is about the strip staying an honest description of what is
+    // stored and what is on the board - a tab that says one thing while the board shows another is
+    // strictly worse than no strip at all, since the whole point is to compare without switching.
+    describe("§13 - several lines at once", () => {
+      it("opens with exactly one line, already active, with no Save step", () => {
+        const vm = mountAsSeat(0);
+        vm.enterAnalysisMode();
+
+        expect(vm.analysisLines).to.deep.equal([[]]);
+        expect(vm.analysisActiveLine).to.equal(0);
+        expect(vm.analysisLineSummaries.map((s: any) => s.label)).to.deep.equal(["Line 1"]);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("keeps each line's moves separate and puts the opened one on the board", () => {
+        const vm = mountAsSeat(0);
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("terrans up nav.");
+        expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
+
+        vm.addAnalysisLine();
+        expect(vm.analysisActiveLine).to.equal(1);
+        expect(vm.analysisEntries).to.deep.equal([]); // a NEW line, not a copy of Line 1
+        vm.applyAnalysisMove("terrans up gaia.");
+        expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up gaia." }]);
+
+        // ...and Line 1 is untouched, and comes back exactly as it was left.
+        vm.selectAnalysisLine(0);
+        expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
+        expect(vm.analysisLines).to.deep.equal([
+          [{ kind: "move", move: "terrans up nav." }],
+          [{ kind: "move", move: "terrans up gaia." }],
+        ]);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("undo and reset act on the open line only", () => {
+        const vm = mountAsSeat(0);
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("terrans up nav.");
+        vm.addAnalysisLine();
+        vm.applyAnalysisMove("terrans up gaia.");
+
+        vm.undoLastAnalysisEntry();
+        expect(vm.analysisEntries).to.deep.equal([]);
+        expect(vm.analysisLines[0]).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
+
+        vm.selectAnalysisLine(0);
+        vm.resetAnalysisLine();
+        expect(vm.analysisLines).to.deep.equal([[], []]);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("carries every line, and which one was open, across leaving and re-entering", () => {
+        const first = mountAsSeat(0);
+        first.enterAnalysisMode();
+        first.applyAnalysisMove("terrans up nav.");
+        first.addAnalysisLine();
+        first.applyAnalysisMove("terrans up gaia.");
+        first.exitAnalysisMode();
+        first.$el.remove();
+        first.$destroy();
+
+        const second = mountAsSeat(0);
+        second.enterAnalysisMode();
+        expect(second.analysisLines).to.deep.equal([
+          [{ kind: "move", move: "terrans up nav." }],
+          [{ kind: "move", move: "terrans up gaia." }],
+        ]);
+        expect(second.analysisActiveLine).to.equal(1);
+        expect(second.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up gaia." }]);
+
+        second.$el.remove();
+        second.$destroy();
+      });
+
+      it("stops adding lines at the cap", () => {
+        const vm = mountAsSeat(0);
+        vm.enterAnalysisMode();
+        for (let i = 0; i < MAX_ANALYSIS_LINES + 3; i++) {
+          vm.addAnalysisLine();
+        }
+        expect(vm.analysisLines.length).to.equal(MAX_ANALYSIS_LINES);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("closes a line without shifting a different one onto the board", () => {
+        const vm = mountAsSeat(0);
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("terrans up nav.");
+        vm.addAnalysisLine();
+        vm.applyAnalysisMove("terrans up gaia.");
+
+        // Closing Line 1 while Line 2 is open: the open line must stay the one the player is looking
+        // at, which means the active index has to follow it down rather than stay put.
+        vm.closeAnalysisLine(0);
+        expect(vm.analysisLines).to.deep.equal([[{ kind: "move", move: "terrans up gaia." }]]);
+        expect(vm.analysisActiveLine).to.equal(0);
+        expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up gaia." }]);
+
+        // ...and the last line is never closable - the strip always has an open tab.
+        vm.closeAnalysisLine(0);
+        expect(vm.analysisLines.length).to.equal(1);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("gives every tab its own outcome, so comparing needs no switching", () => {
+        const vm = mountAsSeat(0);
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("terrans up nav.");
+        vm.addAnalysisLine();
+
+        const summaries = vm.analysisLineSummaries;
+        expect(summaries.length).to.equal(2);
+        expect(summaries[0].label).to.equal("Line 1");
+        expect(summaries[0].moves).to.equal(1);
+        expect(summaries[1].label).to.equal("Line 2");
+        expect(summaries[1].moves).to.equal(0);
+        // Line 1's figure is still readable while Line 2 is the one on the board.
+        expect(vm.analysisActiveLine).to.equal(1);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("commit clears every line, not just the one it played", () => {
+        const vm = mountAsSeat(0);
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("terrans up nav.");
+        vm.addAnalysisLine();
+        vm.applyAnalysisMove("terrans up gaia.");
+        vm.selectAnalysisLine(0);
+        spyDispatch(vm);
+
+        vm.commitAnalysisLine();
+
+        const reopened = mountAsSeat(0);
+        reopened.enterAnalysisMode();
+        expect(reopened.analysisLines).to.deep.equal([[]]);
+
+        reopened.$el.remove();
+        reopened.$destroy();
+        vm.$el.remove();
+        vm.$destroy();
+      });
+    });
+
     describe("Phase 6 - staleness on re-entry (§3.5)", () => {
       it("restores a stored line silently, with no notice, when nothing changed since it was saved", () => {
         const first = mountAsSeat(0);
@@ -1657,7 +1815,8 @@ describe("Game", () => {
 
         expect(second.analysisEntries).to.deep.equal([]); // NOT auto-replayed
         expect(second.analysisPendingRestore).to.not.equal(null);
-        expect(second.analysisPendingRestore.entries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
+        // §13: the prompt now holds the whole stored SET, so the held line is `lines[active]`.
+        expect(second.analysisPendingRestore.lines).to.deep.equal([[{ kind: "move", move: "terrans up nav." }]]);
 
         second.restoreAnalysisLine();
         expect(second.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);

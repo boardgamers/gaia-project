@@ -73,10 +73,15 @@
             :analysis-committable-moves="analysisCommittableMoves.length"
             :analysis-commit-plan="analysisCommitPlan"
             :analysis-faction-choices="analysisFactionChoices"
+            :analysis-line-summaries="analysisLineSummaries"
+            :analysis-active-line="analysisActiveLine"
             @analysis-seed-faction="seedAnalysisFaction"
             @analysis-commit="commitAnalysisLine"
             @analysis-charge="chargeAnalysisPower"
             @analysis-undo-charge="undoAnalysisCharge"
+            @analysis-select-line="selectAnalysisLine"
+            @analysis-add-line="addAnalysisLine"
+            @analysis-close-line="closeAnalysisLine"
             @sticky-bar-height="stickyBarHeight = $event"
           />
           <!-- Rendered next to the picker as well, not only instead of it: the picker drops a
@@ -208,10 +213,15 @@
             :analysis-committable-moves="analysisCommittableMoves.length"
             :analysis-commit-plan="analysisCommitPlan"
             :analysis-faction-choices="analysisFactionChoices"
+            :analysis-line-summaries="analysisLineSummaries"
+            :analysis-active-line="analysisActiveLine"
             @analysis-seed-faction="seedAnalysisFaction"
             @analysis-commit="commitAnalysisLine"
             @analysis-charge="chargeAnalysisPower"
             @analysis-undo-charge="undoAnalysisCharge"
+            @analysis-select-line="selectAnalysisLine"
+            @analysis-add-line="addAnalysisLine"
+            @analysis-close-line="closeAnalysisLine"
             @cancel-premove="cancelTriggerComposeActive ? cancelCancelTriggerCompose() : cancelPremoveMode()"
             @confirm-premove="cancelTriggerComposeActive ? confirmCancelTriggerCompose() : queueCurrentPremove()"
             @sticky-bar-height="stickyBarHeight = $event"
@@ -331,10 +341,15 @@
         :analysis-committable-moves="analysisCommittableMoves.length"
         :analysis-commit-plan="analysisCommitPlan"
         :analysis-faction-choices="analysisFactionChoices"
+        :analysis-line-summaries="analysisLineSummaries"
+        :analysis-active-line="analysisActiveLine"
         @analysis-seed-faction="seedAnalysisFaction"
         @analysis-commit="commitAnalysisLine"
         @analysis-charge="chargeAnalysisPower"
         @analysis-undo-charge="undoAnalysisCharge"
+        @analysis-select-line="selectAnalysisLine"
+        @analysis-add-line="addAnalysisLine"
+        @analysis-close-line="closeAnalysisLine"
       />
       <Table />
       <AdvancedLog :currentMove="currentMove" :hideLog.sync="hideLog" v-if="logPlacement === 'bottom'" />
@@ -398,7 +413,8 @@ import { buildSequentialChainPreview } from "../logic/premove-preview";
 import {
   AnalysisCommitPlan,
   AnalysisEntry,
-  AnalysisLine,
+  AnalysisLineSet,
+  AnalysisLineSummary,
   AnalysisMoveEntry,
   AnalysisStatus,
   advancePastOwnPass,
@@ -409,14 +425,19 @@ import {
   chargedPowerTotal,
   clearAnalysisLine,
   computeAnalysisStatus,
+  analysisLineSetSize,
+  emptyAnalysisLineSet,
   factionSeedAvailable,
-  loadAnalysisLine,
+  loadAnalysisLines,
   markAnalysisSeat,
+  MAX_ANALYSIS_LINES,
   moveBelongsToSeat,
+  normalizeAnalysisLineSet,
   planAnalysisCommit,
   replayAnalysisLine,
-  saveAnalysisLine,
+  saveAnalysisLines,
   settleAnalysisClone,
+  summarizeAnalysisLine,
 } from "../logic/analysis";
 // The three CancelTrigger* step components are registered by PremoveBar now, not here - they render
 // inside the sheet rather than in a modal this component owned.
@@ -549,7 +570,22 @@ export default class Game extends Vue {
   analysisSeat: number = null;
   analysisBaseRound: number = null;
   analysisBaseMoveCount: number = null;
-  analysisEntries: AnalysisEntry[] = [];
+  // §13's lines. Every line is rooted at the same `analysisOrigin` (that is what makes switching
+  // between them a replay rather than a second board takeover), so `analysisBaseRound`/
+  // `analysisBaseMoveCount` above stay session-wide rather than becoming per-line - and staleness
+  // (§3.5) stays one decision for the whole set. There is always at least one line, from the moment
+  // the sandbox opens: Line 1 is not something the player has to create, and there is no Save button
+  // because every line already persists on every completed turn (see `setAnalysisEntries`).
+  analysisLines: AnalysisEntry[][] = [[]];
+  analysisActiveLine = 0;
+  // One summary per line for the tab strip, recomputed only when a line actually changes - see
+  // `refreshAnalysisLineSummaries` for why this is a plain field rather than a computed getter.
+  analysisLineSummaries: AnalysisLineSummary[] = [];
+  // Memo behind that refresh, so editing the open line does not re-replay the four that did not
+  // change. A Map rather than a plain object precisely because Vue 2 leaves it unobserved: this is a
+  // cache, and every read of it is already followed by an assignment to the reactive field above.
+  // Emptied on entry/exit rather than pruned - a sandbox session is short and the keys are cheap.
+  analysisSummaryCache: Map<string, AnalysisLineSummary> = new Map();
   // The assumed-power tally (§12, engine `analysisAssumedPower`) as of `analysisComposeBase`. It has
   // to be tracked separately because that base is a plain-JSON snapshot and the tally is deliberately
   // absent from `PlayerData.toJSON()` - so a turn composed on top of the base would otherwise start
@@ -569,7 +605,7 @@ export default class Game extends Vue {
   // (the one row of §3.5's table that must prompt instead of silently replaying); non-null only
   // while that prompt is showing.
   analysisNotice: string | null = null;
-  analysisPendingRestore: AnalysisLine | null = null;
+  analysisPendingRestore: AnalysisLineSet | null = null;
   // The sandbox rolled the clone into a later round than the real game is in, because this seat had
   // already passed (`advancePastOwnPass`). Nothing in such a line is committable - the real game has
   // not reached that round - so this is what `analysisCommittableMoves` reads to say so.
@@ -1661,7 +1697,8 @@ export default class Game extends Vue {
     this.analysisMode = true;
     this.analysisNotice = null;
     this.analysisPendingRestore = null;
-    this.resolveAnalysisStaleness(seat, loadAnalysisLine(seat));
+    this.analysisSummaryCache = new Map();
+    this.resolveAnalysisStaleness(seat, loadAnalysisLines(seat));
   }
 
   /**
@@ -1725,7 +1762,16 @@ export default class Game extends Vue {
     settleAnalysisClone(incoming, seat);
     this.analysisOrigin = incoming;
     this.analysisBaseMoveCount = incomingHistory.length;
+    // The origin every line is measured against just changed, so every cached tab summary is stale.
+    // The memo keys carry `analysisBaseMoveCount`, so this is belt-and-braces rather than the only
+    // thing keeping them honest - but it also stops the old origin's entries sitting in memory for
+    // the rest of the session.
+    this.analysisSummaryCache = new Map();
 
+    // §13: only the OPEN line is replayed here. The others keep their entries and are trimmed to
+    // what still applies the first time each is opened, which is also when a player could notice -
+    // re-anchoring all of them up front would mean silently editing lines that are not on screen,
+    // and would make an opponent's turn cost one replay per tab instead of one.
     const entries = this.analysisEntries;
     const applied = this.setAnalysisEntries(entries);
     this.analysisNotice =
@@ -1758,31 +1804,40 @@ export default class Game extends Vue {
    *   restore or discard instead (mirrors PremoveBar.vue's inline mode-switch confirm, not a raw
    *   `window.confirm`).
    */
-  private resolveAnalysisStaleness(seat: number, stored: AnalysisLine | null) {
-    if (!stored || stored.entries.length === 0) {
-      this.setAnalysisEntries([]);
+  private resolveAnalysisStaleness(seat: number, stored: AnalysisLineSet | null) {
+    const fresh = () =>
+      this.setAnalysisLineSet(emptyAnalysisLineSet(this.analysisBaseRound, this.analysisBaseMoveCount));
+    if (!stored || analysisLineSetSize(stored) === 0) {
+      fresh();
       return;
     }
     if (stored.baseMoveCount === this.analysisBaseMoveCount) {
-      this.setAnalysisEntries(stored.entries);
+      this.setAnalysisLineSet(stored);
       return;
     }
     if (this.engine.round > stored.baseRound + 1) {
-      this.setAnalysisEntries([]);
+      fresh();
       this.analysisNotice =
-        "Your saved sandbox line was from an earlier round and no longer applies, so it was cleared.";
+        stored.lines.length > 1
+          ? "Your saved sandbox lines were from an earlier round and no longer apply, so they were cleared."
+          : "Your saved sandbox line was from an earlier round and no longer applies, so it was cleared.";
       return;
     }
     const newMoves = this.engine.moveHistory.slice(stored.baseMoveCount);
     if (newMoves.some((move) => moveBelongsToSeat(this.engine, move, seat))) {
-      this.setAnalysisEntries([]);
+      fresh();
       this.analysisPendingRestore = stored;
       return;
     }
-    const applied = this.setAnalysisEntries(stored.entries);
+    // §13: the whole set is adopted, not just the line that was open. The others are replayed lazily
+    // - `setAnalysisLineSet` only puts the active one on the board, and each remaining line is
+    // trimmed to what still applies the first time it is opened. Their tabs report the same thing in
+    // the meantime, since `summarizeAnalysisLine` replays against this same re-anchored origin.
+    const active = stored.lines[normalizeAnalysisLineSet(stored).active] ?? [];
+    const applied = this.setAnalysisLineSet(stored);
     this.analysisNotice =
-      applied < stored.entries.length
-        ? `Opponents moved since this line was saved. Replayed ${applied} of ${stored.entries.length} moves - the rest no longer applied.`
+      applied < active.length
+        ? `Opponents moved since this line was saved. Replayed ${applied} of ${active.length} moves - the rest no longer applied.`
         : "Opponents moved since this line was saved - replayed against the current board.";
   }
 
@@ -1793,10 +1848,11 @@ export default class Game extends Vue {
       return;
     }
     this.analysisPendingRestore = null;
-    const applied = this.setAnalysisEntries(stored.entries);
+    const active = stored.lines[normalizeAnalysisLineSet(stored).active] ?? [];
+    const applied = this.setAnalysisLineSet(stored);
     this.analysisNotice =
-      applied < stored.entries.length
-        ? `Restored ${applied} of ${stored.entries.length} moves from your saved line - the rest no longer applied.`
+      applied < active.length
+        ? `Restored ${applied} of ${active.length} moves from your saved line - the rest no longer applied.`
         : null;
   }
 
@@ -1826,6 +1882,12 @@ export default class Game extends Vue {
     this.analysisSeat = null;
     this.analysisPendingRestore = null;
     this.analysisRolledForward = false;
+    // The strip's in-memory state only. Nothing is being thrown away: every line was persisted as it
+    // was played, so re-entering reads them all back - including which one was open (§13).
+    this.analysisLines = [[]];
+    this.analysisActiveLine = 0;
+    this.analysisLineSummaries = [];
+    this.analysisSummaryCache = new Map();
     this.$store.commit("setSealedBidBackend", this.analysisSealedBidBackendBackup);
     this.analysisSealedBidBackendBackup = null;
     this.$store.commit("setAnalysisMode", false);
@@ -1960,14 +2022,22 @@ export default class Game extends Vue {
     this.setAnalysisEntries([]);
   }
 
-  /** The single path that changes `analysisEntries`: replays the given entries from
+  /** The line currently on the board - the open tab's entries (§13). A getter rather than a field so
+   * that every pre-tabs caller of `analysisEntries` (the header's move count, Undo/Reset gating,
+   * `chargedPowerTotal`, the commit plan) keeps meaning "the line you are looking at" without
+   * needing to know the strip exists. */
+  get analysisEntries(): AnalysisEntry[] {
+    return this.analysisLines[this.analysisActiveLine] ?? [];
+  }
+
+  /** The single path that changes the open line's `analysisEntries`: replays the given entries from
    * `analysisOrigin` (never mutates an Engine in place - see replayAnalysisLine), persists the
    * result, and updates the displayed board. Undo/Reset/a newly-committed turn all go through this,
    * so they can never disagree about what the line replays to.
    *
    * Trims `entries` down to the prefix that actually replayed (`applied`, always the full list
    * during ordinary play - a just-appended or just-undone entry always replays cleanly against the
-   * same `analysisOrigin` it was validated against) before storing it as `analysisEntries` and
+   * same `analysisOrigin` it was validated against) before storing it as the active line and
    * persisting it, so a §3.5 re-entry that only partially replays a stale stored line doesn't keep
    * carrying its dead tail forward into every subsequent Undo/Reset/save. Returns `applied` so
    * `resolveAnalysisStaleness`/`restoreAnalysisLine` can tell whether anything had to be dropped. */
@@ -1979,17 +2049,117 @@ export default class Game extends Vue {
       this.analysisBaseRound
     );
     const kept = entries.slice(0, applied);
-    this.analysisEntries = kept;
+    // Replaced rather than spliced: `analysisLines` is a plain array field, and Vue 2 does not
+    // observe an index assignment on one - the tab strip's own summary for this line would keep
+    // rendering the pre-edit figure.
+    this.analysisLines = this.analysisLines.map((line, index) => (index === this.analysisActiveLine ? kept : line));
     this.analysisComposeBase = JSON.parse(JSON.stringify(engine));
     // Read off the live engine before the snapshot above can drop it - see the field's own comment.
     this.analysisComposeAssumedPower = assumedPowerOf(engine, this.analysisSeat);
-    saveAnalysisLine(this.analysisSeat, {
-      entries: kept,
+    this.persistAnalysisLines();
+    this.refreshAnalysisLineSummaries();
+    this.handleData(engine);
+    return applied;
+  }
+
+  /** Adopts a whole set at once - a stored one on entry, or the re-anchored one after an opponent's
+   * turn - and puts its active line on the board. Everything that replaces more than the open line
+   * goes through here, so `analysisLines`/`analysisActiveLine`/storage/the strip can never end up
+   * describing different sets. Returns what `setAnalysisEntries` returned for the active line. */
+  private setAnalysisLineSet(set: AnalysisLineSet): number {
+    const normalized = normalizeAnalysisLineSet(set);
+    this.analysisLines = normalized.lines;
+    this.analysisActiveLine = normalized.active;
+    return this.setAnalysisEntries(this.analysisEntries);
+  }
+
+  private persistAnalysisLines() {
+    saveAnalysisLines(this.analysisSeat, {
+      lines: this.analysisLines,
+      active: this.analysisActiveLine,
       baseRound: this.analysisBaseRound,
       baseMoveCount: this.analysisBaseMoveCount,
     });
-    this.handleData(engine);
-    return applied;
+  }
+
+  /**
+   * Recomputes the strip's per-line outcomes (§13).
+   *
+   * Deliberately a field refreshed at the few points a line can change, not a computed getter:
+   * `analysisOrigin` is a live `Engine` sitting in a component field, so a getter that touched it
+   * would re-run on every reactive change anywhere inside that object graph - and each run replays
+   * EVERY line, i.e. multiplies the sandbox's per-move engine work by the number of open tabs. The
+   * memo below then keeps even these refreshes to just the line that actually changed: keyed on the
+   * origin's own move count (so a re-anchor invalidates every entry at once, exactly as it should)
+   * plus the line's contents.
+   */
+  private refreshAnalysisLineSummaries() {
+    if (!this.analysisOrigin || this.analysisSeat === null) {
+      this.analysisLineSummaries = [];
+      return;
+    }
+    const cache = this.analysisSummaryCache;
+    this.analysisLineSummaries = this.analysisLines.map((entries, index) => {
+      const key = `${this.analysisBaseMoveCount}:${index}:${JSON.stringify(entries)}`;
+      const hit = cache.get(key);
+      if (hit) {
+        return hit;
+      }
+      const summary = summarizeAnalysisLine(
+        this.analysisOrigin,
+        entries,
+        this.analysisSeat,
+        this.analysisBaseRound,
+        index
+      );
+      cache.set(key, summary);
+      return summary;
+    });
+  }
+
+  /** Open another line (§13). A plain replay of that line from the same origin - which is the whole
+   * reason switching is instant and why nothing has to be saved first.
+   *
+   * A half-composed turn on the board is dropped by this, deliberately and silently: it is not a
+   * line entry until it completes (see `applyAnalysisMove`), so it belongs to the line being left
+   * and carrying it into a different one would apply it to a board it was never composed against. */
+  selectAnalysisLine(index: number) {
+    if (!this.analysisMode || index === this.analysisActiveLine || !this.analysisLines[index]) {
+      return;
+    }
+    this.analysisActiveLine = index;
+    this.setAnalysisEntries(this.analysisEntries);
+  }
+
+  /** The strip's `+` - start another line from the same board, and open it. Empty rather than a copy
+   * of the current line: "a new line" is what the control says, and a line that silently arrived
+   * pre-loaded with someone else's moves would be a much worse surprise than re-clicking a prefix. */
+  addAnalysisLine() {
+    if (!this.analysisMode || this.analysisLines.length >= MAX_ANALYSIS_LINES) {
+      return;
+    }
+    this.analysisLines = [...this.analysisLines, []];
+    this.analysisActiveLine = this.analysisLines.length - 1;
+    this.setAnalysisEntries([]);
+  }
+
+  /** Delete a line. Never the last one - the strip always has an open tab (see
+   * `normalizeAnalysisLineSet`), so "delete Line 1 when it is the only line" is Reset, which already
+   * exists on the map corner. */
+  closeAnalysisLine(index: number) {
+    if (!this.analysisMode || this.analysisLines.length <= 1 || !this.analysisLines[index]) {
+      return;
+    }
+    const lines = this.analysisLines.filter((_, i) => i !== index);
+    // Closing a tab left of the open one would otherwise shift the open line out from under the
+    // index and put a different line on the board than the one the player was looking at.
+    const active =
+      this.analysisActiveLine > index
+        ? this.analysisActiveLine - 1
+        : Math.min(this.analysisActiveLine, lines.length - 1);
+    this.analysisLines = lines;
+    this.analysisActiveLine = active;
+    this.setAnalysisEntries(this.analysisEntries);
   }
 
   handleData(data: Engine, keepMoveHistory?: boolean) {

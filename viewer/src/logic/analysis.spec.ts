@@ -9,21 +9,27 @@ import {
   applySoloRoundFlow,
   buildAnalysisLineup,
   chargedPowerTotal,
+  analysisLineLabel,
+  analysisLineSetSize,
   clearAnalysisLine,
   committableAnalysisMoves,
   computeAnalysisStatus,
+  emptyAnalysisLineSet,
   factionSeedAvailable,
   isCheapAnalysisBuild,
-  loadAnalysisLine,
+  loadAnalysisLines,
+  MAX_ANALYSIS_LINES,
   MAX_COMMITTABLE_MOVES,
   markAnalysisSeat,
   moveBelongsToSeat,
+  normalizeAnalysisLineSet,
   planAnalysisCommit,
   replayAnalysisLine,
   resolveOpponentDecisions,
-  saveAnalysisLine,
+  saveAnalysisLines,
   settleAnalysisClone,
   stripCappedPass,
+  summarizeAnalysisLine,
 } from "./analysis";
 
 // Same fixture as premove-preview.spec.ts: after these moves it's terrans' (seat 0) turn.
@@ -560,33 +566,132 @@ describe("computeAnalysisStatus (§12)", () => {
 });
 
 describe("analysis line persistence", () => {
+  const up = { kind: "move", move: "terrans up nav." } as AnalysisEntry;
+
   afterEach(() => {
     window.localStorage.clear();
   });
 
-  it("round-trips a saved line for the same seat", () => {
-    const line = {
-      entries: [{ kind: "move", move: "terrans up nav." }] as AnalysisEntry[],
-      baseRound: 1,
-      baseMoveCount: 9,
-    };
-    saveAnalysisLine(0, line);
-    expect(loadAnalysisLine(0)).to.deep.equal(line);
+  it("round-trips a saved set for the same seat", () => {
+    const set = { lines: [[up], []], active: 1, baseRound: 1, baseMoveCount: 9 };
+    saveAnalysisLines(0, set);
+    expect(loadAnalysisLines(0)).to.deep.equal(set);
   });
 
   it("keeps different seats' lines separate", () => {
-    saveAnalysisLine(0, { entries: [], baseRound: 1, baseMoveCount: 9 });
-    expect(loadAnalysisLine(1)).to.equal(null);
+    saveAnalysisLines(0, emptyAnalysisLineSet(1, 9));
+    expect(loadAnalysisLines(1)).to.equal(null);
   });
 
   it("returns null when nothing is stored", () => {
-    expect(loadAnalysisLine(0)).to.equal(null);
+    expect(loadAnalysisLines(0)).to.equal(null);
   });
 
-  it("clearAnalysisLine removes a stored line outright, not just empties it", () => {
-    saveAnalysisLine(0, { entries: [{ kind: "move", move: "terrans up nav." }], baseRound: 1, baseMoveCount: 9 });
+  it("clearAnalysisLine removes every stored line outright, not just empties them", () => {
+    saveAnalysisLines(0, { lines: [[up], [up]], active: 0, baseRound: 1, baseMoveCount: 9 });
     clearAnalysisLine(0);
-    expect(loadAnalysisLine(0)).to.equal(null);
+    expect(loadAnalysisLines(0)).to.equal(null);
+  });
+
+  // §13's migration. Real in-progress games are carrying a pre-tabs value right now (master deploys
+  // to production on push), so a single stored line has to come back as Line 1 rather than as
+  // "nothing stored" - losing a line the player can see in the UI is not an acceptable upgrade.
+  it("reads a pre-tabs single line back as Line 1", () => {
+    window.localStorage.setItem(
+      `analysis-mode:${window.location.search}:0`,
+      JSON.stringify({ entries: [up], baseRound: 2, baseMoveCount: 14 })
+    );
+    expect(loadAnalysisLines(0)).to.deep.equal({ lines: [[up]], active: 0, baseRound: 2, baseMoveCount: 14 });
+  });
+
+  it("treats a stored value of neither shape as nothing stored", () => {
+    window.localStorage.setItem(`analysis-mode:${window.location.search}:0`, JSON.stringify({ nonsense: true }));
+    expect(loadAnalysisLines(0)).to.equal(null);
+  });
+
+  it("normalizes a set with no lines or an out-of-range active index", () => {
+    expect(normalizeAnalysisLineSet({ lines: [], active: 4, baseRound: 1, baseMoveCount: 9 })).to.deep.equal({
+      lines: [[]],
+      active: 0,
+      baseRound: 1,
+      baseMoveCount: 9,
+    });
+    expect(normalizeAnalysisLineSet({ lines: [[up], []], active: 7, baseRound: 1, baseMoveCount: 9 }).active).to.equal(
+      1
+    );
+  });
+
+  it("caps a set at MAX_ANALYSIS_LINES", () => {
+    const lines = Array.from({ length: MAX_ANALYSIS_LINES + 3 }, () => [up]);
+    const capped = normalizeAnalysisLineSet({ lines, active: 0, baseRound: 1, baseMoveCount: 9 });
+    expect(capped.lines.length).to.equal(MAX_ANALYSIS_LINES);
+  });
+
+  it("counts every move across every line", () => {
+    expect(analysisLineSetSize({ lines: [[up, up], [], [up]], active: 0, baseRound: 1, baseMoveCount: 9 })).to.equal(3);
+  });
+
+  it("numbers the tabs rather than naming them", () => {
+    expect(analysisLineLabel(0)).to.equal("Line 1");
+    expect(analysisLineLabel(4)).to.equal("Line 5");
+  });
+});
+
+// §13's tab strip is only a comparison because each tab carries its own outcome - switching replaces
+// the board, so a strip that only switched would still leave the player comparing from memory.
+describe("summarizeAnalysisLine (§13)", () => {
+  it("reports an empty line as no moves and no change", () => {
+    const origin = markAnalysisSeat(new Engine(SETUP_MOVES), 0);
+    expect(summarizeAnalysisLine(origin, [], 0, Round.Round1, 0)).to.deep.equal({
+      label: "Line 1",
+      moves: 0,
+      victoryPoints: 0,
+      overdrawn: false,
+      applied: 0,
+    });
+  });
+
+  it("reports VP as a delta against where the sandbox started", () => {
+    const origin = markAnalysisSeat(new Engine(SETUP_MOVES), 0);
+    const base = origin.players[0].data.victoryPoints;
+    const entries: AnalysisEntry[] = [{ kind: "move", move: "terrans up nav." }];
+    const summary = summarizeAnalysisLine(origin, entries, 0, Round.Round1, 1);
+    const { engine } = replayAnalysisLine(origin, entries, 0, Round.Round1);
+    expect(summary.label).to.equal("Line 2");
+    expect(summary.moves).to.equal(1);
+    expect(summary.applied).to.equal(1);
+    expect(summary.victoryPoints).to.equal(engine.players[0].data.victoryPoints - base);
+  });
+
+  it("flags a line that spends more than the seat has", () => {
+    // Same setup as "lets the seat overspend into debt" above: nothing real to pay with, and a
+    // trading station played anyway (§12 lifts affordability inside the sandbox).
+    const origin = new Engine(SETUP_MOVES);
+    applySoloRoundFlow(origin, 0);
+    origin.player(0).data.credits = 0;
+    origin.player(0).data.ores = 0;
+    const summary = summarizeAnalysisLine(
+      origin,
+      [{ kind: "move", move: "terrans build ts -1x2." }],
+      0,
+      Round.Round1,
+      0
+    );
+    expect(summary.applied).to.equal(1);
+    expect(summary.overdrawn).to.equal(true);
+  });
+
+  // A line trimmed by a re-anchor must not be compared as if it were whole - `applied` below `moves`
+  // is what the tab renders its "~" on.
+  it("reports how much of the line actually replayed", () => {
+    const origin = markAnalysisSeat(new Engine(SETUP_MOVES), 0);
+    const entries: AnalysisEntry[] = [
+      { kind: "move", move: "terrans up nav." },
+      { kind: "move", move: "terrans up nonsense." },
+    ];
+    const summary = summarizeAnalysisLine(origin, entries, 0, Round.Round1, 0);
+    expect(summary.moves).to.equal(2);
+    expect(summary.applied).to.equal(1);
   });
 });
 

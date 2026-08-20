@@ -39,7 +39,12 @@ describe("AnalysisPanel", () => {
     });
 
     it("prompts to restore or discard a stored line, and emits both answers", async () => {
-      const pendingRestore = { entries: [{ kind: "move", move: "terrans up nav." }], baseRound: 1, baseMoveCount: 9 };
+      const pendingRestore = {
+        lines: [[{ kind: "move", move: "terrans up nav." }]],
+        active: 0,
+        baseRound: 1,
+        baseMoveCount: 9,
+      };
       const { container, emitted } = render(AnalysisPanel, { props: { active: true, pendingRestore } });
 
       const buttons = Array.from(container.querySelectorAll("button"));
@@ -54,8 +59,28 @@ describe("AnalysisPanel", () => {
       expect(emitted()["discard-restore"]).to.have.length(1);
     });
 
+    // §13: Restore/Discard answers for every stored line at once, so quoting only the open line's
+    // length would understate what Discard is about to throw away.
+    it("counts every line and every move when more than one was stored", () => {
+      const pendingRestore = {
+        lines: [[{ kind: "move", move: "terrans up nav." }], [{ kind: "move", move: "terrans up gaia." }], []],
+        active: 1,
+        baseRound: 1,
+        baseMoveCount: 9,
+      };
+      const { container } = render(AnalysisPanel, { props: { active: true, pendingRestore } });
+      const text = container.querySelector(".analysis-strip").textContent;
+      expect(text).to.contain("3 saved sandbox lines");
+      expect(text).to.contain("2 moves in total");
+    });
+
     it("does not show the restore prompt while analysis mode is inactive", () => {
-      const pendingRestore = { entries: [{ kind: "move", move: "terrans up nav." }], baseRound: 1, baseMoveCount: 9 };
+      const pendingRestore = {
+        lines: [[{ kind: "move", move: "terrans up nav." }]],
+        active: 0,
+        baseRound: 1,
+        baseMoveCount: 9,
+      };
       const { container } = render(AnalysisPanel, { props: { active: false, pendingRestore } });
       expect(container.querySelector(".analysis-strip__banner--confirm")).to.equal(null);
     });

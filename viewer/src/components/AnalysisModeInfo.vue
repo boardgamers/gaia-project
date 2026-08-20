@@ -25,6 +25,14 @@
       one, Reset clears them all.
     </p>
     <p>
+      The tabs along the top of this header are your lines. Line 1 is there from the start; <strong>+</strong> starts
+      another one from the same board, and clicking a tab opens that line to carry on, undo or reset exactly as you
+      would any other. Nothing needs saving — each line is kept as you play it, and is still there when you come back.
+      Each tab carries its own result, so you can read what a line came to without opening it: how many points ahead of
+      where the sandbox started it ends, a red <strong>!</strong> if it spends more than you have, and a
+      <strong>~</strong> if the board has since moved on and part of that line no longer applies.
+    </p>
+    <p>
       Opponents never move, apart from the starting mines you place for them yourself during setup. Their round boosters
       are picked for them, and any power they would be offered is declined automatically, so a build never pauses on
       somebody else's decision. If someone takes their turn in the real game while you are in here, your line is
@@ -38,7 +46,8 @@
       Commit plays the line for real: the first move goes live and the rest queue as premoves, up to four moves in all
       (one live plus the premove queue's three rows). It asks first, listing exactly what will be played and what will
       be left behind — nothing leaves the sandbox until you confirm. Only moves that are your own and affordable without
-      overspending are offered, so a move that needed assumed power ends the list there.
+      overspending are offered, so a move that needed assumed power ends the list there. Committing clears every line,
+      not just the one it played: the others were alternatives to the move you have now actually made.
     </p>
   </b-modal>
 </template>

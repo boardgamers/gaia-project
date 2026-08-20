@@ -86,6 +86,9 @@ export default Vue.extend({
      * Commands.vue holds `null` whenever Game.vue has no plan to give (outside sandbox mode, or a
      * line with nothing committable in it) - which would otherwise render this as `null.live`. */
     plan: { type: Object as () => AnalysisCommitPlan | null, default: null },
+    /** How many lines the strip currently holds (§13) - only the footer reads it, to say honestly
+     * that committing clears the OTHER lines too rather than only the one being played. */
+    lineCount: { type: Number, default: 1 },
   },
   computed: {
     view(): AnalysisCommitPlan {
@@ -126,7 +129,12 @@ export default Vue.extend({
     footer(): string {
       const view = this.view as AnalysisCommitPlan;
       const rest = view.dropped.length > 0 ? " The rest of the line is discarded with it." : "";
-      return `Committing leaves the sandbox and clears this line.${rest} A queued premove can still be edited or cancelled from the premove bar until it plays.`;
+      // §13: the other lines go too, and the footer has to say so - they were alternatives to the
+      // move about to be played for real, so leaving them would leave tabs describing a board the
+      // game has left. Saying "this line" while silently clearing five would be the worse surprise.
+      const lines = this.lineCount as number;
+      const cleared = lines > 1 ? `clears all ${lines} of your lines` : "clears this line";
+      return `Committing leaves the sandbox and ${cleared}.${rest} A queued premove can still be edited or cancelled from the premove bar until it plays.`;
     },
   },
 });

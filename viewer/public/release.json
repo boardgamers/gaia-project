@@ -1,7 +1,23 @@
 {
-  "version": "5.73.1",
+  "version": "5.74.0",
   "releasedAt": "2026-08-20",
   "entries": [
+    {
+      "version": "5.74.0",
+      "releasedAt": "2026-08-20",
+      "kind": "update",
+      "title": "Sandbox lines you can flip between",
+      "impact": "",
+      "changes": [
+        "Sandbox mode now keeps several lines at once - tabs across the top of the sandbox header, with + to start another. Each tab shows what that line comes to, so you can compare without opening them.",
+        "Opening a tab puts that line back on the board to carry on, undo or reset. Nothing needs saving; every line is kept as you play it.",
+        "Sandbox header chips (the move count, overdraft and charged-power readouts) are opaque instead of translucent, so the hazard stripes no longer run through the text."
+      ],
+      "userChanges": [
+        "Sandbox mode now keeps several lines at once - tabs across the top of the sandbox header, with + to start another. Each tab shows what that line comes to, so you can compare without opening them.",
+        "Opening a tab puts that line back on the board to carry on, undo or reset. Nothing needs saving; every line is kept as you play it."
+      ]
+    },
     {
       "version": "5.73.1",
       "releasedAt": "2026-08-20",

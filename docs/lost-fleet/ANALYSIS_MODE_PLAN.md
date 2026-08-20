@@ -759,3 +759,94 @@ each of which would have been enough on its own, because this must not come back
 `replayAnalysisLine` regenerates available commands on the initial clone: `Engine.fromData` carries
 over the command list the origin was serialized with, and that list was built while affordability
 still applied to this seat.
+
+---
+
+## 13. Several lines at once (owner request, 2026-08-20)
+
+> Status: **done** (viewer v5.74.0). Tabs across the top of the striped header, one per line, with
+> `+` to start another. No database object, no RPC, no Edge Function — localStorage only, same as
+> decision #4 has always required.
+
+### 13.1 What was asked for, and what it turned into
+
+The request was "a Save button that saves the current line as a tab, so I can work out several lines
+and compare them". Two things came out of talking it through, and the shipped feature is the second
+one:
+
+- **There is no Save button.** The line already persisted on every completed turn
+  (`setAnalysisEntries` → storage, from Phase 3 onwards), so nothing was ever unsaved. A Save button
+  would have created a second meaning of "saved" and, with it, the question of whether unsaved work
+  could be lost. Instead **Line 1 exists from the moment the sandbox opens**, `+` adds the next one,
+  and every line autosaves exactly as the single line always did. Owner instruction, verbatim:
+  _"Autosave. So there is already a line 1 from the get go and you can simply create a new one if
+  you want which is also autosaved."_
+- **Tabs are numbered, never named.** Owner instruction: _"No naming the tabs just line 1 line 2 and
+  so on."_ Naming is a thing to do before you can get on with the question, and the tab already
+  carries the label that matters for comparing — its own result.
+
+### 13.2 The one thing tabs alone do not do
+
+A strip that only lets you _switch_ between lines does not let you _compare_ them. Switching replaces
+the whole board, so line A has to be held in your head while line B is on screen — which is precisely
+what the sandbox exists to stop you doing, and the same failure the charged-power readout was added
+to fix (PROGRESS #188).
+
+So **each tab carries its own outcome**: the VP it ends on relative to where the sandbox started, a
+red `!` when the line spends more than the seat has, and a `~` when the board has moved on and part
+of that line no longer applies. The answer for every line is on screen at once, and switching becomes
+something you do to _continue_ a line rather than to read it. `summarizeAnalysisLine` computes it,
+and it works for a line that is not open because every line shares one origin (§13.3).
+
+### 13.3 Why lines are cheap
+
+`AnalysisLineSet` puts `baseRound`/`baseMoveCount` on the **set**, not on each line: the sandbox
+clones the board once on entry and every line is a different sequence of turns from that one point.
+Three things fall out for free:
+
+- Switching lines is a replay, not a second board takeover.
+- Staleness (§3.5) stays **one** decision for the whole set rather than a per-line one.
+- Any line's end state can be computed without leaving the line you are on — which is what §13.2
+  needs.
+
+### 13.4 Decisions
+
+| Question                                        | Decision                                                                                                                                                                                                                                                                                       |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Does `+` copy the current line?                 | **No, empty.** "New line" is what the control says; a line that silently arrived pre-loaded would be a worse surprise than re-clicking a shared prefix. Forking from a point is not built.                                                                                                     |
+| How many lines?                                 | `MAX_ANALYSIS_LINES` = 5. The cap is the header's width, not localStorage's quota — past this the tabs stop fitting one row on a phone.                                                                                                                                                        |
+| Deleting                                        | An `✕` inside the **open** tab only, never on the last line. An `✕` on every tab is five ways to lose work one mis-tap from the control used to switch between them.                                                                                                                           |
+| What does Commit clear?                         | **Every line.** The others were alternatives to the move just played for real, worked out from a board the game has left. `AnalysisCommitConfirm.vue`'s footer says so rather than implying "this line" only.                                                                                  |
+| Which line is open on re-entry?                 | The one that was open on exit — `active` is stored with the set.                                                                                                                                                                                                                               |
+| What happens to the other lines on a re-anchor? | They keep their entries and are trimmed the first time each is opened. Re-anchoring all of them up front would silently edit lines that are not on screen, and cost one replay per tab. Their tabs stay honest in the meantime because `summarizeAnalysisLine` replays against the new origin. |
+| A half-composed turn when switching?            | Discarded, silently. It is not a line entry until it completes (`applyAnalysisMove`), so it belongs to the line being left.                                                                                                                                                                    |
+
+### 13.5 Migration — read before touching the storage shape
+
+The pre-tabs value is a bare `AnalysisLine` under the **same** key, and `master` deploys straight to
+production, so real in-progress games are carrying one right now. `loadAnalysisLines` tells the two
+shapes apart by which field they carry (`entries` vs `lines`) and reads a single stored line back as
+Line 1. A second key would only have left the old one behind for a later version to trip over.
+
+### 13.6 File map
+
+| File                                         | What it holds                                                                                                                                                                   |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `viewer/src/logic/analysis.ts`               | `AnalysisLineSet`, `loadAnalysisLines`/`saveAnalysisLines` (+ the v1 migration), `normalizeAnalysisLineSet`, `MAX_ANALYSIS_LINES`, `analysisLineLabel`, `summarizeAnalysisLine` |
+| `viewer/src/components/AnalysisLineTabs.vue` | The strip. Owns no state — Game.vue holds the lines, this reports presses                                                                                                       |
+| `viewer/src/components/Game.vue`             | `analysisLines`/`analysisActiveLine`/`analysisLineSummaries`, `selectAnalysisLine`/`addAnalysisLine`/`closeAnalysisLine`, and `analysisEntries` as a getter over the open line  |
+| `viewer/src/components/Commands.vue`         | Renders the strip in BOTH headers, and the `flex-wrap` that gives it its own row                                                                                                |
+
+### 13.7 Two traps
+
+- **The striped header is click-to-exit** (§5.4). The strip's root carries `@click.stop` for exactly
+  that reason: without it every press on a tab would also close the sandbox, and would land as
+  "exit" rather than "switch line" — the worst available reading of that press.
+- **`analysisLineSummaries` is a refreshed field, not a computed getter.** `analysisOrigin` is a live
+  `Engine` in a component field, so a getter touching it re-runs on any reactive change in that
+  object graph, and each run replays EVERY line — multiplying the sandbox's per-move engine work by
+  the number of open tabs (`PERFORMANCE.md`). A memo keyed on the origin's move count plus the line's
+  contents keeps a refresh to just the line that changed.
+
+Verified in a real browser (Playwright, both the desktop `#move-title` layout and the mobile sticky
+band) as well as by unit tests — §11 and §12 both turned up bugs that only a real browser found.

@@ -5,6 +5,19 @@
       class="d-flex align-items-center"
       :class="{ 'hide-on-mobile-sticky': showStickyMobileBar, 'move-title--analysis': analysisMode }"
     >
+      <!-- The sandbox's line strip (§13), on top of the header exactly as it reads: the header wraps
+           while analysis mode is on and this claims the whole first row (see .analysis-tabs's
+           flex-basis below), so the tabs sit above the status line and its controls rather than
+           competing with them for the one row. Same component, same placement, in the mobile sticky
+           band below - the two headers are the same surface on different viewports. -->
+      <AnalysisLineTabs
+        v-if="analysisMode"
+        :lines="analysisLineSummaries"
+        :active="analysisActiveLine"
+        @select="$emit('analysis-select-line', $event)"
+        @add="$emit('analysis-add-line')"
+        @close="$emit('analysis-close-line', $event)"
+      />
       <h5 class="mb-0">
         <span v-if="init">Pick the number of players</span>
         <!-- Desktop's counterpart of the sticky band below: the bar is in flow here, so this is
@@ -65,7 +78,12 @@
     <AnalysisModeInfo v-if="analysisMode" />
     <!-- Commit's confirmation step, rendered here for the same once-per-page reason as the info modal
          above. The Commit button only opens it; nothing leaves the sandbox until this is confirmed. -->
-    <AnalysisCommitConfirm v-if="analysisMode" :plan="analysisCommitPlan" @confirm="$emit('analysis-commit')" />
+    <AnalysisCommitConfirm
+      v-if="analysisMode"
+      :plan="analysisCommitPlan"
+      :line-count="analysisLineSummaries.length"
+      @confirm="$emit('analysis-commit')"
+    />
     <div id="move-buttons" ref="moveButtons" :class="{ 'mobile-sticky-actions': showStickyMobileBar }">
       <!-- Same status line as #move-title above, shown only inside the mobile sticky bar (once it's
            actually pinned, i.e. narrow viewports - see the .sticky-bar-title/.hide-on-mobile-sticky
@@ -90,6 +108,14 @@
              of sight on a phone. Amber for a cancel rule, the ordinary banner colour for a premove,
              hazard stripes for analysis (§5.1) - the board looks identical otherwise, and this is
              the one cue telling them apart. -->
+        <AnalysisLineTabs
+          v-if="analysisMode"
+          :lines="analysisLineSummaries"
+          :active="analysisActiveLine"
+          @select="$emit('analysis-select-line', $event)"
+          @add="$emit('analysis-add-line')"
+          @close="$emit('analysis-close-line', $event)"
+        />
         <h5 class="mb-0">
           <template v-if="analysisMode"
             >SANDBOX<template v-if="analysisSeedActive"> — choose a faction to play as</template></template
@@ -370,6 +396,7 @@ import { FactionCustomization } from "@gaia-project/engine/src/engine";
 import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
 import { enabledButtonWarnings, isWarningEnabled } from "../data/warnings";
 import AnalysisHeaderControls from "./AnalysisHeaderControls.vue";
+import AnalysisLineTabs from "./AnalysisLineTabs.vue";
 import AnalysisCommitConfirm from "./AnalysisCommitConfirm.vue";
 import AnalysisModeInfo from "./AnalysisModeInfo.vue";
 import Undo from "./Resources/Undo.vue";
@@ -388,7 +415,7 @@ import { attachZoomCompensation, ZoomCompensationHandle } from "../logic/zoom-co
 import { factionColor } from "../graphics/utils";
 import { supportsHoverTooltips } from "../logic/tooltip";
 import { isTypingTarget } from "../logic/typing-target";
-import { AnalysisCommitPlan, AnalysisStatus } from "../logic/analysis";
+import { AnalysisCommitPlan, AnalysisLineSummary, AnalysisStatus } from "../logic/analysis";
 
 let show = false;
 
@@ -449,6 +476,7 @@ export type EmitCommandParams = { disappear?: boolean; times?: number; warnings?
     FactionSheetButton,
     Undo,
     AnalysisHeaderControls,
+    AnalysisLineTabs,
     AnalysisCommitConfirm,
     AnalysisModeInfo,
   },
@@ -501,6 +529,15 @@ export default class Commands extends Vue implements CommandController {
   /** How many entries the analysis line holds, for the header's move count and its Undo/Reset gating. */
   @Prop({ default: 0 })
   analysisMoveCount: number;
+
+  /** One summary per line for the tab strip (§13) - see Game.vue's `analysisLineSummaries`. Empty
+   * whenever analysis mode is off, since the strip is only rendered inside it. */
+  @Prop({ default: () => [] })
+  analysisLineSummaries: AnalysisLineSummary[];
+
+  /** Index into `analysisLineSummaries` of the line currently on the board. */
+  @Prop({ default: 0 })
+  analysisActiveLine: number;
 
   /** How many of those moves could actually be played for real (§6), gating the Commit button. */
   @Prop({ default: 0 })
@@ -1537,6 +1574,12 @@ $mobile-sticky-actions-max-height: 40vh;
   cursor: pointer;
   padding: 0.4rem 0.6rem;
   border-radius: 8px;
+  // Lets §13's line strip take a row of its own above the status line without either header having
+  // to change flex-direction - the strip's own `flex: 0 0 100%` below is what claims that row, and
+  // an `align-items: center` row simply centres each wrapped line within its own line box. Doing it
+  // this way keeps every existing rule on these two headers (both of which are `d-flex
+  // align-items-center` in the markup) working exactly as before whenever analysis mode is off.
+  flex-wrap: wrap;
 
   h5 {
     display: inline-block;
@@ -1592,6 +1635,10 @@ $mobile-sticky-actions-max-height: 40vh;
   &--analysis {
     background: $analysis-stripes;
     cursor: pointer;
+    flex-wrap: wrap;
+    // Clears the grab handle this band draws at its own top edge (the ::before above) - the line
+    // strip is now the first thing in the band, and without this the tabs' rounded tops run into it.
+    padding-top: 0.9rem;
   }
 
   // Small enough that the status text stays on one (or two, at most) lines instead of the default
@@ -1662,6 +1709,15 @@ $mobile-sticky-actions-max-height: 40vh;
 // the auto-leech dropdown gives up during analysis mode. Same scrim reasoning as the h5 title text
 // above: it sits on the same striped background, in both #move-title (desktop) and .sticky-bar-title
 // (mobile), so it gets the identical treatment rather than a third one-off style.
+// §13's line strip claims the full first row of whichever header it is in (see the flex-wrap notes
+// on the two rules above). The margin lifts the strip's rail flush against the row below it, so the
+// open tab reads as joined to the header rather than as a floating pill on the stripes.
+#move-title.move-title--analysis > .analysis-tabs,
+#move-buttons .sticky-bar-title--analysis > .analysis-tabs {
+  flex: 0 0 100%;
+  margin-bottom: 0.3rem;
+}
+
 .analysis-counter-headline {
   display: inline-flex;
   align-items: center;
