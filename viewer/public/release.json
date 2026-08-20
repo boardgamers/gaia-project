@@ -1,7 +1,18 @@
 {
-  "version": "5.74.2",
+  "version": "5.74.3",
   "releasedAt": "2026-08-20",
   "entries": [
+    {
+      "version": "5.74.3",
+      "releasedAt": "2026-08-20",
+      "kind": "fix",
+      "title": "Only the tabs show above the sandbox banner",
+      "impact": "",
+      "changes": [
+        "The row the sandbox line tabs sit in is transparent now, so only the tabs themselves stick up above the banner instead of a solid bar behind them."
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.74.2",
       "releasedAt": "2026-08-20",

@@ -88,7 +88,19 @@
       :line-count="analysisLineSummaries.length"
       @confirm="$emit('analysis-commit')"
     />
-    <div id="move-buttons" ref="moveButtons" :class="{ 'mobile-sticky-actions': showStickyMobileBar }">
+    <!-- --sandbox-tabs-height: how much of the sheet's top the line strip occupies, measured rather
+         than assumed (see stickyBarObserver). The sheet paints its own chrome from that offset down
+         instead of from its own top edge, so the strip's row has nothing behind it - see
+         .mobile-sticky-actions--sandbox. -->
+    <div
+      id="move-buttons"
+      ref="moveButtons"
+      :class="{
+        'mobile-sticky-actions': showStickyMobileBar,
+        'mobile-sticky-actions--sandbox': showStickyMobileBar && analysisMode,
+      }"
+      :style="{ '--sandbox-tabs-height': sandboxTabsHeight + 'px' }"
+    >
       <!-- Same status line as #move-title above, shown only inside the mobile sticky bar (once it's
            actually pinned, i.e. narrow viewports - see the .sticky-bar-title/.hide-on-mobile-sticky
            CSS) - freeing up the space #move-title used to occupy alone on mobile wherever the bar is
@@ -840,6 +852,10 @@ export default class Commands extends Vue implements CommandController {
    * blanket max-height's worth of blank page whenever the button list is short. */
   private stickyBarHeight = 0;
   private stickyBarObserver: ResizeObserver | null = null;
+
+  /** How much of the mobile sheet's top edge §13's line strip takes up, in px - 0 whenever the strip
+   * is not there. Feeds `--sandbox-tabs-height`; see the ResizeObserver that writes it. */
+  sandboxTabsHeight = 0;
   private zoomCompensation: ZoomCompensationHandle | null = null;
 
   get titles() {
@@ -1101,6 +1117,18 @@ export default class Commands extends Vue implements CommandController {
       this.stickyBarObserver = new ResizeObserver(() => {
         // read the full border-box (incl. padding) so the spacer reserves the bar's real footprint
         this.stickyBarHeight = moveButtons.getBoundingClientRect().height;
+        // §13's line strip: how far down the sheet's own chrome has to start so that nothing is
+        // painted behind the tabs. Measured off the striped banner rather than off the tabs, because
+        // the banner's top edge IS where the chrome should start - the tabs deliberately overlap it
+        // by a few pixels, so measuring them would push the chrome down by that overlap and leave a
+        // hairline of map across the banner's top. Hardcoding it would be worse still: it is a
+        // function of the tabs' font size and padding, and a stale constant shows up either as a
+        // sliver of panel above them or as a clipped tab. Observing #move-buttons catches every
+        // change, since the strip lives inside it and its own height moves with the strip's.
+        const banner = moveButtons.querySelector(".sticky-bar-title--analysis");
+        this.sandboxTabsHeight = banner
+          ? Math.max(0, Math.round(banner.getBoundingClientRect().top - moveButtons.getBoundingClientRect().top))
+          : 0;
         this.$emit("sticky-bar-height", this.showStickyMobileBar ? this.stickyBarHeight : 0);
         // Covers #move-buttons first becoming the fixed sticky bar (e.g. once round 1 starts),
         // which isn't itself a visualViewport event.
@@ -1878,6 +1906,47 @@ $mobile-sticky-actions-max-height: 40vh;
   // above), and this is the one place it is shown.
   #move-buttons .analysis-tabs--sticky {
     display: flex !important;
+  }
+
+  // The strip's row has to be TRANSPARENT, so only the tabs themselves show above the banner (owner
+  // instruction). On desktop that is free - the strip sits on the page and the page is what shows
+  // through. Here it is not: the strip is the first thing inside the mobile sheet, and the sheet
+  // paints its own gradient, rounded top and drop shadow across its whole box - including the band
+  // the tabs stick up into, which read as a solid bar behind them.
+  //
+  // So while the strip is up, the sheet stops painting itself and hands that job to a pseudo-element
+  // that starts at the striped banner's top edge instead of the sheet's (--sandbox-tabs-height,
+  // measured - see the ResizeObserver). Everything the sheet actually contains is lifted above it.
+  //
+  // Why not simply move the strip out of the sheet: the sheet is `overflow-y: auto` (a long button
+  // list has to scroll in place), so anything positioned above its top edge is clipped, and making
+  // the strip `position: fixed` to escape that would decouple it from the sheet during the pinch-zoom
+  // counter-transform - the one thing zoom-compensation.ts exists to keep from happening.
+  #move-buttons.mobile-sticky-actions--sandbox {
+    background: transparent;
+    box-shadow: none;
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: var(--sandbox-tabs-height, 0px);
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 0;
+      pointer-events: none;
+      border-radius: 16px 16px 0 0;
+      background: linear-gradient(180deg, var(--ui-panel-gradient-start) 0%, var(--ui-panel-gradient-end) 100%);
+      box-shadow: 0 -12px 28px var(--ui-shadow), 0 -1px 0 var(--ui-divider-highlight);
+    }
+
+    // ...and above that pseudo-element, which is a positioned child and would otherwise paint over
+    // every in-flow row in the sheet. The sheet is `position: fixed` with a z-index, so it is already
+    // a stacking context and these two levels cannot leak out of it.
+    > * {
+      position: relative;
+      z-index: 1;
+    }
   }
 
   // JS (Commands.vue's ResizeObserver) sets --sticky-bar-height to match the bar's actual

@@ -7738,7 +7738,17 @@ Commit · ⓘ` now lives in the hazard-striped header that already existed, with
       over that band's negative top margin (leaving both made the band ride up through the tabs), and
       **each copy needed its own show/hide rule** - as a child the strip inherited its header's
       visibility for free, and without the explicit rules a desktop viewport rendered TWO strips,
-      since `showStickyMobileBar` is phase-gated in JS rather than viewport-gated. The fork
+      since `showStickyMobileBar` is phase-gated in JS rather than viewport-gated. **The strip's row
+      is transparent too** (v5.74.3, owner: "the row where the tabs sit should be transparent so only
+      the tab sticks up") - free on desktop, where the strip sits on the page, but not inside the
+      mobile sheet, which paints a gradient/rounded top/drop shadow across its whole box including the
+      band the tabs stick up into. While the strip is up that sheet stops painting itself and hands
+      the job to a `::before` starting at the striped banner's top edge, offset by a measured
+      `--sandbox-tabs-height` (taken off the BANNER, not the tabs - they overlap it deliberately, so
+      measuring them leaves a hairline of map across its top). Moving the strip out of the sheet does
+      not work instead: it is `overflow-y: auto`, so anything above its top edge is clipped, and
+      `position: fixed` to escape that would decouple the strip during the pinch-zoom
+      counter-transform `zoom-compensation.ts` exists to prevent. The fork
       is a deep copy, not a second reference to the same entry objects: nothing edits an entry in
       place today, but two lines pointing at one object is a trap waiting for the first path that
       does. Tabs are numbered, never named, on owner instruction. Clicking one

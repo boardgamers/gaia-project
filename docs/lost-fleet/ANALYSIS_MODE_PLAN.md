@@ -865,6 +865,17 @@ Three consequences to keep in mind if this moves again:
   itself over the sheet's top padding with `calc(-0.7rem)`; the strip is the first thing in the sheet
   now, so it carries that pull-up and the band's own is zeroed. Leaving both makes the band ride up
   through the tabs.
+- **The strip's row is transparent, and on mobile that took work.** Only the tabs may show above the
+  banner (owner instruction). On desktop it is free: the strip sits on the page and the page shows
+  through. Inside the mobile sheet it is not — the sheet paints a gradient, a rounded top and a drop
+  shadow across its whole box, including the band the tabs stick up into, which reads as a solid bar
+  behind them. While the strip is up the sheet therefore stops painting itself and hands that job to
+  a `::before` starting at the striped banner's top edge (`--sandbox-tabs-height`, measured by the
+  existing `stickyBarObserver` off the banner rather than off the tabs — the tabs overlap the banner
+  deliberately, so measuring them leaves a hairline of map across its top). Moving the strip out of
+  the sheet instead does not work: the sheet is `overflow-y: auto`, so anything above its top edge is
+  clipped, and `position: fixed` to escape that would decouple the strip from the sheet during the
+  pinch-zoom counter-transform `zoom-compensation.ts` exists to prevent.
 - **Each copy needs its own show/hide rule.** The strip used to be a child of whichever header it
   belonged to and inherited that header's visibility for free. As a sibling it does not:
   `#move-title.hide-on-mobile-sticky` no longer reaches the desktop copy, and the sticky copy is not
