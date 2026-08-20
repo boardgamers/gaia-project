@@ -1329,9 +1329,13 @@ $analysis-stripes: repeating-linear-gradient(
   $analysis-stripe-light 12px,
   $analysis-stripe-light 24px
 );
-// Softer than the 0.82 the full-strength stripes needed - it is a text backing, and dimmer stripes
-// need less of one.
-$analysis-scrim: rgba(0, 0, 0, 0.72);
+// OPAQUE, not a translucent scrim (owner report, 2026-08-20). Every version of this was an alpha
+// over the stripes - 0.82, then 0.72 - and at every one of them the diagonals still showed through
+// the text backing, so the label read as a smear rather than as a chip: the complaint was not that
+// the contrast ratio was low (white on the 0.72 blend measures ~9:1) but that the text sits on a
+// moving pattern. A solid fill removes the pattern from behind the glyphs entirely; the stripes are
+// still the whole rest of the bar, so nothing about the hazard treatment is lost.
+$analysis-scrim: #1b1b20;
 
 // Status dot on the auto-leech dropdown button - green/pulsing while it's set to actually act on
 // its own, static red while off ("ask every time"), so the button's current state reads at a

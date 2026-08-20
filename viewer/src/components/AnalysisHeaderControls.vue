@@ -107,13 +107,18 @@ export default Vue.extend({
 }
 
 // The header behind these sits under yellow/black hazard stripes, so every text run needs its own
-// backing to stay legible (§5.1's "solid or scrimmed text backing, not raw text on stripes").
+// backing to stay legible (§5.1's "solid or scrimmed text backing, not raw text on stripes") - and
+// that backing has to be OPAQUE (owner report, 2026-08-20: "the 8 moves label is transparent making
+// it hard to read"). At rgba(0,0,0,0.55) the diagonals ran straight through the chip behind the
+// digits; the measured contrast was fine either way, but text on a moving pattern reads as a smear
+// regardless of its ratio. Same solid fill as Commands.vue's $analysis-scrim, kept in sync by eye
+// rather than by import - these are scoped styles and the variable lives in another component.
 .analysis-controls__moves,
 .analysis-controls__overdrawn,
 .analysis-controls__charged,
 .analysis-controls__assumed {
   white-space: nowrap;
-  background: rgba(0, 0, 0, 0.55);
+  background: #1b1b20;
   border-radius: 0.3rem;
   padding: 0.05rem 0.35rem;
 }
