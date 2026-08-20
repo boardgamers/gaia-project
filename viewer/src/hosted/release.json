@@ -1,7 +1,18 @@
 {
-  "version": "5.74.1",
+  "version": "5.74.2",
   "releasedAt": "2026-08-20",
   "entries": [
+    {
+      "version": "5.74.2",
+      "releasedAt": "2026-08-20",
+      "kind": "fix",
+      "title": "Sandbox tabs sit on top of the banner",
+      "impact": "",
+      "changes": [
+        "The sandbox line tabs sat inside the striped banner with a band of stripes above them; they now rest on its top edge, like tabs on a toolbar."
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.74.1",
       "releasedAt": "2026-08-20",

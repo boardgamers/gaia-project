@@ -848,7 +848,31 @@ Line 1. A second key would only have left the old one behind for a later version
 | `viewer/src/components/Game.vue`             | `analysisLines`/`analysisActiveLine`/`analysisLineSummaries`, `selectAnalysisLine`/`addAnalysisLine`/`closeAnalysisLine`, and `analysisEntries` as a getter over the open line  |
 | `viewer/src/components/Commands.vue`         | Renders the strip in BOTH headers, and the `flex-wrap` that gives it its own row                                                                                                |
 
-### 13.8 Two traps
+### 13.8 Where the strip sits, and why that took two goes
+
+The tabs are a **sibling just before** each header, pulled down so their square bottoms overlap the
+banner's top edge by 3px — browser tabs resting on a toolbar. They started as the header's own first
+row (via `flex-wrap` on a `d-flex align-items-center` container), which put a band of stripes above
+them and read, correctly, as tabs floating in the middle of the banner rather than on top of it.
+Owner report: _"Why is the tab sitting on the middle of the sandbox banner. It should sit on the top
+of it!"_
+
+Three consequences to keep in mind if this moves again:
+
+- **The mobile band's grab handle is suppressed in analysis mode** (`&--analysis::before`). It draws
+  along the same few pixels of the same edge the tabs now rest on.
+- **The strip takes over the mobile band's negative top margin.** `.sticky-bar-title` full-bleeds
+  itself over the sheet's top padding with `calc(-0.7rem)`; the strip is the first thing in the sheet
+  now, so it carries that pull-up and the band's own is zeroed. Leaving both makes the band ride up
+  through the tabs.
+- **Each copy needs its own show/hide rule.** The strip used to be a child of whichever header it
+  belonged to and inherited that header's visibility for free. As a sibling it does not:
+  `#move-title.hide-on-mobile-sticky` no longer reaches the desktop copy, and the sticky copy is not
+  covered by `.sticky-bar-title`'s own `display: none` outside the media query. Both rules are
+  spelled out explicitly — without the second one a desktop viewport renders **two** strips, because
+  `showStickyMobileBar` is phase-gated in JS, not viewport-gated.
+
+### 13.9 Two traps
 
 - **The striped header is click-to-exit** (§5.4). The strip's root carries `@click.stop` for exactly
   that reason: without it every press on a tab would also close the sandbox, and would land as

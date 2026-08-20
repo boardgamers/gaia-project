@@ -1,23 +1,27 @@
 <template>
   <div id="move">
+    <!-- The sandbox's line strip (§13) sits ON TOP of the striped banner, not inside it: a sibling
+         just before the header, with its bottom edge tucked under the banner's top so the tabs read
+         as resting on it - browser tabs on a toolbar. It WAS the header's own first row, which put a
+         band of stripes above the tabs and made them look like they were floating in the middle of
+         the banner (owner report). Being outside the header also means a press on a tab cannot reach
+         it at all, rather than relying on the strip's own @click.stop to stop it.
+         Rendered here AND in the mobile sticky band below, hidden by CSS on whichever of the two
+         headers is not in use - the same twice-mounted arrangement as AnalysisHeaderControls. -->
+    <AnalysisLineTabs
+      v-if="analysisMode"
+      :class="{ 'hide-on-mobile-sticky': showStickyMobileBar }"
+      :lines="analysisLineSummaries"
+      :active="analysisActiveLine"
+      @select="$emit('analysis-select-line', $event)"
+      @add="$emit('analysis-add-line')"
+      @close="$emit('analysis-close-line', $event)"
+    />
     <div
       id="move-title"
       class="d-flex align-items-center"
       :class="{ 'hide-on-mobile-sticky': showStickyMobileBar, 'move-title--analysis': analysisMode }"
     >
-      <!-- The sandbox's line strip (§13), on top of the header exactly as it reads: the header wraps
-           while analysis mode is on and this claims the whole first row (see .analysis-tabs's
-           flex-basis below), so the tabs sit above the status line and its controls rather than
-           competing with them for the one row. Same component, same placement, in the mobile sticky
-           band below - the two headers are the same surface on different viewports. -->
-      <AnalysisLineTabs
-        v-if="analysisMode"
-        :lines="analysisLineSummaries"
-        :active="analysisActiveLine"
-        @select="$emit('analysis-select-line', $event)"
-        @add="$emit('analysis-add-line')"
-        @close="$emit('analysis-close-line', $event)"
-      />
       <h5 class="mb-0">
         <span v-if="init">Pick the number of players</span>
         <!-- Desktop's counterpart of the sticky band below: the bar is in flow here, so this is
@@ -91,6 +95,15 @@
            pinned, instead of duplicating it on screen. Placed first (above the action buttons) so
            whose-turn/what's-happening is the first thing read when the bar comes into view, not
            buried below a scrollable list of buttons. -->
+      <AnalysisLineTabs
+        v-if="showStickyMobileBar && analysisMode"
+        class="analysis-tabs--sticky"
+        :lines="analysisLineSummaries"
+        :active="analysisActiveLine"
+        @select="$emit('analysis-select-line', $event)"
+        @add="$emit('analysis-add-line')"
+        @close="$emit('analysis-close-line', $event)"
+      />
       <div
         v-if="showStickyMobileBar"
         class="sticky-bar-title d-flex align-items-center"
@@ -108,14 +121,6 @@
              of sight on a phone. Amber for a cancel rule, the ordinary banner colour for a premove,
              hazard stripes for analysis (§5.1) - the board looks identical otherwise, and this is
              the one cue telling them apart. -->
-        <AnalysisLineTabs
-          v-if="analysisMode"
-          :lines="analysisLineSummaries"
-          :active="analysisActiveLine"
-          @select="$emit('analysis-select-line', $event)"
-          @add="$emit('analysis-add-line')"
-          @close="$emit('analysis-close-line', $event)"
-        />
         <h5 class="mb-0">
           <template v-if="analysisMode"
             >SANDBOX<template v-if="analysisSeedActive"> — choose a faction to play as</template></template
@@ -1574,12 +1579,6 @@ $mobile-sticky-actions-max-height: 40vh;
   cursor: pointer;
   padding: 0.4rem 0.6rem;
   border-radius: 8px;
-  // Lets §13's line strip take a row of its own above the status line without either header having
-  // to change flex-direction - the strip's own `flex: 0 0 100%` below is what claims that row, and
-  // an `align-items: center` row simply centres each wrapped line within its own line box. Doing it
-  // this way keeps every existing rule on these two headers (both of which are `d-flex
-  // align-items-center` in the markup) working exactly as before whenever analysis mode is off.
-  flex-wrap: wrap;
 
   h5 {
     display: inline-block;
@@ -1635,10 +1634,14 @@ $mobile-sticky-actions-max-height: 40vh;
   &--analysis {
     background: $analysis-stripes;
     cursor: pointer;
-    flex-wrap: wrap;
-    // Clears the grab handle this band draws at its own top edge (the ::before above) - the line
-    // strip is now the first thing in the band, and without this the tabs' rounded tops run into it.
-    padding-top: 0.9rem;
+  }
+
+  // §13's tabs rest on this band's top edge, which is the role the decorative grab handle was
+  // playing - two things drawn along the same 4px of the same edge, so the handle goes while the
+  // strip is up. The band also gives up its own negative top margin there, since the strip has taken
+  // it over (see the strip's rule below) - leaving both would pull the band up THROUGH the tabs.
+  &--analysis::before {
+    display: none;
   }
 
   // Small enough that the status text stays on one (or two, at most) lines instead of the default
@@ -1709,13 +1712,36 @@ $mobile-sticky-actions-max-height: 40vh;
 // the auto-leech dropdown gives up during analysis mode. Same scrim reasoning as the h5 title text
 // above: it sits on the same striped background, in both #move-title (desktop) and .sticky-bar-title
 // (mobile), so it gets the identical treatment rather than a third one-off style.
-// §13's line strip claims the full first row of whichever header it is in (see the flex-wrap notes
-// on the two rules above). The margin lifts the strip's rail flush against the row below it, so the
-// open tab reads as joined to the header rather than as a floating pill on the stripes.
-#move-title.move-title--analysis > .analysis-tabs,
-#move-buttons .sticky-bar-title--analysis > .analysis-tabs {
-  flex: 0 0 100%;
-  margin-bottom: 0.3rem;
+// §13's line strip, resting ON the striped banner's top edge rather than sitting inside it. The
+// negative bottom margin is what does it: the tabs' square bottoms overlap the banner by a couple of
+// pixels, so they read as one shape with it instead of as pills floating above it. `position:
+// relative` + `z-index` keep that overlap drawing over the stripes rather than under them.
+//
+// The left inset lines the first tab up with the banner's own text padding, and keeps it clear of
+// the desktop banner's 8px rounded corner.
+#move .analysis-tabs {
+  position: relative;
+  z-index: 1;
+  margin: 0 0 -3px 0.6rem;
+}
+
+// Inside the mobile sticky sheet the strip also has to take over the band's own negative top margin
+// (`.sticky-bar-title`'s `calc(-0.7rem)`), which exists to full-bleed the band over the sheet's top
+// padding. The strip is now the first thing in the sheet, so it is the thing that has to be pulled
+// up there - and the band's own margin is zeroed to match, or the two would fight over the same
+// space and the band would ride up through the tabs.
+#move-buttons .analysis-tabs--sticky {
+  // Hidden by default and shown only inside the mobile media query, exactly as `.sticky-bar-title`
+  // itself is. This is NOT inherited any more: the strip used to be a child of that band and went
+  // wherever it went, and is a sibling now - without this rule a desktop viewport would render the
+  // sticky copy (its `v-if` is `showStickyMobileBar`, which is phase-gated in JS, not viewport-gated)
+  // on top of the desktop copy, i.e. two line strips at once.
+  display: none !important;
+  margin: calc(-0.7rem) 0 -3px calc(0.2rem + env(safe-area-inset-left));
+}
+
+#move-buttons .sticky-bar-title--analysis {
+  margin-top: 0;
 }
 
 .analysis-counter-headline {
@@ -1839,6 +1865,19 @@ $mobile-sticky-actions-max-height: 40vh;
   // would otherwise always win over this rule regardless of selector specificity.
   #move-title.hide-on-mobile-sticky {
     display: none !important;
+  }
+
+  // ...and §13's strip goes with it. It is a SIBLING of #move-title now rather than a child, so the
+  // rule above no longer reaches it - without this, the desktop copy of the tabs would be left
+  // stranded above the hidden header while the sticky sheet renders its own copy at the bottom.
+  .analysis-tabs.hide-on-mobile-sticky {
+    display: none !important;
+  }
+
+  // The other half of that swap: the sticky copy is display:none everywhere else (see its rule
+  // above), and this is the one place it is shown.
+  #move-buttons .analysis-tabs--sticky {
+    display: flex !important;
   }
 
   // JS (Commands.vue's ResizeObserver) sets --sticky-bar-height to match the bar's actual

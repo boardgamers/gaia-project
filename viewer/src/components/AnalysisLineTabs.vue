@@ -145,9 +145,10 @@ $tab-idle: #3d3d46;
   display: flex;
   align-items: flex-end;
   gap: 0.2rem;
-  // The strip's own rail. The active tab shares its fill, so the two read as one shape and the tab
-  // looks joined to the header below it rather than floating on the stripes.
-  border-bottom: 3px solid $tab-active;
+  // No rail of its own: the striped banner the strip rests on IS the rail, and the tabs overlap its
+  // top edge by a few pixels (Commands.vue's negative bottom margin) to join the two. A rail here
+  // used to stand in for that while the strip lived inside the banner, and it now only drew a dark
+  // line across the banner's top edge.
   // Five tabs plus the two controls do not fit one row on a narrow phone. Scrolling the strip is the
   // only option that keeps the header one row tall; wrapping would grow the mobile sticky sheet by a
   // whole line every time a tab was added.

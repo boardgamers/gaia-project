@@ -7728,7 +7728,17 @@ Commit · ⓘ` now lives in the hazard-striped header that already existed, with
       "forking a line": the comparison you actually want is nearly always "three moves in, X or Y?",
       and an empty tab makes you re-click the shared prefix by hand for every alternative - tedious,
       and worse, one misclick while re-entering it compares two lines that do not share the prefix
-      you think they do. Reset still blanks a line in one press, so the copy costs nothing. The fork
+      you think they do. Reset still blanks a line in one press, so the copy costs nothing. **The strip
+      sits ON the banner's top edge** (v5.74.2, owner report: "why is the tab sitting on the middle of
+      the sandbox banner. It should sit on the top of it!") - it shipped as the header's own first
+      row, which left a band of stripes above the tabs and read as floating in the middle of it. It is
+      a sibling just before each header now, pulled down so the tabs' square bottoms overlap the
+      banner by 3px. Three things came with that move: the mobile band's decorative grab handle is
+      suppressed in analysis mode (it drew along the same edge the tabs now rest on), the strip took
+      over that band's negative top margin (leaving both made the band ride up through the tabs), and
+      **each copy needed its own show/hide rule** - as a child the strip inherited its header's
+      visibility for free, and without the explicit rules a desktop viewport rendered TWO strips,
+      since `showStickyMobileBar` is phase-gated in JS rather than viewport-gated. The fork
       is a deep copy, not a second reference to the same entry objects: nothing edits an entry in
       place today, but two lines pointing at one object is a trap waiting for the first path that
       does. Tabs are numbered, never named, on owner instruction. Clicking one
