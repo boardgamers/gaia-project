@@ -7702,6 +7702,19 @@ Commit · ⓘ` now lives in the hazard-striped header that already existed, with
 
       Viewer: 1211/1211 passing. Engine untouched.
 
+194.  ✅ **The entrant notice ("X just entered the game") could fire several banners at once on
+      reopening a game (2026-08-20, viewer v5.73.1), owner-reported.** `hosted.ts`'s presence watcher
+      diffs `usersInGame(presence, gameId)` across syncs regardless of whether you're actually looking
+      at the game right now, so a game left open in a background tab (or behind another window/app)
+      kept queuing arrivals/departures into `GameEntryNotice.vue`'s `notices` array the whole time you
+      were away - they all dumped onto the screen together the moment you refocused it. Fixed by
+      gating the `notifyEntered` call itself on `isActivelyFocused()` (newly exported from
+      `presence.ts`, previously module-private) - the same "foreground tab AND window-focused" check
+      #108's green presence dot already uses for "actually in the game". The baseline set
+      (`knownInGame`) is still updated on every sync so re-focusing never retroactively announces what
+      was missed; only the notice itself is suppressed while unfocused. Viewer: 1211/1211 passing (no
+      regressions vs. the pre-change baseline).
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

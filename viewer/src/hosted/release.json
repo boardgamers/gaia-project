@@ -1,7 +1,18 @@
 {
-  "version": "5.73.0",
+  "version": "5.73.1",
   "releasedAt": "2026-08-20",
   "entries": [
+    {
+      "version": "5.73.1",
+      "releasedAt": "2026-08-20",
+      "kind": "fix",
+      "title": "Entrant notice only fires while you're actually in the game",
+      "impact": "",
+      "changes": [
+        "Fixed the entered-the-game notice queuing up arrivals/departures that happened while you weren't actively viewing the game and dumping them all on screen at once when you came back"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.73.0",
       "releasedAt": "2026-08-20",

@@ -23,7 +23,7 @@ const CHANNEL_NAME = "presence:app";
  * windowing, so `hasFocus()` tracks visibility and this stays accurate there too (minimizing or
  * switching apps drops both).
  */
-function isActivelyFocused(): boolean {
+export function isActivelyFocused(): boolean {
   return document.visibilityState === "visible" && document.hasFocus();
 }
 

@@ -36,7 +36,7 @@ import {
   isPushEnabled,
   setInAppGameNavigation,
 } from "./hosted/push";
-import { isOnline, PresenceState, trackPresence, usersInGame } from "./hosted/presence";
+import { isActivelyFocused, isOnline, PresenceState, trackPresence, usersInGame } from "./hosted/presence";
 import SignIn from "./hosted/SignIn.vue";
 import { createSupabaseBackend, getSupabaseClient, subscribeMoves, SupabaseClient } from "./hosted/supabase-client";
 import { setViewportZoomLocked } from "./hosted/viewport";
@@ -342,6 +342,11 @@ async function mountGameInstance(
   // anyone who newly appears while I'm here. `knownInGame` starts null so the very first sync
   // (everyone already in the game when I opened it, including myself) only establishes the baseline
   // and never announces - only genuine later arrivals fire a notice. My own id is always excluded.
+  // The baseline is kept up to date on EVERY sync regardless of my own focus (below), but a notice
+  // only fires while `isActivelyFocused()` is true - i.e. I'm actually looking at this game right
+  // now, not just leaving its tab open in the background or sitting in the lobby. Without this gate,
+  // arrivals/departures that happen while I'm away from this tab would silently queue up in
+  // `entryNotice` and all dump onto the screen at once the next time I focus it.
   let knownInGame: Set<string> | null = null;
   const announceEntrants = (presence: PresenceState) => {
     const current = usersInGame(presence, gameId);
@@ -349,14 +354,15 @@ async function mountGameInstance(
       knownInGame = current;
       return;
     }
-    for (const userId of current) {
-      if (userId === session.user.id || knownInGame.has(userId)) {
-        continue;
-      }
+    const newcomers = [...current].filter((userId) => userId !== session.user.id && !knownInGame!.has(userId));
+    knownInGame = current;
+    if (newcomers.length === 0 || !isActivelyFocused()) {
+      return;
+    }
+    for (const userId of newcomers) {
       const name = host.players.find((p) => p.user_id === userId)?.display_name ?? "";
       entryNotice.notifyEntered(name);
     }
-    knownInGame = current;
   };
   const unwatchPresence = emitter.store.watch(
     (state: any) => state.presence,
