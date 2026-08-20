@@ -1937,7 +1937,13 @@ $mobile-sticky-actions-max-height: 40vh;
       pointer-events: none;
       border-radius: 16px 16px 0 0;
       background: linear-gradient(180deg, var(--ui-panel-gradient-start) 0%, var(--ui-panel-gradient-end) 100%);
-      box-shadow: 0 -12px 28px var(--ui-shadow), 0 -1px 0 var(--ui-divider-highlight);
+      // Only the hairline highlight, NOT the sheet's usual `0 -12px 28px` lift. A box-shadow with a
+      // negative y-offset paints ABOVE the edge it belongs to, so that one bled 12px of blur straight
+      // up into the strip's row - the row measured near-black at its lower edge and faded to the map
+      // colour at its top, which is exactly the "not actually transparent" the owner was seeing. The
+      // sheet loses nothing by it here: in sandbox mode its top edge is a yellow/black hazard banner,
+      // which separates it from the map far harder than any drop shadow.
+      box-shadow: 0 -1px 0 var(--ui-divider-highlight);
     }
 
     // ...and above that pseudo-element, which is a positioned child and would otherwise paint over

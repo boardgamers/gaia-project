@@ -1,7 +1,18 @@
 {
-  "version": "5.74.3",
+  "version": "5.74.4",
   "releasedAt": "2026-08-20",
   "entries": [
+    {
+      "version": "5.74.4",
+      "releasedAt": "2026-08-20",
+      "kind": "fix",
+      "title": "Nothing at all behind the sandbox tabs",
+      "impact": "",
+      "changes": [
+        "The sheet's lift shadow was still bleeding upward into the row the sandbox line tabs sit in; that row is now genuinely empty, showing whatever is behind it."
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.74.3",
       "releasedAt": "2026-08-20",

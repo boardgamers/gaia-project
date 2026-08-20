@@ -7748,7 +7748,16 @@ Commit · ⓘ` now lives in the hazard-striped header that already existed, with
       measuring them leaves a hairline of map across its top). Moving the strip out of the sheet does
       not work instead: it is `overflow-y: auto`, so anything above its top edge is clipped, and
       `position: fixed` to escape that would decouple the strip during the pinch-zoom
-      counter-transform `zoom-compensation.ts` exists to prevent. The fork
+      counter-transform `zoom-compensation.ts` exists to prevent. **Switching the sheet's background
+      off was not enough on its own** (v5.74.4, owner: "transparent all the way!! ie like there is
+      nothing"): its lift shadow is `0 -12px 28px`, and a negative y-offset paints ABOVE the edge it
+      belongs to, so it went on bleeding a dozen pixels of blur up into the strip's row - measured
+      near-black at the row's lower edge, fading to the map colour at its top. The chrome keeps only
+      its 1px divider highlight now; in sandbox mode the sheet's top edge is a hazard banner, which
+      separates it from the map far harder than a drop shadow ever did. Worth noting how that was
+      found: by sampling the rendered pixels down the row in a real browser, not by eye - the
+      gradient is subtle enough to look "about right" in a screenshot, and the fix is confirmed the
+      same way (one uniform colour top to bottom, the map's own). The fork
       is a deep copy, not a second reference to the same entry objects: nothing edits an entry in
       place today, but two lines pointing at one object is a trap waiting for the first path that
       does. Tabs are numbered, never named, on owner instruction. Clicking one

@@ -876,6 +876,16 @@ Three consequences to keep in mind if this moves again:
   the sheet instead does not work: the sheet is `overflow-y: auto`, so anything above its top edge is
   clipped, and `position: fixed` to escape that would decouple the strip from the sheet during the
   pinch-zoom counter-transform `zoom-compensation.ts` exists to prevent.
+
+  Switching off the sheet's background was not enough on its own: its lift shadow is
+  `0 -12px 28px`, and **a negative y-offset paints above the edge it belongs to**, so it went on
+  bleeding a dozen pixels of blur straight up into the strip's row — measured near-black at the
+  row's lower edge, fading to the map colour at its top, which is what "not actually transparent"
+  looked like. The pseudo keeps only the 1px divider highlight. The sheet loses nothing by it: in
+  sandbox mode its top edge is a yellow/black hazard banner, a far harder separator from the map
+  than any drop shadow. Verified by sampling the rendered pixels rather than by eye — the row now
+  reads one uniform colour top to bottom, the map's own.
+
 - **Each copy needs its own show/hide rule.** The strip used to be a child of whichever header it
   belonged to and inherited that header's visibility for free. As a sibling it does not:
   `#move-title.hide-on-mobile-sticky` no longer reaches the desktop copy, and the sticky copy is not
