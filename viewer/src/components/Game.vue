@@ -696,7 +696,15 @@ export default class Game extends Vue {
           // closes sandbox mode with no move made" bug. Only a real change in the move history means
           // anything actually happened; an identical history is a no-op refresh and must leave the
           // takeover alone.
-          const originHistory = this.analysisOrigin?.moveHistory ?? [];
+          // The REAL history the origin was cloned from, not the clone's own - `settleAnalysisClone`
+          // and `advancePastOwnPass` push every opponent decline/booster/pass they auto-play onto
+          // `analysisOrigin.moveHistory`, so that list is longer than the real one in most async
+          // games (anything entered during a leech pause, or after this seat had passed). Comparing
+          // against it made `unchanged` false for a refetch that carried no move at all, and the
+          // handler then force-closed the sandbox: this is the "minimize/reopen closes sandbox mode
+          // with no move made" bug, which the check below was written to fix and only fixed for the
+          // games where nothing had to be auto-played.
+          const originHistory = this.analysisRealHistory;
           const incomingHistory = payload.moveHistory ?? [];
           const unchanged =
             originHistory.length === incomingHistory.length &&
@@ -1847,8 +1855,8 @@ export default class Game extends Vue {
    *   `window.confirm`).
    */
   private resolveAnalysisStaleness(seat: number, stored: AnalysisLineSet | null) {
-    const fresh = () =>
-      this.setAnalysisLineSet(emptyAnalysisLineSet(this.analysisBaseRound, this.analysisBaseMoveCount));
+    const fresh = (options: { persist?: boolean } = {}) =>
+      this.setAnalysisLineSet(emptyAnalysisLineSet(this.analysisBaseRound, this.analysisBaseMoveCount), options);
     if (!stored || analysisLineSetSize(stored) === 0) {
       fresh();
       return;
@@ -1867,7 +1875,15 @@ export default class Game extends Vue {
     }
     const newMoves = this.engine.moveHistory.slice(stored.baseMoveCount);
     if (newMoves.some((move) => moveBelongsToSeat(this.engine, move, seat))) {
-      fresh();
+      // `persist: false` is the whole point here (owner-reported, 2026-08-20: "it just resets").
+      // Opening an empty board and persisting it wrote the empty set straight over the saved line,
+      // so the line the prompt was offering to restore had ALREADY been deleted by the time the
+      // prompt appeared - it survived only in `analysisPendingRestore`, in memory. Answer the prompt
+      // and all was well; do anything else first - leave the sandbox, reload, get force-closed by an
+      // incoming move, switch device - and it was gone, with no prompt the next time either. Storage
+      // now keeps the line until the player themselves says restore or discard; the first real edit
+      // persists over it as usual, because that is the player choosing to start something new.
+      fresh({ persist: false });
       this.analysisPendingRestore = stored;
       return;
     }
@@ -1933,8 +1949,13 @@ export default class Game extends Vue {
   /** The player's other answer to `analysisPendingRestore`'s prompt: start fresh instead. The empty
    * line `resolveAnalysisStaleness` already entered with was persisted the moment it called
    * `setAnalysisEntries([])`, so there is nothing left to overwrite here. */
+  /** "Discard" on the restore prompt. Now that the prompt no longer destroys the stored line up
+   * front (see `resolveAnalysisStaleness`), this is the one place that deletes it - otherwise the
+   * discarded line would simply come back the next time the sandbox opened. */
   discardPendingAnalysisLine() {
     this.analysisPendingRestore = null;
+    clearAnalysisLine(this.analysisSeat);
+    this.persistAnalysisLines();
   }
 
   dismissAnalysisNotice() {
@@ -2187,7 +2208,7 @@ export default class Game extends Vue {
    * strip flags the line, and the tail gets another chance every time the origin moves on.
    *
    * Returns `applied` so `resolveAnalysisStaleness`/`restoreAnalysisLine` can say what came back. */
-  private setAnalysisEntries(entries: AnalysisEntry[], options: { prune?: boolean } = {}): number {
+  private setAnalysisEntries(entries: AnalysisEntry[], options: { prune?: boolean; persist?: boolean } = {}): number {
     const { engine, applied } = replayAnalysisLine(
       this.analysisOrigin,
       entries,
@@ -2206,7 +2227,11 @@ export default class Game extends Vue {
     this.analysisComposeBase = JSON.parse(JSON.stringify(engine));
     // Read off the live engine before the snapshot above can drop it - see the field's own comment.
     this.analysisComposeAssumedPower = assumedPowerOf(engine, this.analysisSeat);
-    this.persistAnalysisLines();
+    // `persist: false` puts a line on the board WITHOUT writing it to storage - see
+    // `resolveAnalysisStaleness`'s restore-prompt branch, the only caller that needs it.
+    if (options.persist !== false) {
+      this.persistAnalysisLines();
+    }
     this.refreshAnalysisLineSummaries();
     this.handleData(engine);
     return applied;
@@ -2216,7 +2241,7 @@ export default class Game extends Vue {
    * turn - and puts its active line on the board. Everything that replaces more than the open line
    * goes through here, so `analysisLines`/`analysisActiveLine`/storage/the strip can never end up
    * describing different sets. Returns what `setAnalysisEntries` returned for the active line. */
-  private setAnalysisLineSet(set: AnalysisLineSet, options: { prune?: boolean } = {}): number {
+  private setAnalysisLineSet(set: AnalysisLineSet, options: { prune?: boolean; persist?: boolean } = {}): number {
     const normalized = normalizeAnalysisLineSet(set);
     this.analysisLines = normalized.lines;
     this.analysisActiveLine = normalized.active;

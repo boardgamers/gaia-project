@@ -1890,6 +1890,62 @@ describe("Game", () => {
         second.$destroy();
       });
 
+      it("keeps the saved line in storage while the restore prompt is unanswered (owner report, 2026-08-20)", () => {
+        // The reported "it just resets". Opening the sandbox with a real move of this seat's own in
+        // the way put an EMPTY set on the board and persisted it on the spot, so the line the prompt
+        // was offering to restore had already been deleted - it survived only in memory. Answer the
+        // prompt and all was well; leave, reload, or get force-closed first and it was gone, with no
+        // prompt the next time either.
+        const first = mountAsSeat(0);
+        first.enterAnalysisMode();
+        first.applyAnalysisMove("terrans up nav.");
+        first.$el.remove();
+        first.$destroy();
+
+        const live = new Engine([...SETUP_MOVES, "terrans build m 5A2."]);
+        const second = mountAsSeat(0, live);
+        second.enterAnalysisMode();
+        expect(second.analysisPendingRestore).to.not.equal(null);
+        // Storage still holds it, unread, while the prompt is up.
+        expect(window.localStorage.getItem("analysis-mode::0")).to.contain("terrans up nav.");
+
+        // The player leaves without answering.
+        second.exitAnalysisMode();
+        expect(window.localStorage.getItem("analysis-mode::0")).to.contain("terrans up nav.");
+        second.$el.remove();
+        second.$destroy();
+
+        // ...and it is still offered next time, rather than silently gone.
+        const third = mountAsSeat(0, new Engine([...SETUP_MOVES, "terrans build m 5A2."]));
+        third.enterAnalysisMode();
+        expect(third.analysisPendingRestore).to.not.equal(null);
+        third.restoreAnalysisLine();
+        expect(third.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
+        third.$el.remove();
+        third.$destroy();
+      });
+
+      it("stays open through a refetch that carries no new move, even when the origin auto-played opponents", () => {
+        // The other half of the same root cause as the re-anchor gate: the no-op-refetch guard read
+        // `analysisOrigin.moveHistory`, which settleAnalysisClone/advancePastOwnPass have already
+        // grown past the real history. A plain refetch then looked like a new move and force-closed
+        // the sandbox - the "minimize/reopen closes sandbox mode" bug, in every game where anything
+        // had to be auto-played (a leech pause, or this seat having passed).
+        const vm = mountAsSeat(0, new Engine([...SETUP_MOVES, "terrans pass booster5"]));
+        vm.enterAnalysisMode();
+        expect(vm.analysisOrigin.moveHistory.length).to.be.greaterThan(vm.analysisBaseMoveCount);
+        vm.applyAnalysisMove("terrans up nav.");
+
+        // The same real state arriving again - nobody moved.
+        vm.$store.dispatch("externalData", JSON.parse(JSON.stringify(vm.analysisBackup)));
+
+        expect(vm.analysisMode).to.equal(true);
+        expect(vm.analysisNotice).to.equal(null);
+        expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
       it("discardPendingAnalysisLine clears the prompt and starts fresh instead of restoring", () => {
         const first = mountAsSeat(0);
         first.enterAnalysisMode();
@@ -1908,6 +1964,9 @@ describe("Game", () => {
 
         expect(second.analysisPendingRestore).to.equal(null);
         expect(second.analysisEntries).to.deep.equal([]);
+        // Discard is now what actually deletes it - the prompt no longer wipes storage up front, so
+        // without this the discarded line would be offered again on the next entry.
+        expect(window.localStorage.getItem("analysis-mode::0")).to.not.contain("terrans up nav.");
 
         second.$el.remove();
         second.$destroy();

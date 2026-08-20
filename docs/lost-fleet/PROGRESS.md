@@ -7833,6 +7833,33 @@ Commit · ⓘ` now lives in the hazard-striped header that already existed, with
         becoming an `adjust` entry BEHIND the move once the turn completes - so it charges the position
         on screen, and the stored line replays back to exactly what was displayed.
 
+198.  ✅ **The saved sandbox line was deleted by the prompt offering to restore it (2026-08-20, viewer
+      v5.75.1, owner-reported).** Owner: _"The sandbox seems to reset if I push some buttons in real
+      game. I don't end turn or commit or anything."_ Two bugs, both confirmed by reproduction before
+      any code changed.
+
+      - **The restore prompt destroyed what it was offering.** §3.5's own-move branch calls `fresh()`
+        before setting `analysisPendingRestore`, and `fresh()` goes through `setAnalysisEntries`,
+        which persists. So opening the sandbox with any real move of your own in the way wrote an
+        EMPTY set straight over the saved line: the line existed only in memory from that moment on.
+        Answer the prompt and nothing looked wrong; do anything else first - leave the sandbox,
+        reload, get force-closed by an incoming move, pick the game up on another device - and it was
+        gone, with no prompt the next time either. Measured before the fix: the stored set read
+        `{"lines":[[]]}` the instant the prompt appeared. Note the trigger is not only "I played my
+        turn" - a leech charge/decline answer and an auto-charge are both real moves belonging to
+        your seat, which is why it fired for the owner without committing anything. `setAnalysisEntries`/
+        `setAnalysisLineSet` take `persist: false` now, that branch uses it, and
+        `discardPendingAnalysisLine` is what actually deletes the line (it has to be - nothing else
+        does any more).
+      - **A refetch with no move in it closed the sandbox.** The no-op-refetch guard added for the
+        "minimize/reopen closes sandbox mode" bug compared `analysisOrigin.moveHistory` against the
+        incoming history - but `settleAnalysisClone`/`advancePastOwnPass` push every opponent
+        decline, booster and pass they auto-play onto the clone's own history, so it is longer than
+        the real one in most async games. `unchanged` was therefore false for a refetch carrying
+        nothing, and the handler force-closed. Same root cause as #197's re-anchor gate; this guard
+        was simply left reading the old list. It reads `analysisRealHistory` now, so the fix finally
+        covers the games it was written for.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

@@ -1,7 +1,22 @@
 {
-  "version": "5.75.0",
+  "version": "5.75.1",
   "releasedAt": "2026-08-20",
   "entries": [
+    {
+      "version": "5.75.1",
+      "releasedAt": "2026-08-20",
+      "kind": "fix",
+      "title": "Sandbox: the saved line stops disappearing",
+      "impact": "",
+      "changes": [
+        "The saved sandbox line is no longer deleted the moment the 'restore this line?' prompt appears - it stays until you actually answer Restore or Discard, so leaving or reloading first no longer loses it.",
+        "The sandbox no longer closes on a state refresh that carries no new move, in games where opening it had to auto-play an opponent's leech answer or pass."
+      ],
+      "userChanges": [
+        "Your saved sandbox line is no longer lost if you leave or reload while the 'restore this line?' prompt is showing - it waits there until you answer.",
+        "The sandbox no longer closes by itself when the game refreshes without anyone having moved."
+      ]
+    },
     {
       "version": "5.75.0",
       "releasedAt": "2026-08-20",
