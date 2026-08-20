@@ -7664,6 +7664,44 @@ Commit · ⓘ` now lives in the hazard-striped header that already existed, with
 
       Viewer: 1195/1195 passing. Engine untouched.
 
+193.  ✅ **Commit asks first, and shows the log of what it is about to play (viewer v5.73.0,
+      2026-08-20, owner question).** Commit used to fire the moment it was pressed: move 1 went live,
+      the rest queued as premoves, the line was cleared and the sandbox closed, with nothing shown
+      beforehand. That is the one sandbox control whose effect reaches the real game - where the
+      sandbox's own Undo does not follow - and it is also what discards whatever it could not commit,
+      so it now opens `AnalysisCommitConfirm.vue` first: every move about to go out, in order, marked
+      `plays now` or `premove N`, then every move being left behind with one sentence saying why.
+      Confirming is what emits `analysis-commit`; cancelling leaves the line exactly as it was.
+
+      This does not contradict §12.4's "no confirmation press", which is about composing a turn
+      INSIDE the sandbox, where nothing is real and Undo covers a misclick.
+
+      **The answers to the owner's three questions, since they are the feature's own contract:**
+
+      - **How many moves.** Four at most - 1 played live plus `PremoveBar.vue`'s own 3-row queue
+        (`MAX_COMMITTABLE_MOVES`), and fewer when that queue already holds rows for this seat. Off
+        turn there is no live move, so it is the queue's room alone (3, or what is left of it).
+        Self-contained/offline play has no queue at all, so it is move 1 or nothing.
+      - **Chained premoves - yes.** Moves 2..N are queued in `mode: "sequential"`, i.e. exactly the
+        Sequential chain the premove bar already builds, which is also why editing or removing one
+        drops the entries after it.
+      - **Assumed charges never travel.** A `{kind:"adjust"}` entry (the Charge 1 button) is stripped
+        out of the line entirely before the commit replay, so a move that needed it is judged without
+        it; and a move whose power cost the engine topped up on its own (`analysisAssumedPower`) ends
+        the committable prefix there. Either way the prefix is cut at that move and the modal says so
+        in as many words - the charge is a sandbox fiction, and nothing that depended on one is
+        offered for real.
+
+      Implementation: `analysisCommitPrefix` now returns the cut reason (`AnalysisCommitCut`) beside
+      the prefix `committableAnalysisMoves` already returned, and `planAnalysisCommit` applies the two
+      caps that live outside the line (queue room, hosted-only premoves) to produce the plan.
+      `Game.vue`'s `commitAnalysisLine` executes that same plan object, so the log the player
+      confirmed and the moves that actually go out cannot drift apart. One real bug found on the way:
+      a `null` plan prop crashed the modal's render, because Vue substitutes a prop default only for
+      `undefined` - which is why `AnalysisCommitConfirm` resolves it through its own `view` computed.
+
+      Viewer: 1211/1211 passing. Engine untouched.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

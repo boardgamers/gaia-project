@@ -765,8 +765,41 @@ export function committableAnalysisMoves(
   seat: number,
   baseRound: number
 ): string[] {
+  return analysisCommitPrefix(origin, entries, seat, baseRound).moves;
+}
+
+/** Why the committable prefix stops where it does - the one thing `committableAnalysisMoves`' bare
+ * `string[]` could not say, and the sentence the commit confirmation (`AnalysisCommitConfirm.vue`)
+ * has to put in front of the player before anything leaves the sandbox. `null` means the whole line
+ * is committable and nothing was left behind.
+ *
+ * The first two void the entire line rather than truncating it; the rest cut it at one move. */
+export type AnalysisCommitCut =
+  /** §11's faction seed: every move after it was played as a faction this seat may not even hold. */
+  | "faction"
+  /** The sandbox's cheap Trading Station - priced as if an opponent were adjacent when none is. */
+  | "cheap-build"
+  /** The move stopped applying at all once the line's `adjust` entries were stripped out. */
+  | "illegal"
+  /** The move left a resource below zero, i.e. it only worked because the sandbox lets you overspend. */
+  | "overdrawn"
+  /** The move's power cost was topped up (§12) - as hypothetical as an `adjust` entry. */
+  | "assumed-power"
+  /** Setup pass-and-play put another seat's move here; committing it would move for somebody else. */
+  | "foreign"
+  /** `MAX_COMMITTABLE_MOVES` - the line is fine, there is just nowhere left to put the rest. */
+  | "cap";
+
+/** The committable prefix plus the reason it ends there. See `committableAnalysisMoves` (the thin
+ * wrapper above) for the full account of the rules; this is the same computation, reporting its cut. */
+export function analysisCommitPrefix(
+  origin: Engine,
+  entries: AnalysisEntry[],
+  seat: number,
+  baseRound: number
+): { moves: string[]; cut: AnalysisCommitCut | null } {
   if (entries.some((entry) => entry.kind === "faction")) {
-    return [];
+    return { moves: [], cut: "faction" };
   }
   // The sandbox's cheap Trading Station (owner instruction, 2026-08-19) is a fiction in exactly the
   // way an `adjust` entry is: it prices a hex as if an opponent's structure were adjacent when none
@@ -774,40 +807,59 @@ export function committableAnalysisMoves(
   // not accept - the whole line is out, not just that move, since everything after it was played on
   // credits the seat never had.
   if (entries.some((entry) => entry.kind === "move" && isCheapAnalysisBuild(entry.move))) {
-    return [];
+    return { moves: [], cut: "cheap-build" };
   }
   const moveEntries = entries.filter((entry): entry is AnalysisMoveEntry => entry.kind === "move");
   if (moveEntries.length === 0) {
-    return [];
+    return { moves: [], cut: null };
   }
   // Replay one move at a time so the cut lands on the first move that overdrew, rather than only
   // being able to say "somewhere in this line". Each pass restarts from `origin`, exactly as every
   // other replay in this file does.
   let affordable = 0;
+  let cut: AnalysisCommitCut | null = null;
   for (let count = 1; count <= moveEntries.length; count++) {
     const { engine, applied } = replayAnalysisLine(origin, moveEntries.slice(0, count), seat, baseRound);
     if (applied < count) {
+      cut = "illegal";
       break;
     }
     const data = engine.players[seat]?.data;
     if (!data) {
+      cut = "illegal";
       break;
     }
     const status = computeAnalysisStatus(data);
-    if (status.overdrawn.length > 0 || status.assumedPower > 0) {
+    if (status.overdrawn.length > 0) {
+      cut = "overdrawn";
+      break;
+    }
+    if (status.assumedPower > 0) {
+      cut = "assumed-power";
       break;
     }
     affordable = count;
     if (count >= MAX_COMMITTABLE_MOVES) {
+      cut = count < moveEntries.length ? "cap" : null;
       break;
     }
   }
   if (affordable === 0) {
-    return [];
+    return { moves: [], cut };
   }
   const { engine } = replayAnalysisLine(origin, moveEntries.slice(0, affordable), seat, baseRound);
   const ownCount = ownMovePrefixLength(engine, moveEntries, seat);
-  return moveEntries.slice(0, Math.min(affordable, ownCount, MAX_COMMITTABLE_MOVES)).map((entry) => entry.move);
+  const length = Math.min(affordable, ownCount, MAX_COMMITTABLE_MOVES);
+  // A foreign move is the better explanation whenever it lands at or before wherever the replay
+  // stopped: the line does not end because of this seat's resources, it ends because the next turn
+  // belongs to somebody else - which is also the usual reason the replay could not apply it.
+  if (ownCount < moveEntries.length && ownCount <= affordable) {
+    cut = "foreign";
+  }
+  return {
+    moves: moveEntries.slice(0, length).map((entry) => entry.move),
+    cut: length < moveEntries.length ? cut : null,
+  };
 }
 
 /** Whether `move` is a sandbox cheap-Trading-Station build (`... build ts 1x2 cheap`). Matched on the
@@ -823,4 +875,57 @@ export function isCheapAnalysisBuild(move: string): boolean {
 function ownMovePrefixLength(engine: Engine, moveEntries: AnalysisMoveEntry[], seat: number): number {
   const foreign = moveEntries.findIndex((entry) => !moveBelongsToSeat(engine, entry.move, seat));
   return foreign === -1 ? moveEntries.length : foreign;
+}
+
+/** What pressing Commit is actually about to do, in the shape the confirmation modal
+ * (`AnalysisCommitConfirm.vue`) reads it: which single move goes live, which ones queue behind it as
+ * premoves, and what is being left behind. Built by `planAnalysisCommit`, whose inputs are the only
+ * three things outside the line itself that bound a commit - whether the real game is waiting on
+ * this seat, whether there is a premove queue at all, and how much room is left in it. */
+export interface AnalysisCommitPlan {
+  /** Played for real immediately. `null` off turn, where there is no live move to play - see
+   * `Game.vue`'s `commitAnalysisLine`. */
+  live: string | null;
+  /** Queued as Sequential premoves, in line order, behind `live`. */
+  queued: string[];
+  /** Everything in the line that stays behind. Never committed, and cleared with the line. */
+  dropped: string[];
+  /** Why the line itself stops where it does - null when the line was not the limit. */
+  cut: AnalysisCommitCut | null;
+  /** Which limit actually bound this commit: the line's own feasibility, the premove queue's
+   * remaining room, or the absence of a queue entirely in self-contained/hot-seat play. */
+  limit: "line" | "queue" | "no-premoves";
+}
+
+/** §6/decision #13, made explicit so the player can read it before pressing anything. Applies the
+ * two caps that live outside the line (`PremoveBar.vue`'s 3-row queue and hosted-only premoves) to
+ * the committable prefix, and reports what is left behind either way. */
+export function planAnalysisCommit(args: {
+  /** The committable prefix - `analysisCommitPrefix().moves`. */
+  committable: string[];
+  /** That prefix's cut reason. */
+  cut: AnalysisCommitCut | null;
+  /** Every "move" entry in the line, committable or not, in order. */
+  lineMoves: string[];
+  /** Whether the REAL game (not the clone) is waiting on this seat. */
+  onTurn: boolean;
+  /** Hosted play has a premove queue; self-contained/hot-seat does not. */
+  hosted: boolean;
+  /** Rows still free in this seat's premove queue (3 minus what is already queued). */
+  queueRoom: number;
+}): AnalysisCommitPlan {
+  const { committable, cut, lineMoves, onTurn, hosted, queueRoom } = args;
+  const room = Math.max(0, queueRoom);
+  const allowed = hosted ? committable.slice(0, onTurn ? 1 + room : room) : onTurn ? committable.slice(0, 1) : [];
+  const live = onTurn && allowed.length > 0 ? allowed[0] : null;
+  const queued = live !== null ? allowed.slice(1) : allowed;
+  const limit: AnalysisCommitPlan["limit"] =
+    allowed.length < committable.length ? (hosted ? "queue" : "no-premoves") : "line";
+  return {
+    live,
+    queued,
+    dropped: lineMoves.slice(allowed.length),
+    cut: limit === "line" ? cut : null,
+    limit,
+  };
 }

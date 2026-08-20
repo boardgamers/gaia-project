@@ -3,6 +3,7 @@ import { expect } from "chai";
 import {
   advancePastOwnPass,
   AnalysisEntry,
+  analysisCommitPrefix,
   analysisFactionPool,
   applyFactionSeed,
   applySoloRoundFlow,
@@ -17,6 +18,7 @@ import {
   MAX_COMMITTABLE_MOVES,
   markAnalysisSeat,
   moveBelongsToSeat,
+  planAnalysisCommit,
   replayAnalysisLine,
   resolveOpponentDecisions,
   saveAnalysisLine,
@@ -679,6 +681,142 @@ describe("committableAnalysisMoves (§6, decision #13)", () => {
     ];
 
     expect(committableAnalysisMoves(origin, entries, 0, 1)).to.deep.equal([]);
+  });
+});
+
+describe("analysisCommitPrefix - the cut reason behind the prefix", () => {
+  it("reports no cut for a line that is committable end to end", () => {
+    const origin = new Engine(SETUP_MOVES);
+    applySoloRoundFlow(origin, 0);
+
+    const { moves, cut } = analysisCommitPrefix(origin, [{ kind: "move", move: "terrans up nav." }], 0, 1);
+
+    expect(moves).to.deep.equal(["terrans up nav."]);
+    expect(cut).to.equal(null);
+  });
+
+  it("names the overdraft when a move spends past the seat's real resources", () => {
+    const origin = new Engine(SETUP_MOVES);
+    applySoloRoundFlow(origin, 0);
+    origin.player(0).data.credits = 0;
+    origin.player(0).data.ores = 0;
+
+    const { moves, cut } = analysisCommitPrefix(origin, [{ kind: "move", move: "terrans build ts -1x2." }], 0, 1);
+
+    expect(moves).to.deep.equal([]);
+    expect(cut).to.equal("overdrawn");
+  });
+
+  it("names the faction seed and the cheap build, both of which void the whole line", () => {
+    const seeded = new Engine(["init 2 randomSeed"]);
+    applySoloRoundFlow(seeded, 0);
+    expect(
+      analysisCommitPrefix(seeded, [{ kind: "faction", lineup: [Faction.Terrans, Faction.Nevlas] }], 0, 1).cut
+    ).to.equal("faction");
+
+    const cheap = new Engine(SETUP_MOVES);
+    expect(
+      analysisCommitPrefix(cheap, [{ kind: "move", move: "terrans build ts 4A4 cheap." }], 0, Round.Round1).cut
+    ).to.equal("cheap-build");
+  });
+
+  it("names the foreign move that setup pass-and-play left in the line", () => {
+    const origin = new Engine(["init 2 randomSeed", "p1 faction terrans", "p2 faction nevlas"]);
+    applySoloRoundFlow(origin, 0);
+    const entries: AnalysisEntry[] = [
+      { kind: "move", move: "terrans build m -1x2" },
+      { kind: "move", move: "nevlas build m -1x0" },
+    ];
+
+    const { moves, cut } = analysisCommitPrefix(origin, entries, 0, 1);
+
+    expect(moves).to.deep.equal(["terrans build m -1x2"]);
+    expect(cut).to.equal("foreign");
+  });
+});
+
+describe("planAnalysisCommit - what the Commit confirmation shows (§6)", () => {
+  const line = ["a", "b", "c", "d", "e"];
+
+  it("plays move 1 live and queues the rest as premoves when the real game is waiting on this seat", () => {
+    const plan = planAnalysisCommit({
+      committable: ["a", "b", "c"],
+      cut: "overdrawn",
+      lineMoves: line,
+      onTurn: true,
+      hosted: true,
+      queueRoom: 3,
+    });
+
+    expect(plan.live).to.equal("a");
+    expect(plan.queued).to.deep.equal(["b", "c"]);
+    expect(plan.dropped).to.deep.equal(["d", "e"]);
+    expect(plan.limit).to.equal("line");
+    expect(plan.cut).to.equal("overdrawn");
+  });
+
+  it("queues everything and plays nothing live off turn - there is no turn for a live move to go into", () => {
+    const plan = planAnalysisCommit({
+      committable: ["a", "b"],
+      cut: null,
+      lineMoves: ["a", "b"],
+      onTurn: false,
+      hosted: true,
+      queueRoom: 3,
+    });
+
+    expect(plan.live).to.equal(null);
+    expect(plan.queued).to.deep.equal(["a", "b"]);
+    expect(plan.dropped).to.deep.equal([]);
+  });
+
+  it("reports the premove queue, not the line, as the limit when the queue is the shorter of the two", () => {
+    const plan = planAnalysisCommit({
+      committable: ["a", "b", "c", "d"],
+      cut: "cap",
+      lineMoves: line,
+      onTurn: true,
+      hosted: true,
+      queueRoom: 1, // two rows already queued for this seat
+    });
+
+    expect(plan.live).to.equal("a");
+    expect(plan.queued).to.deep.equal(["b"]);
+    expect(plan.dropped).to.deep.equal(["c", "d", "e"]);
+    expect(plan.limit).to.equal("queue");
+    // The line's own cut is no longer the reason anything was left behind, so it is not reported as one.
+    expect(plan.cut).to.equal(null);
+  });
+
+  it("commits move 1 only in self-contained play, which has no premove queue at all", () => {
+    const plan = planAnalysisCommit({
+      committable: ["a", "b", "c"],
+      cut: null,
+      lineMoves: ["a", "b", "c"],
+      onTurn: true,
+      hosted: false,
+      queueRoom: 3,
+    });
+
+    expect(plan.live).to.equal("a");
+    expect(plan.queued).to.deep.equal([]);
+    expect(plan.dropped).to.deep.equal(["b", "c"]);
+    expect(plan.limit).to.equal("no-premoves");
+  });
+
+  it("commits nothing off turn in self-contained play", () => {
+    const plan = planAnalysisCommit({
+      committable: ["a"],
+      cut: null,
+      lineMoves: ["a"],
+      onTurn: false,
+      hosted: false,
+      queueRoom: 3,
+    });
+
+    expect(plan.live).to.equal(null);
+    expect(plan.queued).to.deep.equal([]);
+    expect(plan.dropped).to.deep.equal(["a"]);
   });
 });
 

@@ -71,6 +71,7 @@
             :analysis-status="analysisStatus"
             :analysis-move-count="analysisEntries.length"
             :analysis-committable-moves="analysisCommittableMoves.length"
+            :analysis-commit-plan="analysisCommitPlan"
             :analysis-faction-choices="analysisFactionChoices"
             @analysis-seed-faction="seedAnalysisFaction"
             @analysis-commit="commitAnalysisLine"
@@ -205,6 +206,7 @@
             :analysis-status="analysisStatus"
             :analysis-move-count="analysisEntries.length"
             :analysis-committable-moves="analysisCommittableMoves.length"
+            :analysis-commit-plan="analysisCommitPlan"
             :analysis-faction-choices="analysisFactionChoices"
             @analysis-seed-faction="seedAnalysisFaction"
             @analysis-commit="commitAnalysisLine"
@@ -327,6 +329,7 @@
         :analysis-status="analysisStatus"
         :analysis-move-count="analysisEntries.length"
         :analysis-committable-moves="analysisCommittableMoves.length"
+        :analysis-commit-plan="analysisCommitPlan"
         :analysis-faction-choices="analysisFactionChoices"
         @analysis-seed-faction="seedAnalysisFaction"
         @analysis-commit="commitAnalysisLine"
@@ -393,21 +396,24 @@ import {
 } from "../hosted/types";
 import { buildSequentialChainPreview } from "../logic/premove-preview";
 import {
+  AnalysisCommitPlan,
   AnalysisEntry,
   AnalysisLine,
+  AnalysisMoveEntry,
   AnalysisStatus,
   advancePastOwnPass,
+  analysisCommitPrefix,
   analysisFactionPool,
   assumedPowerOf,
   buildAnalysisLineup,
   chargedPowerTotal,
   clearAnalysisLine,
-  committableAnalysisMoves,
   computeAnalysisStatus,
   factionSeedAvailable,
   loadAnalysisLine,
   markAnalysisSeat,
   moveBelongsToSeat,
+  planAnalysisCommit,
   replayAnalysisLine,
   saveAnalysisLine,
   settleAnalysisClone,
@@ -1516,34 +1522,48 @@ export default class Game extends Vue {
     return data ? computeAnalysisStatus(data, chargedPowerTotal(this.analysisEntries)) : null;
   }
 
-  /** §6/decision #13's commit path affordability gate, capped further for what this app can actually
-   * offer: self-contained/hot-seat play has no premove queue at all, so it only ever gets move 1
-   * (§6: "Premoves are hosted-only. In self-contained/offline play, offer move 1 only."); hosted play
-   * is also capped by whatever premove room this seat already has left in the real (not analysis)
-   * queue, so committing a line never tries to push the real queue over its own 3-row limit. */
-  get analysisCommittableMoves(): string[] {
+  /**
+   * §6/decision #13's commit path affordability gate, capped further for what this app can actually
+   * offer, and expressed as everything the Commit button is about to do: what goes live, what queues
+   * behind it, what is left behind and why. `AnalysisCommitConfirm.vue` shows the player exactly this
+   * before anything leaves the sandbox and `commitAnalysisLine` then executes the same object, so the
+   * log they confirmed and the moves that get played cannot drift apart.
+   *
+   * Self-contained/hot-seat play has no premove queue at all, so it only ever gets move 1 (§6:
+   * "Premoves are hosted-only. In self-contained/offline play, offer move 1 only.") - and only if the
+   * real game is actually waiting on this seat, since off turn there is nowhere for a live move to
+   * go. Hosted play is capped further by whatever premove room this seat already has left in the real
+   * (not analysis) queue, so committing a line never pushes that queue over its own 3-row limit.
+   */
+  get analysisCommitPlan(): AnalysisCommitPlan {
+    const empty: AnalysisCommitPlan = { live: null, queued: [], dropped: [], cut: null, limit: "line" };
     if (!this.analysisMode || !this.analysisOrigin || this.analysisSeat === null || this.analysisRolledForward) {
-      return [];
+      return empty;
     }
-    const moves = committableAnalysisMoves(
+    const { moves, cut } = analysisCommitPrefix(
       this.analysisOrigin,
       this.analysisEntries,
       this.analysisSeat,
       this.analysisBaseRound
     );
-    if (!this.isHostedMode) {
-      // Self-contained/hot-seat has no premove queue, so move 1 is the only thing that can be played
-      // - and only if the real game is actually waiting on this seat. Off-turn there is nowhere for
-      // it to go, so nothing is committable rather than "one move that will be rejected".
-      return this.analysisSeatIsOnTurnForReal ? moves.slice(0, 1) : [];
-    }
     const queuedForSeat = ((this.$store.state.premoves as PremoveRow[]) ?? []).filter(
       (p) => p.seat === this.analysisSeat
     ).length;
-    const room = Math.max(0, 3 - queuedForSeat);
-    // On turn: move 1 goes live and the rest fill the queue. Off turn: EVERY move has to queue, so
-    // the cap is the queue's own room. `commitAnalysisLine` splits it the same way.
-    return moves.slice(0, this.analysisSeatIsOnTurnForReal ? 1 + room : room);
+    return planAnalysisCommit({
+      committable: moves,
+      cut,
+      lineMoves: this.analysisEntries.filter((e): e is AnalysisMoveEntry => e.kind === "move").map((e) => e.move),
+      onTurn: this.analysisSeatIsOnTurnForReal,
+      hosted: this.isHostedMode,
+      queueRoom: 3 - queuedForSeat,
+    });
+  }
+
+  /** The plan above as one flat list - what the Commit button counts to decide whether it is
+   * offered at all. */
+  get analysisCommittableMoves(): string[] {
+    const plan = this.analysisCommitPlan;
+    return plan.live === null ? plan.queued : [plan.live, ...plan.queued];
   }
 
   /** Whether the REAL game (not the sandbox clone, whose turn order is always this seat alone) is
@@ -1572,16 +1592,15 @@ export default class Game extends Vue {
       return;
     }
     const seat = this.analysisSeat;
-    const moves = this.analysisCommittableMoves;
-    if (moves.length === 0) {
-      return;
-    }
     // Composing off-turn is what the sandbox is FOR, and this used to dispatch move 1 as a live
     // `move` regardless - a move the real game cannot accept, because it is not this seat's turn.
     // The sandbox had already exited and cleared the saved line by then, so the whole line was
-    // silently lost. Off turn, every committable move is a premove; nothing goes live.
-    const live = this.analysisSeatIsOnTurnForReal ? moves[0] : null;
-    const queued = live === null ? moves : moves.slice(1);
+    // silently lost. Off turn, every committable move is a premove; nothing goes live. That split
+    // lives in `planAnalysisCommit` now, so what the confirmation showed is literally what runs.
+    const { live, queued } = this.analysisCommitPlan;
+    if (live === null && queued.length === 0) {
+      return;
+    }
     clearAnalysisLine(seat);
     this.exitAnalysisMode();
     if (live !== null) {

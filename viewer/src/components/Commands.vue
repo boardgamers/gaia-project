@@ -59,10 +59,13 @@
         :move-count="analysisMoveCount"
         :status="analysisStatus"
         :committable-moves="analysisCommittableMoves"
-        @commit="$emit('analysis-commit')"
+        @commit="requestAnalysisCommit"
       />
     </div>
     <AnalysisModeInfo v-if="analysisMode" />
+    <!-- Commit's confirmation step, rendered here for the same once-per-page reason as the info modal
+         above. The Commit button only opens it; nothing leaves the sandbox until this is confirmed. -->
+    <AnalysisCommitConfirm v-if="analysisMode" :plan="analysisCommitPlan" @confirm="$emit('analysis-commit')" />
     <div id="move-buttons" ref="moveButtons" :class="{ 'mobile-sticky-actions': showStickyMobileBar }">
       <!-- Same status line as #move-title above, shown only inside the mobile sticky bar (once it's
            actually pinned, i.e. narrow viewports - see the .sticky-bar-title/.hide-on-mobile-sticky
@@ -127,7 +130,7 @@
           :move-count="analysisMoveCount"
           :status="analysisStatus"
           :committable-moves="analysisCommittableMoves"
-          @commit="$emit('analysis-commit')"
+          @commit="requestAnalysisCommit"
         />
       </div>
       <div v-if="init" class="d-flex flex-wrap align-content-stretch">
@@ -367,6 +370,7 @@ import { FactionCustomization } from "@gaia-project/engine/src/engine";
 import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
 import { enabledButtonWarnings, isWarningEnabled } from "../data/warnings";
 import AnalysisHeaderControls from "./AnalysisHeaderControls.vue";
+import AnalysisCommitConfirm from "./AnalysisCommitConfirm.vue";
 import AnalysisModeInfo from "./AnalysisModeInfo.vue";
 import Undo from "./Resources/Undo.vue";
 import { ActionPayload, SubscribeActionOptions, SubscribeOptions } from "vuex";
@@ -384,7 +388,7 @@ import { attachZoomCompensation, ZoomCompensationHandle } from "../logic/zoom-co
 import { factionColor } from "../graphics/utils";
 import { supportsHoverTooltips } from "../logic/tooltip";
 import { isTypingTarget } from "../logic/typing-target";
-import { AnalysisStatus } from "../logic/analysis";
+import { AnalysisCommitPlan, AnalysisStatus } from "../logic/analysis";
 
 let show = false;
 
@@ -445,6 +449,7 @@ export type EmitCommandParams = { disappear?: boolean; times?: number; warnings?
     FactionSheetButton,
     Undo,
     AnalysisHeaderControls,
+    AnalysisCommitConfirm,
     AnalysisModeInfo,
   },
 })
@@ -500,6 +505,11 @@ export default class Commands extends Vue implements CommandController {
   /** How many of those moves could actually be played for real (§6), gating the Commit button. */
   @Prop({ default: 0 })
   analysisCommittableMoves: number;
+
+  /** What Commit is about to do, for the confirmation modal - see Game.vue's `analysisCommitPlan`.
+   * Only that modal reads it; the button itself is gated on the count above. */
+  @Prop({ default: null })
+  analysisCommitPlan: AnalysisCommitPlan | null;
 
   /** §11's round-0 faction seed options (Game.vue's `analysisFactionChoices`) - empty every time the
    * sandbox clone is past faction selection, which is every case except a round-0 entry that has not
@@ -643,6 +653,13 @@ export default class Commands extends Vue implements CommandController {
 
   setAutoChargePower(value: string) {
     this.$store.commit("preferences", { autoChargePower: value });
+  }
+
+  /** Commit asks first (ANALYSIS_MODE_PLAN.md §6) - it is the only sandbox control whose effect
+   * reaches the real game, where the sandbox's own Undo does not follow, and it clears the line on
+   * the way out. The modal is what emits `analysis-commit`; this only opens it. */
+  requestAnalysisCommit() {
+    this.$bvModal.show("analysis-commit-confirm");
   }
 
   /** Whether auto-leech will currently act on its own instead of asking every time - drives the

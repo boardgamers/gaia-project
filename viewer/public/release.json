@@ -1,7 +1,23 @@
 {
-  "version": "5.72.8",
-  "releasedAt": "2026-08-19",
+  "version": "5.73.0",
+  "releasedAt": "2026-08-20",
   "entries": [
+    {
+      "version": "5.73.0",
+      "releasedAt": "2026-08-20",
+      "kind": "update",
+      "title": "Sandbox Commit asks before it plays",
+      "impact": "",
+      "changes": [
+        "Committing a sandbox line now shows exactly which moves will be played and which are left behind, before anything happens",
+        "The confirmation says which move goes live and which ones queue as premoves, and why the rest could not be committed",
+        "Commit's move list and the moves it plays come from one shared plan object, so the two cannot drift apart"
+      ],
+      "userChanges": [
+        "Committing a sandbox line now shows exactly which moves will be played and which are left behind, before anything happens",
+        "The confirmation says which move goes live and which ones queue as premoves, and why the rest could not be committed"
+      ]
+    },
     {
       "version": "5.72.8",
       "releasedAt": "2026-08-19",

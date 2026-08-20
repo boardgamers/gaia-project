@@ -746,6 +746,44 @@ describe("Commands", () => {
 
     expect(container.querySelectorAll("#analysis-mode-info").length).to.be.at.most(1);
     expect(container.querySelectorAll(".analysis-controls__info").length).to.equal(2);
+    // The commit confirmation is subject to exactly the same trap, and for the same reason - it is
+    // opened by a button inside those twice-rendered controls.
+    expect(container.querySelectorAll("#analysis-commit-confirm").length).to.be.at.most(1);
+  });
+
+  it("asks before committing instead of firing the moves off the button press (§6)", async () => {
+    const engine = createLostFleetRoundMoveEngine();
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container, emitted } = render(Commands, {
+      props: {
+        currentMove: "",
+        analysisMode: true,
+        analysisMoveCount: 2,
+        analysisCommittableMoves: 2,
+        analysisCommitPlan: {
+          live: "terrans up nav.",
+          queued: ["terrans pass booster3"],
+          dropped: [],
+          cut: null,
+          limit: "line",
+        },
+      },
+      store,
+    });
+
+    const commit = Array.from(container.querySelectorAll("button")).find((b) =>
+      (b.textContent ?? "").includes("Commit")
+    ) as HTMLButtonElement;
+    await fireEvent.click(commit);
+    await Vue.nextTick();
+
+    // Nothing leaves the sandbox on the press itself - the modal's own confirm is what emits.
+    expect(emitted()["analysis-commit"]).to.equal(undefined);
+    expect((document.body.querySelector(".modal")?.textContent ?? "").replace(/\s+/g, " ")).to.contain(
+      "terrans up nav."
+    );
   });
 
   it("stripes both headers and reads SANDBOX during sandbox mode, without exiting when tapped (§5.1/§12)", async () => {

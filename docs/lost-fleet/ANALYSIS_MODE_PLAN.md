@@ -531,6 +531,16 @@ Hard constraints:
   after one is only committable if it is still affordable without the assumed leech.
 - Committing exits analysis mode and clears the line.
 
+**It confirms first (added 2026-08-20, from an owner question).** Commit opens
+`AnalysisCommitConfirm.vue` — a modal listing every move that is about to go out, marked `plays now`
+or `premove N`, then every move being left behind with the one sentence saying why (the
+`AnalysisCommitCut` returned alongside the prefix by `analysisCommitPrefix`, or the premove queue's
+own remaining room). This does not contradict §12.4's "no confirmation press": that is about
+composing a turn INSIDE the sandbox, where Undo covers a misclick and nothing is real. Commit is the
+opposite case — it is the only control whose effect reaches the real game, where the sandbox's Undo
+does not follow, and it discards whatever it could not commit. `planAnalysisCommit` is what both the
+modal and `commitAnalysisLine` read, so the log shown and the moves played cannot drift apart.
+
 ---
 
 ## 7. Suggested phasing

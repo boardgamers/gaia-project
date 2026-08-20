@@ -35,8 +35,10 @@
       federation tiles are all shown as available, so a line assumes nobody beats you to any of them.
     </p>
     <p class="mb-0">
-      Commit plays the line for real: the first move goes live and the rest queue as premoves. It is offered only while
-      every move in the line is affordable without overspending and belongs to your own seat.
+      Commit plays the line for real: the first move goes live and the rest queue as premoves, up to four moves in all
+      (one live plus the premove queue's three rows). It asks first, listing exactly what will be played and what will
+      be left behind — nothing leaves the sandbox until you confirm. Only moves that are your own and affordable without
+      overspending are offered, so a move that needed assumed power ends the list there.
     </p>
   </b-modal>
 </template>
