@@ -7716,14 +7716,22 @@ Commit · ⓘ` now lives in the hazard-striped header that already existed, with
       regressions vs. the pre-change baseline).
 
 195.  ✅ **Sandbox mode holds several lines at once, as tabs on top of the striped header (viewer
-      v5.74.0, 2026-08-20, owner request).** Full write-up:
+      v5.74.0, 2026-08-20, owner request; `+` changed to fork in v5.74.1 the same day).** Full write-up:
       `docs/lost-fleet/ANALYSIS_MODE_PLAN.md` §13. The ask was "a Save button that saves the current
       line as a tab, so I can work out several lines and compare them"; talking it through turned it
       into something smaller. **There is no Save button** - the line already persisted on every
       completed turn, so nothing was ever unsaved, and a Save button would only have created a second
       meaning of "saved" plus the question of whether unsaved work could be lost. Line 1 is there from
       the moment the sandbox opens, `+` adds the next one (cap 5), and each line autosaves exactly as
-      the single line always did. Tabs are numbered, never named, on owner instruction. Clicking one
+      the single line always did. **`+` copies the line you are on into the new tab** - it shipped as
+      an empty new line and was changed the same day on owner instruction, which is the whole of
+      "forking a line": the comparison you actually want is nearly always "three moves in, X or Y?",
+      and an empty tab makes you re-click the shared prefix by hand for every alternative - tedious,
+      and worse, one misclick while re-entering it compares two lines that do not share the prefix
+      you think they do. Reset still blanks a line in one press, so the copy costs nothing. The fork
+      is a deep copy, not a second reference to the same entry objects: nothing edits an entry in
+      place today, but two lines pointing at one object is a trap waiting for the first path that
+      does. Tabs are numbered, never named, on owner instruction. Clicking one
       replays that line onto the board to carry on, undo or reset as normal, and which tab was open is
       stored with the set. **Each tab also carries its own result** (VP against where the sandbox
       started, a red `!` for a line that overspends, a `~` for one the board has moved past) - without
@@ -7743,7 +7751,7 @@ Commit · ⓘ` now lives in the hazard-striped header that already existed, with
         a pre-tabs line right now. Committing clears every line, not just the one it played, and the
         confirm modal says so. Driven through a real browser (Playwright) in both header layouts -
         desktop `#move-title` and the mobile sticky band - as well as by unit tests, since §11 and §12
-        both turned up bugs only a browser found. Viewer: 1244/1244 passing (1211 before, +33 new).
+        both turned up bugs only a browser found. Viewer: 1246/1246 passing (1211 before, +35 new).
 
 196.  ✅ **The sandbox header's chips are opaque (2026-08-20, viewer v5.74.0, owner-reported).** "The
       8 moves label is transparent making it hard to read." The move count, overdraft, charged-power

@@ -2131,16 +2131,27 @@ export default class Game extends Vue {
     this.setAnalysisEntries(this.analysisEntries);
   }
 
-  /** The strip's `+` - start another line from the same board, and open it. Empty rather than a copy
-   * of the current line: "a new line" is what the control says, and a line that silently arrived
-   * pre-loaded with someone else's moves would be a much worse surprise than re-clicking a prefix. */
+  /**
+   * The strip's `+` - fork the open line into a new one, and open that (owner instruction,
+   * 2026-08-20). It started as an EMPTY new line, on the reasoning that "new line" is what the
+   * control says; in use that was backwards. The comparison you actually want is almost always
+   * "three moves in, X or Y?", and an empty tab makes you re-click the shared prefix by hand for
+   * every alternative - tedious, and worse, a misclick while re-entering it compares two lines that
+   * do not share the prefix you think they do. Copying makes forking the default and costs nothing,
+   * because Reset already blanks a line in one press for the times you did want to start over.
+   *
+   * Deep-copied rather than sharing the entry objects: nothing edits an entry in place today (every
+   * path replaces the whole array), but two lines pointing at the same objects is a trap waiting for
+   * the first path that does, and the entries are small plain data.
+   */
   addAnalysisLine() {
     if (!this.analysisMode || this.analysisLines.length >= MAX_ANALYSIS_LINES) {
       return;
     }
-    this.analysisLines = [...this.analysisLines, []];
+    const fork: AnalysisEntry[] = JSON.parse(JSON.stringify(this.analysisEntries));
+    this.analysisLines = [...this.analysisLines, fork];
     this.analysisActiveLine = this.analysisLines.length - 1;
-    this.setAnalysisEntries([]);
+    this.setAnalysisEntries(fork);
   }
 
   /** Delete a line. Never the last one - the strip always has an open tab (see

@@ -1620,13 +1620,18 @@ describe("Game", () => {
         vm.applyAnalysisMove("terrans up nav.");
         expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
 
+        // `+` forks: the new line opens carrying what the old one had, so the shared prefix does not
+        // have to be re-clicked (and cannot be mis-clicked) to compare two continuations of it.
         vm.addAnalysisLine();
         expect(vm.analysisActiveLine).to.equal(1);
-        expect(vm.analysisEntries).to.deep.equal([]); // a NEW line, not a copy of Line 1
+        expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
+
+        vm.resetAnalysisLine(); // ...and Reset is still the one press that blanks it
+        expect(vm.analysisEntries).to.deep.equal([]);
         vm.applyAnalysisMove("terrans up gaia.");
         expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up gaia." }]);
 
-        // ...and Line 1 is untouched, and comes back exactly as it was left.
+        // ...and Line 1 is untouched throughout, and comes back exactly as it was left.
         vm.selectAnalysisLine(0);
         expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
         expect(vm.analysisLines).to.deep.equal([
@@ -1642,16 +1647,32 @@ describe("Game", () => {
         const vm = mountAsSeat(0);
         vm.enterAnalysisMode();
         vm.applyAnalysisMove("terrans up nav.");
-        vm.addAnalysisLine();
+        vm.addAnalysisLine(); // forks, so Line 2 starts as [up nav]
         vm.applyAnalysisMove("terrans up gaia.");
+        expect(vm.analysisEntries.length).to.equal(2);
 
         vm.undoLastAnalysisEntry();
-        expect(vm.analysisEntries).to.deep.equal([]);
+        expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
         expect(vm.analysisLines[0]).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
 
-        vm.selectAnalysisLine(0);
         vm.resetAnalysisLine();
-        expect(vm.analysisLines).to.deep.equal([[], []]);
+        expect(vm.analysisLines[1]).to.deep.equal([]);
+        expect(vm.analysisLines[0]).to.deep.equal([{ kind: "move", move: "terrans up nav." }]); // untouched
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      // The fork must not share entry objects with the line it came from.
+      it("forks a copy, not a second reference to the same line", () => {
+        const vm = mountAsSeat(0);
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("terrans up nav.");
+        vm.addAnalysisLine();
+
+        expect(vm.analysisLines[0]).to.deep.equal(vm.analysisLines[1]);
+        expect(vm.analysisLines[0]).to.not.equal(vm.analysisLines[1]);
+        expect(vm.analysisLines[0][0]).to.not.equal(vm.analysisLines[1][0]);
 
         vm.$el.remove();
         vm.$destroy();
@@ -1662,6 +1683,7 @@ describe("Game", () => {
         first.enterAnalysisMode();
         first.applyAnalysisMove("terrans up nav.");
         first.addAnalysisLine();
+        first.resetAnalysisLine();
         first.applyAnalysisMove("terrans up gaia.");
         first.exitAnalysisMode();
         first.$el.remove();
@@ -1697,6 +1719,7 @@ describe("Game", () => {
         vm.enterAnalysisMode();
         vm.applyAnalysisMove("terrans up nav.");
         vm.addAnalysisLine();
+        vm.resetAnalysisLine();
         vm.applyAnalysisMove("terrans up gaia.");
 
         // Closing Line 1 while Line 2 is open: the open line must stay the one the player is looking
@@ -1720,6 +1743,8 @@ describe("Game", () => {
         vm.applyAnalysisMove("terrans up nav.");
         vm.addAnalysisLine();
 
+        vm.resetAnalysisLine(); // blank the fork, so the two tabs describe different lines
+
         const summaries = vm.analysisLineSummaries;
         expect(summaries.length).to.equal(2);
         expect(summaries[0].label).to.equal("Line 1");
@@ -1738,6 +1763,7 @@ describe("Game", () => {
         vm.enterAnalysisMode();
         vm.applyAnalysisMove("terrans up nav.");
         vm.addAnalysisLine();
+        vm.resetAnalysisLine();
         vm.applyAnalysisMove("terrans up gaia.");
         vm.selectAnalysisLine(0);
         spyDispatch(vm);

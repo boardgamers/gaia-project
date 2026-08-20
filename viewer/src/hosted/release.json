@@ -1,7 +1,20 @@
 {
-  "version": "5.74.0",
+  "version": "5.74.1",
   "releasedAt": "2026-08-20",
   "entries": [
+    {
+      "version": "5.74.1",
+      "releasedAt": "2026-08-20",
+      "kind": "update",
+      "title": "Forking a sandbox line",
+      "impact": "",
+      "changes": [
+        "Pressing + in sandbox mode now carries the line you're on into the new tab, so you can take it somewhere else from that point without replaying the shared opening. Reset blanks it if you'd rather start over."
+      ],
+      "userChanges": [
+        "Pressing + in sandbox mode now carries the line you're on into the new tab, so you can take it somewhere else from that point without replaying the shared opening. Reset blanks it if you'd rather start over."
+      ]
+    },
     {
       "version": "5.74.0",
       "releasedAt": "2026-08-20",

@@ -90,6 +90,18 @@ describe("AnalysisLineTabs", () => {
     expect(emitted().add.length).to.equal(1);
   });
 
+  // `+` forks the open line, so the control has to say so - a copy that arrived unannounced would be
+  // a surprise. On an empty line there is nothing to fork and the copy wording would just confuse.
+  it("says the plus carries the open line on, once that line has something in it", () => {
+    const withMoves = tabs({ lines: [line({ moves: 3, victoryPoints: 5, applied: 3 })], active: 0 });
+    expect(withMoves.container.querySelector(".analysis-tabs__add").getAttribute("title")).to.contain(
+      "Carry on from here"
+    );
+
+    const empty = tabs({ lines: [line()], active: 0 });
+    expect(empty.container.querySelector(".analysis-tabs__add").getAttribute("title")).to.contain("Start another line");
+  });
+
   it("stops offering new lines at the cap", () => {
     const lines = Array.from({ length: MAX_ANALYSIS_LINES }, (_, i) => line({ label: `Line ${i + 1}` }));
     const { container } = tabs({ lines, active: 0 });

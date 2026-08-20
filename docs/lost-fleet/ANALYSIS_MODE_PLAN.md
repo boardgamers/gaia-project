@@ -785,7 +785,18 @@ one:
   so on."_ Naming is a thing to do before you can get on with the question, and the tab already
   carries the label that matters for comparing — its own result.
 
-### 13.2 The one thing tabs alone do not do
+### 13.2 `+` forks (owner instruction, same day)
+
+Pressing `+` copies the line you are on into the new tab, rather than opening an empty one. That is
+the whole of "forking a line": play the shared opening once, press `+`, and carry on differently.
+Reset is still one press away when starting over was what was wanted — which is why the copy can be
+the default without taking anything away.
+
+Deep-copied, not a second reference to the same entry objects. Nothing edits an entry in place today
+(every path replaces the whole array), but two lines pointing at one object is a trap waiting for the
+first path that does.
+
+### 13.3 The one thing tabs alone do not do
 
 A strip that only lets you _switch_ between lines does not let you _compare_ them. Switching replaces
 the whole board, so line A has to be held in your head while line B is on screen — which is precisely
@@ -796,9 +807,9 @@ So **each tab carries its own outcome**: the VP it ends on relative to where the
 red `!` when the line spends more than the seat has, and a `~` when the board has moved on and part
 of that line no longer applies. The answer for every line is on screen at once, and switching becomes
 something you do to _continue_ a line rather than to read it. `summarizeAnalysisLine` computes it,
-and it works for a line that is not open because every line shares one origin (§13.3).
+and it works for a line that is not open because every line shares one origin (§13.4).
 
-### 13.3 Why lines are cheap
+### 13.4 Why lines are cheap
 
 `AnalysisLineSet` puts `baseRound`/`baseMoveCount` on the **set**, not on each line: the sandbox
 clones the board once on entry and every line is a different sequence of turns from that one point.
@@ -806,29 +817,29 @@ Three things fall out for free:
 
 - Switching lines is a replay, not a second board takeover.
 - Staleness (§3.5) stays **one** decision for the whole set rather than a per-line one.
-- Any line's end state can be computed without leaving the line you are on — which is what §13.2
+- Any line's end state can be computed without leaving the line you are on — which is what §13.3
   needs.
 
-### 13.4 Decisions
+### 13.5 Decisions
 
-| Question                                        | Decision                                                                                                                                                                                                                                                                                       |
-| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Does `+` copy the current line?                 | **No, empty.** "New line" is what the control says; a line that silently arrived pre-loaded would be a worse surprise than re-clicking a shared prefix. Forking from a point is not built.                                                                                                     |
-| How many lines?                                 | `MAX_ANALYSIS_LINES` = 5. The cap is the header's width, not localStorage's quota — past this the tabs stop fitting one row on a phone.                                                                                                                                                        |
-| Deleting                                        | An `✕` inside the **open** tab only, never on the last line. An `✕` on every tab is five ways to lose work one mis-tap from the control used to switch between them.                                                                                                                           |
-| What does Commit clear?                         | **Every line.** The others were alternatives to the move just played for real, worked out from a board the game has left. `AnalysisCommitConfirm.vue`'s footer says so rather than implying "this line" only.                                                                                  |
-| Which line is open on re-entry?                 | The one that was open on exit — `active` is stored with the set.                                                                                                                                                                                                                               |
-| What happens to the other lines on a re-anchor? | They keep their entries and are trimmed the first time each is opened. Re-anchoring all of them up front would silently edit lines that are not on screen, and cost one replay per tab. Their tabs stay honest in the meantime because `summarizeAnalysisLine` replays against the new origin. |
-| A half-composed turn when switching?            | Discarded, silently. It is not a line entry until it completes (`applyAnalysisMove`), so it belongs to the line being left.                                                                                                                                                                    |
+| Question                                        | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Does `+` copy the current line?                 | **Yes — `+` forks.** It shipped as an empty new line and was changed the same day on owner instruction. The comparison you actually want is nearly always "three moves in, X or Y?", and an empty tab makes you re-click the shared prefix by hand for every alternative — tedious, and worse, one misclick while re-entering it compares two lines that do not share the prefix you think they do. Reset already blanks a line in one press, so making the fork the default costs nothing. |
+| How many lines?                                 | `MAX_ANALYSIS_LINES` = 5. The cap is the header's width, not localStorage's quota — past this the tabs stop fitting one row on a phone.                                                                                                                                                                                                                                                                                                                                                     |
+| Deleting                                        | An `✕` inside the **open** tab only, never on the last line. An `✕` on every tab is five ways to lose work one mis-tap from the control used to switch between them.                                                                                                                                                                                                                                                                                                                        |
+| What does Commit clear?                         | **Every line.** The others were alternatives to the move just played for real, worked out from a board the game has left. `AnalysisCommitConfirm.vue`'s footer says so rather than implying "this line" only.                                                                                                                                                                                                                                                                               |
+| Which line is open on re-entry?                 | The one that was open on exit — `active` is stored with the set.                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| What happens to the other lines on a re-anchor? | They keep their entries and are trimmed the first time each is opened. Re-anchoring all of them up front would silently edit lines that are not on screen, and cost one replay per tab. Their tabs stay honest in the meantime because `summarizeAnalysisLine` replays against the new origin.                                                                                                                                                                                              |
+| A half-composed turn when switching?            | Discarded, silently. It is not a line entry until it completes (`applyAnalysisMove`), so it belongs to the line being left.                                                                                                                                                                                                                                                                                                                                                                 |
 
-### 13.5 Migration — read before touching the storage shape
+### 13.6 Migration — read before touching the storage shape
 
 The pre-tabs value is a bare `AnalysisLine` under the **same** key, and `master` deploys straight to
 production, so real in-progress games are carrying one right now. `loadAnalysisLines` tells the two
 shapes apart by which field they carry (`entries` vs `lines`) and reads a single stored line back as
 Line 1. A second key would only have left the old one behind for a later version to trip over.
 
-### 13.6 File map
+### 13.7 File map
 
 | File                                         | What it holds                                                                                                                                                                   |
 | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -837,7 +848,7 @@ Line 1. A second key would only have left the old one behind for a later version
 | `viewer/src/components/Game.vue`             | `analysisLines`/`analysisActiveLine`/`analysisLineSummaries`, `selectAnalysisLine`/`addAnalysisLine`/`closeAnalysisLine`, and `analysisEntries` as a getter over the open line  |
 | `viewer/src/components/Commands.vue`         | Renders the strip in BOTH headers, and the `flex-wrap` that gives it its own row                                                                                                |
 
-### 13.7 Two traps
+### 13.8 Two traps
 
 - **The striped header is click-to-exit** (§5.4). The strip's root carries `@click.stop` for exactly
   that reason: without it every press on a tab would also close the sandbox, and would land as

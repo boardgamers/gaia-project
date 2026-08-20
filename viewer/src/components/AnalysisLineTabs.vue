@@ -57,16 +57,15 @@
       </button>
     </div>
 
+    <!-- `+` forks the OPEN line rather than starting an empty one - see Game.vue's addAnalysisLine
+         for why. The label says so, because a control that silently copies would otherwise be a
+         surprise; Reset blanks the fork in one press when starting over was what was wanted. -->
     <button
       type="button"
       class="analysis-tabs__add"
       :disabled="lines.length >= maxLines"
-      :title="
-        lines.length >= maxLines
-          ? `${maxLines} lines is the most that fits - delete one to start another`
-          : 'Start another line from the same board'
-      "
-      aria-label="Start another line"
+      :title="addTitle"
+      :aria-label="addTitle"
       @click="$emit('add')"
     >
       +
@@ -87,6 +86,17 @@ export default Vue.extend({
   computed: {
     maxLines(): number {
       return MAX_ANALYSIS_LINES;
+    },
+    addTitle(): string {
+      const lines = this.lines as AnalysisLineSummary[];
+      if (lines.length >= MAX_ANALYSIS_LINES) {
+        return `${MAX_ANALYSIS_LINES} lines is the most that fits - delete one to start another`;
+      }
+      const open = lines[this.active as number];
+      // An empty line has nothing to fork, so the copy wording would only be confusing there.
+      return open && open.moves > 0
+        ? "Carry on from here in a new line - this one is kept as it is"
+        : "Start another line from the same board";
     },
   },
   methods: {
