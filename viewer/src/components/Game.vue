@@ -69,7 +69,7 @@
             :hide-spacer="true"
             :analysis-mode="analysisMode"
             :analysis-status="analysisStatus"
-            :analysis-move-count="analysisEntries.length"
+            :analysis-move-count="analysisAppliedEntries.length"
             :analysis-committable-moves="analysisCommittableMoves.length"
             :analysis-commit-plan="analysisCommitPlan"
             :analysis-faction-choices="analysisFactionChoices"
@@ -103,7 +103,7 @@
           :class="['mb-1', 'space-map', 'col-md-7']"
           :analysis-offered="analysisOffered"
           :analysis-active="analysisMode"
-          :analysis-can-edit="analysisEntries.length > 0"
+          :analysis-can-edit="analysisAppliedEntries.length > 0"
           @analysis-toggle="toggleAnalysisMode"
           @analysis-undo="undoLastAnalysisEntry"
           @analysis-reset="resetAnalysisLine"
@@ -209,7 +209,7 @@
             :premove-context="premoveContext"
             :analysis-mode="analysisMode"
             :analysis-status="analysisStatus"
-            :analysis-move-count="analysisEntries.length"
+            :analysis-move-count="analysisAppliedEntries.length"
             :analysis-committable-moves="analysisCommittableMoves.length"
             :analysis-commit-plan="analysisCommitPlan"
             :analysis-faction-choices="analysisFactionChoices"
@@ -325,7 +325,7 @@
         :class="['mb-1', 'space-map', 'col-md-7']"
         :analysis-offered="analysisOffered"
         :analysis-active="analysisMode"
-        :analysis-can-edit="analysisEntries.length > 0"
+        :analysis-can-edit="analysisAppliedEntries.length > 0"
         @analysis-toggle="toggleAnalysisMode"
         @analysis-undo="undoLastAnalysisEntry"
         @analysis-reset="resetAnalysisLine"
@@ -337,7 +337,7 @@
         :currentMove="currentMove"
         :analysis-mode="analysisMode"
         :analysis-status="analysisStatus"
-        :analysis-move-count="analysisEntries.length"
+        :analysis-move-count="analysisAppliedEntries.length"
         :analysis-committable-moves="analysisCommittableMoves.length"
         :analysis-commit-plan="analysisCommitPlan"
         :analysis-faction-choices="analysisFactionChoices"
@@ -420,12 +420,14 @@ import {
   advancePastOwnPass,
   analysisCommitPrefix,
   analysisFactionPool,
+  applyLeechAdjustment,
   assumedPowerOf,
   buildAnalysisLineup,
   chargedPowerTotal,
   clearAnalysisLine,
   computeAnalysisStatus,
   analysisLineSetSize,
+  dropPlayedAnalysisPrefix,
   emptyAnalysisLineSet,
   factionSeedAvailable,
   loadAnalysisLines,
@@ -433,6 +435,7 @@ import {
   MAX_ANALYSIS_LINES,
   moveBelongsToSeat,
   normalizeAnalysisLineSet,
+  ownMoveCount,
   planAnalysisCommit,
   replayAnalysisLine,
   saveAnalysisLines,
@@ -570,6 +573,13 @@ export default class Game extends Vue {
   analysisSeat: number = null;
   analysisBaseRound: number = null;
   analysisBaseMoveCount: number = null;
+  // The REAL move history the origin was cloned from. Not `analysisOrigin.moveHistory`, which is a
+  // different list: `settleAnalysisClone`/`advancePastOwnPass` play opponents' declines, boosters,
+  // starting mines and passes through `engine.move()`, and every one of those is pushed onto the
+  // clone's own history. That drift is why an opponent's turn used to force-close the sandbox
+  // whenever it had been opened during a leech pause or after this seat had passed - see
+  // `reanchorAnalysisLine`, which compares against this instead.
+  analysisRealHistory: string[] = [];
   // §13's lines. Every line is rooted at the same `analysisOrigin` (that is what makes switching
   // between them a replay rather than a second board takeover), so `analysisBaseRound`/
   // `analysisBaseMoveCount` above stay session-wide rather than becoming per-line - and staleness
@@ -578,6 +588,21 @@ export default class Game extends Vue {
   // because every line already persists on every completed turn (see `setAnalysisEntries`).
   analysisLines: AnalysisEntry[][] = [[]];
   analysisActiveLine = 0;
+  // How many of the OPEN line's entries actually replayed onto the current origin - `analysisEntries`
+  // is what is stored, `analysisAppliedEntries` is what is on the board, and the two differ only
+  // while a line carries a tail that no longer applies.
+  //
+  // A line used to be TRUNCATED to that prefix and the truncation persisted immediately, so anything
+  // that made an early entry illegal - an opponent taking your hex, or (before
+  // `dropPlayedAnalysisPrefix`) your own move making entry 1 unplayable - silently deleted every
+  // move after it, with no way back. Nothing is thrown away now: the strip already flags a line whose
+  // `applied` is short of its `moves` (AnalysisLineTabs.vue's `~`), the dead tail gets another chance
+  // on every re-anchor, and it is dropped only when the player themselves edits the line.
+  analysisAppliedCount = 0;
+  // Charge 1 presses made while a turn is half-composed (see `chargeAnalysisPower`). They are applied
+  // to the board as displayed and only become an `adjust` entry once that turn completes, so the
+  // charge lands where the player is looking rather than ahead of the turn in progress.
+  analysisPendingCharge = 0;
   // One summary per line for the tab strip, recomputed only when a line actually changes - see
   // `refreshAnalysisLineSummaries` for why this is a plain field rather than a computed getter.
   analysisLineSummaries: AnalysisLineSummary[] = [];
@@ -693,6 +718,8 @@ export default class Game extends Vue {
           this.analysisComposeAssumedPower = 0;
           this.analysisSeat = null;
           this.analysisPendingRestore = null;
+          this.analysisPendingCharge = 0;
+          this.analysisRealHistory = [];
           this.analysisNotice =
             "A new move arrived, so sandbox mode closed. Your saved line is still there - Enter sandbox mode to continue where you left off.";
           this.$store.commit("setSealedBidBackend", this.analysisSealedBidBackendBackup);
@@ -1555,7 +1582,9 @@ export default class Game extends Vue {
       return null;
     }
     const data = this.engine?.players[this.analysisSeat]?.data;
-    return data ? computeAnalysisStatus(data, chargedPowerTotal(this.analysisEntries)) : null;
+    return data
+      ? computeAnalysisStatus(data, chargedPowerTotal(this.analysisAppliedEntries) + this.analysisPendingCharge)
+      : null;
   }
 
   /**
@@ -1576,9 +1605,12 @@ export default class Game extends Vue {
     if (!this.analysisMode || !this.analysisOrigin || this.analysisSeat === null || this.analysisRolledForward) {
       return empty;
     }
+    // The applied prefix, not the stored line: a tail that does not replay describes a position the
+    // sandbox itself never reached, so it can hardly describe moves the real game would accept.
+    const entries = this.analysisAppliedEntries;
     const { moves, cut } = analysisCommitPrefix(
       this.analysisOrigin,
-      this.analysisEntries,
+      entries,
       this.analysisSeat,
       this.analysisBaseRound
     );
@@ -1588,7 +1620,7 @@ export default class Game extends Vue {
     return planAnalysisCommit({
       committable: moves,
       cut,
-      lineMoves: this.analysisEntries.filter((e): e is AnalysisMoveEntry => e.kind === "move").map((e) => e.move),
+      lineMoves: entries.filter((e): e is AnalysisMoveEntry => e.kind === "move").map((e) => e.move),
       onTurn: this.analysisSeatIsOnTurnForReal,
       hosted: this.isHostedMode,
       queueRoom: 3 - queuedForSeat,
@@ -1668,7 +1700,8 @@ export default class Game extends Vue {
     this.analysisBackup = JSON.parse(JSON.stringify(this.engine));
     this.analysisOrigin = Engine.fromData(JSON.parse(JSON.stringify(this.engine)));
     this.analysisSeat = seat;
-    this.analysisBaseMoveCount = this.engine.moveHistory.length;
+    this.analysisRealHistory = [...this.engine.moveHistory];
+    this.analysisBaseMoveCount = this.analysisRealHistory.length;
     // Mark the seat BEFORE anything below: every step regenerates the available commands, and they
     // must be generated with affordability already lifted (§12) or the board opens showing only what
     // this seat could really pay for.
@@ -1697,6 +1730,7 @@ export default class Game extends Vue {
     this.analysisMode = true;
     this.analysisNotice = null;
     this.analysisPendingRestore = null;
+    this.analysisPendingCharge = 0;
     this.analysisSummaryCache = new Map();
     this.resolveAnalysisStaleness(seat, loadAnalysisLines(seat));
   }
@@ -1735,10 +1769,17 @@ export default class Game extends Vue {
     if (seat === null || !this.analysisOrigin) {
       return false;
     }
-    const originHistory = this.analysisOrigin.moveHistory ?? [];
+    const originHistory = this.analysisRealHistory;
     const incomingHistory: string[] = payload.moveHistory ?? [];
     // Strictly-further-along-the-same-history, the same test the offline mirror uses before it
     // accepts a refresh (offline-mirror.ts's compareMoveHistories): anything else is a divergence.
+    //
+    // Compared against the REAL history the origin was cloned from, never the clone's own: opening
+    // the sandbox during a leech pause, or after this seat had already passed, plays opponents'
+    // answers on the clone and pushes each of them onto `analysisOrigin.moveHistory`. That made the
+    // clone's history both longer than the real one and different from it, so this test failed on
+    // every subsequent opponent turn and the sandbox force-closed instead of re-anchoring - in
+    // exactly the states an async game sits in most of the time.
     if (
       incomingHistory.length <= originHistory.length ||
       !originHistory.every((move, index) => move === incomingHistory[index])
@@ -1761,6 +1802,7 @@ export default class Game extends Vue {
     // stop one call short and hand the board back with the opponent still on turn.
     settleAnalysisClone(incoming, seat);
     this.analysisOrigin = incoming;
+    this.analysisRealHistory = [...incomingHistory];
     this.analysisBaseMoveCount = incomingHistory.length;
     // The origin every line is measured against just changed, so every cached tab summary is stale.
     // The memo keys carry `analysisBaseMoveCount`, so this is belt-and-braces rather than the only
@@ -1768,17 +1810,17 @@ export default class Game extends Vue {
     // the rest of the session.
     this.analysisSummaryCache = new Map();
 
-    // §13: only the OPEN line is replayed here. The others keep their entries and are trimmed to
-    // what still applies the first time each is opened, which is also when a player could notice -
-    // re-anchoring all of them up front would mean silently editing lines that are not on screen,
-    // and would make an opponent's turn cost one replay per tab instead of one.
+    // §13: only the OPEN line is replayed here. The others keep their entries and are re-measured
+    // the first time each is opened - re-anchoring all of them up front would make an opponent's
+    // turn cost one replay per tab instead of one. Their tabs stay honest in the meantime, since
+    // `summarizeAnalysisLine` replays each against this same new origin.
     const entries = this.analysisEntries;
-    const applied = this.setAnalysisEntries(entries);
+    const applied = this.setAnalysisEntries(entries, { prune: false });
     this.analysisNotice =
       applied < entries.length
         ? `Someone moved, and ${entries.length - applied} of your ${
             entries.length
-          } sandbox moves no longer apply - the rest was replayed against the new board.`
+          } sandbox moves no longer apply - the rest was replayed against the new board. Nothing was deleted; Undo drops what does not fit.`
         : entries.length > 0
         ? "Someone moved. Your sandbox line still applies and was replayed against the new board."
         : null;
@@ -1812,7 +1854,7 @@ export default class Game extends Vue {
       return;
     }
     if (stored.baseMoveCount === this.analysisBaseMoveCount) {
-      this.setAnalysisLineSet(stored);
+      this.setAnalysisLineSet(stored, { prune: false });
       return;
     }
     if (this.engine.round > stored.baseRound + 1) {
@@ -1831,28 +1873,60 @@ export default class Game extends Vue {
     }
     // §13: the whole set is adopted, not just the line that was open. The others are replayed lazily
     // - `setAnalysisLineSet` only puts the active one on the board, and each remaining line is
-    // trimmed to what still applies the first time it is opened. Their tabs report the same thing in
-    // the meantime, since `summarizeAnalysisLine` replays against this same re-anchored origin.
+    // measured against the new origin the first time it is opened. Their tabs report the same thing
+    // in the meantime, since `summarizeAnalysisLine` replays against this same re-anchored origin.
     const active = stored.lines[normalizeAnalysisLineSet(stored).active] ?? [];
-    const applied = this.setAnalysisLineSet(stored);
+    const applied = this.setAnalysisLineSet(stored, { prune: false });
     this.analysisNotice =
       applied < active.length
         ? `Opponents moved since this line was saved. Replayed ${applied} of ${active.length} moves - the rest no longer applied.`
         : "Opponents moved since this line was saved - replayed against the current board.";
   }
 
-  /** The player's answer to `analysisPendingRestore`'s prompt: replay the stored line anyway. */
+  /**
+   * The player's answer to `analysisPendingRestore`'s prompt: replay the stored line anyway.
+   *
+   * The leading entries this seat has since played FOR REAL are dropped first
+   * (`dropPlayedAnalysisPrefix`), which is the whole difference between "restored the rest of my
+   * line" and the reported "0 moves restored". Following the line at the table is the case this
+   * prompt exists for, and it was the case that worked worst: a straight replay starts at entry 1,
+   * which is precisely the move that has just been played and can no longer be played again, so it
+   * stopped there - and the more faithfully the line had been followed, the less of it came back.
+   *
+   * Applied per line, not just the open one: every line in the set shares the same origin, and the
+   * moves that have gone live are gone from all of them equally.
+   */
   restoreAnalysisLine() {
     const stored = this.analysisPendingRestore;
     if (!stored) {
       return;
     }
     this.analysisPendingRestore = null;
-    const active = stored.lines[normalizeAnalysisLineSet(stored).active] ?? [];
-    const applied = this.setAnalysisLineSet(stored);
+    const normalized = normalizeAnalysisLineSet(stored);
+    // How many real moves of this seat's own there are to account for the dropped entries - the
+    // budget that stops this from editing a line the player never actually played.
+    const budget = ownMoveCount(this.engine, this.engine.moveHistory.slice(stored.baseMoveCount), this.analysisSeat);
+    let played = 0;
+    const lines = normalized.lines.map((entries) => {
+      const result = dropPlayedAnalysisPrefix(
+        this.analysisOrigin,
+        entries,
+        this.analysisSeat,
+        this.analysisBaseRound,
+        budget
+      );
+      played = Math.max(played, result.dropped);
+      return result.entries;
+    });
+    const active = lines[normalized.active] ?? [];
+    const applied = this.setAnalysisLineSet({ ...normalized, lines }, { prune: false });
+    const playedNote =
+      played > 0 ? ` ${played} ${played === 1 ? "move was" : "moves were"} already played for real.` : "";
     this.analysisNotice =
       applied < active.length
-        ? `Restored ${applied} of ${active.length} moves from your saved line - the rest no longer applied.`
+        ? `Restored ${applied} of ${active.length} remaining moves - the rest no longer applied.${playedNote}`
+        : playedNote
+        ? `Restored the rest of your saved line.${playedNote}`
         : null;
   }
 
@@ -1886,6 +1960,9 @@ export default class Game extends Vue {
     // was played, so re-entering reads them all back - including which one was open (§13).
     this.analysisLines = [[]];
     this.analysisActiveLine = 0;
+    this.analysisAppliedCount = 0;
+    this.analysisPendingCharge = 0;
+    this.analysisRealHistory = [];
     this.analysisLineSummaries = [];
     this.analysisSummaryCache = new Map();
     this.$store.commit("setSealedBidBackend", this.analysisSealedBidBackendBackup);
@@ -1914,10 +1991,31 @@ export default class Game extends Vue {
       } catch {
         return;
       }
-      if (copy.newTurn) {
-        this.setAnalysisEntries([...this.analysisEntries, { kind: "move", move }]);
-        return;
+    }
+    // Charge 1 presses made during this turn land HERE - after the move, on the position the player
+    // is looking at - rather than as a line entry ahead of it. See `chargeAnalysisPower`.
+    const pending = this.analysisPendingCharge;
+    if (pending > 0) {
+      try {
+        applyLeechAdjustment(copy, this.analysisSeat, pending);
+        copy.clearAvailableCommands();
+        copy.generateAvailableCommands();
+      } catch {
+        // Same treatment an illegal adjust entry gets in replayAnalysisLine: drop it, keep the board.
       }
+    }
+    if (copy.newTurn && (move || pending > 0)) {
+      // The turn is complete (or there was no turn and this is a bare charge), so the pending charge
+      // becomes a real line entry - after the move, which is the order it was played in and the order
+      // that replays back to exactly what was on screen. Cleared before `setAnalysisEntries` only for
+      // clarity; that method zeroes it too.
+      this.analysisPendingCharge = 0;
+      this.setAnalysisEntries([
+        ...this.analysisAppliedEntries,
+        ...(move ? [{ kind: "move", move } as AnalysisEntry] : []),
+        ...(pending > 0 ? [{ kind: "adjust", charge: pending } as AnalysisEntry] : []),
+      ]);
+      return;
     }
     this.handleData(copy);
   }
@@ -1959,26 +2057,51 @@ export default class Game extends Vue {
     }));
   }
 
-  /** Sandbox "Charge 1" button (Commands.vue) - appends a leech adjustment entry (§4.4) each press,
-   * the same fiction the header's charged total already reads, just player-triggered instead of
-   * implicit. */
+  /**
+   * Sandbox "Charge 1" button (Commands.vue) - one leech adjustment (§4.4) per press, the same
+   * fiction the header's charged total already reads, just player-triggered instead of implicit.
+   *
+   * The charge is applied to the position ON SCREEN. That sounds like a restatement of what the
+   * button does, and it is exactly what it did not do (owner-reported bug, 2026-08-20). The entry
+   * used to be appended to the line and the whole line replayed, which puts the charge BEFORE any
+   * turn currently half-composed - and a half-composed turn is the normal state here, because a free
+   * action (burn, a power spend, a resource conversion) leaves the button chain back at the top-level
+   * menu with the turn still open, which is precisely when `showAnalysisChargeButtons` shows this
+   * button at all. So a player who had spent 4 power that turn, and was therefore looking at a full
+   * bowl 1, saw the charge move a token from bowl 2 to bowl 3: correct for the position before the
+   * spend, nonsense against the one on screen.
+   *
+   * A press during a turn is therefore held in `analysisPendingCharge` and applied by
+   * `applyAnalysisMove` after that turn's own moves, becoming an `adjust` entry behind the move once
+   * the turn completes. With no turn in progress the base engine is already `newTurn`, so the same
+   * path commits it straight to the line - which is what it always did, and still the common case.
+   */
   chargeAnalysisPower() {
     if (!this.analysisMode) {
       return;
     }
-    this.editAnalysisLineKeepingComposedTurn([...this.analysisEntries, { kind: "adjust", charge: 1 }]);
+    this.analysisPendingCharge += 1;
+    this.applyAnalysisMove(this.currentMove);
   }
 
-  /** Sandbox "Undo Charge" button - unlike the generic Undo above, only pops the line's last entry
-   * when that entry is itself a charge, so it can never discard a real move played after one. */
+  /** Sandbox "Undo Charge" button - unlike the generic Undo above, only takes back a charge, so it
+   * can never discard a real move. A charge pressed during the turn in progress is taken back from
+   * `analysisPendingCharge` (it is not a line entry yet); otherwise the line's last entry is popped,
+   * and only when that entry is itself a charge. */
   undoAnalysisCharge() {
-    if (!this.analysisMode || this.analysisEntries.length === 0) {
+    if (!this.analysisMode) {
       return;
     }
-    if (this.analysisEntries[this.analysisEntries.length - 1].kind !== "adjust") {
+    if (this.analysisPendingCharge > 0) {
+      this.analysisPendingCharge -= 1;
+      this.applyAnalysisMove(this.currentMove);
       return;
     }
-    this.editAnalysisLineKeepingComposedTurn(this.analysisEntries.slice(0, -1));
+    const entries = this.analysisAppliedEntries;
+    if (entries.length === 0 || entries[entries.length - 1].kind !== "adjust") {
+      return;
+    }
+    this.editAnalysisLineKeepingComposedTurn(entries.slice(0, -1));
   }
 
   /**
@@ -1986,17 +2109,19 @@ export default class Game extends Vue {
    *
    * A turn in progress lives only in the displayed engine plus `currentMove` - it is not a line
    * entry until it completes - and `setAnalysisEntries` replays the line from `analysisOrigin`, so
-   * on its own it wipes that turn out. For Undo/Reset that is the point; for the two Charge buttons
-   * it is the reported bug: press Charge 1 after clicking into a build or an action and the
-   * half-built turn silently vanished, taking its resource and power changes with it, so the bowls
-   * jumped by whatever that turn had spent rather than by the 1 power just charged - looking for all
-   * the world like the charge had gone missing or arrived twice.
+   * on its own it wipes that turn out. For Undo/Reset that is the point; for Undo Charge it is the
+   * reported bug: press it after clicking into a build or an action and the half-built turn silently
+   * vanished, taking its resource and power changes with it, so the bowls jumped by whatever that
+   * turn had spent rather than by the 1 power just taken back - looking for all the world like the
+   * charge had gone missing or arrived twice.
    *
-   * Charging mid-turn is exactly when a player wants it ("can I afford this if I leech 1?"), and the
-   * entry lands ahead of the turn being composed, which is also where a real leech would have
-   * happened. Re-applying the same partial move string against the recharged base is all it takes:
-   * more power can only ever widen what is legal, and `applyAnalysisMove` already treats a move
-   * string it cannot replay as a no-op.
+   * Re-applying the same partial move string against the edited base is all it takes: the composed
+   * turn was legal with MORE power than it now has, so `applyAnalysisMove` may find it no longer
+   * replays - which it already treats as a no-op, leaving the board on the edited line.
+   *
+   * Charge 1 no longer comes through here at all: a charge pressed mid-turn belongs AFTER that turn,
+   * not ahead of it, and lives in `analysisPendingCharge` until the turn completes. See
+   * `chargeAnalysisPower`.
    */
   private editAnalysisLineKeepingComposedTurn(entries: AnalysisEntry[]) {
     const composed = this.currentMove;
@@ -2006,12 +2131,16 @@ export default class Game extends Vue {
     }
   }
 
-  /** Undo (§1 decision #3) - pop the last entry, replay. */
+  /** Undo (§1 decision #3) - pop the last entry, replay. A line carrying a tail that no longer
+   * applies loses that tail first, in one press: those entries are not on the board, so popping the
+   * last of them would look like Undo doing nothing at all. */
   undoLastAnalysisEntry() {
-    if (!this.analysisMode || this.analysisEntries.length === 0) {
+    const entries = this.analysisEntries;
+    if (!this.analysisMode || entries.length === 0) {
       return;
     }
-    this.setAnalysisEntries(this.analysisEntries.slice(0, -1));
+    const applied = Math.min(this.analysisAppliedCount, entries.length);
+    this.setAnalysisEntries(applied < entries.length ? entries.slice(0, applied) : entries.slice(0, -1));
   }
 
   /** Reset (§1 decision #3) - clear the line, replay nothing (back to analysisOrigin as-is). */
@@ -2030,25 +2159,46 @@ export default class Game extends Vue {
     return this.analysisLines[this.analysisActiveLine] ?? [];
   }
 
+  /** The part of the open line that is actually ON the board - `analysisEntries` minus any tail that
+   * no longer replays. Everything that reads the line to describe the current position (the move
+   * count, the charged-power total, the commit plan) reads this; `analysisEntries` is what gets
+   * stored. Editing the line builds on this, which is what finally drops a dead tail - and does it
+   * on the player's own press rather than silently, behind their back, the moment they opened the
+   * tab. */
+  get analysisAppliedEntries(): AnalysisEntry[] {
+    return this.analysisEntries.slice(0, this.analysisAppliedCount);
+  }
+
   /** The single path that changes the open line's `analysisEntries`: replays the given entries from
    * `analysisOrigin` (never mutates an Engine in place - see replayAnalysisLine), persists the
    * result, and updates the displayed board. Undo/Reset/a newly-committed turn all go through this,
    * so they can never disagree about what the line replays to.
    *
-   * Trims `entries` down to the prefix that actually replayed (`applied`, always the full list
-   * during ordinary play - a just-appended or just-undone entry always replays cleanly against the
-   * same `analysisOrigin` it was validated against) before storing it as the active line and
-   * persisting it, so a §3.5 re-entry that only partially replays a stale stored line doesn't keep
-   * carrying its dead tail forward into every subsequent Undo/Reset/save. Returns `applied` so
-   * `resolveAnalysisStaleness`/`restoreAnalysisLine` can tell whether anything had to be dropped. */
-  private setAnalysisEntries(entries: AnalysisEntry[]): number {
+   * `prune` (the default) trims `entries` down to the prefix that actually replayed - during
+   * ordinary play that is the whole list anyway, since a just-appended or just-undone entry always
+   * replays cleanly against the same `analysisOrigin` it was validated against, so the trim only
+   * ever bites when the player has just edited a line that was already carrying a dead tail.
+   *
+   * `prune: false` is for the paths that ADOPT a line rather than edit one - a stored set on
+   * re-entry, a restore, a re-anchor after somebody else moved, switching tabs. Those used to trim
+   * too, and the trim was persisted on the spot: an opponent taking the hex your line's third move
+   * wanted deleted moves 3..N the instant you looked at that tab, permanently, with no undo. Nothing
+   * is deleted now - the tail is kept, `analysisAppliedCount` records where the board stops, the
+   * strip flags the line, and the tail gets another chance every time the origin moves on.
+   *
+   * Returns `applied` so `resolveAnalysisStaleness`/`restoreAnalysisLine` can say what came back. */
+  private setAnalysisEntries(entries: AnalysisEntry[], options: { prune?: boolean } = {}): number {
     const { engine, applied } = replayAnalysisLine(
       this.analysisOrigin,
       entries,
       this.analysisSeat,
       this.analysisBaseRound
     );
-    const kept = entries.slice(0, applied);
+    const kept = options.prune === false ? entries : entries.slice(0, applied);
+    this.analysisAppliedCount = applied;
+    // A pending mid-turn charge belongs to the turn that was being composed; replacing the line
+    // replaces that turn too (see `editAnalysisLineKeepingComposedTurn`, which re-applies it after).
+    this.analysisPendingCharge = 0;
     // Replaced rather than spliced: `analysisLines` is a plain array field, and Vue 2 does not
     // observe an index assignment on one - the tab strip's own summary for this line would keep
     // rendering the pre-edit figure.
@@ -2066,11 +2216,11 @@ export default class Game extends Vue {
    * turn - and puts its active line on the board. Everything that replaces more than the open line
    * goes through here, so `analysisLines`/`analysisActiveLine`/storage/the strip can never end up
    * describing different sets. Returns what `setAnalysisEntries` returned for the active line. */
-  private setAnalysisLineSet(set: AnalysisLineSet): number {
+  private setAnalysisLineSet(set: AnalysisLineSet, options: { prune?: boolean } = {}): number {
     const normalized = normalizeAnalysisLineSet(set);
     this.analysisLines = normalized.lines;
     this.analysisActiveLine = normalized.active;
-    return this.setAnalysisEntries(this.analysisEntries);
+    return this.setAnalysisEntries(this.analysisEntries, options);
   }
 
   private persistAnalysisLines() {
@@ -2128,7 +2278,10 @@ export default class Game extends Vue {
       return;
     }
     this.analysisActiveLine = index;
-    this.setAnalysisEntries(this.analysisEntries);
+    // `prune: false`: merely LOOKING at a tab must never edit it. Switching used to trim the opened
+    // line to whatever still replayed and persist that on the spot, so a line invalidated by an
+    // opponent's move was silently shortened by the act of checking on it.
+    this.setAnalysisEntries(this.analysisEntries, { prune: false });
   }
 
   /**
@@ -2148,7 +2301,9 @@ export default class Game extends Vue {
     if (!this.analysisMode || this.analysisLines.length >= MAX_ANALYSIS_LINES) {
       return;
     }
-    const fork: AnalysisEntry[] = JSON.parse(JSON.stringify(this.analysisEntries));
+    // Forks what is ON the board, not what is stored: a tail that does not replay is not part of the
+    // position being forked, and copying it into the new line would start it already broken.
+    const fork: AnalysisEntry[] = JSON.parse(JSON.stringify(this.analysisAppliedEntries));
     this.analysisLines = [...this.analysisLines, fork];
     this.analysisActiveLine = this.analysisLines.length - 1;
     this.setAnalysisEntries(fork);
@@ -2170,7 +2325,7 @@ export default class Game extends Vue {
         : Math.min(this.analysisActiveLine, lines.length - 1);
     this.analysisLines = lines;
     this.analysisActiveLine = active;
-    this.setAnalysisEntries(this.analysisEntries);
+    this.setAnalysisEntries(this.analysisEntries, { prune: false });
   }
 
   handleData(data: Engine, keepMoveHistory?: boolean) {

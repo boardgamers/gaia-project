@@ -1352,15 +1352,53 @@ describe("Game", () => {
 
         expect(vm.currentMove).to.equal("terrans action power3");
         expect(vm.engine.players[0].data.ores).to.equal(oresMidTurn); // the action is still applied
-        expect(vm.analysisEntries).to.deep.equal([
-          { kind: "adjust", charge: 1 },
-          { kind: "adjust", charge: 1 },
-        ]);
+        // The mid-turn press is held rather than filed ahead of the turn - see the bowl-order test
+        // below for why that matters - but it counts towards the header total either way.
+        expect(vm.analysisEntries).to.deep.equal([{ kind: "adjust", charge: 1 }]);
+        expect(vm.analysisPendingCharge).to.equal(1);
         expect(vm.analysisStatus.chargedPower).to.equal(2);
 
         vm.undoAnalysisCharge();
         expect(vm.currentMove).to.equal("terrans action power3");
+        expect(vm.analysisPendingCharge).to.equal(0);
         expect(vm.analysisEntries).to.deep.equal([{ kind: "adjust", charge: 1 }]);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("charges from bowl 1 whenever bowl 1 has tokens, even mid-turn (owner report, 2026-08-20)", () => {
+        // Charge 1 used to append its entry to the LINE, which replays before any turn still being
+        // composed. A free action is the normal way to be mid-turn here (the button chain is back at
+        // the top-level menu, which is the only place the button shows at all), so a player who had
+        // just spent 4 power was looking at a refilled bowl 1 while the charge was being applied to
+        // the position before that spend - and watched a token go from bowl 2 to bowl 3.
+        const vm = mountAsSeat(0);
+        vm.enterAnalysisMode();
+        // Charge everything up out of bowl 1, so bowl 1 is only refilled by the spend below.
+        vm.setAnalysisEntries([{ kind: "adjust", charge: 8 }]);
+        expect(vm.engine.players[0].data.power.area1).to.equal(0);
+
+        vm.applyAnalysisMove("terrans spend 4pw for 1q"); // free action - turn still open
+        const before = { ...vm.engine.players[0].data.power };
+        expect(before.area1).to.be.greaterThan(0);
+
+        vm.chargeAnalysisPower();
+
+        const after = vm.engine.players[0].data.power;
+        expect(after.area1).to.equal(before.area1 - 1);
+        expect(after.area2).to.equal(before.area2 + 1);
+        expect(after.area3).to.equal(before.area3);
+
+        // And once the turn completes, the charge is stored BEHIND the move - the order it was
+        // played in, and the order that replays back to exactly what was on screen.
+        vm.applyAnalysisMove("terrans spend 4pw for 1q. up nav.");
+        expect(vm.analysisEntries).to.deep.equal([
+          { kind: "adjust", charge: 8 },
+          { kind: "move", move: "terrans spend 4pw for 1q. up nav." },
+          { kind: "adjust", charge: 1 },
+        ]);
+        expect(vm.analysisPendingCharge).to.equal(0);
 
         vm.$el.remove();
         vm.$destroy();
@@ -1990,9 +2028,81 @@ describe("Game", () => {
         vm.$store.dispatch("externalData", JSON.parse(JSON.stringify(real)));
 
         expect(vm.analysisMode).to.equal(true); // still in the sandbox - just with less line
-        expect(vm.analysisEntries).to.deep.equal([]);
+        expect(vm.analysisAppliedEntries).to.deep.equal([]); // nothing of it is on the board
         expect(vm.analysisNotice).to.contain("no longer apply");
+        // ...but the entry itself is NOT deleted: the strip flags the line (applied < moves) and the
+        // player decides. Silently destroying it was the old behaviour, and it had no undo.
+        expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "nevlas action power3." }]);
+        expect(vm.analysisLineSummaries[0].moves).to.equal(1);
+        expect(vm.analysisLineSummaries[0].applied).to.equal(0);
 
+        // Undo is what drops a tail that no longer applies - one press, and only when asked.
+        vm.undoLastAnalysisEntry();
+        expect(vm.analysisEntries).to.deep.equal([]);
+
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("restores the REST of a line the player then played for real, instead of nothing at all", () => {
+        // The reported bug: follow your sandbox line at the table, come back, press Restore anyway,
+        // and get "0 moves restored" - because the replay starts at entry 1, which is exactly the
+        // move that has just been played and can never be played twice.
+        const first = mountAsSeat(0);
+        first.enterAnalysisMode();
+        first.applyAnalysisMove("terrans build m 2A3.");
+        first.applyAnalysisMove("terrans up nav.");
+        expect(first.analysisEntries).to.have.length(2);
+        first.$el.remove();
+        first.$destroy();
+
+        // The real game now contains the line's first move, played for real.
+        const second = mountAsSeat(0, new Engine([...SETUP_MOVES, "terrans build m 2A3."]));
+        second.enterAnalysisMode();
+        expect(second.analysisPendingRestore).to.not.equal(null);
+
+        second.restoreAnalysisLine();
+
+        expect(second.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
+        expect(second.analysisNotice).to.contain("already played for real");
+        second.$el.remove();
+        second.$destroy();
+      });
+
+      it("leaves a line the player did NOT play alone - nothing is dropped without a real move behind it", () => {
+        const first = mountAsSeat(0);
+        first.enterAnalysisMode();
+        first.applyAnalysisMove("terrans build m 2A3.");
+        first.$el.remove();
+        first.$destroy();
+
+        // This seat played something else entirely; the line's own first move is still ahead of them.
+        const second = mountAsSeat(0, new Engine([...SETUP_MOVES, "terrans build m 5A2."]));
+        second.enterAnalysisMode();
+        second.restoreAnalysisLine();
+
+        expect(second.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans build m 2A3." }]);
+        expect(second.analysisNotice).to.equal(null);
+        second.$el.remove();
+        second.$destroy();
+      });
+
+      it("keeps re-anchoring after an opponent's move even when the sandbox had to auto-play opponents at entry", () => {
+        // The clone's own moveHistory grows whenever settleAnalysisClone/advancePastOwnPass play an
+        // opponent's decline, booster or pass through engine.move(). Comparing THAT against the
+        // incoming real history made the two disagree at entry, so every later opponent turn
+        // force-closed the sandbox - in exactly the states an async game sits in most of the time.
+        const vm = mountAsSeat(0, new Engine([...SETUP_MOVES, "terrans pass booster5"]));
+        vm.enterAnalysisMode();
+        expect(vm.analysisRolledForward).to.equal(true);
+        expect(vm.analysisOrigin.moveHistory.length).to.be.greaterThan(vm.analysisBaseMoveCount);
+
+        const arrived = JSON.parse(JSON.stringify(vm.analysisBackup));
+        arrived.moveHistory = [...arrived.moveHistory, "nevlas up nav."];
+        vm.$store.dispatch("externalData", arrived);
+
+        expect(vm.analysisMode).to.equal(true);
+        expect(vm.analysisBaseMoveCount).to.equal(arrived.moveHistory.length);
         vm.$el.remove();
         vm.$destroy();
       });

@@ -14,6 +14,7 @@ import {
   clearAnalysisLine,
   committableAnalysisMoves,
   computeAnalysisStatus,
+  dropPlayedAnalysisPrefix,
   emptyAnalysisLineSet,
   factionSeedAvailable,
   isCheapAnalysisBuild,
@@ -23,6 +24,7 @@ import {
   markAnalysisSeat,
   moveBelongsToSeat,
   normalizeAnalysisLineSet,
+  ownMoveCount,
   planAnalysisCommit,
   replayAnalysisLine,
   resolveOpponentDecisions,
@@ -228,6 +230,70 @@ describe("moveBelongsToSeat", () => {
     expect(moveBelongsToSeat(engine, "p1 faction terrans", 0)).to.equal(true);
     expect(moveBelongsToSeat(engine, "p2 faction nevlas", 0)).to.equal(false);
     expect(moveBelongsToSeat(engine, "p2 faction nevlas", 1)).to.equal(true);
+  });
+});
+
+describe("ownMoveCount", () => {
+  it("counts only the moves in a real history slice that belong to the seat", () => {
+    const engine = new Engine(SETUP_MOVES);
+    const moves = ["terrans build m 2A3.", "nevlas charge 1pw", "terrans up nav."];
+    expect(ownMoveCount(engine, moves, 0)).to.equal(2);
+    expect(ownMoveCount(engine, moves, 1)).to.equal(1);
+    expect(ownMoveCount(engine, [], 0)).to.equal(0);
+  });
+});
+
+describe("dropPlayedAnalysisPrefix (§3.5 - restoring a line you then played for real)", () => {
+  // The board AFTER this seat played the line's first move for real, settled the way the sandbox
+  // settles an origin.
+  function originAfterRealMove(): Engine {
+    const engine = markAnalysisSeat(new Engine([...SETUP_MOVES, "terrans build m 2A3."]), 0);
+    settleAnalysisClone(engine, 0);
+    return engine;
+  }
+
+  const LINE: AnalysisEntry[] = [
+    { kind: "move", move: "terrans build m 2A3." },
+    { kind: "move", move: "terrans up nav." },
+  ];
+
+  it("drops the leading entry the seat has since played for real, keeping the rest of the line", () => {
+    // Before this, restoring here replayed from the top, hit the move that had just been played for
+    // real (the mine is on the hex), stopped there, and reported "0 of 2 restored".
+    const { entries, dropped } = dropPlayedAnalysisPrefix(originAfterRealMove(), LINE, 0, 1, 1);
+    expect(dropped).to.equal(1);
+    expect(entries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
+    expect(replayAnalysisLine(originAfterRealMove(), entries, 0, 1).applied).to.equal(1);
+  });
+
+  it("drops nothing when there were no real moves by this seat to account for it", () => {
+    const { entries, dropped } = dropPlayedAnalysisPrefix(originAfterRealMove(), LINE, 0, 1, 0);
+    expect(dropped).to.equal(0);
+    expect(entries).to.equal(LINE);
+  });
+
+  it("never drops more entries than the seat has real moves to account for", () => {
+    const line: AnalysisEntry[] = [
+      { kind: "move", move: "terrans build m 2A3." },
+      { kind: "move", move: "terrans build m 2A3." },
+    ];
+    const { dropped } = dropPlayedAnalysisPrefix(originAfterRealMove(), line, 0, 1, 1);
+    expect(dropped).to.equal(1);
+  });
+
+  it("keeps a leading entry that still applies, even with budget left to drop it", () => {
+    // A move that is still playable cannot be one that has already been played, so the budget alone
+    // is never enough to discard it.
+    const line: AnalysisEntry[] = [{ kind: "move", move: "terrans up nav." }, ...LINE];
+    const { entries, dropped } = dropPlayedAnalysisPrefix(originAfterRealMove(), line, 0, 1, 3);
+    expect(dropped).to.equal(0);
+    expect(entries).to.equal(line);
+  });
+
+  it("stops at a non-move entry, which no real move can ever have been", () => {
+    const line: AnalysisEntry[] = [{ kind: "adjust", charge: 1 }, ...LINE];
+    const { dropped } = dropPlayedAnalysisPrefix(originAfterRealMove(), line, 0, 1, 2);
+    expect(dropped).to.equal(0);
   });
 });
 

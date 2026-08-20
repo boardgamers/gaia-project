@@ -760,8 +760,12 @@ function tryMoves(engine: Engine, moves: string[]): boolean {
  * is exactly what a real leech resolved via `autoMove()` elsewhere in this file already does. Throws
  * on a non-positive or non-integer charge, exactly like an illegal move string throwing from
  * `engine.move()` - the caller (`replayAnalysisLine`) already treats "this entry threw" as "stop the
- * line here", so an invalid adjust entry is handled identically to an invalid move entry. */
-function applyLeechAdjustment(engine: Engine, seat: number, charge: number): void {
+ * line here", so an invalid adjust entry is handled identically to an invalid move entry.
+ *
+ * Exported because the Charge 1 button also has to apply a charge OUTSIDE the replay loop: pressed
+ * mid-turn, the charge belongs on the board as displayed (Game.vue's `analysisPendingCharge`), and
+ * only becomes a line entry once the turn it was pressed during completes. */
+export function applyLeechAdjustment(engine: Engine, seat: number, charge: number): void {
   if (!Number.isInteger(charge) || charge <= 0) {
     throw new Error(`Invalid analysis leech adjustment: ${charge}`);
   }
@@ -784,6 +788,60 @@ export function moveBelongsToSeat(engine: Engine, move: string, seat: number): b
     return +token[1] - 1 === seat;
   }
   return engine.players[seat]?.faction === token;
+}
+
+/** How many of `moves` (a slice of a real `moveHistory`) were played by `seat` - the budget behind
+ * `dropPlayedAnalysisPrefix`. */
+export function ownMoveCount(engine: Engine, moves: string[], seat: number): number {
+  return moves.filter((move) => moveBelongsToSeat(engine, move, seat)).length;
+}
+
+/**
+ * Drops the leading entries of a line that the player has since played FOR REAL (§3.5's own-move
+ * row), so restoring a line you followed at the table continues it instead of reporting nothing.
+ *
+ * This is the whole reason "I made the same line in the real game, then got 0 moves restored" was
+ * the common outcome: `replayAnalysisLine` starts from the top and stops at the first entry the
+ * engine rejects, and after you play the line's first move for real that entry is exactly the one
+ * that is now illegal (the mine is already on the hex). The more faithfully the line was followed,
+ * the more certainly restoring it returned nothing - and, before this, wrote that nothing back over
+ * the saved line.
+ *
+ * An entry is dropped only when BOTH tests agree, which is what keeps this from quietly editing a
+ * line the player did not play:
+ *
+ * - It no longer applies to `origin` on its own. `origin` is the board AFTER the real moves, so a
+ *   move that has genuinely already happened cannot be played again; one that still applies is
+ *   still ahead of the player and is kept, even if the budget would have allowed dropping it.
+ * - The budget is not spent. `budget` is how many real moves this seat has actually made since the
+ *   line was saved, so the line can never lose more entries than there were real moves to account
+ *   for them.
+ *
+ * Only a leading run of `move` entries is considered: an `adjust` or `faction` entry is sandbox
+ * fiction with no real move behind it (`committableAnalysisMoves`), so nothing in the real history
+ * can ever have been it, and the scan stops there rather than skipping past it.
+ */
+export function dropPlayedAnalysisPrefix(
+  origin: Engine,
+  entries: AnalysisEntry[],
+  seat: number,
+  baseRound: number,
+  budget: number
+): { entries: AnalysisEntry[]; dropped: number } {
+  let dropped = 0;
+  while (dropped < budget && dropped < entries.length) {
+    const entry = entries[dropped];
+    if (entry.kind !== "move") {
+      break;
+    }
+    // Each surviving entry is tested against `origin` alone, not against the entries before it:
+    // everything already dropped is baked into `origin` by virtue of having been played for real.
+    if (replayAnalysisLine(origin, [entry], seat, baseRound).applied === 1) {
+      break;
+    }
+    dropped++;
+  }
+  return { entries: dropped === 0 ? entries : entries.slice(dropped), dropped };
 }
 
 /**

@@ -7793,6 +7793,46 @@ Commit · ⓘ` now lives in the hazard-striped header that already existed, with
       is the third pass over this surface (see #182's dimmed stripes and #189's disabled-Commit fix) -
       if a fourth is ever needed, the rule is **opaque, not another alpha**.
 
+197.  ✅ **Restoring a sandbox line you then played for real, and Charge 1 charging the bowl you are
+      looking at (2026-08-20, viewer v5.75.0, owner-reported).** Four fixes, all in the sandbox.
+
+      - **"0 moves restored" after following your own line.** Play your sandbox line at the table,
+        come back, press **Restore anyway**, and the notice said 0 of N had been restored - and, worse,
+        wrote that nothing back over the saved line, deleting it. The staleness check was not the
+        culprit; it only decides prompt-vs-replay. `replayAnalysisLine` starts at entry 1 and stops at
+        the first entry the engine rejects, and entry 1 is exactly the move that has just been played
+        (the mine is already on the hex), so **the more faithfully the line was followed, the less of
+        it came back**. `dropPlayedAnalysisPrefix` (analysis.ts) now drops the leading entries that
+        have gone live before replaying the rest, and it drops one only when BOTH tests agree: the
+        entry no longer applies to the new origin, AND there is an unspent budget of this seat's own
+        real moves to account for it. So a line the player did not actually play is never edited.
+      - **A partly-applying line is no longer deleted.** `setAnalysisEntries` truncated the line to
+        whatever replayed and persisted that immediately, so an opponent taking the hex your third
+        move wanted deleted moves 3..N the instant you looked at that tab, permanently. The paths that
+        ADOPT a line (re-entry, restore, re-anchor, switching tabs) now pass `prune: false`:
+        `analysisAppliedCount` records where the board stops, the strip's `~` flag already says the
+        line is short, the tail gets another chance on every re-anchor, and it is dropped only when
+        the player edits the line or presses Undo.
+      - **An opponent's move stopped force-closing the sandbox.** `reanchorAnalysisLine` compared the
+        incoming real history against `analysisOrigin.moveHistory` - but that is not the real history:
+        `settleAnalysisClone`/`advancePastOwnPass` play opponents' declines, boosters, starting mines
+        and passes through `engine.move()`, and every one lands on the clone's own history. Measured:
+        entering during a leech pause or after this seat had passed left the clone at 11 entries
+        against the real 10, so the prefix test failed on the next opponent turn and the sandbox
+        closed - in exactly the states an async game sits in most of the time. It compares against
+        `analysisRealHistory` now.
+      - **Charge 1 charged the wrong bowls mid-turn.** Owner, verbatim: _"It should always charge from
+        bowl 1 to bowl 2 first if there are any in bowl 1. I saw it charged from bowl 2 to bowl 3 even
+        though there was power in bowl 1."_ The engine's `chargePower` was never wrong; the ORDER was.
+        The press appended an `adjust` entry to the line, and the line replays BEFORE any turn still
+        being composed - and being mid-turn is normal here, because a free action (a power spend, a
+        burn, a conversion) leaves the button chain back at the top-level menu, which is the only place
+        `showAnalysisChargeButtons` shows the button at all. Reproduced exactly: on screen
+        `bowl1=4 bowl2=4 bowl3=0`, press Charge 1, get `bowl1=4 bowl2=3 bowl3=1`. A mid-turn press is
+        held in `analysisPendingCharge` and applied by `applyAnalysisMove` after that turn's own moves,
+        becoming an `adjust` entry BEHIND the move once the turn completes - so it charges the position
+        on screen, and the stored line replays back to exactly what was displayed.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

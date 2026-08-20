@@ -1,7 +1,25 @@
 {
-  "version": "5.74.4",
+  "version": "5.75.0",
   "releasedAt": "2026-08-20",
   "entries": [
+    {
+      "version": "5.75.0",
+      "releasedAt": "2026-08-20",
+      "kind": "fix",
+      "title": "Sandbox: restoring a line you played, and Charge 1",
+      "impact": "",
+      "changes": [
+        "Restoring a sandbox line after playing it for real now continues the line instead of reporting 0 moves restored - the moves that have gone live are dropped and the rest comes back.",
+        "A sandbox line is no longer deleted when part of it stops applying; the tab flags it and Undo drops what does not fit.",
+        "An opponent's move no longer closes sandbox mode when the sandbox was opened during a leech answer or after you had passed.",
+        "Charge 1 now charges the bowls you are looking at, so it always lifts a token out of bowl 1 when bowl 1 has one - even part-way through a turn."
+      ],
+      "userChanges": [
+        "Restoring a sandbox line after playing it for real now continues the line instead of reporting 0 moves restored - the moves you already played are dropped and the rest comes back.",
+        "A sandbox line is no longer deleted when part of it stops applying; the tab flags it and Undo drops what does not fit.",
+        "Charge 1 now charges the bowls you are looking at, so it always lifts a token out of bowl 1 when bowl 1 has one - even part-way through a turn."
+      ]
+    },
     {
       "version": "5.74.4",
       "releasedAt": "2026-08-20",
