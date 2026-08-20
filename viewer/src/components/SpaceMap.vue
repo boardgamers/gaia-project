@@ -7,17 +7,32 @@
         :center="center"
         :key="`${center.q}x{center.r}`"
         :contentRotation="mapRotationDeg"
-        :style="`transform: translate(${hexCenter(center).x * 1.01}px, ${hexCenter(center).y * 1.01}px) rotate(${
+        :style="`transform: translate(${hexCenter(center).x * spread}px, ${hexCenter(center).y * spread}px) rotate(${
           rotation(center) * 60
         }deg);`"
       />
       <SpaceHex
         v-for="hex in looseHexes"
         :key="hex.toString()"
-        :transform="`translate(${hexCenter(hex).x * 1.01}, ${hexCenter(hex).y * 1.01})`"
+        :transform="`translate(${hexCenter(hex).x * spread}, ${hexCenter(hex).y * spread})`"
         :hex="hex"
         :isCenter="false"
         :contentRotation="mapRotationDeg"
+      />
+      <!-- Moweyds Power Rings, drawn as one layer on top of every hex rather than inside the hex
+           that carries them. The ring is stroked ON the hex border, so half its width lies in the
+           neighbouring cells: from inside a hex it survives only on the sides whose neighbours were
+           painted earlier, and the sides painted later cut it down to half thickness (SVG has no
+           z-index - paint order is document order). That is why a ring on a sector hex used to look
+           lopsided while one on a loose hex - always drawn after every sector - looked right. Here
+           every ring is painted last, so all six sides come out the same. -->
+      <use
+        v-for="ring in powerRings"
+        :key="`power-ring-${ring.key}`"
+        xlink:href="#space-hex"
+        :class="['space-hex-power-ring', ring.planet]"
+        :transform="ring.transform"
+        pointer-events="none"
       />
       <text
         v-for="label in deepSpaceLabels"
@@ -124,13 +139,14 @@ import Engine, {
   SpaceMap as SpaceMapData,
 } from "@gaia-project/engine";
 import { lostFleetTerraformingBoard } from "@gaia-project/engine/src/factions";
-import { hexCenter } from "../graphics/hex";
+import { HEX_SPREAD, hexCenter } from "../graphics/hex";
 import { gameSeed, isBeforeRound1 } from "../logic/utils";
 import Sector from "./Sector.vue";
 import { CubeCoordinates } from "hexagrid";
 import FactionWheel from "./FactionWheel.vue";
 import Definitions from "./definitions/Definitions.vue";
 import { MapMode, MapModeType } from "../data/actions";
+import { factionPiecePlanet } from "../graphics/utils";
 import SpaceHex from "./SpaceHex.vue";
 
 type Point = { x: number; y: number };
@@ -285,6 +301,48 @@ export default class SpaceMap extends Vue {
     return hexCenter(hex);
   }
 
+  /** Exposed for the template, which places sectors and loose hexes at the same 1% spread. */
+  get spread(): number {
+    return HEX_SPREAD;
+  }
+
+  /**
+   * One entry per hex carrying a Moweyds Power Ring, positioned exactly the way the hex itself is:
+   * a loose hex through the plain spread translate the template gives it, a sector hex through its
+   * sector's `translate ... rotate ... translate` chain (the <Sector> placement above, then
+   * Sector.vue's own per-hex `centerOffset`). A sector holds every hex within 2 of its center - the
+   * radius-2 hexagon Sector.vue lists - so that is how a hex finds the sector drawing it.
+   */
+  get powerRings(): { key: string; transform: string; planet: Planet }[] {
+    const rings: { key: string; transform: string; planet: Planet }[] = [];
+    for (const hex of this.map.grid.values()) {
+      const player = hex.data.powerRing;
+      if (player === undefined || player === null) {
+        continue;
+      }
+      rings.push({
+        key: hex.toString(),
+        transform: this.hexTransform(hex),
+        planet: factionPiecePlanet(this.engine.player(player).faction),
+      });
+    }
+    return rings;
+  }
+
+  /** Where `hex` ends up on screen, as an SVG transform in the rotated board's own coordinates. */
+  private hexTransform(hex: GaiaHex): string {
+    const spread = (point: Point) => `translate(${point.x * HEX_SPREAD}, ${point.y * HEX_SPREAD})`;
+    if (classifySectorId(hex.data.sector) !== LostFleetSectorType.Space) {
+      return spread(hexCenter(hex));
+    }
+    const center = this.sectors.find((sector) => this.map.distance(sector, hex) <= 2);
+    if (!center) {
+      return spread(hexCenter(hex));
+    }
+    const offset = hexCenter({ q: hex.q - center.q, r: hex.r - center.r });
+    return `${spread(hexCenter(center))} rotate(${this.rotation(center) * 60}) translate(${offset.x}, ${offset.y})`;
+  }
+
   get highlightedSectors(): CubeCoordinates[] {
     return this.$store.state.context.highlighted.sectors;
   }
@@ -321,8 +379,8 @@ export default class SpaceMap extends Vue {
     }
     return [...groups.entries()].map(([id, hexes]) => {
       const centers = hexes.map((h) => hexCenter(h));
-      const x = (centers.reduce((sum, c) => sum + c.x, 0) / centers.length) * 1.01;
-      const y = (centers.reduce((sum, c) => sum + c.y, 0) / centers.length) * 1.01;
+      const x = (centers.reduce((sum, c) => sum + c.x, 0) / centers.length) * HEX_SPREAD;
+      const y = (centers.reduce((sum, c) => sum + c.y, 0) / centers.length) * HEX_SPREAD;
       return { id, x, y };
     });
   }
@@ -585,6 +643,29 @@ export default class SpaceMap extends Vue {
 </script>
 
 <style lang="scss">
+// The Power Ring overlay (see the template) - styled here rather than in SpaceHex.vue because that
+// is where the elements now live. Stroked on the hex border itself, so it reads as the hex's own
+// glowing rim instead of a second, smaller hexagon inside a planet.
+.space-hex-power-ring {
+  fill: none;
+  stroke-width: 0.2;
+  pointer-events: none;
+  opacity: 0.98;
+  filter: drop-shadow(0 0 0.18px rgba(255, 255, 255, 0.55));
+
+  &.a {
+    stroke: var(--asteroid);
+  }
+
+  &.p {
+    stroke: var(--protoplanet);
+  }
+
+  &:not(.a):not(.p) {
+    stroke: #f7d35c;
+  }
+}
+
 .color-legend {
   stroke: black;
   stroke-width: 0.1px;

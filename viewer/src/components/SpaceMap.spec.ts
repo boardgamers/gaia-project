@@ -24,6 +24,36 @@ function loadFixtureEngine(): Engine {
   return Engine.fromData(data);
 }
 
+/** [a, b, c, d, e, f] of an SVG transform list (or of a `transform: ...` CSS declaration): the two
+ * are equivalent on an SVG element, whose transform-origin is its own (0, 0). Only the translate/
+ * rotate steps the map actually uses are understood. */
+function matrixOf(transform: string): number[] {
+  const step = /(translate|rotate)\(([^)]*)\)/g;
+  let matrix = [1, 0, 0, 1, 0, 0];
+  let match: RegExpExecArray | null;
+  while ((match = step.exec(transform)) !== null) {
+    const values = match[2].split(/[\s,]+/).map((value) => parseFloat(value));
+    if (match[1] === "translate") {
+      matrix = multiply(matrix, [1, 0, 0, 1, values[0], values[1] || 0]);
+    } else {
+      const radians = (values[0] * Math.PI) / 180;
+      matrix = multiply(matrix, [Math.cos(radians), Math.sin(radians), -Math.sin(radians), Math.cos(radians), 0, 0]);
+    }
+  }
+  return matrix;
+}
+
+function multiply(m: number[], n: number[]): number[] {
+  return [
+    m[0] * n[0] + m[2] * n[1],
+    m[1] * n[0] + m[3] * n[1],
+    m[0] * n[2] + m[2] * n[3],
+    m[1] * n[2] + m[3] * n[3],
+    m[0] * n[4] + m[2] * n[5] + m[4],
+    m[1] * n[4] + m[3] * n[5] + m[5],
+  ];
+}
+
 describe("SpaceMap", () => {
   it("renders the full hex map for a real game state without throwing", () => {
     const engine = loadFixtureEngine();
@@ -377,11 +407,13 @@ describe("SpaceMap", () => {
     const engine = new Engine(["init 2 lost-fleet-space-map"], { lostFleet: true });
     engine.players[0].faction = Faction.Moweyds;
 
+    // A hex inside a Space sector on purpose: those are the ones the ring used to render lopsided
+    // on, because a later sector's hexes paint over the half of its stroke that leaves the cell.
     const targetHex = [...engine.map.grid.values()].find(
-      (hex) => !hex.occupied() && hex.data.planet === Planet.Protoplanet
+      (hex) => !hex.occupied() && hex.hasPlanet() && classifySectorId(hex.data.sector) === LostFleetSectorType.Space
     );
 
-    expect(targetHex, "need an unoccupied Protoplanet hex").to.not.equal(undefined);
+    expect(targetHex, "need an unoccupied planet hex inside a sector").to.not.equal(undefined);
 
     targetHex.data.building = Building.PlanetaryInstitute;
     targetHex.data.player = engine.players[0].player;
@@ -389,14 +421,35 @@ describe("SpaceMap", () => {
 
     const store = makeStore();
     store.commit("receiveData", engine);
+    // Rotate the sector the ring sits in, so this also covers the rotate() step of the overlay's
+    // placement chain and not just the two translates.
+    store.commit("rotate", targetHex);
+    store.commit("rotate", targetHex);
 
     const { container } = render(SpaceMap, { store });
 
-    const moweydsHex = container.querySelector(`g.space-hex-cell[id="${targetHex}"]`);
-    const ring = moweydsHex?.querySelector(".space-hex-power-ring.p");
+    const rings = [...container.querySelectorAll(".space-hex-power-ring")];
+    expect(rings.length, "one ring, and only one, per ringed hex").to.equal(1);
+    const ring = rings[0];
+    expect(ring.classList.contains("p"), "Moweyds pieces are Protoplanet-colored").to.equal(true);
+    expect(ring.getAttribute("xlink:href") ?? ring.getAttribute("href")).to.equal("#space-hex");
 
-    expect(ring).to.not.equal(null);
-    expect(ring?.getAttribute("xlink:href") ?? ring?.getAttribute("href")).to.equal("#space-hex");
+    // The ring is stroked ON the hex border, so half of its width lies in the neighbouring cells:
+    // any hex painted after it would cut those sides down to half thickness (SVG has no z-index).
+    // It therefore has to come after every hex on the board, not just after its own.
+    const elements = [...container.querySelectorAll("*")];
+    const lastCell = Math.max(
+      ...[...container.querySelectorAll("g.space-hex-cell")].map((cell) => elements.indexOf(cell))
+    );
+    expect(lastCell, "hexes are rendered at all").to.be.greaterThan(-1);
+    expect(elements.indexOf(ring)).to.be.greaterThan(lastCell);
+
+    // ...and being outside the hex's own group, it has to reproduce that group's placement exactly.
+    const cell = container.querySelector(`g.space-hex-cell[id="${targetHex}"]`);
+    const sector = cell?.closest("g.sector");
+    expect(sector, "the ringed hex renders inside a sector").to.not.equal(null);
+    const expected = multiply(matrixOf(sector.getAttribute("style")), matrixOf(cell.getAttribute("transform")));
+    matrixOf(ring.getAttribute("transform")).forEach((value, i) => expect(value).to.be.closeTo(expected[i], 1e-9));
   });
 
   it("does not render final scoring on the map itself (it lives in ResearchBoard's 7th column instead)", () => {

@@ -7,6 +7,13 @@ export type FederationLine = { rotate: number; id: string };
 
 const vSpacing = Math.sqrt(3) / 2;
 
+/**
+ * The 1% the whole board is spread by, so neighbouring hexes show a hairline gap instead of sharing
+ * an edge exactly. Applied to every top-level placement (sectors, loose hexes and the power-ring
+ * overlay) - anything positioned without it drifts off the grid the further it sits from the origin.
+ */
+export const HEX_SPREAD = 1.01;
+
 export function hexCenter(hex: CubeCoordinatesPartial, radius = 1) {
   return {
     x: hex.r * 1.5 * radius,

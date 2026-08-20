@@ -1,7 +1,20 @@
 {
-  "version": "5.75.1",
+  "version": "5.75.2",
   "releasedAt": "2026-08-20",
   "entries": [
+    {
+      "version": "5.75.2",
+      "releasedAt": "2026-08-20",
+      "kind": "fix",
+      "title": "Moweyds power rings are the same width all the way round",
+      "impact": "",
+      "changes": [
+        "A Power Ring on a hex inside a space sector was drawn before its neighbouring hexes, which then painted over the outer half of its stroke - so it came out full width on some sides and half width on the others. Every ring is now drawn as one layer on top of the whole board."
+      ],
+      "userChanges": [
+        "A Moweyds Power Ring now has the same thickness on all six sides, wherever it sits on the map - it used to look lopsided on hexes inside a sector."
+      ]
+    },
     {
       "version": "5.75.1",
       "releasedAt": "2026-08-20",

@@ -7860,6 +7860,37 @@ Commit · ⓘ` now lives in the hazard-striped header that already existed, with
         was simply left reading the old list. It reads `analysisRealHistory` now, so the fix finally
         covers the games it was written for.
 
+199.  ✅ **Moweyds Power Rings were only full width on some sides (2026-08-20, viewer v5.75.2,
+      owner-reported).** Owner, with a screenshot of two ringed hexes: _"On the top left one it is
+      not symmetric on all the sides like it is on the right one."_ Both rings were drawn by the same
+      code; only where they sat differed.
+
+      The ring is a `#space-hex` polygon stroked at width 0.2 **on** the hex border, so half of it
+      lies in the neighbouring cells. Drawn inside its own hex (`SpaceHex.vue`), it therefore
+      survived only on the sides whose neighbours had already been painted - SVG has no z-index, so
+      paint order is document order, and every hex drawn later filled over the outer half of the
+      stroke reaching into it. Measured in a real browser on the actual rendered map before touching
+      anything: full 0.2 on the sides facing earlier hexes, ~0.11 on the sides facing later ones.
+      That is also why the owner's two examples disagreed - the good one was an Interspace hex, and
+      `SpaceMap.vue` draws all `looseHexes` after every `<Sector>`, so nothing painted over it.
+
+      Fixed by moving the rings out of the hex and into one overlay layer at the end of the board
+      group, so all of them are painted last: `powerRings` in `SpaceMap.vue` lists every hex carrying
+      `data.powerRing` and reproduces that hex's on-screen placement (a loose hex's plain spread
+      translate, or its sector's `translate ... rotate ... translate` chain, found via the sector
+      center within distance 2 - the same radius-2 hexagon `Sector.vue` lists). The `.space-hex-power-ring`
+      styling moved to `SpaceMap.vue` with the elements; the ring itself is unchanged, so a ring that
+      already looked right looks identical. Verified by rendering the real `SpaceMap` DOM in Chromium
+      before and after: all six sides now match, and each ring's bounding box is pixel-identical to
+      its own hex's. `SpaceMap.spec.ts`'s existing ring test now uses a hex inside a rotated sector
+      and asserts all three properties - one ring per ringed hex, rendered after every
+      `g.space-hex-cell`, and a transform that composes to the same matrix as its hex's own.
+      Viewer 1258/1258 passing.
+
+      **The 1% board spread is now `HEX_SPREAD` in `graphics/hex.ts`**, not a `1.01` literal repeated
+      per placement - the overlay has to use the same one or a ring drifts further off its hex the
+      further that hex sits from the origin.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:

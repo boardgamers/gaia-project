@@ -25,11 +25,6 @@
       xlink:href="#space-hex"
       :class="['space-hex-federation', 'planet', 'planet-fill', playerPlanet(mapModeHighlight)]"
     />
-    <use
-      v-if="powerRingPlayer !== null"
-      xlink:href="#space-hex"
-      :class="['space-hex-power-ring', playerPlanet(powerRingPlayer)]"
-    />
     <!-- Lost Fleet spaceship hex: fill the entire hex with the ship's identity color (rulebook
          page 7 - Twilight purple / Rebellion brown / T F Mars grey / Eclipse yellow). Drawn here,
          outside the `contentRotation` counter-rotation below, so the hexagon stays aligned to the
@@ -490,10 +485,6 @@ export default class SpaceHex extends Vue {
     }
   }
 
-  get powerRingPlayer(): PlayerEnum | null {
-    return this.hex.data.powerRing ?? null;
-  }
-
   private leechHighlightClass(mode: MapMode) {
     const hex = this.hex;
     const p = mode.player;
@@ -686,26 +677,6 @@ svg {
     fill: var(--recent);
     stroke: none;
     pointer-events: none;
-  }
-
-  .space-hex-power-ring {
-    fill: none;
-    stroke-width: 0.2;
-    pointer-events: none;
-    opacity: 0.98;
-    filter: drop-shadow(0 0 0.18px rgba(255, 255, 255, 0.55));
-
-    &.a {
-      stroke: var(--asteroid);
-    }
-
-    &.p {
-      stroke: var(--protoplanet);
-    }
-
-    &:not(.a):not(.p) {
-      stroke: #f7d35c;
-    }
   }
 
   .leech {
