@@ -1,8 +1,10 @@
 import Engine, {
   AuctionVariant,
+  AvailableCommand,
   Building,
   Command,
   Faction,
+  Federation,
   Planet,
   Phase,
   PlayerEnum,
@@ -270,6 +272,61 @@ describe("Commands", () => {
       const labels = visibleButtons().map((button) => button.textContent?.trim() ?? "");
       expect(labels.some((label) => label.includes("8vp,q"))).to.equal(true);
       expect(labels.some((label) => label.includes("8vp,8c"))).to.equal(true);
+    } finally {
+      (window as any).matchMedia = previousMatchMedia;
+    }
+  });
+
+  it("submits the federation location tapped directly on touch devices", async () => {
+    const engine = createLostFleetRoundMoveEngine();
+    const previousMatchMedia = window.matchMedia;
+    const locations = ["1A9", "6A6"];
+
+    (window as any).matchMedia = () =>
+      ({
+        matches: false,
+        addListener: () => undefined,
+        removeListener: () => undefined,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+        dispatchEvent: () => false,
+      } as MediaQueryList);
+
+    try {
+      const command: AvailableCommand<Command.FormFederation> = {
+        name: Command.FormFederation,
+        player: PlayerEnum.Player1,
+        data: {
+          tiles: [Federation.Fed4],
+          federations: locations.map((hexes) => ({ hexes, warnings: [] })),
+          claimableFederations: [],
+        },
+      };
+      engine.availableCommands = [command];
+
+      const store = makeStore();
+      store.commit("receiveData", engine);
+      const wrapper = mount(Commands, { propsData: { currentMove: "" }, store });
+      const visibleButtons = () =>
+        wrapper.findAll("#move-buttons button.move-button").filter((button) => button.isVisible());
+      const buttonWithText = (text: string) => visibleButtons().wrappers.find((button) => button.text().includes(text));
+
+      await buttonWithText("Form federation")!.trigger("click");
+      await Vue.nextTick();
+      await buttonWithText("Location 2")!.trigger("click");
+      await Vue.nextTick();
+
+      const okButton = buttonWithText("OK 2");
+      expect(okButton, "the confirmation must identify the tapped location").to.not.equal(undefined);
+      await okButton!.trigger("click");
+      await Vue.nextTick();
+      await buttonWithText("7vp,2o")!.trigger("click");
+      await Vue.nextTick();
+
+      const emitted = wrapper.emitted("command");
+      expect(emitted).to.not.equal(undefined);
+      expect(emitted![0][0]).to.equal(`terrans federation ${locations[1]} fed4`);
+      wrapper.destroy();
     } finally {
       (window as any).matchMedia = previousMatchMedia;
     }

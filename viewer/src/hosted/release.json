@@ -1,7 +1,18 @@
 {
-  "version": "5.75.2",
-  "releasedAt": "2026-08-20",
+  "version": "5.75.3",
+  "releasedAt": "2026-08-21",
   "entries": [
+    {
+      "version": "5.75.3",
+      "releasedAt": "2026-08-21",
+      "kind": "fix",
+      "title": "Fix touch federation selection",
+      "impact": "",
+      "changes": [
+        "Fixed direct federation-location taps on touch devices submitting the first generated route instead of the selected route"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.75.2",
       "releasedAt": "2026-08-20",

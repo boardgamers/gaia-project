@@ -143,6 +143,7 @@ function cycleButtons(
 
   cycler.activateButton = (button: ButtonData) => {
     const i = cycler.locationButtons.indexOf(button);
+    cycler.currentIndex = i;
     okButton.label = `OK ${i + 1} ${federationButtonDetails(true, satType, sorted[i][0])}`;
     okButton.warning = button.warning;
     okButton.tooltip = tooltipWithShortcut(null, button.warning);
