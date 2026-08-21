@@ -133,6 +133,7 @@ export type EngineModule = {
   Engine: new (moves: string[], options?: Record<string, unknown>) => EngineInstance;
   Phase: { RoundMove: string; RoundLeech: string; EndGame: string };
   parseAutoChargePreference: (pref: string) => unknown;
+  parseAutoChargeMaxPassedRoundLeech: (pref: string) => number;
 };
 
 export type EngineInstance = {
@@ -145,7 +146,7 @@ export type EngineInstance = {
   map: MapLike;
   generateAvailableCommandsIfNeeded(): unknown;
   move(line: string): void;
-  player(seat: number): { settings: { autoChargePower: unknown } };
+  player(seat: number): { settings: { autoChargePower: unknown; autoChargeMaxPassedRoundLeech?: number } };
   autoMove(): boolean;
 };
 
@@ -362,21 +363,23 @@ async function resolveLeech(
   game: GameRow,
   ordered: MoveRow[]
 ): Promise<Result> {
-  const { Engine, Phase, parseAutoChargePreference } = engineModule;
+  const { Engine, Phase, parseAutoChargeMaxPassedRoundLeech, parseAutoChargePreference } = engineModule;
 
   const pref = await backend.fetchAutoCharge(gameId, seat);
+  const autoChargePower = parseAutoChargePreference(pref);
 
   const initLine = `init ${game.player_count} ${game.seed}`;
   const clone = new Engine([initLine, ...ordered.map((m) => m.move)], engineOptions(game));
   clone.generateAvailableCommandsIfNeeded();
-  clone.player(seat).settings.autoChargePower = parseAutoChargePreference(pref);
+  clone.player(seat).settings.autoChargePower = autoChargePower;
+  clone.player(seat).settings.autoChargeMaxPassedRoundLeech = parseAutoChargeMaxPassedRoundLeech(pref);
 
   const produced = clone.autoMove();
   if (!produced || !clone.newTurn) {
     // Nothing auto-decided. For an 'ask' user that's the normal "this is a real leech, wait for a
     // human" case; for an opted-in user it's the defensive "autoMove only returns true after a full
     // turn, so this shouldn't happen" case. Either way, leave the game state untouched.
-    return pref === "ask" ? { outcome: "leech-ask" } : { outcome: "leech-auto-decide-produced-nothing" };
+    return autoChargePower === "ask" ? { outcome: "leech-ask" } : { outcome: "leech-auto-decide-produced-nothing" };
   }
 
   const move = clone.moveHistory[clone.moveHistory.length - 1];

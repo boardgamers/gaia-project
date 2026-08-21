@@ -14,7 +14,7 @@ import { ButtonData, ButtonWarning, WarningWithKey } from "../../data";
 import { boosterData } from "../../data/boosters";
 import { translateResources } from "../../data/resources";
 import { WarningKey } from "../../data/warnings";
-import { parseAutoChargePreference } from "../auto-decide";
+import { parseAutoChargeMaxPassedRoundLeech, parseAutoChargePreference } from "../auto-decide";
 import { CommandController } from "./types";
 import { autoClickButton, confirmationButton, symbolButton, textButton } from "./utils";
 import { chargeIncomeWarning, passWarningButton, rewardWarnings } from "./warnings";
@@ -58,7 +58,9 @@ export function autoLeechRiskWarning(
     return null;
   }
   const threshold = parseAutoChargePreference(autoChargePreference);
-  if (typeof threshold !== "number" || threshold < 2) {
+  const cap = parseAutoChargeMaxPassedRoundLeech(autoChargePreference);
+  const effectiveThreshold = typeof threshold === "number" && cap > 0 ? Math.min(threshold, cap) : threshold;
+  if (typeof effectiveThreshold !== "number" || effectiveThreshold < 2) {
     return null;
   }
   const stillActive = engine.players.some(
@@ -67,9 +69,10 @@ export function autoLeechRiskWarning(
   if (!stillActive) {
     return null;
   }
+  const capText = cap > 0 ? `, capped at ${cap} total power after passing` : "";
   return {
     disableKey: WarningKey.autoLeechVpRisk,
-    message: `Auto-leech is set to accept leeches up to ${threshold} power, which can cost Victory Points - other players still have turns this round, so this could happen before you act again.`,
+    message: `Auto-leech is set to accept leeches up to ${threshold} power${capText}, which can cost Victory Points - other players still have turns this round, so this could happen before you act again.`,
   };
 }
 

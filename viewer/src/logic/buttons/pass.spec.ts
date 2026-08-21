@@ -39,6 +39,23 @@ describe("autoLeechRiskWarning", () => {
     expect(autoLeechRiskWarning(engine, player, "1")).to.equal(null);
   });
 
+  it("does not warn when the passed-round cap keeps automatic leech below VP cost", () => {
+    const engine = make2pEngine();
+    const player = engine.player(PlayerEnum.Player1);
+
+    expect(autoLeechRiskWarning(engine, player, "5;passedCap=1")).to.equal(null);
+  });
+
+  it("mentions the passed-round cap when costly auto-leech is still possible", () => {
+    const engine = make2pEngine();
+    const player = engine.player(PlayerEnum.Player1);
+
+    const warning = autoLeechRiskWarning(engine, player, "5;passedCap=2");
+
+    expect(warning).to.not.equal(null);
+    expect(warning.message).to.include("capped at 2 total power");
+  });
+
   it("does not warn on the last round (already safe per the engine's own passed-player rule)", () => {
     const engine = make2pEngine();
     engine.round = Round.LastRound;

@@ -32,22 +32,42 @@ import { AutoCharge } from "@gaia-project/engine/src/player";
  * come back out as real numbers here since that's what `AutoCharge`/`askOrDeclineBasedOnCost`
  * expect. */
 export function parseAutoChargePreference(pref: string | boolean): AutoCharge {
-  if (pref === "decline-cost") {
+  if (pref === true) {
+    return 1;
+  }
+  const basePref = String(pref).split(";")[0];
+  if (basePref === "decline-cost") {
     return "decline-cost";
   }
-  const n = Number(pref);
+  const n = Number(basePref);
   return n >= 1 && n <= 5 ? (n as AutoCharge) : "ask";
+}
+
+export function parseAutoChargeMaxPassedRoundLeech(pref: string | number | boolean): number {
+  const text = String(pref);
+  const encoded = /(?:^|;)passedCap=(\d+)/.exec(text);
+  const n = Number(encoded ? encoded[1] : text);
+  return n >= 1 && n <= 20 ? n : 0;
+}
+
+export function encodeAutoChargePreference(autoChargePower: string, maxPassedRoundLeech: string | number): string {
+  const parsed = parseAutoChargePreference(autoChargePower);
+  const cap = parseAutoChargeMaxPassedRoundLeech(maxPassedRoundLeech);
+  const base = typeof parsed === "number" ? String(parsed) : parsed;
+  return cap > 0 && base !== "ask" ? `${base};passedCap=${cap}` : base;
 }
 
 export function autoDecideChargePower(
   engine: Engine,
   autoChargePower: AutoCharge,
-  isEligibleSeat: (seat: number) => boolean = () => true
+  isEligibleSeat: (seat: number) => boolean = () => true,
+  autoChargeMaxPassedRoundLeech = 0
 ): string | null {
   const before = engine.moveHistory.length;
   let iterations = 0;
   while (engine.playerToMove !== undefined && isEligibleSeat(engine.playerToMove) && iterations++ < 20) {
     engine.player(engine.playerToMove).settings.autoChargePower = autoChargePower;
+    engine.player(engine.playerToMove).settings.autoChargeMaxPassedRoundLeech = autoChargeMaxPassedRoundLeech;
     if (!engine.autoMove()) {
       break;
     }

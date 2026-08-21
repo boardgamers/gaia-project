@@ -35,9 +35,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// engine/node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/lodash.js
+// engine/node_modules/lodash/lodash.js
 var require_lodash = __commonJS({
-  "engine/node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/lodash.js"(exports, module) {
+  "engine/node_modules/lodash/lodash.js"(exports, module) {
     (function() {
       var undefined2;
       var VERSION = "4.18.1";
@@ -5533,16 +5533,16 @@ var require_lodash = __commonJS({
   }
 });
 
-// engine/node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/index.js
+// engine/node_modules/lodash/index.js
 var require_lodash2 = __commonJS({
-  "engine/node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/index.js"(exports, module) {
+  "engine/node_modules/lodash/index.js"(exports, module) {
     module.exports = require_lodash();
   }
 });
 
-// engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/lib/alea.js
+// engine/node_modules/seedrandom/lib/alea.js
 var require_alea = __commonJS({
-  "engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/lib/alea.js"(exports, module) {
+  "engine/node_modules/seedrandom/lib/alea.js"(exports, module) {
     (function(global2, module2, define2) {
       function Alea(seed) {
         var me = this, mash = Mash();
@@ -5631,9 +5631,9 @@ var require_alea = __commonJS({
   }
 });
 
-// engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/lib/xor128.js
+// engine/node_modules/seedrandom/lib/xor128.js
 var require_xor128 = __commonJS({
-  "engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/lib/xor128.js"(exports, module) {
+  "engine/node_modules/seedrandom/lib/xor128.js"(exports, module) {
     (function(global2, module2, define2) {
       function XorGen(seed) {
         var me = this, strseed = "";
@@ -5704,9 +5704,9 @@ var require_xor128 = __commonJS({
   }
 });
 
-// engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/lib/xorwow.js
+// engine/node_modules/seedrandom/lib/xorwow.js
 var require_xorwow = __commonJS({
-  "engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/lib/xorwow.js"(exports, module) {
+  "engine/node_modules/seedrandom/lib/xorwow.js"(exports, module) {
     (function(global2, module2, define2) {
       function XorGen(seed) {
         var me = this, strseed = "";
@@ -5784,9 +5784,9 @@ var require_xorwow = __commonJS({
   }
 });
 
-// engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/lib/xorshift7.js
+// engine/node_modules/seedrandom/lib/xorshift7.js
 var require_xorshift7 = __commonJS({
-  "engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/lib/xorshift7.js"(exports, module) {
+  "engine/node_modules/seedrandom/lib/xorshift7.js"(exports, module) {
     (function(global2, module2, define2) {
       function XorGen(seed) {
         var me = this;
@@ -5875,9 +5875,9 @@ var require_xorshift7 = __commonJS({
   }
 });
 
-// engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/lib/xor4096.js
+// engine/node_modules/seedrandom/lib/xor4096.js
 var require_xor4096 = __commonJS({
-  "engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/lib/xor4096.js"(exports, module) {
+  "engine/node_modules/seedrandom/lib/xor4096.js"(exports, module) {
     (function(global2, module2, define2) {
       function XorGen(seed) {
         var me = this;
@@ -5984,9 +5984,9 @@ var require_xor4096 = __commonJS({
   }
 });
 
-// engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/lib/tychei.js
+// engine/node_modules/seedrandom/lib/tychei.js
 var require_tychei = __commonJS({
-  "engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/lib/tychei.js"(exports, module) {
+  "engine/node_modules/seedrandom/lib/tychei.js"(exports, module) {
     (function(global2, module2, define2) {
       function XorGen(seed) {
         var me = this, strseed = "";
@@ -6063,9 +6063,9 @@ var require_tychei = __commonJS({
   }
 });
 
-// engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/seedrandom.js
+// engine/node_modules/seedrandom/seedrandom.js
 var require_seedrandom = __commonJS({
-  "engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/seedrandom.js"(exports, module) {
+  "engine/node_modules/seedrandom/seedrandom.js"(exports, module) {
     (function(pool, math) {
       var global2 = this, width = 256, chunks = 6, digits = 52, rngname = "random", startdenom = math.pow(width, chunks), significance = math.pow(2, digits), overflow = significance * 2, mask = width - 1, nodecrypto;
       function seedrandom4(seed, options, callback) {
@@ -6207,9 +6207,9 @@ var require_seedrandom = __commonJS({
   }
 });
 
-// engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/index.js
+// engine/node_modules/seedrandom/index.js
 var require_seedrandom2 = __commonJS({
-  "engine/node_modules/.pnpm/seedrandom@2.4.3/node_modules/seedrandom/index.js"(exports, module) {
+  "engine/node_modules/seedrandom/index.js"(exports, module) {
     var alea = require_alea();
     var xor128 = require_xor128();
     var xorwow = require_xorwow();
@@ -6227,9 +6227,9 @@ var require_seedrandom2 = __commonJS({
   }
 });
 
-// engine/node_modules/.pnpm/shuffle-seed@1.1.6/node_modules/shuffle-seed/shuffle-seed.js
+// engine/node_modules/shuffle-seed/shuffle-seed.js
 var require_shuffle_seed = __commonJS({
-  "engine/node_modules/.pnpm/shuffle-seed@1.1.6/node_modules/shuffle-seed/shuffle-seed.js"(exports, module) {
+  "engine/node_modules/shuffle-seed/shuffle-seed.js"(exports, module) {
     (function() {
       var self2 = {};
       if (Math.seedrandom) seedrandom = Math.seedrandom;
@@ -6295,18 +6295,18 @@ var require_shuffle_seed = __commonJS({
   }
 });
 
-// engine/node_modules/.pnpm/shuffle-seed@1.1.6/node_modules/shuffle-seed/index.js
+// engine/node_modules/shuffle-seed/index.js
 var require_shuffle_seed2 = __commonJS({
-  "engine/node_modules/.pnpm/shuffle-seed@1.1.6/node_modules/shuffle-seed/index.js"(exports, module) {
+  "engine/node_modules/shuffle-seed/index.js"(exports, module) {
     var seedrandom4 = require_seedrandom2();
     var self2 = require_shuffle_seed();
     module.exports = self2;
   }
 });
 
-// engine/node_modules/.pnpm/eventemitter3@3.1.2/node_modules/eventemitter3/index.js
+// engine/node_modules/eventemitter3/index.js
 var require_eventemitter3 = __commonJS({
-  "engine/node_modules/.pnpm/eventemitter3@3.1.2/node_modules/eventemitter3/index.js"(exports, module) {
+  "engine/node_modules/eventemitter3/index.js"(exports, module) {
     "use strict";
     var has = Object.prototype.hasOwnProperty;
     var prefix = "~";
@@ -6466,9 +6466,9 @@ var require_eventemitter3 = __commonJS({
   }
 });
 
-// engine/node_modules/.pnpm/semver-compare@1.0.0/node_modules/semver-compare/index.js
+// engine/node_modules/semver-compare/index.js
 var require_semver_compare = __commonJS({
-  "engine/node_modules/.pnpm/semver-compare@1.0.0/node_modules/semver-compare/index.js"(exports, module) {
+  "engine/node_modules/semver-compare/index.js"(exports, module) {
     module.exports = function cmp(a, b) {
       var pa = a.split(".");
       var pb = b.split(".");
@@ -7787,7 +7787,7 @@ function possibleSetupBoardActions(engine, player) {
 }
 
 // engine/src/available/actions.ts
-var import_lodash18 = __toESM(require_lodash2());
+var import_lodash19 = __toESM(require_lodash2());
 
 // engine/src/actions.ts
 var ConversionPool = class {
@@ -7866,8 +7866,8 @@ var boardActions = {
 
 // engine/src/player-data.ts
 var import_eventemitter32 = __toESM(require_eventemitter3());
-var import_lodash17 = __toESM(require_lodash2());
-import assert13 from "node:assert";
+var import_lodash18 = __toESM(require_lodash2());
+import assert14 from "node:assert";
 
 // engine/src/reward.ts
 var import_lodash = __toESM(require_lodash2());
@@ -7970,7 +7970,7 @@ var Reward = class _Reward {
 };
 
 // engine/src/available/buildings.ts
-var import_lodash16 = __toESM(require_lodash2());
+var import_lodash17 = __toESM(require_lodash2());
 
 // engine/src/algorithms/scoring.ts
 var import_lodash2 = __toESM(require_lodash2());
@@ -8144,12 +8144,12 @@ function gainFinalScoringVictoryPoints(allRankings, player) {
 // engine/src/map.ts
 import assert5 from "node:assert";
 
-// engine/node_modules/.pnpm/hexagrid@2.1.1/node_modules/hexagrid/src/utils.ts
+// engine/node_modules/hexagrid/src/utils.ts
 function loadDefaults(args, defaults) {
   return Object.assign(defaults, args);
 }
 
-// engine/node_modules/.pnpm/hexagrid@2.1.1/node_modules/hexagrid/src/hex.ts
+// engine/node_modules/hexagrid/src/hex.ts
 var Hex = class {
   constructor(q = 0, r = 0, data) {
     this.q = q;
@@ -8277,7 +8277,7 @@ var Hex = class {
   }
 };
 
-// engine/node_modules/.pnpm/hexagrid@2.1.1/node_modules/hexagrid/src/direction.ts
+// engine/node_modules/hexagrid/src/direction.ts
 var Direction = /* @__PURE__ */ ((Direction2) => {
   Direction2[Direction2["North"] = 1] = "North";
   Direction2[Direction2["NorthEast"] = 2] = "NorthEast";
@@ -8302,7 +8302,7 @@ var Direction = /* @__PURE__ */ ((Direction2) => {
   Direction2.all = 1 /* North */ | 2 /* NorthEast */ | 4 /* SouthEast */ | 8 /* South */ | 16 /* SouthWest */ | 32 /* NorthWest */;
 })(Direction || (Direction = {}));
 
-// engine/node_modules/.pnpm/hexagrid@2.1.1/node_modules/hexagrid/src/cubecoordinates.ts
+// engine/node_modules/hexagrid/src/cubecoordinates.ts
 var CubeCoordinates = class {
   constructor(q = 0, r = 0) {
     this.q = q;
@@ -8375,7 +8375,7 @@ var CubeCoordinates = class {
   CubeCoordinates5.toString = toString;
 })(CubeCoordinates || (CubeCoordinates = {}));
 
-// engine/node_modules/.pnpm/hexagrid@2.1.1/node_modules/hexagrid/src/grid.ts
+// engine/node_modules/hexagrid/src/grid.ts
 var Grid = class {
   hexes = /* @__PURE__ */ new Map();
   get size() {
@@ -10919,10 +10919,12 @@ function isSpaceshipTechTile(tile) {
 var MAX_SATELLITES = 25;
 var defaultAutoCharge = 1;
 var defaultAutoChargeTargetSpendablePower = 0;
+var defaultAutoChargeMaxPassedRoundLeech = 0;
 var Settings = class {
-  constructor(autoChargePower2 = defaultAutoCharge, autoChargeTargetSpendablePower = defaultAutoChargeTargetSpendablePower, autoIncome2 = false, autoBrainstone2 = false, itarsAutoChargeToArea3 = false) {
+  constructor(autoChargePower2 = defaultAutoCharge, autoChargeTargetSpendablePower = defaultAutoChargeTargetSpendablePower, autoChargeMaxPassedRoundLeech = defaultAutoChargeMaxPassedRoundLeech, autoIncome2 = false, autoBrainstone2 = false, itarsAutoChargeToArea3 = false) {
     this.autoChargePower = autoChargePower2;
     this.autoChargeTargetSpendablePower = autoChargeTargetSpendablePower;
+    this.autoChargeMaxPassedRoundLeech = autoChargeMaxPassedRoundLeech;
     this.autoIncome = autoIncome2;
     this.autoBrainstone = autoBrainstone2;
     this.itarsAutoChargeToArea3 = itarsAutoChargeToArea3;
@@ -11068,11 +11070,44 @@ var Player5 = class _Player extends import_eventemitter3.EventEmitter {
       source
     );
   }
+  /**
+   * How many times over this player can pay `cost` - the "convert up to N" range behind free-action
+   * conversions (available/actions.ts).
+   *
+   * The loop only ever ends because `hasResource` eventually says no, so analysis mode
+   * (ANALYSIS_MODE_PLAN.md §12), where `hasResource` deliberately says yes to any amount of an
+   * overdrawable resource, needs its own ceiling or this spins forever and hangs the browser. The
+   * ceiling is what the seat can really pay plus a fixed slack, so a conversion can be overdrawn
+   * like everything else while the range stays a finite, sane number of steps.
+   */
   maxPayRange(cost) {
     const costs = Reward.merge(cost);
+    const limit = this.data.analysis ? this.realMaxPayRange(costs) + _Player.ANALYSIS_EXTRA_PAY_RANGE : Infinity;
     for (let max = 0; ; max += 1) {
+      if (max >= limit) {
+        return max;
+      }
       for (const rew of costs) {
         if (!this.data.hasResource(new Reward(rew.count * (max + 1), rew.type))) {
+          return max;
+        }
+      }
+    }
+  }
+  static {
+    /** How many extra conversion steps analysis mode offers beyond what the seat can really pay -
+     * generous enough that the range never feels clipped, small enough to stay a usable dropdown. */
+    this.ANALYSIS_EXTRA_PAY_RANGE = 10;
+  }
+  /** `maxPayRange`'s answer ignoring the analysis overdraw, i.e. measured against real resources. */
+  realMaxPayRange(costs) {
+    for (let max = 0; ; max += 1) {
+      for (const rew of costs) {
+        const needed = new Reward(rew.count * (max + 1), rew.type);
+        if (needed.type === "~" /* None */) {
+          continue;
+        }
+        if (this.data.getResources(needed.type) < needed.count) {
           return max;
         }
       }
@@ -12177,34 +12212,81 @@ function possibleTechTiles(engine, player) {
   return commands;
 }
 
-// engine/src/move/phase.ts
-var import_lodash15 = __toESM(require_lodash2());
-import assert12 from "node:assert";
-
-// engine/src/move/setup.ts
+// engine/src/move/buildings.ts
 var import_lodash14 = __toESM(require_lodash2());
 import assert11 from "node:assert";
-function moveInit(engine, players, seed) {
-  assert11(players >= 2 && players <= 5, "Invalid number of players");
+var ANALYSIS_CHEAP_BUILD = "cheap";
+function moveBuild(engine, command, player, building, location, qualifier) {
+  const { buildings } = command.data;
+  const parsed = engine.map.parse(location);
+  const pl = engine.player(player);
+  const wantCheap = qualifier === ANALYSIS_CHEAP_BUILD;
+  for (const elem of buildings) {
+    if (elem.building === building && !!elem.analysisCheap === wantCheap && (0, import_lodash14.isEqual)(engine.map.parse(elem.coordinates), parsed)) {
+      placeBuilding(engine, pl, elem);
+      return;
+    }
+  }
   assert11(
+    false,
+    `Impossible to execute build command at ${location}, available: ${buildings.map((b) => b.coordinates)}`
+  );
+}
+function placeBuilding(engine, pl, building) {
+  const hex = engine.map.getS(building.coordinates);
+  pl.build(
+    building.building,
+    hex,
+    Reward.parse(building.cost),
+    engine.map,
+    building.steps,
+    building.consumesAsteroidGaiaformer ?? true
+  );
+  if ((engine.phase === "roundMove" /* RoundMove */ || engine.phase === "roundShip" /* RoundShip */) && !isShip(building.building)) {
+    engine.leechSources.unshift({ player: pl.player, coordinates: building.coordinates });
+  }
+}
+function moveLostPlanet(engine, command, player, location) {
+  const { spaces } = command.data;
+  const parsed = engine.map.parse(location);
+  const data = spaces.find((space) => (0, import_lodash14.isEqual)(engine.map.parse(space.coordinates), parsed));
+  assert11(data, `Impossible to place lost planet at ${location}`);
+  const hex = engine.map.getS(location);
+  assert11(!hex.hasSpaceship(), "Can't place the Lost Planet on a spaceship hex");
+  hex.data.planet = "l" /* Lost */;
+  engine.players.forEach((p) => p.notifyOfNewPlanet(hex));
+  engine.player(player).build("m" /* Mine */, hex, Reward.parse(data.cost), engine.map, 0);
+  engine.leechSources.unshift({ player, coordinates: location });
+}
+
+// engine/src/move/phase.ts
+var import_lodash16 = __toESM(require_lodash2());
+import assert13 from "node:assert";
+
+// engine/src/move/setup.ts
+var import_lodash15 = __toESM(require_lodash2());
+import assert12 from "node:assert";
+function moveInit(engine, players, seed) {
+  assert12(players >= 2 && players <= 5, "Invalid number of players");
+  assert12(
     !(engine.options.frontiers && engine.options.lostFleet),
     "Frontiers and Lost Fleet expansions cannot be combined"
   );
-  assert11(
+  assert12(
     !(engine.options.lostFleet && engine.options.map?.sectors),
     "A custom map configuration cannot be combined with the Lost Fleet expansion"
   );
-  assert11(
+  assert12(
     !(engine.options.lostFleet && engine.options.customBoardSetup),
     "Custom (drafted) board setup is not supported with the Lost Fleet expansion"
   );
   if (engine.options.auction === "preference-split" /* PreferenceSplit */) {
     const budget = engine.options.auctionBudget ?? defaultPreferenceSplitBudget(players);
-    assert11(
+    assert12(
       isValidPreferenceSplitBudget(budget),
       `The Preference Split Auction's bid budget must be a whole number between ${MIN_PREFERENCE_SPLIT_BUDGET} and ${MAX_PREFERENCE_SPLIT_BUDGET}, got ${engine.options.auctionBudget}`
     );
-    assert11(
+    assert12(
       !engine.options.randomFactions,
       "The Preference Split Auction cannot be combined with forced random factions"
     );
@@ -12246,20 +12328,20 @@ function moveSetup(engine, command, player, type, position, _to, option) {
   applySetupOption(engine, type, position, option);
 }
 function moveRotateSectors(engine, command, player, ...params) {
-  assert11(params.length % 2 === 0, "The rotate command needs an even number of parameters");
+  assert12(params.length % 2 === 0, "The rotate command needs an even number of parameters");
   const pairs = [];
   for (let i = 0; i < params.length; i += 2) {
     pairs.push([params[i], params[i + 1]]);
   }
-  assert11((0, import_lodash14.uniq)(pairs.map((pair) => pair[0])).length === params.length / 2, "Duplicate rotations are not allowed");
+  assert12((0, import_lodash15.uniq)(pairs.map((pair) => pair[0])).length === params.length / 2, "Duplicate rotations are not allowed");
   for (const pair of pairs) {
     engine.map.rotateSector(pair[0], +pair[1]);
   }
   engine.map.recalibrate();
-  assert11(engine.map.isValid(), "Map is invalid with two planets for the same type being near each other");
+  assert12(engine.map.isValid(), "Map is invalid with two planets for the same type being near each other");
 }
 function moveChooseFaction(engine, command, player, faction) {
-  assert11(command.data.includes(faction), `${faction} is not in the available factions`);
+  assert12(command.data.includes(faction), `${faction} is not in the available factions`);
   engine.setup.push(faction);
   if (engine.options.auction !== "choose-bid" /* ChooseBid */) {
     executeBid(engine, player, faction, 0);
@@ -12269,8 +12351,8 @@ function moveBid(engine, command, player, faction, bid) {
   if (!engine.replay) {
     const bidsAC = command.data.bids;
     const bidAC = bidsAC.find((b) => b.faction === faction);
-    assert11(bidAC, `${faction} is not in the available factions`);
-    assert11(bidAC.bid.includes(+bid), "You have to bid the right amount");
+    assert12(bidAC, `${faction} is not in the available factions`);
+    assert12(bidAC.bid.includes(+bid), "You have to bid the right amount");
   }
   executeBid(engine, player, faction, bid);
 }
@@ -12283,43 +12365,43 @@ function executeBid(engine, player, faction, bid) {
   engine.players[player].data.bid = +bid;
 }
 function moveBanFaction(engine, command, player, faction) {
-  assert11(command.data.includes(faction), `${faction} is not available to ban`);
+  assert12(command.data.includes(faction), `${faction} is not available to ban`);
   engine.bannedFactions.push(faction);
 }
 function moveSilentBid(engine, command, player, ...params) {
-  assert11(params.length % 2 === 0, "The silentBid command needs an even number of parameters");
+  assert12(params.length % 2 === 0, "The silentBid command needs an even number of parameters");
   const entries = [];
   for (let i = 0; i < params.length; i += 2) {
-    assert11(/^\d+$/.test(params[i + 1]), `"${params[i + 1]}" is not a whole, non-negative bid`);
+    assert12(/^\d+$/.test(params[i + 1]), `"${params[i + 1]}" is not a whole, non-negative bid`);
     entries.push({ faction: params[i], points: +params[i + 1] });
   }
-  assert11(
-    (0, import_lodash14.uniq)(entries.map((entry) => entry.faction)).length === entries.length,
+  assert12(
+    (0, import_lodash15.uniq)(entries.map((entry) => entry.faction)).length === entries.length,
     "Duplicate factions are not allowed in a silent bid"
   );
-  assert11(
+  assert12(
     !engine.silentAuctionBids.some((bid) => bid.player === player),
     `Player ${player} has already submitted their bids`
   );
   const error = silentAuctionBidError(entries, engine.setup);
-  assert11(error === null, error);
+  assert12(error === null, error);
   for (const entry of entries) {
     engine.silentAuctionBids.push({ player, faction: entry.faction, max: entry.points });
   }
 }
 function movePreferenceBid(engine, command, player, ...params) {
-  assert11(params.length % 2 === 0, "The preferenceBid command needs an even number of parameters");
+  assert12(params.length % 2 === 0, "The preferenceBid command needs an even number of parameters");
   const entries = [];
   for (let i = 0; i < params.length; i += 2) {
-    assert11(/^\d+$/.test(params[i + 1]), `"${params[i + 1]}" is not a whole, non-negative number of bid points`);
+    assert12(/^\d+$/.test(params[i + 1]), `"${params[i + 1]}" is not a whole, non-negative number of bid points`);
     entries.push({ faction: params[i], points: +params[i + 1] });
   }
-  assert11(
+  assert12(
     !engine.preferenceSplitBids.some((bid) => bid.player === player),
     `Player ${player} has already submitted their bids`
   );
   const error = preferenceSplitBidError(entries, engine.setup, engine.preferenceSplitBudget);
-  assert11(error === null, error);
+  assert12(error === null, error);
   for (const entry of entries) {
     engine.preferenceSplitBids.push({ player, faction: entry.faction, points: entry.points });
   }
@@ -12329,7 +12411,7 @@ function movePreferenceBid(engine, command, player, ...params) {
 function phaseSetupInit(engine, move) {
   const split = move.split(" ");
   const command = split.shift();
-  assert12(command === "init" /* Init */, "The first command of a game needs to be the initialization command");
+  assert13(command === "init" /* Init */, "The first command of a game needs to be the initialization command");
   const players = split.shift();
   moveInit(engine, +players || 2, split.shift() || "defaultSeed");
   beginSetupBoardPhase(engine);
@@ -12420,7 +12502,7 @@ function resolvePreferenceSplitPhase(engine) {
   }
 }
 function moveToNextPlayerWithoutAChosenFaction(engine) {
-  const player = [...(0, import_lodash15.range)(engine.currentPlayer + 1, engine.players.length), ...(0, import_lodash15.range)(0, engine.currentPlayer)].find(
+  const player = [...(0, import_lodash16.range)(engine.currentPlayer + 1, engine.players.length), ...(0, import_lodash16.range)(0, engine.currentPlayer)].find(
     (player2) => !engine.players.some((pl) => pl.player === player2 && pl.faction)
   );
   if (player !== void 0) {
@@ -12918,6 +13000,15 @@ function possibleBuildings(engine, player) {
         if (check) {
           buildings.push(newAvailableBuilding(upgrade, hex, check, true));
         }
+        if (pl.data.analysis && isolated && upgrade === "ts" /* TradingStation */) {
+          const cheap = pl.canBuild(map, hex, hex.data.planet, upgrade, engine.isLastRound, engine.replay, {
+            isolated: false,
+            existingBuilding: building
+          });
+          if (cheap) {
+            buildings.push({ ...newAvailableBuilding(upgrade, hex, cheap, true), analysisCheap: true });
+          }
+        }
       }
     } else if (pl.canOccupy(hex)) {
       const planet = hex.occupied() ? pl.planet : hex.data.planet;
@@ -12930,7 +13021,7 @@ function possibleBuildings(engine, player) {
       {
         name: "build" /* Build */,
         player,
-        data: { buildings: (0, import_lodash16.uniq)(buildings) }
+        data: { buildings: (0, import_lodash17.uniq)(buildings) }
         //ship locations may be duplicated
       }
     ];
@@ -13301,9 +13392,9 @@ var PlayerData2 = class _PlayerData extends import_eventemitter32.EventEmitter {
     this.knowledge = 0;
     this.power = new Power();
     this.brainstone = null;
-    this.buildings = (0, import_lodash17.fromPairs)(Building.values(6 /* All */).map((bld) => [bld, 0]));
-    this.destroyedShips = (0, import_lodash17.fromPairs)(Building.ships().map((bld) => [bld, 0]));
-    this.deployedShips = (0, import_lodash17.fromPairs)(Building.ships().map((bld) => [bld, 0]));
+    this.buildings = (0, import_lodash18.fromPairs)(Building.values(6 /* All */).map((bld) => [bld, 0]));
+    this.destroyedShips = (0, import_lodash18.fromPairs)(Building.ships().map((bld) => [bld, 0]));
+    this.deployedShips = (0, import_lodash18.fromPairs)(Building.ships().map((bld) => [bld, 0]));
     this.satellites = 0;
     this.research = {
       terra: 0,
@@ -13369,6 +13460,28 @@ var PlayerData2 = class _PlayerData extends import_eventemitter32.EventEmitter {
     this.temporaryStep = 0;
     this.canUpgradeResearch = true;
     this.turns = 0;
+    /**
+     * Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §3.4) - true only on a disposable sandbox
+     * clone, never on a real game's player data. It lifts affordability (`hasResource` below) so an
+     * unaffordable move can still be played and the debt shown, and it turns on `spendPower`'s power
+     * top-up. It deliberately does NOT lift the MAX_ORE/MAX_CREDIT/MAX_KNOWLEDGE gain clamps: analysis
+     * mode used to inject a fake wallet that those clamps ate, but a seat now keeps its real numbers,
+     * and a real player's gains cap exactly the same way - so clamping is the faithful behaviour.
+     * Deliberately absent from toJSON() (like the other internal variables above), so it can never
+     * round-trip through a serialize/deserialize into a real game - the viewer re-applies it to a fresh
+     * clone on every replay step instead of relying on it surviving.
+     */
+    this.analysis = false;
+    /**
+     * How much power the analysis sandbox has assumed this seat charged (ANALYSIS_MODE_PLAN.md §12).
+     * Power is the one overdrawable resource that cannot go negative - bowls hold tokens, not a balance
+     * - so instead of driving area 3 below zero, `spendPower` charges the shortfall up first and adds
+     *   it here, giving the UI one honest number for "this line only works if you also charge N power".
+     *
+     * Non-serialized for the same reason as `analysis` above, and recomputed from scratch on every
+     * replay, so it always describes exactly the line currently on screen.
+     */
+    this.analysisAssumedPower = 0;
     // when picking rewards
     this.toPick = void 0;
   }
@@ -13422,7 +13535,7 @@ var PlayerData2 = class _PlayerData extends import_eventemitter32.EventEmitter {
       new Reward(board.power.area2, "pw" /* ChargePower */)
     ];
     if (board.brainstone !== null) {
-      assert13(board.brainstone === "area1" /* Area1 */, "other initial areas for brainstone are not supported");
+      assert14(board.brainstone === "area1" /* Area1 */, "other initial areas for brainstone are not supported");
       rewards.push(new Reward(1, "brainstone" /* Brainstone */));
     }
     return rewards;
@@ -13431,7 +13544,7 @@ var PlayerData2 = class _PlayerData extends import_eventemitter32.EventEmitter {
    * Creates a copy of the current player data, except its event emitter is not linked to anything
    */
   clone() {
-    return Object.assign(new _PlayerData(), (0, import_lodash17.cloneDeep)(this.toJSON()));
+    return Object.assign(new _PlayerData(), (0, import_lodash18.cloneDeep)(this.toJSON()));
   }
   emitBrainstoneEvent(choices, area1Warning) {
     const d = {
@@ -13575,9 +13688,34 @@ var PlayerData2 = class _PlayerData extends import_eventemitter32.EventEmitter {
       this.emit(`pay-${reward.type}`, -count, source);
     }
   }
+  static {
+    /**
+     * The spendable resources the viewer's analysis mode (ANALYSIS_MODE_PLAN.md §12) lets a player
+     * overdraw: the four wallet resources plus power. Everything else `getResources` answers for stays
+     * genuinely gated even in analysis mode, because those are physical components or board positions
+     * rather than a stock you can be in debt on - a Gaiaformer you do not own, or a power token that is
+     * not in the Gaia area, cannot be conjured by assuming you overspent.
+     *
+     * Power is in this list, but it is the one that cannot simply go negative (bowls hold tokens, not a
+     * balance). `spendPower` tops the shortfall up instead and records it - see its own comment.
+     */
+    this.ANALYSIS_OVERDRAWABLE = [
+      "c" /* Credit */,
+      "o" /* Ore */,
+      "k" /* Knowledge */,
+      "q" /* Qic */,
+      "pw" /* ChargePower */
+    ];
+  }
   hasResource(reward) {
     const type = reward.type;
-    return type === "~" /* None */ || this.getResources(type) >= reward.count;
+    if (type === "~" /* None */) {
+      return true;
+    }
+    if (this.getResources(type) >= reward.count) {
+      return true;
+    }
+    return this.analysis && _PlayerData.ANALYSIS_OVERDRAWABLE.includes(type);
   }
   getResources(type) {
     switch (type) {
@@ -13675,7 +13813,33 @@ var PlayerData2 = class _PlayerData extends import_eventemitter32.EventEmitter {
     }
     return area1ToUp + area2ToUp + brainstoneUsage;
   }
+  /**
+   * Analysis mode's power top-up (§12). `hasResource` lets this seat commit to a power cost it cannot
+   * really pay, but `spendPower` below moves tokens area3 -> area1 with no floor, so an unpayable
+   * cost would leave a NEGATIVE bowl - a state the board renders as nonsense and every later charge
+   * then compounds. Instead: charge the shortfall up first, one step at a time through the engine's
+   * own `chargePower`, and only fabricate tokens when there are genuinely none left below to lift.
+   * Either way the total lands in `analysisAssumedPower`, so the assumption is shown, not hidden.
+   */
+  assumePowerForAnalysis(power) {
+    for (let i = 0; i < 100 && this.spendablePowerTokens() < power; i++) {
+      if (this.power.area1 + this.power.area2 === 0) {
+        break;
+      }
+      this.chargePower(1, true, false);
+      this.analysisAssumedPower += 1;
+    }
+    const shortfall = power - this.spendablePowerTokens();
+    if (shortfall > 0) {
+      const tokens = Math.ceil(shortfall / this.tokenModifier);
+      this.power.area3 += tokens;
+      this.analysisAssumedPower += shortfall;
+    }
+  }
   spendPower(power) {
+    if (this.analysis) {
+      this.assumePowerForAnalysis(power);
+    }
     if (this.brainstone === "area3" /* Area3 */) {
       let useBrainStone = true;
       const warning = power < 3 ? "brainstone-charges-wasted" /* brainstoneChargesWasted */ : void 0;
@@ -14143,7 +14307,7 @@ function possibleFreeActions(pl) {
     commands.push({
       name: "burn" /* BurnPower */,
       player: pl.player,
-      data: (0, import_lodash18.range)(1, pl.data.burnablePower() + 1)
+      data: (0, import_lodash19.range)(1, pl.data.burnablePower() + 1)
     });
   }
   return commands;
@@ -14157,7 +14321,7 @@ function freeActionData(availableFreeActions, player) {
       acts.push({
         cost: conversion.cost,
         income: conversion.income,
-        range: maxPay > 1 ? (0, import_lodash18.range)(1, maxPay + 1) : void 0
+        range: maxPay > 1 ? (0, import_lodash19.range)(1, maxPay + 1) : void 0
       });
     }
   }
@@ -14335,7 +14499,7 @@ function possibleExplorations(engine, player) {
 }
 
 // engine/src/available/federations.ts
-var import_lodash19 = __toESM(require_lodash2());
+var import_lodash20 = __toESM(require_lodash2());
 function federationWarnings(p, fed) {
   const ret = [];
   if (p.faction !== "ivits" /* Ivits */ && fed.newSatellites > p.data.power.area1) {
@@ -14394,7 +14558,7 @@ function possibleFederationTiles(engine, player, from) {
   const commands = [];
   const possibleTiles = Object.keys(engine.tiles.federations).filter((key2) => engine.tiles.federations[key2] > 0).map((f) => f);
   const pl = engine.player(player);
-  const playerTiles = (0, import_lodash19.uniq)([
+  const playerTiles = (0, import_lodash20.uniq)([
     ...pl.data.tiles.federations.map((fed) => fed.tile),
     ...pl.data.spaceshipFederations.map((fed) => fed.tile)
   ]);
@@ -14555,7 +14719,7 @@ function possibleIncomes(engine, player) {
 }
 
 // engine/src/available/setup.ts
-var import_lodash20 = __toESM(require_lodash2());
+var import_lodash21 = __toESM(require_lodash2());
 function chooseFactionOrBid(engine, player) {
   const chooseFaction = {
     name: "faction" /* ChooseFaction */,
@@ -14571,17 +14735,17 @@ function choosableFactions(engine) {
   let factions2;
   if (engine.randomFactions) {
     if (engine.options.auction && engine.options.auction !== "choose-bid" /* ChooseBid */) {
-      factions2 = (0, import_lodash20.difference)(engine.randomFactions, engine.setup);
+      factions2 = (0, import_lodash21.difference)(engine.randomFactions, engine.setup);
     } else {
       factions2 = engine.randomFactions.length > engine.setup.length ? [engine.randomFactions[engine.setup.length]] : [];
     }
   } else {
     factions2 = remainingFactions(engine.setup, engine.expansions);
   }
-  return (0, import_lodash20.difference)(factions2, engine.bannedFactions);
+  return (0, import_lodash21.difference)(factions2, engine.bannedFactions);
 }
 function banableFactions(engine) {
-  return (0, import_lodash20.difference)(Faction.values(engine.expansions), engine.bannedFactions);
+  return (0, import_lodash21.difference)(Faction.values(engine.expansions), engine.bannedFactions);
 }
 function possibleFactionBans(engine, player) {
   return [{ name: "banFaction" /* BanFaction */, player, data: banableFactions(engine) }];
@@ -14589,7 +14753,7 @@ function possibleFactionBans(engine, player) {
 function possibleSilentBids(engine, player) {
   const bids = engine.setup.map((faction) => ({
     faction,
-    bid: (0, import_lodash20.range)(0, MAX_SILENT_BID + 1)
+    bid: (0, import_lodash21.range)(0, MAX_SILENT_BID + 1)
   }));
   return [{ name: "silentBid" /* SilentBid */, player, data: { maxBid: MAX_SILENT_BID, factions: [...engine.setup], bids } }];
 }
@@ -14597,7 +14761,7 @@ function possiblePreferenceBids(engine, player) {
   const budget = engine.preferenceSplitBudget;
   const bids = engine.setup.map((faction) => ({
     faction,
-    bid: (0, import_lodash20.range)(0, budget + 1)
+    bid: (0, import_lodash21.range)(0, budget + 1)
   }));
   return [{ name: "preferenceBid" /* PreferenceBid */, player, data: { budget, factions: [...engine.setup], bids } }];
 }
@@ -14608,7 +14772,7 @@ function possibleBids(engine, player) {
     const bid = engine.players.find((pl) => pl.faction === faction) ? engine.players.find((pl) => pl.faction === faction).data.bid : -1;
     bids.push({
       faction,
-      bid: (0, import_lodash20.range)(bid + 1, bid + 10)
+      bid: (0, import_lodash21.range)(bid + 1, bid + 10)
     });
   }
   if (bids.length > 0) {
@@ -14738,21 +14902,21 @@ function generate(engine, subPhase = null, data) {
 }
 
 // engine/src/move/actions.ts
-var import_lodash21 = __toESM(require_lodash2());
-import assert14 from "node:assert";
+var import_lodash22 = __toESM(require_lodash2());
+import assert15 from "node:assert";
 function moveSpecial(engine, command, player, income) {
   const { specialacts } = command.data;
   const actAvailable = specialacts.find((sa) => Reward.match(Reward.parse(sa.income), Reward.parse(income)));
-  assert14(actAvailable !== void 0, `Special action ${income} is not available`);
+  assert15(actAvailable !== void 0, `Special action ${income} is not available`);
   engine.player(player).activateEvent(actAvailable.spec);
 }
 function moveSpend(engine, command, player, costS, _for, incomeS) {
   const pl = engine.player(player);
   const cost = Reward.merge(Reward.parse(costS));
   const income = Reward.merge(Reward.parse(incomeS));
-  assert14(!cost.some((r) => r.count <= 0) && !income.some((r) => r.count <= 0), "Nice try!");
-  assert14(pl.data.canPay(cost) && cost, `Impossible to pay ${costS} for ${incomeS}`);
-  assert14(_for === "for", "Expect second part of command to be 'for'");
+  assert15(!cost.some((r) => r.count <= 0) && !income.some((r) => r.count <= 0), "Nice try!");
+  assert15(pl.data.canPay(cost) && cost, `Impossible to pay ${costS} for ${incomeS}`);
+  assert15(_for === "for", "Expect second part of command to be 'for'");
   const isPossible = (cost2, income2) => {
     for (const action of command.data.acts) {
       const actionCost = Reward.parse(action.cost);
@@ -14771,16 +14935,16 @@ function moveSpend(engine, command, player, costS, _for, incomeS) {
     }
     return false;
   };
-  assert14(isPossible(cost, income), `spend ${cost} for ${income} is not allowed`);
+  assert15(isPossible(cost, income), `spend ${cost} for ${income} is not allowed`);
   pl.payCosts(cost, "spend" /* Spend */);
   pl.gainRewards(income, "spend" /* Spend */);
 }
 function moveBurn(engine, command, player, cost) {
-  assert14(command.data.includes(+cost), `Impossible to burn ${cost} power`);
+  assert15(command.data.includes(+cost), `Impossible to burn ${cost} power`);
   engine.players[player].data.burnPower(+cost);
 }
 function moveAction(engine, command, player, action) {
-  assert14(
+  assert15(
     command.data.poweracts.find((act) => act.name === action),
     `${action} is not in the available power actions`
   );
@@ -14795,7 +14959,7 @@ function movePiSwap(engine, command, player, location) {
   const PIHex = pl.data.occupied.find((hex) => hex.buildingOf(player) === "PI" /* PlanetaryInstitute */);
   const parsed = engine.map.parse(location);
   for (const elem of buildings) {
-    if ((0, import_lodash21.isEqual)(engine.map.parse(elem.coordinates), parsed)) {
+    if ((0, import_lodash22.isEqual)(engine.map.parse(elem.coordinates), parsed)) {
       const hex = engine.map.getS(location);
       if (hex.buildingOf(player) === "m" /* Mine */) {
         hex.data.building = "PI" /* PlanetaryInstitute */;
@@ -14805,16 +14969,16 @@ function movePiSwap(engine, command, player, location) {
       }
     }
   }
-  assert14(false, `Impossible to execute PI swap command at ${location}`);
+  assert15(false, `Impossible to execute PI swap command at ${location}`);
 }
 function moveChooseTinkeringTile(engine, command, player, tile) {
-  assert14(command.data.tiles.includes(tile), `${tile} is not in the available Tinkering tiles`);
+  assert15(command.data.tiles.includes(tile), `${tile} is not in the available Tinkering tiles`);
   engine.player(player).chooseTinkeringTile(engine.round, tile);
 }
 function movePlacePowerRing(engine, command, player, location) {
   const parsed = engine.map.parse(location);
-  const space = command.data.spaces.find((entry) => (0, import_lodash21.isEqual)(engine.map.parse(entry.coordinates), parsed));
-  assert14(space, `Impossible to place a Power Ring at ${location}`);
+  const space = command.data.spaces.find((entry) => (0, import_lodash22.isEqual)(engine.map.parse(entry.coordinates), parsed));
+  assert15(space, `Impossible to place a Power Ring at ${location}`);
   const pl = engine.player(player);
   const hex = engine.map.getS(location);
   hex.data.powerRing = player;
@@ -14823,14 +14987,14 @@ function movePlacePowerRing(engine, command, player, location) {
 }
 
 // engine/src/move/artifacts.ts
-import assert15 from "node:assert";
+import assert16 from "node:assert";
 function moveExamineArtifact(engine, command, player) {
   const pl = engine.player(player);
   pl.payCosts(Reward.parse(command.data.cost), "twilight" /* Twilight */);
   pl.gainRewards([new Reward(1, "artifact" /* GainArtifact */)], "twilight" /* Twilight */);
 }
 function moveChooseArtifactToken(engine, command, player, token) {
-  assert15(command.data.tokens.includes(token), `Artifact token ${token} is not available`);
+  assert16(command.data.tokens.includes(token), `Artifact token ${token} is not available`);
   engine.tiles.artifacts.splice(engine.tiles.artifacts.indexOf(token), 1);
   applyArtifactToken(engine, player, token);
 }
@@ -14890,23 +15054,27 @@ function applyArtifactPlanetType(pl, planet) {
 }
 
 // engine/src/move/auto.ts
-import assert16 from "node:assert";
+import assert17 from "node:assert";
 
 // engine/src/auto-charge.ts
 var ChargeRequest = class {
-  constructor(player, offers, isLastRound, playerHasPassed, incomeSelection) {
+  constructor(player, offers, isLastRound, playerHasPassed, incomeSelection, passedRoundLeechAccepted2 = 0) {
     this.player = player;
     this.offers = offers;
     this.isLastRound = isLastRound;
     this.playerHasPassed = playerHasPassed;
     this.incomeSelection = incomeSelection;
+    this.passedRoundLeechAccepted = passedRoundLeechAccepted2;
     const autoCharge = player.settings.autoChargePower;
     let minCharge = 100;
     let maxCharge = 0;
-    const limit = Math.max(
+    const passedRoundCap = Math.max(0, player.settings.autoChargeMaxPassedRoundLeech ?? 0);
+    this.passedRoundLeechRemaining = playerHasPassed && passedRoundCap > 0 ? Math.max(0, passedRoundCap - passedRoundLeechAccepted2) : Infinity;
+    const regularLimit = Math.max(
       player.settings.autoChargeTargetSpendablePower,
       autoCharge === "decline-cost" || autoCharge === "ask" ? 1 : autoCharge
     );
+    const limit = Math.min(regularLimit, this.passedRoundLeechRemaining);
     let allowedMax = 0;
     let maxAllowedOffer = null;
     for (const offer of this.offers) {
@@ -14938,6 +15106,7 @@ var ChargeRequest = class {
   }
 };
 var chargeRules = [
+  declineWhenPassedRoundCapReached,
   askOrDeclineForPassedPlayer,
   (r) => askForMultipleTaklonsOffers(r.offers, r.player.settings.autoBrainstone),
   (r) => allowBasedOnTargetPower(r.player),
@@ -14957,6 +15126,12 @@ function decideChargeRequest(r) {
     }
   }
   return "ask" /* Ask */;
+}
+function declineWhenPassedRoundCapReached(r) {
+  if (!r.playerHasPassed || !Number.isFinite(r.passedRoundLeechRemaining)) {
+    return "undecided" /* Undecided */;
+  }
+  return r.passedRoundLeechRemaining < r.minCharge ? "no" /* No */ : "undecided" /* Undecided */;
 }
 function askOrDeclineForPassedPlayer(r) {
   const noOfferIsFree = r.offers.every((offer) => offer.cost !== "~");
@@ -15081,7 +15256,14 @@ function autoChargePower(engine, cmd) {
   const offers = cmd.data.offers;
   const pl = engine.player(engine.playerToMove);
   const playerHasPassed = engine.passedPlayers.includes(pl.player);
-  const request = new ChargeRequest(pl, offers, engine.isLastRound, playerHasPassed, pl.incomeSelection());
+  const request = new ChargeRequest(
+    pl,
+    offers,
+    engine.isLastRound,
+    playerHasPassed,
+    pl.incomeSelection(),
+    passedRoundLeechAccepted(engine, pl.player)
+  );
   const chargeDecision = decideChargeRequest(request);
   switch (chargeDecision) {
     case "yes" /* Yes */: {
@@ -15089,7 +15271,7 @@ function autoChargePower(engine, cmd) {
       if (!offer) {
         return false;
       }
-      assert16(offer, `could not find max offer: ${JSON.stringify([offers, pl.settings])}`);
+      assert17(offer, `could not find max offer: ${JSON.stringify([offers, pl.settings])}`);
       return `${"charge" /* ChargePower */} ${offer.offer}`;
     }
     case "no" /* No */:
@@ -15097,8 +15279,39 @@ function autoChargePower(engine, cmd) {
     case "ask" /* Ask */:
       return false;
     case "undecided" /* Undecided */:
-      assert16(false, `Could not decide how to charge power: ${request}`);
+      assert17(false, `Could not decide how to charge power: ${request}`);
   }
+}
+function passedRoundLeechAccepted(engine, player) {
+  if (!engine.passedPlayers.includes(player)) {
+    return 0;
+  }
+  const pl = engine.player(player);
+  const slug = pl.faction ?? `p${player + 1}`;
+  let passIndex = -1;
+  for (let i = engine.moveHistory.length - 1; i >= 0; i--) {
+    if (engine.moveHistory[i].startsWith(`${slug} pass`)) {
+      passIndex = i;
+      break;
+    }
+  }
+  if (passIndex < 0) {
+    return 0;
+  }
+  return engine.moveHistory.slice(passIndex + 1).reduce((sum3, move) => {
+    const trimmed = move.trim();
+    if (!trimmed.startsWith(`${slug} charge `)) {
+      return sum3;
+    }
+    const charge = trimmed.slice(`${slug} charge `.length).split(".")[0];
+    const powerPattern = /(\d+)pw/g;
+    let chargeSum = 0;
+    let match;
+    while (match = powerPattern.exec(charge)) {
+      chargeSum += Number(match[1]);
+    }
+    return sum3 + chargeSum;
+  }, 0);
 }
 function autoIncome(engine) {
   const pl = engine.player(engine.playerToMove);
@@ -15131,7 +15344,7 @@ function autoBrainstone(engine, cmd) {
 }
 function autoPass(engine) {
   const toMove = engine.playerToMove;
-  assert16(toMove !== void 0, "Can't execute a move when no player can move");
+  assert17(toMove !== void 0, "Can't execute a move when no player can move");
   const pl = engine.player(toMove);
   if (engine.availableCommands.some((cmd) => cmd.name === "decline" /* Decline */)) {
     const cmd = engine.findAvailableCommand(engine.playerToMove, "decline" /* Decline */);
@@ -15155,56 +15368,11 @@ function autoPass(engine) {
   )) {
     return `${"spend" /* Spend */} ${pl.data.power.gaia}${"tg" /* GainTokenGaiaArea */} for ${pl.data.power.gaia}${"c" /* Credit */}`;
   } else {
-    assert16(
+    assert17(
       false,
       "Can't automove for player " + (engine.playerToMove + 1) + ", available command: " + engine.availableCommands[0].name
     );
   }
-}
-
-// engine/src/move/buildings.ts
-var import_lodash22 = __toESM(require_lodash2());
-import assert17 from "node:assert";
-function moveBuild(engine, command, player, building, location) {
-  const { buildings } = command.data;
-  const parsed = engine.map.parse(location);
-  const pl = engine.player(player);
-  for (const elem of buildings) {
-    if (elem.building === building && (0, import_lodash22.isEqual)(engine.map.parse(elem.coordinates), parsed)) {
-      placeBuilding(engine, pl, elem);
-      return;
-    }
-  }
-  assert17(
-    false,
-    `Impossible to execute build command at ${location}, available: ${buildings.map((b) => b.coordinates)}`
-  );
-}
-function placeBuilding(engine, pl, building) {
-  const hex = engine.map.getS(building.coordinates);
-  pl.build(
-    building.building,
-    hex,
-    Reward.parse(building.cost),
-    engine.map,
-    building.steps,
-    building.consumesAsteroidGaiaformer ?? true
-  );
-  if ((engine.phase === "roundMove" /* RoundMove */ || engine.phase === "roundShip" /* RoundShip */) && !isShip(building.building)) {
-    engine.leechSources.unshift({ player: pl.player, coordinates: building.coordinates });
-  }
-}
-function moveLostPlanet(engine, command, player, location) {
-  const { spaces } = command.data;
-  const parsed = engine.map.parse(location);
-  const data = spaces.find((space) => (0, import_lodash22.isEqual)(engine.map.parse(space.coordinates), parsed));
-  assert17(data, `Impossible to place lost planet at ${location}`);
-  const hex = engine.map.getS(location);
-  assert17(!hex.hasSpaceship(), "Can't place the Lost Planet on a spaceship hex");
-  hex.data.planet = "l" /* Lost */;
-  engine.players.forEach((p) => p.notifyOfNewPlanet(hex));
-  engine.player(player).build("m" /* Mine */, hex, Reward.parse(data.cost), engine.map, 0);
-  engine.leechSources.unshift({ player, coordinates: location });
 }
 
 // engine/src/move/exploration.ts
@@ -16196,17 +16364,28 @@ var Engine3 = class _Engine {
 
 // viewer/src/logic/auto-decide.ts
 function parseAutoChargePreference(pref) {
-  if (pref === "decline-cost") {
+  if (pref === true) {
+    return 1;
+  }
+  const basePref = String(pref).split(";")[0];
+  if (basePref === "decline-cost") {
     return "decline-cost";
   }
-  const n = Number(pref);
+  const n = Number(basePref);
   return n >= 1 && n <= 5 ? n : "ask";
 }
-function autoDecideChargePower(engine, autoChargePower2, isEligibleSeat = () => true) {
+function parseAutoChargeMaxPassedRoundLeech(pref) {
+  const text = String(pref);
+  const encoded = /(?:^|;)passedCap=(\d+)/.exec(text);
+  const n = Number(encoded ? encoded[1] : text);
+  return n >= 1 && n <= 20 ? n : 0;
+}
+function autoDecideChargePower(engine, autoChargePower2, isEligibleSeat = () => true, autoChargeMaxPassedRoundLeech = 0) {
   const before = engine.moveHistory.length;
   let iterations = 0;
   while (engine.playerToMove !== void 0 && isEligibleSeat(engine.playerToMove) && iterations++ < 20) {
     engine.player(engine.playerToMove).settings.autoChargePower = autoChargePower2;
+    engine.player(engine.playerToMove).settings.autoChargeMaxPassedRoundLeech = autoChargeMaxPassedRoundLeech;
     if (!engine.autoMove()) {
       break;
     }
@@ -16217,6 +16396,7 @@ export {
   Engine3 as Engine,
   Phase,
   autoDecideChargePower,
+  parseAutoChargeMaxPassedRoundLeech,
   parseAutoChargePreference
 };
 /*! Bundled license information:

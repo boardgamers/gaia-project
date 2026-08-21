@@ -22,6 +22,15 @@
       >
         {{ opt.text }}
       </b-dropdown-item>
+      <b-dropdown-divider />
+      <b-dropdown-item
+        v-for="opt in autoChargePassedCapOptions"
+        :key="`passed-${opt.value}`"
+        :active="opt.value === autoChargeMaxPassedRoundLeech"
+        @click="setAutoChargeMaxPassedRoundLeech(opt.value)"
+      >
+        {{ opt.text }}
+      </b-dropdown-item>
     </b-dropdown>
   </div>
 </template>
@@ -38,6 +47,9 @@ export default Vue.extend({
     autoChargePower(): string {
       return String((this as any).$store.state.preferences.autoChargePower ?? "ask");
     },
+    autoChargeMaxPassedRoundLeech(): string {
+      return String((this as any).$store.state.preferences.autoChargeMaxPassedRoundLeech ?? "0");
+    },
     autoChargePowerOptions(): Array<{ value: string; text: string }> {
       return [
         { value: "ask", text: "Auto leech: off (ask every time)" },
@@ -49,6 +61,17 @@ export default Vue.extend({
         { value: "5", text: "Auto leech: up to 5 power" },
       ];
     },
+    autoChargePassedCapOptions(): Array<{ value: string; text: string }> {
+      return [
+        { value: "0", text: "After passing: no total cap" },
+        { value: "1", text: "After passing: max 1 total power" },
+        { value: "2", text: "After passing: max 2 total power" },
+        { value: "3", text: "After passing: max 3 total power" },
+        { value: "4", text: "After passing: max 4 total power" },
+        { value: "5", text: "After passing: max 5 total power" },
+        { value: "6", text: "After passing: max 6 total power" },
+      ];
+    },
     autoChargePowerActive(): boolean {
       return (this as any).autoChargePower !== "ask";
     },
@@ -57,15 +80,22 @@ export default Vue.extend({
         case "ask":
           return "Leech: off";
         case "decline-cost":
-          return "Leech: free";
+          return (this as any).autoChargeMaxPassedRoundLeech === "0"
+            ? "Leech: free"
+            : `Leech: free cap ${(this as any).autoChargeMaxPassedRoundLeech}`;
         default:
-          return `Leech: ${(this as any).autoChargePower}`;
+          return (this as any).autoChargeMaxPassedRoundLeech === "0"
+            ? `Leech: ${(this as any).autoChargePower}`
+            : `Leech: ${(this as any).autoChargePower} cap ${(this as any).autoChargeMaxPassedRoundLeech}`;
       }
     },
   },
   methods: {
     setAutoChargePower(value: string) {
       (this as any).$store.commit("preferences", { autoChargePower: value });
+    },
+    setAutoChargeMaxPassedRoundLeech(value: string) {
+      (this as any).$store.commit("preferences", { autoChargeMaxPassedRoundLeech: value });
     },
   },
 });

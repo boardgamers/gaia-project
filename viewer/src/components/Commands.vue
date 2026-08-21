@@ -66,6 +66,15 @@
         >
           {{ opt.text }}
         </b-dropdown-item>
+        <b-dropdown-divider />
+        <b-dropdown-item
+          v-for="opt in autoChargePassedCapOptions"
+          :key="`passed-${opt.value}`"
+          :active="opt.value === autoChargeMaxPassedRoundLeech"
+          @click="setAutoChargeMaxPassedRoundLeech(opt.value)"
+        >
+          {{ opt.text }}
+        </b-dropdown-item>
       </b-dropdown>
       <!-- Analysis mode's controls take over the slot the auto-leech dropdown gives up (§2.9/§12) -
            opponent decisions are auto-resolved there regardless of that preference, and this is where
@@ -164,6 +173,15 @@
             :key="opt.value"
             :active="opt.value === autoChargePower"
             @click="setAutoChargePower(opt.value)"
+          >
+            {{ opt.text }}
+          </b-dropdown-item>
+          <b-dropdown-divider />
+          <b-dropdown-item
+            v-for="opt in autoChargePassedCapOptions"
+            :key="`passed-${opt.value}`"
+            :active="opt.value === autoChargeMaxPassedRoundLeech"
+            @click="setAutoChargeMaxPassedRoundLeech(opt.value)"
           >
             {{ opt.text }}
           </b-dropdown-item>
@@ -427,6 +445,7 @@ import RichTextView from "./Resources/RichTextView.vue";
 import StickyResourceBar from "./StickyResourceBar.vue";
 import { richText, RichText, richTextPlanet } from "../graphics/rich-text";
 import { isLegacySequentialBidRound } from "../logic/sealed-bid";
+import { encodeAutoChargePreference } from "../logic/auto-decide";
 import { chargePowerToPay } from "../logic/utils";
 import { attachZoomCompensation, ZoomCompensationHandle } from "../logic/zoom-compensation";
 import { factionColor } from "../graphics/utils";
@@ -693,6 +712,10 @@ export default class Commands extends Vue implements CommandController {
     return String(this.$store.state.preferences.autoChargePower ?? "ask");
   }
 
+  get autoChargeMaxPassedRoundLeech(): string {
+    return String(this.$store.state.preferences.autoChargeMaxPassedRoundLeech ?? "0");
+  }
+
   get autoChargePowerOptions() {
     return [
       { value: "ask", text: "Auto leech: off (ask every time)" },
@@ -705,8 +728,24 @@ export default class Commands extends Vue implements CommandController {
     ];
   }
 
+  get autoChargePassedCapOptions() {
+    return [
+      { value: "0", text: "After passing: no total cap" },
+      { value: "1", text: "After passing: max 1 total power" },
+      { value: "2", text: "After passing: max 2 total power" },
+      { value: "3", text: "After passing: max 3 total power" },
+      { value: "4", text: "After passing: max 4 total power" },
+      { value: "5", text: "After passing: max 5 total power" },
+      { value: "6", text: "After passing: max 6 total power" },
+    ];
+  }
+
   setAutoChargePower(value: string) {
     this.$store.commit("preferences", { autoChargePower: value });
+  }
+
+  setAutoChargeMaxPassedRoundLeech(value: string) {
+    this.$store.commit("preferences", { autoChargeMaxPassedRoundLeech: value });
   }
 
   /** Commit asks first (ANALYSIS_MODE_PLAN.md §6) - it is the only sandbox control whose effect
@@ -731,9 +770,13 @@ export default class Commands extends Vue implements CommandController {
       case "ask":
         return "Leech: off";
       case "decline-cost":
-        return "Leech: free";
+        return this.autoChargeMaxPassedRoundLeech === "0"
+          ? "Leech: free"
+          : `Leech: free cap ${this.autoChargeMaxPassedRoundLeech}`;
       default:
-        return `Leech: ${this.autoChargePower}`;
+        return this.autoChargeMaxPassedRoundLeech === "0"
+          ? `Leech: ${this.autoChargePower}`
+          : `Leech: ${this.autoChargePower} cap ${this.autoChargeMaxPassedRoundLeech}`;
     }
   }
 
@@ -953,7 +996,10 @@ export default class Commands extends Vue implements CommandController {
   }
 
   autoChargePreference(): string {
-    return String(this.$store.state.preferences.autoChargePower ?? "ask");
+    return encodeAutoChargePreference(
+      String(this.$store.state.preferences.autoChargePower ?? "ask"),
+      String(this.$store.state.preferences.autoChargeMaxPassedRoundLeech ?? "0")
+    );
   }
 
   enabledButtonWarnings(button: ButtonData): string[] {

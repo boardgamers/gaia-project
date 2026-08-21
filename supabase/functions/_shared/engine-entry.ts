@@ -13,4 +13,8 @@
 // public export list (line 55) confirms enums.ts is the real source.
 export { default as Engine } from "../../../engine/src/engine";
 export { Phase } from "../../../engine/src/enums";
-export { autoDecideChargePower, parseAutoChargePreference } from "../../../viewer/src/logic/auto-decide";
+export {
+  autoDecideChargePower,
+  parseAutoChargeMaxPassedRoundLeech,
+  parseAutoChargePreference,
+} from "../../../viewer/src/logic/auto-decide";

@@ -49,9 +49,11 @@ type Preference =
   | "warnings"
   | "autoClick"
   | "uiMode"
-  | "autoChargePower";
+  | "autoChargePower"
+  | "autoChargeMaxPassedRoundLeech";
 
 const AUTO_CHARGE_POWER_STORAGE_KEY = "autoChargePower";
+const AUTO_CHARGE_MAX_PASSED_ROUND_LEECH_STORAGE_KEY = "autoChargeMaxPassedRoundLeech";
 
 export enum UiMode {
   graphical = "graphical",
@@ -204,6 +206,11 @@ const gaiaViewer = {
           (typeof localStorage !== "undefined" && localStorage.getItem(AUTO_CHARGE_POWER_STORAGE_KEY)) ||
           process.env.VUE_APP_autoChargePower ||
           "ask",
+        autoChargeMaxPassedRoundLeech:
+          (typeof localStorage !== "undefined" &&
+            localStorage.getItem(AUTO_CHARGE_MAX_PASSED_ROUND_LEECH_STORAGE_KEY)) ||
+          process.env.VUE_APP_autoChargeMaxPassedRoundLeech ||
+          "0",
       },
       player: null,
       avatars: [] as string[],
@@ -313,13 +320,19 @@ const gaiaViewer = {
       }
     },
 
-    preferences(state: State, preferences: { [key in Preference]: boolean }) {
+    preferences(state: State, preferences: Partial<{ [key in Preference]: boolean | string }>) {
       state.preferences = {
         ...state.preferences,
         ...preferences,
       };
       if ("autoChargePower" in preferences && typeof localStorage !== "undefined") {
         localStorage.setItem(AUTO_CHARGE_POWER_STORAGE_KEY, String(preferences.autoChargePower));
+      }
+      if ("autoChargeMaxPassedRoundLeech" in preferences && typeof localStorage !== "undefined") {
+        localStorage.setItem(
+          AUTO_CHARGE_MAX_PASSED_ROUND_LEECH_STORAGE_KEY,
+          String(preferences.autoChargeMaxPassedRoundLeech)
+        );
       }
     },
 

@@ -73,11 +73,13 @@ export type AutoCharge = "ask" | "decline-cost" | 1 | 2 | 3 | 4 | 5;
 
 export const defaultAutoCharge = 1;
 export const defaultAutoChargeTargetSpendablePower = 0;
+export const defaultAutoChargeMaxPassedRoundLeech = 0;
 
 export class Settings {
   constructor(
     public autoChargePower: AutoCharge = defaultAutoCharge,
     public autoChargeTargetSpendablePower: number = defaultAutoChargeTargetSpendablePower,
+    public autoChargeMaxPassedRoundLeech: number = defaultAutoChargeMaxPassedRoundLeech,
     public autoIncome: boolean = false,
     public autoBrainstone: boolean = false,
     public itarsAutoChargeToArea3: boolean = false

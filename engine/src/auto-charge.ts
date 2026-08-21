@@ -18,22 +18,28 @@ export class ChargeRequest {
   /** Maximum charge executed by the offers */
   public readonly maxCharge: number;
   public readonly maxAllowedOffer: Offer;
+  public readonly passedRoundLeechRemaining: number;
 
   constructor(
     public readonly player: Player,
     public readonly offers: Offer[],
     public readonly isLastRound: boolean,
     public readonly playerHasPassed: boolean,
-    public readonly incomeSelection: IncomeSelection
+    public readonly incomeSelection: IncomeSelection,
+    public readonly passedRoundLeechAccepted: number = 0
   ) {
     const autoCharge = player.settings.autoChargePower;
     let minCharge = 100;
     let maxCharge = 0;
+    const passedRoundCap = Math.max(0, player.settings.autoChargeMaxPassedRoundLeech ?? 0);
+    this.passedRoundLeechRemaining =
+      playerHasPassed && passedRoundCap > 0 ? Math.max(0, passedRoundCap - passedRoundLeechAccepted) : Infinity;
 
-    const limit = Math.max(
+    const regularLimit = Math.max(
       player.settings.autoChargeTargetSpendablePower,
       autoCharge === "decline-cost" || autoCharge === "ask" ? 1 : autoCharge
     );
+    const limit = Math.min(regularLimit, this.passedRoundLeechRemaining);
     let allowedMax = 0;
     let maxAllowedOffer: Offer = null;
 
@@ -69,6 +75,7 @@ export class ChargeRequest {
 }
 
 const chargeRules: ((ChargeRequest) => ChargeDecision)[] = [
+  declineWhenPassedRoundCapReached,
   askOrDeclineForPassedPlayer,
   (r: ChargeRequest) => askForMultipleTaklonsOffers(r.offers, r.player.settings.autoBrainstone),
   (r: ChargeRequest) => allowBasedOnTargetPower(r.player),
@@ -90,6 +97,13 @@ export function decideChargeRequest(r: ChargeRequest): ChargeDecision {
     }
   }
   return ChargeDecision.Ask;
+}
+
+export function declineWhenPassedRoundCapReached(r: ChargeRequest): ChargeDecision {
+  if (!r.playerHasPassed || !Number.isFinite(r.passedRoundLeechRemaining)) {
+    return ChargeDecision.Undecided;
+  }
+  return r.passedRoundLeechRemaining < r.minCharge ? ChargeDecision.No : ChargeDecision.Undecided;
 }
 
 // A passed player should always decline a leech if there's a VP cost associated with it -

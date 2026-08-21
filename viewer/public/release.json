@@ -1,7 +1,21 @@
 {
-  "version": "5.75.3",
+  "version": "5.75.4",
   "releasedAt": "2026-08-21",
   "entries": [
+    {
+      "version": "5.75.4",
+      "releasedAt": "2026-08-21",
+      "kind": "update",
+      "title": "Auto-leech passed-round cap",
+      "impact": "",
+      "changes": [
+        "Auto-leech now has an after-pass total cap so you can stop accepting extra leech before income would overflow.",
+        "Added a passed-round auto-leech cap preference, hosted encoding, Edge automation parsing, and focused engine/viewer tests."
+      ],
+      "userChanges": [
+        "Auto-leech now has an after-pass total cap so you can stop accepting extra leech before income would overflow."
+      ]
+    },
     {
       "version": "5.75.3",
       "releasedAt": "2026-08-21",

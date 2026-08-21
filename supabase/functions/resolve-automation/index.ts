@@ -9,7 +9,12 @@
 // mirroring supabase/functions/notify/index.ts's own shape.
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
-import { Engine, Phase, parseAutoChargePreference } from "../_shared/engine.bundle.js";
+import {
+  Engine,
+  Phase,
+  parseAutoChargeMaxPassedRoundLeech,
+  parseAutoChargePreference,
+} from "../_shared/engine.bundle.js";
 import {
   Backend,
   CancelTriggerDbRow,
@@ -166,7 +171,7 @@ Deno.serve(async (req) => {
 
   try {
     const result = await resolveOneAutomatedTurn(
-      { Engine, Phase, parseAutoChargePreference },
+      { Engine, Phase, parseAutoChargeMaxPassedRoundLeech, parseAutoChargePreference },
       makeBackend(supabase),
       game_id,
       seat

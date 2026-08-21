@@ -41,7 +41,11 @@ import SignIn from "./hosted/SignIn.vue";
 import { createSupabaseBackend, getSupabaseClient, subscribeMoves, SupabaseClient } from "./hosted/supabase-client";
 import { setViewportZoomLocked } from "./hosted/viewport";
 import launch from "./launcher";
-import { parseAutoChargePreference } from "./logic/auto-decide";
+import {
+  encodeAutoChargePreference,
+  parseAutoChargeMaxPassedRoundLeech,
+  parseAutoChargePreference,
+} from "./logic/auto-decide";
 import { retryWithBackoff } from "./logic/retry";
 
 // The Supabase-hosted counterpart of self-contained.ts: instead of minting a
@@ -452,6 +456,8 @@ async function mountGameInstance(
       // launch), so a mid-game toggle takes effect immediately.
       isMySeat: (seat) => mySeats.includes(seat),
       getAutoChargePower: () => parseAutoChargePreference(emitter.store.state.preferences.autoChargePower as string),
+      getAutoChargeMaxPassedRoundLeech: () =>
+        parseAutoChargeMaxPassedRoundLeech(emitter.store.state.preferences.autoChargeMaxPassedRoundLeech as string),
     }
   );
 
@@ -597,14 +603,21 @@ async function mountGameInstance(
   // Commands.vue - so this listens at the mutation level, the same way launcher.ts already does
   // for "info"/"error").
   const pushAutoCharge = () => {
-    const pref = String(emitter.store.state.preferences.autoChargePower ?? "ask");
+    const pref = encodeAutoChargePreference(
+      String(emitter.store.state.preferences.autoChargePower ?? "ask"),
+      String(emitter.store.state.preferences.autoChargeMaxPassedRoundLeech ?? "0")
+    );
     for (const seat of mySeats) {
       host.setAutoCharge(seat, pref);
     }
   };
   pushAutoCharge();
   const unsubAutoCharge = emitter.store.subscribe(({ type, payload }: { type: string; payload: any }) => {
-    if (type === "preferences" && payload && "autoChargePower" in payload) {
+    if (
+      type === "preferences" &&
+      payload &&
+      ("autoChargePower" in payload || "autoChargeMaxPassedRoundLeech" in payload)
+    ) {
       pushAutoCharge();
     }
   });

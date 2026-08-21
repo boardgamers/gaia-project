@@ -3,7 +3,11 @@ import { AuctionVariant, Layout } from "@gaia-project/engine/src/engine";
 import Game from "./components/Game.vue";
 import Wrapper from "./components/Wrapper.vue";
 import launch from "./launcher";
-import { autoDecideChargePower, parseAutoChargePreference } from "./logic/auto-decide";
+import {
+  autoDecideChargePower,
+  parseAutoChargeMaxPassedRoundLeech,
+  parseAutoChargePreference,
+} from "./logic/auto-decide";
 import { discardOfflineMinigameMirror } from "./logic/offline-minigame-sync";
 import {
   announceOfflineGameSave,
@@ -263,7 +267,10 @@ function launchSelfContained(selector = "#app", debug = true) {
         // "my seat" concept - whoever's turn it now is uses the same local preference, exactly
         // like every other viewer preference (flatBuildings etc.) already does.
         const pref = parseAutoChargePreference(emitter.store.state.preferences.autoChargePower as string);
-        autoDecideChargePower(engine, pref);
+        const maxPassedRoundLeech = parseAutoChargeMaxPassedRoundLeech(
+          emitter.store.state.preferences.autoChargeMaxPassedRoundLeech as string
+        );
+        autoDecideChargePower(engine, pref, undefined, maxPassedRoundLeech);
         engine.generateAvailableCommandsIfNeeded();
       }
     }

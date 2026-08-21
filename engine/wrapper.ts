@@ -3,7 +3,11 @@ import crypto from "crypto";
 import { set } from "lodash";
 import Engine, { EngineOptions } from "./src/engine";
 import { Round } from "./src/enums";
-import { defaultAutoCharge, defaultAutoChargeTargetSpendablePower } from "./src/player";
+import {
+  defaultAutoCharge,
+  defaultAutoChargeMaxPassedRoundLeech,
+  defaultAutoChargeTargetSpendablePower,
+} from "./src/player";
 
 export async function init(
   nbPlayers: number,
@@ -43,6 +47,7 @@ export function setPlayerSettings(
   settings: {
     autoCharge?: string;
     autoChargeTargetSpendablePower?: string;
+    autoChargeMaxPassedRoundLeech?: string;
     autoIncome?: boolean;
     autoBrainstone?: boolean;
     itarsAutoChargeToArea3?: boolean;
@@ -60,6 +65,13 @@ export function setPlayerSettings(
       engine.players[player],
       "settings.autoChargeTargetSpendablePower",
       Number(settings.autoChargeTargetSpendablePower)
+    );
+  }
+  if ("autoChargeMaxPassedRoundLeech" in settings) {
+    set(
+      engine.players[player],
+      "settings.autoChargeMaxPassedRoundLeech",
+      Number(settings.autoChargeMaxPassedRoundLeech)
     );
   }
   if ("autoIncome" in settings) {
@@ -80,6 +92,9 @@ export function playerSettings(engine: Engine, player: number) {
     autoCharge: String(engine.players[player].settings?.autoChargePower ?? defaultAutoCharge),
     autoChargeTargetSpendablePower: String(
       engine.players[player].settings?.autoChargeTargetSpendablePower ?? defaultAutoChargeTargetSpendablePower
+    ),
+    autoChargeMaxPassedRoundLeech: String(
+      engine.players[player].settings?.autoChargeMaxPassedRoundLeech ?? defaultAutoChargeMaxPassedRoundLeech
     ),
     autoIncome: !!engine.players[player].settings?.autoIncome,
     autoBrainstone: !!engine.players[player].settings?.autoBrainstone,

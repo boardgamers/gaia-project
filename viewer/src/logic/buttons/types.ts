@@ -81,8 +81,8 @@ export interface CommandController {
 
   isWarningEnabled(disableKey: string): boolean;
 
-  /** The local user's raw "auto-leech" preference (a string - "ask", "decline-cost", or "1".."5" -
-   * see auto-decide.ts's `parseAutoChargePreference`), never synced as engine/game state. Needed by
+  /** The local user's raw "auto-leech" preference (a string - "ask", "decline-cost", "1".."5", or
+   * an encoded value with a passed-round cap; see auto-decide.ts), never synced as engine/game state. Needed by
    * `passWarning` to warn about a setting that could auto-accept a VP-costing leech later this
    * round, which `engine.player(...).settings.autoChargePower` can't answer on its own since it's
    * only ever set transiently at the moment an auto-decide actually runs. */
