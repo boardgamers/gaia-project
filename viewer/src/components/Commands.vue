@@ -66,15 +66,17 @@
         >
           {{ opt.text }}
         </b-dropdown-item>
-        <b-dropdown-divider />
-        <b-dropdown-item
-          v-for="opt in autoChargePassedCapOptions"
-          :key="`passed-${opt.value}`"
-          :active="opt.value === autoChargeMaxPassedRoundLeech"
-          @click="setAutoChargeMaxPassedRoundLeech(opt.value)"
-        >
-          {{ opt.text }}
-        </b-dropdown-item>
+        <template v-if="showAutoChargePassedCapOptions">
+          <b-dropdown-divider />
+          <b-dropdown-item
+            v-for="opt in autoChargePassedCapOptions"
+            :key="`passed-${opt.value}`"
+            :active="opt.value === autoChargeMaxPassedRoundLeech"
+            @click="setAutoChargeMaxPassedRoundLeech(opt.value)"
+          >
+            {{ opt.text }}
+          </b-dropdown-item>
+        </template>
       </b-dropdown>
       <!-- Analysis mode's controls take over the slot the auto-leech dropdown gives up (§2.9/§12) -
            opponent decisions are auto-resolved there regardless of that preference, and this is where
@@ -176,15 +178,17 @@
           >
             {{ opt.text }}
           </b-dropdown-item>
-          <b-dropdown-divider />
-          <b-dropdown-item
-            v-for="opt in autoChargePassedCapOptions"
-            :key="`passed-${opt.value}`"
-            :active="opt.value === autoChargeMaxPassedRoundLeech"
-            @click="setAutoChargeMaxPassedRoundLeech(opt.value)"
-          >
-            {{ opt.text }}
-          </b-dropdown-item>
+          <template v-if="showAutoChargePassedCapOptions">
+            <b-dropdown-divider />
+            <b-dropdown-item
+              v-for="opt in autoChargePassedCapOptions"
+              :key="`passed-${opt.value}`"
+              :active="opt.value === autoChargeMaxPassedRoundLeech"
+              @click="setAutoChargeMaxPassedRoundLeech(opt.value)"
+            >
+              {{ opt.text }}
+            </b-dropdown-item>
+          </template>
         </b-dropdown>
         <AnalysisHeaderControls
           v-else-if="analysisMode"
@@ -740,6 +744,11 @@ export default class Commands extends Vue implements CommandController {
     ];
   }
 
+  get showAutoChargePassedCapOptions(): boolean {
+    const player = this.myPlayer?.player;
+    return player !== undefined && (this.engine.passedPlayers ?? []).includes(player);
+  }
+
   setAutoChargePower(value: string) {
     this.$store.commit("preferences", { autoChargePower: value });
   }
@@ -766,17 +775,14 @@ export default class Commands extends Vue implements CommandController {
    * options (autoChargePowerOptions), not on the button, so the button doesn't force the status
    * line next to it to wrap. */
   get autoChargePowerShortLabel(): string {
+    const cap = this.showAutoChargePassedCapOptions ? this.autoChargeMaxPassedRoundLeech : "0";
     switch (this.autoChargePower) {
       case "ask":
         return "Leech: off";
       case "decline-cost":
-        return this.autoChargeMaxPassedRoundLeech === "0"
-          ? "Leech: free"
-          : `Leech: free cap ${this.autoChargeMaxPassedRoundLeech}`;
+        return cap === "0" ? "Leech: free" : `Leech: free cap ${cap}`;
       default:
-        return this.autoChargeMaxPassedRoundLeech === "0"
-          ? `Leech: ${this.autoChargePower}`
-          : `Leech: ${this.autoChargePower} cap ${this.autoChargeMaxPassedRoundLeech}`;
+        return cap === "0" ? `Leech: ${this.autoChargePower}` : `Leech: ${this.autoChargePower} cap ${cap}`;
     }
   }
 

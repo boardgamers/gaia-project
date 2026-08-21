@@ -22,15 +22,17 @@
       >
         {{ opt.text }}
       </b-dropdown-item>
-      <b-dropdown-divider />
-      <b-dropdown-item
-        v-for="opt in autoChargePassedCapOptions"
-        :key="`passed-${opt.value}`"
-        :active="opt.value === autoChargeMaxPassedRoundLeech"
-        @click="setAutoChargeMaxPassedRoundLeech(opt.value)"
-      >
-        {{ opt.text }}
-      </b-dropdown-item>
+      <template v-if="showPassedCapOptions">
+        <b-dropdown-divider />
+        <b-dropdown-item
+          v-for="opt in autoChargePassedCapOptions"
+          :key="`passed-${opt.value}`"
+          :active="opt.value === autoChargeMaxPassedRoundLeech"
+          @click="setAutoChargeMaxPassedRoundLeech(opt.value)"
+        >
+          {{ opt.text }}
+        </b-dropdown-item>
+      </template>
     </b-dropdown>
   </div>
 </template>
@@ -42,6 +44,7 @@ export default Vue.extend({
   name: "AutoLeechFab",
   props: {
     bottomOffset: { type: Number, default: 24 },
+    showPassedCapOptions: { type: Boolean, default: false },
   },
   computed: {
     autoChargePower(): string {
@@ -76,17 +79,16 @@ export default Vue.extend({
       return (this as any).autoChargePower !== "ask";
     },
     autoChargePowerShortLabel(): string {
+      const cap = (this as any).showPassedCapOptions ? (this as any).autoChargeMaxPassedRoundLeech : "0";
       switch ((this as any).autoChargePower) {
         case "ask":
           return "Leech: off";
         case "decline-cost":
-          return (this as any).autoChargeMaxPassedRoundLeech === "0"
-            ? "Leech: free"
-            : `Leech: free cap ${(this as any).autoChargeMaxPassedRoundLeech}`;
+          return cap === "0" ? "Leech: free" : `Leech: free cap ${cap}`;
         default:
-          return (this as any).autoChargeMaxPassedRoundLeech === "0"
+          return cap === "0"
             ? `Leech: ${(this as any).autoChargePower}`
-            : `Leech: ${(this as any).autoChargePower} cap ${(this as any).autoChargeMaxPassedRoundLeech}`;
+            : `Leech: ${(this as any).autoChargePower} cap ${cap}`;
       }
     },
   },

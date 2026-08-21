@@ -316,7 +316,11 @@
         :style="{ '--sticky-bar-height': totalStickyFooterHeight + 'px' }"
         aria-hidden="true"
       ></div>
-      <AutoLeechFab v-if="showOffTurnAutoLeechFab" :bottom-offset="offTurnAutoLeechBottomOffset" />
+      <AutoLeechFab
+        v-if="showOffTurnAutoLeechFab"
+        :bottom-offset="offTurnAutoLeechBottomOffset"
+        :show-passed-cap-options="myLockedSeatHasPassed"
+      />
     </template>
     <div v-else class="d-flex flex-column">
       <SetupStatus v-if="!ended" />
@@ -911,6 +915,11 @@ export default class Game extends Vue {
       this.engine.round >= Round.Round1 &&
       this.myLockedSeat !== undefined
     );
+  }
+
+  get myLockedSeatHasPassed(): boolean {
+    const seat = this.myLockedSeat;
+    return seat !== undefined && (this.engine.passedPlayers ?? []).includes(seat);
   }
 
   get offTurnAutoLeechBottomOffset(): number {

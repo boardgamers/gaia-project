@@ -742,6 +742,24 @@ describe("Commands", () => {
     expect(container.querySelector("#move-buttons .sticky-bar-title .auto-leech-select")).to.not.equal(null);
   });
 
+  it("only shows after-passing auto-leech cap choices once the viewing seat has passed", () => {
+    const engine = createLostFleetRoundMoveEngine();
+    const store = makeStore();
+    store.commit("preferences", { autoChargePower: "4", autoChargeMaxPassedRoundLeech: "3" });
+    store.commit("receiveData", engine);
+
+    const beforePass = render(Commands, { props: { currentMove: "" }, store });
+    expect(beforePass.container.textContent).to.not.contain("After passing:");
+    expect(beforePass.container.textContent).to.not.contain("cap 3");
+
+    engine.passedPlayers = [PlayerEnum.Player1];
+    store.commit("receiveData", engine);
+
+    const afterPass = render(Commands, { props: { currentMove: "" }, store });
+    expect(afterPass.container.textContent).to.contain("After passing: max 3 total power");
+    expect(afterPass.container.textContent).to.contain("Leech: 4 cap 3");
+  });
+
   it("hides the auto-leech select during analysis mode, putting the line's controls in its place instead (§2.9/§12)", () => {
     const engine = createLostFleetRoundMoveEngine();
     const store = makeStore();
