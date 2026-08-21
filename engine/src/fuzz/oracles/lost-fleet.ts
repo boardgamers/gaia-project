@@ -158,16 +158,14 @@ function checkBuildOffer(
     return;
   }
 
-  // §E1: Protoplanet mine = exactly 3 steps and +6 VP, "0 if it's your start planet" — the
-  // carve-out applies to Moweyds/Space Giants on EVERY Protoplanet mine (their faction's home
-  // planet TYPE, since they have no single starting hex), not just a literal starting hex; this
-  // is the owner-confirmed reading implemented in player.ts (PROGRESS.md "Done so far" #45).
+  // §E1: Protoplanet mine = exactly 3 steps and +6 VP, "0 if it's your start planet". Starting
+  // placements already returned above in Phase.SetupBuilding, so every offer here is a later
+  // Build-a-Mine action and receives +6 VP, including Moweyds and Space Giants.
   if (target === Planet.Protoplanet) {
     if ((b.steps ?? 0) !== 3) {
       messages.push(`${label}: §E1 requires exactly 3 terraforming steps, offer says ${b.steps}`);
     }
-    const isHomeProtoplanetFaction = faction === Faction.Moweyds || faction === Faction.SpaceGiants;
-    const expectedVpBonus = isHomeProtoplanetFaction ? 0 : -6;
+    const expectedVpBonus = -6;
     if (rewardCount(b.cost, Resource.VictoryPoint) !== expectedVpBonus) {
       messages.push(
         `${label}: §E1 requires a ${-expectedVpBonus} VP bonus on this Protoplanet mine, cost "${

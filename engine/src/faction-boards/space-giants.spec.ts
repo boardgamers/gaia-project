@@ -181,11 +181,11 @@ describe("Space Giants - Exploration board special action", () => {
     moveSpecial(engine, command, PlayerEnum.Player1, "2step");
 
     // Protoplanet always requires 3 steps; 2 are free, so exactly 1 extra step's worth of ore is owed
-    // on top of the mine's normal ore cost (no terraform research discount in this setup). Because
-    // Protoplanet is Space Giants' home planet, this setup build does NOT get the +6 VP bonus.
+    // on top of the mine's normal ore cost (no terraform research discount in this setup). This is
+    // a normal action after setup, so it also gets the +6 VP Protoplanet bonus.
     expect(target.data.building).to.equal(Building.Mine);
     expect(player.data.ores).to.equal(beforeOres - baseOreCost - TERRAFORMING_COST);
-    expect(player.data.victoryPoints).to.equal(beforeVp);
+    expect(player.data.victoryPoints).to.equal(beforeVp + 6);
   });
 
   it("should not offer the special action to factions other than Space Giants", () => {

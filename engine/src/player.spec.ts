@@ -127,7 +127,7 @@ describe("Player", () => {
     });
 
     [Faction.Moweyds, Faction.SpaceGiants].forEach((faction) => {
-      it(`should not grant the +6 VP Protoplanet bonus when ${faction} builds on its home Protoplanet`, () => {
+      it(`should grant the +6 VP Protoplanet bonus when ${faction} builds there after setup`, () => {
         const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
         const map = new SpaceMap(2, `home-protoplanet-${faction}`);
         const hex = new GaiaHex(0, 0, { sector: "s1", planet: Planet.Protoplanet });
@@ -138,7 +138,7 @@ describe("Player", () => {
 
         const { cost } = player.canBuild(map, hex, Planet.Protoplanet, Building.Mine, false, false);
 
-        expect(cost.some((reward) => reward.type === Resource.VictoryPoint && reward.count === -6)).to.be.false;
+        expect(cost.some((reward) => reward.type === Resource.VictoryPoint && reward.count === -6)).to.be.true;
       });
     });
   });

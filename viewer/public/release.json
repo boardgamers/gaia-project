@@ -1,7 +1,18 @@
 {
-  "version": "5.75.5",
+  "version": "5.75.6",
   "releasedAt": "2026-08-21",
   "entries": [
+    {
+      "version": "5.75.6",
+      "releasedAt": "2026-08-21",
+      "kind": "fix",
+      "title": "Fix Moweyds Protoplanet scoring",
+      "impact": "",
+      "changes": [
+        "Fixed Moweyds and Space Giants receiving only the Terra tile's 6 VP instead of 12 VP total when building on a Protoplanet after setup"
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.75.5",
       "releasedAt": "2026-08-21",

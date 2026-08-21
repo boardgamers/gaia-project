@@ -3,9 +3,21 @@ import { expect } from "chai";
 import { BoardAction, Booster, Building, Player } from "..";
 import { version } from "../package.json";
 import Engine, { AuctionVariant, createMoveToShow } from "./engine";
-import { Command, Condition, Faction, Operator, Phase, Planet, Player as PlayerEnum } from "./enums";
+import {
+  AdvTechTile,
+  AdvTechTilePos,
+  Command,
+  Condition,
+  Faction,
+  Operator,
+  Phase,
+  Planet,
+  Player as PlayerEnum,
+  Resource,
+} from "./enums";
 import { autoChargePower } from "./move/auto";
 import PlayerData, { MoveTokens } from "./player-data";
+import { techTileEventWithSource } from "./tiles/techs";
 
 describe("Engine", () => {
   it("should throw when trying to build on the wrong place", () => {
@@ -91,6 +103,54 @@ describe("Engine", () => {
       PlayerEnum.Player3,
       PlayerEnum.Player1,
     ]);
+  });
+
+  it("should not grant the Protoplanet VP bonus for Moweyds' starting placement", () => {
+    const engine = new Engine(["init 2 lost-fleet-moweyds-starting-vp"], { lostFleet: true });
+    engine.move(`p1 faction ${Faction.Moweyds}`);
+    engine.move(`p2 faction ${Faction.Terrans}`);
+
+    while (engine.playerToMove !== PlayerEnum.Player1) {
+      const command = engine.generateAvailableCommandsIfNeeded().find((entry) => entry.name === Command.Build) as any;
+      const building = command.data.buildings[0];
+      engine.move(`p${engine.playerToMove + 1} build ${building.building} ${building.coordinates}`);
+    }
+
+    const player = engine.player(PlayerEnum.Player1);
+    const beforeVp = player.data.victoryPoints;
+    const command = engine.generateAvailableCommandsIfNeeded().find((entry) => entry.name === Command.Build) as any;
+    const building = command.data.buildings[0];
+    expect(engine.map.getS(building.coordinates).data.planet).to.equal(Planet.Protoplanet);
+
+    engine.move(`p1 build ${building.building} ${building.coordinates}`);
+
+    expect(player.data.victoryPoints).to.equal(beforeVp);
+  });
+
+  it("should grant Moweyds both Protoplanet and Terra advanced-tech VP after setup", () => {
+    const engine = new Engine(["init 2 moweyds-protoplanet-terra-adv"], { lostFleet: true });
+    const player = engine.player(PlayerEnum.Player1);
+
+    player.faction = Faction.Moweyds;
+    player.loadFaction(null, engine.expansions);
+    player.data.credits = 20;
+    player.data.ores = 20;
+    player.loadEvents(techTileEventWithSource(AdvTechTile.Terra, AdvTechTilePos.Intelligence));
+
+    const hex = [...engine.map.grid.values()].find((entry) => entry.data.planet === Planet.Protoplanet);
+    expect(hex, "need an unoccupied Protoplanet on the board").to.not.equal(undefined);
+
+    const check = player.canBuild(engine.map, hex, Planet.Protoplanet, Building.Mine, false, engine.replay);
+    expect(check.steps).to.equal(3);
+    expect(check.cost.find((reward) => reward.type === Resource.VictoryPoint)?.count ?? 0).to.equal(-6);
+
+    const beforeVp = player.data.victoryPoints;
+    player.build(Building.Mine, hex, check.cost, engine.map, check.steps);
+
+    expect(player.data.victoryPoints - beforeVp).to.equal(12);
+    const latestLog = engine.advancedLog[engine.advancedLog.length - 1];
+    expect(latestLog.changes[Command.Build][Resource.VictoryPoint]).to.equal(6);
+    expect(latestLog.changes[AdvTechTilePos.Intelligence][Resource.VictoryPoint]).to.equal(6);
   });
 
   it("should place Ivits after Lost Fleet expansion factions finish setup", () => {

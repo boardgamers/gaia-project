@@ -1980,13 +1980,13 @@ min` convention above). `Engine.move()`'s `execute()` wrapped `executeMove()` in
       file flags the plan discrepancy so it isn't rediscovered.
     - Wired tier-3 into the driver for Lost Fleet games only (base games keep tier-1/2, since
       that corpus's purpose is calibration, not LF rules checking).
-    - **Triage:** the first sweep flagged `moweyds`/`space-giants` Protoplanet mines as
-      "missing +6 VP" — traced to the oracle mis-encoding §E1's own parenthetical ("0 if it's
-      your start planet"): those 2 factions' faction-planet IS Protoplanet (§B3/§B4), so the
-      already-correct, already-tested engine behavior (PROGRESS "Done so far" #45) suppresses
-      the bonus on every Protoplanet mine they build, not just a literal starting hex. Classified
-      **oracle bug** (not an engine bug) per plan §5.3; fixed in the oracle, documented inline so
-      the misreading isn't reintroduced. No engine change.
+    - **Triage (corrected 2026-08-21):** the first sweep correctly flagged `moweyds`/`space-giants`
+      Protoplanet mines as "missing +6 VP", but the finding was mistakenly dismissed by treating
+      their entire home planet type as "your start planet." §E1's carve-out applies only to the
+      free starting placement; every later Build-a-Mine action on a Protoplanet receives +6 VP.
+      Ivory Beacon exposed the engine bug when Moweyds' two later mines each logged only the Terra
+      advanced tile's 6 VP instead of 12 VP total. The engine and tier-3 oracle now preserve the
+      setup/action distinction explicitly.
     - **Campaign result: 190/190 Lost Fleet seeds clean** after the oracle fix (40×2p + 30×3p +
       30×4p targeted sweeps + a 150-seed mixed-player-count sweep, all outside `npm test`).
       Engine suite unchanged at **532/532** (tier-3 strengthens the existing LF smoke games
