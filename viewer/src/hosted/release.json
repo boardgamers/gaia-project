@@ -1,7 +1,18 @@
 {
-  "version": "5.75.7",
+  "version": "5.75.8",
   "releasedAt": "2026-08-22",
   "entries": [
+    {
+      "version": "5.75.8",
+      "releasedAt": "2026-08-22",
+      "kind": "fix",
+      "title": "Fix mobile chat keyboard layout",
+      "impact": "",
+      "changes": [
+        "Restored the mobile in-game chat toggle as the same bottom-right close button while the chat is open, and hid the game sticky action footer while the chat keyboard is up."
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.75.7",
       "releasedAt": "2026-08-22",

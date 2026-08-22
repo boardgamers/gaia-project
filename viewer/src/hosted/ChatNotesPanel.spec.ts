@@ -559,11 +559,10 @@ describe("ChatNotesPanel", () => {
     own.wrapper.destroy();
   });
 
-  // The mobile panel is a real message window, not a full-screen overlay and not a tiny popup above
-  // the floating toggle: it fills the visible room down to the sticky footer reserve. The arithmetic
-  // itself is chat-popup.ts's; this checks the component actually applies it, including when an
-  // on-screen keyboard eats the bottom of the visible area.
-  it("sizes the mobile panel as a window above the sticky footer, and lifts clear of the keyboard", async () => {
+  // The mobile panel is a real message window, not a full-screen overlay, and the floating toggle
+  // stays in its usual spot so the same tap target minimizes it again. When the keyboard comes up,
+  // the game sticky footer is hidden and the chat remeasures against that freed space.
+  it("keeps the mobile close toggle visible and hides the sticky footer while the keyboard is open", async () => {
     const restoreMobile = mockDesktopViewport(false);
     const listeners: Record<string, () => void> = {};
     const fakeVisualViewport = {
@@ -579,22 +578,29 @@ describe("ChatNotesPanel", () => {
     };
     const previousVv = (window as any).visualViewport;
     (window as any).visualViewport = fakeVisualViewport;
+    const stickyBar = document.createElement("div");
+    stickyBar.id = "move-buttons";
+    stickyBar.className = "mobile-sticky-actions";
+    stickyBar.getBoundingClientRect = () =>
+      ({ height: document.documentElement.classList.contains("chat-popup-keyboard-open") ? 0 : 76 } as DOMRect);
+    document.body.appendChild(stickyBar);
 
     const wrapper = mount(ChatNotesPanel as any, {
       propsData: { client: makeClient(), gameId: "game-1", userId: "user-1" },
     });
     await Vue_nextTick(wrapper);
+    (wrapper.vm as any).updateStickyOffset("#move-buttons.mobile-sticky-actions");
     await wrapper.find(".chat-notes__toggle").trigger("click");
     await Vue_nextTick(wrapper);
     const panelStyle = () => (wrapper.vm as any).panelStyle;
     const toggleStyle = () => (wrapper.vm as any).toggleStyle;
-    // 24px sticky-footer reserve at the bottom, and a max height that leaves only a strip of the
-    // game visible at the top. The floating open button is hidden while the window is open.
-    expect(panelStyle().bottom).to.equal("24px");
-    expect(panelStyle().maxHeight).to.equal(`${window.innerHeight - 24 - 64}px`);
+    // 76px sticky footer + 12px gap, plus the 48px toggle and 10px panel gap.
+    expect(panelStyle().bottom).to.equal("146px");
+    expect(panelStyle().maxHeight).to.equal(`${window.innerHeight - 146 - 64}px`);
     expect(panelStyle().height).to.equal(panelStyle().maxHeight);
-    expect(toggleStyle().bottom).to.equal("24px");
-    expect(wrapper.find(".chat-notes__toggle").exists()).to.equal(false);
+    expect(toggleStyle().bottom).to.equal("88px");
+    expect(wrapper.find(".chat-notes__toggle").exists()).to.equal(true);
+    expect(wrapper.find(".chat-notes__toggle").classes()).to.include("chat-notes__toggle--open");
 
     // An ordinary scroll on iOS (address bar sliding away, elastic overscroll at the end of the
     // thread) moves the visual viewport around without a keyboard being up - nothing should move.
@@ -602,18 +608,22 @@ describe("ChatNotesPanel", () => {
     fakeVisualViewport.height = window.innerHeight - 90;
     listeners.scroll();
     await Vue_nextTick(wrapper);
-    expect(panelStyle().bottom).to.equal("24px");
-    expect(toggleStyle().bottom).to.equal("24px");
+    expect(document.documentElement.classList.contains("chat-popup-keyboard-open")).to.equal(false);
+    expect(panelStyle().bottom).to.equal("146px");
+    expect(toggleStyle().bottom).to.equal("88px");
 
     // The on-screen keyboard opening: the visible area shrinks and shifts, so 368px of the layout
-    // viewport's bottom is hidden and both surfaces have to rise by exactly that.
+    // viewport's bottom is hidden, the sticky footer is hidden, and both chat surfaces rise by the
+    // keyboard inset from the ordinary 24px no-footer baseline.
     fakeVisualViewport.height = 380;
     fakeVisualViewport.offsetTop = 20;
     listeners.resize();
     await Vue_nextTick(wrapper);
+    await Vue_nextTick(wrapper);
     const keyboardInset = window.innerHeight - 400;
-    expect(panelStyle().bottom).to.equal(`${24 + keyboardInset}px`);
-    expect(panelStyle().maxHeight).to.equal(`${380 - 24 - 64}px`);
+    expect(document.documentElement.classList.contains("chat-popup-keyboard-open")).to.equal(true);
+    expect(panelStyle().bottom).to.equal(`${82 + keyboardInset}px`);
+    expect(panelStyle().maxHeight).to.equal(`${380 - 82 - 64}px`);
     expect(panelStyle().height).to.equal(panelStyle().maxHeight);
     expect(toggleStyle().bottom).to.equal(`${24 + keyboardInset}px`);
 
@@ -622,8 +632,10 @@ describe("ChatNotesPanel", () => {
     fakeVisualViewport.offsetTop = 0;
     listeners.resize();
     await Vue_nextTick(wrapper);
-    expect(panelStyle().bottom).to.equal("24px");
-    expect(toggleStyle().bottom).to.equal("24px");
+    await Vue_nextTick(wrapper);
+    expect(document.documentElement.classList.contains("chat-popup-keyboard-open")).to.equal(false);
+    expect(panelStyle().bottom).to.equal("146px");
+    expect(toggleStyle().bottom).to.equal("88px");
 
     // Desktop is a docked full-height strip - no popup geometry there at all.
     (wrapper.vm as any).isDesktop = true;
@@ -631,6 +643,7 @@ describe("ChatNotesPanel", () => {
     expect(panelStyle()).to.deep.equal({});
 
     wrapper.destroy();
+    stickyBar.remove();
     (window as any).visualViewport = previousVv;
     restoreMobile();
   });

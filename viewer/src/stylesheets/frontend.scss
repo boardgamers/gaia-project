@@ -161,4 +161,9 @@ body {
   html.chat-popup-open body {
     overflow: hidden;
   }
+
+  html.chat-popup-keyboard-open #move-buttons.mobile-sticky-actions,
+  html.chat-popup-keyboard-open .premove-bar--sticky-mobile {
+    display: none !important;
+  }
 }

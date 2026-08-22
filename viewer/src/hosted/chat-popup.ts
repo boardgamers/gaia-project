@@ -82,6 +82,11 @@ export function chatPopupGeometry(input: ChatPopupInput): ChatPopupGeometry {
  * `overflow: hidden` on `html`/`body` at mobile widths - see `setPageScrollLock`. */
 export const PAGE_SCROLL_LOCK_CLASS = "chat-popup-open";
 
+/** Class the page root carries while a mobile chat composer has forced the on-screen keyboard up.
+ * frontend.scss hides the game's own sticky action/premove footer under it; the keyboard already
+ * owns that space, and leaving the game controls visible there squeezes the chat window upward. */
+export const PAGE_KEYBOARD_OPEN_CLASS = "chat-popup-keyboard-open";
+
 /** `window.scrollY` at the moment of locking, so a browser that resets the offset when the root
  * stops scrolling can be put back. Module-level rather than per-component because only one chat
  * popup can ever be open at a time (the per-game panel and the lobby panel live on different
@@ -123,6 +128,13 @@ export function setPageScrollLock(locked: boolean): void {
   if (restoreTo !== null && typeof window !== "undefined" && window.scrollY !== restoreTo) {
     window.scrollTo(0, restoreTo);
   }
+}
+
+export function setKeyboardOpenClass(open: boolean): void {
+  if (typeof document === "undefined") {
+    return;
+  }
+  document.documentElement.classList.toggle(PAGE_KEYBOARD_OPEN_CLASS, open);
 }
 
 export function watchOverlayViewport(onPin: (pin: OverlayViewportPin) => void): () => void {

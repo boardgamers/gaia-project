@@ -6,6 +6,7 @@ import {
   CHAT_TOGGLE_HEIGHT,
   PAGE_SCROLL_LOCK_CLASS,
   chatPopupGeometry,
+  setKeyboardOpenClass,
   setPageScrollLock,
   watchOverlayViewport,
 } from "./chat-popup";
@@ -157,6 +158,20 @@ describe("chat-popup", () => {
       const unwatch = watchOverlayViewport(() => expect.fail("must not report a pin"));
       unwatch();
       (window as any).visualViewport = previous;
+    });
+  });
+
+  describe("setKeyboardOpenClass", () => {
+    afterEach(() => {
+      setKeyboardOpenClass(false);
+    });
+
+    it("marks the page root while the chat keyboard is open", () => {
+      expect(document.documentElement.classList.contains("chat-popup-keyboard-open")).to.equal(false);
+      setKeyboardOpenClass(true);
+      expect(document.documentElement.classList.contains("chat-popup-keyboard-open")).to.equal(true);
+      setKeyboardOpenClass(false);
+      expect(document.documentElement.classList.contains("chat-popup-keyboard-open")).to.equal(false);
     });
   });
 });

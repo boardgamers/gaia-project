@@ -1,7 +1,7 @@
 <template>
   <div class="chat-notes gaia-viewer-game">
     <button
-      v-if="!isDesktop && !open"
+      v-if="!isDesktop"
       type="button"
       class="chat-notes__toggle"
       :class="{ 'chat-notes__toggle--unread': hasUnread, 'chat-notes__toggle--open': open }"
@@ -97,7 +97,7 @@ import {
 } from "./chat-reads";
 import { isDesktopViewport, watchDesktopViewport } from "./viewport";
 import { OverlayViewportPin } from "./overlay-viewport";
-import { chatPopupGeometry, setPageScrollLock, watchOverlayViewport } from "./chat-popup";
+import { chatPopupGeometry, setKeyboardOpenClass, setPageScrollLock, watchOverlayViewport } from "./chat-popup";
 import {
   formatUnreadCount,
   loadLastSeenId,
@@ -119,6 +119,7 @@ interface ChatMessage {
 // `-v2` for the same reason as GameNavPanel.vue's own key: the default flipped to closed, and a
 // stored "1" from the default-open era would otherwise keep re-docking the panel.
 const OPEN_PREF_KEY = "chat-notes-panel-open-v2";
+const STICKY_BAR_SELECTOR = "#move-buttons.mobile-sticky-actions, .premove-bar--sticky-mobile";
 
 // Desktop-only preference, mirroring GameNavPanel.vue's own (see its doc comment) - now defaulting
 // to CLOSED so the game keeps the full window width, and still one click away in HostedBar.vue's
@@ -152,9 +153,10 @@ function saveOpenPreference(open: boolean): void {
  * crossing via `watchDesktopViewport`.
  *
  * On mobile it is a windowed chat surface, not a full-screen overlay and not a bottom sheet: it
- * keeps a small inset on the sides and fills the visible room down to the sticky game footer.
- * `chat-popup.ts` owns that arithmetic - the toggle's own offset is measured off the live sticky
- * bar, and an on-screen keyboard has to lift the window by the same hidden-bottom inset.
+ * keeps a small inset on the sides, and the floating chat button remains visible in its usual spot
+ * so the same tap target minimizes it again. `chat-popup.ts` owns that arithmetic - the toggle's
+ * own offset is measured off the live sticky bar, and an on-screen keyboard has to lift the window
+ * by the same hidden-bottom inset.
  *
  * It stays modal in the "nothing behind it responds" sense even so: hosted.ts mirrors `open` onto
  * `#app.chat-notes-open`, and frontend.scss drops pointer events for the whole page except this
@@ -219,7 +221,7 @@ export default Vue.extend({
   },
   computed: {
     /** Mobile geometry only - desktop is a docked full-height strip, styled purely in CSS. See
-     * chat-popup.ts: the panel fills the available visible room down to the sticky footer reserve. */
+     * chat-popup.ts: the panel stays above the floating toggle so it remains a close button. */
     panelStyle(): Record<string, string> {
       if (this.isDesktop) {
         return {};
@@ -228,7 +230,6 @@ export default Vue.extend({
         toggleBottom: this.toggleBottomOffset,
         pin: this.viewportPin,
         innerHeight: typeof window === "undefined" ? 0 : window.innerHeight,
-        keepToggleVisible: false,
       });
       return {
         bottom: `${geometry.bottom}px`,
@@ -250,6 +251,9 @@ export default Vue.extend({
      * about how the page scrolls. */
     popupOpen(): boolean {
       return this.open && !this.isDesktop;
+    },
+    popupKeyboardOpen(): boolean {
+      return this.popupOpen && !!this.viewportPin;
     },
     unreadCount(): number {
       // An open panel is by definition being read; `markSeen` keeps `lastSeenId` current while it
@@ -285,6 +289,10 @@ export default Vue.extend({
     // toolbar / composer chains out and scrolls the game behind it (see chat-popup.ts).
     popupOpen(open: boolean) {
       setPageScrollLock(open);
+    },
+    popupKeyboardOpen(open: boolean) {
+      setKeyboardOpenClass(open);
+      this.$nextTick(() => this.updateStickyOffset(STICKY_BAR_SELECTOR));
     },
   },
   async mounted() {
@@ -328,6 +336,7 @@ export default Vue.extend({
     // Never leave the page locked behind a panel that is going away - an in-app game switch tears
     // this component down and mounts a fresh one.
     setPageScrollLock(false);
+    setKeyboardOpenClass(false);
     if (this.viewportUnwatch) {
       this.viewportUnwatch();
       this.viewportUnwatch = null;
@@ -371,7 +380,6 @@ export default Vue.extend({
       if (typeof document === "undefined" || typeof ResizeObserver === "undefined") {
         return;
       }
-      const STICKY_BAR_SELECTOR = "#move-buttons.mobile-sticky-actions, .premove-bar--sticky-mobile";
       let observedEl: Element | null = null;
       this.stickyBarObserver = new ResizeObserver(() => this.updateStickyOffset(STICKY_BAR_SELECTOR));
       const recheck = () => {
@@ -666,10 +674,11 @@ export default Vue.extend({
   display: flex;
   flex-direction: column;
 
-  // Mobile is a windowed chat surface, not a full-screen overlay and not a squeezed 360px dock: it
-  // fills the visible space above the sticky game footer while keeping a small horizontal inset so
-  // it still reads as a window. `bottom`/`height` come from chat-popup.ts as inline styles; the
-  // inline height is fixed to the available space so message count never collapses the thread.
+  // Mobile is a windowed chat surface, not a full-screen overlay and not a squeezed 360px dock. It
+  // keeps a small horizontal inset so it still reads as a window, and stays above the floating chat
+  // button while open so the same bottom-right control can minimize it again. `bottom`/`height`
+  // come from chat-popup.ts as inline styles; the inline height is fixed to the available space so
+  // message count never collapses the thread.
   @media (max-width: 767px) {
     left: 0.5rem;
     right: 0.5rem;
