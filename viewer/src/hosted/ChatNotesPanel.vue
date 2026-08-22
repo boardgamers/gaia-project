@@ -1,7 +1,7 @@
 <template>
   <div class="chat-notes gaia-viewer-game">
     <button
-      v-if="!isDesktop"
+      v-if="!isDesktop && !open"
       type="button"
       class="chat-notes__toggle"
       :class="{ 'chat-notes__toggle--unread': hasUnread, 'chat-notes__toggle--open': open }"
@@ -151,10 +151,10 @@ function saveOpenPreference(open: boolean): void {
  * toggle below, and it always starts closed. `isDesktop` re-evaluates on every breakpoint
  * crossing via `watchDesktopViewport`.
  *
- * On mobile it is a POPUP, not a full-screen overlay (owner request): full page width, but anchored
- * above the floating toggle and only as tall as the space above it, so the toggle stays visible and
- * one tap minimizes the chat. `chat-popup.ts` owns that arithmetic - the toggle's own offset is
- * measured off the live sticky bar, and an on-screen keyboard has to lift both surfaces.
+ * On mobile it is a windowed chat surface, not a full-screen overlay and not a bottom sheet: it
+ * keeps a small inset on the sides and fills the visible room down to the sticky game footer.
+ * `chat-popup.ts` owns that arithmetic - the toggle's own offset is measured off the live sticky
+ * bar, and an on-screen keyboard has to lift the window by the same hidden-bottom inset.
  *
  * It stays modal in the "nothing behind it responds" sense even so: hosted.ts mirrors `open` onto
  * `#app.chat-notes-open`, and frontend.scss drops pointer events for the whole page except this
@@ -218,9 +218,8 @@ export default Vue.extend({
     };
   },
   computed: {
-    /** Popup geometry (mobile only - desktop is a docked full-height strip, styled purely in CSS).
-     * See chat-popup.ts: the panel hangs above the toggle rather than filling the screen, so the
-     * toggle stays visible and tappable to minimize it again. */
+    /** Mobile geometry only - desktop is a docked full-height strip, styled purely in CSS. See
+     * chat-popup.ts: the panel fills the available visible room down to the sticky footer reserve. */
     panelStyle(): Record<string, string> {
       if (this.isDesktop) {
         return {};
@@ -229,6 +228,7 @@ export default Vue.extend({
         toggleBottom: this.toggleBottomOffset,
         pin: this.viewportPin,
         innerHeight: typeof window === "undefined" ? 0 : window.innerHeight,
+        keepToggleVisible: false,
       });
       return {
         bottom: `${geometry.bottom}px`,
@@ -666,15 +666,13 @@ export default Vue.extend({
   display: flex;
   flex-direction: column;
 
-  // Mobile is a POPUP, not a full-screen overlay and not a squeezed 360px dock (owner request):
-  // full page width, but hanging above the floating toggle and only as tall as the space above it,
-  // so the toggle stays visible and one tap minimizes it. `top`/`bottom`/`max-height` come from
-  // chat-popup.ts as inline styles - the toggle's own offset is measured off the live sticky bar
-  // and an on-screen keyboard shifts both - leaving only the popup's LOOK here. The inline height
-  // is fixed to the available space so message count never collapses the thread into a flat card.
+  // Mobile is a windowed chat surface, not a full-screen overlay and not a squeezed 360px dock: it
+  // fills the visible space above the sticky game footer while keeping a small horizontal inset so
+  // it still reads as a window. `bottom`/`height` come from chat-popup.ts as inline styles; the
+  // inline height is fixed to the available space so message count never collapses the thread.
   @media (max-width: 767px) {
-    left: 0;
-    right: 0;
+    left: 0.5rem;
+    right: 0.5rem;
     top: auto;
     width: auto;
     min-height: 11rem;
@@ -879,6 +877,10 @@ export default Vue.extend({
     background: var(--ui-input-bg);
     color: var(--ui-text);
     padding: 0.35rem 0.5rem;
+
+    @media (max-width: 767px) {
+      font-size: 16px;
+    }
   }
 
   button {

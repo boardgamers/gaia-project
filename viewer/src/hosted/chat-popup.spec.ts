@@ -25,6 +25,17 @@ describe("chat-popup", () => {
       expect(geometry.bottom + geometry.maxHeight).to.be.lessThan(800);
     });
 
+    it("can fill down to the reserved bottom area when the toggle does not need to stay visible", () => {
+      const geometry = chatPopupGeometry({
+        toggleBottom: 96,
+        pin: null,
+        innerHeight: 800,
+        keepToggleVisible: false,
+      });
+      expect(geometry.bottom).to.equal(96);
+      expect(geometry.maxHeight).to.equal(800 - 96 - CHAT_POPUP_TOP_CLEARANCE);
+    });
+
     it("follows the toggle up when the sticky move bar grows underneath it", () => {
       const short = chatPopupGeometry({ toggleBottom: 24, pin: null, innerHeight: 800 });
       const tall = chatPopupGeometry({ toggleBottom: 120, pin: null, innerHeight: 800 });

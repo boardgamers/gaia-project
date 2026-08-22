@@ -42,6 +42,9 @@ export interface ChatPopupInput {
   pin: OverlayViewportPin;
   /** `window.innerHeight` - the layout viewport `position: fixed` anchors to. */
   innerHeight: number;
+  /** Default true: keep the popup above the floating toggle so the toggle stays visible. Set false
+   * for a normal chat window that should use all available room down to the reserved bottom area. */
+  keepToggleVisible?: boolean;
 }
 
 export interface ChatPopupGeometry {
@@ -55,12 +58,13 @@ export interface ChatPopupGeometry {
 }
 
 export function chatPopupGeometry(input: ChatPopupInput): ChatPopupGeometry {
-  const { toggleBottom, pin, innerHeight } = input;
+  const { toggleBottom, pin, innerHeight, keepToggleVisible = true } = input;
   const keyboardInset = pin ? Math.max(0, Math.round(innerHeight - (pin.top + pin.height))) : 0;
   // What the user can actually see right now: the visual viewport under a keyboard, the layout
   // viewport otherwise (see overlay-viewport.ts for why those are the only two cases).
   const visibleHeight = pin ? pin.height : innerHeight;
-  const clearance = toggleBottom + CHAT_TOGGLE_HEIGHT + CHAT_POPUP_GAP;
+  const toggleClearance = keepToggleVisible ? CHAT_TOGGLE_HEIGHT + CHAT_POPUP_GAP : 0;
+  const clearance = toggleBottom + toggleClearance;
   return {
     bottom: Math.round(keyboardInset + clearance),
     maxHeight: Math.max(CHAT_POPUP_MIN_HEIGHT, Math.round(visibleHeight - clearance - CHAT_POPUP_TOP_CLEARANCE)),

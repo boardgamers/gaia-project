@@ -1,7 +1,18 @@
 {
-  "version": "5.75.6",
-  "releasedAt": "2026-08-21",
+  "version": "5.75.7",
+  "releasedAt": "2026-08-22",
   "entries": [
+    {
+      "version": "5.75.7",
+      "releasedAt": "2026-08-22",
+      "kind": "fix",
+      "title": "Fix mobile chat window",
+      "impact": "",
+      "changes": [
+        "Fixed the in-game mobile chat panel so focusing the message box keeps it as an inset window above the sticky action bar instead of squeezing it into a top-aligned strip."
+      ],
+      "userChanges": []
+    },
     {
       "version": "5.75.6",
       "releasedAt": "2026-08-21",
