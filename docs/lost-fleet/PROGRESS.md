@@ -7891,6 +7891,16 @@ Commit · ⓘ` now lives in the hazard-striped header that already existed, with
       per placement - the overlay has to use the same one or a ring drifts further off its hex the
       further that hex sits from the origin.
 
+200.  ✅ **Sandbox mode's booster picker now assumes any booster is pickable when passing (2026-08-24,
+      owner instruction).** `possibleRoundBoosters` (`engine/src/available/round.ts`) used to filter
+      the same way in and out of analysis mode - only boosters still marked available in
+      `engine.tiles.boosters`, i.e. whatever opponents haven't already taken in the real game. That
+      undersold ANALYSIS_MODE_PLAN.md §4.5's decision #11 (boosters are a frozen-opponents blind spot,
+      documented but not built around) for this one case: with opponents frozen, the sandbox seat now
+      sees every booster as available except the one it's currently holding (obviously can't re-pick
+      that one). Gated on `PlayerData.analysis`, so real games are unaffected. New coverage in
+      `engine/src/available/round.spec.ts`; engine suite (excl. AI/fuzz) 677/677 passing.
+
 ## Still MISSING — only one art-only item left
 
 As of 2026-06-27, every item that used to be on this list is resolved EXCEPT:
