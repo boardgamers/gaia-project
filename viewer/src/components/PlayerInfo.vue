@@ -1,6 +1,6 @@
 <template>
   <div class="player-info no-gutters" v-if="player && player.faction">
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center" v-if="!preview">
       <div style="display: flex; align-items: center" @click="playerClick(player)" role="button">
         <img class="player-avatar" :alt="`${name}'s avatar`" :src="avatar" />
         <span :class="['player-name', { dropped: player.dropped }]" role="button">{{ name }}</span>
@@ -29,6 +29,7 @@
           :faction="player.faction"
           :data="playerData"
           :height="height"
+          :preview="preview"
         />
         <g transform="translate(4.4, 0)">
           <BuildingGroup
@@ -38,6 +39,7 @@
             :player="player"
             :placed="playerData.buildings.PI"
             :resource="['pw', 't']"
+            :reveal-income="preview"
           />
           <BuildingGroup
             :transform="player.faction === 'bescods' ? 'translate(2.2, 10)' : 'translate(12, 10)'"
@@ -48,6 +50,7 @@
             :ac1="playerData.buildings.ac1"
             :ac2="playerData.buildings.ac2"
             :resource="['q']"
+            :reveal-income="preview"
           />
           <BuildingGroup
             v-if="isFrontiers"
@@ -74,6 +77,7 @@
             :player="player"
             :placed="playerData.buildings.ts"
             :resource="['c']"
+            :reveal-income="preview"
           />
           <BuildingGroup
             transform="translate(11, 13)"
@@ -82,6 +86,7 @@
             :player="player"
             :placed="playerData.buildings.lab"
             :resource="['k']"
+            :reveal-income="preview"
           />
           <BuildingGroup
             transform="translate(0, 16)"
@@ -90,6 +95,7 @@
             :player="player"
             :placed="playerData.buildings.m"
             :resource="['o']"
+            :reveal-income="preview"
           />
           <!-- M to TS -->
           <line x1="5.7" x2="5.7" y1="14.2" y2="14.8" stroke="black" stroke-width="0.06" />
@@ -118,8 +124,8 @@
         />
         <Resource
           kind="r"
-          tooltip="Range"
-          :count="playerData.range"
+          :tooltip="rangeTooltip"
+          :count="playerRange"
           :transform="`translate(35.5,${isFrontiers ? 0.3 : 1}) scale(0.1)`"
           style="opacity: 0.7"
         />
@@ -138,7 +144,7 @@
             style="opacity: 0"
             v-b-modal.modal-center="'trade'"
             role="button"
-            v-b-tooltip="'Trade Bonus'"
+            v-b-tooltip.hover="'Trade Bonus'"
           />
         </g>
         <g transform="translate(37.3,3.2) scale(0.1)">
@@ -153,7 +159,7 @@
             style="opacity: 0"
             v-b-modal.modal-center="'trade'"
             role="button"
-            v-b-tooltip="'Trading Cost in pw'"
+            v-b-tooltip.hover="'Trading Cost in pw'"
           />
         </g>
 
@@ -164,6 +170,7 @@
           :gaia="playerData.gaiaformersInGaia"
           :player="player"
           :placed="playerData.buildings.gf"
+          :asteroid-consumed="playerData.gaiaformersUsedForAsteroid"
           :resource="[]"
           :discount="playerData ? playerData.gaiaFormingDiscount() : 0"
         />
@@ -174,8 +181,10 @@
             x="-30"
             y="-60"
             height="120"
+            :class="{ 'last-move': recentBooster }"
             :booster="playerData.tiles.booster"
             :disabled="passed"
+            :special-action-used="boosterSpecialActionUsed"
           />
         </g>
 
@@ -194,45 +203,61 @@
           />
         </g>
 
-        <PowerBowls :transform="`translate(30,${height - 7})`" :player="player" />
+        <PowerBowls :transform="`translate(30,${height - 7})`" :player="player" :data="playerData" />
 
         <g transform="translate(29.3, 4.7) scale(0.9) translate(0, 1)">
           <g v-for="i in [0, 1, 2, 3]" :key="i" :transform="`translate(${(i - 2) * 3.8}, 0)`">
             <g
-              v-for="(planet, index) in planetsWithSteps(i)"
-              :key="planet"
-              :transform="`translate(0, ${(i > 0 ? (index > 0 ? 1 : -1) : 0) * 1.4})`"
+              v-for="marker in terraformingMarkers(i)"
+              :key="marker.planet"
+              :data-terraforming-step="i"
+              :data-planet="marker.planet"
+              :data-radius="marker.radius"
+              :transform="`translate(${marker.x}, ${marker.y})`"
             >
-              <circle :r="1" style="stroke-width: 0.06px !important" :class="['player-token', 'planet-fill', planet]" />
+              <circle
+                :r="marker.radius"
+                style="stroke-width: 0.06px !important"
+                :class="['player-token', 'planet-fill', marker.planet]"
+              />
               <text
-                :style="`font-size: 1.4px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(
-                  planet
-                )}`"
+                :style="`font-size: ${
+                  marker.fontSize
+                }px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(marker.planet)}`"
               >
-                {{ player.ownedPlanetsCount[planet] }}
+                {{ player.ownedPlanetsCount[marker.planet] }}
               </text>
-              <circle :r="1" style="cursor: pointer; opacity: 0" @click="togglePlanetHighlight(planet)" />
+              <circle
+                :r="marker.radius"
+                style="cursor: pointer; opacity: 0"
+                @click="togglePlanetHighlight(marker.planet)"
+              />
             </g>
             <line x1="1.9" x2="1.9" y1="-2.3" y2="2.3" stroke-width="0.06" stroke="black" />
           </g>
-          <g :transform="`translate(7.6, ${hasLostPlanet ? -1.4 : 0})`">
-            <circle :r="1" style="stroke-width: 0.06px !important" :class="['player-token', 'planet-fill', 'g']" />
-            <text style="font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: white">
-              {{ player.ownedPlanetsCount["g"] }}
+          <g v-for="entry in planetCounters" :key="entry.planet" :transform="`translate(7.6, ${entry.y})`">
+            <circle
+              :r="planetCounterRadius"
+              style="stroke-width: 0.06px !important"
+              :class="['player-token', 'planet-fill', entry.planet]"
+            />
+            <text
+              :style="`font-size: ${planetCounterFontSize}px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(
+                entry.planet
+              )}`"
+            >
+              {{ player.ownedPlanetsCount[entry.planet] }}
             </text>
-            <circle :r="1" style="cursor: pointer; opacity: 0" @click="togglePlanetHighlight(planet)" />
-          </g>
-          <g v-if="hasLostPlanet" :transform="`translate(7.6, 1.4 )`">
-            <circle :r="1" style="stroke-width: 0.06px !important" :class="['player-token', 'planet-fill', 'l']" />
-            <text style="font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: white">
-              {{ player.ownedPlanetsCount["l"] }}
-            </text>
-            <circle :r="1" style="cursor: pointer; opacity: 0" @click="togglePlanetHighlight(planet)" />
+            <circle
+              :r="planetCounterRadius"
+              style="cursor: pointer; opacity: 0"
+              @click="togglePlanetHighlight(entry.planet)"
+            />
           </g>
         </g>
 
         <SpecialAction
-          v-for="(action, i) in player.actions"
+          v-for="(action, i) in player.actionsWithoutTile"
           :action="[action.rewards]"
           :player="player"
           :recent="recentAction(i)"
@@ -246,7 +271,7 @@
       </svg>
     </div>
 
-    <div class="tiles row no-gutters mt-1">
+    <div class="tiles row no-gutters mt-1" v-if="!preview">
       <FederationTile
         v-for="(fed, i) in playerData.tiles.federations"
         class="mb-1 mr-1"
@@ -257,27 +282,68 @@
         :numTiles="1"
         filter="url(#shadow-1)"
       />
+      <FederationTile
+        v-for="(fed, i) in playerData.spaceshipFederations"
+        class="mb-1 mr-1"
+        :key="'ship-fed-' + i"
+        :data-ship-federation="fed.tile"
+        :spaceship-federation="fed.tile"
+        :rewardsOverride="shipFederationRewards(fed.tile)"
+        :used="!fed.green"
+        :player="player.player"
+        :numTiles="1"
+        filter="url(#shadow-1)"
+      />
       <TechTile
         v-for="tech in playerData.tiles.techs"
         :covered="!tech.enabled"
         class="mb-1 mr-1"
+        :class="{ 'last-move': recentSpecialTile(tech.pos) }"
         :key="tech.pos"
         :pos="tech.pos"
         :player="player.player"
       />
+      <span
+        v-for="(artifact, i) in playerData.artifacts"
+        class="mb-1 mr-1 d-inline-flex player-artifact"
+        :class="{ 'last-move': recentArtifact(artifact) }"
+        :key="'artifact-' + i"
+        :data-artifact="artifact"
+      >
+        <ArtifactIcon :artifact="artifact" />
+      </span>
     </div>
-    <Rules :id="player.faction" :type="player.faction" />
+    <Rules v-if="!preview" :id="player.faction" :type="player.faction" />
   </div>
 </template>
 
 <script lang="ts">
-import Engine, { Building, Expansion, factionPlanet, Planet, Player } from "@gaia-project/engine";
+import Engine, {
+  ArtifactToken,
+  Building,
+  effectiveRange,
+  Expansion,
+  factionPlanet,
+  hasExpansion,
+  Operator,
+  Planet,
+  Player,
+  SpaceshipFederation,
+} from "@gaia-project/engine";
+import { AnyTechTilePos } from "@gaia-project/engine/src/enums";
+import { lostFleetTerraformingBoard } from "@gaia-project/engine/src/factions";
+import { techTileEventSource } from "@gaia-project/engine/src/tiles/techs";
 import Vue from "vue";
 import { Component, Prop, Watch } from "vue-property-decorator";
 import { MapMode, MapModeType } from "../data/actions";
+import { terraformCost3Set } from "../data/faction-overview";
+import { effectivePreviewPlayer } from "../data/faction-preview";
 import { factionData, factionName, planetsWithSteps } from "../data/factions";
+import { spaceshipFederationDisplayRewards } from "../data/federations";
 import { mapModeTypeOptions } from "../data/stats";
 import { factionColor } from "../graphics/utils";
+import { gameSeed } from "../logic/utils";
+import ArtifactIcon from "./ArtifactIcon.vue";
 import Booster from "./Booster.vue";
 import FederationTile from "./FederationTile.vue";
 import BuildingGroup from "./PlayerBoard/BuildingGroup.vue";
@@ -287,12 +353,21 @@ import Rules from "./Rules.vue";
 import SpecialAction from "./SpecialAction.vue";
 import TechTile from "./TechTile.vue";
 
+type TerraformingMarker = {
+  planet: Planet;
+  x: number;
+  y: number;
+  radius: number;
+  fontSize: number;
+};
+
 @Component({
   components: {
     TechTile,
     Booster,
     SpecialAction,
     FederationTile,
+    ArtifactIcon,
     BuildingGroup,
     PowerBowls,
     PlayerBoardInfo,
@@ -303,10 +378,34 @@ export default class PlayerInfo extends Vue {
   @Prop()
   player: Player;
 
+  // Read-only "duplicate of the in-game faction board" mode for the faction pick/ban window: hides
+  // the player-chrome (avatar, name, map-mode select, tiles, per-faction Rules) and interactions,
+  // rendering only the faction board itself from a preview store (see FactionInfoCard.vue).
+  @Prop({ default: false })
+  preview: boolean;
+
   protected selectedMapModeType: MapModeType = MapModeType.default;
 
+  // While a faction is only picked but not yet loaded (`pl.board` stays null until the auction
+  // resolves and `endSetupFactionPhase` runs - true for every setup pick/ban/bid phase), `pl.data`
+  // is still all starting-PlayerData defaults: no starting resources, empty power bowls, research
+  // at level 0. Fall back to a genuinely loaded preview player for the same faction so the board
+  // shows what it will actually start with, exactly like the physical board does the moment a
+  // faction is settled.
   get playerData() {
-    return this.player?.data;
+    return this.player ? effectivePreviewPlayer(this.player).data : undefined;
+  }
+
+  get playerRange(): number {
+    return effectiveRange(this.playerData);
+  }
+
+  get rangeTooltip(): string {
+    const data = this.playerData;
+    if (data && this.playerRange !== data.range) {
+      return "Range (includes +1 from the claimed Range spaceship tech tile)";
+    }
+    return "Range";
   }
 
   playerClick(player: Player) {
@@ -347,24 +446,199 @@ export default class PlayerInfo extends Vue {
   }
 
   recentAction(i: number): boolean {
-    const action = this.player.actions[i];
+    const action = this.player.actionsWithoutTile[i];
+    if (this.recentOpponentSpecials.has(action.rewards)) {
+      return true;
+    }
     const commands = this.$store.getters.recentActions.get(this.faction) ?? [];
     return commands.some((c) => c.args[0] === action.rewards);
   }
 
+  /** The reward specs of this player's special actions taken since the viewer's last turn. */
+  get recentOpponentSpecials(): Set<string> {
+    return this.$store.getters.recentOpponentSpecialActions.get(this.faction) ?? new Set<string>();
+  }
+
+  /**
+   * Which tile a recent special action came from, so the gold mark lands on the tech tile or booster
+   * that carries it - `actionsWithoutTile` only covers the faction's own (PI, ability) octagons.
+   * Matched by `source` the same way `boosterSpecialActionUsed` does.
+   */
+  get recentOpponentSpecialSources(): Set<string> {
+    const rewards = this.recentOpponentSpecials;
+    if (rewards.size === 0) {
+      return new Set<string>();
+    }
+    return new Set(
+      this.player.events[Operator.Activate]
+        .filter((event) => rewards.has(event.action().rewards))
+        .map((event) => String(event.source))
+    );
+  }
+
+  /** A tech tile's events are tagged with `tech-<pos>` (standard) or the pos itself (advanced). */
+  recentSpecialTile(pos: AnyTechTilePos): boolean {
+    return this.recentOpponentSpecialSources.has(String(techTileEventSource(pos)));
+  }
+
+  /** Their booster was used for a special action, or taken from the pool, since the viewer's turn. */
+  get recentBooster(): boolean {
+    const booster = this.playerData?.tiles?.booster;
+    if (!booster) {
+      return false;
+    }
+    return (
+      this.recentOpponentSpecialSources.has(booster) ||
+      (this.$store.getters.recentOpponentBoosters.get(booster)?.has(this.faction) ?? false)
+    );
+  }
+
+  recentArtifact(artifact: ArtifactToken): boolean {
+    return this.$store.getters.recentOpponentArtifacts.get(this.faction)?.has(artifact) ?? false;
+  }
+
   planetFill(planet: string) {
-    if (planet === Planet.Titanium || planet === Planet.Swamp) {
+    if ([Planet.Titanium, Planet.Swamp, Planet.Gaia, Planet.Lost].includes(planet as Planet)) {
       return "white";
     }
     return "black";
   }
 
+  shipFederationRewards(federation: SpaceshipFederation) {
+    return spaceshipFederationDisplayRewards(federation);
+  }
+
+  // The real 3-cost set once it's resolved (`pl.data.lostFleetCost3Planets`, set in
+  // `endSetupFactionPhase`), or - while the faction is only picked and that hasn't run yet - the
+  // same provisional set `terraformCost3Set` derives from the live game's already-known opponents,
+  // so a Tinkeroids/Moweyds board shows correct 1-cost/3-cost markers throughout the pick/bid
+  // phases instead of defaulting every planet to 1-cost. A no-op for every other faction.
+  get lostFleetCost3Planets(): Planet[] {
+    return terraformCost3Set(this.engine, this.faction, this.lostFleetTerraformBoard);
+  }
+
+  get lostFleetTerraformBoard(): Planet[] {
+    if (!this.isLostFleet) {
+      return [];
+    }
+    return lostFleetTerraformingBoard(gameSeed(this.engine));
+  }
+
   planetsWithSteps(steps: number) {
-    return planetsWithSteps(this.planet, steps);
+    return planetsWithSteps(this.faction, steps, this.lostFleetCost3Planets);
+  }
+
+  terraformingMarkers(steps: number): TerraformingMarker[] {
+    const planets = this.planetsWithSteps(steps);
+    const rowCounts = this.terraformingRowCounts(planets.length);
+    const yPositions = this.terraformingRowYPositions(rowCounts.length);
+    const radius = this.terraformingMarkerRadius(planets.length);
+    const fontSize = this.terraformingMarkerFontSize(planets.length);
+    const markers: TerraformingMarker[] = [];
+    let planetIndex = 0;
+
+    rowCounts.forEach((count, rowIndex) => {
+      this.terraformingRowXPositions(count).forEach((x) => {
+        const planet = planets[planetIndex++];
+        if (!planet) {
+          return;
+        }
+
+        markers.push({
+          planet,
+          x,
+          y: yPositions[rowIndex],
+          radius,
+          fontSize,
+        });
+      });
+    });
+
+    return markers;
+  }
+
+  terraformingRowCounts(count: number): number[] {
+    switch (count) {
+      case 0:
+        return [];
+      case 1:
+        return [1];
+      case 2:
+        return [1, 1];
+      case 3:
+        return [1, 2];
+      case 4:
+        return [2, 2];
+      case 5:
+        return [2, 3];
+      case 6:
+        return [3, 3];
+      case 7:
+        return [2, 3, 2];
+      default: {
+        const rows = Math.ceil(count / 3);
+        const base = Math.floor(count / rows);
+        const remainder = count % rows;
+        return Array.from({ length: rows }, (_, index) => base + (index < remainder ? 1 : 0));
+      }
+    }
+  }
+
+  terraformingRowYPositions(count: number): number[] {
+    switch (count) {
+      case 1:
+        return [0];
+      case 2:
+        return [-1.35, 1.35];
+      default:
+        return [-1.55, 0, 1.55];
+    }
+  }
+
+  terraformingRowXPositions(count: number): number[] {
+    switch (count) {
+      case 1:
+        return [0];
+      case 2:
+        return [-0.95, 0.95];
+      default:
+        return [-1.2, 0, 1.2];
+    }
+  }
+
+  terraformingMarkerRadius(count: number): number {
+    if (count <= 2) {
+      return 1;
+    }
+    if (count <= 4) {
+      return 0.8;
+    }
+    return 0.66;
+  }
+
+  terraformingMarkerFontSize(count: number): number {
+    if (count <= 2) {
+      return 1.4;
+    }
+    if (count <= 4) {
+      return 1.1;
+    }
+    return 0.9;
   }
 
   get passed() {
     return (this.engine.passedPlayers || []).includes(this.player.player);
+  }
+
+  // Mirrors BoardAction.vue's `faded`/power-action X marker for the booster's own special action -
+  // matched by `source` (boosterEvents() tags each event with the Booster enum it came from) rather
+  // than by array position, since only the "=> ..." event of a booster is ever Activate-operator.
+  get boosterSpecialActionUsed() {
+    const booster = this.playerData.tiles.booster;
+    if (!booster) {
+      return false;
+    }
+    return this.player.events[Operator.Activate].some((e) => e.source === booster && e.activated);
   }
 
   get round() {
@@ -376,7 +650,47 @@ export default class PlayerInfo extends Vue {
   }
 
   get isFrontiers() {
-    return this.engine.expansions == Expansion.Frontiers;
+    return hasExpansion(this.engine.expansions, Expansion.Frontiers);
+  }
+
+  get isLostFleet() {
+    return hasExpansion(this.engine.expansions, Expansion.LostFleet);
+  }
+
+  // Owner request: Gaia/Protoplanet/Asteroid planet counters share one column (3 entries in the
+  // common case); the pre-existing Lost Planet counter (a rare, separate base-game mechanic) still
+  // shares the same slot when present, so this supports up to 4.
+  get planetCounters(): { planet: string; y: number }[] {
+    const planets: string[] = [Planet.Gaia];
+    if (this.isLostFleet) {
+      planets.push(Planet.Protoplanet, Planet.Asteroid);
+    }
+    if (this.hasLostPlanet) {
+      planets.push(Planet.Lost);
+    }
+    const yPositions = this.planetCounterYPositions(planets.length);
+    return planets.map((planet, index) => ({ planet, y: yPositions[index] }));
+  }
+
+  planetCounterYPositions(count: number): number[] {
+    switch (count) {
+      case 1:
+        return [0];
+      case 2:
+        return [-1.4, 1.4];
+      case 3:
+        return [-1.9, 0, 1.9];
+      default:
+        return [-2.4, -0.8, 0.8, 2.4];
+    }
+  }
+
+  get planetCounterRadius(): number {
+    return this.planetCounters.length > 2 ? 0.85 : 1;
+  }
+
+  get planetCounterFontSize(): number {
+    return this.planetCounters.length > 2 ? 1.05 : 1.2;
   }
 
   get engine() {
@@ -439,11 +753,21 @@ export default class PlayerInfo extends Vue {
   max-width: 674px !important;
 }
 
+// An artifact taken since the viewer's last turn. The token's own art is already gold, so the mark
+// is a gold ring separated from it by a dark one - two flat box-shadow rings, which also keeps the
+// row's layout identical to an unmarked token.
+.player-artifact.last-move {
+  border-radius: 999px;
+  box-shadow:
+    0 0 0 2px var(--ui-bg),
+    0 0 0 4px var(--recent);
+}
+
 .player-avatar {
   width: 2.25rem;
   height: 2.25rem;
   border-radius: 50%;
-  border: 1px solid gray;
+  border: 1px solid var(--ui-border-strong);
   margin-right: 0.25rem;
 }
 
@@ -455,12 +779,12 @@ export default class PlayerInfo extends Vue {
 
 .content {
   font-size: 1rem;
-  color: #212529;
+  color: var(--ui-text);
   pointer-events: none;
 }
 
 .player-board {
-  border: 1px solid black;
+  border: 1px solid var(--ui-border-strong);
   max-width: 700px;
   display: block;
   // margin-left: auto;

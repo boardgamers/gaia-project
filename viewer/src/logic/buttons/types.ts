@@ -1,5 +1,5 @@
 import { AvailableFreeActionData, BoardAction, Command, GaiaHex } from "@gaia-project/engine";
-import { AnyTechTilePos } from "@gaia-project/engine/src/enums";
+import { AnyTechTilePos, Spaceship } from "@gaia-project/engine/src/enums";
 import { CubeCoordinates } from "hexagrid";
 import { ActionPayload, SubscribeActionOptions, SubscribeOptions } from "vuex";
 import { EmitCommandParams } from "../../components/Commands.vue";
@@ -27,6 +27,10 @@ export interface CommandController {
 
   readonly temporaryRange: number;
 
+  /** Whether the board is a non-committing analysis sandbox (ANALYSIS_MODE_PLAN.md §12) - read by
+   * `checkAutoClick` to skip the per-move confirmation press there. */
+  readonly analysisMode: boolean;
+
   undo();
 
   handleCommand(command: string, source?: ButtonData);
@@ -41,7 +45,7 @@ export interface CommandController {
 
   highlightResearchTiles(tiles: string[]);
 
-  highlightTechs(techs: Array<AnyTechTilePos>);
+  highlightTechs(techs: Array<AnyTechTilePos | Spaceship>);
 
   activate(button: ButtonData | null);
 
@@ -76,6 +80,13 @@ export interface CommandController {
   enabledButtonWarnings(button: ButtonData): string[];
 
   isWarningEnabled(disableKey: string): boolean;
+
+  /** The local user's raw "auto-leech" preference (a string - "ask", "decline-cost", "1".."5", or
+   * an encoded value with a passed-round cap; see auto-decide.ts), never synced as engine/game state. Needed by
+   * `passWarning` to warn about a setting that could auto-accept a VP-costing leech later this
+   * round, which `engine.player(...).settings.autoChargePower` can't answer on its own since it's
+   * only ever set transiently at the moment an auto-decide actually runs. */
+  autoChargePreference(): string;
 
   highlightSpecialActions(specialActions: SpecialActionIncome[]): void;
 

@@ -11,6 +11,9 @@ export default {
   [Planet.Gaia]: { radius: 0.65, color: "#00aa00", borderColor: "#004d1a" },
   [Planet.Transdim]: { radius: 0.5, color: "#a64dff", borderColor: "#a64dff" },
   [Planet.Lost]: { radius: 0.5, color: "#004570", borderColor: "#d1d1e0" },
+  // Lost Fleet
+  [Planet.Asteroid]: { radius: 0.5, color: "#ff66b3", borderColor: "#cc3d8a" },
+  [Planet.Protoplanet]: { radius: 0.5, color: "#30d5c8", borderColor: "#1a9e94" },
 };
 
 export const planetNames = {
@@ -24,6 +27,8 @@ export const planetNames = {
   [Planet.Gaia]: "Gaia",
   [Planet.Transdim]: "Transdim",
   [Planet.Lost]: "Lost planet",
+  [Planet.Asteroid]: "Asteroid",
+  [Planet.Protoplanet]: "Protoplanet",
 };
 
 export function remainingPlanets(planet: Planet, engine: Engine): number {

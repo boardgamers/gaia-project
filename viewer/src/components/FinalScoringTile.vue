@@ -1,5 +1,5 @@
 <template>
-  <g :class="['finalScoringTile', { highlighted }]" v-b-tooltip :title="tooltip">
+  <g :class="['finalScoringTile', { highlighted }]" v-b-tooltip.nofade="tooltipTriggerConfig()" :title="tooltip">
     <rect x="1" y="1" width="75" height="55" />
     <text class="title" x="5" y="12">{{ content }}</text>
     <Token
@@ -34,6 +34,7 @@ import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { MapMode, MapModeType } from "../data/actions";
 import { factionName } from "../data/factions";
+import { tooltipTriggerConfig } from "../logic/tooltip";
 import Token from "./Token.vue";
 
 @Component<FinalScoringTile>({
@@ -92,6 +93,27 @@ export default class FinalScoringTile extends Vue {
   }
 
   get content() {
+    switch (this.tile) {
+      case FinalTile.Structure:
+        return "Structures";
+      case FinalTile.StructureFed:
+        return "Fed Structures";
+      case FinalTile.PlanetType:
+        return "Planet Types";
+      case FinalTile.Gaia:
+        return "Gaia";
+      case FinalTile.Sector:
+        return "Sectors";
+      case FinalTile.Satellite:
+        return "Satellites";
+      case FinalTile.Asteroid:
+        return "Asteroids";
+      case FinalTile.PlanetaryInstituteAcademyDistance:
+        return "PI to AC";
+      case FinalTile.DeepSpaceSector:
+        return "Deep Space";
+    }
+
     return this.tile;
   }
 
@@ -112,6 +134,8 @@ export default class FinalScoringTile extends Vue {
   tokenY(index: number) {
     return 25 + (index > 1 ? 19 : 0);
   }
+
+  tooltipTriggerConfig = tooltipTriggerConfig;
 }
 </script>
 

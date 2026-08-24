@@ -1,0 +1,535 @@
+# Lost Fleet — Supabase Multiplayer Backend: Design (PROPOSED, awaiting owner confirmation)
+
+> Status: **DESIGN ONLY — no implementation code yet**, per the working agreement (plan first,
+> confirm, then code). Grounded in the actual code paths listed below, not assumptions.
+> Locked decisions honored: §A2 (undo within own turn only), §A3 (no Automa/solo),
+> §J1 (only completed turns persist + broadcast), §J2 (derive "who can act" from the engine,
+> not round-robin), §J3 (seed fixed at creation), §J4 (email turn notifications baseline).
+> Date: 2026-07-01.
+
+## 0. Code facts this design is built on (traced, with refs)
+
+| Fact                                                                                                                                                                                                       | Where                                                                                      |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| The viewer app is wrapped in an `EventEmitter`; an external host drives it via `"state"`, `"player"`, `"preferences"` events and observes `"move"`                                                         | `viewer/src/launcher.ts:26-90`                                                             |
+| `"player"` event → `store.commit("player", data)` → `state.player = { index }`                                                                                                                             | `launcher.ts:41`, `store.ts:205-207`                                                       |
+| Turn locking already exists: `canPlay = !ended && (!state.player \|\| sessionPlayer === engine.players[currentPlayer(engine)])` — it just never gets a non-null `state.player` today                       | `Game.vue:272-274`, `Game.vue:307-313`                                                     |
+| `currentPlayer(engine)` = `engine.playerToMove`                                                                                                                                                            | `engine/wrapper.ts:201-203`                                                                |
+| `engine.playerToMove` returns `tempCurrentPlayer` when set — i.e. **mid-turn leech/charge interrupts already resolve to the interrupting seat**. Exactly one seat can act at any moment.                   | `engine/src/engine.ts:588-594`                                                             |
+| Commit rule: clone engine, apply the move line, keep it **only if `copy.newTurn`** (turn completed); otherwise the clone is discarded and only rendered                                                    | `viewer/src/self-contained.ts:127-141`, mirrored by `engine/wrapper.ts:205-210` (`toSave`) |
+| The `"move"` payload is the **whole turn line so far** (the UI accumulates commands with `". "` into `currentMove` and re-emits the full line each time) — so one committed turn = one string              | `Game.vue:143,353-391`                                                                     |
+| `engine.moveHistory[0]` is the `init <players> <seed>` line; committed turns are indexes 1..                                                                                                               | `self-contained.ts:104`, `engine.ts:319,421`                                               |
+| Replay is total: `new Engine(["init N seed", ...moves], options)` deterministically rebuilds any state (§J3)                                                                                               | `self-contained.ts:104`, whole engine test suite                                           |
+| At this design's 2026-07-01 snapshot, no local persistence existed. A separate `?offline=1` hot-seat mode with local recovery was added on 2026-07-17; ordinary self-contained test URLs remain ephemeral. | `viewer/src/offline-game.ts`, `viewer/src/self-contained.ts`, PROGRESS.md #102             |
+| Game options shape to persist = `SelfContainedSetup["options"]`                                                                                                                                            | `self-contained.ts:12-26`                                                                  |
+| Engine `Player` has a display `name` field, restorable via `fromData`                                                                                                                                      | `engine/src/player.ts:123,171,223`                                                         |
+
+Conclusion baked into everything below: **the engine is the sole authority on legality and
+turn order; Supabase stores `seed + options + append-only committed turn lines` and fans them
+out.** The backend never interprets game rules. No `engine/` changes are needed anywhere in
+this plan (everything uses the existing public surface: `fromData`, `move`, `newTurn`,
+`playerToMove`, `moveHistory`, `phase`).
+
+## 1. Schema (one SQL migration, checked into `supabase/migrations/`)
+
+```sql
+create table games (
+  id            uuid primary key default gen_random_uuid(),
+  created_at    timestamptz not null default now(),
+  created_by    uuid not null references auth.users (id),
+  name          text not null default '',
+  seed          text not null,                          -- fixed at creation, never regenerated (§J3)
+  player_count  int  not null check (player_count between 2 and 5),
+  options       jsonb not null,                         -- exact SelfContainedSetup["options"] shape
+  status        text not null default 'active' check (status in ('active', 'finished')),
+  current_seat  int,                                    -- engine.playerToMove after last commit; null when finished
+  move_count    int not null default 0,                 -- = max(moves.seq); maintained only by commit_turn()
+  last_committed_by uuid,                               -- who committed last (notify skips self-notifications)
+  -- Phase 2 (optional fast-boot cache, see §8) — columns exist but stay null in v1:
+  cached_state       jsonb,
+  cached_state_moves int
+);
+
+create table players (
+  game_id       uuid not null references games (id) on delete cascade,
+  seat          int  not null check (seat >= 0),        -- = engine player index 0..player_count-1
+  invited_email text not null,                          -- stored lowercased
+  user_id       uuid references auth.users (id),        -- null until the invitee claims the seat
+  display_name  text not null default '',
+  primary key (game_id, seat),
+  unique (game_id, invited_email)
+);
+
+create table moves (
+  game_id      uuid not null references games (id) on delete cascade,
+  seq          int  not null,      -- 1-based; equals the line's index in engine.moveHistory
+                                   -- (the init line is index 0 and is NEVER stored — it is
+                                   --  reconstructed from games.seed/player_count)
+  seat         int  not null,      -- engine player index that committed this turn
+  move         text not null,      -- the full committed turn line (may contain ". "-joined commands)
+  committed_at timestamptz not null default now(),
+  committed_by uuid not null references auth.users (id),
+  primary key (game_id, seq)       -- append-only + race-safe: a stale double-commit is a PK conflict
+);
+
+-- §6 (push notifications, post-amendment):
+create table push_subscriptions (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references auth.users (id) on delete cascade,
+  endpoint   text not null unique,                      -- browser push service URL
+  p256dh     text not null,                             -- client public key
+  auth       text not null,                             -- client auth secret
+  user_agent text,
+  created_at timestamptz not null default now()
+);
+
+-- Service-role-only config (RLS on, zero policies): VAPID keypair + notify function URL/key,
+-- seeded directly into the live DB, never committed to the repo.
+create table app_config (
+  key   text primary key,
+  value jsonb not null
+);
+```
+
+Why the move list (not a state blob) is the source of truth: locked §A decision — the engine
+is deterministic from `seed + moves`, so `games` + `moves` reconstruct everything, the log is
+auditable, and no server code ever has to understand game state. `current_seat` / `move_count`
+/ `status` on `games` are **denormalized copies for the lobby and the notification trigger
+only** — the client never uses them for enforcement (the replayed engine is authoritative;
+see §4).
+
+### Write path: RPCs only (this is what makes the log append-only)
+
+No direct `insert/update` policies exist on `games`/`players`/`moves`. All writes go through
+three `security definer` functions, so append-only isn't a convention — it's the only door:
+
+- `create_game(name, seed, player_count, options, invites jsonb)` — inserts the `games` row +
+  one `players` row per invite `{email, seat, display_name}`. Asserts the caller's own email
+  is among the invites (the host always plays; no spectator-only role in v1) and that seats
+  are exactly `0..player_count-1`.
+- `claim_my_seats()` — `update players set user_id = auth.uid() where user_id is null and
+invited_email = lower(auth.email())`. Called by the client after every sign-in; this is the
+  entire "accept invite" step.
+- `commit_turn(game_id, seq, seat, move, next_seat, finished)` — the only way a move row is
+  born. Asserts: caller's `auth.uid()` owns `seat` in this game; `games.status = 'active'`;
+  `seq = games.move_count + 1`. Then, atomically: insert the `moves` row and update
+  `games.move_count / current_seat / status`. A concurrent/stale commit fails the `seq`
+  assertion (or the PK), and the client resyncs — no lost or reordered turns possible.
+
+## 2. Invite flow & auth
+
+- **Auth = Google sign-in (primary) + Supabase magic links (fallback).** `SignIn.vue` shows a
+  "Sign in with Google" button (`signInWithOAuth({ provider: "google" })`) with the magic-link
+  form (`signInWithOtp`) underneath for anyone whose invite email isn't a Google account. Both
+  identify the player by their verified email, so everything downstream is unchanged. The
+  Supabase client persists the session (localStorage) and auto-refreshes tokens, so it really is
+  **sign in once per device** — see §13.5 for the one-time Google OAuth setup the owner does.
+- Host fills in the create-game form: game name, options (incl. `lostFleet`), and the friends'
+  emails in **seat order** (UI offers a shuffle button; seed is generated once client-side and
+  stored — §J3). Seat index = engine player index; everything downstream (faction pick order,
+  auction, in-game turn order) is the engine's business via normal committed moves.
+- **Invitees must already have an account** (§12): `create_game` rejects any invited email that
+  isn't in `auth.users`, so a typo can't orphan a seat that nobody can ever claim. Friends sign
+  in once (Google or magic link), then the host can seat them. Opening the game link →
+  `claim_my_seats()` matches their email to their seat(s) → the game loads with their seat locked.
+- Invite-only enforcement is RLS (§5): a stranger who signs in sees zero rows. No public
+  matchmaking, no anonymous play (locked decision).
+
+## 3. Turn order & locking (the §J2 case)
+
+- **Client-side (enforcement):** after loading, the hosted entry point finds the caller's
+  `players` row and emits `emitter.emit("player", { index: seat })` — the one thing
+  `self-contained.ts` never does. From there the _existing_ chain does all the work:
+  `launcher.ts:41` → `store.state.player` → `Game.vue:272` `canPlay` compares the session
+  seat against `engine.playerToMove`. Because `playerToMove` returns `tempCurrentPlayer`
+  during pending leech/charge decisions (`engine.ts:588-594`), a mid-turn interrupt
+  automatically unlocks the interrupting player's browser and locks everyone else's —
+  **zero new turn-order logic is written; §J2 is satisfied by the engine itself.**
+- **Server-side (display + notifications):** `commit_turn`'s `next_seat` parameter is
+  `copy.playerToMove` computed by the committing client from the post-move engine (null +
+  `finished=true` when `copy.phase === EndGame`). It feeds the lobby's "whose turn" column and
+  the email trigger. Trust model: clients are trusted to report it honestly (friends group;
+  the engine replay is always the real authority, so a wrong `current_seat` can misdirect an
+  email at worst, never corrupt a game).
+
+## 4. Realtime sync & catch-up
+
+- **Boot (fresh load / reconnect):** fetch the `games` row + `players` + all `moves` ordered
+  by `seq`, then `new Engine(["init ${player_count} ${seed}", ...moves.map(m => m.move)],
+games.options)` + `generateAvailableCommandsIfNeeded()` — the same construction as
+  `self-contained.ts:104`, just fed from the database. Stamp `engine.players[seat].name =
+display_name` for display, then emit `"state"`.
+- **Live:** one Supabase Realtime channel per game, `postgres_changes` INSERT on `moves`
+  filtered by `game_id` (RLS-authorized via the user's JWT). Handler:
+  - `row.seq <= localCount` → skip (it's our own commit echoing back, or already applied).
+  - `row.seq === localCount + 1` → clone engine (`Engine.fromData`), `copy.move(row.move)`,
+    emit `"state"`.
+  - gap (`row.seq > localCount + 1`) or any apply error → **full resync** (refetch all moves,
+    rebuild). Resync also runs on channel rejoin after disconnect and on tab re-focus, so a
+    laptop waking from sleep catches up without a reload.
+- **Commit (replaces `self-contained.ts`'s `emitter.on("move")` body, same skeleton):**
+
+  ```ts
+  emitter.on("move", async (move: string) => {
+    const copy = Engine.fromData(JSON.parse(JSON.stringify(engine)));
+    if (move) {
+      copy.move(move);
+      copy.generateAvailableCommandsIfNeeded();
+      if (copy.newTurn) {                       // §J1/§A2: only a completed turn leaves the browser
+        await rpc("commit_turn", { game_id, seq: localCount + 1, seat: mySeat, move,
+                                   next_seat: ..., finished: ... });
+        // success → engine = copy; seq-conflict/failure → full resync + error toast
+      }
+    }
+    emitter.emit("state", JSON.parse(JSON.stringify(copy)));  // partial moves render locally only
+  });
+  ```
+
+  Incomplete turn lines never reach the network, so **undo within your own turn stays free
+  and invisible to others** (§A2), exactly as today. Undo of an already-committed turn is not
+  supported in v1 (matches §A2's definition of commitment).
+
+## 5. Row-level security
+
+RLS enabled on all three tables. One membership predicate, used everywhere
+(as a `security definer` helper `is_member(game_id)` to avoid recursive-policy issues):
+
+> the caller has a `players` row in this game with `user_id = auth.uid()` > **or** `invited_email = lower(auth.email())` (so invitees can see the game pre-claim).
+
+- `games`: SELECT for members. No INSERT/UPDATE/DELETE policies (writes only via the RPCs).
+- `players`: SELECT for members of the same game. No direct writes.
+- `moves`: SELECT for members. No direct writes — append-only is structural (§1).
+- Realtime `postgres_changes` respects these SELECT policies, so move broadcasts only reach
+  seated players. `moves` is added to the `supabase_realtime` publication in the migration.
+
+## 6. Turn notifications — Web Push (§J4 as AMENDED by owner ruling 2026-07-01)
+
+> Original plan was email-first per the old §J4; the owner overruled it on review: **push
+> notifications only, no turn-change emails** (owner doesn't check email / doesn't want spam).
+> §J4 in RULES_CLARIFICATIONS.md carries the amendment. The only emails left in the system are
+> Supabase Auth's built-in magic-link sign-in emails. Upside: no third-party email provider,
+> no domain verification — Web Push is free and provider-less (browser push services + VAPID).
+
+- **Subscriptions:** a `push_subscriptions` table (user_id, endpoint unique, `p256dh`/`auth`
+  keys, plus `user_agent`). The viewer registers a service worker and, on an explicit "Enable
+  notifications" button (permission prompts require a user gesture), calls
+  `pushManager.subscribe()` with the VAPID public key and upserts the subscription. Per-user,
+  multi-device.
+- **Trigger:** Postgres trigger (`pg_net`) on `games` INSERT (invites) and UPDATE of
+  `current_seat`/`status` → HTTP POST `{game_id, type}` to Edge Function `notify`. The
+  function URL + anon key live in an `app_config` table (RLS on, no policies → service-role
+  only), so nothing project-specific is hardcoded in the committed migration.
+- **`notify` Edge Function** (`supabase/functions/notify/`): service-role reads of
+  `games`/`players`/`push_subscriptions` + the VAPID keypair from `app_config`; sends
+  **"Your turn in <game>"** push (deep link `?game=<id>`) to every subscription of the seat
+  now on turn, skipping when that user _is_ the committer (`games.last_committed_by`); on
+  `finished`, pushes final-scores to everyone; on game creation, pushes an invite notice to
+  invitees who already have accounts+subscriptions. Dead subscriptions (HTTP 404/410 from the
+  push service) are deleted. It never runs the engine — everything it needs is denormalized
+  on `games`.
+- **Accepted caveats (owner acknowledged):** iOS needs the viewer installed to the home screen
+  as a PWA (iOS 16.4+) before push works; each device grants permission once; a player with no
+  subscribed device gets no notification (game unaffected). First-time invitees can't receive
+  an invite push (no account yet) — the host shares the game link out-of-band once. Turn pushes
+  now stay aggressive on desktop subscriptions even when that player already has the game open,
+  while mobile/PWA subscriptions are suppressed **only by that phone's own report** that it has this
+  very game open (see per-device presence below).
+- **Per-device presence** (migration `20260808121000_per_device_push_presence`): the "already open"
+  suppression used to read `players.last_active_at`, which is **one row per seat**, shared by every
+  device that user is signed in on — so leaving the game open in a desktop tab kept it fresh forever
+  and silenced their **phone** as well, a device that was in a pocket with the screen off
+  (owner-reported). Presence is now recorded on the subscription instead:
+  `push_subscriptions.active_game_id` (the game this device has open right now, null = none) and
+  `active_at` (when it last reported **either way**), written by `mark_device_viewing()` from the
+  same ~20s heartbeat tick as `mark_seat_active` — but also while the tab is _hidden_, since that
+  report is exactly what re-enables pushes. `notify/logic.ts::shouldSkipTurnPushForSubscription` then
+  withholds a mobile push only when that subscription itself says this game is open and the report is
+  fresh; a device that has **never** reported (a client older than the migration) still falls back to
+  the old per-player signal, so it can't start double-alerting the person actually playing on it, and
+  self-corrects the first time that device loads a game. Desktop is never withheld, unchanged.
+- **Auction bid-phase pushes** (migration `20260808120000_auction_bid_notifications`): the Preference
+  Split Auction bids simultaneously, into `auction_sealed_bids` rather than `public.moves`, so
+  `current_seat` never moves and the trigger above fired for exactly one of the four players. An
+  announcement (`announce_sealed_bid_auction()` → `games.sealed_bid_announced_at` →
+  `games_notify_sealed_bid_auction` → `{type:'auction_bid'}`) pushes to everyone who still owes a
+  bid, and the sweep re-nudges them per **seat** (`auction_bid_reminders`) rather than per game.
+  Full write-up in `PREFERENCE_SPLIT_AUCTION.md`'s "Notifications during the auction".
+- Known cosmetic wart, accepted for v1: a leech chain produces a couple of rapid turn-change
+  pushes. Fine for a friend group; debounce later if it annoys.
+- **Recurring turn reminders** (migration `20260721000000_turn_reminders`): the one-shot "Your turn"
+  push only fires the instant the seat changes. A separate hourly `pg_cron` job re-invokes `notify`
+  with `{type:'reminder_sweep'}` (same `app_config['notify']` URL/key pattern as the trigger, so
+  still no hardcoded secrets and still a no-op until seeded). The sweep finds every active game whose
+  current player has let their turn sit idle past **12h** and re-sends **"Still your turn in
+  <game>"** (same `turn-<id>` tag so the OS replaces rather than stacks). It re-nudges every 12h,
+  **capped at 3 per turn**, and never during the recipient's **local night** (only while their local
+  hour is in `[8, 22)`; a nudge due at night is deferred to the next daytime sweep). Per-turn state
+  lives in new `games.last_turn_reminder_at` / `games.turn_reminder_count` columns; the count resets
+  implicitly once the player moves (any reminder stamped before `latest_move_committed_at` is treated
+  as belonging to the previous turn — no `commit_turn` change needed). Quiet hours use a new
+  per-device `push_subscriptions.tz` (IANA zone captured at subscribe time); a player with no known
+  timezone is never suppressed, and a player with no subscribed device is skipped entirely (never
+  stamped). The pure per-game decision is `notify/logic.ts::planTurnReminder`; `index.ts` does the IO.
+- **Global notification preferences** (migration `20260721010000_notification_prefs`): a per-user
+  `notification_prefs` row (RLS own-row; the notify function reads it with the service role) is the
+  single, account-wide control set — applied to every game and every device, edited from the bell
+  button's settings modal (`NotificationSettings.vue`). A **missing row = defaults**
+  (`DEFAULT_NOTIFICATION_PREFS`): every category on, and **`reminders_enabled` defaults true** — the
+  recurring 12h reminder is on by default and users opt out. Fields: per-category toggles (`turn`/`chat`/`invite`/`finished`),
+  `reminders_enabled` + `reminder_interval_hours` (12/24/48) + `reminder_max_count`, `quiet_hours_enabled`
+  - `quiet_start_hour`/`quiet_end_hour` (a midnight-wrapping window, replacing the old fixed 8am–10pm),
+    and `snooze_until` (suppresses **all** pushes until it passes). The trigger path gates each one-shot
+    push by category + snooze (`isNotificationAllowed`); the sweep passes prefs into `planTurnReminder`
+    (interval/cap/quiet/snooze). Whether a _device_ is subscribed at all stays per-device
+    (`push_subscriptions`) — that's the modal's top switch; everything else is global.
+
+## 7. Viewer integration
+
+- **New files** (nothing existing is removed; `self-contained.ts` keeps working untouched):
+  - `viewer/src/hosted.ts` — the Supabase-backed counterpart of `self-contained.ts`: auth →
+    `claim_my_seats()` → load game → emit `"player"` + `"state"` → the `"move"` handler from
+    §4 → realtime subscription. Also answers `"fetchState"` by re-emitting current state
+    (launcher.ts:35-38 expects that).
+  - `viewer/src/hosted/` — thin supabase client wrapper (reads `VUE_APP_SUPABASE_URL` /
+    `VUE_APP_SUPABASE_ANON_KEY`), sign-in form, and a minimal bootstrap-vue lobby: list my
+    games (name / status / whose turn / my seat), create-game form (§2).
+- **Mode selection** in `main.ts`: `?game=<uuid>` or `?lobby=1` → hosted mode; anything else →
+  the existing self-contained launcher. One static Vercel build, all existing demo/scenario
+  URLs keep working; the only deploy change is two env vars on Vercel.
+- **Events used, all pre-existing:** `"player"` (seat lock), `"state"` (full load — launcher
+  already derives `replaceLog`/gamelog from it at `launcher.ts:30-34`, so the separate
+  `"gamelog"` hook needs no new wiring), `"move"` (commit path), `"fetchState"` (re-serve).
+- **Toolchain risk, known up front:** `@supabase/supabase-js` v2's `.d.ts` wants TS ≥ 4.x;
+  the viewer pins TS 3.9. The production build already runs ts-loader `transpileOnly`
+  (`vue.config.js`), so builds are unaffected; if `tsc` complains, add `skipLibCheck` to
+  `viewer/tsconfig.json` (which also silences the pre-existing `@types/lodash` noise
+  documented in PROGRESS.md "Done so far" #3). Fallback if that somehow isn't enough:
+  isolate all supabase imports behind one wrapper module.
+- **Tests** (per the standing testing agreement): unit tests for the hosted move handler with
+  a mocked supabase client — commits on `newTurn` only, never commits partial lines, resyncs
+  on seq conflict, applies realtime rows in order, full-resyncs on gaps. Same style as
+  `self-contained.spec.ts`.
+
+## 8. Snapshot cache — deliberately Phase 2, and how it stays honest
+
+Skipped in v1: the engine replays entire recorded games in the test suite in well under a
+second, so a few hundred moves at boot is a non-problem at this scale. If load ever feels
+slow, the reserved `games.cached_state` / `cached_state_moves` columns activate as follows:
+`commit_turn` gains an optional serialized-engine param (best-effort, written by the
+committing client); boot becomes `Engine.fromData(cached_state)` + apply moves with
+`seq > cached_state_moves`. **Honesty rules:** the cache is never authoritative — the move
+log always wins; any `fromData` error, or `cached_state.moveHistory.length !==
+cached_state_moves + 1`, or `cached_state_moves > move_count` → discard cache, full replay;
+`?replay=1` forces full replay for debugging. The cache can be nulled at any time with zero
+data loss.
+
+## 9. Delivery plan (each step = own tested commit on this branch, per repo convention)
+
+1. Supabase project + migration (`supabase/migrations/0001_multiplayer.sql`: tables, RPCs,
+   RLS, realtime publication) + `docs` update.
+2. `hosted.ts` boot path: auth, claim, load-and-replay, `"player"`/`"state"` emit, seat lock
+   verified end-to-end (two browsers, one game).
+3. Commit path + realtime fan-out + resync (+ the unit tests from §7).
+4. Lobby (create game / invites / list games).
+5. `notify` Edge Function + trigger (turn emails + invite emails + finished emails).
+6. PROGRESS.md updates as each piece lands.
+
+## 10. Open questions — RESOLVED (owner, 2026-07-01: "whatever you recommend is fine", plus
+
+the push-over-email override)
+
+- **Q1 — Notifications:** owner overrode the email plan → **Web Push only** (see §6 and the
+  §J4 amendment). No email provider, no domain needed.
+- **Q2 — Supabase project:** created fresh free-tier project **`gaia-lost-fleet`**
+  (ref `mitawjpdxkheascdiffz`, region `eu-west-1`, same org/region as the owner's existing
+  unrelated project, which was left untouched).
+- **Q3 — Lobby scope:** minimal lobby (sign-in, list, create) confirmed for v1.
+- **Q4 — Display names:** host types friends' names at invite time.
+- **Q5 — Post-commit undo:** out of scope for v1.
+- Design is **settled**; implementation proceeds in the §9 steps (with §6 swapped to push).
+
+## 11. Deployment status (2026-07-01) & the two remaining owner actions
+
+**Live right now:**
+
+- Supabase project `gaia-lost-fleet` (ref `mitawjpdxkheascdiffz`, eu-west-1, free tier).
+- Both migrations applied (schema, RPCs, RLS, realtime publication, notify trigger); security
+  advisors clean apart from the intentionally-callable RPCs.
+- `app_config` seeded with the VAPID keypair (subject `mailto:kim.pham.nguyen2@gmail.com`,
+  `site_url` `https://gaia-lost-fleet.vercel.app`) and the notify URL/key. The private VAPID key
+  exists ONLY there.
+- Viewer hosted mode on branch `claude/backend-state-multiplayer-sbhf6c-bov526` — deliberately
+  NOT merged to `master` (auto-deploys to production) pending owner review.
+
+**Owner actions (~5 minutes total):**
+
+1. **Deploy the `notify` Edge Function** (the session's MCP deploy call was approval-gated).
+   Either from the repo root:
+   `npx supabase login && npx supabase functions deploy notify --project-ref mitawjpdxkheascdiffz`
+   or paste `supabase/functions/notify/index.ts` into Dashboard → Edge Functions → Deploy new
+   function, named exactly `notify`, with "Verify JWT" **enabled**. Until deployed, games are
+   fully playable — the trigger's async HTTP call 404s harmlessly; no push arrives, nothing else
+   is affected. (`deno check` passes on the file; the seeded VAPID keys were verified to import
+   and to match the viewer's committed public key.)
+2. **Supabase Auth URL configuration** (Dashboard → Authentication → URL Configuration):
+   set Site URL to the real production domain (assumed `https://gaia-lost-fleet.vercel.app` —
+   verify in Vercel) and add redirect URLs `https://gaia-lost-fleet.vercel.app/*` and, for local
+   dev, `http://localhost:8080/*`. Without this, magic-link emails redirect to the default
+   `http://localhost:3000`.
+
+**If the production domain differs** from `https://gaia-lost-fleet.vercel.app`, fix the deep-link
+base once in SQL:
+`update app_config set value = jsonb_set(value, '{site_url}', '"https://REAL-DOMAIN"') where key = 'vapid';`
+
+**Key rotation note:** the anon key and VAPID public key are committed in
+`viewer/src/hosted/config.ts` (public by design). Rotating VAPID keys = regenerate a P-256 JWK
+pair, update `app_config['vapid']` and the viewer config, and every device must re-enable
+notifications.
+
+## 12. End-to-end verification harness (2026-07-01)
+
+`viewer/e2e/hosted-multiplayer.e2e.js` drives **two real Chromium browsers against the live
+production deployment and the real Supabase project**: lobby boot with a stored session,
+game creation through the real form, seat locking on both sides, faction picks through the
+real Commands UI, realtime fan-out to the other browser without a reload, and reload-resume
+from the stored move log. Run instructions are in the file header. Supporting pieces:
+
+- **Test accounts:** two throwaway password users exist in the project's auth
+  (`e2e-alice@lostfleet.test` / `e2e-bob@lostfleet.test`), created via SQL insert into
+  `auth.users`/`auth.identities` specifically so the harness can sign in WITHOUT the
+  magic-link flow (sessions are minted via `POST /auth/v1/token?grant_type=password` and
+  seeded into the browsers' localStorage). They see only their own games under RLS. Delete
+  them (and any `E2E %`-named games first) if you ever want them gone.
+- **`viewer/e2e/proxy-network.js`:** optional network adapter (`E2E_NETWORK=intercept`) for
+  sandboxes whose TLS-intercepting egress proxy kills Chromium's post-quantum ClientHello
+  (X25519MLKEM768 — not disableable in the Playwright headless shell). It fulfills every
+  HTTP(S) request via Playwright's Node-side request API and bridges WebSockets (Supabase
+  Realtime) over a manual CONNECT tunnel, so the browser never performs TLS itself.
+- **First catch:** the harness immediately found a real production bug — the Engine mutates
+  the options object it's given (stamping the generated `map` into it), Lobby persisted that
+  mutated object, and `moveInit` rejects `map.sectors` + `lostFleet` on replay, bricking the
+  game. Fixed in `buildCreateGameParams` (`viewer/src/hosted/new-game.ts`) + option-cloning
+  in `HostedGameHost.buildEngine`, with unit regression tests.
+
+## 13. Test mode, player counts & registered-only invites (2026-07-02)
+
+Three related changes, migration `supabase/migrations/0003_test_mode_and_player_counts.sql`
+(applied live to project `mitawjpdxkheascdiffz`) plus viewer wiring. All verified end-to-end
+against the live backend (create → enter → play both seats → reload → persistence in `moves`).
+
+### 13.1 Player counts are 2-4, not 2-5
+
+Gaia Project — base game or Lost Fleet — has no 5-player board (the Lost Fleet sector layouts
+and Interspace tile sets stop at 4p). The original `check (player_count between 2 and 5)` and the
+lobby's `[2,3,4,5]` select were wrong. Migration tightens the `games` check to `between 2 and 4`
+and `create_game` to reject >4; `Lobby.vue` offers `[2,3,4]`.
+
+### 13.2 Test mode = one account holding every seat (hot-seat)
+
+For solo testing of the _hosted_ path (commits, realtime, resync, persistence) without waiting
+on friends. Rather than a client flag that bypasses seat locks — which would skip the very
+backend machinery worth testing — a "test game" is a **real** game where the creator's email
+occupies all seats:
+
+- Migration drops `unique (game_id, invited_email)` and relaxes `create_game`'s "each seat needs
+  a distinct email" to "each seat needs an email" (duplicates allowed). `commit_turn` already
+  checks seat ownership per seat and `claim_my_seats` claims every matching seat, so nothing else
+  changed server-side.
+- `Lobby.vue`: a "Test game — I control all seats" checkbox fills every seat with the creator's
+  own email; such games are tagged "test game" in the list (`isTestGame` = every seat owned by me).
+- Seat locking (`host.ts` `seatToLock`, applied in `hosted.ts` `onState`): owning **all** seats →
+  no lock (hot-seat, `canPlay` stays true for whoever the engine says must act); owning **some**
+  seats → locked to whichever owned seat must act now, driven by `playerToMove` so leech
+  interrupts (§J2) unlock the right seat; owning **none** → no lock needed (RLS + `commit_turn`
+  re-check ownership, so an unlocked spectator UI still can't commit).
+- Bonus: the `notify` function already skips pushing to the last committer, so a solo game won't
+  spam "your turn" pushes.
+
+The general case (one person legitimately holding 2 of 4 seats among friends) now works too.
+
+### 13.3 Invites restricted to registered users (§2 amendment)
+
+`create_game` now rejects any invited email not present in `auth.users`, with a message naming
+the offending address(es). This closes the silent-orphan-seat failure (a typo'd invite created a
+seat nobody could claim, blocking the game). `Lobby.vue` warns up front that friends must sign in
+once before they can be seated. This is why §2 auth matters: get everyone signed in first.
+
+### 13.4 Stored-options map bug (fixed, was blocking game entry)
+
+The lobby's create-game probe Engine **mutates the options object** it's given — the engine
+writes the generated map into `options.map`. `create_game` persisted that mutated object, and the
+engine's `init` **rejects a preset `map` combined with `lostFleet`** ("A custom map configuration
+cannot be combined with the Lost Fleet expansion"), so every Lost Fleet game created this way was
+unopenable. Fixes:
+
+- `Lobby.vue` deletes `options.map` after probing, before the `create_game` RPC.
+- `host.ts` `engineOptions()` strips `map` defensively on every boot (the seed regenerates it
+  deterministically), so already-stored legacy rows open too. Regression-tested in `host.spec.ts`.
+- The one pre-existing broken row on the live DB was repaired in place (`options - 'map'`).
+
+## 14. Delete games, pick-from-registered-users invites, dedicated create screen (2026-07-03)
+
+Migrations `0006_delete_game.sql` and `0007_registered_user_invites.sql` — **written but NOT yet
+applied to the live project** (this session had no Supabase MCP access; run them via the
+Supabase CLI/dashboard, or a future session with `mcp__Supabase__apply_migration`, before relying
+on any of this in production). All viewer-side changes are unit-tested (`Lobby.spec.ts`,
+`CreateGame.spec.ts`, updated `new-game.spec.ts`) and the full `npm test` + `vue-cli-service
+build` pass, but the actual Supabase RPCs could not be exercised end-to-end live in this session.
+
+- **`delete_game(p_game_id)`** — new security-definer RPC, creator-only (`created_by = auth.uid()`
+  check), plain `delete from games` (players/moves cascade via existing FKs). `Lobby.vue` shows a
+  "Delete" button per game row only when `game.created_by === session.user.id`, gated by
+  `window.confirm`.
+- **Invites are now "pick from registered users," not "type an email"** (§13.3 amendment):
+  - New **`list_registered_users()`** RPC (security definer, `authenticated`-only) returns
+    `(id, email, display_name)` from `auth.users`, `display_name` derived from Google's
+    `raw_user_meta_data.full_name`/`.name`, falling back to the email's local part.
+  - `create_game`'s `p_invites` shape changed from `{email, seat, display_name}` to
+    `{user_id, seat, display_name}` — same 7-argument signature (`text,text,int,jsonb,jsonb,int,
+text`), so this is a straight `create or replace`, not a new overload (unlike §J4's cautionary
+    tale — no argument _types_ changed, only the jsonb keys inside one of them).
+    `invited_email` is still populated (resolved server-side from the matched `auth.users` row) so
+    `host.ts`'s `mySeats()`/`is_game_member`'s email-fallback matching, and `claim_my_seats()`,
+    keep working unchanged for both old and new rows. Duplicate `user_id`s across seats are still
+    allowed (test games — see §13.2).
+  - `CreateGame.vue` (new component, see below) queries `list_registered_users()` on mount and
+    renders the _other_ registered users (host excluded) as a capped checkbox list — check up to
+    `playerCount - 1`, further checkboxes disable once the cap is hit. No manual seat-by-seat
+    email typing anymore; "Shuffle seat order" still exists, now shuffling the picked-user-id list.
+- **Create-game is now its own screen, not an inline section of the lobby.** `Lobby.vue` was split:
+  it now only renders the game list + delete + a `<a href="?create=1">+ New game</a>` link; the
+  old inline form (player count, test-game toggle, invites, `SetupPreview`, submit) moved to a new
+  `viewer/src/hosted/CreateGame.vue`. Routing stays consistent with the rest of this app (no Vue
+  Router in use, see §2/§9's query-string branching): `main.ts` now also treats `?create=1` as a
+  hosted-mode URL, and `hosted.ts`'s `launchHosted()` branches on it to mount `CreateGame` instead
+  of `Lobby`. **This intentionally is NOT a literal `window.open()` new browser window** — that's
+  unreliable on iOS Safari (popup blocking) and breaks PWA continuity; "a whole new window to do
+  your setup stuff" was implemented as a dedicated full-screen view instead, consistent with how
+  every other screen in this app already works (full navigations via `href`/`window.location`, no
+  in-page modals). Revisit if a literal new window/tab is still wanted.
+  - The game-name text field was dropped entirely per owner request — `buildCreateGameParams`
+    always sends `p_name: ""` now; the lobby already falls back to "Unnamed game".
+  - Player count is 3 buttons (`2`/`3`/`4`) instead of a `<select>`.
+- **No-zoom on Lobby + CreateGame only.** There's one shared `index.html`/`<meta name="viewport">`
+  for the whole SPA (§ above, no per-route HTML). New `viewer/src/hosted/viewport.ts` exports
+  `setViewportZoomLocked(locked)`, which mutates that meta tag's `content` in place.
+  `hosted.ts`'s `launchHosted()` calls it with `true` right before mounting `Lobby`/`CreateGame`,
+  and `false` right before `launchGame()` — so the actual game board keeps normal pinch-zoom
+  (useful for the map), only these two screens lock it. Since every "navigation" in this app is a
+  full page load (`href`/`window.location.search`), there's no stale-state risk between screens.
+
+### 13.5 Google OAuth — the owner's one-time setup (~10 min)
+
+Needed once for the "Sign in with Google" button; magic link works without it.
+
+1. **Google Cloud Console** → create/select a project → _APIs & Services → OAuth consent screen_:
+   External, add your email as a test user (or publish). Then _Credentials → Create OAuth client
+   ID → Web application_. Authorized redirect URI:
+   `https://mitawjpdxkheascdiffz.supabase.co/auth/v1/callback`. Copy the Client ID + secret.
+2. **Supabase Dashboard** → _Authentication → Providers → Google_: enable, paste the Client ID +
+   secret, save.
+3. Confirm _Authentication → URL Configuration_ has the site + redirect URLs from §11.2
+   (`https://gaia-lost-fleet.vercel.app/*` and `http://localhost:8080/*`).
+
+Until step 1-2 are done the Google button returns a provider error; the magic-link fallback is
+unaffected.

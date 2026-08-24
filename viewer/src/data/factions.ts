@@ -11,12 +11,13 @@ import {
   Planet,
   Player,
   PowerArea,
+  Reward,
   terraformingStepsRequired,
 } from "@gaia-project/engine";
 import { FactionBoardRaw } from "@gaia-project/engine/src/faction-boards";
 import { GAIA_FORMER_COST } from "@gaia-project/engine/src/faction-boards/types";
-import { factionColor, planetFill } from "../graphics/utils";
-import { allBuildings, buildingName } from "./building";
+import { factionColor, factionPiecePlanet, planetFill } from "../graphics/utils";
+import { buildingName } from "./building";
 
 export const factionData: {
   [faction in Faction]: { name: string; ability: string; PI: string; shortcut: string; strategyLink?: string };
@@ -127,9 +128,38 @@ export const factionData: {
     PI: `During the Gaia phase, you can discard 4 power tokens from your Gaia area to immediately gain a tech tile. You may do this as many times as you can afford to.`,
     shortcut: "s",
   },
+  [Faction.Tinkeroids]: {
+    name: "Tinkeroids",
+    ability:
+      "You have no home planet type. Start with your Planetary Institute instead of two mines. Three base-game planet colors cost 3 terraforming steps and the others cost 1, determined from the Lost Fleet Terraforming board during setup. Building a mine on a Gaia Planet costs the normal one Q.I.C.",
+    PI: "At the beginning of each round, choose the current round's unused Tinkering tile. Once that round, use it as an action. Rounds 1-3: terraform 1 step, charge 4 power, or gain 1 Q.I.C. Rounds 4-6: terraform 3 steps, gain 3 knowledge, or gain 2 Q.I.C.",
+    shortcut: "y",
+  },
+  [Faction.Darkanians]: {
+    name: "Darkanians",
+    ability:
+      "You have no home planet type. Start with one mine instead of two. Terraforming any standard planet always costs one step, regardless of color. Building a mine on a Gaia Planet costs two Q.I.C. instead of one.",
+    PI: "The first time you colonize a planet in a Space or Deep Space sector, gain two credits and one knowledge. (Interspace tiles do not count as sectors for this effect.)",
+    shortcut: "i",
+  },
+  [Faction.Moweyds]: {
+    name: "Moweyds",
+    ability:
+      "You have no home planet type. Start with one mine instead of two, and start the game with an Exploration Shuttle already on T F Mars. Three base-game planet colors cost 3 terraforming steps and the others cost 1, determined from the Lost Fleet Terraforming board during setup. Building a mine on a Gaia Planet costs the normal one Q.I.C.",
+    PI: "Once per round, place a Power Ring as an action on a planet containing one of your buildings and no Power Ring. That building's power value is increased by 2.",
+    shortcut: "m",
+  },
+  [Faction.SpaceGiants]: {
+    name: "Space Giants",
+    ability:
+      "You have no home planet type. Start with one mine instead of two. Terraforming any standard planet always costs two steps, regardless of color. Building a mine on a Gaia Planet costs two Q.I.C. instead of one.",
+    PI: "Immediately take one tech tile of your choice (normal upgrade restrictions apply). This can only be done once.",
+    shortcut: "g",
+  },
 };
 
-export function planetsWithSteps(planet: Planet, steps: number) {
+export function planetsWithSteps(faction: Faction, steps: number, cost3Planets: Planet[] = []) {
+  const planet = factionPlanet(faction);
   // Planets are ordered the same as in the planet wheel
   let list = [Planet.Terra, Planet.Oxide, Planet.Volcanic, Planet.Desert, Planet.Swamp, Planet.Titanium, Planet.Ice];
 
@@ -138,7 +168,7 @@ export function planetsWithSteps(planet: Planet, steps: number) {
     list = list.slice(list.lastIndexOf(planet)).concat(list.slice(0, list.indexOf(planet)));
   }
 
-  return list.filter((p) => terraformingStepsRequired(planet, p) === steps);
+  return list.filter((p) => terraformingStepsRequired(faction, p, cost3Planets) === steps);
 }
 
 export function factionShortcut(faction: Faction): string {
@@ -147,6 +177,49 @@ export function factionShortcut(faction: Faction): string {
 
 function formatIncome(income: Event[]): string {
   return income.length == 0 ? "~" : income.join(", ");
+}
+
+function buildingStockCount(building: Building): number {
+  switch (building) {
+    case Building.Mine:
+      return 8;
+    case Building.TradingStation:
+      return 4;
+    case Building.ResearchLab:
+      return 3;
+    case Building.PlanetaryInstitute:
+      return 1;
+    case Building.Academy1:
+    case Building.Academy2:
+      return 1;
+    case Building.GaiaFormer:
+      return 3;
+    default:
+      return 0;
+  }
+}
+
+function lostFleetNotes(faction: Faction, expansion: Expansion): string[] {
+  if ((expansion & Expansion.LostFleet) === 0) {
+    return [];
+  }
+
+  switch (faction) {
+    case Faction.Xenos:
+      return ["Lost Fleet adds a free action: spend 1 ore to gain 1 power directly into Area III."];
+    case Faction.Gleens:
+      return ["Lost Fleet adds a special action that grants +2 range, including for Explore."];
+    case Faction.Tinkeroids:
+      return ["Starts with the Planetary Institute already built instead of two mines."];
+    case Faction.Darkanians:
+      return ["Starts with one mine instead of two, and standard planets always terraform in 1 step."];
+    case Faction.Moweyds:
+      return ["Starts with one mine and an Exploration Shuttle already on T F Mars."];
+    case Faction.SpaceGiants:
+      return ["Starts with one mine instead of two, and standard planets always terraform in 2 steps."];
+    default:
+      return [];
+  }
 }
 
 export function buildingDesc(b: Building, faction: Faction, board: FactionBoard, player?: Player) {
@@ -159,55 +232,67 @@ export function buildingDesc(b: Building, faction: Faction, board: FactionBoard,
   );
 }
 
-export function factionDesc(faction: Faction, variant: FactionBoardRaw | null, expansion: Expansion) {
+export const FACTION_INFO_BUILDINGS = [
+  Building.Mine,
+  Building.TradingStation,
+  Building.ResearchLab,
+  Building.Academy1,
+  Building.Academy2,
+  Building.PlanetaryInstitute,
+];
+
+export type FactionInfoBuilding = {
+  building: Building;
+  name: string;
+  stock: number;
+  cost: Reward[];
+  income: Event[][];
+};
+
+export type FactionInfoData = {
+  faction: Faction;
+  name: string;
+  color: string;
+  textColor: string;
+  startingResources: Reward[];
+  power: { area1: number; area2: number; brainstone: boolean };
+  roundIncome: Reward[];
+  buildings: FactionInfoBuilding[];
+  lostFleetChanges: string[];
+  ability: string;
+  pi: string;
+};
+
+/** Structured faction-info data (starting resources, round income, board, abilities) for
+ * `FactionInfoCard.vue` to render with real icon components - the data-only successor to the old
+ * HTML-string `factionDesc()`. Drops nothing that the old popup showed. */
+export function factionInfoData(
+  faction: Faction,
+  variant: FactionBoardRaw | null,
+  expansion: Expansion
+): FactionInfoData {
   const board = factionBoard(faction, variant);
-  const p = factionPlanet(faction);
-
-  const buildingDescription =
-    "<ul>" +
-    allBuildings(expansion, false)
-      .map((bld) => `<li><b>${buildingName(bld, faction)}</b> - ${buildingDesc(bld, faction, board)}</li>`)
-      .join("\n") +
-    "</ul>";
-  const startingIncome = board.income.filter((ev) => ev.operator === Operator.Once);
-  const roundIncome = board.income.filter((ev) => ev.operator === Operator.Income);
-
   const data = factionData[faction];
-  const strategy = data.strategyLink
-    ? `<iframe sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" src="${data.strategyLink}" width="640" height="480" allow="autoplay"></iframe>`
-    : "";
 
-  return `
-  <div class="faction-desc" style="background-color: ${factionColor(faction)}; color: ${planetFill(
-    factionPlanet(faction)
-  )}; padding: 1rem">
-    <b>Ability: </b> ${data.ability} </br>
-    <b>Planetary Institute: </b> ${data.PI}<br/>
-    <b>Buildings:</b> ${buildingDescription}
-    <b>Starting Power:</b> area 1: ${board.power.area1}${
-      board.brainstone == PowerArea.Area1 ? ", brainstone" : ""
-    }, area 2: ${board.power.area2} </br>
-    <b>Starting Income:</b> ${startingIncome.toString().replace(/,/g, ", ")} </br>
-    <b>Round Income:</b> ${roundIncome} </br>
-    <span style="white-space: nowrap; line-height: 1em">
-      <b>Steps:</b>
-      ${[0, 1, 2, 3]
-        .map(
-          (i) =>
-            `<span class="ml-2">${planetsWithSteps(p, i)
-              .map(
-                (p) =>
-                  `<svg width="15" height="20" viewbox="0 0 15 15" >
-          <circle cx="7" cy="6" r="6"  class="player-token planet-fill ${p}" />
-        </svg>`
-              )
-              .join("")} ${i}</span>`
-        )
-        .join("")}
-    </span> </br>
-    ${strategy}
-  </div>
-  `;
+  return {
+    faction,
+    name: data.name,
+    color: factionColor(faction),
+    textColor: planetFill(factionPiecePlanet(faction)),
+    startingResources: board.income.filter((ev) => ev.operator === Operator.Once).flatMap((ev) => ev.rewards),
+    power: { area1: board.power.area1, area2: board.power.area2, brainstone: board.brainstone === PowerArea.Area1 },
+    roundIncome: board.income.filter((ev) => ev.operator === Operator.Income).flatMap((ev) => ev.rewards),
+    buildings: FACTION_INFO_BUILDINGS.map((building) => ({
+      building,
+      name: buildingName(building, faction),
+      stock: buildingStockCount(building),
+      cost: board.buildings[building].cost,
+      income: board.buildings[building].income,
+    })),
+    lostFleetChanges: lostFleetNotes(faction, expansion),
+    ability: data.ability,
+    pi: data.PI,
+  };
 }
 
 export function factionName(faction: Faction) {

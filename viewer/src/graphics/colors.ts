@@ -1,5 +1,6 @@
-import { factionPlanet, Planet, Player } from "@gaia-project/engine";
+import { Planet, Player } from "@gaia-project/engine";
 import { ChartColor } from "../logic/charts/charts";
+import { factionPiecePlanet } from "./utils";
 
 const invertedForeground: string[] = [
   "--volcanic",
@@ -42,7 +43,7 @@ export function planetColorVar(planet: Planet, invert: boolean): string {
 }
 
 export function playerColor(pl: Player, invert: boolean): string {
-  return planetColorVar(factionPlanet(pl.faction), invert);
+  return planetColorVar(factionPiecePlanet(pl.faction), invert);
 }
 
 export type CellStyle = { color: string; backgroundColor: string };

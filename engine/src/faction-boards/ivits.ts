@@ -4,6 +4,10 @@ import { FactionBoardVariants } from "./types";
 const ivits: FactionBoardVariants = {
   faction: Faction.Ivits,
   standard: {
+    power: {
+      area1: 2,
+      area2: 2,
+    },
     buildings: {
       [Building.PlanetaryInstitute]: {
         cost: "~",

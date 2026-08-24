@@ -5,6 +5,13 @@ import { Command, Player } from "../enums";
 const parseMoves = Engine.parseMoves;
 
 describe("Ivits", () => {
+  it("starts with 2 power in area I and 2 in area II under Lost Fleet", () => {
+    const engine = new Engine(["init 2 ivits-power-check", "p1 faction ivits", "p2 faction geodens"]);
+
+    expect(engine.player(Player.Player1).data.power.area1).to.equal(2);
+    expect(engine.player(Player.Player1).data.power.area2).to.equal(2);
+  });
+
   it("should be able to place a space station and use it as a starting point to build a mine", () => {
     const moves = parseMoves(`
       init 2 randomSeed2
@@ -80,7 +87,7 @@ describe("Ivits", () => {
       p1 build m 3x0.
       p2 charge 2pw
       p2 build lab 3x-1. tech free3. up gaia.
-      p1 charge 3pw
+      p1 charge 1pw
       p1 action power2. build m 2x1.
       p2 charge 2pw
       p2 up gaia.
@@ -119,11 +126,10 @@ describe("Ivits", () => {
       ivits action power6. build m 4x-6.
       baltaks build lab 0x-4. tech free1. up gaia.
       ivits charge 3pw
-      ivits action power4.
+      ivits up terra.
       baltaks build ts -4x4.
       ivits build ts 4x-6.
       baltaks pass booster1
-      ivits up terra.
       ivits build lab 4x-6. tech free3. up terra.
       ivits spend 1o for 1c
     `);

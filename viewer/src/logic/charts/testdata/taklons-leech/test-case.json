@@ -1,4 +1,5 @@
 {
+  "legacyIvitsStartingPower": true,
   "types": ["Power Leech"],
   "options": {
     "advancedRules": true,

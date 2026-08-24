@@ -2,7 +2,7 @@ import { Resource } from "./enums";
 import { GaiaHex } from "./gaia-hex";
 import SpaceMap from "./map";
 import PlayerObject, { BuildWarning } from "./player";
-import PlayerData from "./player-data";
+import PlayerData, { effectiveRange } from "./player-data";
 import Reward from "./reward";
 
 export const TERRAFORMING_COST = 3;
@@ -38,7 +38,7 @@ export function qicForDistance(
   };
 
   function qic(temporaryRange: number, distance: number): number {
-    return Math.max(Math.ceil((distance - pl.data.range - temporaryRange) / QIC_RANGE_UPGRADE), 0);
+    return Math.max(Math.ceil((distance - effectiveRange(pl.data) - temporaryRange) / QIC_RANGE_UPGRADE), 0);
   }
 
   const d = distance(false);

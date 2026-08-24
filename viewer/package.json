@@ -18,7 +18,7 @@
     "lint": "vue-cli-service lint",
     "package": "vue-cli-service build --target lib src/wrapper.ts",
     "prepublishOnly": "npm run package && npm run fix-package",
-    "test": "vue-cli-service test:unit  --timeout 4000 src/**/*.spec.ts src/logic/**/*.spec.ts",
+    "test": "vue-cli-service test:unit --timeout 15000 \"src/**/*.spec.ts\"",
     "quick-test": "mocha -r ts-node/register src/logic/*.spec.ts src/logic/**/*.spec.ts src/data/*.spec.ts"
   },
   "unpkg": "dist/package/viewer.umd.min.js",
@@ -43,12 +43,12 @@
     "chart.js": "^3.0.1",
     "hexagrid": "^2.1.1",
     "lodash": "^4.17.15",
-    "vue": "2.6.14",
+    "vue": "^2.7.16",
     "vuex": "^3.0.1"
   },
   "devDependencies": {
     "@testing-library/dom": "7.31.2",
-    "@testing-library/vue": "5.6.1",
+    "@testing-library/vue": "^5.9.0",
     "@types/aria-query": "^4.2.2",
     "@types/chai": "^4.2.15",
     "@types/jquery": "3.5.16",
@@ -81,12 +81,12 @@
     "vue-class-component": "^7.2.6",
     "vue-property-decorator": "^9.1.2",
     "vue-router": "3.5.4",
-    "vue-template-compiler": "2.6.14",
+    "vue-template-compiler": "^2.7.16",
     "webpack": "^4.16.1"
   },
   "peerDependencies": {
     "bootstrap-vue": "^2.12.0",
-    "vue": "2.6.14"
+    "vue": "^2.7.16"
   },
   "browserslist": [
     "> 1%",

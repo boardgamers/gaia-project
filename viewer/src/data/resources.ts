@@ -52,6 +52,12 @@ export const resourceData: { [key in Resource]?: ResourceName } = {
     shortcut: "g",
     color: "--recent",
   },
+  [Resource.GainTokenArea3]: {
+    label: "Power Token in Area III",
+    plural: "Power Tokens in Area III",
+    shortcut: "p",
+    color: "--recent",
+  },
   [Resource.BurnToken]: {
     label: "Burned Token",
     plural: "Burned Tokens",
@@ -79,6 +85,11 @@ export const resourceData: { [key in Resource]?: ResourceName } = {
   [Resource.GaiaFormer]: colorCodes.gaia.add({
     label: "Gaia Former",
     plural: "Gaia Formers",
+  }),
+  [Resource.InstantGaiaforming]: colorCodes.gaia.add({
+    label: "Instant Gaiaforming",
+    plural: "Instant Gaiaforming",
+    shortcut: "g",
   }),
   [Resource.TemporaryStep]: colorCodes.terraformingStep.add({
     label: "Terraforming Step",
@@ -130,6 +141,12 @@ export const resourceData: { [key in Resource]?: ResourceName } = {
     label: "Trade Ship",
     plural: "Trade Ships",
   }),
+  [Resource.PowerRing]: {
+    label: "Power Ring",
+    plural: "Power Rings",
+    shortcut: "r",
+    color: "--protoplanet",
+  },
 };
 
 export function playerHasReceivedAllIncome(engine: Engine, player: Player) {
@@ -162,4 +179,21 @@ export function translateAbbreviatedResources(rewards: Reward[]): string {
       return `${r.count == 1 ? "" : r.count}${d.shortcut.toUpperCase()}`;
     })
     .join(",");
+}
+
+/**
+ * Splits a build/action cost's Reward[] into the real cost (what's actually paid) and any "bonus"
+ * entries. A cost can legitimately contain a negative-count Victory Point reward - e.g. the
+ * Protoplanet mine bonus (engine/src/player.ts's `new Reward(-6, Resource.VictoryPoint)`): paying a
+ * negative-count reward nets as a real VP GAIN (player-data.ts's payCosts flips the sign when
+ * paying), so displaying it inline with the rest of the cost as a literal "-6" reads backwards -
+ * it's a gain, not something else to pay. Pulling it out lets the caller show it distinctly (e.g.
+ * "2c, 10o (+6 VP bonus)") instead of mixed in with real costs.
+ */
+export function splitCostBonus(cost: Reward[]): { cost: Reward[]; bonus: Reward[] } {
+  const isBonus = (r: Reward) => r.type === Resource.VictoryPoint && r.count < 0;
+  return {
+    cost: cost.filter((r) => !isBonus(r)),
+    bonus: cost.filter(isBonus).map((r) => new Reward(-r.count, r.type)),
+  };
 }

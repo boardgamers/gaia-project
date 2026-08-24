@@ -1,8 +1,8 @@
 <template>
   <svg
-    :class="['techTile', pos, { highlighted, covered, advanced: isAdvanced }]"
+    :class="['techTile', pos, { highlighted, covered, advanced: isAdvanced, 'last-move': lastMove }]"
     v-if="this.count"
-    v-b-tooltip.html
+    v-b-tooltip.nofade.html="tooltipTriggerConfig()"
     :title="tooltip"
     @click="onClick"
     width="60"
@@ -23,7 +23,20 @@
         filter="url(#shadow-1)"
       />
       <!--<text class="title" x="-25" y="-18">{{title}}</text>-->
-      <TechContent :event="this.event" style="pointer-events: none" />
+      <g v-if="isRangeTile" class="range-tile-text" style="pointer-events: none">
+        <text class="range-shift" x="0" y="-2" text-anchor="middle">+1</text>
+        <text class="range-word" x="0" y="18" text-anchor="middle">range</text>
+      </g>
+      <g v-else-if="isTerraformMineTile" style="pointer-events: none">
+        <Building building="m" outline-white :flat="flat" faction="gen" transform="translate(-11, 0) scale(2.2)" />
+        <Resource kind="step" :count="2" transform="translate(8, 0) scale(1.3)" />
+      </g>
+      <TechContent
+        v-else-if="this.event"
+        :event="this.event"
+        :disabled="specialActionUsed"
+        style="pointer-events: none"
+      />
     </g>
   </svg>
 </template>
@@ -33,27 +46,37 @@ import Engine, {
   AdvTechTile,
   AdvTechTilePos,
   Event,
+  Expansion,
+  Operator,
   PlayerEnum,
+  Spaceship,
+  SpaceshipTechTile,
   TechTile as TechTileEnum,
   TechTilePos,
 } from "@gaia-project/engine";
-import { techTileEventWithSource } from "@gaia-project/engine/src/tiles/techs";
+import { spaceshipTechSpec } from "@gaia-project/engine/src/tiles/spaceship-techs";
+import { techTileEventSource, techTileEventWithSource } from "@gaia-project/engine/src/tiles/techs";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { ButtonData } from "../data";
 import { eventDesc } from "../data/event";
-import { techTileData } from "../data/tech-tiles";
+import { spaceshipTechDisplayEvent, techTileData } from "../data/tech-tiles";
 import { prependShortcut } from "../logic/buttons/shortcuts";
+import { tooltipTriggerConfig } from "../logic/tooltip";
+import Building from "./Building.vue";
+import Resource from "./Resource.vue";
 import TechContent from "./TechContent.vue";
 
 @Component({
   components: {
     TechContent,
+    Building,
+    Resource,
   },
 })
 export default class TechTile extends Vue {
   @Prop()
-  pos: TechTilePos | AdvTechTilePos;
+  pos: TechTilePos | AdvTechTilePos | Spaceship;
 
   @Prop()
   player: PlayerEnum;
@@ -68,7 +91,7 @@ export default class TechTile extends Vue {
   disableTooltip?: boolean;
 
   @Prop()
-  tileOverride: TechTileEnum | AdvTechTile;
+  tileOverride: TechTileEnum | AdvTechTile | SpaceshipTechTile;
 
   @Prop()
   commandOverride: string;
@@ -88,16 +111,69 @@ export default class TechTile extends Vue {
     return this.$store.state.context.highlighted.techs.has(this.pos) || this.commandOverride;
   }
 
+  /**
+   * An opponent claimed this tile since the viewer's last turn. Marked on every copy of it: the pool
+   * position on the research board (or a ship's Standard Tech slot), which has no owner and so marks
+   * for any taker, and the copy on the taker's own player board, which marks only for them.
+   */
+  get lastMove(): boolean {
+    // An override means this is an inline icon inside a button or a log line (RichTextView), not a
+    // tile sitting on a board.
+    if (this.commandOverride || this.tileOverride) {
+      return false;
+    }
+    const takers = this.$store.getters.recentOpponentTechTiles?.get(this.pos as string);
+    if (!takers) {
+      return false;
+    }
+    return this.player === undefined || takers.has(this.engine.players[this.player]?.faction);
+  }
+
   get tileObject() {
+    if (this.isSpaceshipPos(this.pos)) {
+      return this.engine.tiles.spaceshipTechs[this.pos];
+    }
     return this.engine.tiles.techs[this.pos];
   }
 
-  get tile(): TechTileEnum | AdvTechTile {
-    return this.tileOverride ?? this.tileObject.tile;
+  get tile(): TechTileEnum | AdvTechTile | SpaceshipTechTile | undefined {
+    if (this.tileOverride) {
+      return this.tileOverride;
+    }
+
+    if (this.player !== undefined && this.isSpaceshipPos(this.pos)) {
+      return this.engine.players[this.player]?.data.tiles.techs.find((tech) => tech.pos === this.pos)?.tile;
+    }
+
+    return this.tileObject?.tile;
   }
 
-  get event(): Event {
+  get event(): Event | null {
+    if (this.tile == null) {
+      return null;
+    }
+
+    if (this.isSpaceshipTile(this.tile)) {
+      // display-only event - the ship tiles have no engine Event grammar yet
+      return spaceshipTechDisplayEvent(this.tile);
+    }
+
     return techTileEventWithSource(this.tile, null)[0];
+  }
+
+  // The Range tile reads clearer as plain text than as an icon at this size - owner request.
+  get isRangeTile(): boolean {
+    return this.tile === SpaceshipTechTile.Range;
+  }
+
+  // Needs its own mine icon so it isn't confused with the base game's plain "2 free terraforming
+  // steps" board action (Power2) - this tile also waives the mine's build cost, that one doesn't.
+  get isTerraformMineTile(): boolean {
+    return this.tile === SpaceshipTechTile.Terraform;
+  }
+
+  get flat(): boolean {
+    return this.$store.state.preferences.flatBuildings;
   }
 
   get count() {
@@ -111,7 +187,17 @@ export default class TechTile extends Vue {
   }
 
   get isAdvanced() {
-    return this.tile.startsWith("adv");
+    return typeof this.tile === "string" && this.tile.startsWith("adv");
+  }
+
+  /** Mirrors Booster.vue's specialActionUsed: the same X-overlay for a claimed tech tile's own
+   * repeatable special action, once it's been used this round. */
+  get specialActionUsed(): boolean {
+    if (this.player === undefined || this.isSpaceshipPos(this.pos)) {
+      return false;
+    }
+    const source = techTileEventSource(this.pos as TechTilePos | AdvTechTilePos);
+    return this.engine.player(this.player).events[Operator.Activate].some((e) => e.source === source && e.activated);
   }
 
   get engine(): Engine {
@@ -122,10 +208,27 @@ export default class TechTile extends Vue {
     if (this.disableTooltip) {
       return null;
     }
-    const desc = eventDesc(this.event, this.engine.expansions);
+
+    if (this.tile == null) {
+      return null;
+    }
+
+    const desc = this.isSpaceshipTile(this.tile)
+      ? spaceshipTechSpec[this.tile]
+      : eventDesc(this.event, this.engine.expansions);
     const s = techTileData(this.tile).shortcut;
     return this.shortcut && s.length == 1 ? prependShortcut(s, desc) : desc;
   }
+
+  isSpaceshipPos(pos: TechTilePos | AdvTechTilePos | Spaceship): pos is Spaceship {
+    return Spaceship.values(Expansion.LostFleet).includes(pos as Spaceship);
+  }
+
+  isSpaceshipTile(tile: TechTileEnum | AdvTechTile | SpaceshipTechTile): tile is SpaceshipTechTile {
+    return Object.values(SpaceshipTechTile).includes(tile as SpaceshipTechTile);
+  }
+
+  tooltipTriggerConfig = tooltipTriggerConfig;
 }
 </script>
 
@@ -138,6 +241,7 @@ svg {
       font-weight: bold;
       pointer-events: none;
       fill: white;
+      text-anchor: middle;
     }
     .content {
       font-size: 11px;
@@ -149,6 +253,18 @@ svg {
       &.smaller {
         font-size: 9px;
       }
+    }
+
+    .range-tile-text text {
+      fill: black;
+      font-weight: bold;
+      pointer-events: none;
+    }
+    .range-tile-text .range-shift {
+      font-size: 20px;
+    }
+    .range-tile-text .range-word {
+      font-size: 13px;
     }
 
     .tech-border {
@@ -191,6 +307,20 @@ svg {
       stroke: var(--highlighted);
       cursor: pointer;
       stroke-width: 2px;
+    }
+
+    // Claimed by an opponent since the viewer's last turn, or (set from the player board) used for
+    // their special action, whose octagon lives inside the tile art. The border alone is not enough:
+    // the Economy track's own color is gold, so a gold border on it is invisible - the halo outside
+    // the tile is what always reads. The halo goes on the <svg>, leaving the border rect's own
+    // `url(#shadow-1)` filter attribute alone.
+    &.last-move {
+      filter: drop-shadow(0 0 2px var(--recent)) drop-shadow(0 0 3px var(--recent));
+
+      .tech-border {
+        stroke: var(--recent);
+        stroke-width: 3px;
+      }
     }
 
     &.covered {

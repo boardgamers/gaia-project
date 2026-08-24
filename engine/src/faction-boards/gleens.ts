@@ -12,6 +12,13 @@ function gaiaVp(hex: GaiaHex, player: Player) {
 
 const gleens: FactionBoardVariants = {
   faction: Faction.Gleens,
+  // Lost Fleet §I5: a once-per-round special action granting +2 range (RULES_CLARIFICATIONS.md
+  // p.11) - new to the base faction, so it's gated to Lost Fleet games only (see
+  // FactionBoard's constructor) rather than added to `standard.income` unconditionally. Same
+  // "=>" Activate-operator mechanism as Space Giants' "=> 2step" and Booster5's "=> range+3",
+  // both of which already exercise the generic hasActiveBooster()/temporaryRange plumbing this
+  // reuses, so no new engine mechanism is needed.
+  lostFleetIncome: ["=> range+2"],
   standard: {
     buildings: {
       [Building.PlanetaryInstitute]: {

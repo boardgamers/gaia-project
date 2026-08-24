@@ -1,0 +1,233 @@
+{
+  "schemaVersion": "gaia-ai-phase0-baseline/v1",
+  "recordedAt": "2026-07-13T12:57:57.823Z",
+  "repositoryCommit": "8146e29f41797b630ba5251904657f48b93a27fb",
+  "verification": {
+    "fullEngineSuite": {
+      "command": "npx mocha -r ts-node/register --reporter min 'src/**/*.spec.ts' 'src/*.spec.ts' '*.spec.ts'",
+      "status": "passed",
+      "passing": 634,
+      "pending": 4,
+      "reportedDurationSeconds": 16
+    },
+    "phase0FocusedTests": {
+      "command": "npx mocha -r ts-node/register --reporter min 'src/ai/challenge-manifest.spec.ts' 'src/ai/benchmark.spec.ts'",
+      "status": "passed",
+      "passing": 4,
+      "manifestTests": 3,
+      "benchmarkSmokeTests": 1
+    },
+    "typeScript": {
+      "command": "npx tsc --noEmit",
+      "status": "passed"
+    }
+  },
+  "benchmark": {
+    "schemaVersion": "gaia-ai-benchmark/v1",
+    "generatedAt": "2026-07-13T12:57:57.823Z",
+    "challenge": {
+      "id": "lost-fleet-xenos-hadsch-hallas-lf-mrj5exuu-c680",
+      "version": "1.0.0",
+      "manifestSchemaVersion": "gaia-ai-challenge-manifest/v1",
+      "manifestSha256": "ce3bdd7322860484dfae771320b9f12967d0677b908f91cdc682d9c4427bf51e"
+    },
+    "configuration": {
+      "warmupIterations": 5,
+      "iterations": 50,
+      "randomGameWarmupIterations": 0,
+      "randomGameIterations": 1,
+      "memoryCloneCount": 50
+    },
+    "environment": {
+      "node": "v24.16.0",
+      "v8": "13.6.233.17-node.49",
+      "enginePackageVersion": "4.8.51",
+      "os": {
+        "type": "Windows_NT",
+        "platform": "win32",
+        "release": "10.0.26200",
+        "architecture": "x64"
+      },
+      "cpu": {
+        "model": "AMD Ryzen 5 5600G with Radeon Graphics         ",
+        "logicalCores": 12
+      },
+      "memory": {
+        "totalBytes": 16474476544,
+        "freeBytesAtStart": 4838019072
+      },
+      "process": {
+        "pid": 5800,
+        "gcExposed": false
+      },
+      "environment": {
+        "CI": null,
+        "NODE_ENV": null
+      },
+      "repository": {
+        "commit": "8146e29f41797b630ba5251904657f48b93a27fb"
+      },
+      "redactions": {
+        "hostname": "redacted",
+        "homeDirectory": "redacted"
+      }
+    },
+    "workloads": {
+      "serialize": {
+        "status": "measured",
+        "warmupIterations": 5,
+        "iterations": 50,
+        "unit": "milliseconds",
+        "min": 0.1044,
+        "median": 0.1155,
+        "mean": 0.120436,
+        "p95": 0.1574,
+        "max": 0.1764
+      },
+      "parse": {
+        "status": "measured",
+        "warmupIterations": 5,
+        "iterations": 50,
+        "unit": "milliseconds",
+        "min": 0.1094,
+        "median": 0.1176,
+        "mean": 0.122882,
+        "p95": 0.1704,
+        "max": 0.2157
+      },
+      "hydrate": {
+        "status": "measured",
+        "warmupIterations": 5,
+        "iterations": 50,
+        "unit": "milliseconds",
+        "min": 0.4279,
+        "median": 0.482,
+        "mean": 0.547568,
+        "p95": 0.7438,
+        "max": 2.7423
+      },
+      "clone": {
+        "status": "measured",
+        "warmupIterations": 5,
+        "iterations": 50,
+        "unit": "milliseconds",
+        "min": 0.4992,
+        "median": 0.5543,
+        "mean": 0.560572,
+        "p95": 0.6916,
+        "max": 0.8521
+      },
+      "commandGeneration": {
+        "status": "measured",
+        "warmupIterations": 5,
+        "iterations": 50,
+        "unit": "milliseconds",
+        "min": 0.0086,
+        "median": 0.0117,
+        "mean": 0.01516,
+        "p95": 0.0271,
+        "max": 0.0866,
+        "phase": "setupBuilding",
+        "commandsInChallengePrefixState": 1
+      },
+      "candidateExpansion": {
+        "status": "unavailable",
+        "reason": "Phase 1 candidate-expansion component does not exist in Phase 0"
+      },
+      "actionApplication": {
+        "status": "measured",
+        "warmupIterations": 5,
+        "iterations": 50,
+        "unit": "milliseconds",
+        "min": 2.6956,
+        "median": 3.2845,
+        "mean": 3.58779,
+        "p95": 5.5667,
+        "max": 7.1142,
+        "description": "Apply the two scripted faction-choice move lines after deterministic initialization"
+      },
+      "constructorReplay": {
+        "status": "measured",
+        "warmupIterations": 5,
+        "iterations": 50,
+        "unit": "milliseconds",
+        "min": 2.6281,
+        "median": 2.877,
+        "mean": 3.215326,
+        "p95": 4.757,
+        "max": 5.4989,
+        "committedMoveLines": 3
+      },
+      "hostStyleReplay": {
+        "status": "measured",
+        "warmupIterations": 5,
+        "iterations": 50,
+        "unit": "milliseconds",
+        "min": 3.8586,
+        "median": 4.1026,
+        "mean": 4.265504,
+        "p95": 5.2148,
+        "max": 6.5859,
+        "committedMoveLines": 3,
+        "description": "Engine.slowMotion serialize/parse/hydrate between committed lines"
+      },
+      "randomGame": {
+        "status": "measured",
+        "warmupIterations": 0,
+        "iterations": 1,
+        "unit": "milliseconds",
+        "min": 224.7527,
+        "median": 224.7527,
+        "mean": 224.7527,
+        "p95": 224.7527,
+        "max": 224.7527,
+        "generator": "fuzz/random-player deterministic sampler; not a legal-action enumerator",
+        "gameSeed": "lf-mrj5exuu-c680",
+        "playSeed": "lost-fleet-xenos-hadsch-hallas-lf-mrj5exuu-c680-benchmark-random-player-v1",
+        "outcomes": [
+          {
+            "finished": true,
+            "committedLines": 48,
+            "rounds": 6,
+            "failureCount": 0,
+            "finalStateBytes": 27433
+          }
+        ]
+      },
+      "stateSize": {
+        "status": "measured",
+        "unit": "UTF-8 JSON bytes",
+        "challengePrefixState": 19777,
+        "challengeManifest": 38798,
+        "randomGameFinalState": 27433
+      },
+      "memory": {
+        "status": "measured",
+        "method": "retained Engine.fromData(JSON.parse(serializedState)) clones",
+        "cloneCount": 50,
+        "gcExposed": false,
+        "beforeBytes": {
+          "rss": 282394624,
+          "heapTotal": 231182336,
+          "heapUsed": 97513720,
+          "external": 2953312,
+          "arrayBuffers": 28969
+        },
+        "afterBytes": {
+          "rss": 282046464,
+          "heapTotal": 231182336,
+          "heapUsed": 121978720,
+          "external": 2953352,
+          "arrayBuffers": 28969
+        },
+        "deltaBytes": {
+          "rss": -348160,
+          "heapTotal": 0,
+          "heapUsed": 24465000,
+          "external": 40
+        },
+        "approximateHeapUsedBytesPerClone": 489300
+      }
+    }
+  }
+}

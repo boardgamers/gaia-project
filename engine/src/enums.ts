@@ -10,6 +10,8 @@ export enum Planet {
   Gaia = "g",
   Transdim = "m",
   Lost = "l",
+  Protoplanet = "p",
+  Asteroid = "a",
 }
 
 export enum ResearchField {
@@ -26,7 +28,37 @@ export enum Expansion {
   // 1 was the old spaceships expansion
   None = 0,
   Frontiers = 2,
-  All = 2,
+  LostFleet = 4,
+  // "all content" sentinel for `.values()` enumeration only - never a valid game-config selection
+  All = Frontiers | LostFleet,
+}
+
+export function hasExpansion(expansions: Expansion, expansion: Expansion): boolean {
+  return (expansions & expansion) !== 0;
+}
+
+export namespace Planet {
+  export function values(expansions: Expansion): Planet[] {
+    const ret = [
+      Planet.Empty,
+      Planet.Terra,
+      Planet.Desert,
+      Planet.Swamp,
+      Planet.Oxide,
+      Planet.Volcanic,
+      Planet.Titanium,
+      Planet.Ice,
+      Planet.Gaia,
+      Planet.Transdim,
+      Planet.Lost,
+    ];
+
+    if (hasExpansion(expansions, Expansion.LostFleet)) {
+      ret.push(Planet.Protoplanet, Planet.Asteroid);
+    }
+
+    return ret;
+  }
 }
 
 export namespace ResearchField {
@@ -40,7 +72,7 @@ export namespace ResearchField {
       ResearchField.Science,
     ];
 
-    if (expansions === Expansion.Frontiers) {
+    if (hasExpansion(expansions, Expansion.Frontiers)) {
       ret.push(ResearchField.Diplomacy);
     }
 
@@ -59,6 +91,8 @@ export enum Resource {
   BowlToken = "bowl-t",
   BurnToken = "burn-token",
   GainToken = "t",
+  /** Lost Fleet: gain a power token directly into Area III (Xenos's free action). */
+  GainTokenArea3 = "ta3",
   Brainstone = "brainstone",
   GainTokenGaiaArea = "tg",
   MoveTokenToGaiaArea = "t->tg",
@@ -69,6 +103,7 @@ export enum Resource {
   ShipRange = "ship-range",
   GaiaFormer = "gf",
   MoveGaiaFormerFromGaiaAreaToArea1 = "gf->t",
+  InstantGaiaforming = "instant-gaiaforming",
   SpaceStation = "space-station",
   DowngradeLab = "down-lab",
   UpgradeTerraforming = "up-terra",
@@ -81,6 +116,7 @@ export enum Resource {
   UpgradeLowest = "up-lowest",
   TechTile = "tech",
   RescoreFederation = "fed",
+  GainArtifact = "artifact",
   TemporaryStep = "step",
   TemporaryRange = "range",
   MoveTokenFromArea3ToGaia = "t-a3",
@@ -89,6 +125,7 @@ export enum Resource {
   TradeBonus = "tradeBonus",
   TradeDiscount = "tradeDiscount",
   TradeShip = "tradeShip",
+  PowerRing = "power-ring",
 }
 
 export function isResourceUsed(resource: Resource, expansion: Expansion) {
@@ -98,7 +135,7 @@ export function isResourceUsed(resource: Resource, expansion: Expansion) {
     case Resource.TradeDiscount:
     case Resource.TradeShip:
     case Resource.UpgradeDiplomacy:
-      return expansion === Expansion.Frontiers;
+      return hasExpansion(expansion, Expansion.Frontiers);
   }
   return true;
 }
@@ -131,6 +168,7 @@ export enum Condition {
   // count only
   Gaia = "g",
   PlanetType = "pt",
+  TechTile = "tt",
   Sector = "s",
   Structure = "st",
   StructureFed = "stfed",
@@ -139,6 +177,10 @@ export enum Condition {
   StructureFedValue = "stfedvalue",
   ResearchLevels = "a",
   HighestResearchLevel = "L",
+  // Lost Fleet
+  Asteroid = "ast",
+  DeepSpaceSector = "ds",
+  PlanetaryInstituteAcademyDistance = "pi-ac-dist",
 
   // trigger only
   MineOnGaia = "mg",
@@ -146,6 +188,12 @@ export enum Condition {
   TerraformStep = "step",
   GaiaFormer = "gf",
   Trade = "trade",
+  // Lost Fleet
+  SpaceshipQicAction = "shipq",
+  /** A mine built in a Space/Deep Space sector not colonized by this player before (§G4 "sector3"). */
+  NewSector = "newsector",
+  /** A mine built on a planet type not colonized by this player before (§G4 "planet3"). */
+  NewPlanetType = "newplanet",
 }
 
 export namespace Condition {
@@ -198,12 +246,12 @@ export namespace Building {
         if (!isAvailableShip(b)) {
           return false;
         }
-        return expansion === Expansion.Frontiers;
+        return hasExpansion(expansion, Expansion.Frontiers);
       }
       switch (b) {
         case Building.Colony:
         case Building.CustomsPost:
-          return expansion === Expansion.Frontiers;
+          return hasExpansion(expansion, Expansion.Frontiers);
       }
 
       return true;
@@ -264,10 +312,42 @@ export enum Faction {
   Bescods = "bescods",
   Nevlas = "nevlas",
   Itars = "itars",
+  Tinkeroids = "tinkeroids",
+  Darkanians = "darkanians",
+  Moweyds = "moweyds",
+  SpaceGiants = "space-giants",
+}
+
+export namespace Faction {
+  export function values(expansions: Expansion): Faction[] {
+    const ret = [
+      Faction.Terrans,
+      Faction.Lantids,
+      Faction.HadschHallas,
+      Faction.Ivits,
+      Faction.Geodens,
+      Faction.BalTaks,
+      Faction.Xenos,
+      Faction.Gleens,
+      Faction.Taklons,
+      Faction.Ambas,
+      Faction.Firaks,
+      Faction.Bescods,
+      Faction.Nevlas,
+      Faction.Itars,
+    ];
+
+    if (hasExpansion(expansions, Expansion.LostFleet)) {
+      ret.push(Faction.Tinkeroids, Faction.Darkanians, Faction.Moweyds, Faction.SpaceGiants);
+    }
+
+    return ret;
+  }
 }
 
 export enum Command {
   Action = "action",
+  BanFaction = "banFaction",
   Bid = "bid",
   BrainStone = "brainstone",
   Build = "build",
@@ -282,17 +362,26 @@ export enum Command {
   DeadEnd = "deadEnd", // this command cannot be executed - it just signals that you have to undo
   Decline = "decline",
   EndTurn = "endturn",
+  Explore = "explore",
   FormFederation = "federation",
+  GaiaFormTransdim = "gaiaFormTransdim",
   Init = "init",
   MoveShip = "move",
   PISwap = "swap-PI",
   Pass = "pass",
   PlaceLostPlanet = "lostPlanet",
+  PreferenceBid = "preferenceBid",
   RotateSectors = "rotate",
   Special = "special",
   Setup = "set",
+  SilentBid = "silentBid",
   Spend = "spend",
+  SpaceshipAction = "spaceshipAction",
+  ExamineArtifact = "examineArtifact",
+  ChooseArtifactToken = "chooseArtifactToken",
+  ChooseTinkeringTile = "chooseTinkeringTile",
   UpgradeResearch = "up",
+  PlacePowerRing = "placePowerRing",
 }
 
 export enum Player {
@@ -348,18 +437,32 @@ export enum Booster {
   Booster8 = "booster8",
   Booster9 = "booster9",
   Booster10 = "booster10",
+  LostFleetFormer = "booster-lostfleet-former",
+  LostFleetPlanet = "booster-lostfleet-planet",
+  LostFleetDeep = "booster-lostfleet-deep",
+  LostFleetInstant = "booster-lostfleet-instant",
 }
 
 export namespace Booster {
-  export function values(expansions = 0): Booster[] {
-    return (Object.values(Booster) as Booster[]).filter((val: Booster) => {
-      if (typeof val !== "string") {
-        return;
-      }
-      if (/^booster[0-9]/.test(val)) {
-        return true;
-      }
-    }) as Booster[];
+  export function values(expansions: Expansion = Expansion.None): Booster[] {
+    const ret = [
+      Booster.Booster1,
+      Booster.Booster2,
+      Booster.Booster3,
+      Booster.Booster4,
+      Booster.Booster5,
+      Booster.Booster6,
+      Booster.Booster7,
+      Booster.Booster8,
+      Booster.Booster9,
+      Booster.Booster10,
+    ];
+
+    if (hasExpansion(expansions, Expansion.LostFleet)) {
+      ret.push(Booster.LostFleetFormer, Booster.LostFleetPlanet, Booster.LostFleetDeep, Booster.LostFleetInstant);
+    }
+
+    return ret;
   }
 }
 
@@ -382,7 +485,7 @@ export namespace TechTile {
       if (typeof val !== "string") {
         return;
       }
-      return !val.includes("frontiers") || expansions === Expansion.Frontiers;
+      return !val.includes("frontiers") || hasExpansion(expansions, Expansion.Frontiers);
     }) as TechTile[];
   }
 }
@@ -414,7 +517,7 @@ export namespace TechPos {
       "tech-free3",
     ] as TechPos[];
 
-    if (expansions === Expansion.Frontiers) {
+    if (hasExpansion(expansions, Expansion.Frontiers)) {
       ret.push(TechPos.Diplomacy);
     }
 
@@ -439,7 +542,7 @@ export namespace TechTilePos {
   export function values(expansions: Expansion): TechTilePos[] {
     const ret = ["terra", "nav", "int", "gaia", "eco", "sci", "free1", "free2", "free3"] as TechTilePos[];
 
-    if (expansions === Expansion.Frontiers) {
+    if (hasExpansion(expansions, Expansion.Frontiers)) {
       ret.push(TechTilePos.Diplomacy);
     }
 
@@ -463,18 +566,48 @@ export enum AdvTechTile {
   AdvTech13 = "advtech13",
   AdvTech14 = "advtech14",
   AdvTech15 = "advtech15",
+
+  // Lost Fleet, see RULES_CLARIFICATIONS.md §G2
+  AsteroidPass = "advtech-asteroidpass",
+  Big = "advtech-big",
+  Deep = "advtech-deep",
+  DeepPass = "advtech-deeppass",
+  QAction = "advtech-qaction",
+  Terra = "advtech-terra",
 }
 
 export namespace AdvTechTile {
   export function values(expansions: Expansion): AdvTechTile[] {
-    return (Object.values(AdvTechTile) as AdvTechTile[]).filter((val: AdvTechTile) => {
-      if (typeof val !== "string") {
-        return;
-      }
-      if (val.startsWith("advtech")) {
-        return true;
-      }
-    }) as AdvTechTile[];
+    const ret = [
+      AdvTechTile.AdvTech1,
+      AdvTechTile.AdvTech2,
+      AdvTechTile.AdvTech3,
+      AdvTechTile.AdvTech4,
+      AdvTechTile.AdvTech5,
+      AdvTechTile.AdvTech6,
+      AdvTechTile.AdvTech7,
+      AdvTechTile.AdvTech8,
+      AdvTechTile.AdvTech9,
+      AdvTechTile.AdvTech10,
+      AdvTechTile.AdvTech11,
+      AdvTechTile.AdvTech12,
+      AdvTechTile.AdvTech13,
+      AdvTechTile.AdvTech14,
+      AdvTechTile.AdvTech15,
+    ];
+
+    if (hasExpansion(expansions, Expansion.LostFleet)) {
+      ret.push(
+        AdvTechTile.AsteroidPass,
+        AdvTechTile.Big,
+        AdvTechTile.Deep,
+        AdvTechTile.DeepPass,
+        AdvTechTile.QAction,
+        AdvTechTile.Terra
+      );
+    }
+
+    return ret;
   }
 }
 
@@ -486,18 +619,38 @@ export enum AdvTechTilePos {
   Economy = "adv-eco",
   Science = "adv-sci",
   Diplomacy = "adv-dip",
+  // Lost Fleet's Scoring Board Extension: a 7th Advanced Tech slot not tied to any research field.
+  ScoringExtension = "adv-ext",
 }
 
 export namespace AdvTechTilePos {
   export function values(expansions: Expansion): AdvTechTilePos[] {
     const ret = ["adv-terra", "adv-nav", "adv-int", "adv-gaia", "adv-eco", "adv-sci"] as AdvTechTilePos[];
 
-    if (expansions === Expansion.Frontiers) {
+    if (hasExpansion(expansions, Expansion.Frontiers)) {
       ret.push(AdvTechTilePos.Diplomacy);
+    }
+
+    if (hasExpansion(expansions, Expansion.LostFleet)) {
+      ret.push(AdvTechTilePos.ScoringExtension);
     }
 
     return ret;
   }
+}
+
+// The face-up side of Lost Fleet's Scoring Board Extension, decided once per game at setup. It
+// replaces the usual "research level 4/5" condition for the one Advanced Tech tile placed on it.
+export enum ScoringBoardExtensionSide {
+  VictoryPoints = "vp",
+  ExploredShips = "ships",
+}
+
+// The face-up side of Lost Fleet's Economy research track overlay tile (covers levels 3/4 income),
+// decided once per game at setup (§F1).
+export enum LostFleetEconomySide {
+  Power = "pw",
+  VictoryPoints = "vp",
 }
 
 export type AnyTechTilePos = TechTilePos | AdvTechTilePos;
@@ -533,15 +686,18 @@ export enum BoardAction {
 }
 
 export namespace BoardAction {
-  export function values(expansions: Expansion = 0): BoardAction[] {
-    return Object.values(BoardAction).filter((val: BoardAction) => {
-      if (typeof val !== "string") {
-        return;
-      }
-      if (/^qic[0-9]/.test(val) || /^power[0-9]/.test(val)) {
-        return true;
-      }
-    }) as BoardAction[];
+  // Lost Fleet replaces the research-board Q.I.C. actions with the spaceship boards' own
+  // Q.I.C. actions (RULES_CLARIFICATIONS.md §E4/§K3) — Qic1-3 are not available in those games.
+  export function values(expansions: Expansion = Expansion.None): BoardAction[] {
+    const ret = Object.values(BoardAction).filter(
+      (val: BoardAction) => typeof val === "string" && /^power[0-9]/.test(val)
+    ) as BoardAction[];
+
+    if (!hasExpansion(expansions, Expansion.LostFleet)) {
+      ret.push(BoardAction.Qic1, BoardAction.Qic2, BoardAction.Qic3);
+    }
+
+    return ret;
   }
 }
 
@@ -556,11 +712,15 @@ export enum ScoringTile {
   Score8 = "score8",
   Score9 = "score9",
   Score10 = "score10",
+  // Lost Fleet (RULES_CLARIFICATIONS.md §G4): "lab4"/"sector3"/"planet3"
+  LfLab4 = "lflab4",
+  LfSector3 = "lfsector3",
+  LfPlanet3 = "lfplanet3",
 }
 
 export namespace ScoringTile {
   export function values(expansions = 0): ScoringTile[] {
-    return (Object.values(ScoringTile) as ScoringTile[]).filter((val: ScoringTile) => {
+    const base = (Object.values(ScoringTile) as ScoringTile[]).filter((val: ScoringTile) => {
       if (typeof val !== "string") {
         return;
       }
@@ -568,6 +728,12 @@ export namespace ScoringTile {
         return true;
       }
     }) as ScoringTile[];
+
+    if (hasExpansion(expansions, Expansion.LostFleet)) {
+      base.push(ScoringTile.LfLab4, ScoringTile.LfSector3, ScoringTile.LfPlanet3);
+    }
+
+    return base;
   }
 }
 
@@ -578,6 +744,9 @@ export enum FinalTile {
   Gaia = "gaia",
   Sector = "sector",
   Satellite = "satellite",
+  Asteroid = "asteroid",
+  PlanetaryInstituteAcademyDistance = "piAcademyDistance",
+  DeepSpaceSector = "deepSpaceSector",
 }
 
 export namespace FinalTile {
@@ -590,6 +759,10 @@ export namespace FinalTile {
       FinalTile.Sector,
       FinalTile.Satellite,
     ];
+
+    if (hasExpansion(expansions, Expansion.LostFleet)) {
+      ret.push(FinalTile.Asteroid, FinalTile.PlanetaryInstituteAcademyDistance, FinalTile.DeepSpaceSector);
+    }
 
     return ret;
   }
@@ -605,8 +778,11 @@ export enum PowerArea {
 export enum Phase {
   SetupInit = "setupInit",
   SetupBoard = "setupBoard",
+  SetupFactionBan = "setupFactionBan",
   SetupFaction = "setupFaction",
   SetupAuction = "setupAuction",
+  SetupSilentBid = "setupSilentBid",
+  SetupPreferenceBid = "setupPreferenceBid",
   SetupBuilding = "setupBuilding",
   SetupBooster = "setupBooster",
   BeginGame = "beginGame",
@@ -635,4 +811,137 @@ export enum SubPhase {
   SpaceStation = "spaceStation",
   PISwap = "swap-PI",
   DowngradeLab = "down-lab",
+  InstantGaiaforming = "instantGaiaforming",
+  SpaceshipBuildMine = "spaceshipBuildMine",
+  SpaceshipUpgradeBuilding = "spaceshipUpgradeBuilding",
+  FederationTokenBuildMine = "federationTokenBuildMine",
+  SpaceshipTechTileBuildMine = "spaceshipTechTileBuildMine",
+  ChooseArtifactToken = "chooseArtifactToken",
+  PlacePowerRing = "placePowerRing",
+}
+
+export enum TinkeringTile {
+  Step1 = "tinkering-step1",
+  Power4 = "tinkering-power4",
+  Qic1 = "tinkering-qic1",
+  Step3 = "tinkering-step3",
+  Knowledge3 = "tinkering-knowledge3",
+  Qic2 = "tinkering-qic2",
+}
+
+export namespace TinkeringTile {
+  export function values(): TinkeringTile[] {
+    return [
+      TinkeringTile.Step1,
+      TinkeringTile.Power4,
+      TinkeringTile.Qic1,
+      TinkeringTile.Step3,
+      TinkeringTile.Knowledge3,
+      TinkeringTile.Qic2,
+    ];
+  }
+}
+
+// Lost Fleet Spaceship Boards (4 generic boards, not tied to any faction).
+export enum Spaceship {
+  Twilight = "twilight",
+  Rebellion = "rebellion",
+  TFMars = "tfmars",
+  Eclipse = "eclipse",
+}
+
+export namespace Spaceship {
+  export function values(expansions: Expansion): Spaceship[] {
+    if (!hasExpansion(expansions, Expansion.LostFleet)) {
+      return [];
+    }
+    return [Spaceship.Twilight, Spaceship.Rebellion, Spaceship.TFMars, Spaceship.Eclipse];
+  }
+}
+
+// The 3 new Standard Tech tiles seeded onto Rebellion/T F Mars/Eclipse's single tech slot at setup.
+export enum SpaceshipTechTile {
+  Range = "ship-tech-range",
+  Terraform = "ship-tech-terraform",
+  Resource = "ship-tech-resource",
+}
+
+export namespace SpaceshipTechTile {
+  export function values(expansions: Expansion): SpaceshipTechTile[] {
+    if (!hasExpansion(expansions, Expansion.LostFleet)) {
+      return [];
+    }
+    return [SpaceshipTechTile.Range, SpaceshipTechTile.Terraform, SpaceshipTechTile.Resource];
+  }
+}
+
+// The 8 new Federation tokens distributed at random across the spaceships in play at setup.
+export enum SpaceshipFederation {
+  Credit = "ship-fed-credit",
+  Knowledge = "ship-fed-knowledge",
+  OreQic = "ship-fed-orequic",
+  PowerTokens = "ship-fed-power",
+  Range = "ship-fed-range",
+  Tech = "ship-fed-tech",
+  Terraform = "ship-fed-terraform",
+  Vp = "ship-fed-vp",
+}
+
+export namespace SpaceshipFederation {
+  export function values(expansions: Expansion): SpaceshipFederation[] {
+    if (!hasExpansion(expansions, Expansion.LostFleet)) {
+      return [];
+    }
+    return [
+      SpaceshipFederation.Credit,
+      SpaceshipFederation.Knowledge,
+      SpaceshipFederation.OreQic,
+      SpaceshipFederation.PowerTokens,
+      SpaceshipFederation.Range,
+      SpaceshipFederation.Tech,
+      SpaceshipFederation.Terraform,
+      SpaceshipFederation.Vp,
+    ];
+  }
+}
+
+// The 13 Artifact tokens seeded onto Twilight's artifact slots at setup (one slot per player); see
+// RULES_CLARIFICATIONS.md §G6.
+export enum ArtifactToken {
+  KnowledgeOre = "artifact-knowledgeore",
+  Credit = "artifact-credit",
+  KnowledgeQic = "artifact-knowledgeqic",
+  CreditLarge = "artifact-creditlarge",
+  Power = "artifact-power",
+  Asteroid = "artifact-asteroid",
+  Protoplanet = "artifact-protoplanet",
+  ResearchLevel = "artifact-researchlevel",
+  ResearchTracks = "artifact-researchtracks",
+  Federation = "artifact-federation",
+  GaiaProject = "artifact-gaiaproject",
+  PlanetTypes = "artifact-planettypes",
+  DeepSpace = "artifact-deepspace",
+}
+
+export namespace ArtifactToken {
+  export function values(expansions: Expansion): ArtifactToken[] {
+    if (!hasExpansion(expansions, Expansion.LostFleet)) {
+      return [];
+    }
+    return [
+      ArtifactToken.KnowledgeOre,
+      ArtifactToken.Credit,
+      ArtifactToken.KnowledgeQic,
+      ArtifactToken.CreditLarge,
+      ArtifactToken.Power,
+      ArtifactToken.Asteroid,
+      ArtifactToken.Protoplanet,
+      ArtifactToken.ResearchLevel,
+      ArtifactToken.ResearchTracks,
+      ArtifactToken.Federation,
+      ArtifactToken.GaiaProject,
+      ArtifactToken.PlanetTypes,
+      ArtifactToken.DeepSpace,
+    ];
+  }
 }

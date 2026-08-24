@@ -1,6 +1,8 @@
 import assert from "assert";
 import { range } from "lodash";
+import { resolvePreferenceSplitAuction } from "../algorithms/preference-split-auction";
 import { finalRankings, gainFinalScoringVictoryPoints } from "../algorithms/scoring";
+import { resolveSilentAuction } from "../algorithms/silent-auction";
 import { stdBuildingValue } from "../buildings";
 import Engine, { AuctionVariant, LEECHING_DISTANCE } from "../engine";
 import {
@@ -14,9 +16,16 @@ import {
   Player as PlayerEnum,
   ResearchField,
   Resource,
+  Spaceship,
   SubPhase,
 } from "../enums";
 import { factionVariantBoard } from "../faction-boards";
+import {
+  lostFleetSetupStage,
+  lostFleetTerraformingBoard,
+  lostFleetTerraformingCost3Planets,
+  startingSetupPlacements,
+} from "../factions";
 import { GaiaHex } from "../gaia-hex";
 import Player from "../player";
 import { lastTile } from "../research-tracks";
@@ -40,6 +49,14 @@ export function phaseSetupBoard(engine: Engine, move: string) {
   engine.loadTurnMoves(move, { split: false, processFirst: true });
 
   if (possibleSetupBoardActions(engine, engine.currentPlayer).length === 0 || move.includes(Command.RotateSectors)) {
+    beginSetupFactionPhaseOrBan(engine);
+  }
+}
+
+export function phaseSetupFactionBan(engine: Engine, move: string) {
+  engine.loadTurnMoves(move, { split: false, processFirst: true });
+
+  if (!engine.moveToNextPlayer(engine.turnOrder, { loop: false })) {
     beginSetupFactionPhase(engine);
   }
 }
@@ -47,12 +64,16 @@ export function phaseSetupBoard(engine: Engine, move: string) {
 export function phaseSetupFaction(engine: Engine, move: string) {
   engine.loadTurnMoves(move, { split: false, processFirst: true });
   // Legacy: there might be a few games that ended up in the 4.7.0 <= version < 4.8.0 state.
-  if (engine.isVersionOrLater("4.7.0") && engine.options.auction !== AuctionVariant.ChooseBid) {
+  if (engine.isVersionOrLater("4.7.0") && engine.options.auction === AuctionVariant.BidWhileChoosing) {
     moveToNextPlayerWithoutAChosenFaction(engine);
     return;
   }
   if (!engine.moveToNextPlayer(engine.turnOrder, { loop: false })) {
-    if (engine.options.auction) {
+    if (engine.options.auction === AuctionVariant.Silent) {
+      beginSetupSilentBidPhase(engine);
+    } else if (engine.options.auction === AuctionVariant.PreferenceSplit) {
+      beginSetupPreferenceBidPhase(engine);
+    } else if (engine.options.auction) {
       beginSetupAuctionPhase(engine);
     } else {
       endSetupFactionPhase(engine);
@@ -63,6 +84,89 @@ export function phaseSetupFaction(engine: Engine, move: string) {
 export function phaseSetupAuction(engine: Engine, move: string) {
   engine.loadTurnMoves(move, { processFirst: true });
   moveToNextPlayerWithoutAChosenFaction(engine);
+}
+
+/**
+ * The Silent Auction's secret-bid phase (AuctionVariant.Silent). Structurally identical to the
+ * Preference Split's below: every player submits one `silentBid` move carrying their whole
+ * valuation vector, the moves are recorded in seat order, and nothing whatsoever is derived from
+ * any of them until the last one lands - which is what lets the submissions be collected
+ * simultaneously rather than one seat at a time. In hosted play they are literally collected in
+ * parallel, into `auction_sealed_bids`, and only appended to the move log by `reveal_sealed_bids`
+ * once every one of them is in, so no player can read another's numbers first.
+ */
+export function phaseSetupSilentBid(engine: Engine, move: string) {
+  engine.loadTurnMoves(move, { split: false, processFirst: true });
+
+  if (!engine.moveToNextPlayer(engine.turnOrder, { loop: false })) {
+    const nominatedFaction = new Map(engine.players.map((pl) => [pl.player as PlayerEnum, pl.faction]));
+    const result = resolveSilentAuction(
+      engine.setup,
+      engine.players.map((pl) => pl.player as PlayerEnum),
+      engine.silentAuctionBids,
+      nominatedFaction,
+      () => engine.map.rng()
+    );
+    engine.silentAuctionLog = result.log;
+    for (const player of engine.players) {
+      player.faction = undefined;
+    }
+    for (const faction of engine.setup) {
+      const winner = engine.player(result.winners.get(faction));
+      winner.faction = faction;
+      winner.data.bid = result.prices.get(faction);
+    }
+    endSetupFactionPhase(engine);
+  }
+}
+
+/**
+ * The Preference Split Auction's bid phase (AuctionVariant.PreferenceSplit). Every player submits
+ * one `preferenceBid` move splitting the whole budget across the picked factions; the moves are
+ * recorded in seat order, but nothing is derived from any of them until the last one lands -
+ * which is what makes the submissions simultaneous rather than sequential from a player's point of
+ * view. In hosted play they are literally collected in parallel and only appended to the move log
+ * once every one of them is in, so no player can ever read another's numbers first (see the
+ * `auction_sealed_bids` table).
+ *
+ * The resolution is done exactly once, guarded by `preferenceSplitResult`, and the whole audited
+ * outcome (ranking, both kinds of random tiebreak, every payment) is stored on the engine. Its
+ * only randomness comes from the game's own seeded PRNG, so replaying the same move log always
+ * reproduces the same result - a reload can never reroll a tie.
+ */
+export function phaseSetupPreferenceBid(engine: Engine, move: string) {
+  engine.loadTurnMoves(move, { split: false, processFirst: true });
+
+  if (!engine.moveToNextPlayer(engine.turnOrder, { loop: false })) {
+    resolvePreferenceSplitPhase(engine);
+    endSetupFactionPhase(engine);
+  }
+}
+
+function resolvePreferenceSplitPhase(engine: Engine) {
+  if (engine.preferenceSplitResult) {
+    // Already resolved (a re-entrant call, or a state restored from JSON): the stored result is
+    // the authority, never recomputed.
+    return;
+  }
+
+  const result = resolvePreferenceSplitAuction(
+    engine.setup,
+    engine.players.map((pl) => pl.player as PlayerEnum),
+    engine.preferenceSplitBids,
+    engine.preferenceSplitBudget,
+    () => engine.map.rng()
+  );
+  engine.preferenceSplitResult = result;
+
+  for (const player of engine.players) {
+    player.faction = undefined;
+  }
+  for (const allocation of result.allocations) {
+    const winner = engine.player(allocation.winner);
+    winner.faction = allocation.faction;
+    winner.data.bid = allocation.payment;
+  }
 }
 
 function moveToNextPlayerWithoutAChosenFaction(engine: Engine) {
@@ -178,8 +282,38 @@ function beginSetupBoardPhase(engine: Engine) {
     // The last player is the one to rotate the sectors
     engine.currentPlayer = engine.players.slice(-1).pop().player;
   } else {
+    beginSetupFactionPhaseOrBan(engine);
+  }
+}
+
+function beginSetupFactionPhaseOrBan(engine: Engine) {
+  // `??` is the backward-compat guarantee: games created before `banPhase` existed have it
+  // `undefined` and fall back to the old rule (Silent Auction always bans) so they keep replaying
+  // identically. Games created after this flag exists always set it explicitly (true or false).
+  const banPhase = engine.options.banPhase ?? engine.options.auction === AuctionVariant.Silent;
+  if (banPhase) {
+    beginSetupFactionBanPhase(engine);
+  } else {
     beginSetupFactionPhase(engine);
   }
+}
+
+function beginSetupFactionBanPhase(engine: Engine) {
+  engine.changePhase(Phase.SetupFactionBan);
+  engine.turnOrder = engine.players.map((pl) => pl.player as PlayerEnum);
+  engine.moveToNextPlayer(engine.turnOrder, { loop: false });
+}
+
+function beginSetupSilentBidPhase(engine: Engine) {
+  engine.changePhase(Phase.SetupSilentBid);
+  engine.turnOrder = engine.players.map((pl) => pl.player as PlayerEnum);
+  engine.moveToNextPlayer(engine.turnOrder, { loop: false });
+}
+
+function beginSetupPreferenceBidPhase(engine: Engine) {
+  engine.changePhase(Phase.SetupPreferenceBid);
+  engine.turnOrder = engine.players.map((pl) => pl.player as PlayerEnum);
+  engine.moveToNextPlayer(engine.turnOrder, { loop: false });
 }
 
 function beginSetupFactionPhase(engine: Engine) {
@@ -194,14 +328,45 @@ function beginSetupAuctionPhase(engine: Engine) {
   engine.moveToNextPlayer(engine.turnOrder, { loop: false });
 }
 
-function endSetupFactionPhase(engine: Engine) {
+/**
+ * Loads every player's faction board and hands over to the setup building phase - the one exit from
+ * round 0's faction selection, whichever route got there (plain pick, or any of the auction
+ * variants resolving). Exported for the viewer's analysis mode, which needs to take that exit
+ * directly on its throwaway sandbox clone after assigning factions itself, so a player can try out
+ * "what if I had this faction" without walking every seat's pick/ban/bid first
+ * (`viewer/src/logic/analysis.ts`'s `applyFactionSeed`, ANALYSIS_MODE_PLAN.md §11). Nothing on the
+ * real game path calls it from outside this module, and its behaviour is unchanged.
+ */
+export function endSetupFactionPhase(engine: Engine) {
   for (const pl of engine.players) {
     if (!pl.faction) {
       pl.faction = engine.setup[pl.player as PlayerEnum];
     }
     const faction = pl.faction;
     const board = pl.variant ?? factionVariantBoard(engine.factionCustomization, faction);
-    pl.loadFaction(board, engine.expansions);
+    pl.loadFaction(board, engine.expansions, false, engine.players.length, engine.lostFleetEconomySide);
+  }
+
+  if (engine.options.lostFleet) {
+    // §B5: use the row persisted at init (moveInit). Legacy fallback for serialized states that
+    // predate `lostFleetTerraformingRow`: recompute from `map.seed` as before (correct on the
+    // constructor/replay path, which is how legacy games are restored).
+    const terraformingRow = engine.lostFleetTerraformingRow ?? lostFleetTerraformingBoard(engine.map.seed);
+    const cost3Planets = lostFleetTerraformingCost3Planets(
+      engine.players.map((pl) => ({ player: pl.player, faction: pl.faction })),
+      engine.turnOrderAfterSetupAuction,
+      terraformingRow
+    );
+
+    for (const [player, planets] of Object.entries(cost3Planets)) {
+      engine.player(+player as PlayerEnum).data.lostFleetCost3Planets = [...planets];
+    }
+
+    for (const pl of engine.players) {
+      if (pl.faction === Faction.Moweyds) {
+        pl.data.explorationShips[Spaceship.TFMars] = 1;
+      }
+    }
   }
 
   beginSetupBuildingPhase(engine);
@@ -212,15 +377,20 @@ function beginSetupBuildingPhase(engine: Engine) {
 
   const posIvits = engine.players.findIndex((player) => player.faction === Faction.Ivits);
 
-  const setupTurnOrder = engine.turnOrderAfterSetupAuction.filter((i) => i !== posIvits);
-  const reverseSetupTurnOrder = setupTurnOrder.slice().reverse();
-  engine.turnOrder = setupTurnOrder.concat(reverseSetupTurnOrder);
-
-  const posXenos = engine.players.findIndex((player) => player.faction === Faction.Xenos);
-
-  if (posXenos !== -1) {
-    engine.turnOrder.push(posXenos as PlayerEnum);
-  }
+  const baseSetupTurnOrder = engine.turnOrderAfterSetupAuction.filter(
+    (player) => lostFleetSetupStage(engine.players[player].faction) === 1
+  );
+  const reverseSetupTurnOrder = baseSetupTurnOrder
+    .slice()
+    .reverse()
+    .filter((player) => startingSetupPlacements(engine.players[player].faction) >= 2);
+  const extraSetupTurnOrder = baseSetupTurnOrder.filter(
+    (player) => startingSetupPlacements(engine.players[player].faction) >= 3
+  );
+  const expansionSetupTurnOrder = engine.turnOrderAfterSetupAuction.filter(
+    (player) => lostFleetSetupStage(engine.players[player].faction) === 2
+  );
+  engine.turnOrder = baseSetupTurnOrder.concat(reverseSetupTurnOrder, extraSetupTurnOrder, expansionSetupTurnOrder);
 
   if (posIvits !== -1) {
     if (engine.players.length === 2 && engine.factionCustomization.variant === "more-balanced") {
@@ -264,6 +434,9 @@ function beginRoundStartPhase(engine: Engine) {
  */
 function handleNextIncome(engine: Engine) {
   const pl = engine.player(engine.currentPlayer);
+  if (pl.needsTinkeringTileChoice(engine.round)) {
+    return false;
+  }
   if (pl.incomeSelection().needed) {
     return false;
   }
@@ -354,6 +527,7 @@ function cleanUpPhase(engine: Engine) {
   for (const player of engine.players) {
     // remove roundScoringTile
     player.removeEvents(engine.currentRoundScoringEvents);
+    player.removeCurrentTinkeringTile();
 
     // resets special action
     for (const event of player.events[Operator.Activate]) {
@@ -364,6 +538,8 @@ function cleanUpPhase(engine: Engine) {
   BoardAction.values(engine.expansions).forEach((pos: BoardAction) => {
     engine.boardActions[pos] = null;
   });
+  // resets spaceship board actions
+  engine.spaceshipActions = {};
 
   if (engine.isLastRound) {
     finalScoringPhase(engine);
@@ -376,7 +552,7 @@ function finalScoringPhase(engine: Engine) {
   engine.changePhase(Phase.EndGame);
   engine.addAdvancedLog({ phase: Phase.EndGame });
   engine.currentPlayer = engine.tempCurrentPlayer = undefined;
-  const allRankings = finalRankings(engine.tiles.scorings.final, engine.players);
+  const allRankings = finalRankings(engine.tiles.scorings.final, engine.players, engine.expansions);
 
   // Group gained points per player
   for (const player of engine.players) {

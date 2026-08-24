@@ -1,15 +1,25 @@
 <template>
   <g>
+    <title v-if="presenceTooltip">{{ presenceTooltip }}</title>
     <circle :r="1" :style="stroke()" :class="['player-token', 'planet-fill', planet()]" />
-    <text :style="`font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(planet())}`">
+    <text
+      class="player-circle__initial"
+      :style="`font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(planet())}`"
+    >
       {{ initial() }}
     </text>
-    <text :style="`font-size: 1px; text-anchor: middle;`" y="2">{{ name() }}</text>
+    <text class="player-circle__name" :style="`font-size: 1px; text-anchor: middle;`" y="2">{{ name() }}</text>
+    <!-- Presence indicator (PROGRESS.md Gaia 9) - top-left of the token, only when a caller passes
+         a status (TurnOrder.vue does; other PlayerCircle usages - the solo "current player"
+         placeholder, charts - leave it unset and render exactly as before). -->
+    <circle v-if="presenceStatus" :cx="-0.75" :cy="-0.75" :r="0.28" :class="['presence-dot', presenceStatus]" />
   </g>
 </template>
 <script lang="ts">
-import Engine, { AuctionVariant, factionPlanet, Phase, Planet, Player, PlayerEnum } from "@gaia-project/engine";
+import Engine, { AuctionVariant, Phase, Planet, Player, PlayerEnum } from "@gaia-project/engine";
 import { Component, Prop, Vue } from "vue-property-decorator";
+import { factionPiecePlanet } from "../graphics/utils";
+import { PresenceStatus } from "../logic/presence";
 import { phaseBeforeSetupBuilding } from "../logic/utils";
 
 @Component
@@ -23,6 +33,22 @@ export default class PlayerCircle extends Vue {
   @Prop({ type: Boolean, default: false })
   chart: boolean;
 
+  @Prop({ default: null })
+  presenceStatus: PresenceStatus | null;
+
+  get presenceTooltip(): string | null {
+    switch (this.presenceStatus) {
+      case "green":
+        return "Viewing this game right now";
+      case "yellow":
+        return "Online elsewhere in the app";
+      case "grey":
+        return "Offline right now";
+      default:
+        return null;
+    }
+  }
+
   get gameData(): Engine {
     return this.$store.state.data;
   }
@@ -34,9 +60,9 @@ export default class PlayerCircle extends Vue {
 
     if (this.gameData.players[this.gameData.currentPlayer] === this.player) {
       if (this.gameData.players[this.gameData.playerToMove] === this.player) {
-        return "stroke-width: 0.16px !important; stroke: #2C4";
+        return "stroke-width: 0.22px !important; stroke: #2C4";
       } else {
-        return "stroke-width: 0.10px !important; stroke: #2C4";
+        return "stroke-width: 0.14px !important; stroke: #2C4";
       }
     }
 
@@ -56,11 +82,11 @@ export default class PlayerCircle extends Vue {
 
   planet() {
     if (this.phaseBeforeSetupBuilding()) {
-      return this.gameData.setup[this.index] ? factionPlanet(this.gameData.setup[this.index]) : Planet.Lost;
+      return this.gameData.setup[this.index] ? factionPiecePlanet(this.gameData.setup[this.index]) : Planet.Lost;
     }
 
     if (this.player?.faction) {
-      return factionPlanet(this.player.faction);
+      return factionPiecePlanet(this.player.faction);
     }
 
     return Planet.Lost;
@@ -107,3 +133,25 @@ export default class PlayerCircle extends Vue {
   }
 }
 </script>
+<style lang="scss">
+.player-circle__name {
+  fill: var(--ui-text);
+}
+
+.presence-dot {
+  stroke: white;
+  stroke-width: 0.08px;
+
+  &.green {
+    fill: #2ecc71;
+  }
+
+  &.yellow {
+    fill: #f1c40f;
+  }
+
+  &.grey {
+    fill: #95a5a6;
+  }
+}
+</style>

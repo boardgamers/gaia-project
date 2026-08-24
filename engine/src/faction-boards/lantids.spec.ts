@@ -1,6 +1,9 @@
 import { expect } from "chai";
 import Engine from "../engine";
-import { Building, Command, Operator, Planet, Player, Resource } from "../enums";
+import { Building, Command, Expansion, Faction, Operator, Planet, Player as PlayerEnum, Resource } from "../enums";
+import SpaceMap from "../map";
+import Player from "../player";
+import { Power } from "../player-data";
 
 const parseMoves = Engine.parseMoves;
 
@@ -40,10 +43,10 @@ describe("Lantids", () => {
     `)
     );
 
-    engine.player(Player.Player1).data.buildings[Building.PlanetaryInstitute] = 1;
-    const k = engine.player(Player.Player1).data.knowledge;
+    engine.player(PlayerEnum.Player1).data.buildings[Building.PlanetaryInstitute] = 1;
+    const k = engine.player(PlayerEnum.Player1).data.knowledge;
     engine.move("p1 build m -2x2.");
-    expect(engine.player(Player.Player1).data.knowledge).to.equal(k + 2);
+    expect(engine.player(PlayerEnum.Player1).data.knowledge).to.equal(k + 2);
   });
 
   it("should gain only 1 knowledge when getting pt | vp", () => {
@@ -70,7 +73,7 @@ describe("Lantids", () => {
     `)
     );
 
-    const pl = engine.player(Player.Player1);
+    const pl = engine.player(PlayerEnum.Player1);
     const k = pl.data.knowledge;
     engine.move("lantids build lab -4x-1. tech gaia. up gaia.");
     expect(pl.data.knowledge).to.equal(k + 1);
@@ -133,7 +136,7 @@ describe("Lantids", () => {
     `);
 
     const engine = new Engine(moves);
-    const player = engine.player(Player.Player1);
+    const player = engine.player(PlayerEnum.Player1);
     expect(player.resourceIncome(Resource.ChargePower)).to.equal(4);
     expect(player.resourceIncome(Resource.GainToken)).to.equal(0);
   });
@@ -158,11 +161,117 @@ describe("Lantids", () => {
     const hex = engine.map.getS("1B5");
     hex.data.planet = Planet.Lost;
     hex.data.building = Building.Mine;
-    hex.data.player = Player.Player2;
-    const mines = engine.player(Player.Player1).data.buildings[Building.Mine];
-    const events = engine.player(Player.Player1).events[Operator.Income].length;
+    hex.data.player = PlayerEnum.Player2;
+    const mines = engine.player(PlayerEnum.Player1).data.buildings[Building.Mine];
+    const events = engine.player(PlayerEnum.Player1).events[Operator.Income].length;
     engine.move("p1 build m 1B5.");
-    expect(engine.player(Player.Player1).data.buildings[Building.Mine]).to.equal(mines + 1);
-    expect(engine.player(Player.Player1).events[Operator.Income].length).to.equal(events + 1);
+    expect(engine.player(PlayerEnum.Player1).data.buildings[Building.Mine]).to.equal(mines + 1);
+    expect(engine.player(PlayerEnum.Player1).events[Operator.Income].length).to.equal(events + 1);
+  });
+});
+
+// RULES_CLARIFICATIONS.md §I2: below 4 players, Lantids use an adjusted PI tile. The base (4p) "gain
+// 2 knowledge for an additional mine on an already-colonized planet" ability is unchanged on every
+// side (already covered above and directly in player.ts) - these tests only cover what the adjusted
+// tile changes on top of it: a 2p/solo Terra-mine trigger, and a 3p extra power charge.
+describe("Lantids - Lost Fleet adjusted PI tile (§I2)", () => {
+  function terraHex(map: SpaceMap) {
+    return [...map.grid.values()].find((hex) => hex.data.planet === Planet.Terra && !hex.data.building);
+  }
+
+  function lantidsPlayer(nbPlayers: number, expansions = Expansion.LostFleet) {
+    const player = new Player(expansions, PlayerEnum.Player1);
+    player.faction = Faction.Lantids;
+    player.loadFaction(null, expansions, false, nbPlayers);
+    return player;
+  }
+
+  it("should grant 2 knowledge for a mine on Terra in 2-player games, even for a normal (non-additional) mine", () => {
+    const map = new SpaceMap(2, "lantids-adjusted-pi-2p", false, "standard", true);
+    const player = lantidsPlayer(2);
+    player.data.buildings[Building.PlanetaryInstitute] = 1;
+
+    const hex = terraHex(map);
+    expect(hex, "need an unbuilt Terra hex").to.not.equal(undefined);
+
+    const before = player.data.knowledge;
+    player.build(Building.Mine, hex, [], map);
+    expect(player.data.knowledge).to.equal(before + 2);
+  });
+
+  it("should not grant the Terra-mine bonus without a Planetary Institute", () => {
+    const map = new SpaceMap(2, "lantids-adjusted-pi-2p-no-pi", false, "standard", true);
+    const player = lantidsPlayer(2);
+
+    const hex = terraHex(map);
+    const before = player.data.knowledge;
+    player.build(Building.Mine, hex, [], map);
+    expect(player.data.knowledge).to.equal(before);
+  });
+
+  it("should charge 1 additional power for an additional mine on an already-colonized planet in 3-player games", () => {
+    const map = new SpaceMap(3, "lantids-adjusted-pi-3p", false, "standard", true);
+    const occupiedHex = [...map.grid.values()].find((hex) => hex.hasPlanet() && !hex.data.building);
+    occupiedHex.data.player = PlayerEnum.Player2;
+    occupiedHex.data.building = Building.Mine;
+
+    const player = lantidsPlayer(3);
+    player.data.buildings[Building.PlanetaryInstitute] = 1;
+    player.data.power = new Power(4, 2, 1, 0);
+
+    const beforeKnowledge = player.data.knowledge;
+    const beforeSpendablePower = player.data.power.area2 + player.data.power.area3;
+
+    player.build(Building.Mine, occupiedHex, [], map);
+
+    // The base tile's 2-knowledge grant for an additional mine is unchanged; the 3p adjusted tile
+    // adds a 1-power charge on top of it.
+    expect(player.data.knowledge).to.equal(beforeKnowledge + 2);
+    expect(player.data.power.area2 + player.data.power.area3).to.equal(beforeSpendablePower + 1);
+  });
+
+  it("should not grant either Lost Fleet bonus in 4-player games (unadjusted base tile)", () => {
+    const map = new SpaceMap(4, "lantids-adjusted-pi-4p", false, "standard", true);
+    const occupiedHex = [...map.grid.values()].find((hex) => hex.hasPlanet() && !hex.data.building);
+    occupiedHex.data.player = PlayerEnum.Player2;
+    occupiedHex.data.building = Building.Mine;
+
+    const player = lantidsPlayer(4);
+    player.data.buildings[Building.PlanetaryInstitute] = 1;
+    player.data.power = new Power(4, 2, 1, 0);
+
+    const beforeKnowledge = player.data.knowledge;
+    const beforeSpendablePower = player.data.power.area2 + player.data.power.area3;
+
+    player.build(Building.Mine, occupiedHex, [], map);
+
+    // Base tile's own 2-knowledge grant still applies, but no extra power charge is added at 4p.
+    expect(player.data.knowledge).to.equal(beforeKnowledge + 2);
+    expect(player.data.power.area2 + player.data.power.area3).to.equal(beforeSpendablePower);
+  });
+
+  it("should not grant either Lost Fleet bonus without the Lost Fleet expansion", () => {
+    const map = new SpaceMap(2, "lantids-adjusted-pi-no-expansion", false, "standard", false);
+    const player = lantidsPlayer(2, Expansion.None);
+    player.data.buildings[Building.PlanetaryInstitute] = 1;
+
+    const hex = [...map.grid.values()].find((h) => h.data.planet === Planet.Terra && !h.data.building);
+    expect(hex, "need an unbuilt Terra hex").to.not.equal(undefined);
+
+    const before = player.data.knowledge;
+    player.build(Building.Mine, hex, [], map);
+    expect(player.data.knowledge).to.equal(before);
+  });
+
+  // RULES_CLARIFICATIONS.md §I2 (owner board-read): Lantids gain +1 power token to Area I as basic
+  // income under Lost Fleet, from the start - not present in the base game.
+  it("should gain 1 power token in Area I as basic income under Lost Fleet", () => {
+    const player = lantidsPlayer(2);
+    expect(player.resourceIncome(Resource.GainToken)).to.equal(1);
+  });
+
+  it("should not gain the Lost Fleet power-token income in a base game", () => {
+    const player = lantidsPlayer(2, Expansion.None);
+    expect(player.resourceIncome(Resource.GainToken)).to.equal(0);
   });
 });

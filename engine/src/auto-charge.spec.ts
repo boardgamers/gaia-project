@@ -102,6 +102,9 @@ describe("AutoCharge", () => {
         power: number;
         autoCharge: AutoCharge;
         autoChargeTargetSpendablePower?: number;
+        autoChargeMaxPassedRoundLeech?: number;
+        passedRoundLeechAccepted?: number;
+        remainingChargesAfterIncome?: number;
         powerInArea3?: number;
         lastRound?: boolean;
         playerHasPassed?: boolean;
@@ -148,6 +151,29 @@ describe("AutoCharge", () => {
         give: { power: 2, autoCharge: 1, powerInArea3: 2, autoChargeTargetSpendablePower: 3 },
         want: ChargeDecision.Yes,
       },
+      {
+        name: "passed-round cap declines a leech that would exceed the remaining cap",
+        give: {
+          power: 2,
+          autoCharge: 5,
+          playerHasPassed: true,
+          autoChargeMaxPassedRoundLeech: 3,
+          passedRoundLeechAccepted: 2,
+        },
+        want: ChargeDecision.No,
+      },
+      {
+        name: "passed-round cap leaves the ordinary per-offer threshold ask in place",
+        give: {
+          power: 2,
+          autoCharge: 1,
+          playerHasPassed: true,
+          autoChargeMaxPassedRoundLeech: 6,
+          passedRoundLeechAccepted: 0,
+          remainingChargesAfterIncome: 99,
+        },
+        want: ChargeDecision.Ask,
+      },
     ];
 
     for (const test of tests) {
@@ -155,6 +181,7 @@ describe("AutoCharge", () => {
         const player = new Player();
         player.settings.autoChargePower = test.give.autoCharge;
         player.settings.autoChargeTargetSpendablePower = test.give.autoChargeTargetSpendablePower ?? 0;
+        player.settings.autoChargeMaxPassedRoundLeech = test.give.autoChargeMaxPassedRoundLeech ?? 0;
         player.data.power.area3 = test.give.powerInArea3;
 
         const offer = new Offer(
@@ -162,7 +189,14 @@ describe("AutoCharge", () => {
           new Reward(test.give.power - 1, Resource.VictoryPoint).toString()
         );
 
-        const request = new ChargeRequest(player, [offer], test.give.lastRound, test.give.playerHasPassed, null);
+        const request = new ChargeRequest(
+          player,
+          [offer],
+          test.give.lastRound,
+          test.give.playerHasPassed,
+          { remainingChargesAfterIncome: test.give.remainingChargesAfterIncome ?? 0 } as IncomeSelection,
+          test.give.passedRoundLeechAccepted
+        );
         const decision = decideChargeRequest(request);
         expect(decision).to.equal(test.want);
         if (decision === ChargeDecision.Yes) {

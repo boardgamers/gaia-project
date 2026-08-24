@@ -1,6 +1,7 @@
-import { Planet } from "./enums";
+import { Faction, Planet } from "./enums";
+import { factionPlanet } from "./factions";
 
-export function terraformingStepsRequired(factionPlanet: Planet, targetPlanet: Planet): number {
+export function terraformingStepsRequired(faction: Faction, targetPlanet: Planet, cost3Planets: Planet[] = []): number {
   const planetCycle = [
     Planet.Terra,
     Planet.Oxide,
@@ -11,11 +12,29 @@ export function terraformingStepsRequired(factionPlanet: Planet, targetPlanet: P
     Planet.Ice,
   ];
 
-  if (targetPlanet === Planet.Gaia || targetPlanet === Planet.Transdim) {
+  if (targetPlanet === Planet.Gaia || targetPlanet === Planet.Transdim || targetPlanet === Planet.Asteroid) {
     return 0;
   }
 
-  let dist = planetCycle.findIndex((pc) => pc === targetPlanet) - planetCycle.findIndex((pc) => pc === factionPlanet);
+  if (targetPlanet === Planet.Protoplanet) {
+    return 3;
+  }
+
+  // Lost Fleet: these factions have no home terrain planet, so the planet-cycle math below
+  // (keyed off factionPlanet()) doesn't apply to them - their terraform cost is a flat
+  // per-faction rule instead, regardless of target color.
+  if (faction === Faction.Darkanians) {
+    return 1;
+  }
+  if (faction === Faction.SpaceGiants) {
+    return 2;
+  }
+  if (faction === Faction.Tinkeroids || faction === Faction.Moweyds) {
+    return cost3Planets.includes(targetPlanet) ? 3 : 1;
+  }
+
+  let dist =
+    planetCycle.findIndex((pc) => pc === targetPlanet) - planetCycle.findIndex((pc) => pc === factionPlanet(faction));
   if (dist > 3) {
     dist -= 7;
   } else if (dist < -3) {
@@ -37,4 +56,6 @@ export const planetNames = {
   [Planet.Titanium]: "titanium",
   [Planet.Transdim]: "transdim",
   [Planet.Volcanic]: "volcanic",
+  [Planet.Protoplanet]: "protoplanet",
+  [Planet.Asteroid]: "asteroid",
 };

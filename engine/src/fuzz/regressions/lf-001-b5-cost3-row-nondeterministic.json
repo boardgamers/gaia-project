@@ -1,0 +1,7 @@
+{
+  "name": "lf-001-b5-cost3-row-nondeterministic",
+  "description": "§B5 cost-3 color row changed between live (fromData-cloned, host-style) play and a seed+moves replay: endSetupFactionPhase computed the randomized 7-color Terraforming-board row lazily from engine.map.seed, but SpaceMap.toJSON() never serializes the seed, so every fromData clone (the real hosts clone per move) shuffled from seed 'undefined'. Violates §J3 (engine deterministic from seed + moves) and §B5 (the row is placed once at setup, rulebook p.8).",
+  "finding": "LF-1 (FUZZER_PLAN.md campaign findings table); seed fuzz-lf-2p-0, minimized to the 3-line prefix below",
+  "options": { "lostFleet": true, "factionVariant": "standard" },
+  "moves": ["init 2 lf-b5-cost3-row", "p1 faction firaks", "p2 faction moweyds"]
+}

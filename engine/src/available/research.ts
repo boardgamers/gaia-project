@@ -1,9 +1,10 @@
 import Engine from "../engine";
-import { AdvTechTilePos, Command, Player, ResearchField, TechTilePos } from "../enums";
+import { AdvTechTilePos, Command, Player, ResearchField, ScoringBoardExtensionSide, TechTilePos } from "../enums";
 import PlayerObject from "../player";
 import PlayerData from "../player-data";
 import { lastTile } from "../research-tracks";
 import Reward from "../reward";
+import { claimableSpaceshipTechs } from "../spaceships";
 import { isAdvanced } from "../tiles/techs";
 import { AvailableResearchData, AvailableResearchTrack, Offer, UPGRADE_RESEARCH_COST } from "./types";
 
@@ -84,7 +85,16 @@ export function canTakeAdvancedTechTile(engine: Engine, data: PlayerData, tilePo
   if (!data.hasGreenFederation()) {
     return false;
   }
-  if (data.research[tilePos.slice("adv-".length)] < 4) {
+  if (tilePos === AdvTechTilePos.ScoringExtension) {
+    // §E6: the Scoring Board Extension replaces the research-level condition for this one tile.
+    const meetsExtensionCondition =
+      engine.scoringExtensionSide === ScoringBoardExtensionSide.ExploredShips
+        ? data.exploredShipsCount() >= 3
+        : data.victoryPoints >= 25;
+    if (!meetsExtensionCondition) {
+      return false;
+    }
+  } else if (data.research[tilePos.slice("adv-".length)] < 4) {
     return false;
   }
   if (!data.tiles.techs.some((tech) => tech.enabled && !isAdvanced(tech.pos))) {
@@ -118,6 +128,16 @@ export function possibleTechTiles(engine: Engine, player: Player) {
       });
     }
   }
+
+  for (const claimableTech of claimableSpaceshipTechs(data.explorationShips, engine.tiles.spaceshipTechs)) {
+    if (!data.tiles.techs.find((tech) => tech.tile === claimableTech.tile)) {
+      tiles.push({
+        tile: claimableTech.tile,
+        pos: claimableTech.ship,
+      });
+    }
+  }
+
   if (tiles.length > 0) {
     commands.push({
       name: Command.ChooseTechTile,

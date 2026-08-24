@@ -1,5 +1,5 @@
 import Engine, { AdvTechTile, AdvTechTilePos, TechTile, TechTilePos } from "@gaia-project/engine";
-import { Player } from "@gaia-project/engine/src/enums";
+import { Player, Spaceship, SpaceshipTechTile } from "@gaia-project/engine/src/enums";
 import { expect } from "chai";
 import { parsedMove, recentMoves } from "../logic/recent";
 import { runJsonTests } from "../logic/test-utils";
@@ -33,6 +33,42 @@ describe("Advanced log details", () => {
       expect(replaceMove(data, parsedMove("baltaks build lab 4B1. tech adv-gaia. cover terra")).move).to.equal(
         "baltaks build lab 4B1. tech adv-gaia (2 VP / mine). cover terra (o,q)"
       );
+    });
+
+    it("a claimed Lost Fleet ship tech tile should be replaced, even though its pool entry is already deleted", () => {
+      // Regression test: engine.tiles.spaceshipTechs[pos] is deleted the instant its single copy
+      // is claimed (move/research.ts), unlike a base-board tech position's pool entry, which
+      // survives forever. replaceTech previously only ever looked in tiles.techs (the base-board
+      // pool) and threw for any move history containing an already-claimed ship tech tile - every
+      // Lost Fleet game where a player claimed one, once "Extended Log" was enabled, since the log
+      // always redescribes moves against the CURRENT state, not a per-move snapshot.
+      const shipEngine = new Engine(["init 2 lf-log-repro", "p1 faction terrans", "p2 faction hadsch-hallas"], {
+        lostFleet: true,
+      });
+      shipEngine.players[0].data.tiles.techs.push({
+        tile: SpaceshipTechTile.Resource,
+        pos: Spaceship.Rebellion,
+        enabled: true,
+      });
+      expect(shipEngine.tiles.spaceshipTechs[Spaceship.Rebellion]).to.equal(undefined);
+
+      expect(() => replaceMove(shipEngine, parsedMove("terrans tech rebellion."))).to.not.throw();
+      expect(replaceMove(shipEngine, parsedMove("terrans tech rebellion.")).move).to.equal(
+        "terrans tech rebellion (1 ore, 3 knowledge)."
+      );
+    });
+
+    it('a federation token ending in "-tech" should not be misread as a tech command', () => {
+      // Regression test: the Lost Fleet federation token "ship-fed-tech" ends in "-tech" - a
+      // hyphen is a non-word char, so \b still matches right there - and engine.ts appends a
+      // " using areaX: N" power-usage suffix straight after it, so this used to be misread as a
+      // "tech using" tile-position command and throw (no tile is positioned at "using").
+      expect(() =>
+        replaceMove(data, parsedMove("xenos federation 1A0,1A1 ship-fed-tech using area1: 3. tech terra."))
+      ).to.not.throw();
+      expect(
+        replaceMove(data, parsedMove("xenos federation 1A0,1A1 ship-fed-tech using area1: 3. tech terra.")).move
+      ).to.equal("xenos federation 1A0,1A1 ship-fed-tech using area1: 3. tech terra (o,q).");
     });
   });
 

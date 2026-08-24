@@ -12,4 +12,9 @@ export const roundScoringData: { [key in ScoringTile]: { name: string; shortcut:
   [ScoringTile.Score8]: { name: "3 VP / trading station", shortcut: "3t", color: "--res-credit" },
   [ScoringTile.Score9]: { name: "3 VP / mine on gaia", shortcut: "3g", color: "--gaia" },
   [ScoringTile.Score10]: { name: "5 VP / PI or academy", shortcut: "5b", color: "--current-round" },
+  // Lost Fleet round scoring tiles (RULES_CLARIFICATIONS.md §G4): "lab >> 4vp" / "newsector >> 3vp"
+  // / "newplanet >> 3vp" (tiles/scoring.ts).
+  [ScoringTile.LfLab4]: { name: "4 VP / research lab", shortcut: "4l", color: "--res-knowledge" },
+  [ScoringTile.LfSector3]: colorCodes.sector.add({ name: "3 VP / new sector" }, "3"),
+  [ScoringTile.LfPlanet3]: colorCodes.planetType.add({ name: "3 VP / new planet type" }, "3"),
 };

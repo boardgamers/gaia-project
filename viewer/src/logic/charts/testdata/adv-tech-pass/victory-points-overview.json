@@ -14,6 +14,9 @@
       "--rt-gaia",
       "--current-round",
       "--federation",
+      "--protoplanet",
+      "--rt-int",
+      "--lost",
       "--rt-sci",
       "--dig",
       "--res-credit"
@@ -46,6 +49,9 @@
     "Gaia",
     "Advanced Tech",
     "Federation",
+    "Protoplanets",
+    "Spaceship",
+    "Artifacts",
     "Satellites",
     "Planet Types",
     "Resources"
@@ -53,15 +59,15 @@
   "datasets": [
     {
       "label": "Bal T'aks (109)",
-      "data": [10, 0, -3, 0, 0, 12, 6, 0, 16, 0, 33, 7, 18, 9, 1]
+      "data": [10, 0, -3, 0, 0, 12, 6, 0, 16, 0, 33, 7, 0, 0, 0, 18, 9, 1]
     },
     {
       "label": "Ivits (68)",
-      "data": [10, 0, -12, 0, 0, 7, 7, 0, 4, 0, 0, 15, 12, 18, 7]
+      "data": [10, 0, -12, 0, 0, 7, 7, 0, 4, 0, 0, 15, 0, 0, 0, 12, 18, 7]
     },
     {
       "label": "Gleens (49)",
-      "data": [10, 0, -4, 0, 12, 8, 0, 0, 8, 0, 0, 0, 0, 9, 6]
+      "data": [10, 0, -4, 0, 12, 8, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 9, 6]
     }
   ]
 }

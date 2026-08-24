@@ -22,7 +22,7 @@
       v-for="i in buildingList"
       :transform="`translate(${(i + 0.5) * buildingSpacing + offset}, 0)`"
       :key="i"
-      v-b-tooltip.html
+      v-b-tooltip.hover.html
       :title="tooltip(i)"
     >
       <circle
@@ -66,6 +66,10 @@
         <line y1="-.1" y2=".1" x1="-.1" x2=".1" stroke="#333" stroke-width="2" />
         <line y1=".1" y2="-.1" x1="-.1" x2=".1" stroke="#333" stroke-width="2" />
       </g>
+      <!-- Lost Fleet §E2: a Gaiaformer consumed to colonize an Asteroid never appears on the map (it's
+           gone for good), unlike one placed on Gaia/a transdim/Protoplanet - so mark its board slot
+           with the same "used" X as a power/special action, scaled down to fit this circle. -->
+      <UsedActionMark v-if="isAsteroidConsumed(i)" class="asteroid-consumed-mark" transform="scale(0.05)" />
     </g>
     <!--    not displayed because military is not implemented yet-->
     <!--    <g v-if="isShip" transform="translate(7.5,0)" v-b-tooltip="destroyedTooltip">-->
@@ -95,12 +99,14 @@ import { radiusTranslate } from "../../logic/utils";
 import Building from "../Building.vue";
 import Planet from "../Planet.vue";
 import Resource from "../Resource.vue";
+import UsedActionMark from "../UsedActionMark.vue";
 
 @Component({
   components: {
     Planet,
     Building,
     Resource,
+    UsedActionMark,
   },
 })
 export default class BuildingGroup extends Vue {
@@ -119,6 +125,12 @@ export default class BuildingGroup extends Vue {
   @Prop({ default: 0 })
   gaia: number;
 
+  // Lost Fleet §E2: a Gaiaformer consumed to colonize an Asteroid is gone forever - it never
+  // becomes a map overlay (unlike `placed`/`gaia`), so without this the slot kept rendering as an
+  // available Gaiaformer token.
+  @Prop({ default: 0 })
+  asteroidConsumed: number;
+
   @Prop({ default: 0 })
   destroyed: number;
 
@@ -136,6 +148,12 @@ export default class BuildingGroup extends Vue {
 
   @Prop({ default: false })
   ac2: boolean;
+
+  // Faction pick/ban preview: render every slot as if its building were removed, so the income
+  // icons printed beneath the buildings (the physical faction board's income track) are revealed -
+  // "no buildings on the board, income icons showing". No building tokens are drawn.
+  @Prop({ default: false })
+  revealIncome: boolean;
 
   get board() {
     if (this.player.board) {
@@ -175,7 +193,8 @@ export default class BuildingGroup extends Vue {
     const income =
       building === BuildingEnum.GaiaFormer || isShip(building) ? null : this.resources(i, true).join(", ") || "~";
     const rows = [
-      buildingName(building, this.faction) + (this.isDeployed(i) ? " (deployed)" : ""),
+      buildingName(building, this.faction) +
+        (this.isDeployed(i) ? " (deployed)" : this.isAsteroidConsumed(i) ? " (crashed on an Asteroid)" : ""),
       `Cost: ${cost}${isolatedCost}`,
       income,
       `Power Value: ${this.player.buildingValue(null, { building })}`,
@@ -231,14 +250,24 @@ export default class BuildingGroup extends Vue {
   }
 
   showBuilding(i: number) {
+    if (this.revealIncome) {
+      return false;
+    }
     if (this.ac1 || this.ac2) {
       return i === 0 ? !this.ac1 : !this.ac2;
     }
-    return i >= this.placed + this.gaia;
+    return i >= this.placed + this.gaia + this.asteroidConsumed;
   }
 
   isDeployed(i: number): boolean {
     return i < this.deployed;
+  }
+
+  isAsteroidConsumed(i: number): boolean {
+    if (this.building !== BuildingEnum.GaiaFormer) {
+      return false;
+    }
+    return i >= this.placed + this.gaia && i < this.placed + this.gaia + this.asteroidConsumed;
   }
 
   recentlyBuilt(i: number): boolean {

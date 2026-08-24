@@ -1,10 +1,18 @@
-import { factionPlanet, GaiaHex, Player } from "@gaia-project/engine";
+import { GaiaHex, Player } from "@gaia-project/engine";
 import { Direction, Grid } from "hexagrid";
 import { CubeCoordinatesPartial } from "hexagrid/src/cubecoordinates";
+import { factionPiecePlanet } from "./utils";
 
 export type FederationLine = { rotate: number; id: string };
 
 const vSpacing = Math.sqrt(3) / 2;
+
+/**
+ * The 1% the whole board is spread by, so neighbouring hexes show a hairline gap instead of sharing
+ * an edge exactly. Applied to every top-level placement (sectors, loose hexes and the power-ring
+ * overlay) - anything positioned without it drifts off the grid the further it sits from the origin.
+ */
+export const HEX_SPREAD = 1.01;
 
 export function hexCenter(hex: CubeCoordinatesPartial, radius = 1) {
   return {
@@ -51,7 +59,7 @@ export function playerFederationLines(grid: Grid<GaiaHex>, hex: GaiaHex, player:
         skipped.push(r);
       }
       arcs.push({
-        id: `#federation-arc-${factionPlanet(player.faction)}`,
+        id: `#federation-arc-${factionPiecePlanet(player.faction)}`,
         rotate: rotate(direction),
       });
     }
@@ -70,7 +78,7 @@ export function playerFederationLines(grid: Grid<GaiaHex>, hex: GaiaHex, player:
       return [
         {
           rotate: rotate(direction),
-          id: `#federation-${line}-${factionPlanet(player.faction)}`,
+          id: `#federation-${line}-${factionPiecePlanet(player.faction)}`,
         },
       ];
     })

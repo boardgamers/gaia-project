@@ -10,19 +10,20 @@
     />
     <circle :r="2 * r * spacing" fill="none" />
     <g>
-      <PowerBowl :player="player" area="gaia" class="gaia-bowl" gaia="true" />
+      <PowerBowl :player="player" :data="resolvedData" area="gaia" class="gaia-bowl" gaia="true" />
     </g>
     <g :transform="`translate(${-r * spacing}, ${2 * r * sin60 * spacing})`">
-      <PowerBowl :player="player" area="area1" class="power-bowl" />
+      <PowerBowl :player="player" :data="resolvedData" area="area1" class="power-bowl power-bowl--1" />
       <text y="1.7" transform="scale(0.7)" v-if="showIncome && income('t')">+{{ income("t") }}</text>
       <text class="label" x="-2.6">I</text>
     </g>
     <g :transform="`translate(${-r * spacing}, ${-2 * r * sin60 * spacing})`">
-      <PowerBowl :player="player" area="area2" class="power-bowl" />
+      <PowerBowl :player="player" :data="resolvedData" area="area2" class="power-bowl power-bowl--2" />
       <text class="label" x="-2.6">II</text>
     </g>
     <g :transform="`translate(${2 * r * spacing}, 0)`">
-      <PowerBowl :player="player" area="area3" class="power-bowl" />
+      <PowerBowl :player="player" :data="resolvedData" area="area3" class="power-bowl power-bowl--3" />
+      <text y="1.7" transform="scale(0.7)" v-if="showIncome && income('ta3')">+{{ income("ta3") }}</text>
       <text class="label" y="2.6" x="0">III</text>
     </g>
     <text class="label" transform="translate(-3.5, 0) scale(0.75)" v-if="showIncome && income('pw')"
@@ -32,9 +33,10 @@
 </template>
 
 <script lang="ts">
-import Engine, { Faction, Player, Resource as ResourceEnum } from "@gaia-project/engine";
+import Engine, { Faction, Player, PlayerData, Resource as ResourceEnum } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
+import { effectivePreviewPlayer } from "../../data/faction-preview";
 import { showIncome } from "../../data/resources";
 import Resource from "../Resource.vue";
 import PowerBowl from "./PowerBowl.vue";
@@ -48,6 +50,15 @@ import PowerBowl from "./PowerBowl.vue";
 export default class PowerBowls extends Vue {
   @Prop()
   player: Player;
+
+  // Bowl counts to render, kept independent of `player` so a caller can show a different faction's
+  // starting values (see PowerBowl.vue). Defaults to the player's own data.
+  @Prop()
+  data: PlayerData;
+
+  get resolvedData(): PlayerData {
+    return this.data ?? this.player.data;
+  }
 
   get engine(): Engine {
     return this.$store.state.data;
@@ -73,8 +84,10 @@ export default class PowerBowls extends Vue {
     return 0.86602540378;
   }
 
+  // `this.player` stays the real seat; read the passive round income (the bowl I/III "+X" hints)
+  // from the effective (possibly not-yet-loaded-board) player, same reasoning as PlayerBoard/Info.vue.
   income(resource: ResourceEnum) {
-    return this.player.resourceIncome(resource);
+    return effectivePreviewPlayer(this.player).resourceIncome(resource);
   }
 }
 </script>
@@ -89,8 +102,19 @@ export default class PowerBowls extends Vue {
     fill: #00aa00;
   }
 
-  .power-bowl circle {
-    fill: purple;
+  // Bowls I -> III get progressively darker shades of the same purple, so which bowl is which
+  // reads at a glance even at the sticky resource bar's small scale, where the "I"/"II"/"III"
+  // labels are too small to be legible.
+  .power-bowl--1 circle {
+    fill: #c9a3e0;
+  }
+
+  .power-bowl--2 circle {
+    fill: #9855c9;
+  }
+
+  .power-bowl--3 circle {
+    fill: #5c1f82;
   }
 
   .power {

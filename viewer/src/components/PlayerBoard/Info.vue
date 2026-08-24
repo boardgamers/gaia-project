@@ -40,7 +40,8 @@
         </g>
         <Resource kind="q" :count="data.qics" :center-left="true" transform="translate(12.5,0) scale(0.1)" />
         <g
-          v-b-tooltip
+          v-if="!preview"
+          v-b-tooltip.hover
           title="Leech network - number of upgradable buildings by other players within leeching distance"
           :transform="`translate(33.5,${height - 16.6}) scale(.08)`"
         >
@@ -58,9 +59,9 @@
             {{ leechNetwork }}
           </text>
         </g>
-        <g :transform="`translate(34.7,${height - 6.8}) scale(.1)`">
+        <g v-if="!preview" :transform="`translate(34.7,${height - 6.8}) scale(.1)`">
           <Undo v-if="canUndo" transform="translate(-8, -8) scale(.9)" />
-          <use v-else xlink:href="#info" v-b-tooltip.html="buttonTooltip" />
+          <use v-else xlink:href="#info" v-b-tooltip.hover.click.html="buttonTooltip" style="cursor: pointer" />
         </g>
         <g transform="translate(15, -3) scale(0.2)">
           <VictoryPoint width="15" height="15" />
@@ -101,7 +102,7 @@
         </g>
         <g
           transform="translate(15.2, 3.5)"
-          v-b-tooltip
+          v-b-tooltip.hover
           title="Power value of structures in federations, outside of federations"
         >
           <image
@@ -169,6 +170,7 @@
 import Engine, {
   Expansion,
   Faction,
+  hasExpansion,
   MAX_SATELLITES,
   Player,
   PlayerData,
@@ -178,6 +180,7 @@ import Engine, {
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { FastConversionEvent, MapMode, MapModeType } from "../../data/actions";
+import { effectivePreviewPlayer } from "../../data/faction-preview";
 import { factionName } from "../../data/factions";
 import { researchColor } from "../../data/research";
 import { showIncome } from "../../data/resources";
@@ -207,12 +210,17 @@ export default class PlayerBoardInfo extends Vue {
   @Prop()
   player: Player;
 
+  // Preview mode (faction pick/ban window): hide the interactive undo/info button and the
+  // leech-network readout, which are meaningless for a not-yet-in-play faction board.
+  @Prop({ default: false })
+  preview: boolean;
+
   get engine(): Engine {
     return this.$store.state.data;
   }
 
   get isFrontiers() {
-    return this.engine.expansions == Expansion.Frontiers;
+    return hasExpansion(this.engine.expansions, Expansion.Frontiers);
   }
 
   get researchFields(): number {
@@ -257,8 +265,12 @@ export default class PlayerBoardInfo extends Vue {
     );
   }
 
+  // `this.player` stays the real seat (identity/click behavior); read the passive round income
+  // from the effective (possibly not-yet-loaded-board) player so it shows the faction's real base
+  // income - e.g. "+1o,1k" - throughout the pick/ban/bid setup phases too, not just once the board
+  // actually loads.
   income(resource: ResourceEnum) {
-    return this.player.resourceIncome(resource);
+    return effectivePreviewPlayer(this.player).resourceIncome(resource);
   }
 
   get showIncome() {

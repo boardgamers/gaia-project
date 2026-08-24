@@ -184,13 +184,14 @@ function vpChartFactoryEntries(
   advTechTiles: Map<AdvTechTile, string>,
   data: Engine,
   boosters: Booster[],
-  roundScoringNames: string[] | null
+  roundScoringNames: string[] | null,
+  factions: Faction[]
 ): ChartFactory<any>[] {
   return [
     vpChartFactory(
       vpChartType,
       "Victory Points",
-      victoryPointSources(finalTileName, data.expansions),
+      victoryPointSources(finalTileName, data.expansions, factions),
       roundScoringNames
     ),
     vpChartFactory(
@@ -233,23 +234,24 @@ export class ChartSetup {
 
     const scoringBooster: (booster: Booster) => boolean = (booster: Booster) =>
       boosterEvents(booster)[1].rewards.some((r) => r.type == Resource.VictoryPoint);
-    const currentBoosters = Booster.values().filter((b) => engine.tiles.boosters[b] != null);
-    const vpBoosters = statistics ? Booster.values().filter(scoringBooster) : currentBoosters;
-    const allBoosters = statistics ? Booster.values() : currentBoosters;
+    const currentBoosters = Booster.values(expansions).filter((b) => engine.tiles.boosters[b] != null);
+    const vpBoosters = statistics ? Booster.values(expansions).filter(scoringBooster) : currentBoosters;
+    const allBoosters = statistics ? Booster.values(expansions) : currentBoosters;
 
     const finalTiles = engine.tiles.scorings.final;
     const finalTileName = (tile) =>
       statistics ? `Final ${String.fromCharCode(65 + tile)}` : finalScoringSources[finalTiles[tile]].name;
     const roundScoringNames = statistics ? null : engine.tiles.scorings.round.map((r) => roundScoringData[r].name);
 
-    const factions: Faction[] = statistics ? Object.values(Faction) : engine.players.map((p) => p.faction);
+    const factions: Faction[] = statistics ? Faction.values(expansions) : engine.players.map((p) => p.faction);
 
     this.chartFactories = vpChartFactoryEntries(
       finalTileName,
       vpAdvTechTiles,
       engine,
       vpBoosters,
-      roundScoringNames
+      roundScoringNames,
+      factions
     ).concat(
       createSimpleSourceFactories(
         nonVpAdvTechTiles,
@@ -457,8 +459,12 @@ export class ChartSetup {
             data: points,
             label: key,
             backgroundColor: lookupColor(playerColor(player, style.type == "table")),
-            borderColor: "black",
-            borderWidth: 1,
+            // Thin marks over a hard black outline - the bar's own fill color already carries
+            // identity (see the dataviz skill's mark-spec guidance), and a subtle rounded end
+            // (anchored to the baseline - Chart.js's default borderSkipped already leaves the
+            // near-baseline corners square) reads as more modern than a squared-off, outlined bar.
+            borderWidth: 0,
+            borderRadius: 4,
           };
           return {
             data: d,

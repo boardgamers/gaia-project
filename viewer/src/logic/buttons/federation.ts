@@ -3,16 +3,19 @@ import Engine, {
   AvailableFederation,
   Command,
   Faction,
-  Federation,
   FederationInfo,
   GaiaHex,
   MAX_SATELLITES,
   Player,
 } from "@gaia-project/engine";
-import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
+import { sortBy } from "lodash";
 import { ButtonData, HighlightHex, HighlightHexData } from "../../data";
-import { federationData } from "../../data/federations";
-import { sortBy } from "../lodash-utils";
+import {
+  FederationChoice,
+  federationChoiceDescription,
+  federationChoiceRewards,
+  federationChoiceShortcut,
+} from "../../data/federations";
 import { tooltipWithShortcut } from "./shortcuts";
 import { CommandController } from "./types";
 import { autoClickButton, customHexSelection, textButton } from "./utils";
@@ -24,13 +27,13 @@ type Cycler = {
   activateButton: (button: ButtonData) => void;
 };
 
-export function federationTypeButtons(federations: Federation[], player: Player) {
+export function federationTypeButtons(federations: FederationChoice[], player: Player) {
   return federations.map((fed, i) => {
-    const rewards = federationRewards(fed);
+    const rewards = federationChoiceRewards(fed);
     return textButton({
       command: fed,
-      label: `Federation ${i + 1}: ${rewards.join(",")}`,
-      shortcuts: [federationData[fed].shortcut],
+      label: `Federation ${i + 1}: ${federationChoiceDescription(fed)}`,
+      shortcuts: [federationChoiceShortcut(fed)],
       warning: resourceWasteWarning(player, rewards),
     });
   });
@@ -140,6 +143,7 @@ function cycleButtons(
 
   cycler.activateButton = (button: ButtonData) => {
     const i = cycler.locationButtons.indexOf(button);
+    cycler.currentIndex = i;
     okButton.label = `OK ${i + 1} ${federationButtonDetails(true, satType, sorted[i][0])}`;
     okButton.warning = button.warning;
     okButton.tooltip = tooltipWithShortcut(null, button.warning);

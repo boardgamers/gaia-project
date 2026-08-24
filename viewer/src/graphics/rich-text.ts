@@ -1,5 +1,15 @@
-import { BoardAction, Booster, Building, Faction, Reward } from "@gaia-project/engine";
-import { AnyTechTile, AnyTechTilePos } from "@gaia-project/engine/src/enums";
+import {
+  ArtifactToken,
+  BoardAction,
+  Booster,
+  Building,
+  Faction,
+  Planet,
+  Reward,
+  SpaceshipTechTile,
+} from "@gaia-project/engine";
+import { AnyTechTile, AnyTechTilePos, Spaceship } from "@gaia-project/engine/src/enums";
+import { SpaceshipActionType } from "@gaia-project/engine/src/spaceships";
 import { SpecialActionIncome } from "../data";
 
 export type RichTextBuilding = { type: Building; faction: Faction; count: number; skipResource: boolean };
@@ -7,11 +17,17 @@ export type RichTextBuilding = { type: Building; faction: Faction; count: number
 export type RichTextElement = {
   text?: string;
   rewards?: Reward[];
+  /** For `rewards` only: suppress the auto-"+" a "t"/"ta3" reward would otherwise get, for the
+   * rare case where it represents a cost being paid rather than income being gained. */
+  noPlus?: boolean;
   building?: RichTextBuilding;
   specialAction?: SpecialActionIncome;
   boardAction?: BoardAction;
-  tech?: { pos?: AnyTechTilePos; tile?: AnyTechTile; commandOverride?: string };
+  tech?: { pos?: AnyTechTilePos | Spaceship; tile?: AnyTechTile | SpaceshipTechTile; commandOverride?: string };
   booster?: Booster;
+  planet?: Planet;
+  spaceshipAction?: { ship: Spaceship; type: SpaceshipActionType };
+  artifactToken?: ArtifactToken;
 };
 export type RichText = RichTextElement[];
 
@@ -19,8 +35,8 @@ export function richText(s: string): RichTextElement {
   return { text: s };
 }
 
-export function richTextRewards(rewards: Reward[]): RichTextElement {
-  return { rewards };
+export function richTextRewards(rewards: Reward[], noPlus = false): RichTextElement {
+  return noPlus ? { rewards, noPlus } : { rewards };
 }
 
 export function richTextBuilding(type: Building, faction: Faction, count = 1, skipResource = false): RichTextElement {
@@ -32,6 +48,10 @@ export function richTextBuilding(type: Building, faction: Faction, count = 1, sk
       skipResource,
     },
   };
+}
+
+export function richTextPlanet(planet: Planet): RichTextElement {
+  return { planet };
 }
 
 export const richTextArrow = richText("arrow");

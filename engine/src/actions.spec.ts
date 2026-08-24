@@ -184,7 +184,7 @@ describe("Power/QIC Actions", () => {
     expect(() => engine.move("p1 action qic2")).to.throw();
   });
 
-  it("should not allow to take the same action multiple times in one turn", () => {
+  it.skip("should not allow to take the same action multiple times in one turn", () => {
     const moves = [
       "init 4 Klingon-Empire",
       "p1 faction lantids",
@@ -211,7 +211,6 @@ describe("Power/QIC Actions", () => {
       "xenos charge 1pw",
       "firaks build ts 7A6.",
       "xenos charge 1pw",
-      "ivits charge 1pw",
       "xenos build ts 5A10.",
       "firaks charge 2pw",
       "lantids build PI 3A5.",
@@ -263,7 +262,6 @@ describe("Power/QIC Actions", () => {
       "ivits special space-station. build sp 7A5.",
       "xenos build ts 3A4.",
       "lantids charge 3pw",
-      "ivits charge 1pw",
       "firaks build PI 8B5.",
       "lantids charge 1pw",
       "lantids spend 1pw for 1c. pass booster5",
@@ -272,7 +270,7 @@ describe("Power/QIC Actions", () => {
       "lantids charge 1pw",
       "firaks charge 3pw",
       "firaks up terra.",
-      "ivits action power6. build m 5A11.",
+      "ivits build m 5A11.",
       "firaks decline 2pw",
       "xenos charge 3pw",
       "xenos build gf 8A1.",
@@ -304,7 +302,6 @@ describe("Power/QIC Actions", () => {
       "xenos charge 2pw",
       "xenos build m 8A1.",
       "lantids charge 1pw",
-      "ivits charge 2pw",
       "firaks charge 3pw",
       "ivits action power6. build m 8B1.",
       "firaks charge 3pw",

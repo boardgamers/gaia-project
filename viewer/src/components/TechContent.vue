@@ -1,12 +1,21 @@
 <template>
   <g>
     <text :class="['content', { smaller: content.length >= 10 }]" x="-25" y="0" v-if="showText">{{ content }}</text>
-    <SpecialAction v-if="isAction" :action="[event.action().rewards]" y="-20" width="40" height="40" x="-20" />
+    <SpecialAction
+      v-if="isAction"
+      :action="[event.action().rewards]"
+      y="-20"
+      width="40"
+      height="40"
+      x="-20"
+      :disabled="disabled"
+    />
     <Condition :condition="condition" v-if="condition === 'a'" transform="scale(1.5)" />
     <Resource
       v-if="cornerReward"
       :count="cornerReward.count"
       :kind="cornerReward.type"
+      :plus="cornerReward.type === 'r'"
       transform="translate(19, -19), scale(1.35)"
     />
     <g v-if="event.operator === '|'" style="pointer-events: none">
@@ -32,15 +41,12 @@
         >PASS</text
       >
     </g>
-    <Condition
-      :condition="condition"
-      v-if="condition !== 'a'"
-      :transform="`translate(${event.operator === '>>' && condition !== 'a' ? 8 : 0}, 0) scale(1.5)`"
-    />
+    <Condition :condition="condition" v-if="condition !== 'a'" :transform="conditionTransform" />
     <Resource
       v-for="(res, i) in centerRewards"
       :count="res.count"
       :kind="res.type"
+      :plus="res.type === 'r'"
       :key="i"
       :transform="`translate(${centerRewards.length > 1 ? (i - 0.5) * 26 : 0}, 0) scale(${
         centerRewards.length === 1 ? 2 : 1.5
@@ -50,6 +56,7 @@
       v-for="(res, i) in rightRewards"
       :count="res.count"
       :kind="res.type"
+      :plus="res.type === 'r'"
       :key="'right-' + i"
       :transform="`translate(13, ${rightRewards.length > 1 ? (i - 0.5) * 28 : 0}) scale(1.5)`"
     />
@@ -115,6 +122,11 @@ export default class TechContent extends Vue {
   @Prop()
   event!: Event;
 
+  /** Drives the same X-strikethrough marker BoardAction.vue uses for used power actions, via
+   * SpecialAction.vue's existing `disabled` prop - only meaningful when `isAction` is true. */
+  @Prop({ default: false, type: Boolean })
+  disabled: boolean;
+
   get content(): string {
     return this.event.spec;
   }
@@ -141,6 +153,16 @@ export default class TechContent extends Vue {
 
   get condition() {
     return this.event.condition;
+  }
+
+  get conditionTransform(): string {
+    // The "shipq" octagon+QIC icon (AdvTech "4 VP / QIC action") otherwise overlaps the corner VP
+    // reward at translate(19,-19) - nudge it down and left instead of the usual translate(8, 0).
+    if (this.condition === ConditionEnum.SpaceshipQicAction) {
+      return "translate(3, 6) scale(1.5)";
+    }
+    const dx = this.event.operator === OperatorEnum.Trigger && this.condition !== ConditionEnum.AdvanceResearch ? 8 : 0;
+    return `translate(${dx}, 0) scale(1.5)`;
   }
 
   get rightRewards() {
@@ -175,7 +197,13 @@ export default class TechContent extends Vue {
           ConditionEnum.PlanetType,
           ConditionEnum.Sector,
           ConditionEnum.Gaia,
+          ConditionEnum.GaiaFormer,
+          ConditionEnum.DeepSpaceSector,
+          ConditionEnum.Asteroid,
+          ConditionEnum.SpaceshipQicAction,
+          ConditionEnum.TerraformStep,
           ConditionEnum.Trade,
+          ConditionEnum.TechTile,
           ...Object.values(BuildingEnum),
         ].includes(this.event.condition as any)
       ) {

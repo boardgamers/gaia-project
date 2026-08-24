@@ -1,4 +1,5 @@
 {
+  "legacyIvitsStartingPower": true,
   "types": ["Victory Points/Overview"],
   "options": {
     "layout": "standard"
