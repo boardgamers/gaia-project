@@ -1,6 +1,19 @@
-import { LogEntry, PlayerEnum } from "@gaia-project/engine";
+import { Command, LogEntry, PlayerEnum, ResearchField } from "@gaia-project/engine";
 import { expect } from "chai";
-import { markBuilding, ownTurn, parseCommands, parsedMove, recentMoves } from "./recent";
+import {
+  boardActionMoves,
+  commandArgsByFaction,
+  hexMoveLabel,
+  hexMovesByHex,
+  markBuilding,
+  opponentMovesSinceLastTurn,
+  ownTurn,
+  parseCommands,
+  parsedMove,
+  recentMoves,
+  spaceshipActionKey,
+  spaceshipActionMoves,
+} from "./recent";
 
 describe("Moves", () => {
   describe("recentMoves", () => {
@@ -98,6 +111,109 @@ describe("Moves", () => {
         );
       });
     }
+  });
+
+  it("returns only opponent turns after the viewer's previous turn", () => {
+    const slice = {
+      index: 1,
+      moves: [
+        parsedMove("terrans up gaia"),
+        parsedMove("xenos charge 2pw"),
+        parsedMove("xenos build m 8A2"),
+        parsedMove("geodens build ts 3A4"),
+      ],
+      allMoves: [],
+    };
+
+    expect(opponentMovesSinceLastTurn(slice).map((move) => move.move)).to.deep.equal([
+      "xenos build m 8A2",
+      "geodens build ts 3A4",
+    ]);
+  });
+
+  describe("boards touched by a move", () => {
+    const commands = [
+      parsedMove("xenos up nav"),
+      parsedMove("geodens action power3. build m 3A4"),
+      parsedMove("terrans spaceshipAction twilight power. build lab 4B2"),
+      parsedMove("terrans up terra."),
+      parsedMove("xenos special 4pw"),
+      parsedMove("geodens explore twilight"),
+      parsedMove("terrans examineArtifact. chooseArtifactToken artifact-power"),
+    ].flatMap((move) => move.commands);
+
+    it("groups research upgrades by faction", () => {
+      const research = commandArgsByFaction<ResearchField>(commands, Command.UpgradeResearch);
+
+      expect([...research.keys()]).to.deep.equal(["xenos", "terrans"]);
+      expect([...research.get("xenos")]).to.deep.equal([ResearchField.Navigation]);
+      expect([...research.get("terrans")]).to.deep.equal([ResearchField.Terraforming]);
+    });
+
+    it("collects power/QIC actions", () => {
+      expect([...boardActionMoves(commands)]).to.deep.equal(["power3"]);
+    });
+
+    it("collects spaceship actions by ship and type", () => {
+      expect([...spaceshipActionMoves(commands)]).to.deep.equal([spaceshipActionKey("twilight", "power")]);
+    });
+
+    it("groups special actions, explorations and artifacts by faction", () => {
+      expect([...commandArgsByFaction(commands, Command.Special)]).to.deep.equal([["xenos", new Set(["4pw"])]]);
+      expect([...commandArgsByFaction(commands, Command.Explore)]).to.deep.equal([["geodens", new Set(["twilight"])]]);
+      expect([...commandArgsByFaction(commands, Command.ChooseArtifactToken)]).to.deep.equal([
+        ["terrans", new Set(["artifact-power"])],
+      ]);
+    });
+  });
+
+  describe("hexMovesByHex", () => {
+    // A map stub is all this needs: it only asks for the hex behind a coordinate.
+    const hex = (coordinate: string) => ({ toString: () => coordinate });
+    const data = { map: { getS: (coordinate: string) => hex(coordinate) } } as any;
+
+    it("marks builds, gaiaforming, the Lost Planet, Power Rings and every federation member", () => {
+      const commands = [
+        parsedMove("terrans build m 3A4"),
+        parsedMove("geodens gaiaFormTransdim 5B2"),
+        parsedMove("xenos lostPlanet 1A0"),
+        parsedMove("moweyds placePowerRing 2A1"),
+        parsedMove("terrans federation 7A2,7A3,7B1 fed2"),
+      ].flatMap((move) => move.commands);
+
+      const marked = hexMovesByHex(data, commands);
+
+      expect([...marked.keys()].map((h) => h.toString())).to.deep.equal([
+        "3A4",
+        "5B2",
+        "1A0",
+        "2A1",
+        "7A2",
+        "7A3",
+        "7B1",
+      ]);
+      expect([...marked.values()].map((command) => hexMoveLabel(command))).to.deep.equal([
+        "build m",
+        "gaiaform",
+        "place the Lost Planet",
+        "place a Power Ring",
+        "form a federation",
+        "form a federation",
+        "form a federation",
+      ]);
+    });
+
+    it("leaves an argument that isn't a coordinate unmarked instead of throwing", () => {
+      const throwing = {
+        map: {
+          getS: () => {
+            throw new Error("not a coordinate");
+          },
+        },
+      } as any;
+
+      expect(hexMovesByHex(throwing, parsedMove("terrans build m nowhere").commands).size).to.equal(0);
+    });
   });
 
   describe("markBuilding", () => {

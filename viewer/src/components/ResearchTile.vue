@@ -1,5 +1,10 @@
 <template>
-  <g :transform="`translate(0, ${y})`" v-b-tooltip.html.left :title="tooltip" :class="field">
+  <g
+    :transform="`translate(0, ${y})`"
+    v-b-tooltip.nofade.html.left="tooltipTriggerConfig()"
+    :title="tooltip"
+    :class="field"
+  >
     <rect
       x="2"
       y="2"
@@ -58,6 +63,7 @@ import Engine, {
   Event,
   Expansion,
   Federation,
+  hasExpansion,
   Operator,
   Planet as PlanetEnum,
   Player,
@@ -69,7 +75,9 @@ import Engine, {
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { ButtonData } from "../data";
+import { effectivePreviewPlayer } from "../data/faction-preview";
 import { researchEventsWithCounters, researchLevelDesc } from "../data/research";
+import { tooltipTriggerConfig } from "../logic/tooltip";
 import { plusReward } from "../logic/utils";
 import FederationTile from "./FederationTile.vue";
 import Planet from "./Planet.vue";
@@ -121,7 +129,7 @@ export default class ResearchTile extends Vue {
   smallRange(resource: ResourceEnum): boolean {
     return (
       (resource === ResourceEnum.ShipRange || resource === ResourceEnum.Range) &&
-      this.engine.expansions === Expansion.Frontiers
+      hasExpansion(this.engine.expansions, Expansion.Frontiers)
     );
   }
 
@@ -182,13 +190,24 @@ export default class ResearchTile extends Vue {
     if (c) {
       classes.push(c);
     }
+    // An opponent advanced this track since the viewer's last turn - a gold dot in the middle of the
+    // token they moved. Its rule comes last in the stylesheet, so it wins over "recent"/"current-round"
+    // when the same token qualifies for both.
+    if (this.$store.getters.recentOpponentResearch.get(player.faction)?.has(this.field)) {
+      classes.push("last-move");
+    }
     return classes.join(" ");
   }
 
+  // A player whose faction is picked but not yet loaded (still true throughout the pick/ban/bid
+  // setup phases - see `effectivePreviewPlayer`) has `player.data.research[field]` stuck at the
+  // unloaded default of 0, which would draw their token on the base tile regardless of a starting
+  // research bump like Moweyds'/Terrans' "up-gaia". Read the position from the effective (possibly
+  // preview) player instead, while the token itself still renders for the real player/seat.
   get players(): Array<{ player: Player; class: string }> {
     const players = this.engine.players;
     return players
-      .filter((player) => player.faction && player.data.research[this.field] === this.level)
+      .filter((player) => player.faction && effectivePreviewPlayer(player).data.research[this.field] === this.level)
       .map((p) => ({ player: p, class: this.tokenClass(p) }));
   }
 
@@ -222,6 +241,8 @@ export default class ResearchTile extends Vue {
   get engine(): Engine {
     return this.$store.state.data;
   }
+
+  tooltipTriggerConfig = tooltipTriggerConfig;
 }
 </script>
 
@@ -253,6 +274,12 @@ svg {
     display: block;
     stroke: transparent;
     fill: var(--current-round);
+  }
+
+  circle.research-tile.last-move {
+    display: block;
+    stroke: black;
+    fill: var(--recent);
   }
 
   .research-tile {

@@ -9,6 +9,7 @@ import {
   Phase,
   ResearchField,
   RoundScoring,
+  Spaceship,
   TechPos,
 } from "./enums";
 import Reward from "./reward";
@@ -70,16 +71,34 @@ export type EventSource =
   | RoundScoring
   | ResearchField
   | BoardAction
+  | Spaceship
   | Command.ChooseIncome
   | Phase.BeginGame
   | Phase.RoundGaia
   | Command.Build
   | Command.FormFederation
   | Command.UpgradeResearch
+  | Command.Explore
+  | Command.GaiaFormTransdim
   | Faction
   | Command.Bid
   | typeof tradeSource
   | typeof tradeCostSource;
+
+/**
+ * Whether an event's source is a Booster/standard-Tech-tile/Advanced-Tech-tile - i.e. something
+ * with its own component to render the event's special action on (Booster.vue/TechTile.vue via
+ * TechContent.vue), as opposed to a faction-innate special action (income/PI-granted, source
+ * Command.ChooseIncome) with no tile of its own. Booster/TechPos/AdvTechTilePos values are all
+ * distinctly prefixed ("booster"/"tech-"/"adv-"), so a prefix check is enough - no risk of
+ * colliding with unrelated EventSource values like ResearchField's plain "terra"/"nav"/etc.
+ */
+export function isTileOrBoosterSource(source: EventSource): boolean {
+  return (
+    typeof source === "string" &&
+    (source.startsWith("booster") || source.startsWith("tech-") || source.startsWith("adv-"))
+  );
+}
 
 export default class Event {
   spec: string;

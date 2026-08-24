@@ -32,14 +32,16 @@
     <b-modal
       v-if="button.modal"
       v-model="modalShow"
+      lazy
       size="lg"
       @ok="handleOK"
       @hide="modalCancel"
       dialog-class="gaia-viewer-modal"
       :title="button.modal.title"
-      ok-title="OK, I pick this one!"
+      :ok-title="button.modal.okTitle || 'OK, I pick this one!'"
     >
-      <div v-html="button.modal.content"></div>
+      <component :is="button.modal.component" v-if="button.modal.component" v-bind="button.modal.props" />
+      <div v-else v-html="button.modal.content"></div>
     </b-modal>
   </div>
 </template>
@@ -52,6 +54,7 @@ import { ButtonData, WarningsPreference } from "../data";
 import { enabledButtonWarnings } from "../data/warnings";
 import { CommandController, MoveButtonController } from "../logic/buttons/types";
 import { buttonRichTextLabel, callOnShow } from "../logic/buttons/utils";
+import { isTypingTarget } from "../logic/typing-target";
 import BoardAction from "./BoardAction.vue";
 import Booster from "./Booster.vue";
 import RichTextView from "./Resources/RichTextView.vue";
@@ -82,6 +85,11 @@ export default class MoveButton extends Vue implements MoveButtonController {
 
   mounted() {
     const keyListener = (e) => {
+      // The caret is in a text field (a chat composer, a bid box, the notes pad) - those keystrokes
+      // are the user typing, not a move shortcut. See logic/typing-target.ts.
+      if (isTypingTarget(e.target)) {
+        return;
+      }
       const b = this.button;
       if (b.hide) {
         return;
@@ -193,7 +201,7 @@ export default class MoveButton extends Vue implements MoveButtonController {
   display: flex;
 }
 
-.active {
+.move-button.active {
   background-color: var(--primary) !important;
   color: white !important;
 }

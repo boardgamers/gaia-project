@@ -1,8 +1,18 @@
-import { Building, GaiaHex, Resource, Reward } from "@gaia-project/engine";
-import assert from "assert";
+import {
+  Building,
+  classifySectorId,
+  GaiaHex,
+  LostFleetSectorType,
+  Planet,
+  Resource,
+  Reward,
+} from "@gaia-project/engine";
+import assert from "@gaia-project/engine/src/utils/assert";
 import { ButtonData, HighlightHex } from "../../data";
 import { buildingData } from "../../data/building";
-import { RichText, richText, richTextArrow, richTextRewards } from "../../graphics/rich-text";
+import { planetNames } from "../../data/planets";
+import { splitCostBonus } from "../../data/resources";
+import { RichText, richText, richTextArrow, richTextPlanet, richTextRewards } from "../../graphics/rich-text";
 import { sortBy } from "../lodash-utils";
 import { prependShortcut, tooltipWithShortcut } from "./shortcuts";
 import { CommandController } from "./types";
@@ -57,6 +67,12 @@ export function hexSelectionButton(
         label.push(richText(hex.toString()));
       }
 
+      // Lost Fleet Interspace/Deep Space addresses (IS3, DS14_1) don't carry a readable sector
+      // reference like base-game coordinates do, so show which planet the button targets
+      if (hex.data.planet !== Planet.Empty && classifySectorId(hex.data.sector) !== LostFleetSectorType.Space) {
+        label.push(richTextPlanet(hex.data.planet), richText(planetNames[hex.data.planet]));
+      }
+
       const highlightHex = hexes.get(hex);
       if (highlightHex.tradeCost) {
         label.push(richTextRewards(Reward.parse(highlightHex.tradeCost)), richTextArrow);
@@ -68,11 +84,17 @@ export function hexSelectionButton(
         label.push(richText(`Build ${buildingData[highlightHex.building].name} for`));
       }
       if (highlightHex.cost != null) {
-        label.push(
-          richTextRewards(
-            isFree(highlightHex.cost) ? [new Reward(0, Resource.Credit)] : Reward.parse(highlightHex.cost)
-          )
-        );
+        if (isFree(highlightHex.cost)) {
+          label.push(richTextRewards([new Reward(0, Resource.Credit)]));
+        } else {
+          const { cost, bonus } = splitCostBonus(Reward.parse(highlightHex.cost));
+          label.push(richTextRewards(cost));
+          if (bonus.length > 0) {
+            // A leading "+" (plain text, not run through Resource.vue - its count display has no
+            // generic "this is a gain" concept) keeps the icon from reading as more cost.
+            label.push(richText("+"), richTextRewards(bonus));
+          }
+        }
       }
 
       b.warning = buttonWarnings(highlightHex.warnings);

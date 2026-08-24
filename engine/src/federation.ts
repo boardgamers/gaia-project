@@ -1,8 +1,8 @@
-import assert from "assert";
 import { difference, uniq } from "lodash";
 import { Faction } from "./enums";
 import { GaiaHex } from "./gaia-hex";
 import SpaceMap from "./map";
+import assert from "./utils/assert";
 
 export interface FederationInfo {
   hexes: GaiaHex[];

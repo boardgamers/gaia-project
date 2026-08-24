@@ -1,5 +1,3 @@
-import assert from "assert";
-import shuffleSeed from "shuffle-seed";
 import { AvailableCommand } from "./available/types";
 import Engine from "./engine";
 import {
@@ -7,16 +5,27 @@ import {
   AdvTechTilePos,
   AnyTechTile,
   AnyTechTilePos,
+  ArtifactToken,
   Booster,
   Command,
+  Expansion,
   Federation,
   FinalTile,
+  hasExpansion,
+  LostFleetEconomySide,
   Player,
+  ScoringBoardExtensionSide,
   ScoringTile,
+  Spaceship,
+  SpaceshipFederation,
+  SpaceshipTechTile,
   TechTile,
   TechTilePos,
 } from "./enums";
 import SpaceMap, { MapTile } from "./map";
+import { artifactSlotCount, SeededSpaceshipTech, shipsInPlay, spaceshipBoards } from "./spaceships";
+import assert from "./utils/assert";
+import shuffleSeed from "./utils/shuffle";
 
 export enum SetupType {
   Booster = "booster",
@@ -26,10 +35,22 @@ export enum SetupType {
   RoundScoringTile = "roundScoringTile",
   FinalScoringTile = "finalScoringTile",
   MapTile = "mapTile",
+  SpaceshipTechTile = "spaceshipTechTile",
+  SpaceshipFederation = "spaceshipFederation",
+  ArtifactToken = "artifactToken",
 }
 
-export type SetupPosition = number | AnyTechTilePos;
-export type SetupOption = Booster | AnyTechTile | Federation | ScoringTile | FinalTile | string; //string is for MapTile name
+export type SetupPosition = number | AnyTechTilePos | Spaceship;
+export type SetupOption =
+  | Booster
+  | AnyTechTile
+  | Federation
+  | ScoringTile
+  | FinalTile
+  | SpaceshipTechTile
+  | SpaceshipFederation
+  | ArtifactToken
+  | string; //string is for MapTile name
 
 type SetupFactoryOption = {
   position: SetupPosition;
@@ -76,6 +97,74 @@ function techFactory(
     },
     applyOption: (option, position) => {
       engine.tiles.techs[position] = { tile: option, count: count };
+    },
+  };
+}
+
+// Assigns each Spaceship in `positions` one random, distinct value from `pool` (shuffled by the caller),
+// writing into `target`. Fewer positions than pool entries is expected (e.g. 2p Rebellion exclusion,
+// or more Federation tokens than spaceships) - the leftover pool entries are simply never assigned.
+function shipAssignmentFactory<T extends SetupOption>(
+  type: SetupType,
+  positions: Spaceship[],
+  pool: T[],
+  target: { [key in Spaceship]?: T }
+): SetupFactory {
+  return {
+    type,
+    init: () => {
+      for (const pos of positions) {
+        delete target[pos];
+      }
+    },
+    nextAvailable: () => {
+      const used = positions.map((pos) => target[pos]).filter((t) => t !== undefined);
+      for (const pos of positions) {
+        if (target[pos] === undefined) {
+          return {
+            position: pos,
+            options: pool.filter((o) => !used.includes(o)),
+          };
+        }
+      }
+      return null;
+    },
+    applyOption: (option, position) => {
+      target[position as Spaceship] = option as T;
+    },
+  };
+}
+
+function spaceshipTechAssignmentFactory(
+  positions: Spaceship[],
+  pool: SpaceshipTechTile[],
+  target: { [key in Spaceship]?: SeededSpaceshipTech },
+  count: number
+): SetupFactory {
+  return {
+    type: SetupType.SpaceshipTechTile,
+    init: () => {
+      for (const pos of positions) {
+        delete target[pos];
+      }
+    },
+    nextAvailable: () => {
+      const used = positions.map((pos) => target[pos]?.tile).filter((t) => t !== undefined);
+      for (const pos of positions) {
+        if (target[pos] === undefined) {
+          return {
+            position: pos,
+            options: pool.filter((o) => !used.includes(o)),
+          };
+        }
+      }
+      return null;
+    },
+    applyOption: (option, position) => {
+      target[position as Spaceship] = {
+        tile: option as SpaceshipTechTile,
+        count,
+      };
     },
   };
 }
@@ -192,6 +281,25 @@ const getFactories = (engine: Engine, nbPlayers = engine.players.length): SetupF
     engine.tiles.scorings.final,
     2
   ),
+  spaceshipTechAssignmentFactory(
+    shipsInPlay(engine.expansions, nbPlayers).filter((ship) => spaceshipBoards[ship].hasStandardTechSlot),
+    SpaceshipTechTile.values(engine.expansions),
+    engine.tiles.spaceshipTechs,
+    nbPlayers
+  ),
+  shipAssignmentFactory(
+    SetupType.SpaceshipFederation,
+    shipsInPlay(engine.expansions, nbPlayers),
+    SpaceshipFederation.values(engine.expansions),
+    engine.tiles.spaceshipFederations
+  ),
+  scoringFactory(
+    engine,
+    SetupType.ArtifactToken,
+    ArtifactToken.values(engine.expansions),
+    engine.tiles.artifacts,
+    hasExpansion(engine.expansions, Expansion.LostFleet) ? artifactSlotCount(Spaceship.Twilight, nbPlayers) : 0
+  ),
   {
     type: SetupType.MapTile,
     init: () => {
@@ -232,6 +340,18 @@ export function applyRandomBoardSetup(engine: Engine, seed: string, nbPlayers: n
 
       factory.applyOption(options.shift(), next.position);
     }
+  }
+
+  if (hasExpansion(engine.expansions, Expansion.LostFleet)) {
+    // §E6: 2p always uses the 25-VP side; 3-4p randomize 50/50 every game.
+    engine.scoringExtensionSide =
+      nbPlayers <= 2 || engine.map.rng() < 0.5
+        ? ScoringBoardExtensionSide.VictoryPoints
+        : ScoringBoardExtensionSide.ExploredShips;
+
+    // §F1: the Economy track's level 3/4 overlay tile is placed at random, one side for the whole game.
+    engine.lostFleetEconomySide =
+      engine.map.rng() < 0.5 ? LostFleetEconomySide.Power : LostFleetEconomySide.VictoryPoints;
   }
 }
 

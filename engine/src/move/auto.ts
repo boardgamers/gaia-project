@@ -1,8 +1,8 @@
-import assert from "assert";
 import { ChargeDecision, ChargeRequest, decideChargeRequest } from "../auto-charge";
 import { AvailableCommand, AvailableFreeActionData } from "../available/types";
 import Engine from "../engine";
 import { Command, Faction, PowerArea, Resource } from "../enums";
+import assert from "../utils/assert";
 
 /** Automatically generate moves based on player settings */
 export function autoMove(engine: Engine, partialMove?: string, options?: { autoPass?: boolean }): boolean {
@@ -95,7 +95,14 @@ export function autoChargePower(engine: Engine, cmd: AvailableCommand<Command.Ch
   const offers = cmd.data.offers;
   const pl = engine.player(engine.playerToMove);
   const playerHasPassed = engine.passedPlayers.includes(pl.player);
-  const request = new ChargeRequest(pl, offers, engine.isLastRound, playerHasPassed, pl.incomeSelection());
+  const request = new ChargeRequest(
+    pl,
+    offers,
+    engine.isLastRound,
+    playerHasPassed,
+    pl.incomeSelection(),
+    passedRoundLeechAccepted(engine, pl.player)
+  );
 
   const chargeDecision = decideChargeRequest(request);
   switch (chargeDecision) {
@@ -115,6 +122,39 @@ export function autoChargePower(engine: Engine, cmd: AvailableCommand<Command.Ch
     case ChargeDecision.Undecided:
       assert(false, `Could not decide how to charge power: ${request}`);
   }
+}
+
+export function passedRoundLeechAccepted(engine: Engine, player: number): number {
+  if (!engine.passedPlayers.includes(player)) {
+    return 0;
+  }
+  const pl = engine.player(player);
+  const slug = pl.faction ?? `p${player + 1}`;
+  let passIndex = -1;
+  for (let i = engine.moveHistory.length - 1; i >= 0; i--) {
+    if (engine.moveHistory[i].startsWith(`${slug} pass`)) {
+      passIndex = i;
+      break;
+    }
+  }
+  if (passIndex < 0) {
+    return 0;
+  }
+
+  return engine.moveHistory.slice(passIndex + 1).reduce((sum, move) => {
+    const trimmed = move.trim();
+    if (!trimmed.startsWith(`${slug} charge `)) {
+      return sum;
+    }
+    const charge = trimmed.slice(`${slug} charge `.length).split(".")[0];
+    const powerPattern = /(\d+)pw/g;
+    let chargeSum = 0;
+    let match: RegExpExecArray | null;
+    while ((match = powerPattern.exec(charge))) {
+      chargeSum += Number(match[1]);
+    }
+    return sum + chargeSum;
+  }, 0);
 }
 
 /**

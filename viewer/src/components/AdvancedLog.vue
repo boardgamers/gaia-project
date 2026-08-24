@@ -22,7 +22,7 @@
             v-for="j in rowSpan(event)"
             :key="`${i}-${j}`"
             :class="{ 'border-top': j == 0 }"
-            :style="`background-color: ${event.color}; color: ${event.textColor}`"
+            :style="rowStyle(event)"
             :role="event.moveIndex ? 'button' : ''"
             @click="event.moveIndex ? replayTo(event.moveIndex) : null"
           >
@@ -83,6 +83,7 @@ import { HistoryEntry, makeHistory } from "../data/log";
 import { RichText } from "../graphics/rich-text";
 import { logPlayerTables } from "../logic/table/player";
 import { cellStyle } from "../logic/table/util";
+import { isTypingTarget } from "../logic/typing-target";
 import { parseRewardsForLog } from "../logic/utils";
 import RichTextView from "./Resources/RichTextView.vue";
 
@@ -101,6 +102,10 @@ export default class AdvancedLog extends Vue {
 
   mounted() {
     const keyListener = (e) => {
+      // "h"/"y" typed into a chat composer or a bid box must stay in it - see logic/typing-target.ts.
+      if (isTypingTarget(e.target)) {
+        return;
+      }
       switch (e.key) {
         case "h":
           this.toggleLog();
@@ -162,6 +167,19 @@ export default class AdvancedLog extends Vue {
     return parseRewardsForLog(s);
   }
 
+  rowStyle(event: HistoryEntry): Record<string, string> {
+    if (event.color.trim().toLowerCase() !== "white") {
+      return { backgroundColor: event.color, color: event.textColor };
+    }
+    // Neutral lifecycle rows are UI chrome, not game art. The log model intentionally retains its
+    // historical white/purple values for exports and chart fixtures; translate only at render time
+    // so dark mode does not produce a glaring white slab or lose the lifecycle accent.
+    return {
+      backgroundColor: "var(--ui-surface)",
+      color: event.textColor === "black" ? "var(--ui-text)" : "var(--ui-log-accent)",
+    };
+  }
+
   rowValues(entry: HistoryEntry, change: number): { value: RichText; leftBorder: boolean }[] {
     if (!this.extendedLog || change > 1) {
       return [];
@@ -193,7 +211,7 @@ export default class AdvancedLog extends Vue {
 
 .major-event {
   font-weight: bold;
-  color: black;
+  color: inherit;
 }
 
 .phase-change {

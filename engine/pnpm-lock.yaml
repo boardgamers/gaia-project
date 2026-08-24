@@ -23,16 +23,13 @@ importers:
       semver-compare:
         specifier: 1.0.0
         version: 1.0.0
-      shuffle-seed:
-        specifier: 1.1.6
-        version: 1.1.6
     devDependencies:
       '@types/chai':
         specifier: ^4.1.2
         version: 4.3.20
       '@types/lodash':
-        specifier: ^4.14.149
-        version: 4.17.25
+        specifier: 4.14.182
+        version: 4.14.182
       '@types/mocha':
         specifier: ^2.2.48
         version: 2.2.48
@@ -75,6 +72,9 @@ importers:
       mocha:
         specifier: ^5.2.0
         version: 5.2.0
+      shuffle-seed:
+        specifier: 1.1.6
+        version: 1.1.6
       ts-node:
         specifier: ^5.0.1
         version: 5.0.1
@@ -116,8 +116,8 @@ packages:
   '@types/json5@0.0.29':
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}
 
-  '@types/lodash@4.17.25':
-    resolution: {integrity: sha512-+K1NIO8I+F9/wNulfVvu23QYd0Pe9/OCqRrim4NoYIf1VoEDL90Ve4ClzpyqBLc7NpGGWRvYNCKZ1BE/Jpf8dQ==}
+  '@types/lodash@4.14.182':
+    resolution: {integrity: sha512-/THyiqyQAP9AfARo4pF+aCGcyiQ94tX/Is2I7HofNRqoYLgN1PBoOWu2/zTA5zMxzP5EFutMtWtGAFRKUe961Q==}
 
   '@types/mocha@2.2.48':
     resolution: {integrity: sha512-nlK/iyETgafGli8Zh9zJVCTicvU3iajSkRwOh3Hhiva598CMqNJ4NcVCGMTGKpGpTYj/9R8RLzS9NAykSSCqGw==}
@@ -1421,7 +1421,7 @@ snapshots:
 
   '@types/json5@0.0.29': {}
 
-  '@types/lodash@4.17.25': {}
+  '@types/lodash@4.14.182': {}
 
   '@types/mocha@2.2.48': {}
 
@@ -1435,7 +1435,7 @@ snapshots:
 
   '@typescript-eslint/eslint-plugin@4.33.0(@typescript-eslint/parser@4.33.0(eslint@6.8.0(supports-color@5.4.0))(supports-color@5.4.0)(typescript@4.9.5))(eslint@6.8.0(supports-color@5.4.0))(supports-color@5.4.0)(typescript@4.9.5)':
     dependencies:
-      '@typescript-eslint/experimental-utils': 4.33.0(eslint@6.8.0(supports-color@5.4.0))(supports-color@5.4.0)(typescript@4.9.5)
+      '@typescript-eslint/experimental-utils': 4.33.0(eslint@6.8.0(supports-color@5.4.0))(typescript@4.9.5)
       '@typescript-eslint/parser': 4.33.0(eslint@6.8.0(supports-color@5.4.0))(supports-color@5.4.0)(typescript@4.9.5)
       '@typescript-eslint/scope-manager': 4.33.0
       debug: 4.4.3(supports-color@5.4.0)
@@ -1450,7 +1450,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/experimental-utils@4.33.0(eslint@6.8.0(supports-color@5.4.0))(supports-color@5.4.0)(typescript@4.9.5)':
+  '@typescript-eslint/experimental-utils@4.33.0(eslint@6.8.0(supports-color@5.4.0))(typescript@4.9.5)':
     dependencies:
       '@types/json-schema': 7.0.15
       '@typescript-eslint/scope-manager': 4.33.0

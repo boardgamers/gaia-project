@@ -1,11 +1,11 @@
-import assert from "assert";
 import { isEqual } from "lodash";
 import { boardActions } from "../actions";
 import { AvailableCommand } from "../available/types";
 import Engine from "../engine";
-import { BoardAction, Building, Command, Player as PlayerEnum } from "../enums";
+import { BoardAction, Building, Command, Player as PlayerEnum, TinkeringTile } from "../enums";
 import Event from "../events";
 import Reward from "../reward";
+import assert from "../utils/assert";
 
 export function moveSpecial(
   engine: Engine,
@@ -125,4 +125,34 @@ export function movePiSwap(
   }
 
   assert(false, `Impossible to execute PI swap command at ${location}`);
+}
+
+export function moveChooseTinkeringTile(
+  engine: Engine,
+  command: AvailableCommand<Command.ChooseTinkeringTile>,
+  player: PlayerEnum,
+  tile: TinkeringTile
+) {
+  assert(command.data.tiles.includes(tile), `${tile} is not in the available Tinkering tiles`);
+
+  engine.player(player).chooseTinkeringTile(engine.round, tile);
+}
+
+export function movePlacePowerRing(
+  engine: Engine,
+  command: AvailableCommand<Command.PlacePowerRing>,
+  player: PlayerEnum,
+  location: string
+) {
+  const parsed = engine.map.parse(location);
+  const space = command.data.spaces.find((entry) => isEqual(engine.map.parse(entry.coordinates), parsed));
+
+  assert(space, `Impossible to place a Power Ring at ${location}`);
+
+  const pl = engine.player(player);
+  const hex = engine.map.getS(location);
+
+  hex.data.powerRing = player;
+  pl.data.powerRingsPlaced += 1;
+  pl.federationCache = null;
 }

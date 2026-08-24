@@ -1,13 +1,29 @@
-import assert from "assert";
 import { EventEmitter } from "eventemitter3";
 import { cloneDeep, fromPairs } from "lodash";
 import { TRADE_COST } from "./available/ships";
 import { BrainstoneActionData, BrainstoneWarning, ChooseTechTile } from "./available/types";
-import { Booster, Building, Command, Expansion, Federation, PowerArea, ResearchField, Resource, Ship } from "./enums";
+import {
+  ArtifactToken,
+  Booster,
+  Building,
+  Command,
+  Expansion,
+  Federation,
+  Planet,
+  PowerArea,
+  ResearchField,
+  Resource,
+  Ship,
+  Spaceship,
+  SpaceshipFederation,
+  SpaceshipTechTile,
+  TinkeringTile,
+} from "./enums";
 import { EventSource } from "./events";
 import { FactionBoard } from "./faction-boards";
 import { GaiaHex } from "./gaia-hex";
 import Reward from "./reward";
+import assert from "./utils/assert";
 
 const MAX_ORE = 15;
 const MAX_CREDIT = 30;
@@ -86,6 +102,19 @@ export default class PlayerData extends EventEmitter {
   gaiaformers = 0;
   /** number of gaiaformers gained that are in gaia area */
   gaiaformersInGaia = 0;
+  /** number of gaiaformers permanently consumed to colonize an asteroid (Lost Fleet) */
+  gaiaformersUsedForAsteroid = 0;
+  /**
+   * Of the current gaiaformersInGaia total, how much got there by spending an already-owned
+   * Gaiaformer on something other than actually starting a Gaia project (e.g. Baltaks' "GaiaFormer
+   * -> Q.I.C." free action costing "1gf" - see gainReward's Resource.GaiaFormer case). Tracked
+   * purely so the §G3 "former" booster's pass bonus can add it back: the owner-confirmed ruling
+   * (RULES_CLARIFICATIONS.md G3) counts Gaiaformers "on Faction board or deployed" and excludes
+   * only ones used to colonize an asteroid, NOT ones spent this way. Deliberately does NOT affect
+   * availability/canPay - reset in lockstep with gaiaformersInGaia in Player.gaiaPhaseEnd(), so it
+   * never drifts, and left otherwise unused so it can't change replay behavior of existing games.
+   */
+  gaiaformersUsedForOther = 0;
   terraformCostDiscount = 0;
   tradeBonus = 0;
   tradeDiscount = 0;
@@ -103,6 +132,20 @@ export default class PlayerData extends EventEmitter {
 
   /** Number of federations built (used for ivits) */
   federationCount = 0;
+  /** Lost Fleet Federation tokens claimed from explored spaceship boards */
+  spaceshipFederations: Array<{ tile: SpaceshipFederation; green: boolean }> = [];
+  /** Lost Fleet spaceship exploration slot occupied by this player's shuttle, if any, per ship */
+  explorationShips: {
+    [key in Spaceship]?: number;
+  } = {};
+  /** Lost Fleet: the 3 base-game planet colors that cost this player 3 terraform steps */
+  lostFleetCost3Planets: Planet[] = [];
+  /** Lost Fleet Tinkeroids: the current round's chosen Tinkering tile, if any */
+  currentTinkeringTile: TinkeringTile = null;
+  /** Lost Fleet Tinkeroids: tiles already used and removed from play */
+  usedTinkeringTiles: TinkeringTile[] = [];
+  /** Lost Fleet Moweyds: number of Power Rings placed so far */
+  powerRingsPlaced = 0;
 
   /** Hexes occupied by buildings with value (not gaia formers), refs match the map hexes with a simple equality test */
   occupied: GaiaHex[] = [];
@@ -110,6 +153,10 @@ export default class PlayerData extends EventEmitter {
   leechPossible: number;
   tokenModifier = 1;
   lostPlanet = 0;
+  /** Virtual planet types granted by Asteroid/Protoplanet-themed Artifact tokens, no hex placed */
+  artifactPlanetTypes: Planet[] = [];
+  /** Lost Fleet Twilight: Artifact tokens claimed via Choose Artifact, kept for display under the player board */
+  artifacts: ArtifactToken[] = [];
 
   // Internal variables, not meant to be in toJSON():
   brainstoneDest: BrainstoneDest;
@@ -117,6 +164,28 @@ export default class PlayerData extends EventEmitter {
   temporaryStep = 0;
   canUpgradeResearch = true;
   turns = 0;
+  /**
+   * Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §3.4) - true only on a disposable sandbox
+   * clone, never on a real game's player data. It lifts affordability (`hasResource` below) so an
+   * unaffordable move can still be played and the debt shown, and it turns on `spendPower`'s power
+   * top-up. It deliberately does NOT lift the MAX_ORE/MAX_CREDIT/MAX_KNOWLEDGE gain clamps: analysis
+   * mode used to inject a fake wallet that those clamps ate, but a seat now keeps its real numbers,
+   * and a real player's gains cap exactly the same way - so clamping is the faithful behaviour.
+   * Deliberately absent from toJSON() (like the other internal variables above), so it can never
+   * round-trip through a serialize/deserialize into a real game - the viewer re-applies it to a fresh
+   * clone on every replay step instead of relying on it surviving.
+   */
+  analysis = false;
+  /**
+   * How much power the analysis sandbox has assumed this seat charged (ANALYSIS_MODE_PLAN.md §12).
+   * Power is the one overdrawable resource that cannot go negative - bowls hold tokens, not a balance
+   * - so instead of driving area 3 below zero, `spendPower` charges the shortfall up first and adds
+   *   it here, giving the UI one honest number for "this line only works if you also charge N power".
+   *
+   * Non-serialized for the same reason as `analysis` above, and recomputed from scratch on every
+   * replay, so it always describes exactly the line currently on screen.
+   */
+  analysisAssumedPower = 0;
   // when picking rewards
   toPick: { rewards: Reward[]; count: number; source: EventSource } = undefined;
 
@@ -133,6 +202,8 @@ export default class PlayerData extends EventEmitter {
       range: this.range,
       gaiaformers: this.gaiaformers,
       gaiaformersInGaia: this.gaiaformersInGaia,
+      gaiaformersUsedForAsteroid: this.gaiaformersUsedForAsteroid,
+      gaiaformersUsedForOther: this.gaiaformersUsedForOther,
       terraformCostDiscount: this.terraformCostDiscount,
       tiles: this.tiles,
       satellites: this.satellites,
@@ -143,12 +214,22 @@ export default class PlayerData extends EventEmitter {
       destroyedShips: this.destroyedShips,
       deployedShips: this.deployedShips,
       federationCount: this.federationCount,
+      spaceshipFederations: this.spaceshipFederations,
+      explorationShips: this.explorationShips,
+      lostFleetCost3Planets: this.lostFleetCost3Planets,
+      currentTinkeringTile: this.currentTinkeringTile,
+      usedTinkeringTiles: this.usedTinkeringTiles,
+      powerRingsPlaced: this.powerRingsPlaced,
       lostPlanet: this.lostPlanet,
+      artifactPlanetTypes: this.artifactPlanetTypes,
+      artifacts: this.artifacts,
       ships: this.ships,
       shipRange: this.shipRange,
       tradeBonus: this.tradeBonus,
       tradeDiscount: this.tradeDiscount,
       tradeShips: this.tradeShips,
+      temporaryRange: this.temporaryRange,
+      temporaryStep: this.temporaryStep,
     };
 
     return ret;
@@ -257,6 +338,9 @@ export default class PlayerData extends EventEmitter {
       case Resource.GainToken:
         count > 0 ? (this.power.area1 += count) : this.discardPower(-count);
         break;
+      case Resource.GainTokenArea3:
+        this.power.area3 += count;
+        break;
       case Resource.Brainstone:
         this.brainstone = PowerArea.Area1; //initial brainstone gain or gaia to area1
         break;
@@ -294,7 +378,16 @@ export default class PlayerData extends EventEmitter {
         this.tradeShips += count;
         break;
       case Resource.GaiaFormer:
-        count > 0 ? (this.gaiaformers += count) : (this.gaiaformersInGaia -= count);
+        if (count > 0) {
+          this.gaiaformers += count;
+        } else {
+          // Spending an already-owned Gaiaformer (e.g. Baltaks' "1gf" free-action cost) reuses
+          // gaiaformersInGaia for availability bookkeeping (unchanged from before, to avoid
+          // altering canPay/replay behavior) - gaiaformersUsedForOther mirrors the same delta so
+          // the §G3 booster's scoring can add it back. See the gaiaformersUsedForOther comment.
+          this.gaiaformersInGaia -= count;
+          this.gaiaformersUsedForOther -= count;
+        }
         break;
       case Resource.MoveGaiaFormerFromGaiaAreaToArea1:
         this.gaiaformersInGaia -= count;
@@ -326,9 +419,40 @@ export default class PlayerData extends EventEmitter {
     }
   }
 
+  /**
+   * The spendable resources the viewer's analysis mode (ANALYSIS_MODE_PLAN.md §12) lets a player
+   * overdraw: the four wallet resources plus power. Everything else `getResources` answers for stays
+   * genuinely gated even in analysis mode, because those are physical components or board positions
+   * rather than a stock you can be in debt on - a Gaiaformer you do not own, or a power token that is
+   * not in the Gaia area, cannot be conjured by assuming you overspent.
+   *
+   * Power is in this list, but it is the one that cannot simply go negative (bowls hold tokens, not a
+   * balance). `spendPower` tops the shortfall up instead and records it - see its own comment.
+   */
+  private static readonly ANALYSIS_OVERDRAWABLE: Resource[] = [
+    Resource.Credit,
+    Resource.Ore,
+    Resource.Knowledge,
+    Resource.Qic,
+    Resource.ChargePower,
+  ];
+
   hasResource(reward: Reward): boolean {
     const type = reward.type;
-    return type === Resource.None || this.getResources(type) >= reward.count;
+    if (type === Resource.None) {
+      return true;
+    }
+    // Ordered so the real check comes first: this is one of the hottest paths in the engine (every
+    // available-command generation runs it many times over), and an affordable resource then costs
+    // exactly what it always did, with the analysis branch never consulted at all.
+    if (this.getResources(type) >= reward.count) {
+      return true;
+    }
+    // Analysis mode (§12): affordability is what the engine enforces at command-GENERATION time, so
+    // lifting it here is the whole mechanism behind "let me build it anyway and show me the debt".
+    // Deliberately not a resource top-up: the seat keeps its real numbers and simply goes negative,
+    // which is what the player board then displays.
+    return this.analysis && PlayerData.ANALYSIS_OVERDRAWABLE.includes(type);
   }
 
   getResources(type: Resource): number {
@@ -353,7 +477,12 @@ export default class PlayerData extends EventEmitter {
       case Resource.MoveTokenFromArea3ToGaia:
         return this.power.area3;
       case Resource.GaiaFormer:
-        return this.gaiaformers - this.gaiaformersInGaia - this.buildings[Building.GaiaFormer];
+        return (
+          this.gaiaformers -
+          this.gaiaformersInGaia -
+          this.buildings[Building.GaiaFormer] -
+          this.gaiaformersUsedForAsteroid
+        );
     }
 
     return 0;
@@ -372,6 +501,14 @@ export default class PlayerData extends EventEmitter {
 
   hasPlanetaryInstitute(): boolean {
     return this.buildings[Building.PlanetaryInstitute] > 0;
+  }
+
+  hasExplored(ship: Spaceship): boolean {
+    return this.explorationShips[ship] !== undefined;
+  }
+
+  exploredShipsCount(): number {
+    return Object.keys(this.explorationShips).length;
   }
 
   discardablePowerTokens(): number {
@@ -441,7 +578,36 @@ export default class PlayerData extends EventEmitter {
     return area1ToUp + area2ToUp + brainstoneUsage;
   }
 
+  /**
+   * Analysis mode's power top-up (§12). `hasResource` lets this seat commit to a power cost it cannot
+   * really pay, but `spendPower` below moves tokens area3 -> area1 with no floor, so an unpayable
+   * cost would leave a NEGATIVE bowl - a state the board renders as nonsense and every later charge
+   * then compounds. Instead: charge the shortfall up first, one step at a time through the engine's
+   * own `chargePower`, and only fabricate tokens when there are genuinely none left below to lift.
+   * Either way the total lands in `analysisAssumedPower`, so the assumption is shown, not hidden.
+   */
+  private assumePowerForAnalysis(power: number) {
+    // Bounded by construction (every charge moves a token up exactly one bowl), but capped anyway so
+    // an unforeseen faction/token combination can never spin here.
+    for (let i = 0; i < 100 && this.spendablePowerTokens() < power; i++) {
+      if (this.power.area1 + this.power.area2 === 0) {
+        break;
+      }
+      this.chargePower(1, true, false);
+      this.analysisAssumedPower += 1;
+    }
+    const shortfall = power - this.spendablePowerTokens();
+    if (shortfall > 0) {
+      const tokens = Math.ceil(shortfall / this.tokenModifier);
+      this.power.area3 += tokens;
+      this.analysisAssumedPower += shortfall;
+    }
+  }
+
   spendPower(power: number) {
+    if (this.analysis) {
+      this.assumePowerForAnalysis(power);
+    }
     if (this.brainstone === PowerArea.Area3) {
       let useBrainStone = true;
       const warning: BrainstoneWarning = power < 3 ? BrainstoneWarning.brainstoneChargesWasted : undefined;
@@ -601,7 +767,7 @@ export default class PlayerData extends EventEmitter {
   }
 
   hasGreenFederation() {
-    return this.tiles.federations.some((fed) => fed.green);
+    return this.tiles.federations.some((fed) => fed.green) || this.spaceshipFederations.some((fed) => fed.green);
   }
 
   gaiaFormingDiscount() {
@@ -659,7 +825,18 @@ export default class PlayerData extends EventEmitter {
 
   removeGreenFederation() {
     // console.log("removing green federation...");
-    this.tiles.federations.some((fed) => {
+    if (
+      this.tiles.federations.some((fed) => {
+        if (fed.green) {
+          fed.green = false;
+          return true;
+        }
+      })
+    ) {
+      return;
+    }
+
+    this.spaceshipFederations.some((fed) => {
       if (fed.green) {
         fed.green = false;
         return true;
@@ -675,4 +852,17 @@ export default class PlayerData extends EventEmitter {
     }
     return true;
   }
+}
+
+/**
+ * Range used for build-distance checks: `data.range` (bumped by Reward.Range events, e.g.
+ * Navigation track) plus +1 while the Lost Fleet Range spaceship tech tile is claimed and not
+ * covered by an Advanced Tech tile (`tiles.techs[].enabled` already tracks covering for the base
+ * game's own standard/advanced tech mechanic - reused here rather than duplicated). A standalone
+ * function rather than a PlayerData method so callers can pass any range/tiles-shaped object
+ * (e.g. lightweight test fixtures), not only a fully-constructed PlayerData instance.
+ */
+export function effectiveRange(data: Pick<PlayerData, "range" | "tiles">): number {
+  const hasRangeTech = (data.tiles?.techs ?? []).some((t) => t.tile === SpaceshipTechTile.Range && t.enabled);
+  return data.range + (hasRangeTech ? 1 : 0);
 }

@@ -2,7 +2,7 @@ import { uniq } from "lodash";
 import { upgradedBuildings } from "../buildings";
 import { qicForDistance } from "../cost";
 import Engine from "../engine";
-import { Building, Command, Expansion, Faction, Planet, Player, Resource } from "../enums";
+import { Building, Command, Expansion, Faction, hasExpansion, Planet, Player, Resource } from "../enums";
 import { GaiaHex } from "../gaia-hex";
 import SpaceMap from "../map";
 import PlayerObject, { BuildCheck, BuildWarning } from "../player";
@@ -95,7 +95,7 @@ export function possibleBuildings(engine: Engine, player: Player): AvailableComm
         continue;
       }
 
-      if (hex.isRangeStartingPoint(player) && engine.expansions === Expansion.Frontiers) {
+      if (hex.isRangeStartingPoint(player) && hasExpansion(engine.expansions, Expansion.Frontiers)) {
         buildings.push(...possibleShips(pl, engine, map, hex));
       }
 
@@ -139,6 +139,21 @@ export function possibleBuildings(engine: Engine, player: Player): AvailableComm
         if (check) {
           buildings.push(newAvailableBuilding(upgrade, hex, check, true));
         }
+        // The sandbox's second Trading Station (owner instruction, 2026-08-19): the same hex priced
+        // as if an opponent's structure were adjacent, so a line can ask "what if I had a neighbour
+        // here" without inventing one. Only ever offered to a seat the viewer has flagged as the
+        // analysis sandbox (`PlayerData.analysis`, never serialized, never true in a real game), and
+        // only when the real price IS the isolated one - otherwise the seat already has the neighbour
+        // and the two entries would be identical.
+        if (pl.data.analysis && isolated && upgrade === Building.TradingStation) {
+          const cheap = pl.canBuild(map, hex, hex.data.planet, upgrade, engine.isLastRound, engine.replay, {
+            isolated: false,
+            existingBuilding: building,
+          });
+          if (cheap) {
+            buildings.push({ ...newAvailableBuilding(upgrade, hex, cheap, true), analysisCheap: true });
+          }
+        }
       }
     } else if (pl.canOccupy(hex)) {
       // planet without building
@@ -171,7 +186,7 @@ export function possibleSpaceStations(engine: Engine, player: Player): Available
 
   for (const hex of map.toJSON()) {
     // We can't put a space station where we already have a satellite
-    if (hex.occupied() || hex.hasPlanet() || hex.belongsToFederationOf(player)) {
+    if (hex.hasSpaceship() || hex.occupied() || hex.hasPlanet() || hex.belongsToFederationOf(player)) {
       continue;
     }
 
@@ -250,7 +265,7 @@ export function possibleSpaceLostPlanet(engine: Engine, player: Player) {
 
   for (const hex of engine.map.toJSON()) {
     // exclude existing planets, satellites and space stations
-    if (hex.data.planet !== Planet.Empty || hex.data.federations || hex.data.building) {
+    if (hex.hasSpaceship() || hex.data.planet !== Planet.Empty || hex.data.federations || hex.data.building) {
       continue;
     }
     const qicNeeded = qicForDistance(engine.map, hex, p, engine.replay);

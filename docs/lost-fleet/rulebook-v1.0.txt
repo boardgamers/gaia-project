@@ -1,0 +1,815 @@
+"I can see something on the display." Gratsol, the aged       Over time, the Moweyds were able to locate further
+admiral of the Moweyds fleet, had heard this said many        spaceships thought to be part of this fleet, so we now
+times over the years. The Moweyds have been searching         know more about the origin of the Q.I.C.s. Even back
+for the Lost Fleet for generations, and time after time,      then, these spacecraft already had Q.I.C. interfaces, so
+this observation had led only to disappointment. It was       Quantum Intelligence Cubes must have been available
+the first time for the young engineer looking at the screen,  back in the mythical early days of interstellar space
+however, so he was hopping from one leg to the other in       t ravel. The various factions are now all setting out to find
+excitement. Gratsol sighed and started to head over. Yes,     these spacecraft, in order to exploit the benefits of their
+there had been leaps forward in the technology: It was        legendary technology. News of the reemergence of the
+now possible to colonize a group of asteroids, if you were    Lost Fleet has quickly spread to even the farthest corners
+prepared to scrap a Gaiaformer for it, and then eventually,   of the galaxy, and more species are now also hoping to
+it became possible to colonize protoplanets. Well, what       discover the secrets of these long-forgotten civilizations.
+actually happened was that you settled in orbit and used      Not hailing from this part of the galaxy, they quickly es-
+the latest kit to siphon energy from the planet that
+was forming.. But Gratsol didn't think that                      tablished launch bases on asteroids and protoplanets,
+the sensors had improved by all that                                         thereby giving themselves the chance to
+much. He went over to the screen.                                                  explore the spacecraft that have re-
+"By Vo'Kron," he thought. "Could                                                      emerged. But the Moweyds are already
+it really be ... ?"                                                                      one step ahead of the game, being
+"Get closer!" he commanded,                                                                first to board the T F Mars ...
+now also gripped with
+excitement. After only a few
+seconds, he was sure of it:
+There, in front of their eyes,
+was the legendary T F Mars,
+the Gaia Federation's sparkling
+flagship spacecraft. At last! They
+had found the first spaceship of the
+Lost Fleet.
+4 Lost Fleet Spaceship Boards                                                                               Components                               4 Round Boosters
+
+                                                                                                             8 Deep Space Sector tiles
+                                                                                                                    (double-sided)
+
+1 Colonization overlay for new planet types                                                                                                          3 Final Scoring tiles
+          (covers the Q.I.C. actions)                                                                                                                3 Round Scoring tiles
+                                                                                                                                                     6 Advanced Tech tiles
+                                                                                                                 30 Interspace tiles in 4 sets,
+                                                                                                            for 1­4 players (single-hex Spaceship
+
+                                                                                                              tiles, Planet tiles; and blank tiles)
+
+        1 double-sided Scoring Board Extension
+(Different Planet Types / Additional Advanced Tech)
+
+        13 Artifact tokens                                                                                  9 Exploration boards                            12 Standard Tech tiles;
+                                                                                                                (double-sided)                                      4 each of:
+2 Faction boards (double-sided)
+                                                                                                                                                     8 Federation tokens (gold outline)
+                                                                                                Darkanians
+
+                                                                                                                                                     4 Gaia Planet tokens 12 Action tokens
+
+       6 Tinkering tiles        6 Power Rings                                                                 Expansion components       1 adjusted Economy
+(for the Tinkeroids faction)  (for the Moweyds                                                              that correspond to those in  Research Area tile 1 adjusted Lantids
+                                                                                                            the base game are marked
+                                    faction)                                                                                                (double-sided) Planetary Institute tile,
+                                                                                                                with this icon .                                        for 1­3 players
+                                                                                                                                                                        (double-sided)
+
+                                                                                                            2
+    Revised Expansion Components           Player Aids                                             Automa Components
+
+     (these replace their counterparts     1 Turn Order              1 Moweyds / Tin-             3 Automa Spaceship tiles
+              in the base game)
+                                           board, with keroids Terraforming                  1 Automa
+           1 Final Scoring tile                                                            Terraforming
+                                           Actions Reference board, with Actions
+                               1 Advanced                                                    Reference
+4 Standard Tech tiles Tech tile            on the back Reference on the back                   board
+
+Structures and Other Player Pieces (in each new player color)                                      27 Exploration
+                             Turquoise, pink                                                           Shuttles
+
+8 Mines 4 Trading 3 Research 2 Academies 1 Planetary 3 Gaiaformers 7 player 25 Satellites          (3× 9 colors)
+
+Stations Labs                              Institute                               tokens
+
+4 Credit markers                           2 Ore markers 2 Knowledge markers
+
+                     Introduction
+
+                   This expansion gives you more options and variants for your Gaia Project game.
+                   Huge, deserted spaceships have been discovered in the galaxy, providing evidence
+                   of highly-evolved civilizations that have been forgotten through the mists of time.
+
+                         Your job is to explore these spacecraft and learn their factions' secrets.
+
+                                        You can now also choose one of 4 new factions.
+The new factions start on asteroids or protoplanets--two new types of planet--which can now also be colonized.
+
+                                    These new planets can be found all across the galaxy.
+
+               Before Your First Game with the Expansion
+
+Before you add this expansion to your base game, remove all the         Base game      New symbol  This new symbol shows all
+components showing the base-game symbol for "Different Planet           symbol                     11 different planet types
+Types" from the game. Replace those components with the revised                                    (including the Lost Planet
+components from the expansion (see right).                                                         from level-5 Navigation).
+                                                                                                   It still represents the different
+Sort the Interspace tiles into sets, based on the player count. For                                types of planet that you have
+any given game, you will only need the set for the player count of                                 colonized.
+that game.
+                                                                                       Conversely, the base-game home planet
+Add the additional Gaia Planets and Action tokens to the base-                         symbol only shows the 7 types of home planet
+game components. Shuffle the new Round Boosters, Final Scor-                           for the factions in the base game, i.e. the
+ing tiles, Round Scoring tiles, and Advanced Tech tiles in with the                    standard planet types. You will see the symbol
+base-game components. Make sure that you do not mix the new                            on the new Faction boards.
+Standard Tech tiles with the base-game Standard Tech tiles. Set
+out the Round Boosters, Round Scoring and Final Scoring tiles,
+Advanced Tech tiles, and base-game Standard Tech tiles as nor-
+mal. All the usual base-game rules apply in the expansion, except
+for the changes explained along with the supplementary rules.
+
+                                                                     3
+                         Changes to Setup
+
+                             Variable Gameboard Layout
+
+         Set out the play area as described below. As usual, the final player in player order may freely rotate the Space Sector tiles
+                             (but not the Deep Space sectors) to achieve a fairer distribution of planets, if they wish.
+
+Setup for 2 players
+
+Take the Space Sector tiles numbered 01­07. Flip Sectors 05, 06, and 07 so that the sides with the black numbers outlined in white
+                                                                                                  are face up. Randomly choose one of the Sectors 01­04
+                                                                                                  and place it in the center of the table. Arrange the other
+                                                                                                  6 sectors around it. However, do not match up those 6
+                                                                                                  sectors as per the base game, but instead slide them all
+                                                                                                  one space along to the left or the right, so that each outer
+                                                                                                  sector only borders the inner sector along two spaces.
+                                                                                                  This will create 6 holes around the inner sector, each the
+                                                                                                  size of one space (see image).
+
+                                                                                                  Take the 6 Interspace tiles for your player count and place
+                                                                                                  one into each of the holes at random. Make sure that
+                                                                                                  each spaceship is 5 spaces away from each of the other
+                                                                                                  spaceships (alternately placing Interspace tiles with a
+                                                                                                  spaceship and without a spaceship, and so on).
+
+                                                                                                  Take the Deep Space Sector tiles 11­16 and place them
+                                                                                                  with a random side up in the gaps along the outside edge
+                                                                                                  of the gameboard.
+
+                                                                                                  Special note: If you are using the Final Scoring tile
+                                                                                                  "Most asteroids colonized," then you must have at least
+                                                                                                  6 asteroids in play. If this is not the case, flip Deep Space
+                                                                                                  Sector tile 16.
+
+Setup for 3 players
+
+Take the Space Sector tiles 01­10, apart from 08 (return 08 to the box). Flip Sectors 05, 06, and 07 so that the sides with the black
+numbers outlined in white are face up. Randomly choose one of the Sectors 01­04 and place it in the center of the table. Arrange 6
+
+                                                                                                               random other around them. However, do not
+                                                                                                               match up those 6 sectors as per the base game,
+                                                                                                               but instead slide them all one space to the left or
+                                                                                                               the right, so that each outer sector only borders
+                                                                                                               the inner sector along two spaces. This will
+                                                                                                               create 6 holes around the inner sector, each the
+                                                                                                               size of one space. Then place the two remaining
+                                                                                                               sectors, shifting them one space in the same way
+                                                                                                               (see image).
+
+                                                                                                               Take the 8 Interspace tiles for your player count
+                                                                                                               and place them in the holes at random. Make
+                                                                                                               sure that no two spaceship tiles are next to each
+                                                                                                               other, i.e. a spaceship tile should not be within
+                                                                                                               3 spaces of another spaceship tile.
+
+                                                                                                               Take the 8 Deep Space Sector tiles and place
+                                                                                                               them with a random side up in the gaps along
+                                                                                                               the outside edge of the gameboard. Place 2
+                                                                                                               Deep Space Sector tiles next to each other in
+                                                                                                               the larger gap by the sector you placed last (see
+                                                                                                               image).
+
+                                        4
+                                                    Interspace Tiles
+
+                           Front                                        Back
+
+Tile with a Lost Fleet         Tile with a planet   Blank tile          Only use the tiles that correspond
+       spaceship           (Protoplanet, Asteroid)                             to your player count.
+
+Setup for 4 players
+
+Take all 10 Space Sector tiles, using the side with the white numbers for Sectors 05, 06 and 07. Randomly choose two of the Sectors
+01­04 and place them next to each other in the center of the table. Arrange the other 8 Space Sectors around them at random. However,
+
+                                                                                                                           do not match up those sectors as per
+                                                                                                                           the base game, but instead slide them
+                                                                                                                           all one space to the left or the right,
+                                                                                                                           so that each outer sector only borders
+                                                                                                                           an inner sector along two spaces. This
+                                                                                                                           will create 10 holes around the inner
+                                                                                                                           sectors, each the size of one space (see
+                                                                                                                           image).
+
+                                                                                                                           Take the 10 Interspace tiles for your
+                                                                                                                           player count and place them in the
+                                                                                                                           10 holes at random. Make sure that
+                                                                                                                           no two spaceship tiles are next to
+                                                                                                                           each other, i.e. a spaceship tile should
+                                                                                                                           not be within 3 spaces of another
+                                                                                                                           spaceship tile.
+
+                                                                                                                           Take the 8 Deep Space Sector tiles
+                                                                                                                           and place them with a random side
+                                                                                                                           up in the gaps along the outside edge
+                                                                                                                           of the gameboard.
+
+                                  Changes to the Boards
+
+Scoring Board                                       Advanced Tech tile  Take the Scoring Board Extension.
+                                                    (drawn at random)
+          Scoring Board                                                 For 2 players, always use the side showing
+          Extension for                                                 25 victory points.
+          2/3/4 players
+                                                                        For 3 or 4 players, use the side showing
+          Reverse side of                                               3 Exploration Shuttles. In later games, you
+          Scoring Board                                                 can decide at random which side to use.
+          Extension for
+          3/4 players                                                   Put the Scoring Board Extension below
+                                                                        the scoreboard and then place a random
+                                                                        additional Advanced Tech tile onto the
+                                                                        extension.
+
+                                                    5
+                                                                     Research Board     Place the Colonization overlay for
+                                                                                        the new planet types on the Research
+                                                                     Adjusted tile for  Board so it covers the Q.I.C. actions.
+                                                                     the Economy
+                                                                     Research Area      Take the adjusted Economy Research
+                                                                     (random side)      Area tile and place it with a random
+                                                                                        side up so it covers the previous
+                                                                                        income symbols for levels 3 and 4.
+
+                                                                     Colonization
+                                                                     overlay for the
+                                                                     new planet types
+
+Lost Fleet Spaceships
+
+There are 4 Spaceship Boards for the Lost Fleet. In these rules,     Place the new Standard Tech tiles at random (using
+"spaceship" will always refer to these boards, and not the [single-  the 3 tiles with green markings on the back) onto
+hex] spaceship tiles that are part of the gameboard.                 the corresponding 2 or 3 spots on the spaceships.
+                                                                     If there are only 2 players, return the remaining
+2 players                                                            Standard Tech tiles to the box.
+
+You will not be using the Rebellion spaceship , so return it to      Take as many Artifact tokens at random as there
+the box. Take the remaining 3 spaceships and place them near the     are players. Place the tokens face up on the
+gameboard.                                                           corresponding spaces on the Twilight spaceship
+
+3­4 players                                                              . Return any remaining Artifact tokens to the
+                                                                     box.
+Place all 4 spaceships near the gameboard.
+                                                                     Take 4 of the new Federation tokens and distribute
+You can either place the spaceships in separate spots around the     them on the 4 spaceships at random. If there are
+gameboard so that they are near their corresponding spaceship        2 players, you will only be playing with 3 spaceships,
+tiles, or you can keep them all together in one place.               so take 3 of the new Federation tokens at random
+                                                                     and place them onto those 3 spaceships. Return the
+                                                                     remaining Federation tokens to the box.
+
+                                                                                        Artifact token
+                                                                                        (drawn at random)
+
+                                                                                                                                  Federation token
+                                                                                                                                  (drawn at random)
+
+                                                                     6
+                                                                    Twilight ­ Nautilaks spaceship
+                                                                    The Nautilaks were a legendary species of space researchers
+                                                                    that are mentioned in the early records of the Firaks. They are
+                                                                    said to have been able to perform astonishing jumps through
+                                                                    space. What has only just become known about them is that
+                                                                    they were able to compress intriguing paraphernalia into
+                                                                    artifacts.
+
+                                                                    Rebellion ­ Vo'Kron Directorate spaceship
+                                                                    The Vo'Krons are said to have been masters at harnessing the
+                                                                    power of artificial intelligence. They are thought to have
+                                                                    originally constructed the Q.I.C.s, which gave them an
+                                                                    enormous advantage both technologically and economically.
+                                                                    This is assumed to be the freight ship that they initially used to
+                                                                    transport the Q.I.C.s.
+
+                                                                    T F Mars ­ Gaia Federation spaceship
+                                                                    The Gaia Federation are said to have developed the first
+                                                                    Gaiaformer, in addition to other technologies based around
+                                                                    transdimensional quantum mechanics. They are also considered
+                                                                    to be the pioneers of planetary terraforming.
+
+                                                                    Eclipse ­ Eridani Empire spaceship
+                                                                    The Eridani Empire originates from Epsilon Eridani.
+                                                                    This advanced civilization possessed a range of extraordinary
+                                                                    technologies. Over time, their once expansive empire broke
+                                                                    apart into many disparate powers, which became so technologi-
+                                                                    cally distinct that there are now a number of different factions
+                                                                    who claim to be descended from the Eridani. The Geodens and
+                                                                    the Bal T'aks in particular are descended from the Eridani.
+
+Choosing Your Faction
+
+There are 4 additional factions in this expansion.                  Tinkeroids and Moweyds have
+These 4 factions have the following things in common:               nonstandard terraforming costs for
+                                                                    base-game planets during play, and
+· They all begin the game with only 1 structure (Planetary          those get established after all factions
+  Institute for the Tinkeroids; 1 mine for each of the other        are chosen in Setup.
+  factions).                                                        Essentially, 3 base-game planet types
+                                                                    (which always includes their oppo-
+· They begin the game on an asteroid or protoplanet (see the        nents' base-game types) will require
+  "Build a Mine" action on page 10 for details on the new types     3 steps, and the others will require
+  of planet).                                                       just 1.
+
+· They have no home planet; thus, just like the other factions,
+  they must terraform any other asteroids and protoplanets in
+  order to colonize them.
+
+· There are two new sets of colored components for the new
+  factions.
+
+      You can find more details about the new factions in the Appendices on page 13.
+There is a summary of all eighteen factions on page 16, to help you choose your factions.
+
+                                                                 7
+                             Before anyone chooses factions, populate        Once you have chosen your factions, you each take the Exploration
+                             the Moweyds/Tinkeroids Terraforming             board that corresponds to your faction. Place it next to your
+                             board: Randomly fill the seven spaces           Faction board.
+                             1­7 with 1 base-game Satellite cube of
+                             each color. This order determines the           2 players
+                             other planets for which the Moweyds and
+                             Tinkeroids must perform 3 terraforming          Place 2 of the 3 Exploration Shuttles for your color on the desig-
+                             steps, if they are not playing against          nated spaces. Return the other shuttle to the box.
+                             3 factions from the base game.
+                                                                             3­4 players
+                             After choosing factions, if both Tinkeroids
+                             and Moweyds were chosen, then for               Place all 3 Exploration Shuttles of your color on the designated
+each base-game faction chosen, add a duplicate Satellite cube to             spaces.
+its same space of the Terraforming board (see example below).
+After choosing factions, if anyone chose the Tinkeroids or
+Moweyds, then do the following:
+
+· F or each base-game faction someone is playing, take a Satellite
+ cube of that faction's color from the Terraforming board and
+ place it on any 1 of the 3 spaces of the Terraforming Steps area
+ of your player board.
+
+· In turn order, the Tinkeroids/Moweyds player(s) do the follow-
+ ing: Until filled, for each remaining Terraforming Steps space
+ you need to fill, take the first Satellite cube remaining on the
+ Terraforming board (see example below).
+
+Example                                                                      The cost of deploying one of your Exploration Shuttles is shown
+                                                                             on the left, and any additional, faction-specific adjustments are at
+         At the beginning of a 3-player                                      the top.
+         game, they draw the color order
+         (see left). Player 1 chooses the                                    There are some adjustments that affect game setup: The Ivits
+         Tinkeroids, player 2 chooses the                                    only receive 2 power in Area I and 2 power in Area II, and the
+         Bescods and player 3 chooses                                        Bescods start with 3 knowledge.
+         the Moweyds. Gray (the Bescods)
+         is a type of planet that costs                                      For the Lantids, there is an adjustment that relates to their income
+         3 terraforming steps for both                                       during the game: They gain 1 power in Area I.
+         new factions. The players who
+         chose those factions both take a
+         gray satellite, which they place
+         on their Faction board.
+
+         The Tinkeroids player then                                          If the Lantids faction has been chosen and there are fewer than
+         takes the blue and yellow                                           4 players, take the corresponding adjustment tile and use it to cover
+         satellites from the row of colors                                   their Planetary Institute ability. (The solo/2-player side of the tile
+         and places them on their Faction                                    gives the Lantids 2 knowledge both when adding a mine to a
+         board. The Moweyds player                                           colonized planet and when they build a mine on their home planet
+         takes the red and white satel-                                      type, even if they do not use their faction ability. The 3-player side
+         lites.                                                              of the tile allows them to charge 1 additional power when adding
+                                                                             a mine to a colonized planet.)
+
+                                          Placing your Initial Structures
+
+1) All players who have chosen a faction                 This has 3 stages:           3) The Ivits: Once all the other factions
+    from the base game, with the excep                                                   have placed their structures, place your
+   tion of the Ivits: Place your 2 or 3   2) All players who have chosen one of          Planetary Institute.
+   mines as usual.                           the factions in the expansion: Place
+                                             your structure in turn order, going
+                                             around clockwise from the first player.
+
+                                                                          8
+New Actions
+
+           11) Action: Explore                                               Example
+          a Lost Fleet Spaceship
+                                                                             Since the Taklons currently have a range of 2, they must
+Exploring a spaceship from the Lost Fleet gives you additional               spend 1 Q.I.C. in order to explore the Eclipse spaceship .
+action options. The following rules apply:
+
+     The corresponding spaceship tile on the game board must be
+    accessible from one of your planets. You can also use your
+    Q.I.C.s and special actions to increase your range for these
+    actions just like when you increase the range of the "Build a
+    Mine" or "Start a Gaia Project" actions.
+
+    You must still have an Exploration Shuttle on your Exploration
+    board. You can never send more than 1 Exploration Shuttle to
+    a Lost Fleet spaceship.
+
+                                    P lace your Exploration Shuttle on       They pay [the standard]
+                                      the unoccupied shuttle space with      5 victory points and move
+                                      the lowest number. Unless you          their Brainstone to their Gaia
+                                      are the first faction to explore this  Area (the Taklons' additional
+                                      spaceship, you immediately charge      cost, per their Exploration
+                                      power as indicated in the shuttle      board) in order to deploy
+                                      space.                                 their Exploration Shuttle
+                                                                             onto the corresponding
+    To deploy your Exploration Shuttle, pay the cost shown on                Spaceship Board.
+your Exploration board. This will usually be 5 victory points.               They charge 2 power, as
+                                                                             indicated in Space 2.
+
+                                                12) Action: Examine an Artifact
+
+                                                                                        If you explored the Twilight , you can examine the artifacts
+                                                                                        you found there.
+
+                                                                                        Discard 6 power from any combination of Areas I, II, and III.
+                                                                                        Return these tokens to the supply to gain 1 artifact from the
+                                                                                        spaceship.
+
+The Taklons must additionally move their Brainstone to their
+Gaia Area.
+The Nevlas and Itars must additionally discard 1 power,
+returning it to the supply.
+The Bal T`aks must pay 7 instead of 5 victory points.
+
+A spaceship is explored rather than colonized. When determining
+the range in subsequent turns, you never measure from the
+spaceship but from your closest colonized planet, as usual.
+
+                                                                                        Artifacts are explained in the Appendices, on page 15.
+
+                                        9
+Changes to the Base Game Actions
+
+          1) Action: Build a Mine                                              There will also be 1 additional Advanced Tech available. However,
+                                                                               when taking this tile, you do not need to meet the first condition
+The overlay tile that you used to cover the Q.I.C. actions on the              for taking an Advanced Tech (i.e. your player token must have
+Research board explains both of the new terraforming options.                  reached level 4 or 5 of the research area).
+
+Protoplanet Each faction needs 3 terraforming steps to build a mine            Instead, the conditions shown on the Scoring Board Extension are
+                                                                               applied (either you have at least 25 victory points or have explored
+on the new Protoplanet planet type. If you build a mine on a pro-              3 different spaceships in the Lost Fleet; the latter condition only
+toplanet, you receive 6 victory points. If you start the game on a             applies in 3- and 4-player games).
+
+                                                      protoplanet, you do      The second and third conditions for taking an Advanced Tech tile
+                                                      not receive any victory  (flip a Federation token and cover a Standard Tech tile with an
+                                                      points for that proto-   Advanced Tech tile) remain unchanged.
+                                                      planet.
+                                                                                      4)Action: Form a Federation
+Asteroid To build a mine on the new Asteroid planet type, your
+                                                                               When forming a federation, you may not place a satellite on a
+faction must have an available Gaiaformer. Once a Gaiaformer                   spaceship tile.
+has been used to colonize an asteroid, it cannot be used anymore
+for the rest of the game. Do not place that Gaiaformer on the
+asteroid, but instead on the available spot on the overlay tile. This
+spot has no limit for holding useless Gaiaformers. You do not
+need to pay the build costs (1 ore and 2 credits) for the mine.
+
+The asteroids scattered through space need to be brought near                  If you have explored some of the spaceships in the Lost Fleet, new
+enough so that they can be colonized, but also be kept far                     Federation tokens become available, in addition to the Federation
+enough apart that they don't collide. This requires a huge                     tokens in the general supply.
+amount of energy, which must be provided by the Gaiaformer.
+Due to these high energy requirements, the Gaiaformer's                                            If you have an Exploration Shuttle on a Lost
+energy unit is redlining constantly until the colonization is                                      Fleet spaceship and there is still a Federation to-
+complete. After this process, the Gaiaformer is no longer of                                       ken there, you can gain that token when you form
+any use, except as a playground for youngsters.                                                    a Federation.
+
+                                                                                           6)Action: Power
+                                                                                           and Q.I.C. Actions
+
+           3)Action: Upgrade                                                   The Q.I.C. actions on the Research board are covered and thus
+           Existing Structures                                                 cannot be used.
+
+If you have explored some of the spaceships in the Lost Fleet,                                                                          If you have explored
+new Standard Tech options become available, in addition to the                                                                          some of the space-
+Standard Tech tiles on the Research board.                                                                                              ships in the Lost
+                                                                                                                                        Fleet, new actions
+                                                 If you have an Exploration                                                             become available for
+                                                 Shuttle on a spaceship in                                                              the rest of the game.
+                                                 the Lost Fleet, you can
+                                                 take the Standard Tech        On the spaceships, you gain access to Q.I.C. actions, Power
+                                                 you find there when you       actions and two new types of action: Knowledge actions and
+                                                 upgrade a structure to a      Credit actions. Many of the power actions on the spaceships cost
+                                                 Research Lab or Academy.      not only power, but also an additional resource.
+                                                 If you do, advance 1 level
+                                                 in a Research Area of your    If you have an Exploration Shuttle on a spaceship, and the action
+                                                 choosing.                     that you wish to use has not been covered by an action token,
+                                                                               you can use it (and then cover it with an action token). You must
+The new technologies are explained in the Appendices, on page                  spend the resources and power specified.
+15.
+                                                                               These new actions are explained in the Appendices, on pages
+                                                                               13­14.
+
+                                                               10
+7)Special Actions                                                       10)Free Actions
+
+The Space Giants and the Gleens each have a special action on           Xenos
+their Exploration board that they can use once per round. You           As a free action, the Xenos can spend 1 ore
+cannot combine this special action with another action.                 to gain 1 power (in area III).
+
+Gleens                                                                       Looking for more information or missing something?
+The Gleens' special action allows you to
+perform one of the following actions once:                           https://capstone-games.com/board-games/gaia-project-the-lost-fleet
+"Build a Mine", "Start a Gaia Project", or
+"Explore a Lost Fleet Spaceship," with your                          © 2024 Feuerland         Capstone Games             Version 1.0
+basic range increased by 2 spaces. All the                           Verlagsgesellschaft mbH  2 Techview Drive, Suite 2
+usual rules for performing the respective                            Nassaustr. 3             Cincinnati, OH 45215
+action still apply.                                                  65719 Hofheim am Taunus
+                                                                                              www.capstone-games.com
+Space Giants                                                         www.feuerland-spiele.de
+The Space Giants' special action allows
+you to perform a "Build a Mine" action
+with exactly 2 free terraforming steps, in
+order to make a planet habitable.
+You can, if you need to, pay extra ore to
+add the third terraforming step.
+
+Changes to the Automa Solo Game
+
+      You can also play this expansion against the Automa artificial opponent.
+         The overall gameplay for the Automa functions as in the base game,
+                  but with a few adaptations, which are explained below.
+
+     Note: The Automa in the base game was developed by the Automa Factory.
+The adaptations described below have not been developed by the Automa Factory.
+The Automa cannot be used to control any of the new factions from the expansion.
+
+Setup                                                                  The T F Mars (on the right) was randomly drawn to show
+                                                                       the action side. The other 2 ships show the spaceship side.
+Use the variable setup for 2 players on page 4 in this rulebook.
+Rotate the tiles so that you form a horizontal line of 5 hex spaces  The spaceship side counts as 1 option for the ,,Power/Q.I.C."
+along the top.                                                       Automa action. The action side counts as 0-3 options for the
+                                                                     ,,Power/Q.I.C." Automa action (only count the empty spaces).
+The following exceptions apply                                       Whenever the Automa or you use an action on a spaceship, mark
+· Take the 6 Interspace tiles for the solo game. Return the Twi-     the corresponding space on the Automa Spaceship tile with a
+                                                                     power token.
+  light spaceship (the one with places for artifacts) to the box.
+  Artifacts are not used in the solo game, so return them to the
+  box as well. Put the other 3 spaceships near the gameboard.
+  Place a different new Standard Tech tile and a new Federation
+  token on each of the 3 ships at random.
+
+· The Automa has 3 Exploration Shuttles.
+
+· Do not cover the Q.I.C. actions using the new planets' Coloni-
+  zation overlay tile. Place this tile near the gameboard. Instead,
+  cover the Q.I.C. actions with the 3 Automa Spaceship tiles. Place
+  a random 1 of the 3 tiles Action side up to show that the Auto-
+  ma has already explored this spaceship. Place the other two tiles
+  Spaceship side up. The three tiles should be placed on the Q.I.C.
+  actions in the following order.
+
+                                                                     5  4                     321
+
+                                                                     Automa takes a Power/Q.I.C. action with the
+                                                                     "4 from the right" icon and explores the Eclipse.
+
+                                             11
+                Changes to the Automa Actions
+
+              Build a Mine                                             4. Perform an action:
+
+3. Tiebreaker:                                                             a. If the action is a power action from the base game, place an
+    c. For the new planet types: The asteroids require 2 terraforming         action marker on the chosen action. The Automa gains no
+       steps and the protoplanets require 3 terraforming steps (see           benefit.
+       the new Terraforming board).
+                                                                           b. If the action is the spaceship side of an Automa Spaceship
+The following table shows the Final Scoring tiles that add an                 tile, then the Automa explores this Lost Fleet spaceship
+additional condition to the tiebreaker (3b).                                  at no cost (Action 11). Place 1 of Automa's Exploration
+                                                                              Shuttles on that spaceship and flip the Automa Spaceship
+Most asteroids  (i) Asteroid planets.                                         tile to its action side. (From now on, that tile lists 3 possible
+colonized       (ii) Planets closest to an uncolonized                        actions.) Mark any spaces corresponding to an action space
+                                                                              you already used this round with a power token.
+Present in the      asteroid.
+most Deep                                                                  c. If the action is a space on the action side of an Automa
+Space sectors   (i) Planets in Deep Space sectors in which                    Spaceship tile, cover it with a power token. This will help you
+                    the Automa has no colonized planets yet.                  determining further such actions by the Automa. If there is
+                                                                              a neigboring space to the left of it on the same Spaceship
+                (ii) Planets closest to an uncolonized planet                 tile and it is still empty, place a power token on that space
+                    in a Deep Space sector in which the                       as well. Then place an action marker on the corresponding
+                    Automa has no colonized planets yet.                      action(s) on the Spaceship. The Automa gains no benefit.
+
+                Upgrade                                                              4  3 21
+
+3. Tiebreaker:                                                         Using a Power/Q.I.C. action ,,3 from the right",
+   If the final scoring tile "Longest distance between your Pla        the Automa selects the Q.I.C. action on the Eclipse
+   netary Institute and one of your Academies" is in play, then for    and places a power token there.
+   the following "Valid Options", use this tiebreaker before those
+   from the base game rules:                                           At the end of the round, remove both the action markers and
+                                                                       power tokens.
+   2b. Upgrade a mine into a Trading Station:
+        If the Automa has already built its Planetary Institute but                     Difficulty Levels
+        neither of its Academies yet, choose the mine furthest away
+        from its Planetary Institute.                                  When adjusting the difficulty level in the Lost Fleet expansion,
+                                                                       apply the usual deck modifications and also adjust the Automa's
+   2d. Upgrade a Trading Station into a Research Lab:                  starting victory points as follows:
+        Choose the Trading Station that is furthest away from its
+        Planetary Institute.                                           Automalein:      0 VP (no changes)
+                                                                       Automa:          15 VP
+          Power/Q.I.C. Actions                                         Automächtig:     20 VP
+                                                                       Ultoma:          25 VP
+2. Possible options:                                                   Alptrauma:       10 VP (no changes)
+   · Any power actions on the research board not covered
+     by an action marker.
+
+   · Any Automa Spaceship tile with the spaceship-side up.
+
+   · A ny space on the action side of an Automa Spaceship tile
+     (power, Q.I.C., knowledge or credit actions) not covered
+     by a power token.
+
+                             Credits
+
+                                 Gaia Project ­ The Lost Fleet is designed by Helge Ostertag and Jens Drögemüller.
+                          Artwork and graphics by Dennis Lohausen. These rules were written by Bastian Winkelhaus
+
+                                           as well as Stephan Rink, who also edited and produced this game.
+
+               We would like to thank Ursula Steinhoff for the DTP, Translation Circus for translation and additional DTP,
+          Nathan Morse for proofreading, Christof Tisch and Inga Keutmann for editorial support, our brilliant testing team -
+who were Andreas Estensen, Nils Lindkvist, Jimmy Flumé, Göran Kero, Tonje Lindmark, David Johansson and Joakim Hägglund -
+for all our playtesting and their suggestions for some of the components. Joe Farrell and Monrad Pedersen as well as the Automa Fac-
+ tory team for their invaluable ideas for the solo mode, plus the many playtesters and especially: Florian Schlusnus, Johannes Grimm,
+
+                              Sascha Huning, Alexander Fendt, Florian Bücherl, Christian Blatakes, and Jonas Egel.
+
+                                       12
+                                       APPENDICES
+
+                                       Appendix I: New Factions
+
+Tinkeroids  Starting Planet: Asteroid                                         Planetary Institute: The first time the Darkanians colonize a planet
+                                                                                 in a Space sector or Deep Space sector, they always gain 2 credits
+Ability: You start the game with your Planetary Institute instead of             and 1 knowledge. Interspace tiles do not count as sectors.
+   2 mines, which you place during the second stage of placement.
+   When you terraform a standard planet, you will require 3                   Moweyds  Starting Planet: Protoplanet
+   terraforming steps for 3 of the the base-game planet types, and
+   1 terraforming step for the other base-game planet types (see              Ability: You start the game with 1 mine instead of 2, which you
+   "Choosing Your Faction" on page 7). Making a Gaia planet                      place during the second stage of placement. You start the
+   habitable costs you 2 Q.I.C.s. The Tinkeroids have 6 different                game with an Exploration Shuttle on T F Mars . When
+   Tinkering tiles to use: 3 of the tiles are to be used in rounds               terraforming a standard planet, you will require 3 terraforming
+   1­3, and the rest in rounds 4­6. At the start of each round                   steps for 3 of the the base-game planet types, and 1 terraforming
+   choose 1 Tinkering tile that corresponds to that round. Place it              step for the other base-game planet types (see "Choosing Your
+   on your Faction board. At the end of the round, remove that                   Faction" on page 7).
+   tile from play (each tile is only used once).
+                                                                              Planetary Institute: Once per round, you may place a Power
+            This tile is to be used by the Tinkeroids                            Ring as an ACTION onto a planet that contains one of your
+            during one of the first 3 rounds. It lets                            buildings and does not already have a Power Ring (if you need
+            them perform 1 "Build a Mine" action                                 to, lift up the structure on the planet, put the Power Ring on the
+            with 1 free terraforming step.                                       planet and then put the structure on top). The power value of
+                                                                                 your structure on this planet increases by 2.
+
+Planetary Institute: Once per round, you may use the action on                  Space Giants Starting Planet: Protoplanet
+   your current Tinkering tile as an ACTION.
+                                                                              Ability: You start the game with 1 instead of 2 mines, which you
+Darkanians  Starting Planet: Asteroid                                            place during the second stage of placement. When terraforming
+                                                                                 a standard planet, you require 2 terraforming steps. You have
+Ability: You start the game with 1 mine instead of 2, which you                  (on the Exploration board) 1 "Build a Mine" action with 2 free
+   place during the second stage of placement. Making a standard                 terraforming steps. Making a Gaia planet habitable costs
+   planet habitable costs you 1 terraforming step, and making a                  2 Q.I.C.s.
+   Gaia planet habitable costs 2 Q.I.C.s.
+                                                                              Planetary Institute: Immediately take 1 Tech tile of your choice.
+                                                                                 The same rules apply as for the action "Upgrade Existing
+                                                                                 Structures". You may only perform this ability once.
+
+                                       Appendix II: New Action Spaces
+
+                   When you use this Q.I.C. action, you immediately           · For the "Gain VP for Planet types" action, the base number
+                   and only once receive 2 victory points, plus 1               of points you receive is reduced to 2 (because there are more
+                   victory point for each of your Standard Tech tiles           planet types available).
+                   (whether or not there is an Advanced Tech tile on
+                   it).                                                       · For the "Score a Federation Token Again" action, you not
+                                                                                only gain the victory points and resources again, but also all
+                                                       The other Q.I.C.         other immediate effects on that Federation token.
+                                                       actions generally
+                                                       correspond to those                                         The depicted power actions cost an
+                                                       in the base game, but                                       additional 1 or 2 ore. When you use
+                                                       with the following                                          one of these actions, you
+                                                       changes:                                                    immediately and only once gain an
+· The "Gain a Tech Tile" action only costs 3 Q.I.C.s. If you have                                                  "Upgrade Existing Structures"
+  an Exploration Shuttle on a Lost Fleet ship, you can take the                                                    action, with which you can upgrade
+  Standard Tech tile there.                                                   a Mine to a Trading Station, or a Trading Station to a Research
+                                                                              Lab, at no additional cost.
+
+                                                       13
+                   This power action costs an additional 2 know                                               These actions are the same as the
+                   ledge. When you use this action, you may                                                   power action "Take 1 free terra
+                   immediately move one of your player tokens up                                              forming step" and the special action
+                   1 Research level. The usual rules about advancing                                          "+3 Range" from the base game,
+                   to Level 5 apply.                                                                          except that they cost 3 credits and
+                                                                                                              1 knowledge respectively. Note that
+                   Perform a "Start a Gaia Project" action without       you can also use the "+3 Range" for the new action "Explore a
+                   needing to move any power tokens into the green       Lost Fleet Spaceship."
+                   Gaia Area, and immediately transform the
+                   transdim planet into a Gaia planet (this means                           Immediately and only once receive the resources
+                   you can build a mine on it as a later action in this                     depicted.
+                   round and then use the Gaiaformer again this
+                   round).                                                                 Immediately and only once receive a "Build a
+The transdim planet must be within your range. You may still                               Mine" action, which allows you to build a mine
+spend Q.I.C.s to increase your range.                                                      on an asteroid at no extra cost: That asteroid must
+                                                                                           be within your range, although you may discard
+                                                                                           Q.I.C.s to increase your range. You do not need to
+                                                                                           discard (or even have) a Gaiaformer.
+
+         Appendix III: New Round Boosters
+
+In addition to income (1 ore, 3 credits, or 2 power), the new Round Boosters also give you the following benefits:
+
+1  2  3                            4                                         2 As soon as you perform the Pass action and return this
+
+1 As soon as you perform the Pass action and return this                         Round Booster, you gain 1 victory point for each planet
+                                                                                 type that you have colonized.
+    Round Booster, you gain 3 victory points for each of your
+    Gaiaformers, regardless of whether the Gaiaformer is on                  3 As soon as you perform the Pass action and return this
+    your Faction board or is deployed. You do not receive
+    any victory points for Gaiaformers that you have used for                    Round Booster, you gain 2 victory points for each Deep
+    colonizing asteroids.                                                        Space sector in which you have colonized at least one
+                                                                                 planet.
+
+                                                                             4 As a special action, you can perform a "Start a Gaia Project"
+
+                                                                                 action once without needing to move any power tokens
+                                                                                 into the green Gaia Area, and immediately transform the
+                                                                                 transdim planet into a Gaia planet (this means you can
+                                                                                 build a mine on it as a later action in this round and then
+                                                                                 use the Gaiaformer again this round). The transdim planet
+                                                                                 must be within your range. You may still spend Q.I.C.s to
+                                                                                 increase your range.
+
+         Appendix IV: New Scoring Tiles
+
+   Each time you build a mine         Round Scoring Tiles                    Each time you build
+   in a Space sector / Deep                                                  one of your Research
+   Space sector that you had                     Each time you build         Labs, gain an additional
+   not colonized on a previous                   a mine on a planet          4 victory points.
+   turn, gain an additional 3                    type that you had not
+   victory points. Interspace                    colonized on a previous
+   tiles do not count as sectors.                turn, gain an additional
+                                                 3 victory points.
+
+                                                                         14
+Most                           Final Scoring Tiles                                               Most Deep Space
+asteroids                                                                                        sectors where you
+colonized.                        Longest distance between                                       have colonized at
+                                  your Planetary Institute and                                   least one planet.
+                                  one of your Academies. This              The Lost Planet counts as a colonized
+                                  distance is the range from               planet.
+            your Planetary Institute to that Academy.
+            (You do not score any points if you have not built
+            these structures.)
+
+            Appendix V: New Tech Tiles
+
+Immediately and only once receive a "Build a                                                  Immediately and only once receive
+Mine" action with up to 2 free terraforming steps                                             victory points for each Planetary
+and without paying the cost for that mine.                                                    Institute and/or Academy, and for
+You may spend additional ore to get a third                                                   each Deep Space sector in which
+terraforming step, and you may spend Q.I.C.s                                                  you have colonized at least 1
+to increase the range for this action.                                                        planet.
+
+Your basic range increases by 1 for the rest of                            When you pass, you gain 2 victory points for
+the game, as long as the tile is not covered by                            each asteroid that you have colonized.
+an Advanced Tech tile.
+
+            Appendix VI: New Federation Tokens
+
+Immediately and only once receive 12 victory points.                       Immediately and only once receive a "Build a Mine"
+Unlike the 12-point Federation tokens in the base                          action of limitless range and without paying the cost
+game, this token also has a green side, which allows                       for that mine. You still use ore to pay for any
+you to discover an Advanced Tech or research the                           terraforming steps. For Gaia planets, you must pay
+highest level of a Research Area.                                          the required number of Q.I.C.s.
+
+Immediately and only once receive 1 Tech tile of                           Immediately and only once receive a "Build a Mine"
+your choice. The same rules apply as for the action                        action with up to 3 free terraforming steps and
+"Upgrade Existing Structures".                                             without having to pay the build cost for that mine.
+                                                                           You may still spend Q.I.C.s to increase your range.
+
+            Appendix VII: Artifacts
+
+                                     Immediately and only once receive                         Immediately and only once receive
+                                     7 victory points. This tile also                          3 victory points for each level in
+                                     counts (in a similar way to the Lost                      the corresponding Research Area.
+                                     Planet) as if you are currently
+building a mine and are colonizing an asteroid or protoplanet for          (For example, for the tile on the right, if you have
+that mine. This colonization is not allocated to a particular              reached Science Level 5, you gain 15 victory points.)
+sector, so does not count as colonizing a (new) sector; neither do
+you receive 6 victory points for colonizing a protoplanet.                 Immediately and only once receive 3 victory points
+                                                                           for each Research Area in which you have reached
+During the game, the artifact counts for all purposes as a mine            at least Level 3.
+on an asteroid or protoplanet that is not allocated to a sector.
+However, you do not actually place a mine on it.                           Gain 2 power as income. Place them in Area III.
+
+                                                      15
+          Itars   NEvlas
+       Lantids   Terrans
+Hadsch Hallas
+      Bal T'aks      IVITS
+        Gleens   Geodens
+         Ambas
+         Firaks    Xenos
+                 Taklons
+                 BESCODS
+
+  MoWeyds                                      Space Giants
+Darkanians                                        Tinkeroids
+
+                 16
+

@@ -14,6 +14,8 @@
           :transform="`translate(${j * 20}, ${y(r.type)}) scale(${scale(r.type)})`"
           :kind="r.type"
           :count="r.count"
+          :plus="r.type === 'r'"
+          :no-plus="c.noPlus"
         />
       </svg>
       <svg v-else-if="c.building != null" :key="i" viewBox="0 0 10 10" width="36" height="36">
@@ -28,6 +30,13 @@
         />
       </svg>
       <BoardAction v-else-if="c.boardAction" :key="i" :action="c.boardAction" transform="scale(1.3)" />
+      <ShipActionIcon
+        v-else-if="c.spaceshipAction"
+        :key="i"
+        :ship="c.spaceshipAction.ship"
+        :type="c.spaceshipAction.type"
+      />
+      <ArtifactIcon v-else-if="c.artifactToken != null" :key="i" :artifact="c.artifactToken" :size="48" />
       <SpecialAction
         v-else-if="c.specialAction != null"
         :key="i"
@@ -45,6 +54,9 @@
         :disable-tooltip="true"
       />
       <Booster v-else-if="c.booster" :key="i" :booster="c.booster" highlighted />
+      <svg v-else-if="c.planet" :key="i" viewBox="-10 -10 20 20" width="20" height="20" :data-planet="c.planet">
+        <circle r="7" :class="['planet-fill', c.planet]" style="stroke: black; stroke-width: 0.7" />
+      </svg>
       <svg v-else-if="c.text === 'arrow'" :key="i" viewBox="0 0 10 10" width="20" height="20">
         <use xlink:href="#arrow" x="-2" y="5" />
       </svg>
@@ -61,14 +73,16 @@ import { Component, Prop } from "vue-property-decorator";
 import { foregroundColor } from "../../graphics/colors";
 import { RichText, RichTextBuilding, RichTextElement } from "../../graphics/rich-text";
 import { factionColorVar } from "../../graphics/utils";
+import ArtifactIcon from "../ArtifactIcon.vue";
 import BoardAction from "../BoardAction.vue";
 import Booster from "../Booster.vue";
 import Building from "../Building.vue";
+import ShipActionIcon from "../ShipActionIcon.vue";
 import SpecialAction from "../SpecialAction.vue";
 import TechTile from "../TechTile.vue";
 
 @Component({
-  components: { Booster, TechTile, BoardAction, Building, SpecialAction },
+  components: { Booster, TechTile, BoardAction, Building, SpecialAction, ShipActionIcon, ArtifactIcon },
 })
 export default class RichTextView extends Vue {
   @Prop()
@@ -77,7 +91,7 @@ export default class RichTextView extends Vue {
   get filteredContent(): RichText {
     return this.content.flatMap((c) => {
       if (c.rewards) {
-        return c.rewards.map((r) => ({ rewards: [r] }) as RichTextElement);
+        return c.rewards.map((r) => ({ rewards: [r], noPlus: c.noPlus }) as RichTextElement);
       }
       return c;
     });

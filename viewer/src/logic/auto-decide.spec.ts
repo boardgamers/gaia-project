@@ -1,0 +1,170 @@
+import Engine, { Command, Round } from "@gaia-project/engine";
+import { expect } from "chai";
+import {
+  autoDecideChargePower,
+  encodeAutoChargePreference,
+  parseAutoChargeMaxPassedRoundLeech,
+  parseAutoChargePreference,
+} from "./auto-decide";
+
+// A minimal setup fixture: after these, "terrans build ts -1x2." triggers
+// a leech decision (charge/decline) for nevlas (seat 1) - the §J2 out-of-order interrupt case.
+const SETUP_MOVES = [
+  "p1 faction terrans",
+  "p2 faction nevlas",
+  "terrans build m -1x2",
+  "nevlas build m -1x0",
+  "nevlas build m 0x-4",
+  "terrans build m -4x-1",
+  "nevlas booster booster7",
+  "terrans booster booster3",
+];
+
+function engineWithPendingLeech(): Engine {
+  const engine = new Engine(["init 2 randomSeed", ...SETUP_MOVES]);
+  engine.move("terrans build ts -1x2.");
+  engine.generateAvailableCommandsIfNeeded();
+  return engine;
+}
+
+describe("autoDecideChargePower", () => {
+  it("parses encoded hosted preferences without changing legacy auto-leech values", () => {
+    expect(parseAutoChargePreference("3;passedCap=2")).to.equal(3);
+    expect(parseAutoChargeMaxPassedRoundLeech("3;passedCap=2")).to.equal(2);
+    expect(encodeAutoChargePreference("3", "2")).to.equal("3;passedCap=2");
+    expect(encodeAutoChargePreference("ask", "2")).to.equal("ask");
+  });
+
+  it("does nothing when the preference is 'ask' (the default)", () => {
+    const engine = engineWithPendingLeech();
+    const before = engine.moveHistory.length;
+
+    const result = autoDecideChargePower(engine, "ask");
+
+    expect(result).to.equal(null);
+    expect(engine.moveHistory.length).to.equal(before);
+    expect(engine.availableCommands.some((c) => c.name === Command.ChargePower || c.name === Command.Decline)).to.equal(
+      true
+    );
+  });
+
+  it("auto-resolves a passed player's leech in the last round even under the default 'ask' (no wait)", () => {
+    const engine = engineWithPendingLeech();
+    const seat = engine.playerToMove;
+    // The exact reported scenario: this seat has already passed, and it's the last round - charging
+    // can never help (power is unusable at game end, extra charges only cost VP), so the engine
+    // treats it as a non-decision. It must NOT sit as a pending turn everyone has to wait on.
+    (engine as any).round = Round.LastRound;
+    engine.passedPlayers = [seat];
+    const before = engine.moveHistory.length;
+
+    const result = autoDecideChargePower(engine, "ask");
+
+    // Before the fix, "ask" short-circuited before autoMove ran, so this returned null and the
+    // passed player stayed a pending leech turn. Now it's resolved automatically.
+    expect(result).to.be.a("string");
+    expect(engine.moveHistory.length).to.be.greaterThan(before);
+    expect(engine.availableCommands.some((c) => c.name === Command.ChargePower || c.name === Command.Decline)).to.equal(
+      false
+    );
+  });
+
+  it("still asks a NON-passed player's leech in the last round under 'ask' (only passed players auto-resolve)", () => {
+    const engine = engineWithPendingLeech();
+    // Last round, but this seat has NOT passed - a real leech decision the human still owns.
+    (engine as any).round = Round.LastRound;
+    const before = engine.moveHistory.length;
+
+    const result = autoDecideChargePower(engine, "ask");
+
+    expect(result).to.equal(null);
+    expect(engine.moveHistory.length).to.equal(before);
+    expect(engine.availableCommands.some((c) => c.name === Command.ChargePower)).to.equal(true);
+  });
+
+  it("does nothing when the pending seat is not eligible (not one of the local user's seats)", () => {
+    const engine = engineWithPendingLeech();
+    const before = engine.moveHistory.length;
+
+    const result = autoDecideChargePower(engine, 5, () => false);
+
+    expect(result).to.equal(null);
+    expect(engine.moveHistory.length).to.equal(before);
+  });
+
+  it("'decline-cost' mode still auto-accepts a leech that costs 1 power or less (only real costs get auto-declined)", () => {
+    const engine = engineWithPendingLeech();
+    const before = engine.moveHistory.length;
+
+    const result = autoDecideChargePower(engine, "decline-cost");
+
+    expect(result).to.be.a("string");
+    expect(result).to.include(Command.ChargePower);
+    expect(engine.moveHistory.length).to.be.greaterThan(before);
+    expect(engine.availableCommands.some((c) => c.name === Command.ChargePower || c.name === Command.Decline)).to.equal(
+      false
+    );
+  });
+
+  it("leaves a leech offer above the chosen numeric threshold for a real decision (asks, doesn't decline)", () => {
+    const engine = engineWithPendingLeech();
+    const before = engine.moveHistory.length;
+
+    // this fixture's offer is a 1-power charge - the smallest real AutoCharge threshold (1) would
+    // already auto-accept it, so 0 (below the valid 1-5 range, only used here to exercise
+    // askOrDeclineBasedOnCost's "above threshold" branch) is the only way to force an ask.
+    const result = autoDecideChargePower(engine, 0 as any);
+
+    expect(result).to.equal(null);
+    expect(engine.moveHistory.length).to.equal(before);
+    expect(engine.availableCommands.some((c) => c.name === Command.ChargePower)).to.equal(true);
+  });
+
+  it("auto-accepts a leech within the chosen power threshold", () => {
+    const engine = engineWithPendingLeech();
+    const offer = engine.availableCommands.find((c) => c.name === Command.ChargePower) as any;
+    const maxCharge = Math.max(...offer.data.offers.map((o: any) => Number(/(\d+)pw/.exec(o.offer)[1])));
+
+    const result = autoDecideChargePower(engine, maxCharge as any);
+
+    expect(result).to.be.a("string");
+    expect(result).to.include(Command.ChargePower);
+  });
+
+  it("auto-declines after a passed seat has already reached the passed-round leech cap", () => {
+    const engine = engineWithPendingLeech();
+    const seat = engine.playerToMove;
+    const faction = engine.player(seat).faction;
+    engine.passedPlayers = [seat];
+    engine.moveHistory.push(`${faction} pass booster1`, `${faction} charge 1pw`);
+
+    const result = autoDecideChargePower(engine, 5, () => true, 1);
+
+    expect(result).to.be.a("string");
+    expect(result).to.include(Command.Decline);
+    expect(result).to.not.include(Command.ChargePower);
+  });
+
+  it("auto-accepts while a passed seat is still within the passed-round leech cap", () => {
+    const engine = engineWithPendingLeech();
+    const seat = engine.playerToMove;
+    const faction = engine.player(seat).faction;
+    engine.passedPlayers = [seat];
+    engine.moveHistory.push(`${faction} pass booster1`);
+
+    const result = autoDecideChargePower(engine, 5, () => true, 1);
+
+    expect(result).to.be.a("string");
+    expect(result).to.include(Command.ChargePower);
+  });
+
+  it("only applies the given preference to the currently-pending seat, not other players' settings", () => {
+    const engine = engineWithPendingLeech();
+    const pendingSeat = engine.playerToMove;
+
+    autoDecideChargePower(engine, "decline-cost");
+
+    const otherSeat = pendingSeat === 0 ? 1 : 0;
+    expect(engine.player(otherSeat).settings.autoChargePower).to.not.equal("decline-cost");
+  });
+});

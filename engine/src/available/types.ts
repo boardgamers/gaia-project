@@ -1,6 +1,7 @@
 import {
   AdvTechTile,
   AdvTechTilePos,
+  ArtifactToken,
   BoardAction,
   Booster,
   Building,
@@ -9,14 +10,19 @@ import {
   Federation,
   ResearchField,
   Resource,
+  Spaceship,
+  SpaceshipFederation,
+  SpaceshipTechTile,
   SubPhase,
   TechTile,
   TechTilePos,
+  TinkeringTile,
 } from "../enums";
 import { BuildWarning } from "../player";
 import { BrainstoneDest } from "../player-data";
 import Reward from "../reward";
 import { AvailableSetupOption } from "../setup";
+import { SpaceshipActionType } from "../spaceships";
 
 export const ISOLATED_DISTANCE = 3;
 export const UPGRADE_RESEARCH_COST = new Reward(4, Resource.Knowledge);
@@ -44,6 +50,31 @@ export type AvailableBoardAction = {
 };
 export type AvailableBoardActionData = {
   poweracts: AvailableBoardAction[];
+};
+export type AvailableExploreAction = {
+  ship: Spaceship;
+  coordinates: string;
+  cost: string;
+  charge: number;
+  slot: number;
+  adjustments?: string[];
+};
+export type AvailableExploreActionData = {
+  ships: AvailableExploreAction[];
+};
+export type AvailableSpaceshipFederationClaim = {
+  ship: Spaceship;
+  federation: SpaceshipFederation;
+};
+export type AvailableFederationChoice = Federation | SpaceshipFederation;
+export type AvailableSpaceshipBoardAction = {
+  ship: Spaceship;
+  type: SpaceshipActionType;
+  cost: string;
+  warnings?: BuildWarning[];
+};
+export type AvailableSpaceshipBoardActionData = {
+  actions: AvailableSpaceshipBoardAction[];
 };
 
 export class Offer {
@@ -85,8 +116,10 @@ type _MoveNameWithData<Command extends string, AvailableCommandData extends Base
 };
 export type PossibleBid = { faction: Faction; bid: number[] };
 export type TechTileWithPos = { tile: TechTile; pos: TechTilePos };
+export type SpaceshipTechTileWithPos = { tile: SpaceshipTechTile; pos: Spaceship };
+export type StandardTechTileChoice = TechTileWithPos | SpaceshipTechTileWithPos;
 export type AdvTechTileWithPos = { tile: AdvTechTile; pos: AdvTechTilePos };
-export type ChooseTechTile = TechTileWithPos | AdvTechTileWithPos;
+export type ChooseTechTile = StandardTechTileChoice | AdvTechTileWithPos;
 export type AvailableBuildCommandData = { buildings: AvailableBuilding[] };
 export type AvailableFederation = { hexes: string; warnings: BuildWarning[] };
 
@@ -104,30 +137,50 @@ export type AvailableMoveShipData = { ship: Building; source: string; targets: A
 
 interface CommandData {
   [Command.Action]: AvailableBoardActionData;
+  [Command.BanFaction]: Faction[];
   [Command.Bid]: { bids: PossibleBid[] };
   [Command.BrainStone]: BrainstoneActionData;
   [Command.Build]: AvailableBuildCommandData;
   [Command.BurnPower]: number[];
   [Command.ChargePower]: { offers: Offer[] };
-  [Command.ChooseCoverTechTile]: { tiles: TechTileWithPos[] };
+  [Command.ChooseArtifactToken]: {
+    tokens: ArtifactToken[];
+    /** Lost Fleet §G6, owner ruling 2026-07-03: which of `tokens` would currently have no effect
+     * if chosen (today, only the Federation-shaped token with no owned Federation token to
+     * rescore) - choosing one is still allowed, this is informational for a future UI. */
+    noEffectTokens?: ArtifactToken[];
+  };
+  [Command.ChooseCoverTechTile]: { tiles: StandardTechTileChoice[] };
   [Command.ChooseFaction]: Faction[];
-  [Command.ChooseFederationTile]: { tiles: Federation[]; rescore: boolean };
+  [Command.ChooseFederationTile]: { tiles: AvailableFederationChoice[]; rescore: boolean };
   [Command.ChooseIncome]: string[];
   [Command.ChooseRoundBooster]: { boosters: Booster[] };
+  [Command.ChooseTinkeringTile]: { tiles: TinkeringTile[] };
   [Command.ChooseTechTile]: { tiles: ChooseTechTile[] };
   [Command.DeadEnd]: SubPhase; // for debugging
   [Command.Decline]: { offers: Offer[] };
   [Command.EndTurn]: never;
-  [Command.FormFederation]: { tiles: Federation[]; federations: AvailableFederation[] };
+  [Command.ExamineArtifact]: { cost: string };
+  [Command.Explore]: AvailableExploreActionData;
+  [Command.FormFederation]: {
+    tiles: AvailableFederationChoice[];
+    federations: AvailableFederation[];
+    claimableFederations?: AvailableSpaceshipFederationClaim[];
+  };
+  [Command.GaiaFormTransdim]: { spaces: AvailableHex[] };
   [Command.Init]: never;
   [Command.Pass]: { boosters: Booster[] };
   [Command.PISwap]: AvailableBuildCommandData;
   [Command.PlaceLostPlanet]: { spaces: AvailableHex[] };
   [Command.MoveShip]: AvailableMoveShipData[];
+  [Command.PlacePowerRing]: { spaces: AvailableHex[] };
   [Command.RotateSectors]: never;
   [Command.Setup]: AvailableSetupOption;
+  [Command.PreferenceBid]: { budget: number; factions: Faction[]; bids: PossibleBid[] };
+  [Command.SilentBid]: { maxBid: number; factions: Faction[]; bids: PossibleBid[] };
   [Command.Special]: { specialacts: { income: string; spec: string }[] };
   [Command.Spend]: AvailableFreeActionData;
+  [Command.SpaceshipAction]: AvailableSpaceshipBoardActionData;
   [Command.UpgradeResearch]: AvailableResearchData;
 }
 
@@ -142,6 +195,22 @@ export type AvailableBuilding = AvailableHex & {
   upgrade?: boolean;
   downgrade?: boolean;
   steps?: number;
+  /**
+   * Whether colonizing an Asteroid via this build consumes a Gaiaformer (§E2: the normal
+   * "Build a Mine" action requires and consumes one; also the Federation-token Build-a-Mine per
+   * the BGG designer ruling). Defaults to true; explicitly false for the routes that do NOT
+   * consume one: starting-building setup placement (§B1/§B2 — factions own 0 Gaiaformers at
+   * setup) and Eclipse's Credit action (§C4: "the 6 credits is the entire cost").
+   */
+  consumesAsteroidGaiaformer?: boolean;
+  /**
+   * Viewer analysis mode only (docs/lost-fleet/ANALYSIS_MODE_PLAN.md) - the Trading Station priced as
+   * if an opponent's structure were adjacent, offered ALONGSIDE the real isolated-price one so a
+   * sandbox line can ask "what if I had a neighbour here" (owner instruction, 2026-08-19). Emitted
+   * only when the seat's `PlayerData.analysis` flag is set, i.e. never in a real game, and its move
+   * string carries the `cheap` qualifier so `moveBuild` can tell the two entries for one hex apart.
+   */
+  analysisCheap?: boolean;
 };
 export type AvailableResearchTrack = { cost: string; field: ResearchField; to: number };
 export type AvailableResearchData = { tracks: AvailableResearchTrack[] };

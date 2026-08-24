@@ -13,7 +13,18 @@ export type ButtonWarning = {
   okButton?: { label: string; action: () => void };
 };
 
-export type ModalButtonData = { title: string; content: string; canActivate: () => boolean; show: (boolean) => void };
+export type ModalButtonData = {
+  title: string;
+  /** Plain HTML content, rendered via v-html. Ignored when `component` is set. */
+  content?: string;
+  /** A real Vue component to render as the modal body instead of `content` - lets the body use
+   * actual icon components (SVG-rendered, can't be embedded in an HTML string). */
+  component?: unknown;
+  props?: Record<string, unknown>;
+  canActivate: () => boolean;
+  show: (boolean) => void;
+  okTitle?: string;
+};
 
 export type SpecialActionIncome = string;
 
@@ -70,12 +81,6 @@ export enum WarningsPreference {
   ButtonColor = "buttonColor",
   ButtonText = "buttonText", //including button color
   ModalDialog = "modalDialog", //including button color
-}
-
-export enum StatisticsDisplay {
-  auto = "auto", //depending on screen size
-  table = "table",
-  charts = "charts",
 }
 
 export interface GameContext {

@@ -22,5 +22,19 @@ module.exports = {
     "no-useless-return": "error",
     "no-invalid-this": "error",
     quotes: "off",
+    // Hoisted function declarations are safe to reference before their definition; much of the
+    // codebase organizes helpers below their call sites.
+    "@typescript-eslint/no-use-before-define": ["error", { functions: false }],
   },
+  overrides: [
+    {
+      // Test ergonomics: non-null assertions are fine in specs (a wrong assumption fails the
+      // test anyway), and snake_case identifiers mirror external row shapes under test.
+      files: ["**/*.spec.ts"],
+      rules: {
+        "@typescript-eslint/no-non-null-assertion": "off",
+        "@typescript-eslint/camelcase": "off",
+      },
+    },
+  ],
 };

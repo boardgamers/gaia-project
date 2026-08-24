@@ -1,5 +1,5 @@
 <template>
-  <g :class="{ resource: true, 'no-tooltip': !tooltip }" v-b-tooltip :title="tooltip">
+  <g :class="{ resource: true, 'no-tooltip': !tooltip }" v-b-tooltip.hover :title="tooltip">
     <template v-if="kind === 'q'">
       <Qic v-if="!flat" class="qic" :transform="`translate(-0.5,0)`" />
       <rect v-else class="qic" width="14" height="14" x="-7" y="-7" />
@@ -30,7 +30,7 @@
       y="-8"
     />
     <rect
-      v-else-if="['pw', 'pay-pw', 't', 'bowl-t', 'burn-token', 'brainstone'].includes(kind)"
+      v-else-if="['pw', 'pay-pw', 't', 'ta3', 'bowl-t', 'burn-token', 'brainstone'].includes(kind)"
       class="power"
       width="15"
       height="15"
@@ -39,6 +39,16 @@
       x="-7.5"
       y="-7.5"
     />
+    <!-- Xenos's free action (1 ore -> 1 power token in bowl 3) otherwise renders identically to the
+         base game's bowl-1 version - this badge is the only visual difference between them. -->
+    <g v-if="kind === 'ta3'" class="token-area-badge">
+      <circle cx="5.5" cy="-5.5" r="3.2" />
+      <text x="5.5" y="-4.3">3</text>
+    </g>
+    <g v-else-if="kind === 'power-ring'" class="power-ring">
+      <circle r="7" />
+      <circle r="3.5" />
+    </g>
     <polygon
       points="-7.5,3 -3,7.5 3,7.5 7.5,3 7.5,-3 3,-7.5 -3,-7.5 -7.5,-3"
       v-else-if="kind == 'k'"
@@ -54,6 +64,12 @@
       :flat="flat"
       :faction="faction"
     />
+    <template v-else-if="kind == 'instant-gaiaforming'">
+      <Building building="gf" transform="translate(-8, 0) scale(1.5)" :flat="flat" :faction="faction" />
+      <line x1="-3" y1="0" x2="5" y2="0" stroke="black" stroke-width="1.2" />
+      <polygon points="5,0 1,-3 1,3" fill="black" />
+      <circle class="gaia" cx="9" cy="0" r="5.5" stroke="#111" stroke-width="0.9" />
+    </template>
     <g v-else-if="kind == 'swap-PI'" transform="scale(-1,1)">
       <Building faction="ambas" building="m" transform="translate(-8.5, 0) scale(1.5)" :flat="flat" />
       <Building faction="ambas" building="PI" transform="translate(6, 0) scale(1.5)" :flat="flat" />
@@ -80,6 +96,13 @@
       <template v-else-if="count === 2">
         <image xlink:href="../assets/resources/dig-arrow.svg" width="14" :height="(325 / 308) * 14" x="-13" y="-7" />
         <image xlink:href="../assets/resources/dig-arrow.svg" width="14" :height="(325 / 308) * 14" x="-9" y="-2" />
+      </template>
+      <!-- Lost Fleet's "terra" Federation token (RULES_CLARIFICATIONS.md §G5) grants up to 3 free
+           terraforming steps - one more than any base-game source, so this case didn't exist before. -->
+      <template v-else-if="count === 3">
+        <image xlink:href="../assets/resources/dig-arrow.svg" width="14" :height="(325 / 308) * 14" x="-14" y="-9" />
+        <image xlink:href="../assets/resources/dig-arrow.svg" width="14" :height="(325 / 308) * 14" x="-10" y="-4" />
+        <image xlink:href="../assets/resources/dig-arrow.svg" width="14" :height="(325 / 308) * 14" x="-6" y="1" />
       </template>
     </template>
     <template v-else-if="kind === 'd'">
@@ -195,6 +218,7 @@
             'pw',
             'pay-pw',
             't',
+            'ta3',
             'bowl-t',
             'burn-token',
             'tg',
@@ -210,9 +234,9 @@
         kind === 'tradeBonus' ||
         kind === 'tradeDiscount'
       "
-      :class="{ plus: count === '+' }"
+      :class="{ plus: count === '+', overdrawn: typeof count === 'number' && count < 0 }"
       :text-decoration="kind === 'burn-token' ? 'line-through' : ''"
-      >{{ kind === "t" && count > 0 ? "+" : "" }}{{ count }}</text
+      >{{ !noPlus && (kind === "t" || kind === "ta3") && count > 0 ? "+" : "" }}{{ count }}</text
     >
     <text x="0" y="0" v-if="kind == 'brainstone'">B</text>
   </g>
@@ -253,6 +277,17 @@ export default class Resource extends Vue {
   @Prop()
   tooltip: string;
 
+  /** Show a "+" before the count (kind "r" only) - true when this icon represents a gain, not a raw total. */
+  @Prop({ default: false })
+  plus: boolean;
+
+  /** Suppress the automatic "+" normally shown for a positive "t"/"ta3" count - for the rare case
+   * where a token count of this kind is a cost being paid, not income being gained, so it should
+   * read as a plain number, matching every other cost icon (e.g. "2c 1o" building costs never get
+   * a sign at all). */
+  @Prop({ default: false })
+  noPlus: boolean;
+
   get flat() {
     return this.$store.state.preferences.flatBuildings;
   }
@@ -261,6 +296,15 @@ export default class Resource extends Vue {
 
 <style lang="scss">
 g.resource {
+  // Analysis mode (ANALYSIS_MODE_PLAN.md §12) is the only way a resource count goes below zero: the
+  // sandbox seat keeps its real numbers and is allowed to overspend them, and this is the signal that
+  // it has. One rule covers every surface that renders a count - the player board and the mobile
+  // sticky resource bar both go through this component.
+  text.overdrawn {
+    fill: var(--oxide, #d92626);
+    font-weight: bold;
+  }
+
   &.no-tooltip {
     pointer-events: none;
   }
@@ -286,6 +330,29 @@ g.resource {
 
   .power {
     fill: var(--res-power);
+  }
+
+  .token-area-badge {
+    pointer-events: none;
+
+    circle {
+      fill: white;
+      stroke: #333;
+      stroke-width: 0.5;
+    }
+
+    text {
+      font-size: 5px;
+      font-weight: bold;
+      fill: #333;
+      text-anchor: middle;
+    }
+  }
+
+  .power-ring {
+    fill: none;
+    stroke: var(--protoplanet);
+    stroke-width: 2.2px;
   }
 
   .gaia {

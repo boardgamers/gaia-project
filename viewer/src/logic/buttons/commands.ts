@@ -8,12 +8,21 @@ import { deadEndButton } from "./dead-end";
 import { declineButton } from "./decline";
 import { federationButton, federationTypeButtons } from "./federation";
 import { hexSelectionButton } from "./hex";
+import {
+  chooseArtifactTokenButton,
+  examineArtifactButton,
+  exploreButton,
+  instantGaiaformingButton,
+  placePowerRingButton,
+  spaceshipActionButton,
+} from "./lost-fleet";
 import { endTurnButton, passButton } from "./pass";
 import { brainstoneButtons, chargePowerButtons } from "./power";
 import { researchButtons, techTiles } from "./research";
 import { sectorRotationButton, setupButton } from "./setup";
 import { moveShipButton } from "./ships";
 import { finalizeShortcutsAndParents } from "./shortcuts";
+import { chooseTinkeringTileButton } from "./tinkering";
 import { AvailableConversions, CommandController } from "./types";
 import { autoClickButton, hexMap } from "./utils";
 
@@ -66,6 +75,15 @@ function commandButton(
     case Command.ChooseRoundBooster:
       return [passButton(controller, engine, player, command)];
 
+    case Command.ChooseTinkeringTile:
+      return [chooseTinkeringTileButton(command)];
+
+    case Command.Explore:
+      return [exploreButton(command)];
+
+    case Command.SpaceshipAction:
+      return [spaceshipActionButton(command)];
+
     case Command.UpgradeResearch:
       return researchButtons(command.data.tracks, controller, player, engine.phase, engine.expansions);
 
@@ -76,6 +94,9 @@ function commandButton(
       return [
         techTiles(controller, command.name, "Pick tech tile to cover", command.data.tiles, null, engine.expansions),
       ];
+
+    case Command.ChooseArtifactToken:
+      return [chooseArtifactTokenButton(command)];
 
     case Command.ChargePower:
       return chargePowerButtons(command, engine, player);
@@ -101,6 +122,15 @@ function commandButton(
 
     case Command.Special:
       return [specialActionsButton(command, player, controller)];
+
+    case Command.GaiaFormTransdim:
+      return [instantGaiaformingButton(controller, engine, command)];
+
+    case Command.ExamineArtifact:
+      return [examineArtifactButton(command)];
+
+    case Command.PlacePowerRing:
+      return [placePowerRingButton(controller, engine, command)];
 
     case Command.EndTurn:
       return [endTurnButton(command, player)];
@@ -132,6 +162,9 @@ function commandButton(
           buttons: federationTypeButtons(command.data.tiles, player),
         }),
       ];
+
+    default:
+      return [];
   }
 }
 
@@ -146,7 +179,15 @@ export function commandButtons(
   const conversions: AvailableConversions = {};
   const ret: ButtonData[] = [];
 
-  for (const command of commands.filter((c) => c.name != Command.ChooseFaction)) {
+  for (const command of commands.filter(
+    (c) =>
+      c.name != Command.ChooseFaction &&
+      c.name != Command.BanFaction &&
+      c.name != Command.SilentBid &&
+      // Preference Split bidding has its own panel (PreferenceSplitBid.vue), because every seat
+      // bids at once and this button list only ever renders for the seat on turn.
+      c.name != Command.PreferenceBid
+  )) {
     ret.push(...commandButton(command, engine, player, commands, conversions, controller));
   }
 

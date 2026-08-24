@@ -46,7 +46,7 @@ export const createSimpleSourceFactories = (
     federationsSourceFactory(expansion),
     baseTechSourceFactory(expansion),
     advancedTechSourceFactory(advTechTiles),
-    finalScoringSourceFactory(finalTiles),
+    finalScoringSourceFactory(finalTiles, expansion),
   ]
     .concat(balanceSheetResources.map((r) => balanceSheetResourceFactory(r, expansion)))
     .concat(balanceSheetEventSources(expansion).map((s) => balanceSheetEventSourceFactory(s, expansion)));

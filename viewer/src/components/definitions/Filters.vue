@@ -109,7 +109,7 @@
   </defs>
 </template>
 <script lang="ts">
-import { Faction, Planet } from "@gaia-project/engine";
+import { Expansion, Faction, Planet } from "@gaia-project/engine";
 import { Component, Vue } from "vue-property-decorator";
 import { factionColor, planetColor } from "../../graphics/utils";
 
@@ -132,7 +132,7 @@ function getDarkness(faction: string): number {
 @Component
 export default class Filters extends Vue {
   get factionData() {
-    const factions = ["gen", "gaia", ...Object.values(Faction)];
+    const factions = ["gen", "gaia", ...Faction.values(Expansion.All)];
     return factions.map((faction) => {
       /* Gaia faction is used for gaia-colored gaia formers for Baltaks */
       const color = faction === "gaia" ? planetColor(Planet.Gaia) : factionColor(faction as Faction);
@@ -151,7 +151,7 @@ export default class Filters extends Vue {
   }
 
   get planetData() {
-    const planets = Object.values(Planet).filter((pl) => pl !== Planet.Empty) as Exclude<Planet, Planet.Empty>[];
+    const planets = Planet.values(Expansion.All).filter((pl) => pl !== Planet.Empty) as Exclude<Planet, Planet.Empty>[];
     return planets.map((planet) => {
       const color = planetColor(planet);
       const darkness = 1;

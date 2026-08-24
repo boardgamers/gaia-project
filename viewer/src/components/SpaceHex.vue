@@ -1,90 +1,17 @@
 <template>
-  <g :id="`${hex}`">
-    <defs>
-      <linearGradient
-        v-for="p in this.planetColors"
-        :key="`lg-${p.planet}`"
-        :id="`federation-gradient-line-${p.planet}`"
-        gradientUnits="userSpaceOnUse"
-        x1="-1"
-        y1="-1"
-        x2="1"
-        y2="1"
-        gradientTransform="rotate(135)"
-      >
-        <stop offset="40%" stop-opacity="0" />
-        <stop offset="50%" stop-opacity="1" :stop-color="p.color" />
-        <stop offset="60%" stop-opacity="0" />
-      </linearGradient>
-
-      <line
-        v-for="p in this.planetColors"
-        :key="`l-${p.planet}`"
-        :id="`federation-line-${p.planet}`"
-        x1="0"
-        y1="0"
-        x2="0"
-        y2="0.9"
-        :stroke="`url(#federation-gradient-line-${p.planet})`"
-        stroke-width="1"
-        opacity=".5"
-      />
-
-      <linearGradient
-        v-for="p in this.planetColors"
-        :key="`blg-${p.planet}`"
-        :id="`federation-gradient-big-line-${p.planet}`"
-        gradientUnits="userSpaceOnUse"
-        x1="-1"
-        y1="-1"
-        x2="1"
-        y2="1"
-        gradientTransform="rotate(135)"
-      >
-        <stop offset="10%" stop-opacity="0" />
-        <stop offset="50%" stop-opacity="1" :stop-color="p.color" />
-        <stop offset="90%" stop-opacity="0" />
-      </linearGradient>
-
-      <line
-        v-for="p in this.planetColors"
-        :key="`bl-${p.planet}`"
-        :id="`federation-big-line-${p.planet}`"
-        x1="0"
-        y1="0"
-        x2="0"
-        y2="0.9"
-        :stroke="`url(#federation-gradient-big-line-${p.planet})`"
-        stroke-width="1"
-      />
-
-      <radialGradient
-        v-for="p in this.planetColors"
-        :key="`rg-${p.planet}`"
-        :id="`federation-gradient-arc-${p.planet}`"
-        gradientUnits="userSpaceOnUse"
-        cx="0"
-        cy="0"
-        r="3"
-      >
-        <stop offset="41%" stop-opacity="0" />
-        <stop offset="50%" stop-opacity=".5" :stop-color="p.color" />
-        <stop offset="59%" stop-opacity="0" />
-      </radialGradient>
-
-      <path
-        v-for="p in this.planetColors"
-        :key="`arc-${p.planet}`"
-        :id="`federation-arc-${p.planet}`"
-        d="M 1.5 0 A 1.5 1.5 0 0 0 0.7500000000000002 -1.299038105676658"
-        fill="none"
-        :stroke="`url(#federation-gradient-arc-${p.planet})`"
-        stroke-width=".7"
-        transform="translate(-1.52,.86)"
-      />
-    </defs>
+  <g :id="`${hex}`" class="space-hex-cell">
     <title v-text="tooltip" />
     <use xlink:href="#space-hex" :class="polygonClasses(hex)" @click="hexClick(hex)" />
+    <!-- An opponent's move since the viewer's last turn landed on this hex: fill the whole cell gold.
+         Drawn right on top of the cell's own fill and before everything else, so the federation lines,
+         the planet and the buildings still read normally on top of it. -->
+    <use
+      v-if="recentOpponentMove"
+      xlink:href="#space-hex"
+      class="recent-opponent-move"
+      :data-recent-opponent-move="recentOpponentMove.command"
+      pointer-events="none"
+    />
     <use
       v-for="(l, i) in federationLines"
       :key="`fl-${i}`"
@@ -92,98 +19,141 @@
       :transform="`rotate(${l.rotate})`"
       pointer-events="none"
     />
-    <text class="sector-name" v-if="isCenter">
-      {{ hex.data.sector[0] === "s" ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector) }}
-    </text>
     <use v-if="powerHighlightClass" xlink:href="#space-hex" :class="['space-hex-federation', powerHighlightClass]" />
-    <Planet
-      v-if="showPlanet"
-      :planet="hex.data.planet"
-      :faction="faction(hex.data.player)"
-      :classes="planetClasses(hex)"
-    />
-    <Building
-      style="stroke-width: 10"
-      v-if="hex.data.building"
-      :building="hex.data.building"
-      :faction="faction(hex.data.player)"
-      outline
-      :flat="flat"
-      transform="scale(0.1)"
-    />
-    <Building
-      style="stroke-width: 10"
-      v-if="highlightBuilding"
-      :building="highlightBuilding.building"
-      :faction="faction(highlightBuilding.player)"
-      outline
-      :flat="flat"
-      transform="scale(0.1)"
-    />
-    <Building
-      style="stroke-width: 10"
-      v-if="hex.data.additionalMine !== undefined"
-      :faction="faction(hex.data.additionalMine)"
-      building="m"
-      transform="translate(0.4, 0.2) scale(0.09)"
-      class="additionalMine"
-      :flat="flat"
-      outline
-    />
-    <Building
-      v-for="(s, i) in ships"
-      :key="`b-${i}`"
-      :building="s.type"
-      :ship-moved="s.moved"
-      :faction="faction(s.player)"
-      outline
-      :flat="flat"
-      :transform="shipTransform(i)"
-    />
-    <Building
-      v-for="(p, i) in hex.customPosts"
-      :key="`cp-${i}`"
-      building="customsPost"
-      :faction="faction(p)"
-      outline
-      :flat="flat"
-      :transform="radiusTransform(p, 0.05)"
-    />
-    <g v-for="(p, i) in hex.tradeTokens" :key="`tt-${i}`">
-      <Planet :planet="playerPlanet(p)" :transform="radiusTransform(p, 0.35)" />
-    </g>
     <use
       v-if="mapModeHighlight !== null"
       xlink:href="#space-hex"
       :class="['space-hex-federation', 'planet', 'planet-fill', playerPlanet(mapModeHighlight)]"
     />
+    <!-- Lost Fleet spaceship hex: fill the entire hex with the ship's identity color (rulebook
+         page 7 - Twilight purple / Rebellion brown / T F Mars grey / Eclipse yellow). Drawn here,
+         outside the `contentRotation` counter-rotation below, so the hexagon stays aligned to the
+         cell's own outline; the upright letter lives in the counter-rotated group instead. -->
+    <use
+      v-if="lostFleetSpaceship"
+      xlink:href="#space-hex"
+      class="lost-fleet-spaceship__hex"
+      :data-ship="lostFleetSpaceship"
+      :style="{ fill: lostFleetSpaceshipColor }"
+    />
+    <!-- Content that must stay upright regardless of the whole-board `contentRotation` screen-fit
+         rotation (numbers, labels, buildings, gaiaformers, ships) - counter-rotated here so it
+         doesn't inherit that purely-cosmetic tilt. This deliberately does NOT cancel out any
+         per-sector setup rotation (chosen by the player during map setup, see Commands.vue's
+         `buildRotateMove`) - that one is a real "physically rotated tile" state and its content
+         (incl. the sector number) is supposed to visually rotate with it, same as a real cardboard
+         tile would. -->
+    <g :transform="`rotate(${-contentRotation})`">
+      <g
+        v-if="lostFleetSectorBadge && !lostFleetSpaceship"
+        :class="['lost-fleet-sector-badge', `lost-fleet-sector-badge--${lostFleetSectorBadge.kind}`]"
+        :data-sector-type="lostFleetSectorBadge.kind"
+        transform="translate(-0.84,-0.79)"
+      >
+        <rect :width="badgeWidth" height="0.34" rx="0.12" ry="0.12" />
+        <text :x="badgeWidth / 2" y="0.17">{{ lostFleetSectorBadge.label }}</text>
+      </g>
+      <text class="sector-name" v-if="isCenter" x="0" y="0" dy="0.35">
+        {{ hex.data.sector[0] === "s" ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector) }}
+      </text>
+      <g v-if="lostFleetSpaceship" class="lost-fleet-spaceship">
+        <!-- y=0 + a plain-number dy (user units, ≈0.35 * font-size) centers the uppercase glyph the
+             same in every browser. This deliberately avoids `dy="…em"` (mobile WebKit drops the em
+             unit, leaving the letter on the baseline / high in the hex) and `dominant-baseline`
+             (iOS Safari renders it off) - the same proven mechanism the `.sector-name` labels use. -->
+        <text class="lost-fleet-spaceship__label" y="0" dy="0.315">{{ lostFleetSpaceshipLabel }}</text>
+      </g>
+      <Planet
+        v-if="showPlanet"
+        :planet="hex.data.planet"
+        :faction="faction(hex.data.player)"
+        :classes="planetClasses(hex)"
+      />
+      <Building
+        style="stroke-width: 10"
+        v-if="hex.data.building"
+        :building="hex.data.building"
+        :faction="faction(hex.data.player)"
+        outline
+        :flat="flat"
+        transform="scale(0.1)"
+      />
+      <Building
+        style="stroke-width: 10"
+        v-if="highlightBuilding"
+        :building="highlightBuilding.building"
+        :faction="faction(highlightBuilding.player)"
+        outline
+        :flat="flat"
+        transform="scale(0.1)"
+      />
+      <Building
+        style="stroke-width: 10"
+        v-if="hex.data.additionalMine !== undefined"
+        :faction="faction(hex.data.additionalMine)"
+        building="m"
+        transform="translate(0.4, 0.2) scale(0.09)"
+        class="additionalMine"
+        :flat="flat"
+        outline
+      />
+      <Building
+        v-for="(s, i) in ships"
+        :key="`b-${i}`"
+        :building="s.type"
+        :ship-moved="s.moved"
+        :faction="faction(s.player)"
+        outline
+        :flat="flat"
+        :transform="shipTransform(i)"
+      />
+      <Building
+        v-for="(p, i) in hex.customPosts"
+        :key="`cp-${i}`"
+        building="customsPost"
+        :faction="faction(p)"
+        outline
+        :flat="flat"
+        :transform="radiusTransform(p, 0.05)"
+      />
+      <g v-for="(p, i) in hex.tradeTokens" :key="`tt-${i}`">
+        <Planet :planet="playerPlanet(p)" :transform="radiusTransform(p, 0.35)" />
+      </g>
+    </g>
   </g>
 </template>
 
 <script lang="ts">
 import Engine, {
   Building as BuildingEnum,
+  classifySectorId,
   Faction,
-  factionPlanet,
   GaiaHex,
   SpaceMap as ISpaceMap,
+  LostFleetSectorType,
   Planet as PlanetEnum,
   Player,
   PlayerEnum,
+  Reward,
   shipsInHex,
+  Spaceship,
 } from "@gaia-project/engine";
 import { Ship } from "@gaia-project/engine/src/enums";
+import { max } from "lodash";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { HexSelection, HighlightHex, HighlightHexData, WarningsPreference } from "../data";
 import { MapMode, MapModeType } from "../data/actions";
 import { buildingData, buildingName } from "../data/building";
 import { factionName } from "../data/factions";
-import planets, { planetNames } from "../data/planets";
+import { planetNames } from "../data/planets";
+import { splitCostBonus } from "../data/resources";
+import { spaceshipColors } from "../data/spaceships";
 import { isWarningEnabled } from "../data/warnings";
 import { corners, FederationLine, playerFederationLines } from "../graphics/hex";
+import { factionPiecePlanet } from "../graphics/utils";
 import { isFree } from "../logic/buttons/utils";
-import { max } from "../logic/lodash-utils";
+import { CommandObject, hexMoveLabel } from "../logic/recent";
 import { leechPlanets, radiusTranslate, upgradableBuildingsOfOtherPlayers } from "../logic/utils";
 import Building from "./Building.vue";
 import Planet from "./Planet.vue";
@@ -196,13 +166,28 @@ type BuildingOverride = { building: BuildingEnum; player: PlayerEnum };
   },
 })
 export default class SpaceHex extends Vue {
+  private readonly lostFleetSpaceshipLabels: Record<Spaceship, string> = {
+    [Spaceship.Twilight]: "T",
+    [Spaceship.Rebellion]: "R",
+    [Spaceship.TFMars]: "M",
+    [Spaceship.Eclipse]: "E",
+  };
+
+  private readonly lostFleetSpaceshipNames: Record<Spaceship, string> = {
+    [Spaceship.Twilight]: "Twilight",
+    [Spaceship.Rebellion]: "Rebellion",
+    [Spaceship.TFMars]: "T F Mars",
+    [Spaceship.Eclipse]: "Eclipse",
+  };
+
   @Prop()
   hex: GaiaHex;
 
   @Prop()
   isCenter: boolean;
 
-  planetColors = Object.entries(planets).map((e) => ({ planet: e[0], color: e[1].color }));
+  @Prop({ default: 0 })
+  contentRotation: number;
 
   shipTransform(index: number): string {
     switch (this.ships.length) {
@@ -283,6 +268,11 @@ export default class SpaceHex extends Vue {
 
   polygonClasses(hex: GaiaHex): string[] {
     const ret = ["space-hex"];
+    if (this.sectorType === LostFleetSectorType.Interspace) {
+      ret.push("interspace");
+    } else if (this.sectorType === LostFleetSectorType.DeepSpace) {
+      ret.push("deep-space");
+    }
 
     const selection = this.selection;
     if (this.mapModes.length > 0) {
@@ -335,8 +325,17 @@ export default class SpaceHex extends Vue {
 
   cost(hex: GaiaHex) {
     const data = this.highlightedHexes?.get(hex);
+    if (!data || isFree(data.cost)) {
+      return "";
+    }
 
-    return data && !isFree(data.cost) ? data.cost.replace(/,/g, ", ") : "";
+    // A cost can contain a negative-count Victory Point "bonus" entry (e.g. the Protoplanet mine
+    // bonus) that nets as a real VP gain when paid - show it as a distinct "+N VP bonus" note
+    // instead of a literal "-N", which reads backwards. See data/resources.ts's splitCostBonus.
+    const { cost, bonus } = splitCostBonus(Reward.parse(data.cost));
+    const costText = cost.map((r) => r.toString()).join(", ");
+    const bonusText = bonus.length > 0 ? ` (+${bonus.reduce((sum, r) => sum + r.count, 0)} VP bonus)` : "";
+    return costText + bonusText;
   }
 
   hexClick(hex: GaiaHex) {
@@ -382,6 +381,72 @@ export default class SpaceHex extends Vue {
 
   get planet() {
     return this.hex.data.planet;
+  }
+
+  get sectorType(): LostFleetSectorType {
+    return classifySectorId(this.hex.data.sector);
+  }
+
+  get lostFleetSpaceship(): Spaceship | null {
+    return this.hex.data.spaceship ?? null;
+  }
+
+  get lostFleetSpaceshipLabel(): string {
+    return this.lostFleetSpaceship ? this.lostFleetSpaceshipLabels[this.lostFleetSpaceship] : "";
+  }
+
+  get lostFleetSpaceshipColor(): string {
+    return this.lostFleetSpaceship ? spaceshipColors[this.lostFleetSpaceship] : "";
+  }
+
+  // Deep Space tiles no longer render a per-hex badge here - SpaceMap.vue renders one big
+  // sector-style label centered across all 3 hexes of the tile instead (see its
+  // `deepSpaceLabels` getter), matching the sector-number styling and staying clear of whichever
+  // of the 3 hexes happens to hold a planet.
+  get lostFleetSectorBadge(): { kind: "interspace"; label: string } | null {
+    if (this.sectorType === LostFleetSectorType.Interspace) {
+      // Interspace tiles sit between sectors and have no id printed on the physical tile, so
+      // reference them by which sectors they border (e.g. "IS123" borders sectors 1, 2, 3)
+      // instead of an arbitrary internal id.
+      return { kind: "interspace", label: this.interspaceBorderLabel };
+    }
+    return null;
+  }
+
+  get badgeWidth(): number {
+    const label = this.lostFleetSectorBadge?.label ?? "";
+    return Math.max(0.72, 0.22 + label.length * 0.13);
+  }
+
+  /**
+   * Sorted, deduped sector numbers this Interspace hex is grid-adjacent to, e.g. "IS123". Space
+   * sector ids are never plain digits for sectors 5/6/7 - they're always a face-letter variant
+   * (`map.ts`'s `s5`/`s5b`/`s6`/`s6b`/`s7`/`s7b` name to "5A"/"5B"/"6A"/"6B"/"7A"/"7B", one face or
+   * the other always in play, per RULES_CLARIFICATIONS.md §H4/H1) - so the trailing face letter
+   * must be stripped, not just an occasional leading "s", or it leaks into the label (e.g. the old
+   * "IS1235B" bug) and breaks the "named for the 3 adjacent sector numbers" convention.
+   */
+  private get interspaceBorderLabel(): string {
+    const sectorNumber = (sector: string): string => sector.replace(/^s/, "").replace(/[A-Za-z]+$/, "");
+    const borders = new Set<string>();
+    for (const neighbour of this.map.grid.neighbours(this.hex)) {
+      if (classifySectorId(neighbour.data.sector) === LostFleetSectorType.Space) {
+        borders.add(sectorNumber(neighbour.data.sector));
+      }
+    }
+    const sorted = [...borders].sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+    return "IS" + sorted.join("");
+  }
+
+  private get sectorTypeLabel(): string {
+    switch (this.sectorType) {
+      case LostFleetSectorType.Interspace:
+        return "Interspace";
+      case LostFleetSectorType.DeepSpace:
+        return "Deep Space";
+      default:
+        return "Space";
+    }
   }
 
   get mapModeHighlight(): PlayerEnum | null {
@@ -452,7 +517,7 @@ export default class SpaceHex extends Vue {
   }
 
   playerPlanet(player: PlayerEnum): PlanetEnum {
-    return factionPlanet(this.faction(player));
+    return factionPiecePlanet(this.faction(player));
   }
 
   get highlightedHexes(): HighlightHexData | null {
@@ -465,6 +530,10 @@ export default class SpaceHex extends Vue {
 
   currentRound(hex: GaiaHex): boolean {
     return this.$store.getters.currentRoundHexes.has(hex);
+  }
+
+  get recentOpponentMove(): CommandObject | null {
+    return this.$store.getters.recentOpponentHexes.get(this.hex) ?? null;
   }
 
   get selection(): HexSelection | null {
@@ -496,6 +565,9 @@ export default class SpaceHex extends Vue {
     }
     if (highlightHex?.rewards) {
       messages.push(`Reward: ${highlightHex.rewards}`);
+    }
+    if (this.recentOpponentMove) {
+      messages.push(`Recent opponent move: ${hexMoveLabel(this.recentOpponentMove)}`);
     }
 
     const buildingLabel = (player: Player, building: BuildingEnum) => {
@@ -530,7 +602,11 @@ export default class SpaceHex extends Vue {
       messages.push(`Warning: ${w}`);
     }
     const coord = `Coordinates: ${hex}`;
-    return [coord, planet].concat(buildings).concat(ships).concat(messages).join(" ");
+    const sector = `Sector type: ${this.sectorTypeLabel}`;
+    const spaceship = this.lostFleetSpaceship
+      ? `Lost Fleet spaceship: ${this.lostFleetSpaceshipNames[this.lostFleetSpaceship]}`
+      : null;
+    return [coord, sector, spaceship, planet].concat(buildings).concat(ships).concat(messages).join(" ");
   }
 }
 </script>
@@ -544,6 +620,16 @@ svg {
 
     &.pointer {
       cursor: pointer;
+    }
+
+    &.interspace {
+      fill: #203760;
+      stroke-dasharray: 0.18 0.08;
+    }
+
+    &.deep-space {
+      fill: #111c3d;
+      stroke: #7b88b6;
     }
 
     &.bold {
@@ -586,6 +672,12 @@ svg {
     pointer-events: none;
   }
 
+  .recent-opponent-move {
+    fill: var(--recent);
+    stroke: none;
+    pointer-events: none;
+  }
+
   .leech {
     &.empty {
       fill: white;
@@ -615,11 +707,56 @@ svg {
 
   .sector-name {
     text-anchor: middle;
+    // `dominant-baseline: central` alone is not reliably centered across every renderer (notably
+    // WebKit/Safari, incl. mobile) - the `dy` on the element itself (see the templates that use
+    // this class) is the actual vertical-centering mechanism; this is kept only as a safe fallback
+    // for renderers that ignore `dy` on a bare, unspanned `<text>`.
     dominant-baseline: central;
     font-size: 1px;
     fill: white;
     opacity: 0.75;
     pointer-events: none;
+  }
+
+  .lost-fleet-sector-badge {
+    pointer-events: none;
+
+    rect {
+      stroke: rgb(255 255 255 / 35%);
+      stroke-width: 0.04px;
+    }
+
+    text {
+      fill: white;
+      font-size: 0.18px;
+      font-weight: 700;
+      text-anchor: middle;
+      dominant-baseline: central;
+      letter-spacing: 0.03em;
+    }
+
+    &--interspace rect {
+      fill: #31507f;
+    }
+  }
+
+  // The whole-hex ship-color fill (see template). `fill` is set per-ship inline via
+  // spaceshipColors; pointer-events off so it never intercepts the hex's own click.
+  .lost-fleet-spaceship__hex {
+    stroke: #172e62;
+    stroke-width: 0.03;
+    pointer-events: none;
+  }
+
+  .lost-fleet-spaceship {
+    pointer-events: none;
+
+    &__label {
+      fill: #17161a;
+      text-anchor: middle;
+      font-size: 0.9px;
+      font-weight: 800;
+    }
   }
 }
 </style>

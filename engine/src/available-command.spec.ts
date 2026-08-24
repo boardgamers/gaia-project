@@ -12,7 +12,7 @@ describe("Available commands", () => {
     it("should show all factions at the beginning", () => {
       const engine = new Engine();
 
-      expect(choosableFactions(engine)).to.have.members(Object.values(Faction));
+      expect(choosableFactions(engine)).to.have.members(Faction.values(Expansion.None));
     });
 
     it("should show 2 less factions after one is selected", () => {
@@ -26,7 +26,7 @@ describe("Available commands", () => {
 
       expect(factions).to.not.include(Faction.Gleens);
       expect(factions).to.not.include(Faction.Xenos);
-      expect(factions).to.have.length(Object.values(Faction).length - 2);
+      expect(factions).to.have.length(Faction.values(Expansion.None).length - 2);
     });
 
     describe("when randomFactions is enabled", () => {
@@ -105,6 +105,28 @@ describe("Available commands", () => {
       expect(possible()).to.include("power1");
       d.knowledge = 15;
       expect(possible()).to.not.include("power1");
+    });
+
+    it("should exclude the research-board Q.I.C. actions (qic1-3) under Lost Fleet (RULES_CLARIFICATIONS.md §E4/§K3)", () => {
+      const d = new PlayerData();
+      d.qics = 10;
+      d.power.area3 = 9;
+      const player = { data: d } as Player;
+
+      const baseActions = {};
+      BoardAction.values(Expansion.None).forEach((pos: BoardAction) => {
+        baseActions[pos] = null;
+      });
+      const baseNames = possibleBoardActions(baseActions, player, false)[0].data.poweracts.map((a) => a.name);
+      expect(baseNames).to.include.members(["qic1", "qic3", "power1"]);
+
+      const lostFleetActions = {};
+      BoardAction.values(Expansion.LostFleet).forEach((pos: BoardAction) => {
+        lostFleetActions[pos] = null;
+      });
+      const lostFleetNames = possibleBoardActions(lostFleetActions, player, false)[0].data.poweracts.map((a) => a.name);
+      expect(lostFleetNames).to.not.include.members(["qic1", "qic2", "qic3"]);
+      expect(lostFleetNames).to.include("power1");
     });
   });
 });

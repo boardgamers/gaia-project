@@ -1,11 +1,23 @@
-import { AssertionError } from "assert";
 import { expect } from "chai";
 import { BoardAction, Booster, Building, Player } from "..";
 import { version } from "../package.json";
 import Engine, { AuctionVariant, createMoveToShow } from "./engine";
-import { Command, Condition, Faction, Operator, Phase, Planet, Player as PlayerEnum } from "./enums";
+import {
+  AdvTechTile,
+  AdvTechTilePos,
+  Command,
+  Condition,
+  Faction,
+  Operator,
+  Phase,
+  Planet,
+  Player as PlayerEnum,
+  Resource,
+} from "./enums";
 import { autoChargePower } from "./move/auto";
 import PlayerData, { MoveTokens } from "./player-data";
+import { techTileEventWithSource } from "./tiles/techs";
+import { AssertionError } from "./utils/assert";
 
 describe("Engine", () => {
   it("should throw when trying to build on the wrong place", () => {
@@ -57,6 +69,125 @@ describe("Engine", () => {
     `);
 
     expect(() => new Engine(moves)).to.not.throw();
+  });
+
+  [Faction.Darkanians, Faction.SpaceGiants].forEach((faction) => {
+    it(`should place ${faction} after base-game factions finish setup in Lost Fleet`, () => {
+      const engine = new Engine(["init 2 lost-fleet-one-mine"], { lostFleet: true });
+
+      engine.move(`p1 faction ${faction}`);
+      engine.move("p2 faction terrans");
+
+      expect(engine.phase).to.equal(Phase.SetupBuilding);
+      expect([engine.currentPlayer, ...engine.turnOrder]).to.eql([
+        PlayerEnum.Player2,
+        PlayerEnum.Player2,
+        PlayerEnum.Player1,
+      ]);
+    });
+  });
+
+  it("should finish base-game setup before expansion-faction setup in Lost Fleet", () => {
+    const engine = new Engine(["init 3 lost-fleet-stage-order"], { lostFleet: true });
+
+    engine.move(`p1 faction ${Faction.Darkanians}`);
+    engine.move(`p2 faction ${Faction.Terrans}`);
+    engine.move(`p3 faction ${Faction.Xenos}`);
+
+    expect(engine.phase).to.equal(Phase.SetupBuilding);
+    expect([engine.currentPlayer, ...engine.turnOrder]).to.eql([
+      PlayerEnum.Player2,
+      PlayerEnum.Player3,
+      PlayerEnum.Player3,
+      PlayerEnum.Player2,
+      PlayerEnum.Player3,
+      PlayerEnum.Player1,
+    ]);
+  });
+
+  it("should not grant the Protoplanet VP bonus for Moweyds' starting placement", () => {
+    const engine = new Engine(["init 2 lost-fleet-moweyds-starting-vp"], { lostFleet: true });
+    engine.move(`p1 faction ${Faction.Moweyds}`);
+    engine.move(`p2 faction ${Faction.Terrans}`);
+
+    while (engine.playerToMove !== PlayerEnum.Player1) {
+      const command = engine.generateAvailableCommandsIfNeeded().find((entry) => entry.name === Command.Build) as any;
+      const building = command.data.buildings[0];
+      engine.move(`p${engine.playerToMove + 1} build ${building.building} ${building.coordinates}`);
+    }
+
+    const player = engine.player(PlayerEnum.Player1);
+    const beforeVp = player.data.victoryPoints;
+    const command = engine.generateAvailableCommandsIfNeeded().find((entry) => entry.name === Command.Build) as any;
+    const building = command.data.buildings[0];
+    expect(engine.map.getS(building.coordinates).data.planet).to.equal(Planet.Protoplanet);
+
+    engine.move(`p1 build ${building.building} ${building.coordinates}`);
+
+    expect(player.data.victoryPoints).to.equal(beforeVp);
+  });
+
+  it("should grant Moweyds both Protoplanet and Terra advanced-tech VP after setup", () => {
+    const engine = new Engine(["init 2 moweyds-protoplanet-terra-adv"], { lostFleet: true });
+    const player = engine.player(PlayerEnum.Player1);
+
+    player.faction = Faction.Moweyds;
+    player.loadFaction(null, engine.expansions);
+    player.data.credits = 20;
+    player.data.ores = 20;
+    player.loadEvents(techTileEventWithSource(AdvTechTile.Terra, AdvTechTilePos.Intelligence));
+
+    const hex = [...engine.map.grid.values()].find((entry) => entry.data.planet === Planet.Protoplanet);
+    expect(hex, "need an unoccupied Protoplanet on the board").to.not.equal(undefined);
+
+    const check = player.canBuild(engine.map, hex, Planet.Protoplanet, Building.Mine, false, engine.replay);
+    expect(check.steps).to.equal(3);
+    expect(check.cost.find((reward) => reward.type === Resource.VictoryPoint)?.count ?? 0).to.equal(-6);
+
+    const beforeVp = player.data.victoryPoints;
+    player.build(Building.Mine, hex, check.cost, engine.map, check.steps);
+
+    expect(player.data.victoryPoints - beforeVp).to.equal(12);
+    const latestLog = engine.advancedLog[engine.advancedLog.length - 1];
+    expect(latestLog.changes[Command.Build][Resource.VictoryPoint]).to.equal(6);
+    expect(latestLog.changes[AdvTechTilePos.Intelligence][Resource.VictoryPoint]).to.equal(6);
+  });
+
+  it("should place Ivits after Lost Fleet expansion factions finish setup", () => {
+    const engine = new Engine(["init 3 lost-fleet-ivits-order"], { lostFleet: true });
+
+    engine.move(`p1 faction ${Faction.Ivits}`);
+    engine.move(`p2 faction ${Faction.Terrans}`);
+    engine.move(`p3 faction ${Faction.Darkanians}`);
+
+    expect(engine.phase).to.equal(Phase.SetupBuilding);
+    expect([engine.currentPlayer, ...engine.turnOrder]).to.eql([
+      PlayerEnum.Player2,
+      PlayerEnum.Player2,
+      PlayerEnum.Player3,
+      PlayerEnum.Player1,
+    ]);
+  });
+
+  it("should not consume a Gaiaformer for a starting building on a home Asteroid (fuzzer finding LF-3)", () => {
+    // §E2's Gaiaformer consumption is a cost of the "Build a Mine" ACTION (rulebook p.10);
+    // starting buildings (§B1/§B2, p.13) are placed outside that action and factions own 0
+    // Gaiaformers at setup, so nothing can be consumed. The old unconditional increment
+    // permanently cost Tinkeroids/Darkanians one Gaiaformer of capacity and let the §G3
+    // "former" booster count go negative (-3 VP on pass).
+    const engine = new Engine(["init 2 lost-fleet-one-mine"], { lostFleet: true });
+    engine.move(`p1 faction ${Faction.Darkanians}`);
+    engine.move("p2 faction terrans");
+
+    while (engine.phase === Phase.SetupBuilding) {
+      const command = engine.generateAvailableCommandsIfNeeded().find((c) => c.name === Command.Build) as any;
+      const building = command.data.buildings[0];
+      engine.move(`p${engine.playerToMove + 1} build ${building.building} ${building.coordinates}`);
+    }
+
+    const darkanians = engine.player(PlayerEnum.Player1);
+    expect(darkanians.data.occupied.some((hex) => hex.data.planet === Planet.Asteroid)).to.be.true;
+    expect(darkanians.data.gaiaformersUsedForAsteroid).to.equal(0);
   });
 
   it("should have passedPlayers empty at beginning of a new round", () => {
@@ -274,6 +405,117 @@ describe("Engine", () => {
 
     expect(engine.player(PlayerEnum.Player1).data.victoryPoints).to.equal(130);
     expect(engine.player(PlayerEnum.Player2).data.victoryPoints).to.equal(124);
+  });
+
+  describe("previewAvailableCommandsFor", () => {
+    const setupMoves = `
+      init 2 randomSeed
+      p1 faction terrans
+      p2 faction nevlas
+      terrans build m -1x2
+      nevlas build m -1x0
+      nevlas build m 0x-4
+      terrans build m -4x-1
+      nevlas booster booster7
+      terrans booster booster3
+    `;
+
+    it("returns null for the seat whose turn it already is", () => {
+      const engine = new Engine(parseMoves(setupMoves));
+      expect(engine.phase).to.equal(Phase.RoundMove);
+      expect(engine.playerToMove).to.equal(PlayerEnum.Player1);
+      expect(engine.previewAvailableCommandsFor(PlayerEnum.Player1)).to.equal(null);
+    });
+
+    it("returns the seat's legal commands as if it were their turn", () => {
+      const engine = new Engine(parseMoves(setupMoves));
+      const preview = engine.previewAvailableCommandsFor(PlayerEnum.Player2);
+      expect(preview).to.not.equal(null);
+      expect(preview.some((c) => c.player === PlayerEnum.Player2)).to.equal(true);
+    });
+
+    it("does not mutate the real engine", () => {
+      const engine = new Engine(parseMoves(setupMoves));
+      const before = JSON.stringify(engine);
+      engine.previewAvailableCommandsFor(PlayerEnum.Player2);
+      expect(JSON.stringify(engine)).to.equal(before);
+      expect(engine.playerToMove).to.equal(PlayerEnum.Player1);
+    });
+
+    it("returns null for a seat that has already passed this round", () => {
+      const engine = new Engine(
+        parseMoves(`
+          init 2 randomSeed
+          p1 faction lantids
+          p2 faction gleens
+          p1 build m -4x2
+          p2 build m -2x2
+          p2 build m 1x2
+          p1 build m -4x-1
+          p2 booster booster3
+          p1 booster booster4
+          p1 pass booster5
+        `)
+      );
+      expect(engine.phase).to.equal(Phase.RoundMove);
+      expect(engine.passedPlayers).to.include(PlayerEnum.Player1);
+      expect(engine.previewAvailableCommandsFor(PlayerEnum.Player1)).to.equal(null);
+    });
+
+    it("returns null outside of a running round (e.g. during setup)", () => {
+      const engine = new Engine(parseMoves("init 2 randomSeed\np1 faction terrans"));
+      expect(engine.phase).to.not.equal(Phase.RoundMove);
+      expect(engine.previewAvailableCommandsFor(PlayerEnum.Player2)).to.equal(null);
+    });
+
+    describe("while the round is paused on a leech decision", () => {
+      // An upgrade to a trading station next to the opponent offers them 2 power, which costs a VP
+      // and therefore genuinely pauses the game in Phase.RoundLeech - a mine's free single power is
+      // charged automatically and never stops anything.
+      function leechPausedEngine(): Engine {
+        const engine = new Engine(parseMoves(setupMoves));
+        engine.player(PlayerEnum.Player1).data.credits = 20;
+        engine.player(PlayerEnum.Player1).data.ores = 20;
+        engine.move("terrans build ts -1x2.");
+        engine.generateAvailableCommandsIfNeeded();
+        expect(engine.phase).to.equal(Phase.RoundLeech);
+        expect(engine.playerToMove).to.equal(PlayerEnum.Player2);
+        return engine;
+      }
+
+      it("still previews the off-turn seat's next move-phase turn", () => {
+        const engine = leechPausedEngine();
+        const preview = engine.previewAvailableCommandsFor(PlayerEnum.Player1);
+
+        expect(preview).to.not.equal(null);
+        expect(preview.some((c) => c.name === Command.Build && c.player === PlayerEnum.Player1)).to.equal(true);
+        // The leech decision itself is never what a premove composes against.
+        expect(preview.some((c) => c.name === Command.ChargePower)).to.equal(false);
+      });
+
+      it("does not mutate the paused engine", () => {
+        const engine = leechPausedEngine();
+        const before = JSON.stringify(engine);
+        engine.previewAvailableCommandsFor(PlayerEnum.Player1);
+        expect(JSON.stringify(engine)).to.equal(before);
+      });
+
+      it("returns null for the seat that owes the pending decision", () => {
+        const engine = leechPausedEngine();
+        expect(engine.previewAvailableCommandsFor(PlayerEnum.Player2)).to.equal(null);
+      });
+    });
+
+    it("previews from the income and gaia phases too", () => {
+      for (const phase of [Phase.RoundIncome, Phase.RoundGaia]) {
+        const engine = new Engine(parseMoves(setupMoves));
+        engine.phase = phase;
+
+        const preview = engine.previewAvailableCommandsFor(PlayerEnum.Player2);
+        expect(preview, `expected a preview during ${phase}`).to.not.equal(null);
+        expect(preview.some((c) => c.player === PlayerEnum.Player2)).to.equal(true);
+      }
+    });
   });
 
   describe("fromData", () => {

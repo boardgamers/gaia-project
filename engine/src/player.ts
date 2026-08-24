@@ -1,6 +1,5 @@
-import assert from "assert";
 import { EventEmitter } from "eventemitter3";
-import { Grid, Hex } from "hexagrid";
+import { CubeCoordinates, Grid, Hex } from "hexagrid";
 import { countBy, difference, merge, sum, uniq, uniqWith, zipWith } from "lodash";
 import { topologyOf } from "./algorithms/grid-topology";
 import spanningTree from "./algorithms/spanning-tree";
@@ -16,7 +15,9 @@ import {
   Faction,
   Federation,
   FinalTile,
+  isAcademy,
   isShip,
+  LostFleetEconomySide,
   Operator,
   Phase,
   Planet,
@@ -26,16 +27,25 @@ import {
   Resource,
   Resource as ResourceEnum,
   Ship,
+  Spaceship,
+  SpaceshipFederation,
   TechTile,
   TechTilePos,
+  TinkeringTile,
 } from "./enums";
-import Event, { EventSource } from "./events";
+import Event, { EventSource, isTileOrBoosterSource } from "./events";
 import { factionBoard, FactionBoard, FactionBoardRaw } from "./faction-boards";
 import { FactionBoardVariant } from "./faction-boards/types";
-import { factionPlanet } from "./factions";
+import { factionPlanet, tinkeringTilesForRound, tinkeringTileSpec } from "./factions";
 import { federationCost, FederationInfo, isOutclassedBy, parseFederationLocation } from "./federation";
 import { GaiaHex } from "./gaia-hex";
 import { IncomeSelection } from "./income";
+import {
+  classifySectorId,
+  colonizedDeepSpaceSectorCount,
+  isNewLostFleetSector,
+  LostFleetSectorType,
+} from "./lost-fleet-map";
 import SpaceMap from "./map";
 import { terraformingStepsRequired } from "./planets";
 import PlayerData from "./player-data";
@@ -44,8 +54,10 @@ import Reward from "./reward";
 import { boosterEvents } from "./tiles/boosters";
 import { federationRewards, isGreen } from "./tiles/federations";
 import { finalScorings } from "./tiles/scoring";
+import { spaceshipFederationRewards } from "./tiles/spaceship-federations";
 import { isAdvanced, techTileEvents } from "./tiles/techs";
 import { isVersionOrLater } from "./utils";
+import assert from "./utils/assert";
 
 // 25 satellites total
 // The 2 used on the final scoring board and 1 used in the player order can be replaced by other markers
@@ -62,11 +74,13 @@ export type AutoCharge = "ask" | "decline-cost" | 1 | 2 | 3 | 4 | 5;
 
 export const defaultAutoCharge = 1;
 export const defaultAutoChargeTargetSpendablePower = 0;
+export const defaultAutoChargeMaxPassedRoundLeech = 0;
 
 export class Settings {
   constructor(
     public autoChargePower: AutoCharge = defaultAutoCharge,
     public autoChargeTargetSpendablePower: number = defaultAutoChargeTargetSpendablePower,
+    public autoChargeMaxPassedRoundLeech: number = defaultAutoChargeMaxPassedRoundLeech,
     public autoIncome: boolean = false,
     public autoBrainstone: boolean = false,
     public itarsAutoChargeToArea3: boolean = false
@@ -89,6 +103,9 @@ export enum BuildWarning {
   buildingWillBePartOfFederation = "building-will-be-part-of-federation",
   ambasFederationWithoutPi = "ambas-federation-without-PI",
   ambasSwapIntoFederation = "ambas-swap-into-federation",
+  /** Lost Fleet: rescoring (Twilight's Q.I.C. action, the Federation-shaped Artifact) with no
+   * owned Federation token to rescore - owner ruling 2026-07-03: allowed, but has no effect. */
+  noOwnedFederationToRescore = "no-owned-federation-to-rescore",
 }
 
 export type BuildCheck = { cost: Reward[]; steps: number; warnings: BuildWarning[] };
@@ -118,6 +135,13 @@ export default class Player extends EventEmitter {
   name?: string;
   /** Is the player dropped (i.e. no move) */
   dropped?: boolean;
+  /** Active expansions, set in loadBoard; lets faction-board handlers gate expansion-only abilities. */
+  expansions: Expansion = Expansion.None;
+  /** Total number of players in the game, set in loadBoard; lets faction-board handlers gate
+   * player-count-specific abilities (e.g. Lost Fleet's Lantids adjusted PI tile, §I2). */
+  nbPlayers?: number;
+  /** Lost Fleet's Economy track overlay side, set in loadBoard from the game-wide setup choice (§F1). */
+  lostFleetEconomySide?: LostFleetEconomySide;
 
   constructor(
     expansion: Expansion = Expansion.None,
@@ -141,6 +165,18 @@ export default class Player extends EventEmitter {
 
   get actions() {
     return this.events[Operator.Activate].map((event) => event.action());
+  }
+
+  /**
+   * Special actions with no Booster/Tech-tile/Advanced-Tech-tile of their own to render them on
+   * (faction-innate ones like Space Giants' Exploration board or Ivits' Planetary Institute) -
+   * the only ones the player board's "under the mines" row should show, since a Booster/Tech-tile/
+   * Advanced-Tech-tile-granted special action is already shown on its own component.
+   */
+  get actionsWithoutTile() {
+    return this.events[Operator.Activate]
+      .filter((event) => !isTileOrBoosterSource(event.source))
+      .map((event) => event.action());
   }
 
   progress(finalTile: FinalTile) {
@@ -191,7 +227,15 @@ export default class Player extends EventEmitter {
   /**
    * @param board LEGACY Only useful for old games, now loaded directly from data.variant
    */
-  static fromData(data: any, map: SpaceMap, board: FactionBoardVariant | null, expansions: Expansion, version: string) {
+  static fromData(
+    data: any,
+    map: SpaceMap,
+    board: FactionBoardVariant | null,
+    expansions: Expansion,
+    version: string,
+    nbPlayers?: number,
+    lostFleetEconomySide?: LostFleetEconomySide
+  ) {
     const player = new Player(expansions, data.player);
 
     player.faction = data.faction;
@@ -211,7 +255,7 @@ export default class Player extends EventEmitter {
     }
 
     if (data.faction && (data.factionLoaded || !isVersionOrLater(version, "4.8.4"))) {
-      player.loadFaction(board, expansions, true);
+      player.loadFaction(board, expansions, true, nbPlayers, lostFleetEconomySide);
     }
 
     for (const kind of Object.keys(data.events)) {
@@ -262,12 +306,45 @@ export default class Player extends EventEmitter {
     );
   }
 
+  /**
+   * How many times over this player can pay `cost` - the "convert up to N" range behind free-action
+   * conversions (available/actions.ts).
+   *
+   * The loop only ever ends because `hasResource` eventually says no, so analysis mode
+   * (ANALYSIS_MODE_PLAN.md §12), where `hasResource` deliberately says yes to any amount of an
+   * overdrawable resource, needs its own ceiling or this spins forever and hangs the browser. The
+   * ceiling is what the seat can really pay plus a fixed slack, so a conversion can be overdrawn
+   * like everything else while the range stays a finite, sane number of steps.
+   */
   maxPayRange(cost: Reward[]): number {
     const costs = Reward.merge(cost);
+    const limit = this.data.analysis ? this.realMaxPayRange(costs) + Player.ANALYSIS_EXTRA_PAY_RANGE : Infinity;
 
     for (let max = 0; ; max += 1) {
+      if (max >= limit) {
+        return max;
+      }
       for (const rew of costs) {
         if (!this.data.hasResource(new Reward(rew.count * (max + 1), rew.type))) {
+          return max;
+        }
+      }
+    }
+  }
+
+  /** How many extra conversion steps analysis mode offers beyond what the seat can really pay -
+   * generous enough that the range never feels clipped, small enough to stay a usable dropdown. */
+  private static readonly ANALYSIS_EXTRA_PAY_RANGE = 10;
+
+  /** `maxPayRange`'s answer ignoring the analysis overdraw, i.e. measured against real resources. */
+  private realMaxPayRange(costs: Reward[]): number {
+    for (let max = 0; ; max += 1) {
+      for (const rew of costs) {
+        const needed = new Reward(rew.count * (max + 1), rew.type);
+        if (needed.type === Resource.None) {
+          continue;
+        }
+        if (this.data.getResources(needed.type) < needed.count) {
           return max;
         }
       }
@@ -298,6 +375,10 @@ export default class Player extends EventEmitter {
 
     if (!addedCost) {
       addedCost = [];
+    }
+
+    if (hex?.hasSpaceship() && !isShip(building)) {
+      return null;
     }
 
     if (!this.data.canPay(addedCost)) {
@@ -337,7 +418,7 @@ export default class Player extends EventEmitter {
         }
       } else {
         // Get the number of terraforming steps to pay discounting terraforming track
-        steps = terraformingStepsRequired(factionPlanet(this.faction), targetPlanet);
+        steps = terraformingStepsRequired(this.faction, targetPlanet, this.data.lostFleetCost3Planets);
         const reward = terraformingCost(this.data, steps, replay);
 
         if (reward === null) {
@@ -354,6 +435,16 @@ export default class Player extends EventEmitter {
           warnings.push(BuildWarning.stepActionPartiallyWasted);
         }
         addedCost.push(reward);
+
+        const scoredPlanet = hex?.data?.planet ?? targetPlanet;
+        if (scoredPlanet === Planet.Protoplanet) {
+          addedCost.push(new Reward(-6, Resource.VictoryPoint));
+        } else if (targetPlanet === Planet.Asteroid) {
+          if (!this.data.hasResource(new Reward(1, Resource.GaiaFormer))) {
+            return null;
+          }
+          addedCost.push(...Reward.negative(this.board.cost(building, isolated)));
+        }
       }
     }
 
@@ -394,7 +485,7 @@ export default class Player extends EventEmitter {
   maxBuildings(building: Building) {
     switch (building) {
       case Building.GaiaFormer:
-        return this.data.gaiaformers - this.data.gaiaformersInGaia;
+        return this.data.gaiaformers - this.data.gaiaformersInGaia - this.data.gaiaformersUsedForAsteroid;
       case Building.TradeShip:
         return this.data.tradeShips;
       default:
@@ -406,17 +497,40 @@ export default class Player extends EventEmitter {
     return this.data.occupied.filter((hex) => hex.data.planet !== Planet.Empty && hex.isMainOccupier(this.player));
   }
 
-  loadFaction(board: FactionBoardVariant | null, expansions: Expansion, skipIncome = false) {
+  loadFaction(
+    board: FactionBoardVariant | null,
+    expansions: Expansion,
+    skipIncome = false,
+    nbPlayers?: number,
+    lostFleetEconomySide?: LostFleetEconomySide
+  ) {
     this.variant = {
       board: board?.board,
       version: board?.version,
     };
 
-    this.loadBoard(factionBoard(this.faction, this.variant.board), expansions, skipIncome);
+    this.loadBoard(
+      factionBoard(this.faction, this.variant.board, expansions),
+      expansions,
+      skipIncome,
+      true,
+      nbPlayers,
+      lostFleetEconomySide
+    );
   }
 
-  loadBoard(board: FactionBoard, expansions: Expansion, skipIncome = false, subscribeListeners = true) {
+  loadBoard(
+    board: FactionBoard,
+    expansions: Expansion,
+    skipIncome = false,
+    subscribeListeners = true,
+    nbPlayers?: number,
+    lostFleetEconomySide?: LostFleetEconomySide
+  ) {
     this.board = board;
+    this.expansions = expansions;
+    this.nbPlayers = nbPlayers;
+    this.lostFleetEconomySide = lostFleetEconomySide;
 
     if (!skipIncome) {
       this.gainRewards(this.data.initialPowerRewards(this.board), Phase.BeginGame);
@@ -438,7 +552,7 @@ export default class Player extends EventEmitter {
     const fields = ResearchField.values(expansions);
 
     for (const field of fields) {
-      this.loadEvents(researchEvents(field, this.data.research[field], expansions));
+      this.loadEvents(researchEvents(field, this.data.research[field], expansions, this.lostFleetEconomySide));
     }
   }
 
@@ -526,9 +640,9 @@ export default class Player extends EventEmitter {
    * want to remove multiple green federations for one track
    */
   onResearchAdvanced(field: ResearchField, dest: number, expansion: Expansion) {
-    const events = researchEvents(field, dest, expansion);
+    const events = researchEvents(field, dest, expansion, this.lostFleetEconomySide);
     this.loadEvents(events);
-    const oldEvents = researchEvents(field, dest - 1, expansion);
+    const oldEvents = researchEvents(field, dest - 1, expansion, this.lostFleetEconomySide);
     this.removeEvents(oldEvents);
 
     if (dest === lastTile(field)) {
@@ -538,10 +652,27 @@ export default class Player extends EventEmitter {
     this.receiveTriggerIncome(Condition.AdvanceResearch);
   }
 
-  build(building: Building, hex: GaiaHex, cost: Reward[], map: SpaceMap, stepsReq?: number) {
+  build(
+    building: Building,
+    hex: GaiaHex,
+    cost: Reward[],
+    map: SpaceMap,
+    stepsReq?: number,
+    consumesAsteroidGaiaformer = true
+  ) {
     this.payCosts(cost, Command.Build);
     const wasOccupied = this.data.occupied.includes(hex);
     const isNewLostPlanet = hex.data.planet === Planet.Lost && !hex.occupied();
+    const isNewAsteroidColonization = hex.data.planet === Planet.Asteroid && !hex.occupied();
+
+    // §E2: colonizing an Asteroid consumes a Gaiaformer — but only on routes where the Gaiaformer
+    // is part of the cost. Starting-building placement (§B1/§B2, factions own 0 Gaiaformers at
+    // setup) and Eclipse's Credit action (§C4, "the 6 credits is the entire cost") pass false.
+    // (Fuzzer finding LF-3: the unconditional increment permanently cost Tinkeroids/Darkanians a
+    // Gaiaformer and let the §G3 "former" booster award negative VP.)
+    if (isNewAsteroidColonization && consumesAsteroidGaiaformer) {
+      this.data.gaiaformersUsedForAsteroid += 1;
+    }
 
     // excluding Gaiaformers as occupied
     if (building !== Building.GaiaFormer && building !== Building.CustomsPost && !isShip(building)) {
@@ -608,6 +739,17 @@ export default class Player extends EventEmitter {
 
     // get triggered income for new building
     this.receiveBuildingTriggerIncome(building, hex.data.planet, isAdditionalMine);
+
+    // Lost Fleet round scoring tiles "sector3"/"planet3": a mine in a sector, or on a planet type,
+    // this player had not colonized before this build (RULES_CLARIFICATIONS.md §G4).
+    if (building === Building.Mine) {
+      if (isNewLostFleetSector(this.data.occupied, hex)) {
+        this.receiveTriggerIncome(Condition.NewSector);
+      }
+      if (!this.data.occupied.some((other) => other !== hex && other.data.planet === hex.data.planet)) {
+        this.receiveTriggerIncome(Condition.NewPlanetType);
+      }
+    }
 
     // get triggerd terffaorming step income for new building
     if (stepsReq) {
@@ -687,7 +829,7 @@ export default class Player extends EventEmitter {
     }
   }
 
-  coverTechTile(pos: TechTilePos) {
+  coverTechTile(pos: TechTilePos | Spaceship) {
     const tile = this.data.tiles.techs.find((tech) => tech.pos === pos);
     tile.enabled = false;
 
@@ -823,6 +965,8 @@ export default class Player extends EventEmitter {
         Phase.RoundGaia
       );
     }
+    // Reset in lockstep with gaiaformersInGaia (see its own comment) so it never drifts.
+    this.data.gaiaformersUsedForOther = 0;
   }
 
   buildingValue(
@@ -861,8 +1005,9 @@ export default class Player extends EventEmitter {
     const hasPlanetaryInstitute = options?.hasPlanetaryInstitute ?? this.data.hasPlanetaryInstitute();
     const addedBescods =
       this.faction === Faction.Bescods && hasPlanetaryInstitute && hex?.data?.planet === Planet.Titanium ? 1 : 0;
+    const addedPowerRing = hex?.data?.powerRing === this.player ? 2 : 0;
 
-    return baseValue + addedBescods;
+    return baseValue + addedBescods + addedPowerRing;
   }
 
   maxLeech(extraPowerToken?: boolean): number {
@@ -892,6 +1037,27 @@ export default class Player extends EventEmitter {
     this.receiveTriggerIncome(Condition.Federation);
   }
 
+  gainSpaceshipFederationToken(federation: SpaceshipFederation) {
+    this.data.spaceshipFederations.push({
+      tile: federation,
+      green: true,
+    });
+
+    const rewardSpec = spaceshipFederationRewards[federation];
+    if (rewardSpec) {
+      this.gainRewards(Reward.parse(rewardSpec), Command.FormFederation);
+    }
+    if (federation === SpaceshipFederation.PowerTokens) {
+      // No Resource type grants power tokens directly into Area III; direct area mutation is the
+      // established pattern for this (see burnPower's area2/area3 manipulation above).
+      this.data.power.area3 += 2;
+    }
+
+    // Range/Terraform grant a bonus Build a Mine action instead of a reward; the caller
+    // (move/federation.ts) chains SubPhase.FederationTokenBuildMine for those two tokens.
+    this.receiveTriggerIncome(Condition.Federation);
+  }
+
   factionReward(reward: Reward, source: EventSource, gleensQic: boolean): Reward {
     if (this.faction === Faction.Terrans && reward.type === Resource.GainTokenGaiaArea) {
       return new Reward(-reward.count, Resource.MoveTokenFromGaiaAreaToArea1);
@@ -916,7 +1082,38 @@ export default class Player extends EventEmitter {
     if (this.faction === Faction.Gleens) {
       return new Reward(1, Resource.Ore);
     }
+    // Lost Fleet: Darkanians & Space Giants pay a 2-Q.I.C. surcharge to build a mine on a Gaia
+    // planet (Tinkeroids/Moweyds pay the normal 1, unlike the rest of this no-home-planet group).
+    if (this.faction === Faction.Darkanians || this.faction === Faction.SpaceGiants) {
+      return new Reward(2, Resource.Qic);
+    }
     return new Reward(1, Resource.Qic);
+  }
+
+  needsTinkeringTileChoice(round: number): boolean {
+    return this.faction === Faction.Tinkeroids && round >= 1 && round <= 6 && !this.data.currentTinkeringTile;
+  }
+
+  availableTinkeringTiles(round: number): TinkeringTile[] {
+    return tinkeringTilesForRound(round).filter((tile) => !this.data.usedTinkeringTiles.includes(tile));
+  }
+
+  chooseTinkeringTile(round: number, tile: TinkeringTile) {
+    assert(this.availableTinkeringTiles(round).includes(tile), `${tile} is not available in round ${round}`);
+
+    const spec = tinkeringTileSpec(tile);
+    this.data.currentTinkeringTile = tile;
+    this.loadEvents(Event.parse([`=> ${spec}`], Faction.Tinkeroids));
+  }
+
+  removeCurrentTinkeringTile() {
+    if (!this.data.currentTinkeringTile) {
+      return;
+    }
+
+    this.removeEvent(new Event(`=> ${tinkeringTileSpec(this.data.currentTinkeringTile)}`, Faction.Tinkeroids));
+    this.data.usedTinkeringTiles.push(this.data.currentTinkeringTile);
+    this.data.currentTinkeringTile = null;
   }
 
   eventConditionCount(condition: Condition): number {
@@ -924,7 +1121,9 @@ export default class Player extends EventEmitter {
       case Condition.None:
         return 1;
       case Condition.Mine:
-        return this.data.buildings[Building.Mine] + this.data.lostPlanet;
+        // Asteroid/Protoplanet-themed Artifact tokens also count as a mine, same as the Lost Planet
+        // (RULES_CLARIFICATIONS.md §G6), even though no mine is physically placed for either.
+        return this.data.buildings[Building.Mine] + this.data.lostPlanet + this.data.artifactPlanetTypes.length;
       case Condition.TradingStation:
         return this.data.buildings[Building.TradingStation];
       case Condition.ResearchLab:
@@ -937,14 +1136,31 @@ export default class Player extends EventEmitter {
           this.data.buildings[Building.Colony]
         );
       case Condition.Federation:
-        return this.data.tiles.federations.length;
+        return this.data.tiles.federations.length + this.data.spaceshipFederations.length;
       case Condition.Gaia:
         return this.ownedPlanets.filter((hex) => hex.data.planet === Planet.Gaia).length;
       case Condition.PlanetType:
-        return uniq(this.ownedPlanets.map((hex) => hex.data.planet)).length;
+        return uniq([...this.ownedPlanets.map((hex) => hex.data.planet), ...this.data.artifactPlanetTypes]).length;
+      case Condition.TechTile:
+        // Standard Tech tiles only: an Advanced Tech tile covers a standard slot rather than
+        // adding a new one, so it must not count again on top of the slot it covers.
+        return this.data.tiles.techs.filter((tech) => !isAdvanced(tech.pos)).length;
       case Condition.Sector:
-        return uniq(this.data.occupied.filter((hex) => hex.colonizedBy(this.player)).map((hex) => hex.data.sector))
-          .length;
+        // Owner ruling: for this generic "sector" count (the base "most sectors" Final Scoring tile,
+        // and the base Advanced Tech tiles that pay per sector), a Deep Space Sector tile does NOT
+        // count - only real Space Sector tiles do. Deliberately narrower than Condition.NewSector /
+        // Darkanians' PI ability just below, which DO include Deep Space because their rulebook text
+        // explicitly says "Space sector / Deep Space sector" (RULES_CLARIFICATIONS.md line 132) -
+        // this condition's tiles have no such text either way, so there's no confirmed rule to defer
+        // to, and the owner chose "sectors are sectors, not deep space" for all of them. No-op change
+        // for the base game (no Deep Space hexes exist there).
+        return uniq(
+          this.data.occupied
+            .filter(
+              (hex) => hex.colonizedBy(this.player) && classifySectorId(hex.data.sector) === LostFleetSectorType.Space
+            )
+            .map((hex) => hex.data.sector)
+        ).length;
       case Condition.Structure:
         return this.data.occupied.filter((hex) => hex.colonizedBy(this.player)).length;
       case Condition.StructureFed:
@@ -965,6 +1181,31 @@ export default class Player extends EventEmitter {
         return sum(Object.values(this.data.research));
       case Condition.HighestResearchLevel:
         return Math.max(...Object.values(this.data.research));
+      case Condition.GaiaFormer:
+        return (
+          this.data.gaiaformers -
+          this.data.gaiaformersInGaia -
+          this.data.gaiaformersUsedForAsteroid +
+          this.data.gaiaformersUsedForOther
+        );
+      case Condition.Asteroid:
+        // Include the Asteroid-themed Artifact token's virtual mine (§G6) alongside real owned Asteroid hexes.
+        return (
+          this.ownedPlanets.filter((hex) => hex.data.planet === Planet.Asteroid).length +
+          this.data.artifactPlanetTypes.filter((planet) => planet === Planet.Asteroid).length
+        );
+      case Condition.DeepSpaceSector:
+        return colonizedDeepSpaceSectorCount(this.ownedPlanets);
+      case Condition.PlanetaryInstituteAcademyDistance: {
+        const pi = this.data.occupied.find((hex) => hex.buildingOf(this.player) === Building.PlanetaryInstitute);
+        const academies = this.data.occupied.filter((hex) => isAcademy(hex.buildingOf(this.player)));
+
+        if (!pi || academies.length === 0) {
+          return 0;
+        }
+
+        return Math.max(...academies.map((academy) => CubeCoordinates.distance(pi, academy)));
+      }
     }
 
     return 0;
@@ -1160,6 +1401,11 @@ export default class Player extends EventEmitter {
   }
 
   formFederation(hexes: GaiaHex[], token: Federation) {
+    this.completeFederation(hexes);
+    this.gainFederationToken(token);
+  }
+
+  completeFederation(hexes: GaiaHex[]) {
     let newSatellites = 0;
     for (const hex of hexes) {
       // Second test is for ivits
@@ -1173,7 +1419,6 @@ export default class Player extends EventEmitter {
       Command.FormFederation
     );
     this.data.satellites += newSatellites;
-    this.gainFederationToken(token);
     this.data.federationCount += 1;
     this.federationCache = null;
   }

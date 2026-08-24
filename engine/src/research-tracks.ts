@@ -1,5 +1,5 @@
 import { Event, Expansion } from "../index";
-import { isResourceUsed, ResearchField } from "./enums";
+import { hasExpansion, isResourceUsed, LostFleetEconomySide, ResearchField } from "./enums";
 
 const researchTracks: { [key in ResearchField]: string[][] } = {
   [ResearchField.Terraforming]: [[], ["2o"], ["d"], ["d", "3pw"], ["2o"], []],
@@ -27,11 +27,39 @@ const frontiersEco: string[][] = [
   ["6c,3o,6pw"],
 ];
 
-export function researchEvents(field: ResearchField, level: number, expansion: Expansion) {
+// Lost Fleet §F1: a single overlay tile (one of 2 possible sides, chosen at random at setup) covers
+// only the base game's level 3/4 Economy income boxes - levels 0/1/2/5 are untouched, so those
+// entries are copied straight from the base `researchTracks[Economy]` above.
+const lostFleetEcoPw: string[][] = [
+  researchTracks[ResearchField.Economy][0],
+  researchTracks[ResearchField.Economy][1],
+  researchTracks[ResearchField.Economy][2],
+  ["+2c,1o,3pw", "3pw"],
+  ["+2c,2o,2pw"],
+  researchTracks[ResearchField.Economy][5],
+];
+
+const lostFleetEcoVp: string[][] = [
+  researchTracks[ResearchField.Economy][0],
+  researchTracks[ResearchField.Economy][1],
+  researchTracks[ResearchField.Economy][2],
+  ["+3c,1o,1vp", "3pw"],
+  ["+4c,2o,1vp"],
+  researchTracks[ResearchField.Economy][5],
+];
+
+export function researchEvents(
+  field: ResearchField,
+  level: number,
+  expansion: Expansion,
+  lostFleetEconomySide?: LostFleetEconomySide
+) {
   const spec: string[] =
-    expansion === Expansion.Frontiers && field === ResearchField.Economy
+    field === ResearchField.Economy && hasExpansion(expansion, Expansion.Frontiers)
       ? frontiersEco[level]
-      : researchTracks[field][level];
+      : field === ResearchField.Economy && hasExpansion(expansion, Expansion.LostFleet)
+        ? (lostFleetEconomySide === LostFleetEconomySide.VictoryPoints ? lostFleetEcoVp : lostFleetEcoPw)[level]
+        : researchTracks[field][level];
   return spec.map((s) => new Event(s, field)).filter((e) => e.rewards.every((r) => isResourceUsed(r.type, expansion)));
 }
 

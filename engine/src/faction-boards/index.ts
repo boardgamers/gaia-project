@@ -1,9 +1,10 @@
 import { maxBy } from "lodash";
 import { FactionCustomization, FactionVariant } from "../engine";
-import { Faction } from "../enums";
+import { Expansion, Faction } from "../enums";
 import Ambas from "./ambas";
 import BalTaks from "./baltaks";
 import Bescods from "./bescods";
+import Darkanians from "./darkanians";
 import Firaks from "./firaks";
 import Geodens from "./geodens";
 import Gleens from "./gleens";
@@ -11,9 +12,12 @@ import HadschHallas from "./hadsch-hallas";
 import Itars from "./itars";
 import Ivits from "./ivits";
 import Lantids from "./lantids";
+import Moweyds from "./moweyds";
 import Nevlas from "./nevlas";
+import SpaceGiants from "./space-giants";
 import Taklons from "./taklons";
 import Terrans from "./terrans";
+import Tinkeroids from "./tinkeroids";
 import { FactionBoard, FactionBoardRaw, FactionBoardVariant, FactionBoardVariants } from "./types";
 import Xenos from "./xenos";
 
@@ -34,6 +38,10 @@ const factionBoards: { [key in Faction]: FactionBoardVariants } = {
   [Faction.Bescods]: Bescods,
   [Faction.Nevlas]: Nevlas,
   [Faction.Itars]: Itars,
+  [Faction.Tinkeroids]: Tinkeroids,
+  [Faction.Darkanians]: Darkanians,
+  [Faction.Moweyds]: Moweyds,
+  [Faction.SpaceGiants]: SpaceGiants,
 };
 
 export function factionVariantBoard(customization: FactionCustomization, faction: Faction): FactionBoardVariant | null {
@@ -72,6 +80,6 @@ export function latestVariantVersion(variant: FactionVariant) {
   );
 }
 
-export function factionBoard(faction: Faction, variant?: FactionBoardRaw): FactionBoard {
-  return new FactionBoard(factionBoards[faction], variant);
+export function factionBoard(faction: Faction, variant?: FactionBoardRaw, expansion?: Expansion): FactionBoard {
+  return new FactionBoard(factionBoards[faction], variant, expansion);
 }

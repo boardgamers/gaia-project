@@ -1,8 +1,8 @@
-import assert from "assert";
 import { AvailableCommand } from "../available/types";
 import Engine from "../engine";
 import { Booster, Command, Player as PlayerEnum } from "../enums";
 import Reward from "../reward";
+import assert from "../utils/assert";
 
 export function moveChooseRoundBooster(
   engine: Engine,

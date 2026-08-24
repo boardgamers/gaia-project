@@ -3,7 +3,7 @@
     <g
       :transform="transform"
       :class="['boardAction', kind, { highlighted, recent, warning }]"
-      v-b-tooltip.html
+      v-b-tooltip.nofade.html="tooltipTriggerConfig()"
       :title="button.tooltip"
     >
       <SpecialAction
@@ -43,10 +43,7 @@
           {{ costNumber }}
         </text>
       </g>
-      <g v-if="faded">
-        <line y1="-11" y2="11" x1="-11" x2="11" stroke="#333" stroke-width="5" />
-        <line y1="11" y2="-11" x1="-11" x2="11" stroke="#333" stroke-width="5" />
-      </g>
+      <UsedActionMark v-if="faded" />
     </g>
   </svg>
 </template>
@@ -56,7 +53,6 @@ import Engine, {
   BoardAction as BoardActionEnum,
   boardActions,
   Command,
-  factionPlanet,
   Planet,
   PlayerEnum,
   Reward,
@@ -64,14 +60,18 @@ import Engine, {
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { enabledButtonWarnings } from "../data/warnings";
+import { factionPiecePlanet } from "../graphics/utils";
 import { boardActionButton } from "../logic/buttons/actions";
+import { tooltipTriggerConfig } from "../logic/tooltip";
 import Resource from "./Resource.vue";
 import SpecialAction from "./SpecialAction.vue";
+import UsedActionMark from "./UsedActionMark.vue";
 
 @Component<BoardAction>({
   components: {
     Resource,
     SpecialAction,
+    UsedActionMark,
   },
 })
 export default class BoardAction extends Vue {
@@ -92,7 +92,12 @@ export default class BoardAction extends Vue {
     return this.$store.state.context.highlighted.boardActions.has(this.action);
   }
 
+  /** Gold outline: either the viewer's own opt-in recent-action trail, or an opponent taking this
+   * action since the viewer's last turn (that one is always shown, see the store's getter). */
   get recent(): boolean {
+    if (this.$store.getters.recentOpponentBoardActions.has(this.action)) {
+      return true;
+    }
     const moves = this.$store.getters.recentCommands;
     return moves.some((c) => c.command == Command.Action && (c.args[0] as BoardActionEnum) === this.action);
   }
@@ -114,7 +119,7 @@ export default class BoardAction extends Vue {
     const player = this.player();
     if (player != null && player !== PlayerEnum.Player5) {
       // Player5 is for converted old games
-      return factionPlanet(this.gameData.player(player).faction);
+      return factionPiecePlanet(this.gameData.player(player).faction);
     }
     return null;
   }
@@ -136,6 +141,7 @@ export default class BoardAction extends Vue {
   }
 
   boardActions = boardActions;
+  tooltipTriggerConfig = tooltipTriggerConfig;
 }
 </script>
 

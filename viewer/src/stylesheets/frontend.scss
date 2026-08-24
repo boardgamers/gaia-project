@@ -26,6 +26,7 @@
 @import "~bootstrap/scss/bootstrap.scss";
 @import "~bootstrap-vue";
 @import "./dark.scss";
+@import "./theme";
 
 .tooltip {
   .tooltip-inner {
@@ -67,10 +68,103 @@
   }
 }
 
-:focus {
-  outline: none !important;
+:focus-visible {
+  outline: 3px solid var(--ui-focus) !important;
+  outline-offset: 2px;
 }
 
 .pointer {
   cursor: pointer;
+}
+
+body {
+  touch-action: manipulation;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+// Reserves space for ChatNotesPanel.vue's floating chat/notes dock (desktop only - it's already a
+// full-screen overlay on mobile, no reservation needed or wanted there) and GameNavPanel.vue's
+// desktop-only left menu (mobile doesn't render it at all), so the game area shrinks out of the
+// way instead of being covered by either fixed-position panel. Class toggled from hosted.ts by
+// watching each panel's own `open` state; width literals here must match each panel's own
+// `.chat-notes__panel`/`.game-nav__panel` CSS.
+@media (min-width: 768px) {
+  #app.chat-notes-open {
+    // The same width as a custom property, so `position: fixed` controls INSIDE the page can clear
+    // the dock too. They are out of flow, so the padding below never moves them: the auto-leech
+    // pill (AutoLeechFab.vue, bottom-right, z-index 1028) sat squarely underneath the docked chat
+    // (z-index 1050) and was simply invisible while the chat was open (owner report). It reads this
+    // property, which is unset - and so falls back to 0 - whenever the chat is closed.
+    --chat-dock-width: 360px;
+    padding-right: var(--chat-dock-width);
+    transition: padding-right 0.15s ease-out;
+  }
+
+  #app.game-nav-open {
+    padding-left: 420px;
+    transition: padding-left 0.15s ease-out;
+  }
+}
+
+// Mobile counterpart of the same class: while the chat is up, nothing behind it may respond - the
+// owner was hitting move buttons "through" the open chat. Not a z-index problem (the panel is 1050,
+// the sticky move/premove bars 1030): a tap can land on the page whenever the visual viewport and
+// the layout viewport disagree (keyboard, address bar, pinch-zoom, elastic overscroll), and this
+// makes that harmless whatever the viewport is doing.
+//
+// Still wanted now that mobile is a POPUP rather than a full-screen overlay (see ChatNotesPanel.vue):
+// the board is visible around the popup, but it was never reachable with the chat open before
+// either, and the popup sits right on top of the sticky move bar - so an inert page keeps a
+// half-missed tap on the chat's own edge from firing a move. Closing the chat (one tap on the
+// bubble, which stays live) is what gives the board back.
+//
+// Everything under #app stops hit-testing and the chat's own subtree opts back in (pointer-events is
+// per-element, so re-enabling the panel does not require its ancestors) - deliberately the whole
+// page rather than a list of the fixed bars, since the point is that NOTHING behind the chat
+// reacts. The floating toggle lives inside `.chat-notes` too, which is what keeps tap-to-minimize
+// working. Toasts appended to <body> (update/install prompts) are outside #app and stay clickable.
+@media (max-width: 767px) {
+  #app.chat-notes-open {
+    pointer-events: none;
+  }
+
+  #app.chat-notes-open .chat-notes {
+    pointer-events: auto;
+  }
+}
+
+// Scroll lock for whichever chat popup is open (per-game or lobby - the class is set by
+// `setPageScrollLock` in chat-popup.ts, which is where the full reasoning lives). Short version: a
+// gesture starting anywhere on the popup other than the message list - its header, the
+// notifications strip, the composer - has no scroll container of its own, so it chains out to the
+// document and scrolls the game behind the popup instead. Verified in a real browser: all three of
+// those regions moved the page by 200px while the thread stayed put. Taking the document's own
+// scrollability away for as long as the popup is up removes what the gesture was chaining to; the
+// message list is unaffected because it IS a scroll container and already contains its overscroll.
+//
+// Mobile only, matching the popup itself - the desktop panel is a docked strip beside a page that
+// should still scroll.
+@media (max-width: 767px) {
+  html.chat-popup-open,
+  html.chat-popup-open body {
+    overflow: hidden;
+  }
+
+  html.chat-popup-keyboard-open #move-buttons.mobile-sticky-actions,
+  html.chat-popup-keyboard-open .premove-bar--sticky-mobile {
+    display: none !important;
+  }
 }

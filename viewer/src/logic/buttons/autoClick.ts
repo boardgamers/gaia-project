@@ -67,12 +67,22 @@ export function checkAutoClick(controller: CommandController, buttons: ButtonDat
     }
   }
 
-  if (
-    buttons.length == 1 &&
-    controller.enabledButtonWarnings(buttons[0]).length == 0 &&
-    !buttons[0].needConfirm &&
-    allowAutoClick(strategy.first, buttons[0])
-  ) {
+  if (buttons.length != 1 || controller.enabledButtonWarnings(buttons[0]).length > 0) {
+    return;
+  }
+
+  // Analysis mode (ANALYSIS_MODE_PLAN.md §12) skips the confirmation press: a sandbox turn fires the
+  // moment it is fully composed, because Undo already covers a misclick and a round-0 line spends
+  // most of its presses confirming placements it has to make for every seat. Only the confirmation
+  // itself is auto-clicked, and only when it is the lone remaining button with no warning on it -
+  // ordinary single-option buttons still obey the player's own auto-click preference below, so
+  // opening a menu never fires a move by itself.
+  if (controller.analysisMode && buttons[0].needConfirm) {
+    setAutoClick(controller, buttons[0]);
+    return;
+  }
+
+  if (!buttons[0].needConfirm && allowAutoClick(strategy.first, buttons[0])) {
     setAutoClick(controller, buttons[0]);
   }
 }

@@ -1,11 +1,77 @@
 import { expect } from "chai";
 import Engine from "./engine";
-import { Faction, Player as PlayerEnum, ResearchField } from "./enums";
-import { remainingFactions } from "./factions";
+import { Expansion, Faction, Planet, Player as PlayerEnum, ResearchField } from "./enums";
+import {
+  lostFleetSetupStage,
+  lostFleetTerraformingCost3Planets,
+  remainingFactions,
+  startingSetupPlacements,
+} from "./factions";
 
 describe("Factions", () => {
   it("lantids and terrans can not be chosen together", () => {
-    expect(remainingFactions([Faction.Terrans])).to.not.contain(Faction.Lantids);
+    expect(remainingFactions([Faction.Terrans], Expansion.None)).to.not.contain(Faction.Lantids);
+  });
+
+  it("should not offer the Lost Fleet factions without the expansion", () => {
+    expect(remainingFactions([], Expansion.None)).to.not.contain(Faction.Darkanians);
+  });
+
+  it("should still offer Space Giants after Darkanians is chosen, since they are not the same-color pair", () => {
+    const remaining = remainingFactions([Faction.Darkanians], Expansion.LostFleet);
+
+    expect(remaining).to.contain(Faction.SpaceGiants);
+  });
+
+  it("should not offer Tinkeroids after Darkanians, nor Moweyds after Space Giants", () => {
+    expect(remainingFactions([Faction.Darkanians], Expansion.LostFleet)).to.not.contain(Faction.Tinkeroids);
+    expect(remainingFactions([Faction.SpaceGiants], Expansion.LostFleet)).to.not.contain(Faction.Moweyds);
+  });
+
+  it("should use the correct number of starting setup placements for special factions", () => {
+    expect(startingSetupPlacements(Faction.Terrans)).to.equal(2);
+    expect(startingSetupPlacements(Faction.Xenos)).to.equal(3);
+    expect(startingSetupPlacements(Faction.Ivits)).to.equal(1);
+    expect(startingSetupPlacements(Faction.Tinkeroids)).to.equal(1);
+    expect(startingSetupPlacements(Faction.Darkanians)).to.equal(1);
+    expect(startingSetupPlacements(Faction.Moweyds)).to.equal(1);
+    expect(startingSetupPlacements(Faction.SpaceGiants)).to.equal(1);
+  });
+
+  it("should use the correct Lost Fleet setup stage for base, expansion, and Ivits factions", () => {
+    expect(lostFleetSetupStage(Faction.Terrans)).to.equal(1);
+    expect(lostFleetSetupStage(Faction.Xenos)).to.equal(1);
+    expect(lostFleetSetupStage(Faction.Tinkeroids)).to.equal(2);
+    expect(lostFleetSetupStage(Faction.Darkanians)).to.equal(2);
+    expect(lostFleetSetupStage(Faction.Moweyds)).to.equal(2);
+    expect(lostFleetSetupStage(Faction.SpaceGiants)).to.equal(2);
+    expect(lostFleetSetupStage(Faction.Ivits)).to.equal(3);
+  });
+
+  it("should assign Tinkeroids/Moweyds cost-3 colors by taking mandatory opponent colors first, then filling left-to-right", () => {
+    const board = [
+      Planet.Titanium,
+      Planet.Ice,
+      Planet.Terra,
+      Planet.Oxide,
+      Planet.Volcanic,
+      Planet.Desert,
+      Planet.Swamp,
+    ];
+    const players = [
+      { player: PlayerEnum.Player1, faction: Faction.Tinkeroids },
+      { player: PlayerEnum.Player2, faction: Faction.Bescods },
+      { player: PlayerEnum.Player3, faction: Faction.Moweyds },
+    ];
+
+    const cost3 = lostFleetTerraformingCost3Planets(
+      players,
+      [PlayerEnum.Player1, PlayerEnum.Player2, PlayerEnum.Player3],
+      board
+    );
+
+    expect(cost3[PlayerEnum.Player1]).to.deep.equal([Planet.Titanium, Planet.Ice, Planet.Terra]);
+    expect(cost3[PlayerEnum.Player3]).to.deep.equal([Planet.Titanium, Planet.Oxide, Planet.Volcanic]);
   });
 
   describe("balanced variant", () => {

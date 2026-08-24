@@ -1,9 +1,9 @@
-import assert from "assert";
 import { AvailableCommand, Offer } from "../available/types";
 import Engine from "../engine";
 import { Command, Player as PlayerEnum } from "../enums";
 import { BrainstoneDest } from "../player-data";
 import Reward from "../reward";
+import assert from "../utils/assert";
 
 export function moveChargePower(
   engine: Engine,

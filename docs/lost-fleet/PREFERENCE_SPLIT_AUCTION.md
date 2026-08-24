@@ -1,0 +1,246 @@
+# Preference Split Auction
+
+A faction-selection variant playable at **any player count the game supports (2–5)**, with one
+picked faction per player. Selectable at game creation as `AuctionVariant.PreferenceSplit`
+(`"preference-split"`), alongside Standard, Silent Auction, Choose-Then-Bid and Bid-While-Choosing.
+
+> It was 4-players-only in its first version — an explicit requirement of the original brief — and
+> generalized the same day (owner request, 2026-08-05). Nothing in the mechanism was ever
+> count-specific: the price is a faction's total over the player count, and the pick round always
+> produces exactly one faction per player.
+
+It is deliberately **not** a first-price, second-price or ascending ("silent") auction: nobody
+outbids anybody, nobody reacts to anybody else's numbers, and the price never comes from a single
+opponent's bid.
+
+## The rules, in plain language
+
+1. Every player secretly distributes **exactly X bid points** among the picked factions (one per
+   player), all at the same time. Bids are whole numbers, 0 is allowed, and they must add up to
+   exactly X.
+2. Nothing is revealed until every player has submitted. Then everything is revealed at once.
+3. Factions are **ranked by the total** bid on them, highest first.
+4. Going down that ranking, each faction is **awarded to the highest bidder who has not already
+   received a faction**. A player who wins one is out of the running for the rest.
+5. The price is the **average of every bid** on that faction — including bids from players who
+   already won something else. It is never recalculated as players drop out.
+6. That average is the price **whatever the winner bid themselves**. Your own bid decides _which_
+   faction you get, never what it costs — so you can end up paying more than you put on it, and a
+   player who bid 0 on the faction they receive still pays its average.
+7. Any tie — two factions on the same total, or two eligible players on the same highest bid — is
+   resolved **automatically and at random**. Players are never asked to break a tie.
+
+The payment is deducted from the winner's final score, the same way every other auction variant's
+bid is (`player.data.bid`, cashed out in `finalScoringPhase`).
+
+### Budget (X)
+
+**Fixed by the player count: 20 points per player** (owner decision, 2026-08-05 — it was briefly a
+number you typed at setup, and that was one dial too many for something with a single sensible
+answer). `EngineOptions.auctionBudget` still exists and is still stored per game by `create_game`,
+which pins a game's budget forever so changing the default can never rewrite what an in-progress
+game's players were asked to split; there is simply no UI that lets you choose it. The engine
+accepts any whole number 1–999 if one is supplied another way (`?auctionBudget=` in the
+self-contained viewer, handy for testing).
+
+**The scale is 20 points per player** — 40 at 2 players, 60 at 3, 80 at 4
+(`defaultPreferenceSplitBudget`). That is because **X is the table's total bill, not one player's**:
+every faction costs its own average (its total over N players) and there are N factions, so the
+payments always add up to exactly X before rounding. Each player therefore pays X/N on average,
+whoever ends up with what. A flat default would have made a 2-player auction twice as punishing as a
+4-player one for the same number.
+
+At 20 per player, a typical winning price lands in the 10–30 VP range next to a ~120 VP game.
+
+The scale was 10 per player when the variant shipped (2026-08-05) and was doubled to 20 the next
+day (owner decision) to give a split more resolution to express preferences with. Only the default
+moved: `auctionBudget` is stamped into a game's options at creation, so the two games created on the
+old scale still run on it, and the server-side fallback in `preference_split_budget` was moved in
+lockstep (migration `20260806090000_preference_split_budget_20_per_player.sql`).
+
+### What 2 players looks like
+
+The mechanism is well defined at 2 players but much simpler than it looks: with two factions,
+whoever bid more on one necessarily bid less on the other, so each player just gets the faction they
+rated relatively higher and the ranking step cannot change the outcome. Pricing still works normally
+(each pays half the combined bid on their faction). 3 players and up is fully non-degenerate.
+
+### Why there is no cap at the winner's own bid (owner decision, 2026-08-05)
+
+An earlier draft capped the payment at `min(average, own bid)`. It was removed: a cap sounds fairer
+and is not. It lets a player take a faction the whole table rated highly for **nothing at all**,
+simply by having bid 0 on it.
+
+The owner's example: one player splits their budget almost evenly across two factions — say 20 and
+19 — and another player rates those same two almost equally too. The first player's marginally
+higher bid pulls them onto one of them, and under a cap the second player picks up the other for 0,
+even though everyone at the table agreed it was worth about 20. Paying the average keeps a faction's
+price tied to what it is actually worth to the table.
+
+The accepted cost is that a winner can pay more VP than they personally bid. In exchange the rule is
+one sentence long: **you pay what the table thought it was worth.**
+
+### Rounding
+
+`roundVictoryPoints()` in `engine/src/algorithms/preference-split-auction.ts` is the single place
+this happens: conventional **half-up** (10.5 → 11, 10.49 → 10). Totals and averages stay exact until
+the very end; only the final payment is rounded. The UI shows averages to two decimals.
+
+## Flow
+
+```
+SetupBoard → [SetupFactionBan] → SetupFaction → SetupPreferenceBid → SetupBuilding → …
+```
+
+The ban round is the existing independent `EngineOptions.banPhase` and is orthogonal to this
+variant. The pick round is the ordinary `Command.ChooseFaction` one: four players each nominate one
+faction, which is where the factions up for auction come from. A pick is only a nomination —
+the auction can and often does give it to somebody else.
+
+Turn order after the auction is the existing rule for every auction variant: `engine.setup` (pick
+order) mapped to each faction's final owner.
+
+## Where the code lives
+
+| Layer                                    | File                                                                                                                                                              |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Resolution algorithm (pure, no engine)   | `engine/src/algorithms/preference-split-auction.ts`                                                                                                               |
+| Variant + persisted result on the engine | `engine/src/engine.ts` (`AuctionVariant.PreferenceSplit`, `auctionBudget`, `preferenceSplitBids`, `preferenceSplitResult`, `preferenceSplitBudget`)               |
+| Phase + one-shot resolution              | `engine/src/move/phase.ts` (`phaseSetupPreferenceBid`)                                                                                                            |
+| Move validation                          | `engine/src/move/setup.ts` (`movePreferenceBid`, plus the 4-player/budget preconditions in `moveInit`)                                                            |
+| Available command                        | `engine/src/available/setup.ts` (`possiblePreferenceBids`)                                                                                                        |
+| Server-side sealed bidding               | `supabase/migrations/20260805120000_preference_split_sealed_bids.sql`                                                                                             |
+| Bid-phase notifications                  | `supabase/migrations/20260808120000_auction_bid_notifications.sql`, `supabase/functions/notify/logic.ts` (`buildSealedBidNotifications`, `planSealedBidReminder`) |
+| Hosted orchestration                     | `viewer/src/hosted/host.ts` (`submitSealedBid`, `refreshSealedBids`)                                                                                              |
+| Which round is sealed, and its command   | `viewer/src/logic/sealed-bid.ts` (`sealedBidPhase`, `sealedBidMove`, `isLegacySequentialBidRound`)                                                                |
+| Bid form (shared half / this variant)    | `viewer/src/components/SealedBidPanel.ts`, `PreferenceSplitBid.vue`                                                                                               |
+| Reveal / result                          | `viewer/src/components/PreferenceSplitLog.vue`, `PreferenceSplitSummary.vue`                                                                                      |
+| In-app rules                             | `viewer/src/components/PreferenceSplitInfo.vue`                                                                                                                   |
+| Setup                                    | `viewer/src/hosted/new-game.ts`, `viewer/src/hosted/CreateGame.vue`                                                                                               |
+
+## How secrecy is enforced
+
+The engine is client-side and authoritative, and every committed move lands in `public.moves`,
+which every seated player can read. That is fine for an ordinary turn, but not for a round where
+every player bids simultaneously.
+
+> **Shared with the Silent Auction since 2026-08-12 (PROGRESS #157).** Everything in this section
+> is now the mechanism for both variants, not just this one: `auction_sealed_bids` is keyed by game
+> and seat and holds an opaque `bids` payload, and `sealed_bid_variant(options)` decides which
+> rules `submit_sealed_bid` enforces and which command (`preferenceBid` / `silentBid`)
+> `reveal_sealed_bids` writes. On the client, `viewer/src/logic/sealed-bid.ts` is the single source
+> of truth for "is this a simultaneous bid round", and `SealedBidPanel.ts` is the shared half of
+> both bid forms.
+
+So in hosted play, a `preferenceBid` move **does not exist** while the auction is open. Submissions
+go to `public.auction_sealed_bids` through `submit_sealed_bid()`, behind an RLS policy that returns
+a player only their own row until `sealed_bids_complete()` is true. There are no insert/update/
+delete policies at all, so a submission can never be edited or withdrawn. The RPC — not the client —
+enforces the budget, the whole-number/non-negative bids, one bid per faction and one submission per
+seat.
+
+When the last submission lands, any client may call `reveal_sealed_bids()`, which builds the
+move lines **itself, from the stored rows**, appends them to `public.moves` in seat order and moves
+the turn pointer, all in one transaction. It is exactly-once by construction: the caller names the
+sequence number it expects, `games` is locked for the duration, and a loser of the race gets
+`seq_conflict` — which the client already treats as "someone else landed it, resync". A second call
+after a successful reveal returns 0.
+
+The only thing the client contributes is `nextSeat`, which it works out by replaying the game
+locally with the (now readable) bids applied — the same trust model as `commit_turn`'s own
+client-computed `p_next_seat`.
+
+While the auction is open, the only thing any player can learn is **which seats have submitted**
+(`sealed_bid_status()` returns counts and seat numbers, never points). The bid panel polls it every
+5s; Realtime cannot help here, precisely because the rows are invisible to everyone else.
+
+That seat list is what the bid panel's **bid-status roster** renders: one line per player, named,
+marked submitted or still choosing. It is shown _while the form is still open_, not only on the
+waiting screen — knowing whether you are the last one the table is waiting on is most useful before
+you submit. Own submissions are folded in locally so the roster never lags the 5s poll, and offline
+/hot-seat play — which has no poll — derives the same roster from `preferenceSplitBids`, the engine's
+own record of which seats have bid.
+
+The same idea covers the other round-0 phase where every player owes exactly one thing — the pick
+round — as a compact chip row in `SetupStatus.vue` (see PROGRESS #142). That row is deliberately
+absent from **both** simultaneous bid rounds, because each variant's own panel already carries the
+roster; and absent from `Phase.SetupAuction` (Choose-Then-Bid / Bid-While-Choosing), because a
+player there bids repeatedly and can be outbid again, so "done" is not a state that exists.
+
+**Offline / hot-seat play** has no server, so there is nothing to enforce: the bid form falls back
+to an ordinary `preferenceBid` move for the seat on turn, and secrecy is pass-the-device — the same
+model the Silent Auction uses offline.
+
+## Notifications during the auction
+
+Every other "it's your move" push in this app rides on `games.current_seat` changing
+(`games_notify_update`, `0001_multiplayer.sql`). Simultaneous bidding is the one phase that signal
+cannot describe: nothing is committed to `public.moves` while the auction is open, so `current_seat`
+sits unchanged — on whichever single seat the engine nominally names — from the last faction pick
+right through to `reveal_sealed_bids`. Until migration `20260808120000` that meant exactly **one**
+player got told anything (their ordinary turn push, fired by the last pick), everybody else got
+nothing, and the hourly reminder sweep could nudge none of them, because `planTurnReminder` only ever
+looks at the current seat. A game could stall indefinitely on one person who was never told.
+
+So the auction announces itself:
+
+- `announce_sealed_bid_auction(game_id)` stamps `games.sealed_bid_announced_at`. Any client sitting
+  in `SetupPreferenceBid` calls it — the same "whoever notices first" shape as the reveal, and for
+  the same reason: the client that committed the final pick may already be gone. It is exactly-once
+  server-side (row locked, stamp written once, later callers get `false`), so calling it from every
+  client on every status refresh is correct, not merely tolerated.
+- The null → not-null transition fires `games_notify_sealed_bid_auction`, which POSTs
+  `{type: 'auction_bid', game_id}` to the `notify` Edge Function. That function looks up who has **no**
+  row in `auction_sealed_bids` yet and pushes to each of them —
+  _"Faction auction in <game> — split your bid points."_
+- The push is deliberately the ordinary `turn` kind on the ordinary `turn-<id>` tag: it **is** the
+  player's move, someone who turned turn pushes off does not want this either, and the shared tag
+  makes the announcement, its re-nudges and the real turn push after the reveal replace one another
+  instead of stacking banners.
+- The sweep re-nudges per **seat**, not per game (`auction_bid_reminders`), because an open auction
+  has up to five people on turn at once, each with their own interval, cap, quiet hours and snooze.
+  `sealed_bid_announced_at` is the auction's equivalent of a turn's `latest_move_committed_at`.
+- `reveal_sealed_bids` closes all of it out: it clears `sealed_bid_announced_at` (so a resolved
+  auction drops out of the sweep's candidate query for good), deletes the reminder rows, and — new
+  in the same migration — stamps `latest_move_committed_at`, which it previously left on the last
+  faction pick, making the turn that _follows_ the auction inherit however long the auction took.
+
+## Randomness and determinism
+
+The two tiebreaks are the only randomness, and they draw from the game's own **seeded** PRNG
+(`engine.map.rng()`), exactly as the Silent Auction's do. Replaying the same move log therefore
+always produces the same ranking and the same allocation.
+
+On top of that, the whole outcome is **persisted** on the engine as `preferenceSplitResult` —
+ranking, both kinds of tiebreak, every eligibility set, every price and every payment — and
+`resolvePreferenceSplitPhase` is a no-op when it is already set. A reload cannot reroll a tie, and
+a state restored from JSON never re-runs the auction at all.
+
+The result object is also what the reveal screen renders, so what a player sees is literally the
+stored decision, not a re-derivation of it.
+
+## Tests
+
+| File                                                       | Covers                                                                                                                                                                                                                                                                                                                                                                                              |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `engine/src/algorithms/preference-split-auction.spec.ts`   | rounding, submission validation, ranking, allocation, exclusion of assigned players, averages including assigned players' bids, paying **more** than your own bid, the 0-bid case, the owner's near-tie example, both tiebreaks, determinism, and both end-to-end fixtures (the four-way-tied one and a tie-free one with exact expected payments)                                                  |
+| `engine/src/preference-split-variant.spec.ts`              | the same through real move logs: full flow, the 4-player and budget preconditions, per-move validation, one submission per player, a configured budget, reload determinism (full replay and `fromData`), and that nothing is derived before the last submission                                                                                                                                     |
+| `viewer/src/hosted/host.spec.ts`                           | sealed submissions unreadable until the last one lands, resolution on the fourth, exactly-once reveal under two concurrent clients, identical result on reload, the abandoned-last-submitter fallback, server-side rejection of a wrong total / second submission, and the bid-phase announcement (from any client, exactly once, the moment the last pick opens the phase, never after the reveal) |
+| `supabase/functions/notify/logic.spec.ts`                  | who the bid-phase push goes to and its wording, that it reuses the `turn` kind/tag, and the per-seat re-nudge's interval, cap, snooze and quiet-hours gates                                                                                                                                                                                                                                         |
+| `viewer/src/components/PreferenceSplitBid.spec.ts`         | one input per faction, allocated/remaining, submit disabled off-budget, submits through the sealed backend (never as a move), renders for a seat that is not on turn, post-submission progress, the per-player bid-status roster (during the form, named seats, unnamed fallback, own submission before the next poll, offline derivation), and the offline move fallback                           |
+| `viewer/src/components/PreferenceSplitLog.spec.ts`         | every bid, totals, averages, the ranking, the step-by-step allocation timeline (arithmetic spelled out), and an over-own-bid payment explained as such                                                                                                                                                                                                                                              |
+| `viewer/src/components/PreferenceSplitSummary.spec.ts`     | the result strip under the banner: what it announces, opening the full log from it, dismissing it per game per device, and staying hidden before the auction resolves                                                                                                                                                                                                                               |
+| `viewer/src/hosted/new-game.spec.ts`, `CreateGame.spec.ts` | 4-player-only gating, the stored budget and its default, invalid-budget blocking, and dropping the variant on a player-count change                                                                                                                                                                                                                                                                 |
+
+## Adding another auction variant later
+
+Nothing here is hardcoded to this mechanism, and the Silent Auction moving onto it (PROGRESS #157)
+is the proof. A new variant needs: a value in `AuctionVariant`, a `Phase`/`Command` pair, a resolver
+under `engine/src/algorithms/`, a branch in `phaseSetupFaction`, an entry in
+`AUCTION_VARIANT_OPTIONS` (with `playerCounts` if it is restricted to certain player counts — no
+variant uses that today, but the gating machinery is still there and tested), and — only if it needs
+simultaneous secret input — reuse of the `auction_sealed_bids` table plus: a case in
+`sealed_bid_variant()`/`sealed_bid_command()`, its own branch of `submit_sealed_bid`'s validation, a
+case in `sealedBidPhase`, and a `SealedBidPanel` subclass supplying `variant`, `commandName` and
+`submissionError`. The table itself is keyed by game and seat and holds an opaque `bids` JSON
+payload, not anything specific to any variant.

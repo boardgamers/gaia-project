@@ -1,7 +1,7 @@
 <template>
   <svg
     :class="['booster', { highlighted, disabled }]"
-    v-b-tooltip
+    v-b-tooltip.nofade="tooltipTriggerConfig()"
     :title="tooltip"
     width="60"
     height="120"
@@ -22,7 +22,11 @@
     />
     <line x1="-29" x2="29" y1="-8" y2="-8" stroke="#aaa" stroke-width="2" />
     <TechContent :event="event1" transform="translate(0, -33)" />
-    <TechContent :event="event2" :transform="`translate(0, ${30 - (event2.operator === '+' ? 4 : 0)})`" />
+    <TechContent
+      :event="event2"
+      :transform="`translate(0, ${30 - (event2.operator === '+' ? 4 : 0)})`"
+      :disabled="specialActionUsed"
+    />
   </svg>
 </template>
 
@@ -32,6 +36,7 @@ import { boosterEvents } from "@gaia-project/engine/src/tiles/boosters";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { eventDesc } from "../data/event";
+import { tooltipTriggerConfig } from "../logic/tooltip";
 import TechContent from "./TechContent.vue";
 
 @Component<Booster>({
@@ -48,6 +53,11 @@ export default class Booster extends Vue {
 
   @Prop({ default: false, type: Boolean })
   highlighted: boolean;
+
+  /** Mirrors BoardAction.vue's used-power-action X marker for this booster's own special action -
+   * distinct from `disabled` above (which fades the whole tile when the player has passed). */
+  @Prop({ default: false, type: Boolean })
+  specialActionUsed: boolean;
 
   get tileObject(): Event[] {
     return boosterEvents(this.booster);
@@ -72,6 +82,8 @@ export default class Booster extends Vue {
   get tooltip() {
     return `- ${eventDesc(this.event1, this.engine.expansions)}\n- ${eventDesc(this.event2, this.engine.expansions)}`;
   }
+
+  tooltipTriggerConfig = tooltipTriggerConfig;
 }
 </script>
 
@@ -96,6 +108,17 @@ svg {
       stroke: var(--highlighted);
       cursor: pointer;
       stroke-width: 2px;
+    }
+
+    // Taken by an opponent since the viewer's last turn, or used for their special action, whose
+    // octagon lives inside the booster art. Bordered and haloed like a marked tech tile.
+    &.last-move {
+      filter: drop-shadow(0 0 2px var(--recent)) drop-shadow(0 0 3px var(--recent));
+
+      .booster-background {
+        stroke: var(--recent);
+        stroke-width: 3px;
+      }
     }
 
     &.disabled {

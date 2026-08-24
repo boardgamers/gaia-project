@@ -17,6 +17,7 @@ import Engine, {
   Resource,
   Round,
   RoundScoring,
+  Spaceship,
   TechPos,
 } from "@gaia-project/engine";
 import { boosterData } from "../../data/boosters";
@@ -121,7 +122,10 @@ function finalScoringProjection(finalTile: number): (engine: Engine, pl: Player)
     const points = simulateIncome(
       pl,
       (clone) =>
-        gainFinalScoringVictoryPoints(finalRankings([engine.tiles.scorings.final[finalTile]], engine.players), clone),
+        gainFinalScoringVictoryPoints(
+          finalRankings([engine.tiles.scorings.final[finalTile]], engine.players, engine.expansions),
+          clone
+        ),
       engine.version
     );
     return new Map([[finalScoringRound, points]]);
@@ -131,7 +135,8 @@ function finalScoringProjection(finalTile: number): (engine: Engine, pl: Player)
 export const roundScoring = "Round";
 export const victoryPointSources = (
   finalTileName: (tile: number) => string,
-  expansion: Expansion
+  expansion: Expansion,
+  factions: Faction[]
 ): VictoryPointSource[] => {
   const sources: VictoryPointSource[] = [
     {
@@ -178,16 +183,33 @@ export const victoryPointSources = (
       color: "--titanium",
     },
     {
-      types: Booster.values(),
+      types: Booster.values(expansion),
       label: "Booster",
       description: "Round Boosters",
       color: colorCodes.booster.color,
-      roundValues: passIncomeProjection(Booster.values(), false),
+      roundValues: passIncomeProjection(Booster.values(expansion), false),
     },
     {
-      types: BoardAction.values(),
+      // T F Mars/Eclipse's spaceship-board QIC action grants VP directly (2vp, +1vp per tech
+      // tile/planet type) - tagged with the ship itself as source (spaceships.ts's
+      // spaceshipActionEffects), not a BoardAction, but it's still a QIC action so it belongs here
+      // rather than under "Spaceship" (which is just the VP cost of exploring - see below).
+      //
+      // BoardAction.Qic2 is added unconditionally, even though BoardAction.values(expansion)
+      // itself correctly excludes it under Lost Fleet (that list gates "is this a legal action to
+      // take", and Qic2 as a live board action is genuinely replaced by the spaceship boards' own
+      // QIC actions there - see the enum's own doc comment). But rescoring a Federation tile always
+      // tags its reward "qic2" (move/federation.ts's moveChooseFederationTile/
+      // rescoreSpaceshipFederationToken both hardcode BoardAction.Qic2 as the EventSource,
+      // regardless of what triggered the rescore) - including Lost Fleet's own Twilight ship-board
+      // QIC action and Artifact-token rescores. Filtering "qic2" out of `types` for Lost Fleet games
+      // silently dropped every rescored Federation tile's VP from the stats total while the
+      // player's real victoryPoints correctly kept it - confirmed against a real finished game
+      // (PROGRESS.md's "solar drift" report) where 2 Twilight-QIC rescores left 2 players' displayed
+      // totals 14 VP under their actual score.
+      types: [...BoardAction.values(expansion), BoardAction.Qic2, Spaceship.TFMars, Spaceship.Eclipse],
       label: "QIC",
-      description: "QIC actions",
+      description: "QIC actions, including T F Mars/Eclipse's spaceship-board QIC action",
       color: "--specialAction",
     },
     {
@@ -216,6 +238,34 @@ export const victoryPointSources = (
       label: "Federation",
       description: "Re-scoring is counted as QIC action",
       color: colorCodes.federation.color,
+    },
+    {
+      // This source only ever captures the Lost Fleet Protoplanet mine bonus (+6 VP) - the only VP
+      // tagged directly to Command.Build - so it's named for what it actually is rather than the
+      // generic "Building" (owner request).
+      types: [Command.Build],
+      label: "Protoplanets",
+      description: "Protoplanet mine bonus (+6 VP)",
+      color: "--protoplanet",
+    },
+    {
+      // The only VP a spaceship board action itself costs or grants is exploring (deploying a
+      // shuttle onto a spaceship) - 5 VP normally, 7 VP for Bal T'aks (exploration.ts's
+      // explorationCost) - tagged Command.Explore regardless of which ship. The spaceship boards'
+      // own actions (qic/power/knowledge/credit) pay in QIC/power/ore/knowledge, never VP, except
+      // T F Mars/Eclipse's qic action, which is counted under "QIC" above instead.
+      types: [Command.Explore],
+      label: "Spaceship",
+      description: "VP cost paid to explore (deploy) a spaceship",
+      color: "--rt-int",
+    },
+    {
+      // Every artifact-token VP grant is tagged Spaceship.Twilight (move/artifacts.ts) regardless
+      // of which spaceship board the artifact was drawn/examined from.
+      types: [Spaceship.Twilight],
+      label: "Artifacts",
+      description: "VP granted by Artifact tokens",
+      color: "--lost",
     },
     {
       types: ["chart-final1"],
@@ -259,7 +309,10 @@ export const victoryPointSources = (
       }
     );
   }
-  return sources;
+  // The Gleens VP source only ever scores for a Gleens player, so drop its (always-empty) column
+  // unless Gleens is actually in the game (owner request). Statistics mode passes every faction, so
+  // it stays there.
+  return factions.includes(Faction.Gleens) ? sources : sources.filter((s) => s.label !== "Gleens");
 };
 
 function advancedTechTileTypes(e: Engine, tile: AdvTechTile): AdvTechTilePos[] {

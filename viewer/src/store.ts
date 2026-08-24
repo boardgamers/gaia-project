@@ -1,20 +1,37 @@
 import Engine, { BoardAction, Command, Faction, GaiaHex, Player, ResearchField } from "@gaia-project/engine";
-import { AnyTechTilePos } from "@gaia-project/engine/src/enums";
+import { AnyTechTilePos, ArtifactToken, Spaceship } from "@gaia-project/engine/src/enums";
 import { CubeCoordinates } from "hexagrid";
-import Vue from "vue";
+import Vue, { markRaw } from "vue";
 import Vuex from "vuex";
 import { ButtonData, GameContext, HexSelection, HighlightHex, SpecialActionIncome } from "./data";
 import { FastConversionEvent, MapMode } from "./data/actions";
 import { ExecuteBack, FastConversionTooltips } from "./logic/buttons/types";
 import {
+  CancelTriggerKind,
+  CancelTriggerLeechConfig,
+  CancelTriggerRow,
+  PremoveFailureRow,
+  PremoveMode,
+  PremoveRow,
+  SealedBidEntry,
+  SealedBidStatus,
+} from "./logic/hosted-types";
+import { PresenceState } from "./logic/presence";
+import {
+  boardActionMoves,
+  commandArgsByFaction,
   CommandObject,
+  factionsByCommandArg,
+  hexMovesByHex,
   MovesSlice,
   movesToHexes,
+  opponentMovesSinceLastTurn,
   parseCommands,
   parseMoves,
   recentMoves,
   researchClasses,
   roundMoves,
+  spaceshipActionMoves,
 } from "./logic/recent";
 
 Vue.use(Vuex);
@@ -28,8 +45,12 @@ type Preference =
   | "extendedLog"
   | "warnings"
   | "autoClick"
-  | "statistics"
-  | "uiMode";
+  | "uiMode"
+  | "autoChargePower"
+  | "autoChargeMaxPassedRoundLeech";
+
+const AUTO_CHARGE_POWER_STORAGE_KEY = "autoChargePower";
+const AUTO_CHARGE_MAX_PASSED_ROUND_LEECH_STORAGE_KEY = "autoChargeMaxPassedRoundLeech";
 
 export enum UiMode {
   graphical = "graphical",
@@ -56,6 +77,66 @@ export type State = {
     [key in Preference]: boolean | string;
   };
   player: { index?: number; auth?: string } | null;
+  /** Hosted mode only (PREMOVE_PLAN.md) - always empty in self-contained hot-seat play. */
+  premoves: PremoveRow[];
+  premoveFailures: PremoveFailureRow[];
+  /** Phase 3 (§10.6) - quiet, in-app-only "played from your queue" notice for the most recent
+   * fast-path success; null once dismissed or superseded. Never sourced from a push - see
+   * host.ts's onPremovePlayed doc comment. */
+  premovePlayedNotice: { seat: number; move: string; rank?: number; totalRanks?: number } | null;
+  /** Premove cancel triggers - hosted mode only, always empty in self-contained hot-seat play. */
+  cancelTriggers: CancelTriggerRow[];
+  /** Quiet, in-app-only "cancelled by trigger" toast for the most recent fast-path match; null once
+   * dismissed or superseded (mirrors premovePlayedNotice above). */
+  cancelTriggerFiredNotice: { seat: number; reason: string } | null;
+  /** Hosted mode only - seat -> user id, for matching a seat to its presence entry below. Never
+   * populated in self-contained hot-seat play (no accounts/seats to map). */
+  seatUsers: Record<number, string | null>;
+  /** Hosted mode only - seat -> players.last_active_at, the "seen recently" presence fallback
+   * (presence.ts's presenceStatus) for a seat with no live Realtime Presence entry. */
+  seatLastActive: Record<number, string | null>;
+  /** Hosted mode only (presence.ts) - the shared cross-page roster, keyed by user id. */
+  presence: PresenceState;
+  /** Load/save adapter for the Lost Fleet sidebar notes sheet (LostFleetNotes.vue). A hosting app
+   * can inject a thin closure over its own per-game notes storage, so the viewer never talks to a
+   * backend itself. null in self-contained/hot-seat play, where the sheet falls back to
+   * localStorage. */
+  notesBackend: NotesBackend | null;
+  /** True while showing an offline copy of an online game: play is
+   * limited to the seats this account holds, so the board explains itself when it is someone
+   * else's turn instead of simply offering nothing. False for ordinary pass-and-play. */
+  offlineMirror: boolean;
+  /** True while a local Analysis mode sandbox has taken the board over
+   * (docs/lost-fleet/ANALYSIS_MODE_PLAN.md). Set/cleared by Game.vue's enterAnalysisMode/
+   * exitAnalysisMode. Exists as store state (not just a Game.vue field) because SealedBidPanel.ts's
+   * `mySeats` needs it too - during setup pass-and-play (§2.6/decision #7) the analysis player must
+   * be able to submit every seat's auction bid locally, not just their own locked seat's. */
+  analysisMode: boolean;
+  /**
+   * The simultaneous-bid auctions (`AuctionVariant.PreferenceSplit` and `AuctionVariant.Silent`) -
+   * hosted mode only, same injection contract as the backends above. Non-null means bids are
+   * collected server-side, where a player can only ever read their own until every seat has
+   * submitted (migrations 20260805120000 / 20260812130000). Null means offline/hot-seat play, where
+   * the bid form submits an ordinary move for whichever seat is on turn and secrecy is
+   * pass-the-device.
+   */
+  sealedBidBackend: SealedBidBackend | null;
+  /** Submission progress pushed by the host while the bid phase is open. Progress only - it never
+   * carries anybody's points, so there is nothing here to leak into the UI early. */
+  sealedBidStatus: SealedBidStatus | null;
+};
+
+export type NotesBackend = {
+  load: () => Promise<string>;
+  save: (body: string) => Promise<void>;
+};
+
+export type SealedBidBackend = {
+  /** Submits this seat's whole submission. Rejects (server-side) unless it is legal for the game's
+   * auction variant - a split totalling the budget, or bids within the Silent Auction's ceiling. */
+  submit: (seat: number, bids: SealedBidEntry[]) => Promise<void>;
+  /** Re-reads submission progress; also what closes the auction once the last seat is in. */
+  refresh: () => Promise<void>;
 };
 
 function indexCommands(commands, command: Command) {
@@ -73,43 +154,80 @@ function indexCommands(commands, command: Command) {
 }
 
 const gaiaViewer = {
-  state: {
-    data: new Engine(),
-    context: {
-      highlighted: {
-        sectors: [],
-        hexes: null,
-        researchTiles: new Set(),
-        techs: new Set(),
-        boosters: new Set(),
-        boardActions: new Set(),
-        specialActions: new Set(),
+  // A factory (not a shared object literal) so every `new Vuex.Store(gaiaViewer)` gets its own
+  // independent state. This matters because the app can hold more than one live store at once - the
+  // faction pick/ban window mounts a self-contained preview board on its own store while the game
+  // store is still active - and a shared state object would let the preview clobber the live game's
+  // `state.data` (and cross-contaminate tests, per HostedBar.spec's note).
+  state(): State {
+    return {
+      data: new Engine(),
+      context: {
+        highlighted: {
+          sectors: [],
+          hexes: null,
+          researchTiles: new Set(),
+          techs: new Set(),
+          boosters: new Set(),
+          boardActions: new Set(),
+          specialActions: new Set(),
+        },
+        rotation: new Map(),
+        activeButton: null,
+        hasCommandChain: false,
+        autoClick: [],
+        mapModes: [],
+        fastConversionTooltips: {} as FastConversionTooltips,
       },
-      rotation: new Map(),
-      activeButton: null,
-      hasCommandChain: false,
-      autoClick: [],
-      mapModes: [],
-      fastConversionTooltips: {} as FastConversionTooltips,
-    },
-    preferences: {
-      accessibleSpaceMap: !!process.env.VUE_APP_accessibleSpaceMap,
-      noFactionFill: !!process.env.VUE_APP_noFactionFill,
-      flatBuildings: !!process.env.VUE_APP_flatBuildings,
-      highlightRecentActions: !!process.env.VUE_APP_highlightRecentActions,
-      autoClick: process.env.VUE_APP_autoClick ?? "smart",
-      logPlacement: process.env.VUE_APP_logPlacement ?? "bottom",
-      extendedLog: !!process.env.VUE_APP_extendedLog,
-      warnings: process.env.VUE_APP_warnings ?? "modalDialog",
-      statistics: process.env.VUE_APP_statistics ?? "auto",
-      uiMode: process.env.VUE_APP_uiMode ?? "graphical",
-    },
-    player: null,
-    avatars: [] as string[],
-  } as State,
+      preferences: {
+        accessibleSpaceMap: !!process.env.VUE_APP_accessibleSpaceMap,
+        noFactionFill: !!process.env.VUE_APP_noFactionFill,
+        flatBuildings: !!process.env.VUE_APP_flatBuildings,
+        highlightRecentActions: !!process.env.VUE_APP_highlightRecentActions,
+        autoClick: process.env.VUE_APP_autoClick ?? "smart",
+        logPlacement: process.env.VUE_APP_logPlacement ?? "bottom",
+        extendedLog: !!process.env.VUE_APP_extendedLog,
+        warnings: process.env.VUE_APP_warnings ?? "modalDialog",
+        uiMode: process.env.VUE_APP_uiMode ?? "graphical",
+        // "Auto leech": a purely local, per-browser convenience - never part of synced/persisted
+        // game state (see logic/auto-decide.ts) - so it's the one preference read back from
+        // localStorage rather than a fresh env-var default every load, matching what a user expects
+        // from a "preference" toggle they set once.
+        autoChargePower:
+          (typeof localStorage !== "undefined" && localStorage.getItem(AUTO_CHARGE_POWER_STORAGE_KEY)) ||
+          process.env.VUE_APP_autoChargePower ||
+          "ask",
+        autoChargeMaxPassedRoundLeech:
+          (typeof localStorage !== "undefined" &&
+            localStorage.getItem(AUTO_CHARGE_MAX_PASSED_ROUND_LEECH_STORAGE_KEY)) ||
+          process.env.VUE_APP_autoChargeMaxPassedRoundLeech ||
+          "0",
+      },
+      player: null,
+      avatars: [] as string[],
+      premoves: [],
+      premoveFailures: [],
+      premovePlayedNotice: null,
+      cancelTriggers: [],
+      cancelTriggerFiredNotice: null,
+      seatUsers: {},
+      seatLastActive: {},
+      presence: {},
+      notesBackend: null,
+      offlineMirror: false,
+      analysisMode: false,
+      sealedBidBackend: null,
+      sealedBidStatus: null,
+    } as State;
+  },
   mutations: {
     receiveData(state: State, data: Engine) {
-      state.data = data;
+      // The engine state is large, deeply nested, and replaced wholesale on every
+      // update — the viewer treats it as read-only display data and never relies on
+      // deep reactivity into it. markRaw skips Vue's deep observation (the expensive
+      // defineReactive/Dep walk over the whole game state) while keeping the object
+      // mutable; reassigning state.data still triggers re-render via the top-level key.
+      state.data = markRaw(data);
       state.context.rotation = new Map();
     },
 
@@ -125,7 +243,7 @@ const gaiaViewer = {
       state.context.highlighted.researchTiles = new Set(tiles);
     },
 
-    highlightTechs(state: State, techs: Array<AnyTechTilePos>) {
+    highlightTechs(state: State, techs: Array<AnyTechTilePos | Spaceship>) {
       state.context.highlighted.techs = new Set(techs);
     },
 
@@ -190,11 +308,20 @@ const gaiaViewer = {
       }
     },
 
-    preferences(state: State, preferences: { [key in Preference]: boolean }) {
+    preferences(state: State, preferences: Partial<{ [key in Preference]: boolean | string }>) {
       state.preferences = {
         ...state.preferences,
         ...preferences,
       };
+      if ("autoChargePower" in preferences && typeof localStorage !== "undefined") {
+        localStorage.setItem(AUTO_CHARGE_POWER_STORAGE_KEY, String(preferences.autoChargePower));
+      }
+      if ("autoChargeMaxPassedRoundLeech" in preferences && typeof localStorage !== "undefined") {
+        localStorage.setItem(
+          AUTO_CHARGE_MAX_PASSED_ROUND_LEECH_STORAGE_KEY,
+          String(preferences.autoChargeMaxPassedRoundLeech)
+        );
+      }
     },
 
     player(state: State, data: { index?: number }) {
@@ -204,18 +331,118 @@ const gaiaViewer = {
     avatars(state, data) {
       state.avatars = data;
     },
+
+    premoveState(state: State, data: { premoves: PremoveRow[]; failures: PremoveFailureRow[] }) {
+      state.premoves = data.premoves;
+      state.premoveFailures = data.failures;
+    },
+
+    premovePlayed(state: State, data: { seat: number; move: string; rank?: number; totalRanks?: number }) {
+      state.premovePlayedNotice = data;
+    },
+
+    dismissPremovePlayedNotice(state: State) {
+      state.premovePlayedNotice = null;
+    },
+
+    cancelTriggerState(state: State, triggers: CancelTriggerRow[]) {
+      state.cancelTriggers = triggers;
+    },
+
+    cancelTriggerFired(state: State, data: { seat: number; reason: string }) {
+      state.cancelTriggerFiredNotice = data;
+    },
+
+    dismissCancelTriggerFiredNotice(state: State) {
+      state.cancelTriggerFiredNotice = null;
+    },
+
+    seatUsers(state: State, data: Record<number, string | null>) {
+      state.seatUsers = data;
+    },
+
+    seatLastActive(state: State, data: Record<number, string | null>) {
+      state.seatLastActive = data;
+    },
+
+    presence(state: State, data: PresenceState) {
+      state.presence = data;
+    },
+
+    setNotesBackend(state: State, backend: NotesBackend | null) {
+      state.notesBackend = backend;
+    },
+
+    setOfflineMirror(state: State, mirrored: boolean) {
+      state.offlineMirror = mirrored;
+    },
+    setAnalysisMode(state: State, active: boolean) {
+      state.analysisMode = active;
+    },
+
+    setSealedBidBackend(state: State, backend: SealedBidBackend | null) {
+      state.sealedBidBackend = backend;
+    },
+
+    sealedBidStatus(state: State, status: SealedBidStatus | null) {
+      state.sealedBidStatus = status;
+    },
   },
   actions: {
     // No body, used for signalling with store.subscribeAction
     hexClick(context: any, hex: GaiaHex, highlight?: HighlightHex) {},
     researchClick(context: any, field: ResearchField) {},
-    techClick(context: any, pos: AnyTechTilePos) {},
+    techClick(context: any, pos: AnyTechTilePos | Spaceship) {},
     fastConversionClick(context: any, event: FastConversionEvent) {},
     specialActionClick(context: any, action: SpecialActionIncome) {},
     boardActionClick(context: any, action: BoardAction) {},
     // API COMMUNICATION
     playerClick(context: any, player: Player) {},
     move(context: any, move: string) {},
+    // Premove (PREMOVE_PLAN.md) - accumulates a command against a local preview clone only; never
+    // reaches the launcher's "move" forwarding (see Game.vue's own subscribeAction handler, which
+    // intercepts this type before it would otherwise be a no-op here).
+    premoveMove(context: any, move: string) {},
+    // Cancel trigger compose mode (Game.vue) - same "accumulates against a preview clone only,
+    // intercepted locally, never reaches the launcher's real move forwarding" shape as premoveMove.
+    cancelTriggerMove(context: any, move: string) {},
+    // Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md) - the third board-takeover mode, same
+    // "accumulates against a local clone only, intercepted by Game.vue, never reaches the
+    // launcher's real move forwarding" shape as premoveMove/cancelTriggerMove above.
+    analysisMove(context: any, move: string) {},
+    queuePremove(context: any, payload: { seat: number; move: string; mode: PremoveMode }) {},
+    cancelPremove(context: any, payload: { seat: number; seq: number }) {},
+    // Premove UI redesign (Gaia 9) - update-in-place ("stage until confirmed", see host.ts).
+    editPremove(context: any, payload: { seat: number; seq: number; move: string }) {},
+    // Phase 3 (§10.4) - clears a seat's whole queue (mode-toggle confirm, "start over").
+    cancelAllPremoves(context: any, payload: { seat: number }) {},
+    // Phase 3 (§10.4), priority mode only.
+    reorderPremove(context: any, payload: { seat: number; seq: number; direction: "up" | "down" }) {},
+    markPremoveFailureRead(context: any, id: string) {},
+    // Premove cancel triggers - same "no body, forwarded by launcher.ts's subscribeAction" shape.
+    armCancelTrigger(
+      context: any,
+      payload: {
+        seat: number;
+        watchedSeat: number;
+        move: string;
+        atoms: string[];
+        kind: CancelTriggerKind;
+        config: CancelTriggerLeechConfig | Record<string, never>;
+      }
+    ) {},
+    disarmCancelTrigger(context: any, payload: { seat: number; seq: number }) {},
+    disarmAllCancelTriggers(context: any, payload: { seat: number }) {},
+    editCancelTrigger(
+      context: any,
+      payload: {
+        seat: number;
+        seq: number;
+        move: string;
+        atoms: string[];
+        config: CancelTriggerLeechConfig | Record<string, never>;
+      }
+    ) {},
     replayInfo(context: any, info: { start: number; end: number; current: number }) {},
     // ^ up - down v
     externalData(context: any, data: Engine) {},
@@ -253,6 +480,45 @@ const gaiaViewer = {
     recentHexes: (state: State, getters): Set<GaiaHex> => {
       return new Set(movesToHexes(state.data, getters.recentCommands));
     },
+    // Everything an opponent did since the viewer's own previous turn, marked in gold on the board it
+    // happened on: the hexes it touched, the research token, the power/QIC octagon, the ship-action
+    // octagon, their own special action, their exploration shuttle, the artifact they took.
+    // Deliberately NOT gated on highlightRecentActions - this is the "what did I miss" marker, not the
+    // opt-in own-move trail.
+    recentOpponentCommands: (state: State, getters): CommandObject[] =>
+      opponentMovesSinceLastTurn(getters.recentMoves).flatMap((move) => move.commands),
+    recentOpponentHexes: (state: State, getters): Map<GaiaHex, CommandObject> =>
+      hexMovesByHex(state.data, getters.recentOpponentCommands),
+    recentOpponentResearch: (state: State, getters): Map<Faction, Set<ResearchField>> =>
+      commandArgsByFaction<ResearchField>(getters.recentOpponentCommands, Command.UpgradeResearch),
+    recentOpponentBoardActions: (state: State, getters): Set<BoardAction> =>
+      boardActionMoves(getters.recentOpponentCommands),
+    recentOpponentShipActions: (state: State, getters): Set<string> =>
+      spaceshipActionMoves(getters.recentOpponentCommands),
+    // Keyed by the reward spec the move carries ("special 4pw"), which is how PlayerInfo already
+    // matches a command to one of a player's own action octagons.
+    recentOpponentSpecialActions: (state: State, getters): Map<Faction, Set<string>> =>
+      commandArgsByFaction(getters.recentOpponentCommands, Command.Special),
+    recentOpponentExplorations: (state: State, getters): Map<Faction, Set<Spaceship>> =>
+      commandArgsByFaction<Spaceship>(getters.recentOpponentCommands, Command.Explore),
+    recentOpponentArtifacts: (state: State, getters): Map<Faction, Set<ArtifactToken>> =>
+      commandArgsByFaction<ArtifactToken>(getters.recentOpponentCommands, Command.ChooseArtifactToken),
+    // Tiles are marked in both places they appear - the pool they came from and the board of whoever
+    // took one - so these are keyed by tile, with the factions that claimed it.
+    recentOpponentTechTiles: (state: State, getters): Map<string, Set<Faction>> =>
+      factionsByCommandArg(getters.recentOpponentCommands, [{ command: Command.ChooseTechTile }]),
+    recentOpponentFederationTiles: (state: State, getters): Map<string, Set<Faction>> =>
+      factionsByCommandArg(getters.recentOpponentCommands, [
+        // forming a federation names its token as the move's second argument; every other way of
+        // gaining or re-scoring one goes through fedtile
+        { command: Command.FormFederation, index: 1 },
+        { command: Command.ChooseFederationTile },
+      ]),
+    recentOpponentBoosters: (state: State, getters): Map<string, Set<Faction>> =>
+      factionsByCommandArg(getters.recentOpponentCommands, [
+        { command: Command.ChooseRoundBooster },
+        { command: Command.Pass },
+      ]),
     currentRoundHexes: (state: State, getters): Set<GaiaHex> => {
       return new Set(movesToHexes(state.data, getters.currentRoundCommands));
     },

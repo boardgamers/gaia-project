@@ -2,7 +2,7 @@
   <svg viewBox="-25 -25 50 50" width="50" height="50" style="overflow: visible">
     <g
       :class="['specialAction', { highlighted: isHighlighted, disabled, board, recent, warning }]"
-      v-b-tooltip.html
+      v-b-tooltip.nofade.html="tooltipTriggerConfig()"
       :title="button ? button.tooltip : null"
     >
       <polygon
@@ -32,6 +32,7 @@ import { Component, Prop } from "vue-property-decorator";
 import { ButtonData } from "../data";
 import { enabledButtonWarnings } from "../data/warnings";
 import { specialActionButton } from "../logic/buttons/actions";
+import { tooltipTriggerConfig } from "../logic/tooltip";
 
 @Component
 export default class SpecialAction extends Vue {
@@ -95,17 +96,14 @@ export default class SpecialAction extends Vue {
   get isHighlighted() {
     return this.highlighted || this._highlighted;
   }
+
+  tooltipTriggerConfig = tooltipTriggerConfig;
 }
 </script>
 
 <style lang="scss">
 g {
   &.specialAction {
-    &.recent > polygon {
-      stroke-width: 2;
-      stroke: var(--recent);
-    }
-
     & > polygon {
       stroke: black;
       stroke-width: 0.5;
@@ -113,7 +111,17 @@ g {
     }
 
     &.board > polygon:not(.planet-fill) {
-      fill: var(--systemGray6);
+      fill: var(--ui-board-action);
+      stroke: var(--ui-board-action-border);
+    }
+
+    // Gold outline: the viewer's own recent-action trail, or an opponent's action since the viewer's
+    // last turn. A used octagon is faction-colored (planet-fill), but one whose round has since reset
+    // is not - the second selector repeats the .board rule's own specificity so that case stays marked.
+    &.recent > polygon,
+    &.recent.board > polygon:not(.planet-fill) {
+      stroke-width: 2;
+      stroke: var(--recent);
     }
 
     &.highlighted > polygon {
@@ -128,6 +136,13 @@ g {
 
     &.disabled {
       opacity: 0.5;
+
+      // A used action an opponent took since the viewer's last turn: half opacity washes the gold
+      // mark out to olive, so keep it near-full. The "used" X is drawn outside this group, so the
+      // octagon still reads as used.
+      &.recent {
+        opacity: 0.9;
+      }
     }
   }
 }

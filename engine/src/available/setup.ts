@@ -1,8 +1,11 @@
 import { difference, range } from "lodash";
+import { MAX_SILENT_BID } from "../algorithms/silent-auction";
 import Engine, { AuctionVariant } from "../engine";
-import { Command, Player } from "../enums";
+import { Command, Faction, Player } from "../enums";
 import { remainingFactions } from "../factions";
 import { AvailableCommand, PossibleBid } from "./types";
+
+export { MAX_SILENT_BID };
 
 export function chooseFactionOrBid(
   engine: Engine,
@@ -20,18 +23,62 @@ export function chooseFactionOrBid(
 }
 
 export function choosableFactions(engine: Engine) {
+  let factions: Faction[];
   if (engine.randomFactions) {
     if (engine.options.auction && engine.options.auction !== AuctionVariant.ChooseBid) {
       // In auction the player can pick from the pool of random factions
-      return difference(engine.randomFactions, engine.setup);
+      factions = difference(engine.randomFactions, engine.setup);
     } else {
       // Otherwise, they are limited to one specific faction
-      return engine.randomFactions.length > engine.setup.length ? [engine.randomFactions[engine.setup.length]] : [];
+      factions = engine.randomFactions.length > engine.setup.length ? [engine.randomFactions[engine.setup.length]] : [];
     }
   } else {
     // Standard
-    return remainingFactions(engine.setup);
+    factions = remainingFactions(engine.setup, engine.expansions);
   }
+  return difference(factions, engine.bannedFactions);
+}
+
+/** Factions still eligible to be banned (Silent Auction's ban phase - one forced ban per player). */
+export function banableFactions(engine: Engine): Faction[] {
+  return difference(Faction.values(engine.expansions), engine.bannedFactions);
+}
+
+export function possibleFactionBans(engine: Engine, player: Player): AvailableCommand<Command.BanFaction>[] {
+  return [{ name: Command.BanFaction, player, data: banableFactions(engine) }];
+}
+
+/**
+ * Silent Auction: one independent max-VP bid per faction up for auction, 0 to `MAX_SILENT_BID`
+ * each. `factions` and `maxBid` travel with the command for the same reason the Preference Split's
+ * `budget`/`factions` do - the bid panel renders for seats the engine's turn pointer is not on
+ * (every player submits at the same time), so it must not have to re-derive them from the engine's
+ * turn state.
+ */
+export function possibleSilentBids(engine: Engine, player: Player): AvailableCommand<Command.SilentBid>[] {
+  const bids: PossibleBid[] = engine.setup.map((faction) => ({
+    faction,
+    bid: range(0, MAX_SILENT_BID + 1),
+  }));
+
+  return [{ name: Command.SilentBid, player, data: { maxBid: MAX_SILENT_BID, factions: [...engine.setup], bids } }];
+}
+
+/**
+ * Preference Split Auction: the player has to split exactly `budget` whole points across every
+ * faction up for auction, so each individual amount can be anything from 0 to the whole budget -
+ * the constraint that actually matters is the sum, which `movePreferenceBid` enforces and the
+ * viewer's form mirrors. `budget` and `factions` travel with the command so the UI never has to
+ * re-derive them from engine options.
+ */
+export function possiblePreferenceBids(engine: Engine, player: Player): AvailableCommand<Command.PreferenceBid>[] {
+  const budget = engine.preferenceSplitBudget;
+  const bids: PossibleBid[] = engine.setup.map((faction) => ({
+    faction,
+    bid: range(0, budget + 1),
+  }));
+
+  return [{ name: Command.PreferenceBid, player, data: { budget, factions: [...engine.setup], bids } }];
 }
 
 export function possibleBids(engine: Engine, player: Player): AvailableCommand<Command.Bid>[] {

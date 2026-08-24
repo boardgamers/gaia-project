@@ -11,8 +11,22 @@
     <g v-else-if="condition === 'fed'" transform="scale(0.45)">
       <Federation width="50" x="-20" y="-30" :used="true" filter="url(#white-shadow-1)" />
     </g>
-    <PlanetType v-else-if="condition === 'pt'" transform="scale(1.1)" />
+    <PlanetType v-else-if="condition === 'pt' || condition === 'newplanet'" transform="scale(1.1)" />
     <Sector v-else-if="condition === 's'" transform="scale(1.5)" />
+    <g v-else-if="condition === 'newsector'" class="newsector-combo">
+      <g transform="translate(-8, 0) scale(0.75)">
+        <Sector />
+      </g>
+      <text x="0" y="3" class="newsector-combo__slash">/</text>
+      <g transform="translate(8, 0) scale(0.75)">
+        <DeepSpaceSector :white="true" />
+      </g>
+    </g>
+    <Resource v-else-if="condition === 'gf'" kind="gf" />
+    <!-- white to match the base-game Sector icon's own coloring (used right above, and in the
+         newsector combo below) - the map itself keeps the dark navy fill for realism, but tile/
+         condition iconography (round scoring, adv tech tiles, ...) should read the same as Sector. -->
+    <DeepSpaceSector v-else-if="condition === 'ds'" :white="true" transform="scale(1.3)" />
     <g v-else-if="condition === 'g'" transform="scale(0.85)">
       <image
         xlink:href="../assets/conditions/planet.svg"
@@ -25,6 +39,16 @@
     </g>
     <Resource v-else-if="condition === 'step'" kind="step" />
     <Resource v-else-if="condition === 'trade'" kind="tradeShip" />
+    <Resource v-else-if="condition === 'tt'" kind="tech" />
+    <circle v-else-if="condition === 'ast'" r="9" class="planet-fill a" style="stroke: black; stroke-width: 0.5" />
+    <g v-else-if="condition === 'shipq'">
+      <polygon
+        points="-10,4 -4,10 4,10 10,4 10,-4 4,-10 -4,-10 -10,-4"
+        transform="scale(1.1)"
+        style="fill: none; stroke: black; stroke-width: 1"
+      />
+      <Resource kind="q" transform="scale(0.85)" />
+    </g>
     <g v-else-if="condition === 'mg'">
       <image
         v-if="!flat"
@@ -61,9 +85,12 @@
       />
     </g>
     <g v-else-if="condition === 'a'">
-      <line x1="-15" x2="15" stroke="#666" />
-      <line x1="-15" x2="15" y1="-10" y2="-10" stroke="#666" />
-      <line x1="-15" x2="15" y1="10" y2="10" stroke="#666" />
+      <!-- when tied to one specific research track (color set), tint the whole track box, not just
+           the segment lines, so it reads at a glance as "that track" rather than "some track". -->
+      <rect v-if="color" x="-15" y="-12" width="30" height="24" :fill="color" opacity="0.35" />
+      <line x1="-15" x2="15" :stroke="color || '#666'" />
+      <line x1="-15" x2="15" y1="-10" y2="-10" :stroke="color || '#666'" />
+      <line x1="-15" x2="15" y1="10" y2="10" :stroke="color || '#666'" />
       <image
         xlink:href="../assets/operators/trigger.svg"
         width="15"
@@ -80,23 +107,32 @@
 import { Building as BuildingEnum, Condition as ConditionEnum } from "@gaia-project/engine";
 import { Component, Prop, Vue } from "vue-property-decorator";
 import Building from "./Building.vue";
+import DeepSpaceSector from "./Conditions/DeepSpaceSector.vue";
 import PlanetType from "./Conditions/PlanetType.vue";
 import Sector from "./Conditions/Sector.vue";
 import Federation from "./FederationTile.vue";
 import Planet from "./Planet.vue";
+import Resource from "./Resource.vue";
 
 @Component({
   components: {
     Building,
+    DeepSpaceSector,
     Federation,
     Planet,
     PlanetType,
+    Resource,
     Sector,
   },
 })
 export default class Condition extends Vue {
   @Prop()
   condition!: ConditionEnum;
+
+  // Optional override for the "a" (AdvanceResearch/ResearchLevels) icon's track-segment lines, so
+  // tiles tied to one specific research track can be told apart from track-agnostic ones.
+  @Prop()
+  color?: string;
 
   get isBuilding() {
     return Object.values(BuildingEnum).includes(this.condition as any);
@@ -114,6 +150,16 @@ g {
     &.gaia {
       fill: var(--gaia);
     }
+  }
+
+  .newsector-combo__slash {
+    font-size: 9px;
+    font-weight: bold;
+    text-anchor: middle;
+    fill: #333;
+    stroke: white;
+    stroke-width: 0.4px;
+    pointer-events: none;
   }
 }
 </style>

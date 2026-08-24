@@ -83,24 +83,26 @@
           <li><a href="https://www.boardgamers.space/page/elo">How Elo works</a></li>
         </ul>
       </div>
-      <div v-else v-html="factionTooltip"></div>
+      <FactionInfoCard v-else :faction="rule" :variant="factionVariant" :expansion="engine.expansions" />
     </div>
   </b-modal>
 </template>
 
 <script lang="ts">
-import { factionDesc, factionName } from "../data/factions";
+import { FactionBoardRaw } from "@gaia-project/engine/src/faction-boards";
+import { factionName } from "../data/factions";
 
-import Engine, { Expansion, Faction, factionPlanet, factionVariantBoard } from "@gaia-project/engine";
+import Engine, { Expansion, Faction, factionVariantBoard, hasExpansion } from "@gaia-project/engine";
 import { Component, Prop, Vue } from "vue-property-decorator";
-import { factionColor, planetFill } from "../graphics/utils";
+import { factionColor, factionPiecePlanet, planetFill } from "../graphics/utils";
 import { finalScoringFields, finalScoringItems } from "../logic/final-scoring-rules";
 import { tradeHeaders, tradeRows } from "../logic/trade-rewards";
+import FactionInfoCard from "./FactionInfoCard.vue";
 import RichTextView from "./Resources/RichTextView.vue";
 
 type Rule = Faction | "rules" | "scoring" | "trade";
 @Component({
-  components: { RichTextView },
+  components: { RichTextView, FactionInfoCard },
 })
 export default class Rules extends Vue {
   @Prop()
@@ -119,7 +121,7 @@ export default class Rules extends Vue {
   }
 
   get isFrontiers(): boolean {
-    return this.engine.expansions === Expansion.Frontiers;
+    return hasExpansion(this.engine.expansions, Expansion.Frontiers);
   }
 
   mounted() {
@@ -142,7 +144,7 @@ export default class Rules extends Vue {
   }
 
   get factions(): Faction[] {
-    return Object.values(Faction);
+    return Faction.values(this.engine.expansions);
   }
 
   factionName(faction: Rule): string {
@@ -154,15 +156,13 @@ export default class Rules extends Vue {
   }
 
   color(rule: Rule): string {
-    return planetFill(factionPlanet(rule as Faction));
+    return planetFill(factionPiecePlanet(rule as Faction));
   }
 
-  get factionTooltip(): string {
+  get factionVariant(): FactionBoardRaw | null {
     const faction = this.rule as Faction;
-
     const player = this.engine.players.find((p) => p.faction == faction);
-    const variant = player?.variant?.board ?? factionVariantBoard(this.engine.factionCustomization, faction)?.board;
-    return factionDesc(faction, variant, this.engine.expansions);
+    return player?.variant?.board ?? factionVariantBoard(this.engine.factionCustomization, faction)?.board ?? null;
   }
 }
 </script>

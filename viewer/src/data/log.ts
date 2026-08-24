@@ -8,6 +8,7 @@ import Engine, {
   Phase,
   Player,
   PlayerEnum,
+  Spaceship,
   TechTilePos,
 } from "@gaia-project/engine";
 import { AnyTechTilePos } from "@gaia-project/engine/src/enums";
@@ -22,7 +23,7 @@ import { MovesSlice, ownTurn, parsedMove, ParsedMove } from "../logic/recent";
 import { playerTableRow } from "../logic/table/info-table";
 import { logPlayerTables } from "../logic/table/player";
 import { boosterData } from "./boosters";
-import { advancedTechTileData, baseTechTileData } from "./tech-tiles";
+import { advancedTechTileData, baseTechTileData, spaceshipTechTileData } from "./tech-tiles";
 
 type LogCounter = {
   consumeChanges: (a: ExtractLogArg<any>) => void;
@@ -31,8 +32,21 @@ type LogCounter = {
 };
 
 function replaceTech(data: Engine, pos: AnyTechTilePos) {
-  const tile = data.tiles.techs[pos].tile;
-  return pos.startsWith("adv") ? advancedTechTileData[tile].name : baseTechTileData[tile].name;
+  if (pos.startsWith("adv")) {
+    return advancedTechTileData[data.tiles.techs[pos].tile].name;
+  }
+  if (Spaceship.values(data.expansions).includes(pos as unknown as Spaceship)) {
+    // A spaceship's tech-tile pool entry (engine.tiles.spaceshipTechs) is deleted the instant its
+    // single copy is claimed (move/research.ts) - unlike a base-board tech position, whose pool
+    // entry survives forever (only its count decrements). Describing an already-claimed ship tile
+    // from the log (which always redescribes a move that already happened) needs the permanent
+    // record in whichever player claimed it, since the pool entry itself is long gone by the time
+    // the log renders. This was a real bug: previously always looked in `tiles.techs` (the
+    // base-board pool only) and threw for every Lost Fleet game with a claimed ship tech tile.
+    const claimed = data.players.flatMap((p) => p.data.tiles.techs).find((t) => t.pos === pos);
+    return spaceshipTechTileData[claimed.tile as keyof typeof spaceshipTechTileData].name;
+  }
+  return baseTechTileData[data.tiles.techs[pos as TechTilePos].tile].name;
 }
 
 export function replaceMove(data: Engine, move: ParsedMove): ParsedMove {
@@ -42,19 +56,31 @@ export function replaceMove(data: Engine, move: ParsedMove): ParsedMove {
 
   return {
     commands: move.commands,
-    move: move.move.replace(/\b(tech|cover) [a-z0-9-]+|fed[0-9]+|booster[0-9]+/g, (match) => {
-      if (match.startsWith("booster")) {
-        return addDetails(match, boosterData[match].name);
-      } else if (match.startsWith("fed")) {
-        return addDetails(match, federationRewards(match as Federation).join(","));
-      } else if (match.startsWith("cover")) {
-        const pos = match.substr("cover ".length) as TechTilePos;
-        return addDetails(match, replaceTech(data, pos));
-      } else {
-        const pos = match.substr("tech ".length) as AnyTechTilePos;
-        return addDetails(match, replaceTech(data, pos));
+    move: move.move.replace(
+      /\b(tech|cover) [a-z0-9-]+|fed[0-9]+|booster[0-9]+/g,
+      (match, _group, offset: number, full: string) => {
+        // The Lost Fleet federation token "ship-fed-tech" ends in "-tech", and a hyphen is a
+        // non-word char, so \b still fires right there - a "using areaX: N" power-usage suffix
+        // straight after it (engine.ts's `${move} using ${powerUsage}`) reads as a bogus
+        // "tech using" tile-position command and replaceTech throws (data.tiles.techs["using"] is
+        // undefined). A real tech/cover command is never preceded by a hyphen, so use that to skip
+        // the false match instead of misparsing it.
+        if ((match.startsWith("tech") || match.startsWith("cover")) && full[offset - 1] === "-") {
+          return match;
+        }
+        if (match.startsWith("booster")) {
+          return addDetails(match, boosterData[match].name);
+        } else if (match.startsWith("fed")) {
+          return addDetails(match, federationRewards(match as Federation).join(","));
+        } else if (match.startsWith("cover")) {
+          const pos = match.substr("cover ".length) as TechTilePos;
+          return addDetails(match, replaceTech(data, pos));
+        } else {
+          const pos = match.substr("tech ".length) as AnyTechTilePos;
+          return addDetails(match, replaceTech(data, pos));
+        }
       }
-    }),
+    ),
   };
 }
 
@@ -117,6 +143,18 @@ type HistoryState = {
   turnFactions: string[];
 };
 
+/** Commands a player can make before they have a faction, so the move is logged under their seat
+ * ("p1 banFaction ambas") instead of a faction name. Their rows are neutral - there is no faction
+ * to color them with yet - but they still count as that seat's turn. */
+const setupCommandsBeforeFactions: Command[] = [
+  Command.Bid,
+  Command.RotateSectors,
+  Command.Setup,
+  Command.BanFaction,
+  Command.SilentBid,
+  Command.PreferenceBid,
+];
+
 function makeEntry(
   data: Engine,
   state: HistoryState,
@@ -138,7 +176,7 @@ function makeEntry(
     } else if (command == Command.ChooseFaction) {
       faction = cmd.args[0] as Faction;
       turnFaction = faction;
-    } else if (command == Command.Bid || command == Command.RotateSectors || command == Command.Setup) {
+    } else if (setupCommandsBeforeFactions.includes(command)) {
       turnFaction = cmd.faction;
     } else {
       faction = cmd.faction;
@@ -151,6 +189,14 @@ function makeEntry(
       turnFaction = faction;
     }
     move = faction;
+  }
+  // Belt and braces for the list above: a move logged before its player has a faction carries a
+  // seat slug ("p1") where a faction name would be, and that has no entry in the color maps. An
+  // `undefined` color used to blow up AdvancedLog's rowStyle and take the WHOLE log panel down with
+  // it (owner-reported, 2026-08-06: the log vanished during the round-0 ban phase), so treat any
+  // unrecognized faction as the neutral row it renders as anyway.
+  if (faction != null && factionLogColors[faction] == null) {
+    faction = null;
   }
   const color = faction == null ? "white" : own ? factionLogColors[faction] : lightFactionLogColors[faction];
   const textColor = own ? (faction != null ? factionLogTextColors[faction] : "black") : "var(--res-power)";

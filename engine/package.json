@@ -1,6 +1,6 @@
 {
   "name": "@gaia-project/engine",
-  "version": "4.9.0",
+  "version": "4.10.2",
   "description": "Javascript engine for project gaia",
   "main": "dist/index.js",
   "types": "index.ts",
@@ -22,10 +22,11 @@
   "scripts": {
     "prepublishOnly": "npm run test && npm run clean && tsc",
     "build": "npm run clean && tsc",
-    "clean": "rm -Rf dist",
+    "clean": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\"",
     "lint": "eslint . --ext .ts",
     "test": "mocha -r ts-node/register src/**/*.spec.ts src/*.spec.ts *.spec.ts",
-    "test-single": "mocha -r ts-node/register"
+    "test-single": "mocha -r ts-node/register",
+    "fuzz": "node -r ts-node/register src/fuzz/run.ts"
   },
   "contributors": [
     "coyotte508 <coyotte508@gmail.com>",
@@ -37,8 +38,7 @@
     "hexagrid": "^2.1.1",
     "lodash": "^4.17.15",
     "seedrandom": "2.4.3",
-    "semver-compare": "1.0.0",
-    "shuffle-seed": "1.1.6"
+    "semver-compare": "1.0.0"
   },
   "devDependencies": {
     "@types/chai": "^4.1.2",
@@ -57,6 +57,7 @@
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
     "mocha": "^5.2.0",
+    "shuffle-seed": "1.1.6",
     "ts-node": "^5.0.1",
     "typescript": "^4.9.5"
   }

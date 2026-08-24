@@ -1,5 +1,15 @@
 import { ChooseTechTile } from "../available/types";
-import { AdvTechTile, AdvTechTilePos, AnyTechTile, AnyTechTilePos, Operator, TechPos, TechTile } from "../enums";
+import {
+  AdvTechTile,
+  AdvTechTilePos,
+  AnyTechTile,
+  AnyTechTilePos,
+  Operator,
+  SpaceshipTechTile,
+  TechPos,
+  TechTile,
+  TechTilePos,
+} from "../enums";
 import Event, { EventSource } from "../events";
 import Reward from "../reward";
 
@@ -29,6 +39,14 @@ const techTileSpec: { [key in AnyTechTile]: string[] } = {
   [AdvTechTile.AdvTech13]: ["=> 3k"],
   [AdvTechTile.AdvTech14]: ["m >> 3vp"],
   [AdvTechTile.AdvTech15]: ["ts >> 3vp"],
+
+  // Lost Fleet, see RULES_CLARIFICATIONS.md §G2
+  [AdvTechTile.AsteroidPass]: ["ast | 2vp"],
+  [AdvTechTile.Big]: ["PA > 6vp"],
+  [AdvTechTile.Deep]: ["ds > 4vp"],
+  [AdvTechTile.DeepPass]: ["ds | 2vp"],
+  [AdvTechTile.QAction]: ["shipq >> 4vp"],
+  [AdvTechTile.Terra]: ["step >> 2vp"],
 };
 
 export function techTileEventWithSource(tile: AnyTechTile, source: EventSource): Event[] {
@@ -40,13 +58,32 @@ export function techTileEventSource(pos: AnyTechTilePos): AdvTechTilePos | TechP
 }
 
 export function techTileEvents(chooseTechTile: ChooseTechTile): Event[] {
-  return techTileEventWithSource(chooseTechTile.tile, techTileEventSource(chooseTechTile.pos));
+  // The Resource ship tech tile ("gain 1 ore and 3 knowledge immediately", spaceship-techs.ts) is a
+  // plain flat one-time reward - fits the same Operator.Once/condition-None shape as any base-game
+  // tech tile's flat reward (e.g. Tech1's "o,q"), so it's granted the same way: synchronously via
+  // Player.loadEvent's gainRewards call, with no extra move/subphase (unlike Range, a continuous
+  // modifier read directly off the tile's `enabled` flag elsewhere, or Terraform, whose chained
+  // Build-a-Mine prompt is executed from moveChooseTechTile before the follow-up tech-track bump).
+  if (chooseTechTile.tile === SpaceshipTechTile.Resource) {
+    return Event.parse(["o,3k"], chooseTechTile.pos);
+  }
+  if (isSpaceshipTechTile(chooseTechTile.tile)) {
+    return [];
+  }
+  return techTileEventWithSource(
+    chooseTechTile.tile,
+    techTileEventSource(chooseTechTile.pos as TechTilePos | AdvTechTilePos)
+  );
 }
 
 export function techTileRewards(tile: AnyTechTile): Reward[] {
   return techTileEventWithSource(tile, null).flatMap((e) => e.rewards);
 }
 
-export function isAdvanced(pos: AnyTechTilePos): boolean {
+export function isAdvanced(pos: string): boolean {
   return pos.startsWith("adv");
+}
+
+export function isSpaceshipTechTile(tile: AnyTechTile | SpaceshipTechTile): tile is SpaceshipTechTile {
+  return tile.startsWith("ship-tech-");
 }
