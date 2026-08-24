@@ -306,7 +306,9 @@ function materialDominates(left: DominanceMaterial, right: DominanceMaterial): b
   return strict;
 }
 
-interface DominanceIndexEntry<T extends Record<string, unknown>> {
+// `object` is the right generic constraint here
+// eslint-disable-next-line @typescript-eslint/ban-types
+interface DominanceIndexEntry<T extends object> {
   item: T;
   state: ProjectedConversionState;
   order: number;
@@ -317,7 +319,9 @@ interface DominanceIndexEntry<T extends Record<string, unknown>> {
  * Exact-context plus credit/ore/knowledge/QIC buckets are a necessary-condition filter only.
  * Every returned relationship still passes the complete ten-dimensional strict predicate.
  */
-class DominanceFrontierIndex<T extends Record<string, unknown>> {
+// `object` is the right generic constraint here
+// eslint-disable-next-line @typescript-eslint/ban-types
+class DominanceFrontierIndex<T extends object> {
   private readonly buckets = new Map<
     string,
     Map<number, Map<number, Map<number, Map<number, Array<DominanceIndexEntry<T>>>>>>
