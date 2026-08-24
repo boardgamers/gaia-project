@@ -11,6 +11,21 @@ if (process.argv.includes("lib")) {
       config.externals({
         "bootstrap-vue": "BootstrapVue",
       });
+      // Inline ALL svg assets as data URIs instead of emitting img/*.svg files that resolve
+      // against the baked-in publicPath (the versioned jsDelivr URL). This makes the UMD lib a
+      // fully self-contained file, so it can be hosted anywhere (S3 upload via the BGS admin
+      // API, jsDelivr, ...) without 404ing its images. ~376 KiB of svg, well worth it.
+      // "url-loader" resolves through vue-cli's own resolveLoader search path.
+      const urlLoader = require.resolve("url-loader", {
+        paths: [path.dirname(require.resolve("@vue/cli-service/package.json"))],
+      });
+      config.module
+        .rule("svg")
+        .uses.clear()
+        .end()
+        .use("url-loader")
+        .loader(urlLoader)
+        .options({ limit: undefined, esModule: false });
       // Package (transpile-only): the published bundle doesn't need full type-checking
       // (that's covered by the test workflow). fork-ts-checker otherwise resolves a hoisted
       // TS and fails on dependency .d.ts files (aria-query, csstype, @types/lodash) that

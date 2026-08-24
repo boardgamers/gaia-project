@@ -40,7 +40,13 @@
       <div v-if="submissionError" class="small text-danger mb-2">{{ submissionError }}</div>
       <div v-if="error" class="small text-danger mb-2">{{ error }}</div>
 
-      <b-btn variant="primary" class="silent-auction-bid__submit" :disabled="!valid || busy" @click="submit">
+      <div v-if="turnHint" class="small text-muted mb-2">{{ turnHint }}</div>
+      <b-btn
+        variant="primary"
+        class="silent-auction-bid__submit"
+        :disabled="!valid || busy || waitingForTurn"
+        @click="submit"
+      >
         {{ busy ? "Submitting…" : "Submit my bids" }}
       </b-btn>
     </template>

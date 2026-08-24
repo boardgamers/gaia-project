@@ -64,12 +64,40 @@ export default class SealedBidPanel extends Vue {
 
   /** What this device's own finished submission is called, e.g. "Your split is in." */
   get waitingText(): string {
-    if (!this.backend) {
+    if (!this.backend && !this.onlineSequential) {
       return "Pass the device to the next player.";
     }
     return this.submittedCount >= this.playerCount
       ? "Everyone has submitted - resolving the auction…"
       : "The auction resolves itself the moment the last submission lands.";
+  }
+
+  /**
+   * Online play without a sealed backend (boardgamers.space): this device holds exactly one locked
+   * seat and a bid is an ordinary move relayed through the platform. The engine collects bids one
+   * seat at a time, but the platform's stripSecret masks every submitted bid from the other
+   * clients until the reveal - so the round is sequential-but-sealed: you may have to wait for
+   * your turn to submit, yet nobody ever sees a value before the auction resolves.
+   */
+  get onlineSequential(): boolean {
+    if (this.backend || this.$store.state.analysisMode) {
+      return false;
+    }
+    const locked = this.$store.state.player?.index;
+    return typeof locked === "number" && locked >= 0;
+  }
+
+  /** True while this device's seat may not submit yet (online sequential play, not on turn). */
+  get waitingForTurn(): boolean {
+    return this.onlineSequential && this.seat !== null && this.gameData?.playerToMove !== this.seat;
+  }
+
+  /** Small hint under the form while `waitingForTurn` - the inputs stay editable so the bids can
+   * be prepared, only the submit waits. */
+  get turnHint(): string {
+    return this.waitingForTurn
+      ? "Waiting for your turn to submit - bids already made stay sealed until everyone has bid."
+      : "";
   }
 
   // -------------------------------------------------------------------------
@@ -311,7 +339,7 @@ export default class SealedBidPanel extends Vue {
 
   async submit() {
     const seat = this.seat;
-    if (seat === null || !this.valid || this.busy) {
+    if (seat === null || !this.valid || this.busy || this.waitingForTurn) {
       return;
     }
     this.error = "";

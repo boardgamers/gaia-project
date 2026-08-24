@@ -2,7 +2,7 @@ import assert from "assert";
 import crypto from "crypto";
 import { set } from "lodash";
 import Engine, { EngineOptions } from "./src/engine";
-import { Round } from "./src/enums";
+import { Phase, Round } from "./src/enums";
 import {
   defaultAutoCharge,
   defaultAutoChargeMaxPassedRoundLeech,
@@ -261,14 +261,61 @@ export function messages(engine: Engine) {
   };
 }
 
+/** `p3 silentBid ...` / `p3 preferenceBid ...` → seat index 2, or null for any other move. */
+function sealedBidMovePlayer(move: string): number | null {
+  const match = /^p(\d+)\s+(?:silentBid|preferenceBid)\b/.exec(move.trim());
+  return match ? Number(match[1]) - 1 : null;
+}
+
+/**
+ * Hide other seats' sealed bids while a silent / preference-split auction round is being
+ * collected. The bid phases are sequential in-engine (one seat at a time), but nothing is
+ * derived from a bid until the last one lands, so sequential-but-hidden is equivalent to a
+ * simultaneous sealed round: the only thing other clients may learn is WHO has already bid
+ * (the UI shows that roster anyway), never the values or preference order.
+ *
+ * Masking is phase-scoped (same pattern as take6's face-down cards): once the engine leaves
+ * the bid phase the reveal has happened and the true moves/bids are public again - clients
+ * simply re-fetch the log. While the phase is in progress, a masked bid move is served as
+ * `pN silentBid` (well-formed command, no arguments), and the engine-level bid arrays keep
+ * only the `player` field for foreign seats so the "already submitted" roster keeps working.
+ */
+export function stripSecret(engine: Engine, player?: number): Engine {
+  // Plain-JSON copy: this runs on both live Engine instances and the saved plain data, and the
+  // platform JSON-serializes whatever we return anyway.
+  const data = JSON.parse(JSON.stringify(engine)) as Engine;
+
+  if (data.phase !== Phase.SetupSilentBid && data.phase !== Phase.SetupPreferenceBid) {
+    return data;
+  }
+
+  data.silentAuctionBids = (data.silentAuctionBids ?? []).map((bid) =>
+    bid.player === player ? bid : ({ player: bid.player } as typeof bid)
+  );
+  data.preferenceSplitBids = (data.preferenceSplitBids ?? []).map((bid) =>
+    bid.player === player ? bid : ({ player: bid.player } as typeof bid)
+  );
+  data.moveHistory = data.moveHistory.map((move) => {
+    const bidder = sealedBidMovePlayer(move);
+    if (bidder === null || bidder === player) {
+      return move;
+    }
+    // Keep the seat + command so log rendering can still label the row, drop the arguments.
+    return move.trim().split(/\s+/).slice(0, 2).join(" ");
+  });
+
+  return data;
+}
+
 export function logLength(engine: Engine) {
   return engine.moveHistory.length;
 }
 
 export function logSlice(engine: Engine, options?: { player?: number; start?: number; end?: number }) {
+  const stripped = stripSecret(engine, options?.player);
   return {
-    state: engine, // to remove later
-    log: engine.moveHistory.slice(options?.start, options?.end),
+    state: stripped, // to remove later
+    log: stripped.moveHistory.slice(options?.start, options?.end),
     availableMoves: engine.availableCommands, // todo: if end !== undefined, get the available moves from back then?
   };
 }

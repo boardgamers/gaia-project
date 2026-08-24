@@ -1,4 +1,4 @@
-import { ChartConfiguration } from "chart.js";
+import type { ChartConfiguration } from "chart.js";
 import { CellStyle, staticCellStyle } from "../../graphics/colors";
 import { DatasetSummary, TableMeta } from "./chart-factory";
 import { ChartStyleDisplay } from "./charts";

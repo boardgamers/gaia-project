@@ -9,7 +9,7 @@ import Engine, {
 } from "@gaia-project/engine";
 import { boosterEvents } from "@gaia-project/engine/src/tiles/boosters";
 import { techTileRewards } from "@gaia-project/engine/src/tiles/techs";
-import {
+import type {
   ChartConfiguration,
   ChartDataset,
   ChartEvent,
