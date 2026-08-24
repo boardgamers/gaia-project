@@ -1,4 +1,4 @@
-import assert from "assert";
+import assert from "../utils/assert";
 import { ChargeDecision, ChargeRequest, decideChargeRequest } from "../auto-charge";
 import { AvailableCommand, AvailableFreeActionData } from "../available/types";
 import Engine from "../engine";

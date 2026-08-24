@@ -1,4 +1,4 @@
-import assert from "assert";
+import assert from "./utils/assert";
 import { Resource } from "./enums";
 import Event from "./events";
 import { Settings } from "./player";

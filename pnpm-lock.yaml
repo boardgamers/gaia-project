@@ -44,9 +44,6 @@ importers:
       semver-compare:
         specifier: 1.0.0
         version: 1.0.0
-      shuffle-seed:
-        specifier: 1.1.6
-        version: 1.1.6
     devDependencies:
       '@types/chai':
         specifier: ^4.1.2
@@ -96,6 +93,9 @@ importers:
       mocha:
         specifier: ^5.2.0
         version: 5.2.0
+      shuffle-seed:
+        specifier: 1.1.6
+        version: 1.1.6
       ts-node:
         specifier: ^5.0.1
         version: 5.0.1

@@ -1,4 +1,4 @@
-import assert from "assert";
+import assert from "./utils/assert";
 import { EventEmitter } from "eventemitter3";
 import { cloneDeep, fromPairs } from "lodash";
 import { TRADE_COST } from "./available/ships";

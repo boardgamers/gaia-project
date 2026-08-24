@@ -1,5 +1,5 @@
-import assert from "assert";
-import shuffleSeed from "shuffle-seed";
+import assert from "./utils/assert";
+import shuffleSeed from "./utils/shuffle";
 import { AvailableCommand } from "./available/types";
 import Engine from "./engine";
 import {

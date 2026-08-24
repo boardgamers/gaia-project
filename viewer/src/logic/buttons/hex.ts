@@ -7,7 +7,7 @@ import {
   Resource,
   Reward,
 } from "@gaia-project/engine";
-import assert from "assert";
+import assert from "@gaia-project/engine/src/utils/assert";
 import { ButtonData, HighlightHex } from "../../data";
 import { buildingData } from "../../data/building";
 import { planetNames } from "../../data/planets";

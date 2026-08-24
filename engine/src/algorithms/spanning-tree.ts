@@ -1,4 +1,4 @@
-import assert from "assert";
+import assert from "../utils/assert";
 import { Grid, Hex } from "hexagrid";
 import { difference, inRange, maxBy, minBy, sumBy, uniq } from "lodash";
 import { topologyOf } from "./grid-topology";

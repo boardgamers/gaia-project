@@ -1,4 +1,4 @@
-import assert from "assert";
+import assert from "./utils/assert";
 import { CubeCoordinates, Hex } from "hexagrid";
 import { stdBuildingValue } from "./buildings";
 import { Building, Planet, Player, Spaceship } from "./enums";

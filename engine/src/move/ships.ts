@@ -1,4 +1,4 @@
-import assert from "assert";
+import assert from "../utils/assert";
 import { AvailableBuilding, AvailableCommand, ShipAction, TradingLocation } from "../available/types";
 import Engine from "../engine";
 import { Building, Command, Condition, Player as PlayerEnum } from "../enums";

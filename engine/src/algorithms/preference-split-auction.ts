@@ -1,4 +1,4 @@
-import assert from "assert";
+import assert from "../utils/assert";
 import { Faction, Player as PlayerEnum } from "../enums";
 
 /**

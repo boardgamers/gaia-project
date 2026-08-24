@@ -1,4 +1,4 @@
-import assert from "assert";
+import assert from "./src/utils/assert";
 import crypto from "crypto";
 import { set } from "lodash";
 import Engine, { EngineOptions } from "./src/engine";

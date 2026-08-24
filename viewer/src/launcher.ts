@@ -19,7 +19,14 @@ Vue.component("Resource", Resource);
 // (after tapping something else first) shows it. Binding a no-op touchstart listener up front
 // arms hover emulation immediately, so the very first tap on any tooltip target works.
 if (typeof document !== "undefined") {
-  document.body.addEventListener("touchstart", () => undefined, true);
+  // The lib may be loaded from <head> (e.g. the platform's iframe wrapper), where document.body
+  // does not exist yet at module evaluation time.
+  const armHoverEmulation = () => document.body.addEventListener("touchstart", () => undefined, true);
+  if (document.body) {
+    armHoverEmulation();
+  } else {
+    document.addEventListener("DOMContentLoaded", armHoverEmulation);
+  }
 }
 
 // The boardgamers.space host page signals dark mode by toggling the "dark" class on <html>

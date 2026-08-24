@@ -1,4 +1,4 @@
-import assert from "assert";
+import assert from "./utils/assert";
 import { set } from "lodash";
 import { version } from "../package.json";
 import {

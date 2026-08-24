@@ -1,8 +1,8 @@
-import assert from "assert";
+import assert from "./utils/assert";
 import { CubeCoordinates, Grid, Hex } from "hexagrid";
 import { keyBy } from "lodash";
 import seedrandom from "seedrandom";
-import shuffleSeed from "shuffle-seed";
+import shuffleSeed from "./utils/shuffle";
 import { EngineOptions } from "./engine";
 import { Faction, Planet, Player } from "./enums";
 import { GaiaHex, reverseSuffixes } from "./gaia-hex";

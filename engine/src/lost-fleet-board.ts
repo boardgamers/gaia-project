@@ -1,6 +1,6 @@
 import { CubeCoordinates, Grid } from "hexagrid";
 import seedrandom from "seedrandom";
-import shuffleSeed from "shuffle-seed";
+import shuffleSeed from "./utils/shuffle";
 import { Expansion, Planet, Spaceship } from "./enums";
 import { GaiaHex } from "./gaia-hex";
 import {

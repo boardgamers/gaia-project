@@ -1,4 +1,4 @@
-import assert from "assert";
+import assert from "../utils/assert";
 import { AvailableCommand } from "../available/types";
 import Engine from "../engine";
 import { Command, Player as PlayerEnum, Spaceship } from "../enums";

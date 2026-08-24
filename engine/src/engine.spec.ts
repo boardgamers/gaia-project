@@ -1,4 +1,4 @@
-import { AssertionError } from "assert";
+import { AssertionError } from "./utils/assert";
 import { expect } from "chai";
 import { BoardAction, Booster, Building, Player } from "..";
 import { version } from "../package.json";

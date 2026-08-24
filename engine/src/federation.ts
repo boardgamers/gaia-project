@@ -1,4 +1,4 @@
-import assert from "assert";
+import assert from "./utils/assert";
 import { difference, uniq } from "lodash";
 import { Faction } from "./enums";
 import { GaiaHex } from "./gaia-hex";

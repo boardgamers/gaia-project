@@ -1,5 +1,5 @@
 import { difference } from "lodash";
-import shuffleSeed from "shuffle-seed";
+import shuffleSeed from "./utils/shuffle";
 import { Expansion, Faction, Planet, Player as PlayerEnum, TinkeringTile } from "./enums";
 
 type TerraformingCost3Player = { player: PlayerEnum; faction: Faction };

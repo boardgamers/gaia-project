@@ -1,5 +1,5 @@
 import Engine, { Phase, Player, Resource, Reward } from "@gaia-project/engine";
-import assert from "assert";
+import assert from "@gaia-project/engine/src/utils/assert";
 import { colorCodes } from "../logic/color-codes";
 
 export type ResourceName = {

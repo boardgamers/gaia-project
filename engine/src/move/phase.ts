@@ -1,4 +1,4 @@
-import assert from "assert";
+import assert from "../utils/assert";
 import { range } from "lodash";
 import { resolvePreferenceSplitAuction } from "../algorithms/preference-split-auction";
 import { finalRankings, gainFinalScoringVictoryPoints } from "../algorithms/scoring";

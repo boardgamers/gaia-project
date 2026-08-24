@@ -1,4 +1,4 @@
-import assert from "assert";
+import assert from "./utils/assert";
 import { EventEmitter } from "eventemitter3";
 import { CubeCoordinates, Grid, Hex } from "hexagrid";
 import { countBy, difference, merge, sum, uniq, uniqWith, zipWith } from "lodash";

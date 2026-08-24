@@ -1,4 +1,4 @@
-import assert from "assert";
+import assert from "../utils/assert";
 import { isEqual } from "lodash";
 import { AvailableCommand } from "../available/types";
 import Engine from "../engine";
