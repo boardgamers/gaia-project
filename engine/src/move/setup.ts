@@ -1,4 +1,3 @@
-import assert from "../utils/assert";
 import { uniq } from "lodash";
 import {
   defaultPreferenceSplitBudget,
@@ -15,6 +14,7 @@ import { lostFleetTerraformingBoard, remainingFactions } from "../factions";
 import SpaceMap from "../map";
 import Player from "../player";
 import { applyRandomBoardSetup, applySetupOption, SetupOption, SetupPosition, SetupType } from "../setup";
+import assert from "../utils/assert";
 
 export function moveInit(engine: Engine, players: number, seed: string) {
   assert(players >= 2 && players <= 5, "Invalid number of players");

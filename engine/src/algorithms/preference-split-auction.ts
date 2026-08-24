@@ -1,5 +1,5 @@
-import assert from "../utils/assert";
 import { Faction, Player as PlayerEnum } from "../enums";
+import assert from "../utils/assert";
 
 /**
  * "Preference Split Auction" - a simultaneous, secret, budget-limited faction auction resolved

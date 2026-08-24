@@ -3,8 +3,7 @@ import * as seedrandomNamespace from "seedrandom";
 // Interop-proof import: depending on which tsconfig/bundler compiles this file (tsc CommonJS for
 // the node engine, webpack harmony modules for the viewer lib), a CJS package's "default" lands in
 // different places. Resolve it once, at runtime.
-const seedrandom: (seed: string) => () => number =
-  (seedrandomNamespace as any).default ?? (seedrandomNamespace as any);
+const seedrandom: (seed: string) => () => number = (seedrandomNamespace as any).default ?? (seedrandomNamespace as any);
 
 /**
  * Vendored re-implementation of the `shuffle-seed` npm package (MIT), byte-for-byte compatible:

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { expect } from "chai";
 import Engine from "../engine";
 import { Building, Command, Faction, Player as PlayerEnum } from "../enums";

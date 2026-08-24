@@ -1,5 +1,3 @@
-import assert from "./utils/assert";
-import shuffleSeed from "./utils/shuffle";
 import { AvailableCommand } from "./available/types";
 import Engine from "./engine";
 import {
@@ -26,6 +24,8 @@ import {
 } from "./enums";
 import SpaceMap, { MapTile } from "./map";
 import { artifactSlotCount, SeededSpaceshipTech, shipsInPlay, spaceshipBoards } from "./spaceships";
+import assert from "./utils/assert";
+import shuffleSeed from "./utils/shuffle";
 
 export enum SetupType {
   Booster = "booster",

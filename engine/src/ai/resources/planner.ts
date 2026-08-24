@@ -306,7 +306,7 @@ function materialDominates(left: DominanceMaterial, right: DominanceMaterial): b
   return strict;
 }
 
-interface DominanceIndexEntry<T extends object> {
+interface DominanceIndexEntry<T extends Record<string, unknown>> {
   item: T;
   state: ProjectedConversionState;
   order: number;
@@ -317,7 +317,7 @@ interface DominanceIndexEntry<T extends object> {
  * Exact-context plus credit/ore/knowledge/QIC buckets are a necessary-condition filter only.
  * Every returned relationship still passes the complete ten-dimensional strict predicate.
  */
-class DominanceFrontierIndex<T extends object> {
+class DominanceFrontierIndex<T extends Record<string, unknown>> {
   private readonly buckets = new Map<
     string,
     Map<number, Map<number, Map<number, Map<number, Array<DominanceIndexEntry<T>>>>>>

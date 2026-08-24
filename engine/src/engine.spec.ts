@@ -1,4 +1,3 @@
-import { AssertionError } from "./utils/assert";
 import { expect } from "chai";
 import { BoardAction, Booster, Building, Player } from "..";
 import { version } from "../package.json";
@@ -18,6 +17,7 @@ import {
 import { autoChargePower } from "./move/auto";
 import PlayerData, { MoveTokens } from "./player-data";
 import { techTileEventWithSource } from "./tiles/techs";
+import { AssertionError } from "./utils/assert";
 
 describe("Engine", () => {
   it("should throw when trying to build on the wrong place", () => {

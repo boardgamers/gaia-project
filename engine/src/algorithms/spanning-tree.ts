@@ -1,6 +1,6 @@
-import assert from "../utils/assert";
 import { Grid, Hex } from "hexagrid";
 import { difference, inRange, maxBy, minBy, sumBy, uniq } from "lodash";
+import assert from "../utils/assert";
 import { topologyOf } from "./grid-topology";
 import minimumPathLength from "./minimum-path-length";
 import shortestPath from "./shortest-path";

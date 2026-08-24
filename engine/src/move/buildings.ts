@@ -1,10 +1,10 @@
-import assert from "../utils/assert";
 import { isEqual } from "lodash";
 import { AvailableBuilding, AvailableCommand } from "../available/types";
 import Engine from "../engine";
 import { Building, Command, isShip, Phase, Planet, Player as PlayerEnum } from "../enums";
 import Player from "../player";
 import Reward from "../reward";
+import assert from "../utils/assert";
 
 /**
  * Qualifier that may follow the location on a build move, as in `build ts 1x2 cheap`. Purely

@@ -1,8 +1,8 @@
-import assert from "../utils/assert";
 import { ChargeDecision, ChargeRequest, decideChargeRequest } from "../auto-charge";
 import { AvailableCommand, AvailableFreeActionData } from "../available/types";
 import Engine from "../engine";
 import { Command, Faction, PowerArea, Resource } from "../enums";
+import assert from "../utils/assert";
 
 /** Automatically generate moves based on player settings */
 export function autoMove(engine: Engine, partialMove?: string, options?: { autoPass?: boolean }): boolean {

@@ -189,7 +189,9 @@ describe("Game", () => {
   });
 
   it("replays Moweyds' PI upgrade cleanly when confirming End Turn in self-contained mode", async () => {
-    let { persisted, partial, coordinates } = createMoweydsPiUpgradeState();
+    const moweydsState = createMoweydsPiUpgradeState();
+    let { persisted } = moweydsState;
+    const { partial, coordinates } = moweydsState;
 
     const store = makeStore();
     const vm = new (Vue.extend(Game as any))({ store }) as any;

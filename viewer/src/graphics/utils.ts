@@ -15,9 +15,8 @@ export function factionPiecePlanet(faction: Faction): Planet {
 }
 
 function planetColorVarName(planet: Planet): string {
-  return `--${Object.keys(Planet)
-    .find((key) => Planet[key] === planet)!
-    .toLowerCase()}`;
+  const key = Object.keys(Planet).find((k) => Planet[k] === planet) ?? "unknown";
+  return `--${key.toLowerCase()}`;
 }
 
 export function factionColor(faction: Faction | "gen"): string {

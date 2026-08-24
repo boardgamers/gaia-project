@@ -209,7 +209,8 @@ export function attachZoomCompensation({ element, isStickyMobile }: ZoomCompensa
   // left transformed at the moment the app was minimized re-derives itself the instant it is on
   // screen again, with no event needed - and, because the condition is read off the element rather
   // than off a remembered value, that holds for a transform this module did not write either.
-  const armWatchdog = () => {
+  // A function declaration (hoisted) because `update` above re-arms the watchdog.
+  function armWatchdog() {
     if (destroyed || stopWatchdog !== null) {
       return;
     }
@@ -220,7 +221,7 @@ export function attachZoomCompensation({ element, isStickyMobile }: ZoomCompensa
       stopWatchdog = null;
       update();
     });
-  };
+  }
 
   // Everything that invalidates the reading wholesale rather than reporting a change to it. Clearing
   // first is deliberate: in the overwhelmingly common case (nobody is pinch-zoomed) that alone puts

@@ -1,4 +1,3 @@
-import assert from "./utils/assert";
 import { set } from "lodash";
 import { version } from "../package.json";
 import {
@@ -86,6 +85,7 @@ import { lastTile } from "./research-tracks";
 import { SeededSpaceshipTech, SpaceshipActionType } from "./spaceships";
 import { roundScoringEvents } from "./tiles/scoring";
 import { isVersionOrLater } from "./utils";
+import assert from "./utils/assert";
 
 export const LEECHING_DISTANCE = 2;
 

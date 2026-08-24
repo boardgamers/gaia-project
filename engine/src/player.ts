@@ -1,4 +1,3 @@
-import assert from "./utils/assert";
 import { EventEmitter } from "eventemitter3";
 import { CubeCoordinates, Grid, Hex } from "hexagrid";
 import { countBy, difference, merge, sum, uniq, uniqWith, zipWith } from "lodash";
@@ -58,6 +57,7 @@ import { finalScorings } from "./tiles/scoring";
 import { spaceshipFederationRewards } from "./tiles/spaceship-federations";
 import { isAdvanced, techTileEvents } from "./tiles/techs";
 import { isVersionOrLater } from "./utils";
+import assert from "./utils/assert";
 
 // 25 satellites total
 // The 2 used on the final scoring board and 1 used in the player order can be replaced by other markers

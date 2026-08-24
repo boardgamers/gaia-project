@@ -1,4 +1,3 @@
-import assert from "../utils/assert";
 import { AvailableCommand } from "../available/types";
 import Engine from "../engine";
 import {
@@ -12,6 +11,7 @@ import {
   TechTilePos,
 } from "../enums";
 import { isAdvanced } from "../tiles/techs";
+import assert from "../utils/assert";
 import { advanceResearchAreaPhase } from "./phase";
 
 export function moveResearch(

@@ -1,4 +1,3 @@
-import assert from "./utils/assert";
 import { EventEmitter } from "eventemitter3";
 import { cloneDeep, fromPairs } from "lodash";
 import { TRADE_COST } from "./available/ships";
@@ -24,6 +23,7 @@ import { EventSource } from "./events";
 import { FactionBoard } from "./faction-boards";
 import { GaiaHex } from "./gaia-hex";
 import Reward from "./reward";
+import assert from "./utils/assert";
 
 const MAX_ORE = 15;
 const MAX_CREDIT = 30;

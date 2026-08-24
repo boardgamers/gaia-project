@@ -1,4 +1,3 @@
-import assert from "../utils/assert";
 import { AvailableCommand } from "../available/types";
 import Engine from "../engine";
 import {
@@ -15,6 +14,7 @@ import Event from "../events";
 import Player from "../player";
 import Reward from "../reward";
 import { artifactTokenRewards } from "../tiles/artifacts";
+import assert from "../utils/assert";
 
 export function moveExamineArtifact(
   engine: Engine,

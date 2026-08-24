@@ -1,8 +1,8 @@
-import assert from "./utils/assert";
 import { CubeCoordinates, Hex } from "hexagrid";
 import { stdBuildingValue } from "./buildings";
 import { Building, Planet, Player, Spaceship } from "./enums";
 import { classifySectorId, LostFleetSectorType } from "./lost-fleet-map";
+import assert from "./utils/assert";
 
 export interface GaiaHexData {
   planet: Planet;

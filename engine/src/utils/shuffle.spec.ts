@@ -1,7 +1,7 @@
 import { expect } from "chai";
+import vendored from "./shuffle";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const original = require("shuffle-seed");
-import vendored from "./shuffle";
 
 describe("vendored shuffle-seed", () => {
   const seeds = ["djfjjv4k", "e2e-seed", "none", "12345", "Gaia-Project!", "9zNkbGXKV3iMYT2"];

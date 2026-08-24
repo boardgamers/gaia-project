@@ -1,4 +1,3 @@
-import assert from "../utils/assert";
 import { isEqual } from "lodash";
 import { AvailableCommand } from "../available/types";
 import Engine from "../engine";
@@ -6,6 +5,7 @@ import { Building, Command, Condition, Planet, Player as PlayerEnum, Spaceship, 
 import Event from "../events";
 import Reward from "../reward";
 import { SpaceshipActionType, spaceshipActionEffects } from "../spaceships";
+import assert from "../utils/assert";
 
 export function moveSpaceshipAction(
   engine: Engine,

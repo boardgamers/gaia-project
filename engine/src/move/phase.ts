@@ -1,4 +1,3 @@
-import assert from "../utils/assert";
 import { range } from "lodash";
 import { resolvePreferenceSplitAuction } from "../algorithms/preference-split-auction";
 import { finalRankings, gainFinalScoringVictoryPoints } from "../algorithms/scoring";
@@ -31,6 +30,7 @@ import Player from "../player";
 import { lastTile } from "../research-tracks";
 import Reward from "../reward";
 import { initCustomSetup, possibleSetupBoardActions } from "../setup";
+import assert from "../utils/assert";
 import { moveInit } from "./setup";
 
 export function phaseSetupInit(engine: Engine, move: string) {

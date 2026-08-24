@@ -1,4 +1,3 @@
-import assert from "../utils/assert";
 import { AvailableCommand } from "../available/types";
 import Engine from "../engine";
 import {
@@ -14,6 +13,7 @@ import Reward from "../reward";
 import { claimableSpaceshipFederations } from "../spaceships";
 import { federationRewards } from "../tiles/federations";
 import { spaceshipFederationRewards } from "../tiles/spaceship-federations";
+import assert from "../utils/assert";
 
 export function moveChooseFederationTile(
   engine: Engine,

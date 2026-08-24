@@ -1,5 +1,5 @@
-import assert from "../utils/assert";
 import { Faction, Player as PlayerEnum } from "../enums";
+import assert from "../utils/assert";
 
 /** Upper bound offered for a Silent Auction max-VP bid; a generous ceiling, not a real cap. */
 export const MAX_SILENT_BID = 40;

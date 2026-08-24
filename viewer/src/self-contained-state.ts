@@ -88,7 +88,8 @@ export function parseLoadFromQuery(search = ""): SelfContainedLoad | null {
 }
 
 export function loadEngineFromData(load: SelfContainedLoad): Engine {
-  let { engineData, type, stopMove } = load;
+  let { engineData } = load;
+  const { type, stopMove } = load;
   if ("cancelled" in engineData) {
     engineData = (engineData as any).data;
   }

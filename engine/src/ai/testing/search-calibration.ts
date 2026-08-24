@@ -94,7 +94,7 @@ function rankBy(
   );
 }
 
-function macroProfile(source: Engine, macro: CommittedTurnMacro): object {
+function macroProfile(source: Engine, macro: CommittedTurnMacro): Record<string, unknown> {
   const destination = applyMacroHostStyle(source, macro);
   const greedyValue = greedyStateValue(destination);
   const heuristicValue = evaluateHeuristic(destination, { transition: { source, macro } }).value;
@@ -110,7 +110,7 @@ function macroProfile(source: Engine, macro: CommittedTurnMacro): object {
   };
 }
 
-function priorEntryProfile(entries: NonNeuralPriorEntry[], macroKey: string): object {
+function priorEntryProfile(entries: NonNeuralPriorEntry[], macroKey: string): Record<string, unknown> {
   const entry = entries.find((candidate) => candidate.macroKey === macroKey);
   if (!entry) {
     throw new Error(`Missing prior entry for ${macroKey}`);
@@ -130,7 +130,7 @@ function heuristicPreferenceBreakdown(
   source: Engine,
   selected: CommittedTurnMacro,
   greedy: CommittedTurnMacro
-): object[] {
+): Record<string, unknown>[] {
   const selectedEvaluation = evaluateHeuristic(applyMacroHostStyle(source, selected), {
     transition: { source, macro: selected },
   });
@@ -159,11 +159,11 @@ function heuristicPreferenceBreakdown(
     .slice(0, 8);
 }
 
-function traceFirstMaterialDivergences(candidateSeat: Player, arm: CalibrationArm): object {
+function traceFirstMaterialDivergences(candidateSeat: Player, arm: CalibrationArm): Record<string, unknown> {
   let engine = new Engine([...LOST_FLEET_CHALLENGE.scriptedPrefix], challengeEngineOptions());
   const candidate = searchBot(TRACE_BUDGET, `ai-7-calibration-trace:${arm.label}:${candidateSeat}`, arm);
   const opponent = new GreedyMacroBot();
-  const divergences: object[] = [];
+  const divergences: Record<string, unknown>[] = [];
   let differentChoices = 0;
   let freshDecisionDifferences = 0;
   let availableVisitEvents = 0;
@@ -255,7 +255,7 @@ function traceFirstMaterialDivergences(candidateSeat: Player, arm: CalibrationAr
   };
 }
 
-function curatedBudgetComparison(): object {
+function curatedBudgetComparison(): Record<string, unknown> {
   const positions = buildCuratedSearchPositions();
   const measurements = positions.map((position) => {
     const greedy = new GreedyMacroBot().select(position.engine);

@@ -5,7 +5,7 @@ import { FullGamePlayerReport } from "./full-game-report";
 import { PairedBaselineResult, playPairedBaselineMatchup } from "./self-play";
 import { buildCuratedSearchPositions } from "./strength";
 
-function compactPlayer(player: FullGamePlayerReport): object {
+function compactPlayer(player: FullGamePlayerReport): Record<string, unknown> {
   return {
     faction: player.faction,
     finalScore: player.score.finalScore,

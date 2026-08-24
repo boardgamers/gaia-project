@@ -1,4 +1,3 @@
-import assert from "../utils/assert";
 import { isEqual } from "lodash";
 import { boardActions } from "../actions";
 import { AvailableCommand } from "../available/types";
@@ -6,6 +5,7 @@ import Engine from "../engine";
 import { BoardAction, Building, Command, Player as PlayerEnum, TinkeringTile } from "../enums";
 import Event from "../events";
 import Reward from "../reward";
+import assert from "../utils/assert";
 
 export function moveSpecial(
   engine: Engine,

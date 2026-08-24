@@ -105,7 +105,7 @@ function round(value: number): number {
   return Math.round(value * 1000) / 1000;
 }
 
-function campaignSummary(label: string, campaign: StrengthCampaignResult): object {
+function campaignSummary(label: string, campaign: StrengthCampaignResult): Record<string, unknown> {
   return {
     label,
     candidateBot: campaign.candidateBot,

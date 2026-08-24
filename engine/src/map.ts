@@ -1,14 +1,14 @@
-import assert from "./utils/assert";
 import { CubeCoordinates, Grid, Hex } from "hexagrid";
 import { keyBy } from "lodash";
 import seedrandom from "seedrandom";
-import shuffleSeed from "./utils/shuffle";
 import { EngineOptions } from "./engine";
 import { Faction, Planet, Player } from "./enums";
 import { GaiaHex, reverseSuffixes } from "./gaia-hex";
 import { generateLostFleetBoard } from "./lost-fleet-board";
 import { classifySectorId, lostFleetSectorCenters, LostFleetSectorType } from "./lost-fleet-map";
 import Sector from "./sector";
+import assert from "./utils/assert";
+import shuffleSeed from "./utils/shuffle";
 
 // Data: from outer ring to inside ring, starting from top
 const s1 = { name: "1", map: "eeemevoeedee,ereees,e".replace(/,/g, "") };

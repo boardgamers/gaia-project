@@ -227,7 +227,7 @@ export function piConversions(faction: Faction): Conversion[] {
       : faction === Faction.HadschHallas
         ? freeActionsHadschHallas
         : null;
-  return table ? Object.values(table).map((c) => ({ cost: c!.cost, income: c!.income })) : [];
+  return table ? Object.values(table).flatMap((c) => (c ? [{ cost: c.cost, income: c.income }] : [])) : [];
 }
 
 // A board special action worth spelling out in text (its octagon is on the board but not labelled).

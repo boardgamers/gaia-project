@@ -1,4 +1,3 @@
-import assert from "./src/utils/assert";
 import crypto from "crypto";
 import { set } from "lodash";
 import Engine, { EngineOptions } from "./src/engine";
@@ -8,6 +7,7 @@ import {
   defaultAutoChargeMaxPassedRoundLeech,
   defaultAutoChargeTargetSpendablePower,
 } from "./src/player";
+import assert from "./src/utils/assert";
 
 export async function init(
   nbPlayers: number,

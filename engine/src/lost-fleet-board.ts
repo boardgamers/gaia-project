@@ -1,6 +1,5 @@
 import { CubeCoordinates, Grid } from "hexagrid";
 import seedrandom from "seedrandom";
-import shuffleSeed from "./utils/shuffle";
 import { Expansion, Planet, Spaceship } from "./enums";
 import { GaiaHex } from "./gaia-hex";
 import {
@@ -16,6 +15,7 @@ import {
 import { MapTile, s1, s10, s2, s3, s4, s5, s5b, s6, s6b, s7, s7b, s8, s9, SectorInMapConfiguration } from "./map";
 import Sector from "./sector";
 import { shipsInPlay } from "./spaceships";
+import shuffleSeed from "./utils/shuffle";
 
 /**
  * Lost Fleet "Variable Gameboard Layout" board assembly: turns the geometry/tile data in

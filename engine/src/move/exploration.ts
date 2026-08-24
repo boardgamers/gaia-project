@@ -1,9 +1,9 @@
-import assert from "../utils/assert";
 import { AvailableCommand } from "../available/types";
 import Engine from "../engine";
 import { Command, Player as PlayerEnum, Spaceship } from "../enums";
 import { canPayExplorationCost, deployExplorationShuttle } from "../exploration";
 import Reward from "../reward";
+import assert from "../utils/assert";
 
 export function moveExplore(
   engine: Engine,
