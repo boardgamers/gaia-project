@@ -38,26 +38,37 @@ admin for a current one. Do NOT commit tokens anywhere.
 The game is registered on the v3 gameinfo service. Base URL: `https://admin.boardgamers.space/api/admin/gameinfo/gaia-project/3`.
 All calls take `Authorization: Bearer <token>`.
 
-1. **Engine** — publish the npm tarball (its `version` field becomes the engine version):
+1. **Engine** — publish the npm tarball (its `version` field becomes the engine version). The
+   endpoint takes the tarball as the **raw request body** (no multipart):
    ```bash
    cd engine && npm run build && npm pack        # -> gaia-project-engine-<version>.tgz
    curl -X POST "$BASE/engine" -H "Authorization: Bearer $TOKEN" \
-        -F "file=@gaia-project-engine-4.10.3.tgz"
+        -H "Content-Type: application/octet-stream" \
+        --data-binary @gaia-project-engine-<version>.tgz
    ```
-2. **Viewer files** — upload the freshly built bundle; js+css(+map) that belong together share a
-   `bundle` id:
+2. **Viewer files** — upload the freshly built bundle. These endpoints take the file as the
+   **raw request body** (no multipart!), with parameters in the query string; js+css+map that
+   belong together share a `bundle` id so the map's relative `sourceMappingURL` resolves:
    ```bash
-   curl -X POST "$BASE/viewer/file" -H "Authorization: Bearer $TOKEN" \
-        -F "file=@dist/package/viewer.umd.min.js" -F "type=js" -F "bundle=<new-bundle-id>"
-   curl -X POST "$BASE/viewer/file" -H "Authorization: Bearer $TOKEN" \
-        -F "file=@dist/package/viewer.css" -F "type=css" -F "bundle=<new-bundle-id>"
-   # same pattern for viewer.umd.min.js.map (type=map), same bundle id
+   curl -X POST "$BASE/viewer/file?filename=viewer.umd.min.js&bundle=<new-bundle-id>" \
+        -H "Authorization: Bearer $TOKEN" -H "Content-Type: text/javascript" \
+        --data-binary @dist/package/viewer.umd.min.js
+   curl -X POST "$BASE/viewer/file?filename=viewer.css&bundle=<new-bundle-id>" \
+        -H "Authorization: Bearer $TOKEN" -H "Content-Type: text/css" \
+        --data-binary @dist/package/viewer.css
+   # map: use application/octet-stream (NOT application/json - koa-bodyparser's 1MB jsonLimit
+   # intercepts json bodies before the route's raw-body reader and 413s large maps):
+   curl -X POST "$BASE/viewer/file?filename=viewer.umd.min.js.map&bundle=<new-bundle-id>" \
+        -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/octet-stream" \
+        --data-binary @dist/package/viewer.umd.min.js.map
    ```
-   Get a fresh `<new-bundle-id>` (uuidgen) — every upload gets a unique one, and the doc's
-   `viewer.url` then points at the new bundle's file URL.
-3. **Update the doc** — `GET $BASE` to fetch the current gameinfo doc, update the `viewer.url`
-   (and `viewer.cssUrl` / engine fields if they changed), then `PUT $BASE` with the whole doc.
-   The PUT replaces the stored doc, so send everything back, not just the changed fields.
+   Get a fresh `<new-bundle-id>` (uuidgen or a timestamped tag) — every upload gets a unique
+   one, and the doc's `viewer.url` then points at the new bundle's file URL.
+3. **Update the doc** — `GET $BASE` to fetch the current gameinfo doc, update the
+   `viewer.url` and `viewer.dependencies.stylesheets` (and engine fields if they changed), then
+   `PUT $BASE` with the whole doc. The PUT replaces the stored doc, so send everything back, not
+   just the changed fields. **Always GET right before PUT** — the engine-upload step mutates the
+   doc (sets `engine.package`), and a PUT based on an earlier GET silently reverts it.
 4. Verify on a real BGS game page afterwards (hard-reload; the platform may cache the old
    viewer URL per game).
 
