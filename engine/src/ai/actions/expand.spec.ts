@@ -586,11 +586,5 @@ describe("Phase 1.2 typed atomic decision expansion", () => {
     expect(() => expandAtomicDecisions(customFederation))
       .to.throw(AtomicExpansionError)
       .with.property("code", "empty-command-data");
-
-    const frontiers = lockedRoundOneEngine();
-    frontiers.availableCommands = [{ name: Command.MoveShip, player: Player.Player1, data: [] }];
-    expect(() => expandAtomicDecisions(frontiers))
-      .to.throw(AtomicExpansionError)
-      .with.property("code", "unsupported-command");
   });
 });

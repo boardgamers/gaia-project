@@ -258,17 +258,18 @@ describe("Game", () => {
     const researchBoard = svg.querySelector("svg.research-board");
     const scoringBoard = researchBoard.nextElementSibling;
     expect(scoringBoard.tagName).to.equal("svg");
-    // Base game keeps its long-standing framing: the research board at the viewBox origin, the
-    // side ScoringBoard nudged up 25 units (its own content has built-in top padding).
+    // Base game framing: the research board at the viewBox origin, and the side ScoringBoard
+    // with NO y offset. The pre-LF y="-25" pushed the final scoring tiles 25 units above the
+    // canvas' minY=0 and clipped them at the top (owner report, 2026-09) - y is absent now.
     expect(researchBoard.getAttribute("y")).to.equal(null);
-    expect(scoringBoard.getAttribute("y")).to.equal("-25");
+    expect(scoringBoard.getAttribute("y")).to.equal(null);
 
     const [, minY, , height] = svg.getAttribute("viewBox").split(" ").map(Number);
     expect(minY).to.equal(0);
     // ScoringBoard renders at width=90 against its own `viewBox="0 0 80 480"` with no explicit
     // height, so its rendered height auto-scales to preserve aspect ratio: 90 * (480/80) = 540,
-    // starting 25 units above the viewBox top - a 505-tall viewBox shows it down to y=480 of its
-    // own 540, which is where its actual content ends (the rest is padding).
+    // starting exactly at the viewBox top - a 505-tall viewBox shows it down to y=505 of its
+    // own 540; its content (final scoring + round tiles) ends at y=480, the rest is padding.
     expect(height).to.equal(505);
 
     vm.$el.remove();

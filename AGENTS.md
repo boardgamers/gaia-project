@@ -11,7 +11,7 @@ pnpm install                       # pnpm 10+; CI=true to avoid the modules-purg
 cd engine && npm test              # mocha + ts-node (TS via tsconfig "module": "commonjs")
 cd engine && npm run build         # tsc -> dist/ (wrapper.js, index.js)
 cd viewer && npm test              # vitest (jsdom); needs --max-old-space-size=12288
-cd viewer && npm run package       # vite lib build -> dist/package/viewer.umd.js + .css + .map
+cd viewer && npm run package       # vite lib build -> dist/package/viewer.umd.js + .css (+ .map, not uploaded)
 ```
 
 - Viewer unit tests: `NODE_OPTIONS="--max-old-space-size=12288" npm test` (the suite peaks ~10 GB).
@@ -45,8 +45,8 @@ All calls take `Authorization: Bearer <token>`.
         --data-binary @gaia-project-engine-<version>.tgz
    ```
 2. **Viewer files** — upload the freshly built bundle. These endpoints take the file as the
-   **raw request body** (no multipart!), with parameters in the query string; js+css+map that
-   belong together share a `bundle` id so the map's relative `sourceMappingURL` resolves:
+   **raw request body** (no multipart!), with parameters in the query string; js+css share a
+   `bundle` id so they belong together:
    ```bash
    curl -X POST "$BASE/viewer/file?filename=viewer.umd.min.js&bundle=<new-bundle-id>" \
         -H "Authorization: Bearer $TOKEN" -H "Content-Type: text/javascript" \
@@ -54,12 +54,9 @@ All calls take `Authorization: Bearer <token>`.
    curl -X POST "$BASE/viewer/file?filename=viewer.css&bundle=<new-bundle-id>" \
         -H "Authorization: Bearer $TOKEN" -H "Content-Type: text/css" \
         --data-binary @dist/package/viewer.css
-   # map: use application/octet-stream (NOT application/json - koa-bodyparser's 1MB jsonLimit
-   # intercepts json bodies before the route's raw-body reader and 413s large maps):
-   curl -X POST "$BASE/viewer/file?filename=viewer.umd.min.js.map&bundle=<new-bundle-id>" \
-        -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/octet-stream" \
-        --data-binary @dist/package/viewer.umd.min.js.map
    ```
+   No sourcemap upload needed — owner decision (2026-09): the platform doesn't deploy maps
+   in general. The bundle's trailing sourceMappingURL is harmless (the map 404s quietly).
    Get a fresh `<new-bundle-id>` (uuidgen or a timestamped tag) — every upload gets a unique
    one, and the doc's `viewer.url` then points at the new bundle's file URL.
 3. **Update the doc** — `GET $BASE` to fetch the current gameinfo doc, update the

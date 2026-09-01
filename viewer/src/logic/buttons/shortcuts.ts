@@ -1,5 +1,9 @@
 import type { ButtonData, ButtonWarning } from "../../data";
-import { buttonStringLabel } from "./utils";
+// Defined here rather than in utils.ts so the utils <-> shortcuts circular import is a one-way
+// edge (utils -> shortcuts); utils.ts re-exports it for its existing importers.
+export function buttonStringLabel(button: ButtonData) {
+  return (button.richText?.find((l) => typeof l == "string") as string) ?? button.label ?? button.command;
+}
 
 export const forceNumericShortcut = (label: string) => ["Charge", "Income"].find((b) => label.startsWith(b));
 

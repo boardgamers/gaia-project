@@ -6,7 +6,6 @@ import {
   FactionBoard,
   factionBoard,
   factionPlanet,
-  isShip,
   Operator,
   Planet,
   Player,
@@ -228,7 +227,7 @@ export function buildingDesc(b: Building, faction: Faction, board: FactionBoard,
   return (
     (player && b === Building.GaiaFormer
       ? cost.toString().replace(String(GAIA_FORMER_COST), String(GAIA_FORMER_COST - player.data.gaiaFormingDiscount()))
-      : cost) + (b === Building.GaiaFormer || isShip(b) ? "" : income)
+      : cost) + (b === Building.GaiaFormer ? "" : income)
   );
 }
 

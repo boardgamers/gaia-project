@@ -77,9 +77,6 @@ export const PARETO_EXACT_DIMENSIONS = [
   "temporaryRange",
   "temporaryStep",
   "satellites",
-  "tradeBonus",
-  "tradeDiscount",
-  "tradeShips",
   "hasPlanetaryInstitute",
   "conversionRights",
 ] as const;
@@ -211,9 +208,6 @@ function projectState(
     temporaryRange: data.temporaryRange,
     temporaryStep: data.temporaryStep,
     satellites: data.satellites,
-    tradeBonus: data.tradeBonus,
-    tradeDiscount: data.tradeDiscount,
-    tradeShips: data.tradeShips,
     hasPlanetaryInstitute: data.hasPlanetaryInstitute(),
     conversionRights: [...rights],
   };
@@ -261,9 +255,6 @@ function exactDimensions(state: ProjectedConversionState): unknown {
     temporaryRange: state.temporaryRange,
     temporaryStep: state.temporaryStep,
     satellites: state.satellites,
-    tradeBonus: state.tradeBonus,
-    tradeDiscount: state.tradeDiscount,
-    tradeShips: state.tradeShips,
     hasPlanetaryInstitute: state.hasPlanetaryInstitute,
     conversionRights: [...state.conversionRights].sort(),
   };
@@ -583,9 +574,6 @@ function applyProjectedState(engine: Engine, state: ProjectedConversionState): v
   data.temporaryRange = state.temporaryRange;
   data.temporaryStep = state.temporaryStep;
   data.satellites = state.satellites;
-  data.tradeBonus = state.tradeBonus;
-  data.tradeDiscount = state.tradeDiscount;
-  data.tradeShips = state.tradeShips;
   player.federationCache = null;
   engine.clearAvailableCommands();
 }

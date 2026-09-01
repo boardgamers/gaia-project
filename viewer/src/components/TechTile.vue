@@ -287,9 +287,6 @@ svg {
     &.sci .tech-border {
       fill: var(--rt-sci);
     }
-    &.dip .tech-border {
-      fill: var(--rt-dip);
-    }
     &.terra .tech-border {
       fill: var(--rt-terra);
     }

@@ -137,10 +137,6 @@ export const resourceData: { [key in Resource]?: ResourceName } = {
     shortcut: "d",
     color: "--titanium",
   },
-  [Resource.TradeShip]: colorCodes.tradeShip.add({
-    label: "Trade Ship",
-    plural: "Trade Ships",
-  }),
   [Resource.PowerRing]: {
     label: "Power Ring",
     plural: "Power Rings",

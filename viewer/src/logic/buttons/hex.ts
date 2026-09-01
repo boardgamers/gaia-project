@@ -13,7 +13,7 @@ import { buildingData } from "../../data/building";
 import { planetNames } from "../../data/planets";
 import { splitCostBonus } from "../../data/resources";
 import type { RichText } from "../../graphics/rich-text";
-import { richText, richTextArrow, richTextPlanet, richTextRewards } from "../../graphics/rich-text";
+import { richText, richTextPlanet, richTextRewards } from "../../graphics/rich-text";
 import { sortBy } from "../lodash-utils";
 import { prependShortcut, tooltipWithShortcut } from "./shortcuts";
 import type { CommandController } from "./types";
@@ -75,9 +75,6 @@ export function hexSelectionButton(
       }
 
       const highlightHex = hexes.get(hex);
-      if (highlightHex.tradeCost) {
-        label.push(richTextRewards(Reward.parse(highlightHex.tradeCost)), richTextArrow);
-      }
       if (highlightHex.rewards) {
         label.push(richTextRewards(Reward.parse(highlightHex.rewards)));
       }

@@ -59,7 +59,6 @@ export interface ButtonData {
 
 export type HighlightHex = {
   cost?: string;
-  tradeCost?: string;
   rewards?: string;
   warnings?: WarningWithKey[];
   building?: Building;

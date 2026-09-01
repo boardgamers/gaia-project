@@ -12,10 +12,6 @@ export interface GaiaHexData {
   player?: Player;
   /** List of players who have a federation occupying this square */
   federations?: Player[];
-  /** List of players who have a traded with this planet */
-  tradeTokens?: Player[];
-  /** List of players who have build a customs post on this planet */
-  customPosts?: Player[];
   /** Additional mine of lantids */
   additionalMine?: Player;
   /** Lost Fleet Moweyds: +2 power value ring placed on this planet */
@@ -59,8 +55,7 @@ export class GaiaHex extends Hex<GaiaHexData> {
 
   // Space stations do not count as colonized, gaia-formers do not count as colonized
   colonizedBy(player: Player): boolean {
-    const building = this.buildingOf(player);
-    return stdBuildingValue(building) > 0 && building !== Building.CustomsPost;
+    return stdBuildingValue(this.buildingOf(player)) > 0;
   }
 
   isMainOccupier(player: Player): boolean {
@@ -111,14 +106,6 @@ export class GaiaHex extends Hex<GaiaHexData> {
       this.data.federations = [player];
     }
     return true;
-  }
-
-  get customPosts(): Player[] {
-    return this.data.customPosts ?? [];
-  }
-
-  get tradeTokens(): Player[] {
-    return this.data.tradeTokens ?? [];
   }
 
   // Can probably math this better

@@ -97,28 +97,6 @@
         :flat="flat"
         outline
       />
-      <Building
-        v-for="(s, i) in ships"
-        :key="`b-${i}`"
-        :building="s.type"
-        :ship-moved="s.moved"
-        :faction="faction(s.player)"
-        outline
-        :flat="flat"
-        :transform="shipTransform(i)"
-      />
-      <Building
-        v-for="(p, i) in hex.customPosts"
-        :key="`cp-${i}`"
-        building="customsPost"
-        :faction="faction(p)"
-        outline
-        :flat="flat"
-        :transform="radiusTransform(p, 0.05)"
-      />
-      <g v-for="(p, i) in hex.tradeTokens" :key="`tt-${i}`">
-        <Planet :planet="playerPlanet(p)" :transform="radiusTransform(p, 0.35)" />
-      </g>
     </g>
   </g>
 </template>
@@ -135,10 +113,8 @@ import Engine, {
   Player,
   PlayerEnum,
   Reward,
-  shipsInHex,
   Spaceship,
 } from "@gaia-project/engine";
-import type { Ship } from "@gaia-project/engine/src/enums";
 import { max } from "lodash";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
@@ -158,7 +134,7 @@ import { factionPiecePlanet } from "../graphics/utils";
 import { isFree } from "../logic/buttons/utils";
 import type { CommandObject } from "../logic/recent";
 import { hexMoveLabel } from "../logic/recent";
-import { leechPlanets, radiusTranslate, upgradableBuildingsOfOtherPlayers } from "../logic/utils";
+import { leechPlanets, upgradableBuildingsOfOtherPlayers } from "../logic/utils";
 import Building from "./Building.vue";
 import Planet from "./Planet.vue";
 
@@ -193,21 +169,6 @@ export default class SpaceHex extends Vue {
   @Prop({ default: 0 })
   contentRotation: number;
 
-  shipTransform(index: number): string {
-    switch (this.ships.length) {
-      case 1:
-        return "scale(0.1)";
-      case 2:
-        return `scale(0.07) ${radiusTranslate(5.8, 2 * index + 1, 4)}`;
-      default:
-        return `scale(0.06) ${radiusTranslate(7.5, index, this.ships.length)}`;
-    }
-  }
-
-  radiusTransform(index: number, scale: number): string {
-    return `scale(${scale}) ${radiusTranslate(0.63 / scale, index, 7)}`;
-  }
-
   get hexCorners() {
     return corners();
   }
@@ -218,21 +179,6 @@ export default class SpaceHex extends Vue {
 
   get map(): ISpaceMap {
     return this.engine.map;
-  }
-
-  get ships(): Ship[] {
-    let firstHidden = false;
-    return shipsInHex(this.hex.toString(), this.engine).filter((s) => {
-      if (firstHidden) {
-        return true;
-      }
-      const b = this.hideBuilding;
-      const hide = b && b.building == s.type && b.player == s.player;
-      if (hide) {
-        firstHidden = true;
-      }
-      return !hide;
-    });
   }
 
   private get engine(): Engine {
@@ -564,9 +510,6 @@ export default class SpaceHex extends Vue {
         highlightHex?.building ? `Build ${buildingData[highlightHex.building].name} for ${c}` : `Cost: ${c}`
       );
     }
-    if (highlightHex?.tradeCost) {
-      messages.push(`Trade Cost: ${highlightHex.tradeCost}`);
-    }
     if (highlightHex?.rewards) {
       messages.push(`Reward: ${highlightHex.rewards}`);
     }
@@ -587,20 +530,12 @@ export default class SpaceHex extends Vue {
     };
 
     const buildings: string[] = [];
-    let ships: string[] = [];
     if (data.building) {
       buildings.push(buildingLabel(this.player(data.player), data.building));
       if (data.additionalMine != null) {
         buildings.push(buildingLabel(this.player(data.additionalMine), BuildingEnum.Mine));
       }
-    } else if (this.ships) {
-      ships = this.ships.map((s) => {
-        const faction = this.player(s.player).faction;
-        return `${buildingName(s.type, faction)} (${factionName(faction)})`;
-      });
     }
-    buildings.push(...hex.customPosts.map((p) => buildingLabel(this.player(p), BuildingEnum.CustomsPost)));
-    buildings.push(...hex.tradeTokens.map((p) => `Traded: ${factionName(this.player(p).faction)}`));
     const w = this.warning(hex, true);
     if (w) {
       messages.push(`Warning: ${w}`);
@@ -610,7 +545,7 @@ export default class SpaceHex extends Vue {
     const spaceship = this.lostFleetSpaceship
       ? `Lost Fleet spaceship: ${this.lostFleetSpaceshipNames[this.lostFleetSpaceship]}`
       : null;
-    return [coord, sector, spaceship, planet].concat(buildings).concat(ships).concat(messages).join(" ");
+    return [coord, sector, spaceship, planet].concat(buildings).concat(messages).join(" ");
   }
 }
 </script>

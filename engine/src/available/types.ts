@@ -123,18 +123,6 @@ export type ChooseTechTile = StandardTechTileChoice | AdvTechTileWithPos;
 export type AvailableBuildCommandData = { buildings: AvailableBuilding[] };
 export type AvailableFederation = { hexes: string; warnings: BuildWarning[] };
 
-export enum ShipAction {
-  Nothing = "nothing",
-  BuildColony = "buildColony",
-  Trade = "trade",
-}
-
-export type TradingLocation = (AvailableHex | AvailableBuilding) & { tradeCost: string; rewards: string };
-export type ShipActionLocation = TradingLocation | AvailableBuilding;
-export type AvailableShipAction = { type: ShipAction; locations: ShipActionLocation[] };
-export type AvailableShipTarget = { location: AvailableHex; actions: AvailableShipAction[] };
-export type AvailableMoveShipData = { ship: Building; source: string; targets: AvailableShipTarget[] };
-
 interface CommandData {
   [Command.Action]: AvailableBoardActionData;
   [Command.BanFaction]: Faction[];
@@ -172,7 +160,6 @@ interface CommandData {
   [Command.Pass]: { boosters: Booster[] };
   [Command.PISwap]: AvailableBuildCommandData;
   [Command.PlaceLostPlanet]: { spaces: AvailableHex[] };
-  [Command.MoveShip]: AvailableMoveShipData[];
   [Command.PlacePowerRing]: { spaces: AvailableHex[] };
   [Command.RotateSectors]: never;
   [Command.Setup]: AvailableSetupOption;

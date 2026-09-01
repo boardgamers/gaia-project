@@ -4,7 +4,6 @@ import { ChallengeDefinition } from "./types";
 
 const CHALLENGE_OPTIONS: EngineOptions = {
   lostFleet: true,
-  frontiers: false,
   officialCenterSectors: false,
   advancedRules: false,
   customBoardSetup: false,

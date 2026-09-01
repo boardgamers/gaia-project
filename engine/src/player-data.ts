@@ -1,6 +1,5 @@
 import { EventEmitter } from "eventemitter3";
 import { cloneDeep, fromPairs } from "lodash";
-import { TRADE_COST } from "./available/ships";
 import { BrainstoneActionData, BrainstoneWarning, ChooseTechTile } from "./available/types";
 import {
   ArtifactToken,
@@ -13,7 +12,6 @@ import {
   PowerArea,
   ResearchField,
   Resource,
-  Ship,
   Spaceship,
   SpaceshipFederation,
   SpaceshipTechTile,
@@ -78,14 +76,6 @@ export default class PlayerData extends EventEmitter {
     [key in Building]: number;
   } = fromPairs(Building.values(Expansion.All).map((bld) => [bld, 0])) as any;
 
-  destroyedShips: {
-    [key in Building]: number;
-  } = fromPairs(Building.ships().map((bld) => [bld, 0])) as any;
-
-  deployedShips: {
-    [key in Building]: number;
-  } = fromPairs(Building.ships().map((bld) => [bld, 0])) as any;
-
   satellites = 0;
   research: ResearchProgress = {
     terra: 0,
@@ -94,10 +84,8 @@ export default class PlayerData extends EventEmitter {
     gaia: 0,
     eco: 0,
     sci: 0,
-    dip: 0,
   };
   range = 1;
-  shipRange = 2;
   /** Total number of gaiaformers gained (including those on the board & the gaia area) */
   gaiaformers = 0;
   /** number of gaiaformers gained that are in gaia area */
@@ -116,9 +104,6 @@ export default class PlayerData extends EventEmitter {
    */
   gaiaformersUsedForOther = 0;
   terraformCostDiscount = 0;
-  tradeBonus = 0;
-  tradeDiscount = 0;
-  tradeShips = 0;
 
   tiles: {
     booster: Booster;
@@ -149,7 +134,6 @@ export default class PlayerData extends EventEmitter {
 
   /** Hexes occupied by buildings with value (not gaia formers), refs match the map hexes with a simple equality test */
   occupied: GaiaHex[] = [];
-  ships: Ship[] = [];
   leechPossible: number;
   tokenModifier = 1;
   lostPlanet = 0;
@@ -211,8 +195,6 @@ export default class PlayerData extends EventEmitter {
       leechPossible: this.leechPossible,
       tokenModifier: this.tokenModifier,
       buildings: this.buildings,
-      destroyedShips: this.destroyedShips,
-      deployedShips: this.deployedShips,
       federationCount: this.federationCount,
       spaceshipFederations: this.spaceshipFederations,
       explorationShips: this.explorationShips,
@@ -223,11 +205,6 @@ export default class PlayerData extends EventEmitter {
       lostPlanet: this.lostPlanet,
       artifactPlanetTypes: this.artifactPlanetTypes,
       artifacts: this.artifacts,
-      ships: this.ships,
-      shipRange: this.shipRange,
-      tradeBonus: this.tradeBonus,
-      tradeDiscount: this.tradeDiscount,
-      tradeShips: this.tradeShips,
       temporaryRange: this.temporaryRange,
       temporaryStep: this.temporaryStep,
     };
@@ -362,20 +339,8 @@ export default class PlayerData extends EventEmitter {
       case Resource.Range:
         this.range += count;
         break;
-      case Resource.ShipRange:
-        this.shipRange += count;
-        break;
       case Resource.TemporaryRange:
         this.temporaryRange += count;
-        break;
-      case Resource.TradeBonus:
-        this.tradeBonus += count;
-        break;
-      case Resource.TradeDiscount:
-        this.tradeDiscount += count;
-        break;
-      case Resource.TradeShip:
-        this.tradeShips += count;
         break;
       case Resource.GaiaFormer:
         if (count > 0) {
@@ -772,10 +737,6 @@ export default class PlayerData extends EventEmitter {
 
   gaiaFormingDiscount() {
     return this.gaiaformers > 1 ? this.gaiaformers : 0;
-  }
-
-  tradeCost(): Reward {
-    return new Reward(TRADE_COST - this.tradeDiscount, Resource.ChargePower);
   }
 
   /**

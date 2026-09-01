@@ -1,15 +1,5 @@
 import seedrandom from "seedrandom";
-import {
-  AvailableBuilding,
-  AvailableCommand,
-  AvailableFreeAction,
-  AvailableMoveShipData,
-  AvailableShipAction,
-  Offer,
-  PossibleBid,
-  ShipAction,
-  TradingLocation,
-} from "../available/types";
+import { AvailableBuilding, AvailableCommand, AvailableFreeAction, Offer, PossibleBid } from "../available/types";
 import Engine from "../engine";
 import { Command, Player as PlayerEnum } from "../enums";
 import { AvailableSetupOption } from "../setup";
@@ -96,7 +86,6 @@ export function moveAI(engine: Engine, player: PlayerEnum, salt = 0): string {
       (cmd: AvailableCommand<Command.PlaceLostPlanet>) =>
         `${Command.PlaceLostPlanet} ${pick(rng, cmd.data.spaces).coordinates}`,
     ],
-    [Command.MoveShip, (cmd: AvailableCommand<Command.MoveShip>) => randomShipMove(rng, cmd.data)],
     [
       Command.Special,
       (cmd: AvailableCommand<Command.Special>) => `${Command.Special} ${pick(rng, cmd.data.specialacts).income}`,
@@ -245,32 +234,6 @@ function randomFreeAction(rng: () => number, acts: AvailableFreeAction[]): strin
     acts.filter((a) => !a.hide)
   );
   return `${act.cost} for ${act.income}`;
-}
-
-function randomShipMove(rng: () => number, data: AvailableMoveShipData[]): string {
-  const ship = pick(rng, data);
-  const target = pick(rng, ship.targets);
-  const action = randomShipAction(rng, target.actions);
-
-  return `${Command.MoveShip} ${ship.ship} ${ship.source} ${target.location.coordinates}${action}`;
-}
-
-function randomShipAction(rng: () => number, actions: AvailableShipAction[]): string {
-  const choices = (actions ?? []).filter((action) => action.type !== ShipAction.Nothing && action.locations.length > 0);
-
-  if (choices.length === 0) {
-    return "";
-  }
-
-  const action = pick(rng, choices);
-  const location = pick(rng, action.locations);
-
-  // `cost` contains the satellite cost for trading locations near other players'
-  // structures, it is not part of the command
-  const tradeCost = (location as TradingLocation).tradeCost;
-  const cost = tradeCost ? ` ${tradeCost}` : "";
-
-  return ` ${action.type} ${location.coordinates}${cost}`;
 }
 
 function freeCommandMove(rng: () => number, cmd: AvailableCommand): string {

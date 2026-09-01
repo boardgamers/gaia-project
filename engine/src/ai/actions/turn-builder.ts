@@ -263,9 +263,6 @@ function afterWalletSignature(engine: Engine, actor: Player): string {
     temporaryRange: data.temporaryRange,
     temporaryStep: data.temporaryStep,
     satellites: data.satellites,
-    tradeBonus: data.tradeBonus,
-    tradeDiscount: data.tradeDiscount,
-    tradeShips: data.tradeShips,
     hasPlanetaryInstitute: data.hasPlanetaryInstitute(),
   });
 }

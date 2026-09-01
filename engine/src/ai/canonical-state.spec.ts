@@ -188,14 +188,6 @@ describe("canonical-state", () => {
         },
       },
       {
-        id: "map-hex-state",
-        build: () => buildEngine(CORPUS[2]),
-        mutate: (engine: Engine) => {
-          const hex = engine.map.getS("-1x0");
-          hex.data.tradeTokens = [PlayerEnum.Player1];
-        },
-      },
-      {
         id: "player-resource",
         build: () => buildEngine(CORPUS[2]),
         mutate: (engine: Engine) => {
@@ -345,10 +337,10 @@ describe("canonical-state", () => {
     }));
 
     expect(hashes).to.deep.equal([
-      { id: "base-setup-faction", hash: "eadc55a22a11410b35b4a97271eacfc7eb2d802a49d1f61d279b520c884de54e" },
-      { id: "base-round1-start", hash: "7304cadb68460015fdff1764e2c694e9e8eddc5be7b00247168b4712a86a3e55" },
-      { id: "base-round1-leech", hash: "6da29f291c9831b0e43ab1b8793f4e645bae816ac136ff2b31a0d80afb75d27e" },
-      { id: "phase0-challenge", hash: "f181469e8a3cbf6148a7a471151515f09cf5329a3c068664074a3b7a1ac2c2f7" },
+      { id: "base-setup-faction", hash: "a9e8e293be80425602a7b744f740274e2af008408fdfe85a4338e9ac7e8dda68" },
+      { id: "base-round1-start", hash: "646ab3c7f54fd5726149dcaa14e4b0b266a8472192f1113c07f280228357ba57" },
+      { id: "base-round1-leech", hash: "51df79a25990d93a45b5d7e7d15fd953c477f0730a21dee3c92c0ce815595f74" },
+      { id: "phase0-challenge", hash: "91842ba26604fd58365bd37f8d2c37ff455b986c4bcf260334aa01a21f242fbe" },
     ]);
   });
 });

@@ -1,4 +1,4 @@
-import Engine, { Event, Expansion, Player, researchEvents, ResearchField, Resource } from "@gaia-project/engine";
+import Engine, { Event, Player, researchEvents, ResearchField, Resource } from "@gaia-project/engine";
 import { GAIA_FORMER_COST } from "@gaia-project/engine/src/faction-boards/types";
 import type { CellStyle } from "../graphics/colors";
 import { staticCellStyle } from "../graphics/colors";
@@ -11,11 +11,9 @@ export const researchData: { [key in ResearchField]: { name: string; shortcut: s
   [ResearchField.GaiaProject]: { name: "Gaia Project", shortcut: "g" },
   [ResearchField.Economy]: { name: "Economy", shortcut: "e" },
   [ResearchField.Science]: { name: "Science", shortcut: "s" },
-  [ResearchField.Diplomacy]: { name: "Diplomacy", shortcut: "p" },
 };
 
 type ResearchEffectCounter = {
-  expansion?: Expansion;
   field: ResearchField;
   minLevel?: number;
   from: Resource;
@@ -36,44 +34,18 @@ const researchEffectCounters: ResearchEffectCounter[] = [
     currentValue: (p) => p.data.range,
   },
   {
-    expansion: Expansion.Frontiers,
-    field: ResearchField.Navigation,
-    from: Resource.ShipRange,
-    currentValue: (p) => p.data.shipRange,
-  },
-  {
-    expansion: Expansion.Frontiers,
-    field: ResearchField.Economy,
-    from: Resource.TradeShip,
-    currentValue: (p) => p.data.tradeShips,
-  },
-  {
     field: ResearchField.GaiaProject,
     minLevel: 1,
     from: Resource.GaiaFormer,
     to: Resource.MoveTokenToGaiaArea,
     currentValue: (p) => GAIA_FORMER_COST - p.data.gaiaFormingDiscount(),
   },
-  {
-    expansion: Expansion.Frontiers,
-    field: ResearchField.Diplomacy,
-    from: Resource.TradeBonus,
-    currentValue: (p) => p.data.tradeBonus,
-  },
-  {
-    expansion: Expansion.Frontiers,
-    field: ResearchField.Diplomacy,
-    from: Resource.TradeDiscount,
-    currentValue: (p) => p.data.tradeCost().count,
-  },
 ];
 
 export function researchEventsWithCounters(engine: Engine, field: ResearchField, level: number): Event[] {
   let events = researchEvents(field, level, engine.expansions, engine.lostFleetEconomySide);
 
-  const counters = researchEffectCounters.filter(
-    (c) => c.field == field && (c.expansion == null || c.expansion == engine.expansions)
-  );
+  const counters = researchEffectCounters.filter((c) => c.field == field);
 
   const p = new Player();
 

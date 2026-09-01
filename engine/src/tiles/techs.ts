@@ -23,7 +23,6 @@ const techTileSpec: { [key in AnyTechTile]: string[] } = {
   [TechTile.Tech7]: ["mg >> 3vp"],
   [TechTile.Tech8]: ["+4c"],
   [TechTile.Tech9]: ["=> 4pw"],
-  [TechTile.TechFrontiers1]: ["trade >> 2c"],
   [AdvTechTile.AdvTech1]: ["fed | 3vp"],
   [AdvTechTile.AdvTech2]: ["a >> 2vp"],
   [AdvTechTile.AdvTech3]: ["=> q,5c"],

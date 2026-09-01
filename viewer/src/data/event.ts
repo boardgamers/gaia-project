@@ -30,7 +30,6 @@ const conditionsTrigger: { [key in Condition]?: string } = {
   [Condition.MineOnGaia]: "building a mine on a gaia planet",
   [Condition.AdvanceResearch]: "advancing a level in research",
   [Condition.TerraformStep]: "terraforming a planet one step",
-  [Condition.Trade]: "trading (afterwards)",
   [Condition.SpaceshipQicAction]: "taking a spaceship Q.I.C. action",
   [Condition.NewSector]:
     "building a mine in a Space or Deep Space sector you had not colonized before (Interspace doesn't count)",
@@ -76,17 +75,9 @@ function rewardDesc(rewards: Reward[], long: boolean) {
 
 export function eventDesc(event: Event, expansion: Expansion, long = false): string {
   const op = event.operator;
-  const operatorString =
-    op == Operator.FourPowerBuildings && expansion == Expansion.Frontiers
-      ? "Planetary institutes, academies, and colonies have a power value of 4, when forming federations and charging power."
-      : operators[op];
-  const colony = event.condition === Condition.BigBuilding && expansion == Expansion.Frontiers;
-  const cond = colony
-    ? "planetary institute, academy, or colony"
-    : conditionsCount[event.condition as keyof typeof conditionsCount];
-  const trigger = colony
-    ? "building a planetary institute, academy, or colony"
-    : conditionsTrigger[event.condition as keyof typeof conditionsTrigger];
+  const operatorString = operators[op];
+  const cond = conditionsCount[event.condition as keyof typeof conditionsCount];
+  const trigger = conditionsTrigger[event.condition as keyof typeof conditionsTrigger];
   const conditionString = op === Operator.Trigger ? trigger + "," : cond && "for each " + cond + ",";
   const rewardString = event.rewards.length === 0 ? "" : rewardDesc(event.rewards, long);
 
@@ -101,14 +92,8 @@ export function eventDescForCounters(event: Event, expansions: Expansion, long: 
       return `Each terraforming step costs you ${TERRAFORMING_COST - value} ore`;
     case Resource.Range:
       return `Your basic range is ${value}`;
-    case Resource.ShipRange:
-      return `Your ship range is ${value}`;
     case Resource.MoveTokenToGaiaArea:
       return `To start a Gaia project, you must move ${value} power tokens to your Gaia area`;
-    case Resource.TradeBonus:
-      return `Your trade bonus level is ${value}`;
-    case Resource.TradeDiscount:
-      return `Trading costs ${value} power`;
   }
 
   return eventDesc(event, expansions, long);

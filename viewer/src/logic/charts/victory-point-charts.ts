@@ -10,7 +10,6 @@ import Engine, {
   Faction,
   finalRankings,
   gainFinalScoringVictoryPoints,
-  Operator,
   Player,
   PlayerEnum,
   ResearchField,
@@ -21,7 +20,6 @@ import Engine, {
   TechPos,
 } from "@gaia-project/engine";
 import { boosterData } from "../../data/boosters";
-import { playerHasReceivedAllIncome } from "../../data/resources";
 import { advancedTechTileData } from "../../data/tech-tiles";
 import { colorCodes } from "../color-codes";
 import type { DatasetFactory, IncludeRounds } from "./charts";
@@ -106,15 +104,6 @@ function passIncomeProjection(
       return null;
     }
     return vpProjection(p.passIncomeEvents(), sources, e, eachRound, hasPassed ? 1 : 0);
-  };
-}
-
-function incomeProjection(sources: EventSource[]): (e: Engine, p: Player) => Map<number, number> | null {
-  return (e, p) => {
-    if (e.isLastRound) {
-      return null;
-    }
-    return vpProjection(p.events[Operator.Income], sources, e, true, playerHasReceivedAllIncome(e, p) ? 1 : 0);
   };
 }
 
@@ -293,23 +282,6 @@ export const victoryPointSources = (
         new Map([[finalScoringRound, simulateIncome(pl, (clone) => clone.data.finalResourceHandling(), e.version)]]),
     },
   ];
-  if (expansion == Expansion.Frontiers) {
-    sources.push(
-      {
-        types: [Command.ChooseIncome],
-        label: "Colonies",
-        description: "Income from colonies",
-        color: "--rt-nav",
-        roundValues: incomeProjection([Command.ChooseIncome]),
-      },
-      {
-        types: ["trade"],
-        label: "Trade",
-        description: "Trade with colonies",
-        color: "--rt-dip",
-      }
-    );
-  }
   // The Gleens VP source only ever scores for a Gleens player, so drop its (always-empty) column
   // unless Gleens is actually in the game (owner request). Statistics mode passes every faction, so
   // it stays there.

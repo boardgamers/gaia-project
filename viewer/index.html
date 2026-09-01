@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <link rel="shortcut icon" type="image/png" id="favicon-gp" href="/favicon.png?v=5.36.4" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=5.36.4" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#1c2027" />
+    <script>
+      // Apply dark-by-default or the persisted choice before CSS and Vue mount, avoiding a theme
+      // flash.
+      (function () {
+        var theme = "dark";
+        try {
+          var storedTheme = window.localStorage.getItem("gp-fight-club-theme");
+          if (storedTheme === "light" || storedTheme === "dark") {
+            theme = storedTheme;
+          }
+        } catch (_) {
+          // Storage is optional in privacy-restricted contexts.
+        }
+        document.documentElement.setAttribute("data-theme", theme);
+        document.documentElement.style.colorScheme = theme;
+        document
+          .querySelector('meta[name="theme-color"]')
+          .setAttribute("content", theme === "dark" ? "#1c2027" : "#ffffff");
+      })();
+    </script>
+    <meta name="description" content="Gaia Project multiplayer and offline pass-and-play" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Fight Club" />
+    <title>GP: Fight Club</title>
+  </head>
+  <body>
+    <noscript>
+      <strong>We are sorry, javascript is needed for the website.</strong>
+    </noscript>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+    <!-- built files will be auto injected -->
+  </body>
+</html>

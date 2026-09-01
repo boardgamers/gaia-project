@@ -38,7 +38,6 @@
       />
     </g>
     <Resource v-else-if="condition === 'step'" kind="step" />
-    <Resource v-else-if="condition === 'trade'" kind="tradeShip" />
     <Resource v-else-if="condition === 'tt'" kind="tech" />
     <circle v-else-if="condition === 'ast'" r="9" class="planet-fill a" style="stroke: black; stroke-width: 0.5" />
     <g v-else-if="condition === 'shipq'">

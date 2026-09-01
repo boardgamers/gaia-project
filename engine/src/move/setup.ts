@@ -19,10 +19,6 @@ import assert from "../utils/assert";
 export function moveInit(engine: Engine, players: number, seed: string) {
   assert(players >= 2 && players <= 5, "Invalid number of players");
   assert(
-    !(engine.options.frontiers && engine.options.lostFleet),
-    "Frontiers and Lost Fleet expansions cannot be combined"
-  );
-  assert(
     !(engine.options.lostFleet && engine.options.map?.sectors),
     "A custom map configuration cannot be combined with the Lost Fleet expansion"
   );

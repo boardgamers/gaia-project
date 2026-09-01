@@ -115,9 +115,6 @@ export function leechPlanets(map: SpaceMap, player: PlayerEnum, hex: GaiaHex): {
       if (h.colonizedBy(player)) {
         return [{ hex: h, building: h.buildingOf(player) }];
       }
-      if (h.customPosts.includes(player)) {
-        return [{ hex: h, building: Building.CustomsPost }];
-      }
     }
     return [];
   });

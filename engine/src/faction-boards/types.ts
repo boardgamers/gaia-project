@@ -78,50 +78,6 @@ const defaultBoard: FactionBoardRaw = {
       cost: "~",
       income: [[], [], [], [], [], []],
     },
-
-    //frontiers
-    [Building.Colony]: {
-      cost: "~",
-      income: [
-        ["+3c", "+3pw", "+3vp", "2vp"],
-        ["+3c", "+3pw", "+4vp", "2vp"],
-        ["+3c", "+3pw", "+5vp", "2vp"],
-      ],
-    },
-    [Building.CustomsPost]: {
-      cost: "2c",
-      income: [["+2c"], ["+2c"], ["+2c"], ["+2c"], ["+2c"]],
-    },
-
-    [Building.ColonyShip]: {
-      cost: "4c,3o",
-      income: [[], [], []],
-    },
-    [Building.ConstructionShip]: {
-      cost: "3c,2o",
-      income: [[], [], []],
-    },
-    [Building.ResearchShip]: {
-      cost: "3c,2o",
-      income: [[], [], []],
-    },
-    [Building.TradeShip]: {
-      cost: "5c,1o",
-      income: [[], [], []],
-    },
-
-    [Building.Scout]: {
-      cost: "1c,1o",
-      income: [[], [], []],
-    },
-    [Building.Frigate]: {
-      cost: "3c,2o",
-      income: [[], [], []],
-    },
-    [Building.BattleShip]: {
-      cost: "5c,5o",
-      income: [[], [], []],
-    },
   },
   income: ["3k,4o,15c,q", "+o,k"],
   power: {

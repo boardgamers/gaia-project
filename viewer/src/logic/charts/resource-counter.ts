@@ -13,7 +13,6 @@ import {
   TechPos,
 } from "@gaia-project/engine";
 import type { LogEntryChange } from "@gaia-project/engine/src/engine";
-import { tradeCostSource, tradeSource } from "@gaia-project/engine/src/events";
 import type { MoveTokens } from "@gaia-project/engine/src/player-data";
 import { sum } from "../lodash-utils";
 import type { CommandObject } from "../recent";
@@ -87,8 +86,6 @@ const commandEventSource = (c: CommandObject): EventSource[] => {
       return [c.command as EventSource, c.args[0] as EventSource];
     case Command.Build:
       return [c.command as EventSource, Faction.Gleens, Faction.Geodens, Faction.Lantids, Command.FormFederation];
-    case Command.MoveShip:
-      return [tradeCostSource, tradeSource, Command.Build];
   }
   return [c.command as EventSource];
 };

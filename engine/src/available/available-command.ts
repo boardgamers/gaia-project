@@ -35,7 +35,6 @@ import {
   possiblePreferenceBids,
   possibleSilentBids,
 } from "./setup";
-import { possibleShipMovements } from "./ships";
 import {
   possibleInstantGaiaforming,
   possibleSpaceshipActions,
@@ -79,7 +78,7 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
     case SubPhase.PlacePowerRing:
       return possiblePowerRingPlacements(engine, player);
     case SubPhase.BuildMine:
-      return [...possibleMineBuildings(engine, player, false), ...possibleShipMovements(engine, player, true)];
+      return possibleMineBuildings(engine, player, false);
     case SubPhase.BuildMineOrGaiaFormer:
       return [...possibleMineBuildings(engine, player, true, data), ...possibleExplorations(engine, player)];
     case SubPhase.SpaceStation:
@@ -90,13 +89,10 @@ export function generate(engine: Engine, subPhase: SubPhase = null, data?: any):
       return possibleLabDowngrades(engine, player);
     case SubPhase.BrainStone:
       return [{ name: Command.BrainStone, player, data }];
-    // case SubPhase.MoveShip:
-    //   return possibleShipMovements(engine, player);
     case SubPhase.BeforeMove: {
       return [
         ...possibleBuildings(engine, player),
         ...possibleExplorations(engine, player),
-        ...possibleShipMovements(engine, player, false),
         ...possibleFederations(engine, player),
         ...possibleResearchAreas(engine, player, UPGRADE_RESEARCH_COST),
         ...possibleBoardActions(engine.boardActions, engine.player(player), engine.replay),

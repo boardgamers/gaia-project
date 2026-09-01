@@ -23,10 +23,6 @@ export async function init(
     options.creator = creator;
   }
 
-  if (expansions.includes("frontiers")) {
-    options.frontiers = true;
-  }
-
   if (expansions.includes("lost-fleet")) {
     options.lostFleet = true;
   }

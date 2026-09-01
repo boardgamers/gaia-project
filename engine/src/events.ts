@@ -57,9 +57,6 @@ function findOperator(spec: string): [Operator, string] {
   return [Operator.Once, spec];
 }
 
-export const tradeSource = "trade";
-export const tradeCostSource = "tradeCost";
-
 export type EventSource =
   | Booster
   | TechPos
@@ -81,9 +78,7 @@ export type EventSource =
   | Command.Explore
   | Command.GaiaFormTransdim
   | Faction
-  | Command.Bid
-  | typeof tradeSource
-  | typeof tradeCostSource;
+  | Command.Bid;
 
 /**
  * Whether an event's source is a Booster/standard-Tech-tile/Advanced-Tech-tile - i.e. something

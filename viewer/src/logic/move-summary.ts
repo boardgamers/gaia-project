@@ -41,7 +41,6 @@ const TRACK_LABELS: Record<string, string> = {
   [ResearchField.GaiaProject]: "Gaia",
   [ResearchField.Economy]: "eco",
   [ResearchField.Science]: "sci",
-  [ResearchField.Diplomacy]: "dip",
 };
 
 const SHIP_LABELS: Record<string, string> = {
@@ -400,7 +399,6 @@ function normalizeReleasedCompactSummary(summary: string): string {
     "GAIA↑": "up Gaia",
     "ECO↑": "up eco",
     "SCI↑": "up sci",
-    "DIP↑": "up dip",
   };
   for (const [oldLabel, newLabel] of Object.entries(oldTracks)) {
     detail = detail.split(oldLabel).join(newLabel);
@@ -448,7 +446,7 @@ export function normalizeCachedMoveSummary(summary: string): string {
 
   const patterns: Array<[RegExp, (match: RegExpMatchArray) => string]> = [
     [/^(.+?) submitted silent bids\.?$/i, (m) => `${m[1]}: bids in`],
-    [/^(.+?) up (terra|nav|int|gaia|eco|sci|dip)\.?$/i, (m) => `${m[1]}: up ${TRACK_LABELS[m[2].toLowerCase()]}`],
+    [/^(.+?) up (terra|nav|int|gaia|eco|sci)\.?$/i, (m) => `${m[1]}: up ${TRACK_LABELS[m[2].toLowerCase()]}`],
     [/^(.+?) build mine sector (\S+?)\.?$/i, (m) => `${m[1]}: build m @ S${cleanArg(m[2])}`],
     [
       /^(.+?) build (ts|lab|PI|academy)\.?$/i,

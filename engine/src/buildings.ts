@@ -1,4 +1,7 @@
-import { Building, Faction } from "..";
+// Relative import (was `from ".."` - the package root, which resolves to the compiled dist
+// under node/cjs and broke the viewer's vite dev server, which can't interop the CJS dist for
+// named ESM imports; the enums module is the real source of Building/Faction either way).
+import { Building, Faction } from "./enums";
 
 export function upgradedBuildings(currentBuilding: Building, faction: Faction): Building[] {
   switch (currentBuilding) {
@@ -20,7 +23,6 @@ export function upgradedBuildings(currentBuilding: Building, faction: Faction): 
 export function stdBuildingValue(building: Building): number {
   switch (building) {
     case Building.Mine:
-    case Building.CustomsPost:
       return 1;
     case Building.TradingStation:
     case Building.ResearchLab:
@@ -28,7 +30,6 @@ export function stdBuildingValue(building: Building): number {
     case Building.PlanetaryInstitute:
     case Building.Academy1:
     case Building.Academy2:
-    case Building.Colony:
       return 3;
   }
 

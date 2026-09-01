@@ -420,9 +420,6 @@ function beginRoundStartPhase(engine: Engine) {
 
   for (const player of engine.playersInOrder()) {
     player.loadEvents(engine.currentRoundScoringEvents);
-    player.data.ships?.forEach((s) => {
-      s.moved = false;
-    });
   }
 
   beginIncomePhase(engine);
@@ -592,10 +589,7 @@ function beginLeechingPhase(engine: Engine) {
     }
     // Do not use PlayerData.maxLeech() here, cuz taklons
     pl.data.leechPossible = leechPossible(engine, sourceHex, (hex) =>
-      pl.buildingValue(engine.map.grid.get(hex), {
-        building:
-          hex.buildingOf(pl.player) ?? (hex.customPosts.some((c) => c === pl.player) ? Building.CustomsPost : null),
-      })
+      pl.buildingValue(engine.map.grid.get(hex), { building: hex.buildingOf(pl.player) })
     );
     if (pl.canLeech()) {
       canLeechPlayers.push(pl);

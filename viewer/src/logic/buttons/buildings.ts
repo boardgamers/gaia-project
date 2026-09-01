@@ -6,7 +6,6 @@ import Engine, {
   Command,
   Expansion,
   Faction,
-  isShip,
   Planet,
   Player,
   Round,
@@ -25,10 +24,6 @@ import { confirmationButton, hexMap, isFree, symbolButton, textButton } from "./
 import { commonButtonWarning } from "./warnings";
 
 function buildingMenu(building: Building, faction: Faction): { richText?: RichText; label: string } | null {
-  if (isShip(building)) {
-    return { label: "<u>B</u>uild Ship" };
-  }
-
   if (isAcademy(building)) {
     return { label: "Upgrade to A<u>c</u>ademy", richText: [richTextBuilding(Building.Academy1, faction, 1, true)] };
   }
@@ -76,12 +71,7 @@ function buildingLabel(
   } else if (bld.downgrade) {
     label = `Downgrade to ${name}`;
     rich.unshift(richText("Downgrade to"));
-  } else if (
-    isFree(bld.cost) ||
-    building === Building.SpaceStation ||
-    building === Building.GaiaFormer ||
-    isShip(building)
-  ) {
+  } else if (isFree(bld.cost) || building === Building.SpaceStation || building === Building.GaiaFormer) {
     label = `Place a ${name}`;
   }
   return { label, richText: rich };
@@ -104,7 +94,7 @@ function buildingButton(
   commandSuffix?: string
 ) {
   const hexes = hexMap(engine, buildings, false);
-  if (!upgrade && engine.round != Round.None && building != Building.SpaceStation && !isShip(building)) {
+  if (!upgrade && engine.round != Round.None && building != Building.SpaceStation) {
     const map = engine.map;
     for (const hex of map.grid.values()) {
       if (hex.data.planet == Planet.Empty) {
@@ -123,7 +113,7 @@ function buildingButton(
       shortcuts: shortcut ? [shortcut] : [],
       command,
       hexes,
-      smartAutoClick: !isShip(building),
+      smartAutoClick: true,
     }),
     () => textButton({ buttons: confirm }),
     building,

@@ -7,18 +7,6 @@
     <!-- <rect v-if="kind="='q'"" class="qic" width="14" height="14" x="-7" y="-7" /> -->
     <rect v-else-if="kind === 'o'" class="ore" width="14" height="14" x="-7" y="-7" />
     <rect v-else-if="kind === 'c'" class="credit" width="16" height="16" ry="8" rx="8" x="-8" y="-8" />
-    <rect v-else-if="kind === 'tradeBonus'" class="trade-bonus" width="16" height="16" ry="8" rx="8" x="-8" y="-8" />
-    <rect
-      v-else-if="kind === 'tradeDiscount'"
-      class="trade-discount"
-      width="16"
-      height="16"
-      ry="8"
-      rx="8"
-      x="-8"
-      y="-8"
-    />
-    <rect v-else-if="kind === 'tradeShip'" class="trade-ship" width="16" height="16" ry="8" rx="8" x="-8" y="-8" />
     <rect
       v-else-if="['tg', 't->tg', 'tg->t'].includes(kind)"
       class="gaia"
@@ -162,30 +150,6 @@
         {{ count }}
       </text>
     </template>
-    <template v-else-if="kind === 'ship-range'">
-      <g transform="scale(1) translate(-13,0)">
-        <image xlink:href="../assets/resources/flat-hex.svg" :height="(162 / 328) * 20" width="20" x="-10" y="-4" />
-      </g>
-      <g transform="scale(1) translate(13,0)">
-        <image xlink:href="../assets/resources/flat-hex.svg" :height="(162 / 328) * 20" width="20" x="-10" y="-4" />
-      </g>
-      <g transform="translate(1,0) rotate(70)">
-        <image xlink:href="../assets/resources/range-arrow.svg" :height="(285 / 164) * 9" width="10" x="-5" y="-8" />
-      </g>
-      <text v-if="count >= 1" x="13" y="1.2" fill="black" stroke-width="0.3" style="font-weight: bold; font-size: 10px">
-        {{ count }}
-      </text>
-      <text
-        v-if="count >= 1"
-        x="-13"
-        y="1.2"
-        fill="black"
-        stroke-width="0.3"
-        style="font-weight: bold; font-size: 10px"
-      >
-        S
-      </text>
-    </template>
     <template v-else-if="kind === 'up-lowest'">
       <Condition condition="a" transform="scale(0.75)" />
       <Token faction="bescods" transform="scale(0.15) translate(50,-24)" />
@@ -228,11 +192,8 @@
             'q',
             'gf',
             'gf->t',
-            'tradeShip',
           ].includes(kind)) ||
-        count === '+' ||
-        kind === 'tradeBonus' ||
-        kind === 'tradeDiscount'
+        count === '+'
       "
       :class="{ plus: count === '+', overdrawn: typeof count === 'number' && count < 0 }"
       :text-decoration="kind === 'burn-token' ? 'line-through' : ''"
@@ -357,18 +318,6 @@ g.resource {
 
   .gaia {
     fill: var(--gaia);
-  }
-
-  .trade-bonus {
-    fill: var(--current-round);
-  }
-
-  .trade-discount {
-    fill: var(--oxide);
-  }
-
-  .trade-ship {
-    fill: var(--volcanic);
   }
 
   .ore,

@@ -21,7 +21,6 @@ import { endTurnButton, passButton } from "./pass";
 import { brainstoneButtons, chargePowerButtons } from "./power";
 import { researchButtons, techTiles } from "./research";
 import { sectorRotationButton, setupButton } from "./setup";
-import { moveShipButton } from "./ships";
 import { finalizeShortcutsAndParents } from "./shortcuts";
 import { chooseTinkeringTileButton } from "./tinkering";
 import type { AvailableConversions, CommandController } from "./types";
@@ -44,9 +43,6 @@ function commandButton(
 
     case Command.Build:
       return buildButtons(controller, engine, command, player);
-
-    case Command.MoveShip:
-      return [moveShipButton(controller, engine, command)];
 
     case Command.PISwap:
       return [

@@ -1,40 +1,24 @@
 import { expect } from "chai";
 import Engine from "./engine";
-import { AdvTechTile, BoardAction, Building, Expansion, FinalTile, hasExpansion } from "./enums";
+import { AdvTechTile, BoardAction, Expansion, FinalTile, hasExpansion } from "./enums";
 
 describe("Expansion", () => {
   it("hasExpansion tests individual bits", () => {
-    expect(hasExpansion(Expansion.Frontiers, Expansion.Frontiers)).to.be.true;
-    expect(hasExpansion(Expansion.Frontiers, Expansion.LostFleet)).to.be.false;
     expect(hasExpansion(Expansion.LostFleet, Expansion.LostFleet)).to.be.true;
-    expect(hasExpansion(Expansion.None, Expansion.Frontiers)).to.be.false;
+    expect(hasExpansion(Expansion.None, Expansion.LostFleet)).to.be.false;
   });
 
   it("All is the combination of every expansion bit", () => {
-    expect(Expansion.All).to.equal(Expansion.Frontiers | Expansion.LostFleet);
-    expect(hasExpansion(Expansion.All, Expansion.Frontiers)).to.be.true;
+    expect(Expansion.All).to.equal(Expansion.LostFleet);
     expect(hasExpansion(Expansion.All, Expansion.LostFleet)).to.be.true;
-  });
-
-  it("Building.values(All) still includes Frontiers-only content", () => {
-    expect(Building.values(Expansion.All)).to.contain(Building.ColonyShip);
-    expect(Building.values(Expansion.All)).to.contain(Building.Colony);
-    expect(Building.values(Expansion.None)).to.not.contain(Building.ColonyShip);
   });
 
   it("engine.expansions reflects the configured option flags", () => {
     const engine = new Engine(["init 2 randomSeed"], {});
     expect(engine.expansions).to.equal(Expansion.None);
 
-    const frontiersEngine = new Engine(["init 2 randomSeed"], { frontiers: true });
-    expect(frontiersEngine.expansions).to.equal(Expansion.Frontiers);
-
     const lostFleetEngine = new Engine(["init 2 randomSeed"], { lostFleet: true });
     expect(lostFleetEngine.expansions).to.equal(Expansion.LostFleet);
-  });
-
-  it("Frontiers and Lost Fleet can not be combined", () => {
-    expect(() => new Engine(["init 2 randomSeed"], { frontiers: true, lostFleet: true })).to.throw();
   });
 
   it("AdvTechTile.values(LostFleet) includes the 6 §G2 tiles, AdvTechTile.values(None) does not", () => {
@@ -59,11 +43,9 @@ describe("Expansion", () => {
   it("BoardAction.values(LostFleet) excludes qic1-3, replaced by the spaceship boards' own Q.I.C. actions (RULES_CLARIFICATIONS.md §E4/§K3)", () => {
     const qicActions = [BoardAction.Qic1, BoardAction.Qic2, BoardAction.Qic3];
 
-    for (const expansions of [Expansion.None, Expansion.Frontiers]) {
-      const values = BoardAction.values(expansions);
-      for (const action of qicActions) {
-        expect(values).to.contain(action);
-      }
+    const withoutExpansion = BoardAction.values(Expansion.None);
+    for (const action of qicActions) {
+      expect(withoutExpansion).to.contain(action);
     }
 
     const withLostFleet = BoardAction.values(Expansion.LostFleet);

@@ -64,9 +64,6 @@ export interface ProjectedConversionState {
   temporaryRange: number;
   temporaryStep: number;
   satellites: number;
-  tradeBonus: number;
-  tradeDiscount: number;
-  tradeShips: number;
   hasPlanetaryInstitute: boolean;
   conversionRights: string[];
 }

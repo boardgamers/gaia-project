@@ -1,7 +1,7 @@
 import { isEqual } from "lodash";
 import { AvailableBuilding, AvailableCommand } from "../available/types";
 import Engine from "../engine";
-import { Building, Command, isShip, Phase, Planet, Player as PlayerEnum } from "../enums";
+import { Building, Command, Phase, Planet, Player as PlayerEnum } from "../enums";
 import Player from "../player";
 import Reward from "../reward";
 import assert from "../utils/assert";
@@ -61,7 +61,7 @@ export function placeBuilding(engine: Engine, pl: Player, building: AvailableBui
   );
 
   // will trigger a LeechPhase
-  if ((engine.phase === Phase.RoundMove || engine.phase === Phase.RoundShip) && !isShip(building.building)) {
+  if (engine.phase === Phase.RoundMove) {
     engine.leechSources.unshift({ player: pl.player, coordinates: building.coordinates });
   }
 }

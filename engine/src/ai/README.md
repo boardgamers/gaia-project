@@ -157,7 +157,7 @@ Explicit rejections:
 - non-`standard` faction-board variants;
 - `DeadEnd`, because it is an undo signal rather than an executable candidate;
 - custom Federation fallback commands with no enumerated geometry;
-- custom setup/rotation, bidding/ban commands, initialization, and Frontiers ship movement, which
+- custom setup/rotation, bidding/ban commands, and initialization, which
   are outside the locked challenge boundary;
 - any offered executable command with an empty option set or unfamiliar command branch.
 
@@ -175,8 +175,7 @@ every projection to the canonical committed source/action timing context and inc
 - credits, ore, knowledge, Q.I.C., and victory points;
 - all four power bowls and exact brainstone placement;
 - Gaiaformer total, Gaia-area, on-board, asteroid-used, other-used, and available counts;
-- token modifier, terraform discount, temporary range/steps, satellites, and Frontiers trade
-  counters;
+- token modifier, terraform discount, temporary range/steps, and satellites;
 - actor, faction, round/final-round marker, Planetary Institute state, timing, and the sorted set of
   conversion rights.
 

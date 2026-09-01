@@ -77,7 +77,6 @@ import {
   moveSetup,
   moveSilentBid,
 } from "./move/setup";
-import { moveShip } from "./move/ships";
 import { moveGaiaFormTransdim, moveSpaceshipAction } from "./move/spaceship-actions";
 import Player from "./player";
 import { MoveTokens, powerLogString } from "./player-data";
@@ -139,8 +138,6 @@ export interface EngineOptions {
   map?: MapConfiguration;
   /** Are the federations flexible (allows you to avoid planets with buildings to form federation even if it's not the shortest route)? */
   flexibleFederations?: boolean;
-  /** Frontiers expansion */
-  frontiers?: boolean;
   /** Lost Fleet expansion */
   lostFleet?: boolean;
   /**
@@ -210,7 +207,7 @@ export interface LogEntry {
  * other three are the states a live async game actually SITS in between turns - waiting on someone
  * else's power-charge answer, or on a start-of-round income/gaia choice - which is precisely when a
  * player reaches for a premove. Everything else (setup, auction, scoring, endgame, and the transient
- * `RoundStart`/`RoundFinish`/`RoundShip` the engine never rests in) has no well-defined "my next turn"
+ * `RoundStart`/`RoundFinish` the engine never rests in) has no well-defined "my next turn"
  * to preview.
  */
 const premovePreviewablePhases: Phase[] = [Phase.RoundMove, Phase.RoundLeech, Phase.RoundIncome, Phase.RoundGaia];
@@ -383,7 +380,7 @@ export default class Engine {
   }
 
   get expansions(): Expansion {
-    return 0 | (this.options.frontiers ? Expansion.Frontiers : 0) | (this.options.lostFleet ? Expansion.LostFleet : 0);
+    return 0 | (this.options.lostFleet ? Expansion.LostFleet : 0);
   }
 
   round: number = Round.None;
@@ -1050,9 +1047,6 @@ export default class Engine {
       [Phase.RoundFinish]: () => {
         throw new Error("roundFinish cannot be executed");
       },
-      [Phase.RoundShip]: () => {
-        throw new Error("roundShip cannot be executed");
-      },
       [Phase.SetupInit]: phaseSetupInit,
       [Phase.SetupBoard]: phaseSetupBoard,
       [Phase.SetupFactionBan]: phaseSetupFactionBan,
@@ -1135,7 +1129,6 @@ export default class Engine {
       [Command.PreferenceBid]: movePreferenceBid,
       [Command.Build]: moveBuild,
       [Command.PlaceLostPlanet]: moveLostPlanet,
-      [Command.MoveShip]: moveShip,
       [Command.Special]: moveSpecial,
       [Command.Spend]: moveSpend,
       [Command.BurnPower]: moveBurn,

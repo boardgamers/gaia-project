@@ -1,18 +1,5 @@
 <template>
-  <g v-if="isShip" class="ship">
-    <circle v-if="shipMoved" r="7" />
-    <Planet :planet="planetClass" transform="scale(7)" :classes="['ship']" />
-    <text transform="translate(-2, -.7) scale(5)" :class="`board-text ${planetClass}`" style="font-weight: bolder">{{
-      shipLetter
-    }}</text>
-  </g>
-  <g v-else-if="customsPost" class="ship">
-    <Planet :planet="planetClass" transform="scale(7)" />
-    <text transform="translate(-2, -.7) scale(5)" :class="`board-text ${planetClass}`" style="font-weight: bolder"
-      >C</text
-    >
-  </g>
-  <g v-else :class="['building']">
+  <g :class="['building']">
     <g :class="['planet-fill', planetClass]" v-if="flat">
       <rect v-if="mine" x="-20" y="-20" width="40" height="40" />
       <rect v-else-if="planetaryInstitute" x="-37.5" y="-37.5" width="75" height="75" />
@@ -20,7 +7,6 @@
       <circle v-else-if="lab" r="30" />
       <circle v-else-if="academy" r="50" />
       <polygon v-else-if="tradingStation" points="-20,-20 0,-38 20,-20 20,20 -20,20" transform="translate(0, 0.08)" />
-      <polygon v-else-if="colony" points="-35,30 0,-40 35,30" transform="translate(0, 0.08)" />
       <circle v-else-if="spaceStation" r="20" />
     </g>
     <use
@@ -32,29 +18,20 @@
 </template>
 
 <script lang="ts">
-import { Building as BuildingEnum, Faction, isShip } from "@gaia-project/engine";
+import { Building as BuildingEnum, Faction } from "@gaia-project/engine";
 import { isAcademy } from "@gaia-project/engine/src/enums";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { shipLetter } from "../data/building";
 import { corners } from "../graphics/hex";
 import { planetClass } from "../graphics/utils";
-import Planet from "./Planet.vue";
 
-@Component<Building>({
-  components: {
-    Planet,
-  },
-})
+@Component<Building>({})
 export default class Building extends Vue {
   @Prop()
   faction: Faction;
 
   @Prop({ default: false, type: Boolean })
   flat: boolean;
-
-  @Prop()
-  shipMoved: boolean;
 
   @Prop()
   building: BuildingEnum;
@@ -77,16 +54,6 @@ export default class Building extends Vue {
   get hexCorners() {
     return corners()
       .map(({ x, y }) => `${x * 40},${y * 40}`)
-      .join(" ");
-  }
-
-  get triangleCorners() {
-    return [
-      { x: -0.5, y: Math.sqrt(3) / 4 },
-      { x: 0.5, y: Math.sqrt(3) / 4 },
-      { x: 0, y: -Math.sqrt(3) / 4 },
-    ]
-      .map(({ x, y }) => `${x * 0.5},${y * 0.5}`)
       .join(" ");
   }
 
@@ -114,24 +81,8 @@ export default class Building extends Vue {
     return this.building === BuildingEnum.GaiaFormer;
   }
 
-  get colony() {
-    return this.building === BuildingEnum.Colony;
-  }
-
   get spaceStation() {
     return this.building === BuildingEnum.SpaceStation;
-  }
-
-  get customsPost() {
-    return this.building === BuildingEnum.CustomsPost;
-  }
-
-  get isShip() {
-    return isShip(this.building);
-  }
-
-  get shipLetter() {
-    return shipLetter(this.building);
   }
 }
 </script>

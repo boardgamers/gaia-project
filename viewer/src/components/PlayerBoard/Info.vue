@@ -147,14 +147,10 @@
           <text class="board-text" transform="scale(0.7)">+{{ income("q") }}</text>
         </g>
       </g>
-      <g
-        v-for="i in researchFields"
-        :key="i"
-        :transform="`translate(${(i * 2 + -1.4) * (isFrontiers ? 0.85 : 1)},3.5) scale(1)`"
-      >
+      <g v-for="i in researchFields" :key="i" :transform="`translate(${(i * 2 + -1.4) * 1},3.5) scale(1)`">
         <polygon
           points="-7.5,3 -3,7.5 3,7.5 7.5,3 7.5,-3 3,-7.5 -3,-7.5 -7.5,-3"
-          :transform="`scale(${isFrontiers ? 0.085 : 0.1})`"
+          :transform="`scale(0.1)`"
           :class="['board-info', 'research-tile', researchClass(i - 1)]"
           :style="`fill: ${researchStyle(i - 1).backgroundColor}`"
         />
@@ -168,9 +164,7 @@
 
 <script lang="ts">
 import Engine, {
-  Expansion,
   Faction,
-  hasExpansion,
   MAX_SATELLITES,
   Player,
   PlayerData,
@@ -220,10 +214,6 @@ export default class PlayerBoardInfo extends Vue {
     return this.$store.state.data;
   }
 
-  get isFrontiers() {
-    return hasExpansion(this.engine.expansions, Expansion.Frontiers);
-  }
-
   get researchFields(): number {
     return ResearchField.values(this.engine.expansions).length;
   }
@@ -261,7 +251,6 @@ export default class PlayerBoardInfo extends Vue {
       "<li>Click on the sectors icon to highlight all colonized sectors (also works for other players)</li>" +
       "<li>Click on the federation icon to highlight all federation (also works for other players)</li>" +
       "<li>Click on the network icon (right of power bowl) to leech network - how much power can be gained if other players upgrade buildings</li>" +
-      (this.isFrontiers ? "<li>Click on the trade bonus or cost icons to see the trade rewards table</li>" : "") +
       "</ul>"
     );
   }

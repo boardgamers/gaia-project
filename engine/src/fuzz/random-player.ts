@@ -10,7 +10,7 @@
  * - Guard against free-action loops (`Spend`, `BurnPower`): cap conversions per line, then
  *   force progress (pass weighting grows as the round ages).
  * - v1 scope: `factionVariant: "standard"`, no auction, no `customBoardSetup`, players 2-4.
- *   Commands outside that scope (Bid, Setup, RotateSectors, MoveShip) throw GeneratorError.
+ *   Commands outside that scope (Bid, Setup, RotateSectors) throw GeneratorError.
  */
 import { AvailableCommand } from "../available/types";
 import { Command, Faction, Phase } from "../enums";
@@ -289,7 +289,6 @@ function movePartFor(command: AvailableCommand, ctx: PlayContext): string | null
     case Command.Bid:
     case Command.Setup:
     case Command.RotateSectors:
-    case Command.MoveShip:
       throw new GeneratorError(`Command ${command.name} is outside the fuzzer's v1 scope (plan §2) but was offered`);
 
     default:

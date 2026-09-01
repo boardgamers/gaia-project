@@ -16,7 +16,6 @@ import {
   Federation,
   FinalTile,
   isAcademy,
-  isShip,
   LostFleetEconomySide,
   Operator,
   Phase,
@@ -26,7 +25,6 @@ import {
   ResearchField,
   Resource,
   Resource as ResourceEnum,
-  Ship,
   Spaceship,
   SpaceshipFederation,
   TechTile,
@@ -377,7 +375,7 @@ export default class Player extends EventEmitter {
       addedCost = [];
     }
 
-    if (hex?.hasSpaceship() && !isShip(building)) {
+    if (hex?.hasSpaceship()) {
       return null;
     }
 
@@ -401,7 +399,7 @@ export default class Player extends EventEmitter {
     // gaiaforming discount
     if (building === Building.GaiaFormer) {
       addedCost.push(new Reward(-this.data.gaiaFormingDiscount(), Resource.MoveTokenToGaiaArea));
-    } else if (building === Building.Mine || building === Building.Colony) {
+    } else if (building === Building.Mine) {
       // habitability costs
       if (targetPlanet === Planet.Gaia) {
         if (this.data.temporaryStep > 0 && !replay) {
@@ -486,8 +484,6 @@ export default class Player extends EventEmitter {
     switch (building) {
       case Building.GaiaFormer:
         return this.data.gaiaformers - this.data.gaiaformersInGaia - this.data.gaiaformersUsedForAsteroid;
-      case Building.TradeShip:
-        return this.data.tradeShips;
       default:
         return this.board.buildings[building].income.length;
     }
@@ -675,7 +671,7 @@ export default class Player extends EventEmitter {
     }
 
     // excluding Gaiaformers as occupied
-    if (building !== Building.GaiaFormer && building !== Building.CustomsPost && !isShip(building)) {
+    if (building !== Building.GaiaFormer) {
       if (!wasOccupied) {
         this.data.occupied.push(hex);
         // Clear federation cache on new building
@@ -706,7 +702,7 @@ export default class Player extends EventEmitter {
 
     // remove upgraded building and the associated event
     const upgradedBuilding = hex.buildingOf(this.player);
-    if (upgradedBuilding && building !== Building.CustomsPost) {
+    if (upgradedBuilding) {
       this.data.buildings[upgradedBuilding] -= 1;
       this.removeEvents(this.board.buildings[upgradedBuilding].income[this.data.buildings[upgradedBuilding]]);
     }
@@ -720,22 +716,16 @@ export default class Player extends EventEmitter {
     // Lantids
     const isAdditionalMine = !upgradedBuilding && hex.occupied();
 
-    if (isShip(building)) {
-      this.placeShip(building, hex);
-    } else if (building === Building.CustomsPost) {
-      hex.data.customPosts = hex.customPosts.concat(this.player);
-    } else {
-      if (isAdditionalMine) {
-        hex.data.additionalMine = this.player;
-        if (this.data.hasPlanetaryInstitute()) {
-          this.gainRewards([new Reward("2k")], Faction.Lantids);
-        }
-      } else {
-        hex.data.building = building;
-        hex.data.player = this.player;
+    if (isAdditionalMine) {
+      hex.data.additionalMine = this.player;
+      if (this.data.hasPlanetaryInstitute()) {
+        this.gainRewards([new Reward("2k")], Faction.Lantids);
       }
-      this.addBuildingToNearbyFederation(building, hex, map);
+    } else {
+      hex.data.building = building;
+      hex.data.player = this.player;
     }
+    this.addBuildingToNearbyFederation(building, hex, map);
 
     // get triggered income for new building
     this.receiveBuildingTriggerIncome(building, hex.data.planet, isAdditionalMine);
@@ -775,25 +765,6 @@ export default class Player extends EventEmitter {
       }
     }
     return added;
-  }
-
-  placeShip(ship: Building, hex: GaiaHex) {
-    this.data.ships.push({ type: ship, location: hex.toString(), moved: true, player: this.player });
-  }
-
-  findUnmovedShip(ship: Building, location: string): Ship | null {
-    return this.data.ships.find((s) => s.location === location && s.type === ship && !s.moved);
-  }
-
-  removeShip(ship: Ship, destroyed: boolean) {
-    const l = this.data.ships;
-    l.splice(l.indexOf(ship), 1);
-    if (destroyed) {
-      this.data.destroyedShips[ship.type]++;
-      this.data.buildings[ship.type]--;
-    } else {
-      this.data.deployedShips[ship.type]++;
-    }
   }
 
   resetTemporaryVariables() {
@@ -985,8 +956,6 @@ export default class Player extends EventEmitter {
       switch (building) {
         case Building.SpaceStation:
           return 1;
-        case Building.CustomsPost:
-          return 0;
       }
     }
 
@@ -1132,8 +1101,7 @@ export default class Player extends EventEmitter {
         return (
           this.data.buildings[Building.Academy1] +
           this.data.buildings[Building.Academy2] +
-          this.data.buildings[Building.PlanetaryInstitute] +
-          this.data.buildings[Building.Colony]
+          this.data.buildings[Building.PlanetaryInstitute]
         );
       case Condition.Federation:
         return this.data.tiles.federations.length + this.data.spaceshipFederations.length;

@@ -37,7 +37,6 @@ export type SelfContainedSetup = {
     randomFactions: boolean;
     advancedRules: boolean;
     customBoardSetup: boolean;
-    frontiers: boolean;
     lostFleet: boolean;
   };
 };
@@ -104,7 +103,6 @@ export function parseSelfContainedSetup(search = "", env: SelfContainedEnv = pro
       randomFactions: flag("randomFactions", env.VUE_APP_randomFactions),
       advancedRules: flag("advancedRules") || flag("rotateSectors", env.VUE_APP_rotateSectors),
       customBoardSetup: flag("customBoardSetup", env.VUE_APP_customBoardSetup),
-      frontiers: flag("frontiers", env.VUE_APP_frontiers),
       lostFleet: flag("lostFleet", env.VUE_APP_lostFleet),
     },
   };
@@ -128,13 +126,13 @@ function launchSelfContained(selector = "#app", debug = true) {
   const emitter = launch(selector, debug ? Wrapper : Game);
 
   // Game setup can be configured at runtime via URL query params (no rebuild
-  // needed) — e.g. ?players=4&seed=42&factionVariant=beta&frontiers=1
+  // needed) — e.g. ?players=4&seed=42&factionVariant=beta&lostFleet=1
   // Query params take precedence over the VUE_APP_* build-time env vars.
   // Supported: players (2-5), seed, layout (standard|balanced|xshape),
   // auction (none|silent|choose-bid|bid-while-choosing), banPhase,
   // factionVariant (standard|more-balanced|beta), and the flags
   // randomFactions, advancedRules (alias rotateSectors), customBoardSetup,
-  // frontiers, lostFleet. Alternatively, ?state=<base64url-json> boots
+  // lostFleet. Alternatively, ?state=<base64url-json> boots
   // directly into an exported game state, and ?scenario=<id> loads a named
   // Lost Fleet test position. State URLs take precedence over scenario URLs.
   // Optional loadType and stopMove are supported for state URLs.

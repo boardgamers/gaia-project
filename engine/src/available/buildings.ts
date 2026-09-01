@@ -2,12 +2,11 @@ import { uniq } from "lodash";
 import { upgradedBuildings } from "../buildings";
 import { qicForDistance } from "../cost";
 import Engine from "../engine";
-import { Building, Command, Expansion, Faction, hasExpansion, Planet, Player, Resource } from "../enums";
+import { Building, Command, Faction, Planet, Player, Resource } from "../enums";
 import { GaiaHex } from "../gaia-hex";
 import SpaceMap from "../map";
 import PlayerObject, { BuildCheck, BuildWarning } from "../player";
 import Reward from "../reward";
-import { possibleShips } from "./ships";
 import {
   AvailableBuildCommandData,
   AvailableBuilding,
@@ -93,10 +92,6 @@ export function possibleBuildings(engine: Engine, player: Player): AvailableComm
       // excluding Transdim planet until transformed into Gaia planets
       if (hex.data.planet === Planet.Transdim) {
         continue;
-      }
-
-      if (hex.isRangeStartingPoint(player) && hasExpansion(engine.expansions, Expansion.Frontiers)) {
-        buildings.push(...possibleShips(pl, engine, map, hex));
       }
 
       if (player !== hex.data.player) {

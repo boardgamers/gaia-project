@@ -16,7 +16,6 @@ const geodens: FactionBoardVariants = {
     income: ["3k,4o,15c,q,up-terra", "+o,k"],
     handlers: {
       [`build-${Building.Mine}`]: (player: Player, hex: GaiaHex) => gainExtraKnowledge(player, hex),
-      [`build-${Building.Colony}`]: (player: Player, hex: GaiaHex) => gainExtraKnowledge(player, hex),
     },
   },
   variants: [

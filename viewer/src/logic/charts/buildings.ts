@@ -1,12 +1,4 @@
-import Engine, {
-  Building,
-  Command,
-  Expansion,
-  GaiaHex,
-  PlayerData,
-  ShipAction,
-  stdBuildingValue,
-} from "@gaia-project/engine";
+import Engine, { Building, Command, Expansion, GaiaHex, PlayerData, stdBuildingValue } from "@gaia-project/engine";
 import { allBuildings, buildingData } from "../../data/building";
 import type { CommandObject } from "../recent";
 import { ChartSource } from "./charts";
@@ -14,18 +6,9 @@ import type { ExtractLogArg, SimpleSourceFactory } from "./simple-charts";
 import { ChartSummary, ExtractLog } from "./simple-charts";
 
 function buildingFromLog(e: ExtractLogArg<ChartSource<Building>>): Building | null {
-  const args = e.cmd.args;
   switch (e.cmd.command) {
     case Command.Build:
-      return args[0] as Building;
-    case Command.MoveShip:
-      if (args.some((a) => a === ShipAction.BuildColony)) {
-        return Building.Colony;
-      }
-      if (e.log.changes?.[Command.Build] != null) {
-        return Building.CustomsPost;
-      }
-      return null;
+      return e.cmd.args[0] as Building;
   }
   return null;
 }

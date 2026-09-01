@@ -53,24 +53,6 @@
             :reveal-income="preview"
           />
           <BuildingGroup
-            v-if="isFrontiers"
-            transform="translate(21, 10.7) scale(1.65)"
-            :nBuildings="3"
-            building="colony"
-            :player="player"
-            :placed="playerData.buildings.colony"
-            :resource="[]"
-          />
-          <BuildingGroup
-            v-if="isFrontiers"
-            transform="translate(13.47, 20.57) scale(.6)"
-            :nBuildings="5"
-            building="customsPost"
-            :player="player"
-            :placed="playerData.buildings.customsPost"
-            :resource="[]"
-          />
-          <BuildingGroup
             transform="translate(0, 13)"
             :nBuildings="4"
             building="ts"
@@ -126,42 +108,9 @@
           kind="r"
           :tooltip="rangeTooltip"
           :count="playerRange"
-          :transform="`translate(35.5,${isFrontiers ? 0.3 : 1}) scale(0.1)`"
+          :transform="`translate(35.5,1) scale(0.1)`"
           style="opacity: 0.7"
         />
-        <Resource
-          v-if="isFrontiers"
-          kind="ship-range"
-          tooltip="Ship Range"
-          :count="playerData.shipRange"
-          transform="translate(35.5,1.5) scale(0.1)"
-          style="opacity: 0.7"
-        />
-        <g transform="translate(35.5,3.2) scale(0.1)">
-          <Resource v-if="isFrontiers" kind="tradeBonus" :count="playerData.tradeBonus" style="opacity: 0.7" />
-          <circle
-            r="10"
-            style="opacity: 0"
-            v-b-modal.modal-center="'trade'"
-            role="button"
-            v-b-tooltip.hover="'Trade Bonus'"
-          />
-        </g>
-        <g transform="translate(37.3,3.2) scale(0.1)">
-          <Resource
-            v-if="isFrontiers"
-            kind="tradeDiscount"
-            :count="playerData.tradeCost().count"
-            style="opacity: 0.7"
-          />
-          <circle
-            r="10"
-            style="opacity: 0"
-            v-b-modal.modal-center="'trade'"
-            role="button"
-            v-b-tooltip.hover="'Trading Cost in pw'"
-          />
-        </g>
 
         <BuildingGroup
           transform="translate(21, 1.2)"
@@ -185,21 +134,6 @@
             :booster="playerData.tiles.booster"
             :disabled="passed"
             :special-action-used="boosterSpecialActionUsed"
-          />
-        </g>
-
-        <g transform="translate(0, 18.5) scale(0.7)" v-if="isFrontiers">
-          <BuildingGroup
-            v-for="s in ships"
-            :key="s"
-            :transform="shipPositions[s]"
-            :nBuildings="s === 'tradeShip' ? playerData.tradeShips : 3"
-            :destroyed="playerData.destroyedShips[s]"
-            :deployed="playerData.deployedShips[s]"
-            :building="s"
-            :player="player"
-            :placed="playerData.buildings[s]"
-            :resource="[]"
           />
         </g>
 
@@ -320,7 +254,6 @@
 <script lang="ts">
 import Engine, {
   ArtifactToken,
-  Building,
   effectiveRange,
   Expansion,
   factionPlanet,
@@ -650,10 +583,6 @@ export default class PlayerInfo extends Vue {
     return (this.player.ownedPlanetsCount.l ?? 0) > 0;
   }
 
-  get isFrontiers() {
-    return hasExpansion(this.engine.expansions, Expansion.Frontiers);
-  }
-
   get isLostFleet() {
     return hasExpansion(this.engine.expansions, Expansion.LostFleet);
   }
@@ -699,23 +628,7 @@ export default class PlayerInfo extends Vue {
   }
 
   get height() {
-    return this.isFrontiers ? "26.2" : "21.4";
-  }
-
-  get ships(): Building[] {
-    return Building.ships();
-  }
-
-  get shipPositions() {
-    return {
-      [Building.ColonyShip]: "translate(0, 0)",
-      [Building.ConstructionShip]: "translate(8.5, 0)",
-      [Building.ResearchShip]: "translate(17, 0)",
-      [Building.TradeShip]: "translate(25.5, 0)",
-      [Building.Scout]: "translate(0, 3)",
-      [Building.Frigate]: "translate(8.5, 3)",
-      [Building.BattleShip]: "translate(17, 3)",
-    };
+    return "21.4";
   }
 
   togglePlanetHighlight(planet: Planet) {

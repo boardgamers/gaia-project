@@ -35,7 +35,6 @@ const ALL_RESEARCH_FIELDS: readonly ResearchField[] = [
   ResearchField.GaiaProject,
   ResearchField.Economy,
   ResearchField.Science,
-  ResearchField.Diplomacy,
 ];
 
 type CanonicalPoint = {
@@ -49,7 +48,6 @@ type CanonicalOptions = {
   customBoardSetup: boolean;
   noFedCheck: boolean;
   flexibleFederations: boolean;
-  frontiers: boolean;
   lostFleet: boolean;
   factionVariant: string;
   factionVariantVersion: number;
@@ -71,8 +69,6 @@ type CanonicalMapHex = {
   building: Building | null;
   player: PlayerEnum | null;
   federations: PlayerEnum[];
-  tradeTokens: PlayerEnum[];
-  customPosts: PlayerEnum[];
   additionalMine: PlayerEnum | null;
   powerRing: PlayerEnum | null;
   spaceship: Spaceship | null;
@@ -107,20 +103,14 @@ type CanonicalPlayer = {
     };
     brainstone: string | null;
     buildings: Array<{ building: string; count: number }>;
-    destroyedShips: Array<{ building: string; count: number }>;
-    deployedShips: Array<{ building: string; count: number }>;
     satellites: number;
     research: Array<{ field: string; level: number }>;
     range: number;
-    shipRange: number;
     gaiaformers: number;
     gaiaformersInGaia: number;
     gaiaformersUsedForAsteroid: number;
     gaiaformersUsedForOther: number;
     terraformCostDiscount: number;
-    tradeBonus: number;
-    tradeDiscount: number;
-    tradeShips: number;
     leechPossible: number;
     tokenModifier: number;
     lostPlanet: number;
@@ -131,7 +121,6 @@ type CanonicalPlayer = {
     lostFleetCost3Planets: string[];
     artifactPlanetTypes: string[];
     artifacts: string[];
-    ships: Array<{ type: string; player: PlayerEnum; location: string; moved: boolean }>;
     explorationShips: Array<{ ship: string; slot: number }>;
     tiles: {
       booster: string | null;
@@ -307,8 +296,6 @@ export function projectCanonicalState(engine: Engine): CanonicalState {
           building: hex.data.building ?? null,
           player: normalizeNullableNumber(hex.data.player),
           federations: sortNumbers(hex.data.federations ?? []),
-          tradeTokens: sortNumbers(hex.data.tradeTokens ?? []),
-          customPosts: sortNumbers(hex.data.customPosts ?? []),
           additionalMine: normalizeNullableNumber(hex.data.additionalMine),
           powerRing: normalizeNullableNumber(hex.data.powerRing),
           spaceship: hex.data.spaceship ?? null,
@@ -343,23 +330,17 @@ export function projectCanonicalState(engine: Engine): CanonicalState {
         },
         brainstone: player.data.brainstone ?? null,
         buildings: projectBuildingCounts(player.data.buildings),
-        destroyedShips: projectShipBuildingCounts(player.data.destroyedShips),
-        deployedShips: projectShipBuildingCounts(player.data.deployedShips),
         satellites: player.data.satellites,
         research: ALL_RESEARCH_FIELDS.map((field) => ({
           field,
           level: player.data.research[field] ?? 0,
         })),
         range: player.data.range,
-        shipRange: player.data.shipRange,
         gaiaformers: player.data.gaiaformers,
         gaiaformersInGaia: player.data.gaiaformersInGaia,
         gaiaformersUsedForAsteroid: player.data.gaiaformersUsedForAsteroid,
         gaiaformersUsedForOther: player.data.gaiaformersUsedForOther,
         terraformCostDiscount: player.data.terraformCostDiscount,
-        tradeBonus: player.data.tradeBonus,
-        tradeDiscount: player.data.tradeDiscount,
-        tradeShips: player.data.tradeShips,
         leechPossible: player.data.leechPossible ?? 0,
         tokenModifier: player.data.tokenModifier,
         lostPlanet: player.data.lostPlanet,
@@ -370,14 +351,6 @@ export function projectCanonicalState(engine: Engine): CanonicalState {
         lostFleetCost3Planets: [...player.data.lostFleetCost3Planets].sort(),
         artifactPlanetTypes: [...player.data.artifactPlanetTypes].sort(),
         artifacts: [...player.data.artifacts].sort(),
-        ships: [...player.data.ships]
-          .map((ship) => ({
-            type: ship.type,
-            player: ship.player,
-            location: ship.location,
-            moved: ship.moved,
-          }))
-          .sort(compareShips),
         explorationShips: Object.keys(player.data.explorationShips)
           .sort()
           .map((ship) => ({
@@ -522,7 +495,6 @@ function projectOptions(options: EngineOptions): CanonicalOptions {
     customBoardSetup: !!options.customBoardSetup,
     noFedCheck: !!options.noFedCheck,
     flexibleFederations: !!options.flexibleFederations,
-    frontiers: !!options.frontiers,
     lostFleet: !!options.lostFleet,
     factionVariant: options.factionVariant ?? "standard",
     factionVariantVersion: options.factionVariantVersion ?? 0,
@@ -531,16 +503,6 @@ function projectOptions(options: EngineOptions): CanonicalOptions {
 
 function projectBuildingCounts(counts: Record<string, number>): Array<{ building: string; count: number }> {
   return Building.values(Expansion.All)
-    .slice()
-    .sort()
-    .map((building) => ({
-      building,
-      count: counts?.[building] ?? 0,
-    }));
-}
-
-function projectShipBuildingCounts(counts: Record<string, number>): Array<{ building: string; count: number }> {
-  return Building.ships()
     .slice()
     .sort()
     .map((building) => ({
@@ -563,18 +525,6 @@ function sortNumbers(values: number[]): number[] {
 
 function compareHexes(left: { q: number; r: number; s: number }, right: { q: number; r: number; s: number }): number {
   return left.q - right.q || left.r - right.r || left.s - right.s;
-}
-
-function compareShips(
-  left: { type: string; location: string; moved: boolean; player: number },
-  right: { type: string; location: string; moved: boolean; player: number }
-): number {
-  return (
-    left.type.localeCompare(right.type) ||
-    left.location.localeCompare(right.location) ||
-    Number(left.moved) - Number(right.moved) ||
-    left.player - right.player
-  );
 }
 
 function stableJson(value: unknown): string {

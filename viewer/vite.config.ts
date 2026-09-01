@@ -21,16 +21,26 @@ const root = dirname(fileURLToPath(import.meta.url));
  *  - CSS extracts to viewer.css alongside the bundle; the sourcemap's relative
  *    sourceMappingURL keeps working because js+map share the BGS bundle directory.
  */
+// `vite` / `vite serve` runs the dev app (index.html + src/main.ts entry, public/ assets);
+// `vite build` produces the published IIFE lib (src/wrapper.ts). Everything lib-specific
+// (appType/publicDir/lib entry/externals) is scoped to the build; the dev app gets the
+// standard SPA treatment.
+const building = process.argv.includes("build");
+
 export default defineConfig({
-  // no app shell: the lib entry only; dev serves from src/demo for local testing
-  appType: "custom",
-  publicDir: false,
+  // Lib build only: no app shell, no public assets, NODE_ENV baked to production (the
+  // published bundle must not keep dev branches). The dev app flips all of these.
+  ...(building ? { appType: "custom", publicDir: false } : {}),
+  // Dev only: never let the dep-optimizer pre-bundle the workspace engine - the aliases below
+  // point the bare specifier at engine SOURCE, and esbuild pre-bundling would race the first
+  // page load with a stale CJS dist snapshot ("does not provide an export named ...").
+  ...(building ? {} : { optimizeDeps: { exclude: ["@gaia-project/engine"] } }),
   define: {
     // vue-cli's DefinePlugin supplied `process.env` (empty object) plus VUE_APP_* vars that
     // default to undefined. webpack also auto-shimmed bare `process` in the browser; rolldown
     // doesn't, so replace the whole expression. Empty object reproduces the old defaults:
     // !!undefined === false, `?? x` falls through, for-in over {} iterates nothing.
-    "process.env.NODE_ENV": JSON.stringify("production"),
+    "process.env.NODE_ENV": JSON.stringify(building ? "production" : "development"),
     "process.env": "({})",
   },
   plugins: [vue()],
@@ -43,15 +53,20 @@ export default defineConfig({
     // from the same bundle dir; keep cssCodeSplit false so it lands in one viewer.css.
     cssCodeSplit: false,
     minify: true,
-    lib: {
-      entry: join(root, "src/wrapper.ts"),
-      name: "gaiaViewerLib",
-      formats: ["iife"],
-      fileName: () => "viewer.umd.js",
-    },
+    ...(building
+      ? {
+          lib: {
+            entry: join(root, "src/wrapper.ts"),
+            name: "gaiaViewerLib",
+            formats: ["iife"],
+            fileName: () => "viewer.umd.js",
+          },
+        }
+      : {}),
     rollupOptions: {
-      // IIFE externals resolve to plain global identifier reads at runtime.
-      external: ["vue", "bootstrap-vue"],
+      // IIFE externals resolve to plain global identifier reads at runtime (build only -
+      // the dev app bundles its own copies).
+      external: building ? ["vue", "bootstrap-vue"] : [],
       output: {
         globals: { vue: "Vue", "bootstrap-vue": "BootstrapVue" },
         sourcemap: true,
@@ -98,10 +113,23 @@ export default defineConfig({
     },
   },
   resolve: {
-    alias: {
-      // keep `~` scss imports (~bootstrap/..., ~bootstrap-vue) working
-      "~": join(root, "node_modules"),
-    },
+    // Array form so the dev-only engine aliases can be conditionally spread. The workspace-linked
+    // engine package is CJS (main = dist/index.js) which the dev server can't interop for named
+    // ESM imports (`Planet` fails with "does not provide an export"), and its /wrapper + /src/*
+    // subpaths have no package.json "exports" map for vite to follow - so dev maps everything
+    // onto the engine SOURCE (vite transpiles TS natively). The lib build (building=true) keeps
+    // the real package resolution: same emitted shapes, and `~` scss imports (~bootstrap/...,
+    // ~bootstrap-vue) must keep resolving into node_modules either way.
+    alias: [
+      { find: "~", replacement: join(root, "node_modules") },
+      ...(building
+        ? []
+        : [
+            { find: /^@gaia-project\/engine\/wrapper$/, replacement: join(root, "..", "engine", "wrapper.ts") },
+            { find: /^@gaia-project\/engine\/src\//, replacement: join(root, "..", "engine", "src/") },
+            { find: /^@gaia-project\/engine$/, replacement: join(root, "..", "engine", "index.ts") },
+          ]),
+    ],
   },
 });
 

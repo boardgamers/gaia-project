@@ -2,12 +2,12 @@ import Engine, { AvailableHex, GaiaHex } from "@gaia-project/engine";
 import type { ButtonData, HexSelection, HighlightHex, HighlightHexData } from "../../data";
 import type { RichText } from "../../graphics/rich-text";
 import { richText } from "../../graphics/rich-text";
-import { tooltipWithShortcut, withShortcut } from "./shortcuts";
+import { buttonStringLabel, tooltipWithShortcut, withShortcut } from "./shortcuts";
 import { translateWarnings } from "./warnings";
 
-export function buttonStringLabel(button: ButtonData) {
-  return (button.richText?.find((l) => typeof l == "string") as string) ?? button.label ?? button.command;
-}
+// Moved to shortcuts.ts (it was the one edge making utils <-> shortcuts circular); re-exported
+// here so existing `from "./utils"` importers (Commands.vue) keep working.
+export { buttonStringLabel };
 
 export function buttonRichTextLabel(button: ButtonData): RichText {
   if (button.richText) {

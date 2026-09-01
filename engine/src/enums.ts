@@ -21,16 +21,14 @@ export enum ResearchField {
   GaiaProject = "gaia",
   Economy = "eco",
   Science = "sci",
-  Diplomacy = "dip",
 }
 
 export enum Expansion {
   // 1 was the old spaceships expansion
   None = 0,
-  Frontiers = 2,
   LostFleet = 4,
   // "all content" sentinel for `.values()` enumeration only - never a valid game-config selection
-  All = Frontiers | LostFleet,
+  All = LostFleet,
 }
 
 export function hasExpansion(expansions: Expansion, expansion: Expansion): boolean {
@@ -72,10 +70,6 @@ export namespace ResearchField {
       ResearchField.Science,
     ];
 
-    if (hasExpansion(expansions, Expansion.Frontiers)) {
-      ret.push(ResearchField.Diplomacy);
-    }
-
     return ret;
   }
 }
@@ -100,7 +94,6 @@ export enum Resource {
   VictoryPoint = "vp",
   TerraformCostDiscount = "d",
   Range = "r",
-  ShipRange = "ship-range",
   GaiaFormer = "gf",
   MoveGaiaFormerFromGaiaAreaToArea1 = "gf->t",
   InstantGaiaforming = "instant-gaiaforming",
@@ -112,7 +105,6 @@ export enum Resource {
   UpgradeGaiaProject = "up-gaia",
   UpgradeEconomy = "up-eco",
   UpgradeScience = "up-sci",
-  UpgradeDiplomacy = "up-dip",
   UpgradeLowest = "up-lowest",
   TechTile = "tech",
   RescoreFederation = "fed",
@@ -122,22 +114,7 @@ export enum Resource {
   MoveTokenFromArea3ToGaia = "t-a3",
   PISwap = "swap-PI",
   Turn = "turn",
-  TradeBonus = "tradeBonus",
-  TradeDiscount = "tradeDiscount",
-  TradeShip = "tradeShip",
   PowerRing = "power-ring",
-}
-
-export function isResourceUsed(resource: Resource, expansion: Expansion) {
-  switch (resource) {
-    case Resource.ShipRange:
-    case Resource.TradeBonus:
-    case Resource.TradeDiscount:
-    case Resource.TradeShip:
-    case Resource.UpgradeDiplomacy:
-      return hasExpansion(expansion, Expansion.Frontiers);
-  }
-  return true;
 }
 
 export enum Operator {
@@ -187,7 +164,6 @@ export enum Condition {
   AdvanceResearch = "a",
   TerraformStep = "step",
   GaiaFormer = "gf",
-  Trade = "trade",
   // Lost Fleet
   SpaceshipQicAction = "shipq",
   /** A mine built in a Space/Deep Space sector not colonized by this player before (§G4 "sector3"). */
@@ -205,7 +181,7 @@ export namespace Condition {
       case Condition.MineOnGaia:
         return building === Building.Mine && planet === Planet.Gaia;
       case Condition.BigBuilding:
-        return building === Building.PlanetaryInstitute || isAcademy(building) || building === Building.Colony;
+        return building === Building.PlanetaryInstitute || isAcademy(building);
     }
     return false;
   }
@@ -220,77 +196,12 @@ export enum Building {
   Academy2 = "ac2",
   GaiaFormer = "gf",
   SpaceStation = "sp",
-
-  //frontiers
-  Colony = "colony",
-  CustomsPost = "customsPost",
-
-  ColonyShip = "colonyShip",
-  TradeShip = "tradeShip",
-  ConstructionShip = "constructionShip",
-  ResearchShip = "researchShip",
-
-  Scout = "scout",
-  Frigate = "frigate",
-  BattleShip = "battleShip",
 }
 
 export namespace Building {
-  export function values(expansion: Expansion): Building[] {
-    return (Object.values(Building) as Building[]).filter((b: Building) => {
-      if (typeof b !== "string") {
-        return false;
-      }
-
-      if (isShip(b)) {
-        if (!isAvailableShip(b)) {
-          return false;
-        }
-        return hasExpansion(expansion, Expansion.Frontiers);
-      }
-      switch (b) {
-        case Building.Colony:
-        case Building.CustomsPost:
-          return hasExpansion(expansion, Expansion.Frontiers);
-      }
-
-      return true;
-    });
+  export function values(_expansion: Expansion): Building[] {
+    return (Object.values(Building) as Building[]).filter((b: Building) => typeof b === "string");
   }
-  export function ships(): Building[] {
-    return values(Expansion.Frontiers).filter((b) => isShip(b));
-  }
-}
-
-export type Ship = {
-  type: Building;
-  player: Player;
-  location: string;
-  moved: boolean;
-};
-
-function isAvailableShip(b: Building) {
-  //some ships are not implemented yet
-  switch (b) {
-    case Building.ColonyShip:
-    case Building.TradeShip:
-      return true;
-  }
-  return false;
-}
-
-export function isShip(b: Building) {
-  switch (b) {
-    case Building.ColonyShip:
-    case Building.TradeShip:
-    case Building.ConstructionShip:
-    case Building.ResearchShip:
-    case Building.Scout:
-    case Building.Frigate:
-    case Building.BattleShip:
-      return true;
-  }
-  return false;
 }
 
 export function isAcademy(b: Building) {
@@ -366,7 +277,6 @@ export enum Command {
   FormFederation = "federation",
   GaiaFormTransdim = "gaiaFormTransdim",
   Init = "init",
-  MoveShip = "move",
   PISwap = "swap-PI",
   Pass = "pass",
   PlaceLostPlanet = "lostPlanet",
@@ -390,7 +300,6 @@ export enum Player {
   Player3,
   Player4,
   Player5,
-  All,
 }
 
 export enum Round {
@@ -476,17 +385,11 @@ export enum TechTile {
   Tech7 = "tech7",
   Tech8 = "tech8",
   Tech9 = "tech9",
-  TechFrontiers1 = "tech-frontiers1",
 }
 
 export namespace TechTile {
-  export function values(expansions: Expansion): TechTile[] {
-    return (Object.values(TechTile) as TechTile[]).filter((val: TechTile) => {
-      if (typeof val !== "string") {
-        return;
-      }
-      return !val.includes("frontiers") || hasExpansion(expansions, Expansion.Frontiers);
-    }) as TechTile[];
+  export function values(_expansions: Expansion): TechTile[] {
+    return (Object.values(TechTile) as TechTile[]).filter((val: TechTile) => typeof val === "string") as TechTile[];
   }
 }
 
@@ -497,7 +400,6 @@ export enum TechPos {
   GaiaProject = "tech-gaia",
   Economy = "tech-eco",
   Science = "tech-sci",
-  Diplomacy = "tech-dip",
   Free1 = "tech-free1",
   Free2 = "tech-free2",
   Free3 = "tech-free3",
@@ -517,10 +419,6 @@ export namespace TechPos {
       "tech-free3",
     ] as TechPos[];
 
-    if (hasExpansion(expansions, Expansion.Frontiers)) {
-      ret.push(TechPos.Diplomacy);
-    }
-
     return ret;
   }
 }
@@ -532,7 +430,6 @@ export enum TechTilePos {
   GaiaProject = "gaia",
   Economy = "eco",
   Science = "sci",
-  Diplomacy = "dip",
   Free1 = "free1",
   Free2 = "free2",
   Free3 = "free3",
@@ -541,10 +438,6 @@ export enum TechTilePos {
 export namespace TechTilePos {
   export function values(expansions: Expansion): TechTilePos[] {
     const ret = ["terra", "nav", "int", "gaia", "eco", "sci", "free1", "free2", "free3"] as TechTilePos[];
-
-    if (hasExpansion(expansions, Expansion.Frontiers)) {
-      ret.push(TechTilePos.Diplomacy);
-    }
 
     return ret;
   }
@@ -618,7 +511,6 @@ export enum AdvTechTilePos {
   GaiaProject = "adv-gaia",
   Economy = "adv-eco",
   Science = "adv-sci",
-  Diplomacy = "adv-dip",
   // Lost Fleet's Scoring Board Extension: a 7th Advanced Tech slot not tied to any research field.
   ScoringExtension = "adv-ext",
 }
@@ -626,10 +518,6 @@ export enum AdvTechTilePos {
 export namespace AdvTechTilePos {
   export function values(expansions: Expansion): AdvTechTilePos[] {
     const ret = ["adv-terra", "adv-nav", "adv-int", "adv-gaia", "adv-eco", "adv-sci"] as AdvTechTilePos[];
-
-    if (hasExpansion(expansions, Expansion.Frontiers)) {
-      ret.push(AdvTechTilePos.Diplomacy);
-    }
 
     if (hasExpansion(expansions, Expansion.LostFleet)) {
       ret.push(AdvTechTilePos.ScoringExtension);
@@ -789,7 +677,6 @@ export enum Phase {
   RoundStart = "roundStart",
   RoundIncome = "roundIncome",
   RoundGaia = "roundGaia",
-  RoundShip = "roundShip",
   RoundMove = "roundMove",
   RoundLeech = "roundLeech",
   RoundFinish = "roundFinish",

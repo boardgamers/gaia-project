@@ -62,7 +62,6 @@ describe("Spaceship boards", () => {
 
     it("should be empty without the Lost Fleet expansion", () => {
       expect(shipsInPlay(Expansion.None, 4)).to.deep.equal([]);
-      expect(shipsInPlay(Expansion.Frontiers, 4)).to.deep.equal([]);
     });
   });
 });

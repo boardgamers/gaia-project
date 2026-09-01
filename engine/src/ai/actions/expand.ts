@@ -722,7 +722,6 @@ function expandCommand(
     case Command.BanFaction:
     case Command.Bid:
     case Command.Init:
-    case Command.MoveShip:
     case Command.PreferenceBid:
     case Command.RotateSectors:
     case Command.Setup:

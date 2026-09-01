@@ -29,7 +29,6 @@ const gleens: FactionBoardVariants = {
     handlers: {
       [`build-${Building.PlanetaryInstitute}`]: (player: Player) => player.gainFederationToken(Federation.Gleens),
       [`build-${Building.Mine}`]: (player: Player, hex: GaiaHex) => gaiaVp(hex, player),
-      [`build-${Building.Colony}`]: (player: Player, hex: GaiaHex) => gaiaVp(hex, player),
     },
   },
   variants: [

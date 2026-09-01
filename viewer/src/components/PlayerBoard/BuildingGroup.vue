@@ -62,20 +62,11 @@
         :transform="resourceTranslate(i, index)"
         style="opacity: 0.7"
       />
-      <g v-if="isDeployed(i)">
-        <line y1="-.1" y2=".1" x1="-.1" x2=".1" stroke="#333" stroke-width="2" />
-        <line y1=".1" y2="-.1" x1="-.1" x2=".1" stroke="#333" stroke-width="2" />
-      </g>
       <!-- Lost Fleet §E2: a Gaiaformer consumed to colonize an Asteroid never appears on the map (it's
            gone for good), unlike one placed on Gaia/a transdim/Protoplanet - so mark its board slot
            with the same "used" X as a power/special action, scaled down to fit this circle. -->
       <UsedActionMark v-if="isAsteroidConsumed(i)" class="asteroid-consumed-mark" transform="scale(0.05)" />
     </g>
-    <!--    not displayed because military is not implemented yet-->
-    <!--    <g v-if="isShip" transform="translate(7.5,0)" v-b-tooltip="destroyedTooltip">-->
-    <!--      <circle r=".6" class="destroyed" />-->
-    <!--      <text transform="translate(-.33,-.1)" class="board-text">{{ destroyed }}</text>-->
-    <!--    </g>-->
   </g>
 </template>
 
@@ -84,7 +75,6 @@ import Engine, {
   Building as BuildingEnum,
   factionBoard,
   factionVariantBoard,
-  isShip,
   Operator,
   Planet as PlanetEnum,
   Player,
@@ -133,12 +123,6 @@ export default class BuildingGroup extends Vue {
   asteroidConsumed: number;
 
   @Prop({ default: 0 })
-  destroyed: number;
-
-  @Prop({ default: 0 })
-  deployed: number;
-
-  @Prop({ default: 0 })
   discount: number;
 
   @Prop()
@@ -180,10 +164,6 @@ export default class BuildingGroup extends Vue {
     return this.building === BuildingEnum.PlanetaryInstitute;
   }
 
-  get isShip() {
-    return isShip(this.building);
-  }
-
   tooltip(i: number) {
     const building = this.building;
     const b = this.board.buildings[building];
@@ -191,20 +171,14 @@ export default class BuildingGroup extends Vue {
       ? b.cost.map((c) => `${c.count - this.discount}${c.type}`).join(", ")
       : b.cost.join(", ") || "~";
     const isolatedCost = b.isolatedCost ? " Isolated cost: " + (b.isolatedCost.join(", ") || "~") : "";
-    const income =
-      building === BuildingEnum.GaiaFormer || isShip(building) ? null : this.resources(i, true).join(", ") || "~";
+    const income = building === BuildingEnum.GaiaFormer ? null : this.resources(i, true).join(", ") || "~";
     const rows = [
-      buildingName(building, this.faction) +
-        (this.isDeployed(i) ? " (deployed)" : this.isAsteroidConsumed(i) ? " (crashed on an Asteroid)" : ""),
+      buildingName(building, this.faction) + (this.isAsteroidConsumed(i) ? " (crashed on an Asteroid)" : ""),
       `Cost: ${cost}${isolatedCost}`,
       income,
       `Power Value: ${this.player.buildingValue(null, { building })}`,
     ];
     return rows.filter((r) => r).join("<br/>");
-  }
-
-  get destroyedTooltip() {
-    return `Destroyed ${buildingName(this.building, this.faction)}s`;
   }
 
   get offset() {
@@ -225,8 +199,6 @@ export default class BuildingGroup extends Vue {
       minWidth = 3;
     } else if (this.building === BuildingEnum.PlanetaryInstitute) {
       minWidth = this.incomeTypes;
-    } else if (isShip(this.building)) {
-      minWidth = 3.6;
     }
     return Math.max(this.nBuildings, minWidth) * this.buildingSpacing + this.offset + this.paddingRight;
   }
@@ -258,10 +230,6 @@ export default class BuildingGroup extends Vue {
       return i === 0 ? !this.ac1 : !this.ac2;
     }
     return i >= this.placed + this.gaia + this.asteroidConsumed;
-  }
-
-  isDeployed(i: number): boolean {
-    return i < this.deployed;
   }
 
   isAsteroidConsumed(i: number): boolean {
@@ -380,11 +348,6 @@ export default class BuildingGroup extends Vue {
 
     .recent {
       fill: var(--recent);
-      opacity: 1;
-    }
-
-    .destroyed {
-      fill: red;
       opacity: 1;
     }
   }

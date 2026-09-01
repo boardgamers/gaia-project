@@ -1,6 +1,6 @@
 {
   "name": "@gaia-project/viewer",
-  "version": "5.14.2",
+  "version": "5.15.0",
   "description": "Functions to visualize the map and boards for gaia project inside html canvas",
   "contributors": [
     "coyotte508",
@@ -12,26 +12,23 @@
     "access": "public"
   },
   "scripts": {
-    "serve": "vue-cli-service serve --port 8080",
+    "serve": "vite --port 8080",
     "build": "vite build",
-    "fix-package": "ts-node scripts/fix-package-imports.ts",
     "lint": "vue-cli-service lint",
     "package": "vite build",
-    "prepublishOnly": "npm run package && npm run fix-package",
+    "prepublishOnly": "npm run package",
     "test": "vitest run",
     "quick-test": "vitest run --changed"
   },
-  "unpkg": "dist/package/viewer.umd.min.js",
+  "unpkg": "dist/package/viewer.umd.js",
   "files": [
     "index.ts",
     "tsconfig.json",
     "src",
     "README.md",
     "public",
-    "dist/package/viewer.umd.min.js",
-    "dist/package/viewer.umd.min.*.js",
-    "dist/package/viewer.umd.min.js.map",
-    "dist/package/viewer.umd.min.*.js.map",
+    "dist/package/viewer.umd.js",
+    "dist/package/viewer.umd.*.js",
     "dist/package/viewer.css",
     "dist/package/img",
     "dist/package/css"

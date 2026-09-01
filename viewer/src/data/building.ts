@@ -1,5 +1,5 @@
 import type { AvailableBuilding } from "@gaia-project/engine";
-import { Building, Building as BuildingEnum, Expansion, Faction, isShip, ShipAction } from "@gaia-project/engine";
+import { Building, Expansion, Faction } from "@gaia-project/engine";
 import { colorCodes } from "../logic/color-codes";
 
 export const buildingData: { [key in Building]: { name: string; color: string } } = {
@@ -35,42 +35,6 @@ export const buildingData: { [key in Building]: { name: string; color: string } 
     name: "Space Station",
     color: "--current-round",
   },
-  [Building.Colony]: {
-    name: "Colony",
-    color: "--rt-nav",
-  },
-  [Building.CustomsPost]: {
-    name: "Customs Post",
-    color: "--res-credit",
-  },
-  [Building.ColonyShip]: {
-    name: "Colony Ship",
-    color: "--rt-gaia",
-  },
-  [Building.ConstructionShip]: {
-    name: "Construction Ship",
-    color: "--current-round",
-  },
-  [Building.ResearchShip]: {
-    name: "Research Ship",
-    color: "--current-round",
-  },
-  [Building.TradeShip]: {
-    name: "Trade Ship",
-    color: colorCodes.tradeShip.color,
-  },
-  [Building.Scout]: {
-    name: "Scout",
-    color: "--current-round",
-  },
-  [Building.Frigate]: {
-    name: "Frigate",
-    color: "--current-round",
-  },
-  [Building.BattleShip]: {
-    name: "Battle Ship",
-    color: "--current-round",
-  },
 };
 
 export function allBuildings(expansion: Expansion, gaiaFormer: boolean) {
@@ -86,40 +50,7 @@ export function buildingName(building: Building, faction: Faction): string {
   return buildingData[building].name;
 }
 
-export function shipLetter(building: BuildingEnum): string {
-  switch (building) {
-    case BuildingEnum.ColonyShip:
-      return "L";
-    case BuildingEnum.TradeShip:
-      return "T";
-    case BuildingEnum.ConstructionShip:
-      return "C";
-    case BuildingEnum.ResearchShip:
-      return "R";
-    case BuildingEnum.Scout:
-      return "S";
-    case BuildingEnum.Frigate:
-      return "F";
-    case BuildingEnum.BattleShip:
-      return "B";
-  }
-}
-
-export function shipActionName(action: ShipAction): string {
-  switch (action) {
-    case ShipAction.Nothing:
-      return "<u>D</u>ecline";
-    case ShipAction.BuildColony:
-      return "Build <u>C</u>olony";
-    case ShipAction.Trade:
-      return "<u>T</u>rade";
-  }
-}
-
 export function buildingShortcut(building: Building, faction?: Faction): string {
-  if (isShip(building)) {
-    return shipLetter(building).toLowerCase();
-  }
   switch (building) {
     case Building.Mine:
       return "m";
@@ -143,10 +74,6 @@ export function buildingShortcut(building: Building, faction?: Faction): string 
       return "g";
     case Building.SpaceStation:
       return colorCodes.spaceStation.shortcut;
-    case Building.Colony:
-      return "c";
-    case Building.CustomsPost:
-      return "u";
   }
 }
 

@@ -22,7 +22,6 @@ import {
 } from "@gaia-project/engine";
 import { UPGRADE_RESEARCH_COST } from "@gaia-project/engine/src/available/types";
 import type { AnyTechTile, AnyTechTilePos } from "@gaia-project/engine/src/enums";
-import { tradeCostSource, tradeSource } from "@gaia-project/engine/src/events";
 import { boosterEvents } from "@gaia-project/engine/src/tiles/boosters";
 import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
 import { techTileEventSource, techTileRewards } from "@gaia-project/engine/src/tiles/techs";
@@ -76,140 +75,126 @@ function eventTypes(events: Event[]): Resource[] {
 }
 
 export function balanceSheetEventSources(expansion: Expansion): BalanceSheetSourceTemplate[] {
-  return (
-    [
-      {
-        label: "Game start",
-        costResources: [],
-        incomeResources: balanceSheetResources,
-        eventSources: [Phase.BeginGame],
-        color: "--gaia",
-      },
-      {
-        label: "Base",
-        costResources: [],
-        incomeResources: balanceSheetResources,
-        eventSources: [Command.ChooseIncome],
-        color: "--res-credit",
-      },
-      {
-        label: "Faction abilities",
-        costResources: [],
-        incomeResources: [Resource.Knowledge],
-        eventSources: Faction.values(expansion),
-        color: "--volcanic",
-      },
-      {
-        label: "Tech Tiles",
-        description: "Tech Tiles income, including the free 4k for the free research step when gained",
-        costResources: [],
-        incomeResources: rewardTypes(
-          (TechTile.values(expansion) as AnyTechTile[])
-            .concat(AdvTechTile.values(expansion))
-            .flatMap((t) => techTileRewards(t))
-        ),
-        eventSources: (TechPos.values(expansion) as (TechPos | AdvTechTilePos)[]).concat(
-          AdvTechTilePos.values(expansion)
-        ),
-        color: "--current-round",
-      },
-      {
-        label: "Research",
-        costResources: [Resource.Knowledge],
-        incomeResources: balanceSheetResources,
-        eventSources: (ResearchField.values(expansion) as EventSource[]).concat(Command.UpgradeResearch),
-        color: colorCodes.researchStep.color,
-      },
-      {
-        label: "Booster",
-        costResources: [],
-        incomeResources: eventTypes(Booster.values(expansion).flatMap((b) => boosterEvents(b))),
-        eventSources: Booster.values(expansion),
-        color: colorCodes.booster.color,
-      },
-      {
-        label: "Build",
-        costResources: [Resource.Credit, Resource.Ore, Resource.Knowledge, Resource.Qic],
-        incomeResources: [],
-        eventSources: [Command.Build],
-        color: "--res-ore",
-      },
-      {
-        label: "Free actions",
-        costResources: rewardTypes(Object.values(freeActionConversions).flatMap((c) => Reward.parse(c.cost))).concat(
-          Resource.GainToken
-        ), //for burn
-        incomeResources: rewardTypes(Object.values(freeActionConversions).flatMap((c) => Reward.parse(c.income))),
-        eventSources: [Command.Spend],
-        color: "--res-power",
-      },
-      {
-        label: "Power/Q.I.C Actions",
-        costResources: rewardTypes(BoardAction.values(expansion).flatMap((a) => Reward.parse(boardActions[a].cost))),
-        incomeResources: eventTypes(
-          BoardAction.values(expansion).flatMap((a) => Event.parse(boardActions[a].income, null))
-        ),
-        eventSources: BoardAction.values(),
-        color: "--specialAction",
-      },
-      {
-        label: "Free Leech",
-        incomeResources: [Resource.ChargePower, Resource.GainToken],
-        costResources: [],
-        eventSources: [PowerChargeSource.freeLeech],
-        color: "--res-power",
-      },
-      {
-        label: "Paid Leech",
-        incomeResources: [Resource.ChargePower, Resource.GainToken],
-        costResources: [],
-        eventSources: [PowerChargeSource.paidLeech],
-        color: "--res-qic",
-      },
-      {
-        label: "Powerful Power Tokens",
-        incomeResources: [Resource.ChargePower],
-        costResources: [],
-        eventSources: [PowerChargeSource.powerLeverage],
-        color: "--tech-tile",
-      },
-      {
-        label: "Terrans",
-        description: "Tokens are moved from the gaia area to area 2",
-        incomeResources: [Resource.ChargePower],
-        costResources: [],
-        eventSources: [Faction.Terrans],
-        color: "--terra",
-      },
-      {
-        label: "Federations",
-        costResources: [Resource.GainToken, Resource.Qic],
-        incomeResources: rewardTypes(Federation.values(expansion).flatMap((f) => federationRewards(f))),
-        eventSources: [Command.FormFederation],
-        color: "--federation",
-      },
-      {
-        label: "Waste",
-        description: "Also includes tye use of tokens in area2 or area3 for gaia forming or forming federations",
-        costResources: balanceSheetResources,
-        incomeResources: [],
-        eventSources: [waste],
-        color: "--res-qic",
-      },
-    ] as BalanceSheetSourceTemplate[]
-  ).concat(
-    expansion == Expansion.Frontiers
-      ? [
-          {
-            label: "Trade",
-            costResources: [Resource.ChargePower],
-            incomeResources: balanceSheetResources,
-            eventSources: [tradeSource, tradeCostSource],
-            color: colorCodes.tradeShip.color,
-          },
-        ]
-      : []
-  );
+  return [
+    {
+      label: "Game start",
+      costResources: [],
+      incomeResources: balanceSheetResources,
+      eventSources: [Phase.BeginGame],
+      color: "--gaia",
+    },
+    {
+      label: "Base",
+      costResources: [],
+      incomeResources: balanceSheetResources,
+      eventSources: [Command.ChooseIncome],
+      color: "--res-credit",
+    },
+    {
+      label: "Faction abilities",
+      costResources: [],
+      incomeResources: [Resource.Knowledge],
+      eventSources: Faction.values(expansion),
+      color: "--volcanic",
+    },
+    {
+      label: "Tech Tiles",
+      description: "Tech Tiles income, including the free 4k for the free research step when gained",
+      costResources: [],
+      incomeResources: rewardTypes(
+        (TechTile.values(expansion) as AnyTechTile[])
+          .concat(AdvTechTile.values(expansion))
+          .flatMap((t) => techTileRewards(t))
+      ),
+      eventSources: (TechPos.values(expansion) as (TechPos | AdvTechTilePos)[]).concat(
+        AdvTechTilePos.values(expansion)
+      ),
+      color: "--current-round",
+    },
+    {
+      label: "Research",
+      costResources: [Resource.Knowledge],
+      incomeResources: balanceSheetResources,
+      eventSources: (ResearchField.values(expansion) as EventSource[]).concat(Command.UpgradeResearch),
+      color: colorCodes.researchStep.color,
+    },
+    {
+      label: "Booster",
+      costResources: [],
+      incomeResources: eventTypes(Booster.values(expansion).flatMap((b) => boosterEvents(b))),
+      eventSources: Booster.values(expansion),
+      color: colorCodes.booster.color,
+    },
+    {
+      label: "Build",
+      costResources: [Resource.Credit, Resource.Ore, Resource.Knowledge, Resource.Qic],
+      incomeResources: [],
+      eventSources: [Command.Build],
+      color: "--res-ore",
+    },
+    {
+      label: "Free actions",
+      costResources: rewardTypes(Object.values(freeActionConversions).flatMap((c) => Reward.parse(c.cost))).concat(
+        Resource.GainToken
+      ), //for burn
+      incomeResources: rewardTypes(Object.values(freeActionConversions).flatMap((c) => Reward.parse(c.income))),
+      eventSources: [Command.Spend],
+      color: "--res-power",
+    },
+    {
+      label: "Power/Q.I.C Actions",
+      costResources: rewardTypes(BoardAction.values(expansion).flatMap((a) => Reward.parse(boardActions[a].cost))),
+      incomeResources: eventTypes(
+        BoardAction.values(expansion).flatMap((a) => Event.parse(boardActions[a].income, null))
+      ),
+      eventSources: BoardAction.values(),
+      color: "--specialAction",
+    },
+    {
+      label: "Free Leech",
+      incomeResources: [Resource.ChargePower, Resource.GainToken],
+      costResources: [],
+      eventSources: [PowerChargeSource.freeLeech],
+      color: "--res-power",
+    },
+    {
+      label: "Paid Leech",
+      incomeResources: [Resource.ChargePower, Resource.GainToken],
+      costResources: [],
+      eventSources: [PowerChargeSource.paidLeech],
+      color: "--res-qic",
+    },
+    {
+      label: "Powerful Power Tokens",
+      incomeResources: [Resource.ChargePower],
+      costResources: [],
+      eventSources: [PowerChargeSource.powerLeverage],
+      color: "--tech-tile",
+    },
+    {
+      label: "Terrans",
+      description: "Tokens are moved from the gaia area to area 2",
+      incomeResources: [Resource.ChargePower],
+      costResources: [],
+      eventSources: [Faction.Terrans],
+      color: "--terra",
+    },
+    {
+      label: "Federations",
+      costResources: [Resource.GainToken, Resource.Qic],
+      incomeResources: rewardTypes(Federation.values(expansion).flatMap((f) => federationRewards(f))),
+      eventSources: [Command.FormFederation],
+      color: "--federation",
+    },
+    {
+      label: "Waste",
+      description: "Also includes tye use of tokens in area2 or area3 for gaia forming or forming federations",
+      costResources: balanceSheetResources,
+      incomeResources: [],
+      eventSources: [waste],
+      color: "--res-qic",
+    },
+  ] as BalanceSheetSourceTemplate[];
 }
 
 function isPayPower(wantResource: Resource, reward: Reward) {

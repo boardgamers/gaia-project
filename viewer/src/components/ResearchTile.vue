@@ -20,7 +20,7 @@
         <Resource
           v-for="(resource, i) in resources"
           :key="'field-' + i"
-          :transform="`translate(${2 + 56 / 2 + resourceX(i)}, ${resourceY(i)}) scale(${scale(resource.type)})`"
+          :transform="`translate(${2 + 56 / 2 + resourceX(i)}, ${resourceY(i)}) scale(1)`"
           :kind="resource.type"
           :count="resource.count"
         />
@@ -61,16 +61,13 @@ import Engine, {
   canTakeAdvancedTechTile,
   Condition,
   Event,
-  Expansion,
   Federation,
-  hasExpansion,
   Operator,
   Planet as PlanetEnum,
   Player,
   PlayerEnum,
   researchEvents,
   ResearchField,
-  Resource as ResourceEnum,
 } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
@@ -104,33 +101,15 @@ export default class ResearchTile extends Vue {
 
   resourceX(index: number) {
     const res = this.resources;
-    const range = this.smallRange(res[0].type);
 
-    let l = res.length;
-    if (range) {
-      l = 1;
-      index = 0;
-    }
-
+    const l = res.length;
     const sep = l <= 2 ? 7 : 6;
 
     return -6 * (l - 1) + index * 2 * sep - ((res[0].count as any) === "+" ? 2 : 0);
   }
 
   resourceY(index: number): number {
-    const range = this.smallRange(this.resources[0].type);
-    return (this.height / 3) * 2 + 3 + this.resourceOffset + (range ? (index - 0.4) * 10 : 0);
-  }
-
-  scale(resource: ResourceEnum): number {
-    return this.smallRange(resource) ? 0.8 : 1;
-  }
-
-  smallRange(resource: ResourceEnum): boolean {
-    return (
-      (resource === ResourceEnum.ShipRange || resource === ResourceEnum.Range) &&
-      hasExpansion(this.engine.expansions, Expansion.Frontiers)
-    );
+    return (this.height / 3) * 2 + 3 + this.resourceOffset;
   }
 
   tokenX(index: PlayerEnum) {
@@ -293,10 +272,6 @@ svg {
 
     &.sci {
       fill: var(--rt-sci);
-    }
-
-    &.dip {
-      fill: var(--rt-dip);
     }
 
     &.terra {
