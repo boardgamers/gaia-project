@@ -69,7 +69,7 @@ function customFederationButton(controller: CommandController, fedTypeButtons: B
                   highlighted.set(hex, {});
                 }
 
-                const keys: GaiaHex[] = [...highlighted.keys()];
+                const keys: GaiaHex[] = Array.from(highlighted.keys());
                 controller.highlightHexes(customHexSelection(new Map([...keys.map((key) => [key, {}])] as any)));
               });
               controller.highlightHexes(customHexSelection(new Map<GaiaHex, HighlightHex>()));

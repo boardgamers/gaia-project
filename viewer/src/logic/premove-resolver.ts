@@ -96,12 +96,15 @@ export function resolvePremoveQueue(
     }
 
     const rest = ordered.slice(1).map((r) => r.seq);
-    if (result.threw && rest.length > 0) {
+    // Explicit shape: control-flow narrowing of the result union is unreliable under the older
+    // TS used by some compile paths (engine tsconfig via ts-node), so assert the failure member.
+    const failure = result as { ok: false; threw: boolean; reason: string };
+    if (failure.threw && rest.length > 0) {
       // A broken link invalidates the plan behind it (§10.5): cascade-discard the rest rather than
       // attempting them against state their own preview never accounted for.
       return {
         outcome: "failed",
-        reason: `${result.reason} — ${rest.length} more queued premove${
+        reason: `${failure.reason} — ${rest.length} more queued premove${
           rest.length > 1 ? "s" : ""
         } discarded, they depended on this one`,
         failedMove: head.move,
@@ -111,7 +114,7 @@ export function resolvePremoveQueue(
     // Either a plain throw with nothing behind it, or the defensive "applied but didn't complete a
     // turn" case (shouldn't normally happen - queuing already enforces completeness) - Phase 1's
     // original behavior, no cascade needed since there's nothing after it or nothing to protect.
-    return { outcome: "failed", reason: result.reason, failedMove: head.move, consumedSeqs: [head.seq] };
+    return { outcome: "failed", reason: failure.reason, failedMove: head.move, consumedSeqs: [head.seq] };
   }
 
   // Priority: try ranks in ascending order against the SAME original state; first legal one wins.

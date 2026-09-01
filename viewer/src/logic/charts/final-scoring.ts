@@ -261,7 +261,7 @@ const piAcademyDistance: FinalScoringExtractLog = ExtractLog.wrapper((want) => {
     counter.playerCommand(e.cmd, e.data);
 
     const pi = counter.planetaryInstituteLocation;
-    const academies = [...counter.buildings.entries()]
+    const academies = Array.from(counter.buildings.entries())
       .filter(([, building]) => building === Building.Academy1 || building === Building.Academy2)
       .map(([hex]) => hex);
 

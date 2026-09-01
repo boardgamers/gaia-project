@@ -52,7 +52,7 @@ export function buildingMovesByHex(data: Engine, moves: CommandObject[]): Map<Ga
 }
 
 export function movesToHexes(data: Engine, moves: CommandObject[]): GaiaHex[] {
-  return [...buildingMovesByHex(data, moves).keys()];
+  return Array.from(buildingMovesByHex(data, moves).keys());
 }
 
 /** A move's last argument can keep the "." that separates it from the next command, e.g. "build m 3A4.". */

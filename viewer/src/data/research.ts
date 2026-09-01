@@ -78,7 +78,7 @@ export function researchEventsWithCounters(engine: Engine, field: ResearchField,
 
   const vals = {};
 
-  [...Array(level + 1).keys()]
+  Array.from({ length: level + 1 }, (_, i) => i)
     .map((l) => researchEvents(field, l, engine.expansions, engine.lostFleetEconomySide))
     .forEach((events, l) => {
       for (const e of events) {

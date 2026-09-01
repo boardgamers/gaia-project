@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { AvailableCommand } from "./available/types";
 import Engine, { AuctionVariant, EngineOptions } from "./engine";
 import { Command, Faction, Phase, Player as PlayerEnum } from "./enums";
 
@@ -285,7 +286,9 @@ describe("Preference Split Auction variant", () => {
       const partial = engineFor(picks + "p1 preferenceBid itars 20 taklons 12 xenos 6 terrans 2");
       partial.generateAvailableCommandsIfNeeded();
 
-      const command = partial.availableCommands.find((c) => c.name === Command.PreferenceBid);
+      const command = partial.availableCommands.find(
+        (c): c is AvailableCommand<Command.PreferenceBid> => c.name === Command.PreferenceBid
+      );
       expect(command.player).to.equal(PlayerEnum.Player2);
       expect(command.data.budget).to.equal(40);
       expect(command.data.factions).to.deep.equal([Faction.Itars, Faction.Taklons, Faction.Xenos, Faction.Terrans]);

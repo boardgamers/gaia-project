@@ -10,7 +10,7 @@ describe("Bescods", () => {
     const player = new Player(Expansion.None, PlayerEnum.Player1);
 
     player.faction = Faction.Bescods;
-    player.loadFaction(null);
+    player.loadFaction(null, Expansion.None);
 
     expect(player.data.knowledge).to.equal(3);
   });

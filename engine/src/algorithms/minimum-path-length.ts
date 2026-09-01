@@ -73,5 +73,5 @@ export default function minimumPathLength<T>(groups: Array<Hex<T>[]>): number {
     }
   } while (modified);
 
-  return Math.max(...flatten([...shortestPaths.values()].map((v) => [...v.values()])));
+  return Math.max(...flatten(Array.from(shortestPaths.values()).map((v) => Array.from(v.values()))));
 }

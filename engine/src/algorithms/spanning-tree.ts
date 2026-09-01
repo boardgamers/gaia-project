@@ -61,7 +61,7 @@ function spanningTreeWithHeuristic<T>(
   if (destGroups.length > 2) {
     // We pick all the hexes that are in the middle of the federation buildings, and try to create a network from them
     startingPoints.push(
-      ...[...grid.values()].filter(
+      ...Array.from(grid.values()).filter(
         (hex) =>
           !destHexesSet.has(hex) &&
           inRange(hex.q, minQ + 1, maxQ) &&

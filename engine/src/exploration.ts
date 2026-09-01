@@ -15,7 +15,7 @@ export function maxExplorationShuttles(nbPlayers: number): number {
 }
 
 export function spaceshipHex(map: SpaceMap, ship: Spaceship): GaiaHex | undefined {
-  return [...map.grid.values()].find((hex) => hex.data.spaceship === ship);
+  return Array.from(map.grid.values()).find((hex) => hex.data.spaceship === ship);
 }
 
 export function nextFreeExplorationSlot(players: Player[], ship: Spaceship): number | null {

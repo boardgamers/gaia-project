@@ -10,7 +10,7 @@ import { roundScoringEvents } from "./scoring";
 function newPlayer(faction = Faction.Terrans): Player {
   const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
   player.faction = faction;
-  player.loadFaction(null);
+  player.loadFaction(null, Expansion.LostFleet);
   return player;
 }
 

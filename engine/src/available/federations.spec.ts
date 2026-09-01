@@ -4,6 +4,7 @@ import { qicForDistance, terraformingCost } from "../cost";
 import Engine from "../engine";
 import {
   AdvTechTile,
+  AdvTechTilePos,
   Building,
   Command,
   Faction,
@@ -211,7 +212,7 @@ describe("possibleFederationTokenBuildMine", () => {
       const player = engine.player(PlayerEnum.Player1);
 
       if (withTerra) {
-        player.loadEvents(techTileEventWithSource(AdvTechTile.Terra, AdvTechTile.Terra));
+        player.loadEvents(techTileEventWithSource(AdvTechTile.Terra, AdvTechTilePos.Intelligence));
       }
 
       const target = cheapestHexNeedingRangeAndTerraforming(engine, PlayerEnum.Player1, Faction.Terrans);

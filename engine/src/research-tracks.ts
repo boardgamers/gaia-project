@@ -1,5 +1,5 @@
-import { Event, Expansion } from "../index";
-import { hasExpansion, isResourceUsed, LostFleetEconomySide, ResearchField } from "./enums";
+import { Expansion, hasExpansion, isResourceUsed, LostFleetEconomySide, ResearchField } from "./enums";
+import Event from "./events";
 
 const researchTracks: { [key in ResearchField]: string[][] } = {
   [ResearchField.Terraforming]: [[], ["2o"], ["d"], ["d", "3pw"], ["2o"], []],

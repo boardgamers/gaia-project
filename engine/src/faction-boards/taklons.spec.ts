@@ -1,7 +1,7 @@
 import { expect } from "chai";
-import { BrainstoneWarning } from "../available/types";
+import { AvailableCommand, BrainstoneWarning } from "../available/types";
 import Engine from "../engine";
-import { Player, PowerArea } from "../enums";
+import { Command, Player, PowerArea } from "../enums";
 
 describe("Taklons", () => {
   it("should allow charge with +t freeIncome", () => {
@@ -68,7 +68,12 @@ describe("Taklons", () => {
     `);
 
     it("should warn when wasting power charges", () => {
-      expect(new Engine([...moves, "taklons spend 2pw for 2c"]).availableCommands[0].data).to.deep.equal({
+      expect(
+        (
+          new Engine([...moves, "taklons spend 2pw for 2c"])
+            .availableCommands[0] as AvailableCommand<Command.BrainStone>
+        ).data
+      ).to.deep.equal({
         choices: [
           {
             area: "area1",
@@ -80,7 +85,7 @@ describe("Taklons", () => {
     it("should ask about brainstone without warning", () => {
       const e = new Engine([...moves, "taklons burn 3. spend 3pw for 3c"]);
       expect(e.player(Player.Player1).data.brainstone).to.equal(PowerArea.Area3);
-      expect(e.availableCommands[0].data).to.deep.equal({
+      expect((e.availableCommands[0] as AvailableCommand<Command.BrainStone>).data).to.deep.equal({
         choices: [
           { area: PowerArea.Area1, warning: undefined },
           { area: PowerArea.Area3, warning: undefined },

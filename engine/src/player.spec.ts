@@ -26,7 +26,7 @@ describe("Player", () => {
       const player = new Player(Expansion.None, PlayerEnum.Player1);
 
       player.faction = Faction.Terrans;
-      player.loadFaction(null);
+      player.loadFaction(null, Expansion.None);
 
       const { cost } = player.canBuild(null, null, Planet.Terra, Building.Mine, false, false, {
         addedCost: [new Reward(1, Resource.Qic)],
@@ -40,7 +40,7 @@ describe("Player", () => {
       const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
 
       player.faction = Faction.Terrans;
-      player.loadFaction(null);
+      player.loadFaction(null, Expansion.None);
       player.data.ores = 20; // enough to afford the 3 terraform steps on top of the base mine cost
 
       const { cost } = player.canBuild(null, null, Planet.Protoplanet, Building.Mine, false, false);
@@ -53,7 +53,7 @@ describe("Player", () => {
       const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
 
       player.faction = Faction.Terrans;
-      player.loadFaction(null);
+      player.loadFaction(null, Expansion.None);
       player.data.gaiaformers = 0; // every faction starts with 1 via GaiaProject research level 1
 
       expect(player.canBuild(null, null, Planet.Asteroid, Building.Mine, false, false)).to.equal(null);
@@ -63,7 +63,7 @@ describe("Player", () => {
       const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
 
       player.faction = Faction.Terrans;
-      player.loadFaction(null);
+      player.loadFaction(null, Expansion.None);
 
       const { cost } = player.canBuild(null, null, Planet.Asteroid, Building.Mine, false, false);
 
@@ -75,7 +75,7 @@ describe("Player", () => {
       const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
 
       player.faction = Faction.Darkanians;
-      player.loadFaction(null);
+      player.loadFaction(null, Expansion.None);
       player.data.ores = 20; // enough to afford the terraform step on top of the base mine cost
 
       const { cost } = player.canBuild(null, null, Planet.Terra, Building.Mine, false, false);
@@ -89,7 +89,7 @@ describe("Player", () => {
       const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
 
       player.faction = Faction.SpaceGiants;
-      player.loadFaction(null);
+      player.loadFaction(null, Expansion.None);
       player.data.ores = 20; // enough to afford both terraform steps on top of the base mine cost
 
       const { cost } = player.canBuild(null, null, Planet.Terra, Building.Mine, false, false);
@@ -104,7 +104,7 @@ describe("Player", () => {
         const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
 
         player.faction = faction;
-        player.loadFaction(null);
+        player.loadFaction(null, Expansion.None);
         player.data.qics = 20; // enough to afford the 2 QIC surcharge
 
         const { cost } = player.canBuild(null, null, Planet.Gaia, Building.Mine, false, false);
@@ -118,7 +118,7 @@ describe("Player", () => {
       const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
 
       player.faction = Faction.Terrans;
-      player.loadFaction(null);
+      player.loadFaction(null, Expansion.None);
 
       const { cost } = player.canBuild(null, null, Planet.Gaia, Building.Mine, false, false);
 
@@ -133,7 +133,7 @@ describe("Player", () => {
         const hex = new GaiaHex(0, 0, { sector: "s1", planet: Planet.Protoplanet });
 
         player.faction = faction;
-        player.loadFaction(null);
+        player.loadFaction(null, Expansion.None);
         player.data.ores = 20;
 
         const { cost } = player.canBuild(map, hex, Planet.Protoplanet, Building.Mine, false, false);
@@ -151,7 +151,7 @@ describe("Player", () => {
 
       const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
       player.faction = Faction.Terrans;
-      player.loadFaction(null);
+      player.loadFaction(null, Expansion.None);
 
       const { cost } = player.canBuild(map, hex, Planet.Asteroid, Building.Mine, false, false);
       player.build(Building.Mine, hex, cost, map);
@@ -173,7 +173,7 @@ describe("Player", () => {
 
       const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
       player.faction = Faction.Terrans;
-      player.loadFaction(null);
+      player.loadFaction(null, Expansion.None);
 
       const { cost } = player.canBuild(map, asteroid, Planet.Asteroid, Building.Mine, false, false);
       player.build(Building.Mine, asteroid, cost, map);
@@ -219,7 +219,7 @@ describe("Player", () => {
 
       const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
       player.faction = Faction.Darkanians;
-      player.loadFaction(null);
+      player.loadFaction(null, Expansion.None);
 
       const baselineCredits = player.data.credits;
       const baselineKnowledge = player.data.knowledge;
@@ -418,7 +418,7 @@ describe("Player", () => {
     it("should grant 8 VP and 8 credits for the Credit token", () => {
       const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
       player.faction = Faction.Terrans;
-      player.loadFaction(null);
+      player.loadFaction(null, Expansion.None);
       const beforeVp = player.data.victoryPoints;
       const beforeCredits = player.data.credits;
 
@@ -431,7 +431,7 @@ describe("Player", () => {
     it("should grant 4 VP and 4 knowledge for the Knowledge token", () => {
       const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
       player.faction = Faction.Terrans;
-      player.loadFaction(null);
+      player.loadFaction(null, Expansion.None);
       const beforeVp = player.data.victoryPoints;
       const beforeKnowledge = player.data.knowledge;
 
@@ -444,7 +444,7 @@ describe("Player", () => {
     it("should grant 4 VP, 2 ore, and 1 QIC for the OreQic token", () => {
       const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
       player.faction = Faction.Terrans;
-      player.loadFaction(null);
+      player.loadFaction(null, Expansion.None);
       const beforeVp = player.data.victoryPoints;
       const beforeOres = player.data.ores;
       const beforeQic = player.data.qics;
@@ -459,7 +459,7 @@ describe("Player", () => {
     it("should grant 12 VP for the Vp token", () => {
       const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
       player.faction = Faction.Terrans;
-      player.loadFaction(null);
+      player.loadFaction(null, Expansion.None);
       const beforeVp = player.data.victoryPoints;
 
       player.gainSpaceshipFederationToken(SpaceshipFederation.Vp);
@@ -470,7 +470,7 @@ describe("Player", () => {
     it("should grant 7 VP and 2 power tokens placed directly into Area III for the PowerTokens token", () => {
       const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
       player.faction = Faction.Terrans;
-      player.loadFaction(null);
+      player.loadFaction(null, Expansion.None);
       const beforeVp = player.data.victoryPoints;
       const beforeArea3 = player.data.power.area3;
 
@@ -483,7 +483,7 @@ describe("Player", () => {
     it("should grant a Tech tile pick (TechTile reward) for the Tech token", () => {
       const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
       player.faction = Faction.Terrans;
-      player.loadFaction(null);
+      player.loadFaction(null, Expansion.None);
 
       let gained = 0;
       player.data.on(`gain-${Resource.TechTile}`, (count: number) => {
@@ -499,7 +499,7 @@ describe("Player", () => {
       for (const federation of [SpaceshipFederation.Range, SpaceshipFederation.Terraform]) {
         const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
         player.faction = Faction.Terrans;
-        player.loadFaction(null);
+        player.loadFaction(null, Expansion.None);
         const beforeVp = player.data.victoryPoints;
         const beforeCredits = player.data.credits;
         const beforeOres = player.data.ores;
@@ -547,7 +547,7 @@ describe("Player", () => {
       const player = new Player();
 
       player.faction = Faction.Lantids;
-      player.loadFaction(null);
+      player.loadFaction(null, Expansion.None);
       const hex = new GaiaHex(0, 0, {
         sector: "s1",
         planet: Planet.Lost,
@@ -590,6 +590,8 @@ describe("Player", () => {
             hexes: [],
             planets: 0,
             satellites: 5,
+            newSatellites: 0,
+            powerValue: 0,
           },
         ],
       };
@@ -609,6 +611,8 @@ describe("Player", () => {
             hexes: [lostPlanet],
             planets: 0,
             satellites: 5,
+            newSatellites: 0,
+            powerValue: 0,
           },
         ],
       };
@@ -621,7 +625,7 @@ describe("Player", () => {
     it("excludes Booster-granted special actions (already shown on the booster's own tile)", () => {
       const player = new Player(Expansion.None, PlayerEnum.Player1);
       player.faction = Faction.Terrans;
-      player.loadFaction(null);
+      player.loadFaction(null, Expansion.None);
       player.loadEvents(boosterEvents(Booster.Booster4));
 
       expect(player.actions.map((a) => a.rewards)).to.include("step");
@@ -631,7 +635,7 @@ describe("Player", () => {
     it("keeps faction-innate special actions with no tile of their own (e.g. Space Giants')", () => {
       const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
       player.faction = Faction.SpaceGiants;
-      player.loadFaction(null);
+      player.loadFaction(null, Expansion.None);
 
       expect(player.actions.map((a) => a.rewards)).to.include("2step");
       expect(player.actionsWithoutTile.map((a) => a.rewards)).to.include("2step");

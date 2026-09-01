@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { MAX_SILENT_BID } from "./algorithms/silent-auction";
+import { AvailableCommand } from "./available/types";
 import Engine, { AuctionVariant } from "./engine";
 import { Command, Faction, Phase } from "./enums";
 
@@ -141,7 +142,9 @@ describe("Silent Auction variant", () => {
       const engine = silent();
       engine.generateAvailableCommandsIfNeeded();
 
-      const data = engine.availableCommands.find((c) => c.name === Command.SilentBid)?.data as any;
+      const data = engine.availableCommands.find(
+        (c): c is AvailableCommand<Command.SilentBid> => c.name === Command.SilentBid
+      )?.data as any;
       expect(data.factions).to.deep.equal([Faction.Itars, Faction.Xenos, Faction.Taklons]);
       expect(data.maxBid).to.equal(MAX_SILENT_BID);
     });

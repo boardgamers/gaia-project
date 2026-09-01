@@ -81,12 +81,12 @@ function occupyPlanetsOfDistinctTypes(engine: Engine, player: PlayerEnum, count:
 
 function occupyNearestPlanet(engine: Engine, player: PlayerEnum, ship: Spaceship): GaiaHex {
   const pl = engine.player(player);
-  const shipTile = [...engine.map.grid.values()].find((hex) => hex.data.spaceship === ship);
+  const shipTile = Array.from(engine.map.grid.values()).find((hex) => hex.data.spaceship === ship);
   if (!shipTile) {
     throw new Error(`No ${ship} tile found on Lost Fleet map`);
   }
 
-  const candidate = [...engine.map.grid.values()]
+  const candidate = Array.from(engine.map.grid.values())
     .filter((hex) => hex.hasPlanet() && hex.data.spaceship === undefined && !hex.occupied())
     .sort((a, b) => engine.map.distance(a, shipTile) - engine.map.distance(b, shipTile))[0];
 
@@ -109,7 +109,7 @@ function occupyFirstAvailablePlanet(
   predicate?: (hex: GaiaHex) => boolean
 ): GaiaHex {
   const pl = engine.player(player);
-  const hex = [...engine.map.grid.values()].find(
+  const hex = Array.from(engine.map.grid.values()).find(
     (space) =>
       space.hasPlanet() &&
       space.data.spaceship === undefined &&

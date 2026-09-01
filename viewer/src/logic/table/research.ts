@@ -46,7 +46,7 @@ export function research(engine: Engine, greenFederations: boolean): PlayerTable
     ).concat(
       ...ResearchField.values(engine.expansions).map((f) => ({
         shortcut: f.substring(0, 1),
-        title: `<b>${researchData[f].name}</b>${[...Array(lastTile(f) + 1).keys()]
+        title: `<b>${researchData[f].name}</b>${Array.from({ length: lastTile(f) + 1 }, (_, i) => i)
           .map((level) => {
             const desc = researchLevelDesc(engine, f, level, false);
             return desc ? `<br/>Level ${level}: ${desc.join(" ")}` : "";

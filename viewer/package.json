@@ -1,6 +1,6 @@
 {
   "name": "@gaia-project/viewer",
-  "version": "5.13.0",
+  "version": "5.13.1",
   "description": "Functions to visualize the map and boards for gaia project inside html canvas",
   "contributors": [
     "coyotte508",
@@ -63,6 +63,7 @@
     "@vue/eslint-config-standard": "^5.1.2",
     "@vue/eslint-config-typescript": "^5.0.2",
     "@vue/test-utils": "^1.1.3",
+    "autoprefixer": "9.8.8",
     "chai": "^4.3.0",
     "chart.js": "^3.0.1",
     "eslint": "^6.7.2",

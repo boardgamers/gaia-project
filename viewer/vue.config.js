@@ -11,6 +11,12 @@ if (process.argv.includes("lib")) {
       config.externals({
         "bootstrap-vue": "BootstrapVue",
       });
+      // 'vue' stays an external (the host page provides Vue), but TS's esModuleInterop emits
+      // `vue_1.default` and the host's `window.Vue` is a plain function with no `.default` -
+      // the raw external made the whole bundle throw "Cannot read properties of undefined
+      // (reading 'extend')" at module-eval. Resolving 'vue' through this shim normalizes the
+      // global into a proper ES-module shape so every import style works.
+      config.resolve.alias.set("vue$", path.join(__dirname, "vue-global-shim.js"));
       // Inline ALL svg assets as data URIs instead of emitting img/*.svg files that resolve
       // against the baked-in publicPath (the versioned jsDelivr URL). This makes the UMD lib a
       // fully self-contained file, so it can be hosted anywhere (S3 upload via the BGS admin

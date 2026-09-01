@@ -361,7 +361,7 @@ export default class SpaceMap extends Vue {
   }
 
   get looseHexes(): GaiaHex[] {
-    return [...this.map.grid.values()]
+    return Array.from(this.map.grid.values())
       .filter((hex) => classifySectorId(hex.data.sector) !== LostFleetSectorType.Space)
       .sort((a, b) => a.q - b.q || a.r - b.r || a.s - b.s);
   }
@@ -386,7 +386,7 @@ export default class SpaceMap extends Vue {
         }
       }
     }
-    return [...groups.entries()].map(([id, hexes]) => {
+    return Array.from(groups.entries()).map(([id, hexes]) => {
       const centers = hexes.map((h) => hexCenter(h));
       const x = (centers.reduce((sum, c) => sum + c.x, 0) / centers.length) * HEX_SPREAD;
       const y = (centers.reduce((sum, c) => sum + c.y, 0) / centers.length) * HEX_SPREAD;
@@ -644,7 +644,7 @@ export default class SpaceMap extends Vue {
 
   get colorLegend(): { class: string; text: string }[] {
     if (this.mapModes.find((m) => m.type === MapModeType.leech || m.type == MapModeType.federations)) {
-      return [...Array(5).keys()].map((i) => ({ class: `power${i + 1}`, text: String(i + 1) }));
+      return Array.from({ length: 5 }, (_, i) => ({ class: `power${i + 1}`, text: String(i + 1) }));
     }
     return [];
   }

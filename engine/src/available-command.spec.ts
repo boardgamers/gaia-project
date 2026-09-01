@@ -2,6 +2,7 @@ import { expect } from "chai";
 import { Expansion, PlayerEnum } from "../index";
 import { possibleBoardActions, possibleFreeActions } from "./available/actions";
 import { choosableFactions } from "./available/setup";
+import { AvailableCommand } from "./available/types";
 import Engine, { AuctionVariant } from "./engine";
 import { BoardAction, Faction } from "./enums";
 import Player from "./player";
@@ -99,7 +100,10 @@ describe("Available commands", () => {
       const player = { data: d } as Player;
 
       function possible() {
-        return possibleBoardActions(actions, player, false)[0].data.poweracts.map((a) => a.name);
+        const cmd = possibleBoardActions(actions, player, false)[0] as AvailableCommand & {
+          data: { poweracts: { name: string }[] };
+        };
+        return cmd.data.poweracts.map((a) => a.name);
       }
 
       expect(possible()).to.include("power1");
@@ -117,14 +121,22 @@ describe("Available commands", () => {
       BoardAction.values(Expansion.None).forEach((pos: BoardAction) => {
         baseActions[pos] = null;
       });
-      const baseNames = possibleBoardActions(baseActions, player, false)[0].data.poweracts.map((a) => a.name);
+      const baseNames = (
+        possibleBoardActions(baseActions, player, false)[0] as AvailableCommand & {
+          data: { poweracts: { name: string }[] };
+        }
+      ).data.poweracts.map((a) => a.name);
       expect(baseNames).to.include.members(["qic1", "qic3", "power1"]);
 
       const lostFleetActions = {};
       BoardAction.values(Expansion.LostFleet).forEach((pos: BoardAction) => {
         lostFleetActions[pos] = null;
       });
-      const lostFleetNames = possibleBoardActions(lostFleetActions, player, false)[0].data.poweracts.map((a) => a.name);
+      const lostFleetNames = (
+        possibleBoardActions(lostFleetActions, player, false)[0] as AvailableCommand & {
+          data: { poweracts: { name: string }[] };
+        }
+      ).data.poweracts.map((a) => a.name);
       expect(lostFleetNames).to.not.include.members(["qic1", "qic2", "qic3"]);
       expect(lostFleetNames).to.include("power1");
     });

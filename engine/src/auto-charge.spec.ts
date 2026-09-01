@@ -65,7 +65,7 @@ describe("AutoCharge", () => {
 
   describe("askOrDeclineForPassedPlayer", () => {
     describe("when passed & no remaining charges after income", () => {
-      const baseRequest: ChargeRequest = {
+      const baseRequest = {
         playerHasPassed: true,
         autoCharge: 3,
         incomeSelection: {
@@ -73,7 +73,7 @@ describe("AutoCharge", () => {
         } as IncomeSelection,
         minCharge: 1,
         isLastRound: false,
-      } as ChargeRequest;
+      } as unknown as ChargeRequest;
 
       it("should not decline if taklons can gain a power token", () => {
         expect(

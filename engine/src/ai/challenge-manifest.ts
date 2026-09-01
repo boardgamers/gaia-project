@@ -84,7 +84,7 @@ function buildChallengeManifest() {
   const advancedTechPositions = AdvTechTilePos.values(engine.expansions);
   const ships = shipsInPlay(engine.expansions, engine.players.length);
 
-  const mapHexes = [...engine.map.grid.values()]
+  const mapHexes = Array.from(engine.map.grid.values())
     .map((hex) => ({
       id: hex.toString(),
       q: hex.q,

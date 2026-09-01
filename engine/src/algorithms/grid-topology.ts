@@ -30,7 +30,7 @@ export class GridTopology<HexType extends Hex<any>> {
   /** Integer-indexed view of the grid, for algorithms that want to avoid Map/Set lookups in hot loops */
   index(): GridIndex<HexType> {
     if (this._index === undefined) {
-      const hexList = [...this.grid.values()];
+      const hexList = Array.from(this.grid.values());
       const indexOf = new Map(hexList.map((hex, i) => [hex, i] as [HexType, number]));
       const neighbourIndices = hexList.map((hex) => this.neighbours(hex).map((neighbour) => indexOf.get(neighbour)));
       this._index = { hexList, indexOf, neighbourIndices };

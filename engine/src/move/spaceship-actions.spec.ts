@@ -635,7 +635,7 @@ describe("Lost Fleet spaceship board actions", () => {
     const engine = createLostFleetRoundMoveEngine(3);
     const player = engine.player(PlayerEnum.Player1);
     player.data.explorationShips[Spaceship.TFMars] = 1;
-    player.loadEvents(techTileEventWithSource(AdvTechTile.QAction, AdvTechTile.QAction));
+    player.loadEvents(techTileEventWithSource(AdvTechTile.QAction, AdvTechTilePos.Intelligence));
 
     const command = availableSpaceshipActionCommand(engine, PlayerEnum.Player1);
     const action = command.data.actions.find((a) => a.ship === Spaceship.TFMars && a.type === "qic");

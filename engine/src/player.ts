@@ -1236,7 +1236,7 @@ export default class Player extends EventEmitter {
     const hexes = this.data.occupied.filter((hex) => !excluded.has(hex));
 
     const buildingGroups = this.buildingGroups(hexes, map);
-    const buildingGroupsList = uniq([...buildingGroups.values()]);
+    const buildingGroupsList = uniq(Array.from(buildingGroups.values()));
     const values = buildingGroupsList.map((buildings) =>
       sum(buildings.map((node) => this.buildingValue(node, { federation: true })))
     );
@@ -1257,7 +1257,7 @@ export default class Player extends EventEmitter {
     const federations: GaiaHex[][] = [];
     const occupiedSet = new Set(this.data.occupied);
     const mapTopology = topologyOf(map.grid);
-    const baseHexes = [...map.grid.values()].filter((hex) => !excluded.has(hex));
+    const baseHexes = Array.from(map.grid.values()).filter((hex) => !excluded.has(hex));
     const buildWorkingGrid = (hexes: GaiaHex[]) =>
       new Grid<Hex<{ cost: number }>>(
         ...hexes.map(
@@ -1455,7 +1455,7 @@ export default class Player extends EventEmitter {
 
     // Check if federation can be built with fewer satellites
     if (!flexible) {
-      const allHexes = [...map.grid.values()].filter((hex) => !excluded.has(hex));
+      const allHexes = Array.from(map.grid.values()).filter((hex) => !excluded.has(hex));
 
       const occupiedSet = new Set(this.data.occupied);
       const workingGrid = new Grid<Hex<{ cost: number }>>(

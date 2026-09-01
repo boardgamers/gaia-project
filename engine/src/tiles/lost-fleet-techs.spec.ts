@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import "mocha";
-import { AdvTechTile, Building, Expansion, Faction, Planet, Player as PlayerEnum } from "../enums";
+import { AdvTechTile, AdvTechTilePos, Building, Expansion, Faction, Planet, Player as PlayerEnum } from "../enums";
 import { GaiaHex } from "../gaia-hex";
 import { classifySectorId, LostFleetSectorType } from "../lost-fleet-map";
 import SpaceMap from "../map";
@@ -10,7 +10,7 @@ import { techTileEventWithSource } from "./techs";
 function newPlayer(faction = Faction.Terrans): Player {
   const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
   player.faction = faction;
-  player.loadFaction(null);
+  player.loadFaction(null, Expansion.LostFleet);
   return player;
 }
 
@@ -42,7 +42,7 @@ describe("Lost Fleet Advanced Tech tiles (RULES_CLARIFICATIONS.md §G2)", () => 
     player.build(Building.Mine, hexes[0], [], map);
     player.build(Building.Mine, hexes[1], [], map);
 
-    player.loadEvents(techTileEventWithSource(AdvTechTile.AsteroidPass, AdvTechTile.AsteroidPass));
+    player.loadEvents(techTileEventWithSource(AdvTechTile.AsteroidPass, AdvTechTilePos.Intelligence));
 
     const beforeVp = player.data.victoryPoints;
     player.receivePassIncome();
@@ -61,7 +61,7 @@ describe("Lost Fleet Advanced Tech tiles (RULES_CLARIFICATIONS.md §G2)", () => 
     player.build(Building.Academy2, hexes[2], [], map);
 
     const beforeVp = player.data.victoryPoints;
-    player.loadEvents(techTileEventWithSource(AdvTechTile.Big, AdvTechTile.Big));
+    player.loadEvents(techTileEventWithSource(AdvTechTile.Big, AdvTechTilePos.Intelligence));
 
     expect(player.data.victoryPoints).to.equal(beforeVp + 18);
   });
@@ -81,7 +81,7 @@ describe("Lost Fleet Advanced Tech tiles (RULES_CLARIFICATIONS.md §G2)", () => 
     player.build(Building.Mine, sectorB[0], [], map);
 
     const beforeVp = player.data.victoryPoints;
-    player.loadEvents(techTileEventWithSource(AdvTechTile.Deep, AdvTechTile.Deep));
+    player.loadEvents(techTileEventWithSource(AdvTechTile.Deep, AdvTechTilePos.Intelligence));
 
     // 4 VP * 2 distinct sectors colonized (3 hexes total, but only 2 sectors).
     expect(player.data.victoryPoints).to.equal(beforeVp + 8);
@@ -100,7 +100,7 @@ describe("Lost Fleet Advanced Tech tiles (RULES_CLARIFICATIONS.md §G2)", () => 
     player.build(Building.Mine, sectorA[0], [], map);
     player.build(Building.Mine, sectorB[0], [], map);
 
-    player.loadEvents(techTileEventWithSource(AdvTechTile.DeepPass, AdvTechTile.DeepPass));
+    player.loadEvents(techTileEventWithSource(AdvTechTile.DeepPass, AdvTechTilePos.Intelligence));
 
     const beforeVp = player.data.victoryPoints;
     player.receivePassIncome();
@@ -110,7 +110,7 @@ describe("Lost Fleet Advanced Tech tiles (RULES_CLARIFICATIONS.md §G2)", () => 
 
   it("terra: grants 2 VP per terraforming step, scaling with multi-step colonizations", () => {
     const player = newPlayer();
-    player.loadEvents(techTileEventWithSource(AdvTechTile.Terra, AdvTechTile.Terra));
+    player.loadEvents(techTileEventWithSource(AdvTechTile.Terra, AdvTechTilePos.Intelligence));
 
     const beforeVp = player.data.victoryPoints;
     player.receiveTerraformingStepTriggerIncome(3); // e.g. colonizing a Protoplanet (3 steps)

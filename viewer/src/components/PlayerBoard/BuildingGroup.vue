@@ -304,7 +304,7 @@ export default class BuildingGroup extends Vue {
       if (i < this.gaia) {
         return PlanetEnum.Volcanic;
       }
-      const onGaia = [...this.engine.map.grid.values()].filter(
+      const onGaia = Array.from(this.engine.map.grid.values()).filter(
         (h) => h.buildingOf(this.player.player) === BuildingEnum.GaiaFormer && h.data.planet == PlanetEnum.Gaia
       ).length;
       return i < onGaia + this.gaia ? PlanetEnum.Gaia : PlanetEnum.Transdim;

@@ -16,7 +16,7 @@ import { cellStyle } from "./table/util";
 
 type TradeRow = { style: string; cells: RichText[] };
 
-const levels = Array.from(Array(lastTile(ResearchField.Diplomacy) + 1).keys());
+const levels = Array.from({ length: lastTile(ResearchField.Diplomacy) + 1 }, (_, i) => i);
 
 export function tradeHeaders(): string[] {
   return ["Name"].concat(levels.map((level) => `Diplomacy ${level}`));
@@ -32,7 +32,7 @@ function row(option: TradeOption): TradeRow {
   const cells: RichText[] = levels.map((level) => {
     const guest = new PlayerData();
 
-    [...Array(level + 1).keys()]
+    Array.from({ length: level + 1 }, (_, i) => i)
       .map((l) => researchEvents(ResearchField.Diplomacy, l, Expansion.Frontiers))
       .forEach((events, l) => {
         for (const e of events) {

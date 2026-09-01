@@ -354,7 +354,7 @@ export const lfMapComposition: Oracle = {
     }
     // The board is generated once at init and never changes — checking every line is redundant
     // but cheap; simpler and safer than trying to detect "setup just finished".
-    const ships = [...ctx.engine.map.grid.values()]
+    const ships = Array.from(ctx.engine.map.grid.values())
       .map((hex) => hex.data.spaceship)
       .filter((s): s is Spaceship => s !== undefined)
       .sort();

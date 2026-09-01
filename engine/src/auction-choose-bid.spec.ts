@@ -219,7 +219,7 @@ describe("legacy engine", () => {
       terrans build m -4x2
     `);
 
-    expect(() => new Engine(moves, { auction: false }, "4.6.10")).to.not.throw();
+    expect(() => new Engine(moves, { auction: undefined as any }, "4.6.10")).to.not.throw();
   });
 
   it("should be able to continue a legacy non-auction game", () => {

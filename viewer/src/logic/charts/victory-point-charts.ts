@@ -207,7 +207,7 @@ export const victoryPointSources = (
       // player's real victoryPoints correctly kept it - confirmed against a real finished game
       // (PROGRESS.md's "solar drift" report) where 2 Twilight-QIC rescores left 2 players' displayed
       // totals 14 VP under their actual score.
-      types: [...BoardAction.values(expansion), BoardAction.Qic2, Spaceship.TFMars, Spaceship.Eclipse],
+      types: [...Array.from(BoardAction.values(expansion)), BoardAction.Qic2, Spaceship.TFMars, Spaceship.Eclipse],
       label: "QIC",
       description: "QIC actions, including T F Mars/Eclipse's spaceship-board QIC action",
       color: "--specialAction",

@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import { BoardAction, Booster, Building, Player } from "..";
 import { version } from "../package.json";
+import { AvailableCommand } from "./available/types";
 import Engine, { AuctionVariant, createMoveToShow } from "./engine";
 import {
   AdvTechTile,
@@ -180,7 +181,9 @@ describe("Engine", () => {
     engine.move("p2 faction terrans");
 
     while (engine.phase === Phase.SetupBuilding) {
-      const command = engine.generateAvailableCommandsIfNeeded().find((c) => c.name === Command.Build) as any;
+      const command = engine
+        .generateAvailableCommandsIfNeeded()
+        .find((c): c is AvailableCommand<Command.Build> => c.name === Command.Build) as any;
       const building = command.data.buildings[0];
       engine.move(`p${engine.playerToMove + 1} build ${building.building} ${building.coordinates}`);
     }

@@ -395,7 +395,7 @@ export default class SpaceMap {
     if (classifySectorId(coords) !== LostFleetSectorType.Space) {
       // Interspace/Deep Space hexes ("IS3", "DS14_0") aren't part of a numbered/lettered sector and
       // have no center-relative suffix; their toString() is already a unique address, so scan for it.
-      const hex = [...this.grid.values()].find((h) => h.toString() === coords);
+      const hex = Array.from(this.grid.values()).find((h) => h.toString() === coords);
       assert(hex, `Can't find hex for Lost Fleet coordinate ${coords}`);
       return { q: hex.q, r: hex.r, s: hex.s };
     }

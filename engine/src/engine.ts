@@ -236,7 +236,7 @@ export function createMoveToShow(move: string, player: Player, map: SpaceMap, ex
 
   const formerPI =
     player.faction === Faction.Ambas && move.includes(Command.PISwap)
-      ? [...map.grid.values()].find((h) => h.buildingOf(player.player) === Building.PlanetaryInstitute)
+      ? Array.from(map.grid.values()).find((h) => h.buildingOf(player.player) === Building.PlanetaryInstitute)
       : null;
 
   data.on("move-tokens", listener);
