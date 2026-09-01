@@ -258,25 +258,24 @@ describe("Game", () => {
     const researchBoard = svg.querySelector("svg.research-board");
     const scoringBoard = researchBoard.nextElementSibling;
     expect(scoringBoard.tagName).to.equal("svg");
-    // Both nested boards now start at the same y as each other (and as the outer viewBox), so
-    // their own top-anchored content (the research track's level-5 tile, ScoringBoard's index-0
-    // FinalScoringTile) renders at the same height - no more of ScoringBoard's own -25 offset that
-    // used to shift it, and everything it contains, above the research track's top edge.
+    // Base game keeps its long-standing framing: the research board at the viewBox origin, the
+    // side ScoringBoard nudged up 25 units (its own content has built-in top padding).
     expect(researchBoard.getAttribute("y")).to.equal(null);
-    expect(scoringBoard.getAttribute("y")).to.equal(null);
+    expect(scoringBoard.getAttribute("y")).to.equal("-25");
 
     const [, minY, , height] = svg.getAttribute("viewBox").split(" ").map(Number);
     expect(minY).to.equal(0);
     // ScoringBoard renders at width=90 against its own `viewBox="0 0 80 480"` with no explicit
-    // height, so its rendered height auto-scales to preserve aspect ratio: 90 * (480/80) = 540 -
-    // the outer viewBox must be at least that tall (starting from y=0) to avoid clipping it.
-    expect(height).to.be.at.least(540);
+    // height, so its rendered height auto-scales to preserve aspect ratio: 90 * (480/80) = 540,
+    // starting 25 units above the viewBox top - a 505-tall viewBox shows it down to y=480 of its
+    // own 540, which is where its actual content ends (the rest is padding).
+    expect(height).to.equal(505);
 
     vm.$el.remove();
     vm.$destroy();
   });
 
-  it("renders Turn Order in a banner at the top of the page (before the map), and gives the Commands column the full row width", () => {
+  it("renders Turn Order compactly in the commands row (the pre-Gaia-9 placement - the full-width top banner was reverted)", () => {
     const setupEngine = new Engine(["init 2 lf-freeze-28"]);
 
     const gameplayEngine = new Engine(["init 2 lf-freeze-28"]);
@@ -289,9 +288,8 @@ describe("Game", () => {
     gameplayEngine.turnOrder = gameplayEngine.players.map((pl) => pl.player);
     gameplayEngine.currentPlayer = PlayerEnum.Player1;
 
-    // Turn Order's top-banner placement (PROGRESS.md Gaia 9) no longer depends on whether
-    // gameplay has started - unlike the old mobile order-flip it replaced, both engines below
-    // should render it identically, at the very top of the page.
+    // The restored compact TurnOrder sits in the commands row (col-md-4, order-flipped against
+    // the commands column on mobile) - identical for setup and in-progress engines.
     for (const engine of [setupEngine, gameplayEngine]) {
       const store = makeStore();
       const vm = new (Vue.extend(Game as any))({ store }) as any;
@@ -299,19 +297,11 @@ describe("Game", () => {
       vm.$mount();
       document.body.appendChild(vm.$el);
 
-      const banner = vm.$el.querySelector(".turn-order-banner");
-      expect(banner, "expected a top turn-order banner").to.not.equal(null);
-      expect(banner.querySelector(".turn-order"), "expected TurnOrder mounted inside the banner").to.not.equal(null);
-
-      // The banner must precede the map/research-board row in document order - "top of the page".
-      const mapRow = vm.$el.querySelector(".space-map")?.closest(".row");
-      expect(mapRow, "expected the map row").to.not.equal(null);
-      expect(banner.compareDocumentPosition(mapRow) & Node.DOCUMENT_POSITION_FOLLOWING).to.not.equal(0);
-
-      // Commands (or the "current player" fallback) no longer shares its row with Turn Order, so
-      // the old split-column classes are both gone entirely.
-      expect(vm.$el.querySelector(".col-md-4.order-md-1"), "old Turn Order column class should be gone").to.equal(null);
-      expect(vm.$el.querySelector(".col-md-8.order-md-2"), "old Commands column class should be gone").to.equal(null);
+      const turnOrder = vm.$el.querySelector(".turn-order");
+      expect(turnOrder, "expected TurnOrder to render").to.not.equal(null);
+      // No banner chrome, and it shares the row with the commands column.
+      expect(vm.$el.querySelector(".turn-order-banner"), "no top banner").to.equal(null);
+      expect(vm.$el.querySelector(".col-md-4.order-md-1"), "Turn Order column class").to.not.equal(null);
 
       vm.$el.remove();
       vm.$destroy();

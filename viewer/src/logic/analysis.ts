@@ -215,7 +215,7 @@ export function analysisLineSetSize(set: AnalysisLineSet): number {
 }
 
 function storageKey(seat: number): string {
-  // Same convention as LostFleetNotes.vue's localKey(): a hosted game's `?game=<id>` and a
+  // Same convention as the old notes sheet's localKey(): a hosted game's `?game=<id>` and a
   // self-contained game's full launch query string both already uniquely identify "this game".
   const search = typeof window !== "undefined" ? window.location.search : "";
   return `analysis-mode:${search}:${seat}`;

@@ -26,18 +26,6 @@
     </div>
 
     <template v-if="uiMode === 'graphical'">
-      <!-- Turn Order, at the very top of the page (PROGRESS.md Gaia 9) - it used to live further
-           down, sharing a row with Commands and order-flipping against it on mobile; a fixed top
-           banner is simpler and also gives each player's circle room for a presence dot (green =
-           actively viewing this game right now, yellow = present in the lobby or another game,
-           grey = no live presence at all - see logic/presence.ts). Hosted mode instead folds this
-           into HostedBar.vue's own top banner (PROGRESS.md Gaia 10), so this standalone banner only
-           renders for self-contained/hot-seat play now. -->
-      <div class="row" v-if="!ended && engine.players.length > 0 && !isHostedMode">
-        <div class="col-12 turn-order-banner">
-          <TurnOrder />
-        </div>
-      </div>
       <!-- Round 0 only (ban/pick/bid/starting buildings/booster): says whose turn it is and what
            they have to do, plus the auction/ban explainer buttons. Deliberately above the map
            rather than down in the commands column - during setup the board matters least and
@@ -132,19 +120,29 @@
                 ry="9"
               />
               <ResearchBoard
-                :height="researchBoardViewHeight"
+                :height="engine.options.lostFleet ? researchBoardViewHeight : 450"
                 :width="engine.options.lostFleet ? researchBoardContentWidth : undefined"
                 ref="researchBoard"
                 x="-50"
               />
-              <ScoringBoard v-if="!engine.options.lostFleet" class="ml-4" width="90" :x="researchBoardWidth + 20" />
+              <ScoringBoard
+                v-if="!engine.options.lostFleet"
+                class="ml-4"
+                width="90"
+                :x="researchBoardWidth + 20"
+                y="-25"
+              />
               <!-- Right under the 6 tracks' own bottom edge (BASE_RESEARCH_BOARD_HEIGHT, a fixed
                    5-unit gap) - NOT researchBoardViewHeight, which Lost Fleet's 7th column (round
                    scoring + final scoring, positioned further right) can inflate well past where the
                    tracks themselves actually end, leaving a large visible gap here otherwise. -->
               <BoardAction
                 :scale="17"
-                :transform="`translate(${45 * i - 20 + boardActionRowXShift}, ${baseResearchBoardHeight + 5})`"
+                :transform="
+                  engine.options.lostFleet
+                    ? `translate(${45 * i - 20 + boardActionRowXShift}, ${baseResearchBoardHeight + 5})`
+                    : `translate(${45 * i + 6}, 455)`
+                "
                 v-for="(action, i) in actions"
                 :key="action"
                 :action="action"
@@ -170,25 +168,19 @@
                keeping its bordered box unchanged) whatever's left over. -->
           <div v-if="engine.options.lostFleet" class="lost-fleet-ships-row mt-2">
             <LostFleetShips :style="lostFleetShipsStyle" />
-            <!-- Right sidebar column: the round-booster/federation Pool on top, then a yellow notes
-                 sheet that grows to fill the rest so the column bottoms out level with the ship
-                 boards (and so never runs past them on mobile - its height naturally differs with the
-                 ship count at 2 vs 3-4 players). -->
+            <!-- Right sidebar column: just the round-booster/federation Pool (the notes sheet was
+                 removed - per-game notes are the hosting platform's job now). -->
             <div class="lost-fleet-pool-sidebar lf-sidebar-col">
               <Pool compact />
-              <LostFleetNotes />
             </div>
           </div>
         </div>
       </div>
       <div class="row mt-2">
-        <!-- Turn Order used to live in this row (col-md-4, order-flipped against this column on
-             mobile) - it's now a banner at the very top of the page instead (Game.vue's
-             turn-order-banner, PROGRESS.md Gaia 9). On desktop, a Lost Fleet game narrows this
-             column to match the map's own `col-md-7` (`commandsColumnClass`) instead of stretching
-             full-width under the research track too - the ship boards live in the research column
-             above now (see the map+research row), not here, so this row's remaining col-md-5 is
-             simply left empty on desktop. -->
+        <!-- Turn Order back in its pre-Gaia-9 spot: compact, sharing this row with the commands
+             column (order-flipped against it on mobile). The full-width top banner was reverted -
+             it read as a huge rounded strip and duplicated information the page already shows. -->
+        <TurnOrder v-if="!ended && engine.players.length > 0" class="col-md-4 order-4 order-md-1" />
         <div :class="commandsColumnClass">
           <!-- The two `alert` banners that used to sit here - one blue for composing a premove, one
                amber for composing a cancel rule - are gone. They described what the bottom bar was
@@ -434,7 +426,6 @@ import BoardAction from "./BoardAction.vue";
 import Charts from "./Charts.vue";
 import Commands from "./Commands.vue";
 import FactionBrowser from "./FactionBrowser.vue";
-import LostFleetNotes from "./LostFleetNotes.vue";
 import LostFleetShips, { SHIP_BOARD_VIEWBOX_WIDTH } from "./LostFleetShips.vue";
 import PlayerInfo from "./PlayerInfo.vue";
 import Pool from "./Pool.vue";
@@ -483,7 +474,6 @@ const BOARD_ACTION_BASE_X = -20;
     ScoringBoard,
     SpaceMap,
     LostFleetShips,
-    LostFleetNotes,
     TurnOrder,
     SetupStatus,
     FactionBrowser,
@@ -864,18 +854,22 @@ export default class Game extends Vue {
   }
 
   get researchBoardCanvasMinX() {
-    return -50;
+    // Base game: the pre-Lost-Fleet framing (0) - the -50 inset only exists so Lost Fleet's
+    // extension column can hang left of the tracks without clipping.
+    return this.engine.options.lostFleet ? -50 : 0;
   }
 
   get researchBoardCanvasWidth() {
-    // Keep the base game's long-standing research + ScoringBoard framing unchanged. Lost Fleet no
-    // longer renders that side board, so its canvas can end exactly at the extension column.
-    return this.engine.options.lostFleet ? this.researchBoardContentWidth : this.researchBoardWidth + 170;
+    // Base game: the pre-Lost-Fleet framing (tracks + 120 for the side ScoringBoard). Lost Fleet
+    // has no side board, so its canvas can end exactly at the extension column.
+    return this.engine.options.lostFleet ? this.researchBoardContentWidth : this.researchBoardWidth + 120;
   }
 
   get researchBoardCanvasHeight() {
     if (!this.engine.options.lostFleet) {
-      return 550;
+      // Pre-Lost-Fleet value: 440 of tracks + the action row below them. 550 was a Lost-Fleet
+      // accommodation that left ~110 units of empty space at the base-game board's bottom.
+      return 505;
     }
 
     // Reserve room for the action row's ACTUAL painted bottom edge, not its bare translate: each
@@ -989,7 +983,10 @@ export default class Game extends Vue {
   // column to match the map's own col-md-7 and orders it ahead of the ship boards, instead of the
   // plain full-width col-12 every other game mode still uses.
   get commandsColumnClass(): string[] {
-    return this.engine.options.lostFleet ? ["order-2", "order-md-1", "col-12", "col-md-7"] : ["col-12"];
+    // Shares the row with the restored compact TurnOrder (col-md-4) - old pre-Gaia-9 widths.
+    return this.engine.options.lostFleet
+      ? ["order-2", "order-md-1", "col-12", "col-md-7"]
+      : ["col-12", "col-md-8", "order-1", "order-md-2"];
   }
 
   /** Mobile-only: during round 0 the pick/ban action area is rendered directly under the setup
@@ -1051,6 +1048,11 @@ export default class Game extends Vue {
     // background rule.
     if (this.analysisMode) {
       classes.push("analysis-mode-active");
+    }
+    // Scopes the Lost-Fleet-only layout overrides (65/35 map split, ship rows) so the base game's
+    // board layout stays exactly the pre-expansion one.
+    if (this.engine.options.lostFleet) {
+      classes.push("lost-fleet");
     }
     return classes;
   }
@@ -2529,18 +2531,11 @@ export default class Game extends Vue {
   }
 }
 
-// The sidebar's inner stack: Pool takes its natural height, while LostFleetNotes starts from a zero
-// flex basis and grows into only the remaining height. That keeps the ships (not the textarea's
-// intrinsic height) in control of the row bottom in the shorter three-ship mobile layout.
+// The sidebar's inner stack: just the Pool now (the notes sheet was removed - per-game notes are
+// the hosting platform's job).
 .lf-sidebar-col {
   display: flex;
   flex-direction: column;
-
-  // Tighten the Pool's own bottom margin (1em in the base game) to a compact sidebar gap above the
-  // notes sheet, so the two read as one stacked column rather than two far-apart boxes.
-  > div > .pool.compact {
-    margin-bottom: 0.4rem;
-  }
 }
 
 .medium-map,
@@ -2611,7 +2606,9 @@ export default class Game extends Vue {
 // edge instead of centered in their boxes.
 // ---------------------------------------------------------------------------
 @media (min-width: 992px) {
-  .gaia-viewer-game .game-board-layout {
+  // Lost Fleet only: the map needs more of the row (65%) because the side column also carries the
+  // ship boards; the base game keeps its long-standing col-md-7 / col-md-5 split.
+  .gaia-viewer-game.lost-fleet .game-board-layout {
     align-items: flex-start;
 
     > .space-map {

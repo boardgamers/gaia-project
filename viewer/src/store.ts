@@ -98,11 +98,6 @@ export type State = {
   seatLastActive: Record<number, string | null>;
   /** Hosted mode only (presence.ts) - the shared cross-page roster, keyed by user id. */
   presence: PresenceState;
-  /** Load/save adapter for the Lost Fleet sidebar notes sheet (LostFleetNotes.vue). A hosting app
-   * can inject a thin closure over its own per-game notes storage, so the viewer never talks to a
-   * backend itself. null in self-contained/hot-seat play, where the sheet falls back to
-   * localStorage. */
-  notesBackend: NotesBackend | null;
   /** True while showing an offline copy of an online game: play is
    * limited to the seats this account holds, so the board explains itself when it is someone
    * else's turn instead of simply offering nothing. False for ordinary pass-and-play. */
@@ -125,11 +120,6 @@ export type State = {
   /** Submission progress pushed by the host while the bid phase is open. Progress only - it never
    * carries anybody's points, so there is nothing here to leak into the UI early. */
   sealedBidStatus: SealedBidStatus | null;
-};
-
-export type NotesBackend = {
-  load: () => Promise<string>;
-  save: (body: string) => Promise<void>;
 };
 
 export type SealedBidBackend = {
@@ -214,7 +204,6 @@ const gaiaViewer = {
       seatUsers: {},
       seatLastActive: {},
       presence: {},
-      notesBackend: null,
       offlineMirror: false,
       analysisMode: false,
       sealedBidBackend: null,
@@ -368,10 +357,6 @@ const gaiaViewer = {
 
     presence(state: State, data: PresenceState) {
       state.presence = data;
-    },
-
-    setNotesBackend(state: State, backend: NotesBackend | null) {
-      state.notesBackend = backend;
     },
 
     setOfflineMirror(state: State, mirrored: boolean) {

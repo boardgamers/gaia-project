@@ -8,7 +8,7 @@
 // had gone through the on-screen keyboard and the chat popup and landed on a faction button.
 //
 // The fix belongs in the listeners rather than on each input: `@keydown.stop` on one textarea (which
-// is what LostFleetNotes.vue does) shields only that textarea, and the viewer keeps growing new text
+// is what a notes textarea would do) shields only that textarea, and the viewer keeps growing new text
 // fields - two chat composers, the silent-auction bid boxes, the Preference Split bid boxes, the
 // hosted lobby's search and sign-in forms. A global shortcut that fires while the caret is in a text
 // field is wrong in every one of those cases.

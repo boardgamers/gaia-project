@@ -1,5 +1,6 @@
 <template>
   <div class="turn-order">
+    <h5 v-if="!compact">Turn order</h5>
     <svg viewBox="-1.2 -1.2 12.5 4" :width="compact ? 170 : 250" :height="compact ? 60 : 80" style="max-width: 100%">
       <PlayerCircle
         v-for="(player, index) in turnOrder"
@@ -87,14 +88,5 @@ export default class TurnOrder extends Vue {
   & > svg {
     max-width: 250px;
   }
-}
-
-// The top-banner placement (Game.vue) wants this to read as a header strip, not a floating card.
-.turn-order-banner {
-  background: linear-gradient(135deg, var(--ui-banner-start) 0%, var(--ui-banner-end) 100%);
-  border-radius: 8px;
-  padding: 0.4rem 0.75rem;
-  display: flex;
-  justify-content: center;
 }
 </style>
