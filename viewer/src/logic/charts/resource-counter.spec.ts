@@ -10,7 +10,8 @@ import Engine, {
 } from "@gaia-project/engine";
 import { expect } from "chai";
 import { factionName } from "../../data/factions";
-import { CommandObject, parseCommands } from "../recent";
+import type { CommandObject } from "../recent";
+import { parseCommands } from "../recent";
 import { createFixtureEngine, findFirstBad, runMoveHistoryTests } from "../test-utils";
 import { balanceSheetResourceName, balanceSheetResources, currentAmount } from "./balance-sheet";
 import { ChartSetup } from "./chart-factory";
@@ -175,7 +176,7 @@ describe("Resource Counter", () => {
     }
   });
 
-  it("brainstone simulator", () => {
+  describe("brainstone simulator", () => {
     const tests: {
       name: string;
       give: { move: string };

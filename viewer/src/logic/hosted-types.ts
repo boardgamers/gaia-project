@@ -1,7 +1,7 @@
 // Row shapes for a hosted multiplayer backend (premove/sealed-bid/game-row shapes used by game
 // components and the store).
 
-import { SealedBidVariant } from "./sealed-bid";
+import type { SealedBidVariant } from "./sealed-bid";
 
 export type GameRow = {
   id: string;

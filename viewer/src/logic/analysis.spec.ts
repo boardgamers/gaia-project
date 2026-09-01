@@ -1,9 +1,9 @@
 import Engine, { AuctionVariant, Command, Faction, Phase, Round } from "@gaia-project/engine";
 import { expect } from "chai";
+import type { AnalysisEntry } from "./analysis";
 import {
   advancePastOwnPass,
   analysisCommitPrefix,
-  AnalysisEntry,
   analysisFactionPool,
   analysisLineLabel,
   analysisLineSetSize,

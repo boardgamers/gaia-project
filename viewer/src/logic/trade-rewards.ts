@@ -9,9 +9,11 @@ import {
   ResearchField,
   Resource,
 } from "@gaia-project/engine";
-import { tradeCost, TradeOption, tradeOptions, tradeRewards } from "@gaia-project/engine/src/available/ships";
+import type { TradeOption } from "@gaia-project/engine/src/available/ships";
+import { tradeCost, tradeOptions, tradeRewards } from "@gaia-project/engine/src/available/ships";
 import { buildingData } from "../data/building";
-import { richText, RichText, richTextArrow, richTextRewards } from "../graphics/rich-text";
+import type { RichText } from "../graphics/rich-text";
+import { richText, richTextArrow, richTextRewards } from "../graphics/rich-text";
 import { cellStyle } from "./table/util";
 
 type TradeRow = { style: string; cells: RichText[] };

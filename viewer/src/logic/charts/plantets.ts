@@ -2,7 +2,8 @@ import { Planet } from "@gaia-project/engine";
 import { planetNames } from "../../data/planets";
 import { planetColorVar } from "../../graphics/colors";
 import { ChartSource } from "./charts";
-import { ChartSummary, planetCounter, SimpleSourceFactory } from "./simple-charts";
+import type { SimpleSourceFactory } from "./simple-charts";
+import { ChartSummary, planetCounter } from "./simple-charts";
 
 export const planetsSourceFactory: SimpleSourceFactory<ChartSource<Planet>> = {
   name: "Planets",

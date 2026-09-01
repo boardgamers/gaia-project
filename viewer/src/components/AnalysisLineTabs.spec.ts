@@ -2,7 +2,8 @@ import { fireEvent, render } from "@testing-library/vue";
 import BootstrapVue from "bootstrap-vue";
 import { expect } from "chai";
 import Vue from "vue";
-import { AnalysisLineSummary, MAX_ANALYSIS_LINES } from "../logic/analysis";
+import type { AnalysisLineSummary } from "../logic/analysis";
+import { MAX_ANALYSIS_LINES } from "../logic/analysis";
 import AnalysisLineTabs from "./AnalysisLineTabs.vue";
 
 Vue.use(BootstrapVue);

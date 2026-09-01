@@ -13,7 +13,8 @@ import Engine, {
 } from "@gaia-project/engine";
 import { upgradedBuildings } from "@gaia-project/engine/src/buildings";
 import { LEECHING_DISTANCE } from "@gaia-project/engine/src/engine";
-import { RichText, richTextRewards } from "../graphics/rich-text";
+import type { RichText } from "../graphics/rich-text";
+import { richTextRewards } from "../graphics/rich-text";
 
 /**
  * The seed a game was created with, read from the "init <players> <seed>" line that's always

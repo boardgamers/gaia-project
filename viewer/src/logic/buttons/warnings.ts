@@ -1,7 +1,8 @@
 import { applyChargePowers, Event, Player, Resource, Reward } from "@gaia-project/engine";
-import { ButtonWarning, WarningWithKey } from "../../data";
-import { moveWarnings, TranslatedWarningKey, WarningKey } from "../../data/warnings";
-import { CommandController } from "./types";
+import type { ButtonWarning, WarningWithKey } from "../../data";
+import type { TranslatedWarningKey } from "../../data/warnings";
+import { moveWarnings, WarningKey } from "../../data/warnings";
+import type { CommandController } from "./types";
 
 export function buttonWarnings(messages: WarningWithKey[]): ButtonWarning | null {
   return messages.length > 0 && { title: "Are you sure?", body: messages };

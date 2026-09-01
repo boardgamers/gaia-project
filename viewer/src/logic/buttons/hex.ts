@@ -8,14 +8,15 @@ import {
   Reward,
 } from "@gaia-project/engine";
 import assert from "@gaia-project/engine/src/utils/assert";
-import { ButtonData, HighlightHex } from "../../data";
+import type { ButtonData, HighlightHex } from "../../data";
 import { buildingData } from "../../data/building";
 import { planetNames } from "../../data/planets";
 import { splitCostBonus } from "../../data/resources";
-import { RichText, richText, richTextArrow, richTextPlanet, richTextRewards } from "../../graphics/rich-text";
+import type { RichText } from "../../graphics/rich-text";
+import { richText, richTextArrow, richTextPlanet, richTextRewards } from "../../graphics/rich-text";
 import { sortBy } from "../lodash-utils";
 import { prependShortcut, tooltipWithShortcut } from "./shortcuts";
-import { CommandController } from "./types";
+import type { CommandController } from "./types";
 import { addOnClick, addOnShow, isFree, textButton } from "./utils";
 import { buttonWarnings, commonButtonWarning } from "./warnings";
 

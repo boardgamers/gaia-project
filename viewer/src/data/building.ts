@@ -1,12 +1,5 @@
-import {
-  AvailableBuilding,
-  Building,
-  Building as BuildingEnum,
-  Expansion,
-  Faction,
-  isShip,
-  ShipAction,
-} from "@gaia-project/engine";
+import type { AvailableBuilding } from "@gaia-project/engine";
+import { Building, Building as BuildingEnum, Expansion, Faction, isShip, ShipAction } from "@gaia-project/engine";
 import { colorCodes } from "../logic/color-codes";
 
 export const buildingData: { [key in Building]: { name: string; color: string } } = {

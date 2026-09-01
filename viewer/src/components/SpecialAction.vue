@@ -29,7 +29,7 @@
 import Engine, { Event, Planet } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { ButtonData } from "../data";
+import type { ButtonData } from "../data";
 import { enabledButtonWarnings } from "../data/warnings";
 import { specialActionButton } from "../logic/buttons/actions";
 import { tooltipTriggerConfig } from "../logic/tooltip";

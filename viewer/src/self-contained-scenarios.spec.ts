@@ -1,5 +1,5 @@
 import Engine from "@gaia-project/engine";
-import { AvailableCommand } from "@gaia-project/engine/src/available/types";
+import type { AvailableCommand } from "@gaia-project/engine/src/available/types";
 import {
   ArtifactToken,
   Building,

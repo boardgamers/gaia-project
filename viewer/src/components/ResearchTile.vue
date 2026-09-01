@@ -74,7 +74,7 @@ import Engine, {
 } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { ButtonData } from "../data";
+import type { ButtonData } from "../data";
 import { effectivePreviewPlayer } from "../data/faction-preview";
 import { researchEventsWithCounters, researchLevelDesc } from "../data/research";
 import { tooltipTriggerConfig } from "../logic/tooltip";

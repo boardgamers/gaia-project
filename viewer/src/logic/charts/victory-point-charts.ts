@@ -24,7 +24,8 @@ import { boosterData } from "../../data/boosters";
 import { playerHasReceivedAllIncome } from "../../data/resources";
 import { advancedTechTileData } from "../../data/tech-tiles";
 import { colorCodes } from "../color-codes";
-import { DatasetFactory, extractChanges, finalScoringRound, getDataPoints, IncludeRounds } from "./charts";
+import type { DatasetFactory, IncludeRounds } from "./charts";
+import { extractChanges, finalScoringRound, getDataPoints } from "./charts";
 import { countResearch } from "./research";
 
 function simulateIncome(pl: Player, consume: (p: Player) => void, engineVersion: string): number {

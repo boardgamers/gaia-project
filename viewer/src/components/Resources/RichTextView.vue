@@ -71,7 +71,7 @@ import Reward from "@gaia-project/engine/src/reward";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { foregroundColor } from "../../graphics/colors";
-import { RichText, RichTextBuilding, RichTextElement } from "../../graphics/rich-text";
+import type { RichText, RichTextBuilding, RichTextElement } from "../../graphics/rich-text";
 import { factionColorVar } from "../../graphics/utils";
 import ArtifactIcon from "../ArtifactIcon.vue";
 import BoardAction from "../BoardAction.vue";

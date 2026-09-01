@@ -1,4 +1,4 @@
-import { ButtonData, ButtonWarning } from "../../data";
+import type { ButtonData, ButtonWarning } from "../../data";
 import { buttonStringLabel } from "./utils";
 
 export const forceNumericShortcut = (label: string) => ["Charge", "Income"].find((b) => label.startsWith(b));

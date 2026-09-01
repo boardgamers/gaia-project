@@ -1,13 +1,7 @@
 import Engine from "@gaia-project/engine";
 import { expect } from "chai";
-import {
-  CancelTriggerRow,
-  candidateAtoms,
-  LeechConfig,
-  matchCancelTriggers,
-  moveAtoms,
-  SeatedMove,
-} from "./premove-cancel-trigger";
+import type { CancelTriggerRow, LeechConfig, SeatedMove } from "./premove-cancel-trigger";
+import { candidateAtoms, matchCancelTriggers, moveAtoms } from "./premove-cancel-trigger";
 
 // An identity map: hex args round-trip unchanged. Good enough for every test that isn't
 // specifically exercising hex-notation canonicalization (that group builds a real engine map

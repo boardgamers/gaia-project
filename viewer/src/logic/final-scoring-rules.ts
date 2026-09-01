@@ -1,5 +1,6 @@
 import { staticCellStyle } from "../graphics/colors";
-import { FinalScoringContributor, finalScoringSources, FinalScoringTableRow } from "./charts/final-scoring";
+import type { FinalScoringContributor } from "./charts/final-scoring";
+import { finalScoringSources, FinalScoringTableRow } from "./charts/final-scoring";
 import { rowHeaderCell } from "./charts/table";
 import { colorCodes } from "./color-codes";
 

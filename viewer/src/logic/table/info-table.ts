@@ -2,18 +2,8 @@ import Engine, { Player } from "@gaia-project/engine";
 import { UiMode } from "../../store";
 import { generalTables, playerCell } from "./general";
 import { playerTables } from "./player";
-import {
-  Cell,
-  ConversionSupport,
-  defaultBackground,
-  emptyCell,
-  InfoTable,
-  InfoTableColumn,
-  InfoTableFlex,
-  InfoTableRow,
-  PlayerTable,
-  uiModeSettings,
-} from "./types";
+import type { Cell, ConversionSupport, InfoTable, InfoTableColumn, InfoTableRow, PlayerTable } from "./types";
+import { defaultBackground, emptyCell, InfoTableFlex, uiModeSettings } from "./types";
 import { deactivatedLabel, formatCell } from "./util";
 
 function field(c: Cell, sortable: boolean): InfoTableColumn {

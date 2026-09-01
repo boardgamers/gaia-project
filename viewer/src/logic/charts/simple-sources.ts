@@ -13,15 +13,17 @@ import { balanceSheetEventSources, balanceSheetResourceFactory, balanceSheetReso
 import { balanceSheetEventSourceFactory, resourceSourceFactory } from "./balance-sheet-summary";
 import { buildingsSourceFactory } from "./buildings";
 import { leechSourceFactory } from "./charge";
-import { ChartFactory } from "./chart-factory";
-import { ChartSource, DatasetFactory, getDataPoints, IncludeRounds, playerLabel } from "./charts";
+import type { ChartFactory } from "./chart-factory";
+import type { DatasetFactory, IncludeRounds } from "./charts";
+import { ChartSource, getDataPoints, playerLabel } from "./charts";
 import { factionSourceFactory } from "./factions";
 import { federationsSourceFactory } from "./federations";
 import { finalScoringSourceFactory } from "./final-scoring";
 import { planetsSourceFactory } from "./plantets";
 import { researchSourceFactory } from "./research";
 import { boardActionSourceFactory, boosterSourceFactory, freeActionSourceFactory } from "./resources";
-import { ExtractLog, logEntryProcessor, SimpleSourceFactory } from "./simple-charts";
+import type { SimpleSourceFactory } from "./simple-charts";
+import { ExtractLog, logEntryProcessor } from "./simple-charts";
 import { advancedTechSourceFactory, baseTechSourceFactory } from "./tech";
 import { terraformingStepsSourceFactory } from "./terraforming";
 

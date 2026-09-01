@@ -76,11 +76,12 @@
 </template>
 <script lang="ts">
 import Engine from "@gaia-project/engine";
-import { PlayerColumn } from "src/logic/table/types";
+import type { PlayerColumn } from "src/logic/table/types";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { HistoryEntry, makeHistory } from "../data/log";
-import { RichText } from "../graphics/rich-text";
+import type { HistoryEntry } from "../data/log";
+import { makeHistory } from "../data/log";
+import type { RichText } from "../graphics/rich-text";
 import { logPlayerTables } from "../logic/table/player";
 import { cellStyle } from "../logic/table/util";
 import { isTypingTarget } from "../logic/typing-target";

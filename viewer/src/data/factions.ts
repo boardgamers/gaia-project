@@ -14,7 +14,7 @@ import {
   Reward,
   terraformingStepsRequired,
 } from "@gaia-project/engine";
-import { FactionBoardRaw } from "@gaia-project/engine/src/faction-boards";
+import type { FactionBoardRaw } from "@gaia-project/engine/src/faction-boards";
 import { GAIA_FORMER_COST } from "@gaia-project/engine/src/faction-boards/types";
 import { factionColor, factionPiecePlanet, planetFill } from "../graphics/utils";
 import { buildingName } from "./building";

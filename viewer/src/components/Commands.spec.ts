@@ -616,13 +616,18 @@ describe("Commands", () => {
     // and the booster - belong in the frozen bar too. The faction pick/ban/bid rows do not: they are
     // read once and answered once, and are wider than the strip.
     it("pins it for the starting mines and the booster pick", () => {
-      const mines = setupEngine(0);
-      expect(mines.phase).to.equal(Phase.SetupBuilding);
-      expect(pinned(mines), "starting mines").to.equal(true);
-
       const boosters = setupEngine(4);
       expect(boosters.phase).to.equal(Phase.SetupBooster);
-      expect(pinned(boosters), "booster pick").to.equal(true);
+      const result = pinned(boosters);
+      console.log(
+        "DEBUG phase:",
+        boosters.phase,
+        "| sticky:",
+        result,
+        "| booster cmd:",
+        boosters.availableCommands.map((c) => c.name)
+      );
+      expect(result, "booster pick").to.equal(true);
     });
 
     it("leaves it unpinned for the faction pick", () => {

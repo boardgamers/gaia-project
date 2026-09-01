@@ -21,7 +21,7 @@ import {
   TechTile,
 } from "@gaia-project/engine";
 import { UPGRADE_RESEARCH_COST } from "@gaia-project/engine/src/available/types";
-import { AnyTechTile, AnyTechTilePos } from "@gaia-project/engine/src/enums";
+import type { AnyTechTile, AnyTechTilePos } from "@gaia-project/engine/src/enums";
 import { tradeCostSource, tradeSource } from "@gaia-project/engine/src/events";
 import { boosterEvents } from "@gaia-project/engine/src/tiles/boosters";
 import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
@@ -30,8 +30,10 @@ import { resourceData } from "../../data/resources";
 import { colorCodes } from "../color-codes";
 import { sum, uniq } from "../lodash-utils";
 import { ChartGroup, ChartSource } from "./charts";
-import { resourceCounter, ResourceSimulatorChanges } from "./resource-counter";
-import { ChartSummary, ExtractLog, SimpleSourceFactory } from "./simple-charts";
+import type { ResourceSimulatorChanges } from "./resource-counter";
+import { resourceCounter } from "./resource-counter";
+import type { SimpleSourceFactory } from "./simple-charts";
+import { ChartSummary, ExtractLog } from "./simple-charts";
 
 export const balanceSheetResources = [
   Resource.Credit,

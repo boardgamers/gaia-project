@@ -11,7 +11,7 @@ import Engine, {
 } from "@gaia-project/engine";
 import { factionName } from "../../data/factions";
 import { playerColor } from "../../graphics/colors";
-import { ChartKind } from "./chart-factory";
+import type { ChartKind } from "./chart-factory";
 
 export type ChartStyle = "table" | "chart";
 

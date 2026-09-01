@@ -5,9 +5,11 @@ import { orderBy } from "../lodash-utils";
 import { deltaCounter } from "../utils";
 import { terranChargeExtractLog } from "./charge";
 import { ChartSource } from "./charts";
-import { federationDiscount, GetFederationBonusArg } from "./federations";
+import type { GetFederationBonusArg } from "./federations";
+import { federationDiscount } from "./federations";
 import { nevlasPowerLeverage, taklonsPowerLeverage } from "./power-leverage";
-import { ChartSummary, commandCounter, ExtractLog, planetCounter, SimpleSourceFactory } from "./simple-charts";
+import type { SimpleSourceFactory } from "./simple-charts";
+import { ChartSummary, commandCounter, ExtractLog, planetCounter } from "./simple-charts";
 import { TerraformingSteps } from "./terraforming";
 
 type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never };

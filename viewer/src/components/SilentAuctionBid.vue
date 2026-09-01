@@ -91,7 +91,7 @@
 <script lang="ts">
 import { Command, MAX_SILENT_BID, silentAuctionBidError } from "@gaia-project/engine";
 import { Component } from "vue-property-decorator";
-import { SealedBidVariant } from "../logic/sealed-bid";
+import type { SealedBidVariant } from "../logic/sealed-bid";
 import FactionSheetButton from "./FactionSheetButton.vue";
 import SealedBidPanel from "./SealedBidPanel";
 import SilentAuctionInfo from "./SilentAuctionInfo.vue";

@@ -58,7 +58,7 @@ import { spaceshipTechSpec } from "@gaia-project/engine/src/tiles/spaceship-tech
 import { techTileEventSource, techTileEventWithSource } from "@gaia-project/engine/src/tiles/techs";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { ButtonData } from "../data";
+import type { ButtonData } from "../data";
 import { eventDesc } from "../data/event";
 import { spaceshipTechDisplayEvent, techTileData } from "../data/tech-tiles";
 import { prependShortcut } from "../logic/buttons/shortcuts";

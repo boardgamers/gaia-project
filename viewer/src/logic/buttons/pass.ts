@@ -10,12 +10,12 @@ import Engine, {
   Reward,
 } from "@gaia-project/engine";
 import { boosterEvents } from "@gaia-project/engine/src/tiles/boosters";
-import { ButtonData, ButtonWarning, WarningWithKey } from "../../data";
+import type { ButtonData, ButtonWarning, WarningWithKey } from "../../data";
 import { boosterData } from "../../data/boosters";
 import { translateResources } from "../../data/resources";
 import { WarningKey } from "../../data/warnings";
 import { parseAutoChargeMaxPassedRoundLeech, parseAutoChargePreference } from "../auto-decide";
-import { CommandController } from "./types";
+import type { CommandController } from "./types";
 import { autoClickButton, confirmationButton, symbolButton, textButton } from "./utils";
 import { chargeIncomeWarning, passWarningButton, rewardWarnings } from "./warnings";
 

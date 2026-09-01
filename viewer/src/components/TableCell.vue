@@ -16,9 +16,9 @@
 </template>
 <script lang="ts">
 import { PowerArea, Resource as ResourceEnum } from "@gaia-project/engine";
-import { InfoTableCell } from "src/logic/table/types";
+import type { InfoTableCell } from "src/logic/table/types";
 import { Component, Prop, Vue } from "vue-property-decorator";
-import { FastConversionEvent } from "../data/actions";
+import type { FastConversionEvent } from "../data/actions";
 import { UiMode } from "../store";
 import RichTextView from "./Resources/RichTextView.vue";
 @Component({

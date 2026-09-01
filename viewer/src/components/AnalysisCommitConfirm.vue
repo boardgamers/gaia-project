@@ -60,7 +60,8 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { AnalysisCommitCut, AnalysisCommitPlan, MAX_COMMITTABLE_MOVES } from "../logic/analysis";
+import type { AnalysisCommitCut, AnalysisCommitPlan } from "../logic/analysis";
+import { MAX_COMMITTABLE_MOVES } from "../logic/analysis";
 
 const EMPTY_PLAN: AnalysisCommitPlan = { live: null, queued: [], dropped: [], cut: null, limit: "line" };
 

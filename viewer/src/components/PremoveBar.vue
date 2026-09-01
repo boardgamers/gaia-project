@@ -306,7 +306,7 @@ import Engine, { Player, PlayerEnum } from "@gaia-project/engine";
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { factionName } from "../data/factions";
 import { researchData } from "../data/research";
-import {
+import type {
   CancelTriggerLeechConfig as CancelTriggerLeechConfigType,
   CancelTriggerRow,
   PremoveFailureRow,
@@ -314,7 +314,8 @@ import {
   PremoveRow,
 } from "../logic/hosted-types";
 import { buildSequentialChainPreview } from "../logic/premove-preview";
-import { attachZoomCompensation, ZoomCompensationHandle } from "../logic/zoom-compensation";
+import type { ZoomCompensationHandle } from "../logic/zoom-compensation";
+import { attachZoomCompensation } from "../logic/zoom-compensation";
 import CancelTriggerLeechConfig from "./CancelTriggerLeechConfig.vue";
 import CancelTriggerPicker from "./CancelTriggerPicker.vue";
 import CancelTriggerRefine from "./CancelTriggerRefine.vue";

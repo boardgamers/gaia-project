@@ -5,7 +5,8 @@
     "lint-staged": "lint-staged",
     "postinstall": "husky install",
     "prettier": "prettier --write .",
-    "prettier-check": "prettier --check ."
+    "prettier-check": "prettier --check .",
+    "test": "vitest run"
   },
   "devDependencies": {
     "husky": "^5.0.9",

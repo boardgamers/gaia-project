@@ -1,12 +1,14 @@
 import Engine, { BoardAction, Command, Faction, GaiaHex, Player, ResearchField } from "@gaia-project/engine";
-import { AnyTechTilePos, ArtifactToken, Spaceship } from "@gaia-project/engine/src/enums";
+import type { AnyTechTilePos } from "@gaia-project/engine/src/enums";
+import { ArtifactToken, Spaceship } from "@gaia-project/engine/src/enums";
 import { CubeCoordinates } from "hexagrid";
 import Vue, { markRaw } from "vue";
 import Vuex from "vuex";
-import { ButtonData, GameContext, HexSelection, HighlightHex, SpecialActionIncome } from "./data";
-import { FastConversionEvent, MapMode } from "./data/actions";
-import { ExecuteBack, FastConversionTooltips } from "./logic/buttons/types";
-import {
+import type { ButtonData, GameContext, HexSelection, HighlightHex, SpecialActionIncome } from "./data";
+import type { FastConversionEvent, MapMode } from "./data/actions";
+import type { FastConversionTooltips } from "./logic/buttons/types";
+import { ExecuteBack } from "./logic/buttons/types";
+import type {
   CancelTriggerKind,
   CancelTriggerLeechConfig,
   CancelTriggerRow,
@@ -16,14 +18,13 @@ import {
   SealedBidEntry,
   SealedBidStatus,
 } from "./logic/hosted-types";
-import { PresenceState } from "./logic/presence";
+import type { PresenceState } from "./logic/presence";
+import type { CommandObject, MovesSlice } from "./logic/recent";
 import {
   boardActionMoves,
   commandArgsByFaction,
-  CommandObject,
   factionsByCommandArg,
   hexMovesByHex,
-  MovesSlice,
   movesToHexes,
   opponentMovesSinceLastTurn,
   parseCommands,

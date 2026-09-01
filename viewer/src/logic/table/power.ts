@@ -1,6 +1,6 @@
 import { PlayerData, PowerArea, Resource } from "@gaia-project/engine";
 import { incomeCell, realIncomeCell, resourceCell } from "./resource";
-import { ConversionSupport, PlayerTable } from "./types";
+import type { ConversionSupport, PlayerTable } from "./types";
 
 function powerArea(a: PowerArea, d: PlayerData): string | number {
   return d.brainstone == a ? `${d.power[a]},B` : d.power[a];

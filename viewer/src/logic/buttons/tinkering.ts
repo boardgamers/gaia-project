@@ -1,6 +1,7 @@
-import { AvailableCommand, Command } from "@gaia-project/engine";
+import type { AvailableCommand } from "@gaia-project/engine";
+import { Command } from "@gaia-project/engine";
 import { TinkeringTile } from "@gaia-project/engine/src/enums";
-import { ButtonData } from "../../data";
+import type { ButtonData } from "../../data";
 import { autoClickButton, textButton } from "./utils";
 
 const tinkeringTileLabels: Record<TinkeringTile, string> = {

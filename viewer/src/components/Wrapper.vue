@@ -102,7 +102,8 @@ import {
 } from "../offline-game";
 import { buildScenarioUrl, loadScenarioEngineData, selfContainedScenarios } from "../self-contained-scenarios";
 import { buildStateUrl } from "../self-contained-state";
-import { LoadFromJson, LoadFromJsonType } from "../store";
+import type { LoadFromJson } from "../store";
+import { LoadFromJsonType } from "../store";
 import Game from "./Game.vue";
 
 function currentOfflineSavedAt(): string {

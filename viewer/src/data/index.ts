@@ -1,9 +1,9 @@
 import { BoardAction, Booster, Building, GaiaHex } from "@gaia-project/engine";
-import { AnyTechTilePos } from "@gaia-project/engine/src/enums";
+import type { AnyTechTilePos } from "@gaia-project/engine/src/enums";
 import { CubeCoordinates } from "hexagrid";
-import { RichText } from "../graphics/rich-text";
-import { FastConversionTooltips, MoveButtonController } from "../logic/buttons/types";
-import { MapMode } from "./actions";
+import type { RichText } from "../graphics/rich-text";
+import type { FastConversionTooltips, MoveButtonController } from "../logic/buttons/types";
+import type { MapMode } from "./actions";
 
 export type WarningWithKey = { disableKey: string; message: string };
 

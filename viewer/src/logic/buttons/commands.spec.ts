@@ -8,7 +8,7 @@ import {
   Power,
 } from "@gaia-project/engine";
 import { expect } from "chai";
-import { WarningWithKey } from "../../data";
+import type { WarningWithKey } from "../../data";
 import { freeActionButton } from "./conversion";
 import { boosterWarning } from "./pass";
 import { withShortcut } from "./shortcuts";

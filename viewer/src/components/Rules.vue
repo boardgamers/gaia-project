@@ -89,7 +89,7 @@
 </template>
 
 <script lang="ts">
-import { FactionBoardRaw } from "@gaia-project/engine/src/faction-boards";
+import type { FactionBoardRaw } from "@gaia-project/engine/src/faction-boards";
 import { factionName } from "../data/factions";
 
 import Engine, { Expansion, Faction, factionVariantBoard, hasExpansion } from "@gaia-project/engine";

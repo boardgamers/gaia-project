@@ -2,7 +2,8 @@ import Engine, { Planet } from "@gaia-project/engine";
 import { planetNames, remainingPlanets } from "../../data/planets";
 import { planetColorVar } from "../../graphics/colors";
 import { countBy } from "../lodash-utils";
-import { defaultBackground, emptyCell, PlayerColumn, PlayerTable } from "./types";
+import type { PlayerColumn, PlayerTable } from "./types";
+import { defaultBackground, emptyCell } from "./types";
 
 export function planets(engine: Engine): PlayerTable {
   if (!engine.map) {

@@ -11,15 +11,17 @@ import Engine, {
   Spaceship,
   TechTilePos,
 } from "@gaia-project/engine";
-import { AnyTechTilePos } from "@gaia-project/engine/src/enums";
+import type { AnyTechTilePos } from "@gaia-project/engine/src/enums";
 import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
-import { RichText } from "../graphics/rich-text";
+import type { RichText } from "../graphics/rich-text";
 import { factionLogColors, factionLogTextColors, lightFactionLogColors } from "../graphics/utils";
 import { BuildingCounter } from "../logic/charts/buildings";
 import { ResearchCounter } from "../logic/charts/research";
 import { newResourceSimulator } from "../logic/charts/resource-counter";
-import { ExtractLogArg, processLogEntry } from "../logic/charts/simple-charts";
-import { MovesSlice, ownTurn, parsedMove, ParsedMove } from "../logic/recent";
+import type { ExtractLogArg } from "../logic/charts/simple-charts";
+import { processLogEntry } from "../logic/charts/simple-charts";
+import type { MovesSlice, ParsedMove } from "../logic/recent";
+import { ownTurn, parsedMove } from "../logic/recent";
 import { playerTableRow } from "../logic/table/info-table";
 import { logPlayerTables } from "../logic/table/player";
 import { boosterData } from "./boosters";

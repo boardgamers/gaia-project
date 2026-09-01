@@ -2,7 +2,8 @@ import { Command, Faction, leechPossible, MaxLeech, Phase, Resource, Reward } fr
 import { ChartSource, extractChanges } from "./charts";
 import { BuildingPowerValueCounter } from "./federations";
 import { resourceCounter } from "./resource-counter";
-import { ChartSummary, ExtractChange, ExtractLog, ExtractLogEntry, SimpleSourceFactory } from "./simple-charts";
+import type { ExtractChange, ExtractLogEntry, SimpleSourceFactory } from "./simple-charts";
+import { ChartSummary, ExtractLog } from "./simple-charts";
 
 enum LeechSource {
   leech1 = "leech1",

@@ -1,8 +1,9 @@
 import Engine, { Building, factionBoard, factionVariantBoard, Player } from "@gaia-project/engine";
 import { allBuildings, buildingData, buildingName, buildingShortcut } from "../../data/building";
 import { buildingDesc } from "../../data/factions";
-import { RichText, richTextBuilding } from "../../graphics/rich-text";
-import { PlayerTable } from "./types";
+import type { RichText } from "../../graphics/rich-text";
+import { richTextBuilding } from "../../graphics/rich-text";
+import type { PlayerTable } from "./types";
 import { skipZero } from "./util";
 
 function buildingTooltip(p: Player, engine: Engine, b: Building): string {

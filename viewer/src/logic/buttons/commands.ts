@@ -1,7 +1,8 @@
 import Engine, { AvailableCommand, Command, Player } from "@gaia-project/engine";
-import { ButtonData } from "../../data";
+import type { ButtonData } from "../../data";
 import { boardActionsButton, specialActionsButton } from "./actions";
-import { AutoClickStrategy, checkAutoClick } from "./autoClick";
+import type { AutoClickStrategy } from "./autoClick";
+import { checkAutoClick } from "./autoClick";
 import { buildButtons } from "./buildings";
 import { fastConversionClick, freeAndBurnButton } from "./conversion";
 import { deadEndButton } from "./dead-end";
@@ -23,7 +24,7 @@ import { sectorRotationButton, setupButton } from "./setup";
 import { moveShipButton } from "./ships";
 import { finalizeShortcutsAndParents } from "./shortcuts";
 import { chooseTinkeringTileButton } from "./tinkering";
-import { AvailableConversions, CommandController } from "./types";
+import type { AvailableConversions, CommandController } from "./types";
 import { autoClickButton, hexMap } from "./utils";
 
 function commandButton(

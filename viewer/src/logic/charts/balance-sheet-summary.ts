@@ -1,13 +1,10 @@
 import { Expansion, Resource } from "@gaia-project/engine";
-import {
-  balanceSheetEventSources,
-  balanceSheetExtractLog,
-  balanceSheetResourceName,
-  BalanceSheetSourceTemplate,
-} from "./balance-sheet";
+import type { BalanceSheetSourceTemplate } from "./balance-sheet";
+import { balanceSheetEventSources, balanceSheetExtractLog, balanceSheetResourceName } from "./balance-sheet";
 import { ChartGroup, ChartSource } from "./charts";
 import { resourceSources } from "./resources";
-import { ChartSummary, SimpleSourceFactory } from "./simple-charts";
+import type { SimpleSourceFactory } from "./simple-charts";
+import { ChartSummary } from "./simple-charts";
 
 class BalanceSheetResourceSource extends ChartSource<string> {
   resource: Resource;

@@ -7,7 +7,7 @@ import Engine, {
   PowerArea,
   Reward,
 } from "@gaia-project/engine";
-import { ButtonData, ButtonWarning } from "../../data";
+import type { ButtonData, ButtonWarning } from "../../data";
 import { richText, richTextRewards } from "../../graphics/rich-text";
 import { withShortcut } from "./shortcuts";
 import { textButton } from "./utils";

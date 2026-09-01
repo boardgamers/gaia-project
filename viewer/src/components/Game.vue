@@ -377,20 +377,22 @@ import Engine, {
 import { currentPlayer } from "@gaia-project/engine/wrapper";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { LogPlacement } from "../data";
+import type { LogPlacement } from "../data";
 import { factionName } from "../data/factions";
 import { orderedPlayers } from "../data/player";
-import {
-  advancePastOwnPass,
+import type {
   AnalysisCommitPlan,
-  analysisCommitPrefix,
   AnalysisEntry,
-  analysisFactionPool,
   AnalysisLineSet,
-  analysisLineSetSize,
   AnalysisLineSummary,
   AnalysisMoveEntry,
   AnalysisStatus,
+} from "../logic/analysis";
+import {
+  advancePastOwnPass,
+  analysisCommitPrefix,
+  analysisFactionPool,
+  analysisLineSetSize,
   applyLeechAdjustment,
   assumedPowerOf,
   buildAnalysisLineup,
@@ -413,7 +415,7 @@ import {
   summarizeAnalysisLine,
 } from "../logic/analysis";
 import { ExecuteBack } from "../logic/buttons/types";
-import {
+import type {
   CancelTriggerKind,
   CancelTriggerLeechConfig as CancelTriggerLeechConfigType,
   CancelTriggerRow,
@@ -424,7 +426,8 @@ import { buildSequentialChainPreview } from "../logic/premove-preview";
 import { parseCommands } from "../logic/recent";
 import { BASE_RESEARCH_BOARD_HEIGHT, isBeforeRound1, researchBoardHeight } from "../logic/utils";
 import { isDesktopViewport, watchDesktopViewport } from "../logic/viewport";
-import { SealedBidBackend, UiMode } from "../store";
+import type { SealedBidBackend } from "../store";
+import { UiMode } from "../store";
 import AdvancedLog from "./AdvancedLog.vue";
 import AnalysisPanel from "./AnalysisPanel.vue";
 import BoardAction from "./BoardAction.vue";

@@ -5,7 +5,7 @@ import { expect } from "chai";
 import SpaceMap from "../../components/SpaceMap.vue";
 import { makeStore } from "../../store";
 import { examineArtifactButton, exploreButton, instantGaiaformingButton, placePowerRingButton } from "./lost-fleet";
-import { CommandController } from "./types";
+import type { CommandController } from "./types";
 
 function rewardStrings(rewards: Reward[]): string[] {
   return rewards.map((r) => r.toString());

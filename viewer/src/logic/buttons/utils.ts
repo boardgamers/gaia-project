@@ -1,6 +1,7 @@
 import Engine, { AvailableHex, GaiaHex } from "@gaia-project/engine";
-import { ButtonData, HexSelection, HighlightHex, HighlightHexData } from "../../data";
-import { richText, RichText } from "../../graphics/rich-text";
+import type { ButtonData, HexSelection, HighlightHex, HighlightHexData } from "../../data";
+import type { RichText } from "../../graphics/rich-text";
+import { richText } from "../../graphics/rich-text";
 import { tooltipWithShortcut, withShortcut } from "./shortcuts";
 import { translateWarnings } from "./warnings";
 

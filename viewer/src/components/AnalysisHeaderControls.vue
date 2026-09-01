@@ -67,7 +67,7 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { AnalysisOverdraft, AnalysisStatus } from "../logic/analysis";
+import type { AnalysisOverdraft, AnalysisStatus } from "../logic/analysis";
 
 export default Vue.extend({
   name: "AnalysisHeaderControls",

@@ -1,5 +1,5 @@
 import { AdvTechTile, Event, SpaceshipTechTile, TechTile } from "@gaia-project/engine";
-import { AnyTechTile } from "@gaia-project/engine/src/enums";
+import type { AnyTechTile } from "@gaia-project/engine/src/enums";
 import { colorCodes } from "../logic/color-codes";
 
 export type TileTileData = {

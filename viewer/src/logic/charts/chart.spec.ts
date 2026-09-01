@@ -2,7 +2,7 @@ import Engine, { Faction, LogEntry, Player, ResearchField, Reward } from "@gaia-
 import { expect } from "chai";
 import { runJsonTests } from "../test-utils";
 import { ChartSetup } from "./chart-factory";
-import { ChartType } from "./charts";
+import type { ChartType } from "./charts";
 import { countResearch, ResearchCounter } from "./research";
 
 export function createTestChartConfig(setup: ChartSetup, chartSelect: string, chartType: string, engine: Engine) {
@@ -22,16 +22,18 @@ export function createTestChartConfig(setup: ChartSetup, chartSelect: string, ch
 
 describe("Chart", () => {
   describe("initial research", () => {
-    const p = {
-      board: {
-        income: [
-          {
-            rewards: Reward.parse("up-nav,up-nav"),
-          },
-        ],
-      },
-    } as Player;
-    expect(new ResearchCounter(p).playerData.research[ResearchField.Navigation]).to.equal(2);
+    it("counts income board research as starting levels", () => {
+      const p = {
+        board: {
+          income: [
+            {
+              rewards: Reward.parse("up-nav,up-nav"),
+            },
+          ],
+        },
+      } as Player;
+      expect(new ResearchCounter(p).playerData.research[ResearchField.Navigation]).to.equal(2);
+    });
   });
 
   describe("count research", () => {

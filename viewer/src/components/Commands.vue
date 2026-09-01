@@ -415,36 +415,39 @@ import Engine, {
   Spaceship,
   TechTilePos,
 } from "@gaia-project/engine";
-import { FactionCustomization } from "@gaia-project/engine/src/engine";
+import type { FactionCustomization } from "@gaia-project/engine/src/engine";
 import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
 import { CubeCoordinates } from "hexagrid";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { ActionPayload, SubscribeActionOptions, SubscribeOptions } from "vuex";
-import {
+import type {
   ButtonData,
   GameContext,
   HexSelection,
   HighlightHex,
   ModalButtonData,
   SpecialActionIncome,
-  WarningsPreference,
 } from "../data";
+import { WarningsPreference } from "../data";
 import { factionName, factionShortcut } from "../data/factions";
 import { enabledButtonWarnings, isWarningEnabled } from "../data/warnings";
-import { richText, RichText, richTextPlanet } from "../graphics/rich-text";
+import type { RichText } from "../graphics/rich-text";
+import { richText, richTextPlanet } from "../graphics/rich-text";
 import { factionColor } from "../graphics/utils";
-import { AnalysisCommitPlan, AnalysisLineSummary, AnalysisStatus } from "../logic/analysis";
+import type { AnalysisCommitPlan, AnalysisLineSummary, AnalysisStatus } from "../logic/analysis";
 import { encodeAutoChargePreference } from "../logic/auto-decide";
 import { autoClickStrategy } from "../logic/buttons/autoClick";
 import { commandButtons, replaceRepeat } from "../logic/buttons/commands";
-import { CommandController, ExecuteBack, FastConversionTooltips } from "../logic/buttons/types";
+import type { CommandController, FastConversionTooltips } from "../logic/buttons/types";
+import { ExecuteBack } from "../logic/buttons/types";
 import { buttonStringLabel, callOnShow } from "../logic/buttons/utils";
 import { isLegacySequentialBidRound } from "../logic/sealed-bid";
 import { supportsHoverTooltips } from "../logic/tooltip";
 import { isTypingTarget } from "../logic/typing-target";
 import { chargePowerToPay } from "../logic/utils";
-import { attachZoomCompensation, ZoomCompensationHandle } from "../logic/zoom-compensation";
+import type { ZoomCompensationHandle } from "../logic/zoom-compensation";
+import { attachZoomCompensation } from "../logic/zoom-compensation";
 import AnalysisCommitConfirm from "./AnalysisCommitConfirm.vue";
 import AnalysisHeaderControls from "./AnalysisHeaderControls.vue";
 import AnalysisLineTabs from "./AnalysisLineTabs.vue";

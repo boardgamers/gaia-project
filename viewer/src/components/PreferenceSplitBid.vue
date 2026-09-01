@@ -93,7 +93,7 @@
 <script lang="ts">
 import { Command, Faction, preferenceSplitBidError } from "@gaia-project/engine";
 import { Component } from "vue-property-decorator";
-import { SealedBidVariant } from "../logic/sealed-bid";
+import type { SealedBidVariant } from "../logic/sealed-bid";
 import FactionSheetButton from "./FactionSheetButton.vue";
 import PreferenceSplitInfo from "./PreferenceSplitInfo.vue";
 import SealedBidPanel from "./SealedBidPanel";

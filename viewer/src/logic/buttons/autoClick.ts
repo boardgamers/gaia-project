@@ -1,5 +1,5 @@
-import { ButtonData } from "../../data";
-import { CommandController } from "./types";
+import type { ButtonData } from "../../data";
+import type { CommandController } from "./types";
 import { addOnShow } from "./utils";
 
 export enum AutoClickPolicy {

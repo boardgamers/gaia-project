@@ -8,9 +8,10 @@ import {
   Reward,
   SpaceshipTechTile,
 } from "@gaia-project/engine";
-import { AnyTechTile, AnyTechTilePos, Spaceship } from "@gaia-project/engine/src/enums";
-import { SpaceshipActionType } from "@gaia-project/engine/src/spaceships";
-import { SpecialActionIncome } from "../data";
+import type { AnyTechTile, AnyTechTilePos } from "@gaia-project/engine/src/enums";
+import { Spaceship } from "@gaia-project/engine/src/enums";
+import type { SpaceshipActionType } from "@gaia-project/engine/src/spaceships";
+import type { SpecialActionIncome } from "../data";
 
 export type RichTextBuilding = { type: Building; faction: Faction; count: number; skipResource: boolean };
 

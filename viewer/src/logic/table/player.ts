@@ -9,7 +9,8 @@ import { power } from "./power";
 import { research } from "./research";
 import { resourceColumn } from "./resource";
 import { assets, finals, stats } from "./stats";
-import { ConversionSupport, defaultBackground, InfoTableFlex, PlayerTable } from "./types";
+import type { ConversionSupport, PlayerTable } from "./types";
+import { defaultBackground, InfoTableFlex } from "./types";
 
 function general(engine: Engine, compact: boolean, showIncome: (Player) => boolean): PlayerTable {
   return {

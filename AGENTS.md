@@ -10,25 +10,23 @@ the BGS iframe wrapper).
 pnpm install                       # pnpm 10+; CI=true to avoid the modules-purge prompt in scripts
 cd engine && npm test              # mocha + ts-node (TS via tsconfig "module": "commonjs")
 cd engine && npm run build         # tsc -> dist/ (wrapper.js, index.js)
-cd viewer && npm test              # vue-cli unit tests (see note on NODE_OPTIONS below)
-cd viewer && npm run package       # lib build -> dist/package/viewer.umd.js + .min.js + .css
+cd viewer && npm test              # vitest (jsdom); needs --max-old-space-size=12288
+cd viewer && npm run package       # vite lib build -> dist/package/viewer.umd.js + .css + .map
 ```
 
-- Viewer unit tests: `NODE_OPTIONS="--localstorage-file=/tmp/gaia-test-ls.json --max-old-space-size=12288"`.
-- **Always `rm -rf viewer/node_modules/.cache` before `npm run package`** if you changed TS
-  compiler options or anything that feeds cache-loader. Stale cache-loader output has shipped
-  broken bundles twice (iterator-spread helper regressing, and a `vue_1.default` interop crash).
-  When in doubt, nuke the cache — it is the single biggest "works on my rebuild, broke on theirs"
-  trap in this repo.
-- The published UMD keeps `vue` and `bootstrap-vue` **external** — the host page provides them
-  (`window.Vue`, `window.BootstrapVue`). Never import them in a way that assumes a `.default`
-  shape; test any bundler/interop change by loading the built `viewer.umd.js` in a real browser
-  page that loads Vue 2 from a CDN, then exercising the viewer (`window.gaiaViewer.launch`).
-- Downlevel safety: do NOT use `[...someMap.values()]` / `[...x.entries()]` /
-  `[...Array(n).keys()]` iterator spreads in shipped code. Under this toolchain they can
-  compile to TS's `__spreadArrays` helper, which reads `.length` on iterators → `Array(NaN)` →
-  `RangeError: invalid array length` at runtime (this broke "Rotate sectors" in 5.13.0).
-  Use `Array.from(...)` — safe under every downlevel chain.
+- Viewer unit tests: `NODE_OPTIONS="--max-old-space-size=12288" npm test` (the suite peaks ~10 GB).
+- The viewer builds with **Vite 8 + rolldown** (`vite.config.ts`), tests with **vitest 4**
+  (`vitest.config.ts`). Target is `esnext` — no downlevel helpers, no cache-loader, no webpack.
+  The old vue-cli/webpack toolchain is gone; `vue-cli-service serve` still exists for the dev app.
+- The published IIFE keeps `vue` and `bootstrap-vue` **external** — the host page provides them
+  (`window.Vue`, `window.BootstrapVue`). Vite externals resolve to plain global reads (no
+  `.default` unwrapping), which is what CDN Vue 2 needs. Test any bundler change by loading the
+  built `viewer.umd.js` in a real browser page that loads Vue 2 from a CDN, then exercising the
+  viewer (`window.gaiaViewer.launch`).
+- `process.env` is baked to `({})` via vite `define` (vue-cli's DefinePlugin used to supply it);
+  `VUE_APP_*` env prefs therefore default to undefined/false in the lib build, as before.
+- `import type` matters now: rolldown errors on value-imports of type-only exports. When adding
+  an import of something that's only a type/interface, write `import type`.
 
 ## Publishing to boardgamers.space
 

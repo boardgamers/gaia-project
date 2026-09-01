@@ -19,7 +19,7 @@
 import Engine, { AuctionVariant, Phase, Planet, Player, PlayerEnum } from "@gaia-project/engine";
 import { Component, Prop, Vue } from "vue-property-decorator";
 import { factionPiecePlanet } from "../graphics/utils";
-import { PresenceStatus } from "../logic/presence";
+import type { PresenceStatus } from "../logic/presence";
 import { phaseBeforeSetupBuilding } from "../logic/utils";
 
 @Component

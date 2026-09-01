@@ -1,5 +1,5 @@
 import Engine from "@gaia-project/engine";
-import { expect } from "chai";
+import type { expect } from "chai";
 import fs from "fs";
 
 export type JsonTester = {

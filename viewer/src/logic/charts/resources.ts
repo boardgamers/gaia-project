@@ -5,13 +5,8 @@ import { resourceData } from "../../data/resources";
 import { colorCodes } from "../color-codes";
 import { sum } from "../lodash-utils";
 import { ChartSource } from "./charts";
-import {
-  ChartSummary,
-  commandCounterArg0EqualsSource,
-  ExtractLog,
-  planetCounter,
-  SimpleSourceFactory,
-} from "./simple-charts";
+import type { SimpleSourceFactory } from "./simple-charts";
+import { ChartSummary, commandCounterArg0EqualsSource, ExtractLog, planetCounter } from "./simple-charts";
 
 const range = "range";
 

@@ -9,15 +9,11 @@ import Engine, {
   Player,
 } from "@gaia-project/engine";
 import { sortBy } from "lodash";
-import { ButtonData, HighlightHex, HighlightHexData } from "../../data";
-import {
-  FederationChoice,
-  federationChoiceDescription,
-  federationChoiceRewards,
-  federationChoiceShortcut,
-} from "../../data/federations";
+import type { ButtonData, HighlightHex, HighlightHexData } from "../../data";
+import type { FederationChoice } from "../../data/federations";
+import { federationChoiceDescription, federationChoiceRewards, federationChoiceShortcut } from "../../data/federations";
 import { tooltipWithShortcut } from "./shortcuts";
-import { CommandController } from "./types";
+import type { CommandController } from "./types";
 import { autoClickButton, customHexSelection, textButton } from "./utils";
 import { buttonWarnings, commonButtonWarning, resourceWasteWarning, translateWarnings } from "./warnings";
 

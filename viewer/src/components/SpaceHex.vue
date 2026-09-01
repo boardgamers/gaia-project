@@ -138,22 +138,26 @@ import Engine, {
   shipsInHex,
   Spaceship,
 } from "@gaia-project/engine";
-import { Ship } from "@gaia-project/engine/src/enums";
+import type { Ship } from "@gaia-project/engine/src/enums";
 import { max } from "lodash";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { HexSelection, HighlightHex, HighlightHexData, WarningsPreference } from "../data";
-import { MapMode, MapModeType } from "../data/actions";
+import type { HexSelection, HighlightHex, HighlightHexData } from "../data";
+import { WarningsPreference } from "../data";
+import type { MapMode } from "../data/actions";
+import { MapModeType } from "../data/actions";
 import { buildingData, buildingName } from "../data/building";
 import { factionName } from "../data/factions";
 import { planetNames } from "../data/planets";
 import { splitCostBonus } from "../data/resources";
 import { spaceshipColors } from "../data/spaceships";
 import { isWarningEnabled } from "../data/warnings";
-import { corners, FederationLine, playerFederationLines } from "../graphics/hex";
+import type { FederationLine } from "../graphics/hex";
+import { corners, playerFederationLines } from "../graphics/hex";
 import { factionPiecePlanet } from "../graphics/utils";
 import { isFree } from "../logic/buttons/utils";
-import { CommandObject, hexMoveLabel } from "../logic/recent";
+import type { CommandObject } from "../logic/recent";
+import { hexMoveLabel } from "../logic/recent";
 import { leechPlanets, radiusTranslate, upgradableBuildingsOfOtherPlayers } from "../logic/utils";
 import Building from "./Building.vue";
 import Planet from "./Planet.vue";

@@ -11,12 +11,13 @@ import {
   Resource,
   Reward,
 } from "@gaia-project/engine";
-import { ButtonData } from "../../data";
-import { FastConversion, FastConversionEvent, freeActionShortcuts } from "../../data/actions";
+import type { ButtonData } from "../../data";
+import type { FastConversion, FastConversionEvent } from "../../data/actions";
+import { freeActionShortcuts } from "../../data/actions";
 import { translateResources } from "../../data/resources";
 import { richTextArrow, richTextRewards } from "../../graphics/rich-text";
 import { max, minBy, range, sortBy } from "../lodash-utils";
-import { AvailableConversions, FastConversionTooltips } from "./types";
+import type { AvailableConversions, FastConversionTooltips } from "./types";
 import { autoClickButton, confirmationButton, symbolButton } from "./utils";
 import { resourceWasteWarning } from "./warnings";
 

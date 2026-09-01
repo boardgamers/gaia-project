@@ -330,12 +330,13 @@ import Engine, {
   Player,
   SpaceshipFederation,
 } from "@gaia-project/engine";
-import { AnyTechTilePos } from "@gaia-project/engine/src/enums";
+import type { AnyTechTilePos } from "@gaia-project/engine/src/enums";
 import { lostFleetTerraformingBoard } from "@gaia-project/engine/src/factions";
 import { techTileEventSource } from "@gaia-project/engine/src/tiles/techs";
 import Vue from "vue";
 import { Component, Prop, Watch } from "vue-property-decorator";
-import { MapMode, MapModeType } from "../data/actions";
+import type { MapMode } from "../data/actions";
+import { MapModeType } from "../data/actions";
 import { terraformCost3Set } from "../data/faction-overview";
 import { effectivePreviewPlayer } from "../data/faction-preview";
 import { factionData, factionName, planetsWithSteps } from "../data/factions";

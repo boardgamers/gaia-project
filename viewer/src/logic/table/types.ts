@@ -1,7 +1,7 @@
 import { Player, PlayerEnum, PowerArea, Resource as ResourceEnum } from "@gaia-project/engine";
 import { BvTableField } from "bootstrap-vue/src/components/table";
-import { CellStyle } from "../../graphics/colors";
-import { RichText } from "../../graphics/rich-text";
+import type { CellStyle } from "../../graphics/colors";
+import type { RichText } from "../../graphics/rich-text";
 import { UiMode } from "../../store";
 
 export type Convert = ResourceEnum | PowerArea;

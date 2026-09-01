@@ -13,11 +13,11 @@ import {
 import { researchEvents } from "@gaia-project/engine/src/research-tracks";
 import { spaceshipTechSpec } from "@gaia-project/engine/src/tiles/spaceship-techs";
 import { techTileEvents } from "@gaia-project/engine/src/tiles/techs";
-import { ButtonData, ButtonWarning } from "../../data";
+import type { ButtonData, ButtonWarning } from "../../data";
 import { eventDesc } from "../../data/event";
 import { researchData } from "../../data/research";
 import { techTileData } from "../../data/tech-tiles";
-import { CommandController } from "./types";
+import type { CommandController } from "./types";
 import { autoClickButton, confirmationButton, symbolButton, textButton } from "./utils";
 import { resourceWasteWarning } from "./warnings";
 

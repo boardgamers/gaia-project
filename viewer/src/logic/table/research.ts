@@ -1,11 +1,12 @@
 import Engine, { lastTile, ResearchField, SpaceshipTechTile } from "@gaia-project/engine";
-import { AnyTechTile } from "@gaia-project/engine/src/enums";
+import type { AnyTechTile } from "@gaia-project/engine/src/enums";
 import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
 import { federationData } from "../../data/federations";
 import { researchColorVar, researchData, researchLevelDesc } from "../../data/research";
 import { techTileData } from "../../data/tech-tiles";
 import { colorCodes } from "../color-codes";
-import { Cell, defaultBackground, InfoTableFlex, PlayerColumn, PlayerTable } from "./types";
+import type { Cell, PlayerColumn, PlayerTable } from "./types";
+import { defaultBackground, InfoTableFlex } from "./types";
 import { deactivated, skipZero } from "./util";
 
 export function techCell(t: AnyTechTile | SpaceshipTechTile, remaining: number): Cell {

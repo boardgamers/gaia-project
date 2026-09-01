@@ -14,10 +14,11 @@ import SpaceMap from "@gaia-project/engine/src/map";
 import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
 import { federationData } from "../../data/federations";
 import { sum } from "../lodash-utils";
-import { CommandObject } from "../recent";
+import type { CommandObject } from "../recent";
 import { BuildingCounter } from "./buildings";
 import { ChartSource } from "./charts";
-import { ChartSummary, ExtractLog, SimpleSourceFactory } from "./simple-charts";
+import type { SimpleSourceFactory } from "./simple-charts";
+import { ChartSummary, ExtractLog } from "./simple-charts";
 
 function isSpecialOperator(data: Engine, cmd: CommandObject) {
   return data.tiles.techs[cmd.args[0]].tile == TechTile.Tech3;

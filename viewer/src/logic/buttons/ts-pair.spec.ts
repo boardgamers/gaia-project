@@ -1,8 +1,8 @@
 import Engine, { Command, PlayerEnum } from "@gaia-project/engine";
 import { expect } from "chai";
-import { ButtonData } from "../../data";
+import type { ButtonData } from "../../data";
 import { buildButtons } from "./buildings";
-import { CommandController } from "./types";
+import type { CommandController } from "./types";
 
 // The sandbox's two Trading Station buttons (owner instruction, 2026-08-19). Every build button in
 // this app is icon-only, with the words in the tooltip - which stops working the moment two buttons

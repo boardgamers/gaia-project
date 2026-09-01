@@ -1,5 +1,6 @@
 import Engine, { FactionVariant } from "@gaia-project/engine";
-import { AuctionVariant, Layout } from "@gaia-project/engine/src/engine";
+import type { Layout } from "@gaia-project/engine/src/engine";
+import { AuctionVariant } from "@gaia-project/engine/src/engine";
 import Game from "./components/Game.vue";
 import Wrapper from "./components/Wrapper.vue";
 import launch from "./launcher";
@@ -19,7 +20,7 @@ import {
 } from "./offline-game";
 import { loadScenarioEngine, parseScenarioFromQuery } from "./self-contained-scenarios";
 import { loadEngineFromData, parseLoadFromQuery } from "./self-contained-state";
-import { LoadFromJson } from "./store";
+import type { LoadFromJson } from "./store";
 
 type SelfContainedEnv = Record<string, string | undefined>;
 

@@ -12,13 +12,14 @@ import {
   Reward,
   TechPos,
 } from "@gaia-project/engine";
-import { LogEntryChange } from "@gaia-project/engine/src/engine";
+import type { LogEntryChange } from "@gaia-project/engine/src/engine";
 import { tradeCostSource, tradeSource } from "@gaia-project/engine/src/events";
-import { MoveTokens } from "@gaia-project/engine/src/player-data";
+import type { MoveTokens } from "@gaia-project/engine/src/player-data";
 import { sum } from "../lodash-utils";
-import { CommandObject } from "../recent";
+import type { CommandObject } from "../recent";
 import { chartPlayerBoard } from "./charts";
-import { ExtractLog, ExtractLogArg } from "./simple-charts";
+import type { ExtractLogArg } from "./simple-charts";
+import { ExtractLog } from "./simple-charts";
 
 export class BrainstoneSimulator {
   private allCommands: CommandObject[];

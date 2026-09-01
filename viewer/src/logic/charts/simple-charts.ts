@@ -1,8 +1,10 @@
 import Engine, { Building, Command, Faction, LogEntry, Planet, Player } from "@gaia-project/engine";
 import { sum } from "../lodash-utils";
-import { CommandObject, parseCommands } from "../recent";
-import { ChartKind } from "./chart-factory";
-import { ChartGroup, ChartSource, ChartType } from "./charts";
+import type { CommandObject } from "../recent";
+import { parseCommands } from "../recent";
+import type { ChartKind } from "./chart-factory";
+import type { ChartType } from "./charts";
+import { ChartGroup, ChartSource } from "./charts";
 
 export type ExtractChange<Source extends ChartSource<any>> = (
   player: Player,

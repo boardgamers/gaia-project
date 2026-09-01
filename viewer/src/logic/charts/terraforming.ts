@@ -2,7 +2,8 @@ import { Faction, factionPlanet, Planet } from "@gaia-project/engine";
 import { planetsWithSteps } from "../../data/factions";
 import { planetColorVar } from "../../graphics/colors";
 import { ChartSource } from "./charts";
-import { ChartSummary, planetCounter, SimpleSourceFactory } from "./simple-charts";
+import type { SimpleSourceFactory } from "./simple-charts";
+import { ChartSummary, planetCounter } from "./simple-charts";
 
 export enum TerraformingSteps {
   Step0 = "Home world",

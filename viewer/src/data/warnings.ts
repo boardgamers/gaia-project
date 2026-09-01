@@ -1,5 +1,5 @@
 import { BrainstoneWarning, BuildWarning } from "@gaia-project/engine";
-import { ButtonData } from "./index";
+import type { ButtonData } from "./index";
 
 export enum WarningKey {
   declineFree = "decline-free",

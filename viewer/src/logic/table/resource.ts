@@ -4,7 +4,8 @@ import { richTextRewards } from "../../graphics/rich-text";
 import { lightenDarkenColor } from "../../graphics/utils";
 import { colorCodes } from "../color-codes";
 import { plusReward } from "../utils";
-import { Cell, ConversionSupport, PlayerColumn, stripUnderline } from "./types";
+import type { Cell, ConversionSupport, PlayerColumn } from "./types";
+import { stripUnderline } from "./types";
 import { skipZero } from "./util";
 
 export function resourceCell(r: Resource | PowerArea): Cell {

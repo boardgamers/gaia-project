@@ -85,7 +85,8 @@
 <script lang="ts">
 import Engine, { Planet, Player, Spaceship } from "@gaia-project/engine";
 import { Player as PlayerEnum } from "@gaia-project/engine/src/enums";
-import { spaceshipActionEffects, SpaceshipActionType, spaceshipBoards } from "@gaia-project/engine/src/spaceships";
+import type { SpaceshipActionType } from "@gaia-project/engine/src/spaceships";
+import { spaceshipActionEffects, spaceshipBoards } from "@gaia-project/engine/src/spaceships";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import {

@@ -13,13 +13,14 @@ import Engine, {
 } from "@gaia-project/engine";
 import { qicForDistance } from "@gaia-project/engine/src/cost";
 import { isAcademy } from "@gaia-project/engine/src/enums";
-import { ButtonData } from "../../data";
+import type { ButtonData } from "../../data";
 import { availableBuildingShortcut, buildingName } from "../../data/building";
-import { RichText, richText, richTextArrow, richTextBuilding } from "../../graphics/rich-text";
+import type { RichText } from "../../graphics/rich-text";
+import { richText, richTextArrow, richTextBuilding } from "../../graphics/rich-text";
 import { pick, sortBy } from "../lodash-utils";
 import { hexSelectionButton } from "./hex";
 import { withShortcut } from "./shortcuts";
-import { CommandController } from "./types";
+import type { CommandController } from "./types";
 import { confirmationButton, hexMap, isFree, symbolButton, textButton } from "./utils";
 import { commonButtonWarning } from "./warnings";
 

@@ -8,9 +8,10 @@ import Engine, {
   stdBuildingValue,
 } from "@gaia-project/engine";
 import { allBuildings, buildingData } from "../../data/building";
-import { CommandObject } from "../recent";
+import type { CommandObject } from "../recent";
 import { ChartSource } from "./charts";
-import { ChartSummary, ExtractLog, ExtractLogArg, SimpleSourceFactory } from "./simple-charts";
+import type { ExtractLogArg, SimpleSourceFactory } from "./simple-charts";
+import { ChartSummary, ExtractLog } from "./simple-charts";
 
 function buildingFromLog(e: ExtractLogArg<ChartSource<Building>>): Building | null {
   const args = e.cmd.args;

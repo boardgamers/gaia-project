@@ -135,18 +135,17 @@ import Engine, {
   Player,
   Reward,
 } from "@gaia-project/engine";
-import { FactionBoardRaw } from "@gaia-project/engine/src/faction-boards";
+import type { FactionBoardRaw } from "@gaia-project/engine/src/faction-boards";
 import { lostFleetTerraformingBoard } from "@gaia-project/engine/src/factions";
 import Vue, { markRaw } from "vue";
 import { Component, Prop } from "vue-property-decorator";
+import type { BuildingSpecialAction, Conversion, TinkeringRound } from "../data/faction-overview";
 import {
   baseFactionLostFleetChanges,
   boardActionNote,
   boardActionSpec,
   buildingShortLabel,
-  BuildingSpecialAction,
   buildingSpecialActions,
-  Conversion,
   DEFAULT_EXPLORE_COST,
   DEFAULT_GAIA_MINE_COST,
   exploreCostIsDefault,
@@ -160,12 +159,12 @@ import {
   startingBuildingNote,
   terraformCost3Set,
   terraformCostDependsOnFactions,
-  TinkeringRound,
   tinkeringRounds,
 } from "../data/faction-overview";
 import { factionPreviewEngine } from "../data/faction-preview";
 import { factionData, factionName } from "../data/factions";
-import { richText, RichText, richTextArrow, richTextPlanet, richTextRewards } from "../graphics/rich-text";
+import type { RichText } from "../graphics/rich-text";
+import { richText, richTextArrow, richTextPlanet, richTextRewards } from "../graphics/rich-text";
 import { planetColor } from "../graphics/utils";
 import { gameSeed } from "../logic/utils";
 import { makeStore } from "../store";

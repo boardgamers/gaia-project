@@ -1,7 +1,8 @@
 import type { ChartConfiguration } from "chart.js";
-import { CellStyle, staticCellStyle } from "../../graphics/colors";
-import { DatasetSummary, TableMeta } from "./chart-factory";
-import { ChartStyleDisplay } from "./charts";
+import type { CellStyle } from "../../graphics/colors";
+import { staticCellStyle } from "../../graphics/colors";
+import type { DatasetSummary, TableMeta } from "./chart-factory";
+import type { ChartStyleDisplay } from "./charts";
 
 const nameColumn = {
   key: "Name",

@@ -2,7 +2,7 @@ import { shallowMount } from "@vue/test-utils";
 import BootstrapVue from "bootstrap-vue";
 import { expect } from "chai";
 import Vue from "vue";
-import { ButtonData } from "../data";
+import type { ButtonData } from "../data";
 import { makeStore } from "../store";
 import MoveButton from "./MoveButton.vue";
 

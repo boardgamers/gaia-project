@@ -89,7 +89,10 @@ export function parseLoadFromQuery(search = ""): SelfContainedLoad | null {
 
 export function loadEngineFromData(load: SelfContainedLoad): Engine {
   let { engineData } = load;
-  const { type, stopMove } = load;
+  const { stopMove } = load;
+  // `loadType` may need upgrading to permissiveReplay when a stopMove is given - take it
+  // as a mutable copy of the input (a bare destructured const can't be reassigned).
+  let type = load.type;
   if ("cancelled" in engineData) {
     engineData = (engineData as any).data;
   }

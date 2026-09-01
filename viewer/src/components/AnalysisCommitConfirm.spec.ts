@@ -2,7 +2,7 @@ import { mount, Wrapper } from "@vue/test-utils";
 import BootstrapVue from "bootstrap-vue";
 import { expect } from "chai";
 import Vue from "vue";
-import { AnalysisCommitPlan } from "../logic/analysis";
+import type { AnalysisCommitPlan } from "../logic/analysis";
 import AnalysisCommitConfirm from "./AnalysisCommitConfirm.vue";
 
 Vue.use(BootstrapVue);

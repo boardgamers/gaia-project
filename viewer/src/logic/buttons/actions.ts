@@ -8,11 +8,11 @@ import {
   Player,
   Reward,
 } from "@gaia-project/engine";
-import { ButtonData, ButtonWarning } from "../../data";
+import type { ButtonData, ButtonWarning } from "../../data";
 import { boardActionData } from "../../data/actions";
 import { resourceData, translateResources } from "../../data/resources";
 import { conversionButton } from "./conversion";
-import { CommandController } from "./types";
+import type { CommandController } from "./types";
 import { symbolButton } from "./utils";
 import { resourceWasteWarning } from "./warnings";
 

@@ -232,18 +232,18 @@ import Engine, {
   SpaceshipFederation,
 } from "@gaia-project/engine";
 import { Player as PlayerEnum } from "@gaia-project/engine/src/enums";
+import type { SpaceshipActionType } from "@gaia-project/engine/src/spaceships";
 import {
   EXPLORATION_CHARGE_TRACK,
   shipsInPlay,
   spaceshipActionEffects,
-  SpaceshipActionType,
   spaceshipBoards,
 } from "@gaia-project/engine/src/spaceships";
 import { spaceshipFederationSpec } from "@gaia-project/engine/src/tiles/spaceship-federations";
 import { Component, Vue } from "vue-property-decorator";
 import { spaceshipFederationDisplayRewards } from "../data/federations";
+import type { ActionOverlay } from "../data/spaceships";
 import {
-  ActionOverlay,
   actionOverlay as actionOverlaySpec,
   costBadgeTransform as costBadgeTransformFn,
   costFill as costFillFn,

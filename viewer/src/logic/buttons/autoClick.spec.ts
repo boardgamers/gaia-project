@@ -1,7 +1,7 @@
 import { expect } from "chai";
-import { ButtonData } from "../../data";
+import type { ButtonData } from "../../data";
 import { AutoClickPolicy, checkAutoClick } from "./autoClick";
-import { CommandController } from "./types";
+import type { CommandController } from "./types";
 
 // The confirmation press is what analysis mode drops (ANALYSIS_MODE_PLAN.md §12): a sandbox turn fires
 // as soon as it is composed, because Undo already covers a misclick and a round-0 line otherwise

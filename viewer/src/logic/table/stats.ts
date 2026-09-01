@@ -6,7 +6,8 @@ import { finalScoringSources } from "../charts/final-scoring";
 import { colorCodes } from "../color-codes";
 import { sortBy } from "../lodash-utils";
 import { techCell } from "./research";
-import { InfoTableFlex, PlayerTable } from "./types";
+import type { PlayerTable } from "./types";
+import { InfoTableFlex } from "./types";
 import { skipZero } from "./util";
 
 export function assets(engine: Engine): PlayerTable {

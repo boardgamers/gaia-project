@@ -1,8 +1,10 @@
 import Engine, { Booster, Command, ResearchField, Spaceship } from "@gaia-project/engine";
 import { factionName } from "../data/factions";
-import { FederationChoice, federationChoiceDescription } from "../data/federations";
+import type { FederationChoice } from "../data/federations";
+import { federationChoiceDescription } from "../data/federations";
 import { techTileData } from "../data/tech-tiles";
-import { CommandObject, parseCommands } from "./recent";
+import type { CommandObject } from "./recent";
+import { parseCommands } from "./recent";
 
 const OUT_OF_TURN = new Set<string>([Command.ChargePower, Command.BrainStone, Command.ChooseIncome, Command.Decline]);
 

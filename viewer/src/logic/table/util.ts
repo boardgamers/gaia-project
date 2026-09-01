@@ -1,6 +1,8 @@
-import { CellStyle, staticCellStyle } from "../../graphics/colors";
+import type { CellStyle } from "../../graphics/colors";
+import { staticCellStyle } from "../../graphics/colors";
 import { richText } from "../../graphics/rich-text";
-import { Cell, InfoTableCell, InfoTableFlex } from "./types";
+import type { Cell, InfoTableCell } from "./types";
+import { InfoTableFlex } from "./types";
 
 export function deactivated(s: string, deactivated = true): string {
   return deactivated ? `<s><i>${s}</i></s>` : s;

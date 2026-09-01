@@ -1,8 +1,9 @@
 import Engine, { Command, Faction } from "@gaia-project/engine";
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { factionName } from "../data/factions";
-import { isLegacySequentialBidRound, sealedBidPhase, SealedBidVariant } from "../logic/sealed-bid";
-import { SealedBidBackend } from "../store";
+import type { SealedBidVariant } from "../logic/sealed-bid";
+import { isLegacySequentialBidRound, sealedBidPhase } from "../logic/sealed-bid";
+import type { SealedBidBackend } from "../store";
 
 /** How often the panel re-reads submission progress. There is nothing to subscribe to: sealed rows
  * are invisible to other players by design, so Realtime cannot deliver them. */

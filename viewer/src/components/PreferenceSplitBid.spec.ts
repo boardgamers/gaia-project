@@ -3,7 +3,7 @@ import { fireEvent, render } from "@testing-library/vue";
 import BootstrapVue from "bootstrap-vue";
 import { expect } from "chai";
 import Vue from "vue";
-import { SealedBidEntry } from "../logic/hosted-types";
+import type { SealedBidEntry } from "../logic/hosted-types";
 import { makeStore } from "../store";
 import PreferenceSplitBid from "./PreferenceSplitBid.vue";
 

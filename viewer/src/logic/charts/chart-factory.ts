@@ -24,17 +24,12 @@ import { factionName } from "../../data/factions";
 import { roundScoringData } from "../../data/round-scorings";
 import { playerColor, resolveColor } from "../../graphics/colors";
 import { memoize, sortBy, sum, sumBy } from "../lodash-utils";
+import type { ChartSelect, ChartStyleDisplay, ChartType, DatasetFactory, DeepPartial, IncludeRounds } from "./charts";
 import {
   ChartGroup,
   chartPlayerOrder,
-  ChartSelect,
   ChartSource,
-  ChartStyleDisplay,
-  ChartType,
   dataPointsBalance,
-  DatasetFactory,
-  DeepPartial,
-  IncludeRounds,
   playerLabel,
   vpChartType,
   weightedSum,
@@ -42,13 +37,13 @@ import {
 import { finalScoringSources } from "./final-scoring";
 import { ChartSummary } from "./simple-charts";
 import { createSimpleSourceFactories, simpleChartFactory } from "./simple-sources";
+import type { VictoryPointSource } from "./victory-point-charts";
 import {
   advancedTechTileSource,
   boosterSource,
   groupSources,
   roundScoring,
   victoryPointDetails,
-  VictoryPointSource,
   victoryPointSources,
 } from "./victory-point-charts";
 

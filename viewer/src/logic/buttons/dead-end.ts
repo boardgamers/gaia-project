@@ -1,5 +1,6 @@
-import { AvailableCommand, Command, SubPhase } from "@gaia-project/engine";
-import { ButtonData } from "../../data";
+import type { AvailableCommand } from "@gaia-project/engine";
+import { Command, SubPhase } from "@gaia-project/engine";
+import type { ButtonData } from "../../data";
 import { WarningKey } from "../../data/warnings";
 import { textButton } from "./utils";
 

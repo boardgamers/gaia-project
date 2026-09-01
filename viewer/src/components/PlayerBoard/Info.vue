@@ -179,13 +179,14 @@ import Engine, {
 } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { FastConversionEvent, MapMode, MapModeType } from "../../data/actions";
+import type { FastConversionEvent, MapMode } from "../../data/actions";
+import { MapModeType } from "../../data/actions";
 import { effectivePreviewPlayer } from "../../data/faction-preview";
 import { factionName } from "../../data/factions";
 import { researchColor } from "../../data/research";
 import { showIncome } from "../../data/resources";
 import { leechNetwork, sectors } from "../../data/stats";
-import { CellStyle } from "../../graphics/colors";
+import type { CellStyle } from "../../graphics/colors";
 import Resource from "../Resource.vue";
 import Undo from "../Resources/Undo.vue";
 import VictoryPoint from "../Resources/VictoryPoint.vue";

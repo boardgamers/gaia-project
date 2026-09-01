@@ -21,7 +21,8 @@ import Tinkeroids from "./tinkeroids";
 import { FactionBoard, FactionBoardRaw, FactionBoardVariant, FactionBoardVariants } from "./types";
 import Xenos from "./xenos";
 
-export { FactionBoard, FactionBoardRaw } from "./types";
+export { FactionBoard } from "./types";
+export type { FactionBoardRaw } from "./types";
 
 const factionBoards: { [key in Faction]: FactionBoardVariants } = {
   [Faction.Terrans]: Terrans,

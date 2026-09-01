@@ -1,7 +1,8 @@
 import { AvailableCommand, Command, Reward } from "@gaia-project/engine";
-import { ButtonData } from "../../data";
+import type { ButtonData } from "../../data";
 import { WarningKey } from "../../data/warnings";
-import { richText, RichText, richTextRewards } from "../../graphics/rich-text";
+import type { RichText } from "../../graphics/rich-text";
+import { richText, richTextRewards } from "../../graphics/rich-text";
 import { withShortcut } from "./shortcuts";
 import { textButton } from "./utils";
 import { buttonWarnings } from "./warnings";

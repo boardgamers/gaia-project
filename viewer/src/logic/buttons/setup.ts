@@ -1,12 +1,12 @@
 import Engine, { AvailableSetupOption, Booster, Command, Federation, SetupType, TechTile } from "@gaia-project/engine";
 import { boosterEvents } from "@gaia-project/engine/src/tiles/boosters";
 import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
-import { ButtonData } from "../../data";
+import type { ButtonData } from "../../data";
 import { eventDesc } from "../../data/event";
 import { federationData } from "../../data/federations";
 import { roundScoringData } from "../../data/round-scorings";
 import { finalScoringSources } from "../charts/final-scoring";
-import { CommandController } from "./types";
+import type { CommandController } from "./types";
 import { autoClickButton, symbolButton, textButton } from "./utils";
 
 function chooseTechButton(command: string, data: AvailableSetupOption, controller: CommandController, label: string) {

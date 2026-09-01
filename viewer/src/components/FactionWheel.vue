@@ -45,7 +45,7 @@
 import Engine, { factionPlanet, Planet } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component } from "vue-property-decorator";
-import { MapMode } from "../data/actions";
+import type { MapMode } from "../data/actions";
 import { remainingPlanets } from "../data/planets";
 import { planetFill } from "../graphics/utils";
 import { radiusTranslate } from "../logic/utils";

@@ -1,5 +1,6 @@
 import { expect } from "chai";
-import { EngineLike, resolvePremoveQueue } from "./premove-resolver";
+import type { EngineLike } from "./premove-resolver";
+import { resolvePremoveQueue } from "./premove-resolver";
 
 // Fully generic tests (no real engine needed - the resolver is engine-agnostic, see its own doc
 // comment) exercising the mode-branching decision logic in isolation, per PREMOVE_PLAN.md §10.8.

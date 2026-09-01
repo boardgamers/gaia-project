@@ -16,7 +16,8 @@ import { federationData } from "../../data/federations";
 import { roundScoringData } from "../../data/round-scorings";
 import { playerColor } from "../../graphics/colors";
 import { richTextRewards } from "../../graphics/rich-text";
-import { Cell, defaultBackground, emptyCell, GeneralTable } from "./types";
+import type { Cell, GeneralTable } from "./types";
+import { defaultBackground, emptyCell } from "./types";
 
 export function playerCell(p: Player | null, bold = false): Cell {
   if (p == null) {

@@ -17,7 +17,8 @@ import { Grid } from "hexagrid";
 import { colorCodes } from "../color-codes";
 import { BuildingCounter } from "./buildings";
 import { ChartSource } from "./charts";
-import { ChartSummary, ExtractLog, ExtractLogArg, planetCounter, SimpleSourceFactory } from "./simple-charts";
+import type { ExtractLogArg, SimpleSourceFactory } from "./simple-charts";
+import { ChartSummary, ExtractLog, planetCounter } from "./simple-charts";
 
 type FinalScoringExtractLog = ExtractLog<ChartSource<FinalTile>>;
 

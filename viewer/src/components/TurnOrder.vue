@@ -24,7 +24,8 @@
 <script lang="ts">
 import Engine, { Phase, Player, Round } from "@gaia-project/engine";
 import { Component, Prop, Vue } from "vue-property-decorator";
-import { presenceStatus, PresenceStatus } from "../logic/presence";
+import type { PresenceStatus } from "../logic/presence";
+import { presenceStatus } from "../logic/presence";
 import { phaseBeforeSetupBuilding } from "../logic/utils";
 import PlayerCircle from "./PlayerCircle.vue";
 

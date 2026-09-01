@@ -50,9 +50,10 @@
 import { Player } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { ButtonData, WarningsPreference } from "../data";
+import type { ButtonData } from "../data";
+import { WarningsPreference } from "../data";
 import { enabledButtonWarnings } from "../data/warnings";
-import { CommandController, MoveButtonController } from "../logic/buttons/types";
+import type { CommandController, MoveButtonController } from "../logic/buttons/types";
 import { buttonRichTextLabel, callOnShow } from "../logic/buttons/utils";
 import { isTypingTarget } from "../logic/typing-target";
 import BoardAction from "./BoardAction.vue";

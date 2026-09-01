@@ -9,13 +9,13 @@ import Engine, {
   Reward,
   ShipAction,
 } from "@gaia-project/engine";
-import { TradingLocation } from "@gaia-project/engine/src/available/types";
-import { ButtonData } from "../../data";
+import type { TradingLocation } from "@gaia-project/engine/src/available/types";
+import type { ButtonData } from "../../data";
 import { shipActionName, shipLetter } from "../../data/building";
 import { richTextBuilding } from "../../graphics/rich-text";
 import { sortedUniq } from "../lodash-utils";
 import { hexSelectionButton } from "./hex";
-import { CommandController } from "./types";
+import type { CommandController } from "./types";
 import { hexMap, symbolButton, textButton } from "./utils";
 import { rewardWarnings } from "./warnings";
 

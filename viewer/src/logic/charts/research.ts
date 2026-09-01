@@ -10,9 +10,10 @@ import {
 } from "@gaia-project/engine";
 import { researchColorVar, researchData } from "../../data/research";
 import { sum } from "../lodash-utils";
-import { CommandObject } from "../recent";
+import type { CommandObject } from "../recent";
 import { chartPlayerBoard, ChartSource } from "./charts";
-import { ChartSummary, commandCounterArg0EqualsSource, logEntryProcessor, SimpleSourceFactory } from "./simple-charts";
+import type { SimpleSourceFactory } from "./simple-charts";
+import { ChartSummary, commandCounterArg0EqualsSource, logEntryProcessor } from "./simple-charts";
 
 export class ResearchCounter {
   player: Player;

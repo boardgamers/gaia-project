@@ -28,7 +28,7 @@
 import Engine, { Player, PlayerData, PowerArea } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { FastConversionEvent } from "../../data/actions";
+import type { FastConversionEvent } from "../../data/actions";
 import Resource from "../Resource.vue";
 
 @Component({

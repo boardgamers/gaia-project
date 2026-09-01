@@ -1,6 +1,7 @@
 import Engine, { Event, Expansion, Player, researchEvents, ResearchField, Resource } from "@gaia-project/engine";
 import { GAIA_FORMER_COST } from "@gaia-project/engine/src/faction-boards/types";
-import { CellStyle, staticCellStyle } from "../graphics/colors";
+import type { CellStyle } from "../graphics/colors";
+import { staticCellStyle } from "../graphics/colors";
 import { eventDescForCounters } from "./event";
 
 export const researchData: { [key in ResearchField]: { name: string; shortcut: string } } = {

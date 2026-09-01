@@ -94,7 +94,8 @@ import Engine, {
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { buildingName } from "../../data/building";
-import { CommandObject, markBuilding } from "../../logic/recent";
+import type { CommandObject } from "../../logic/recent";
+import { markBuilding } from "../../logic/recent";
 import { radiusTranslate } from "../../logic/utils";
 import Building from "../Building.vue";
 import Planet from "../Planet.vue";

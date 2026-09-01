@@ -1,11 +1,12 @@
 import Engine, { ArtifactToken, AvailableCommand, Command, Resource, Reward } from "@gaia-project/engine";
-import { SpaceshipActionType, spaceshipBoards } from "@gaia-project/engine/src/spaceships";
+import type { SpaceshipActionType } from "@gaia-project/engine/src/spaceships";
+import { spaceshipBoards } from "@gaia-project/engine/src/spaceships";
 import { artifactTokenSpec } from "@gaia-project/engine/src/tiles/artifacts";
-import { ButtonData } from "../../data";
+import type { ButtonData } from "../../data";
 import { spaceshipNames } from "../../data/spaceships";
 import { richText, richTextRewards } from "../../graphics/rich-text";
 import { hexSelectionButton } from "./hex";
-import { CommandController } from "./types";
+import type { CommandController } from "./types";
 import { autoClickButton, hexMap, symbolButton, textButton } from "./utils";
 
 const artifactNames: Record<ArtifactToken, string> = {

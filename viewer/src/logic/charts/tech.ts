@@ -1,8 +1,9 @@
 import { AdvTechTile, Command, Expansion, TechTile } from "@gaia-project/engine";
-import { AnyTechTile, AnyTechTilePos } from "@gaia-project/engine/src/enums";
+import type { AnyTechTile, AnyTechTilePos } from "@gaia-project/engine/src/enums";
 import { advancedTechTileData, baseTechTileData } from "../../data/tech-tiles";
 import { ChartSource } from "./charts";
-import { ChartSummary, ExtractLog, SimpleSourceFactory } from "./simple-charts";
+import type { SimpleSourceFactory } from "./simple-charts";
+import { ChartSummary, ExtractLog } from "./simple-charts";
 
 const techTileExtractLog: ExtractLog<ChartSource<AnyTechTile>> = ExtractLog.filterPlayer((e) => {
   if (e.cmd.command == Command.ChooseTechTile) {

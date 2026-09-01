@@ -1,5 +1,5 @@
 import Engine from "@gaia-project/engine";
-import { AutoCharge } from "@gaia-project/engine/src/player";
+import type { AutoCharge } from "@gaia-project/engine/src/player";
 
 /**
  * "Auto leech": the engine already fully implements auto-deciding power-charge/decline offers

@@ -1,5 +1,5 @@
 import { Building as BuildingEnum, Condition as ConditionEnum, Planet, Reward, Spaceship } from "@gaia-project/engine";
-import { SpaceshipActionType } from "@gaia-project/engine/src/spaceships";
+import type { SpaceshipActionType } from "@gaia-project/engine/src/spaceships";
 
 export const spaceshipNames: Record<Spaceship, string> = {
   [Spaceship.Twilight]: "Twilight",

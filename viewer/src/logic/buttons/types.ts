@@ -1,10 +1,12 @@
-import { AvailableFreeActionData, BoardAction, Command, GaiaHex } from "@gaia-project/engine";
-import { AnyTechTilePos, Spaceship } from "@gaia-project/engine/src/enums";
+import type { AvailableFreeActionData } from "@gaia-project/engine";
+import { BoardAction, Command, GaiaHex } from "@gaia-project/engine";
+import type { AnyTechTilePos } from "@gaia-project/engine/src/enums";
+import { Spaceship } from "@gaia-project/engine/src/enums";
 import { CubeCoordinates } from "hexagrid";
 import { ActionPayload, SubscribeActionOptions, SubscribeOptions } from "vuex";
-import { EmitCommandParams } from "../../components/Commands.vue";
-import { ButtonData, HexSelection, HighlightHex, SpecialActionIncome } from "../../data";
-import { FastConversionButton } from "../../data/actions";
+import type { EmitCommandParams } from "../../components/Commands.vue";
+import type { ButtonData, HexSelection, HighlightHex, SpecialActionIncome } from "../../data";
+import type { FastConversionButton } from "../../data/actions";
 
 export type FastConversionTooltips = { [key in FastConversionButton]?: string };
 

@@ -94,15 +94,10 @@
 import Engine, { PlayerEnum } from "@gaia-project/engine";
 import type { ChartConfiguration } from "chart.js";
 import { Component, Vue } from "vue-property-decorator";
-import {
-  barChartKind,
-  ChartKind,
-  ChartKindDisplay,
-  ChartSetup,
-  lineChartKind,
-  TableMeta,
-} from "../logic/charts/chart-factory";
-import { ChartGroup, ChartSelect, ChartType } from "../logic/charts/charts";
+import type { ChartKind, ChartKindDisplay, TableMeta } from "../logic/charts/chart-factory";
+import { barChartKind, ChartSetup, lineChartKind } from "../logic/charts/chart-factory";
+import type { ChartSelect, ChartType } from "../logic/charts/charts";
+import { ChartGroup } from "../logic/charts/charts";
 import { tableHeader, tableItems } from "../logic/charts/table";
 import BuildingImage from "./Building.vue";
 import PlayerCircle from "./PlayerCircle.vue";

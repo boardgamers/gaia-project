@@ -75,7 +75,8 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { AnalysisLineSummary, MAX_ANALYSIS_LINES } from "../logic/analysis";
+import type { AnalysisLineSummary } from "../logic/analysis";
+import { MAX_ANALYSIS_LINES } from "../logic/analysis";
 
 export default Vue.extend({
   name: "AnalysisLineTabs",

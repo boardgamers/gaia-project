@@ -25,7 +25,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component, Watch } from "vue-property-decorator";
-import { NotesBackend } from "../store";
+import type { NotesBackend } from "../store";
 
 const SAVE_DEBOUNCE_MS = 1200;
 

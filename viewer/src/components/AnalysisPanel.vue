@@ -34,7 +34,8 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { AnalysisLineSet, analysisLineSetSize } from "../logic/analysis";
+import type { AnalysisLineSet } from "../logic/analysis";
+import { analysisLineSetSize } from "../logic/analysis";
 
 export default Vue.extend({
   name: "AnalysisPanel",

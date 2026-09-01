@@ -32,7 +32,8 @@
 import { Faction, finalScorings, FinalTile, Phase, Player } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { MapMode, MapModeType } from "../data/actions";
+import type { MapMode } from "../data/actions";
+import { MapModeType } from "../data/actions";
 import { factionName } from "../data/factions";
 import { tooltipTriggerConfig } from "../logic/tooltip";
 import Token from "./Token.vue";
