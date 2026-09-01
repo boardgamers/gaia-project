@@ -62,11 +62,6 @@
   --ui-table-stripe: rgba(31, 45, 82, 0.045);
   --ui-table-hover: rgba(47, 111, 237, 0.08);
   --ui-log-accent: #7b2cbf;
-  --ui-map-canvas: #f5f7fb;
-  --ui-map-border: #c8d1df;
-  --ui-map-shadow: rgba(31, 45, 82, 0.14);
-  --ui-board-canvas: #edf1f6;
-  --ui-board-border: #b8c2d0;
   --ui-board-action: #f8fafc;
   --ui-board-action-border: #7d899b;
   --ui-svg-neutral-text: #212529;
@@ -144,11 +139,6 @@
   --ui-log-accent: #d0a6ff;
   // A mid-slate table surface is intentional: the map hexes are already dark navy, so the
   // transparent inter-sector gaps need a lighter material behind them to remain legible.
-  --ui-map-canvas: #566277;
-  --ui-map-border: #8190a8;
-  --ui-map-shadow: rgba(0, 0, 0, 0.48);
-  --ui-board-canvas: #343d4a;
-  --ui-board-border: #64738a;
   --ui-board-action: #4b586b;
   --ui-board-action-border: #8796ad;
   --ui-svg-neutral-text: #f1f4f8;
@@ -749,20 +739,12 @@ kbd {
   background-color: var(--ui-surface-muted);
 }
 
-// One shared board-table surface for the real game and every setup/open-game preview. The SVG's
-// transparent inter-sector gaps reveal this material, and the border gives the otherwise-dark map
-// a clear outer edge. No per-hex nodes or reactive work are added.
+// The map renders without a card background by owner request (2026-09) - the space between
+// sectors is the page's own background again, like the pre-Lost-Fleet viewer. Only the
+// analysis-mode hazard overlay (below) still paints on this element.
 .space-map,
 .space-map-canvas {
   box-sizing: border-box;
-  background-color: var(--ui-map-canvas);
-  // Inset strokes make the table edge visible without consuming even one pixel of map width.
-  border: 0;
-  border-radius: 0.75rem;
-  box-shadow:
-    inset 0 0 0 1px var(--ui-map-border),
-    inset 0 0 0 2px var(--ui-divider-highlight),
-    0 4px 14px var(--ui-map-shadow);
 }
 
 // Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §5.2/§2.10) - dimmed yellow/black hazard

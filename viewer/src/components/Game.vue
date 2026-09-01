@@ -109,16 +109,6 @@
               :width="researchBoardCanvasWidth"
               :height="researchBoardCanvasHeight"
             >
-              <rect
-                aria-hidden="true"
-                class="research-actions-panel"
-                :x="researchBoardCanvasMinX + 1"
-                y="1"
-                :width="researchBoardCanvasWidth - 2"
-                :height="researchBoardCanvasHeight - 2"
-                rx="9"
-                ry="9"
-              />
               <ResearchBoard
                 :height="engine.options.lostFleet ? researchBoardViewHeight : 450"
                 :width="engine.options.lostFleet ? researchBoardContentWidth : undefined"
@@ -2496,12 +2486,6 @@ export default class Game extends Vue {
 
 .game-board-side-column {
   min-width: 0;
-}
-
-.research-actions-panel {
-  fill: var(--ui-board-canvas);
-  stroke: var(--ui-board-border);
-  stroke-width: 1;
 }
 
 // Ship boards sit in a FIXED-width left share of this row - `--lf-ship-width` (lostFleetShipsStyle)

@@ -402,7 +402,9 @@ describe("Game", () => {
     expect(canvasHeight).to.equal(497);
     expect(svg.getAttribute("width")).to.equal("430");
     expect(svg.getAttribute("height")).to.equal("497");
-    expect(svg.querySelector(".research-actions-panel")).to.not.equal(null);
+    // The rounded panel rect behind the board is gone (owner request, 2026-09) - the boards
+    // render on the page background in both Lost Fleet and base games.
+    expect(svg.querySelector(".research-actions-panel")).to.equal(null);
     expect(svg.closest(".game-board-layout")).to.not.equal(null);
 
     // The whole action row is left-aligned within the board panel (per the owner's brief), hugging
