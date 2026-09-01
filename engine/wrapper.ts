@@ -276,6 +276,12 @@ function sealedBidMovePlayer(move: string): number | null {
  * `pN silentBid` (well-formed command, no arguments), and the engine-level bid arrays keep
  * only the `player` field for foreign seats so the "already submitted" roster keeps working.
  */
+// BGS game-server: `hashSeed ?? !!stripSecret` decides whether the game seed gets sha256-hashed
+// before init (hashed seeds show as base64 in the log instead of the game name). Gaia's only hidden
+// information is the sealed-bid auction, which is player CHOICE, not seed-derived - no secret depends
+// on the seed - so force the raw seed.
+export const hashSeed = false;
+
 export function stripSecret(engine: Engine, player?: number): Engine {
   // Plain-JSON copy: this runs on both live Engine instances and the saved plain data, and the
   // platform JSON-serializes whatever we return anyway.
