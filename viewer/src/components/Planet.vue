@@ -5,7 +5,7 @@
          the sphere treatment below, via the `.space-map .planet-fill` rules further down. -->
     <circle
       :r="radius"
-      :class="['planet-fill', 'planet-disc', planet, { 'flat-pref': flatBuildings }].concat(...classes)"
+      :class="['planet-fill', 'planet-disc', planet, { 'flat-pref': flatBuildings }].concat(...(classes || []))"
       style="pointer-events: none"
     />
     <circle :r="radius" :class="['planet-fill', 'faction-fill', fill]" v-if="faction" style="pointer-events: none" />
@@ -19,7 +19,7 @@
       :class="['planet-sphere', planet, { 'flat-pref': flatBuildings }]"
       style="pointer-events: none"
     />
-    <circle :r="radius" :class="['planet', planet].concat(...classes)" />
+    <circle :r="radius" :class="['planet', planet].concat(...(classes || []))" />
   </g>
 </template>
 
@@ -38,7 +38,7 @@ export default class Planet extends Vue {
   @Prop()
   faction: Faction;
 
-  @Prop()
+  @Prop({ default: () => [] })
   classes: string[];
 
   /** The player's "flat buildings" display preference, read the same place SpaceHex/Building/etc.
