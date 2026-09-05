@@ -36,8 +36,10 @@ export function gameSeed(engine: Engine): string | undefined {
 // `<ResearchBoard height="450">` once did (see `researchBoardHeight` below).
 export const BOTTOM_SCORING_TILE_Y = 300;
 const FINAL_SCORING_GAP_BELOW_ROUND_TILES = 40;
-const FINAL_SCORING_NATIVE_HEIGHT = 56;
-const FINAL_SCORING_NATIVE_GAP = 60;
+// FinalScoringTile is 71 units tall (a 70-tall card from y=1) and the two tiles sit 74 units
+// apart, so the board reserves room for both without the second tile overlapping the first.
+const FINAL_SCORING_NATIVE_HEIGHT = 71;
+const FINAL_SCORING_NATIVE_GAP = 74;
 const FINAL_SCORING_SCALE = 0.9;
 // The 6 research tracks' own fixed content height (independent of Lost Fleet's 7th column, which
 // can grow taller than this to fit final scoring - see researchBoardHeight below). Exported so

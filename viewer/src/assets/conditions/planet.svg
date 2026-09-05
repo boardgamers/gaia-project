@@ -1,6 +1,14 @@
 <svg width="171" height="171" viewBox="0 0 171 171" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M85.5 170C132.168 170 170 132.168 170 85.5C170 38.8319 132.168 1 85.5 1C38.8319 1 1 38.8319 1 85.5C1 132.168 38.8319 170 85.5 170Z" fill="#0a0" stroke="black" stroke-miterlimit="10"/>
+<!-- Gaia-planet condition icon, shaded with the same sphere as every other planet: a lit top-left
+     highlight fading into the base green, deepened bottom-right (data/planets.ts gaia palette:
+     light #77dd6a, base #00aa00, dark #005c14). SVG-1.1 attrs only, self-contained, so it works
+     as an <image> without depending on the host document's defs. -->
 <defs>
-
+<radialGradient id="gaia-sphere" cx="0.38" cy="0.32" r="0.95">
+<stop offset="0" stop-color="#77dd6a"/>
+<stop offset="0.45" stop-color="#00aa00"/>
+<stop offset="1" stop-color="#005c14"/>
+</radialGradient>
 </defs>
+<path d="M85.5 170C132.168 170 170 132.168 170 85.5C170 38.8319 132.168 1 85.5 1C38.8319 1 1 38.8319 1 85.5C1 132.168 38.8319 170 85.5 170Z" fill="url(#gaia-sphere)" stroke="black" stroke-miterlimit="10"/>
 </svg>

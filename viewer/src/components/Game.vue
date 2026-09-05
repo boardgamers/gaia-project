@@ -117,7 +117,7 @@
               <!-- No y offset: the pre-LF y="-25" pushed the final scoring tiles 25 units above
                    the canvas' minY=0, clipping them at the top (owner report, 2026-09). y=0 aligns
                    the section's top with the research tracks' top. -->
-              <ScoringBoard v-if="!engine.options.lostFleet" class="ml-4" width="90" :x="researchBoardWidth + 20" />
+              <ScoringBoard v-if="!engine.options.lostFleet" class="ml-4" width="80" :x="researchBoardWidth + 20" />
               <!-- Right under the 6 tracks' own bottom edge (BASE_RESEARCH_BOARD_HEIGHT, a fixed
                    5-unit gap) - NOT researchBoardViewHeight, which Lost Fleet's 7th column (round
                    scoring + final scoring, positioned further right) can inflate well past where the

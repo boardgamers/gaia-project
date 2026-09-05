@@ -106,11 +106,31 @@
         />
       </filter>
     </template>
+    <!-- Planet sphere-shading gradients + shared geometry. These live in THIS single static <defs>
+         (Filters.vue already declares one) rather than a separate PlanetGradients.vue <defs>, so
+         the map still renders exactly 3 <defs> blocks - the invariant SpaceMap.spec.ts asserts to
+         guard against defs being duplicated per hex. One radialGradient per planet type (palette
+         from data/planets.ts's `gradient`, white-falloff default) - Planet.vue fills each map
+         planet with it. SVG-1.1 attrs only (no `href`, no CSS `fill` on stops) for the older
+         renderers the CDN stack meets. -->
+    <radialGradient
+      v-for="g in planetGradients"
+      :id="`planet-gradient-${g.id}`"
+      :key="`pg-${g.id}`"
+      cx="0.38"
+      cy="0.32"
+      r="0.95"
+    >
+      <stop offset="0" :stop-color="g.light" />
+      <stop :offset="g.midOffset" :stop-color="g.base" />
+      <stop offset="1" :stop-color="g.dark" />
+    </radialGradient>
   </defs>
 </template>
 <script lang="ts">
 import { Expansion, Faction, Planet } from "@gaia-project/engine";
 import { Component, Vue } from "vue-property-decorator";
+import { planetGradients } from "../../data/planets";
 import { factionColor, planetColor } from "../../graphics/utils";
 
 function getDarkness(faction: string): number {
@@ -151,8 +171,11 @@ export default class Filters extends Vue {
   }
 
   get planetData() {
-    const planets = Planet.values(Expansion.All).filter((pl) => pl !== Planet.Empty) as Exclude<Planet, Planet.Empty>[];
-    return planets.map((planet) => {
+    const planetList = Planet.values(Expansion.All).filter((pl) => pl !== Planet.Empty) as Exclude<
+      Planet,
+      Planet.Empty
+    >[];
+    return planetList.map((planet) => {
       const color = planetColor(planet);
       const darkness = 1;
 
@@ -164,6 +187,12 @@ export default class Filters extends Vue {
         darkness,
       ];
     });
+  }
+
+  /** Sphere-shading gradients above, driven by the shared per-planet stops (data/planets.ts's
+   *  `planetGradients()`), so the map and the research board shade every planet identically. */
+  get planetGradients() {
+    return planetGradients();
   }
 }
 </script>

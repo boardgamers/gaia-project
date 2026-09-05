@@ -101,11 +101,10 @@ describe("ResearchBoard", () => {
     const scoringTiles = container.querySelectorAll(".scoringTile");
     expect(scoringTiles.length).to.equal(engine.tiles.scorings.round.length);
 
-    // Each tile is 40 units tall but the track's own level slots are only 38 apart - scaled down
-    // to 0.9 (36 tall, matching ResearchTile's own height in the same slots) so consecutive tiles
-    // don't overlap.
+    // Each tile is 40 units tall; the Lost Fleet column scales them to 0.82 so they read a touch
+    // narrower than the research columns beside them (owner feedback) and don't dominate the board.
     for (const tile of Array.from(scoringTiles)) {
-      expect(tile.getAttribute("transform")).to.contain("scale(0.9)");
+      expect(tile.getAttribute("transform")).to.contain("scale(0.82)");
     }
   });
 
@@ -125,7 +124,7 @@ describe("ResearchBoard", () => {
     expect(gate?.textContent).to.not.contain("explorations");
   });
 
-  it("spaces every round scoring tile the same distance apart", () => {
+  it("spreads the round scoring tiles evenly from the top of the column down to the finals", () => {
     const engine = new Engine(["init 2 lf-scoring-extension"], { lostFleet: true });
     const store = makeStore();
     store.commit("receiveData", engine);
@@ -133,11 +132,17 @@ describe("ResearchBoard", () => {
     const { container } = render(ResearchBoard, { store });
 
     const ys = Array.from(container.querySelectorAll(".scoringTile")).map((tile) => {
-      const match = tile.getAttribute("transform")!.match(/translate\(0, (-?\d+(?:\.\d+)?)\)/);
-      return Number(match![1]);
+      const match = tile.getAttribute("transform")!.match(/translate\((-?\d+(?:\.\d+)?), (-?\d+(?:\.\d+)?)\)/);
+      return Number(match![2]);
     });
-    const gaps = new Set(ys.slice(1).map((y, i) => Math.abs(y - ys[i])));
-    expect(gaps.size).to.equal(1);
+    // The 6 round tiles are spaced by a single even step from the topmost (R6) down to R1, so the
+    // column stretches to meet the finals (and the action row) below. Adjacent gaps are all equal
+    // within floating-point rounding.
+    const gaps = ys.slice(1).map((y, i) => Math.abs(y - ys[i]));
+    const step = gaps[0];
+    for (const gap of gaps) {
+      expect(gap).to.be.closeTo(step, 0.01);
+    }
   });
 
   it("renders final scoring directly below the round scoring tiles, in the same column", () => {
@@ -153,11 +158,13 @@ describe("ResearchBoard", () => {
     const scoringTiles = container.querySelectorAll(".scoringTile");
     const lastRoundTileY = Math.max(
       ...Array.from(scoringTiles).map((tile) =>
-        Number(tile.getAttribute("transform")!.match(/translate\(0, (-?\d+)\)/)![1])
+        Number(tile.getAttribute("transform")!.match(/translate\((-?\d+(?:\.\d+)?), (-?\d+(?:\.\d+)?)\)/)![2])
       )
     );
     const finalGroup = tiles[0].closest("g[transform]")!;
-    const finalY = Number(finalGroup.getAttribute("transform")!.match(/translate\(0, (-?\d+)\)/)![1]);
+    const finalY = Number(
+      finalGroup.getAttribute("transform")!.match(/translate\((-?\d+(?:\.\d+)?), (-?\d+(?:\.\d+)?)\)/)![2]
+    );
     expect(finalY).to.be.greaterThan(lastRoundTileY);
   });
 

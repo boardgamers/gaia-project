@@ -5,16 +5,7 @@
     :title="tooltip"
     :class="field"
   >
-    <rect
-      x="2"
-      y="2"
-      :class="['research-tile', field, { highlighted }]"
-      width="56"
-      :height="height"
-      rx="5"
-      ry="2"
-      @click="onClick"
-    />
+    <rect x="2" y="2" :class="['research-tile', field, { highlighted }]" width="56" :height="height" @click="onClick" />
     <g style="pointer-events: none">
       <g style="opacity: 0.7">
         <Resource
@@ -48,6 +39,8 @@
           filter="url(#shadow-1)"
         />
       </g>
+      <!-- The lost planet, as a plain `.planet-fill` disc - the global planets.css rule shades it
+           with the same sphere gradient as the map's planets (and every other planet readout). -->
       <circle v-if="this.lostPlanet" :class="['planet-fill', this.lostPlanet]" cx="30" cy="16" r="9" />
     </g>
     <!-- <text x="0" y="0" :transform="`translate(${2 + 56/2 }, ${height - 10})`" class="levDesc">{{label}}</text> -->
@@ -261,10 +254,12 @@ svg {
     fill: var(--recent);
   }
 
+  // Each research track is rendered as ONE column (the rounded `.track-bg` rect in
+  // ResearchTrack.vue carries the silhouette, edge and lift); the per-level cells are flat,
+  // crisp and borderless so the column reads as a single track, not six floating cards.
   .research-tile {
     fill: none;
-    stroke: #444;
-    stroke-width: 1;
+    stroke: none;
 
     &.eco {
       fill: var(--rt-eco);

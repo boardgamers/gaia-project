@@ -40,6 +40,16 @@
     <Resource v-else-if="condition === 'step'" kind="step" />
     <Resource v-else-if="condition === 'tt'" kind="tech" />
     <circle v-else-if="condition === 'ast'" r="9" class="planet-fill a" style="stroke: black; stroke-width: 0.5" />
+    <!-- Satellite (the "Satellites" final-scoring condition): the same satellite silhouette the
+         player board's satellite counter uses, so the iconography is consistent. -->
+    <image
+      v-else-if="condition === 'sat'"
+      xlink:href="../assets/other/satellite.svg"
+      width="20"
+      height="20"
+      x="-10"
+      y="-10"
+    />
     <g v-else-if="condition === 'shipq'">
       <polygon
         points="-10,4 -4,10 4,10 10,4 10,-4 4,-10 -4,-10 -10,-4"

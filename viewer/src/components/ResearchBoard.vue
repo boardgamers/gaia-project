@@ -6,7 +6,12 @@
       :x="(fields.length - 1 - index) * 60"
       :key="field"
     />
-    <text y="198" x="180" class="charge-note" style="font-size: 12px; text-anchor: middle">Charge 3 power</text>
+    <!-- Level 3's "charge 3 power" reward as the actual charge glyph - the same power-circle icon
+         the tech tiles use (e.g. the `~o,pw` tile), with the count centred inside it - instead of
+         the spelled-out text. -->
+    <g class="charge-note" transform="translate(180, 194)">
+      <Resource kind="pw" :count="3" transform="scale(1.15)" />
+    </g>
     <!-- The Scoring Board Extension's 7th Advanced Tech tile + the round scoring tiles, in their
          own column right after the 6 tracks - aligned with the adv-tech row (same y=79 as
          ResearchTrack.vue's own adv-tech tile), with the round scoring tiles just under it, and
@@ -41,21 +46,20 @@
           <TechTile pos="adv-ext" x="-30" y="-30" />
         </g>
       </g>
-      <!-- Scaled to 0.9 (40 units tall -> 36) so consecutive tiles fit the track's own 38-unit
-           level slots without overlapping - matches ResearchTile's own 36-unit height in the same
-           38-unit slots (see ResearchTile.vue's `height` getter), same top-aligned anchor. Every
-           slot uses the SAME 38-unit gap (unlike the track's own uneven level spacing this column
-           used to borrow) so all round scoring tiles sit an equal distance apart. -->
+      <!-- Scaled to 0.82 so the scoring tiles read a touch narrower than the research columns beside
+           them (owner feedback: at 0.9 they dominated the Lost Fleet 7th column). The 6-unit
+           horizontal nudge keeps the 61.5-unit-wide tiles centered in the 70-unit column. Every slot
+           uses the SAME 38-unit gap so all round scoring tiles sit an equal distance apart. -->
       <ScoringTile
         v-for="i in scorings"
         :round="i"
-        :transform="`translate(0, ${scoringTileY(i)}) scale(0.9)`"
+        :transform="`translate(6, ${scoringTileY(i)}) scale(0.82)`"
         :key="i"
       />
       <!-- Final scoring, directly below the round scoring tiles in the same column/scale. -->
-      <g v-if="hasFinalScoring" :transform="`translate(0, ${finalScoringY}) scale(0.9)`">
+      <g v-if="hasFinalScoring" :transform="`translate(6, ${finalScoringY}) scale(0.82)`">
         <FinalScoringTile :index="0" />
-        <FinalScoringTile :index="1" v-if="finalScoringCount > 1" transform="translate(0, 60)" />
+        <FinalScoringTile :index="1" v-if="finalScoringCount > 1" transform="translate(0, 74)" />
       </g>
     </g>
     <g v-if="$store.state.data.tiles && $store.state.data.tiles.techs['gaia']">
@@ -102,7 +106,7 @@ import { Expansion, hasExpansion, ResearchField, ScoringBoardExtensionSide } fro
 import Vue from "vue";
 import { Component } from "vue-property-decorator";
 import { tooltipTriggerConfig } from "../logic/tooltip";
-import { BOTTOM_SCORING_TILE_Y, researchBoardHeight } from "../logic/utils";
+import { researchBoardHeight } from "../logic/utils";
 import BoardAction from "./BoardAction.vue";
 import FinalScoringTile from "./FinalScoringTile.vue";
 import ResearchTrack from "./ResearchTrack.vue";
@@ -132,14 +136,28 @@ const EXTENSION_COLUMN_WIDTH = 70;
 // Element 0 (bottommost, R1) is shared with logic/utils.ts's `researchBoardHeight` as
 // BOTTOM_SCORING_TILE_Y, so Game.vue's declared render height for this whole component can never
 // drift out of sync with this array again.
-const SCORING_TILE_Y = [BOTTOM_SCORING_TILE_Y, 262, 224, 186, 148, 110];
-
-// Final scoring sits directly below the last (bottommost, R1) round scoring tile, in the same
-// column/scale, separated by the same 2-unit gap convention (36-tall tile + 2 = 38, plus this
-// tile's own 4-unit breathing room since it's a visually distinct block). The matching native
-// height/gap/scale constants used to size the actual block live in logic/utils.ts's
-// `researchBoardHeight`, which this component's `viewHeight` now delegates to.
+//
+// The 6 round tiles spread evenly from R6 (topmost, fixed at 110 just under the adv-tech row) down
+// to R1, and the finals stack below them so the lowest final tile's bottom lands flush with the
+// power/QIC action row's bottom edge (y=492, Game.vue's actionRowBottom) - the Lost Fleet layout
+// brief. The bottom final tile is 70 native units tall, scaled 0.82 (~57.4), so it starts at 492 -
+// 57.4 = 434.6; the finals group holds two of them 74 native units apart, so the group (and F1)
+// starts at 434.6 - 74*0.82 = 373.9. R1's bottom is that minus the 40-unit finals gap = 333.9.
+const ACTION_ROW_BOTTOM = 492;
+const FINAL_TILE_SCALED_HEIGHT = 70 * 0.82; // ≈ 57.4
+const F1_TOP = ACTION_ROW_BOTTOM - FINAL_TILE_SCALED_HEIGHT; // ≈ 434.6
 const FINAL_SCORING_GAP_BELOW_ROUND_TILES = 40;
+const R1_TOP = F1_TOP - 74 * 0.82 - FINAL_SCORING_GAP_BELOW_ROUND_TILES; // ≈ 333.9
+const R6_TOP = 110;
+const SCORING_STEP = (R1_TOP - R6_TOP) / 5; // ≈ 44.8
+const SCORING_TILE_Y = [
+  R1_TOP,
+  R6_TOP + 4 * SCORING_STEP,
+  R6_TOP + 3 * SCORING_STEP,
+  R6_TOP + 2 * SCORING_STEP,
+  R6_TOP + SCORING_STEP,
+  R6_TOP,
+];
 
 @Component({
   computed: {

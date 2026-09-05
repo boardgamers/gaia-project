@@ -2,6 +2,24 @@
   <g :id="`${hex}`" class="space-hex-cell">
     <title v-text="tooltip" />
     <use xlink:href="#space-hex" :class="polygonClasses(hex)" @click="hexClick(hex)" />
+    <!-- Cosmetic star field on the space tile itself - a few pinprick dots, deterministic per hex
+         (graphics/stars.ts) so the pattern is stable across re-renders and map rotations. Bare
+         <circle>s, deliberately NOT wrapped in a <g>: the cell's first <g> child is the
+         upright-content group (the counter-rotated `rotate(-contentRotation)` one below), and a
+         SpaceMap.spec.ts ordering assertion locates exactly that element as "the first <g>". A
+         wrapper would silently take that slot; bare circles keep every <g> index unchanged. The
+         dots are sampled inside the hex's apothem, so no clip path is needed (which also keeps the
+         map's <defs> count at the asserted 3). Drawn right after the hex fill so they sit under
+         the planet, buildings, federation lines and every highlight overlay. -->
+    <circle
+      v-for="(star, i) in hexStars"
+      :key="`star-${i}`"
+      class="space-hex-star"
+      :cx="star.x"
+      :cy="star.y"
+      :r="star.r"
+      :opacity="star.opacity"
+    />
     <!-- An opponent's move since the viewer's last turn landed on this hex: fill the whole cell gold.
          Drawn right on top of the cell's own fill and before everything else, so the federation lines,
          the planet and the buildings still read normally on top of it. -->
@@ -130,6 +148,7 @@ import { spaceshipColors } from "../data/spaceships";
 import { isWarningEnabled } from "../data/warnings";
 import type { FederationLine } from "../graphics/hex";
 import { corners, playerFederationLines } from "../graphics/hex";
+import { hexStarField } from "../graphics/stars";
 import { factionPiecePlanet } from "../graphics/utils";
 import { isFree } from "../logic/buttons/utils";
 import type { CommandObject } from "../logic/recent";
@@ -171,6 +190,12 @@ export default class SpaceHex extends Vue {
 
   get hexCorners() {
     return corners();
+  }
+
+  /** The cosmetic stars for this space tile - computed once per hex from its coordinates, so the
+   * pattern is stable across re-renders and map rotations. */
+  get hexStars() {
+    return hexStarField(this.hex);
   }
 
   get flat() {
@@ -617,6 +642,13 @@ svg {
     pointer-events: none;
   }
 
+  // The tile's star texture. Pale dots at low opacity, so they read as distant stars against the
+  // hex fill without competing with the planets or the highlight overlays drawn above them.
+  .space-hex-star {
+    fill: #dbe7ff;
+    pointer-events: none;
+  }
+
   .leech {
     &.empty {
       fill: white;
@@ -646,11 +678,12 @@ svg {
 
   .sector-name {
     text-anchor: middle;
-    // `dominant-baseline: central` alone is not reliably centered across every renderer (notably
-    // WebKit/Safari, incl. mobile) - the `dy` on the element itself (see the templates that use
-    // this class) is the actual vertical-centering mechanism; this is kept only as a safe fallback
-    // for renderers that ignore `dy` on a bare, unspanned `<text>`.
-    dominant-baseline: central;
+    // Vertical centering is done by the plain-number `dy` on the element itself (≈0.35 ×
+    // font-size, the same proven mechanism the Lost Fleet spaceship labels use) - NOT by
+    // `dominant-baseline`, which the old rule set *on top of* the dy. Chrome applies both, so the
+    // two half-height shifts stacked and every sector number sat ~0.35 units too low in its hex.
+    // (The spaceship labels never had the property, which is exactly why they were centered while
+    // the sector numbers were not.)
     font-size: 1px;
     fill: white;
     opacity: 0.75;

@@ -10,6 +10,6 @@ allowBuilds:
   core-js: true
   core-js-pure: true
   ejs: true
-  esbuild: set this to true or false
+  esbuild: true
   nodent-runtime: true
   yorkie: true
