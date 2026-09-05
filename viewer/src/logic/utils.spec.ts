@@ -37,7 +37,9 @@ describe("Utils", () => {
       const engine = new Engine(["init 2 my-cool-seed"], { lostFleet: true });
 
       expect(engine.tiles.scorings.final).to.have.length(2);
-      expect(researchBoardHeight(engine)).to.equal(455);
+      // The Lost Fleet scoring column now stretches so the bottom final tile meets the power/QIC
+      // action row's bottom edge (y=492), so the board height grew from 455 to 481.
+      expect(researchBoardHeight(engine)).to.equal(481);
     });
   });
 

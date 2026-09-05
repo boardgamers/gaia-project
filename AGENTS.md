@@ -44,10 +44,15 @@ All calls take `Authorization: Bearer <token>`.
         -H "Content-Type: application/octet-stream" \
         --data-binary @gaia-project-engine-<version>.tgz
    ```
-2. **Viewer files** — upload the freshly built bundle. These endpoints take the file as the
-   **raw request body** (no multipart!), with parameters in the query string; js+css share a
-   `bundle` id so they belong together:
+2. **Viewer files** — upload the freshly built bundle. `npm run package` emits
+   `dist/package/viewer.umd.js` (already minified) + `viewer.css`; the platform's doc expects the
+   js under the name `viewer.umd.min.js`, so copy/rename it first. These endpoints take the file
+   as the **raw request body** (no multipart!), with parameters in the query string; js+css share
+   a `bundle` id so they belong together:
    ```bash
+   cp dist/package/viewer.umd.js dist/package/viewer.umd.min.js
+   # (optional) strip the trailing sourceMappingURL - the map isn't uploaded anyway:
+   # sed -i 's|//# sourceMappingURL=viewer.umd.js.map||' dist/package/viewer.umd.min.js
    curl -X POST "$BASE/viewer/file?filename=viewer.umd.min.js&bundle=<new-bundle-id>" \
         -H "Authorization: Bearer $TOKEN" -H "Content-Type: text/javascript" \
         --data-binary @dist/package/viewer.umd.min.js

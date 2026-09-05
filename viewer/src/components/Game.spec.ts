@@ -259,17 +259,16 @@ describe("Game", () => {
     const scoringBoard = researchBoard.nextElementSibling;
     expect(scoringBoard.tagName).to.equal("svg");
     // Base game framing: the research board at the viewBox origin, and the side ScoringBoard
-    // with NO y offset. The pre-LF y="-25" pushed the final scoring tiles 25 units above the
-    // canvas' minY=0 and clipped them at the top (owner report, 2026-09) - y is absent now.
+    // anchored at y=0 so its top aligns with the research tracks' top (owner report, 2026-09).
     expect(researchBoard.getAttribute("y")).to.equal(null);
-    expect(scoringBoard.getAttribute("y")).to.equal(null);
+    expect(scoringBoard.getAttribute("y")).to.equal("0");
 
     const [, minY, , height] = svg.getAttribute("viewBox").split(" ").map(Number);
     expect(minY).to.equal(0);
-    // ScoringBoard renders at width=90 against its own `viewBox="0 0 80 480"` with no explicit
-    // height, so its rendered height auto-scales to preserve aspect ratio: 90 * (480/80) = 540,
-    // starting exactly at the viewBox top - a 505-tall viewBox shows it down to y=505 of its
-    // own 540; its content (final scoring + round tiles) ends at y=480, the rest is padding.
+    // The scoring column is 446 tall (the research board's 440 + the ~6 units the general tech
+    // tiles extend past it), so its bottom aligns with the tech tiles' bottom edge.
+    expect(scoringBoard.getAttribute("viewBox")).to.contain("446");
+    // The canvas still reserves room for the power/QIC action row below the tracks.
     expect(height).to.equal(505);
 
     vm.$el.remove();

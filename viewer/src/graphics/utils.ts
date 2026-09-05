@@ -1,5 +1,8 @@
 import { Expansion, Faction, factionPlanet, Planet } from "@gaia-project/engine";
 import planets from "../data/planets";
+// Re-exported so UI that shades a faction-colored chip (final-scoring indents, ...) can tell a
+// light faction color from a dark one without re-deriving the planet.
+export { factionPlanet };
 
 export function factionPiecePlanet(faction: Faction): Planet {
   switch (faction) {

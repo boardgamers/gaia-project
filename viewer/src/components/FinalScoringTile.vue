@@ -84,13 +84,14 @@
 </template>
 
 <script lang="ts">
-import { Faction, finalScorings, FinalTile, Phase, Player } from "@gaia-project/engine";
+import { Faction, finalScorings, FinalTile, Phase, Planet, Player } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import type { MapMode } from "../data/actions";
 import { MapModeType } from "../data/actions";
 import { factionName } from "../data/factions";
-import { factionColor, factionLogTextColors } from "../graphics/utils";
+import planets from "../data/planets";
+import { factionColor, factionLogTextColors, factionPiecePlanet } from "../graphics/utils";
 import { tooltipTriggerConfig } from "../logic/tooltip";
 import Building from "./Building.vue";
 import Condition from "./Condition.vue";
@@ -132,17 +133,26 @@ export default class FinalScoringTile extends Vue {
       : player.progress(this.tile);
   }
 
-  /** The indent square's fill: the player's faction color (the automa neutral player reads as
-   * the generic grey). */
+  /** The indent square's fill: the player's faction color. Ice (Itars) is near-white (#F8FFF5), so
+   * on the white card it gets its teal border color instead to stay visible. Automa reads grey. */
   indentColor(player: Player): string {
-    return (player.faction as Faction | "automa") === "automa" ? factionColor("gen") : factionColor(player.faction);
+    if ((player.faction as Faction | "automa") === "automa") {
+      return factionColor("gen");
+    }
+    return factionPiecePlanet(player.faction) === Planet.Ice
+      ? planets[Planet.Ice].borderColor
+      : factionColor(player.faction);
   }
 
-  /** Score text color: black on the light faction colors (Gleens' yellow etc.) for legibility,
-   * white on the dark ones - the same per-faction split the log uses. Automa (grey) reads white. */
+  /** Score text color: black on the light faction colors (Gleens' yellow, and Itars' teal chip)
+   * for legibility, white on the dark ones - the same per-faction split the log uses. Automa
+   * (grey) reads white. */
   scoreTextColor(player: Player): string {
     if ((player.faction as Faction | "automa") === "automa") {
       return "#fff";
+    }
+    if (factionPiecePlanet(player.faction) === Planet.Ice) {
+      return "#fff"; // white text on the teal chip
     }
     return factionLogTextColors[player.faction];
   }
