@@ -1011,6 +1011,14 @@ export default class Game extends Vue {
       return lockedSeat >= 0 && lockedSeat === this.engine.playerToMove;
     }
 
+    // A hosted viewer with NO locked seat is a spectator: the host always sends a `player` message
+    // (empty object when the user owns no seat), so `state.player` is set in hosted mode but stays
+    // null in self-contained/hot-seat play. Returning true here is what let a spectator see (and
+    // press) the current player's action buttons - the "I see the current move" bug.
+    if (this.$store.state.player !== null) {
+      return false;
+    }
+
     return true;
   }
 

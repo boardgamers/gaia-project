@@ -360,6 +360,25 @@ describe("Game", () => {
     lockedVm.$destroy();
   });
 
+  it("hides the current player's action buttons for a spectator (hosted player message with no seat)", async () => {
+    const engine = new Engine(["init 2 spectator-no-buttons"], { lostFleet: true });
+    const store = makeStore();
+    // A spectator's `player` message is an empty object - no `index`. The viewer must NOT fall
+    // through to hot-seat `canPlay = true` here (that made a spectator see the current move).
+    store.commit("player", {});
+    const vm = new (Vue.extend(Game as any))({ store }) as any;
+    vm.handleData(Engine.fromData(JSON.parse(JSON.stringify(engine))));
+    vm.$mount();
+    document.body.appendChild(vm.$el);
+    await Vue.nextTick();
+
+    expect(vm.canPlay).to.equal(false);
+    expect(vm.$el.querySelector("#move")).to.equal(null);
+
+    vm.$el.remove();
+    vm.$destroy();
+  });
+
   it("hides ScoringBoard for a Lost Fleet game - final scoring, the 7th adv-tech tile, and the round scoring tiles all moved into ResearchBoard's own extra column", () => {
     const engine = new Engine(["init 2 lf-scoring-extension"], { lostFleet: true });
     engine.players.forEach((pl, index) => {
