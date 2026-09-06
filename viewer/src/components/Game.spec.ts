@@ -543,24 +543,22 @@ describe("Game", () => {
       return vm;
     }
 
-    it("offers the premove sticky bar for a locked seat whose turn it isn't", () => {
+    // Owner decision (2026-09): the premove bar is hidden - BGS has its own planning UI, so
+    // showPremoveBar is hard-false. The premove machinery (premoveOffered etc.) is untouched; these
+    // tests assert the bar/sheet simply never renders.
+    it("does not render the premove sticky bar even for a locked seat whose turn it isn't", () => {
       // playerToMove is 0 (terrans); this session is locked to seat 1 (nevlas).
       const vm = mountAsSeat(1);
 
-      expect(vm.premoveOffered).to.equal(true);
-      expect(vm.$el.textContent).to.contain("+ Add move");
-      // Mode is a labelled choice beside the add action now, not two separate "+" buttons.
-      expect(vm.$el.textContent).to.contain("Chain");
-      expect(vm.$el.textContent).to.contain("Fallback");
+      expect(vm.premoveOffered).to.equal(true); // logic intact
+      expect(vm.showPremoveBar).to.equal(false); // but the bar is hidden
+      expect(vm.$el.textContent).to.not.contain("+ Add move");
 
       vm.$el.remove();
       vm.$destroy();
     });
 
-    it("keeps offering it while the round is paused on someone else's leech decision", () => {
-      // The state a live async game actually sits in between turns: terrans upgrading next to
-      // nevlas offers 2 power, which costs a VP and parks the game in Phase.RoundLeech until nevlas
-      // answers. Seat 0 is off-turn there and used to be shown no premove UI at all.
+    it("does not render it while the round is paused on someone else's leech decision either", () => {
       const engine = new Engine(SETUP_MOVES);
       engine.players[0].data.credits = 20;
       engine.players[0].data.ores = 20;
@@ -572,18 +570,8 @@ describe("Game", () => {
 
       expect(vm.canPlay).to.equal(false);
       expect(vm.premoveOffered).to.equal(true);
-      expect(vm.showPremoveBar).to.equal(true);
-      expect(vm.$el.textContent).to.contain("+ Add move");
-
-      // ...and composing from there says so, rather than quietly previewing a board that is still
-      // waiting on an answer. The caveat rides in the sticky bar's own header context now, not in a
-      // banner at the top of the page.
-      vm.onStartNewPremove({ mode: "sequential", switchingModes: false });
-      expect(vm.premoveComposeCaveat).to.contain("power-charge decision");
-      expect(vm.premoveContext.notes.join(" ")).to.contain("power-charge decision");
-      // Composing hands the screen to Commands.vue's bar, so the sheet stands down - exactly one
-      // sticky bar at a time.
-      expect(vm.showPremoveSheet).to.equal(false);
+      expect(vm.showPremoveBar).to.equal(false);
+      expect(vm.$el.textContent).to.not.contain("+ Add move");
 
       vm.$el.remove();
       vm.$destroy();

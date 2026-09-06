@@ -1119,13 +1119,11 @@ export default class Game extends Vue {
   }
 
   get showPremoveBar(): boolean {
-    return (
-      !this.analysisMode &&
-      this.engine.round >= Round.Round1 &&
-      this.myLockedSeat !== undefined &&
-      !this.ended &&
-      (this.myQueuedPremoves.length > 0 || this.premoveOffered)
-    );
+    // Owner decision (2026-09): the premove bar ("Plan your next turn") is hidden - it doesn't work
+    // correctly on the BGS platform, which has its own planning UI. Kept as `false` (like the
+    // auto-leech controls) so the premove machinery and the `premoveOffered`/queued-premoves logic
+    // stay intact; a revert is a one-word change.
+    return false;
   }
 
   /**
