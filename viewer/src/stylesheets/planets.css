@@ -56,48 +56,7 @@
   --current-round: black;
 }
 
-/* Planet discs render as spheres everywhere they appear as a planet readout (tech tiles, the
-   research track, conditions, artifact/ship overlays, ...), not just on the map. The gradient
-   fills live once in the SpaceMap svg's <defs>; a url(#…) reference resolves against the whole
-   HTML document, so these reach into every sibling svg. Each rule lists the flat color second as
-   the fallback, so a context whose map (and its defs) isn't rendered keeps the plain color.
-
-   Only `.planet-fill` circles that carry a planet-type class are shaded - the class also marks
-   player tokens, flat-building fills and the map-mode hex overlay, which are not planets and keep
-   their flat fill. Player tokens (`.player-token`) are additionally excluded by the :not() below. */
-svg .planet-fill.r:not(.player-token) {
-  fill: url(#planet-gradient-r) var(--terra);
-}
-svg .planet-fill.d:not(.player-token) {
-  fill: url(#planet-gradient-d) var(--desert);
-}
-svg .planet-fill.s:not(.player-token) {
-  fill: url(#planet-gradient-s) var(--swamp);
-}
-svg .planet-fill.o:not(.player-token) {
-  fill: url(#planet-gradient-o) var(--oxide);
-}
-svg .planet-fill.t:not(.player-token) {
-  fill: url(#planet-gradient-t) var(--titanium);
-}
-svg .planet-fill.i:not(.player-token) {
-  fill: url(#planet-gradient-i) var(--ice);
-}
-svg .planet-fill.v:not(.player-token) {
-  fill: url(#planet-gradient-v) var(--volcanic);
-}
-svg .planet-fill.g:not(.player-token) {
-  fill: url(#planet-gradient-g) var(--gaia);
-}
-svg .planet-fill.m:not(.player-token) {
-  fill: url(#planet-gradient-m) var(--transdim);
-}
-svg .planet-fill.a:not(.player-token) {
-  fill: url(#planet-gradient-a) var(--asteroid);
-}
-svg .planet-fill.p:not(.player-token) {
-  fill: url(#planet-gradient-p) var(--protoplanet);
-}
-svg .planet-fill.l:not(.player-token) {
-  fill: url(#planet-gradient-l) var(--lost);
-}
+/* Owner decision (2026-09): planets render FLAT everywhere, always. The sphere-gradient fills that
+   used to live here (one `url(#planet-gradient-*)` rule per planet type) are removed - every
+   `.planet-fill` disc now just keeps its flat `--<planet>` color from the per-type fill classes
+   below. The gradient <defs> remain in the SpaceMap svg but nothing references them. */
