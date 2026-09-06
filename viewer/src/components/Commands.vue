@@ -865,14 +865,12 @@ export default class Commands extends Vue implements CommandController {
    * during analysis mode (§2.9) - opponent decisions are auto-resolved there regardless of this
    * preference - which is what frees up that slot for the counter headline instead (§5.3). */
   get showAutoLeechSelect(): boolean {
-    return (
-      !this.init &&
-      !this.isChoosingFaction &&
-      !this.isBanningFaction &&
-      !this.isSilentBidding &&
-      this.engine.round >= 1 &&
-      !this.analysisMode
-    );
+    // Owner decision (2026-09): the Auto-leech control is removed from the viewer - the platform's
+    // own sidebar now exposes the same autoChargePower/autoChargeMaxPassedRoundLeech preferences.
+    // Kept as `false` (rather than deleting the dropdowns + option lists) so the markup and the
+    // per-browser preference storage stay intact for the platform to drive, and so a revert is a
+    // one-word change.
+    return false;
   }
 
   /** The viewing user's own player (not necessarily whoever's turn it is), same "viewing seat"

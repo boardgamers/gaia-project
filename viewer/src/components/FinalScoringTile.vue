@@ -145,11 +145,11 @@ export default class FinalScoringTile extends Vue {
   }
 
   /** Score text color: black on the light faction colors (Gleens' yellow, and Itars' teal chip)
-   * for legibility, white on the dark ones - the same per-faction split the log uses. Automa
-   * (grey) reads white. */
+   * for legibility, white on the dark ones - the same per-faction split the log uses. Automa's
+   * grey chip (factionColor("gen")) is light enough that black reads better than white. */
   scoreTextColor(player: Player): string {
     if ((player.faction as Faction | "automa") === "automa") {
-      return "#fff";
+      return "#000";
     }
     if (factionPiecePlanet(player.faction) === Planet.Ice) {
       return "#fff"; // white text on the teal chip

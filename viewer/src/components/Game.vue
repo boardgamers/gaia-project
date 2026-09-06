@@ -895,13 +895,10 @@ export default class Game extends Vue {
   }
 
   get showOffTurnAutoLeechFab(): boolean {
-    return (
-      !this.analysisMode &&
-      !this.canPlay &&
-      !this.ended &&
-      this.engine.round >= Round.Round1 &&
-      this.myLockedSeat !== undefined
-    );
+    // Owner decision (2026-09): the off-turn Auto-leech FAB is removed from the viewer - the
+    // platform's own sidebar now exposes the same auto-leech preferences (see Commands.vue's
+    // showAutoLeechSelect). Kept as `false` so the FAB component + preference storage stay intact.
+    return false;
   }
 
   get myLockedSeatHasPassed(): boolean {

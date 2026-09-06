@@ -27,16 +27,9 @@
          newsector combo below) - the map itself keeps the dark navy fill for realism, but tile/
          condition iconography (round scoring, adv tech tiles, ...) should read the same as Sector. -->
     <DeepSpaceSector v-else-if="condition === 'ds'" :white="true" transform="scale(1.3)" />
-    <g v-else-if="condition === 'g'" transform="scale(0.85)">
-      <image
-        xlink:href="../assets/conditions/planet.svg"
-        width="25"
-        height="25"
-        x="-12"
-        y="-11.5"
-        transform="scale(-1,1)"
-      />
-    </g>
+    <!-- Gaia planet (gaiaforming) - a plain flat gaia disc now that planets render flat always
+         (owner decision 2026-09); the old spherical planet.svg image is gone. -->
+    <circle v-else-if="condition === 'g'" r="12" :class="['planet-fill', 'g']" transform="scale(0.85)" />
     <Resource v-else-if="condition === 'step'" kind="step" />
     <Resource v-else-if="condition === 'tt'" kind="tech" />
     <circle v-else-if="condition === 'ast'" r="9" class="planet-fill a" style="stroke: black; stroke-width: 0.5" />
