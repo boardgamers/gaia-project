@@ -204,7 +204,7 @@ describe("PreferenceSplitBid", () => {
     ]);
   });
 
-  it("falls back to an ordinary move in offline/hot-seat play, for the seat on turn", async () => {
+  it("falls back to an ordinary move in offline/hot-seat play, seat-prefixed for the engine", async () => {
     // No lock AND no backend - the offline case, where the seat on turn is the one to bid for.
     const { store } = biddingStore({ seat: null });
     const { container, emitted } = render(PreferenceSplitBid, { store });
@@ -212,7 +212,8 @@ describe("PreferenceSplitBid", () => {
     await fill(container, [20, 12, 6, 2]);
     await fireEvent.click(submitButton(container));
 
-    expect(emitted().command[0]).to.deep.equal(["preferenceBid itars 20 taklons 12 xenos 6 terrans 2"]);
+    // Seat-prefixed so the engine parses the bidder (any pending seat's bid is accepted now).
+    expect(emitted().command[0]).to.deep.equal(["p1 preferenceBid itars 20 taklons 12 xenos 6 terrans 2"]);
   });
 
   it("stays hidden outside the bid phase", () => {

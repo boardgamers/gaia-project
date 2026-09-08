@@ -196,14 +196,30 @@ describe("SilentAuctionBid", () => {
     ]);
   });
 
-  it("falls back to an ordinary move in offline/hot-seat play, for the seat on turn", async () => {
+  it("falls back to an ordinary move in offline/hot-seat play, seat-prefixed for the engine", async () => {
     const { store } = biddingStore({ seat: null });
     const { container, emitted } = render(SilentAuctionBid, { store });
 
     await fill(container, [15, 0, 10]);
     await fireEvent.click(submitButton(container));
 
-    expect(emitted().command[0]).to.deep.equal(["silentBid itars 15 xenos 0 taklons 10"]);
+    // The seat prefix lets the engine parse the bidder - with simultaneous bidding any pending
+    // seat's bid is accepted, so the prefix (not the turn pointer) is what identifies the bidder.
+    expect(emitted().command[0]).to.deep.equal(["p1 silentBid itars 15 xenos 0 taklons 10"]);
+  });
+
+  it("an off-turn seat's bid is seat-prefixed and immediately submittable (no waiting for turn)", async () => {
+    // Seat 1 (p2) while the turn pointer is on seat 0 - the exact case that used to be blocked.
+    const { store } = biddingStore({ seat: 1 });
+    const { container, emitted } = render(SilentAuctionBid, { store });
+
+    expect(submitButton(container).disabled).to.equal(false);
+    expect(container.textContent).to.not.contain("Waiting for your turn");
+
+    await fill(container, [5, 3, 8]);
+    await fireEvent.click(submitButton(container));
+
+    expect(emitted().command[0]).to.deep.equal(["p2 silentBid itars 5 xenos 3 taklons 8"]);
   });
 
   it("renders in a hosted test game, where one account holds every seat and there is no seat lock", async () => {

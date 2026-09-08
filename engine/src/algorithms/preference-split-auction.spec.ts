@@ -23,15 +23,14 @@ function bidsFrom(vectors: number[][], factions = FACTIONS): PreferenceSplitBid[
   return bids;
 }
 
-/** A deterministic stand-in for the engine's seeded PRNG - cycles through the given values. */
-function seededRandom(values: number[]): () => number {
-  let i = 0;
-  return () => values[i++ % values.length];
-}
+/** The fixture convention: PLAYERS[i] nominated FACTIONS[i] in the pick round (Player1 -> Itars,
+ * Player2 -> Taklons, Player3 -> Xenos, Player4 -> Gleens). Both tiebreaks resolve off this -
+ * deterministically, latest nominator first. */
+const NOMINATED: Map<PlayerEnum, Faction> = new Map(PLAYERS.map((p, i) => [p, FACTIONS[i]] as [PlayerEnum, Faction]));
 
 /**
  * The required end-to-end fixture, adapted to this project's factions. Every faction totals 40, so
- * the whole faction ranking is a four-way tie that has to be broken at random.
+ * the whole faction ranking is a four-way tie broken by nomination order.
  */
 const ALL_TIED = [
   [20, 12, 6, 2],
@@ -143,7 +142,7 @@ describe("Preference Split Auction", () => {
 
   describe("resolution", () => {
     it("ranks factions by their total bid, highest first", () => {
-      const result = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bidsFrom(NO_TIES), 40, seededRandom([0]));
+      const result = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bidsFrom(NO_TIES), 40, NOMINATED);
 
       expect(result.order).to.deep.equal([Faction.Gleens, Faction.Itars, Faction.Taklons, Faction.Xenos]);
       expect(result.factions.map((f) => f.total)).to.deep.equal([51, 38, 36, 35]);
@@ -153,7 +152,7 @@ describe("Preference Split Auction", () => {
     });
 
     it("awards each faction to the highest bidder who is still unassigned", () => {
-      const result = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bidsFrom(NO_TIES), 40, seededRandom([0]));
+      const result = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bidsFrom(NO_TIES), 40, NOMINATED);
 
       // Gleens (rank 1): p4 bid 25, the highest of all four.
       // Itars (rank 2): p1 bid 20, highest among the three still in the running.
@@ -168,7 +167,7 @@ describe("Preference Split Auction", () => {
     });
 
     it("excludes already-assigned players from later allocations", () => {
-      const result = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bidsFrom(NO_TIES), 40, seededRandom([0]));
+      const result = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bidsFrom(NO_TIES), 40, NOMINATED);
 
       expect(result.allocations.map((a) => a.eligible.length)).to.deep.equal([4, 3, 2, 1]);
       // p4 took Gleens first and is gone from every later pool, even though their 11 on Xenos was
@@ -178,7 +177,7 @@ describe("Preference Split Auction", () => {
     });
 
     it("keeps assigned players' original bids in every faction's total and average", () => {
-      const result = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bidsFrom(NO_TIES), 40, seededRandom([0]));
+      const result = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bidsFrom(NO_TIES), 40, NOMINATED);
 
       // Xenos is awarded last, when only p3 remains - but its average still divides all four
       // original bids (6 + 8 + 10 + 11 = 35) by four, not just p3's own.
@@ -190,7 +189,7 @@ describe("Preference Split Auction", () => {
     });
 
     it("charges the faction average, whatever the winner bid themselves", () => {
-      const result = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bidsFrom(NO_TIES), 40, seededRandom([0]));
+      const result = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bidsFrom(NO_TIES), 40, NOMINATED);
 
       const gleens = result.allocations[0];
       expect(gleens.winnerBid).to.equal(25);
@@ -212,7 +211,7 @@ describe("Preference Split Auction", () => {
         [4, 12, 22, 2],
         [6, 4, 16, 14],
       ];
-      const result = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bidsFrom(overBid), 40, seededRandom([0]));
+      const result = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bidsFrom(overBid), 40, NOMINATED);
 
       const itars = result.allocations.find((a) => a.faction === Faction.Itars);
       expect(itars.winner).to.equal(PlayerEnum.Player4);
@@ -231,7 +230,7 @@ describe("Preference Split Auction", () => {
         [5, 5, 25, 5],
         [21, 19, 0, 0],
       ];
-      const result = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bidsFrom(zeroBid), 40, seededRandom([0]));
+      const result = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bidsFrom(zeroBid), 40, NOMINATED);
 
       const last = result.allocations[result.allocations.length - 1];
       expect(last.faction).to.equal(Faction.Gleens);
@@ -256,7 +255,7 @@ describe("Preference Split Auction", () => {
         [1, 2, 20, 17],
         [2, 3, 16, 19],
       ];
-      const result = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bidsFrom(nearTie), 40, seededRandom([0]));
+      const result = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bidsFrom(nearTie), 40, NOMINATED);
 
       const taklons = result.allocations.find((a) => a.faction === Faction.Taklons);
       expect(taklons.winner).to.equal(PlayerEnum.Player1);
@@ -268,23 +267,22 @@ describe("Preference Split Auction", () => {
       expect(itars.payment).to.equal(6);
     });
 
-    it("breaks a faction-total tie at random and records who was tied", () => {
+    it("breaks a faction-total tie by nomination order (latest nominator first) and records who was tied", () => {
       const bids = bidsFrom(ALL_TIED);
-      // Every faction totals 40, so the four-way tie is decided entirely by the random source.
-      const first = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bids, 40, seededRandom([0.99, 0.99, 0.99]));
-      const second = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bids, 40, seededRandom([0, 0, 0]));
+      // Every faction totals 40, so the four-way tie is decided entirely by nomination order: the
+      // faction nominated LATEST in setup order (highest FACTIONS index) ranks first, so the
+      // resolved ranking is exactly the reverse of FACTIONS.
+      const result = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bids, 40, NOMINATED);
 
-      expect(first.factions.map((f) => f.total)).to.deep.equal([40, 40, 40, 40]);
-      expect([...first.order].sort()).to.deep.equal([...FACTIONS].sort());
-      expect(first.factions.every((f) => f.tiedWith.length === 3)).to.equal(true);
-      expect(first.order).to.not.deep.equal(second.order);
-      // Same random source -> same order, every time.
-      expect(resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bids, 40, seededRandom([0, 0, 0])).order).to.deep.equal(
-        second.order
-      );
+      expect(result.factions.map((f) => f.total)).to.deep.equal([40, 40, 40, 40]);
+      expect(result.order).to.deep.equal([Faction.Gleens, Faction.Xenos, Faction.Taklons, Faction.Itars]);
+      expect(result.factions.map((f) => f.rank)).to.deep.equal([1, 2, 3, 4]);
+      expect(result.factions.every((f) => f.tiedWith.length === 3)).to.equal(true);
+      // Deterministic: the same bids always produce exactly this order.
+      expect(resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bids, 40, NOMINATED).order).to.deep.equal(result.order);
     });
 
-    it("breaks a player tie at random among only the tied eligible players", () => {
+    it("breaks a player tie by nomination order (latest nominator wins), among only the tied eligible players", () => {
       // p1 and p2 both bid 20 on Itars, which is also the top-ranked faction (total 44).
       const playerTie = [
         [20, 12, 6, 2],
@@ -293,30 +291,19 @@ describe("Preference Split Auction", () => {
         [2, 4, 9, 25],
       ];
       const bids = bidsFrom(playerTie);
-      const toP1 = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bids, 40, seededRandom([0]));
-      const toP2 = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bids, 40, seededRandom([0.99]));
+      const result = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bids, 40, NOMINATED);
 
-      const itarsA = toP1.allocations.find((a) => a.faction === Faction.Itars);
-      const itarsB = toP2.allocations.find((a) => a.faction === Faction.Itars);
-      expect(itarsA.tiedPlayers).to.deep.equal([PlayerEnum.Player1, PlayerEnum.Player2]);
-      expect(itarsA.winner).to.equal(PlayerEnum.Player1);
-      expect(itarsB.winner).to.equal(PlayerEnum.Player2);
-      // Total points bid across all factions is identical for everyone (that's the whole point of a
-      // fixed budget), so it is never used to separate them.
-      expect(itarsA.tiedPlayers).to.deep.equal(itarsB.tiedPlayers);
+      const itars = result.allocations.find((a) => a.faction === Faction.Itars);
+      expect(itars.tiedPlayers).to.deep.equal([PlayerEnum.Player1, PlayerEnum.Player2]);
+      // p1 nominated Itars (index 0), p2 nominated Taklons (index 1) - the later nominator wins.
+      expect(itars.winner).to.equal(PlayerEnum.Player2);
       // Untied allocations record no tiebreak at all.
-      expect(toP1.allocations.filter((a) => a.tiedPlayers.length > 0)).to.have.length(1);
+      expect(result.allocations.filter((a) => a.tiedPlayers.length > 0)).to.have.length(1);
     });
 
     it("gives every player exactly one faction and every faction exactly one winner", () => {
       for (const vectors of [NO_TIES, ALL_TIED]) {
-        const result = resolvePreferenceSplitAuction(
-          FACTIONS,
-          PLAYERS,
-          bidsFrom(vectors),
-          40,
-          seededRandom([0.1, 0.7, 0.3, 0.9])
-        );
+        const result = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bidsFrom(vectors), 40, NOMINATED);
         expect([...new Set(result.allocations.map((a) => a.winner))]).to.have.length(4);
         expect([...new Set(result.allocations.map((a) => a.faction))]).to.have.length(4);
         expect(result.allocations).to.have.length(4);
@@ -325,7 +312,7 @@ describe("Preference Split Auction", () => {
 
     it("rounds every payment with the same half-up rule", () => {
       // Totals 38/36/35/51 -> averages 9.5, 9, 8.75, 12.75, none of them whole.
-      const result = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bidsFrom(NO_TIES), 40, seededRandom([0]));
+      const result = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bidsFrom(NO_TIES), 40, NOMINATED);
 
       for (const allocation of result.allocations) {
         expect(allocation.payment).to.equal(roundVictoryPoints(Math.min(allocation.basePrice, allocation.winnerBid)));
@@ -334,19 +321,18 @@ describe("Preference Split Auction", () => {
       expect(result.allocations.map((a) => a.payment)).to.deep.equal([13, 10, 9, 9]);
     });
 
-    it("is fully determined by the bids once the random source is fixed", () => {
+    it("is fully determined by the bids alone - no random source at all", () => {
       const bids = bidsFrom(ALL_TIED);
-      const random = () => 0.42;
-      const a = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bids, 40, random);
-      const b = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bids, 40, random);
+      const a = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bids, 40, NOMINATED);
+      const b = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bids, 40, NOMINATED);
       expect(JSON.stringify(a)).to.equal(JSON.stringify(b));
     });
 
     describe("end-to-end: the four-way-tied fixture", () => {
-      // Not asserting a particular random order - only that whatever order comes out is internally
-      // consistent, which is what the rules actually promise here.
+      // The tie resolves deterministically now - this pins the internal consistency the rules
+      // promise, not the order itself (the dedicated tiebreak test above does that).
       const bids = bidsFrom(ALL_TIED);
-      const result = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bids, 40, seededRandom([0.3, 0.8, 0.1, 0.6]));
+      const result = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bids, 40, NOMINATED);
 
       it("contains all four factions exactly once in the resolved order", () => {
         expect([...result.order].sort()).to.deep.equal([...FACTIONS].sort());
@@ -384,9 +370,7 @@ describe("Preference Split Auction", () => {
 
     describe("end-to-end: the deterministic fixture", () => {
       it("produces exactly this allocation and these payments", () => {
-        const result = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bidsFrom(NO_TIES), 40, () => {
-          throw new Error("no tie should ever need the random source here");
-        });
+        const result = resolvePreferenceSplitAuction(FACTIONS, PLAYERS, bidsFrom(NO_TIES), 40, NOMINATED);
 
         expect(
           result.allocations.map((a) => ({
@@ -449,7 +433,13 @@ describe("Preference Split Auction", () => {
         ],
         factions
       );
-      const result = resolvePreferenceSplitAuction(factions, players, bids, 30, seededRandom([0]));
+      const result = resolvePreferenceSplitAuction(
+        factions,
+        players,
+        bids,
+        30,
+        new Map(players.map((p, i) => [p, factions[i]] as [PlayerEnum, Faction]))
+      );
 
       expect(result.order).to.deep.equal([Faction.Xenos, Faction.Taklons, Faction.Itars]);
       expect(result.factions.map((f) => f.average)).to.deep.equal([11, 10, 9]);
@@ -463,9 +453,9 @@ describe("Preference Split Auction", () => {
     it("resolves a two-player auction, where each player simply takes the one they rated higher", () => {
       const factions = FACTIONS.slice(0, 2);
       const players = PLAYERS.slice(0, 2);
-      // itars 14+6 = 20 (avg 10), taklons 6+14 = 20 (avg 10) - a total tie, so the order is random,
-      // but at two players the order cannot change who gets what: whoever bid more on one bid less
-      // on the other.
+      // itars 14+6 = 20 (avg 10), taklons 6+14 = 20 (avg 10) - a total tie, so the order comes
+      // from the nomination-order tiebreak, but at two players the order cannot change who gets
+      // what: whoever bid more on one bid less on the other.
       const bids = bidsFrom(
         [
           [14, 6],
@@ -473,15 +463,14 @@ describe("Preference Split Auction", () => {
         ],
         factions
       );
-      for (const random of [seededRandom([0]), seededRandom([0.99])]) {
-        const result = resolvePreferenceSplitAuction(factions, players, bids, 20, random);
-        const itars = result.allocations.find((a) => a.faction === Faction.Itars);
-        const taklons = result.allocations.find((a) => a.faction === Faction.Taklons);
-        expect(itars.winner).to.equal(PlayerEnum.Player1);
-        expect(taklons.winner).to.equal(PlayerEnum.Player2);
-        expect(itars.payment).to.equal(10);
-        expect(taklons.payment).to.equal(10);
-      }
+      const nominated = new Map(players.map((p, i) => [p, factions[i]] as [PlayerEnum, Faction]));
+      const result = resolvePreferenceSplitAuction(factions, players, bids, 20, nominated);
+      const itars = result.allocations.find((a) => a.faction === Faction.Itars);
+      const taklons = result.allocations.find((a) => a.faction === Faction.Taklons);
+      expect(itars.winner).to.equal(PlayerEnum.Player1);
+      expect(taklons.winner).to.equal(PlayerEnum.Player2);
+      expect(itars.payment).to.equal(10);
+      expect(taklons.payment).to.equal(10);
     });
 
     it("always bills the table exactly the budget, whatever the player count", () => {
@@ -516,7 +505,7 @@ describe("Preference Split Auction", () => {
           players,
           bidsFrom(vectors, factions),
           budget,
-          seededRandom([0])
+          new Map(players.map((p, i) => [p, factions[i]] as [PlayerEnum, Faction]))
         );
         const exact = result.allocations.reduce((sum, a) => sum + a.basePrice, 0);
         expect(exact).to.equal(budget);

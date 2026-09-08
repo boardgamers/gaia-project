@@ -75,10 +75,11 @@ export default class SealedBidPanel extends Vue {
 
   /**
    * Online play without a sealed backend (boardgamers.space): this device holds exactly one locked
-   * seat and a bid is an ordinary move relayed through the platform. The engine collects bids one
-   * seat at a time, but the platform's stripSecret masks every submitted bid from the other
-   * clients until the reveal - so the round is sequential-but-sealed: you may have to wait for
-   * your turn to submit, yet nobody ever sees a value before the auction resolves.
+   * seat and a bid is an ordinary move relayed through the platform. The engine collects bids from
+   * EVERY pending seat simultaneously (its `currentPlayer()` returns all of them, and `move()`
+   * accepts a bid from any of them in any order), while the platform's stripSecret masks every
+   * submitted bid from the other clients until the reveal - so the round is truly simultaneous AND
+   * sealed: nobody waits for a turn, and nobody ever sees a value before the auction resolves.
    */
   get onlineSequential(): boolean {
     if (this.backend || this.$store.state.analysisMode) {
@@ -88,17 +89,14 @@ export default class SealedBidPanel extends Vue {
     return typeof locked === "number" && locked >= 0;
   }
 
-  /** True while this device's seat may not submit yet (online sequential play, not on turn). */
+  /** Kept for the template: simultaneous bidding means a pending seat may always submit now. */
   get waitingForTurn(): boolean {
-    return this.onlineSequential && this.seat !== null && this.gameData?.playerToMove !== this.seat;
+    return false;
   }
 
-  /** Small hint under the form while `waitingForTurn` - the inputs stay editable so the bids can
-   * be prepared, only the submit waits. */
+  /** Kept for the template: no turn to wait for anymore - every pending seat bids at once. */
   get turnHint(): string {
-    return this.waitingForTurn
-      ? "Waiting for your turn to submit - bids already made stay sealed until everyone has bid."
-      : "";
+    return "";
   }
 
   // -------------------------------------------------------------------------
@@ -351,9 +349,15 @@ export default class SealedBidPanel extends Vue {
         this.locallySubmitted = [...this.locallySubmitted, seat];
         this.resetValues();
       } else {
-        // Offline/hot-seat: no server to seal anything, so the bid is an ordinary move for the seat
-        // on turn and secrecy is whoever else is looking at the screen.
-        this.$emit("command", `${this.commandName} ${this.entries.map((e) => `${e.faction} ${e.points}`).join(" ")}`);
+        // No sealed backend (offline/hot-seat, or boardgamers.space): the bid is an ordinary move.
+        // Prefix it with the seat (`p${seat+1}`) - the engine parses the bidder off that token, and
+        // with simultaneous bidding it accepts the bid from ANY pending seat, not just the one its
+        // turn pointer is on. Omitting the prefix left the seat unparseable, which is what made
+        // off-turn submissions fail with "Wrong turn order ... expected player NaN".
+        this.$emit(
+          "command",
+          `p${seat + 1} ${this.commandName} ${this.entries.map((e) => `${e.faction} ${e.points}`).join(" ")}`
+        );
         this.resetValues();
       }
     } catch (err) {

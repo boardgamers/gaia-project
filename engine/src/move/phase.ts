@@ -98,14 +98,20 @@ export function phaseSetupAuction(engine: Engine, move: string) {
 export function phaseSetupSilentBid(engine: Engine, move: string) {
   engine.loadTurnMoves(move, { split: false, processFirst: true });
 
-  if (!engine.moveToNextPlayer(engine.turnOrder, { loop: false })) {
+  // Simultaneous collection: resolve as soon as the LAST pending bid lands, regardless of the
+  // order they arrived in (`sealedBidPendingSeats` reads the recorded bids, so the sequential
+  // `moveToNextPlayer` walk is no longer what gates resolution). The old sequential walk is kept
+  // only to keep `currentPlayer` moving for any client still reading it, but it no longer decides
+  // when the auction resolves.
+  engine.moveToNextPlayer(engine.turnOrder, { loop: false });
+
+  if ((engine.sealedBidPendingSeats() ?? []).length === 0) {
     const nominatedFaction = new Map(engine.players.map((pl) => [pl.player as PlayerEnum, pl.faction]));
     const result = resolveSilentAuction(
       engine.setup,
       engine.players.map((pl) => pl.player as PlayerEnum),
       engine.silentAuctionBids,
-      nominatedFaction,
-      () => engine.map.rng()
+      nominatedFaction
     );
     engine.silentAuctionLog = result.log;
     for (const player of engine.players) {
@@ -137,7 +143,10 @@ export function phaseSetupSilentBid(engine: Engine, move: string) {
 export function phaseSetupPreferenceBid(engine: Engine, move: string) {
   engine.loadTurnMoves(move, { split: false, processFirst: true });
 
-  if (!engine.moveToNextPlayer(engine.turnOrder, { loop: false })) {
+  // Simultaneous collection: resolve as soon as the last pending bid lands (see phaseSetupSilentBid).
+  engine.moveToNextPlayer(engine.turnOrder, { loop: false });
+
+  if ((engine.sealedBidPendingSeats() ?? []).length === 0) {
     resolvePreferenceSplitPhase(engine);
     endSetupFactionPhase(engine);
   }
@@ -150,12 +159,13 @@ function resolvePreferenceSplitPhase(engine: Engine) {
     return;
   }
 
+  const nominatedFaction = new Map(engine.players.map((pl) => [pl.player as PlayerEnum, pl.faction]));
   const result = resolvePreferenceSplitAuction(
     engine.setup,
     engine.players.map((pl) => pl.player as PlayerEnum),
     engine.preferenceSplitBids,
     engine.preferenceSplitBudget,
-    () => engine.map.rng()
+    nominatedFaction
   );
   engine.preferenceSplitResult = result;
 

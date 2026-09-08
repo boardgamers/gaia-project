@@ -33,9 +33,10 @@ describe("resolveSilentAuction", () => {
       [C, Faction.Taklons],
     ]);
 
-    // Only one tiebreak in the whole trace reaches rule #3 (random): B's turn 11, indifferent
-    // between Itars and Taklons. Force it to pick the 2nd candidate (Taklons), as the guide does.
-    const result = resolveSilentAuction(factions, [A, B, C], bids, nominatedFaction, () => 0.99);
+    // Only one tiebreak in the whole trace reaches rule #3 (setup order): B's turn 11, indifferent
+    // between Itars and Taklons. The deterministic rule picks the LATEST-nominated faction in setup
+    // order - Taklons (index 1) over Itars (index 0) - which happens to match the guide's pick.
+    const result = resolveSilentAuction(factions, [A, B, C], bids, nominatedFaction);
 
     expect(result.winners.get(Faction.Taklons)).to.equal(A);
     expect(result.winners.get(Faction.Itars)).to.equal(B);
@@ -50,7 +51,7 @@ describe("resolveSilentAuction", () => {
     expect(result.log).to.have.length(18);
     expect(result.log[8]).to.deep.include({ player: C, faction: Faction.Itars, price: 7, tiebreak: "existing" });
     expect(result.log[9]).to.deep.include({ player: A, faction: Faction.Taklons, skipped: true });
-    expect(result.log[10]).to.deep.include({ player: B, faction: Faction.Taklons, price: 1, tiebreak: "random" });
+    expect(result.log[10]).to.deep.include({ player: B, faction: Faction.Taklons, price: 1, tiebreak: "setupOrder" });
     expect(result.log[11]).to.deep.include({ player: C, faction: Faction.Itars, skipped: true });
     expect(result.log[12]).to.deep.include({ player: A, faction: Faction.Taklons, price: 2 });
   });

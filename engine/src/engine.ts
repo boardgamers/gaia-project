@@ -312,6 +312,27 @@ export default class Engine {
   // written exactly once, when the last submission lands, and never recomputed afterwards.
   preferenceSplitBids: PreferenceSplitBid[] = [];
   preferenceSplitResult?: PreferenceSplitResult;
+
+  /**
+   * Simultaneous sealed bidding (Silent / Preference Split Auction). The seats that still owe a
+   * bid, derived from the phase + the bids already recorded - `undefined` outside a bid phase, so
+   * callers can tell "not a bid phase" apart from "bid phase, nobody left".
+   *
+   * The bid phases collect one whole bid vector per seat, in ANY order (the platform accepts a move
+   * from every seat `currentPlayer()` names). Nothing is derived from any bid until the last one
+   * lands, so collecting them simultaneously is equivalent to collecting them in turn order - only
+   * without forcing players to wait. Recorded bids are keyed by seat, so the order they arrive in
+   * never affects the resolution.
+   */
+  sealedBidPendingSeats(): PlayerEnum[] | undefined {
+    const isBidPhase = this.phase === Phase.SetupSilentBid || this.phase === Phase.SetupPreferenceBid;
+    if (!isBidPhase) {
+      return undefined;
+    }
+    const bids = this.phase === Phase.SetupSilentBid ? this.silentAuctionBids : this.preferenceSplitBids;
+    const bidSeats = new Set(bids.map((bid) => bid.player as number));
+    return this.players.map((pl) => pl.player as PlayerEnum).filter((seat) => !bidSeats.has(seat));
+  }
   options: EngineOptions = {};
   tiles: {
     boosters: {
@@ -495,9 +516,21 @@ export default class Engine {
     const move = _move.trim();
     this.pendingMove = move;
     let moveToShow = move;
-    if (this.playerToMove !== undefined) {
-      this.log(this.playerToMove, undefined, 0, undefined);
-      moveToShow = createMoveToShow(move, this.player(this.playerToMove), this.map, execute);
+    // Attribute the move to whoever actually played it. In simultaneous sealed bidding the mover is
+    // NOT the sequential `playerToMove` (any pending seat may bid in any order), so parse the seat
+    // off the move string for those; everywhere else it is the turn player as before.
+    const pendingSeats = this.sealedBidPendingSeats();
+    const isSealedBid = pendingSeats !== undefined && /^(p[1-7]|\S+)\s+(silentBid|preferenceBid)\b/.test(move);
+    let actingPlayer = this.playerToMove;
+    if (isSealedBid) {
+      const seatMatch = /^p([1-7])\b/.exec(move);
+      if (seatMatch) {
+        actingPlayer = (+seatMatch[1] - 1) as PlayerEnum;
+      }
+    }
+    if (actingPlayer !== undefined) {
+      this.log(actingPlayer, undefined, 0, undefined);
+      moveToShow = createMoveToShow(move, this.player(actingPlayer), this.map, execute);
     } else {
       execute();
     }
@@ -998,10 +1031,24 @@ export default class Engine {
     }
 
     if (!this.replay) {
-      assert(
-        this.playerToMove === (player as PlayerEnum),
-        "Wrong turn order in move " + move + ", expected player " + (this.playerToMove + 1)
-      );
+      // Simultaneous sealed bidding (Silent / Preference Split Auction): a bid is legal from ANY
+      // seat still owing one, regardless of where the engine's sequential `playerToMove` pointer
+      // happens to sit. The bid phases collect submissions in any order (the platform accepts moves
+      // from every seat `currentPlayer()` names) and resolve only once the last one lands - the
+      // turn pointer is meaningless during them. Everywhere else the strict turn-order check stands.
+      const pending = this.sealedBidPendingSeats();
+      const isSealedBidMove = pending !== undefined && /^(p[1-7]|\S+)\s+(silentBid|preferenceBid)\b/.test(move.trim());
+      if (isSealedBidMove) {
+        assert(
+          pending.includes(player as PlayerEnum),
+          "Player " + (player + 1) + " has already submitted their bids (or is not in this auction)"
+        );
+      } else {
+        assert(
+          this.playerToMove === (player as PlayerEnum),
+          "Wrong turn order in move " + move + ", expected player " + (this.playerToMove + 1)
+        );
+      }
     }
     this.processedPlayer = player;
 
@@ -1085,6 +1132,20 @@ export default class Engine {
     };
   }
 
+  /**
+   * The seat actually executing the current command. Identical to `playerToMove` everywhere except
+   * a simultaneous sealed-bid phase, where `loadTurnMoves` has already parsed the bidding seat off
+   * the move string into `processedPlayer` - use that, so `silentBid`/`preferenceBid` are recorded
+   * against the real bidder (not wherever the sequential turn pointer happens to sit).
+   */
+  private get actingSeat(): PlayerEnum {
+    const pending = this.sealedBidPendingSeats();
+    if (pending !== undefined && this.processedPlayer !== undefined) {
+      return this.processedPlayer as PlayerEnum;
+    }
+    return this.playerToMove;
+  }
+
   processNextMove(subphase?: SubPhase, data?: any, required = false) {
     if (subphase) {
       this.generateAvailableCommands(subphase, data);
@@ -1154,7 +1215,7 @@ export default class Engine {
       [Command.ExamineArtifact]: moveExamineArtifact,
       [Command.ChooseArtifactToken]: moveChooseArtifactToken,
     };
-    moveRegistry[move.command](this, this.avCommand(), this.playerToMove, ...move.args);
+    moveRegistry[move.command](this, this.avCommand(), this.actingSeat, ...move.args);
 
     return move;
   }
@@ -1165,7 +1226,13 @@ export default class Engine {
 
   checkCommand(command: Command) {
     this.availableCommand = this.findAvailableCommand(this.playerToMove, command);
-    if (!this.availableCommand && !this.replay) {
+    // Simultaneous sealed bidding: availableCommands are only generated for the sequential
+    // `playerToMove`, so an off-turn bidder's command won't be in the list - that's expected, not
+    // illegal. `moveSilentBid`/`movePreferenceBid` do their own legality check (the shared
+    // silentAuctionBidError / preferenceSplitBidError), which is the check that actually matters.
+    const isSealedBid =
+      this.sealedBidPendingSeats() !== undefined && [Command.SilentBid, Command.PreferenceBid].includes(command);
+    if (!this.availableCommand && !this.replay && !isSealedBid) {
       assert(this.availableCommand, `Command ${command} is not in the list of available commands`);
     }
   }

@@ -236,7 +236,23 @@ export async function dropPlayer(engine: Engine, player: number) {
   return engine;
 }
 
-export function currentPlayer(engine: Engine) {
+/**
+ * Whose move the platform should accept right now. Returns a single seat in sequential play, an
+ * ARRAY of seats during a simultaneous sealed-bid phase (Silent / Preference Split Auction - every
+ * seat still owing a bid may submit in any order), and `undefined` when the game is over or between
+ * phases. The platform normalizes both shapes (`Array.isArray(current) ? current : [current]`) and
+ * persists all of them to `game.currentPlayers`, which is the check its `/move` route authorizes
+ * against - returning the array is what lifts the "not your turn to play" rejection off-turn
+ * bidders used to hit. Same array convention as the other BGS games (Outpost / Power Grid).
+ */
+export function currentPlayer(engine: Engine): number | number[] | undefined {
+  const pending = engine.sealedBidPendingSeats();
+  if (pending !== undefined) {
+    if (pending.length === 0) {
+      return undefined;
+    }
+    return pending.length === 1 ? pending[0] : pending;
+  }
   return engine.playerToMove;
 }
 

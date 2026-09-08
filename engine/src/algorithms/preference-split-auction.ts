@@ -13,11 +13,12 @@ import assert from "../utils/assert";
  * 1. Each faction's `total` is the sum of EVERY original bid on it, and its `average` is that
  *    total divided by the number of players. Both are computed once, from the original bids, and
  *    are never recomputed as players drop out of the running.
- * 2. Factions are ranked by `total`, highest first. Factions on an equal total are ordered
- *    randomly (recorded in `tiedWith`).
+ * 2. Factions are ranked by `total`, highest first. Factions on an equal total are ordered by
+ *    nomination order, LATEST first (recorded in `tiedWith`).
  * 3. Working down that ranking, each faction goes to whichever still-unassigned player bid the
- *    most on it. Players on an equal highest bid are separated randomly (recorded in
- *    `tiedPlayers`). A player who wins a faction is out of the running for the rest.
+ *    most on it. Players on an equal highest bid are separated by NOMINATION ORDER - the player who
+ *    nominated LATEST wins (recorded in `tiedPlayers`). A player who wins a faction is out of the
+ *    running for the rest.
  * 4. The winner pays the faction's `average`, rounded to a whole VP. **Always the average, whatever
  *    they bid themselves** - their own bid decides which faction they get, never what it costs.
  *
@@ -34,8 +35,11 @@ import assert from "../utils/assert";
  * tied to what it is actually worth to the table. The accepted cost is that a winner can pay more
  * than they personally bid; in exchange the rule is one sentence long.
  *
- * The only randomness is the two tiebreaks. Pass a seeded `random` (the engine passes the game's
- * own seeded PRNG) and the whole resolution is reproducible from the submitted bids alone.
+ * Both tiebreaks are DETERMINISTIC (owner decision, 2026-09): on a tie, the LATER nominator wins -
+ * the last faction-picker picks a booster first (setup booster order is reverse nomination order)
+ * and the owner ruled they win auction ties. No PRNG - the resolution is reproducible from the
+ * submitted bids alone, with nothing to persist or reseed across a server round-trip (the old
+ * seeded-`random` tiebreak is what crashed hosted simultaneous bidding on a reloaded engine).
  */
 
 /** Fewest players the variant makes sense for. Nothing above this is count-specific: the auction
@@ -180,27 +184,12 @@ export function preferenceSplitBidError(
   return null;
 }
 
-/** Fisher-Yates over a copy, driven by the supplied (seeded) random source. */
-function shuffled<T>(items: T[], random: () => number): T[] {
-  const result = [...items];
-  for (let i = result.length - 1; i > 0; i--) {
-    const j = pick(i + 1, random);
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-  return result;
-}
-
-/** A uniform index in [0, count), guarded against a random source that can return exactly 1. */
-function pick(count: number, random: () => number): number {
-  return Math.min(count - 1, Math.max(0, Math.floor(random() * count)));
-}
-
 export function resolvePreferenceSplitAuction(
   factions: Faction[],
   players: PlayerEnum[],
   bids: PreferenceSplitBid[],
   budget: number,
-  random: () => number = Math.random
+  nominatedFaction: Map<PlayerEnum, Faction>
 ): PreferenceSplitResult {
   assert(
     players.length >= MIN_PREFERENCE_SPLIT_PLAYERS,
@@ -250,9 +239,14 @@ export function resolvePreferenceSplitAuction(
     };
   });
 
-  // Ranking: highest total first. `sort` is stable, so factions sharing a total arrive here in
-  // their `factions` order and the shuffle below is the ONLY thing that decides between them.
-  const byTotal = [...summaries].sort((a, b) => b.total - a.total);
+  // Ranking: highest total first. `sort` is stable, so factions sharing a total keep their
+  // `factions` (nomination) order. Deterministic tiebreak (no PRNG): the LATER-nominated faction
+  // ranks higher - the last faction-picker picks a booster first (booster order is reverse
+  // nomination order) and, per the owner's ruling, wins auction ties. So within a tied group,
+  // reverse the nomination order so the latest nominee resolves first.
+  const byTotal = [...summaries].sort(
+    (a, b) => b.total - a.total || factions.indexOf(b.faction) - factions.indexOf(a.faction)
+  );
   const ordered: PreferenceSplitFactionSummary[] = [];
   for (let i = 0; i < byTotal.length;) {
     let j = i;
@@ -265,10 +259,8 @@ export function resolvePreferenceSplitAuction(
       for (const summary of group) {
         summary.tiedWith = tied.filter((faction) => faction !== summary.faction);
       }
-      ordered.push(...shuffled(group, random));
-    } else {
-      ordered.push(...group);
     }
+    ordered.push(...group); // already in deterministic setup order
     i = j;
   }
   ordered.forEach((summary, index) => {
@@ -280,7 +272,12 @@ export function resolvePreferenceSplitAuction(
     const eligible = [...remaining];
     const highest = Math.max(...eligible.map((player) => bidOf(player, summary.faction)));
     const tiedPlayers = eligible.filter((player) => bidOf(player, summary.faction) === highest);
-    const winner = tiedPlayers.length === 1 ? tiedPlayers[0] : tiedPlayers[pick(tiedPlayers.length, random)];
+    // Deterministic tiebreak, no PRNG (reproducible from the bids alone): the player who nominated
+    // their faction LATEST in setup order wins. The last faction-picker picks a booster first
+    // (booster order is reverse nomination order) and, per the owner's ruling, wins auction ties.
+    // A player's nomination position is the index in `factions` of the faction they nominated.
+    const nominationPos = (player: PlayerEnum) => factions.indexOf(nominatedFaction.get(player));
+    const winner = tiedPlayers.reduce((a, b) => (nominationPos(a) >= nominationPos(b) ? a : b));
     remaining.splice(remaining.indexOf(winner), 1);
 
     return {

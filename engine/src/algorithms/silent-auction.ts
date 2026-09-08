@@ -56,7 +56,7 @@ export type SilentAuctionStep = {
   price: number;
   /** true when the player already led `faction` (their best-value option) and made no bid */
   skipped: boolean;
-  tiebreak?: "existing" | "nominated" | "random";
+  tiebreak?: "existing" | "nominated" | "setupOrder";
 };
 
 export type SilentAuctionResult = {
@@ -79,15 +79,20 @@ export type SilentAuctionResult = {
  * its price to (current price + 1), or to 0 if it's unclaimed, and become its new leader (bumping
  * off whoever led it before). Ties in value are broken by, in order: preferring to raise an
  * existing bid over claiming an untouched faction, preferring the faction the player originally
- * picked in the nomination/pick phase, then uniformly at random. The auction ends once a full
- * round passes with every player skipped.
+ * picked in the nomination/pick phase, then DETERMINISTICALLY by faction setup order (the order the
+ * factions were nominated in) - earliest first. The auction ends once a full round passes with
+ * every player skipped.
+ *
+ * The last tiebreak used to be `random()` (seeded PRNG). It is deterministic now (owner decision,
+ * 2026-09) so the resolution depends ONLY on the submitted bids - no PRNG to persist or reseed
+ * across a server round-trip, which is what broke hosted simultaneous bidding when the last bid
+ * landed on a reloaded engine (`map.rng is not a function`).
  */
 export function resolveSilentAuction(
   factions: Faction[],
   seatOrder: PlayerEnum[],
   bids: SilentAuctionBid[],
-  nominatedFaction: Map<PlayerEnum, Faction>,
-  random: () => number = Math.random
+  nominatedFaction: Map<PlayerEnum, Faction>
 ): SilentAuctionResult {
   const maxBid = (player: PlayerEnum, faction: Faction) =>
     bids.find((b) => b.player === player && b.faction === faction)?.max ?? 0;
@@ -142,8 +147,12 @@ export function resolveSilentAuction(
       }
     }
     if (candidates.length > 1) {
-      candidates = [candidates[Math.floor(random() * candidates.length)]];
-      tiebreak = "random";
+      // Deterministic, no PRNG (reproducible from the bids alone - nothing to reseed across a
+      // server round-trip): the LATEST-nominated faction in setup order. The last faction-picker
+      // picks a booster first (setup booster order is reverse nomination order), and the owner
+      // ruled that the first booster-picker wins auction ties. `factions` IS the nomination order.
+      candidates = [candidates.reduce((a, b) => (factions.indexOf(a) >= factions.indexOf(b) ? a : b))];
+      tiebreak = "setupOrder";
     }
 
     const best = candidates[0];
