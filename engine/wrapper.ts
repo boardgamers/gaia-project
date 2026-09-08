@@ -246,14 +246,19 @@ export async function dropPlayer(engine: Engine, player: number) {
  * bidders used to hit. Same array convention as the other BGS games (Outpost / Power Grid).
  */
 export function currentPlayer(engine: Engine): number | number[] | undefined {
-  const pending = engine.sealedBidPendingSeats();
+  // The game-server holds the game state as PLAIN JSON (Mongo stores plain objects, and every
+  // result crosses the worker boundary via JSON.parse(JSON.stringify(...))), so `engine` here is
+  // usually NOT an `Engine` instance. `sealedBidPendingSeats`/`playerToMove` are instance members -
+  // rehydrate first or they are undefined and this throws "sealedBidPendingSeats is not a function".
+  const e = engine instanceof Engine ? engine : Engine.fromData(engine);
+  const pending = e.sealedBidPendingSeats();
   if (pending !== undefined) {
     if (pending.length === 0) {
       return undefined;
     }
     return pending.length === 1 ? pending[0] : pending;
   }
-  return engine.playerToMove;
+  return e.playerToMove;
 }
 
 export function toSave(engine: Engine) {
