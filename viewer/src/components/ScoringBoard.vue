@@ -3,13 +3,11 @@
        Lost Fleet, final scoring lives on the map itself (SpaceMap.vue's bottom-right corner) and
        the 7th adv-tech extension + round scoring tiles live in ResearchBoard.vue's 7th column.
 
-       The board is 440 tall - the SAME height as the research board it sits beside - so its top
-       aligns with the tracks' top and its bottom with the general tech tiles' bottom. The 8 tiles
-       (2 final + 6 round) are distributed evenly down the column with an equal gap between each. -->
+       The 8 tiles (2 final + 6 round) are top-aligned in a tight uniform stack. -->
   <!-- viewBox starts at x=-2 (not 0): the accent/body cards sit up-left of each tile's origin,
-       their left edge reaching x=-0.5, so a 0-origin viewBox clips the left border. Vertically the
-       stack starts 2 units down (see TOP_MARGIN), which both clears the top tile's overhanging top
-       edge and lands R1's bottom flush with the general tech tiles' bottom. -->
+       their left edge reaching x=-0.5, so a 0-origin viewBox clips the left border. The stack is
+       TOP-ALIGNED (starts TOP_MARGIN units down, clearing the top tile's overhanging edge) with a
+       tight uniform gap between tiles - NOT stretched to fill the research board's height. -->
   <svg
     viewBox="-2 0 80 446"
     :x="x"
@@ -30,18 +28,16 @@ import { Component, Prop } from "vue-property-decorator";
 import FinalScoringTile from "./FinalScoringTile.vue";
 import ScoringTile from "./ScoringTile.vue";
 
-// The board is 446 tall: the research board's track area is 440, and its general tech tiles extend
-// ~6 units past that, so the scoring column's bottom aligns with the tech tiles' true bottom edge.
-// Each tile's accent/body card overhangs its origin by ~0.5 up/left, so the stack starts TOP_MARGIN
-// units down to clear the top tile's top edge; the stack itself ends 1 unit short of the board
-// bottom so R1's bottom card isn't flush against the frame edge.
-const BOARD_HEIGHT = 446;
+// The stack is TOP-ALIGNED with a tight, uniform gap between tiles - it no longer stretches to fill
+// the research board's height (owner feedback, 2026-09: the even fill-the-height distribution read
+// as "spaced out"). Each tile's accent/body card overhangs its origin by ~0.5 up/left, so the stack
+// starts TOP_MARGIN units down to clear the top tile's top edge.
 const FINAL_TILE_HEIGHT = 70;
 const ROUND_TILE_HEIGHT = 40;
 const TOP_MARGIN = 2;
-// 7 gaps between the 8 tiles. The stack fills BOARD_HEIGHT - 1 (plus TOP_MARGIN), leaving a 1-unit
-// margin at the bottom so R1's bottom card isn't flush against the frame edge.
-const GAP = (BOARD_HEIGHT - 1 - TOP_MARGIN - 2 * FINAL_TILE_HEIGHT - 6 * ROUND_TILE_HEIGHT) / 7; // ≈ 8.1
+// Fixed 4-unit gap between consecutive tiles - a touch of air (owner asked for slightly more than
+// the tight 2-unit minimum) without going back to the fill-the-height spread.
+const GAP = 4;
 
 @Component({
   components: {

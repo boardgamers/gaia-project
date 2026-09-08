@@ -137,27 +137,28 @@ const EXTENSION_COLUMN_WIDTH = 70;
 // BOTTOM_SCORING_TILE_Y, so Game.vue's declared render height for this whole component can never
 // drift out of sync with this array again.
 //
-// The 6 round tiles spread evenly from R6 (topmost, fixed at 110 just under the adv-tech row) down
-// to R1, and the finals stack below them so the lowest final tile's bottom lands flush with the
-// power/QIC action row's bottom edge (y=492, Game.vue's actionRowBottom) - the Lost Fleet layout
-// brief. The bottom final tile is 70 native units tall, scaled 0.82 (~57.4), so it starts at 492 -
-// 57.4 = 434.6; the finals group holds two of them 74 native units apart, so the group (and F1)
-// starts at 434.6 - 74*0.82 = 373.9. R1's bottom is that minus the 40-unit finals gap = 333.9.
-const ACTION_ROW_BOTTOM = 492;
-const FINAL_TILE_SCALED_HEIGHT = 70 * 0.82; // ≈ 57.4
-const F1_TOP = ACTION_ROW_BOTTOM - FINAL_TILE_SCALED_HEIGHT; // ≈ 434.6
-const FINAL_SCORING_GAP_BELOW_ROUND_TILES = 40;
-const R1_TOP = F1_TOP - 74 * 0.82 - FINAL_SCORING_GAP_BELOW_ROUND_TILES; // ≈ 333.9
+// The 6 round tiles form a TIGHT, top-aligned stack in the 7th column, with the finals directly
+// below them - no longer spread to fill the column or pinned to the action row (owner feedback,
+// 2026-09: the fill-the-height / bottom-aligned layout read as "spaced out"). R6 stays at its
+// current 110 (just under the adv-tech row), and each round tile sits a uniform step below the
+// previous one: the 40-tall native tile scaled to 0.82 (~32.8) plus a 2-unit gap. The finals stack
+// straight under R1 with the same 2-unit gap; the second final sits 74 native units below the first
+// (as before).
 const R6_TOP = 110;
-const SCORING_STEP = (R1_TOP - R6_TOP) / 5; // ≈ 44.8
+const ROUND_TILE_SCALED_HEIGHT = 40 * 0.82; // ≈ 32.8 - one round scoring tile, scaled
+const ROUND_GAP = 2;
+const ROUND_SCALED_STEP = ROUND_TILE_SCALED_HEIGHT + ROUND_GAP; // ≈ 34.8
 const SCORING_TILE_Y = [
-  R1_TOP,
-  R6_TOP + 4 * SCORING_STEP,
-  R6_TOP + 3 * SCORING_STEP,
-  R6_TOP + 2 * SCORING_STEP,
-  R6_TOP + SCORING_STEP,
-  R6_TOP,
+  R6_TOP + 5 * ROUND_SCALED_STEP, // R1 (bottommost)
+  R6_TOP + 4 * ROUND_SCALED_STEP,
+  R6_TOP + 3 * ROUND_SCALED_STEP,
+  R6_TOP + 2 * ROUND_SCALED_STEP,
+  R6_TOP + ROUND_SCALED_STEP,
+  R6_TOP, // R6 (topmost)
 ];
+// The finals stack below R1's BOTTOM edge (R1 top + its scaled height), plus the same gap - not
+// R1's top, which would overlap R1 (R1 is ~33 units tall; 2 below its top lands inside the tile).
+const FINAL_SCORING_GAP_BELOW_ROUND_TILES = ROUND_TILE_SCALED_HEIGHT + ROUND_GAP;
 
 @Component({
   computed: {

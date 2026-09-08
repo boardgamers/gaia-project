@@ -31,16 +31,18 @@ export function gameSeed(engine: Engine): string | undefined {
 
 // The bottommost (R1) round scoring tile's y-position in ResearchBoard.vue's 7th (Lost Fleet
 // only) column - see that file's own SCORING_TILE_Y[0]. Final scoring sits directly below it.
-// Kept in sync manually with ResearchBoard.vue, which re-exports this same value rather than
-// hardcoding its own copy, so the two can never drift apart the way Game.vue's hardcoded
-// `<ResearchBoard height="450">` once did (see `researchBoardHeight` below).
-export const BOTTOM_SCORING_TILE_Y = 300;
-const FINAL_SCORING_GAP_BELOW_ROUND_TILES = 40;
+// Kept in sync manually with ResearchBoard.vue (R6_TOP 110 + 5 * a 34.8-unit tight step), which
+// re-exports this same value rather than hardcoding its own copy, so the two can never drift apart
+// the way Game.vue's hardcoded `<ResearchBoard height="450">` once did (see `researchBoardHeight`).
+export const BOTTOM_SCORING_TILE_Y = 284;
+// The finals sit below R1's BOTTOM edge (R1 top + its ~32.8-unit scaled height) plus the 2-unit
+// gap - matching ResearchBoard.vue's FINAL_SCORING_GAP_BELOW_ROUND_TILES.
+const FINAL_SCORING_GAP_BELOW_ROUND_TILES = 40 * 0.82 + 2;
 // FinalScoringTile is 71 units tall (a 70-tall card from y=1) and the two tiles sit 74 units
 // apart, so the board reserves room for both without the second tile overlapping the first.
 const FINAL_SCORING_NATIVE_HEIGHT = 71;
 const FINAL_SCORING_NATIVE_GAP = 74;
-const FINAL_SCORING_SCALE = 0.9;
+const FINAL_SCORING_SCALE = 0.82;
 // The 6 research tracks' own fixed content height (independent of Lost Fleet's 7th column, which
 // can grow taller than this to fit final scoring - see researchBoardHeight below). Exported so
 // Game.vue can anchor the base-game power/QIC action row to the tracks' own bottom edge instead of

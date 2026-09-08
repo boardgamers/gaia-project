@@ -33,13 +33,14 @@ describe("Utils", () => {
       expect(researchBoardHeight(engine)).to.equal(440);
     });
 
-    it("grows to fit Lost Fleet's round + final scoring column, matching its own content exactly", () => {
+    it("grows just enough to fit Lost Fleet's tight top-aligned scoring column", () => {
       const engine = new Engine(["init 2 my-cool-seed"], { lostFleet: true });
 
       expect(engine.tiles.scorings.final).to.have.length(2);
-      // The Lost Fleet scoring column now stretches so the bottom final tile meets the power/QIC
-      // action row's bottom edge (y=492), so the board height grew from 455 to 481.
-      expect(researchBoardHeight(engine)).to.equal(481);
+      // The scoring column is a tight top-aligned stack (not stretched to fill the board or pinned
+      // to the action row): round tiles R6-R1 then the two finals directly below, ending at ~437,
+      // so the board grows just past the base 440 to fit them (448 with the bottom margin).
+      expect(researchBoardHeight(engine)).to.equal(448);
     });
   });
 
