@@ -39,6 +39,42 @@ describe("Federations", () => {
     expect(() => engine.move("xenos federation 5B3,5C,5A11,3A5,3B2,3B1 fed1.")).to.not.throw();
   });
 
+  it("restores a federation cache whose hexes were saved as raw hex objects, not strings", function () {
+    this.timeout(10000);
+
+    // Regression (Electric-plaza-5793 rendered blank): `Player.toJSON` writes federation hexes as
+    // coordinate strings, but a state can be persisted with the raw hex OBJECTS (the engine's
+    // `Object.assign({}, this)` serialization can copy the cache by reference). `fromData` must
+    // accept both or it throws `coords.includes is not a function` and the board never renders.
+    const engine = new Engine(game3.moveHistory, game3.options);
+    engine.move("xenos federation 5B3,5C,5A11,3A5,3B2,3B1 fed1.");
+
+    const fedOwner = engine.players.find((pl) => pl.federationCache && pl.federationCache.federations.length > 0);
+    expect(fedOwner, "a player should hold a formed federation").to.not.equal(undefined);
+
+    // Simulate the legacy/object persistence shape: hexes as {q, r, s, data} objects.
+    const asObjects = JSON.parse(JSON.stringify(engine));
+    for (const pl of asObjects.players) {
+      for (const fed of pl.federationCache?.federations ?? []) {
+        fed.hexes = fed.hexes.map((h: any) => (typeof h === "string" ? engine.map.getS(h) : h));
+      }
+    }
+    // ...then back through JSON, which leaves plain {q, r, s, data} objects (no GaiaHex methods).
+    const plainWithObjectHexes = JSON.parse(JSON.stringify(asObjects));
+    expect(
+      plainWithObjectHexes.players.some((pl: any) =>
+        pl.federationCache?.federations.some((fed: any) => fed.hexes.some((h: any) => typeof h === "object"))
+      )
+    ).to.equal(true);
+
+    const restored = Engine.fromData(plainWithObjectHexes);
+    expect(() => restored.generateAvailableCommandsIfNeeded()).to.not.throw();
+    const restoredFed = restored.players.find((pl) => pl.federationCache && pl.federationCache.federations.length > 0);
+    expect(
+      restoredFed.federationCache.federations.every((fed) => fed.hexes.every((h) => typeof h.toString === "function"))
+    ).to.equal(true);
+  });
+
   it.skip("should show a federation with only 6 satellites", function () {
     this.timeout(10000);
 

@@ -266,7 +266,13 @@ export default class Player extends EventEmitter {
     if (data.federationCache) {
       player.federationCache = data.federationCache;
       for (const fed of player.federationCache.federations) {
-        fed.hexes = (fed.hexes as any as string[]).map((hex) => map.getS(hex));
+        // `toJSON` writes hexes as coordinate strings, but a state can also be persisted with the
+        // raw hex objects (the engine's `Object.assign({}, this)` serialization copies the cache by
+        // reference, bypassing the player's own toJSON). Accept both: a string parses via `getS`,
+        // an object is looked up by its {q, r} cube coordinates.
+        fed.hexes = (fed.hexes as any as Array<string | { q: number; r: number }>).map((hex) =>
+          typeof hex === "string" ? map.getS(hex) : map.grid.get({ q: hex.q, r: hex.r } as any)
+        );
       }
     }
 
