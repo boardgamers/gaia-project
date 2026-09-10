@@ -147,7 +147,13 @@
           <text class="board-text" transform="scale(0.7)">+{{ income("q") }}</text>
         </g>
       </g>
-      <g v-for="i in researchFields" :key="i" :transform="`translate(${(i * 2 + -1.4) * 1},3.5) scale(1)`">
+      <g
+        v-for="i in researchFields"
+        :key="i"
+        :transform="`translate(${(i * 2 + -1.4) * 1},3.5) scale(1)`"
+        v-b-tooltip.hover
+        :title="researchTooltip(i - 1)"
+      >
         <polygon
           points="-7.5,3 -3,7.5 3,7.5 7.5,3 7.5,-3 3,-7.5 -3,-7.5 -7.5,-3"
           :transform="`scale(0.1)`"
@@ -177,7 +183,7 @@ import type { FastConversionEvent, MapMode } from "../../data/actions";
 import { MapModeType } from "../../data/actions";
 import { effectivePreviewPlayer } from "../../data/faction-preview";
 import { factionName } from "../../data/factions";
-import { researchColor } from "../../data/research";
+import { researchColor, researchData } from "../../data/research";
 import { showIncome } from "../../data/resources";
 import { leechNetwork, sectors } from "../../data/stats";
 import type { CellStyle } from "../../graphics/colors";
@@ -265,6 +271,10 @@ export default class PlayerBoardInfo extends Vue {
 
   get showIncome() {
     return showIncome(this.engine, this.player);
+  }
+
+  researchTooltip(index: number): string {
+    return `${researchData[this.researchType(index)].name} research track: level ${this.research(index)} of 5`;
   }
 
   researchClass(index: number): string {

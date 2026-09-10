@@ -5,8 +5,7 @@
        where the factions being bid on are otherwise unreadable plain text. -->
   <span class="faction-sheet-button">
     <b-btn class="faction-sheet-button__btn" :aria-label="ariaLabel" @click="open = true">
-      {{ label }}
-      <i :class="`planet ${planet}`" :style="{ color: color }"></i>
+      <span v-html="portrait" />{{ label }}
       <!-- Who currently holds this faction, for the browser's "already picked" row. Kept inside the
            button so the name travels with the faction on a wrapped, multi-column row. -->
       <small v-if="note" class="faction-sheet-button__note">{{ note }}</small>
@@ -20,6 +19,7 @@
       size="lg"
       dialog-class="gaia-viewer-modal"
     >
+      <template #modal-title><span v-html="portrait" />{{ label }}</template>
       <FactionInfoCard :faction="faction" :variant="variant" :expansion="expansions" />
     </b-modal>
   </span>
@@ -29,6 +29,7 @@
 import Engine, { Expansion, Faction, factionPlanet } from "@gaia-project/engine";
 import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
 import { Component, Prop, Vue } from "vue-property-decorator";
+import { factionPortraitHtml } from "../data/faction-art";
 import { factionName } from "../data/factions";
 import { factionColor } from "../graphics/utils";
 import FactionInfoCard from "./FactionInfoCard.vue";
@@ -43,6 +44,9 @@ export default class FactionSheetButton extends Vue {
   note: string;
 
   open = false;
+  get portrait() {
+    return factionPortraitHtml(this.faction, 28);
+  }
 
   get gameData(): Engine {
     return this.$store.state.data;

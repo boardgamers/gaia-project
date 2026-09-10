@@ -6,7 +6,6 @@ import Engine, {
   Faction,
   Federation,
   Phase,
-  Planet,
   PlayerEnum,
   Spaceship,
   SpaceshipFederation,
@@ -89,7 +88,7 @@ describe("Commands", () => {
     return cluster;
   }
 
-  it("renders Lost Fleet faction picker dots with Asteroid/Protoplanet colors", () => {
+  it("renders distinct portraits for all four Lost Fleet factions", () => {
     const engine = new Engine(["init 2 lf-faction-colors"], { lostFleet: true });
     engine.generateAvailableCommandsIfNeeded();
 
@@ -108,19 +107,13 @@ describe("Commands", () => {
         button.textContent?.includes(name)
       );
 
-    const tinkeroidsIcon = buttonFor("Tinkeroids")?.querySelector<SVGElement>("svg[data-planet]");
-    const darkaniansIcon = buttonFor("Darkanians")?.querySelector<SVGElement>("svg[data-planet]");
-    const moweydsIcon = buttonFor("Moweyds")?.querySelector<SVGElement>("svg[data-planet]");
-    const spaceGiantsIcon = buttonFor("Space Giants")?.querySelector<SVGElement>("svg[data-planet]");
-
-    expect(tinkeroidsIcon).to.not.equal(null);
-    expect(darkaniansIcon).to.not.equal(null);
-    expect(moweydsIcon).to.not.equal(null);
-    expect(spaceGiantsIcon).to.not.equal(null);
-    expect(tinkeroidsIcon?.getAttribute("data-planet")).to.equal(Planet.Asteroid);
-    expect(darkaniansIcon?.getAttribute("data-planet")).to.equal(Planet.Asteroid);
-    expect(moweydsIcon?.getAttribute("data-planet")).to.equal(Planet.Protoplanet);
-    expect(spaceGiantsIcon?.getAttribute("data-planet")).to.equal(Planet.Protoplanet);
+    const portraits = ["Tinkeroids", "Darkanians", "Moweyds", "Space Giants"].map((name) => {
+      const image = buttonFor(name)?.querySelector<HTMLImageElement>("img");
+      expect(image, `${name} portrait`).to.not.equal(null);
+      expect(image?.getAttribute("src")).to.be.a("string").and.not.equal("");
+      return image?.getAttribute("src");
+    });
+    expect(new Set(portraits).size).to.equal(4);
   });
 
   it("renders Tinkeroids' round-start tinkering choice after Lost Fleet setup", async () => {
