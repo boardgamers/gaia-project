@@ -40,6 +40,7 @@
       :title="button.modal.title"
       :ok-title="button.modal.okTitle || 'OK, I pick this one!'"
     >
+      <template #modal-title><span v-html="modalPortrait" />{{ button.modal.title }}</template>
       <component :is="button.modal.component" v-if="button.modal.component" v-bind="button.modal.props" />
       <div v-else v-html="button.modal.content"></div>
     </b-modal>
@@ -52,6 +53,7 @@ import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import type { ButtonData } from "../data";
 import { WarningsPreference } from "../data";
+import { factionPortraitHtml } from "../data/faction-art";
 import { enabledButtonWarnings } from "../data/warnings";
 import type { CommandController, MoveButtonController } from "../logic/buttons/types";
 import { buttonRichTextLabel, callOnShow } from "../logic/buttons/utils";
@@ -72,6 +74,10 @@ import TechTile from "./TechTile.vue";
   },
 })
 export default class MoveButton extends Vue implements MoveButtonController {
+  get modalPortrait(): string {
+    const faction = this.button.modal?.props?.faction;
+    return typeof faction === "string" ? factionPortraitHtml(faction, 32) : "";
+  }
   @Prop()
   public button!: ButtonData;
 

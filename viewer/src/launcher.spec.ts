@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { afterEach, beforeEach, vi } from "vitest";
 import Vue from "vue";
 import launch from "./launcher";
 
@@ -15,6 +16,19 @@ import launch from "./launcher";
 // UI redesign - Game.vue's queueCurrentPremove dispatches it) so a future one silently missing this
 // list fails loudly here instead of only in a live session.
 describe("launcher's store-to-emitter bridge", () => {
+  beforeEach(() => {
+    class Observer {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    }
+    vi.stubGlobal("IntersectionObserver", Observer);
+    vi.stubGlobal("ResizeObserver", Observer);
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    document.querySelectorAll(".bgs-game-chat, .chat-shortcut").forEach((element) => element.remove());
+  });
   const premoveActionTypes = [
     "queuePremove",
     "cancelPremove",

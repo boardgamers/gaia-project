@@ -6,6 +6,8 @@ import Condition from "./components/Condition.vue";
 import Game from "./components/Game.vue";
 import Resource from "./components/Resource.vue";
 import TechContent from "./components/TechContent.vue";
+import { mountGameChat } from "./game-chat";
+import { installActionSounds } from "./sounds";
 import { makeStore } from "./store";
 
 Vue.use(BootstrapVue);
@@ -94,6 +96,9 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
   }
 
   const item: EventEmitter & { store: typeof store; app: Vue } = Object.assign(new EventEmitter(), { store, app });
+
+  installActionSounds(item);
+  mountGameChat(item, app.$el);
 
   let replaying = false;
 

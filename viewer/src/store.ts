@@ -38,6 +38,7 @@ import {
 Vue.use(Vuex);
 
 type Preference =
+  | "sound"
   | "accessibleSpaceMap"
   | "noFactionFill"
   | "flatBuildings"
@@ -171,6 +172,7 @@ const gaiaViewer = {
         fastConversionTooltips: {} as FastConversionTooltips,
       },
       preferences: {
+        sound: true,
         accessibleSpaceMap: !!process.env.VUE_APP_accessibleSpaceMap,
         noFactionFill: !!process.env.VUE_APP_noFactionFill,
         flatBuildings: !!process.env.VUE_APP_flatBuildings,

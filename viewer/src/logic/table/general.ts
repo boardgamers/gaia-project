@@ -11,6 +11,7 @@ import Engine, {
 import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
 import { boardActionData } from "../../data/actions";
 import { boosterData } from "../../data/boosters";
+import { factionPortraitHtml } from "../../data/faction-art";
 import { factionName } from "../../data/factions";
 import { federationData } from "../../data/federations";
 import { roundScoringData } from "../../data/round-scorings";
@@ -34,7 +35,7 @@ export function playerCell(p: Player | null, bold = false): Cell {
 
   const f = p.faction;
   return {
-    shortcut: f ? b(f.substring(0, 1)) : "",
+    shortcut: f ? factionPortraitHtml(f, 18) || b(f.substring(0, 1)) : "",
     title: f ? factionName(f) : "",
     color: f ? playerColor(p, true) : null,
   };

@@ -3,6 +3,7 @@ import type { Layout } from "@gaia-project/engine/src/engine";
 import { AuctionVariant } from "@gaia-project/engine/src/engine";
 import Game from "./components/Game.vue";
 import Wrapper from "./components/Wrapper.vue";
+import { installLocalChat } from "./game-chat";
 import launch from "./launcher";
 import {
   autoDecideChargePower,
@@ -20,6 +21,7 @@ import {
 } from "./offline-game";
 import { loadScenarioEngine, parseScenarioFromQuery } from "./self-contained-scenarios";
 import { loadEngineFromData, parseLoadFromQuery } from "./self-contained-state";
+import { mountSoundTests } from "./sounds";
 import type { LoadFromJson } from "./store";
 
 type SelfContainedEnv = Record<string, string | undefined>;
@@ -124,6 +126,8 @@ function returnToOfflineLobby(reason: string): void {
 
 function launchSelfContained(selector = "#app", debug = true) {
   const emitter = launch(selector, debug ? Wrapper : Game);
+  mountSoundTests(emitter);
+  installLocalChat(emitter);
 
   // Game setup can be configured at runtime via URL query params (no rebuild
   // needed) — e.g. ?players=4&seed=42&factionVariant=beta&lostFleet=1

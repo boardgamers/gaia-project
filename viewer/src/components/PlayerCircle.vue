@@ -2,7 +2,22 @@
   <g>
     <title v-if="presenceTooltip">{{ presenceTooltip }}</title>
     <circle :r="1" :style="stroke()" :class="['player-token', 'planet-fill', planet()]" />
+    <defs v-if="portrait && artwork"
+      ><clipPath :id="portraitId"><circle r="0.91" /></clipPath
+    ></defs>
+    <image
+      v-if="portrait && artwork"
+      :href="artwork"
+      x="-1.06"
+      y="-0.94"
+      width="4.4"
+      height="1.88"
+      :clip-path="`url(#${portraitId})`"
+      preserveAspectRatio="none"
+      ><title>{{ portraitFaction }}</title></image
+    >
     <text
+      v-else
       class="player-circle__initial"
       :style="`font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(planet())}`"
     >
@@ -18,12 +33,24 @@
 <script lang="ts">
 import Engine, { AuctionVariant, Phase, Planet, Player, PlayerEnum } from "@gaia-project/engine";
 import { Component, Prop, Vue } from "vue-property-decorator";
+import { factionArt } from "../data/faction-art";
 import { factionPiecePlanet } from "../graphics/utils";
 import type { PresenceStatus } from "../logic/presence";
 import { phaseBeforeSetupBuilding } from "../logic/utils";
 
+let nextPortraitId = 0;
+
 @Component
 export default class PlayerCircle extends Vue {
+  @Prop({ type: Boolean, default: true }) portrait: boolean;
+  portraitId = `faction-portrait-${nextPortraitId++}`;
+  get portraitFaction(): string {
+    return this.phaseBeforeSetupBuilding() ? this.gameData.setup[this.index] : this.player?.faction;
+  }
+  get artwork(): string | undefined {
+    return factionArt[this.portraitFaction];
+  }
+
   @Prop()
   index: PlayerEnum | null;
 

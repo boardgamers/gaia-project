@@ -430,10 +430,11 @@ import type {
   SpecialActionIncome,
 } from "../data";
 import { WarningsPreference } from "../data";
+import { factionPortraitHtml } from "../data/faction-art";
 import { factionName, factionShortcut } from "../data/factions";
 import { enabledButtonWarnings, isWarningEnabled } from "../data/warnings";
 import type { RichText } from "../graphics/rich-text";
-import { richText, richTextPlanet } from "../graphics/rich-text";
+import { richText } from "../graphics/rich-text";
 import { factionColor } from "../graphics/utils";
 import type { AnalysisCommitPlan, AnalysisLineSummary, AnalysisStatus } from "../logic/analysis";
 import { encodeAutoChargePreference } from "../logic/auto-decide";
@@ -928,7 +929,7 @@ export default class Commands extends Vue implements CommandController {
   }
 
   factionPickerLabel(faction: Faction): RichText {
-    return [richText(this.factionName(faction)), richTextPlanet(this.factionPlanet(faction))];
+    return [richText(factionPortraitHtml(faction, 28) + this.factionName(faction))];
   }
 
   updateRandomFaction() {
