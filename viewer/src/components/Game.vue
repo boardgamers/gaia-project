@@ -340,11 +340,11 @@
 </template>
 
 <script lang="ts">
+import type { EngineOptions } from "@gaia-project/engine";
 import Engine, {
   BoardAction as BoardActionEnum,
   BuildWarning,
   Command,
-  EngineOptions,
   Faction,
   Phase,
   Player,
