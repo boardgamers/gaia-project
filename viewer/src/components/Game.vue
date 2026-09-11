@@ -284,16 +284,6 @@
           v-if="logPlacement === 'bottom'"
         />
       </div>
-      <!-- Reserves the mobile sticky action bar's height (see Commands.vue's hide-spacer prop)
-           at the true end of the page instead of right after Turn Order, where it used to leave a
-           large dead gap before the first faction board. Same class/CSS-var contract as the
-           in-place spacer it replaces here, so the same media query still collapses it to 0 on
-           wide viewports. -->
-      <div
-        class="mobile-sticky-actions-spacer"
-        :style="{ '--sticky-bar-height': totalStickyFooterHeight + 'px' }"
-        aria-hidden="true"
-      ></div>
       <AutoLeechFab
         v-if="showOffTurnAutoLeechFab"
         :bottom-offset="offTurnAutoLeechBottomOffset"
@@ -317,6 +307,8 @@
         @command="handleCommand"
         v-if="canPlay"
         :currentMove="currentMove"
+        :hide-spacer="true"
+        @sticky-bar-height="stickyBarHeight = $event"
         :analysis-mode="analysisMode"
         :analysis-status="analysisStatus"
         :analysis-move-count="analysisAppliedEntries.length"
@@ -336,6 +328,12 @@
       <Table />
       <AdvancedLog :currentMove="currentMove" :hideLog.sync="hideLog" v-if="logPlacement === 'bottom'" />
     </div>
+    <div class="chat-host" :style="{ '--chat-footer-height': totalStickyFooterHeight + 'px' }"></div>
+    <div
+      class="mobile-sticky-actions-spacer"
+      :style="{ '--sticky-bar-height': totalStickyFooterHeight + 'px' }"
+      aria-hidden="true"
+    ></div>
   </div>
 </template>
 

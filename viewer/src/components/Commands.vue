@@ -151,6 +151,7 @@
           <template v-else-if="premoveContext">{{ premoveContext.title }}</template>
           <RichTextView v-else :content="statusLine" />
         </h5>
+        <span class="chat-shortcut-host"></span>
         <!-- No explainer buttons here either: the bar is never pinned during the ban/pick/bid phases
              (showStickyMobileBar excludes all three), so they could never show here. See
              SetupStatus.vue. -->

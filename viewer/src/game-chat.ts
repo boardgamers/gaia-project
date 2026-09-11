@@ -15,6 +15,7 @@ export function mountGameChat(emitter: ChatEmitter, host: Element): void {
   const style = document.createElement("style");
   style.textContent = `
 .bgs-game-chat{box-sizing:border-box;font-family:inherit;font-size:14px;line-height:1.45;width:calc(100% - 30px);max-width:760px;border:1px solid var(--ui-border);border-radius:2px;margin:8px 15px;padding:0 8px 8px;background:var(--ui-surface);color:var(--ui-text)}
+.chat-host .bgs-game-chat{width:100%;margin:8px 0}
 .bgs-game-chat summary{cursor:pointer;font-weight:600;border-bottom:1px solid var(--ui-border);padding:5px 8px;margin:0 -8px;background:var(--ui-surface-muted)}
 .bgs-game-chat summary:hover{color:#126778}
 .bgs-game-chat summary:focus-visible,.bgs-game-chat button:focus-visible{outline:2px solid #247d8c;outline-offset:3px}
@@ -43,10 +44,17 @@ export function mountGameChat(emitter: ChatEmitter, host: Element): void {
 .chat-shortcut[hidden]{display:none}
 .chat-shortcut:hover{background:#315966}
 .chat-shortcut:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.chat-shortcut-host{margin-left:auto;padding-left:8px;flex-shrink:0}
+.chat-shortcut.chat-shortcut--inline{position:static;padding:3px 8px;border-color:#ffffff66;background:#ffffff15;color:inherit;box-shadow:none;font-size:12px;line-height:20px;white-space:nowrap}
+@media(max-width:767px){
+  .chat-shortcut{bottom:calc(var(--chat-footer-height,0px) + max(16px,env(safe-area-inset-bottom)))}
+  .bgs-game-chat .chat-messages{max-height:clamp(48px,calc(100dvh - var(--chat-footer-height,0px) - 120px),250px)}
+}
 
 `;
   panel.append(style);
   const slot = host.querySelector(".chat-host");
+  const footer = host.querySelector(".mobile-sticky-actions-spacer");
   if (slot) slot.append(panel);
   else host.insertAdjacentElement("afterend", panel);
   const list = panel.querySelector(".chat-messages") as HTMLDivElement;
@@ -85,52 +93,72 @@ export function mountGameChat(emitter: ChatEmitter, host: Element): void {
   shortcut.className = "chat-shortcut";
   shortcut.hidden = true;
   panel.insertAdjacentElement("afterend", shortcut);
-  let chatVisible = false;
+  function viewportBottom(): number {
+    return Math.max(0, window.innerHeight - (footer?.getBoundingClientRect().height || 0));
+  }
+  function keepComposerVisible(): void {
+    if (document.activeElement !== input) return;
+    const bounds = input.getBoundingClientRect();
+    const bottom = viewportBottom() - 8;
+    if (bounds.bottom > bottom) window.scrollBy({ top: bounds.bottom - bottom });
+    else if (bounds.top < 8) window.scrollBy({ top: bounds.top - 8 });
+  }
   function updateShortcut(): void {
     const count = unread.size;
     const label = count ? `Chat · ${count} unread` : "Chat";
-    shortcut.textContent = label;
+    const barSlot = window.innerWidth < 768 ? host.querySelector(".mobile-sticky-actions .chat-shortcut-host") : null;
+    const destination = barSlot || slot || panel.parentElement!;
+    if (shortcut.parentElement !== destination) destination.append(shortcut);
+    shortcut.classList.toggle("chat-shortcut--inline", !!barSlot);
+    const buttonLabel = barSlot ? (count ? `Chat · ${count}` : "Chat") : label;
+    if (shortcut.textContent !== buttonLabel) shortcut.textContent = buttonLabel;
     shortcut.setAttribute("aria-label", `Open ${label}`);
-    summary.textContent = label;
-    shortcut.hidden = chatVisible;
+    if (summary.textContent !== label) summary.textContent = label;
+    const bounds = panel.getBoundingClientRect();
+    const visibleHeight = Math.min(bounds.bottom, viewportBottom()) - Math.max(bounds.top, 0);
+    shortcut.hidden =
+      !barSlot &&
+      bounds.height > 0 &&
+      bounds.right > 0 &&
+      bounds.left < window.innerWidth &&
+      visibleHeight >= Math.min(panel.open ? 80 : 20, bounds.height);
   }
   shortcut.onclick = () => {
     panel.open = true;
     requestAnimationFrame(() => {
       const firstUnread = Array.from(list.children).find((row) => unread.has((row as HTMLElement).dataset.id || ""));
-      if (firstUnread) firstUnread.scrollIntoView({ block: "center" });
-      else panel.scrollIntoView({ block: "center" });
+      if (firstUnread) {
+        list.scrollTop +=
+          firstUnread.getBoundingClientRect().top -
+          list.getBoundingClientRect().top -
+          list.clientHeight / 2 +
+          firstUnread.clientHeight / 2;
+      }
+      const bounds = panel.getBoundingClientRect();
+      // Scroll only the game document, leaving the embedding page in place.
+      window.scrollBy({ top: bounds.top - Math.max(8, (viewportBottom() - bounds.height) / 2) });
       summary.focus({ preventScroll: true });
       read();
     });
   };
-  const visibility = new IntersectionObserver(
-    (entries) => {
-      for (const entry of entries) {
-        if (entry.target === panel) {
-          chatVisible =
-            entry.isIntersecting &&
-            entry.intersectionRect.height >= Math.min(panel.open ? 80 : 20, entry.boundingClientRect.height);
-        }
-      }
-      updateShortcut();
-      read();
-    },
-    { threshold: Array.from({ length: 21 }, (_, i) => i / 20) }
-  );
+  const visibility = new IntersectionObserver(() => read(), {
+    threshold: Array.from({ length: 21 }, (_, i) => i / 20),
+  });
   visibility.observe(panel);
   function controls(): void {
     button.disabled = !canSend || disabled || !!pending || !input.value.trim();
     input.disabled = !canSend || disabled;
   }
   function read(): void {
+    updateShortcut();
     if (!panel.open || document.visibilityState !== "visible" || !document.hasFocus()) {
       return;
     }
     const bounds = list.getBoundingClientRect();
+    const bottom = Math.min(bounds.bottom, viewportBottom());
     const visible = Array.from(list.children).filter((el) => {
       const r = el.getBoundingClientRect();
-      return r.bottom <= Math.min(bounds.bottom, window.innerHeight) + 1 && r.top >= Math.max(bounds.top, 0);
+      return r.bottom <= bottom + 1 && r.top >= Math.max(bounds.top, 0);
     });
     for (const row of visible) unread.delete((row as HTMLElement).dataset.id || "");
     updateShortcut();
@@ -304,12 +332,19 @@ export function mountGameChat(emitter: ChatEmitter, host: Element): void {
   };
   window.addEventListener("scroll", read, { passive: true });
   window.addEventListener("focus", read);
-  window.addEventListener("resize", read);
+  window.addEventListener("resize", () => {
+    keepComposerVisible();
+    read();
+  });
+  input.addEventListener("focus", () => requestAnimationFrame(keepComposerVisible));
   const sizing = new ResizeObserver(() => {
-    updateShortcut();
+    keepComposerVisible();
     read();
   });
   sizing.observe(panel);
+  if (footer) sizing.observe(footer);
+  // Commands is mounted and removed as the active player/phase changes.
+  new MutationObserver(updateShortcut).observe(host, { childList: true, subtree: true });
   document.addEventListener("visibilitychange", read);
   status.textContent = reason;
   controls();
