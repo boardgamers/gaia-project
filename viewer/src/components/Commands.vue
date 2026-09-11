@@ -1672,34 +1672,15 @@ $mobile-sticky-actions-max-height: 40vh;
   }
 }
 
-// The status strip is the sheet's own dark "header" band - deliberately contrasting with the light
-// button/resource area below it, both to visually anchor "this is the important line" and to
-// guarantee text contrast outright rather than relying on a thin accent line against a
-// same-lightness background. Full-bleed to the sheet's outer edges (matching its rounded top
-// corners) and pulled up over the container's own top padding, which is sized to leave room for
-// the small "grab handle" bar this element draws at its own top edge - a common bottom-sheet
-// affordance, purely decorative. Kept compact - just enough padding for the handle and a
-// comfortable tap target, not a deep banner.
+// Full-width status header for the mobile action tray.
 #move-buttons .sticky-bar-title {
   display: none !important;
   position: relative;
   margin: calc(-0.7rem) calc(-0.5rem - env(safe-area-inset-right)) 0.4rem calc(-0.5rem - env(safe-area-inset-left));
-  padding: 0.65rem calc(0.7rem + env(safe-area-inset-right)) 0.35rem calc(0.7rem + env(safe-area-inset-left));
+  padding: 0.35rem calc(0.7rem + env(safe-area-inset-right)) 0.35rem calc(0.7rem + env(safe-area-inset-left));
   border-radius: 16px 16px 0 0;
   background: linear-gradient(135deg, var(--ui-banner-start) 0%, var(--ui-banner-end) 100%);
   color: var(--ui-banner-text);
-
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0.35rem;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 32px;
-    height: 4px;
-    border-radius: 2px;
-    background: rgba(255, 255, 255, 0.28);
-  }
 
   // Amber while composing a cancel rule, so the takeover is distinguishable from composing an
   // ordinary premove - the board itself looks identical in both. Matches PremoveBar's own
@@ -1710,20 +1691,11 @@ $mobile-sticky-actions-max-height: 40vh;
 
   // Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §5.1) - hazard stripes, since this is the
   // ONE header state where the board underneath is genuinely not the live game. Stripes live in
-  // `background` (not `::before`, which is the grab handle above - §2.9) so the two never fight for
-  // the same layer. Clickable to exit (§5.4) - the map-anchored control can scroll off-screen on
+  // Clickable to exit (§5.4) - the map-anchored control can scroll off-screen on
   // mobile, so the header is the reliable way out.
   &--analysis {
     background: $analysis-stripes;
     cursor: pointer;
-  }
-
-  // §13's tabs rest on this band's top edge, which is the role the decorative grab handle was
-  // playing - two things drawn along the same 4px of the same edge, so the handle goes while the
-  // strip is up. The band also gives up its own negative top margin there, since the strip has taken
-  // it over (see the strip's rule below) - leaving both would pull the band up THROUGH the tabs.
-  &--analysis::before {
-    display: none;
   }
 
   // Small enough that the status text stays on one (or two, at most) lines instead of the default

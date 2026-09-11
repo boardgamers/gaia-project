@@ -49,6 +49,18 @@ describe("chat beside the mobile action bar", () => {
     document.body.innerHTML = "";
   });
 
+  it("does not count replacement history as unread", () => {
+    vi.spyOn(panel, "getBoundingClientRect").mockReturnValue(rect(900, 130));
+    vi.spyOn(list, "getBoundingClientRect").mockReturnValue(rect(920, 60));
+    const message = { _id: "000000000000000000000001", author: "Nevlas", text: "Hello" };
+    emitter.emit("chat:appended", [message]);
+    expect(shortcut.textContent).toContain("1 unread");
+    emitter.emit("chat:messages", [message]);
+    expect(shortcut.textContent).toBe("Chat");
+    emitter.emit("chat:appended", [{ ...message, _id: "000000000000000000000002" }]);
+    expect(shortcut.textContent).toContain("1 unread");
+  });
+
   it("keeps a message unread while the action bar covers it", () => {
     const read = vi.fn();
     emitter.on("chat:read", read);

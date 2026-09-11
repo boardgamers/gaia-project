@@ -233,6 +233,7 @@ export function mountGameChat(emitter: ChatEmitter, host: Element): void {
   }
   emitter.on("chat:messages", (data: ChatMessage[]) => {
     messages = data || [];
+    unread.clear();
     render();
   });
   emitter.on("chat:appended", (data: ChatMessage[]) => {
