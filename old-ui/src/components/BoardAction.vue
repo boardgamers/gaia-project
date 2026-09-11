@@ -1,5 +1,5 @@
 <template>
-  <g :class="['boardAction', kind, { highlighted, faded }]" v-b-tooltip :title="tooltip">
+  <g :transform="transform" :class="['old-board-action', kind, { highlighted, faded }]" v-b-tooltip :title="tooltip">
     <polygon
       points="-1,0.5 -0.5,1 0.5,1 1,0.5 1,-0.5 0.5,-1 -0.5,-1 -1,-0.5"
       :transform="`scale(${scale})`"
@@ -19,17 +19,22 @@
 </template>
 
 <script lang="ts">
-import { BoardAction as BoardActionEnum, boardActions, Event } from "@gaia-project/engine";
-import Vue from "vue";
+import { boardActions, Event } from "@gaia-project/engine";
 import { Component, Prop } from "vue-property-decorator";
-import { eventDesc } from "../data/event";
+import CurrentBoardAction from "../../../viewer/src/components/BoardAction.vue";
+import { eventDesc } from "../../../viewer/src/data/event";
 
 @Component<BoardAction>({
   computed: {
     tooltip() {
       const costDesc = "Spend " + this.cost + "\n";
 
-      return costDesc + boardActions[this.action].income.map((x) => eventDesc(new Event(x))).join("\n");
+      return (
+        costDesc +
+        boardActions[this.action].income
+          .map((x) => eventDesc(new Event(x), this.$store.state.data.expansions, true))
+          .join("\n")
+      );
     },
 
     faded() {
@@ -56,29 +61,15 @@ import { eventDesc } from "../data/event";
     },
   },
 })
-export default class BoardAction extends Vue {
+export default class BoardAction extends CurrentBoardAction {
   @Prop()
   scale: number;
-
-  @Prop()
-  action: BoardActionEnum;
-
-  onClick() {
-    if (!this.highlighted) {
-      return;
-    }
-    this.$store.dispatch("actionClick", this.action);
-  }
-
-  get highlighted() {
-    return this.$store.state.context.highlighted.actions.has(this.action);
-  }
 }
 </script>
 
 <style lang="scss">
 g {
-  &.boardAction {
+  &.old-board-action {
     polygon {
       stroke: #333;
       stroke-width: 0.02;

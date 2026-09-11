@@ -1,6 +1,6 @@
 <template>
-  <svg viewBox="-25 -25 50 50" width="50" height="50">
-    <g :class="['federationTile', { highlighted, disabled }]">
+  <svg v-b-tooltip :title="tooltip" viewBox="-25 -25 50 50" width="50" height="50">
+    <g :class="['old-federation-tile', { highlighted, disabled }]">
       <polygon
         points="-1,0.5 -0.5,1 0.5,1 1,0.5 1,-0.7 0.5,-1 -0.5,-1 -1,-0.7"
         transform="scale(24)"
@@ -20,49 +20,23 @@
 </template>
 
 <script lang="ts">
-import { Federation as FederationEnum } from "@gaia-project/engine";
-import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
-import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
-
-@Component<FederationTile>({
-  computed: {
-    income() {
-      const [first, ...others] = federationRewards(this.federation).map((r) => r.toString());
-      return others.length > 0 ? [first, others.join(", ")] : first.split("-");
-    },
-
-    disabled() {
-      return this.used || this.federation === FederationEnum.Fed1;
-    },
-  },
-})
-export default class FederationTile extends Vue {
-  @Prop()
-  federation: FederationEnum;
-
-  @Prop()
-  used: boolean;
-
-  @Prop()
-  numTiles: number;
-
-  onClick() {
-    if (!this.highlighted) {
-      return;
-    }
-    this.$store.dispatch("federationClick", this.federation);
+import { Component } from "vue-property-decorator";
+import CurrentFederationTile from "../../../viewer/src/components/FederationTile.vue";
+@Component
+export default class FederationTile extends CurrentFederationTile {
+  get income() {
+    return this.rewards.map((r) => r.toString());
   }
-
   get highlighted() {
-    return this.$store.state.context.highlighted.federations.has(this.federation);
+    return false;
   }
+  onClick() {}
 }
 </script>
 
 <style lang="scss">
 g {
-  &.federationTile {
+  &.old-federation-tile {
     polygon {
       stroke: #333;
       stroke-width: 0.02;

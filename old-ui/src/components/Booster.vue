@@ -1,72 +1,43 @@
 <template>
   <svg
-    :class="['booster', { highlighted, disabled }]"
+    :class="['old-booster', { highlighted, disabled }]"
     v-b-tooltip
     :title="tooltip"
     @click="onClick"
-    width="76"
+    :width="tileWidth"
     height="50"
-    viewBox="0 0 76 50"
+    :viewBox="`0 0 ${tileWidth} 50`"
   >
-    <rect x="1" y="1" width="74" height="48" rx="5" ry="5" />
+    <rect x="1" y="1" :width="tileWidth - 2" height="48" rx="5" ry="5" />
     <text class="title" x="6" y="12">{{ title }}</text>
-    <text class="event1" x="6" y="30">{{ event1 }}</text>
-    <text class="event1" x="6" y="44">{{ event2 }}</text>
+    <text class="event1" x="6" y="30">{{ event1 && event1.toString() }}</text>
+    <text class="event1" x="6" y="44">{{ event2 && event2.toString() }}</text>
   </svg>
 </template>
 
 <script lang="ts">
-import { Event } from "@gaia-project/engine";
-import { boosterEvents } from "@gaia-project/engine/src/tiles/boosters";
-import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
-import { eventDesc } from "../data/event";
-
-@Component<Booster>({
-  computed: {
-    tileObject() {
-      return boosterEvents(this.booster).map((e) => e.spec);
-    },
-
-    event1() {
-      return this.tileObject[0];
-    },
-
-    event2() {
-      return this.tileObject[1];
-    },
-
-    title() {
-      return this.booster;
-    },
-
-    tooltip() {
-      return `- ${eventDesc(new Event(this.event1))}\n- ${eventDesc(new Event(this.event2))}`;
-    },
-  },
-})
-export default class Booster extends Vue {
-  @Prop()
-  booster: Booster;
-
-  @Prop()
-  disabled: boolean;
-
-  onClick() {
-    if (this.highlighted) {
-      this.$store.dispatch("boosterClick", this.booster);
-    }
+import { Component } from "vue-property-decorator";
+import CurrentBooster from "../../../viewer/src/components/Booster.vue";
+@Component
+export default class Booster extends CurrentBooster {
+  get title() {
+    return this.booster.replace("booster-lostfleet-", "LF ").replace("booster", "Booster ");
   }
-
-  get highlighted() {
-    return this.$store.state.context.highlighted.boosters.has(this.booster);
+  get tileWidth() {
+    return Math.max(
+      76,
+      ...[this.title, this.event1?.toString() ?? "", this.event2?.toString() ?? ""].map((text) => text.length * 6 + 12)
+    );
+  }
+  onClick() {
+    this.$emit("click");
   }
 }
 </script>
 
 <style lang="scss">
 svg {
-  &.booster {
+  &.old-booster {
     rect {
       stroke: #333;
       stroke-width: 1px;
@@ -75,6 +46,8 @@ svg {
     .title {
       font-size: 10px;
       font-weight: bold;
+      text-anchor: start;
+      fill: #212529;
       pointer-events: none;
     }
     .event1,

@@ -172,12 +172,11 @@ export function terraformCost3Set(engine: Engine, faction: Faction, board: Plane
     return existing.data.lostFleetCost3Planets;
   }
 
-  const opponents = engine.players
-    .filter((pl) => pl.faction && pl.faction !== faction)
-    .map((pl) => ({ player: pl.player, faction: pl.faction }));
-  const specialId = engine.players.length as PlayerEnum;
-  const players = [...opponents, { player: specialId, faction }];
-  const turnOrder = [...opponents.map((pl) => pl.player), specialId];
+  // Auction bids change ownership, not the chosen lineup or its terraforming order.
+  const lineup = [...new Set([...engine.setup, ...engine.players.map((pl) => pl.faction), faction])].filter(Boolean);
+  const players = lineup.map((faction, player) => ({ player: player as PlayerEnum, faction }));
+  const specialId = lineup.indexOf(faction) as PlayerEnum;
+  const turnOrder = players.map((pl) => pl.player);
 
   const map = lostFleetTerraformingCost3Planets(players, turnOrder, board);
   return map[specialId] ?? [];

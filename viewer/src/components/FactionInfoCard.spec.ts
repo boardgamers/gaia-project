@@ -1,6 +1,7 @@
 import Engine, { Expansion, Faction } from "@gaia-project/engine";
 import { render } from "@testing-library/vue";
 import { expect } from "chai";
+import Vue from "vue";
 import { makeStore } from "../store";
 import FactionInfoCard from "./FactionInfoCard.vue";
 
@@ -83,5 +84,24 @@ describe("FactionInfoCard", () => {
     });
 
     expect(container.textContent).to.include("build a mine on a planet colonized by an opponent");
+  });
+  it("refreshes both the modal costs and its player board when another faction is chosen", async () => {
+    const engine = new Engine(["init 3 live-terraform-preview"], { lostFleet: true });
+    const store = makeStore();
+    store.commit("receiveData", engine);
+    const { container } = render(FactionInfoCard, {
+      props: { faction: Faction.Moweyds, variant: null, expansion: Expansion.LostFleet },
+      store,
+    });
+    const before = container.querySelector(".player-board")!.outerHTML;
+    const next = Engine.fromData(JSON.parse(JSON.stringify(engine)));
+    next.move("p1 faction nevlas");
+    store.commit("receiveData", next);
+    await Vue.nextTick();
+    await Vue.nextTick();
+    expect(container.querySelectorAll(".faction-info-card__swatch--cost3").length).to.equal(3);
+    const white = next.lostFleetTerraformingRow.indexOf("i" as any);
+    expect(container.querySelectorAll(".faction-info-card__swatch")[white].textContent!.trim()).to.equal("3");
+    expect(container.querySelector(".player-board")!.outerHTML).not.to.equal(before);
   });
 });

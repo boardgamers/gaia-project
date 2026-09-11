@@ -4,12 +4,18 @@ on:
     paths:
       - ".github/workflows/viewer-test.yml"
       - "viewer/**"
+      - "old-ui/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
     branches:
       - master
   pull_request:
     paths:
       - ".github/workflows/viewer-test.yml"
       - "viewer/**"
+      - "old-ui/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
 
 defaults:
   run:
@@ -31,3 +37,7 @@ jobs:
         env:
           NODE_OPTIONS: --max-old-space-size=12288
       - run: pnpm build
+      - run: pnpm --dir ../old-ui test
+        env:
+          NODE_OPTIONS: --max-old-space-size=12288
+      - run: pnpm --dir ../old-ui package

@@ -124,8 +124,9 @@ function returnToOfflineLobby(reason: string): void {
   window.location.replace(url.toString());
 }
 
-function launchSelfContained(selector = "#app", debug = true) {
-  const emitter = launch(selector, debug ? Wrapper : Game);
+function launchSelfContained(selector = "#app", debug = true, gameComponent = Game) {
+  const localWrapper = Wrapper.extend({ components: { Game: gameComponent } });
+  const emitter = launch(selector, debug ? localWrapper : gameComponent);
   mountSoundTests(emitter);
   installLocalChat(emitter);
 

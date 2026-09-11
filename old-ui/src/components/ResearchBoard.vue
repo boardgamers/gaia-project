@@ -1,12 +1,13 @@
 <template>
-  <svg :viewBox="`0 0 ${viewWidth} 440`" :height="height" :width="width">
+  <svg :viewBox="`0 0 ${viewWidth} ${viewHeight}`" :height="height" :width="width">
     <ResearchTrack v-for="(field, index) in fields" :field="field" :x="index * 60" :key="field" />
-    <text y="186" x="130" style="font-size: 14px">Charge 3 power</text>
+    <FleetScoringColumn v-if="$store.state.data.options.lostFleet" />
+    <text y="186" x="130" style="font-size: 14px; fill: currentColor">Charge 3 power</text>
     <g v-if="$store.state.data.tiles && $store.state.data.tiles.techs['gaia']">
       <TechTile pos="free1" x="70" y="360" />
       <TechTile pos="free2" x="150" y="360" />
       <TechTile pos="free3" x="230" y="360" />
-      <TechTile pos="free4" v-if="expansions" x="310" y="360" />
+      <TechTile pos="free4" v-if="$store.state.data.tiles.techs.free4" x="310" y="360" />
     </g>
     <BoardAction
       :scale="17"
@@ -22,7 +23,9 @@
 import { BoardAction as BoardActionEnum, ResearchField } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
+import { researchBoardHeight } from "../../../viewer/src/logic/utils";
 import BoardAction from "./BoardAction.vue";
+import FleetScoringColumn from "./FleetScoringColumn.vue";
 import ResearchTrack from "./ResearchTrack.vue";
 import TechTile from "./TechTile.vue";
 
@@ -38,13 +41,17 @@ import TechTile from "./TechTile.vue";
       return this.$store.state.data.expansions;
     },
     viewWidth() {
-      return this.fields.length * 60;
+      return this.fields.length * 60 + (this.$store.state.data.options.lostFleet ? 80 : 0);
+    },
+    viewHeight() {
+      return researchBoardHeight(this.$store.state.data);
     },
     width() {
       return (this.height / 440) * this.viewWidth;
     },
   },
   components: {
+    FleetScoringColumn,
     ResearchTrack,
     TechTile,
     BoardAction,

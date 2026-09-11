@@ -1,13 +1,13 @@
 <template>
   <svg viewBox="-25 -25 50 50" width="50" height="50">
-    <g :class="['specialAction', { highlighted, disabled }]">
+    <g :class="['old-special-action', { highlighted: isHighlighted, disabled }]">
       <polygon
         points="-1,0.5 -0.5,1 0.5,1 1,0.5 1,-0.5 0.5,-1 -0.5,-1 -1,-0.5"
         transform="scale(24)"
         @click="onClick"
       />
       <text>
-        <tspan x="0" v-for="(line, i) in income" :dy="`${i === 0 ? -0.5 * (income.length - 1) * 11 : 11}px`" :key="i">
+        <tspan x="0" v-for="(line, i) in lines" :dy="`${i === 0 ? -0.5 * (lines.length - 1) * 11 : 11}px`" :key="i">
           {{ line.replace(/ /g, "") }}
         </tspan>
       </text>
@@ -16,39 +16,19 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
-
-@Component<SpecialAction>({
-  computed: {
-    income() {
-      return this.action.includes(",") ? this.action.split(",") : this.action.split("-");
-    },
-  },
-})
-export default class SpecialAction extends Vue {
-  @Prop()
-  disabled: boolean;
-
-  @Prop()
-  action: string;
-
-  onClick() {
-    if (!this.highlighted) {
-      return;
-    }
-    this.$store.dispatch("actionClick", this.action);
-  }
-
-  get highlighted() {
-    return this.$store.state.context.highlighted.actions.has(this.action);
+import { Component } from "vue-property-decorator";
+import CurrentAction from "../../../viewer/src/components/SpecialAction.vue";
+@Component
+export default class SpecialAction extends CurrentAction {
+  get lines() {
+    return this.income.split(",");
   }
 }
 </script>
 
 <style lang="scss">
 g {
-  &.specialAction {
+  &.old-special-action {
     polygon {
       stroke: #333;
       stroke-width: 0.02;

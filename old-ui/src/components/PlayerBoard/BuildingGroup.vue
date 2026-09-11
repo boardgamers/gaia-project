@@ -38,7 +38,7 @@
       />
       <Building
         :building="building"
-        class="building-in-group"
+        class="old-building-in-group"
         :faction="faction"
         :transform="`translate(${isPI ? 0.5 : 0}, 0) scale(1.5)`"
         v-if="showBuilding(i)"
@@ -55,132 +55,9 @@
 </template>
 
 <script lang="ts">
-import {
-  Building as BuildingEnum,
-  Faction,
-  FactionBoard,
-  factionBoard,
-  Operator,
-  Resource as ResourceEnum,
-  Reward,
-} from "@gaia-project/engine";
-import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
+import { Component } from "vue-property-decorator";
+import CurrentBuildingGroup from "../../../../viewer/src/components/PlayerBoard/BuildingGroup.vue";
 import Building from "../Building.vue";
-import Resource from "../Resource.vue";
-
-@Component({
-  components: {
-    Building,
-    Resource,
-  },
-  watch: {
-    faction(newVal) {
-      this.board = factionBoard(newVal);
-    },
-  },
-})
-export default class BuildingGroup extends Vue {
-  @Prop()
-  nBuildings: number;
-
-  @Prop()
-  building: BuildingEnum;
-
-  @Prop()
-  faction!: Faction;
-
-  @Prop()
-  placed: number;
-
-  @Prop()
-  resource: ResourceEnum[];
-
-  @Prop({ default: false })
-  ac1: boolean;
-
-  @Prop({ default: false })
-  ac2: boolean;
-
-  board: FactionBoard = factionBoard(this.faction || Faction.Terrans);
-
-  get buildingList() {
-    return [0, 1, 2, 3, 4, 5, 6, 7].slice(0, this.nBuildings);
-  }
-
-  get isPI() {
-    return this.building === BuildingEnum.PlanetaryInstitute;
-  }
-
-  tooltip(i: number) {
-    return "Income: " + (this.resources(i, true).join(", ") || "~");
-  }
-
-  get offset() {
-    return 1.4;
-  }
-
-  get buildingSpacing() {
-    return 2.2;
-  }
-
-  get paddingRight() {
-    return 0.2;
-  }
-
-  get width() {
-    return Math.max(this.nBuildings, 2) * this.buildingSpacing + this.offset + this.paddingRight;
-  }
-
-  get factionIncome(): Reward[] {
-    const income: Reward[] = [].concat(
-      ...this.board.income.filter((ev) => ev.operator === Operator.Income).map((ev) => ev.rewards)
-    );
-
-    return income.filter((rew) => this.resource.includes(rew.type));
-  }
-
-  showBuilding(i: number) {
-    if (this.ac1 || this.ac2) {
-      return i === 0 ? !this.ac1 : !this.ac2;
-    }
-    return i >= this.placed;
-  }
-
-  resources(i: number, forced = false): Reward[] {
-    if (this.showBuilding(i) && !forced) {
-      return [];
-    }
-
-    let building = this.building;
-
-    if (this.building === BuildingEnum.Academy1 && i > 0) {
-      building = BuildingEnum.Academy2;
-      i = 0;
-    }
-
-    return [].concat(
-      ...this.board.buildings[building].income[i]
-        .filter((ev) => {
-          if (ev.operator === Operator.Income) {
-            return true;
-          }
-          const rew = ev.rewards.toString();
-
-          return ev.operator === Operator.Activate && (rew === "q" || rew === "4c");
-        })
-        .map((ev) => ev.rewards)
-    );
-  }
-}
+@Component({ components: { Building } })
+export default class BuildingGroup extends CurrentBuildingGroup {}
 </script>
-
-<style lang="scss">
-.player-board {
-  .building-group {
-    .building-in-group {
-      stroke-width: 0.05px;
-    }
-  }
-}
-</style>

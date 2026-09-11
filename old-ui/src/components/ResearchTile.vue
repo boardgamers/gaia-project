@@ -47,7 +47,6 @@
 
 <script lang="ts">
 import {
-  Expansion,
   Federation,
   Operator,
   Planet as PlanetEnum,
@@ -59,7 +58,7 @@ import {
 } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { descriptions } from "../data/research";
+import { researchLevelDesc } from "../../../viewer/src/data/research";
 import FederationTile from "./FederationTile.vue";
 import Planet from "./Planet.vue";
 import Resource from "./Resource.vue";
@@ -73,7 +72,7 @@ import Token from "./Token.vue";
       );
     },
     tooltip() {
-      return `<b>Level ${this.level}:</b> ${descriptions[this.field][this.level]}`;
+      return `<b>Level ${this.level}:</b> ${researchLevelDesc(this.$store.state.data, this.field, this.level, true).join("<br>")}`;
     },
     height() {
       return this.level === 0 || this.level === 5 ? 46 : 36;
@@ -131,7 +130,7 @@ export default class ResearchTile extends Vue {
 
   onClick() {
     if (this.highlighted) {
-      this.$store.dispatch("researchClick", this.field);
+      this.$store.dispatch("researchClick", { command: this.field });
     }
   }
 
@@ -158,7 +157,12 @@ export default class ResearchTile extends Vue {
   }
 
   get resources() {
-    const events = researchEvents(this.field, this.level, Expansion.None).slice(0, 1);
+    const events = researchEvents(
+      this.field,
+      this.level,
+      this.$store.state.data.expansions,
+      this.$store.state.data.lostFleetEconomySide
+    ).slice(0, 1);
 
     const rewards = Reward.merge(...events.map((ev) => ev.rewards));
 

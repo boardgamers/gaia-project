@@ -1,6 +1,6 @@
 <template>
   <svg
-    :class="['techTile', { highlighted, covered }]"
+    :class="['old-tech-tile', { highlighted, covered }]"
     v-show="this.count"
     v-b-tooltip
     :title="tooltip"
@@ -16,78 +16,30 @@
 </template>
 
 <script lang="ts">
-import { AdvTechTilePos, Event, PlayerEnum, TechTilePos } from "@gaia-project/engine";
-import { techTileEvents } from "@gaia-project/engine/src/tiles/techs";
-import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
-import { eventDesc } from "../data/event";
-
-@Component<TechTile>({
-  computed: {
-    tileObject() {
-      return this.$store.state.data.tiles.techs[this.pos];
-    },
-
-    tile() {
-      return this.tileObject.tile;
-    },
-
-    count() {
-      if (this.player !== undefined) {
-        return 1;
-      }
-      return this.tileObject.count;
-    },
-
-    rawContent() {
-      return techTileEvents(this.tile)[0].toString();
-    },
-
-    content() {
-      const val = this.rawContent;
-
-      return val.length > 10 && val[0] !== "=" ? val.replace(/ /g, "") : val;
-    },
-
-    title() {
-      // Only show count if there are more players than tech tiles available
-      if (this.count > 1 && this.$store.state.data.players.length > 4) {
-        return `${this.pos} (${this.count})`;
-      }
-
-      return this.pos;
-    },
-
-    tooltip() {
-      return eventDesc(new Event(this.rawContent));
-    },
-  },
-})
-export default class TechTile extends Vue {
-  @Prop()
-  pos: TechTilePos | AdvTechTilePos;
-
-  @Prop()
-  player: PlayerEnum;
-
-  @Prop()
-  covered: boolean;
-
-  onClick() {
-    if (this.highlighted) {
-      this.$store.dispatch("techClick", this.pos);
-    }
+import { spaceshipTechSpec } from "@gaia-project/engine/src/tiles/spaceship-techs";
+import { Component } from "vue-property-decorator";
+import CurrentTechTile from "../../../viewer/src/components/TechTile.vue";
+import { eventDesc } from "../../../viewer/src/data/event";
+@Component
+export default class TechTile extends CurrentTechTile {
+  get rawContent() {
+    return this.event?.toString() ?? "";
   }
-
-  get highlighted() {
-    return this.$store.state.context.highlighted.techs.has(this.pos);
+  get content() {
+    return this.isRangeTile ? "+1 range" : this.isTerraformMineTile ? "2step + mine" : this.rawContent;
+  }
+  get title() {
+    return this.pos;
+  }
+  get tooltip() {
+    return spaceshipTechSpec[this.tile] ?? (this.event ? eventDesc(this.event, this.engine.expansions, true) : "");
   }
 }
 </script>
 
 <style lang="scss">
 svg {
-  &.techTile {
+  &.old-tech-tile {
     polygon {
       stroke: #333;
       stroke-width: 1px;
@@ -96,10 +48,13 @@ svg {
     .title {
       font-size: 10px;
       font-weight: bold;
+      fill: #212529;
+      text-anchor: start;
       pointer-events: none;
     }
     .content {
       font-size: 11px;
+      fill: #212529;
       pointer-events: none;
 
       &.smaller {

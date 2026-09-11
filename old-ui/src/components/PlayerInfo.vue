@@ -4,19 +4,20 @@
       name
     }}</span>
     <div class="board mt-2">
-      <svg viewBox="-0.2 -0.5 38.5 21.4" class="player-board" :style="`background-color: ${factionColor}`">
+      <svg :viewBox="`-0.2 -0.5 38.5 ${height}`" class="player-board" :style="`background-color: ${factionColor}`">
         <rect x="-1" y="-1" width="50" height="50" fill="#ffffff44"></rect>
         <PlayerBoardInfo
           transform="translate(0.5, 0.5)"
           :player="player"
           :faction="player.faction"
           :data="playerData"
+          :height="height"
         />
         <BuildingGroup
           :transform="player.faction !== 'bescods' ? 'translate(2.2, 10)' : 'translate(12, 10)'"
           :nBuildings="1"
           building="PI"
-          :faction="player.faction"
+          :player="player"
           :placed="playerData.buildings.PI"
           :resource="['pw', 't']"
         />
@@ -24,7 +25,7 @@
           :transform="player.faction === 'bescods' ? 'translate(2.2, 10)' : 'translate(12, 10)'"
           :nBuildings="2"
           building="ac1"
-          :faction="player.faction"
+          :player="player"
           :placed="0"
           :ac1="playerData.buildings.ac1"
           :ac2="playerData.buildings.ac2"
@@ -34,7 +35,7 @@
           transform="translate(0, 13)"
           :nBuildings="4"
           building="ts"
-          :faction="player.faction"
+          :player="player"
           :placed="playerData.buildings.ts"
           :resource="['c']"
         />
@@ -42,7 +43,7 @@
           transform="translate(11, 13)"
           :nBuildings="3"
           building="lab"
-          :faction="player.faction"
+          :player="player"
           :placed="playerData.buildings.lab"
           :resource="['k']"
         />
@@ -50,7 +51,7 @@
           transform="translate(0, 16)"
           :nBuildings="8"
           building="m"
-          :faction="player.faction"
+          :player="player"
           :placed="playerData.buildings.m"
           :resource="['o']"
         />
@@ -62,40 +63,81 @@
         <line x1="15.3" x2="15.3" y1="11.2" y2="11.8" stroke="black" stroke-width="0.06" />
         <!-- TS to LAB -->
         <line x1="10.4" x2="11" y1="13.0" y2="13.0" stroke="black" stroke-width="0.06" />
-        <PowerBowls transform="translate(29,14.5)" :faction="player.faction" :data="playerData" :player="player" />
+        <BuildingGroup
+          transform="translate(21,1.2)"
+          :nBuildings="playerData.gaiaformers"
+          building="gf"
+          :gaia="playerData.gaiaformersInGaia"
+          :player="player"
+          :placed="playerData.buildings.gf"
+          :asteroid-consumed="playerData.gaiaformersUsedForAsteroid"
+          :resource="[]"
+        />
+        <PowerBowls
+          :transform="`translate(29,${height - 7})`"
+          :faction="player.faction"
+          :data="playerData"
+          :player="player"
+        />
 
-        <g transform="translate(29.3, 5)">
+        <g transform="translate(29.3, 4.7) scale(0.9) translate(0, 1)">
           <g v-for="i in [0, 1, 2, 3]" :key="i" :transform="`translate(${(i - 2) * 3.8}, 0)`">
             <g
-              v-for="(planet, index) in planetsWithSteps(i)"
-              :key="planet"
-              :transform="`translate(0, ${(i > 0 ? (index > 0 ? 1 : -1) : 0) * 1.4})`"
+              v-for="marker in terraformingMarkers(i)"
+              :key="marker.planet"
+              :data-terraforming-step="i"
+              :data-planet="marker.planet"
+              :data-radius="marker.radius"
+              :transform="`translate(${marker.x}, ${marker.y})`"
             >
-              <circle :r="1" style="stroke-width: 0.06px !important" :class="['player-token', 'planet-fill', planet]" />
+              <circle
+                :r="marker.radius"
+                style="stroke-width: 0.06px !important"
+                :class="['player-token', 'planet-fill', marker.planet]"
+              />
               <text
-                :style="`font-size: 1.2px; text-anchor: middle; dominant-baseline: mathematical; fill: ${planetFill(
-                  planet
-                )}`"
+                :style="`font-size: ${
+                  marker.fontSize
+                }px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(marker.planet)}`"
               >
-                {{ player.ownedPlanetsCount[planet] }}
+                {{ player.ownedPlanetsCount[marker.planet] }}
               </text>
+              <circle
+                :r="marker.radius"
+                style="cursor: pointer; opacity: 0"
+                @click="togglePlanetHighlight(marker.planet)"
+              />
             </g>
             <line x1="1.9" x2="1.9" y1="-2.3" y2="2.3" stroke-width="0.06" stroke="black" />
           </g>
-          <g :transform="`translate(7.6, 0)`">
-            <circle :r="1" style="stroke-width: 0.06px !important" :class="['player-token', 'planet-fill', 'g']" />
-            <text style="font-size: 1.2px; text-anchor: middle; dominant-baseline: mathematical; fill: white">
-              {{ player.ownedPlanetsCount["g"] }}
+          <g v-for="entry in planetCounters" :key="entry.planet" :transform="`translate(7.6, ${entry.y})`">
+            <circle
+              :r="planetCounterRadius"
+              style="stroke-width: 0.06px !important"
+              :class="['player-token', 'planet-fill', entry.planet]"
+            />
+            <text
+              :style="`font-size: ${planetCounterFontSize}px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(
+                entry.planet
+              )}`"
+            >
+              {{ player.ownedPlanetsCount[entry.planet] }}
             </text>
+            <circle
+              :r="planetCounterRadius"
+              style="cursor: pointer; opacity: 0"
+              @click="togglePlanetHighlight(entry.planet)"
+            />
           </g>
         </g>
 
         <SpecialAction
-          v-for="(action, i) in player.actions"
-          :action="action.rewards"
+          v-for="(action, i) in player.actionsWithoutTile"
+          :action="[action.rewards]"
+          :player="player"
           :disabled="!action.enabled || passed"
-          :key="action.action + '-' + i"
-          y="17.5"
+          :key="'action-' + i"
+          :y="height - 4"
           width="3.1"
           height="3.1"
           :x="3.3 * i"
@@ -123,6 +165,27 @@
         :player="player.player"
         :numTiles="1"
       />
+      <FederationTile
+        v-for="(fed, i) in playerData.spaceshipFederations"
+        class="mb-1 mr-1"
+        :key="'ship-fed-' + i"
+        :data-ship-federation="fed.tile"
+        :spaceship-federation="fed.tile"
+        :rewardsOverride="shipFederationRewards(fed.tile)"
+        :used="!fed.green"
+        :player="player.player"
+        :numTiles="1"
+        filter="url(#shadow-1)"
+      />
+      <span
+        v-for="(artifact, i) in playerData.artifacts"
+        class="mb-1 mr-1 d-inline-flex player-artifact"
+        :class="{ 'last-move': recentArtifact(artifact) }"
+        :key="'artifact-' + i"
+        :data-artifact="artifact"
+      >
+        <ArtifactIcon :artifact="artifact" />
+      </span>
       <TechTile
         v-for="tech in playerData.tiles.techs"
         :covered="!tech.enabled"
@@ -132,177 +195,26 @@
         :player="player.player"
       />
     </div>
-    <b-modal :id="player.faction" :title="factionName" size="lg">
-      <div v-html="tooltip"></div>
-    </b-modal>
+    <Rules :id="player.faction" :type="player.faction" />
   </div>
 </template>
 
 <script lang="ts">
-import { Planet, Player, factionPlanet } from "@gaia-project/engine";
-import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
-import { factionDesc, planetsWithSteps } from "../data/factions";
-import { factionColor } from "../graphics/utils";
+import { Component } from "vue-property-decorator";
+import CurrentPlayerInfo from "../../../viewer/src/components/PlayerInfo.vue";
+import ArtifactIcon from "./ArtifactIcon.vue";
 import Booster from "./Booster.vue";
 import FederationTile from "./FederationTile.vue";
 import BuildingGroup from "./PlayerBoard/BuildingGroup.vue";
-import PlayerBoardInfo from "./PlayerBoard/Info.vue";
-import PowerBowls from "./PlayerBoard/PowerBowls.vue";
 import SpecialAction from "./SpecialAction.vue";
 import TechTile from "./TechTile.vue";
-
-@Component({
-  components: {
-    TechTile,
-    Booster,
-    SpecialAction,
-    FederationTile,
-    BuildingGroup,
-    PowerBowls,
-    PlayerBoardInfo,
-  },
-})
-export default class PlayerInfo extends Vue {
-  @Prop()
-  player: Player;
-
-  get playerData() {
-    return this.player ? this.player.data : null;
-  }
-
-  playerClick(player: Player) {
-    this.$store.dispatch("playerClick", player);
-  }
-
-  get factionColor() {
-    return factionColor(this.player.faction);
-  }
-
-  get name() {
-    if (this.player.name) {
-      return this.player.name;
-    }
-    return "Player " + (this.player.player + 1);
-  }
-
-  get tooltip() {
-    return factionDesc(this.player.faction);
-  }
-
-  get planet() {
-    return factionPlanet(this.player.faction);
-  }
-
-  get factionName(): string {
-    return factionPlanet(this.player.faction);
-  }
-
-  planetFill(planet: string) {
-    if (planet === Planet.Titanium || planet === Planet.Swamp) {
-      return "white";
-    }
-    return "black";
-  }
-
-  planetsWithSteps(steps: number) {
-    return planetsWithSteps(this.planet, steps);
-  }
-
-  get passed() {
-    return (this.$store.state.data.passedPlayers || []).includes(this.player.player);
-  }
-
-  get round() {
-    return this.$store.state.data.round;
-  }
-
-  get hasPlanets() {
-    return this.player.ownedPlanets.length > 0;
-  }
-}
+@Component({ components: { SpecialAction, Booster, TechTile, FederationTile, ArtifactIcon, BuildingGroup } })
+export default class PlayerInfo extends CurrentPlayerInfo {}
 </script>
-
-<style lang="scss">
-.player-token {
-  stroke: #111;
-  pointer-events: none;
-  stroke-width: 1;
-}
-
-.content {
-  font-size: 1rem;
-  color: #212529;
-  pointer-events: none;
-}
-
+<style scoped>
 .player-board {
+  width: 100%;
+  height: auto;
   border: 1px solid black;
-  max-width: 700px;
-  display: block;
-  // margin-left: auto;
-  margin-right: auto;
-
-  .board-text {
-    dominant-baseline: mathematical;
-    font-size: 1.2px;
-  }
-
-  // &::after {
-  //   position: absolute;
-  //   content: " ";
-  //   background: rgba(white, 0.4);
-  //   top: 0; bottom: 0; left: 0; right: 0;
-  // }
-
-  &.bescods::after,
-  &.firaks::after {
-    background: rgba(white, 0.7);
-  }
-}
-
-.player-info {
-  padding-top: 0.5em;
-  padding-bottom: 0.5em;
-
-  border-radius: 5px;
-
-  position: relative;
-
-  .player-name {
-    cursor: pointer;
-    font-weight: bold;
-
-    &.dropped {
-      text-decoration: line-through;
-    }
-  }
-
-  flex-wrap: nowrap !important;
-
-  @media (max-width: 600px) {
-    flex-wrap: wrap !important;
-  }
-
-  .tiles {
-    align-content: baseline;
-    align-items: center;
-    // justify-content: center;
-  }
-
-  .tiles,
-  .board {
-    z-index: 1;
-    position: relative;
-  }
-
-  .faction-name {
-    cursor: pointer;
-    outline: 0;
-  }
-
-  .maxResource {
-    color: red;
-  }
 }
 </style>

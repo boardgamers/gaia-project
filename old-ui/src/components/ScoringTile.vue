@@ -1,5 +1,5 @@
 <template>
-  <g :class="['scoringTile', { highlighted, faded }]" v-b-tooltip :title="tooltip">
+  <g :class="['old-scoring-tile', { highlighted, faded }]" v-b-tooltip :title="tooltip">
     <rect x="1" y="1" width="75" height="40" />
     <text class="title" x="5" y="12">Round {{ round }}</text>
     <text class="content" x="5" y="31">{{ content }}</text>
@@ -44,7 +44,7 @@ export default class ScoringTile extends Vue {
 
 <style lang="scss">
 g {
-  &.scoringTile {
+  &.old-scoring-tile {
     rect {
       stroke: #333;
       stroke-width: 1px;
@@ -53,10 +53,13 @@ g {
     .title {
       font-size: 10px;
       font-weight: bold;
+      text-anchor: start;
+      fill: #212529;
       pointer-events: none;
     }
     .content {
       font-size: 12px;
+      fill: #212529;
       pointer-events: none;
     }
 

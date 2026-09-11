@@ -1,5 +1,5 @@
 <template>
-  <g :class="['building', 'planet-fill', planet]">
+  <g :class="['old-building', 'planet-fill', planet]">
     <rect v-if="mine" x="-0.2" y="-0.2" width="0.4" height="0.4" />
     <rect v-else-if="planetaryInstitute" x="-0.375" y="-0.375" width="0.75" height="0.75" />
     <polygon v-else-if="gaiaFormer" :points="hexCorners" />
@@ -15,9 +15,10 @@
 </template>
 
 <script lang="ts">
-import { Building as BuildingEnum, Faction, Planet, factionPlanet } from "@gaia-project/engine";
+import { Building as BuildingEnum, Faction, Planet } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
+import { planetClass } from "../../../viewer/src/graphics/utils";
 import { corners } from "../graphics/hex";
 import Token from "./Token.vue";
 
@@ -34,7 +35,7 @@ export default class Building extends Vue {
   building: BuildingEnum;
 
   get planet() {
-    return (this.faction as any) === "wild" ? Planet.Transdim : factionPlanet(this.faction);
+    return (this.faction as any) === "wild" ? Planet.Transdim : planetClass(this.faction);
   }
 
   get hexCorners() {
@@ -79,7 +80,7 @@ export default class Building extends Vue {
 
 <style lang="scss">
 svg {
-  .building {
+  .old-building {
     stroke-width: 0.1;
     pointer-events: none;
     stroke: #111;

@@ -455,7 +455,7 @@ export default class PlayerInfo extends Vue {
     if (!this.isLostFleet) {
       return [];
     }
-    return lostFleetTerraformingBoard(gameSeed(this.engine));
+    return this.engine.lostFleetTerraformingRow ?? lostFleetTerraformingBoard(gameSeed(this.engine));
   }
 
   planetsWithSteps(steps: number) {

@@ -138,7 +138,7 @@ import Engine, {
 import type { FactionBoardRaw } from "@gaia-project/engine/src/faction-boards";
 import { lostFleetTerraformingBoard } from "@gaia-project/engine/src/factions";
 import Vue, { markRaw } from "vue";
-import { Component, Prop } from "vue-property-decorator";
+import { Component, Prop, Watch } from "vue-property-decorator";
 import type { BuildingSpecialAction, Conversion, TinkeringRound } from "../data/faction-overview";
 import {
   baseFactionLostFleetChanges,
@@ -194,6 +194,11 @@ class FactionBoardPreview extends Vue {
   @Prop()
   player: Player;
 
+  @Watch("engine")
+  updatePreview(engine: Engine) {
+    this.$store.commit("receiveData", engine);
+  }
+
   beforeCreate() {
     const store = makeStore();
     const engine = (this.$options.propsData as { engine?: Engine })?.engine;
@@ -224,10 +229,6 @@ export default class FactionInfoCard extends Vue {
   @Prop()
   expansion: Expansion;
 
-  // Built once and shared between the board and every supplemental getter. markRaw keeps Vue from
-  // deep-observing the large engine graph (it is read-only display data that never mutates here).
-  private engineInstance: Engine | null = null;
-
   get PI(): BuildingEnum {
     return BuildingEnum.PlanetaryInstitute;
   }
@@ -235,17 +236,11 @@ export default class FactionInfoCard extends Vue {
   // A self-contained preview engine (round-1, no buildings placed) read purely as data - the source
   // for the reused board and for all supplemental costs below.
   get previewEngine(): Engine {
-    if (!this.engineInstance) {
-      const engine = markRaw(factionPreviewEngine(this.faction));
-      // The preview's own cost-3 terraforming set is computed against a throwaway filler opponent and
-      // the preview seed, so it would contradict the real 7-colour row we show. Replace it with the
-      // set computed from the live game's board + opponents so the board markers and swatches agree.
-      if (terraformCostDependsOnFactions(this.faction)) {
-        engine.players[0].data.lostFleetCost3Planets = this.cost3Set;
-      }
-      this.engineInstance = engine;
+    const engine = markRaw(factionPreviewEngine(this.faction));
+    if (terraformCostDependsOnFactions(this.faction)) {
+      engine.players[0].data.lostFleetCost3Planets = this.cost3Set;
     }
-    return this.engineInstance;
+    return engine;
   }
 
   // Live-game terraforming row (the 7 swatches) and the cost-3 subset for this faction.
@@ -342,7 +337,7 @@ export default class FactionInfoCard extends Vue {
     }
     const engine = this.$store.state.data as Engine;
     const seed = engine ? gameSeed(engine) : undefined;
-    return seed ? lostFleetTerraformingBoard(seed) : [];
+    return engine?.lostFleetTerraformingRow ?? (seed ? lostFleetTerraformingBoard(seed) : []);
   }
 
   get terraformNote(): string | null {

@@ -7,6 +7,7 @@ import Game from "./components/Game.vue";
 import Resource from "./components/Resource.vue";
 import TechContent from "./components/TechContent.vue";
 import { mountGameChat } from "./game-chat";
+import { installBoardTouch } from "./logic/board-touch";
 import { installActionSounds } from "./sounds";
 import { makeStore } from "./store";
 
@@ -14,22 +15,6 @@ Vue.use(BootstrapVue);
 Vue.component("Condition", Condition);
 Vue.component("TechContent", TechContent);
 Vue.component("Resource", Resource);
-
-// iOS Safari (and older mobile Chrome) only emits `mouseenter`/`:hover` on the first tap of a
-// session if some element on the page already has a click listener bound - otherwise the first
-// tap on any `.hover`-triggered tooltip (v-b-tooltip) is swallowed and only the *second* tap
-// (after tapping something else first) shows it. Binding a no-op touchstart listener up front
-// arms hover emulation immediately, so the very first tap on any tooltip target works.
-if (typeof document !== "undefined") {
-  // The lib may be loaded from <head> (e.g. the platform's iframe wrapper), where document.body
-  // does not exist yet at module evaluation time.
-  const armHoverEmulation = () => document.body.addEventListener("touchstart", () => undefined, true);
-  if (document.body) {
-    armHoverEmulation();
-  } else {
-    document.addEventListener("DOMContentLoaded", armHoverEmulation);
-  }
-}
 
 // The boardgamers.space host page signals dark mode by toggling the "dark" class on <html>
 // (live, via postMessage - see the platform's iframe wrapper). The component styles inherited
@@ -63,7 +48,7 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
     render: (h) => h("div", { class: "container-fluid py-2" }, [h(component)]),
   }).$mount(selector);
 
-  // Tooltips also carry `.click` (see the touchstart-arm comment above this function) so a first
+  // Touch tooltips open on click, so a first
   // tap always shows one, but that means a click-opened tooltip no longer auto-hides on its own
   // the way a hover-only one did when the pointer moved elsewhere - tapping a different component
   // left the previous one stuck open. A capture-phase listener fires before the newly-tapped
@@ -94,6 +79,9 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
       true
     );
   }
+
+  const removeBoardTouch = installBoardTouch(app.$el, () => app.$emit("bv::hide::tooltip"));
+  app.$once("hook:beforeDestroy", removeBoardTouch);
 
   const item: EventEmitter & { store: typeof store; app: Vue } = Object.assign(new EventEmitter(), { store, app });
 

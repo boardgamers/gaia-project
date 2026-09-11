@@ -1,15 +1,24 @@
-# gaia-viewer
+# Gaia Project old UI
 
-A Vue.js / SVG UI for Gaia Project
+The original map, text-based research board and player-card arrangement run on
+Vue 2.7 and Vite. The game controller, engine, action controls, chat and journal
+are shared with `viewer`; this package has its own renderer and build.
 
-**OLD UI — ARCHIVED**
+Lost Fleet adds loose map tiles and spaceships, the scoring extension, ship actions,
+ship technology/federation tiles, artifacts, and updated faction boards and abilities.
 
-This package is no longer part of the pnpm workspace and is no longer built or
-tested in CI. It is kept in the repository for reference only. The active UI is
-[`viewer`](../viewer). Its legacy toolchain (`@vue/cli-service` 4 +
-`fork-ts-checker-webpack-plugin` 1.6) is incompatible with the current
-dependency versions.
+From the repository root:
 
-## Demo
+```sh
+pnpm install
+pnpm --dir old-ui serve    # http://localhost:5193/
+pnpm --dir old-ui test
+pnpm --dir old-ui package
+```
 
-Check out [boardgamers.space](https://www.boardgamers.space)!
+Use `?lostFleet=1` for expansion setup or `?scenario=lost-fleet-overview` for a
+playable test position. The local test tools also load the other expansion positions.
+
+For BGS, publish `dist/package/old-ui.umd.js` and `old-ui.css` as the alternate
+viewer. Its API is `gaiaViewer.launch`, with the same events as the normal viewer.
+Vue and BootstrapVue remain supplied by the host; game assets and sounds are bundled.

@@ -1,5 +1,5 @@
 <template>
-  <g :class="['finalScoringTile', { highlighted }]" v-b-tooltip :title="tooltip">
+  <g :class="['old-final-scoring-tile', { highlighted }]" v-b-tooltip :title="tooltip">
     <rect x="1" y="1" width="75" height="55" />
     <text class="title" x="5" y="12">{{ content }}</text>
     <Token
@@ -24,7 +24,7 @@
 import { Faction, Phase, Player, finalScorings } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { factionName } from "../data/factions";
+import { factionName } from "../../../viewer/src/data/factions";
 import Token from "./Token.vue";
 
 @Component<FinalScoringTile>({
@@ -91,7 +91,7 @@ export default class FinalScoringTile extends Vue {
 
 <style lang="scss">
 g {
-  &.finalScoringTile {
+  &.old-final-scoring-tile {
     rect {
       stroke: #333;
       stroke-width: 1px;
@@ -100,6 +100,8 @@ g {
     .title {
       font-size: 10px;
       font-weight: bold;
+      text-anchor: start;
+      fill: #212529;
       pointer-events: none;
     }
     .score {
