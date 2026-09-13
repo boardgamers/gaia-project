@@ -14,3 +14,5 @@ allowBuilds:
   esbuild: true
   nodent-runtime: true
   yorkie: true
+minimumReleaseAgeExclude:
+  - "@boardgamers/protocol@0.1.0"

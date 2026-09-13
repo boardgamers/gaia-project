@@ -41,3 +41,6 @@ jobs:
         env:
           NODE_OPTIONS: --max-old-space-size=12288
       - run: pnpm --dir ../old-ui package
+      - run: pnpm --dir ../engine build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:browser

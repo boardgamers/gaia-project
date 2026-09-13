@@ -1,9 +1,10 @@
-import { EventEmitter } from "events";
+import { ViewerEmitter } from "@boardgamers/protocol/viewer";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mountGameChat } from "./game-chat";
 
 describe("chat beside the mobile action bar", () => {
-  let emitter: EventEmitter;
+  let emitter: ViewerEmitter;
+  let dispose: () => void;
   let panel: HTMLElement;
   let list: HTMLElement;
   let shortcut: HTMLButtonElement;
@@ -18,12 +19,14 @@ describe("chat beside the mobile action bar", () => {
       "IntersectionObserver",
       class {
         observe() {}
+        disconnect() {}
       }
     );
     vi.stubGlobal(
       "ResizeObserver",
       class {
         observe() {}
+        disconnect() {}
       }
     );
     vi.stubGlobal("innerHeight", 800);
@@ -34,14 +37,16 @@ describe("chat beside the mobile action bar", () => {
     vi.spyOn(host.querySelector(".mobile-sticky-actions-spacer")!, "getBoundingClientRect").mockReturnValue(
       rect(900, 180)
     );
-    emitter = new EventEmitter();
-    mountGameChat(emitter, host);
+    emitter = new ViewerEmitter();
+    dispose = mountGameChat(emitter, host);
     panel = host.querySelector(".bgs-game-chat")!;
     list = host.querySelector(".chat-messages")!;
     shortcut = host.querySelector(".chat-shortcut")!;
   });
 
   afterEach(() => {
+    dispose();
+    emitter.destroy();
     vi.clearAllTimers();
     vi.useRealTimers();
     vi.restoreAllMocks();
@@ -52,12 +57,13 @@ describe("chat beside the mobile action bar", () => {
   it("does not count replacement history as unread", () => {
     vi.spyOn(panel, "getBoundingClientRect").mockReturnValue(rect(900, 130));
     vi.spyOn(list, "getBoundingClientRect").mockReturnValue(rect(920, 60));
-    const message = { _id: "000000000000000000000001", author: "Nevlas", text: "Hello" };
-    emitter.emit("chat:appended", [message]);
-    expect(shortcut.textContent).toContain("1 unread");
+    const message = { _id: "000000000000000000000001", type: "text" as const, author: "Nevlas", text: "Hello" };
     emitter.emit("chat:messages", [message]);
     expect(shortcut.textContent).toBe("Chat");
-    emitter.emit("chat:appended", [{ ...message, _id: "000000000000000000000002" }]);
+    const next = { ...message, _id: "000000000000000000000002" };
+    emitter.emit("chat:appended", [next]);
+    expect(shortcut.textContent).toContain("1 unread");
+    emitter.emit("chat:messages", [message, next]);
     expect(shortcut.textContent).toContain("1 unread");
   });
 
@@ -66,7 +72,9 @@ describe("chat beside the mobile action bar", () => {
     emitter.on("chat:read", read);
     vi.spyOn(panel, "getBoundingClientRect").mockReturnValue(rect(650, 130));
     vi.spyOn(list, "getBoundingClientRect").mockReturnValue(rect(680, 60));
-    emitter.emit("chat:appended", [{ _id: "000000000000000000000001", author: "Nevlas", text: "Hello" }]);
+    emitter.emit("chat:appended", [
+      { _id: "000000000000000000000001", type: "text" as const, author: "Nevlas", text: "Hello" },
+    ]);
     const row = list.firstElementChild!;
     const rowBounds = vi.spyOn(row, "getBoundingClientRect").mockReturnValue(rect(690, 40));
     window.dispatchEvent(new Event("scroll"));
@@ -94,7 +102,9 @@ describe("chat beside the mobile action bar", () => {
     vi.stubGlobal("innerWidth", 390);
     vi.spyOn(panel, "getBoundingClientRect").mockReturnValue(rect(900, 130));
     vi.spyOn(list, "getBoundingClientRect").mockReturnValue(rect(930, 60));
-    emitter.emit("chat:appended", [{ _id: "000000000000000000000001", author: "Nevlas", text: "Hello" }]);
+    emitter.emit("chat:appended", [
+      { _id: "000000000000000000000001", type: "text" as const, author: "Nevlas", text: "Hello" },
+    ]);
     const bar = document.createElement("div");
     bar.className = "mobile-sticky-actions";
     bar.innerHTML = '<span class="chat-shortcut-host"></span>';

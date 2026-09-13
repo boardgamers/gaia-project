@@ -1,3 +1,6 @@
+import type { EventName } from "@boardgamers/protocol";
+import { downlinkSchemas, uplinkSchemas } from "@boardgamers/protocol";
+import { createViewer } from "@boardgamers/protocol/viewer";
 import BootstrapVue from "bootstrap-vue";
 import { EventEmitter } from "events";
 import Vue from "vue";
@@ -38,7 +41,14 @@ if (typeof document !== "undefined" && typeof MutationObserver !== "undefined") 
 // zoom is already disabled globally by `body { touch-action: manipulation }` (frontend.scss),
 // which does NOT suppress clicks, so the JS handler was redundant as well as harmful.
 
+let dispose: (() => void) | undefined;
+
 function launch(selector: string, component: VueConstructor<Vue> = Game) {
+  const target = document.querySelector(selector);
+  if (!target) throw new Error(`Viewer mount point not found: ${selector}`);
+  dispose?.();
+  const mountPoint = document.createElement("div");
+  target.append(mountPoint);
   let lastMovedAt = 0;
 
   const store = makeStore();
@@ -46,7 +56,7 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
   const app = new Vue({
     store,
     render: (h) => h("div", { class: "container-fluid py-2" }, [h(component)]),
-  }).$mount(selector);
+  }).$mount(mountPoint);
 
   // Touch tooltips open on click, so a first
   // tap always shows one, but that means a click-opened tooltip no longer auto-hides on its own
@@ -66,75 +76,97 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
   // attribute on the click target (or an ancestor, since the target is often an inner SVG shape
   // one level below the actual v-b-tooltip-bound element) reliably distinguishes "close some
   // other tooltip" from "let this element's own toggle handle itself."
-  if (typeof document !== "undefined") {
-    document.addEventListener(
-      "click",
-      (event) => {
-        const target = event.target as Element | null;
-        if (target?.closest?.("[aria-describedby]")) {
-          return;
-        }
-        app.$emit("bv::hide::tooltip");
-      },
-      true
-    );
-  }
+  const hideTooltips = (event: MouseEvent) => {
+    const target = event.target as Element | null;
+    if (!target?.closest?.("[aria-describedby]")) app.$emit("bv::hide::tooltip");
+  };
+  document.addEventListener("click", hideTooltips, true);
+  app.$once("hook:beforeDestroy", () => document.removeEventListener("click", hideTooltips, true));
 
   const removeBoardTouch = installBoardTouch(app.$el, () => app.$emit("bv::hide::tooltip"));
   app.$once("hook:beforeDestroy", removeBoardTouch);
 
   const item: EventEmitter & { store: typeof store; app: Vue } = Object.assign(new EventEmitter(), { store, app });
 
-  installActionSounds(item);
-  mountGameChat(item, app.$el);
-
   let replaying = false;
-
-  item.addListener("state", (data) => {
-    store.dispatch("externalData", data);
-    item.emit("replaceLog", data?.moveHistory);
-    app.$nextTick().then(() => item.emit("ready"));
+  const viewer = createViewer<Record<string, any>, string>({
+    async onState(data) {
+      await store.dispatch("externalData", data);
+      viewer.replaceLog(data?.moveHistory || []);
+      await app.$nextTick();
+    },
+    onUpdate() {
+      if (!replaying) viewer.fetchState();
+    },
+    onPreferences(data) {
+      store.commit("preferences", data);
+    },
+    onPlayer(data) {
+      store.commit("player", data);
+    },
+    onAvatars(data) {
+      store.commit("avatars", data);
+    },
+    onTheme({ dark }) {
+      document.documentElement.dataset.theme = dark ? "dark" : "light";
+    },
+    onReplayStart() {
+      replaying = true;
+      void store.dispatch("replayStart");
+    },
+    onReplayTo(index) {
+      void store.dispatch("replayTo", index);
+      viewer.replaceLog(store.state.data.moveHistory);
+    },
+    onReplayEnd() {
+      void store.dispatch("replayEnd");
+      replaying = false;
+      viewer.fetchState();
+    },
+    async onLog(logData) {
+      if (replaying) return;
+      const data = logData.data as { state?: unknown } | undefined;
+      if (data?.state) {
+        await store.dispatch("externalData", data.state);
+        viewer.replaceLog(store.state.data.moveHistory);
+        await app.$nextTick();
+      } else viewer.fetchState();
+    },
+    onError(error) {
+      if (item.listenerCount("error")) item.emit("error", error);
+      else console.error(error);
+    },
   });
-  item.addListener("state:updated", () => {
-    if (!replaying) {
-      item.emit("fetchState");
-    }
+  // Gaia's premove/presence extensions still use its host emitter; standard events
+  // pass through the shared protocol's validation and lifecycle.
+  for (const event of Object.keys(downlinkSchemas)) {
+    item.on(event, (payload) => viewer.emitter.receive(event, payload));
+  }
+  for (const event of Object.keys(uplinkSchemas) as EventName[]) {
+    viewer.emitter.on(event, (payload) => item.emit(event, payload));
+  }
+  for (const event of [
+    "premoveState",
+    "premovePlayed",
+    "cancelTriggerState",
+    "cancelTriggerFired",
+    "seatUsers",
+    "seatLastActive",
+    "presence",
+  ]) {
+    item.on(event, (data) => store.commit(event, data));
+  }
+  installActionSounds(viewer.emitter);
+  const removeChat = mountGameChat(viewer.emitter, app.$el);
+  app.$once("hook:beforeDestroy", () => {
+    removeChat();
+    viewer.destroy();
+    item.removeAllListeners();
   });
-  item.addListener("preferences", (data) => store.commit("preferences", data));
-  item.addListener("player", (data) => store.commit("player", data));
-  // Premove (PREMOVE_PLAN.md) - hosted-mode-only; self-contained mode never emits this.
-  item.addListener("premoveState", (data) => store.commit("premoveState", data));
-  // Phase 3 (§10.6) - hosted-mode-only quiet success notice.
-  item.addListener("premovePlayed", (data) => store.commit("premovePlayed", data));
-  // Premove cancel triggers - hosted-mode-only, same shape as the two listeners above.
-  item.addListener("cancelTriggerState", (data) => store.commit("cancelTriggerState", data));
-  item.addListener("cancelTriggerFired", (data) => store.commit("cancelTriggerFired", data));
-  item.addListener("replay:start", () => {
-    store.dispatch("replayStart");
-    replaying = true;
-  });
-  item.addListener("replay:to", (info) => {
-    store.dispatch("replayTo", info);
-    item.emit("replaceLog", store.state.data.moveHistory);
-  });
-  item.addListener("avatars", (data) => store.commit("avatars", data));
-  // Presence (PROGRESS.md Gaia 9) - hosted-mode-only; self-contained mode never emits either.
-  item.addListener("seatUsers", (data) => store.commit("seatUsers", data));
-  item.addListener("seatLastActive", (data) => store.commit("seatLastActive", data));
-  item.addListener("presence", (data) => store.commit("presence", data));
-  item.addListener("replay:end", () => {
-    store.dispatch("replayEnd");
-    replaying = false;
-    item.emit("fetchState");
-  });
-  item.addListener("gamelog", (logData) => {
-    if (replaying) {
-      //
-    } else {
-      store.dispatch("externalData", logData.data.state);
-      item.emit("replaceLog", logData.data.state?.moveHistory);
-    }
-  });
+  dispose = () => {
+    app.$destroy();
+    target.replaceChildren();
+  };
 
   const unsub1 = store.subscribeAction(({ type, payload }) => {
     // console.log("spy action", type, payload);
@@ -146,7 +178,7 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
       }
       lastMovedAt = Date.now();
 
-      item.emit("move", payload);
+      viewer.move(payload);
       return;
     }
 
@@ -167,15 +199,12 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
     }
 
     if (type === "playerClick") {
-      item.emit("player:clicked", {
-        name: payload.name,
-        auth: payload.auth,
-        index: store.state.data?.players?.findIndex((pl) => pl === payload),
-      });
+      const index = store.state.data?.players?.findIndex((pl) => pl === payload);
+      if (index >= 0) viewer.openPlayer(index);
     }
 
     if (type === "replayInfo") {
-      item.emit("replay:info", payload);
+      viewer.setReplayInfo(payload);
     }
   });
 
