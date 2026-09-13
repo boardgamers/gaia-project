@@ -31,6 +31,7 @@ describe("chat beside the mobile action bar", () => {
     );
     vi.stubGlobal("innerHeight", 800);
     vi.spyOn(document, "hasFocus").mockReturnValue(true);
+    Object.defineProperty(HTMLElement.prototype, "checkVisibility", { value: () => true, configurable: true });
     document.body.innerHTML =
       '<div id="host"><div class="chat-host"></div><div class="mobile-sticky-actions-spacer"></div></div>';
     const host = document.querySelector("#host")!;
@@ -75,7 +76,7 @@ describe("chat beside the mobile action bar", () => {
     emitter.emit("chat:appended", [
       { _id: "000000000000000000000001", type: "text" as const, author: "Nevlas", text: "Hello" },
     ]);
-    const row = list.firstElementChild!;
+    const row = list.querySelector("[data-message-id]")!;
     const rowBounds = vi.spyOn(row, "getBoundingClientRect").mockReturnValue(rect(690, 40));
     window.dispatchEvent(new Event("scroll"));
     vi.advanceTimersByTime(600);
