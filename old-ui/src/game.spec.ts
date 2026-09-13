@@ -27,7 +27,7 @@ describe("old UI on the current engine", () => {
             : loadScenarioEngine(id);
         viewer.emit("state", JSON.parse(JSON.stringify(engine)));
         viewer.emit("chat:state", { canSend: true });
-        viewer.emit("chat:messages", [{ author: "Teammate", text: "Ready to explore" }]);
+        viewer.emit("chat:messages", [{ type: "text", author: "Teammate", text: "Ready to explore" }]);
         await Vue.nextTick();
         expect(viewer.app.$el.querySelector(".old-ui-game")).not.toBeNull();
         expect(viewer.app.$el.querySelector(".old-map-canvas")).not.toBeNull();

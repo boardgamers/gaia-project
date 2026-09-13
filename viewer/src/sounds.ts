@@ -1,3 +1,4 @@
+import type { ViewerEmitter } from "@boardgamers/protocol/viewer";
 import { factionPlanet, Planet } from "@gaia-project/engine";
 import SpaceMap from "@gaia-project/engine/src/map";
 type Note = [number, number, number, number, number?];
@@ -107,7 +108,7 @@ export function playSound(name: string): void {
     .catch(() => undefined);
 }
 
-export function installActionSounds(emitter: { on: (event: string, fn: (value: any) => void) => unknown }): void {
+export function installActionSounds(emitter: Pick<ViewerEmitter<any, any>, "on">): void {
   let previous: string[] | undefined;
   let replaying = false;
   emitter.on("update:preference", (pref) => {
@@ -148,13 +149,14 @@ export function installActionSounds(emitter: { on: (event: string, fn: (value: a
   };
   emitter.on("state", receiveState);
   emitter.on("gamelog", (event) => {
-    if (event?.data?.state) {
-      receiveState(event.data.state);
+    const data = event?.data as { state?: any } | undefined;
+    if (data?.state) {
+      receiveState(data.state);
     }
   });
 }
 
-export function mountSoundTests(emitter: { emit: (event: string, value: any) => unknown }): void {
+export function mountSoundTests(emitter: Pick<ViewerEmitter<any, any>, "emit">): void {
   const panel = document.createElement("details");
   panel.style.cssText =
     "position:relative;z-index:5;padding:10px 16px;margin:8px;background:#172638;color:#f0f4f8;border:1px solid #56718a;border-radius:8px;font:14px system-ui";
