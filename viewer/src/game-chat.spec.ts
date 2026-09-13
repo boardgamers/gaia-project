@@ -18,8 +18,36 @@ describe("chat beside the mobile action bar", () => {
     vi.stubGlobal(
       "IntersectionObserver",
       class {
-        observe() {}
-        disconnect() {}
+        targets = new Set<Element>();
+        constructor(private callback: IntersectionObserverCallback) {
+          this.refresh = this.refresh.bind(this);
+          window.addEventListener("scroll", this.refresh);
+        }
+        refresh() {
+          this.callback(
+            Array.from(
+              this.targets,
+              (target) =>
+                ({
+                  target,
+                  isIntersecting: true,
+                  intersectionRect: target.getBoundingClientRect(),
+                }) as IntersectionObserverEntry
+            ),
+            this as unknown as IntersectionObserver
+          );
+        }
+        observe(target: Element) {
+          this.targets.add(target);
+          this.refresh();
+        }
+        unobserve(target: Element) {
+          this.targets.delete(target);
+        }
+        disconnect() {
+          window.removeEventListener("scroll", this.refresh);
+          this.targets.clear();
+        }
       }
     );
     vi.stubGlobal(
@@ -30,7 +58,7 @@ describe("chat beside the mobile action bar", () => {
       }
     );
     vi.stubGlobal("innerHeight", 800);
-    vi.spyOn(document, "hasFocus").mockReturnValue(true);
+    vi.spyOn(document, "hasFocus").mockReturnValue(false);
     Object.defineProperty(HTMLElement.prototype, "checkVisibility", { value: () => true, configurable: true });
     document.body.innerHTML =
       '<div id="host"><div class="chat-host"></div><div class="mobile-sticky-actions-spacer"></div></div>';
