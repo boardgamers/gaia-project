@@ -129,7 +129,7 @@ export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): 
     shortcut.classList.toggle("chat-shortcut--inline", !!barSlot);
     const text = barSlot && count ? `Chat · ${count}` : label;
     if (shortcut.textContent !== text) shortcut.textContent = text;
-    shortcut.hidden = !barSlot && chatVisible;
+    shortcut.hidden = count === 0 || (!barSlot && chatVisible);
     shortcut.setAttribute("aria-label", `Open ${label}`);
   }
   shortcut.onclick = () => {

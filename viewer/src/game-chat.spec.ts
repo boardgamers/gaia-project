@@ -89,9 +89,11 @@ describe("chat beside the mobile action bar", () => {
     const message = { _id: "000000000000000000000001", type: "text" as const, author: "Nevlas", text: "Hello" };
     emitter.emit("chat:messages", [message]);
     expect(shortcut.textContent).toBe("Chat");
+    expect(shortcut.hidden).toBe(true);
     const next = { ...message, _id: "000000000000000000000002" };
     emitter.emit("chat:appended", [next]);
     expect(shortcut.textContent).toContain("1 unread");
+    expect(shortcut.hidden).toBe(false);
     emitter.emit("chat:messages", [message, next]);
     expect(shortcut.textContent).toContain("1 unread");
   });
@@ -158,5 +160,23 @@ describe("chat beside the mobile action bar", () => {
     expect(shortcut.parentElement!.className).toBe("chat-host");
     expect(shortcut.textContent).toBe("Chat · 1 unread");
     expect(document.querySelectorAll(".chat-shortcut")).toHaveLength(1);
+  });
+
+  it("hides the action-bar shortcut without unread messages, including after deletion", async () => {
+    vi.stubGlobal("innerWidth", 390);
+    vi.spyOn(panel, "getBoundingClientRect").mockReturnValue(rect(900, 130));
+    vi.spyOn(list, "getBoundingClientRect").mockReturnValue(rect(930, 60));
+    const bar = document.createElement("div");
+    bar.className = "mobile-sticky-actions";
+    bar.innerHTML = '<span class="chat-shortcut-host"></span>';
+    document.querySelector("#host")!.prepend(bar);
+    await Promise.resolve();
+
+    expect(bar.contains(shortcut)).toBe(true);
+    expect(shortcut.hidden).toBe(true);
+    emitter.emit("chat:appended", [{ _id: "000000000000000000000001", type: "text", author: "Nevlas", text: "Hello" }]);
+    expect(shortcut.hidden).toBe(false);
+    emitter.emit("chat:deleted", ["000000000000000000000001"]);
+    expect(shortcut.hidden).toBe(true);
   });
 });

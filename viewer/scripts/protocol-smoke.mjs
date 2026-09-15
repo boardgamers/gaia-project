@@ -128,6 +128,7 @@ try {
           el.open = false;
         });
         await page.evaluate(() => window.scrollTo(0, 0));
+        await page.waitForFunction(() => document.querySelector(".chat-shortcut").hidden);
         const incoming = {
           _id: id(40),
           type: "text",
@@ -145,6 +146,7 @@ try {
           host.emit("chat:appended", [incoming]);
         }, incoming);
         assert.match(await panel.locator("summary").textContent(), /1 unread/);
+        await page.locator(".chat-shortcut").waitFor({ state: "visible" });
         assert.equal(await list.locator("article").count(), 36, "duplicate append is ignored");
         await page.evaluate((messages) => host.emit("chat:messages", messages), [...messages, incoming]);
         assert.match(
@@ -174,6 +176,7 @@ try {
         await list.locator(".chat-mention").click();
         assert.deepEqual(await page.evaluate(() => playerClicks), [{ index: 0 }]);
         await page.waitForFunction(() => receipts.some((r) => r.messageId === "000000000000000000000028"));
+        await page.waitForFunction(() => document.querySelector(".chat-shortcut").hidden);
         const receiptCount = await page.evaluate(() => receipts.length);
         await list.evaluate((el) => {
           el.scrollTop = 0;
