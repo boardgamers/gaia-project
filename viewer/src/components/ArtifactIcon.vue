@@ -54,6 +54,13 @@
         <text v-if="display.minLevel" v-text="display.minLevel" class="lost-fleet-ship__artifact-level" x="14" y="10" />
         <circle v-if="display.planet" r="6" :class="['planet-fill', display.planet]" transform="translate(0, 11)" />
       </g>
+      <Resource
+        v-if="showCost"
+        class="artifact-cost"
+        kind="bowl-t"
+        :count="6"
+        transform="translate(-11, -9) scale(0.65)"
+      />
     </g>
   </svg>
 </template>
@@ -80,6 +87,9 @@ import Resource from "./Resource.vue";
 export default class ArtifactIcon extends Vue {
   @Prop()
   artifact: ArtifactToken;
+
+  @Prop({ type: Boolean, default: false })
+  showCost: boolean;
 
   // Height of the icon; width is derived from it (the token is an oval, wider than tall).
   @Prop({ default: 30 })
@@ -148,7 +158,8 @@ export default class ArtifactIcon extends Vue {
   }
 
   get tooltip(): string {
-    return artifactTokenSpec[this.artifact];
+    const cost = this.showCost ? "Discard 6 power tokens from bowls I, II and/or III. " : "";
+    return cost + artifactTokenSpec[this.artifact];
   }
 
   tooltipTriggerConfig = tooltipTriggerConfig;

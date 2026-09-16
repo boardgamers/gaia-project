@@ -42,6 +42,11 @@ if (typeof document !== "undefined" && typeof MutationObserver !== "undefined") 
 // which does NOT suppress clicks, so the JS handler was redundant as well as harmful.
 
 let dispose: (() => void) | undefined;
+export function destroyViewer() {
+  const cleanup = dispose;
+  dispose = undefined;
+  cleanup?.();
+}
 
 function launch(selector: string, component: VueConstructor<Vue> = Game) {
   const target = document.querySelector(selector);

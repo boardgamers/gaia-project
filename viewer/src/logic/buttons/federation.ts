@@ -43,7 +43,11 @@ function federationButtonDetails(long: boolean, satelliteName: string, info: Fed
   return `(${info.powerValue}${powerValue}${sep}${info.newSatellites}${satellites})`;
 }
 
-function customFederationButton(controller: CommandController, fedTypeButtons: ButtonData[]) {
+function customFederationButton(
+  controller: CommandController,
+  fedTypeButtons: ButtonData[],
+  initialHexes: GaiaHex[] = []
+) {
   return {
     label: "Custom location",
     shortcuts: ["c"],
@@ -68,7 +72,9 @@ function customFederationButton(controller: CommandController, fedTypeButtons: B
                 const keys: GaiaHex[] = Array.from(highlighted.keys());
                 controller.highlightHexes(customHexSelection(new Map([...keys.map((key) => [key, {}])] as any)));
               });
-              controller.highlightHexes(customHexSelection(new Map<GaiaHex, HighlightHex>()));
+              controller.highlightHexes(
+                customHexSelection(new Map<GaiaHex, HighlightHex>(initialHexes.map((hex) => [hex, {}])))
+              );
             },
             onClick: (button) => {
               button.command = [...controller.getHighlightedHexes().hexes.keys()]
@@ -82,6 +88,19 @@ function customFederationButton(controller: CommandController, fedTypeButtons: B
       }),
     ],
   };
+}
+
+export function selectCustomFederation(engine: Engine, controller: CommandController, location: string) {
+  const command = engine.findAvailableCommand(engine.playerToMove, Command.FormFederation);
+  if (!command) return;
+  const hexes = location.split(",").map((coord) => engine.map.getS(coord));
+  if (hexes.some((hex) => !hex)) return;
+  const buttons = federationTypeButtons(command.data.tiles, engine.players[engine.playerToMove]);
+  const custom = customFederationButton(controller, buttons, hexes);
+  controller.handleCommand(Command.FormFederation, {
+    label: "Custom federation: select planets and empty space",
+    buttons: custom.buttons[0].buttons,
+  });
 }
 
 function federationLocationButton(

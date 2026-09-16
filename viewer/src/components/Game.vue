@@ -621,6 +621,12 @@ export default class Game extends Vue {
   // not reached that round - so this is what `analysisCommittableMoves` reads to say so.
   analysisRolledForward = false;
 
+  @Prop({ default: false })
+  tutorial: boolean;
+
+  @Prop({ default: false })
+  interactionDisabled: boolean;
+
   @Prop()
   options: EngineOptions;
 
@@ -978,6 +984,7 @@ export default class Game extends Vue {
   }
 
   get canPlay() {
+    if (this.interactionDisabled) return false;
     if (this.ended) {
       return false;
     }
@@ -1566,6 +1573,7 @@ export default class Game extends Vue {
    * simply passed to whoever's turn it is), so this reduces to "always offered" there too, just
    * without inventing a seat picker for a mode that has no concept of "my seat" to begin with. */
   get analysisOffered(): boolean {
+    if (this.tutorial) return false;
     if (this.analysisMode || this.premoveMode || this.cancelTriggerComposeActive || this.ended) {
       return false;
     }

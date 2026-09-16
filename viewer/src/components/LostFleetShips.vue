@@ -103,26 +103,11 @@
               </g>
             </g>
             <g class="lost-fleet-ship__cost-badge" :transform="costBadgeTransform(ship, action.type)">
-              <image
-                v-if="costKind(action.cost) === 'pw'"
-                xlink:href="../assets/resources/power-charge.svg"
-                width="20"
-                :height="(133 / 345) * 20"
-                transform="scale(-1,1) translate(-9, -12)"
-              />
-              <rect
-                x="-8"
-                y="-8"
-                width="16"
-                height="16"
-                :rx="costKind(action.cost) === 'pw' ? 8 : 0"
-                :ry="costKind(action.cost) === 'pw' ? 8 : 0"
-                stroke="black"
-                stroke-width="1"
-                :fill="costFill(action.cost)"
+              <Resource
+                :kind="costKind(action.cost) === 'pw' ? 'pay-pw' : costKind(action.cost)"
+                :count="costNumber(action.cost)"
                 transform="scale(0.8)"
               />
-              <text x="-3" y="3.5" class="lost-fleet-ship__cost">{{ costNumber(action.cost) }}</text>
               <Resource
                 v-for="(extra, j) in extraCosts(action.cost)"
                 :key="j"
@@ -174,7 +159,7 @@
               :data-artifact="artifact"
               :transform="`translate(${artifactX0 + (i % 2) * 37}, ${3 + Math.floor(i / 2) * 27})`"
             >
-              <ArtifactIcon :artifact="artifact" :size="24" />
+              <ArtifactIcon :artifact="artifact" :size="24" show-cost />
             </g>
           </g>
 
@@ -246,7 +231,6 @@ import type { ActionOverlay } from "../data/spaceships";
 import {
   actionOverlay as actionOverlaySpec,
   costBadgeTransform as costBadgeTransformFn,
-  costFill as costFillFn,
   costKind as costKindFn,
   costNumber as costNumberFn,
   extraCosts as extraCostsFn,
@@ -541,10 +525,6 @@ export default class LostFleetShips extends Vue {
     return extraCostsFn(cost);
   }
 
-  costFill(cost: string): string {
-    return costFillFn(cost);
-  }
-
   costBadgeTransform(ship: Spaceship, type: SpaceshipActionType): string {
     return costBadgeTransformFn(ship, type);
   }
@@ -677,11 +657,6 @@ svg.lost-fleet-ship {
   .lost-fleet-ship__slot.last-move .lost-fleet-ship__slot-bg {
     stroke: var(--recent);
     stroke-width: 2.5;
-  }
-
-  .lost-fleet-ship__cost {
-    fill: white !important;
-    font-size: 12px;
   }
 
   .lost-fleet-ship__action-overlay {

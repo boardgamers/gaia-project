@@ -147,7 +147,7 @@
         <image xlink:href="../assets/resources/range-arrow.svg" :height="(285 / 164) * 9" width="10" x="-5" y="-8" />
       </g>
       <text v-if="count >= 1" x="13" y="1.2" fill="black" stroke-width="0.3" style="font-weight: bold; font-size: 10px">
-        {{ count }}
+        {{ plus ? "+" : "" }}{{ count }}
       </text>
     </template>
     <template v-else-if="kind === 'up-lowest'">

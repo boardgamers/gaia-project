@@ -173,8 +173,8 @@ importers:
   viewer:
     dependencies:
       '@boardgamers/protocol':
-        specifier: 0.2.2
-        version: 0.2.2
+        specifier: 0.3.3
+        version: 0.3.3
       '@gaia-project/engine':
         specifier: workspace:../engine
         version: link:../engine
@@ -433,8 +433,8 @@ packages:
     resolution: {integrity: sha512-6zABk/ECA/QYSCQ1NGiVwwbQerUCZ+TQbp64Q3AgmfNvurHH0j8TtXa1qbShXA6qqkpAj4V5W8pP6mLe1mcMqA==}
     engines: {node: '>=18'}
 
-  '@boardgamers/protocol@0.2.2':
-    resolution: {integrity: sha512-5o5nPZW6CN6PysF0i90OR+B30djiFhAGutCZe5RKJV6h3RgqE36HA7l0pOpvhdHz8uYtqE0nmaPlc+2ZtYiM/A==}
+  '@boardgamers/protocol@0.3.3':
+    resolution: {integrity: sha512-AS+x84WHXRudW6xt/s/5I3xYmNTQFbZEBp3V+41w0I2RirSr2fWjYnYf0p11nwTbZ6G5upivKz/sjYLtk8HOYA==}
 
   '@bramus/specificity@2.4.2':
     resolution: {integrity: sha512-ctxtJ/eA+t+6q2++vj5j7FYX3nRu311q1wfYH3xjlLOsczhlhxAg2FWNUXhpGvAw3BWo1xBcvOV6/YLc2r5FJw==}
@@ -7083,7 +7083,7 @@ snapshots:
 
   '@bcoe/v8-coverage@1.0.2': {}
 
-  '@boardgamers/protocol@0.2.2':
+  '@boardgamers/protocol@0.3.3':
     dependencies:
       zod: 4.6.2
 

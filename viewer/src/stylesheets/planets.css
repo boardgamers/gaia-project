@@ -1,5 +1,6 @@
 .gaia-viewer-game,
-.gaia-viewer-modal {
+.gaia-viewer-modal,
+.gaia-tutorial {
   --volcanic: #ff9500;
   --swamp: #704100;
   --generic: lightgray;

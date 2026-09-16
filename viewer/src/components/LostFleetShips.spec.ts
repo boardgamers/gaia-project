@@ -1,11 +1,14 @@
-import Engine, { Faction, Spaceship } from "@gaia-project/engine";
+import Engine, { ArtifactToken, Faction, Spaceship, SpaceshipTechTile } from "@gaia-project/engine";
 import { render } from "@testing-library/vue";
 import { expect } from "chai";
 import Vue from "vue";
 import { factionPiecePlanet } from "../graphics/utils";
 import { makeStore } from "../store";
+import ArtifactIcon from "./ArtifactIcon.vue";
 import LostFleetShips from "./LostFleetShips.vue";
+import ShipActionIcon from "./ShipActionIcon.vue";
 import TechContent from "./TechContent.vue";
+import TechTile from "./TechTile.vue";
 
 // SpecialAction.vue's template uses <TechContent> without a local import, relying on launcher.ts's
 // global Vue.component("TechContent", ...) registration - which isolated component tests never
@@ -18,6 +21,52 @@ Vue.component("TechContent", TechContent);
 // everything a ship gives access to (actions, Federation token, Standard Tech, artifacts,
 // explored-by markers) must be visible in one place, drawn with base-game components.
 describe("LostFleetShips", () => {
+  it("shows the six-token cost on available artifacts but not on already-owned copies", () => {
+    const engine = new Engine(["init 4 artifact-cost-icons"], { lostFleet: true });
+    const store = makeStore();
+    store.commit("receiveData", engine);
+    const { container } = render(LostFleetShips, { store });
+    const costs = container.querySelectorAll("[data-artifact] .artifact-cost");
+    expect(costs.length).to.equal(engine.tiles.artifacts.length);
+    for (const cost of Array.from(costs)) {
+      expect(cost.querySelector(".power")).to.not.equal(null);
+      expect(cost.querySelector("text")?.textContent).to.equal("6");
+      expect(cost.querySelector("image"), "discarded tokens do not carry the spend-power arrow").to.equal(null);
+    }
+    const { container: owned } = render(ArtifactIcon, { props: { artifact: ArtifactToken.Credit }, store });
+    expect(owned.querySelector(".artifact-cost")).to.equal(null);
+  });
+
+  it("shows the lasting range tile with Navigation's symbol and a +1 modifier, without an action octagon", () => {
+    const store = makeStore();
+    const { container } = render(TechTile, {
+      props: { tileOverride: SpaceshipTechTile.Range, countOverride: 1 },
+      store,
+    });
+    const icon = container.querySelector(".range-tile-icon");
+    expect(icon?.querySelectorAll("image").length).to.equal(3);
+    expect(icon?.textContent?.trim()).to.equal("+1");
+    expect(container.querySelector(".specialAction")).to.equal(null);
+  });
+
+  it("uses the shared credit icon and amount for both ships' credit costs", () => {
+    const store = makeStore();
+    store.commit("receiveData", new Engine(["init 2 ship-credit-icons"], { lostFleet: true }));
+    const { container } = render(LostFleetShips, { store });
+    for (const [ship, amount] of [
+      [Spaceship.TFMars, "3"],
+      [Spaceship.Eclipse, "6"],
+    ]) {
+      const badge = container.querySelector(
+        `[data-ship="${ship}"] [data-action="credit"] .lost-fleet-ship__cost-badge`
+      );
+      expect(badge?.querySelector(".resource .credit")?.getAttribute("rx")).to.equal("8");
+      expect(badge?.querySelector(".resource text")?.textContent).to.equal(amount);
+      const { container: button } = render(ShipActionIcon, { props: { ship, type: "credit" }, store });
+      expect(button.querySelector(".lost-fleet-ship__cost-badge .resource .credit")?.getAttribute("rx")).to.equal("8");
+      expect(button.querySelector(".lost-fleet-ship__cost-badge .resource text")?.textContent).to.equal(amount);
+    }
+  });
   it("shows actions, Federation token, tech tile, and artifacts per ship using base-game components", () => {
     const engine = new Engine(["init 4 lost-fleet-ships-spec"], { lostFleet: true });
     const store = makeStore();

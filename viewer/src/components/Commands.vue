@@ -441,6 +441,7 @@ import type { AnalysisCommitPlan, AnalysisLineSummary, AnalysisStatus } from "..
 import { encodeAutoChargePreference } from "../logic/auto-decide";
 import { autoClickStrategy } from "../logic/buttons/autoClick";
 import { commandButtons, replaceRepeat } from "../logic/buttons/commands";
+import { selectCustomFederation } from "../logic/buttons/federation";
 import type { CommandController, FastConversionTooltips } from "../logic/buttons/types";
 import { ExecuteBack } from "../logic/buttons/types";
 import { buttonStringLabel, callOnShow } from "../logic/buttons/utils";
@@ -1143,6 +1144,10 @@ export default class Commands extends Vue implements CommandController {
     const backListener = this.$store.subscribeAction(({ type, payload }) => {
       if (type === "back") {
         this.back(payload as ExecuteBack);
+      } else if (type === "selectFederation") {
+        this.clearContext();
+        this.loadCommands(this.availableCommands);
+        selectCustomFederation(this.engine, this, payload);
       }
     });
 

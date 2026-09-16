@@ -107,11 +107,6 @@ export function extraCosts(cost: string): Reward[] {
   return costRewards(cost).slice(1);
 }
 
-export function costFill(cost: string): string {
-  const fills = { pw: "#984FF1", q: "green", k: "#3b82f6", c: "#d6a23c" };
-  return fills[costKind(cost)] ?? "green";
-}
-
 /** Every ship-action cost uses the same top-left anchor as the base-game BoardAction component. */
 export function costBadgeTransform(ship: Spaceship, type: SpaceshipActionType): string {
   return "translate(-15,-15)";

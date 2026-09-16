@@ -79,6 +79,9 @@ export type State = {
     [key in Preference]: boolean | string;
   };
   player: { index?: number; auth?: string } | null;
+  /** Tutorials mark this move with the normal gold markers. Null keeps the hosted opponent recap;
+   * an empty string marks nothing in a chapter's initial teaching position. */
+  highlightedMove: string | null;
   /** Hosted mode only (PREMOVE_PLAN.md) - always empty in self-contained hot-seat play. */
   premoves: PremoveRow[];
   premoveFailures: PremoveFailureRow[];
@@ -197,6 +200,7 @@ const gaiaViewer = {
           "0",
       },
       player: null,
+      highlightedMove: null,
       avatars: [] as string[],
       premoves: [],
       premoveFailures: [],
@@ -213,6 +217,9 @@ const gaiaViewer = {
     } as State;
   },
   mutations: {
+    highlightMove(state: State, move: string | null) {
+      state.highlightedMove = move;
+    },
     receiveData(state: State, data: Engine) {
       // The engine state is large, deeply nested, and replaced wholesale on every
       // update — the viewer treats it as read-only display data and never relies on
@@ -384,6 +391,7 @@ const gaiaViewer = {
     fastConversionClick(context: any, event: FastConversionEvent) {},
     specialActionClick(context: any, action: SpecialActionIncome) {},
     boardActionClick(context: any, action: BoardAction) {},
+    selectFederation(context: any, location: string) {},
     // API COMMUNICATION
     playerClick(context: any, player: Player) {},
     move(context: any, move: string) {},
@@ -473,8 +481,11 @@ const gaiaViewer = {
     // octagon, their own special action, their exploration shuttle, the artifact they took.
     // Deliberately NOT gated on highlightRecentActions - this is the "what did I miss" marker, not the
     // opt-in own-move trail.
+    // Tutorials reuse every gold marker for the learner's last action, including their own pieces.
     recentOpponentCommands: (state: State, getters): CommandObject[] =>
-      opponentMovesSinceLastTurn(getters.recentMoves).flatMap((move) => move.commands),
+      state.highlightedMove !== null
+        ? parseCommands(state.highlightedMove)
+        : opponentMovesSinceLastTurn(getters.recentMoves).flatMap((move) => move.commands),
     recentOpponentHexes: (state: State, getters): Map<GaiaHex, CommandObject> =>
       hexMovesByHex(state.data, getters.recentOpponentCommands),
     recentOpponentResearch: (state: State, getters): Map<Faction, Set<ResearchField>> =>

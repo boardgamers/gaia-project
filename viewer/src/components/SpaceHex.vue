@@ -539,7 +539,8 @@ export default class SpaceHex extends Vue {
       messages.push(`Reward: ${highlightHex.rewards}`);
     }
     if (this.recentOpponentMove) {
-      messages.push(`Recent opponent move: ${hexMoveLabel(this.recentOpponentMove)}`);
+      const label = this.$store.state.highlightedMove !== null ? "Last move" : "Recent opponent move";
+      messages.push(`${label}: ${hexMoveLabel(this.recentOpponentMove)}`);
     }
 
     const buildingLabel = (player: Player, building: BuildingEnum) => {

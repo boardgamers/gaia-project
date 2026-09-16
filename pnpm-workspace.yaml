@@ -15,4 +15,4 @@ allowBuilds:
   nodent-runtime: true
   yorkie: true
 minimumReleaseAgeExclude:
-  - "@boardgamers/protocol@0.2.2"
+  - "@boardgamers/protocol@0.2.2 || 0.3.3"

@@ -49,26 +49,11 @@
         </g>
       </g>
       <g class="lost-fleet-ship__cost-badge" :transform="costBadgeTransform(ship, type)">
-        <image
-          v-if="costKind(cost) === 'pw'"
-          xlink:href="../assets/resources/power-charge.svg"
-          width="20"
-          :height="(133 / 345) * 20"
-          transform="scale(-1,1) translate(-9, -12)"
-        />
-        <rect
-          x="-8"
-          y="-8"
-          width="16"
-          height="16"
-          :rx="costKind(cost) === 'pw' ? 8 : 0"
-          :ry="costKind(cost) === 'pw' ? 8 : 0"
-          stroke="black"
-          stroke-width="1"
-          :fill="costFill(cost)"
+        <Resource
+          :kind="costKind(cost) === 'pw' ? 'pay-pw' : costKind(cost)"
+          :count="costNumber(cost)"
           transform="scale(0.8)"
         />
-        <text x="-3" y="3.5" class="lost-fleet-ship__cost">{{ costNumber(cost) }}</text>
         <Resource
           v-for="(extra, j) in extraCosts(cost)"
           :key="j"
@@ -89,15 +74,7 @@ import type { SpaceshipActionType } from "@gaia-project/engine/src/spaceships";
 import { spaceshipActionEffects, spaceshipBoards } from "@gaia-project/engine/src/spaceships";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import {
-  actionOverlay,
-  costBadgeTransform,
-  costFill,
-  costKind,
-  costNumber,
-  extraCosts,
-  isMineBubble,
-} from "../data/spaceships";
+import { actionOverlay, costBadgeTransform, costKind, costNumber, extraCosts, isMineBubble } from "../data/spaceships";
 import { factionPiecePlanet } from "../graphics/utils";
 import { tooltipTriggerConfig } from "../logic/tooltip";
 import Building from "./Building.vue";
@@ -165,7 +142,6 @@ export default class ShipActionIcon extends Vue {
   isMineBubble = isMineBubble;
   costKind = costKind;
   costNumber = costNumber;
-  costFill = costFill;
   extraCosts = extraCosts;
   costBadgeTransform = costBadgeTransform;
   tooltipTriggerConfig = tooltipTriggerConfig;
@@ -174,11 +150,6 @@ export default class ShipActionIcon extends Vue {
 
 <style lang="scss">
 g.lost-fleet-ship__action {
-  .lost-fleet-ship__cost {
-    fill: white !important;
-    font-size: 12px;
-  }
-
   .lost-fleet-ship__action-overlay {
     pointer-events: none;
 

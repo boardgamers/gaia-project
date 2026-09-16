@@ -1,6 +1,6 @@
 {
   "name": "@gaia-project/viewer",
-  "version": "5.16.7",
+  "version": "5.17.0",
   "description": "Functions to visualize the map and boards for gaia project inside html canvas",
   "contributors": [
     "coyotte508",
@@ -19,7 +19,11 @@
     "prepublishOnly": "npm run package",
     "test": "vitest run",
     "quick-test": "vitest run --changed",
-    "test:browser": "node scripts/protocol-smoke.mjs"
+    "test:browser": "node scripts/protocol-smoke.mjs",
+    "test:tutorial": "vitest run src/tutorial",
+    "test:tutorial:browser": "node scripts/tutorial-smoke.mjs",
+    "tutorial:preview": "node scripts/tutorial-preview.mjs",
+    "tutorial:manifest": "node scripts/tutorial-manifest.cjs"
   },
   "unpkg": "dist/package/viewer.umd.js",
   "files": [
@@ -35,7 +39,7 @@
     "dist/package/css"
   ],
   "dependencies": {
-    "@boardgamers/protocol": "0.2.2",
+    "@boardgamers/protocol": "0.3.3",
     "@gaia-project/engine": "workspace:../engine",
     "bootstrap": "^4.4.1",
     "bootstrap-vue": "^2.12.0",

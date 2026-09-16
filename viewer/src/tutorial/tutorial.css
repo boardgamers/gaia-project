@@ -1,0 +1,242 @@
+.gaia-tutorial {
+  --tutorial-diagram-bg: #f7f8fa;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 12px;
+  color: var(--text-primary, #26374c);
+}
+[data-theme="dark"] .gaia-tutorial {
+  --tutorial-diagram-bg: #1b2535;
+  color: #e4eaf3;
+}
+.gaia-tutorial .tutorial-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+.gaia-tutorial .tutorial-choices[hidden],
+.gaia-tutorial .tutorial-route[hidden] {
+  display: none;
+}
+.gaia-tutorial .tutorial-choices button {
+  border: 1px solid #739ab8;
+  border-radius: 5px;
+  padding: 8px 12px;
+  background: #174768;
+  color: white;
+  cursor: pointer;
+}
+.gaia-tutorial .tutorial-choices button:hover {
+  background: #24608a;
+}
+.gaia-tutorial .tutorial-choices button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.gaia-tutorial .tutorial-route {
+  margin: 12px 0;
+}
+.gaia-tutorial .tutorial-route-result {
+  margin: 12px 0;
+  border-left: 3px solid #c17820;
+  padding: 10px 12px;
+  background: #c178201c;
+}
+.gaia-tutorial .tutorial-route-result[hidden] {
+  display: none;
+}
+.gaia-tutorial .tutorial-route svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.gaia-tutorial .tutorial-route text {
+  font-size: 24px;
+}
+.gaia-tutorial .tutorial-route-attempts,
+.gaia-tutorial .tutorial-route-comparison {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gaia-tutorial .tutorial-route-attempts {
+  display: flex;
+  gap: 8px;
+  max-width: 840px;
+}
+.gaia-tutorial .tutorial-route-attempts li {
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 3px 6px;
+  padding: 6px;
+  border-left: 3px solid transparent;
+}
+.gaia-tutorial .tutorial-route-attempts strong {
+  flex-basis: 100%;
+  font-size: 14px;
+}
+.gaia-tutorial .tutorial-route-attempts .current {
+  border-color: #5486ba;
+  background: #5486ba12;
+}
+.gaia-tutorial .tutorial-route-stats,
+.gaia-tutorial .tutorial-route-status {
+  font-size: 13px;
+}
+.gaia-tutorial .tutorial-route-status {
+  font-weight: 600;
+}
+.gaia-tutorial .tutorial-route-attempts span {
+  font-size: 12px;
+}
+.gaia-tutorial .refused .tutorial-route-status {
+  color: #a05a0a;
+}
+.gaia-tutorial .accepted .tutorial-route-status {
+  color: #167e60;
+}
+[data-theme="dark"] .gaia-tutorial .refused .tutorial-route-status {
+  color: #f0ba71;
+}
+[data-theme="dark"] .gaia-tutorial .accepted .tutorial-route-status {
+  color: #73d5b8;
+}
+.gaia-tutorial .tutorial-route-comparison {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr));
+  gap: 12px;
+}
+.gaia-tutorial .tutorial-route-comparison li {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid #7e99b755;
+  border-radius: 8px;
+  background: var(--tutorial-diagram-bg);
+}
+.gaia-tutorial .tutorial-route-comparison svg {
+  margin-top: 12px;
+}
+.gaia-tutorial .tutorial-board {
+  margin-top: 12px;
+}
+.gaia-tutorial .chat-host {
+  display: none;
+}
+@media (max-width: 600px) {
+  .gaia-tutorial {
+    padding: 8px;
+  }
+  .gaia-tutorial .tutorial-choices button {
+    flex: 1 1 auto;
+  }
+}
+.gaia-tutorial .bgs-tutorial-guide {
+  background: var(--tutorial-diagram-bg);
+  border: 1px solid #8da5be66;
+  border-top: 3px solid #5486ba;
+  border-radius: 8px;
+  padding: 16px 20px;
+  font:
+    16px/1.5 system-ui,
+    sans-serif;
+}
+.gaia-tutorial .bgs-tutorial-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.gaia-tutorial .bgs-tutorial-heading strong {
+  font-size: 20px;
+}
+.gaia-tutorial .bgs-tutorial-body p {
+  max-width: 95ch;
+  margin: 12px 0;
+}
+.gaia-tutorial .bgs-tutorial-body small {
+  display: block;
+  margin-top: 10px;
+  opacity: 0.7;
+}
+.gaia-tutorial .bgs-tutorial-body [role="alert"] {
+  color: #bd4330;
+  font-weight: 600;
+}
+.gaia-tutorial .bgs-tutorial-feedback {
+  border-left: 3px solid #399b78;
+  background: #399b781c;
+  padding: 8px 12px;
+  margin: 12px 0;
+}
+.gaia-tutorial .bgs-tutorial-controls,
+.gaia-tutorial .bgs-tutorial-playback,
+.gaia-tutorial .bgs-tutorial-help {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.gaia-tutorial .bgs-tutorial-guide button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 7px 11px;
+  background: transparent;
+  color: inherit;
+  border: 1px solid #8da5be;
+  border-radius: 5px;
+  cursor: pointer;
+  font: inherit;
+}
+.gaia-tutorial .bgs-tutorial-guide button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.gaia-tutorial .bgs-tutorial-guide button:hover:not(:disabled) {
+  background: #5486ba20;
+}
+.gaia-tutorial .bgs-tutorial-transport {
+  width: 40px;
+  flex: 0 0 40px;
+  padding: 0;
+}
+.gaia-tutorial .bgs-tutorial-guide [hidden],
+.gaia-tutorial .bgs-tutorial-help:empty {
+  display: none;
+}
+.gaia-tutorial .bgs-tutorial-next-chapter {
+  white-space: nowrap;
+}
+.gaia-tutorial button:focus-visible {
+  outline: 3px solid #5194ce;
+  outline-offset: 2px;
+}
+.gaia-tutorial .tutorial-resource {
+  display: inline;
+  white-space: nowrap;
+}
+.gaia-tutorial .tutorial-resource-icon {
+  display: inline-block;
+  width: 1.45em;
+  height: 1.45em;
+  margin-right: 0.15em;
+  vertical-align: -0.35em;
+  overflow: visible;
+}
+@media (max-width: 600px) {
+  .gaia-tutorial .bgs-tutorial-guide {
+    padding: 12px;
+    font-size: 14px;
+  }
+  .gaia-tutorial .bgs-tutorial-heading strong {
+    font-size: 17px;
+  }
+}

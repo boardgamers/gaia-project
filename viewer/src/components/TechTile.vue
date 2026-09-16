@@ -23,10 +23,14 @@
         filter="url(#shadow-1)"
       />
       <!--<text class="title" x="-25" y="-18">{{title}}</text>-->
-      <g v-if="isRangeTile" class="range-tile-text" style="pointer-events: none">
-        <text class="range-shift" x="0" y="-2" text-anchor="middle">+1</text>
-        <text class="range-word" x="0" y="18" text-anchor="middle">range</text>
-      </g>
+      <Resource
+        v-if="isRangeTile"
+        class="range-tile-icon"
+        kind="r"
+        :count="1"
+        :plus="true"
+        transform="translate(0, -3) scale(1.15)"
+      />
       <g v-else-if="isTerraformMineTile" style="pointer-events: none">
         <Building building="m" outline-white :flat="flat" faction="gen" transform="translate(-11, 0) scale(2.2)" />
         <Resource kind="step" :count="2" transform="translate(8, 0) scale(1.3)" />
@@ -161,7 +165,7 @@ export default class TechTile extends Vue {
     return techTileEventWithSource(this.tile, null)[0];
   }
 
-  // The Range tile reads clearer as plain text than as an icon at this size - owner request.
+  // A lasting range modifier, using Navigation's symbol without a special-action octagon.
   get isRangeTile(): boolean {
     return this.tile === SpaceshipTechTile.Range;
   }
@@ -253,18 +257,6 @@ svg {
       &.smaller {
         font-size: 9px;
       }
-    }
-
-    .range-tile-text text {
-      fill: black;
-      font-weight: bold;
-      pointer-events: none;
-    }
-    .range-tile-text .range-shift {
-      font-size: 20px;
-    }
-    .range-tile-text .range-word {
-      font-size: 13px;
     }
 
     .tech-border {
