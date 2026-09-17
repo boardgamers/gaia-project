@@ -7,7 +7,7 @@ alternate-viewer preference. The legacy viewer does not need a tutorial entry po
 
 The initial course has four sections:
 
-- **The basics:** mines, terraforming/range, upgrades/research, power, free conversions, Gaiaforming and scoring.
+- **The basics:** mines, terraforming/range, upgrades/research, power, free conversions, passing/boosters, Gaiaforming and scoring.
 - **Federations:** building value and satellites, the routing trap, green tokens, and advanced technology tiles.
 - **Faction differences:** Xenos, Ivits and Terrans. These are examples, not a catalogue of every faction.
 - **The Lost Fleet:** exploration, spaceship actions, artifacts and new planets.

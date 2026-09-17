@@ -2,6 +2,7 @@
 import { createTutorial } from "@boardgamers/protocol/tutorial";
 import Engine, {
   AdvTechTilePos,
+  Booster,
   Building,
   Command,
   Phase,
@@ -107,6 +108,60 @@ describe("teaching positions", () => {
     expect(end.players[0].data.credits).toBe(start.players[0].data.credits - 2);
     expect(end.players[0].data.buildings[Building.Mine]).toBe(2);
     expect(end.players[0].income).not.toBe(start.players[0].income);
+  });
+  it("pays separately for terraforming and temporary range without changing basic range", () => {
+    const lesson = lessons.find((entry) => entry.id === "terraforming")!;
+    let state = lesson.initialState();
+    for (const step of lesson.steps) {
+      const before = Engine.fromData(copy(state.game)).players[0].data;
+      state = lesson.move(state, step.solution!(state)) as typeof state;
+      const after = Engine.fromData(copy(state.game)).players[0].data;
+      if (step.id === "ice") {
+        expect(after.ores).toBe(before.ores - 4);
+        expect(after.qics).toBe(before.qics);
+      }
+      if (step.id === "qic-range") {
+        expect(after.qics).toBe(before.qics - 1);
+        expect(after.ores).toBe(before.ores - 1);
+      }
+      if (step.id === "booster-range") {
+        expect(after.qics).toBe(before.qics);
+        expect(after.ores).toBe(before.ores - 1);
+        expect(after.buildings[Building.Mine]).toBe(4);
+      }
+      expect(after.range).toBe(1);
+      expect(after.temporaryRange).toBe(0);
+    }
+    const end = Engine.fromData(copy(state.game));
+    expect(end.map.getS("4x0").data.player).toBe(0);
+    expect(
+      end.findAvailableCommand(0, Command.Special)?.data.specialacts.map((action) => action.income) ?? []
+    ).not.toContain("range+3");
+  });
+  it("waits for a held booster to become available, then scores and returns the old one", () => {
+    const lesson = lessons.find((entry) => entry.id === "passing")!;
+    let state = lesson.initialState();
+    const start = Engine.fromData(copy(state.game));
+    expect(start.players[0].data.tiles.booster).toBe(Booster.Booster6);
+    expect(start.players[1].data.tiles.booster).toBe(Booster.Booster5);
+    expect(start.findAvailableCommand(0, Command.Pass).data.boosters).not.toContain(Booster.Booster5);
+    for (const step of lesson.steps.slice(0, 2)) state = lesson.move(state, step.solution!(state)) as typeof state;
+    const before = Engine.fromData(copy(state.game));
+    expect(before.passedPlayers).toEqual([1, 2]);
+    expect(before.findAvailableCommand(0, Command.Pass).data.boosters).toContain(Booster.Booster5);
+    expect(before.findAvailableCommand(0, Command.Pass).data.boosters).not.toContain(Booster.Booster6);
+    expect(before.players[0].data.buildings[Building.Mine]).toBe(2);
+    state = lesson.move(state, lesson.steps[2].solution!(state)) as typeof state;
+    const after = Engine.fromData(copy(state.game));
+    expect(after.players[0].data.victoryPoints).toBe(before.players[0].data.victoryPoints + 2);
+    expect(after.players[0].data.tiles.booster).toBe(Booster.Booster5);
+    expect(after.tiles.boosters[Booster.Booster6]).toBe(true);
+    expect(after.round).toBe(before.round + 1);
+    expect(after.passedPlayers[0]).toBe(1);
+    expect(after.players[0].data.ores).toBe(
+      before.players[0].data.ores + before.players[0].resourceIncome(Resource.Ore)
+    );
+    expect(after.players[0].resourceIncome(Resource.Ore)).toBe(before.players[0].resourceIncome(Resource.Ore));
   });
   it("the shorter federation forces in the station and leaves the lower mine out", () => {
     const start = federationPosition(true);

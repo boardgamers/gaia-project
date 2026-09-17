@@ -117,3 +117,16 @@ export function prepareBoosters(engine: Engine) {
     player.getRoundBooster(booster);
   }
 }
+
+export function setBoosters(engine: Engine, held: Booster[], available: Booster[]) {
+  engine.tiles.boosters = {} as Engine["tiles"]["boosters"];
+  for (const booster of available) engine.tiles.boosters[booster] = true;
+  engine.players.forEach((player, index) => {
+    player.removeRoundBoosterEvents();
+    player.removeRoundBoosterEvents(Operator.Income);
+    engine.tiles.boosters[held[index]] = false;
+    player.getRoundBooster(held[index]);
+    // These lessons start after income; only the next booster pays next round.
+    player.removeRoundBoosterEvents(Operator.Income);
+  });
+}
