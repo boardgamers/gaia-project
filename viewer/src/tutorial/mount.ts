@@ -22,7 +22,7 @@ export const mountTutorial: TutorialMount = async (target, { chapter, onProgress
   const guide = document.createElement("section");
   const choices = document.createElement("div");
   choices.className = "tutorial-choices";
-  choices.setAttribute("aria-label", "Lesson actions and answers");
+  choices.setAttribute("aria-label", "Lesson answers");
   const diagram = document.createElement("div");
   diagram.className = "tutorial-route";
   const routeResult = document.createElement("p");
@@ -57,8 +57,12 @@ export const mountTutorial: TutorialMount = async (target, { chapter, onProgress
   let latest: TutorialSnapshot<State>;
   let previous: State | undefined;
   let destroyed = false;
-  const send = (action: Action) => {
-    if (!destroyed && !latest.busy && !latest.completed) void controller.play(action);
+  let routeStep = -1;
+  let previousRouteState: State | undefined;
+  const send = async (action: Action) => {
+    if (destroyed || latest.busy || latest.completed) return;
+    const accepted = await controller.play(action);
+    if (!accepted && !destroyed) await store.dispatch("externalData", copy(latest.state.game));
   };
   const removeMoves = store.subscribeAction(({ type, payload }) => {
     if (type !== "move") return;
@@ -71,7 +75,7 @@ export const mountTutorial: TutorialMount = async (target, { chapter, onProgress
   const removeGuide = mountTutorialGuide(guide, controller, { nextChapter });
   const remove = controller.subscribe((snapshot) => {
     latest = snapshot;
-    view.disabled = snapshot.busy || snapshot.completed;
+    view.disabled = snapshot.busy || snapshot.completed || !!lesson.steps[snapshot.step]?.choices;
     if (previous !== snapshot.state) {
       previous = snapshot.state;
       store.commit("highlightMove", snapshot.state.lastMove ?? "");
@@ -85,12 +89,7 @@ export const mountTutorial: TutorialMount = async (target, { chapter, onProgress
         button.textContent = choice.label;
         resourceText(button);
         button.disabled = snapshot.busy;
-        button.onclick = () => {
-          if (choice.action.kind === "probe") {
-            const selected = store.state.context.highlighted.hexes?.hexes;
-            send({ ...choice.action, location: [...(selected?.keys() ?? [])].map((hex) => hex.toString()).join(",") });
-          } else send(choice.action);
-        };
+        button.onclick = () => send(choice.action);
         choices.append(button);
       }
     if (lesson.id === "federation-routes" && !snapshot.completed) {
@@ -121,9 +120,16 @@ export const mountTutorial: TutorialMount = async (target, { chapter, onProgress
     routeResult.hidden = !refusal;
     routeResult.textContent = refusal;
     if (revealRefusal) routeResult.scrollIntoView({ block: "center", behavior: "smooth" });
-    if (federationRoutes && !snapshot.busy && !snapshot.completed)
+    if (
+      federationRoutes &&
+      !snapshot.busy &&
+      !snapshot.completed &&
+      (routeStep !== snapshot.step || previousRouteState !== snapshot.state)
+    )
       void Vue.nextTick().then(() => {
         if (destroyed || latest !== snapshot) return;
+        routeStep = snapshot.step;
+        previousRouteState = snapshot.state;
         void store.dispatch("selectFederation", routeExamples[snapshot.step].location);
       });
   });

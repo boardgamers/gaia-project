@@ -105,6 +105,7 @@
          .mobile-sticky-actions--sandbox. -->
     <div
       id="move-buttons"
+      data-tutorial="game-controls"
       ref="moveButtons"
       :class="{
         'mobile-sticky-actions': showStickyMobileBar,

@@ -54,6 +54,47 @@ function finish(id: string) {
   return Engine.fromData(copy(state.game));
 }
 
+describe("native controls", () => {
+  for (const lesson of lessons)
+    it(`${lesson.id}: accepts turn commands one at a time`, async () => {
+      const controller = await createTutorial(lesson);
+      while (!controller.snapshot.completed) {
+        const index = controller.snapshot.step;
+        const step = lesson.steps[index];
+        const action = step.solution!(controller.snapshot.state);
+        if (action.kind !== "move") {
+          expect(await controller.play(action)).toBe(true);
+          continue;
+        }
+        const move = action.move.replace(
+          /(federation )([^ ]+)/g,
+          (_match, command, location) => command + location.split(",").reverse().join(",")
+        );
+        const commands = move.replace(/\.$/, "").split(". ");
+        const prior = controller.snapshot.state.lastMove;
+        const priorCount =
+          prior && !Engine.fromData(copy(controller.snapshot.state.game)).newTurn
+            ? prior.replace(/\.$/, "").split(". ").length
+            : 0;
+        for (let i = priorCount + 1; i <= commands.length && controller.snapshot.step === index; i++) {
+          const partial = commands.slice(0, i).join(". ");
+          expect(
+            await controller.play({ kind: "move", move: partial }),
+            `${lesson.id}/${step.id}: ${controller.snapshot.error}`
+          ).toBe(true);
+        }
+        if (controller.snapshot.step === index) {
+          expect(
+            await controller.play({ kind: "move", move }),
+            `${lesson.id}/${step.id}: ${controller.snapshot.error}`
+          ).toBe(true);
+        }
+        expect(controller.snapshot.step, `${lesson.id}/${step.id} advanced`).toBeGreaterThan(index);
+      }
+      controller.destroy();
+    });
+});
+
 describe("teaching positions", () => {
   it("places every chapter in one known section", () => {
     expect(new Set(lessons.map((lesson) => lesson.id)).size).toBe(lessons.length);
@@ -239,7 +280,14 @@ describe("teaching positions", () => {
     expect(restored.snapshot.state).toEqual(controller.snapshot.state);
     const before = copy(restored.snapshot.state);
     const cover = lesson.steps[2];
-    expect(await restored.play(cover.choices!(before)[1].action)).toBe(false);
+    const solution = cover.solution!(before);
+    if (solution.kind !== "move") throw new Error("Covering a tech tile needs a game move");
+    const incomeTile = Engine.fromData(copy(before.game)).players[0].data.tiles.techs.find(
+      (tile) => tile.tile === TechTile.Tech8
+    )!;
+    expect(
+      await restored.play({ kind: "move", move: solution.move.replace(/cover \S+/, `cover ${incomeTile.pos}`) })
+    ).toBe(false);
     expect(restored.snapshot.state).toEqual(before);
     expect(restored.snapshot.error).toContain("remove your 4-credit income");
     expect(await restored.play(cover.solution!(before))).toBe(true);
