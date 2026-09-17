@@ -219,6 +219,10 @@
   outline: 3px solid #5194ce;
   outline-offset: 2px;
 }
+.gaia-tutorial .bgs-tutorial-highlight {
+  outline: 2px solid #c17820;
+  outline-offset: 3px;
+}
 .gaia-tutorial .tutorial-resource {
   display: inline;
   white-space: nowrap;

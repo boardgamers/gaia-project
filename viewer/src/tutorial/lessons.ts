@@ -2,6 +2,7 @@ import type { TutorialOptions, TutorialStep } from "@boardgamers/protocol/tutori
 import Engine, {
   AdvTechTile,
   AdvTechTilePos,
+  Booster,
   Building,
   Command,
   Faction,
@@ -27,6 +28,7 @@ import {
   position,
   prepareBoosters,
   serialise,
+  setBoosters,
 } from "./position";
 
 export type Action =
@@ -296,13 +298,30 @@ export const lessons: Lesson[] = [
     "terraforming",
     "basics",
     "Terraforming and range",
-    "Separate the cost of changing a planet from the cost of reaching it.",
+    "Read your range, reach farther with Q.I.C. or a booster, and pay for terraforming.",
     () => {
       const e = home();
       planet(e, "-1x0", Planet.Ice);
+      planet(e, "4x0", Planet.Terra);
+      setBoosters(
+        e,
+        [Booster.Booster5, Booster.Booster6, Booster.Booster3],
+        [Booster.Booster1, Booster.Booster2, Booster.Booster4]
+      );
       return e;
     },
     [
+      {
+        ...question(
+          "basic-range",
+          "Find your range",
+          "Your current range is shown beside the range arrow at the top right of your faction board. Count hexes from your nearest building to the destination. A range of 1 reaches an adjacent hex. What is your range now?",
+          ["1", "2", "3"],
+          "1",
+          "Your basic range is 1, so more distant planets need a range boost."
+        ),
+        target: "player-range-0",
+      },
       question(
         "cost",
         "A different planet type",
@@ -319,16 +338,33 @@ export const lessons: Lesson[] = [
         1,
         "Terraform ice and build"
       ),
+      play(
+        "qic-range",
+        "Reach farther with Q.I.C.",
+        "The blue planet beyond your new mine is 2 hexes away. Each Q.I.C. spent adds 2 range for this action only. Build there: the game charges 1 Q.I.C. for range, plus the mine’s 1 ore and 2 credits. Its blue planet needs no terraforming.",
+        "terrans build m -3x0.",
+        2,
+        "Build the distant blue-planet mine with 1 Q.I.C."
+      ),
       question(
-        "range",
-        "Q.I.C. extends one action’s range",
-        "Navigation sets your basic range. Each Q.I.C. spent on range adds 2 for that action. It does not reduce the ore needed to terraform the destination. What does spending Q.I.C. on range change?",
-        ["Q.I.C. reduces terraforming cost", "Q.I.C. extends range"],
-        "Q.I.C. extends range",
-        "Range and terraforming are separate costs. A distant planet can require both."
+        "navigation",
+        "Improve your basic range",
+        "Navigation research increases basic range to 2 at level 2, to 3 at level 4 and to 4 at level 5. These increases last for the rest of the game. The Q.I.C. you just spent helped only that build. What is your basic range still?",
+        ["1", "2", "3"],
+        "1",
+        "Your basic range remains 1. A later lesson lets you research Navigation to increase it."
+      ),
+      play(
+        "booster-range",
+        "Use the +3 range booster",
+        "Your round booster has a +3 range special action, usable once this round. Choose Special Action, then +3 range, and build on the blue planet 4 hexes to the right of your central mine. Basic range 1 + 3 reaches it without Q.I.C. You still pay 1 ore and 2 credits for the mine. This action can also send a Gaiaformer, which we will cover later.",
+        "terrans special range+3. build m 4x0.",
+        3,
+        "Use the booster’s special action, then build the mine"
       ),
     ],
-    "Check range, planet type and mine cost separately. Research can reduce future terraforming costs or improve your normal range."
+    "Check range, terraforming and mine cost separately. Navigation improves your basic range; Q.I.C. adds 2 for one action; the booster’s special action adds 3 once per round.",
+    2
   ),
   lesson(
     "upgrades",
@@ -473,6 +509,59 @@ export const lessons: Lesson[] = [
       ),
     ],
     "You burned and converted before building, all in one turn. Burning permanently loses tokens; spending power sends them back to bowl I. Other basic conversions are 1 Q.I.C. → 1 ore, 1 ore or 1 knowledge → 1 credit, and 1 ore → 1 new power token in bowl I."
+  ),
+  lesson(
+    "passing",
+    "basics",
+    "Passing and choosing a booster",
+    "Trade your remaining actions for next round’s booster, or wait for another player to return one.",
+    () => {
+      const e = home();
+      setBoosters(
+        e,
+        [Booster.Booster6, Booster.Booster5, Booster.Booster3],
+        [Booster.Booster1, Booster.Booster2, Booster.Booster4]
+      );
+      return e;
+    },
+    [
+      question(
+        "held-booster",
+        "Which boosters can you take?",
+        "Passing ends your actions for this round. Choose one of the three available boosters, then return your old one. Ada currently holds the +3 range booster you want for next round. Can you take it while she still holds it?",
+        ["Yes", "No"],
+        "No",
+        "Only available boosters can be chosen. You must wait for Ada to pass and return hers."
+      ),
+      play(
+        "wait",
+        "Build while you wait",
+        "You still have a useful action: build the adjacent blue-planet mine for 1 ore and 2 credits, then end your turn. In this example, Ada will then pass and return her +3 range booster; Leo will pass too. Waiting means taking another action, not skipping your turn.",
+        "terrans build m 1x0.",
+        1,
+        "Build the mine and let Ada return her booster"
+      ),
+      play(
+        "swap",
+        "Take the returned booster",
+        "Ada’s +3 range booster is now available. Choose Pass, select that booster, then confirm. Your old booster gives 1 VP per mine when you pass, so your two mines earn 2 VP before you return it. You cannot keep the same booster for consecutive rounds. Everyone has now passed, so the next round begins and you collect income.",
+        "terrans pass booster5",
+        2,
+        "Pass and choose the +3 range booster"
+      ),
+      question(
+        "timing",
+        "Pass early or wait?",
+        "Waiting let you take Ada’s returned booster. But if a booster you want is already available, someone else may take it first. Passing early secures it, at the cost of your remaining actions this round. The first player to pass also starts the next round. When should you consider passing early?",
+        [
+          "When securing an available booster is worth giving up further actions",
+          "Always, because passing gives an extra turn",
+        ],
+        "When securing an available booster is worth giving up further actions",
+        "Weigh this round’s useful actions against the booster you want for next round."
+      ),
+    ],
+    "Choose an available booster, then return yours and score any passing reward on it. Passing early can secure a tile; waiting can make a returned tile available. In round 6, return your booster without taking a new one."
   ),
   lesson(
     "gaiaforming",

@@ -17,11 +17,21 @@ try {
       console.log(`START ${lesson.id} ${width}`);
       await page.goto(`http://127.0.0.1:${server.address().port}/?chapter=${lesson.id}`);
       await page.waitForFunction(() => window.progress?.step === 0);
+      if (lesson.id === "terraforming") {
+        const range = page.locator('[data-tutorial="player-range-0"]');
+        assert.equal(await range.count(), 1, "the guide targets the learner’s range display");
+        await page.getByRole("button", { name: "Show area", exact: true }).click();
+        const box = await range.boundingBox();
+        assert.ok(box && box.width > 0 && box.height > 0, "range highlight has a visible target");
+        assert.equal(await range.evaluate((node) => getComputedStyle(node).outlineStyle), "solid");
+      }
       let state = lesson.initialState();
       for (let index = 0; index < lesson.steps.length; index++) {
         const step = lesson.steps[index];
         const action = step.solution(state);
         console.log(`  ${step.id}`);
+        if (["basic-range", "swap"].includes(step.id))
+          await page.screenshot({ path: `/tmp/gaia-${lesson.id}-${step.id}-${width}.png`, fullPage: true });
         if (action.kind === "answer") {
           const choice = step.choices(state).find((choice) => choice.action.answer === action.answer);
           await page.locator(".tutorial-choices").getByRole("button", { name: choice.label, exact: true }).click();

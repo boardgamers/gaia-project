@@ -106,6 +106,7 @@
         />
         <Resource
           kind="r"
+          :data-tutorial="`player-range-${player.player}`"
           :tooltip="rangeTooltip"
           :count="playerRange"
           :transform="`translate(35.5,1) scale(0.1)`"

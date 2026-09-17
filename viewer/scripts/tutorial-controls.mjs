@@ -6,6 +6,8 @@ export async function playOnBoard(page, move, step) {
   const guideError = page.locator('.bgs-tutorial-body [role="alert"]');
   const priorError = (await guideError.isVisible()) ? await guideError.innerText() : "";
   for (let attempt = 0; attempt < 35; attempt++) {
+    // Move off the previous control so its hover tooltip cannot cover the next one.
+    await (page.mouse ?? page.page().mouse).move(0, 0);
     if (await page.evaluate((step) => progress.step !== step, step)) return;
     const confirmation = page.locator(".modal.show .modal-footer .btn-primary");
     if (await confirmation.isVisible()) {
