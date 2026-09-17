@@ -79,6 +79,7 @@ const coords = (engine: Engine, value: string) =>
   value.replace(/-?\d+x-?\d+|\d+[ABC]\d*/g, (coord) => engine.map.getS(coord)?.toString() ?? coord);
 const normalise = (engine: Engine, move: string) =>
   coords(engine, move)
+    .replace(/(federation )([^ ]+)/g, (_match, command, location) => command + location.split(",").sort().join(","))
     .trim()
     .replace(/\s*\.\s*/g, ". ")
     .trim()
@@ -155,7 +156,7 @@ function probeRoute(attempt: RejectedRoute, title: string, text: string, error: 
     complete: (state) => !!state.routeRejections?.[attempt],
     validateMove(state, action) {
       if (action.kind !== "probe" || action.attempt !== attempt)
-        return "Test the selected route, or use End Selection and choose a federation token.";
+        return "Use End Selection in the game controls, then choose a federation token.";
       const engine = engineOf(state);
       try {
         engine.players[0].checkAndGetFederationInfo(action.location ?? example.location, engine.map, false, false);
@@ -165,7 +166,6 @@ function probeRoute(attempt: RejectedRoute, title: string, text: string, error: 
         if (!message.includes(error)) return `${message}. Use Restore this attempt to test the example.`;
       }
     },
-    choices: () => [{ label: "Test the selected route", action: { kind: "probe", attempt } }],
     solution: () => ({ kind: "probe", attempt }),
   };
 }
@@ -187,13 +187,19 @@ function play(
   text: string | ((s: State) => string),
   command: string | ((s: State) => string),
   count: number | ((state: State) => boolean),
-  label: string
+  hint: string
 ): Step {
-  const move = (state: State) => (typeof command === "function" ? command(state) : command);
+  const move = (state: State) => (typeof command === "function" ? command({ ...state, game: state.turn }) : command);
   return {
     id,
     title,
-    text,
+    text: (state) => {
+      const explanation = typeof text === "function" ? text({ ...state, game: state.turn }) : text;
+      const location = /\bbuild \S+ (-?\d+x-?\d+|\d+[ABC]\d*)/.exec(move(state))?.[1];
+      return location ? `${explanation} Select ${coords(engineOf(state), location)} on the map.` : explanation;
+    },
+    hint,
+    target: "game-controls",
     complete: typeof count === "function" ? count : (state) => state.moves >= count,
     validateMove(state, action) {
       if (action.kind !== "move") return "Use the action described in this step.";
@@ -201,9 +207,8 @@ function play(
       const wanted = normalise(engine, move(state));
       const actual = normalise(engine, action.move);
       if (!actual || !(wanted === actual || wanted.startsWith(actual + ". ")))
-        return "Follow this step’s action. You can use the button above the board.";
+        return "Follow this step’s action using the game controls below.";
     },
-    choices: (state) => [{ label, action: { kind: "move", move: move(state) } }],
     solution: (state) => ({ kind: "move", move: move(state) }),
   };
 }
@@ -271,7 +276,7 @@ export const lessons: Lesson[] = [
       play(
         "mine",
         "Settle a home-type planet",
-        "You are the Terrans. The blue planet next to your mine needs no terraforming and is within range. Build a mine for 1 ore and 2 credits. Finish the turn if you use the board controls.",
+        "You are the Terrans. The blue planet next to your mine needs no terraforming and is within range. Build a mine for 1 ore and 2 credits. Choose End turn when you have finished.",
         "terrans build m 1x0.",
         1,
         "Build the blue-planet mine"
@@ -359,7 +364,7 @@ export const lessons: Lesson[] = [
       play(
         "knowledge",
         "Spend knowledge to research",
-        "You can also spend 4 knowledge to advance one level on an available research track. This uses your main action and does not give you a tech tile. Choose Research, then Navigation: moving from level 1 to 2 increases your basic range from 1 to 2. Finish the turn if you use the board controls.",
+        "You can also spend 4 knowledge to advance one level on an available research track. This uses your main action and does not give you a tech tile. Choose Research, then Navigation: moving from level 1 to 2 increases your basic range from 1 to 2. Choose End turn when you have finished.",
         "terrans up nav.",
         3,
         "Spend 4 knowledge to advance Navigation"
@@ -491,7 +496,7 @@ export const lessons: Lesson[] = [
       play(
         "pass",
         "Give the project time",
-        "The Gaiaformer occupies the planet while the project develops. Pass and choose the offered booster. Ada and Leo have passed too, so the game advances to the next round.",
+        "The Gaiaformer occupies the planet while the project develops. Choose Pass, then the first available booster. Ada and Leo have passed too, so the game advances to the next round.",
         passMove,
         2,
         "Pass and begin the next round"
@@ -593,19 +598,19 @@ export const lessons: Lesson[] = [
       probeRoute(
         "detour",
         "Attempt 1: avoid the station",
-        "Your planetary institute, academy and lower mine total 7. The preselected detour links them with 7 satellites, avoiding your trading station. Test it using the button below, or End Selection and a federation token. In a normal game, open Form federation → Custom location to select your own route.",
+        "Your planetary institute, academy and lower mine total 7. The preselected detour links them with 7 satellites, avoiding your trading station. Use End Selection in the game controls, then choose a federation token to test it. In a normal game, open Form federation → Custom location to select your own route.",
         "fewer satellites"
       ),
       probeRoute(
         "station",
         "Attempt 2: add the station, keep the mine",
-        "The map now takes the shortcut through your trading station, keeping all three original buildings. This uses 6 satellites instead of 7. The station adds 2 value, bringing the total to 9. Is the shorter route legal now? Test this second selection.",
+        "The map now takes the shortcut through your trading station, keeping all three original buildings. This uses 6 satellites instead of 7. The station adds 2 value, bringing the total to 9. Is the shorter route legal now? Use End Selection again, then choose a federation token.",
         "outclassed"
       ),
       play(
         "short",
         "Attempt 3: remove the unnecessary branch",
-        "Even the shorter route was refused. The planetary institute (3), station (2) and academy (3) already total 8, enough without the mine. Remove its branch and save 2 more satellites: only 4 remain. This reduced group is selected on the map. Form it and take the token worth 8 VP and 1 Q.I.C.",
+        "Even the shorter route was refused. The planetary institute (3), station (2) and academy (3) already total 8, enough without the mine. Remove its branch and save 2 more satellites: only 4 remain. This reduced group is selected on the map. Use End Selection and take the token worth 8 VP and 1 Q.I.C. Then end your turn.",
         `terrans federation ${reducedRoute} fed2.`,
         1,
         "Form the reduced federation"
@@ -703,13 +708,6 @@ export const lessons: Lesson[] = [
             engineOf(state).players[0].data.tiles.techs.some((tile) => tile.tile === TechTile.Tech4 && !tile.enabled),
           "Cover the 7-VP tile"
         ),
-        choices: (state) => [
-          { label: "Cover the 7-VP tile", action: { kind: "move", move: advancedTechCoverMove(state) } },
-          {
-            label: "Cover the 4-credit income tile",
-            action: { kind: "move", move: advancedTechCoverMove(state, TechTile.Tech8) },
-          },
-        ],
         validateMove(state, action) {
           return action.kind === "move" &&
             normalise(engineOf(state), action.move) === normalise(engineOf(state), advancedTechCoverMove(state))
@@ -755,7 +753,7 @@ export const lessons: Lesson[] = [
       play(
         "fed",
         "Use the faction ability",
-        "Form the available federation. The Xenos threshold lets you leave the lower mine for a later group.",
+        "Form the available federation and take the green token worth 8 VP and 1 Q.I.C. The Xenos threshold lets you leave the lower mine for a later group.",
         (state) => federationMove(state),
         1,
         "Form the Xenos federation"
@@ -797,7 +795,7 @@ export const lessons: Lesson[] = [
       play(
         "next-round",
         "One space station per round",
-        "Your space-station action is used for this round. Taking another turn does not reset it. Pass to finish the round in this lesson, collect income and make the special action available again.",
+        "Your space-station action is used for this round. Taking another turn does not reset it. Choose Pass, then the first available booster and confirm it. This finishes the round, collects income and makes the special action available again.",
         passMove,
         4,
         "Pass and start the next round"
@@ -813,7 +811,7 @@ export const lessons: Lesson[] = [
       play(
         "first",
         "A federation with no satellites",
-        "All four pieces are connected, so form your federation without placing any satellites. Space stations add value and bridge gaps. If you still need satellites, Ivits pay 1 Q.I.C. for each instead of discarding power tokens.",
+        "All four pieces are connected, so form your federation without placing any satellites. Take the green token worth 8 VP and 1 Q.I.C. Space stations add value and bridge gaps. If you still need satellites, Ivits pay 1 Q.I.C. for each instead of discarding power tokens.",
         "ivits federation 0x0,1x0,2x0,1x1 fed2.",
         6,
         "Form the federation with 0 satellites"
@@ -852,7 +850,7 @@ export const lessons: Lesson[] = [
       play(
         "recover",
         "Recover into bowl II",
-        "Pass to the next round. Terrans return their Gaia-area tokens to bowl II instead of bowl I, bringing them closer to spendable power.",
+        "Choose Pass, then the first available booster and confirm it to start the next round. Terrans return their Gaia-area tokens to bowl II instead of bowl I, bringing them closer to spendable power.",
         passMove,
         2,
         "Pass and recover the tokens"
@@ -925,7 +923,7 @@ lessons.push(
       play(
         "range",
         "A temporary reach",
-        "You already explored Twilight and keep access to it even after exploring other ships. Its knowledge action lets you build a mine with +3 range. The mine and any terraforming still cost resources. Use the guided action to build beyond your normal range.",
+        "You already explored Twilight and keep access to it even after exploring other ships. Its knowledge action lets you build a mine with +3 range. The mine and any terraforming still cost resources. Choose Twilight’s knowledge action, then select the distant planet and end your turn.",
         (state) => {
           const e = Engine.fromData(copy(state.turn));
           const prefix = e.players[0].faction;
@@ -1001,7 +999,7 @@ lessons.push(
       play(
         "settle",
         "Settle an asteroid",
-        "Use the normal mine action on an available asteroid. The guided action chooses a legal target and pays any range cost. Your pool of available Gaiaformers shrinks by one.",
+        "Use the normal mine action on an available asteroid. Select the indicated asteroid and confirm any range cost. Your pool of available Gaiaformers shrinks by one.",
         (state) => {
           const e = engineOf(state);
           const c = e.findAvailableCommand(0, Command.Build);

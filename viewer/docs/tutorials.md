@@ -30,8 +30,9 @@ Upload the ordinary viewer JS/CSS and copy the manifest's tutorial metadata to t
 
 `src/tutorial/lessons.ts` contains the text, expected actions and chapter metadata.
 `position.ts` prepares deterministic engine states. Gameplay uses the real engine, including
-satellite validation and scripted opponent turns. Both the guide buttons and board controls
-submit the same actions. The ordinary viewer handles rendering.
+satellite validation and scripted opponent turns. Players use the ordinary board controls for moves;
+the guide provides explanations and quiz answers. Prepared federation routes still require
+End Selection and a token choice through the game's controls.
 Resource names in the guide and answers keep their text labels and use the board's resource icons.
 
 The first `game` snapshot is also the base for a composed turn. The viewer may send several
