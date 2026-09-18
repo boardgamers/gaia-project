@@ -14,6 +14,7 @@ export type PremovePlan = {
 export type AutomationState = {
   version: 1;
   roundPremoves?: true;
+  setupPremoves?: true;
   plans: Record<number, PremovePlan>;
   increments: number[];
   turns: number[];

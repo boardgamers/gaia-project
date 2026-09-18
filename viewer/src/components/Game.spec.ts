@@ -2036,6 +2036,33 @@ describe("Game", () => {
         vm.$destroy();
       });
 
+      it("queues only my second starting mine, not the other players' simulated placements", async () => {
+        const real = new Engine(SETUP_MOVES.slice(0, 4));
+        const vm = mountAsSeat(0, Engine.fromData(stripSecret(real, 0)));
+        vm.$store.commit("hosted", true);
+        expect(vm.premoveAvailable).to.equal(true);
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("terrans build m -4x-1");
+        expect(vm.engine.moveHistory.length).to.be.greaterThan(real.moveHistory.length + 1);
+        expect(vm.analysisCommittableMoves).to.deep.equal(["terrans build m -4x-1"]);
+        expect(vm.analysisCommitPlan.timings).to.deep.equal([{ round: 0, phase: Phase.SetupBuilding }]);
+        await Vue.nextTick();
+        const button = Array.from(vm.$el.querySelectorAll("button")).find(
+          (el: HTMLButtonElement) => el.textContent.trim() === "Queue moves"
+        ) as HTMLButtonElement;
+        expect(button).not.to.equal(undefined);
+        expect(button.disabled).to.equal(false);
+        const dispatched = spyDispatch(vm);
+        vm.commitAnalysisLine();
+        expect(dispatched[0].payload.moves).to.deep.equal(["terrans build m -4x-1"]);
+        const saved = bgsMove(JSON.parse(JSON.stringify(real)), dispatched[0].payload, 0);
+        expect(saved.moveHistory).to.deep.equal(real.moveHistory);
+        expect(saved.players[1].data.occupied).to.have.length(0);
+        expect(saved.automation.plans[0].moves).to.deep.equal(["terrans build m -4x-1"]);
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
       it("keeps variations on queue acknowledgement and trims them after execution while planning stays open", async () => {
         const vm = mountAsSeat(1, researchGame());
         vm.$store.commit("hosted", true);

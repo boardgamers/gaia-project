@@ -32,9 +32,11 @@
         <span class="analysis-commit__badge analysis-commit__badge--queued"
           >premove {{ i + 1 }}<template v-if="view.live"> · after your live move</template></span
         >
-        <span v-if="view.timings" class="small text-muted"
-          >Round {{ view.timings[i + (view.live ? 1 : 0)].round }}</span
-        >
+        <span v-if="view.timings" class="small text-muted">{{
+          view.timings[i + (view.live ? 1 : 0)].round === 0
+            ? "Setup"
+            : `Round ${view.timings[i + (view.live ? 1 : 0)].round}`
+        }}</span>
         <span class="analysis-commit__move">{{ move }}</span>
       </li>
     </ol>

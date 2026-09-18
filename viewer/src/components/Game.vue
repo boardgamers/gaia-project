@@ -916,7 +916,8 @@ export default class Game extends Vue {
       real.automation?.version === 1 &&
       this.myLockedSeat !== undefined &&
       !real.ended &&
-      real.round > 0
+      (real.round > 0 ||
+        (real.automation.setupPremoves && [Phase.SetupBuilding, Phase.SetupBooster].includes(real.phase)))
     );
   }
 

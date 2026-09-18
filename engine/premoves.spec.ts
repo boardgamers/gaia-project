@@ -48,6 +48,104 @@ function json(engine: Engine): Engine {
 }
 
 describe("BGS premoves", () => {
+  it("queues a second starting mine off turn without simulating other players in the real game", () => {
+    let engine = new Engine(setup.slice(0, 4));
+    const history = [...engine.moveHistory];
+    const queued = command(engine, 0, ["terrans build m -4x-1"]);
+    queued.timings = [{ round: 0, phase: Phase.SetupBuilding }];
+    expect(canMoveOutOfTurn(json(engine), queued, 0)).to.equal(true);
+    engine = move(json(engine), queued, 0);
+    expect(isLiveUpdate(engine)).to.equal(true);
+    expect(engine.moveHistory).to.deep.equal(history);
+    expect(timeIncrements(engine)).to.deep.equal([0, 0]);
+    expect(stripSecret(engine, 1).automation.plans).to.deep.equal({});
+    engine = move(json(engine), "nevlas build m -1x0", 1);
+    expect(engine.automation.plans[0].moves).to.have.length(1);
+    engine = move(json(engine), "nevlas build m 0x-4", 1);
+    expect(engine.moveHistory.slice(-1)).to.deep.equal(["terrans build m -4x-1"]);
+    expect(engine.automation.plans[0].moves).to.deep.equal([]);
+    expect(engine.phase).to.equal(Phase.SetupBooster);
+    expect(timeIncrements(engine)).to.deep.equal([1, 2]);
+    expect(engine.automation.turns).to.deep.equal([1, 2]);
+    automove(engine);
+    expect(timeIncrements(engine)).to.deep.equal([1, 2]);
+  });
+
+  it("can cancel a starting placement and rejects a submission stale after a manual placement", () => {
+    let engine = new Engine(setup.slice(0, 4));
+    const stale = command(engine, 0, ["terrans build m -4x-1"]);
+    engine = queue(engine, 0, ["terrans build m -4x-1"]);
+    engine = queue(engine, 0, []);
+    engine = move(json(engine), "nevlas build m -1x0", 1);
+    engine = move(json(engine), "nevlas build m 0x-4", 1);
+    expect(engine.playerToMove).to.equal(0);
+    expect(engine.players[0].data.occupied).to.have.length(1);
+    engine = move(json(engine), "terrans build m -4x-1", 0);
+    stale.revision = engine.automation.plans[0].revision;
+    stale.timings = [{ round: 0, phase: Phase.SetupBooster }];
+    stale.moves = ["terrans booster booster3"];
+    expect(() => move(json(engine), stale, 0)).to.throw("turn has changed");
+  });
+
+  it("stops an unavailable setup placement without making an alternative move", () => {
+    let engine = new Engine(setup.slice(0, 4));
+    engine = queue(engine, 0, ["terrans build m -1x2"]);
+    engine = move(json(engine), "nevlas build m -1x0", 1);
+    engine = move(json(engine), "nevlas build m 0x-4", 1);
+    expect(engine.playerToMove).to.equal(0);
+    expect(engine.players[0].data.occupied).to.have.length(1);
+    expect(engine.automation.plans[0].notice.kind).to.equal("stopped");
+    expect(engine.automation.plans[0].moves).to.deep.equal([]);
+    expect(timeIncrements(engine)).to.deep.equal([0, 2]);
+  });
+
+  it("waits for the initial booster pick after a queued mine, then rechecks availability", () => {
+    let engine = new Engine(setup.slice(0, 4));
+    const cmd = command(engine, 0, ["terrans build m -4x-1", "terrans booster booster7"]);
+    cmd.timings = [
+      { round: 0, phase: Phase.SetupBuilding },
+      { round: 0, phase: Phase.SetupBooster },
+    ];
+    engine = move(json(engine), cmd, 0);
+    engine = move(json(engine), "nevlas build m -1x0", 1);
+    engine = move(json(engine), "nevlas build m 0x-4", 1);
+    expect(engine.automation.plans[0].moves).to.deep.equal(["terrans booster booster7"]);
+    engine = move(json(engine), "nevlas booster booster7", 1);
+    expect(engine.phase).to.equal(Phase.SetupBooster);
+    expect(engine.playerToMove).to.equal(0);
+    expect(engine.automation.plans[0].notice.kind).to.equal("stopped");
+    expect(engine.players[0].data.tiles.booster).to.equal(null);
+  });
+
+  it("keeps a setup queue through income into round one without adding invented setup moves", () => {
+    let engine = new Engine(setup.slice(0, 4));
+    const cmd = command(engine, 0, ["terrans build m -4x-1", "terrans booster booster3", "terrans up nav."]);
+    cmd.timings = [
+      { round: 0, phase: Phase.SetupBuilding },
+      { round: 0, phase: Phase.SetupBooster },
+      { round: 1, phase: Phase.RoundMove },
+    ];
+    engine = move(json(engine), cmd, 0);
+    engine = move(json(engine), "nevlas build m -1x0", 1);
+    engine = move(json(engine), "nevlas build m 0x-4", 1);
+    engine = move(json(engine), "nevlas booster booster7", 1);
+    expect(engine.phase).to.equal(Phase.RoundMove);
+    expect(engine.round).to.equal(1);
+    expect(engine.moveHistory).to.deep.equal(new Engine([...setup, "terrans up nav."]).moveHistory);
+    expect(engine.automation.plans[0].moves).to.deep.equal([]);
+    expect(timeIncrements(engine)).to.deep.equal([3, 3]);
+  });
+
+  it("rejects premoves before faction selection and setup timings in a running round", () => {
+    expect(() => queue(new Engine(setup.slice(0, 1)), 0, ["p1 faction terrans"])).to.throw("after faction selection");
+    const engine = new Engine(setup.slice(0, 4));
+    const cmd = command(engine, 0, ["terrans build m -4x-1"]);
+    cmd.timings = [{ round: 1, phase: Phase.SetupBuilding }];
+    expect(() => move(json(engine), cmd, 0)).to.throw("Invalid premove schedule");
+    cmd.timings = [{ round: 0, phase: Phase.RoundMove }];
+    expect(() => move(json(engine), cmd, 0)).to.throw("Invalid premove schedule");
+  });
+
   it("keeps the 3c Trading Station constraint and executes after a real neighbour arrives", () => {
     let engine = game();
     Object.assign(engine.players[0].data, { ores: 20, credits: 20, qics: 10 });

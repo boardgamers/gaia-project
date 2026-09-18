@@ -31,7 +31,12 @@ choices wait for the player, while planned income choices can execute automatica
 resolved by the normal auto-income setting is not applied twice. Dropping the seat or ending the
 game clears the queue.
 
-Commands carry the seat's main-turn counter, round, queue revision and request ID. This rejects
+Initial building placements and booster choices can also be queued once factions are assigned.
+`setupPremoves` advertises this capability. The queue contains only the player's own choices;
+opponents' hypothetical setup moves stay in the preview. Each queued choice is checked again
+on the real board when its setup turn arrives, including whether its planet or booster is available.
+
+Commands carry the seat's setup/main-turn counter, round, queue revision and request ID. This rejects
 stale replacements and makes retries idempotent. Automatic leech does not stale a plan. Cancelling
 an existing suffix remains possible even when the retained prefix has become illegal.
 

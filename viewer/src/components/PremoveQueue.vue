@@ -47,9 +47,9 @@
     </div>
     <ol v-if="moves.length" class="premove-queue__moves">
       <li v-for="(move, index) in moves" :key="index">
-        <span v-if="plan.timings" class="premove-queue__price premove-queue__round"
-          >Round {{ plan.timings[index].round }}</span
-        >
+        <span v-if="plan.timings" class="premove-queue__price premove-queue__round">{{
+          plan.timings[index].round === 0 ? "Setup" : `Round ${plan.timings[index].round}`
+        }}</span>
         <span>{{ move }}</span>
         <span
           v-if="isCheapAnalysisBuild(move)"

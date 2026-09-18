@@ -15,10 +15,12 @@ export function automation(engine: Engine): AutomationState {
     liveUpdate: false,
   });
   state.roundPremoves = true;
+  state.setupPremoves = true;
   return state;
 }
 
-const phases = [Phase.RoundIncome, Phase.RoundGaia, Phase.RoundMove];
+const setupPhases = [Phase.SetupBuilding, Phase.SetupBooster];
+const phases = [...setupPhases, Phase.RoundIncome, Phase.RoundGaia, Phase.RoundMove];
 const phaseOrder = (phase: Phase) => phases.indexOf(phase === Phase.RoundLeech ? Phase.RoundMove : phase);
 const position = (timing: PremoveTiming) => timing.round * phases.length + phaseOrder(timing.phase);
 const sameTiming = (a: PremoveTiming, b: PremoveTiming) => a.round === b.round && a.phase === b.phase;
@@ -39,13 +41,12 @@ export function canQueue(engine: Engine, seat: number): boolean {
     !!engine.players[seat] &&
     !engine.players[seat].dropped &&
     !engine.ended &&
-    engine.round >= Round.Round1 &&
-    [Phase.RoundMove, Phase.RoundLeech, Phase.RoundIncome, Phase.RoundGaia].includes(engine.phase)
+    (phases.includes(engine.phase) || engine.phase === Phase.RoundLeech)
   );
 }
 
 export function setPremoves(engine: Engine, command: PremoveCommand, seat: number) {
-  assert(canQueue(engine, seat), "Premoves are only available during a running round");
+  assert(canQueue(engine, seat), "Premoves are available after faction selection");
   const state = automation(engine);
   const old = state.plans[seat];
   assert(
@@ -58,11 +59,11 @@ export function setPremoves(engine: Engine, command: PremoveCommand, seat: numbe
   }
   assert(command.revision === (old?.revision ?? 0), "Your premove queue changed. Please check it and try again.");
   assert(Array.isArray(command.moves) && command.moves.length <= MAX_PREMOVES, "Queue at most three moves");
-  let nextRound = engine.round + (engine.passedPlayers.includes(seat) ? 1 : 0);
+  let nextRound = engine.round + (engine.passedPlayers?.includes(seat) ? 1 : 0);
   const timings =
     command.timings ??
     command.moves.map((move) => {
-      const timing = { round: nextRound, phase: Phase.RoundMove };
+      const timing = { round: nextRound, phase: setupPhases.includes(engine.phase) ? engine.phase : Phase.RoundMove };
       if (/\bpass\b/.test(move)) nextRound++;
       return timing;
     });
@@ -80,7 +81,8 @@ export function setPremoves(engine: Engine, command: PremoveCommand, seat: numbe
         Number.isInteger(timing.round) &&
         timing.round >= engine.round &&
         timing.round <= Round.LastRound &&
-        phases.includes(timing.phase),
+        phases.includes(timing.phase) &&
+        (setupPhases.includes(timing.phase) ? timing.round === Round.None : timing.round >= Round.Round1),
       "Invalid premove schedule"
     );
     assert(position(timing) >= previous, "Premoves must follow round order");
@@ -96,9 +98,16 @@ export function setPremoves(engine: Engine, command: PremoveCommand, seat: numbe
       assertOwnMove(preview, move, seat);
       const timing = timings[index];
       assert(
-        !(timing.round === engine.round && engine.passedPlayers.includes(seat)),
+        !(timing.round === engine.round && engine.passedPlayers?.includes(seat)),
         "You have already passed this round"
       );
+      if (setupPhases.includes(timing.phase)) {
+        if (index === 0 && timing.phase === engine.phase && engine.playerToMove === seat) {
+          preview.move(move);
+          assert(preview.newTurn, "Finish each planned turn before queuing it");
+        }
+        continue;
+      }
       // A later round/phase depends on income and other players' decisions. Validate its timing
       // and ownership now; execute the complete move atomically against the real board when due.
       if (
@@ -136,7 +145,7 @@ export function setPremoves(engine: Engine, command: PremoveCommand, seat: numbe
 export function creditDecision(engine: Engine, seat: number, phase: Phase) {
   const state = automation(engine);
   state.increments[seat]++;
-  if (phase === Phase.RoundMove) state.turns[seat]++;
+  if (phase === Phase.RoundMove || setupPhases.includes(phase)) state.turns[seat]++;
 }
 
 export function clearExpiredPremoves(engine: Engine) {
