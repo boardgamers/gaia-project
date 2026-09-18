@@ -76,6 +76,7 @@ import {
   moveRotateSectors,
   moveSetup,
   moveSilentBid,
+  repairBannedRandomFactions,
 } from "./move/setup";
 import { moveGaiaFormTransdim, moveSpaceshipAction } from "./move/spaceship-actions";
 import Player from "./player";
@@ -929,6 +930,7 @@ export default class Engine {
       }
     }
 
+    repairBannedRandomFactions(engine);
     return engine;
   }
 
@@ -956,7 +958,12 @@ export default class Engine {
   replayedTo(move = Infinity, keepReplayMode = false) {
     const oldHistory = this.moveHistory.slice(0, move);
     const oldPlayers = this.players;
-    const engine = new Engine(oldHistory.slice(0, 1), this.options, this.version ?? "1.0.0", true);
+    const options = { ...this.options };
+    // Lost Fleet stores its generated map here too; it is not a custom-map setup option.
+    if (options.lostFleet) {
+      delete options.map;
+    }
+    const engine = new Engine(oldHistory.slice(0, 1), options, this.version ?? "1.0.0", true);
 
     for (let i = 0; i < oldPlayers.length && i < engine.players.length; i++) {
       engine.players[i].name = oldPlayers[i].name;

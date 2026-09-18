@@ -210,17 +210,73 @@ describe("Random factions", () => {
       expect(resumed.phase).to.equal(Phase.SetupSilentBid);
     });
 
-    it("does not redraw or partially auto-nominate an old pool containing a banned faction", () => {
+    it("replaces only banned factions in an old pool before completing nominations", () => {
       const original = oldGame(3);
+      const pool = [...original.randomFactions];
       original.move(`p4 banFaction ${original.randomFactions[0]}`);
-      const resumed = Engine.fromData(JSON.parse(JSON.stringify(original)));
+      const saved = JSON.parse(JSON.stringify(original));
+      saved.randomFactions = pool;
+      const resumed = Engine.fromData(saved);
       wrapper.automove(resumed);
-      expect(resumed.phase).to.equal(Phase.SetupFaction);
-      expect(resumed.setup).to.deep.equal(original.setup);
-      expect(resumed.randomFactions).to.deep.equal(original.randomFactions);
+      expect(resumed.phase).to.equal(Phase.SetupSilentBid);
+      expect(resumed.randomFactions.slice(1)).to.deep.equal(pool.slice(1));
+      expect(resumed.bannedFactions).not.to.include(resumed.randomFactions[0]);
+      expect(new Set(resumed.randomFactions.map(factionPlanet)).size).to.equal(4);
       expect(resumed.bannedFactions).to.deep.equal(original.bannedFactions);
-      expect(resumed.moveHistory).to.deep.equal(original.moveHistory);
+      expect(resumed.moveHistory.slice(0, original.moveHistory.length)).to.deep.equal(original.moveHistory);
+      expect(resumed.replayedTo().randomFactions).to.deep.equal(resumed.randomFactions);
     });
+
+    for (const auction of [AuctionVariant.Silent, AuctionVariant.PreferenceSplit]) {
+      for (const nominations of [0, 1, 2, 3]) {
+        it(`repairs the blocked Lost Fleet pool after ${nominations} manual picks with ${auction}`, () => {
+          const original = new Engine(
+            ["init 4 Merry-novel-6174"],
+            { randomFactions: true, auction, banPhase: true, lostFleet: true, officialCenterSectors: true },
+            "4.14.2"
+          );
+          const pool = [...original.randomFactions];
+          expect(pool).to.deep.equal([Faction.Firaks, Faction.Gleens, Faction.Itars, Faction.Taklons]);
+          const bans = [Faction.Firaks, Faction.Ivits, Faction.Lantids, Faction.Xenos];
+          for (const [seat, faction] of bans.entries()) {
+            original.move(`p${seat + 1} banFaction ${faction}`);
+          }
+          const choices = [Faction.Itars, Faction.Gleens, Faction.Taklons].slice(0, nominations);
+          for (const [seat, faction] of choices.entries()) {
+            original.move(`p${seat + 1} faction ${faction}`);
+          }
+          const saved = JSON.parse(JSON.stringify(original));
+          saved.randomFactions = pool;
+          saved.availableCommands = [
+            {
+              name: Command.ChooseFaction,
+              player: nominations,
+              data: pool.filter((faction) => !bans.includes(faction) && !choices.includes(faction)),
+            },
+          ];
+
+          const resumed = Engine.fromData(saved);
+          wrapper.automove(resumed);
+          expect(resumed.phase).to.equal(
+            auction === AuctionVariant.Silent ? Phase.SetupSilentBid : Phase.SetupPreferenceBid
+          );
+          expect(resumed.setup.slice(0, nominations)).to.deep.equal(choices);
+          expect(resumed.randomFactions.slice(1)).to.deep.equal(pool.slice(1));
+          expect(resumed.randomFactions.some((faction) => bans.includes(faction))).to.equal(false);
+          expect(new Set(resumed.randomFactions.map(factionPlanet)).size).to.equal(4);
+          expect(resumed.bannedFactions).to.deep.equal(bans);
+          expect(resumed.moveHistory.slice(0, original.moveHistory.length)).to.deep.equal(original.moveHistory);
+          expect(resumed.sealedBidPendingSeats()).to.deep.equal([0, 1, 2, 3]);
+          const replayed = resumed.replayedTo();
+          expect(replayed.randomFactions).to.deep.equal(resumed.randomFactions);
+          expect(replayed.options.map).to.deep.equal(resumed.options.map);
+          expect(replayed.setup).to.deep.equal(resumed.setup);
+          expect(replayed.players.map((player) => player.faction)).to.deep.equal(resumed.setup);
+          const loaded = Engine.fromData(JSON.parse(JSON.stringify(resumed)));
+          expect(loaded.randomFactions).to.deep.equal(resumed.randomFactions);
+        });
+      }
+    }
 
     for (const submitted of [1, 2, 3]) {
       it(`preserves ${submitted} submitted bid vectors and their nomination tie-breakers`, () => {
