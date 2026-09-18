@@ -1,4 +1,5 @@
 import Engine, { AuctionVariant, Building, Command, Faction, Phase, Planet, PlayerEnum } from "@gaia-project/engine";
+import { move as bgsMove, stripSecret } from "@gaia-project/engine/wrapper";
 import { fireEvent } from "@testing-library/vue";
 import BootstrapVue from "bootstrap-vue";
 import { expect } from "chai";
@@ -10,6 +11,14 @@ import Game from "./Game.vue";
 Vue.use(BootstrapVue);
 
 describe("Game", () => {
+  afterEach(() => {
+    // A failed assertion must not leave a mounted board and its watchers running into the next test.
+    for (const element of Array.from(document.body.children)) {
+      const vm = (element as any).__vue__;
+      if (vm) vm.$destroy();
+      element.remove();
+    }
+  });
   function createMoweydsPiUpgradeState(withLeech = false) {
     const persisted = new Engine(["init 2 lf-moweyds-pi-endturn"], { lostFleet: true });
 
@@ -332,6 +341,7 @@ describe("Game", () => {
     const engine = new Engine(["init 2 hosted-faction-picker-visibility"], { lostFleet: true });
     const mountWithSeat = (seatIndex: number | undefined) => {
       const store = makeStore();
+      store.commit("hosted", new URLSearchParams(window.location.search).has("game"));
       if (seatIndex !== undefined) {
         store.commit("player", { index: seatIndex });
       } else {
@@ -505,332 +515,6 @@ describe("Game", () => {
     vm.$destroy();
   });
 
-  it("aligns the off-turn auto-leech control with the mobile chat toggle above the premove bar", () => {
-    const store = makeStore();
-    const vm = new (Vue.extend(Game as any))({ store }) as any;
-
-    expect(vm.offTurnAutoLeechBottomOffset).to.equal(24);
-    vm.premoveBarHeight = 86;
-    expect(vm.offTurnAutoLeechBottomOffset).to.equal(98);
-
-    vm.$destroy();
-  });
-
-  describe("premove (hosted mode)", () => {
-    const SETUP_MOVES = [
-      "init 2 randomSeed",
-      "p1 faction terrans",
-      "p2 faction nevlas",
-      "terrans build m -1x2",
-      "nevlas build m -1x0",
-      "nevlas build m 0x-4",
-      "terrans build m -4x-1",
-      "nevlas booster booster7",
-      "terrans booster booster3",
-    ];
-
-    function mountAsSeat(seatIndex: number | undefined, engine: Engine = new Engine(SETUP_MOVES)) {
-      const store = makeStore();
-      if (seatIndex !== undefined) {
-        store.commit("player", { index: seatIndex });
-      } else {
-        store.state.player = null;
-      }
-      const vm = new (Vue.extend(Game as any))({ store }) as any;
-      vm.handleData(engine);
-      vm.$mount();
-      document.body.appendChild(vm.$el);
-      return vm;
-    }
-
-    // Owner decision (2026-09): the premove bar is hidden - BGS has its own planning UI, so
-    // showPremoveBar is hard-false. The premove machinery (premoveOffered etc.) is untouched; these
-    // tests assert the bar/sheet simply never renders.
-    it("does not render the premove sticky bar even for a locked seat whose turn it isn't", () => {
-      // playerToMove is 0 (terrans); this session is locked to seat 1 (nevlas).
-      const vm = mountAsSeat(1);
-
-      expect(vm.premoveOffered).to.equal(true); // logic intact
-      expect(vm.showPremoveBar).to.equal(false); // but the bar is hidden
-      expect(vm.$el.textContent).to.not.contain("+ Add move");
-
-      vm.$el.remove();
-      vm.$destroy();
-    });
-
-    it("does not render it while the round is paused on someone else's leech decision either", () => {
-      const engine = new Engine(SETUP_MOVES);
-      engine.players[0].data.credits = 20;
-      engine.players[0].data.ores = 20;
-      engine.move("terrans build ts -1x2.");
-      engine.generateAvailableCommandsIfNeeded();
-      expect(engine.phase).to.equal(Phase.RoundLeech);
-
-      const vm = mountAsSeat(0, engine);
-
-      expect(vm.canPlay).to.equal(false);
-      expect(vm.premoveOffered).to.equal(true);
-      expect(vm.showPremoveBar).to.equal(false);
-      expect(vm.$el.textContent).to.not.contain("+ Add move");
-
-      vm.$el.remove();
-      vm.$destroy();
-    });
-
-    it("hides Commands (canPlay false) for everyone while locked to a pending placeholder seat", () => {
-      // playerToMove is 0 (terrans) - a real lock to seat 0 would make canPlay true, but the
-      // impossible placeholder index a hosting app locks to before its real seat lock resolves
-      // (closing a race) must keep canPlay false regardless of whose turn
-      // it actually is, so no viewer sees the active player's in-progress picks during that window.
-      const vm = mountAsSeat(-1);
-
-      expect(vm.engine.playerToMove).to.equal(0);
-      expect(vm.canPlay).to.equal(false);
-      // Regression check: myLockedSeat must reject the out-of-range placeholder rather than pass
-      // it through - premoveOffered calls into the engine with it and previously threw.
-      expect(vm.myLockedSeat).to.equal(undefined);
-      expect(() => vm.premoveOffered).to.not.throw();
-      expect(vm.premoveOffered).to.equal(false);
-
-      vm.$el.remove();
-      vm.$destroy();
-    });
-
-    it("does not offer a premove for the seat currently on turn", () => {
-      const vm = mountAsSeat(0);
-
-      expect(vm.premoveOffered).to.equal(false);
-
-      vm.$el.remove();
-      vm.$destroy();
-    });
-
-    it("does not offer a premove with no seat lock (spectator or hot-seat test game)", () => {
-      const vm = mountAsSeat(undefined);
-
-      expect(vm.premoveOffered).to.equal(false);
-      expect(vm.$el.textContent).to.not.contain("Sequential premove");
-
-      vm.$el.remove();
-      vm.$destroy();
-    });
-
-    it("onStartNewPremove swaps into a preview clone where it's the locked seat's turn, and cancelPremoveMode restores the real state", () => {
-      const vm = mountAsSeat(1);
-
-      vm.onStartNewPremove({ mode: "sequential", switchingModes: false });
-
-      expect(vm.premoveMode).to.equal(true);
-      expect(vm.premoveEditSeq).to.equal(null);
-      expect(vm.canPlay).to.equal(true);
-      expect(vm.engine.playerToMove).to.equal(1);
-
-      vm.cancelPremoveMode();
-
-      expect(vm.premoveMode).to.equal(false);
-      expect(vm.engine.playerToMove).to.equal(0);
-
-      vm.$el.remove();
-      vm.$destroy();
-    });
-
-    it("composing a full turn via premoveMove enables Queue this move, and queuing dispatches it with the locked seat", () => {
-      const vm = mountAsSeat(1);
-      vm.onStartNewPremove({ mode: "sequential", switchingModes: false });
-
-      const dispatched: any[] = [];
-      const originalDispatch = vm.$store.dispatch.bind(vm.$store);
-      vm.$store.dispatch = (type: string, payload: unknown) => {
-        dispatched.push({ type, payload });
-        return originalDispatch(type, payload);
-      };
-
-      expect(vm.premoveReady).to.equal(false);
-      // A research track upgrade completes the turn in one command (no further prompts).
-      vm.applyPremoveMove("nevlas up terra.");
-      expect(vm.premoveReady).to.equal(true);
-
-      vm.queueCurrentPremove();
-
-      expect(dispatched).to.deep.equal([
-        { type: "queuePremove", payload: { seat: 1, move: "nevlas up terra.", mode: "sequential" } },
-      ]);
-      expect(vm.premoveMode).to.equal(false);
-
-      vm.$el.remove();
-      vm.$destroy();
-    });
-
-    it("editing a queued premove stages the change: cancelPremoveMode before confirming leaves the original queue untouched", () => {
-      const vm = mountAsSeat(1);
-      vm.$store.commit("premoveState", {
-        premoves: [{ seat: 1, seq: 1, move: "nevlas up terra.", mode: "sequential", queued_move_count: 0 }],
-        failures: [],
-      });
-
-      vm.startEditPremove(1);
-
-      expect(vm.premoveMode).to.equal(true);
-      expect(vm.premoveEditSeq).to.equal(1);
-
-      const dispatched: any[] = [];
-      const originalDispatch = vm.$store.dispatch.bind(vm.$store);
-      vm.$store.dispatch = (type: string, payload: unknown) => {
-        dispatched.push({ type, payload });
-        return originalDispatch(type, payload);
-      };
-
-      // Backing out without confirming must not touch the backend at all.
-      vm.cancelPremoveMode();
-
-      expect(dispatched).to.deep.equal([]);
-      expect(vm.premoveMode).to.equal(false);
-      expect(vm.premoveEditSeq).to.equal(null);
-
-      vm.$el.remove();
-      vm.$destroy();
-    });
-
-    it("confirming an edit dispatches editPremove (not queuePremove) with the original seq", () => {
-      const vm = mountAsSeat(1);
-      vm.$store.commit("premoveState", {
-        premoves: [{ seat: 1, seq: 1, move: "nevlas up terra.", mode: "sequential", queued_move_count: 0 }],
-        failures: [],
-      });
-      vm.startEditPremove(1);
-
-      const dispatched: any[] = [];
-      const originalDispatch = vm.$store.dispatch.bind(vm.$store);
-      vm.$store.dispatch = (type: string, payload: unknown) => {
-        dispatched.push({ type, payload });
-        return originalDispatch(type, payload);
-      };
-
-      vm.applyPremoveMove("nevlas up nav.");
-      vm.queueCurrentPremove();
-
-      expect(dispatched).to.deep.equal([{ type: "editPremove", payload: { seat: 1, seq: 1, move: "nevlas up nav." } }]);
-
-      vm.$el.remove();
-      vm.$destroy();
-    });
-
-    describe("cancel triggers", () => {
-      function spyDispatch(vm: any): any[] {
-        const dispatched: any[] = [];
-        const originalDispatch = vm.$store.dispatch.bind(vm.$store);
-        vm.$store.dispatch = (type: string, payload: unknown) => {
-          dispatched.push({ type, payload });
-          return originalDispatch(type, payload);
-        };
-        return dispatched;
-      }
-
-      it("full compose -> refine -> arm flow watches the picked opponent's seat", () => {
-        const vm = mountAsSeat(1); // nevlas; terrans (seat 0) is on turn
-        vm.startCancelTriggerPicker();
-        expect(vm.cancelTriggerStage).to.equal("picker");
-
-        vm.pickCancelTriggerOpponent(0);
-        expect(vm.cancelTriggerStage).to.equal(null);
-        expect(vm.cancelTriggerComposeActive).to.equal(true);
-        // Composing plays as the WATCHED seat (terrans), not this session's own locked seat.
-        expect(vm.canPlay).to.equal(true);
-        expect(vm.engine.playerToMove).to.equal(0);
-
-        vm.applyCancelTriggerMove("terrans build m 3B0.");
-        expect(vm.cancelTriggerReady).to.equal(true);
-
-        const dispatched = spyDispatch(vm);
-        vm.confirmCancelTriggerCompose();
-
-        // Leaves the board exactly as it was for real - no leech offer, no move recorded.
-        expect(vm.cancelTriggerComposeActive).to.equal(false);
-        expect(vm.cancelTriggerStage).to.equal("refine");
-        expect(vm.engine.phase).to.equal(Phase.RoundMove);
-        expect(vm.engine.playerToMove).to.equal(0);
-        expect(vm.canPlay).to.equal(false);
-
-        vm.armCancelTriggerFromRefine(["build:m:3B0"]);
-        expect(dispatched).to.deep.equal([
-          {
-            type: "armCancelTrigger",
-            payload: {
-              seat: 1,
-              watchedSeat: 0,
-              move: "terrans build m 3B0.",
-              atoms: ["build:m:3B0"],
-              kind: "move",
-              config: {},
-            },
-          },
-        ]);
-        expect(vm.cancelTriggerStage).to.equal(null);
-
-        vm.$el.remove();
-        vm.$destroy();
-      });
-
-      it("the leech chip arms a leech trigger directly, without ever touching the board", () => {
-        const vm = mountAsSeat(1);
-        vm.startCancelTriggerPicker();
-        vm.pickCancelTriggerLeech();
-
-        expect(vm.cancelTriggerStage).to.equal("leech");
-        expect(vm.cancelTriggerComposeActive).to.equal(false);
-
-        const dispatched = spyDispatch(vm);
-        vm.armLeechTrigger({ mode: "gained", minPower: 2 });
-
-        expect(dispatched).to.deep.equal([
-          {
-            type: "armCancelTrigger",
-            payload: {
-              seat: 1,
-              watchedSeat: 1,
-              move: "",
-              atoms: [],
-              kind: "leech",
-              config: { mode: "gained", minPower: 2 },
-            },
-          },
-        ]);
-        expect(vm.cancelTriggerStage).to.equal(null);
-
-        vm.$el.remove();
-        vm.$destroy();
-      });
-
-      it("cancelling mid-compose restores the real board and dispatches nothing", () => {
-        const vm = mountAsSeat(1);
-        const beforeMoveHistoryLength = vm.engine.moveHistory.length;
-        const beforeCredits = vm.engine.players[0].data.credits;
-        const beforeMines = vm.engine.players[0].data.buildings.m;
-
-        vm.pickCancelTriggerOpponent(0);
-        // The resource-relaxed clone really did relax terrans' credits while composing.
-        expect(vm.engine.players[0].data.credits).to.equal(30);
-        vm.applyCancelTriggerMove("terrans build m 3B0.");
-
-        const dispatched = spyDispatch(vm);
-        vm.cancelCancelTriggerCompose();
-
-        expect(dispatched).to.deep.equal([]);
-        expect(vm.cancelTriggerComposeActive).to.equal(false);
-        // Real state restored: nothing was appended to the move log, and the relaxed resources
-        // (and the build itself) never leaked into the real board.
-        expect(vm.engine.moveHistory.length).to.equal(beforeMoveHistoryLength);
-        expect(vm.engine.playerToMove).to.equal(0);
-        expect(vm.engine.phase).to.equal(Phase.RoundMove);
-        expect(vm.engine.players[0].data.credits).to.equal(beforeCredits);
-        expect(vm.engine.players[0].data.buildings.m).to.equal(beforeMines);
-
-        vm.$el.remove();
-        vm.$destroy();
-      });
-    });
-  });
-
   describe("analysis mode", () => {
     const SETUP_MOVES = [
       "init 2 randomSeed",
@@ -844,8 +528,17 @@ describe("Game", () => {
       "terrans booster booster3",
     ];
 
+    function researchGame() {
+      const engine = new Engine(SETUP_MOVES);
+      for (const player of engine.players) player.data.knowledge = 12;
+      engine.clearAvailableCommands();
+      engine.generateAvailableCommands();
+      return engine;
+    }
+
     function mountAsSeat(seatIndex: number | undefined, engine: Engine = new Engine(SETUP_MOVES)) {
       const store = makeStore();
+      store.commit("hosted", new URLSearchParams(window.location.search).has("game"));
       if (seatIndex !== undefined) {
         store.commit("player", { index: seatIndex });
       } else {
@@ -905,6 +598,52 @@ describe("Game", () => {
       hotSeat.$destroy();
     });
 
+    it("offers a compact simulation control on turn, with no empty planning card", async () => {
+      const vm = mountAsSeat(0);
+      await Vue.nextTick();
+      expect(vm.$el.querySelector(".premove-queue")).to.equal(null);
+      const start = vm.$el.querySelector("#move-title .planning-entry");
+      expect(start.textContent).to.contain("Simulate moves");
+      await fireEvent.click(start);
+      expect(vm.analysisMode).to.equal(true);
+      expect(vm.$el.querySelector(".premove-queue")).not.to.equal(null);
+      vm.exitAnalysisMode();
+      await Vue.nextTick();
+      expect(vm.$el.querySelector(".premove-queue")).to.equal(null);
+      vm.$el.remove();
+      vm.$destroy();
+    });
+
+    it("still shows queued moves and cancellation while on turn", async () => {
+      const position = new Engine(SETUP_MOVES);
+      position.automation = {
+        version: 1,
+        plans: {
+          0: {
+            moves: ["terrans up nav."],
+            revision: 1,
+            round: 1,
+            requestId: "queued",
+          },
+        },
+        increments: [0, 0],
+        turns: [0, 0],
+        liveUpdate: false,
+      };
+      const vm = mountAsSeat(0, position);
+      await Vue.nextTick();
+      expect(vm.$el.querySelector(".premove-queue").textContent).to.contain("Cancel all");
+      const stopped = JSON.parse(JSON.stringify(vm.engine));
+      stopped.automation.plans[0].moves = [];
+      stopped.automation.plans[0].notice = { kind: "stopped", text: "Premoves stopped: insufficient ore" };
+      await vm.$store.dispatch("externalData", stopped);
+      await Vue.nextTick();
+      expect(vm.$el.querySelector(".premove-queue")).to.equal(null);
+      expect(vm.$el.querySelector(".premove-notice").textContent).to.contain("Premoves stopped: insufficient ore");
+      vm.$el.remove();
+      vm.$destroy();
+    });
+
     it("actually lets an off-turn locked seat compose and complete their own turn inside the sandbox", () => {
       // Seat 1 (nevlas) is locked but it's genuinely seat 0's (terrans') turn right now.
       const vm = mountAsSeat(1);
@@ -950,19 +689,6 @@ describe("Game", () => {
       expect(notOnTurn.analysisOffered).to.equal(true); // but this seat genuinely has a bid to make right now
       notOnTurn.$el.remove();
       notOnTurn.$destroy();
-    });
-
-    it("toggleAnalysisMode (the map-corner button's handler, §5.4) enters when inactive and exits when active", () => {
-      const vm = mountAsSeat(0);
-
-      vm.toggleAnalysisMode();
-      expect(vm.analysisMode).to.equal(true);
-
-      vm.toggleAnalysisMode();
-      expect(vm.analysisMode).to.equal(false);
-
-      vm.$el.remove();
-      vm.$destroy();
     });
 
     it("enters a clone (real state untouched) and exits back to the exact real state, dispatching nothing either way", () => {
@@ -1025,16 +751,18 @@ describe("Game", () => {
         await Vue.nextTick();
 
         const shown = () =>
-          (Array.from(document.querySelectorAll(".move-button > button")) as HTMLElement[]).filter(
-            (b) => !(b.parentElement as HTMLElement).className.includes("d-none")
-          );
+          (
+            Array.from(
+              document.querySelectorAll(".move-button > button, .analysis-simulation__button")
+            ) as HTMLElement[]
+          ).filter((b) => !(b.parentElement as HTMLElement).className.includes("d-none"));
         // Both, because these buttons split their wording between the two: the sandbox Charge button
         // says "Charge 1" in its text and something else entirely in its tooltip.
         const titleOf = (b: HTMLElement) =>
           `${b.getAttribute("title") ?? ""} ${b.textContent ?? ""}`.replace(/\s+/g, " ");
 
         expect(
-          shown().some((b) => titleOf(b).includes("Charge 1")),
+          shown().some((b) => titleOf(b).includes("Simulate charge")),
           "Charge 1 is on the top menu"
         ).to.equal(true);
         const research = shown().find((b) => titleOf(b).includes("Research"));
@@ -1058,7 +786,7 @@ describe("Game", () => {
         expect(vm.analysisEntries).to.deep.equal([]);
         expect(JSON.stringify(vm.engine.players[0].data.power)).to.equal(powerBefore);
         expect(
-          shown().some((b) => titleOf(b).includes("Charge 1")),
+          shown().some((b) => titleOf(b).includes("Simulate charge")),
           "and it really did go back"
         ).to.equal(true);
 
@@ -1076,7 +804,7 @@ describe("Game", () => {
         await Vue.nextTick();
         await Vue.nextTick();
 
-        const charge = shown().find((b) => titleOf(b).includes("Charge 1"));
+        const charge = shown().find((b) => titleOf(b).includes("Simulate charge"));
         expect(charge, "back to the top menu").to.not.equal(undefined);
         expect(charge).to.not.equal(backElement);
 
@@ -1186,6 +914,92 @@ describe("Game", () => {
       vm.$destroy();
     });
 
+    it("keeps planning usable after next-round income when the opponent has manual income enabled", async () => {
+      const engine = new Engine([
+        "init 2 Gaudy-plow-4506",
+        "p1 faction itars",
+        "p2 faction ivits",
+        "itars build m 3B3",
+        "itars build m 2B2",
+        "ivits build PI 4B3",
+        "ivits booster booster3",
+        "itars booster booster8",
+        "ivits income t",
+        "itars pass booster9",
+      ]);
+      engine.players.forEach((player) => {
+        player.settings.autoIncome = false;
+        player.settings.autoBrainstone = false;
+      });
+      const original = JSON.stringify(engine);
+      const vm = mountAsSeat(0, Engine.fromData(stripSecret(engine, 0)));
+      vm.$store.commit("hosted", true);
+      const dispatched = spyDispatch(vm);
+      vm.enterAnalysisMode();
+      expect(vm.engine.round).to.equal(2);
+      expect(vm.engine.phase).to.equal(Phase.RoundIncome);
+      expect(vm.engine.playerToMove).to.equal(0);
+
+      vm.applyAnalysisMove("itars income t");
+      await Vue.nextTick();
+
+      expect(vm.engine.phase).to.equal(Phase.RoundMove);
+      expect(vm.engine.playerToMove).to.equal(0);
+      expect(vm.engine.turnOrder).to.deep.equal([0]);
+      expect(vm.canPlay).to.equal(true);
+      expect(vm.$el.textContent).to.contain("Plan A");
+      expect(vm.$el.textContent).to.contain("Clear plan");
+      expect(vm.$el.textContent).to.contain("Return to live game");
+      vm.applyAnalysisMove("itars up nav.");
+      await Vue.nextTick();
+      expect(vm.analysisEntries).to.have.length(2);
+      expect(vm.analysisCommittableMoves).to.deep.equal(["itars income t", "itars up nav."]);
+      expect(vm.analysisCommitPlan.timings).to.deep.equal([
+        { round: 2, phase: Phase.RoundIncome },
+        { round: 2, phase: Phase.RoundMove },
+      ]);
+      expect(vm.$el.textContent).to.contain("appropriate round and phase");
+
+      vm.addAnalysisLine();
+      await Vue.nextTick();
+      expect(vm.$el.textContent).to.contain("Plan B");
+      vm.resetAnalysisLine();
+      expect(vm.analysisEntries).to.have.length(0);
+      vm.exitAnalysisMode();
+      expect(vm.engine.moveHistory).to.deep.equal(JSON.parse(original).moveHistory);
+      expect(vm.engine.players.map((player) => player.settings)).to.deep.equal(
+        JSON.parse(original).players.map((player) => player.settings)
+      );
+      expect(dispatched.filter((action) => ["move", "submitPlan"].includes(action.type))).to.have.length(0);
+      vm.$destroy();
+    });
+
+    it("keeps plan controls available after a simulated final pass", async () => {
+      const engine = new Engine(SETUP_MOVES);
+      engine.round = 6;
+      engine.clearAvailableCommands();
+      engine.generateAvailableCommands();
+      const vm = mountAsSeat(0, engine);
+      vm.enterAnalysisMode();
+      vm.applyAnalysisMove("terrans pass");
+      await Vue.nextTick();
+
+      expect(vm.engine.ended).to.equal(true);
+      expect(vm.canPlay).to.equal(false);
+      expect(vm.$el.textContent).to.contain("Plan A");
+      expect(vm.$el.textContent).to.contain("Clear plan");
+      expect(vm.$el.textContent).to.contain("Return to live game");
+      expect(vm.$el.querySelectorAll("button.move-button")).to.have.length(0);
+      const clear = Array.from(vm.$el.querySelectorAll("button")).find(
+        (button: HTMLButtonElement) => button.textContent.trim() === "Clear plan"
+      ) as HTMLButtonElement;
+      await fireEvent.click(clear);
+      expect(vm.engine.ended).to.equal(false);
+      expect(vm.canPlay).to.equal(true);
+      expect(vm.analysisEntries).to.have.length(0);
+      vm.$destroy();
+    });
+
     it("commits nothing off-turn in self-contained play, where there is no queue to put it in", () => {
       // Seat 1 is locked; it is genuinely seat 0's turn. Commit used to dispatch move 1 as a live
       // `move` the real game cannot accept - after exiting the sandbox and clearing the saved line,
@@ -1234,39 +1048,6 @@ describe("Game", () => {
       second.$destroy();
     });
 
-    it("is not offered while a premove or cancel-trigger rule is composing, even though their forced clone reads canPlay true (§3.6)", () => {
-      const vm = mountAsSeat(1); // off-turn (playerToMove is 0) - a premove is offered here
-      vm.onStartNewPremove({ mode: "sequential", switchingModes: false });
-      expect(vm.premoveMode).to.equal(true);
-      // Premove's own forced-turn clone (buildSequentialChainPreview) makes canPlay read true -
-      // exactly why analysisOffered needs its own explicit exclusion rather than relying on canPlay.
-      expect(vm.canPlay).to.equal(true);
-      expect(vm.analysisOffered).to.equal(false);
-
-      vm.cancelPremoveMode();
-      // Off-turn is now genuinely offered for a locked seat (this session's own off-turn widening),
-      // so this reverts to true once premove composing ends - the exclusion above was specifically
-      // about NOT composing two board-takeovers at once, not about being off-turn.
-      expect(vm.analysisOffered).to.equal(true);
-
-      vm.$el.remove();
-      vm.$destroy();
-    });
-
-    it("hides the premove sheet while analysis mode is active, so the two can never compose at once", () => {
-      const vm = mountAsSeat(0);
-      vm.enterAnalysisMode();
-
-      // The clone's own turn now belongs to seat 0 forever within analysis mode (Phase 1 has no
-      // round-flow yet, but the getters must not offer a premove regardless of whose turn the clone
-      // shows) - checked directly via the getters, which short-circuit on `analysisMode` first.
-      expect(vm.premoveOffered).to.equal(false);
-      expect(vm.showPremoveBar).to.equal(false);
-
-      vm.$el.remove();
-      vm.$destroy();
-    });
-
     describe("real resources and the compact status (§12)", () => {
       it("leaves the seat's real resources alone on entry - nothing is injected any more", () => {
         const vm = mountAsSeat(0);
@@ -1293,17 +1074,14 @@ describe("Game", () => {
         vm.$destroy();
       });
 
-      it("surfaces the power the sandbox had to top up, which the player board cannot show", () => {
-        // This read 0 no matter what: the status came off `analysisComposeBase`, a plain-JSON
-        // snapshot, and `analysisAssumedPower` is deliberately absent from PlayerData.toJSON().
+      it("refuses a power action without enough power", () => {
         const vm = mountAsSeat(0);
         vm.enterAnalysisMode();
-
-        vm.applyAnalysisMove("terrans action power3."); // far more power than this seat really has
-
-        expect(vm.engine.players[0].data.analysisAssumedPower).to.be.greaterThan(0);
-        expect(vm.analysisStatus.assumedPower).to.equal(vm.engine.players[0].data.analysisAssumedPower);
-
+        const before = JSON.stringify(vm.engine.players[0].data.power);
+        vm.applyAnalysisMove("terrans action power3.");
+        expect(vm.analysisEntries).to.deep.equal([]);
+        expect(JSON.stringify(vm.engine.players[0].data.power)).to.equal(before);
+        expect(vm.analysisStatus.assumedPower).to.equal(0);
         vm.$el.remove();
         vm.$destroy();
       });
@@ -1327,7 +1105,9 @@ describe("Game", () => {
         // The reported bug: Charge 1 replays the line from the origin, and a turn in progress is not
         // a line entry - so pressing it after clicking into a build or an action wiped that turn out,
         // and the bowls moved by whatever the turn had spent rather than by the 1 power charged.
-        const vm = mountAsSeat(0);
+        const position = new Engine(SETUP_MOVES);
+        position.players[0].data.power.area3 = 4;
+        const vm = mountAsSeat(0, position);
         vm.enterAnalysisMode();
         vm.chargeAnalysisPower();
 
@@ -1391,6 +1171,29 @@ describe("Game", () => {
         vm.$destroy();
       });
 
+      it("hides research after spending the last knowledge and restores it on undo while off turn", async () => {
+        const position = new Engine(SETUP_MOVES);
+        position.players[1].data.knowledge = 4;
+        const vm = mountAsSeat(1, position);
+        vm.enterAnalysisMode();
+        await Vue.nextTick();
+        const choices = () =>
+          Array.from(vm.$el.querySelectorAll("#move-buttons button")).map((b: any) => b.textContent.trim());
+        expect(choices()).to.include("Research");
+        vm.applyAnalysisMove("nevlas up nav.");
+        await Vue.nextTick();
+        expect(vm.engine.players[1].data.knowledge).to.equal(0);
+        expect(choices()).not.to.include("Research");
+        vm.applyAnalysisMove("nevlas up gaia.");
+        expect(vm.analysisEntries).to.have.length(1);
+        expect(vm.engine.players[1].data.knowledge).to.equal(0);
+        vm.undoLastAnalysisEntry();
+        await Vue.nextTick();
+        expect(choices()).to.include("Research");
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
       it("spends real resources, so the board's own numbers move with the line", () => {
         const vm = mountAsSeat(0);
         const realKnowledge = vm.engine.players[0].data.knowledge;
@@ -1409,16 +1212,17 @@ describe("Game", () => {
         vm.$destroy();
       });
 
-      it("surfaces an overdraft once the line spends past what the seat has", () => {
+      it("rejects research when the position has no knowledge", () => {
         const vm = mountAsSeat(0);
         vm.enterAnalysisMode();
         // Every replay restarts from analysisOrigin, so that is where a "this seat is broke" setup
         // has to land - mutating vm.engine would be overwritten by the next replay.
         vm.analysisOrigin.players[0].data.knowledge = 0;
-
+        vm.setAnalysisEntries([]);
         vm.applyAnalysisMove("terrans up nav.");
-
-        expect(vm.analysisStatus.overdrawn).to.deep.equal([{ kind: "k", amount: -4 }]);
+        expect(vm.analysisEntries).to.deep.equal([]);
+        expect(vm.engine.players[0].data.knowledge).to.equal(0);
+        expect(vm.analysisStatus.overdrawn).to.deep.equal([]);
 
         vm.$el.remove();
         vm.$destroy();
@@ -1506,7 +1310,7 @@ describe("Game", () => {
         vm.$destroy();
       });
 
-      it("hides Pass once the line has used its one bonus round (the two-round cap, §3.7)", () => {
+      it("allows planning through multiple round boundaries", () => {
         const vm = mountAsSeat(0);
         vm.enterAnalysisMode();
         expect(vm.engine.availableCommands.some((c) => c.name === Command.Pass)).to.equal(true);
@@ -1514,7 +1318,11 @@ describe("Game", () => {
 
         vm.applyAnalysisMove(`terrans pass ${booster}`); // round 1 -> round 2, the one bonus round
 
-        expect(vm.engine.availableCommands.some((c) => c.name === Command.Pass)).to.equal(false);
+        expect(vm.engine.availableCommands.some((c) => c.name === Command.Pass)).to.equal(true);
+        const nextBooster = vm.engine.findAvailableCommand(0, Command.Pass).data.boosters[0];
+        vm.applyAnalysisMove(`terrans pass ${nextBooster}`);
+        expect(vm.engine.round).to.equal(3);
+        expect(vm.canPlay).to.equal(true);
 
         vm.$el.remove();
         vm.$destroy();
@@ -1633,7 +1441,6 @@ describe("Game", () => {
 
         expect(vm.analysisLines).to.deep.equal([[]]);
         expect(vm.analysisActiveLine).to.equal(0);
-        expect(vm.analysisLineSummaries.map((s: any) => s.label)).to.deep.equal(["Line 1"]);
 
         vm.$el.remove();
         vm.$destroy();
@@ -1669,7 +1476,7 @@ describe("Game", () => {
       });
 
       it("undo and reset act on the open line only", () => {
-        const vm = mountAsSeat(0);
+        const vm = mountAsSeat(0, researchGame());
         vm.enterAnalysisMode();
         vm.applyAnalysisMove("terrans up nav.");
         vm.addAnalysisLine(); // forks, so Line 2 starts as [up nav]
@@ -1772,9 +1579,7 @@ describe("Game", () => {
 
         const summaries = vm.analysisLineSummaries;
         expect(summaries.length).to.equal(2);
-        expect(summaries[0].label).to.equal("Line 1");
         expect(summaries[0].moves).to.equal(1);
-        expect(summaries[1].label).to.equal("Line 2");
         expect(summaries[1].moves).to.equal(0);
         // Line 1's figure is still readable while Line 2 is the one on the board.
         expect(vm.analysisActiveLine).to.equal(1);
@@ -1783,7 +1588,7 @@ describe("Game", () => {
         vm.$destroy();
       });
 
-      it("commit clears every line, not just the one it played", () => {
+      it("submitting keeps every variation until its moves actually execute", () => {
         const vm = mountAsSeat(0);
         vm.enterAnalysisMode();
         vm.applyAnalysisMove("terrans up nav.");
@@ -1797,7 +1602,10 @@ describe("Game", () => {
 
         const reopened = mountAsSeat(0);
         reopened.enterAnalysisMode();
-        expect(reopened.analysisLines).to.deep.equal([[]]);
+        expect(reopened.analysisLines).to.deep.equal([
+          [{ kind: "move", move: "terrans up nav." }],
+          [{ kind: "move", move: "terrans up gaia." }],
+        ]);
 
         reopened.$el.remove();
         reopened.$destroy();
@@ -1845,71 +1653,57 @@ describe("Game", () => {
 
         expect(second.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
         expect(second.analysisPendingRestore).to.equal(null);
-        expect(second.analysisNotice).to.contain("Opponents moved");
+        expect(second.analysisNotice).to.contain("board changed");
 
         second.$el.remove();
         second.$destroy();
       });
 
-      it("holds the stored line for an explicit prompt, not a silent replay, when this seat's own moves happened since it was saved", () => {
-        const first = mountAsSeat(0);
+      it("automatically trims matching manual moves after reloading every variation", () => {
+        const first = mountAsSeat(0, researchGame());
         first.enterAnalysisMode();
         first.applyAnalysisMove("terrans up nav.");
+        first.applyAnalysisMove("terrans up nav.");
+        first.addAnalysisLine();
+        first.undoLastAnalysisEntry();
+        first.applyAnalysisMove("terrans up gaia.");
+        first.addAnalysisLine();
+        first.resetAnalysisLine();
+        first.applyAnalysisMove("terrans build m 2A3.");
         first.$el.remove();
         first.$destroy();
 
-        const liveEngine = new Engine(SETUP_MOVES);
-        liveEngine.moveHistory.push("terrans up nav (0 ⇒ 1)."); // this seat's own real move since it was saved
-
-        const second = mountAsSeat(0, liveEngine);
-        second.enterAnalysisMode();
-
-        expect(second.analysisEntries).to.deep.equal([]); // NOT auto-replayed
-        expect(second.analysisPendingRestore).to.not.equal(null);
-        // §13: the prompt now holds the whole stored SET, so the held line is `lines[active]`.
-        expect(second.analysisPendingRestore.lines).to.deep.equal([[{ kind: "move", move: "terrans up nav." }]]);
-
-        second.restoreAnalysisLine();
-        expect(second.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
-        expect(second.analysisPendingRestore).to.equal(null);
-
-        second.$el.remove();
-        second.$destroy();
-      });
-
-      it("keeps the saved line in storage while the restore prompt is unanswered (owner report, 2026-08-20)", () => {
-        // The reported "it just resets". Opening the sandbox with a real move of this seat's own in
-        // the way put an EMPTY set on the board and persisted it on the spot, so the line the prompt
-        // was offering to restore had already been deleted - it survived only in memory. Answer the
-        // prompt and all was well; leave, reload, or get force-closed first and it was gone, with no
-        // prompt the next time either.
-        const first = mountAsSeat(0);
-        first.enterAnalysisMode();
-        first.applyAnalysisMove("terrans up nav.");
-        first.$el.remove();
-        first.$destroy();
-
-        const live = new Engine([...SETUP_MOVES, "terrans build m 5A2."]);
+        const live = bgsMove(JSON.parse(JSON.stringify(researchGame())), "terrans up nav.", 0);
         const second = mountAsSeat(0, live);
         second.enterAnalysisMode();
-        expect(second.analysisPendingRestore).to.not.equal(null);
-        // Storage still holds it, unread, while the prompt is up.
-        expect(window.localStorage.getItem("analysis-mode::0")).to.contain("terrans up nav.");
-
-        // The player leaves without answering.
+        expect(second.analysisPendingRestore).to.equal(null);
+        expect(second.analysisLines).to.deep.equal([
+          [{ kind: "move", move: "terrans up nav." }],
+          [{ kind: "move", move: "terrans up gaia." }],
+          [{ kind: "move", move: "terrans build m 2A3." }],
+        ]);
         second.exitAnalysisMode();
-        expect(window.localStorage.getItem("analysis-mode::0")).to.contain("terrans up nav.");
+        second.enterAnalysisMode();
+        expect(second.analysisLines[0]).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
         second.$el.remove();
         second.$destroy();
+      });
 
-        // ...and it is still offered next time, rather than silently gone.
-        const third = mountAsSeat(0, new Engine([...SETUP_MOVES, "terrans build m 5A2."]));
-        third.enterAnalysisMode();
-        expect(third.analysisPendingRestore).to.not.equal(null);
-        third.restoreAnalysisLine();
-        expect(third.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
-        third.$el.remove();
-        third.$destroy();
+      it("preserves plans across an unanswered rollback recovery prompt", () => {
+        const first = mountAsSeat(0, new Engine([...SETUP_MOVES, "terrans build m 5A2."]));
+        first.enterAnalysisMode();
+        first.applyAnalysisMove("terrans up nav.");
+        first.$el.remove();
+        first.$destroy();
+        for (let attempt = 0; attempt < 2; attempt++) {
+          const vm = mountAsSeat(0, new Engine(SETUP_MOVES));
+          vm.enterAnalysisMode();
+          expect(vm.analysisPendingRestore).to.not.equal(null);
+          expect(window.localStorage.getItem("analysis-mode::0")).to.contain("terrans up nav.");
+          vm.exitAnalysisMode();
+          vm.$el.remove();
+          vm.$destroy();
+        }
       });
 
       it("stays open through a refetch that carries no new move, even when the origin auto-played opponents", () => {
@@ -1934,14 +1728,13 @@ describe("Game", () => {
       });
 
       it("discardPendingAnalysisLine clears the prompt and starts fresh instead of restoring", () => {
-        const first = mountAsSeat(0);
+        const first = mountAsSeat(0, new Engine([...SETUP_MOVES, "terrans build m 5A2."]));
         first.enterAnalysisMode();
         first.applyAnalysisMove("terrans up nav.");
         first.$el.remove();
         first.$destroy();
 
         const liveEngine = new Engine(SETUP_MOVES);
-        liveEngine.moveHistory.push("terrans up nav (0 ⇒ 1).");
 
         const second = mountAsSeat(0, liveEngine);
         second.enterAnalysisMode();
@@ -1959,7 +1752,7 @@ describe("Game", () => {
         second.$destroy();
       });
 
-      it("clears a stored line whose two-round window the live game has already moved past", () => {
+      it("keeps a stored plan when the live game advances several rounds", () => {
         const first = mountAsSeat(0);
         first.enterAnalysisMode();
         first.applyAnalysisMove("terrans up nav.");
@@ -1973,9 +1766,9 @@ describe("Game", () => {
         const second = mountAsSeat(0, liveEngine);
         second.enterAnalysisMode();
 
-        expect(second.analysisEntries).to.deep.equal([]);
+        expect(second.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
         expect(second.analysisPendingRestore).to.equal(null);
-        expect(second.analysisNotice).to.contain("no longer applies");
+        expect(second.analysisNotice).to.contain("board changed");
 
         second.$el.remove();
         second.$destroy();
@@ -2008,25 +1801,20 @@ describe("Game", () => {
         vm.$destroy();
       });
 
-      it("keeps the persisted line but explains the forced exit when this seat's OWN real move arrives mid-analysis", () => {
-        const vm = mountAsSeat(0);
+      it("trims a matching manual move without closing planning, and persists the remainder", () => {
+        const vm = mountAsSeat(0, researchGame());
         vm.enterAnalysisMode();
         vm.applyAnalysisMove("terrans up nav.");
-
-        // This seat moved for real - the line may be the very thing that was just played, so it has
-        // to go through the re-entry prompt rather than being replayed on top of itself.
-        const arrived = JSON.parse(JSON.stringify(vm.analysisBackup));
-        arrived.moveHistory = [...arrived.moveHistory, "terrans up nav."];
+        vm.applyAnalysisMove("terrans up gaia.");
+        const arrived = bgsMove(JSON.parse(JSON.stringify(vm.analysisBackup)), "terrans up nav.", 0);
         vm.$store.dispatch("externalData", arrived);
-
-        expect(vm.analysisMode).to.equal(false);
-        expect(vm.analysisNotice).to.contain("saved line is still there");
+        expect(vm.analysisMode).to.equal(true);
+        expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up gaia." }]);
         vm.$el.remove();
         vm.$destroy();
-
-        const second = mountAsSeat(0);
+        const second = mountAsSeat(0, Engine.fromData(JSON.parse(JSON.stringify(arrived))));
         second.enterAnalysisMode();
-        expect(second.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
+        expect(second.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up gaia." }]);
         second.$el.remove();
         second.$destroy();
       });
@@ -2047,7 +1835,7 @@ describe("Game", () => {
         expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
         // Re-anchored onto the new history, so the stored line is not stale next time either.
         expect(vm.analysisBaseMoveCount).to.equal(baseBefore + 1);
-        expect(vm.analysisNotice).to.contain("still applies");
+        expect(vm.analysisNotice).to.contain("plans were updated");
         // Exiting now restores the NEW real board, not the one from before the opponent moved.
         vm.exitAnalysisMode();
         expect(vm.engine.moveHistory.length).to.equal(arrived.moveHistory.length);
@@ -2059,12 +1847,14 @@ describe("Game", () => {
       it("truncates and says so when an opponent's move genuinely does invalidate part of the line", () => {
         // Seat 1 (nevlas) analyses taking a board action while seat 0 is on turn; seat 0 then takes
         // that very action for real. Board actions are single-use, so the line really is dead.
-        const vm = mountAsSeat(1);
+        const position = new Engine(SETUP_MOVES);
+        position.players[1].data.power.area3 = 4;
+        const vm = mountAsSeat(1, position);
         vm.enterAnalysisMode();
         vm.applyAnalysisMove("nevlas action power3.");
         expect(vm.analysisEntries).to.have.length(1);
 
-        const real = new Engine(SETUP_MOVES);
+        const real = Engine.fromData(JSON.parse(JSON.stringify(position)));
         real.players[0].data.power.area3 = 8; // enough for terrans to actually afford it
         real.clearAvailableCommands();
         real.generateAvailableCommands();
@@ -2105,12 +1895,10 @@ describe("Game", () => {
         // The real game now contains the line's first move, played for real.
         const second = mountAsSeat(0, new Engine([...SETUP_MOVES, "terrans build m 2A3."]));
         second.enterAnalysisMode();
-        expect(second.analysisPendingRestore).to.not.equal(null);
-
-        second.restoreAnalysisLine();
+        expect(second.analysisPendingRestore).to.equal(null);
 
         expect(second.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
-        expect(second.analysisNotice).to.contain("already played for real");
+        expect(second.analysisNotice).to.contain("already played");
         second.$el.remove();
         second.$destroy();
       });
@@ -2128,7 +1916,7 @@ describe("Game", () => {
         second.restoreAnalysisLine();
 
         expect(second.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans build m 2A3." }]);
-        expect(second.analysisNotice).to.equal(null);
+        expect(second.analysisNotice).to.contain("board changed");
         second.$el.remove();
         second.$destroy();
       });
@@ -2153,7 +1941,7 @@ describe("Game", () => {
         vm.$destroy();
       });
 
-      it("still force-exits when the incoming state has left the line's two-round window behind", () => {
+      it("keeps planning open when the incoming state advances several rounds", () => {
         const vm = mountAsSeat(0);
         vm.enterAnalysisMode();
         vm.applyAnalysisMove("terrans up nav.");
@@ -2163,7 +1951,7 @@ describe("Game", () => {
         arrived.round = 3; // baseRound was 1 - no amount of re-basing brings that window back
         vm.$store.dispatch("externalData", arrived);
 
-        expect(vm.analysisMode).to.equal(false);
+        expect(vm.analysisMode).to.equal(true);
         vm.$el.remove();
         vm.$destroy();
       });
@@ -2219,7 +2007,7 @@ describe("Game", () => {
         vm.$destroy();
       });
 
-      it("clears the persisted line on commit, unlike a normal exit which keeps it (decision #2 vs §6)", () => {
+      it("keeps the persisted plan while waiting for the submitted move", () => {
         const first = mountAsSeat(0);
         first.enterAnalysisMode();
         first.applyAnalysisMove("terrans up nav.");
@@ -2229,7 +2017,7 @@ describe("Game", () => {
 
         const second = mountAsSeat(0);
         second.enterAnalysisMode();
-        expect(second.analysisEntries).to.deep.equal([]);
+        expect(second.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
         second.$el.remove();
         second.$destroy();
       });
@@ -2248,58 +2036,105 @@ describe("Game", () => {
         vm.$destroy();
       });
 
-      it("commits move 1 live and queues the rest as Sequential premoves in hosted mode", () => {
-        const originalSearch = window.location.search;
-        window.history.pushState({}, "", "?game=some-game-id");
-        try {
-          const vm = mountAsSeat(0);
-          vm.enterAnalysisMode();
-          // Two upgrades cost 8 knowledge. Nothing is injected any more (§12), so they are only
-          // committable if the seat can really pay for both - set that up on the origin every replay
-          // restarts from, rather than asserting against a sandbox grant that no longer exists.
-          vm.analysisOrigin.players[0].data.knowledge = 12;
-          vm.applyAnalysisMove("terrans up nav.");
-          vm.applyAnalysisMove("terrans up nav.");
-          const committable = vm.analysisCommittableMoves;
-          expect(committable).to.have.length(2);
-          const dispatched = spyDispatch(vm);
-
-          vm.commitAnalysisLine();
-
-          expect(dispatched[0]).to.deep.equal({ type: "move", payload: committable[0] });
-          expect(dispatched.slice(1)).to.deep.equal([
-            { type: "queuePremove", payload: { seat: 0, move: committable[1], mode: "sequential" } },
-          ]);
-
-          vm.$el.remove();
-          vm.$destroy();
-        } finally {
-          window.history.pushState({}, "", `${window.location.pathname}${originalSearch}`);
-        }
+      it("keeps variations on queue acknowledgement and trims them after execution while planning stays open", async () => {
+        const vm = mountAsSeat(1, researchGame());
+        vm.$store.commit("hosted", true);
+        const real = vm.engine;
+        real.automation = { version: 1, plans: {}, increments: [0, 0], turns: [0, 0], liveUpdate: false };
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("nevlas up nav.");
+        vm.addAnalysisLine();
+        vm.applyAnalysisMove("nevlas up gaia.");
+        vm.selectAnalysisLine(0);
+        const dispatched = spyDispatch(vm);
+        vm.commitAnalysisLine();
+        expect(dispatched[0].payload.moves).to.deep.equal(["nevlas up nav."]);
+        vm.$store.commit("submittingPlan", dispatched[0].payload);
+        const saved = bgsMove(JSON.parse(JSON.stringify(real)), dispatched[0].payload, 1);
+        await vm.$store.dispatch("externalData", stripSecret(saved, 1));
+        expect(vm.analysisMode).to.equal(false);
+        vm.enterAnalysisMode();
+        expect(vm.analysisLines.map((line) => line.length)).to.deep.equal([1, 2]);
+        vm.selectAnalysisLine(1);
+        const executed = bgsMove(saved, "terrans build ts -1x2.", 0);
+        await vm.$store.dispatch("externalData", stripSecret(executed, 1));
+        expect(vm.analysisMode).to.equal(true);
+        expect(vm.analysisLines).to.deep.equal([[], [{ kind: "move", move: "nevlas up gaia." }]]);
+        expect(vm.myPremovePlan.moves).to.deep.equal([]);
+        // An unchanged refresh must never consume the remaining plan twice.
+        await vm.$store.dispatch("externalData", stripSecret(executed, 1));
+        expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "nevlas up gaia." }]);
+        vm.$el.remove();
+        vm.$destroy();
       });
 
-      it("caps queueing by the real premove queue's own remaining room, not just §6's flat 3-row limit", () => {
-        const originalSearch = window.location.search;
-        window.history.pushState({}, "", "?game=some-game-id");
-        try {
-          const vm = mountAsSeat(0);
-          vm.enterAnalysisMode();
-          vm.analysisOrigin.players[0].data.knowledge = 12; // both upgrades genuinely affordable (§12)
-          vm.applyAnalysisMove("terrans up nav.");
-          vm.applyAnalysisMove("terrans up nav.");
-          // Two premove slots already taken for this seat outside analysis mode - only one more fits.
-          vm.$store.state.premoves = [
-            { seat: 0, seq: 1, move: "terrans pass booster1", mode: "sequential", queued_move_count: 1 },
-            { seat: 0, seq: 2, move: "terrans pass booster2", mode: "sequential", queued_move_count: 1 },
-          ];
+      it("keeps the sandbox and a partial turn open across this seat's automatic leech", async () => {
+        const real = new Engine(SETUP_MOVES);
+        const vm = mountAsSeat(1, real);
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("nevlas build ts -1x0");
+        const draft = vm.currentMove;
+        expect(draft).not.to.equal("");
+        const incoming = bgsMove(JSON.parse(JSON.stringify(real)), "terrans build ts -1x2.", 0);
+        expect(incoming.moveHistory.slice(-1)[0]).to.match(/^nevlas charge/);
+        await vm.$store.dispatch("externalData", JSON.parse(JSON.stringify(incoming)));
+        expect(vm.analysisMode).to.equal(true);
+        expect(vm.currentMove).to.equal(draft);
+        vm.$el.remove();
+        vm.$destroy();
+      });
 
-          expect(vm.analysisCommittableMoves).to.have.length(2); // 1 live + only 1 queue slot left
+      it("keeps the live queue cancellable while viewing an earlier turn", async () => {
+        const vm = mountAsSeat(1);
+        vm.$store.commit("hosted", true);
+        const saved = bgsMove(
+          JSON.parse(JSON.stringify(vm.engine)),
+          { type: "premoves", requestId: "queued", moves: ["nevlas up nav."], revision: 0, turn: 0, round: 1 },
+          1
+        );
+        await vm.$store.dispatch("externalData", stripSecret(saved, 1));
+        vm.startReplay();
+        vm.replayTo(7);
+        const history = [...vm.engine.moveHistory];
+        expect(vm.premoveAvailable).to.equal(true);
+        expect(vm.myPremovePlan.moves).to.deep.equal(["nevlas up nav."]);
+        const dispatched = spyDispatch(vm);
+        vm.cancelPremoves();
+        vm.$store.commit("submittingPlan", dispatched[0].payload);
+        const cancelled = bgsMove(saved, dispatched[0].payload, 1);
+        await vm.$store.dispatch("externalData", stripSecret(cancelled, 1));
+        expect(vm.myPremovePlan.moves).to.have.length(0);
+        expect(vm.engine.moveHistory).to.deep.equal(history);
+        await vm.$store.dispatch("replayEnd");
+        expect(vm.engine.moveHistory).to.deep.equal(saved.moveHistory);
+        expect(vm.myPremovePlan.moves).to.have.length(0);
+        vm.$el.remove();
+        vm.$destroy();
+      });
 
-          vm.$el.remove();
-          vm.$destroy();
-        } finally {
-          window.history.pushState({}, "", `${window.location.pathname}${originalSearch}`);
-        }
+      it("keeps queued moves inspectable and cancellable inside the sandbox", async () => {
+        const vm = mountAsSeat(1);
+        vm.$store.commit("hosted", true);
+        const saved = bgsMove(
+          JSON.parse(JSON.stringify(vm.engine)),
+          { type: "premoves", requestId: "queued", moves: ["nevlas up nav."], revision: 0, turn: 0, round: 1 },
+          1
+        );
+        await vm.$store.dispatch("externalData", stripSecret(saved, 1));
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("nevlas up terra.");
+        await Vue.nextTick();
+        expect(vm.$el.textContent).to.contain("nevlas up nav.");
+        const dispatched = spyDispatch(vm);
+        vm.cancelPremoves();
+        vm.$store.commit("submittingPlan", dispatched[0].payload);
+        const cancelled = bgsMove(saved, dispatched[0].payload, 1);
+        await vm.$store.dispatch("externalData", stripSecret(cancelled, 1));
+        expect(vm.analysisMode).to.equal(true);
+        expect(vm.analysisEntries[0].move).to.equal("nevlas up terra.");
+        expect(vm.myPremovePlan.moves).to.have.length(0);
+        vm.$el.remove();
+        vm.$destroy();
       });
     });
   });

@@ -95,6 +95,17 @@ describe("Preference Split Auction variant", () => {
       expect(engine.playerToMove).to.equal(0);
     });
 
+    it("replays the bids even when the last entry includes a power-change annotation", () => {
+      expect(engine.moveHistory[engine.moveHistory.length - 1]).to.include("⇒");
+      const replayed = engine.replayedTo();
+      expect(replayed.preferenceSplitBids).to.deep.equal(engine.preferenceSplitBids);
+      expect(replayed.preferenceSplitResult).to.deep.equal(engine.preferenceSplitResult);
+      expect(replayed.players.map((player) => player.faction)).to.deep.equal(
+        engine.players.map((player) => player.faction)
+      );
+      expect(replayed.phase).to.equal(engine.phase);
+    });
+
     it("keeps the whole resolution auditable on the engine", () => {
       const terrans = engine.preferenceSplitResult.allocations[0];
 
@@ -253,8 +264,12 @@ describe("Preference Split Auction variant", () => {
       }
     });
 
-    it("refuses forced random factions, which would leave nothing to express a preference over", () => {
-      expect(() => new Engine(["init 4 djfjjv4k"], options({ randomFactions: true }))).to.throw(/random factions/);
+    it("automatically nominates the random pool before the preference bids", () => {
+      const engine = new Engine(["init 4 djfjjv4k"], options({ randomFactions: true }));
+      while (engine.autoMove());
+      expect(engine.phase).to.equal(Phase.SetupPreferenceBid);
+      expect(engine.setup).to.deep.equal(engine.randomFactions);
+      expect(engine.setup).to.have.length(4);
     });
   });
 

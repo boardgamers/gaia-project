@@ -1,5 +1,4 @@
 import { expect } from "chai";
-import { EngineLike, resolvePremoveQueue } from "../viewer/src/logic/premove-resolver";
 import Engine from "./src/engine";
 import {
   AdvTechTile,
@@ -15,6 +14,7 @@ import {
 } from "./src/enums";
 import { GaiaHex } from "./src/gaia-hex";
 import { Power } from "./src/player-data";
+import { automation, playNextPremove } from "./src/premoves";
 
 const parseMoves = Engine.parseMoves;
 
@@ -86,8 +86,14 @@ function occupyPlanetsOfDistinctTypes(engine: Engine, player: PlayerEnum, count:
 //   federation-eligibility CACHE specifically, as opposed to just making the move illegal outright)
 //   would need a purpose-built fixture isolating that cache and wasn't reached this session.
 
-function cloneEngineLike(engine: Engine): EngineLike {
-  return Engine.fromData(JSON.parse(JSON.stringify(engine))) as unknown as EngineLike;
+function resolvePremoveQueue(clone: () => Engine, seat: number, rows: { seq: number; move: string }[], _mode: string) {
+  const engine = clone();
+  automation(engine).plans[seat] = { moves: rows.map((row) => row.move), round: engine.round, revision: 1 };
+  const played = playNextPremove(engine);
+  return { outcome: played ? "success" : "failed", reason: engine.automation.plans[seat].notice?.text };
+}
+function cloneEngineLike(engine: Engine): Engine {
+  return Engine.fromData(JSON.parse(JSON.stringify(engine)));
 }
 
 describe("Premove race-condition regressions (#69 audit)", () => {

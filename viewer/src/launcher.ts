@@ -1,6 +1,7 @@
 import type { EventName } from "@boardgamers/protocol";
 import { downlinkSchemas, uplinkSchemas } from "@boardgamers/protocol";
 import { createViewer } from "@boardgamers/protocol/viewer";
+import type { PremoveCommand } from "@gaia-project/engine/src/premove-types";
 import BootstrapVue from "bootstrap-vue";
 import { EventEmitter } from "events";
 import Vue from "vue";
@@ -57,6 +58,8 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
   let lastMovedAt = 0;
 
   const store = makeStore();
+  store.commit("hosted", true);
+  let planTimer: ReturnType<typeof setTimeout>;
 
   const app = new Vue({
     store,
@@ -94,14 +97,14 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
   const item: EventEmitter & { store: typeof store; app: Vue } = Object.assign(new EventEmitter(), { store, app });
 
   let replaying = false;
-  const viewer = createViewer<Record<string, any>, string>({
+  const viewer = createViewer<Record<string, any>, string | PremoveCommand>({
     async onState(data) {
       await store.dispatch("externalData", data);
-      viewer.replaceLog(data?.moveHistory || []);
+      if (!replaying) viewer.replaceLog(data?.moveHistory || []);
       await app.$nextTick();
     },
     onUpdate() {
-      if (!replaying) viewer.fetchState();
+      viewer.fetchState();
     },
     onPreferences(data) {
       store.commit("preferences", data);
@@ -142,23 +145,14 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
       else console.error(error);
     },
   });
-  // Gaia's premove/presence extensions still use its host emitter; standard events
-  // pass through the shared protocol's validation and lifecycle.
+  // Standard game actions, including premoves, use the BGS protocol.
   for (const event of Object.keys(downlinkSchemas)) {
     item.on(event, (payload) => viewer.emitter.receive(event, payload));
   }
   for (const event of Object.keys(uplinkSchemas) as EventName[]) {
     viewer.emitter.on(event, (payload) => item.emit(event, payload));
   }
-  for (const event of [
-    "premoveState",
-    "premovePlayed",
-    "cancelTriggerState",
-    "cancelTriggerFired",
-    "seatUsers",
-    "seatLastActive",
-    "presence",
-  ]) {
+  for (const event of ["seatUsers", "seatLastActive", "presence"]) {
     item.on(event, (data) => store.commit(event, data));
   }
   installActionSounds(viewer.emitter);
@@ -187,19 +181,18 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
       return;
     }
 
-    if (
-      type === "queuePremove" ||
-      type === "cancelPremove" ||
-      type === "editPremove" ||
-      type === "cancelAllPremoves" ||
-      type === "reorderPremove" ||
-      type === "markPremoveFailureRead" ||
-      type === "armCancelTrigger" ||
-      type === "disarmCancelTrigger" ||
-      type === "disarmAllCancelTriggers" ||
-      type === "editCancelTrigger"
-    ) {
-      item.emit(type, payload);
+    if (type === "submitPlan") {
+      store.commit("submittingPlan", payload);
+      clearTimeout(planTimer);
+      planTimer = setTimeout(() => {
+        if (store.state.pendingPlan?.requestId !== payload.requestId) return;
+        store.commit(
+          "planError",
+          "The server has not confirmed your plan. Your plan is still saved. Check the queue before trying again."
+        );
+        viewer.fetchState();
+      }, 15000);
+      viewer.move(payload);
       return;
     }
 
@@ -222,6 +215,7 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
   });
 
   app.$once("hook:beforeDestroy", () => {
+    clearTimeout(planTimer);
     unsub1();
     unsub2();
   });

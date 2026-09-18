@@ -92,9 +92,6 @@ describe("PlayerData", () => {
     });
 
     it("still clamps gains with the flag set - a real player's gains cap the same way (§12)", () => {
-      // The flag used to lift these clamps, because analysis mode injected a sandbox wallet that the
-      // clamps then ate. Nothing is injected now: the seat keeps its real numbers and is simply
-      // allowed to overdraw them, so clamping a GAIN is the faithful behaviour rather than a bug.
       const data = new PlayerData();
       data.analysis = true;
       data.credits = 25;
@@ -112,22 +109,17 @@ describe("PlayerData", () => {
       expect(data.knowledge).to.equal(15);
     });
 
-    it("stops enforcing affordability for the spendable resources once the flag is set (§12)", () => {
+    it("enforces every resource cost while planning", () => {
       const data = new PlayerData();
-      data.credits = 1;
-
-      expect(data.hasResource(new Reward(10, Resource.Credit))).to.equal(false);
-
       data.analysis = true;
-
-      expect(data.hasResource(new Reward(10, Resource.Credit))).to.equal(true);
-      expect(data.hasResource(new Reward(10, Resource.Ore))).to.equal(true);
-      expect(data.hasResource(new Reward(10, Resource.Knowledge))).to.equal(true);
-      expect(data.hasResource(new Reward(10, Resource.Qic))).to.equal(true);
-      expect(data.hasResource(new Reward(10, Resource.ChargePower))).to.equal(true);
+      data.credits = 1;
+      for (const resource of [Resource.Credit, Resource.Ore, Resource.Knowledge, Resource.Qic, Resource.ChargePower]) {
+        expect(data.hasResource(new Reward(10, resource))).to.equal(false);
+      }
+      expect(data.hasResource(new Reward(1, Resource.Credit))).to.equal(true);
     });
 
-    it("keeps components and board positions genuinely gated - only spendable resources are overdrawable", () => {
+    it("keeps components and board positions gated while planning", () => {
       const data = new PlayerData();
       data.analysis = true;
 
@@ -138,19 +130,9 @@ describe("PlayerData", () => {
       expect(data.hasResource(new Reward(1, Resource.MoveTokenFromArea3ToGaia))).to.equal(false);
     });
 
-    it("lets a spend go negative, which is what the player board then shows", () => {
+    it("can validate a future premove without spending real power", () => {
       const data = new PlayerData();
-      data.analysis = true;
-      data.credits = 2;
-
-      data.gainReward(new Reward(9, Resource.Credit), true);
-
-      expect(data.credits).to.equal(-7);
-    });
-
-    it("tops a power cost up instead of driving a bowl negative, and counts what it assumed", () => {
-      const data = new PlayerData();
-      data.analysis = true;
+      data.validatingFuturePremove = true;
       data.power = { area1: 0, area2: 0, area3: 0, gaia: 0 } as any;
 
       data.spendPower(4);
@@ -163,7 +145,7 @@ describe("PlayerData", () => {
 
     it("charges real tokens up from the lower bowls before assuming any", () => {
       const data = new PlayerData();
-      data.analysis = true;
+      data.validatingFuturePremove = true;
       data.power = { area1: 4, area2: 0, area3: 0, gaia: 0 } as any;
 
       data.spendPower(2);
@@ -175,9 +157,12 @@ describe("PlayerData", () => {
     it("does not survive a toJSON -> clone round trip", () => {
       const data = new PlayerData();
       data.analysis = true;
+      data.validatingFuturePremove = true;
 
       expect(data.toJSON()).to.not.have.property("analysis");
+      expect(data.toJSON()).to.not.have.property("validatingFuturePremove");
       expect(data.clone().analysis).to.equal(false);
+      expect(data.clone().validatingFuturePremove).to.equal(false);
     });
   });
 

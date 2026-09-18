@@ -151,14 +151,14 @@ export function balanceSheetEventSources(expansion: Expansion): BalanceSheetSour
       color: "--specialAction",
     },
     {
-      label: "Free Leech",
+      label: "Free Charge",
       incomeResources: [Resource.ChargePower, Resource.GainToken],
       costResources: [],
       eventSources: [PowerChargeSource.freeLeech],
       color: "--res-power",
     },
     {
-      label: "Paid Leech",
+      label: "Paid Charge",
       incomeResources: [Resource.ChargePower, Resource.GainToken],
       costResources: [],
       eventSources: [PowerChargeSource.paidLeech],

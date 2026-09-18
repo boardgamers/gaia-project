@@ -78,7 +78,7 @@ export function stats(engine: Engine): PlayerTable {
       }),
       {
         shortcut: "L",
-        title: "Leech network",
+        title: "Charge network",
         color: "--res-power",
         cell: (p) => skipZero(leechNetwork(engine, p.player)),
       },

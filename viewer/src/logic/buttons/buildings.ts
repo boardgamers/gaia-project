@@ -31,14 +31,8 @@ function buildingMenu(building: Building, faction: Faction): { richText?: RichTe
   return null;
 }
 
-/**
- * The sandbox's pair of Trading Station buttons (owner instruction, 2026-08-19). Every build button
- * in this app is icon-only - the words live in the tooltip - which is fine when each icon is a
- * different building, and useless the moment two buttons carry the SAME Trading Station icon. So
- * whenever the sandbox twin exists, BOTH get a visible word on the button face: you pick "cheap" or
- * "expensive" by reading them, not by hovering. Outside sandbox mode there is no twin and the real
- * button keeps exactly the bare icon it has always had.
- */
+/** Distinguish normal upgrades, which already include any neighbour discount, from a hypothetical
+ * neighbour. The actual cost is shown for each mine when selecting where to upgrade. */
 function buildingLabel(
   bld: AvailableBuilding,
   faction: Faction,
@@ -48,8 +42,8 @@ function buildingLabel(
   const name = buildingName(building, faction);
   if (bld.analysisCheap) {
     return {
-      label: `Cheap ${name} - sandbox only: 3c, as if an opponent's building were next door. A line holding one cannot be committed.`,
-      richText: [richText("Cheap"), richTextBuilding(building, faction)],
+      label: `Simulate a neighbour for this ${name}: preview the 3c price on an isolated mine. If queued, this upgrade only plays at 3c; otherwise the premoves stop.`,
+      richText: [richText("Simulate neighbour"), richTextBuilding(building, faction)],
     };
   }
   let label = `Build a ${name}`;
@@ -63,8 +57,7 @@ function buildingLabel(
       // No `withShortcut` here: it exists to put the shortcut's underline into the label text, and
       // `symbolButton`'s own `tooltipWithShortcut` already does that from `button.shortcuts` - which
       // this button still carries, so `t` keeps working and the tooltip still marks it.
-      label = `Expensive ${name} - the real price: 6c on a hex with no opponent's building next door`;
-      rich.unshift(richText("Expensive"));
+      label = `Upgrade to ${name}: 3c near an opponent's building, 6c otherwise. Select a mine to see its full cost.`;
     } else {
       label = withShortcut(`Upgrade to ${name}`, availableBuildingShortcut(bld, faction), ["Upgrade to"]);
     }

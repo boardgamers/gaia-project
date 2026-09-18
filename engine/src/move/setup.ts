@@ -1,4 +1,5 @@
-import { uniq } from "lodash";
+import { difference, uniq } from "lodash";
+import seedrandom from "seedrandom";
 import {
   defaultPreferenceSplitBudget,
   isValidPreferenceSplitBudget,
@@ -40,10 +41,6 @@ export function moveInit(engine: Engine, players: number, seed: string) {
       isValidPreferenceSplitBudget(budget),
       `The Preference Split Auction's bid budget must be a whole number between ${MIN_PREFERENCE_SPLIT_BUDGET} and ${MAX_PREFERENCE_SPLIT_BUDGET}, got ${engine.options.auctionBudget}`
     );
-    assert(
-      !engine.options.randomFactions,
-      "The Preference Split Auction cannot be combined with forced random factions"
-    );
   }
 
   engine.map = new SpaceMap(
@@ -82,16 +79,30 @@ export function moveInit(engine: Engine, players: number, seed: string) {
     engine.addPlayer(new Player(engine.expansions, i));
   }
 
-  if (engine.options.randomFactions) {
-    const randomFactions = [];
-
-    for (const _ of engine.players) {
-      const possible = remainingFactions(randomFactions, engine.expansions);
-
-      randomFactions.push(possible[Math.floor(possible.length * engine.map.rng())]);
-    }
-    engine.randomFactions = randomFactions;
+  if (engine.options.randomFactions && !randomFactionsAfterBans(engine)) {
+    drawRandomFactions(engine, engine.map.rng);
   }
+}
+
+export function randomFactionsAfterBans(engine: Engine): boolean {
+  return !!(
+    engine.options.randomFactions &&
+    engine.isVersionOrLater("4.14.3") &&
+    (engine.options.banPhase ?? engine.options.auction === AuctionVariant.Silent)
+  );
+}
+
+export function drawRandomFactions(engine: Engine, rng?: () => number) {
+  // The map's RNG is not persisted. After bans, derive a separate deterministic stream
+  // from the recorded init move so loading a saved game cannot change the draw.
+  const random = rng ?? seedrandom(`${engine.moveHistory[0]}:random-factions`);
+  const factions: Faction[] = [];
+  for (const _ of engine.players) {
+    const possible = difference(remainingFactions(factions, engine.expansions), engine.bannedFactions);
+    assert(possible.length > 0, "Not enough unbanned faction colours for all players");
+    factions.push(possible[Math.floor(possible.length * random())]);
+  }
+  engine.randomFactions = factions;
 }
 
 export function moveSetup(

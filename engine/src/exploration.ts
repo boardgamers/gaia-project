@@ -39,7 +39,7 @@ export function qicForExplorationDistance(
   replay: boolean,
   temporaryRange = pl.data.temporaryRange
 ): QicNeeded | null {
-  const origins = pl.data.occupied.filter((loc) => loc.colonizedBy(pl.player));
+  const origins = pl.data.occupied.filter((loc) => loc.isRangeStartingPoint(pl.player));
 
   if (origins.length === 0) {
     return null;

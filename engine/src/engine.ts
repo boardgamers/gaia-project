@@ -80,6 +80,7 @@ import {
 import { moveGaiaFormTransdim, moveSpaceshipAction } from "./move/spaceship-actions";
 import Player from "./player";
 import { MoveTokens, powerLogString } from "./player-data";
+import type { AutomationState } from "./premove-types";
 import { lastTile } from "./research-tracks";
 import { SeededSpaceshipTech, SpaceshipActionType } from "./spaceships";
 import { roundScoringEvents } from "./tiles/scoring";
@@ -440,6 +441,7 @@ export default class Engine {
   pendingMove = "";
   // Tells the UI if the new move should be on the same line or not
   newTurn = true;
+  automation?: AutomationState;
 
   constructor(moves: string[] = [], options: EngineOptions = {}, engineVersion?: string, replay?: boolean) {
     this.options = options;
@@ -1125,7 +1127,9 @@ export default class Engine {
   }
 
   parseMove(move: string) {
-    const split = move.split(" ");
+    // The journal can append power changes when a setup move loads the factions.
+    // They describe the result, not extra arguments to the recorded command.
+    const split = move.replace(powerRegex, "").trim().split(" ");
     return {
       command: (split[0] || Command.EndTurn) as Command,
       args: split.slice(1),

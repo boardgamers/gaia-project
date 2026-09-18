@@ -8,7 +8,7 @@
       variant="outline-secondary"
       class="auto-leech-fab__menu"
       v-b-tooltip.hover
-      title="Auto leech: automatically accept or decline power-charge offers up to this amount, instead of asking every time"
+      title="Auto-charge: automatically accept or decline power-charge offers up to this amount, instead of asking every time"
     >
       <template #button-content>
         <span class="auto-leech-dot" :class="autoChargePowerActive ? 'active' : 'inactive'"></span>
@@ -55,13 +55,13 @@ export default Vue.extend({
     },
     autoChargePowerOptions(): Array<{ value: string; text: string }> {
       return [
-        { value: "ask", text: "Auto leech: off (ask every time)" },
-        { value: "decline-cost", text: "Auto leech: free only (decline anything with a cost)" },
-        { value: "1", text: "Auto leech: up to 1 power" },
-        { value: "2", text: "Auto leech: up to 2 power" },
-        { value: "3", text: "Auto leech: up to 3 power" },
-        { value: "4", text: "Auto leech: up to 4 power" },
-        { value: "5", text: "Auto leech: up to 5 power" },
+        { value: "ask", text: "Auto-charge: off (ask every time)" },
+        { value: "decline-cost", text: "Auto-charge: free only (decline anything with a cost)" },
+        { value: "1", text: "Auto-charge: up to 1 power" },
+        { value: "2", text: "Auto-charge: up to 2 power" },
+        { value: "3", text: "Auto-charge: up to 3 power" },
+        { value: "4", text: "Auto-charge: up to 4 power" },
+        { value: "5", text: "Auto-charge: up to 5 power" },
       ];
     },
     autoChargePassedCapOptions(): Array<{ value: string; text: string }> {
@@ -82,13 +82,13 @@ export default Vue.extend({
       const cap = (this as any).showPassedCapOptions ? (this as any).autoChargeMaxPassedRoundLeech : "0";
       switch ((this as any).autoChargePower) {
         case "ask":
-          return "Leech: off";
+          return "Charge: off";
         case "decline-cost":
-          return cap === "0" ? "Leech: free" : `Leech: free cap ${cap}`;
+          return cap === "0" ? "Charge: free" : `Charge: free cap ${cap}`;
         default:
           return cap === "0"
-            ? `Leech: ${(this as any).autoChargePower}`
-            : `Leech: ${(this as any).autoChargePower} cap ${cap}`;
+            ? `Charge: ${(this as any).autoChargePower}`
+            : `Charge: ${(this as any).autoChargePower} cap ${cap}`;
       }
     },
   },

@@ -1,12 +1,6 @@
-// Decides - and then owns the lifetime of - the counter-transform that keeps both mobile sticky
-// footer states (#move-buttons on-turn, PremoveBar off-turn) at a constant on-screen size and
-// position while the game board is pinch-zoomed.
-//
-// This file is where the long-running "the fixed bar floats mid-screen" bug keeps being fought, so
-// it carries the whole mechanism rather than just the arithmetic: the pure decision below, AND the
-// listener/lifetime wiring (`attachZoomCompensation`). Both bars used to wire their own listeners
-// from `mounted()`, which is how they drifted apart once already (PremoveBar was left on an exact
-// `scale === 1` check after Commands moved to a tolerance).
+// Keeps the mobile action bar at a constant on-screen size and position while the board is
+// pinch-zoomed. Own both the arithmetic and listener lifetime here so stale viewport transforms
+// cannot leave the fixed bar floating in the middle of the screen.
 //
 // The governing rule, learned the hard way: **a transform written from a viewport snapshot must
 // never outlive the snapshot.** Every incarnation of this bug has been a transform that was correct

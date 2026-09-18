@@ -7,6 +7,17 @@ import {
   defaultAutoChargeMaxPassedRoundLeech,
   defaultAutoChargeTargetSpendablePower,
 } from "./src/player";
+import type { PremoveCommand } from "./src/premove-types";
+import {
+  assertOwnMove,
+  automation,
+  canQueue,
+  clearExpiredPremoves,
+  creditDecision,
+  playNextPremove,
+  reconcileManualPremoves,
+  setPremoves,
+} from "./src/premoves";
 import assert from "./src/utils/assert";
 
 export async function init(
@@ -102,7 +113,7 @@ export function playerSettings(engine: Engine, player: number) {
   };
 }
 
-export function move(engine: Engine, move: string, player: number) {
+export function move(engine: Engine, move: string | PremoveCommand, player: number) {
   if (!move) {
     // Don't save
     (engine as any).noSave = true;
@@ -113,7 +124,17 @@ export function move(engine: Engine, move: string, player: number) {
     engine = Engine.fromData(engine);
   }
 
+  automation(engine).liveUpdate = false;
+  if (typeof move !== "string") {
+    assert(move?.type === "premoves", "Unknown move");
+    setPremoves(engine, move, player);
+    automove(engine);
+    return engine;
+  }
+  assertOwnMove(engine, move, player);
+
   const round = engine.round;
+  const phase = engine.phase;
   const backup = JSON.stringify(engine);
 
   engine.move(move);
@@ -132,6 +153,8 @@ export function move(engine: Engine, move: string, player: number) {
   engine.generateAvailableCommandsIfNeeded();
 
   if (engine.newTurn) {
+    creditDecision(engine, player, phase);
+    reconcileManualPremoves(engine, player, round, phase);
     afterMove(engine, round);
 
     automove(engine);
@@ -167,7 +190,24 @@ export function automove(engine: Engine) {
       modified = true;
       oldRound = engine.round;
     }
+    clearExpiredPremoves(engine);
+    if (playNextPremove(engine)) {
+      afterMove(engine, oldRound);
+      modified = true;
+    }
   } while (modified);
+}
+
+export function canMoveOutOfTurn(engine: Engine, move: string | PremoveCommand, player: number): boolean {
+  return typeof move === "object" && move?.type === "premoves" && canQueue(engine, player);
+}
+
+export function isLiveUpdate(engine: Engine): boolean {
+  return engine.automation?.liveUpdate === true;
+}
+
+export function timeIncrements(engine: Engine): number[] {
+  return engine.automation?.increments ?? engine.players.map(() => 0);
 }
 
 export function ended(engine: Engine) {
@@ -191,7 +231,9 @@ export async function replay(engine: Engine, { to = Infinity } = { to: Infinity 
     engine = Engine.fromData(engine);
   }
 
+  const previous = automation(engine);
   engine = engine.replayedTo(to, false);
+  engine.automation = { ...previous, plans: {}, liveUpdate: false };
 
   automove(engine);
 
@@ -210,8 +252,11 @@ export function moveAI(engine: Engine, player: number) {
   }
 
   const round = engine.round;
+  const phase = engine.phase;
+  automation(engine).liveUpdate = false;
 
   if (engine.moveAI()) {
+    creditDecision(engine, player, phase);
     afterMove(engine, round);
     engine.generateAvailableCommandsIfNeeded();
     // resolve forced / trivial decisions (free leech, income, ...) so the game
@@ -224,6 +269,7 @@ export function moveAI(engine: Engine, player: number) {
 
 export async function dropPlayer(engine: Engine, player: number) {
   engine = engine instanceof Engine ? engine : Engine.fromData(engine);
+  automation(engine).liveUpdate = false;
 
   engine.players[player].dropped = true;
 
@@ -307,6 +353,8 @@ export function stripSecret(engine: Engine, player?: number): Engine {
   // Plain-JSON copy: this runs on both live Engine instances and the saved plain data, and the
   // platform JSON-serializes whatever we return anyway.
   const data = JSON.parse(JSON.stringify(engine)) as Engine;
+  const state = automation(data);
+  state.plans = player === undefined || !state.plans[player] ? {} : { [player]: state.plans[player] };
 
   if (data.phase !== Phase.SetupSilentBid && data.phase !== Phase.SetupPreferenceBid) {
     return data;

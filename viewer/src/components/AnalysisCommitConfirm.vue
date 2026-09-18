@@ -1,27 +1,26 @@
 <template>
-  <!-- The one confirmation step sandbox mode has (ANALYSIS_MODE_PLAN.md §6/decision #13). Composing a
-       turn inside the sandbox deliberately does NOT confirm (§12.4 - Undo covers a misclick and
-       nothing there is real), but Commit is the single control that takes moves OUT of the sandbox
-       and plays them for real, where Undo does not reach: move 1 is dispatched live and the rest are
-       queued to fire by themselves, possibly with the app closed. It is also the moment the line is
-       cleared, so anything not committed is gone - which is exactly why the moves being left behind
-       are listed here too, rather than only the ones going out.
-       Rendered exactly ONCE per page, by Commands.vue, for the same reason AnalysisModeInfo.vue is:
-       AnalysisHeaderControls.vue is mounted twice (desktop title + mobile sticky bar) and two copies
-       of one b-modal id make the button open whichever Bootstrap-Vue registered first. -->
+  <!-- One confirmation for committing real moves, shared by desktop and mobile controls. -->
   <b-modal
     id="analysis-commit-confirm"
     size="lg"
-    title="Commit these moves for real?"
+    :title="view.live ? 'Play these moves?' : 'Queue these premoves?'"
     ok-variant="success"
     :ok-title="okTitle"
-    cancel-title="Keep playing in the sandbox"
+    cancel-title="Keep planning"
     :ok-disabled="total === 0"
     dialog-class="gaia-viewer-modal"
     @ok="$emit('confirm')"
   >
     <p class="analysis-commit__lede">
       {{ lede }}
+    </p>
+    <p v-if="view.queued.length" class="small">
+      Each premove uses your actual resources when your turn arrives. Simulated charges are not queued. If a move cannot
+      be played then, the queue stops; it does not wait for more charges.
+    </p>
+    <p v-if="view.simulatedNeighbour" class="analysis-commit__neighbour">
+      This Trading Station upgrade will only play at <strong>3c, plus ore</strong>. If that price is unavailable on your
+      turn, the premoves stop. It will never spend 6c or wait for a neighbour.
     </p>
 
     <ol class="analysis-commit__list">
@@ -33,12 +32,14 @@
         <span class="analysis-commit__badge analysis-commit__badge--queued"
           >premove {{ i + 1 }}<template v-if="view.live"> · after your live move</template></span
         >
+        <span v-if="view.timings" class="small text-muted"
+          >Round {{ view.timings[i + (view.live ? 1 : 0)].round }}</span
+        >
         <span class="analysis-commit__move">{{ move }}</span>
       </li>
     </ol>
 
-    <!-- Never silently truncate. A player who queued six moves in the sandbox and got four needs to
-         know which two did not make it and why, before the line is cleared out from under them. -->
+    <!-- Show the unsent tail; it stays in the local plan. -->
     <template v-if="view.dropped.length > 0">
       <p class="analysis-commit__dropped-head">
         {{ view.dropped.length }} more {{ view.dropped.length === 1 ? "move stays" : "moves stay" }} behind —
@@ -53,7 +54,8 @@
     </template>
 
     <p class="analysis-commit__foot mb-0">
-      {{ footer }}
+      Your plans stay saved. Played moves are removed automatically.
+      <span v-if="view.queued.length">This replaces your current queue. You can view or cancel it at any time.</span>
     </p>
   </b-modal>
 </template>
@@ -69,15 +71,13 @@ const EMPTY_PLAN: AnalysisCommitPlan = { live: null, queued: [], dropped: [], cu
  * because it is wording, not logic - the cut itself is decided by `analysisCommitPrefix`. */
 const CUT_TEXT: Record<AnalysisCommitCut, string> = {
   faction:
-    "this line was played as a faction you picked in the sandbox, so none of it describes a move the real game would accept.",
-  "cheap-build":
-    "it includes a Trading Station the sandbox priced as if an opponent were next to it, so the rest of the line was played on credits you do not really have.",
-  illegal: "the next move is not legal on the real board without the power you assumed in here.",
+    "this plan was played as a faction you picked while planning, so none of it describes a move the real game would accept.",
+  illegal: "the next move cannot be played on the current board.",
   overdrawn: "the next move would spend more than you actually have.",
   "assumed-power":
-    "the next move only worked because the sandbox topped up your power — charge it for real first and it can be committed later.",
+    "the next move only worked because the simulation added power — charge it for real first and it can be committed later.",
   foreign: "the next move belongs to another seat, and committing it would take somebody else's turn.",
-  cap: `only ${MAX_COMMITTABLE_MOVES} moves can go out at once — one live plus a full premove queue.`,
+  cap: `you can submit up to ${MAX_COMMITTABLE_MOVES} moves at once.`,
 };
 
 export default Vue.extend({
@@ -87,9 +87,6 @@ export default Vue.extend({
      * Commands.vue holds `null` whenever Game.vue has no plan to give (outside sandbox mode, or a
      * line with nothing committable in it) - which would otherwise render this as `null.live`. */
     plan: { type: Object as () => AnalysisCommitPlan | null, default: null },
-    /** How many lines the strip currently holds (§13) - only the footer reads it, to say honestly
-     * that committing clears the OTHER lines too rather than only the one being played. */
-    lineCount: { type: Number, default: 1 },
   },
   computed: {
     view(): AnalysisCommitPlan {
@@ -100,7 +97,7 @@ export default Vue.extend({
       return (view.live ? 1 : 0) + view.queued.length;
     },
     okTitle(): string {
-      return `Commit ${this.total} move${this.total === 1 ? "" : "s"}`;
+      return `${this.view.live ? "Play" : "Queue"} ${this.total} move${this.total === 1 ? "" : "s"}`;
     },
     lede(): string {
       const view = this.view as AnalysisCommitPlan;
@@ -109,33 +106,20 @@ export default Vue.extend({
         return "This move is played in the real game as soon as you confirm.";
       }
       if (view.live) {
-        return `The first move is played in the real game as soon as you confirm. The other ${queued} ${
-          queued === 1 ? "is queued as a premove" : "are queued as premoves"
-        } and play by themselves, in this order, when your turn comes round again — even with the app closed.`;
+        return "The first move plays now. The rest will play in order on your following turns, even with the browser closed.";
       }
-      return `It is not your turn, so nothing is played immediately: all ${queued} ${
-        queued === 1 ? "move is queued as a premove" : "moves are queued as premoves"
-      } and play by themselves, in this order, when your turn comes — even with the app closed.`;
+      return `${queued === 1 ? "This move will play" : "These moves will play in order"} on your next ${queued === 1 ? "turn" : "turns"}, even with the browser closed. Charge decisions are handled separately.`;
     },
+
     droppedReason(): string {
       const view = this.view as AnalysisCommitPlan;
       if (view.limit === "no-premoves") {
         return "offline games have no premove queue, so only the move you play right now can be committed.";
       }
       if (view.limit === "queue") {
-        return "your premove queue is full — cancel a queued move and commit again to send more.";
+        return "you can queue up to three moves at once.";
       }
       return view.cut ? CUT_TEXT[view.cut] : "they are past what can be committed in one go.";
-    },
-    footer(): string {
-      const view = this.view as AnalysisCommitPlan;
-      const rest = view.dropped.length > 0 ? " The rest of the line is discarded with it." : "";
-      // §13: the other lines go too, and the footer has to say so - they were alternatives to the
-      // move about to be played for real, so leaving them would leave tabs describing a board the
-      // game has left. Saying "this line" while silently clearing five would be the worse surprise.
-      const lines = this.lineCount as number;
-      const cleared = lines > 1 ? `clears all ${lines} of your lines` : "clears this line";
-      return `Committing leaves the sandbox and ${cleared}.${rest} A queued premove can still be edited or cancelled from the premove bar until it plays.`;
     },
   },
 });

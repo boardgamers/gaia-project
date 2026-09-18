@@ -31,7 +31,7 @@ import { lastTile } from "../research-tracks";
 import Reward from "../reward";
 import { initCustomSetup, possibleSetupBoardActions } from "../setup";
 import assert from "../utils/assert";
-import { moveInit } from "./setup";
+import { drawRandomFactions, moveInit, randomFactionsAfterBans } from "./setup";
 
 export function phaseSetupInit(engine: Engine, move: string) {
   const split = move.split(" ");
@@ -327,6 +327,9 @@ function beginSetupPreferenceBidPhase(engine: Engine) {
 }
 
 function beginSetupFactionPhase(engine: Engine) {
+  if (randomFactionsAfterBans(engine) && !engine.randomFactions) {
+    drawRandomFactions(engine);
+  }
   engine.changePhase(Phase.SetupFaction);
   engine.turnOrder = engine.players.map((pl) => pl.player as PlayerEnum);
   engine.moveToNextPlayer(engine.turnOrder, { loop: false });

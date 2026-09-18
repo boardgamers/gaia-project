@@ -1,6 +1,6 @@
 import { ChargeDecision, ChargeRequest, decideChargeRequest } from "../auto-charge";
 import { AvailableCommand, AvailableFreeActionData } from "../available/types";
-import Engine from "../engine";
+import Engine, { AuctionVariant } from "../engine";
 import { Command, Faction, PowerArea, Resource } from "../enums";
 import assert from "../utils/assert";
 
@@ -72,7 +72,7 @@ export function autoMove(engine: Engine, partialMove?: string, options?: { autoP
   return false;
 }
 
-/** Automatically choose faction when there's only one faction available */
+/** Resolve forced picks and nominate a complete random pool for sealed auctions. */
 function autoChooseFaction(engine: Engine, cmd: AvailableCommand<Command.ChooseFaction>): string | false {
   if (engine.availableCommands.length > 1) {
     // There can be a bid command too
@@ -81,7 +81,13 @@ function autoChooseFaction(engine: Engine, cmd: AvailableCommand<Command.ChooseF
 
   const factions: Faction[] = cmd.data;
 
-  if (factions.length === 1) {
+  const randomNomination =
+    engine.randomFactions &&
+    [AuctionVariant.Silent, AuctionVariant.PreferenceSplit].includes(engine.options.auction) &&
+    // An old game may have banned a faction from its already-drawn pool.
+    // Do not partially automate an incomplete pool or silently replace its factions.
+    factions.length === engine.players.length - engine.setup.length;
+  if (factions.length === 1 || (randomNomination && factions.length > 0)) {
     return `${Command.ChooseFaction} ${factions[0]}`;
   }
 

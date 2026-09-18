@@ -689,15 +689,22 @@ describe("Commands", () => {
     function sandbox(engine: Engine) {
       const store = makeStore();
       store.commit("receiveData", engine);
-      const { container } = render(Commands, { props: { currentMove: "", analysisMode: true }, store });
+      const { container } = render(Commands, {
+        props: { currentMove: "", analysisMode: true, analysisCanUndoCharge: true },
+        store,
+      });
       const labels = () =>
-        Array.from(container.querySelectorAll<HTMLButtonElement>("#move-buttons button.move-button")).map(
-          (button) => button.textContent?.trim() ?? ""
-        );
+        Array.from(
+          container.querySelectorAll<HTMLButtonElement>(
+            "#move-buttons button.move-button, .analysis-simulation__button"
+          )
+        ).map((button) => button.textContent?.trim() ?? "");
       const button = (label: string) =>
-        Array.from(container.querySelectorAll<HTMLButtonElement>("#move-buttons button.move-button")).find(
-          (candidate) => candidate.textContent?.trim() === label
-        );
+        Array.from(
+          container.querySelectorAll<HTMLButtonElement>(
+            "#move-buttons button.move-button, .analysis-simulation__button"
+          )
+        ).find((candidate) => candidate.textContent?.trim() === label);
       return { container, labels, button };
     }
 
@@ -707,8 +714,8 @@ describe("Commands", () => {
       const { labels } = sandbox(roundMoveMenu());
 
       expect(labels()).to.include("Research"); // a real menu, not an empty one
-      expect(labels()).to.include("Charge 1");
-      expect(labels()).to.include("Undo Charge");
+      expect(labels()).to.include("Simulate charge +1");
+      expect(labels()).to.include("Undo charge");
     });
 
     it("hides them on the round-0 booster pick, which is not that menu", () => {
@@ -725,30 +732,20 @@ describe("Commands", () => {
       const { labels } = sandbox(engine);
 
       expect(labels().length, "expected the booster buttons themselves").to.be.greaterThan(0);
-      expect(labels()).to.not.include("Charge 1");
-      expect(labels()).to.not.include("Undo Charge");
+      expect(labels()).to.not.include("Simulate charge +1");
+      expect(labels()).to.not.include("Undo charge");
     });
 
     it("hides them once a button is drilled into (a sub-menu is not the main menu)", async () => {
       const { labels, button } = sandbox(roundMoveMenu());
-      expect(labels()).to.include("Charge 1");
+      expect(labels()).to.include("Simulate charge +1");
 
       const research = button("Research");
       expect(research, "expected a Research button to drill into").to.not.equal(undefined);
       await fireEvent.click(research!);
 
-      expect(labels()).to.not.include("Charge 1");
-      expect(labels()).to.not.include("Undo Charge");
-    });
-
-    // The keycap styling in the sticky bar is a `.move-button .btn` DESCENDANT rule, so these have to
-    // sit inside a `.move-button` wrapper like MoveButton.vue's own root or they render with square
-    // corners next to properly rounded neighbours.
-    it("wraps them the same way MoveButton does, so they pick up the same button styling", () => {
-      const { button } = sandbox(roundMoveMenu());
-
-      expect(button("Charge 1")?.parentElement?.classList.contains("move-button")).to.equal(true);
-      expect(button("Undo Charge")?.parentElement?.classList.contains("move-button")).to.equal(true);
+      expect(labels()).to.not.include("Simulate charge +1");
+      expect(labels()).to.not.include("Undo charge");
     });
   });
 
@@ -773,7 +770,7 @@ describe("Commands", () => {
     const { container } = render(Commands, { props: { currentMove: "" }, store });
 
     expect(container.querySelectorAll(".auto-leech-select").length).to.equal(0);
-    expect(container.textContent).to.not.contain("Leech:");
+    expect(container.textContent).to.not.contain("Charge:");
   });
 
   it("does not render after-passing auto-leech cap choices either, even once the viewing seat has passed", () => {
@@ -787,7 +784,7 @@ describe("Commands", () => {
 
     const afterPass = render(Commands, { props: { currentMove: "" }, store });
     expect(afterPass.container.textContent).to.not.contain("After passing:");
-    expect(afterPass.container.textContent).to.not.contain("Leech:");
+    expect(afterPass.container.textContent).to.not.contain("Charge:");
   });
 
   it("hides the auto-leech select during analysis mode, putting the line's controls in its place instead (§2.9/§12)", () => {
@@ -806,8 +803,7 @@ describe("Commands", () => {
     expect(controls.length).to.equal(2); // one in #move-title, one in the mobile sticky bar
     const title = container.querySelector("#move-title .analysis-controls");
     expect(title.textContent).to.contain("3 moves");
-    expect(title.textContent).to.contain("-7c");
-    expect(title.textContent).to.contain("+2 power");
+    expect(title.querySelector(".analysis-controls__shortfall").getAttribute("title")).to.contain("7 credits, 2 power");
   });
 
   it("puts round 0's faction seed in the action area as one button per faction, announced in the header", async () => {
@@ -878,9 +874,7 @@ describe("Commands", () => {
       store,
     });
 
-    const commit = Array.from(container.querySelectorAll("button")).find((b) =>
-      (b.textContent ?? "").includes("Commit")
-    ) as HTMLButtonElement;
+    const commit = container.querySelector(".analysis-controls__btn") as HTMLButtonElement;
     await fireEvent.click(commit);
     await Vue.nextTick();
 
@@ -901,7 +895,7 @@ describe("Commands", () => {
       store,
     });
 
-    expect(container.querySelector("#move-title").textContent).to.contain("SANDBOX");
+    expect(container.querySelector("#move-title").textContent).to.contain("Planning");
     expect(container.querySelector("#move-title").classList.contains("move-title--analysis")).to.equal(true);
     expect(
       container.querySelector("#move-buttons .sticky-bar-title").classList.contains("sticky-bar-title--analysis")

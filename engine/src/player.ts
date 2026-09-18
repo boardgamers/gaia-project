@@ -314,15 +314,16 @@ export default class Player extends EventEmitter {
    * How many times over this player can pay `cost` - the "convert up to N" range behind free-action
    * conversions (available/actions.ts).
    *
-   * The loop only ever ends because `hasResource` eventually says no, so analysis mode
-   * (ANALYSIS_MODE_PLAN.md §12), where `hasResource` deliberately says yes to any amount of an
+   * The loop only ever ends because `hasResource` eventually says no, so disposable future-premove validation, where `hasResource` deliberately says yes to any amount of an
    * overdrawable resource, needs its own ceiling or this spins forever and hangs the browser. The
    * ceiling is what the seat can really pay plus a fixed slack, so a conversion can be overdrawn
    * like everything else while the range stays a finite, sane number of steps.
    */
   maxPayRange(cost: Reward[]): number {
     const costs = Reward.merge(cost);
-    const limit = this.data.analysis ? this.realMaxPayRange(costs) + Player.ANALYSIS_EXTRA_PAY_RANGE : Infinity;
+    const limit = this.data.validatingFuturePremove
+      ? this.realMaxPayRange(costs) + Player.ANALYSIS_EXTRA_PAY_RANGE
+      : Infinity;
 
     for (let max = 0; ; max += 1) {
       if (max >= limit) {
@@ -598,6 +599,7 @@ export default class Player extends EventEmitter {
   }
 
   removeRoundBoosterEvents(type?: Operator.Income) {
+    if (!this.data.tiles.booster) return;
     const events = boosterEvents(this.data.tiles.booster).filter(
       (ev) => (type && ev.operator === Operator.Income) || (!type && ev.operator !== Operator.Income)
     );
