@@ -68,6 +68,7 @@
           <Commands
             v-if="setupActionsAtTop && (canPlay || analysisMode)"
             :actions-enabled="canPlay"
+            :auto-charge-enabled="!replayData"
             @command="handleCommand"
             :currentMove="currentMove"
             :hide-spacer="true"
@@ -189,6 +190,7 @@
             @command="handleCommand"
             v-if="(canPlay || analysisMode) && !setupActionsAtTop"
             :actions-enabled="canPlay"
+            :auto-charge-enabled="!replayData"
             :currentMove="currentMove"
             :hide-spacer="true"
             :analysis-mode="analysisMode"
@@ -263,6 +265,7 @@
         @command="handleCommand"
         v-if="canPlay || analysisMode"
         :actions-enabled="canPlay"
+        :auto-charge-enabled="!replayData"
         :currentMove="currentMove"
         :hide-spacer="true"
         @sticky-bar-height="stickyBarHeight = $event"
@@ -293,6 +296,7 @@
       <Table />
       <AdvancedLog :currentMove="currentMove" :hideLog.sync="hideLog" v-if="logPlacement === 'bottom'" />
     </div>
+    <AutoLeechFab v-if="showAutoChargeFab" :bottom-offset="totalStickyFooterHeight + 24" />
     <div class="chat-host" :style="{ '--chat-footer-height': totalStickyFooterHeight + 'px' }"></div>
     <div
       class="mobile-sticky-actions-spacer"
@@ -362,6 +366,7 @@ import type { SealedBidBackend } from "../store";
 import { UiMode } from "../store";
 import AdvancedLog from "./AdvancedLog.vue";
 import AnalysisPanel from "./AnalysisPanel.vue";
+import AutoLeechFab from "./AutoLeechFab.vue";
 import BoardAction from "./BoardAction.vue";
 import Charts from "./Charts.vue";
 import Commands from "./Commands.vue";
@@ -403,6 +408,7 @@ const BOARD_ACTION_BASE_X = -20;
     AnalysisPanel,
     BoardAction,
     Commands,
+    AutoLeechFab,
     PlayerInfo,
     Pool,
     ResearchBoard,
@@ -749,6 +755,19 @@ export default class Game extends Vue {
   get lostFleetShipsStyle(): Record<string, string> {
     const width = (SHIP_BOARD_VIEWBOX_WIDTH / this.researchBoardCanvasWidth) * 100;
     return { "--lf-ship-width": `${width}%` };
+  }
+
+  get showAutoChargeFab() {
+    return (
+      !this.canPlay &&
+      !this.analysisMode &&
+      !this.replayData &&
+      !this.interactionDisabled &&
+      !this.ended &&
+      this.engine.round >= 1 &&
+      this.myLockedSeat !== undefined &&
+      !!this.$store.state.playerSettings
+    );
   }
 
   get totalStickyFooterHeight() {

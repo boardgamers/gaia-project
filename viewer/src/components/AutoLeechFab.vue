@@ -1,108 +1,17 @@
 <template>
   <div class="auto-leech-fab" :style="{ '--auto-leech-bottom-offset': `${bottomOffset}px` }">
-    <b-dropdown
-      right
-      dropup
-      boundary="window"
-      :popper-opts="{ positionFixed: true }"
-      variant="outline-secondary"
-      class="auto-leech-fab__menu"
-      v-b-tooltip.hover
-      title="Auto-charge: automatically accept or decline power-charge offers up to this amount, instead of asking every time"
-    >
-      <template #button-content>
-        <span class="auto-leech-dot" :class="autoChargePowerActive ? 'active' : 'inactive'"></span>
-        {{ autoChargePowerShortLabel }}
-      </template>
-      <b-dropdown-item
-        v-for="opt in autoChargePowerOptions"
-        :key="opt.value"
-        :active="opt.value === autoChargePower"
-        @click="setAutoChargePower(opt.value)"
-      >
-        {{ opt.text }}
-      </b-dropdown-item>
-      <template v-if="showPassedCapOptions">
-        <b-dropdown-divider />
-        <b-dropdown-item
-          v-for="opt in autoChargePassedCapOptions"
-          :key="`passed-${opt.value}`"
-          :active="opt.value === autoChargeMaxPassedRoundLeech"
-          @click="setAutoChargeMaxPassedRoundLeech(opt.value)"
-        >
-          {{ opt.text }}
-        </b-dropdown-item>
-      </template>
-    </b-dropdown>
+    <AutoChargeControl class="auto-leech-fab__menu" dropup />
   </div>
 </template>
-
 <script lang="ts">
 import Vue from "vue";
-
+import AutoChargeControl from "./AutoChargeControl.vue";
 export default Vue.extend({
   name: "AutoLeechFab",
-  props: {
-    bottomOffset: { type: Number, default: 24 },
-    showPassedCapOptions: { type: Boolean, default: false },
-  },
-  computed: {
-    autoChargePower(): string {
-      return String((this as any).$store.state.preferences.autoChargePower ?? "ask");
-    },
-    autoChargeMaxPassedRoundLeech(): string {
-      return String((this as any).$store.state.preferences.autoChargeMaxPassedRoundLeech ?? "0");
-    },
-    autoChargePowerOptions(): Array<{ value: string; text: string }> {
-      return [
-        { value: "ask", text: "Auto-charge: off (ask every time)" },
-        { value: "decline-cost", text: "Auto-charge: free only (decline anything with a cost)" },
-        { value: "1", text: "Auto-charge: up to 1 power" },
-        { value: "2", text: "Auto-charge: up to 2 power" },
-        { value: "3", text: "Auto-charge: up to 3 power" },
-        { value: "4", text: "Auto-charge: up to 4 power" },
-        { value: "5", text: "Auto-charge: up to 5 power" },
-      ];
-    },
-    autoChargePassedCapOptions(): Array<{ value: string; text: string }> {
-      return [
-        { value: "0", text: "After passing: no total cap" },
-        { value: "1", text: "After passing: max 1 total power" },
-        { value: "2", text: "After passing: max 2 total power" },
-        { value: "3", text: "After passing: max 3 total power" },
-        { value: "4", text: "After passing: max 4 total power" },
-        { value: "5", text: "After passing: max 5 total power" },
-        { value: "6", text: "After passing: max 6 total power" },
-      ];
-    },
-    autoChargePowerActive(): boolean {
-      return (this as any).autoChargePower !== "ask";
-    },
-    autoChargePowerShortLabel(): string {
-      const cap = (this as any).showPassedCapOptions ? (this as any).autoChargeMaxPassedRoundLeech : "0";
-      switch ((this as any).autoChargePower) {
-        case "ask":
-          return "Charge: off";
-        case "decline-cost":
-          return cap === "0" ? "Charge: free" : `Charge: free cap ${cap}`;
-        default:
-          return cap === "0"
-            ? `Charge: ${(this as any).autoChargePower}`
-            : `Charge: ${(this as any).autoChargePower} cap ${cap}`;
-      }
-    },
-  },
-  methods: {
-    setAutoChargePower(value: string) {
-      (this as any).$store.commit("preferences", { autoChargePower: value });
-    },
-    setAutoChargeMaxPassedRoundLeech(value: string) {
-      (this as any).$store.commit("preferences", { autoChargeMaxPassedRoundLeech: value });
-    },
-  },
+  components: { AutoChargeControl },
+  props: { bottomOffset: { type: Number, default: 24 } },
 });
 </script>
-
 <style lang="scss" scoped>
 .auto-leech-fab {
   position: fixed;

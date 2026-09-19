@@ -75,6 +75,7 @@ export type State = {
    * an empty string marks nothing in a chapter's initial teaching position. */
   highlightedMove: string | null;
   hosted: boolean;
+  playerSettings: Record<string, unknown> | null;
   pendingPlan: PremoveCommand | null;
   planError: string | null;
   /** Hosted mode only - seat -> user id, for matching a seat to its presence entry below. Never
@@ -186,6 +187,7 @@ const gaiaViewer = {
       highlightedMove: null,
       avatars: [] as string[],
       hosted: false,
+      playerSettings: null,
       pendingPlan: null,
       planError: null,
       seatUsers: {},
@@ -304,6 +306,10 @@ const gaiaViewer = {
       }
     },
 
+    playerSettings(state: State, data: Record<string, unknown> | null) {
+      state.playerSettings = data;
+    },
+
     player(state: State, data: { index?: number }) {
       state.player = data;
     },
@@ -355,6 +361,7 @@ const gaiaViewer = {
     },
   },
   actions: {
+    updatePlayerSetting(_context, _payload: { name: string; value: string }) {},
     // No body, used for signalling with store.subscribeAction
     hexClick(context: any, hex: GaiaHex, highlight?: HighlightHex) {},
     researchClick(context: any, field: ResearchField) {},

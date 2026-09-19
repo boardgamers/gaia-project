@@ -759,32 +759,11 @@ describe("Commands", () => {
     expect(container.querySelector(".auto-leech-select")).to.equal(null);
   });
 
-  // Owner decision (2026-09): the auto-leech control moved to the platform's sidebar, so the
-  // viewer no longer renders it at all - showAutoLeechSelect is hard-false. The preference storage
-  // and option lists stay (the platform drives them); these tests assert the control is gone.
-  it("does not render the auto-leech select (the platform's sidebar owns it now)", () => {
-    const engine = createLostFleetRoundMoveEngine();
+  it("shows auto-charge in the action bar during a round", () => {
     const store = makeStore();
-    store.commit("receiveData", engine);
-
+    store.commit("receiveData", createLostFleetRoundMoveEngine());
     const { container } = render(Commands, { props: { currentMove: "" }, store });
-
-    expect(container.querySelectorAll(".auto-leech-select").length).to.equal(0);
-    expect(container.textContent).to.not.contain("Charge:");
-  });
-
-  it("does not render after-passing auto-leech cap choices either, even once the viewing seat has passed", () => {
-    const engine = createLostFleetRoundMoveEngine();
-    const store = makeStore();
-    store.commit("preferences", { autoChargePower: "4", autoChargeMaxPassedRoundLeech: "3" });
-    store.commit("receiveData", engine);
-
-    engine.passedPlayers = [PlayerEnum.Player1];
-    store.commit("receiveData", engine);
-
-    const afterPass = render(Commands, { props: { currentMove: "" }, store });
-    expect(afterPass.container.textContent).to.not.contain("After passing:");
-    expect(afterPass.container.textContent).to.not.contain("Charge:");
+    expect(container.querySelectorAll(".auto-leech-select").length).to.equal(2);
   });
 
   it("hides the auto-leech select during analysis mode, putting the line's controls in its place instead (§2.9/§12)", () => {

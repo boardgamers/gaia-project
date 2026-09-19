@@ -17,6 +17,24 @@ describe("launcher's store-to-emitter bridge", () => {
     vi.unstubAllGlobals();
     document.querySelectorAll(".bgs-game-chat, .chat-shortcut").forEach((element) => element.remove());
   });
+  it("receives canonical settings and sends setting changes through the protocol", () => {
+    const container = document.createElement("div");
+    container.id = "launcher-settings";
+    document.body.appendChild(container);
+    const item = launch("#launcher-settings", Vue.extend({ render: (h) => h("div") }));
+    item.emit("settings", { autoCharge: "3", autoIncome: true });
+    expect(item.store.state.playerSettings).to.deep.equal({ autoCharge: "3", autoIncome: true });
+    let received: unknown;
+    item.on("update:setting", (update) => {
+      received = update;
+    });
+    item.store.dispatch("updatePlayerSetting", { name: "autoCharge", value: "4" });
+    expect(received).to.deep.equal({ name: "autoCharge", value: "4" });
+    expect(item.store.state.playerSettings.autoCharge).to.equal("3");
+    item.app.$destroy();
+    container.remove();
+  });
+
   it("sends a premove plan as an ordinary protocol move", () => {
     const container = document.createElement("div");
     container.id = "launcher-premove";

@@ -106,6 +106,9 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
     onUpdate() {
       viewer.fetchState();
     },
+    onSettings(data) {
+      store.commit("playerSettings", data);
+    },
     onPreferences(data) {
       store.commit("preferences", data);
     },
@@ -169,6 +172,11 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
 
   const unsub1 = store.subscribeAction(({ type, payload }) => {
     // console.log("spy action", type, payload);
+
+    if (type === "updatePlayerSetting") {
+      viewer.updateSetting(payload.name, payload.value);
+      return;
+    }
 
     if (type === "move") {
       // There's a bug with the viewer, after an undo on some occasions moves are emitted twice in a row

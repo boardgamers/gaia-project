@@ -42,46 +42,7 @@
            SetupStatus.vue's round-0 strip at the top of the page (Game.vue), which - unlike this
            panel - also renders for players who aren't on turn. Two copies would also register the
            same modal id twice. -->
-      <!-- "Auto-charge": lets the engine's own already-implemented decision logic
-           (engine/src/auto-charge.ts) auto-resolve power-charge/decline offers instead of asking
-           every time - a per-browser preference (never synced/persisted as part of game state).
-           Hidden before round 1 (see showAutoLeechSelect) - faction pick/ban/silent-auction-bid/
-           initial-building setup have nothing to leech from yet. A dropdown (not a <select>) so the
-           button itself can show a short label instead of the full option text, which used to force
-           the status line to wrap onto several lines on narrow screens. -->
-      <b-dropdown
-        v-if="showAutoLeechSelect"
-        size="sm"
-        variant="outline-secondary"
-        right
-        class="ml-auto auto-leech-select"
-        v-b-tooltip.hover
-        title="Auto-charge: automatically accept or decline power-charge offers up to this amount, instead of asking every time"
-      >
-        <template #button-content>
-          <span class="auto-leech-dot" :class="autoChargePowerActive ? 'active' : 'inactive'"></span>
-          {{ autoChargePowerShortLabel }}
-        </template>
-        <b-dropdown-item
-          v-for="opt in autoChargePowerOptions"
-          :key="opt.value"
-          :active="opt.value === autoChargePower"
-          @click="setAutoChargePower(opt.value)"
-        >
-          {{ opt.text }}
-        </b-dropdown-item>
-        <template v-if="showAutoChargePassedCapOptions">
-          <b-dropdown-divider />
-          <b-dropdown-item
-            v-for="opt in autoChargePassedCapOptions"
-            :key="`passed-${opt.value}`"
-            :active="opt.value === autoChargeMaxPassedRoundLeech"
-            @click="setAutoChargeMaxPassedRoundLeech(opt.value)"
-          >
-            {{ opt.text }}
-          </b-dropdown-item>
-        </template>
-      </b-dropdown>
+      <AutoChargeControl v-if="showAutoLeechSelect" class="ml-auto" />
       <AnalysisHeaderControls
         v-else-if="analysisMode"
         :move-count="analysisMoveCount"
@@ -145,42 +106,7 @@
         <!-- No explainer buttons here either: the bar is never pinned during the ban/pick/bid phases
              (showStickyMobileBar excludes all three), so they could never show here. See
              SetupStatus.vue. -->
-        <b-dropdown
-          v-if="showAutoLeechSelect"
-          size="sm"
-          variant="outline-secondary"
-          right
-          dropup
-          boundary="window"
-          :popper-opts="{ positionFixed: true }"
-          class="ml-auto auto-leech-select"
-          v-b-tooltip.hover
-          title="Auto-charge: automatically accept or decline power-charge offers up to this amount, instead of asking every time"
-        >
-          <template #button-content>
-            <span class="auto-leech-dot" :class="autoChargePowerActive ? 'active' : 'inactive'"></span>
-            {{ autoChargePowerShortLabel }}
-          </template>
-          <b-dropdown-item
-            v-for="opt in autoChargePowerOptions"
-            :key="opt.value"
-            :active="opt.value === autoChargePower"
-            @click="setAutoChargePower(opt.value)"
-          >
-            {{ opt.text }}
-          </b-dropdown-item>
-          <template v-if="showAutoChargePassedCapOptions">
-            <b-dropdown-divider />
-            <b-dropdown-item
-              v-for="opt in autoChargePassedCapOptions"
-              :key="`passed-${opt.value}`"
-              :active="opt.value === autoChargeMaxPassedRoundLeech"
-              @click="setAutoChargeMaxPassedRoundLeech(opt.value)"
-            >
-              {{ opt.text }}
-            </b-dropdown-item>
-          </template>
-        </b-dropdown>
+        <AutoChargeControl v-if="showAutoLeechSelect" class="ml-auto" dropup />
         <AnalysisHeaderControls
           v-else-if="analysisMode"
           :move-count="analysisMoveCount"
@@ -416,6 +342,7 @@ import AnalysisCommitConfirm from "./AnalysisCommitConfirm.vue";
 import AnalysisHeaderControls from "./AnalysisHeaderControls.vue";
 import AnalysisLineTabs from "./AnalysisLineTabs.vue";
 import AnalysisModeInfo from "./AnalysisModeInfo.vue";
+import AutoChargeControl from "./AutoChargeControl.vue";
 import FactionInfoCard from "./FactionInfoCard.vue";
 import FactionSheetButton from "./FactionSheetButton.vue";
 import MoveButton from "./MoveButton.vue";
@@ -476,6 +403,7 @@ export type EmitCommandParams = { disappear?: boolean; times?: number; warnings?
     },
   },
   components: {
+    AutoChargeControl,
     RichTextView,
     StickyResourceBar,
     MoveButton,
@@ -488,6 +416,9 @@ export type EmitCommandParams = { disappear?: boolean; times?: number; warnings?
   },
 })
 export default class Commands extends Vue implements CommandController {
+  @Prop({ default: true })
+  autoChargeEnabled: boolean;
+
   @Prop({ default: true })
   actionsEnabled: boolean;
 
@@ -674,78 +605,11 @@ export default class Commands extends Vue implements CommandController {
     return !!this.silentBidCommand && !!this.$store.state.sealedBidBackend && isLegacySequentialBidRound(this.engine);
   }
 
-  get autoChargePower(): string {
-    return String(this.$store.state.preferences.autoChargePower ?? "ask");
-  }
-
-  get autoChargeMaxPassedRoundLeech(): string {
-    return String(this.$store.state.preferences.autoChargeMaxPassedRoundLeech ?? "0");
-  }
-
-  get autoChargePowerOptions() {
-    return [
-      { value: "ask", text: "Auto-charge: off (ask every time)" },
-      { value: "decline-cost", text: "Auto-charge: free only (decline anything with a cost)" },
-      { value: "1", text: "Auto-charge: up to 1 power" },
-      { value: "2", text: "Auto-charge: up to 2 power" },
-      { value: "3", text: "Auto-charge: up to 3 power" },
-      { value: "4", text: "Auto-charge: up to 4 power" },
-      { value: "5", text: "Auto-charge: up to 5 power" },
-    ];
-  }
-
-  get autoChargePassedCapOptions() {
-    return [
-      { value: "0", text: "After passing: no total cap" },
-      { value: "1", text: "After passing: max 1 total power" },
-      { value: "2", text: "After passing: max 2 total power" },
-      { value: "3", text: "After passing: max 3 total power" },
-      { value: "4", text: "After passing: max 4 total power" },
-      { value: "5", text: "After passing: max 5 total power" },
-      { value: "6", text: "After passing: max 6 total power" },
-    ];
-  }
-
-  get showAutoChargePassedCapOptions(): boolean {
-    const player = this.myPlayer?.player;
-    return player !== undefined && (this.engine.passedPlayers ?? []).includes(player);
-  }
-
-  setAutoChargePower(value: string) {
-    this.$store.commit("preferences", { autoChargePower: value });
-  }
-
-  setAutoChargeMaxPassedRoundLeech(value: string) {
-    this.$store.commit("preferences", { autoChargeMaxPassedRoundLeech: value });
-  }
-
   /** Commit asks first (ANALYSIS_MODE_PLAN.md §6) - it is the only sandbox control whose effect
    * reaches the real game, where the sandbox's own Undo does not follow, and it clears the line on
    * the way out. The modal is what emits `analysis-commit`; this only opens it. */
   requestAnalysisCommit() {
     this.$bvModal.show("analysis-commit-confirm");
-  }
-
-  /** Whether auto-leech will currently act on its own instead of asking every time - drives the
-   * dot indicator on the dropdown button (pulsing green when active, static red when off), since
-   * the short label alone ("Charge: off" vs "Charge: 3") is easy to miss at a glance. */
-  get autoChargePowerActive(): boolean {
-    return this.autoChargePower !== "ask";
-  }
-
-  /** Short label for the auto-leech dropdown button itself - the full sentence lives in the menu
-   * options (autoChargePowerOptions), not on the button, so the button doesn't force the status
-   * line next to it to wrap. */
-  get autoChargePowerShortLabel(): string {
-    const cap = this.showAutoChargePassedCapOptions ? this.autoChargeMaxPassedRoundLeech : "0";
-    switch (this.autoChargePower) {
-      case "ask":
-        return "Charge: off";
-      case "decline-cost":
-        return cap === "0" ? "Charge: free" : `Charge: free cap ${cap}`;
-      default:
-        return cap === "0" ? `Charge: ${this.autoChargePower}` : `Charge: ${this.autoChargePower} cap ${cap}`;
-    }
   }
 
   submitSilentBid() {
@@ -825,12 +689,14 @@ export default class Commands extends Vue implements CommandController {
    * during analysis mode (§2.9) - opponent decisions are auto-resolved there regardless of this
    * preference - which is what frees up that slot for the counter headline instead (§5.3). */
   get showAutoLeechSelect(): boolean {
-    // Owner decision (2026-09): the Auto-charge control is removed from the viewer - the platform's
-    // own sidebar now exposes the same autoChargePower/autoChargeMaxPassedRoundLeech preferences.
-    // Kept as `false` (rather than deleting the dropdowns + option lists) so the markup and the
-    // per-browser preference storage stay intact for the platform to drive, and so a revert is a
-    // one-word change.
-    return false;
+    return (
+      !this.analysisMode &&
+      this.autoChargeEnabled &&
+      this.engine.round >= 1 &&
+      !this.engine.ended &&
+      (!this.$store.state.hosted ||
+        (!!this.$store.state.playerSettings && this.$store.state.player?.index !== undefined))
+    );
   }
 
   /** The viewing user's own player (not necessarily whoever's turn it is), same "viewing seat"
@@ -960,8 +826,16 @@ export default class Commands extends Vue implements CommandController {
 
   autoChargePreference(): string {
     return encodeAutoChargePreference(
-      String(this.$store.state.preferences.autoChargePower ?? "ask"),
-      String(this.$store.state.preferences.autoChargeMaxPassedRoundLeech ?? "0")
+      String(
+        this.$store.state.hosted
+          ? (this.$store.state.playerSettings?.autoCharge ?? "ask")
+          : (this.$store.state.preferences.autoChargePower ?? "ask")
+      ),
+      String(
+        this.$store.state.hosted
+          ? (this.$store.state.playerSettings?.autoChargeMaxPassedRoundLeech ?? "0")
+          : (this.$store.state.preferences.autoChargeMaxPassedRoundLeech ?? "0")
+      )
     );
   }
 
@@ -1399,35 +1273,6 @@ $planning-accent: var(--ui-warning-border);
   padding: 0.15rem 0.4rem;
 }
 
-.auto-leech-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  margin-right: 0.3rem;
-  border-radius: 50%;
-
-  &.inactive {
-    background: var(--oxide, #ff160a);
-  }
-
-  &.active {
-    background: var(--highlighted, #2c4);
-    animation: auto-leech-pulse 1.6s infinite;
-  }
-}
-
-@keyframes auto-leech-pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(var(--highlighted-rgb, 32, 204, 68), 0.7);
-  }
-  70% {
-    box-shadow: 0 0 0 5px rgba(var(--highlighted-rgb, 32, 204, 68), 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(var(--highlighted-rgb, 32, 204, 68), 0);
-  }
-}
-
 // One fixed-width column for the faction buttons and one for the number boxes, so the bid inputs
 // line up instead of stepping in and out with each faction name's length.
 .silent-bid-faction {
@@ -1659,7 +1504,7 @@ $mobile-sticky-actions-max-height: 40vh;
   // ChatNotesPanel.vue's floating chat toggle (1040) - belt-and-suspenders alongside the
   // padding-right reservation above, in case the opened menu's own width still reaches the chat
   // toggle's corner on a narrow viewport, it should render on top of it, not tangled underneath.
-  .auto-leech-select ::v-deep(.dropdown-menu) {
+  .auto-leech-select .dropdown-menu {
     z-index: 1050;
   }
 }
