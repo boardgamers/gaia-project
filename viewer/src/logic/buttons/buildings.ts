@@ -6,6 +6,7 @@ import Engine, {
   Command,
   Expansion,
   Faction,
+  Phase,
   Planet,
   Player,
   Round,
@@ -87,6 +88,13 @@ function buildingButton(
   commandSuffix?: string
 ) {
   const hexes = hexMap(engine, buildings, false);
+  if (engine.phase === Phase.SetupBuilding) {
+    for (const target of hexes.hexes.values()) {
+      if (isFree(target.cost)) {
+        delete target.cost;
+      }
+    }
+  }
   if (!upgrade && engine.round != Round.None && building != Building.SpaceStation) {
     const map = engine.map;
     for (const hex of map.grid.values()) {

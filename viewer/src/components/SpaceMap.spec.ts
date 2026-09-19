@@ -6,6 +6,7 @@ import Engine, {
   LostFleetSectorType,
   Planet,
   PlayerEnum,
+  Spaceship,
 } from "@gaia-project/engine";
 import { render } from "@testing-library/vue";
 import { expect } from "chai";
@@ -132,6 +133,40 @@ describe("SpaceMap", () => {
       const content = children.find((child) => child.tagName === "g");
       expect(children.indexOf(marker)).to.be.lessThan(children.indexOf(content));
     }
+  });
+
+  it("shows each ship's explorers in slot order with their faction colors and recent-move highlight", () => {
+    const engine = new Engine(
+      [
+        "init 4 map-explore-markers",
+        "p1 faction terrans",
+        "p2 faction hadsch-hallas",
+        "p3 faction moweyds",
+        "p4 faction xenos",
+      ],
+      { lostFleet: true }
+    );
+    engine.players.forEach((player, index) => {
+      player.name = `Player ${index + 1}`;
+      player.data.explorationShips[Spaceship.Twilight] = 4 - index;
+    });
+    engine.players[1].data.explorationShips[Spaceship.Eclipse] = 1;
+    engine.moveHistory = ["init 4 map-explore-markers", "terrans explore twilight", "moweyds explore twilight"];
+    engine.advancedLog = [{ player: 0, move: 1 }, { player: 2, move: 2 }, { player: 0 }];
+
+    const store = makeStore();
+    store.commit("player", { index: 0 });
+    store.commit("receiveData", engine);
+    const { container } = render(SpaceMap, { store });
+    const ship = (name: Spaceship) => container.querySelector(`[data-ship="${name}"]`).parentElement;
+    const markers = Array.from(ship(Spaceship.Twilight).querySelectorAll(".lost-fleet-spaceship__explorer"));
+    expect(markers.map((marker) => marker.getAttribute("data-player"))).to.deep.equal(["3", "2", "1", "0"]);
+    expect(markers[1].querySelector(".planet-fill.p")).not.to.equal(null);
+    expect(markers[1].getAttribute("aria-label")).to.equal("Explored by Player 3 (Moweyds)");
+    expect(markers.filter((marker) => marker.classList.contains("recent"))).to.deep.equal([markers[1]]);
+    expect(ship(Spaceship.Twilight).querySelector("title").textContent).to.contain("Explored by Player 3");
+    expect(ship(Spaceship.Eclipse).querySelectorAll(".lost-fleet-spaceship__explorer").length).to.equal(1);
+    expect(ship(Spaceship.Rebellion).querySelectorAll(".lost-fleet-spaceship__explorer").length).to.equal(0);
   });
 
   it("renders Lost Fleet Interspace and Deep Space hexes in addition to the base sectors", () => {

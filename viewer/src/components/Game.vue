@@ -22,6 +22,7 @@
     <PremoveQueue
       v-if="showPremovePanel"
       :plan="myPremovePlan"
+      :notice-storage-key="premoveNoticeStorageKey"
       :pending="!!$store.state.pendingPlan"
       :active="analysisMode"
       :preview-round="analysisMode && analysisRolledForward ? analysisBaseRound : undefined"
@@ -32,14 +33,12 @@
       @view="viewPremoves"
       @cancel="cancelPremoves"
     />
-    <div
+    <PremoveNotice
       v-else-if="myPremovePlan && myPremovePlan.notice"
-      class="premove-notice small mb-3"
-      :class="myPremovePlan.notice.kind === 'stopped' ? 'text-warning' : 'text-muted'"
-      role="status"
-    >
-      {{ myPremovePlan.notice.text }}
-    </div>
+      :plan="myPremovePlan"
+      :storage-key="premoveNoticeStorageKey"
+      class="mb-3"
+    />
     <div v-if="$store.state.planError" class="alert alert-warning" role="status">{{ $store.state.planError }}</div>
     <template v-if="uiMode === 'graphical'">
       <!-- Round 0 only (ban/pick/bid/starting buildings/booster): says whose turn it is and what
@@ -372,6 +371,7 @@ import PlayerInfo from "./PlayerInfo.vue";
 import Pool from "./Pool.vue";
 import PreferenceSplitBid from "./PreferenceSplitBid.vue";
 import PreferenceSplitSummary from "./PreferenceSplitSummary.vue";
+import PremoveNotice from "./PremoveNotice.vue";
 import PremoveQueue from "./PremoveQueue.vue";
 import ResearchBoard from "./ResearchBoard.vue";
 import ResearchPanel from "./ResearchPanel.vue";
@@ -420,6 +420,7 @@ const BOARD_ACTION_BASE_X = -20;
     Rules,
     Table,
     PremoveQueue,
+    PremoveNotice,
     // Static import (rather than the previous `() => import("./Charts.vue")`) so the published
     // UMD lib stays a single file - an async chunk would resolve against the baked-in publicPath,
     // which breaks when the bundle is hosted anywhere other than that exact CDN path.
@@ -931,6 +932,11 @@ export default class Game extends Vue {
 
   get myPremovePlan(): PremovePlan | undefined {
     return this.realEngine.automation?.plans[this.myLockedSeat];
+  }
+
+  get premoveNoticeStorageKey(): string {
+    // BGS reuses one viewer iframe URL, so use the game's seed plus the player's seat.
+    return `premove-notice:${JSON.stringify([this.realEngine.moveHistory[0], this.myLockedSeat])}`;
   }
 
   submitPremoves(moves: string[], timings?: PremoveTiming[]) {

@@ -68,14 +68,7 @@
       </li>
     </ol>
     <div v-if="pending" class="small mt-2" role="status">Saving your plan…</div>
-    <div
-      v-else-if="plan && plan.notice"
-      class="small mt-2"
-      :class="{ 'text-warning': plan.notice.kind === 'stopped' }"
-      role="status"
-    >
-      {{ plan.notice.text }}
-    </div>
+    <PremoveNotice v-else-if="plan && plan.notice" :plan="plan" :storage-key="noticeStorageKey" class="mt-2" />
   </section>
 </template>
 
@@ -83,11 +76,14 @@
 import type { PremovePlan } from "@gaia-project/engine/src/premove-types";
 import Vue from "vue";
 import { isCheapAnalysisBuild } from "../logic/analysis";
+import PremoveNotice from "./PremoveNotice.vue";
 
 export default Vue.extend({
+  components: { PremoveNotice },
   methods: { isCheapAnalysisBuild },
   props: {
     plan: { type: Object as () => PremovePlan, default: undefined },
+    noticeStorageKey: { type: String, required: true },
     pending: Boolean,
     queueEnabled: { type: Boolean, default: true },
     active: Boolean,

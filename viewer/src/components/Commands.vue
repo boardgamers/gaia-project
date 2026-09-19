@@ -1004,6 +1004,11 @@ export default class Commands extends Vue implements CommandController {
   }
 
   get canUndo() {
+    // The mandatory setup building is opened automatically. Returning from its destination list
+    // would only show that same building button; keep Back once a destination has been selected.
+    if (this.engine.phase === Phase.SetupBuilding && this.buttonChain.length === 1 && this.buttonChain[0].hexes) {
+      return false;
+    }
     return this.$store.getters.canUndo;
   }
 
