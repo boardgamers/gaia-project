@@ -32,9 +32,6 @@
         >
           View on board
         </button>
-        <button v-else-if="!active && canPreview" class="btn btn-sm btn-outline-primary" @click="$emit('plan')">
-          Plan a move
-        </button>
         <button
           v-if="moves.length"
           class="btn btn-sm btn-outline-danger"

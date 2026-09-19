@@ -28,7 +28,6 @@
       :preview-round="analysisMode && analysisRolledForward ? analysisBaseRound : undefined"
       :queue-enabled="premoveAvailable"
       :can-preview="!replayData"
-      @plan="enterAnalysisMode"
       @exit="exitAnalysisMode"
       @view="viewPremoves"
       @cancel="cancelPremoves"
@@ -66,7 +65,7 @@
                matching `v-if` on the commands column's own <Commands> keeps exactly one of the two
                mounted - never both, which would duplicate its element ids and modals. -->
           <Commands
-            v-if="setupActionsAtTop && (canPlay || analysisMode)"
+            v-if="setupActionsAtTop && showCommands"
             :actions-enabled="canPlay"
             :auto-charge-enabled="!replayData"
             @command="handleCommand"
@@ -188,7 +187,7 @@
         <div :class="commandsColumnClass">
           <Commands
             @command="handleCommand"
-            v-if="(canPlay || analysisMode) && !setupActionsAtTop"
+            v-if="showCommands && !setupActionsAtTop"
             :actions-enabled="canPlay"
             :auto-charge-enabled="!replayData"
             :currentMove="currentMove"
@@ -263,7 +262,7 @@
       <AdvancedLog :currentMove="currentMove" :hideLog.sync="hideLog" v-if="logPlacement === 'top'" />
       <Commands
         @command="handleCommand"
-        v-if="canPlay || analysisMode"
+        v-if="showCommands"
         :actions-enabled="canPlay"
         :auto-charge-enabled="!replayData"
         :currentMove="currentMove"
@@ -296,7 +295,6 @@
       <Table />
       <AdvancedLog :currentMove="currentMove" :hideLog.sync="hideLog" v-if="logPlacement === 'bottom'" />
     </div>
-    <AutoLeechFab v-if="showAutoChargeFab" :bottom-offset="totalStickyFooterHeight + 24" />
     <div class="chat-host" :style="{ '--chat-footer-height': totalStickyFooterHeight + 'px' }"></div>
     <div
       class="mobile-sticky-actions-spacer"
@@ -366,7 +364,6 @@ import type { SealedBidBackend } from "../store";
 import { UiMode } from "../store";
 import AdvancedLog from "./AdvancedLog.vue";
 import AnalysisPanel from "./AnalysisPanel.vue";
-import AutoLeechFab from "./AutoLeechFab.vue";
 import BoardAction from "./BoardAction.vue";
 import Charts from "./Charts.vue";
 import Commands from "./Commands.vue";
@@ -408,7 +405,6 @@ const BOARD_ACTION_BASE_X = -20;
     AnalysisPanel,
     BoardAction,
     Commands,
-    AutoLeechFab,
     PlayerInfo,
     Pool,
     ResearchBoard,
@@ -757,17 +753,8 @@ export default class Game extends Vue {
     return { "--lf-ship-width": `${width}%` };
   }
 
-  get showAutoChargeFab() {
-    return (
-      !this.canPlay &&
-      !this.analysisMode &&
-      !this.replayData &&
-      !this.interactionDisabled &&
-      !this.ended &&
-      this.engine.round >= 1 &&
-      this.myLockedSeat !== undefined &&
-      !!this.$store.state.playerSettings
-    );
+  get showCommands() {
+    return this.canPlay || this.analysisMode || (this.analysisOffered && !this.replayData && !this.interactionDisabled);
   }
 
   get totalStickyFooterHeight() {
@@ -945,7 +932,7 @@ export default class Game extends Vue {
     return (
       this.analysisMode ||
       ((this.premoveAvailable || this.analysisOffered) &&
-        (!this.canPlay || !!this.myPremovePlan?.moves.length || !!this.$store.state.pendingPlan))
+        (!!this.myPremovePlan?.moves.length || !!this.$store.state.pendingPlan))
     );
   }
 

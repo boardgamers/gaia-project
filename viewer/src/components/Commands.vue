@@ -31,12 +31,12 @@
         <RichTextView v-else :content="statusLine" />
       </h5>
       <button
-        v-if="analysisOffered && !analysisMode && actionsEnabled"
-        class="btn btn-sm btn-link planning-entry"
+        v-if="analysisOffered && !analysisMode"
+        class="btn btn-sm btn-outline-primary planning-entry"
         title="Try moves without playing them"
         @click="$emit('analysis-start')"
       >
-        Simulate moves
+        {{ actionsEnabled ? "Simulate moves" : "Plan a move" }}
       </button>
       <!-- The Silent Auction / ban-phase explainer buttons used to sit here. They now live in
            SetupStatus.vue's round-0 strip at the top of the page (Game.vue), which - unlike this
@@ -95,12 +95,12 @@
           <RichTextView v-else :content="statusLine" />
         </h5>
         <button
-          v-if="analysisOffered && !analysisMode && actionsEnabled"
-          class="btn btn-sm btn-link planning-entry"
+          v-if="analysisOffered && !analysisMode"
+          class="btn btn-sm btn-outline-primary planning-entry"
           title="Try moves without playing them"
           @click="$emit('analysis-start')"
         >
-          Simulate moves
+          {{ actionsEnabled ? "Simulate moves" : "Plan a move" }}
         </button>
         <span class="chat-shortcut-host"></span>
         <!-- No explainer buttons here either: the bar is never pinned during the ban/pick/bid phases
@@ -731,6 +731,7 @@ export default class Commands extends Vue implements CommandController {
   private zoomCompensation: ZoomCompensationHandle | null = null;
 
   get titles() {
+    if (!this.actionsEnabled && !this.analysisMode) return [`Playing - Round ${this.engine.round}`];
     return this.commandTitles.length === 0 ? [`Your turn - Round ${this.engine.round}`] : this.commandTitles;
   }
 
@@ -1264,13 +1265,20 @@ export default class Commands extends Vue implements CommandController {
 $planning-background: var(--ui-surface-muted);
 $planning-accent: var(--ui-warning-border);
 
-// Status dot on the auto-leech dropdown button - green/pulsing while it's set to actually act on
-// its own, static red while off ("ask every time"), so the button's current state reads at a
-// glance without parsing its ("Charge: off"/"Charge: 3") text.
 .planning-entry {
   margin-left: auto;
   flex-shrink: 0;
-  padding: 0.15rem 0.4rem;
+  padding: 0.25rem 0.6rem;
+  color: var(--ui-text);
+  border-color: var(--ui-border-strong);
+  background: linear-gradient(180deg, var(--ui-keycap-gradient-start), var(--ui-keycap-gradient-end));
+  box-shadow: 0 1px 2px var(--ui-shadow-soft);
+  &:hover,
+  &:focus {
+    color: var(--ui-text);
+    background: var(--ui-surface-muted);
+    border-color: var(--ui-border-strong);
+  }
 }
 
 // One fixed-width column for the faction buttons and one for the number boxes, so the bid inputs

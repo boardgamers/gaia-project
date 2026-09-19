@@ -364,7 +364,7 @@ describe("Game", () => {
     const lockedVm = mountWithSeat(1);
     await Vue.nextTick();
     expect(lockedVm.canPlay).to.equal(false);
-    expect(lockedVm.$el.querySelector("#move-buttons")).to.equal(null);
+    expect(lockedVm.$el.querySelectorAll("#move-buttons .move-button").length).to.equal(0);
     expect(lockedVm.$el.textContent).to.not.contain("Sequential premove");
     lockedVm.$el.remove();
     lockedVm.$destroy();
@@ -576,7 +576,7 @@ describe("Game", () => {
       // clone's turn order to whichever seat you enter as, regardless of the real playerToMove at
       // entry, so the entry gate no longer needs to require canPlay for a locked seat.
       const offTurn = mountAsSeat(1);
-      expect(offTurn.canPlay).to.equal(false); // Commands.vue itself still correctly stays hidden
+      expect(offTurn.canPlay).to.equal(false); // Live action buttons stay disabled.
       expect(offTurn.analysisOffered).to.equal(true);
       offTurn.$el.remove();
       offTurn.$destroy();
@@ -604,6 +604,7 @@ describe("Game", () => {
       expect(vm.$el.querySelector(".premove-queue")).to.equal(null);
       const start = vm.$el.querySelector("#move-title .planning-entry");
       expect(start.textContent).to.contain("Simulate moves");
+      expect(start.classList.contains("btn-outline-primary")).to.equal(true);
       await fireEvent.click(start);
       expect(vm.analysisMode).to.equal(true);
       expect(vm.$el.querySelector(".premove-queue")).not.to.equal(null);
@@ -612,6 +613,27 @@ describe("Game", () => {
       expect(vm.$el.querySelector(".premove-queue")).to.equal(null);
       vm.$el.remove();
       vm.$destroy();
+    });
+
+    it("keeps planning and auto-charge in the off-turn action bar without an empty card", async () => {
+      const vm = mountAsSeat(1);
+      vm.$store.commit("hosted", true);
+      vm.$store.commit("playerSettings", { autoCharge: "3" });
+      await Vue.nextTick();
+      expect(vm.$el.querySelector(".premove-queue")).to.equal(null);
+      const start = vm.$el.querySelector("#move-title .planning-entry");
+      expect(start.textContent).to.contain("Plan a move");
+      expect(vm.$el.querySelector("#move-title").textContent).not.to.contain("Your turn");
+      expect(start.classList.contains("btn-outline-primary")).to.equal(true);
+      expect(vm.$el.querySelector(".auto-leech-select")).not.to.equal(null);
+      expect(vm.$el.querySelectorAll("#move-buttons .move-button").length).to.equal(0);
+      await fireEvent.click(start);
+      expect(vm.analysisMode).to.equal(true);
+      vm.exitAnalysisMode();
+      await Vue.nextTick();
+      expect(vm.$el.querySelector(".premove-queue")).to.equal(null);
+      vm.$destroy();
+      vm.$el.remove();
     });
 
     it("still shows queued moves and cancellation while on turn", async () => {
