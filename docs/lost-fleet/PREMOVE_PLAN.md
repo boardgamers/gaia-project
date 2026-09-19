@@ -1,3 +1,7 @@
+> **Archived:** this plan describes the retired standalone Lost Fleet host. BGS uses the
+> engine-owned queue documented in [BGS premoves](../bgs-premoves.md), with the sandbox as its
+> only composer. The separate editor, cancellation triggers and Supabase transport were removed.
+
 # Premove — Implementation Plan (consolidated, ready for handoff)
 
 > Status: **design finalized + reviewed, nothing built yet.** Originally written 2026-07-04 and

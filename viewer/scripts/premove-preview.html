@@ -1,0 +1,104 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Gaia Project · Premoves preview</title>
+    <link rel="stylesheet" href="/bundle.css" />
+    <style>
+      body {
+        margin: 0;
+      }
+      .preview-tools {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 16px;
+        background: #123a5a;
+        color: #fff;
+        flex-wrap: wrap;
+      }
+      .preview-tools a {
+        color: #cceaff;
+      }
+      .preview-tools strong {
+        margin-right: auto;
+      }
+      .preview-tools button {
+        border: 1px solid #82a9c7;
+        background: transparent;
+        color: #fff;
+        border-radius: 5px;
+        padding: 5px 10px;
+      }
+      #error {
+        color: #902b20;
+        background: #fff2e9;
+        padding: 10px;
+      }
+      #error:empty {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="preview-tools">
+      <strong>Gaia Project · Local premove preview</strong><a id="other" target="_blank">Other player's view ↗</a
+      ><button id="opponent">Play opponent's turn</button><button id="reset">Reset position</button
+      ><button id="theme">Light / dark</button>
+    </header>
+    <div id="error" role="alert"></div>
+    <div id="app"></div>
+    <script src="/vue.js"></script>
+    <script src="/bootstrap.js"></script>
+    <script src="/bundle.js"></script>
+    <script>
+      const seat = Number(new URL(location.href).searchParams.get("seat") ?? 1);
+      const host = gaiaViewer.launch("#app");
+      let revision = -1;
+      document.querySelector("#other").href = "/?seat=" + (1 - seat);
+      async function send(path, body) {
+        const response = await fetch(
+          path + "?seat=" + seat,
+          body === undefined
+            ? {}
+            : { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
+        );
+        const data = await response.json();
+        if (data.error) {
+          host.store.commit("planError", data.error);
+          document.querySelector("#error").textContent = data.error;
+          return;
+        }
+        document.querySelector("#error").textContent = "";
+        revision = data.revision;
+        host.emit("state", data.state);
+      }
+      host.on("fetchState", () => send("/state"));
+      host.on("move", (move) => send("/move", { move }));
+      host.emit("player", { index: seat });
+      host.emit("preferences", { sound: false });
+      host.emit("chat:state", { canSend: false, mentions: [] });
+      host.emit("chat:messages", []);
+      document.querySelector("#opponent").onclick = () => send("/opponent", {});
+      document.querySelector("#reset").onclick = () => {
+        localStorage.clear();
+        send("/reset", {});
+      };
+      document.querySelector("#theme").onclick = () => {
+        const dark = document.documentElement.dataset.theme !== "dark";
+        document.documentElement.classList.toggle("dark", dark);
+        host.emit("theme", { dark });
+      };
+      setInterval(async () => {
+        const response = await fetch("/state?seat=" + seat);
+        const data = await response.json();
+        if (data.revision !== revision) {
+          revision = data.revision;
+          host.emit("state", data.state);
+        }
+      }, 1000);
+      send("/state");
+    </script>
+  </body>
+</html>

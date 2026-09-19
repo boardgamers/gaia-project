@@ -13,7 +13,7 @@ Vue.use(BootstrapVue);
 // presses, which is what keeps the two copies from ever disagreeing about which tab is open.
 describe("AnalysisLineTabs", () => {
   const line = (over: Partial<AnalysisLineSummary> = {}): AnalysisLineSummary => ({
-    label: "Line 1",
+    label: "Plan A",
     moves: 0,
     victoryPoints: 0,
     overdrawn: false,
@@ -39,27 +39,26 @@ describe("AnalysisLineTabs", () => {
       .trim();
   }
 
-  it("numbers the tabs rather than naming them", () => {
-    const { container } = tabs({ lines: [line(), line({ label: "Line 2" })], active: 0 });
-    expect(tabButtons(container).map(tabText)).to.deep.equal(["Line 1", "Line 2"]);
+  it("labels alternative plans alphabetically", () => {
+    const { container } = tabs({ lines: [line(), line({ label: "Plan B" })], active: 0 });
+    expect(tabButtons(container).map(tabText)).to.deep.equal(["Plan A", "Plan B"]);
   });
 
   it("marks the open tab, and only it", () => {
-    const { container } = tabs({ lines: [line(), line({ label: "Line 2" })], active: 1 });
+    const { container } = tabs({ lines: [line(), line({ label: "Plan B" })], active: 1 });
     const marked = tabButtons(container).map((b) => b.classList.contains("analysis-tabs__tab--active"));
     expect(marked).to.deep.equal([false, true]);
   });
 
-  // The reason the strip is a comparison and not a bookmark list: switching replaces the board, so
-  // every line's outcome has to be readable without switching to it.
-  it("puts each line's own VP on its own tab", () => {
+  it("keeps VP changes out of the tabs", () => {
     const { container } = tabs({
-      lines: [line({ moves: 3, victoryPoints: 7 }), line({ label: "Line 2", moves: 2, victoryPoints: -2 })],
+      lines: [
+        line({ moves: 3, applied: 3, victoryPoints: 7 }),
+        line({ label: "Plan B", moves: 2, applied: 2, victoryPoints: -2 }),
+      ],
       active: 0,
     });
-    const text = tabButtons(container).map(tabText);
-    expect(text[0]).to.contain("+7");
-    expect(text[1]).to.contain("-2");
+    expect(tabButtons(container).map(tabText)).to.deep.equal(["Plan A", "Plan B"]);
   });
 
   it("says nothing about VP for a line with nothing played yet", () => {
@@ -80,7 +79,7 @@ describe("AnalysisLineTabs", () => {
   });
 
   it("reports a press on a tab as a line to open", async () => {
-    const { container, emitted } = tabs({ lines: [line(), line({ label: "Line 2" })], active: 0 });
+    const { container, emitted } = tabs({ lines: [line(), line({ label: "Plan B" })], active: 0 });
     await fireEvent.click(tabButtons(container)[1]);
     expect(emitted().select[0]).to.deep.equal([1]);
   });
@@ -96,15 +95,17 @@ describe("AnalysisLineTabs", () => {
   it("says the plus carries the open line on, once that line has something in it", () => {
     const withMoves = tabs({ lines: [line({ moves: 3, victoryPoints: 5, applied: 3 })], active: 0 });
     expect(withMoves.container.querySelector(".analysis-tabs__add").getAttribute("title")).to.contain(
-      "Carry on from here"
+      "Try a variation of Plan A"
     );
 
     const empty = tabs({ lines: [line()], active: 0 });
-    expect(empty.container.querySelector(".analysis-tabs__add").getAttribute("title")).to.contain("Start another line");
+    expect(empty.container.querySelector(".analysis-tabs__add").getAttribute("title")).to.contain("Start another plan");
   });
 
   it("stops offering new lines at the cap", () => {
-    const lines = Array.from({ length: MAX_ANALYSIS_LINES }, (_, i) => line({ label: `Line ${i + 1}` }));
+    const lines = Array.from({ length: MAX_ANALYSIS_LINES }, (_, i) =>
+      line({ label: `Plan ${String.fromCharCode(65 + i)}` })
+    );
     const { container } = tabs({ lines, active: 0 });
     expect((container.querySelector(".analysis-tabs__add") as HTMLButtonElement).disabled).to.equal(true);
   });
@@ -117,21 +118,21 @@ describe("AnalysisLineTabs", () => {
   });
 
   it("puts delete inside the open tab, and nowhere else", () => {
-    const { container } = tabs({ lines: [line(), line({ label: "Line 2" })], active: 1 });
+    const { container } = tabs({ lines: [line(), line({ label: "Plan B" })], active: 1 });
     const closes = container.querySelectorAll(".analysis-tabs__close");
     expect(closes.length).to.equal(1);
     expect(tabButtons(container)[1].contains(closes[0])).to.equal(true);
   });
 
   it("reports delete against the open line, without also selecting it", async () => {
-    const { container, emitted } = tabs({ lines: [line(), line({ label: "Line 2" })], active: 1 });
+    const { container, emitted } = tabs({ lines: [line(), line({ label: "Plan B" })], active: 1 });
     await fireEvent.click(container.querySelector(".analysis-tabs__close"));
     expect(emitted().close[0]).to.deep.equal([1]);
     expect(emitted().select).to.equal(undefined);
   });
 
   it("opens a line from the keyboard", async () => {
-    const { container, emitted } = tabs({ lines: [line(), line({ label: "Line 2" })], active: 0 });
+    const { container, emitted } = tabs({ lines: [line(), line({ label: "Plan B" })], active: 0 });
     await fireEvent.keyDown(tabButtons(container)[1], { key: "Enter", code: "Enter" });
     expect(emitted().select[0]).to.deep.equal([1]);
   });
@@ -139,7 +140,7 @@ describe("AnalysisLineTabs", () => {
   // Load-bearing: the striped header these sit on is click-to-exit, so a press that reached it would
   // close the sandbox instead of switching lines.
   it("keeps a press on the strip off the header behind it", async () => {
-    const { container } = tabs({ lines: [line(), line({ label: "Line 2" })], active: 0 });
+    const { container } = tabs({ lines: [line(), line({ label: "Plan B" })], active: 0 });
     const host = document.createElement("div");
     let reachedHeader = false;
     host.addEventListener("click", () => (reachedHeader = true));

@@ -54,7 +54,17 @@
         :disable-tooltip="true"
       />
       <Booster v-else-if="c.booster" :key="i" :booster="c.booster" highlighted />
-      <svg v-else-if="c.planet" :key="i" viewBox="-10 -10 20 20" width="20" height="20" :data-planet="c.planet">
+      <svg
+        v-else-if="c.planet"
+        :key="i"
+        viewBox="-10 -10 20 20"
+        width="20"
+        height="20"
+        :data-planet="c.planet"
+        role="img"
+        :aria-label="planetNames[c.planet]"
+      >
+        <title>{{ planetNames[c.planet] }}</title>
         <circle r="7" :class="['planet-fill', c.planet]" style="stroke: black; stroke-width: 0.7" />
       </svg>
       <svg v-else-if="c.text === 'arrow'" :key="i" viewBox="0 0 10 10" width="20" height="20">
@@ -70,6 +80,7 @@ import { Building as BuildingEnum, Faction, Resource } from "@gaia-project/engin
 import Reward from "@gaia-project/engine/src/reward";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
+import { planetNames } from "../../data/planets";
 import { foregroundColor } from "../../graphics/colors";
 import type { RichText, RichTextBuilding, RichTextElement } from "../../graphics/rich-text";
 import { factionColorVar } from "../../graphics/utils";
@@ -85,6 +96,8 @@ import TechTile from "../TechTile.vue";
   components: { Booster, TechTile, BoardAction, Building, SpecialAction, ShipActionIcon, ArtifactIcon },
 })
 export default class RichTextView extends Vue {
+  readonly planetNames = planetNames;
+
   @Prop()
   content: RichText;
 

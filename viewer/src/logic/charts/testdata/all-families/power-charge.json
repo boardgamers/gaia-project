@@ -26,14 +26,14 @@
     }
   },
   "labels": [
-    "Leech 1 (free)",
-    "Leech 2 (1 VP)",
-    "Leech 3 (2 VP)",
-    "Leech 4 (3 VP)",
-    "Leech 5 (4 VP)",
-    "Declined Leech",
-    "Missed Leech (lack of VP)",
-    "Missed Leech (lack of tokens)"
+    "Charge 1 (free)",
+    "Charge 2 (1 VP)",
+    "Charge 3 (2 VP)",
+    "Charge 4 (3 VP)",
+    "Charge 5 (4 VP)",
+    "Declined Charge",
+    "Missed Charge (lack of VP)",
+    "Missed Charge (lack of tokens)"
   ],
   "datasets": [
     {

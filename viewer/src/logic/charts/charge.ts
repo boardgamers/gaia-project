@@ -19,49 +19,49 @@ enum LeechSource {
 const leechSources: ChartSource<LeechSource>[] = [
   {
     type: LeechSource.leech1,
-    label: "Leech 1 (free)",
+    label: "Charge 1 (free)",
     color: "--rt-terra",
     weight: 1,
   },
   {
     type: LeechSource.leech2,
-    label: "Leech 2 (1 VP)",
+    label: "Charge 2 (1 VP)",
     color: "--rt-nav",
     weight: 1,
   },
   {
     type: LeechSource.leech3,
-    label: "Leech 3 (2 VP)",
+    label: "Charge 3 (2 VP)",
     color: "--rt-int",
     weight: 1,
   },
   {
     type: LeechSource.leech4,
-    label: "Leech 4 (3 VP)",
+    label: "Charge 4 (3 VP)",
     color: "--rt-gaia",
     weight: 1,
   },
   {
     type: LeechSource.leech5,
-    label: "Leech 5 (4 VP)",
+    label: "Charge 5 (4 VP)",
     color: "--rt-eco",
     weight: 1,
   },
   {
     type: LeechSource.Declined,
-    label: "Declined Leech",
+    label: "Declined Charge",
     color: "--lost",
     weight: 0,
   },
   {
     type: LeechSource.MissedVp,
-    label: "Missed Leech (lack of VP)",
+    label: "Missed Charge (lack of VP)",
     color: "--rt-sci",
     weight: 0,
   },
   {
     type: LeechSource.MissedCharge,
-    label: "Missed Leech (lack of tokens)",
+    label: "Missed Charge (lack of tokens)",
     color: "--tech-tile",
     weight: 0,
   },
@@ -116,8 +116,8 @@ export const terranChargeExtractLog: (sourceType: any) => ExtractLogEntry<any> =
 });
 
 export const leechSourceFactory: SimpleSourceFactory<ChartSource<LeechSource>> = {
-  name: "Power Leech",
-  playerSummaryLineChartTitle: "Power Leech of all players",
+  name: "Power Charge",
+  playerSummaryLineChartTitle: "Power Charge of all players",
   summary: ChartSummary.weightedTotal,
   extractChange: powerChargeDetails(),
   extractLog: ExtractLog.mux([

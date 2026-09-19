@@ -68,10 +68,12 @@ export function hexSelectionButton(
         label.push(richText(hex.toString()));
       }
 
-      // Lost Fleet Interspace/Deep Space addresses (IS3, DS14_1) don't carry a readable sector
-      // reference like base-game coordinates do, so show which planet the button targets
-      if (hex.data.planet !== Planet.Empty && classifySectorId(hex.data.sector) !== LostFleetSectorType.Space) {
-        label.push(richTextPlanet(hex.data.planet), richText(planetNames[hex.data.planet]));
+      // Identify Lost Fleet destinations by their planet icon; keep the full name in the tooltip
+      // instead of repeating it in every button of the mobile action bar.
+      const showPlanet =
+        hex.data.planet !== Planet.Empty && classifySectorId(hex.data.sector) !== LostFleetSectorType.Space;
+      if (showPlanet) {
+        label.push(richTextPlanet(hex.data.planet));
       }
 
       const highlightHex = hexes.get(hex);
@@ -96,7 +98,7 @@ export function hexSelectionButton(
       }
 
       b.warning = buttonWarnings(highlightHex.warnings);
-      b.tooltip = tooltipWithShortcut(null, b.warning);
+      b.tooltip = tooltipWithShortcut(showPlanet ? `${hex}: ${planetNames[hex.data.planet]}` : null, b.warning);
 
       b.hover = {
         enter: () => {

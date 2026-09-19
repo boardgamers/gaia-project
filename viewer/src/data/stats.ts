@@ -29,5 +29,5 @@ export const mapModeTypeOptions = [
   { value: MapModeType.default, text: "Default" },
   { value: MapModeType.sectors, text: "Sectors" },
   { value: MapModeType.federations, text: "Federations" },
-  { value: MapModeType.leech, text: "Leech Network" },
+  { value: MapModeType.leech, text: "Charge Network" },
 ];

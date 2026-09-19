@@ -8,6 +8,9 @@ import Engine, {
   Reward,
   Round,
 } from "@gaia-project/engine";
+import type { PremoveTiming } from "@gaia-project/engine/src/premove-types";
+
+import { parseCommands } from "./recent";
 
 // Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md) - a local, non-committing sandbox clone of
 // the board. The "line" is the ordered list of turns played inside it. Persistence is localStorage
@@ -57,26 +60,19 @@ export interface AnalysisResourceView {
   ores: number;
   knowledge: number;
   qics: number;
+  victoryPoints?: number;
   /** The engine's own tally of power the sandbox assumed this seat charged (§12) - absent on a
    * plain-JSON'd snapshot taken before the field existed, hence optional. */
   analysisAssumedPower?: number;
 }
 
-/** Marks the analysis seat's player data as the sandbox seat (§3.4/§12, engine player-data.ts's
- * `analysis` flag): affordability stops being enforced for it, so an unaffordable move can be played
- * and the resulting debt shown, and `spendPower` tops up rather than driving a power bowl negative.
- * Must be re-applied after every `Engine.fromData` reconstruction in this file, since the flag is
- * deliberately absent from `toJSON()` and so never survives a serialize/deserialize round trip.
- *
- * `analysisAssumedPower` (the running total of that top-up) is absent from `toJSON()` for the same
- * reason, and it is a TALLY rather than a flag - so every reconstruction has to be handed the total
- * so far explicitly, or the count silently restarts at 0 on each clone and the header can only ever
- * report whatever the last step happened to top up. Callers that continue an existing line pass the
- * carried total; a genuinely fresh start passes nothing and gets 0. */
+/** Enables explicit planning options while preserving the position's normal resource checks.
+ * Re-applied after cloning because the flag is intentionally not serialized. */
 export function markAnalysisSeat(engine: Engine, seat: number, assumedPower = 0): Engine {
   const data = engine.players[seat]?.data;
   if (data) {
     data.analysis = true;
+    data.validatingFuturePremove = false;
     data.analysisAssumedPower = assumedPower;
   }
   return engine;
@@ -98,32 +94,20 @@ export function chargedPowerTotal(entries: AnalysisEntry[]): number {
   return entries.reduce((total, entry) => (entry.kind === "adjust" ? total + entry.charge : total), 0);
 }
 
-/** One overdrawn resource: how far below zero the line has driven it. */
-export interface AnalysisOverdraft {
-  /** The resource's single-letter icon key, matching the viewer's own `Resource` kinds. */
-  kind: "c" | "o" | "k" | "q";
-  /** Always negative - the number the player board is showing in red. */
+export interface AnalysisResourceChange {
+  /** The resource's icon key, matching the viewer's own `Resource` kinds. */
+  kind: "c" | "o" | "k" | "q" | "vp";
+  /** Signed amount: positive for a gain, negative for a spend or deficit. */
   amount: number;
 }
 
-/**
- * What the header needs to say about a line, and nothing more (§12).
- *
- * There used to be a full per-resource counter here, with a `displayed` figure (clone minus the
- * granted sandbox wallet) beside a `net` one, plus a power bowl delta and a per-entry feasibility
- * scan. All of it existed to undo the fake wallet analysis mode used to inject. Nothing injects
- * anything now - the seat keeps its real resources and simply goes negative - so the player board is
- * already showing every one of those numbers, live, in the place players actually read them. What is
- * left is the three facts the board CANNOT show: a compact overdraft summary for when the board is
- * scrolled off screen on mobile, how much power the sandbox topped up on its own, and how much the
- * player has told it to assume they charge.
- *
- * The last one matters because a Charge 1 press and a power spend both just move tokens between
- * bowls - once a later move has spent that power, the bowls can read exactly as they did before the
- * charge, so "did my charge land?" is genuinely unanswerable from the board alone (the reported
- * bug). The running total answers it.
- */
+/** One overdrawn resource: how far below zero the plan has driven it. */
+export type AnalysisOverdraft = AnalysisResourceChange;
+
+/** Resource changes and simulation assumptions for the selected plan. */
 export interface AnalysisStatus {
+  /** Net resource change from the start of the selected plan, including the unfinished turn. */
+  changes?: AnalysisResourceChange[];
   /** Empty when the line is genuinely affordable. */
   overdrawn: AnalysisOverdraft[];
   /** 0 unless a power cost was topped up (see engine `assumePowerForAnalysis`). */
@@ -132,7 +116,11 @@ export interface AnalysisStatus {
   chargedPower: number;
 }
 
-export function computeAnalysisStatus(data: AnalysisResourceView, chargedPower = 0): AnalysisStatus {
+export function computeAnalysisStatus(
+  data: AnalysisResourceView,
+  chargedPower = 0,
+  origin?: AnalysisResourceView
+): AnalysisStatus {
   const overdrawn: AnalysisOverdraft[] = [];
   const add = (kind: AnalysisOverdraft["kind"], amount: number) => {
     if (amount < 0) {
@@ -143,7 +131,20 @@ export function computeAnalysisStatus(data: AnalysisResourceView, chargedPower =
   add("o", data.ores);
   add("k", data.knowledge);
   add("q", data.qics);
-  return { overdrawn, assumedPower: data.analysisAssumedPower ?? 0, chargedPower };
+  const changes: AnalysisResourceChange[] = origin
+    ? (
+        [
+          ["c", "credits"],
+          ["o", "ores"],
+          ["k", "knowledge"],
+          ["q", "qics"],
+          ["vp", "victoryPoints"],
+        ] as const
+      )
+        .map(([kind, field]) => ({ kind, amount: (data[field] ?? 0) - (origin[field] ?? 0) }))
+        .filter(({ amount }) => amount !== 0)
+    : [];
+  return { changes, overdrawn, assumedPower: data.analysisAssumedPower ?? 0, chargedPower };
 }
 
 /** The stored shape BEFORE §13's tab strip - one line per game+seat. Kept solely so
@@ -176,6 +177,8 @@ export interface AnalysisLineSet {
   active: number;
   baseRound: number;
   baseMoveCount: number;
+  /** Last real move at the saved base, used to detect a rollback before trimming. */
+  baseMove?: string;
 }
 
 /** How many lines the strip will hold. The cap is the header's width far more than localStorage's
@@ -183,11 +186,9 @@ export interface AnalysisLineSet {
  * horizontally to read is not much of a comparison. */
 export const MAX_ANALYSIS_LINES = 5;
 
-/** Tabs are numbered, never named (owner instruction) - "Line 1", "Line 2". A name would be one more
- * thing to type before you can get on with the actual question, and the tab already carries the only
- * label that matters for comparing: its own outcome. */
+/** Label the alternative plans without requiring players to name them. */
 export function analysisLineLabel(index: number): string {
-  return `Line ${index + 1}`;
+  return `Plan ${String.fromCharCode(65 + index)}`;
 }
 
 /** Forces the invariants the rest of the code assumes: at least one line, `active` inside it, and no
@@ -214,9 +215,10 @@ export function analysisLineSetSize(set: AnalysisLineSet): number {
   return set.lines.reduce((total, entries) => total + entries.length, 0);
 }
 
-function storageKey(seat: number): string {
-  // Same convention as the old notes sheet's localKey(): a hosted game's `?game=<id>` and a
-  // self-contained game's full launch query string both already uniquely identify "this game".
+function storageKey(seat: number, scope?: string): string {
+  // BGS shares one iframe URL across games. Its initial move contains the game seed/name,
+  // so hosted callers supply that stable identity instead of sharing a query-string key.
+  if (scope !== undefined) return `analysis-mode:game:${scope}:${seat}`;
   const search = typeof window !== "undefined" ? window.location.search : "";
   return `analysis-mode:${search}:${seat}`;
 }
@@ -229,15 +231,13 @@ function storageKey(seat: number): string {
  * leave the old one behind for a later version to trip over. A stored value that is neither shape
  * reads as "nothing stored", exactly as an unparseable one always has.
  */
-export function loadAnalysisLines(seat: number): AnalysisLineSet | null {
+export function loadAnalysisLines(seat: number, scope?: string): AnalysisLineSet | null {
   if (typeof window === "undefined") {
     return null;
   }
-  const raw = window.localStorage.getItem(storageKey(seat));
-  if (!raw) {
-    return null;
-  }
   try {
+    const raw = window.localStorage.getItem(storageKey(seat, scope));
+    if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (parsed && Array.isArray(parsed.lines)) {
       return normalizeAnalysisLineSet(parsed as AnalysisLineSet);
@@ -257,9 +257,13 @@ export function loadAnalysisLines(seat: number): AnalysisLineSet | null {
   }
 }
 
-export function saveAnalysisLines(seat: number, set: AnalysisLineSet): void {
+export function saveAnalysisLines(seat: number, set: AnalysisLineSet, scope?: string): void {
   if (typeof window !== "undefined") {
-    window.localStorage.setItem(storageKey(seat), JSON.stringify(normalizeAnalysisLineSet(set)));
+    try {
+      window.localStorage.setItem(storageKey(seat, scope), JSON.stringify(normalizeAnalysisLineSet(set)));
+    } catch {
+      // A blocked/full browser store must not prevent playing or queuing a move.
+    }
   }
 }
 
@@ -277,16 +281,16 @@ export function saveAnalysisLines(seat: number, set: AnalysisLineSet): void {
  * same double-digit number on every tab and the difference between them is the whole question.
  */
 export interface AnalysisLineSummary {
-  /** "Line 1", "Line 2" - see `analysisLineLabel`. */
+  /** "Plan A", "Plan B" - see `analysisLineLabel`. */
   label: string;
-  /** Entries in the line, including `adjust`/`faction` ones - the same figure the header counts. */
+  /** Complete game turns, excluding simulation adjustments. */
   moves: number;
   /** VP this line ends on, minus the VP the seat started the sandbox with. */
   victoryPoints: number;
   /** True when the line spends more than the seat has - a VP total bought with resources that do not
    * exist is not comparable to one that is actually payable, so the tab has to say so. */
   overdrawn: boolean;
-  /** How many entries actually replayed. Below `moves` only after a re-anchor (§3.5) dropped part of
+  /** How many game turns actually replayed. Below `moves` only after a re-anchor (§3.5) dropped part of
    * the line; the tab flags it so a truncated line is never silently compared as if it were whole. */
   applied: number;
 }
@@ -316,10 +320,10 @@ export function summarizeAnalysisLine(
   const data = engine.players[seat]?.data;
   return {
     label,
-    moves: entries.length,
+    moves: entries.filter((entry) => entry.kind === "move").length,
     victoryPoints: (data?.victoryPoints ?? baseVictoryPoints) - baseVictoryPoints,
     overdrawn: data ? computeAnalysisStatus(data).overdrawn.length > 0 : false,
-    applied,
+    applied: entries.slice(0, applied).filter((entry) => entry.kind === "move").length,
   };
 }
 
@@ -331,9 +335,13 @@ export function summarizeAnalysisLine(
  * other line in the set was an ALTERNATIVE to the move that has now been played for real, worked out
  * from a board state the game has since left. Keeping them would leave tabs sitting there whose
  * numbers describe a table that no longer exists. */
-export function clearAnalysisLine(seat: number): void {
+export function clearAnalysisLine(seat: number, scope?: string): void {
   if (typeof window !== "undefined") {
-    window.localStorage.removeItem(storageKey(seat));
+    try {
+      window.localStorage.removeItem(storageKey(seat, scope));
+    } catch {
+      // The server queue remains independent of local sandbox persistence.
+    }
   }
 }
 
@@ -590,23 +598,6 @@ export function applyFactionSeed(engine: Engine, lineup: Faction[]): void {
   endSetupFactionPhase(engine);
 }
 
-/** The two-round cap (§3.7): Pass is allowed while still in the round the line started on;
- * suppressed once the clone has advanced into its one bonus round - except round 6, the deliberate
- * exception (passing there ends the game for real, which is worth seeing). Exported so the UI can
- * explain a missing Pass button rather than leave it looking like it just vanished. */
-export function passAllowed(round: number, baseRound: number): boolean {
-  return round < baseRound + 1 || round === Round.LastRound;
-}
-
-/** Removes Command.Pass from the clone's available commands once the two-round cap forbids it, so
- * the button is simply never offered - the same "if you can't, the button doesn't exist" principle
- * affordability already uses (§2.3), applied here to a policy limit instead of a resource one. */
-export function stripCappedPass(engine: Engine, baseRound: number): void {
-  if (!passAllowed(engine.round, baseRound) && engine.availableCommands) {
-    engine.availableCommands = engine.availableCommands.filter((c) => c.name !== Command.Pass);
-  }
-}
-
 /**
  * Opponent decisions (§2.8) - your own building can trigger a leech offer to an opponent
  * (`beginLeechingPhase`, move/phase.ts), and the engine pauses on `Phase.RoundLeech` waiting for
@@ -642,7 +633,9 @@ export function resolveOpponentDecisions(engine: Engine, seat: number): void {
       if (
         tryMoves(
           engine,
-          offers.map((offer) => `${faction} ${Command.Decline} ${offer}`)
+          offers.length
+            ? offers.map((offer) => `${faction} ${Command.Decline} ${offer}`)
+            : [`${faction} ${Command.Decline}`]
         )
       ) {
         continue;
@@ -696,14 +689,22 @@ export function resolveOpponentDecisions(engine: Engine, seat: number): void {
         continue;
       }
     }
-    // Not a leech offer (a brainstone placement, an income choice, a faction pick): the engine's own
-    // heuristics are the right answer for those, and they cannot be expressed as a Decline.
+    // Opponents cannot answer prompts in a solo preview. Use the engine's income/brainstone
+    // heuristics even when their live preferences require a manual answer. Restore those settings
+    // afterwards; the planning player's own choices are never automated here.
+    const settings = engine.players[toMove].settings;
+    const { autoIncome, autoBrainstone } = settings;
     try {
+      settings.autoIncome = true;
+      settings.autoBrainstone = true;
       if (engine.autoMove()) {
         continue;
       }
     } catch {
       break;
+    } finally {
+      settings.autoIncome = autoIncome;
+      settings.autoBrainstone = autoBrainstone;
     }
     break; // Nothing this function knows how to resolve - stop rather than guess at a move.
   }
@@ -776,11 +777,7 @@ export function applyLeechAdjustment(engine: Engine, seat: number, charge: numbe
   data.gainRewards([new Reward(charge, Resource.ChargePower)], true, Command.ChargePower);
 }
 
-/** Whether a real (already-committed) `move` string from `engine.moveHistory` was made by `seat` -
- * used for §3.5's staleness check, to tell "only opponents moved since this line was saved" apart
- * from "I moved myself" (the row that needs a keep/clear prompt instead of a silent replay). Mirrors
- * the exact prefix format `engine.ts`'s own `loadTurnMoves` parses a move's acting player from
- * (`p<N>`, 1-indexed, or the player's faction name) rather than inventing a second convention. */
+/** Identify a real move's seat using either its faction or the engine's p<N> notation. */
 export function moveBelongsToSeat(engine: Engine, move: string, seat: number): boolean {
   const spaceIndex = move.indexOf(" ");
   const token = spaceIndex === -1 ? move : move.slice(0, spaceIndex);
@@ -790,58 +787,65 @@ export function moveBelongsToSeat(engine: Engine, move: string, seat: number): b
   return engine.players[seat]?.faction === token;
 }
 
-/** How many of `moves` (a slice of a real `moveHistory`) were played by `seat` - the budget behind
- * `dropPlayedAnalysisPrefix`. */
+/** Count main decisions, excluding automatic power and income responses. */
 export function ownMoveCount(engine: Engine, moves: string[], seat: number): number {
-  return moves.filter((move) => moveBelongsToSeat(engine, move, seat)).length;
+  return moves.filter(
+    (move) => moveBelongsToSeat(engine, move, seat) && !/^\S+\s+(?:charge|decline|income|brainstone)\b/.test(move)
+  ).length;
 }
 
-/**
- * Drops the leading entries of a line that the player has since played FOR REAL (§3.5's own-move
- * row), so restoring a line you followed at the table continues it instead of reporting nothing.
- *
- * This is the whole reason "I made the same line in the real game, then got 0 moves restored" was
- * the common outcome: `replayAnalysisLine` starts from the top and stops at the first entry the
- * engine rejects, and after you play the line's first move for real that entry is exactly the one
- * that is now illegal (the mine is already on the hex). The more faithfully the line was followed,
- * the more certainly restoring it returned nothing - and, before this, wrote that nothing back over
- * the saved line.
- *
- * An entry is dropped only when BOTH tests agree, which is what keeps this from quietly editing a
- * line the player did not play:
- *
- * - It no longer applies to `origin` on its own. `origin` is the board AFTER the real moves, so a
- *   move that has genuinely already happened cannot be played again; one that still applies is
- *   still ahead of the player and is kept, even if the budget would have allowed dropping it.
- * - The budget is not spent. `budget` is how many real moves this seat has actually made since the
- *   line was saved, so the line can never lose more entries than there were real moves to account
- *   for them.
- *
- * Only a leading run of `move` entries is considered: an `adjust` or `faction` entry is sandbox
- * fiction with no real move behind it (`committableAnalysisMoves`), so nothing in the real history
- * can ever have been it, and the scan stops there rather than skipping past it.
- */
+/** Compare actions, ignoring display annotations, coordinate aliases and the 3c price guard.
+ * The guard changes when an upgrade may execute, not which upgrade was played. */
+function analysisMoveKey(engine: Engine, move: string): string {
+  return JSON.stringify(
+    parseCommands(move).map(({ command, args }) => {
+      if (command === Command.Build) args = args.slice(0, 2);
+      if (command === Command.Pass || command === Command.UpgradeResearch) args = args.slice(0, 1);
+      return [
+        command,
+        ...args.map((arg) =>
+          arg
+            .split(",")
+            .map((token) => {
+              if (!/^(?:-?\d+x-?\d+|\d+[AB]\d+|IS\d+|DS\d+_\d+)$/.test(token)) return token;
+              try {
+                const { q, r } = engine.map.parse(token);
+                return `${q}x${r}`;
+              } catch {
+                return token;
+              }
+            })
+            .join(",")
+        ),
+      ];
+    })
+  );
+}
+
+/** Trim only a matching prefix actually present in this seat's new real history.
+ * A repeatable action (research, for example) is consumed once per real turn. An invalid
+ * alternative is never mistaken for a played move. Assumed charges leading into a consumed
+ * turn go with it, so they cannot be added again on top of the real board. */
 export function dropPlayedAnalysisPrefix(
-  origin: Engine,
+  engine: Engine,
   entries: AnalysisEntry[],
   seat: number,
-  baseRound: number,
-  budget: number
+  playedMoves: string[]
 ): { entries: AnalysisEntry[]; dropped: number } {
+  let consumed = 0;
   let dropped = 0;
-  while (dropped < budget && dropped < entries.length) {
-    const entry = entries[dropped];
-    if (entry.kind !== "move") {
-      break;
+  for (const move of playedMoves) {
+    if (!moveBelongsToSeat(engine, move, seat)) continue;
+    let next = consumed;
+    while (entries[next]?.kind === "adjust") next++;
+    const entry = entries[next];
+    if (entry?.kind !== "move" || !moveBelongsToSeat(engine, entry.move, seat)) continue;
+    if (analysisMoveKey(engine, entry.move) === analysisMoveKey(engine, move)) {
+      consumed = next + 1;
+      dropped++;
     }
-    // Each surviving entry is tested against `origin` alone, not against the entries before it:
-    // everything already dropped is baked into `origin` by virtue of having been played for real.
-    if (replayAnalysisLine(origin, [entry], seat, baseRound).applied === 1) {
-      break;
-    }
-    dropped++;
   }
-  return { entries: dropped === 0 ? entries : entries.slice(dropped), dropped };
+  return { entries: consumed ? entries.slice(consumed) : entries, dropped };
 }
 
 /**
@@ -852,18 +856,11 @@ export function dropPlayedAnalysisPrefix(
  *
  * `seat`'s player data is re-marked as the sandbox seat (`markAnalysisSeat`, §3.4/§12) after every
  * reconstruction, since the flag never survives the `JSON.parse(JSON.stringify(...))` round trip this
- * function (and every other clone in the analysis pipeline) relies on. That flag is now the whole
- * mechanism: with affordability lifted in the engine, the seat keeps its real resources and simply
- * goes negative, so there is no wallet to grant, carry between calls, or subtract back out - the
- * player board reads the true numbers straight off the replayed engine.
+ * function (and every other clone in the analysis pipeline) relies on. Resource checks stay active:
+ * an unaffordable entry stops replay at the last valid position, including for older saved drafts.
  *
- * The one thing that DOES have to be carried by hand across those clones is `analysisAssumedPower`:
- * it is a tally rather than a flag, and it is dropped by the same round trip, so without threading
- * it through each step the returned engine would only report whatever the LAST entry topped up
- * rather than what the line as a whole assumed.
- *
- * After each entry lands, opponent decisions are auto-resolved (§2.8) and the two-round cap's Pass
- * suppression (§3.7) is reapplied, since both depend on where the line has gotten to.
+ * After each entry lands, opponent decisions are auto-resolved and solo turn order is restored,
+ * including after income and other round transitions.
  */
 export function replayAnalysisLine(
   origin: Engine,
@@ -879,14 +876,9 @@ export function replayAnalysisLine(
     seat,
     assumedPowerOf(origin, seat)
   );
-  // Regenerate before anything reads them: `Engine.fromData` carries over the command list `origin`
-  // was serialized with, and that list was built while affordability still applied to this seat. With
-  // the flag now set, the same position offers strictly more (§12) - without this an empty line shows
-  // the real game's buttons, so entering analysis mode appeared to change nothing until the first
-  // move happened to regenerate them.
+  // Recompute choices using this position's resources and explicit planning options.
   engine.clearAvailableCommands();
   engine.generateAvailableCommands();
-  stripCappedPass(engine, baseRound);
   let applied = 0;
   for (const entry of entries) {
     const copy = markAnalysisSeat(
@@ -914,56 +906,28 @@ export function replayAnalysisLine(
     } catch {
       break;
     }
-    resolveOpponentDecisions(copy, seat);
+    // Finishing income/setup can enter a round with the real multiplayer turn order. Reapply the
+    // solo turn order after resolving opponents, just as when entering or rebasing a preview.
+    settleAnalysisClone(copy, seat);
     // Unconditional, and it has to come after the decisions above. `Engine.executeMove` nulls the
     // command list after every successful move, including the declines `resolveOpponentDecisions`
     // plays - and nothing downstream regenerates it, because `Commands.vue` reads
     // `engine.availableCommands` straight off the store. A null list renders as an empty command area
     // with only the Back button in it, which was the reported "I built inside leech range, the log
     // shows the opponents declining, and then I'm stuck": the declines had worked exactly as intended
-    // and simply left the position with no commands generated for it. `stripCappedPass` below also
-    // silently did nothing whenever this happened, for the same reason.
+    // and simply left the position with no commands generated for it.
     copy.generateAvailableCommandsIfNeeded();
-    stripCappedPass(copy, baseRound);
     engine = copy;
     applied++;
   }
   return { engine, applied };
 }
 
-/** §6's queue cap: 1 move committed live plus `PremoveBar.vue`'s own 3-row queue limit - never
- * arbitrary, it's just what the existing premove machinery already allows. */
-export const MAX_COMMITTABLE_MOVES = 4;
+// Bound both previews and server submissions to three turns.
+export const MAX_COMMITTABLE_MOVES = 3;
 
-/**
- * The commit path's affordability gate (§6, decision #13). Only "move" entries are ever committed -
- * an `adjust` entry is analysis-only fiction (§4.4), so it is stripped out of the line entirely
- * (not merely skipped-but-counted) before replaying, and consequently every move after one is only
- * committable if it is STILL affordable **without** the leech it assumed: this replays the
- * move-only entries completely fresh.
- *
- * Affordability is now simply "did any resource end up negative" (§12) - the sandbox no longer hands
- * the seat resources it does not have, so an overdrawn line is visible in the player data itself. The
- * returned prefix is cut at the first move that leaves the seat overdrawn, since a line that only
- * worked by overspending must never be committable, and separately at wherever the move-only replay
- * stops applying (`applied`, e.g. a move that depended on an adjust entry's power to even be legal).
- *
- * Two whole-line disqualifications come first, both specific to a setup-phase line:
- *
- * - **A faction seed (§11) voids the entire line for commit purposes.** Every move after one was
- *   played on a table this seat only imagined - possibly as a faction it does not even hold - so
- *   nothing in it describes a move the real game would accept.
- * - **Only this seat's own moves are committable.** Setup pass-and-play (§2.6/decision #7) puts
- *   opponents' picks and mine placements in the line as ordinary entries, and committing one would
- *   dispatch a move for somebody else's seat. Truncates at the first foreign move rather than
- *   filtering them out, since committing move 3 without move 2 would not describe the same line.
- *   The replayed engine (not `origin`) resolves the faction prefixes, because a setup line is
- *   typically what assigned those factions in the first place.
- *
- * A power cost that had to be topped up (`analysisAssumedPower`, §12) also blocks the commit: the
- * move is only legal in the sandbox because power was assumed, so it is exactly as hypothetical as an
- * `adjust` entry.
- */
+/** Moves that can be submitted now, replayed without simulated charges. Faction changes and
+ * other players' moves cannot be submitted. The returned prefix stops at the first invalid move. */
 export function committableAnalysisMoves(
   origin: Engine,
   entries: AnalysisEntry[],
@@ -982,8 +946,6 @@ export function committableAnalysisMoves(
 export type AnalysisCommitCut =
   /** §11's faction seed: every move after it was played as a faction this seat may not even hold. */
   | "faction"
-  /** The sandbox's cheap Trading Station - priced as if an opponent were adjacent when none is. */
-  | "cheap-build"
   /** The move stopped applying at all once the line's `adjust` entries were stripped out. */
   | "illegal"
   /** The move left a resource below zero, i.e. it only worked because the sandbox lets you overspend. */
@@ -996,36 +958,39 @@ export type AnalysisCommitCut =
   | "cap";
 
 /** The committable prefix plus the reason it ends there. See `committableAnalysisMoves` (the thin
- * wrapper above) for the full account of the rules; this is the same computation, reporting its cut. */
+ * wrapper above) for the full account of the rules; this is the same computation, reporting its cut.
+ * `affordableTurns` is 0 for future premoves, 1 when the first move plays now, or Infinity for offline
+ * submission. Future turns may include explicitly simulated charges while checking the plan,
+ * but those adjustments are never submitted. The server rechecks actual resources at execution. */
 export function analysisCommitPrefix(
   origin: Engine,
   entries: AnalysisEntry[],
   seat: number,
-  baseRound: number
+  baseRound: number,
+  affordableTurns = Infinity
 ): { moves: string[]; cut: AnalysisCommitCut | null } {
   if (entries.some((entry) => entry.kind === "faction")) {
     return { moves: [], cut: "faction" };
-  }
-  // The sandbox's cheap Trading Station (owner instruction, 2026-08-19) is a fiction in exactly the
-  // way an `adjust` entry is: it prices a hex as if an opponent's structure were adjacent when none
-  // is. A real game would charge the isolated price, so a line holding one describes moves it would
-  // not accept - the whole line is out, not just that move, since everything after it was played on
-  // credits the seat never had.
-  if (entries.some((entry) => entry.kind === "move" && isCheapAnalysisBuild(entry.move))) {
-    return { moves: [], cut: "cheap-build" };
   }
   const moveEntries = entries.filter((entry): entry is AnalysisMoveEntry => entry.kind === "move");
   if (moveEntries.length === 0) {
     return { moves: [], cut: null };
   }
-  // Replay one move at a time so the cut lands on the first move that overdrew, rather than only
-  // being able to say "somewhere in this line". Each pass restarts from `origin`, exactly as every
-  // other replay in this file does.
+  // A move played now must work without simulated charges. Future moves may use charges the
+  // player explicitly simulated, while still obeying every cost in that simulated position.
+  const replayPrefix = (count: number) => {
+    const prefix =
+      count <= affordableTurns
+        ? moveEntries.slice(0, count)
+        : entries.slice(0, entries.indexOf(moveEntries[count - 1]) + 1);
+    return replayAnalysisLine(origin, prefix, seat, baseRound);
+  };
   let affordable = 0;
   let cut: AnalysisCommitCut | null = null;
   for (let count = 1; count <= moveEntries.length; count++) {
-    const { engine, applied } = replayAnalysisLine(origin, moveEntries.slice(0, count), seat, baseRound);
-    if (applied < count) {
+    const { engine, applied } = replayPrefix(count);
+    const expected = count <= affordableTurns ? count : entries.indexOf(moveEntries[count - 1]) + 1;
+    if (applied < expected) {
       cut = "illegal";
       break;
     }
@@ -1035,13 +1000,27 @@ export function analysisCommitPrefix(
       break;
     }
     const status = computeAnalysisStatus(data);
-    if (status.overdrawn.length > 0) {
+    if (count <= affordableTurns && status.overdrawn.length > 0) {
       cut = "overdrawn";
       break;
     }
-    if (status.assumedPower > 0) {
+    if (count <= affordableTurns && status.assumedPower > 0) {
       cut = "assumed-power";
       break;
+    }
+    if (count <= affordableTurns && isCheapAnalysisBuild(moveEntries[count - 1].move)) {
+      // A turn played now must already have the neighbour price. Future premoves retain the
+      // qualifier and are checked on their actual turn, without granting a simulated discount.
+      const real = Engine.fromData(JSON.parse(JSON.stringify(origin)));
+      try {
+        for (const entry of moveEntries.slice(0, count)) {
+          real.forcePremovePreviewTurn(seat);
+          real.move(entry.move);
+        }
+      } catch {
+        cut = "illegal";
+        break;
+      }
     }
     affordable = count;
     if (count >= MAX_COMMITTABLE_MOVES) {
@@ -1052,7 +1031,7 @@ export function analysisCommitPrefix(
   if (affordable === 0) {
     return { moves: [], cut };
   }
-  const { engine } = replayAnalysisLine(origin, moveEntries.slice(0, affordable), seat, baseRound);
+  const { engine } = replayPrefix(affordable);
   const ownCount = ownMovePrefixLength(engine, moveEntries, seat);
   const length = Math.min(affordable, ownCount, MAX_COMMITTABLE_MOVES);
   // A foreign move is the better explanation whenever it lands at or before wherever the replay
@@ -1067,12 +1046,9 @@ export function analysisCommitPrefix(
   };
 }
 
-/** Whether `move` is a sandbox cheap-Trading-Station build (`... build ts 1x2 cheap`). Matched on the
- * qualifier rather than on the building token, so it stays correct if the qualifier is ever offered
- * for another building - as the last token of a turn, which is where `buildings.ts` appends it, and
- * which no ordinary build annotation (`build gf 6A9 using area1: 6.`) ever ends with. */
+/** A simulated neighbour becomes an explicit maximum-price constraint in a queued upgrade. */
 export function isCheapAnalysisBuild(move: string): boolean {
-  return move.split(".").some((turn) => turn.trim().split(/\s+/).slice(-1)[0] === ANALYSIS_CHEAP_BUILD);
+  return new RegExp(`\\bbuild\\s+\\S+\\s+\\S+\\s+${ANALYSIS_CHEAP_BUILD}(?=\\s*(?:\\.|$))`).test(move);
 }
 
 /** How many of `moveEntries` from the start belong to `seat` - see `committableAnalysisMoves`' own
@@ -1088,6 +1064,10 @@ function ownMovePrefixLength(engine: Engine, moveEntries: AnalysisMoveEntry[], s
  * three things outside the line itself that bound a commit - whether the real game is waiting on
  * this seat, whether there is a premove queue at all, and how much room is left in it. */
 export interface AnalysisCommitPlan {
+  /** Round and phase for each submitted move, in live-then-queued order. */
+  timings?: PremoveTiming[];
+  /** A submitted upgrade must keep the 3c neighbour price. */
+  simulatedNeighbour?: boolean;
   /** Played for real immediately. `null` off turn, where there is no live move to play - see
    * `Game.vue`'s `commitAnalysisLine`. */
   live: string | null;
@@ -1103,7 +1083,7 @@ export interface AnalysisCommitPlan {
 }
 
 /** §6/decision #13, made explicit so the player can read it before pressing anything. Applies the
- * two caps that live outside the line (`PremoveBar.vue`'s 3-row queue and hosted-only premoves) to
+ * two caps that live outside the line (the three-move limit and hosted-only premoves) to
  * the committable prefix, and reports what is left behind either way. */
 export function planAnalysisCommit(args: {
   /** The committable prefix - `analysisCommitPrefix().moves`. */
@@ -1116,7 +1096,7 @@ export function planAnalysisCommit(args: {
   onTurn: boolean;
   /** Hosted play has a premove queue; self-contained/hot-seat does not. */
   hosted: boolean;
-  /** Rows still free in this seat's premove queue (3 minus what is already queued). */
+  /** Number of planned turns allowed after any move played immediately. The submitted plan replaces the queue. */
   queueRoom: number;
 }): AnalysisCommitPlan {
   const { committable, cut, lineMoves, onTurn, hosted, queueRoom } = args;
@@ -1129,6 +1109,7 @@ export function planAnalysisCommit(args: {
   return {
     live,
     queued,
+    ...(lineMoves.slice(0, allowed.length).some(isCheapAnalysisBuild) ? { simulatedNeighbour: true } : {}),
     dropped: lineMoves.slice(allowed.length),
     cut: limit === "line" ? cut : null,
     limit,

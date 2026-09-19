@@ -42,7 +42,7 @@
         <g
           v-if="!preview"
           v-b-tooltip.hover
-          title="Leech network - number of upgradable buildings by other players within leeching distance"
+          title="Charge network - number of upgradable buildings by other players within charging distance"
           :transform="`translate(33.5,${height - 16.6}) scale(.08)`"
         >
           <image
@@ -256,7 +256,7 @@ export default class PlayerBoardInfo extends Vue {
       "<li>Click on the planets to highlight all planets of this type</li>" +
       "<li>Click on the sectors icon to highlight all colonized sectors (also works for other players)</li>" +
       "<li>Click on the federation icon to highlight all federation (also works for other players)</li>" +
-      "<li>Click on the network icon (right of power bowl) to leech network - how much power can be gained if other players upgrade buildings</li>" +
+      "<li>Click on the network icon (right of power bowl) to show the charge network: how much power can be gained if other players upgrade buildings</li>" +
       "</ul>"
     );
   }

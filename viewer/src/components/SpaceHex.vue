@@ -80,6 +80,19 @@
              unit, leaving the letter on the baseline / high in the hex) and `dominant-baseline`
              (iOS Safari renders it off) - the same proven mechanism the `.sector-name` labels use. -->
         <text class="lost-fleet-spaceship__label" y="0" dy="0.315">{{ lostFleetSpaceshipLabel }}</text>
+        <g
+          v-for="(explorer, index) in explorers"
+          :key="explorer.player"
+          class="lost-fleet-spaceship__explorer"
+          :class="{ recent: recentExploration(explorer) }"
+          :data-player="explorer.player"
+          :transform="`translate(${[-0.65, 0.65, 0, 0][index]}, ${[0, 0, -0.57, 0.57][index]})`"
+          role="img"
+          :aria-label="explorerLabel(explorer)"
+        >
+          <circle class="lost-fleet-spaceship__explorer-outline" r="0.3" />
+          <circle :class="['planet-fill', playerPlanet(explorer.player)]" r="0.25" />
+        </g>
       </g>
       <Planet
         v-if="showPlanet"
@@ -374,6 +387,22 @@ export default class SpaceHex extends Vue {
     return this.lostFleetSpaceship ? spaceshipColors[this.lostFleetSpaceship] : "";
   }
 
+  get explorers(): Player[] {
+    const ship = this.lostFleetSpaceship;
+    if (!ship) return [];
+    return this.engine.players
+      .filter((player) => player.data.hasExplored(ship))
+      .sort((a, b) => a.data.explorationShips[ship] - b.data.explorationShips[ship]);
+  }
+
+  explorerLabel(player: Player): string {
+    return `Explored by ${player.name || `P${player.player + 1}`} (${factionName(player.faction)})`;
+  }
+
+  recentExploration(player: Player): boolean {
+    return this.$store.getters.recentOpponentExplorations.get(player.faction)?.has(this.lostFleetSpaceship) ?? false;
+  }
+
   // Deep Space tiles no longer render a per-hex badge here - SpaceMap.vue renders one big
   // sector-style label centered across all 3 hexes of the tile instead (see its
   // `deepSpaceLabels` getter), matching the sector-number styling and staying clear of whichever
@@ -571,7 +600,11 @@ export default class SpaceHex extends Vue {
     const spaceship = this.lostFleetSpaceship
       ? `Lost Fleet spaceship: ${this.lostFleetSpaceshipNames[this.lostFleetSpaceship]}`
       : null;
-    return [coord, sector, spaceship, planet].concat(buildings).concat(messages).join(" ");
+    return [coord, sector, spaceship, planet]
+      .concat(this.explorers.map(this.explorerLabel))
+      .concat(buildings)
+      .concat(messages)
+      .join(" ");
   }
 }
 </script>
@@ -729,6 +762,19 @@ svg {
       text-anchor: middle;
       font-size: 0.9px;
       font-weight: 800;
+    }
+
+    &__explorer-outline {
+      fill: #17202b;
+      stroke: #fff;
+      stroke-width: 0.025;
+    }
+
+    &__explorer.recent {
+      .lost-fleet-spaceship__explorer-outline {
+        stroke: var(--recent);
+        stroke-width: 0.09;
+      }
     }
   }
 }

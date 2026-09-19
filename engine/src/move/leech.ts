@@ -28,7 +28,10 @@ export function moveChargePower(
 
   const offer = leechCommand.offers.find((ofr) => ofr.offer === income);
 
-  assert(offer, `Cannot leech ${income}. Possible leeches: ${leechCommand.offers.map((ofr) => ofr.offer).join(" - ")}`);
+  assert(
+    offer,
+    `Cannot charge ${income}. Possible charges: ${leechCommand.offers.map((ofr) => ofr.offer).join(" - ")}`
+  );
 
   engine.player(player).gainRewards(leechRewards, Command.ChargePower);
   engine.player(player).payCosts(Reward.parse(offer.cost), Command.ChargePower);

@@ -70,7 +70,7 @@ describe("AnalysisPanel", () => {
       };
       const { container } = render(AnalysisPanel, { props: { active: true, pendingRestore } });
       const text = container.querySelector(".analysis-strip").textContent;
-      expect(text).to.contain("3 saved sandbox lines");
+      expect(text).to.contain("3 saved plans");
       expect(text).to.contain("2 moves in total");
     });
 

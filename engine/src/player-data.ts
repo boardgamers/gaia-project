@@ -148,27 +148,13 @@ export default class PlayerData extends EventEmitter {
   temporaryStep = 0;
   canUpgradeResearch = true;
   turns = 0;
-  /**
-   * Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §3.4) - true only on a disposable sandbox
-   * clone, never on a real game's player data. It lifts affordability (`hasResource` below) so an
-   * unaffordable move can still be played and the debt shown, and it turns on `spendPower`'s power
-   * top-up. It deliberately does NOT lift the MAX_ORE/MAX_CREDIT/MAX_KNOWLEDGE gain clamps: analysis
-   * mode used to inject a fake wallet that those clamps ate, but a seat now keeps its real numbers,
-   * and a real player's gains cap exactly the same way - so clamping is the faithful behaviour.
-   * Deliberately absent from toJSON() (like the other internal variables above), so it can never
-   * round-trip through a serialize/deserialize into a real game - the viewer re-applies it to a fresh
-   * clone on every replay step instead of relying on it surviving.
-   */
+  /** Enables explicit planning options, such as simulating a neighbouring Trading Station.
+   * Costs still apply. Never serialized into a real game's player data. */
   analysis = false;
-  /**
-   * How much power the analysis sandbox has assumed this seat charged (ANALYSIS_MODE_PLAN.md §12).
-   * Power is the one overdrawable resource that cannot go negative - bowls hold tokens, not a balance
-   * - so instead of driving area 3 below zero, `spendPower` charges the shortfall up first and adds
-   *   it here, giving the UI one honest number for "this line only works if you also charge N power".
-   *
-   * Non-serialized for the same reason as `analysis` above, and recomputed from scratch on every
-   * replay, so it always describes exactly the line currently on screen.
-   */
+  /** Only the server's disposable future-premove validator may relax resource checks. The move
+   * is checked again against the real wallet before execution. Never enabled by the viewer or saved. */
+  validatingFuturePremove = false;
+  /** Power assumed by the disposable future-premove validator. Never serialized. */
   analysisAssumedPower = 0;
   // when picking rewards
   toPick: { rewards: Reward[]; count: number; source: EventSource } = undefined;
@@ -385,8 +371,8 @@ export default class PlayerData extends EventEmitter {
   }
 
   /**
-   * The spendable resources the viewer's analysis mode (ANALYSIS_MODE_PLAN.md §12) lets a player
-   * overdraw: the four wallet resources plus power. Everything else `getResources` answers for stays
+   * The spendable resources the future-premove validator can
+   * temporarily overdraw: the four wallet resources plus power. Everything else `getResources` answers for stays
    * genuinely gated even in analysis mode, because those are physical components or board positions
    * rather than a stock you can be in debt on - a Gaiaformer you do not own, or a power token that is
    * not in the Gaia area, cannot be conjured by assuming you overspent.
@@ -413,11 +399,9 @@ export default class PlayerData extends EventEmitter {
     if (this.getResources(type) >= reward.count) {
       return true;
     }
-    // Analysis mode (§12): affordability is what the engine enforces at command-GENERATION time, so
-    // lifting it here is the whole mechanism behind "let me build it anyway and show me the debt".
-    // Deliberately not a resource top-up: the seat keeps its real numbers and simply goes negative,
-    // which is what the player board then displays.
-    return this.analysis && PlayerData.ANALYSIS_OVERDRAWABLE.includes(type);
+    // Future premoves can include explicitly simulated charges. Only their disposable server-side
+    // validation relaxes costs; normal play and the planning UI both enforce the displayed wallet.
+    return this.validatingFuturePremove && PlayerData.ANALYSIS_OVERDRAWABLE.includes(type);
   }
 
   getResources(type: Resource): number {
@@ -544,7 +528,7 @@ export default class PlayerData extends EventEmitter {
   }
 
   /**
-   * Analysis mode's power top-up (§12). `hasResource` lets this seat commit to a power cost it cannot
+   * Future-premove validation's power top-up. `hasResource` lets this seat commit to a power cost it cannot
    * really pay, but `spendPower` below moves tokens area3 -> area1 with no floor, so an unpayable
    * cost would leave a NEGATIVE bowl - a state the board renders as nonsense and every later charge
    * then compounds. Instead: charge the shortfall up first, one step at a time through the engine's
@@ -570,7 +554,7 @@ export default class PlayerData extends EventEmitter {
   }
 
   spendPower(power: number) {
-    if (this.analysis) {
+    if (this.validatingFuturePremove) {
       this.assumePowerForAnalysis(power);
     }
     if (this.brainstone === PowerArea.Area3) {

@@ -739,31 +739,10 @@ kbd {
   background-color: var(--ui-surface-muted);
 }
 
-// The map renders without a card background by owner request (2026-09) - the space between
-// sectors is the page's own background again, like the pre-Lost-Fleet viewer. Only the
-// analysis-mode hazard overlay (below) still paints on this element.
+// The space between sectors uses the page background, including while planning.
 .space-map,
 .space-map-canvas {
   box-sizing: border-box;
-}
-
-// Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §5.2/§2.10) - dimmed yellow/black hazard
-// stripes, much lower contrast than Commands.vue's header treatment, read through the SVG's
-// transparent inter-sector gaps and frame the board as "not live" without fighting planet colours
-// over what can be a long session. Scoped under .analysis-mode-active (Game.vue's own root class
-// while analysisMode is true) - the .space-map/.space-map-canvas rule above is shared with setup
-// and open-game previews, so an unscoped rule here would hazard-tape every one of those too.
-// Layered as background-image on top of the existing background-color rather than overriding it,
-// so this is purely additive.
-.analysis-mode-active .space-map,
-.analysis-mode-active .space-map-canvas {
-  background-image: repeating-linear-gradient(
-    45deg,
-    rgba(245, 197, 24, 0.13) 0px,
-    rgba(245, 197, 24, 0.13) 16px,
-    rgba(20, 20, 20, 0.13) 16px,
-    rgba(20, 20, 20, 0.13) 32px
-  );
 }
 
 :root[data-theme="dark"] .space-map .space-hex,
@@ -784,51 +763,4 @@ kbd {
 
 .space-map__chart-button {
   filter: var(--ui-map-icon-filter);
-}
-
-// Analysis mode's map-corner button (§5.4) - the bottom-right mirror of the chart icon above.
-// Neutral (ui-surface/ui-border/ui-text-muted) while merely offered, so it doesn't read as a
-// warning before anything is actually happening; switches to the same warning tokens the striped
-// header/AnalysisPanel already use for the active state, tying the corner control to the rest of
-// the feature's established visual language.
-.space-map__analysis-button {
-  cursor: pointer;
-
-  .space-map__analysis-badge {
-    fill: var(--ui-surface);
-    stroke: var(--ui-border);
-    stroke-width: 1;
-    transition:
-      fill 0.1s ease-out,
-      stroke 0.1s ease-out;
-  }
-
-  color: var(--ui-text-muted);
-
-  &:hover .space-map__analysis-badge {
-    stroke: var(--ui-border-strong);
-  }
-}
-
-.space-map__analysis-button--active {
-  color: var(--ui-warning-text);
-
-  .space-map__analysis-badge {
-    fill: var(--ui-warning-bg);
-    stroke: var(--ui-warning-border);
-  }
-
-  &:hover .space-map__analysis-badge {
-    stroke: var(--ui-warning-border);
-  }
-}
-
-// Undo/Reset with nothing in the line yet. They stay on screen rather than disappearing (so the
-// toggle beside them never jumps sideways the moment the first sandbox move lands) but must not
-// look or behave pressable - `pointer-events: none` also stops the hover rule above lighting them
-// up, which on its own would read as "this does something".
-.space-map__analysis-button--inert {
-  cursor: default;
-  opacity: 0.4;
-  pointer-events: none;
 }

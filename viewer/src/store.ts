@@ -1,6 +1,7 @@
 import Engine, { BoardAction, Command, Faction, GaiaHex, Player, ResearchField } from "@gaia-project/engine";
 import type { AnyTechTilePos } from "@gaia-project/engine/src/enums";
 import { ArtifactToken, Spaceship } from "@gaia-project/engine/src/enums";
+import type { PremoveCommand } from "@gaia-project/engine/src/premove-types";
 import { CubeCoordinates } from "hexagrid";
 import Vue, { markRaw } from "vue";
 import Vuex from "vuex";
@@ -8,16 +9,7 @@ import type { ButtonData, GameContext, HexSelection, HighlightHex, SpecialAction
 import type { FastConversionEvent, MapMode } from "./data/actions";
 import type { FastConversionTooltips } from "./logic/buttons/types";
 import { ExecuteBack } from "./logic/buttons/types";
-import type {
-  CancelTriggerKind,
-  CancelTriggerLeechConfig,
-  CancelTriggerRow,
-  PremoveFailureRow,
-  PremoveMode,
-  PremoveRow,
-  SealedBidEntry,
-  SealedBidStatus,
-} from "./logic/hosted-types";
+import type { SealedBidEntry, SealedBidStatus } from "./logic/hosted-types";
 import type { PresenceState } from "./logic/presence";
 import type { CommandObject, MovesSlice } from "./logic/recent";
 import {
@@ -82,18 +74,10 @@ export type State = {
   /** Tutorials mark this move with the normal gold markers. Null keeps the hosted opponent recap;
    * an empty string marks nothing in a chapter's initial teaching position. */
   highlightedMove: string | null;
-  /** Hosted mode only (PREMOVE_PLAN.md) - always empty in self-contained hot-seat play. */
-  premoves: PremoveRow[];
-  premoveFailures: PremoveFailureRow[];
-  /** Phase 3 (§10.6) - quiet, in-app-only "played from your queue" notice for the most recent
-   * fast-path success; null once dismissed or superseded. Never sourced from a push - see
-   * host.ts's onPremovePlayed doc comment. */
-  premovePlayedNotice: { seat: number; move: string; rank?: number; totalRanks?: number } | null;
-  /** Premove cancel triggers - hosted mode only, always empty in self-contained hot-seat play. */
-  cancelTriggers: CancelTriggerRow[];
-  /** Quiet, in-app-only "cancelled by trigger" toast for the most recent fast-path match; null once
-   * dismissed or superseded (mirrors premovePlayedNotice above). */
-  cancelTriggerFiredNotice: { seat: number; reason: string } | null;
+  hosted: boolean;
+  playerSettings: Record<string, unknown> | null;
+  pendingPlan: PremoveCommand | null;
+  planError: string | null;
   /** Hosted mode only - seat -> user id, for matching a seat to its presence entry below. Never
    * populated in self-contained hot-seat play (no accounts/seats to map). */
   seatUsers: Record<number, string | null>;
@@ -202,11 +186,10 @@ const gaiaViewer = {
       player: null,
       highlightedMove: null,
       avatars: [] as string[],
-      premoves: [],
-      premoveFailures: [],
-      premovePlayedNotice: null,
-      cancelTriggers: [],
-      cancelTriggerFiredNotice: null,
+      hosted: false,
+      playerSettings: null,
+      pendingPlan: null,
+      planError: null,
       seatUsers: {},
       seatLastActive: {},
       presence: {},
@@ -323,6 +306,10 @@ const gaiaViewer = {
       }
     },
 
+    playerSettings(state: State, data: Record<string, unknown> | null) {
+      state.playerSettings = data;
+    },
+
     player(state: State, data: { index?: number }) {
       state.player = data;
     },
@@ -331,31 +318,21 @@ const gaiaViewer = {
       state.avatars = data;
     },
 
-    premoveState(state: State, data: { premoves: PremoveRow[]; failures: PremoveFailureRow[] }) {
-      state.premoves = data.premoves;
-      state.premoveFailures = data.failures;
+    hosted(state: State, value: boolean) {
+      state.hosted = value;
     },
-
-    premovePlayed(state: State, data: { seat: number; move: string; rank?: number; totalRanks?: number }) {
-      state.premovePlayedNotice = data;
+    submittingPlan(state: State, command: PremoveCommand) {
+      state.pendingPlan = command;
+      state.planError = null;
     },
-
-    dismissPremovePlayedNotice(state: State) {
-      state.premovePlayedNotice = null;
+    planSaved(state: State) {
+      state.pendingPlan = null;
+      state.planError = null;
     },
-
-    cancelTriggerState(state: State, triggers: CancelTriggerRow[]) {
-      state.cancelTriggers = triggers;
+    planError(state: State, message: string) {
+      state.pendingPlan = null;
+      state.planError = message;
     },
-
-    cancelTriggerFired(state: State, data: { seat: number; reason: string }) {
-      state.cancelTriggerFiredNotice = data;
-    },
-
-    dismissCancelTriggerFiredNotice(state: State) {
-      state.cancelTriggerFiredNotice = null;
-    },
-
     seatUsers(state: State, data: Record<number, string | null>) {
       state.seatUsers = data;
     },
@@ -384,6 +361,7 @@ const gaiaViewer = {
     },
   },
   actions: {
+    updatePlayerSetting(_context, _payload: { name: string; value: string }) {},
     // No body, used for signalling with store.subscribeAction
     hexClick(context: any, hex: GaiaHex, highlight?: HighlightHex) {},
     researchClick(context: any, field: ResearchField) {},
@@ -395,50 +373,8 @@ const gaiaViewer = {
     // API COMMUNICATION
     playerClick(context: any, player: Player) {},
     move(context: any, move: string) {},
-    // Premove (PREMOVE_PLAN.md) - accumulates a command against a local preview clone only; never
-    // reaches the launcher's "move" forwarding (see Game.vue's own subscribeAction handler, which
-    // intercepts this type before it would otherwise be a no-op here).
-    premoveMove(context: any, move: string) {},
-    // Cancel trigger compose mode (Game.vue) - same "accumulates against a preview clone only,
-    // intercepted locally, never reaches the launcher's real move forwarding" shape as premoveMove.
-    cancelTriggerMove(context: any, move: string) {},
-    // Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md) - the third board-takeover mode, same
-    // "accumulates against a local clone only, intercepted by Game.vue, never reaches the
-    // launcher's real move forwarding" shape as premoveMove/cancelTriggerMove above.
     analysisMove(context: any, move: string) {},
-    queuePremove(context: any, payload: { seat: number; move: string; mode: PremoveMode }) {},
-    cancelPremove(context: any, payload: { seat: number; seq: number }) {},
-    // Premove UI redesign (Gaia 9) - update-in-place ("stage until confirmed", see host.ts).
-    editPremove(context: any, payload: { seat: number; seq: number; move: string }) {},
-    // Phase 3 (§10.4) - clears a seat's whole queue (mode-toggle confirm, "start over").
-    cancelAllPremoves(context: any, payload: { seat: number }) {},
-    // Phase 3 (§10.4), priority mode only.
-    reorderPremove(context: any, payload: { seat: number; seq: number; direction: "up" | "down" }) {},
-    markPremoveFailureRead(context: any, id: string) {},
-    // Premove cancel triggers - same "no body, forwarded by launcher.ts's subscribeAction" shape.
-    armCancelTrigger(
-      context: any,
-      payload: {
-        seat: number;
-        watchedSeat: number;
-        move: string;
-        atoms: string[];
-        kind: CancelTriggerKind;
-        config: CancelTriggerLeechConfig | Record<string, never>;
-      }
-    ) {},
-    disarmCancelTrigger(context: any, payload: { seat: number; seq: number }) {},
-    disarmAllCancelTriggers(context: any, payload: { seat: number }) {},
-    editCancelTrigger(
-      context: any,
-      payload: {
-        seat: number;
-        seq: number;
-        move: string;
-        atoms: string[];
-        config: CancelTriggerLeechConfig | Record<string, never>;
-      }
-    ) {},
+    submitPlan(context: any, command: PremoveCommand) {},
     replayInfo(context: any, info: { start: number; end: number; current: number }) {},
     // ^ up - down v
     externalData(context: any, data: Engine) {},

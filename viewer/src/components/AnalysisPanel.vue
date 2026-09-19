@@ -1,31 +1,13 @@
 <template>
-  <!--
-    What is left of analysis mode's own surface once §12 moved every control into the striped header
-    and every number onto the player board: the two things that genuinely cannot live in either.
-
-    Staleness notices and the "a saved line exists" prompt (§3.5), and nothing else. Both have to be
-    readable while sandbox mode is NOT active, which is exactly why they cannot live in Commands.vue:
-    it is not rendered then.
-
-    Round 0's faction picker used to be here too. It moved into Commands.vue's action area on owner
-    instruction - every press the player makes inside the sandbox belongs on that one surface, and a
-    second container above the map is nowhere near it on a phone.
-
-    Deliberately NOT a container announcing sandbox mode: the hazard-striped header and map already
-    do that, and the yellow box that used to sit here said it a third time while carrying resource
-    rows the player board now shows live.
-  -->
+  <!-- Planning notices and recovery after a rollback. -->
   <div v-if="notice || pendingRestore" class="analysis-strip">
     <div v-if="notice" class="analysis-strip__banner">
       <span class="flex-grow-1">{{ notice }}</span>
       <button type="button" class="analysis-strip__banner-x" @click="$emit('dismiss-notice')">✕</button>
     </div>
 
-    <!-- The "own seat moved since this was saved" row of §3.5's table - prompts instead of silently
-         replaying, mirroring PremoveBar.vue's inline mode-switch confirm rather than a raw
-         window.confirm. -->
     <div v-if="active && pendingRestore" class="analysis-strip__banner analysis-strip__banner--confirm">
-      <span class="flex-grow-1"> {{ pendingRestoreLabel }} from before your last move. </span>
+      <span class="flex-grow-1"> {{ pendingRestoreLabel }} from a different board position. </span>
       <b-button size="sm" variant="outline-secondary" class="mr-1" @click="$emit('restore')">Restore anyway</b-button>
       <b-button size="sm" variant="outline-secondary" @click="$emit('discard-restore')">Discard</b-button>
     </div>
@@ -56,8 +38,8 @@ export default Vue.extend({
       const moves = analysisLineSetSize(set);
       const moveText = `${moves} move${moves === 1 ? "" : "s"}`;
       return set.lines.length > 1
-        ? `${set.lines.length} saved sandbox lines (${moveText} in total) exist`
-        : `A saved sandbox line (${moveText}) exists`;
+        ? `${set.lines.length} saved plans (${moveText} in total) exist`
+        : `A saved plan (${moveText}) exists`;
     },
   },
 });

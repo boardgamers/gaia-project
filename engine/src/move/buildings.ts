@@ -1,17 +1,16 @@
 import { isEqual } from "lodash";
 import { AvailableBuilding, AvailableCommand } from "../available/types";
 import Engine from "../engine";
-import { Building, Command, Phase, Planet, Player as PlayerEnum } from "../enums";
+import { Building, Command, Phase, Planet, Player as PlayerEnum, Resource } from "../enums";
 import Player from "../player";
 import Reward from "../reward";
 import assert from "../utils/assert";
 
 /**
  * Qualifier that may follow the location on a build move, as in `build ts 1x2 cheap`. Purely
- * additive: no recorded game history carries it, and only the viewer's analysis sandbox ever produces
- * it (see `AvailableBuilding.analysisCheap`), where it selects the second, neighbour-priced Trading
- * Station offered for a hex that is really isolated. A real game has no such entry to select, so the
- * move simply fails to match and the assert at the bottom rejects it.
+ * produced by the planning viewer. In a simulation it selects the assumed-neighbour price; in a
+ * real turn or premove it requires a Trading Station costing at most 3 credits. It never grants a
+ * discount that is not already available on the real board.
  *
  * Matched positionally - the first argument after the location - and NOT by scanning every trailing
  * token: build moves already carry log annotations there (`build gf 6A9 using area1: 6.`), which
@@ -33,11 +32,13 @@ export function moveBuild(
   const wantCheap = qualifier === ANALYSIS_CHEAP_BUILD;
 
   for (const elem of buildings) {
-    if (
-      elem.building === building &&
-      !!elem.analysisCheap === wantCheap &&
-      isEqual(engine.map.parse(elem.coordinates), parsed)
-    ) {
+    const matchesPrice = wantCheap
+      ? elem.building === Building.TradingStation &&
+        Reward.parse(elem.cost)
+          .filter((cost) => cost.type === Resource.Credit)
+          .reduce((sum, cost) => sum + cost.count, 0) <= 3
+      : !elem.analysisCheap;
+    if (elem.building === building && matchesPrice && isEqual(engine.map.parse(elem.coordinates), parsed)) {
       placeBuilding(engine, pl, elem);
       return;
     }
@@ -45,7 +46,9 @@ export function moveBuild(
 
   assert(
     false,
-    `Impossible to execute build command at ${location}, available: ${buildings.map((b) => b.coordinates)}`
+    wantCheap
+      ? `The Trading Station at ${location} is not available for 3c.`
+      : `Impossible to execute build command at ${location}, available: ${buildings.map((b) => b.coordinates)}`
   );
 }
 

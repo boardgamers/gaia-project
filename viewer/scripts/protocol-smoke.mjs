@@ -194,16 +194,33 @@ try {
         }, state);
         await page.waitForFunction(() => fetches > 0);
         assert.equal(await page.evaluate(() => readyCount), 1, "ready fires once");
-        const action = { seat: 0, id: "test", move: "p1 up nav.", mode: "sequential" };
+        const action = { type: "premoves", requestId: "test", moves: ["p1 up nav."], round: 1, turn: 0, revision: 0 };
         const received = await page.evaluate((action) => {
           let forwarded;
-          host.on("queuePremove", (payload) => {
+          host.on("move", (payload) => {
             forwarded = payload;
           });
-          host.store.dispatch("queuePremove", action);
+          host.store.dispatch("submitPlan", action);
           return forwarded;
         }, action);
-        assert.deepEqual(received, action, "Gaia extension events keep working");
+        assert.deepEqual(received, action, "premove plans use the ordinary move protocol");
+        const settings = await page.evaluate(() => {
+          host.emit("settings", { autoCharge: "3", autoIncome: true });
+          let update;
+          host.on("update:setting", (payload) => {
+            update = payload;
+          });
+          host.store.dispatch("updatePlayerSetting", { name: "autoCharge", value: "4" });
+          return { current: host.store.state.playerSettings, update };
+        });
+        assert.deepEqual(
+          settings,
+          {
+            current: { autoCharge: "3", autoIncome: true },
+            update: { name: "autoCharge", value: "4" },
+          },
+          "viewer settings stay confirmed until the host responds"
+        );
         await page.screenshot({
           path: `/tmp/${game}-protocol-${ui}-${lostFleet ? "fleet" : "base"}-${width}.png`,
           fullPage: true,

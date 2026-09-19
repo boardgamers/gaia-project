@@ -21,7 +21,7 @@ import {
   SpaceshipTechTile,
   SubPhase,
 } from "./enums";
-import { spaceshipHex } from "./exploration";
+import { qicForExplorationDistance, spaceshipHex } from "./exploration";
 import { GaiaHex } from "./gaia-hex";
 import { moveExplore } from "./move/exploration";
 import { moveFormFederation } from "./move/federation";
@@ -164,6 +164,63 @@ describe("Lost Fleet exploration", () => {
     expect(ships).to.have.members([Spaceship.Twilight, Spaceship.TFMars, Spaceship.Eclipse]);
     expect(ships).to.not.include(Spaceship.Rebellion);
     expect(command.data.ships.every((entry) => entry.slot === 1)).to.be.true;
+  });
+
+  it("explores from an adjacent Ivits space station with no QIC, including after reload", () => {
+    const engine = createLostFleetRoundMoveEngine(4, [
+      Faction.Ivits,
+      Faction.Terrans,
+      Faction.Lantids,
+      Faction.HadschHallas,
+    ]);
+    const player = engine.player(PlayerEnum.Player1);
+    const ship = spaceshipHex(engine.map, Spaceship.Eclipse);
+    const station = [...engine.map.grid.neighbours(ship)].find(
+      (hex) => !hex.hasPlanet() && !hex.occupied() && !hex.data.spaceship
+    );
+    expect(station, "empty space adjacent to Eclipse").to.not.equal(undefined);
+    const institute = [...engine.map.grid.values()]
+      .filter((hex) => hex.hasPlanet())
+      .sort((a, b) => engine.map.distance(b, ship) - engine.map.distance(a, ship))[0];
+    institute.data.player = player.player;
+    institute.data.building = Building.PlanetaryInstitute;
+    station.data.player = player.player;
+    station.data.building = Building.SpaceStation;
+    player.data.occupied = [institute, station];
+    player.data.buildings[Building.PlanetaryInstitute] = 1;
+    player.data.buildings[Building.SpaceStation] = 1;
+    player.data.qics = 0;
+
+    const restored = Engine.fromData(JSON.parse(JSON.stringify(engine)));
+    const command = availableExploreCommand(restored);
+    const eclipse = command?.data.ships.find((entry) => entry.ship === Spaceship.Eclipse);
+    expect(eclipse, "station makes Eclipse reachable even with zero QIC").to.not.equal(undefined);
+    expect(eclipse.cost).to.equal("5vp");
+    restored.move("ivits explore eclipse");
+    expect(restored.player(PlayerEnum.Player1).data.qics).to.equal(0);
+    expect(restored.player(PlayerEnum.Player1).data.victoryPoints).to.equal(25);
+    expect(restored.player(PlayerEnum.Player1).data.hasExplored(Spaceship.Eclipse)).to.equal(true);
+  });
+
+  it("does not use another player's station or a Gaiaformer as an exploration origin", () => {
+    const engine = createLostFleetRoundMoveEngine(4, [
+      Faction.Ivits,
+      Faction.Terrans,
+      Faction.Lantids,
+      Faction.HadschHallas,
+    ]);
+    const player = engine.player(PlayerEnum.Player1);
+    const ship = spaceshipHex(engine.map, Spaceship.Eclipse);
+    const station = [...engine.map.grid.neighbours(ship)].find(
+      (hex) => !hex.hasPlanet() && !hex.occupied() && !hex.data.spaceship
+    );
+    station.data.player = PlayerEnum.Player2;
+    station.data.building = Building.SpaceStation;
+    player.data.occupied = [station];
+    expect(qicForExplorationDistance(engine.map, ship, player, false)).to.equal(null);
+    station.data.player = player.player;
+    station.data.building = Building.GaiaFormer;
+    expect(qicForExplorationDistance(engine.map, ship, player, false)).to.equal(null);
   });
 
   it("should pay the Explore cost, take the lowest free slot, charge power, and survive serialization", () => {

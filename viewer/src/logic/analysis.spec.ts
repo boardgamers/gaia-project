@@ -21,7 +21,6 @@ import {
   loadAnalysisLines,
   markAnalysisSeat,
   MAX_ANALYSIS_LINES,
-  MAX_COMMITTABLE_MOVES,
   moveBelongsToSeat,
   normalizeAnalysisLineSet,
   ownMoveCount,
@@ -30,11 +29,10 @@ import {
   resolveOpponentDecisions,
   saveAnalysisLines,
   settleAnalysisClone,
-  stripCappedPass,
   summarizeAnalysisLine,
 } from "./analysis";
 
-// Same fixture as premove-preview.spec.ts: after these moves it's terrans' (seat 0) turn.
+// After these moves it's terrans' (seat 0) turn.
 const SETUP_MOVES = [
   "init 2 randomSeed",
   "p1 faction terrans",
@@ -60,14 +58,11 @@ describe("replayAnalysisLine", () => {
     expect(engine.moveHistory[engine.moveHistory.length - 1]).to.equal("terrans up nav (0 ⇒ 1).");
   });
 
-  it("accumulates the assumed power top-up across the whole line, not just its last entry", () => {
-    // Every replay step round-trips the engine through JSON, and `analysisAssumedPower` is
-    // deliberately not serialized - so without being carried by hand the tally silently restarted on
-    // each entry and the header could only ever report what the final move happened to top up.
+  it("stops when earlier planned actions have spent the remaining power", () => {
     const origin = markAnalysisSeat(new Engine(SETUP_MOVES), 0);
     applySoloRoundFlow(origin, 0);
-    const first = replayAnalysisLine(origin, [{ kind: "move", move: "terrans action power3." }], 0, 1);
-    const both = replayAnalysisLine(
+    Object.assign(origin.players[0].data.power, { area1: 0, area2: 0, area3: 4 });
+    const { engine, applied } = replayAnalysisLine(
       origin,
       [
         { kind: "move", move: "terrans action power3." },
@@ -76,10 +71,9 @@ describe("replayAnalysisLine", () => {
       0,
       1
     );
-    const afterOne = first.engine.players[0].data.analysisAssumedPower;
-    expect(afterOne).to.be.greaterThan(0);
-    expect(both.applied).to.equal(2);
-    expect(both.engine.players[0].data.analysisAssumedPower).to.be.greaterThan(afterOne);
+    expect(applied).to.equal(1);
+    expect(engine.players[0].data.power.area3).to.equal(0);
+    expect(engine.players[0].data.analysisAssumedPower).to.equal(0);
   });
 
   it("stops at the first entry that has gone illegal, keeping the valid prefix", () => {
@@ -142,7 +136,7 @@ describe("replayAnalysisLine", () => {
       expect(second.engine.players[0].data.credits).to.equal(first.engine.players[0].data.credits);
     });
 
-    it("lets the seat overspend into debt rather than refusing the move", () => {
+    it("rejects an unaffordable build without spending anything", () => {
       const origin = new Engine(SETUP_MOVES);
       applySoloRoundFlow(origin, 0);
       origin.player(0).data.credits = 0;
@@ -150,26 +144,20 @@ describe("replayAnalysisLine", () => {
 
       const { engine, applied } = replayAnalysisLine(origin, [{ kind: "move", move: "terrans build ts -1x2." }], 0, 1);
 
-      expect(applied).to.equal(1); // the move was offered and played anyway (§12)
+      expect(applied).to.equal(0);
       const data = engine.players[0].data;
-      expect(data.credits + data.ores).to.be.lessThan(0); // ...and the debt is real and visible
+      expect(data.credits).to.equal(0);
+      expect(data.ores).to.equal(0);
     });
 
-    it("never drives a power bowl negative - a power cost beyond the seat's is topped up and counted", () => {
+    it("rejects a power action without inventing charges or tokens", () => {
       const origin = new Engine(SETUP_MOVES);
       applySoloRoundFlow(origin, 0);
-      const data = origin.player(0).data;
-      data.power.area1 = 0;
-      data.power.area2 = 0;
-      data.power.area3 = 0;
-      data.analysis = true;
-
-      data.spendPower(4);
-
-      expect(data.power.area1).to.be.at.least(0);
-      expect(data.power.area2).to.be.at.least(0);
-      expect(data.power.area3).to.be.at.least(0);
-      expect(data.analysisAssumedPower).to.be.at.least(4);
+      Object.assign(origin.player(0).data.power, { area1: 0, area2: 0, area3: 0 });
+      const { engine, applied } = replayAnalysisLine(origin, [{ kind: "move", move: "terrans action power3." }], 0, 1);
+      expect(applied).to.equal(0);
+      expect(engine.players[0].data.power).to.deep.equal(origin.players[0].data.power);
+      expect(engine.players[0].data.analysisAssumedPower).to.equal(0);
     });
   });
 
@@ -234,66 +222,67 @@ describe("moveBelongsToSeat", () => {
 });
 
 describe("ownMoveCount", () => {
-  it("counts only the moves in a real history slice that belong to the seat", () => {
+  it("counts own turns without treating leech responses as played sandbox moves", () => {
     const engine = new Engine(SETUP_MOVES);
     const moves = ["terrans build m 2A3.", "nevlas charge 1pw", "terrans up nav."];
     expect(ownMoveCount(engine, moves, 0)).to.equal(2);
-    expect(ownMoveCount(engine, moves, 1)).to.equal(1);
+    expect(ownMoveCount(engine, moves, 1)).to.equal(0);
     expect(ownMoveCount(engine, [], 0)).to.equal(0);
   });
 });
 
-describe("dropPlayedAnalysisPrefix (§3.5 - restoring a line you then played for real)", () => {
-  // The board AFTER this seat played the line's first move for real, settled the way the sandbox
-  // settles an origin.
-  function originAfterRealMove(): Engine {
-    const engine = markAnalysisSeat(new Engine([...SETUP_MOVES, "terrans build m 2A3."]), 0);
-    settleAnalysisClone(engine, 0);
-    return engine;
-  }
+describe("dropPlayedAnalysisPrefix", () => {
+  const engine = new Engine(SETUP_MOVES);
+  const move = (text: string): AnalysisEntry => ({ kind: "move", move: text });
+  const nav = move("terrans up nav.");
+  const mine = move("terrans build m 2A3.");
 
-  const LINE: AnalysisEntry[] = [
-    { kind: "move", move: "terrans build m 2A3." },
-    { kind: "move", move: "terrans up nav." },
-  ];
-
-  it("drops the leading entry the seat has since played for real, keeping the rest of the line", () => {
-    // Before this, restoring here replayed from the top, hit the move that had just been played for
-    // real (the mine is on the hex), stopped there, and reported "0 of 2 restored".
-    const { entries, dropped } = dropPlayedAnalysisPrefix(originAfterRealMove(), LINE, 0, 1, 1);
-    expect(dropped).to.equal(1);
-    expect(entries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
-    expect(replayAnalysisLine(originAfterRealMove(), entries, 0, 1).applied).to.equal(1);
+  it("trims a played research once even though it can still be researched again", () => {
+    const result = dropPlayedAnalysisPrefix(engine, [nav, nav, mine], 0, ["terrans up nav (0 ⇒ 1)."]);
+    expect(result.dropped).to.equal(1);
+    expect(result.entries).to.deep.equal([nav, mine]);
   });
 
-  it("drops nothing when there were no real moves by this seat to account for it", () => {
-    const { entries, dropped } = dropPlayedAnalysisPrefix(originAfterRealMove(), LINE, 0, 1, 0);
-    expect(dropped).to.equal(0);
-    expect(entries).to.equal(LINE);
+  it("trims multiple turns through opponents and autoleech, including coordinate aliases", () => {
+    const coords = engine.map.parse("2A3");
+    const result = dropPlayedAnalysisPrefix(engine, [mine, nav, nav], 0, [
+      `p1 build m ${coords.q}x${coords.r}.`,
+      "nevlas up nav (0 ⇒ 1).",
+      "terrans charge 1.",
+      "terrans up nav (0 ⇒ 1).",
+    ]);
+    expect(result.entries).to.deep.equal([nav]);
+    expect(result.dropped).to.equal(2);
   });
 
-  it("never drops more entries than the seat has real moves to account for", () => {
-    const line: AnalysisEntry[] = [
-      { kind: "move", move: "terrans build m 2A3." },
-      { kind: "move", move: "terrans build m 2A3." },
-    ];
-    const { dropped } = dropPlayedAnalysisPrefix(originAfterRealMove(), line, 0, 1, 1);
-    expect(dropped).to.equal(1);
+  it("does not trim a different move, even when that planned move has become invalid", () => {
+    const after = new Engine([...SETUP_MOVES, "terrans build m 2A3."]);
+    const result = dropPlayedAnalysisPrefix(after, [mine, nav], 0, ["terrans up nav (0 ⇒ 1)."]);
+    expect(result.entries).to.deep.equal([mine, nav]);
+    expect(result.dropped).to.equal(0);
   });
 
-  it("keeps a leading entry that still applies, even with budget left to drop it", () => {
-    // A move that is still playable cannot be one that has already been played, so the budget alone
-    // is never enough to discard it.
-    const line: AnalysisEntry[] = [{ kind: "move", move: "terrans up nav." }, ...LINE];
-    const { entries, dropped } = dropPlayedAnalysisPrefix(originAfterRealMove(), line, 0, 1, 3);
-    expect(dropped).to.equal(0);
-    expect(entries).to.equal(line);
+  it("removes simulated charges only together with their played turn", () => {
+    const charge: AnalysisEntry = { kind: "adjust", charge: 2 };
+    expect(dropPlayedAnalysisPrefix(engine, [charge, nav, charge, mine], 0, ["terrans up nav."]).entries).to.deep.equal(
+      [charge, mine]
+    );
+    expect(dropPlayedAnalysisPrefix(engine, [charge, nav], 0, ["terrans charge 2."]).entries).to.deep.equal([
+      charge,
+      nav,
+    ]);
   });
 
-  it("stops at a non-move entry, which no real move can ever have been", () => {
-    const line: AnalysisEntry[] = [{ kind: "adjust", charge: 1 }, ...LINE];
-    const { dropped } = dropPlayedAnalysisPrefix(originAfterRealMove(), line, 0, 1, 2);
-    expect(dropped).to.equal(0);
+  it("matches a guarded upgrade when the regular control played the same building", () => {
+    const ts = move("terrans build ts -1x2 cheap.");
+    expect(
+      dropPlayedAnalysisPrefix(engine, [ts, nav], 0, ["terrans build ts 3A3. (2/4/0/0 ⇒ 1/5/0/0)"]).entries
+    ).to.deep.equal([nav]);
+  });
+
+  it("keeps the whole turn when only one command matches", () => {
+    const turn = move("terrans spend 1q for 1o. up nav.");
+    expect(dropPlayedAnalysisPrefix(engine, [turn], 0, ["terrans up nav."]).entries).to.deep.equal([turn]);
   });
 });
 
@@ -346,28 +335,6 @@ describe("applySoloRoundFlow", () => {
     expect(engine.phase).to.equal(Phase.RoundMove);
     expect(engine.round).to.equal(1);
     expect(engine.turnOrder).to.deep.equal([0]); // passedPlayers=[0] resolved the fallback, not the real 2p list
-  });
-});
-
-describe("stripCappedPass", () => {
-  it("keeps Pass available in the current round", () => {
-    const engine = new Engine(SETUP_MOVES);
-    applySoloRoundFlow(engine, 0);
-    stripCappedPass(engine, engine.round);
-    expect(engine.availableCommands.some((c) => c.name === Command.Pass)).to.equal(true);
-  });
-
-  it("removes Pass once the line has advanced into its one bonus round", () => {
-    const engine = new Engine(SETUP_MOVES);
-    applySoloRoundFlow(engine, 0);
-    const baseRound = engine.round; // 1
-    const cmd = engine.findAvailableCommand(0, Command.Pass);
-    engine.move(`terrans pass ${cmd.data.boosters[0]}`); // -> round 2, the one bonus round
-    engine.generateAvailableCommandsIfNeeded();
-
-    stripCappedPass(engine, baseRound);
-
-    expect(engine.availableCommands.some((c) => c.name === Command.Pass)).to.equal(false);
   });
 });
 
@@ -606,6 +573,14 @@ describe("computeAnalysisStatus (§12)", () => {
     expect(status.assumedPower).to.equal(0);
   });
 
+  it("distinguishes spending 4 ore from a remaining balance of minus 2", () => {
+    const status = computeAnalysisStatus(view({ ores: -2 }), 0, view({ ores: 2 }));
+    expect(status.changes).to.deep.equal([{ kind: "o", amount: -4 }]);
+    expect(status.overdrawn).to.deep.equal([{ kind: "o", amount: -2 }]);
+    const gain = computeAnalysisStatus(view({ ores: 3 }), 0, view({ ores: 2 }));
+    expect(gain.changes).to.deep.equal([{ kind: "o", amount: 1 }]);
+  });
+
   it("lists every overdrawn resource, and only those", () => {
     const status = computeAnalysisStatus(view({ credits: -7, ores: 3, knowledge: -1, qics: 0 }));
     expect(status.overdrawn).to.deep.equal([
@@ -647,6 +622,15 @@ describe("analysis line persistence", () => {
   it("keeps different seats' lines separate", () => {
     saveAnalysisLines(0, emptyAnalysisLineSet(1, 9));
     expect(loadAnalysisLines(1)).to.equal(null);
+  });
+
+  it("keeps hosted games separate even when their iframe URL and seat match", () => {
+    const set = { lines: [[up]], active: 0, baseRound: 1, baseMoveCount: 9 };
+    saveAnalysisLines(0, set, "init 2 first-game");
+    expect(loadAnalysisLines(0, "init 2 second-game")).to.equal(null);
+    saveAnalysisLines(0, emptyAnalysisLineSet(1, 9), "init 2 second-game");
+    clearAnalysisLine(0, "init 2 second-game");
+    expect(loadAnalysisLines(0, "init 2 first-game")).to.deep.equal(set);
   });
 
   it("returns null when nothing is stored", () => {
@@ -697,19 +681,31 @@ describe("analysis line persistence", () => {
     expect(analysisLineSetSize({ lines: [[up, up], [], [up]], active: 0, baseRound: 1, baseMoveCount: 9 })).to.equal(3);
   });
 
-  it("numbers the tabs rather than naming them", () => {
-    expect(analysisLineLabel(0)).to.equal("Line 1");
-    expect(analysisLineLabel(4)).to.equal("Line 5");
+  it("labels alternative plans alphabetically", () => {
+    expect(analysisLineLabel(0)).to.equal("Plan A");
+    expect(analysisLineLabel(4)).to.equal("Plan E");
   });
 });
 
 // §13's tab strip is only a comparison because each tab carries its own outcome - switching replaces
 // the board, so a strip that only switched would still leave the player comparing from memory.
 describe("summarizeAnalysisLine (§13)", () => {
+  it("does not count simulated charges as game turns", () => {
+    const origin = new Engine(SETUP_MOVES);
+    const entries: AnalysisEntry[] = [
+      { kind: "adjust", charge: 1 },
+      { kind: "move", move: "terrans up nav." },
+      { kind: "adjust", charge: 1 },
+    ];
+    const summary = summarizeAnalysisLine(origin, entries, 0, Round.Round1, 0);
+    expect(summary.moves).to.equal(1);
+    expect(summary.applied).to.equal(1);
+  });
+
   it("reports an empty line as no moves and no change", () => {
     const origin = markAnalysisSeat(new Engine(SETUP_MOVES), 0);
     expect(summarizeAnalysisLine(origin, [], 0, Round.Round1, 0)).to.deep.equal({
-      label: "Line 1",
+      label: "Plan A",
       moves: 0,
       victoryPoints: 0,
       overdrawn: false,
@@ -723,15 +719,13 @@ describe("summarizeAnalysisLine (§13)", () => {
     const entries: AnalysisEntry[] = [{ kind: "move", move: "terrans up nav." }];
     const summary = summarizeAnalysisLine(origin, entries, 0, Round.Round1, 1);
     const { engine } = replayAnalysisLine(origin, entries, 0, Round.Round1);
-    expect(summary.label).to.equal("Line 2");
+    expect(summary.label).to.equal("Plan B");
     expect(summary.moves).to.equal(1);
     expect(summary.applied).to.equal(1);
     expect(summary.victoryPoints).to.equal(engine.players[0].data.victoryPoints - base);
   });
 
-  it("flags a line that spends more than the seat has", () => {
-    // Same setup as "lets the seat overspend into debt" above: nothing real to pay with, and a
-    // trading station played anyway (§12 lifts affordability inside the sandbox).
+  it("flags the unapplied move in an unaffordable line", () => {
     const origin = new Engine(SETUP_MOVES);
     applySoloRoundFlow(origin, 0);
     origin.player(0).data.credits = 0;
@@ -743,8 +737,9 @@ describe("summarizeAnalysisLine (§13)", () => {
       Round.Round1,
       0
     );
-    expect(summary.applied).to.equal(1);
-    expect(summary.overdrawn).to.equal(true);
+    expect(summary.moves).to.equal(1);
+    expect(summary.applied).to.equal(0);
+    expect(summary.overdrawn).to.equal(false);
   });
 
   // A line trimmed by a re-anchor must not be compared as if it were whole - `applied` below `moves`
@@ -807,14 +802,19 @@ describe("committableAnalysisMoves (§6, decision #13)", () => {
     expect(moves).to.deep.equal(["terrans build m -1x2"]);
   });
 
-  it("commits nothing from a line holding a sandbox cheap Trading Station - it priced a neighbour that is not there", () => {
+  it("keeps an affordable prefix when a later upgrade needs a neighbour that is not there", () => {
     const origin = new Engine(SETUP_MOVES);
+    applySoloRoundFlow(origin, 0);
     const entries: AnalysisEntry[] = [
       { kind: "move", move: "terrans up nav." },
       { kind: "move", move: "terrans build ts 4A4 cheap." },
     ];
 
-    expect(committableAnalysisMoves(origin, entries, 0, Round.Round1)).to.deep.equal([]);
+    expect(committableAnalysisMoves(origin, entries, 0, Round.Round1)).to.deep.equal(["terrans up nav."]);
+    expect(analysisCommitPrefix(origin, entries, 0, Round.Round1, 1).moves).to.deep.equal([
+      "terrans up nav.",
+      "terrans build ts 4A4 cheap.",
+    ]);
   });
 
   it("returns nothing for a line with no move entries at all", () => {
@@ -823,10 +823,6 @@ describe("committableAnalysisMoves (§6, decision #13)", () => {
 
     expect(committableAnalysisMoves(origin, [], 0, 1)).to.deep.equal([]);
     expect(committableAnalysisMoves(origin, [{ kind: "adjust", charge: 1 }], 0, 1)).to.deep.equal([]);
-  });
-
-  it("caps at 1 live move plus PremoveBar.vue's 3-row queue limit (§6)", () => {
-    expect(MAX_COMMITTABLE_MOVES).to.equal(4);
   });
 
   it("truncates at an opponent's move, which setup pass-and-play puts in the line as an ordinary entry", () => {
@@ -856,6 +852,28 @@ describe("committableAnalysisMoves (§6, decision #13)", () => {
 });
 
 describe("analysisCommitPrefix - the cut reason behind the prefix", () => {
+  it("requires enough resources in the simulated position even for future premoves", () => {
+    const origin = new Engine(SETUP_MOVES);
+    origin.players[0].data.knowledge = 0;
+    const entries: AnalysisEntry[] = [
+      { kind: "adjust", charge: 1 },
+      { kind: "move", move: "terrans up nav." },
+    ];
+    expect(analysisCommitPrefix(origin, entries, 0, 1, 0).moves).to.deep.equal([]);
+    expect(analysisCommitPrefix(origin, entries, 0, 1, 1).moves).to.deep.equal([]);
+  });
+
+  it("can queue a power action after explicit simulated charges, but cannot play it immediately", () => {
+    const origin = new Engine(SETUP_MOVES);
+    Object.assign(origin.players[0].data.power, { area1: 0, area2: 4, area3: 0 });
+    const entries: AnalysisEntry[] = [
+      { kind: "adjust", charge: 4 },
+      { kind: "move", move: "terrans action power3." },
+    ];
+    expect(analysisCommitPrefix(origin, entries, 0, 1, 0).moves).to.deep.equal(["terrans action power3."]);
+    expect(analysisCommitPrefix(origin, entries, 0, 1, 1).moves).to.deep.equal([]);
+  });
+
   it("reports no cut for a line that is committable end to end", () => {
     const origin = new Engine(SETUP_MOVES);
     applySoloRoundFlow(origin, 0);
@@ -866,7 +884,7 @@ describe("analysisCommitPrefix - the cut reason behind the prefix", () => {
     expect(cut).to.equal(null);
   });
 
-  it("names the overdraft when a move spends past the seat's real resources", () => {
+  it("rejects an older saved draft that spends past the seat's resources", () => {
     const origin = new Engine(SETUP_MOVES);
     applySoloRoundFlow(origin, 0);
     origin.player(0).data.credits = 0;
@@ -875,20 +893,25 @@ describe("analysisCommitPrefix - the cut reason behind the prefix", () => {
     const { moves, cut } = analysisCommitPrefix(origin, [{ kind: "move", move: "terrans build ts -1x2." }], 0, 1);
 
     expect(moves).to.deep.equal([]);
-    expect(cut).to.equal("overdrawn");
+    expect(cut).to.equal("illegal");
   });
 
-  it("names the faction seed and the cheap build, both of which void the whole line", () => {
+  it("rejects an imagined faction, but allows a future 3c-only upgrade with its constraint intact", () => {
     const seeded = new Engine(["init 2 randomSeed"]);
     applySoloRoundFlow(seeded, 0);
     expect(
       analysisCommitPrefix(seeded, [{ kind: "faction", lineup: [Faction.Terrans, Faction.Nevlas] }], 0, 1).cut
     ).to.equal("faction");
 
-    const cheap = new Engine(SETUP_MOVES);
+    const origin = new Engine(SETUP_MOVES);
+    const entries: AnalysisEntry[] = [{ kind: "move", move: "terrans build ts 4A4 cheap." }];
+    expect(analysisCommitPrefix(origin, entries, 0, Round.Round1, 0).moves).to.deep.equal([
+      "terrans build ts 4A4 cheap.",
+    ]);
+    expect(analysisCommitPrefix(origin, entries, 0, Round.Round1, 1).moves).to.deep.equal([]);
     expect(
-      analysisCommitPrefix(cheap, [{ kind: "move", move: "terrans build ts 4A4 cheap." }], 0, Round.Round1).cut
-    ).to.equal("cheap-build");
+      analysisCommitPrefix(origin, [{ kind: "move", move: "terrans build ts 3A3 cheap." }], 0, Round.Round1, 1).moves
+    ).to.deep.equal(["terrans build ts 3A3 cheap."]);
   });
 
   it("names the foreign move that setup pass-and-play left in the line", () => {

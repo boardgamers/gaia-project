@@ -4,10 +4,7 @@ import type { ButtonData } from "../../data";
 import { buildButtons } from "./buildings";
 import type { CommandController } from "./types";
 
-// The sandbox's two Trading Station buttons (owner instruction, 2026-08-19). Every build button in
-// this app is icon-only, with the words in the tooltip - which stops working the moment two buttons
-// carry the same Trading Station icon, so the pair has to be readable on the button face itself.
-describe("the sandbox's cheap/expensive Trading Station pair", () => {
+describe("normal Trading Stations and simulated neighbours", () => {
   const SETUP = [
     "init 2 randomSeed",
     "p1 faction terrans",
@@ -81,15 +78,22 @@ describe("the sandbox's cheap/expensive Trading Station pair", () => {
     const buttons = tradingStationButtons(true);
 
     expect(buttons).to.have.length(2);
-    expect(buttons.map(faceText)).to.deep.equal(["Expensive", "Cheap"]);
+    expect(buttons.map(faceText)).to.deep.equal(["", "Simulate neighbour"]);
   });
 
-  it("says which price each one charges, and that the cheap one is a sandbox fiction", () => {
-    const [expensive, cheap] = tradingStationButtons(true);
+  it("keeps both actual prices under the normal upgrade and reserves simulation for isolated mines", () => {
+    const [normal, simulated] = tradingStationButtons(true);
 
-    expect(expensive.label).to.contain("6c");
-    expect(cheap.label).to.contain("3c");
-    expect(cheap.label).to.contain("cannot be committed");
+    expect(normal.label).to.contain("3c");
+    expect(normal.label).to.contain("6c");
+    expect(simulated.label).to.contain("only plays at 3c");
+    const normalCosts = Array.from(normal.hexes.hexes.values()).map((hex) => hex.cost);
+    expect(normalCosts).to.include("3c,2o");
+    expect(normalCosts).to.include("6c,2o");
+    for (const [hex, simulatedCost] of simulated.hexes.hexes) {
+      expect(normal.hexes.hexes.get(hex).cost).to.equal("6c,2o");
+      expect(simulatedCost.cost).to.equal("3c,2o");
+    }
   });
 
   it("keeps the shortcut on the real one only, since nothing here resolves a collision", () => {

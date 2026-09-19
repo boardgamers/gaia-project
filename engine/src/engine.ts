@@ -76,10 +76,12 @@ import {
   moveRotateSectors,
   moveSetup,
   moveSilentBid,
+  repairBannedRandomFactions,
 } from "./move/setup";
 import { moveGaiaFormTransdim, moveSpaceshipAction } from "./move/spaceship-actions";
 import Player from "./player";
 import { MoveTokens, powerLogString } from "./player-data";
+import type { AutomationState } from "./premove-types";
 import { lastTile } from "./research-tracks";
 import { SeededSpaceshipTech, SpaceshipActionType } from "./spaceships";
 import { roundScoringEvents } from "./tiles/scoring";
@@ -440,6 +442,7 @@ export default class Engine {
   pendingMove = "";
   // Tells the UI if the new move should be on the same line or not
   newTurn = true;
+  automation?: AutomationState;
 
   constructor(moves: string[] = [], options: EngineOptions = {}, engineVersion?: string, replay?: boolean) {
     this.options = options;
@@ -927,6 +930,7 @@ export default class Engine {
       }
     }
 
+    repairBannedRandomFactions(engine);
     return engine;
   }
 
@@ -954,7 +958,12 @@ export default class Engine {
   replayedTo(move = Infinity, keepReplayMode = false) {
     const oldHistory = this.moveHistory.slice(0, move);
     const oldPlayers = this.players;
-    const engine = new Engine(oldHistory.slice(0, 1), this.options, this.version ?? "1.0.0", true);
+    const options = { ...this.options };
+    // Lost Fleet stores its generated map here too; it is not a custom-map setup option.
+    if (options.lostFleet) {
+      delete options.map;
+    }
+    const engine = new Engine(oldHistory.slice(0, 1), options, this.version ?? "1.0.0", true);
 
     for (let i = 0; i < oldPlayers.length && i < engine.players.length; i++) {
       engine.players[i].name = oldPlayers[i].name;
@@ -1125,7 +1134,9 @@ export default class Engine {
   }
 
   parseMove(move: string) {
-    const split = move.split(" ");
+    // The journal can append power changes when a setup move loads the factions.
+    // They describe the result, not extra arguments to the recorded command.
+    const split = move.replace(powerRegex, "").trim().split(" ");
     return {
       command: (split[0] || Command.EndTurn) as Command,
       args: split.slice(1),

@@ -72,7 +72,7 @@ export function autoLeechRiskWarning(
   const capText = cap > 0 ? `, capped at ${cap} total power after passing` : "";
   return {
     disableKey: WarningKey.autoLeechVpRisk,
-    message: `Auto-leech is set to accept leeches up to ${threshold} power${capText}, which can cost Victory Points - other players still have turns this round, so this could happen before you act again.`,
+    message: `Auto-charge is set to accept charges up to ${threshold} power${capText}, which can cost Victory Points - other players still have turns this round, so this could happen before you act again.`,
   };
 }
 

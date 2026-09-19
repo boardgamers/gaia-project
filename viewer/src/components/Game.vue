@@ -5,12 +5,7 @@
     </b-modal>
     <Rules id="rules" />
 
-    <!-- Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §12) - only staleness notices and the
-         saved-line prompt live here now, because both have to be readable while sandbox mode is NOT
-         active, and Commands.vue is not rendered then. Everything the player actually presses inside
-         the sandbox - the controls, the status numbers, and round 0's faction choice - is in
-         Commands.vue's header and action area (owner instruction); entering and leaving is the map's
-         own corner button. -->
+    <!-- Show planning and queue details above the board; own-turn simulation starts beside the actions. -->
     <div v-if="analysisNotice || analysisPendingRestore" class="row">
       <div class="col-12">
         <AnalysisPanel
@@ -24,6 +19,26 @@
       </div>
     </div>
 
+    <PremoveQueue
+      v-if="showPremovePanel"
+      :plan="myPremovePlan"
+      :notice-storage-key="premoveNoticeStorageKey"
+      :pending="!!$store.state.pendingPlan"
+      :active="analysisMode"
+      :preview-round="analysisMode && analysisRolledForward ? analysisBaseRound : undefined"
+      :queue-enabled="premoveAvailable"
+      :can-preview="!replayData"
+      @exit="exitAnalysisMode"
+      @view="viewPremoves"
+      @cancel="cancelPremoves"
+    />
+    <PremoveNotice
+      v-else-if="myPremovePlan && myPremovePlan.notice"
+      :plan="myPremovePlan"
+      :storage-key="premoveNoticeStorageKey"
+      class="mb-3"
+    />
+    <div v-if="$store.state.planError" class="alert alert-warning" role="status">{{ $store.state.planError }}</div>
     <template v-if="uiMode === 'graphical'">
       <!-- Round 0 only (ban/pick/bid/starting buildings/booster): says whose turn it is and what
            they have to do, plus the auction/ban explainer buttons. Deliberately above the map
@@ -50,13 +65,21 @@
                matching `v-if` on the commands column's own <Commands> keeps exactly one of the two
                mounted - never both, which would duplicate its element ids and modals. -->
           <Commands
-            v-if="setupActionsAtTop && canPlay"
+            v-if="setupActionsAtTop && showCommands"
+            :actions-enabled="canPlay"
+            :auto-charge-enabled="!replayData"
             @command="handleCommand"
             :currentMove="currentMove"
             :hide-spacer="true"
             :analysis-mode="analysisMode"
+            :analysis-offered="analysisOffered && !replayData"
+            @analysis-start="enterAnalysisMode"
             :analysis-status="analysisStatus"
-            :analysis-move-count="analysisAppliedEntries.length"
+            :analysis-move-count="analysisAppliedEntries.filter((entry) => entry.kind === 'move').length"
+            :analysis-can-edit="!!(analysisEntries.length || currentMove || analysisPendingCharge)"
+            :analysis-can-undo-charge="
+              analysisPendingCharge > 0 || analysisAppliedEntries[analysisAppliedEntries.length - 1]?.kind === 'adjust'
+            "
             :analysis-committable-moves="analysisCommittableMoves.length"
             :analysis-commit-plan="analysisCommitPlan"
             :analysis-faction-choices="analysisFactionChoices"
@@ -66,6 +89,8 @@
             @analysis-commit="commitAnalysisLine"
             @analysis-charge="chargeAnalysisPower"
             @analysis-undo-charge="undoAnalysisCharge"
+            @analysis-undo="undoLastAnalysisEntry"
+            @analysis-reset="resetAnalysisLine"
             @analysis-select-line="selectAnalysisLine"
             @analysis-add-line="addAnalysisLine"
             @analysis-close-line="closeAnalysisLine"
@@ -86,15 +111,7 @@
         ]"
         v-if="hasMap"
       >
-        <SpaceMap
-          :class="['mb-1', 'space-map', 'col-md-7']"
-          :analysis-offered="analysisOffered"
-          :analysis-active="analysisMode"
-          :analysis-can-edit="analysisAppliedEntries.length > 0"
-          @analysis-toggle="toggleAnalysisMode"
-          @analysis-undo="undoLastAnalysisEntry"
-          @analysis-reset="resetAnalysisLine"
-        />
+        <SpaceMap :class="['mb-1', 'space-map', 'col-md-7']" />
         <div class="col-md-5 game-board-side-column">
           <!-- For Lost Fleet, ResearchBoard itself grows a 7th column (Scoring Board Extension +
                round scoring tiles - see ResearchBoard.vue) in the space ScoringBoard's final
@@ -168,26 +185,22 @@
              it read as a huge rounded strip and duplicated information the page already shows. -->
         <TurnOrder v-if="!ended && engine.players.length > 0" class="col-md-4 order-4 order-md-1" />
         <div :class="commandsColumnClass">
-          <!-- The two `alert` banners that used to sit here - one blue for composing a premove, one
-               amber for composing a cancel rule - are gone. They described what the bottom bar was
-               doing while living at the top of the page, which on a phone is usually scrolled out of
-               sight while you compose against it. Both now render inside Commands.vue's own sticky
-               bar header (`premove-context`), so the status and the buttons it describes are the
-               same object. -->
           <Commands
             @command="handleCommand"
-            v-if="canPlay && !setupActionsAtTop"
+            v-if="showCommands && !setupActionsAtTop"
+            :actions-enabled="canPlay"
+            :auto-charge-enabled="!replayData"
             :currentMove="currentMove"
             :hide-spacer="true"
-            :show-premove-cancel="premoveMode || cancelTriggerComposeActive"
-            :show-premove-confirm="(premoveMode && premoveReady) || (cancelTriggerComposeActive && cancelTriggerReady)"
-            :premove-confirm-label="
-              cancelTriggerComposeActive ? 'Continue' : premoveEditSeq !== null ? 'Save changes' : 'Queue now'
-            "
-            :premove-context="premoveContext"
             :analysis-mode="analysisMode"
+            :analysis-offered="analysisOffered && !replayData"
+            @analysis-start="enterAnalysisMode"
             :analysis-status="analysisStatus"
-            :analysis-move-count="analysisAppliedEntries.length"
+            :analysis-move-count="analysisAppliedEntries.filter((entry) => entry.kind === 'move').length"
+            :analysis-can-edit="!!(analysisEntries.length || currentMove || analysisPendingCharge)"
+            :analysis-can-undo-charge="
+              analysisPendingCharge > 0 || analysisAppliedEntries[analysisAppliedEntries.length - 1]?.kind === 'adjust'
+            "
             :analysis-committable-moves="analysisCommittableMoves.length"
             :analysis-commit-plan="analysisCommitPlan"
             :analysis-faction-choices="analysisFactionChoices"
@@ -197,61 +210,19 @@
             @analysis-commit="commitAnalysisLine"
             @analysis-charge="chargeAnalysisPower"
             @analysis-undo-charge="undoAnalysisCharge"
+            @analysis-undo="undoLastAnalysisEntry"
+            @analysis-reset="resetAnalysisLine"
             @analysis-select-line="selectAnalysisLine"
             @analysis-add-line="addAnalysisLine"
             @analysis-close-line="closeAnalysisLine"
-            @cancel-premove="cancelTriggerComposeActive ? cancelCancelTriggerCompose() : cancelPremoveMode()"
-            @confirm-premove="cancelTriggerComposeActive ? confirmCancelTriggerCompose() : queueCurrentPremove()"
             @sticky-bar-height="stickyBarHeight = $event"
           />
-          <!-- The old "Current player" heading + circle here was redundant with the turn-order
-               banner at the top of the page (PROGRESS.md Gaia 10) - removed, keeping only the
-               premove explainer this block also carried. -->
-          <!-- An offline copy of an online game plays only the seats
-               this account holds, and has no premove machinery to offer instead - so without this
-               the action area is simply empty while an opponent is on turn, which reads as broken. -->
+
           <div v-else-if="offlineMirrorWaiting" class="text-muted small">
             Waiting for {{ turnPlayer.name || "the other player" }}. This is your offline copy of an online game, so you
             play only your own seats here; their move arrives the next time you open the game with a connection.
           </div>
-          <!-- The premove sheet: the ONE surface the off-turn flow lives on. The cancel-rule
-               `b-modal` that used to follow this block is gone - its three stages are steps inside
-               the sheet now (`stage`), so the flow never leaves the bottom of the screen. The
-               cascade / failure / played-automatically `alert`s that used to follow it are gone for
-               the same reason: they rendered in this in-flow column, i.e. above a sheet pinned to the
-               bottom of the viewport, which is precisely where they would not be read. They are
-               notices inside the sheet body now. -->
-          <div v-if="showPremoveSheet" class="mt-2">
-            <PremoveBar
-              :seat="myLockedSeat"
-              :compose-mode-preference="premoveModePreference"
-              :sticky-mobile="!canPlay"
-              :bottom-offset="0"
-              :stage="cancelTriggerStage"
-              :watched-seat="cancelTriggerWatchedSeat"
-              :draft-move="cancelTriggerDraftMove"
-              :editing-atoms="cancelTriggerEditingAtoms"
-              :editing-leech-config="cancelTriggerEditingLeechConfig"
-              :edit-cascade-notice="premoveEditCascadeNotice"
-              @mode-preference="setPremoveModePreference"
-              @start-new="onStartNewPremove"
-              @start-edit="startEditPremove"
-              @start-cancel-trigger="startCancelTriggerPicker"
-              @start-edit-cancel-trigger="startEditCancelTrigger"
-              @pick-opponent="pickCancelTriggerOpponent"
-              @pick-leech="pickCancelTriggerLeech"
-              @arm-refine="armCancelTriggerFromRefine"
-              @arm-leech="armLeechTrigger"
-              @close-cancel-trigger="closeCancelTriggerStep"
-              @dismiss-cascade="premoveEditCascadeNotice = null"
-              @bar-height="premoveBarHeight = $event"
-            />
-          </div>
-          <!-- Desktop's round-0 slot (mobile's is up under the status strip). Placed after the
-               block above rather than inside its v-if/v-else-if chain, so the offline-mirror
-               "waiting for X" message still gets to render alongside it. Rendered on turn too (it
-               then shows only the already-picked factions, which the picker above no longer
-               offers). -->
+
           <FactionBrowser v-if="!setupActionsAtTop" :on-turn="canPlay" />
         </div>
       </div>
@@ -284,34 +255,28 @@
           v-if="logPlacement === 'bottom'"
         />
       </div>
-      <AutoLeechFab
-        v-if="showOffTurnAutoLeechFab"
-        :bottom-offset="offTurnAutoLeechBottomOffset"
-        :show-passed-cap-options="myLockedSeatHasPassed"
-      />
     </template>
     <div v-else class="d-flex flex-column">
       <SetupStatus v-if="!ended" />
-      <SpaceMap
-        v-if="hasMap"
-        :class="['mb-1', 'space-map', 'col-md-7']"
-        :analysis-offered="analysisOffered"
-        :analysis-active="analysisMode"
-        :analysis-can-edit="analysisAppliedEntries.length > 0"
-        @analysis-toggle="toggleAnalysisMode"
-        @analysis-undo="undoLastAnalysisEntry"
-        @analysis-reset="resetAnalysisLine"
-      />
+      <SpaceMap v-if="hasMap" :class="['mb-1', 'space-map', 'col-md-7']" />
       <AdvancedLog :currentMove="currentMove" :hideLog.sync="hideLog" v-if="logPlacement === 'top'" />
       <Commands
         @command="handleCommand"
-        v-if="canPlay"
+        v-if="showCommands"
+        :actions-enabled="canPlay"
+        :auto-charge-enabled="!replayData"
         :currentMove="currentMove"
         :hide-spacer="true"
         @sticky-bar-height="stickyBarHeight = $event"
         :analysis-mode="analysisMode"
+        :analysis-offered="analysisOffered && !replayData"
+        @analysis-start="enterAnalysisMode"
         :analysis-status="analysisStatus"
-        :analysis-move-count="analysisAppliedEntries.length"
+        :analysis-move-count="analysisAppliedEntries.filter((entry) => entry.kind === 'move').length"
+        :analysis-can-edit="!!(analysisEntries.length || currentMove || analysisPendingCharge)"
+        :analysis-can-undo-charge="
+          analysisPendingCharge > 0 || analysisAppliedEntries[analysisAppliedEntries.length - 1]?.kind === 'adjust'
+        "
         :analysis-committable-moves="analysisCommittableMoves.length"
         :analysis-commit-plan="analysisCommitPlan"
         :analysis-faction-choices="analysisFactionChoices"
@@ -321,6 +286,8 @@
         @analysis-commit="commitAnalysisLine"
         @analysis-charge="chargeAnalysisPower"
         @analysis-undo-charge="undoAnalysisCharge"
+        @analysis-undo="undoLastAnalysisEntry"
+        @analysis-reset="resetAnalysisLine"
         @analysis-select-line="selectAnalysisLine"
         @analysis-add-line="addAnalysisLine"
         @analysis-close-line="closeAnalysisLine"
@@ -346,10 +313,11 @@ import Engine, {
   Faction,
   Phase,
   Player,
-  PlayerEnum,
   ResearchField,
   Round,
 } from "@gaia-project/engine";
+import type { PremoveCommand, PremovePlan, PremoveTiming } from "@gaia-project/engine/src/premove-types";
+import { MAX_PREMOVES } from "@gaia-project/engine/src/premove-types";
 import { currentPlayer } from "@gaia-project/engine/wrapper";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
@@ -368,7 +336,6 @@ import {
   advancePastOwnPass,
   analysisCommitPrefix,
   analysisFactionPool,
-  analysisLineSetSize,
   applyLeechAdjustment,
   assumedPowerOf,
   buildAnalysisLineup,
@@ -381,7 +348,6 @@ import {
   loadAnalysisLines,
   markAnalysisSeat,
   MAX_ANALYSIS_LINES,
-  moveBelongsToSeat,
   normalizeAnalysisLineSet,
   ownMoveCount,
   planAnalysisCommit,
@@ -391,14 +357,6 @@ import {
   summarizeAnalysisLine,
 } from "../logic/analysis";
 import { ExecuteBack } from "../logic/buttons/types";
-import type {
-  CancelTriggerKind,
-  CancelTriggerLeechConfig as CancelTriggerLeechConfigType,
-  CancelTriggerRow,
-  PremoveMode,
-  PremoveRow,
-} from "../logic/hosted-types";
-import { buildSequentialChainPreview } from "../logic/premove-preview";
 import { parseCommands } from "../logic/recent";
 import { BASE_RESEARCH_BOARD_HEIGHT, isBeforeRound1, researchBoardHeight } from "../logic/utils";
 import { isDesktopViewport, watchDesktopViewport } from "../logic/viewport";
@@ -415,6 +373,8 @@ import PlayerInfo from "./PlayerInfo.vue";
 import Pool from "./Pool.vue";
 import PreferenceSplitBid from "./PreferenceSplitBid.vue";
 import PreferenceSplitSummary from "./PreferenceSplitSummary.vue";
+import PremoveNotice from "./PremoveNotice.vue";
+import PremoveQueue from "./PremoveQueue.vue";
 import ResearchBoard from "./ResearchBoard.vue";
 import ResearchPanel from "./ResearchPanel.vue";
 import Rules from "./Rules.vue";
@@ -425,12 +385,6 @@ import SilentAuctionSummary from "./SilentAuctionSummary.vue";
 import SpaceMap from "./SpaceMap.vue";
 import Table from "./Table.vue";
 import TurnOrder from "./TurnOrder.vue";
-// The three CancelTrigger* step components are registered by PremoveBar now, not here - they render
-// inside the sheet rather than in a modal this component owned.
-import AutoLeechFab from "./AutoLeechFab.vue";
-import PremoveBar from "./PremoveBar.vue";
-
-const PREMOVE_MODE_PREFERENCE_KEY = "premoveModePreference";
 
 // The base-game power/QIC action row is drawn with BoardAction.vue, which wraps every octagon in an
 // inner `<svg viewBox="-28 -28 56 56" overflow:visible>`. That inner viewBox origin shifts the
@@ -467,8 +421,8 @@ const BOARD_ACTION_BASE_X = -20;
     SilentAuctionBid,
     Rules,
     Table,
-    PremoveBar,
-    AutoLeechFab,
+    PremoveQueue,
+    PremoveNotice,
     // Static import (rather than the previous `() => import("./Charts.vue")`) so the published
     // UMD lib stays a single file - an async chunk would resolve against the baked-in publicPath,
     // which breaks when the bundle is hosted anywhere other than that exact CDN path.
@@ -484,73 +438,12 @@ export default class Game extends Vue {
   // `sticky-bar-height` event) so the reserved space for it can render at the end of the page
   // instead of right after Turn Order.
   stickyBarHeight = 0;
-  premoveBarHeight = 0;
   // When joining a game
   name = "";
 
   replayData: { current: number; backup: Engine } = null;
 
-  // Premove (PREMOVE_PLAN.md) - hosted mode only. `premoveBackup` is the real engine state to
-  // restore to once the preview is queued or cancelled (same "stash the real state, swap
-  // state.data to a preview, restore later" shape as replayData above). `premoveComposeBase` is
-  // the FORCED preview clone startPremove() builds (this seat's turn, any prior queued moves in
-  // a Sequential chain already applied) - applyPremoveMove() must always replay the full
-  // accumulated move string from this stable base, never from `this.engine` (which handleData()
-  // mutates on every partial-move call, so replaying the full string on top of it would
-  // re-execute an already-applied partial move) nor from `premoveBackup` (which lacks the
-  // "force this seat's turn" override and any prior chain moves).
-  premoveMode = false;
-  premoveBackup: Engine = null;
-  premoveComposeBase: Engine = null;
-  premoveSeat: number = null;
-  premoveReady = false;
-  premoveDraftMove = "";
-  // Premove UI redesign (Gaia 9) - null while composing a brand-new entry; the existing row's
-  // `seq` while editing one instead (queueCurrentPremove below dispatches editPremove rather than
-  // queuePremove in that case). "Stage until confirmed": nothing about the existing row changes
-  // until the edit is actually confirmed, so backing out of an edit leaves it untouched.
-  premoveEditSeq: number | null = null;
-  // One-shot dismissible notice ("N discarded") shown after confirming a Sequential edit that had
-  // downstream entries - the count is captured at confirm time since the rows are already gone by
-  // the time the notice renders.
-  premoveEditCascadeNotice: number | null = null;
-  // Phase 3 (§10.1/§10.6) - which mode a FRESH queue (no existing rows yet) should be composed
-  // into; once a seat has rows, their shared `mode` column is authoritative instead (see
-  // PremoveBar's own `mode` getter). Remembered per-browser.
-  premoveModePreference: PremoveMode =
-    (typeof localStorage !== "undefined" && (localStorage.getItem(PREMOVE_MODE_PREFERENCE_KEY) as PremoveMode)) ||
-    "sequential";
-
-  // Premove cancel rules (§8) - the picker/leech-config/refine screens are steps of the premove
-  // sheet's body (`cancelTriggerStage`, passed to PremoveBar as `stage`); they used to be three
-  // screens of a b-modal owned here. Composing a move rule takes the board over the same way
-  // premove composing does (`cancelTriggerComposeSeat`/`cancelTriggerBackup`/
-  // `cancelTriggerComposeBase` mirror premoveSeat/premoveBackup/premoveComposeBase above, but
-  // forced to the WATCHED opponent's seat against a resource-relaxed clone instead of this
-  // session's own seat).
-  cancelTriggerStage: "picker" | "leech" | "refine" | null = null;
-  cancelTriggerWatchedSeat: number | null = null;
-  cancelTriggerComposeSeat: number | null = null;
-  cancelTriggerBackup: Engine = null;
-  cancelTriggerComposeBase: Engine = null;
-  cancelTriggerReady = false;
-  cancelTriggerDraftMove = "";
-  // null while composing a brand-new trigger; the existing row's seq while editing one (mirrors
-  // premoveEditSeq above).
-  cancelTriggerEditingSeq: number | null = null;
-  cancelTriggerEditingAtoms: string[] = [];
-  cancelTriggerEditingLeechConfig: CancelTriggerLeechConfigType | null = null;
-
-  // Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md) - a non-committing local sandbox: "you
-  // press a button, the board becomes yours" (§0). Follows the same "stash the real engine, take
-  // the board over, replay from a stable base, restore on exit" shape as premove/cancel-trigger
-  // above, but the stable base is `analysisOrigin` (the engine at the moment analysis mode was
-  // entered), and the accumulated result is a persisted LINE of many completed turns
-  // (`analysisEntries`), not one queued move. `analysisComposeBase` is origin + every committed
-  // entry replayed on top - the base the currently in-progress turn composes against, mirroring
-  // premoveComposeBase's role for premove. There is no separate "ready"/"confirm" step the way
-  // premove has: the moment a turn completes (`newTurn`) it is appended to the line automatically,
-  // same as self-contained.ts's own `engine = copy` on a completed move.
+  analysisSubmission: string | null = null;
   analysisMode = false;
   analysisBackup: Engine = null;
   analysisOrigin: Engine = null;
@@ -608,12 +501,8 @@ export default class Game extends Vue {
   // going through the server while composing inside the sandbox - the same "stash, take over,
   // restore" shape as analysisBackup above, applied to this one piece of global store state.
   analysisSealedBidBackendBackup: SealedBidBackend | null = null;
-  // Phase 6 (§3.5) - staleness on re-entry. `analysisNotice` is a one-line, dismissible explanation
-  // shown after the line was auto-replayed against a changed board (or cleared, or a forced exit
-  // happened) - null the rest of the time. `analysisPendingRestore` holds a stored line that was
-  // deliberately NOT auto-replayed because this seat's own real moves happened since it was saved
-  // (the one row of §3.5's table that must prompt instead of silently replaying); non-null only
-  // while that prompt is showing.
+  // Ordinary real moves reconcile automatically. A saved plan from a divergent history is
+  // held for explicit recovery without overwriting storage while the prompt is unanswered.
   analysisNotice: string | null = null;
   analysisPendingRestore: AnalysisLineSet | null = null;
   // The sandbox rolled the clone into a later round than the real game is in, because this seat had
@@ -650,36 +539,19 @@ export default class Game extends Vue {
   created(this: Game) {
     const unsub = this.$store.subscribeAction(({ type, payload }) => {
       if (type === "externalData") {
-        // Real state just arrived - a premove-in-progress preview is no longer meaningful (the
-        // board may have changed), so drop it rather than risk building a turn against stale data.
-        if (this.premoveMode) {
-          this.premoveMode = false;
-          this.premoveBackup = null;
-          this.premoveSeat = null;
-          this.premoveReady = false;
-          this.premoveEditSeq = null;
-        }
-        // Same reasoning for a cancel-trigger move in progress - only the board-takeover half,
-        // since the modal (picker/leech-config, which don't depend on stale board state) can stay
-        // open. A refine screen mid-edit is genuinely stale too, so that closes as well.
-        if (this.cancelTriggerComposeSeat !== null) {
-          this.cancelTriggerComposeSeat = null;
-          this.cancelTriggerBackup = null;
-          this.cancelTriggerComposeBase = null;
-          this.cancelTriggerReady = false;
-          if (this.cancelTriggerStage === "refine") {
-            this.cancelTriggerStage = null;
+        const pending = this.$store.state.pendingPlan as PremoveCommand | null;
+        if (pending && payload.automation?.plans[this.myLockedSeat]?.requestId === pending.requestId) {
+          if (this.analysisMode && this.analysisSubmission === pending.requestId) {
+            // Saving a queue does not play it. Keep all variations until real moves arrive.
+            this.exitAnalysisMode();
           }
+          this.analysisSubmission = null;
+          this.$store.commit("planSaved");
         }
-        // Analysis mode (§3.5/§3.6) - unlike premove/cancel-trigger above, the LINE survives this
-        // (decision #2: exiting keeps it, only the live takeover ends) - it was already persisted
-        // to localStorage as each entry committed, so nothing here needs to save it again. Mirrors
-        // exitAnalysisMode's own cleanup (sealed-bid backend restore, analysisMode store flag) since
-        // this is the OTHER path back to the real board, not just a "discard the preview" click.
-        // §3.5's "re-anchor and show a notice" (as opposed to premove's silent nuke): the line's
-        // baseMoveCount still anchors it to this seat's own future moves, so re-entering runs it
-        // straight back through resolveAnalysisStaleness's normal table - nothing needs to happen to
-        // the stored line itself here, only a notice explaining why the takeover just closed.
+        if (this.replayData) {
+          this.replayData.backup = JSON.parse(JSON.stringify(payload));
+          return;
+        }
         if (this.analysisMode) {
           // A reconnect/tab-refocus refetch dispatches this with the SAME real state as when
           // sandbox mode was entered - not an actual new move - and used to force-close the
@@ -701,6 +573,7 @@ export default class Game extends Vue {
             originHistory.length === incomingHistory.length &&
             originHistory.every((move, index) => move === incomingHistory[index]);
           if (unchanged) {
+            this.analysisBackup = JSON.parse(JSON.stringify(payload));
             return;
           }
           // An opponent's turn is not, by itself, a reason to throw the player out of the sandbox -
@@ -719,21 +592,12 @@ export default class Game extends Vue {
           this.analysisPendingRestore = null;
           this.analysisPendingCharge = 0;
           this.analysisRealHistory = [];
-          this.analysisNotice =
-            "A new move arrived, so sandbox mode closed. Your saved line is still there - Enter sandbox mode to continue where you left off.";
+          this.analysisNotice = "The position changed. Your draft is saved; open Planning to review it.";
           this.$store.commit("setSealedBidBackend", this.analysisSealedBidBackendBackup);
           this.analysisSealedBidBackendBackup = null;
           this.$store.commit("setAnalysisMode", false);
         }
         this.handleData(Engine.fromData(payload));
-        return;
-      }
-      if (type === "premoveMove") {
-        this.applyPremoveMove(payload as string);
-        return;
-      }
-      if (type === "cancelTriggerMove") {
-        this.applyCancelTriggerMove(payload as string);
         return;
       }
       if (type === "analysisMove") {
@@ -759,6 +623,7 @@ export default class Game extends Vue {
   }
 
   startReplay() {
+    if (this.analysisMode) this.exitAnalysisMode();
     if (this.replayData) {
       return;
     }
@@ -888,33 +753,18 @@ export default class Game extends Vue {
     return { "--lf-ship-width": `${width}%` };
   }
 
+  get showCommands() {
+    return this.canPlay || this.analysisMode || (this.analysisOffered && !this.replayData && !this.interactionDisabled);
+  }
+
   get totalStickyFooterHeight() {
-    return this.stickyBarHeight + this.premoveBarHeight;
+    return this.stickyBarHeight;
   }
 
   /** Someone else is on turn in an offline copy of an online game - nothing to play, and nothing
-   * else (premove bar, Commands) would otherwise appear to say why. */
+   * else (Commands) would otherwise appear to say why. */
   get offlineMirrorWaiting(): boolean {
     return !this.analysisMode && !!this.$store.state.offlineMirror && !!this.turnPlayer && !this.ended && !this.canPlay;
-  }
-
-  get showOffTurnAutoLeechFab(): boolean {
-    // Owner decision (2026-09): the off-turn Auto-leech FAB is removed from the viewer - the
-    // platform's own sidebar now exposes the same auto-leech preferences (see Commands.vue's
-    // showAutoLeechSelect). Kept as `false` so the FAB component + preference storage stay intact.
-    return false;
-  }
-
-  get myLockedSeatHasPassed(): boolean {
-    const seat = this.myLockedSeat;
-    return seat !== undefined && (this.engine.passedPlayers ?? []).includes(seat);
-  }
-
-  get offTurnAutoLeechBottomOffset(): number {
-    // ChatNotesPanel independently measures the same off-turn premove bar and uses barHeight + 12,
-    // or 24px when there is no sticky bar. Mirror that contract so the two adjacent mobile
-    // controls share a baseline instead of drifting into each other vertically.
-    return this.premoveBarHeight > 0 ? this.premoveBarHeight + 12 : 24;
   }
 
   get logPlacement(): LogPlacement {
@@ -955,11 +805,9 @@ export default class Game extends Vue {
     return this.engine.phase === Phase.EndGame;
   }
 
-  // Hosted mode (a "?game=" URL) has its own top banner (HostedBar.vue) with Turn Order folded
-  // into it (PROGRESS.md Gaia 10, replacing the old separate standalone banner below) - only
-  // self-contained/hot-seat play (no such banner exists) still renders Turn Order here.
+  // The BGS launcher marks hosted games explicitly; the iframe URL is shared between games.
   get isHostedMode(): boolean {
-    return typeof window !== "undefined" && new URLSearchParams(window.location.search).has("game");
+    return this.$store.state.hosted;
   }
 
   get orderedPlayers(): Player[] {
@@ -989,21 +837,6 @@ export default class Game extends Vue {
       return false;
     }
 
-    // Composing a cancel trigger plays as the WATCHED opponent's seat, forced onto a disposable
-    // clone (§8.3) - never this session's own locked seat, so the ordinary check below would
-    // always read false while composing one.
-    if (this.cancelTriggerComposeSeat !== null) {
-      return true;
-    }
-
-    // Analysis mode's setup-phase pass-and-play (§2.6/decision #7) walks EVERY seat's turn inside
-    // the clone - a real locked seat would otherwise hide Commands entirely the moment the clone's
-    // playerToMove moves to an opponent's setup turn. Round 1 onwards is the opposite: only this seat
-    // ever plays, and the only way another seat can be on turn is a decision `resolveOpponentDecisions`
-    // could not resolve (§12). Rendering their buttons there is what left a leech offer's accept/
-    // decline prompt on screen with the player unable to continue their own line - so the analysis
-    // seat's own turn is the gate from round 1 on, and an unresolved pause simply shows nothing to
-    // press rather than somebody else's decision.
     if (this.analysisMode) {
       return isBeforeRound1(this.engine) || this.engine.playerToMove === this.analysisSeat;
     }
@@ -1039,9 +872,7 @@ export default class Game extends Vue {
         classes.push("accessible-space-map");
       }
     }
-    // Analysis mode (§5.2/§2.10) - scopes the dimmed map stripes (theme.scss) to only this live
-    // game, not every setup/open-game preview that shares the same .space-map/.space-map-canvas
-    // background rule.
+    // Planning controls identify the mode; the map keeps its normal appearance.
     if (this.analysisMode) {
       classes.push("analysis-mode-active");
     }
@@ -1075,506 +906,92 @@ export default class Game extends Vue {
     }
   }
 
-  /**
-   * Premove (PREMOVE_PLAN.md). The seat this session would premove for: exactly the seat
-   * `seatToLock` (host.ts) already resolved into `$store.state.player.index` - whichever of this
-   * user's owned seats must act next, falling back to their first owned seat while someone else is
-   * on turn. A user who owns ALL seats (test game) never gets a lock at all (`state.player` stays
-   * null); a spectator who owns none gets locked to the out-of-range placeholder seat `-1` instead
-   * (see `seatToLock`'s doc comment) - the bounds check below excludes both, so `premoveOffered` is
-   * automatically false for both - no extra plumbing needed to satisfy "suppress where it makes no
-   * sense" (PREMOVE_PLAN.md §7.7).
-   */
   get myLockedSeat(): number | undefined {
     const index = this.$store.state.player?.index;
-    // Bounds-checked, not a raw passthrough: a hosting app may briefly lock every viewer to an
-    // out-of-range placeholder seat (index -1) while it waits to learn the real one (closing a
-    // race) - premoveOffered/myQueuedPremoves/etc. below would otherwise treat
-    // -1 as a real locked seat and crash calling into the engine with an invalid player index.
     return index !== undefined && index >= 0 && index < this.engine.players.length ? index : undefined;
   }
 
-  get premoveOffered(): boolean {
+  get realEngine(): Engine {
+    return this.analysisBackup ?? this.replayData?.backup ?? this.engine;
+  }
+
+  get premoveAvailable(): boolean {
+    const real = this.realEngine;
     return (
-      !this.premoveMode &&
-      !this.analysisMode &&
-      !this.canPlay &&
-      !this.ended &&
-      this.engine.round >= Round.Round1 &&
+      !this.tutorial &&
+      this.isHostedMode &&
+      real.automation?.version === 1 &&
       this.myLockedSeat !== undefined &&
-      this.myQueuedPremoves.length < 3 &&
-      this.engine.previewAvailableCommandsFor(this.myLockedSeat) !== null
+      !real.ended &&
+      (real.round > 0 ||
+        (real.automation.setupPremoves && [Phase.SetupBuilding, Phase.SetupBooster].includes(real.phase)))
     );
   }
 
-  get myQueuedPremoves(): PremoveRow[] {
+  get showPremovePanel(): boolean {
+    return (
+      this.analysisMode ||
+      ((this.premoveAvailable || this.analysisOffered) &&
+        (!!this.myPremovePlan?.moves.length || !!this.$store.state.pendingPlan))
+    );
+  }
+
+  get myPremovePlan(): PremovePlan | undefined {
+    return this.realEngine.automation?.plans[this.myLockedSeat];
+  }
+
+  get premoveNoticeStorageKey(): string {
+    // BGS reuses one viewer iframe URL, so use the game's seed plus the player's seat.
+    return `premove-notice:${JSON.stringify([this.realEngine.moveHistory[0], this.myLockedSeat])}`;
+  }
+
+  submitPremoves(moves: string[], timings?: PremoveTiming[]) {
+    const real = this.realEngine;
     const seat = this.myLockedSeat;
-    if (seat === undefined) {
-      return [];
-    }
-    return ((this.$store.state.premoves as PremoveRow[]) ?? [])
-      .filter((p) => p.seat === seat)
-      .sort((a, b) => a.seq - b.seq);
+    if (seat === undefined || this.$store.state.pendingPlan) return;
+    const requestId = globalThis.crypto.randomUUID();
+    this.$store.dispatch("submitPlan", {
+      type: "premoves",
+      requestId,
+      moves,
+      ...(timings ? { timings } : {}),
+      round: real.round,
+      turn: real.automation?.turns[seat] ?? 0,
+      revision: real.automation?.plans[seat]?.revision ?? 0,
+    } as PremoveCommand);
+    return requestId;
   }
 
-  /** Phase 3 (§10.1) - the mode a NEW composed entry joins: an existing queue's own mode (all of a
-   * seat's rows share one), or the remembered preference for a fresh queue. */
-  get effectivePremoveMode(): PremoveMode {
-    return this.myQueuedPremoves.length > 0 ? this.myQueuedPremoves[0].mode : this.premoveModePreference;
+  cancelPremoves(from = 0) {
+    this.submitPremoves((this.myPremovePlan?.moves ?? []).slice(0, from), this.myPremovePlan?.timings?.slice(0, from));
   }
 
-  get showPremoveBar(): boolean {
-    // Owner decision (2026-09): the premove bar ("Plan your next turn") is hidden - it doesn't work
-    // correctly on the BGS platform, which has its own planning UI. Kept as `false` (like the
-    // auto-leech controls) so the premove machinery and the `premoveOffered`/queued-premoves logic
-    // stay intact; a revert is a one-word change.
-    return false;
-  }
-
-  /**
-   * Whether the premove sheet renders at all. Two rules, both about keeping exactly one sheet on
-   * screen:
-   *
-   *  - a cancel-rule step (`cancelTriggerStage`) shows the sheet even when there is nothing
-   *    queued, because those steps live inside it now rather than in a modal of their own;
-   *  - composing anything hides it, because Commands.vue's own sticky bar IS the sheet during
-   *    compose (it carries the move buttons, the confirm pair and now the status band too). Without
-   *    the second rule a seat with a queued premove got both bars stacked on top of each other while
-   *    composing a cancel rule - `canPlay` is forced true during that compose, so Commands renders,
-   *    while `myQueuedPremoves.length > 0` kept this one alive as well.
-   */
-  get showPremoveSheet(): boolean {
-    if (this.premoveMode || this.cancelTriggerComposeActive) {
-      return false;
-    }
-    return this.showPremoveBar || this.cancelTriggerStage !== null;
-  }
-
-  /** The status line + caveats Commands.vue's sticky bar header shows while the board is taken over
-   * for composing. This is the content of the two `alert` banners that used to sit at the top of the
-   * commands column, moved onto the bar it was describing all along. */
-  get premoveContext(): { title: string; notes: string[]; variant: "premove" | "trigger" } | null {
-    if (this.cancelTriggerComposeActive) {
-      return {
-        variant: "trigger",
-        title: `Cancel rule — playing as ${this.cancelTriggerWatchedFactionName}`,
-        notes: this.cancelTriggerReady ? [] : ["Build the move to watch for, then end the turn to continue."],
-      };
-    }
-    if (!this.premoveMode) {
-      return null;
-    }
-    const notes: string[] = [];
-    if (!this.premoveReady) {
-      notes.push("Build the move you want, then end the turn to queue it.");
-    }
-    if (this.premoveComposeCaveat) {
-      notes.push(this.premoveComposeCaveat);
-    }
-    if (this.premoveEditDownstreamCount > 0) {
-      notes.push(
-        `This also discards the ${this.premoveEditDownstreamCount} entr${
-          this.premoveEditDownstreamCount === 1 ? "y" : "ies"
-        } queued after it.`
-      );
-    }
-    const modeLabel = this.effectivePremoveMode === "sequential" ? "chain" : "fallback";
-    return {
-      variant: "premove",
-      title:
-        this.premoveEditSeq !== null
-          ? "Editing a queued move"
-          : `Adding move ${Math.min(this.myQueuedPremoves.length + 1, 3)} of 3 · ${modeLabel}`,
-      notes,
-    };
-  }
-
-  /** Composing a premove while the game is paused on someone else's charge/income decision is
-   * allowed (Engine.previewAvailableCommandsFor), but the preview is built as if that decision were
-   * already settled - say so rather than let the board quietly disagree with what lands later.
-   * Reads the phase off `premoveBackup` (the real state snapshotted at compose time), because
-   * `this.engine` is the forced preview clone while composing and always reads RoundMove. */
-  get premoveComposeCaveat(): string | null {
-    const phase = (this.premoveBackup as Engine | null)?.phase;
-    if (!this.premoveMode || phase === undefined || phase === Phase.RoundMove) {
-      return null;
-    }
-    return phase === Phase.RoundLeech
-      ? "A power-charge decision is still open — this previews the board as if it had already been answered."
-      : "This round's income hasn't been handed out yet — this preview can show fewer resources than you'll actually have.";
-  }
-
-  /** How many entries editing the seat's currently-being-edited Sequential premove would discard -
-   * 0 outside an edit, in Priority mode (no cascade there), or if editing the last entry. */
-  get premoveEditDownstreamCount(): number {
-    if (this.premoveEditSeq === null || this.effectivePremoveMode !== "sequential") {
-      return 0;
-    }
-    return this.myQueuedPremoves.filter((p) => p.seq > this.premoveEditSeq).length;
-  }
-
-  // The "played automatically" / failure / cancelled notices used to be read and dismissed here.
-  // They are rendered by PremoveBar now (straight off the store), so that everything reporting what
-  // happened while you were away arrives on the sheet rather than in this in-flow column.
-
-  setPremoveModePreference(mode: PremoveMode) {
-    this.premoveModePreference = mode;
-    if (typeof localStorage !== "undefined") {
-      localStorage.setItem(PREMOVE_MODE_PREFERENCE_KEY, mode);
-    }
-  }
-
-  /** Starts composing a brand-new queued entry (the sheet's "+ Add move" button).
-   * `switchingModes` is true when the caller just triggered a mode switch (which clears the
-   * existing queue via a separate async dispatch) - in that case `priorMoves` is forced empty
-   * rather than read from `myQueuedPremoves`, since those rows may not have been cancelled in the
-   * store yet and are about to disappear regardless. */
-  onStartNewPremove({ mode, switchingModes }: { mode: PremoveMode; switchingModes: boolean }) {
-    const seat = this.myLockedSeat;
-    if (seat === undefined || (!switchingModes && this.myQueuedPremoves.length >= 3)) {
+  viewPremoves() {
+    if (this.replayData) return;
+    const moves = this.myPremovePlan?.moves ?? [];
+    if (!moves.length) return;
+    if (!this.analysisMode) this.enterAnalysisMode();
+    const matching = this.analysisLines.findIndex((entries) => {
+      const planned = entries.filter((entry) => entry.kind === "move");
+      return moves.every((move, index) => planned[index]?.move === move);
+    });
+    if (matching >= 0) {
+      this.selectAnalysisLine(matching);
       return;
     }
-    this.premoveEditSeq = null;
-    this.premoveBackup = JSON.parse(JSON.stringify(this.engine));
-    this.premoveSeat = seat;
-    this.premoveMode = true;
-    this.premoveReady = false;
-
-    // Phase 3 (§10.1) - sequential chains: preview the next slot against a clone with every
-    // already-queued move applied first. Priority previews always against the SAME fresh current
-    // state (empty priorMoves), since every rank is an alternative for the one upcoming turn.
-    const priorMoves = !switchingModes && mode === "sequential" ? this.myQueuedPremoves.map((p) => p.move) : [];
-    const clone = buildSequentialChainPreview(this.engine, seat, priorMoves);
-    this.premoveComposeBase = JSON.parse(JSON.stringify(clone));
-    this.handleData(clone);
-  }
-
-  /** Starts editing an existing queued entry (PremoveBar's "Edit" button) - previews against a
-   * clone with every entry BEFORE this one already applied (Sequential) or the fresh current state
-   * (Priority), exactly like composing a new entry at this same position would. Nothing is sent to
-   * the server yet ("stage until confirmed") - queueCurrentPremove only calls editPremove once the
-   * edit is actually confirmed. */
-  startEditPremove(seq: number) {
-    const seat = this.myLockedSeat;
-    const row = this.myQueuedPremoves.find((p) => p.seq === seq);
-    if (seat === undefined || !row) {
-      return;
-    }
-    this.premoveEditSeq = seq;
-    this.premoveBackup = JSON.parse(JSON.stringify(this.engine));
-    this.premoveSeat = seat;
-    this.premoveMode = true;
-    this.premoveReady = false;
-
-    const priorMoves =
-      row.mode === "sequential" ? this.myQueuedPremoves.filter((p) => p.seq < seq).map((p) => p.move) : [];
-    const clone = buildSequentialChainPreview(this.engine, seat, priorMoves);
-    this.premoveComposeBase = JSON.parse(JSON.stringify(clone));
-    this.handleData(clone);
-  }
-
-  cancelPremoveMode() {
-    if (!this.premoveBackup) {
-      return;
-    }
-    this.premoveMode = false;
-    this.premoveReady = false;
-    this.premoveSeat = null;
-    this.premoveComposeBase = null;
-    this.premoveEditSeq = null;
-    const backup = this.premoveBackup;
-    this.premoveBackup = null;
-    this.handleData(Engine.fromData(backup));
-  }
-
-  applyPremoveMove(move: string) {
-    // Always replay the FULL accumulated move string from the stable compose-base snapshot taken
-    // once in startPremove(), never from `this.engine` - handleData() below commits the (mutated,
-    // partial-move-applied) result back into `this.engine` on every call, so cloning from
-    // `this.engine` here would re-execute an already-applied partial move on top of itself and
-    // throw "Cannot execute a move after executing an incomplete move" the moment a premove needs
-    // more than one click to compose. `premoveBackup` alone isn't right either - it lacks the
-    // "force this seat's turn" override and any prior Sequential-chain moves that
-    // buildSequentialChainPreview baked into premoveComposeBase.
-    const copy = Engine.fromData(JSON.parse(JSON.stringify(this.premoveComposeBase)));
-    if (move) {
-      try {
-        copy.move(move);
-        copy.generateAvailableCommandsIfNeeded();
-      } catch {
-        // Invalid partial command while composing a premove - Commands.vue only offers legal
-        // buttons in the first place, so this shouldn't normally happen; just ignore it.
+    if (this.analysisEntries.length) {
+      if (this.analysisLines.length >= MAX_ANALYSIS_LINES) {
+        this.analysisNotice = "Close a plan before opening your queued moves.";
         return;
       }
+      this.addAnalysisLine();
     }
-    this.premoveReady = copy.newTurn;
-    // `move` is always the FULL accumulated turn line so far (handleCommand builds it up with
-    // ". " before ever calling addMove) - capture it now, before handleData resets currentMove to
-    // "" the instant a turn completes (same as it does for a real committed move).
-    if (copy.newTurn) {
-      this.premoveDraftMove = move;
-    }
-    this.handleData(copy);
+    this.setAnalysisEntries(moves.map((move) => ({ kind: "move", move })));
   }
 
-  queueCurrentPremove() {
-    if (!this.premoveReady || this.premoveSeat === null) {
-      return;
-    }
-    if (this.premoveEditSeq !== null) {
-      const discarded = this.premoveEditDownstreamCount;
-      this.$store.dispatch("editPremove", {
-        seat: this.premoveSeat,
-        seq: this.premoveEditSeq,
-        move: this.premoveDraftMove,
-      });
-      this.premoveEditCascadeNotice = discarded > 0 ? discarded : null;
-    } else {
-      this.$store.dispatch("queuePremove", {
-        seat: this.premoveSeat,
-        move: this.premoveDraftMove,
-        mode: this.effectivePremoveMode,
-      });
-    }
-    this.cancelPremoveMode();
-  }
-
-  // ---------------------------------------------------------------------------
-  // Premove cancel rules (§8)
-  // ---------------------------------------------------------------------------
-
-  get cancelTriggerComposeActive(): boolean {
-    return this.cancelTriggerComposeSeat !== null;
-  }
-
-  get cancelTriggerWatchedFactionName(): string {
-    const seat = this.cancelTriggerWatchedSeat;
-    if (seat === null) {
-      return "";
-    }
-    const faction = this.engine.players[seat]?.faction;
-    return faction ? factionName(faction) : `seat ${seat}`;
-  }
-
-  get myCancelTriggers(): CancelTriggerRow[] {
-    const seat = this.myLockedSeat;
-    if (seat === undefined) {
-      return [];
-    }
-    return ((this.$store.state.cancelTriggers as CancelTriggerRow[]) ?? []).filter((t) => t.seat === seat);
-  }
-
-  /** The sheet's "⚠ Cancel if…" button - swaps its body to the picker step (§8.2). */
-  startCancelTriggerPicker() {
-    this.cancelTriggerEditingSeq = null;
-    this.cancelTriggerEditingAtoms = [];
-    this.cancelTriggerEditingLeechConfig = null;
-    this.cancelTriggerStage = "picker";
-  }
-
-  /** The sheet's armed-rules "Edit" - reopens the config step (leech) or the refine step (move,
-   * skipping re-composing the board since the move text is already stored) pre-filled with the
-   * rule's current selection. */
-  startEditCancelTrigger(seq: number) {
-    const row = this.myCancelTriggers.find((t) => t.seq === seq);
-    if (!row) {
-      return;
-    }
-    this.cancelTriggerEditingSeq = seq;
-    if (row.kind === "leech") {
-      this.cancelTriggerEditingLeechConfig = row.config as CancelTriggerLeechConfigType;
-      this.cancelTriggerStage = "leech";
-    } else {
-      this.cancelTriggerWatchedSeat = row.watched_seat;
-      this.cancelTriggerDraftMove = row.move;
-      this.cancelTriggerEditingAtoms = row.atoms;
-      this.cancelTriggerStage = "refine";
-    }
-  }
-
-  closeCancelTriggerStep() {
-    this.cancelTriggerStage = null;
-  }
-
-  pickCancelTriggerLeech() {
-    this.cancelTriggerStage = "leech";
-  }
-
-  /** Picker's faction chip - closes the picker and starts composing on the board, playing as the
-   * watched opponent against a resource-relaxed clone (§8.3). */
-  pickCancelTriggerOpponent(seat: number) {
-    this.cancelTriggerStage = null;
-    this.cancelTriggerBackup = JSON.parse(JSON.stringify(this.engine));
-    this.cancelTriggerWatchedSeat = seat;
-    this.cancelTriggerComposeSeat = seat;
-    this.cancelTriggerReady = false;
-
-    const clone = Engine.fromData(JSON.parse(JSON.stringify(this.engine)));
-    // Resource-relaxed: inflate credits/ore/knowledge/QIC/power so affordability never limits what
-    // can be described - the line is only ever pattern-matched afterward, never executed (§8.3).
-    const data = clone.players[seat]?.data;
-    if (data) {
-      data.credits = 30;
-      data.ores = 15;
-      data.knowledge = 15;
-      data.qics = 10;
-      data.power.area1 = 4;
-      data.power.area2 = 4;
-      data.power.area3 = 4;
-    }
-    clone.forcePremovePreviewTurn(seat as PlayerEnum);
-    clone.generateAvailableCommands();
-
-    this.cancelTriggerComposeBase = JSON.parse(JSON.stringify(clone));
-    this.handleData(clone);
-  }
-
-  /** Mirrors applyPremoveMove - always replays the full accumulated move string from the stable
-   * compose-base snapshot, never from `this.engine` (which handleData mutates on every partial
-   * call) nor from `cancelTriggerBackup` (which lacks the forced-turn override). */
-  applyCancelTriggerMove(move: string) {
-    const copy = Engine.fromData(JSON.parse(JSON.stringify(this.cancelTriggerComposeBase)));
-    if (move) {
-      try {
-        copy.move(move);
-        copy.generateAvailableCommandsIfNeeded();
-      } catch {
-        return;
-      }
-    }
-    this.cancelTriggerReady = copy.newTurn;
-    if (copy.newTurn) {
-      this.cancelTriggerDraftMove = move;
-    }
-    this.handleData(copy);
-  }
-
-  cancelCancelTriggerCompose() {
-    if (!this.cancelTriggerBackup) {
-      return;
-    }
-    const backup = this.cancelTriggerBackup;
-    this.cancelTriggerComposeSeat = null;
-    this.cancelTriggerBackup = null;
-    this.cancelTriggerComposeBase = null;
-    this.cancelTriggerReady = false;
-    this.cancelTriggerWatchedSeat = null;
-    this.handleData(Engine.fromData(backup));
-  }
-
-  /** Board's "Continue" confirm - leaves the board (restoring the real state) and opens the refine
-   * step (§2.3) rather than arming anything yet. */
-  confirmCancelTriggerCompose() {
-    if (!this.cancelTriggerReady || !this.cancelTriggerBackup) {
-      return;
-    }
-    const backup = this.cancelTriggerBackup;
-    this.cancelTriggerComposeSeat = null;
-    this.cancelTriggerBackup = null;
-    this.cancelTriggerComposeBase = null;
-    this.handleData(Engine.fromData(backup));
-    this.cancelTriggerStage = "refine";
-  }
-
-  armCancelTriggerFromRefine(atoms: string[]) {
-    const seat = this.myLockedSeat;
-    const watchedSeat = this.cancelTriggerWatchedSeat;
-    if (seat === undefined || watchedSeat === null) {
-      return;
-    }
-    if (this.cancelTriggerEditingSeq !== null) {
-      this.$store.dispatch("editCancelTrigger", {
-        seat,
-        seq: this.cancelTriggerEditingSeq,
-        move: this.cancelTriggerDraftMove,
-        atoms,
-        config: {},
-      });
-    } else {
-      this.$store.dispatch("armCancelTrigger", {
-        seat,
-        watchedSeat,
-        move: this.cancelTriggerDraftMove,
-        atoms,
-        kind: "move" as CancelTriggerKind,
-        config: {},
-      });
-    }
-    this.resetCancelTriggerState();
-  }
-
-  armLeechTrigger(config: CancelTriggerLeechConfigType) {
-    const seat = this.myLockedSeat;
-    if (seat === undefined) {
-      return;
-    }
-    if (this.cancelTriggerEditingSeq !== null) {
-      this.$store.dispatch("editCancelTrigger", {
-        seat,
-        seq: this.cancelTriggerEditingSeq,
-        move: "",
-        atoms: [],
-        config,
-      });
-    } else {
-      this.$store.dispatch("armCancelTrigger", {
-        seat,
-        watchedSeat: seat,
-        move: "",
-        atoms: [],
-        kind: "leech" as CancelTriggerKind,
-        config,
-      });
-    }
-    this.resetCancelTriggerState();
-  }
-
-  private resetCancelTriggerState() {
-    this.cancelTriggerStage = null;
-    this.cancelTriggerWatchedSeat = null;
-    this.cancelTriggerDraftMove = "";
-    this.cancelTriggerEditingSeq = null;
-    this.cancelTriggerEditingAtoms = [];
-    this.cancelTriggerEditingLeechConfig = null;
-  }
-
-  // ---------------------------------------------------------------------------
-  // Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md)
-  // ---------------------------------------------------------------------------
-
-  /**
-   * The entry button's gate. For a locked (hosted, real-account) seat this is now unconditional -
-   * available any phase, any round, **whoever's turn it currently is** - not just "round 1+
-   * move-phase turns" or "any setup sub-phase" the way it used to read. That widening turned out to
-   * be free, not a new mechanism: `applySoloRoundFlow` (§2.5/§3.1) already forces the clone's
-   * `turnOrder`/`currentPlayer` to `seat` outright the moment it reaches `Phase.RoundMove`,
-   * regardless of who the real engine's `playerToMove` was at entry, and `grantSandboxWallet` grants
-   * directly to `players[seat].data` with no turn dependency either - the ONLY thing that was ever
-   * off-turn-hostile was this gate reading `canPlay` (itself genuinely turn-gated, since it also
-   * controls `Commands.vue`). A simultaneous sealed-bid round (Silent Auction / Preference Split,
-   * §2.7) was the first off-turn case reported - `canPlay` reads false for every seat but whichever
-   * one the engine happens to be internally pointing at, even though every seated player has a
-   * decision to make at once (`SealedBidPanel.ts`'s own doc comment) - but it turned out to be one
-   * instance of a general pattern (any seat, any time) rather than a special case worth its own
-   * check. Composing a move/bid once inside already works regardless of turn (Phase 4 nulls the real
-   * sealed-bid backend and makes `SealedBidPanel.mySeats` render every seat's form during analysis
-   * mode; setup pass-and-play already walks every seat's turn per decision #7) - the gate was always
-   * the only thing standing in the way.
-   *
-   * Excludes the other two board-takeover modes (§3.6) - premove/cancel-trigger compose force
-   * `canPlay` true via a forced-turn clone, which would otherwise make this readable as offered
-   * mid-compose. This is the ONLY mutual-exclusion mechanism (matching how premove/cancel-trigger
-   * already stay exclusive of each other purely through `showPremoveSheet`'s visibility gating, not
-   * a runtime cancel) - hiding the entry point is enough, since nothing can dispatch `analysisMode`
-   * without it.
-   *
-   * Pass-and-play / hot-seat (no locked seat) keeps the old `canPlay` gate - `canPlay` itself is
-   * already unconditionally true there (no session identity to be "off turn" from; the device is
-   * simply passed to whoever's turn it is), so this reduces to "always offered" there too, just
-   * without inventing a seat picker for a mode that has no concept of "my seat" to begin with. */
   get analysisOffered(): boolean {
     if (this.tutorial) return false;
-    if (this.analysisMode || this.premoveMode || this.cancelTriggerComposeActive || this.ended) {
+    if (this.analysisMode || this.ended) {
       return false;
     }
     if (this.myLockedSeat !== undefined) {
@@ -1588,42 +1005,31 @@ export default class Game extends Vue {
     return !this.isHostedMode && this.canPlay;
   }
 
-  /** §12 - the facts the player board cannot show for itself: a compact overdraft summary (the board
-   * has the real per-resource numbers, but it scrolls off screen on mobile), how much power the
-   * sandbox topped up on its own, and how much the player has told it to assume they charge.
-   *
-   * Read off the DISPLAYED engine, not `analysisComposeBase`. The base is a plain-JSON snapshot, and
-   * `analysisAssumedPower` does not survive `PlayerData.toJSON()` - so reading it there reported 0
-   * every single time, which is why a topped-up power cost was invisible. The displayed engine is a
-   * live one with the tally intact, and it has the second advantage of covering the turn currently
-   * being composed rather than only completed entries: overdrawing mid-compose now shows up while
-   * the move is still being built, which is when the player wants to know. */
+  /** Include the unfinished turn in resource deltas; read live data to retain power assumptions. */
   get analysisStatus(): AnalysisStatus | null {
     if (!this.analysisMode) {
       return null;
     }
     const data = this.engine?.players[this.analysisSeat]?.data;
     return data
-      ? computeAnalysisStatus(data, chargedPowerTotal(this.analysisAppliedEntries) + this.analysisPendingCharge)
+      ? computeAnalysisStatus(
+          data,
+          chargedPowerTotal(this.analysisAppliedEntries) + this.analysisPendingCharge,
+          this.analysisOrigin?.players[this.analysisSeat]?.data
+        )
       : null;
   }
 
-  /**
-   * §6/decision #13's commit path affordability gate, capped further for what this app can actually
-   * offer, and expressed as everything the Commit button is about to do: what goes live, what queues
-   * behind it, what is left behind and why. `AnalysisCommitConfirm.vue` shows the player exactly this
-   * before anything leaves the sandbox and `commitAnalysisLine` then executes the same object, so the
-   * log they confirmed and the moves that get played cannot drift apart.
-   *
-   * Self-contained/hot-seat play has no premove queue at all, so it only ever gets move 1 (§6:
-   * "Premoves are hosted-only. In self-contained/offline play, offer move 1 only.") - and only if the
-   * real game is actually waiting on this seat, since off turn there is nowhere for a live move to
-   * go. Hosted play is capped further by whatever premove room this seat already has left in the real
-   * (not analysis) queue, so committing a line never pushes that queue over its own 3-row limit.
-   */
+  // Immediate moves need real resources now; future premoves are checked again at execution.
   get analysisCommitPlan(): AnalysisCommitPlan {
     const empty: AnalysisCommitPlan = { live: null, queued: [], dropped: [], cut: null, limit: "line" };
-    if (!this.analysisMode || !this.analysisOrigin || this.analysisSeat === null || this.analysisRolledForward) {
+    if (
+      !this.analysisMode ||
+      !this.analysisOrigin ||
+      this.analysisSeat === null ||
+      (this.analysisRolledForward && !this.realEngine.automation?.roundPremoves) ||
+      this.$store.state.pendingPlan
+    ) {
       return empty;
     }
     // The applied prefix, not the stored line: a tail that does not replay describes a position the
@@ -1633,19 +1039,31 @@ export default class Game extends Vue {
       this.analysisOrigin,
       entries,
       this.analysisSeat,
-      this.analysisBaseRound
+      this.analysisBaseRound,
+      this.premoveAvailable ? (this.analysisSeatIsOnTurnForReal ? 1 : 0) : Infinity
     );
-    const queuedForSeat = ((this.$store.state.premoves as PremoveRow[]) ?? []).filter(
-      (p) => p.seat === this.analysisSeat
-    ).length;
-    return planAnalysisCommit({
+    const plan = planAnalysisCommit({
       committable: moves,
       cut,
       lineMoves: entries.filter((e): e is AnalysisMoveEntry => e.kind === "move").map((e) => e.move),
       onTurn: this.analysisSeatIsOnTurnForReal,
-      hosted: this.isHostedMode,
-      queueRoom: 3 - queuedForSeat,
+      hosted: this.premoveAvailable,
+      queueRoom: MAX_PREMOVES - (this.analysisSeatIsOnTurnForReal ? 1 : 0),
     });
+    if (this.realEngine.automation?.roundPremoves) {
+      const submitted = plan.live === null ? plan.queued : [plan.live, ...plan.queued];
+      const moveEntries = entries.filter((entry) => entry.kind === "move");
+      plan.timings = submitted.map((_, index) => {
+        const { engine } = replayAnalysisLine(
+          this.analysisOrigin,
+          entries.slice(0, entries.indexOf(moveEntries[index])),
+          this.analysisSeat,
+          this.analysisBaseRound
+        );
+        return { round: engine.round, phase: engine.phase };
+      });
+    }
+    return plan;
   }
 
   /** The plan above as one flat list - what the Commit button counts to decide whether it is
@@ -1662,56 +1080,32 @@ export default class Game extends Vue {
     if (!this.analysisBackup || this.analysisSeat === null) {
       return false;
     }
-    return Engine.fromData(JSON.parse(JSON.stringify(this.analysisBackup))).playerToMove === this.analysisSeat;
+    const real = Engine.fromData(JSON.parse(JSON.stringify(this.analysisBackup)));
+    return (
+      real.playerToMove === this.analysisSeat &&
+      real.round === this.analysisOrigin?.round &&
+      real.phase === this.analysisOrigin?.phase
+    );
   }
 
-  /**
-   * Decision #13/§6 - the commit path. Exits analysis mode FIRST, discarding the takeover back to
-   * the exact real pre-commit state (nothing else could have changed it while analysis mode was
-   * active - any real external change would already have force-exited via the `externalData`
-   * handler), then dispatches move 1 through the SAME `"move"` pipeline a manually-typed turn
-   * already uses (`addMove`) rather than reimplementing its hosted-round-trip/self-contained-
-   * persistence behaviour locally, exactly like `queueCurrentPremove` already dispatches through
-   * `queuePremove` before calling `cancelPremoveMode`. Moves 2..N (hosted only) queue as Sequential
-   * premoves the same way. Unlike a normal exit (decision #2), a commit clears the persisted line -
-   * there is nothing left to come back to once part of it has actually been played for real.
-   */
   commitAnalysisLine() {
     if (!this.analysisMode) {
       return;
     }
-    const seat = this.analysisSeat;
-    // Composing off-turn is what the sandbox is FOR, and this used to dispatch move 1 as a live
-    // `move` regardless - a move the real game cannot accept, because it is not this seat's turn.
-    // The sandbox had already exited and cleared the saved line by then, so the whole line was
-    // silently lost. Off turn, every committable move is a premove; nothing goes live. That split
-    // lives in `planAnalysisCommit` now, so what the confirmation showed is literally what runs.
-    const { live, queued } = this.analysisCommitPlan;
+    const { live, queued, timings } = this.analysisCommitPlan;
     if (live === null && queued.length === 0) {
       return;
     }
-    clearAnalysisLine(seat);
+    if (this.premoveAvailable) {
+      this.analysisSubmission = this.submitPremoves(live === null ? queued : [live, ...queued], timings) ?? null;
+      return;
+    }
     this.exitAnalysisMode();
-    if (live !== null) {
-      this.$store.dispatch("move", live);
-    }
-    for (const move of queued) {
-      this.$store.dispatch("queuePremove", { seat, move, mode: "sequential" });
-    }
-  }
-
-  /** The map-corner button's click handler (§5.4) - one control for both directions, since
-   * SpaceMap.vue only ever needs to say "the button was pressed," not decide which way. */
-  toggleAnalysisMode() {
-    if (this.analysisMode) {
-      this.exitAnalysisMode();
-    } else {
-      this.enterAnalysisMode();
-    }
+    if (live !== null) this.$store.dispatch("move", live);
   }
 
   enterAnalysisMode() {
-    if (this.analysisMode || !this.analysisOffered) {
+    if (this.replayData || this.analysisMode || !this.analysisOffered) {
       return;
     }
     const seat = this.myLockedSeat !== undefined ? this.myLockedSeat : this.engine.playerToMove;
@@ -1723,9 +1117,7 @@ export default class Game extends Vue {
     this.analysisSeat = seat;
     this.analysisRealHistory = [...this.engine.moveHistory];
     this.analysisBaseMoveCount = this.analysisRealHistory.length;
-    // Mark the seat BEFORE anything below: every step regenerates the available commands, and they
-    // must be generated with affordability already lifted (§12) or the board opens showing only what
-    // this seat could really pay for.
+    // Enable planning options before regenerating available commands. Normal costs still apply.
     markAnalysisSeat(this.analysisOrigin, seat);
     // Already passed this round -> roll the clone into the next one instead of handing back a turn in
     // a round this seat is out of (owner instruction, see `advancePastOwnPass`). Must come before the
@@ -1736,10 +1128,8 @@ export default class Game extends Vue {
     // leech answer (the state a live async game spends most of its time in) used to open a sandbox
     // with no commands for this seat at all and no way to play anything.
     settleAnalysisClone(this.analysisOrigin, seat);
-    // §3.7 - "setup gives you setup plus round 1": a setup-phase entry (round 0) counts as if it
-    // started at round 1 for the two-round cap and staleness purposes, since setup is not itself a
-    // playable "round" to spend that budget on. Read off the CLONE, after the steps above, so a line
-    // that was rolled past its own pass gets its two rounds from where it actually starts.
+    // Read the first playable round from the settled clone, including when entry rolls past
+    // our own pass. Setup itself is not a playable round.
     this.analysisBaseRound = Math.max(this.analysisOrigin.round, Round.Round1);
     // Sealed-bid auctions (§2.7) - null the real backend for the duration, so a Preference Split/
     // Silent bid phase submits an ordinary local move instead of going through the server; restored
@@ -1753,38 +1143,11 @@ export default class Game extends Vue {
     this.analysisPendingRestore = null;
     this.analysisPendingCharge = 0;
     this.analysisSummaryCache = new Map();
-    this.resolveAnalysisStaleness(seat, loadAnalysisLines(seat));
+    this.resolveAnalysisStaleness(seat, loadAnalysisLines(seat, this.analysisStorageScope));
   }
 
-  /**
-   * Staleness WITHOUT leaving the sandbox (§3.5) - the live counterpart to `resolveAnalysisStaleness`
-   * below, which only ever runs on re-entry.
-   *
-   * An opponent taking their turn used to close sandbox mode outright, every time, and hand back a
-   * notice saying so. But the sandbox's whole premise (§2.5's solo round flow) is that opponents do
-   * not move inside it, and a line's moves are replayed from scratch against whatever board they are
-   * given - so an opponent's turn usually changes nothing about whether the line still works. Being
-   * ejected mid-analysis because somebody else built on the far side of the map is the reported bug:
-   * the line was treated as invalidated when it plainly was not.
-   *
-   * So: re-base in place instead. The new real state becomes the origin, the line replays onto it,
-   * and the takeover carries on. Only a line that genuinely no longer applies loses anything, and
-   * then only the part that does not apply - reported honestly rather than by closing the sandbox.
-   *
-   * Three cases are deliberately NOT handled here, and fall through to the old force-exit:
-   *
-   * - **This seat's own move arrived.** The line may be the very thing that was just played (a
-   *   commit, or a premove firing), so replaying it would duplicate it. That is exactly the row of
-   *   §3.5's table that has to prompt, and the prompt lives on the re-entry path.
-   * - **The line's two-round window is gone** (`round > baseRound + 1`, decision #10), which no
-   *   amount of re-basing can bring back.
-   * - **The history diverged rather than grew** - a rollback, a different game, a re-anchor onto
-   *   something that is not a continuation of what the line was built on. Nothing here can be
-   *   trusted in that case, so it takes the conservative exit.
-   *
-   * Returns whether it took ownership of this update; false means the caller should carry on with
-   * the force-exit path.
-   */
+  /** Keep planning open across real moves. Every variation loses only the matching actions
+   * already played, then replays against the new board. Divergent histories still need review. */
   private reanchorAnalysisLine(payload: any): boolean {
     const seat = this.analysisSeat;
     if (seat === null || !this.analysisOrigin) {
@@ -1808,12 +1171,14 @@ export default class Game extends Vue {
       return false;
     }
     const incoming = markAnalysisSeat(Engine.fromData(JSON.parse(JSON.stringify(payload))), seat);
-    if (incoming.round > this.analysisBaseRound + 1) {
-      return false;
-    }
-    if (incomingHistory.slice(originHistory.length).some((move) => moveBelongsToSeat(incoming, move, seat))) {
-      return false;
-    }
+    const newMoves = incomingHistory.slice(originHistory.length);
+    let played = 0;
+    this.analysisLines = this.analysisLines.map((entries) => {
+      const result = dropPlayedAnalysisPrefix(incoming, entries, seat, newMoves);
+      played = Math.max(played, result.dropped);
+      return result.entries;
+    });
+    const ownMove = ownMoveCount(incoming, newMoves, seat) > 0;
 
     this.analysisBackup = JSON.parse(JSON.stringify(payload));
     // Unlike `enterAnalysisMode`, nobody chose this moment: the new state can be parked on an
@@ -1821,6 +1186,7 @@ export default class Game extends Vue {
     // accept/decline buttons with the player unable to continue. `settleAnalysisClone` resolves that
     // and then re-applies the solo turn order, which resolving alone does not do - this path used to
     // stop one call short and hand the board back with the opponent still on turn.
+    this.analysisRolledForward = advancePastOwnPass(incoming, seat);
     settleAnalysisClone(incoming, seat);
     this.analysisOrigin = incoming;
     this.analysisRealHistory = [...incomingHistory];
@@ -1836,138 +1202,76 @@ export default class Game extends Vue {
     // turn cost one replay per tab instead of one. Their tabs stay honest in the meantime, since
     // `summarizeAnalysisLine` replays each against this same new origin.
     const entries = this.analysisEntries;
+    const draft = ownMove ? "" : this.currentMove;
+    const pendingCharge = ownMove ? 0 : this.analysisPendingCharge;
     const applied = this.setAnalysisEntries(entries, { prune: false });
+    this.analysisPendingCharge = pendingCharge;
+    if (draft) this.applyAnalysisMove(draft);
     this.analysisNotice =
-      applied < entries.length
-        ? `Someone moved, and ${entries.length - applied} of your ${
-            entries.length
-          } sandbox moves no longer apply - the rest was replayed against the new board. Nothing was deleted; Undo drops what does not fit.`
+      played > 0
+        ? `Removed ${played} already played ${played === 1 ? "move" : "moves"} from matching plans. Remaining moves were updated for the current board.`
         : entries.length > 0
-          ? "Someone moved. Your sandbox line still applies and was replayed against the new board."
+          ? "The board changed. Your plans were updated."
           : null;
+    if (applied < entries.length) {
+      this.analysisNotice = "The board changed. Some planned moves no longer apply; they are kept for you to edit.";
+    }
     return true;
   }
 
-  /**
-   * Staleness on re-entry (§3.5). Compares the stored line's `baseMoveCount` against the live
-   * game's current `moveHistory.length` and picks one of four behaviours - `entries`/`baseRound`/
-   * `baseMoveCount` on `this` are already set by the caller by this point, so this only ever needs
-   * to decide what to replay (if anything) and what, if anything, to tell the player about it:
-   *
-   * - Unchanged (`baseMoveCount` matches) - restore silently, no notice.
-   * - The live game has already moved past the stored line's own two-round window
-   *   (`this.engine.round > stored.baseRound + 1`) - clear it; that window is gone regardless of who
-   *   moved, so there is nothing left worth replaying.
-   * - Only opponents moved since the line was saved - replay automatically (§2.5's solo round flow
-   *   makes this safe regardless of how many real opponent turns happened in between), keeping
-   *   whichever prefix still applies, with a notice either way.
-   * - This seat's own real moves happened since the line was saved - the common "I analysed a line,
-   *   then played it" case, where silently replaying it would double the move or throw. Enter with
-   *   an empty line and hold the stored one in `analysisPendingRestore` for the player to explicitly
-   *   restore or discard instead (mirrors PremoveBar.vue's inline mode-switch confirm, not a raw
-   *   `window.confirm`).
-   */
+  /** Restore all variations on the current board, trimming moves played manually or by a queue.
+   * Only a rollback/divergence needs an explicit restore; ordinary progress is automatic. */
   private resolveAnalysisStaleness(seat: number, stored: AnalysisLineSet | null) {
     const fresh = (options: { persist?: boolean } = {}) =>
       this.setAnalysisLineSet(emptyAnalysisLineSet(this.analysisBaseRound, this.analysisBaseMoveCount), options);
-    if (!stored || analysisLineSetSize(stored) === 0) {
+    if (!stored) {
       fresh();
       return;
     }
-    if (stored.baseMoveCount === this.analysisBaseMoveCount) {
+    if (
+      stored.baseMoveCount === this.analysisBaseMoveCount &&
+      (stored.baseMove === undefined || stored.baseMove === this.analysisRealHistory[stored.baseMoveCount - 1])
+    ) {
       this.setAnalysisLineSet(stored, { prune: false });
       return;
     }
-    if (this.engine.round > stored.baseRound + 1) {
-      fresh();
-      this.analysisNotice =
-        stored.lines.length > 1
-          ? "Your saved sandbox lines were from an earlier round and no longer apply, so they were cleared."
-          : "Your saved sandbox line was from an earlier round and no longer applies, so it was cleared.";
-      return;
-    }
-    const newMoves = this.engine.moveHistory.slice(stored.baseMoveCount);
-    if (newMoves.some((move) => moveBelongsToSeat(this.engine, move, seat))) {
-      // `persist: false` is the whole point here (owner-reported, 2026-08-20: "it just resets").
-      // Opening an empty board and persisting it wrote the empty set straight over the saved line,
-      // so the line the prompt was offering to restore had ALREADY been deleted by the time the
-      // prompt appeared - it survived only in `analysisPendingRestore`, in memory. Answer the prompt
-      // and all was well; do anything else first - leave the sandbox, reload, get force-closed by an
-      // incoming move, switch device - and it was gone, with no prompt the next time either. Storage
-      // now keeps the line until the player themselves says restore or discard; the first real edit
-      // persists over it as usual, because that is the player choosing to start something new.
+    if (
+      stored.baseMoveCount > this.analysisBaseMoveCount ||
+      (stored.baseMove !== undefined && this.analysisRealHistory[stored.baseMoveCount - 1] !== stored.baseMove)
+    ) {
       fresh({ persist: false });
       this.analysisPendingRestore = stored;
       return;
     }
-    // §13: the whole set is adopted, not just the line that was open. The others are replayed lazily
-    // - `setAnalysisLineSet` only puts the active one on the board, and each remaining line is
-    // measured against the new origin the first time it is opened. Their tabs report the same thing
-    // in the meantime, since `summarizeAnalysisLine` replays against this same re-anchored origin.
-    const active = stored.lines[normalizeAnalysisLineSet(stored).active] ?? [];
-    const applied = this.setAnalysisLineSet(stored, { prune: false });
-    this.analysisNotice =
-      applied < active.length
-        ? `Opponents moved since this line was saved. Replayed ${applied} of ${active.length} moves - the rest no longer applied.`
-        : "Opponents moved since this line was saved - replayed against the current board.";
-  }
-
-  /**
-   * The player's answer to `analysisPendingRestore`'s prompt: replay the stored line anyway.
-   *
-   * The leading entries this seat has since played FOR REAL are dropped first
-   * (`dropPlayedAnalysisPrefix`), which is the whole difference between "restored the rest of my
-   * line" and the reported "0 moves restored". Following the line at the table is the case this
-   * prompt exists for, and it was the case that worked worst: a straight replay starts at entry 1,
-   * which is precisely the move that has just been played and can no longer be played again, so it
-   * stopped there - and the more faithfully the line had been followed, the less of it came back.
-   *
-   * Applied per line, not just the open one: every line in the set shares the same origin, and the
-   * moves that have gone live are gone from all of them equally.
-   */
-  restoreAnalysisLine() {
-    const stored = this.analysisPendingRestore;
-    if (!stored) {
-      return;
-    }
-    this.analysisPendingRestore = null;
-    const normalized = normalizeAnalysisLineSet(stored);
-    // How many real moves of this seat's own there are to account for the dropped entries - the
-    // budget that stops this from editing a line the player never actually played.
-    const budget = ownMoveCount(this.engine, this.engine.moveHistory.slice(stored.baseMoveCount), this.analysisSeat);
+    const newMoves = this.analysisRealHistory.slice(stored.baseMoveCount);
     let played = 0;
-    const lines = normalized.lines.map((entries) => {
-      const result = dropPlayedAnalysisPrefix(
-        this.analysisOrigin,
-        entries,
-        this.analysisSeat,
-        this.analysisBaseRound,
-        budget
-      );
+    const lines = stored.lines.map((entries) => {
+      const result = dropPlayedAnalysisPrefix(this.analysisOrigin, entries, seat, newMoves);
       played = Math.max(played, result.dropped);
       return result.entries;
     });
-    const active = lines[normalized.active] ?? [];
-    const applied = this.setAnalysisLineSet({ ...normalized, lines }, { prune: false });
-    const playedNote =
-      played > 0 ? ` ${played} ${played === 1 ? "move was" : "moves were"} already played for real.` : "";
+    const active = lines[normalizeAnalysisLineSet(stored).active] ?? [];
+    const applied = this.setAnalysisLineSet({ ...stored, lines }, { prune: false });
     this.analysisNotice =
-      applied < active.length
-        ? `Restored ${applied} of ${active.length} remaining moves - the rest no longer applied.${playedNote}`
-        : playedNote
-          ? `Restored the rest of your saved line.${playedNote}`
-          : null;
+      played > 0
+        ? `Removed ${played} already played ${played === 1 ? "move" : "moves"} from matching plans.`
+        : "The board changed. Your plans were updated.";
+    if (applied < active.length) {
+      this.analysisNotice = "The board changed. Some planned moves no longer apply; they are kept for you to edit.";
+    }
   }
 
-  /** The player's other answer to `analysisPendingRestore`'s prompt: start fresh instead. The empty
-   * line `resolveAnalysisStaleness` already entered with was persisted the moment it called
-   * `setAnalysisEntries([])`, so there is nothing left to overwrite here. */
-  /** "Discard" on the restore prompt. Now that the prompt no longer destroys the stored line up
-   * front (see `resolveAnalysisStaleness`), this is the one place that deletes it - otherwise the
-   * discarded line would simply come back the next time the sandbox opened. */
+  /** A divergent history cannot prove which moves were played. Restore without deleting any. */
+  restoreAnalysisLine() {
+    if (!this.analysisPendingRestore) return;
+    const stored = this.analysisPendingRestore;
+    this.analysisPendingRestore = null;
+    this.setAnalysisLineSet(stored, { prune: false });
+  }
+
   discardPendingAnalysisLine() {
     this.analysisPendingRestore = null;
-    clearAnalysisLine(this.analysisSeat);
+    clearAnalysisLine(this.analysisSeat, this.analysisStorageScope);
     this.persistAnalysisLines();
   }
 
@@ -2005,10 +1309,7 @@ export default class Game extends Vue {
     this.handleData(Engine.fromData(backup));
   }
 
-  /** Mirrors applyPremoveMove/applyCancelTriggerMove - always replays the full accumulated move
-   * string from the stable compose-base snapshot. Unlike those two, there is no manual confirm: the
-   * instant a turn completes it is committed to the line, exactly as self-contained.ts's own `move`
-   * handler commits a completed turn to the real engine. */
+  // Partial turns are always replayed from their stable base.
   applyAnalysisMove(move: string) {
     if (!this.analysisComposeBase) {
       return;
@@ -2170,18 +1471,19 @@ export default class Game extends Vue {
    * last of them would look like Undo doing nothing at all. */
   undoLastAnalysisEntry() {
     const entries = this.analysisEntries;
-    if (!this.analysisMode || entries.length === 0) {
+    if (!this.analysisMode) return;
+    if (this.currentMove || this.analysisPendingCharge) {
+      this.setAnalysisEntries(entries);
       return;
     }
+    if (!entries.length) return;
     const applied = Math.min(this.analysisAppliedCount, entries.length);
     this.setAnalysisEntries(applied < entries.length ? entries.slice(0, applied) : entries.slice(0, -1));
   }
 
   /** Reset (§1 decision #3) - clear the line, replay nothing (back to analysisOrigin as-is). */
   resetAnalysisLine() {
-    if (!this.analysisMode || this.analysisEntries.length === 0) {
-      return;
-    }
+    if (!this.analysisMode) return;
     this.setAnalysisEntries([]);
   }
 
@@ -2261,13 +1563,22 @@ export default class Game extends Vue {
     return this.setAnalysisEntries(this.analysisEntries, options);
   }
 
+  get analysisStorageScope(): string | undefined {
+    return this.isHostedMode ? (this.analysisBackup ?? this.engine)?.moveHistory[0] : undefined;
+  }
+
   private persistAnalysisLines() {
-    saveAnalysisLines(this.analysisSeat, {
-      lines: this.analysisLines,
-      active: this.analysisActiveLine,
-      baseRound: this.analysisBaseRound,
-      baseMoveCount: this.analysisBaseMoveCount,
-    });
+    saveAnalysisLines(
+      this.analysisSeat,
+      {
+        lines: this.analysisLines,
+        active: this.analysisActiveLine,
+        baseRound: this.analysisBaseRound,
+        baseMoveCount: this.analysisBaseMoveCount,
+        baseMove: this.analysisRealHistory[this.analysisBaseMoveCount - 1],
+      },
+      this.analysisStorageScope
+    );
   }
 
   /**
@@ -2404,11 +1715,6 @@ export default class Game extends Vue {
 
     if (move.command === Command.EndTurn) {
       this.addMove(this.currentMove + ".");
-      if (this.premoveMode && this.premoveReady) {
-        this.queueCurrentPremove();
-      } else if (this.cancelTriggerComposeActive && this.cancelTriggerReady) {
-        this.confirmCancelTriggerCompose();
-      }
       return;
     }
 
@@ -2451,18 +1757,7 @@ export default class Game extends Vue {
 
   addMove(command: string) {
     this.$store.commit("clearContext");
-    // Premove (PREMOVE_PLAN.md) / cancel-trigger compose (§8.3): while composing either, commands
-    // accumulate against a preview clone only (handled locally by this component's own
-    // subscribeAction handler above) and never reach the launcher's real "move" forwarding to the
-    // backend - critical for cancel-trigger compose, which plays as an OPPONENT's seat and must
-    // never actually commit anything on their behalf.
-    const type = this.analysisMode
-      ? "analysisMove"
-      : this.premoveMode
-        ? "premoveMove"
-        : this.cancelTriggerComposeActive
-          ? "cancelTriggerMove"
-          : "move";
+    const type = this.analysisMode ? "analysisMove" : "move";
     this.$store.dispatch(type, command);
   }
 }

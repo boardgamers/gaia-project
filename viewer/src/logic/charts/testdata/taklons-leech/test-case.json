@@ -1,6 +1,6 @@
 {
   "legacyIvitsStartingPower": true,
-  "types": ["Power Leech"],
+  "types": ["Power Charge"],
   "options": {
     "advancedRules": true,
     "layout": "standard",

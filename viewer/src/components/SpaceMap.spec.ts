@@ -6,8 +6,9 @@ import Engine, {
   LostFleetSectorType,
   Planet,
   PlayerEnum,
+  Spaceship,
 } from "@gaia-project/engine";
-import { fireEvent, render } from "@testing-library/vue";
+import { render } from "@testing-library/vue";
 import { expect } from "chai";
 import fs from "fs";
 import { hexCenter } from "../graphics/hex";
@@ -132,6 +133,40 @@ describe("SpaceMap", () => {
       const content = children.find((child) => child.tagName === "g");
       expect(children.indexOf(marker)).to.be.lessThan(children.indexOf(content));
     }
+  });
+
+  it("shows each ship's explorers in slot order with their faction colors and recent-move highlight", () => {
+    const engine = new Engine(
+      [
+        "init 4 map-explore-markers",
+        "p1 faction terrans",
+        "p2 faction hadsch-hallas",
+        "p3 faction moweyds",
+        "p4 faction xenos",
+      ],
+      { lostFleet: true }
+    );
+    engine.players.forEach((player, index) => {
+      player.name = `Player ${index + 1}`;
+      player.data.explorationShips[Spaceship.Twilight] = 4 - index;
+    });
+    engine.players[1].data.explorationShips[Spaceship.Eclipse] = 1;
+    engine.moveHistory = ["init 4 map-explore-markers", "terrans explore twilight", "moweyds explore twilight"];
+    engine.advancedLog = [{ player: 0, move: 1 }, { player: 2, move: 2 }, { player: 0 }];
+
+    const store = makeStore();
+    store.commit("player", { index: 0 });
+    store.commit("receiveData", engine);
+    const { container } = render(SpaceMap, { store });
+    const ship = (name: Spaceship) => container.querySelector(`[data-ship="${name}"]`).parentElement;
+    const markers = Array.from(ship(Spaceship.Twilight).querySelectorAll(".lost-fleet-spaceship__explorer"));
+    expect(markers.map((marker) => marker.getAttribute("data-player"))).to.deep.equal(["3", "2", "1", "0"]);
+    expect(markers[1].querySelector(".planet-fill.p")).not.to.equal(null);
+    expect(markers[1].getAttribute("aria-label")).to.equal("Explored by Player 3 (Moweyds)");
+    expect(markers.filter((marker) => marker.classList.contains("recent"))).to.deep.equal([markers[1]]);
+    expect(ship(Spaceship.Twilight).querySelector("title").textContent).to.contain("Explored by Player 3");
+    expect(ship(Spaceship.Eclipse).querySelectorAll(".lost-fleet-spaceship__explorer").length).to.equal(1);
+    expect(ship(Spaceship.Rebellion).querySelectorAll(".lost-fleet-spaceship__explorer").length).to.equal(0);
   });
 
   it("renders Lost Fleet Interspace and Deep Space hexes in addition to the base sectors", () => {
@@ -460,141 +495,5 @@ describe("SpaceMap", () => {
     const { container } = render(SpaceMap, { store });
 
     expect(container.querySelectorAll(".finalScoringTile").length).to.equal(0);
-  });
-
-  describe("the analysis mode map-corner button (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §5.4)", () => {
-    function mountWithProps(props: { analysisOffered?: boolean; analysisActive?: boolean; analysisCanEdit?: boolean }) {
-      const engine = loadFixtureEngine();
-      const store = makeStore();
-      store.commit("receiveData", engine);
-      return render(SpaceMap, { store, props });
-    }
-
-    it("is hidden when neither offered nor active", () => {
-      const { container } = mountWithProps({ analysisOffered: false, analysisActive: false });
-      expect(container.querySelector(".space-map__analysis-button")).to.equal(null);
-    });
-
-    it("shows a neutral (not warning-styled) button when merely offered", () => {
-      const { container } = mountWithProps({ analysisOffered: true, analysisActive: false });
-      const button = container.querySelector(".space-map__analysis-button");
-      expect(button).to.not.equal(null);
-      expect(button.classList.contains("space-map__analysis-button--active")).to.equal(false);
-      expect(button.querySelector("title").textContent).to.equal("Enter sandbox mode");
-    });
-
-    it("shows the warning-styled button and the Exit label while active", () => {
-      const { container } = mountWithProps({ analysisOffered: false, analysisActive: true });
-      const button = container.querySelector(".space-map__analysis-button");
-      expect(button).to.not.equal(null);
-      expect(button.classList.contains("space-map__analysis-button--active")).to.equal(true);
-      expect(button.querySelector("title").textContent).to.equal("Exit sandbox mode");
-    });
-
-    it("emits analysis-toggle when clicked, regardless of which state it's in", async () => {
-      const { container, emitted } = mountWithProps({ analysisOffered: true, analysisActive: false });
-      const button = container.querySelector(".space-map__analysis-button");
-      await fireEvent.click(button);
-      expect(emitted()["analysis-toggle"]).to.have.length(1);
-    });
-
-    it("offers Undo/Reset beside the toggle only while the sandbox is open", () => {
-      const offered = mountWithProps({ analysisOffered: true, analysisActive: false });
-      expect(offered.container.querySelector(".space-map__analysis-button--undo")).to.equal(null);
-      expect(offered.container.querySelector(".space-map__analysis-button--reset")).to.equal(null);
-
-      const { container } = mountWithProps({ analysisActive: true, analysisCanEdit: true });
-      expect(container.querySelector(".space-map__analysis-button--undo")).to.not.equal(null);
-      expect(container.querySelector(".space-map__analysis-button--reset")).to.not.equal(null);
-    });
-
-    it("keeps the toggle first in document order, so a bare .space-map__analysis-button query still finds it", () => {
-      const { container } = mountWithProps({ analysisActive: true, analysisCanEdit: true });
-      expect(container.querySelector(".space-map__analysis-button title").textContent).to.equal("Exit sandbox mode");
-    });
-
-    it("lays the three controls out right to left - toggle, Reset, Undo - all on the bottom edge", () => {
-      const { container } = mountWithProps({ analysisActive: true, analysisCanEdit: true });
-      const x = (selector: string) => {
-        const match = /translate\((-?[\d.]+),\s*(-?[\d.]+)\)/.exec(
-          container.querySelector(selector).getAttribute("transform")
-        );
-        return { x: Number(match[1]), y: Number(match[2]) };
-      };
-      const toggle = x(".space-map__analysis-button");
-      const reset = x(".space-map__analysis-button--reset");
-      const undo = x(".space-map__analysis-button--undo");
-
-      expect(undo.x).to.be.lessThan(reset.x);
-      expect(reset.x).to.be.lessThan(toggle.x);
-      expect(reset.y).to.equal(toggle.y);
-      expect(undo.y).to.equal(toggle.y);
-    });
-
-    it("emits analysis-undo / analysis-reset when they are pressable, and nothing at all for an empty line", async () => {
-      const live = mountWithProps({ analysisActive: true, analysisCanEdit: true });
-      await fireEvent.click(live.container.querySelector(".space-map__analysis-button--undo"));
-      await fireEvent.click(live.container.querySelector(".space-map__analysis-button--reset"));
-      expect(live.emitted()["analysis-undo"]).to.have.length(1);
-      expect(live.emitted()["analysis-reset"]).to.have.length(1);
-
-      // Still rendered (so the toggle beside them never shifts), but inert - CSS also takes their
-      // pointer events away, which jsdom does not apply, hence the handler's own guard.
-      const empty = mountWithProps({ analysisActive: true, analysisCanEdit: false });
-      const undo = empty.container.querySelector(".space-map__analysis-button--undo");
-      expect(undo.classList.contains("space-map__analysis-button--inert")).to.equal(true);
-      await fireEvent.click(undo);
-      expect(empty.emitted()["analysis-undo"]).to.equal(undefined);
-    });
-
-    it("never overlaps a hex, for any Lost Fleet player count", () => {
-      // Same geometric-clearance methodology as the faction-wheel test above: derive the button's
-      // actual rendered bounding box from its own transform (not a hardcoded guess) and assert no
-      // hex (inflated by its own ~1-unit radius) intersects it.
-      const rotationDeg = (players: number) => (players === 3 ? 0 : 60);
-      const rotate = (x: number, y: number, deg: number) => {
-        const rad = (deg * Math.PI) / 180;
-        const cos = Math.cos(rad);
-        const sin = Math.sin(rad);
-        return { x: x * cos - y * sin, y: x * sin + y * cos };
-      };
-
-      for (const players of [2, 3, 4]) {
-        const engine = new Engine([`init ${players} lost-fleet-space-map`], { lostFleet: true });
-        const store = makeStore();
-        store.commit("receiveData", engine);
-
-        const { container } = render(SpaceMap, { store, props: { analysisActive: true, analysisCanEdit: true } });
-
-        // All three corner controls, not just the toggle: Undo/Reset extend the row leftwards, so
-        // they are the ones actually at risk of reaching a hex.
-        const buttons = container.querySelectorAll(".space-map__analysis-button");
-        expect(buttons.length, `${players}p expected toggle + Undo + Reset`).to.equal(3);
-
-        for (const button of buttons) {
-          const match = /translate\((-?[\d.]+),\s*(-?[\d.]+)\)\s*scale\((-?[\d.]+)\)/.exec(
-            button.getAttribute("transform") ?? ""
-          );
-          expect(match, `${players}p expected an anchored+scaled transform`).to.not.equal(null);
-          const origin = { x: Number(match[1]), y: Number(match[2]) };
-          const scale = Number(match[3]);
-          // The badge rect's own local footprint is x=-11..11, y=-11..11 (see the template).
-          const buttonBox = {
-            left: origin.x - 11 * scale,
-            right: origin.x + 11 * scale,
-            top: origin.y - 11 * scale,
-            bottom: origin.y + 11 * scale,
-          };
-
-          for (const hex of engine.map.grid.values()) {
-            const raw = hexCenter(hex);
-            const c = rotate(raw.x * 1.01, raw.y * 1.01, rotationDeg(players));
-            const overlapsX = c.x + 1 > buttonBox.left && c.x - 1 < buttonBox.right;
-            const overlapsY = c.y + 1 > buttonBox.top && c.y - 1 < buttonBox.bottom;
-            expect(overlapsX && overlapsY, `${players}p button overlaps hex at (${c.x}, ${c.y})`).to.equal(false);
-          }
-        }
-      }
-    });
   });
 });

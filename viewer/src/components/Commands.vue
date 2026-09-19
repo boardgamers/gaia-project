@@ -24,85 +24,41 @@
     >
       <h5 class="mb-0">
         <span v-if="init">Pick the number of players</span>
-        <!-- Desktop's counterpart of the sticky band below: the bar is in flow here, so this is
-             where a compose takeover has to announce itself. Analysis mode wins over premove/
-             cancel-trigger context since the three board-takeover modes are mutually exclusive
-             (§3.6) - this is just the render-time ordering, not an extra exclusion check. -->
+
         <template v-if="analysisMode"
-          >SANDBOX<template v-if="analysisSeedActive"> — choose a faction to play as</template></template
+          >Planning<template v-if="analysisSeedActive"> — choose a faction to play as</template></template
         >
-        <template v-else-if="premoveContext">{{ premoveContext.title }}</template>
         <RichTextView v-else :content="statusLine" />
       </h5>
+      <button
+        v-if="analysisOffered && !analysisMode"
+        class="btn btn-sm btn-outline-primary planning-entry"
+        title="Try moves without playing them"
+        @click="$emit('analysis-start')"
+      >
+        {{ actionsEnabled ? "Simulate moves" : "Plan a move" }}
+      </button>
       <!-- The Silent Auction / ban-phase explainer buttons used to sit here. They now live in
            SetupStatus.vue's round-0 strip at the top of the page (Game.vue), which - unlike this
            panel - also renders for players who aren't on turn. Two copies would also register the
            same modal id twice. -->
-      <!-- "Auto leech": lets the engine's own already-implemented decision logic
-           (engine/src/auto-charge.ts) auto-resolve power-charge/decline offers instead of asking
-           every time - a per-browser preference (never synced/persisted as part of game state).
-           Hidden before round 1 (see showAutoLeechSelect) - faction pick/ban/silent-auction-bid/
-           initial-building setup have nothing to leech from yet. A dropdown (not a <select>) so the
-           button itself can show a short label instead of the full option text, which used to force
-           the status line to wrap onto several lines on narrow screens. -->
-      <b-dropdown
-        v-if="showAutoLeechSelect"
-        size="sm"
-        variant="outline-secondary"
-        right
-        class="ml-auto auto-leech-select"
-        v-b-tooltip.hover
-        title="Auto leech: automatically accept or decline power-charge offers up to this amount, instead of asking every time"
-      >
-        <template #button-content>
-          <span class="auto-leech-dot" :class="autoChargePowerActive ? 'active' : 'inactive'"></span>
-          {{ autoChargePowerShortLabel }}
-        </template>
-        <b-dropdown-item
-          v-for="opt in autoChargePowerOptions"
-          :key="opt.value"
-          :active="opt.value === autoChargePower"
-          @click="setAutoChargePower(opt.value)"
-        >
-          {{ opt.text }}
-        </b-dropdown-item>
-        <template v-if="showAutoChargePassedCapOptions">
-          <b-dropdown-divider />
-          <b-dropdown-item
-            v-for="opt in autoChargePassedCapOptions"
-            :key="`passed-${opt.value}`"
-            :active="opt.value === autoChargeMaxPassedRoundLeech"
-            @click="setAutoChargeMaxPassedRoundLeech(opt.value)"
-          >
-            {{ opt.text }}
-          </b-dropdown-item>
-        </template>
-      </b-dropdown>
-      <!-- Analysis mode's controls take over the slot the auto-leech dropdown gives up (§2.9/§12) -
-           opponent decisions are auto-resolved there regardless of that preference, and this is where
-           the deleted yellow panel's counts and Commit now live (Undo/Reset moved on again, to the
-           map's bottom-right corner beside the sandbox toggle - see SpaceMap.vue). -->
+      <AutoChargeControl v-if="showAutoLeechSelect" class="ml-auto" />
       <AnalysisHeaderControls
         v-else-if="analysisMode"
         :move-count="analysisMoveCount"
+        :can-edit="analysisCanEdit"
+        @undo="$emit('analysis-undo')"
+        @reset="$emit('analysis-reset')"
         :status="analysisStatus"
         :committable-moves="analysisCommittableMoves"
+        :plays-now="!!(analysisCommitPlan && analysisCommitPlan.live)"
         @commit="requestAnalysisCommit"
       />
     </div>
     <AnalysisModeInfo v-if="analysisMode" />
     <!-- Commit's confirmation step, rendered here for the same once-per-page reason as the info modal
          above. The Commit button only opens it; nothing leaves the sandbox until this is confirmed. -->
-    <AnalysisCommitConfirm
-      v-if="analysisMode"
-      :plan="analysisCommitPlan"
-      :line-count="analysisLineSummaries.length"
-      @confirm="$emit('analysis-commit')"
-    />
-    <!-- --sandbox-tabs-height: how much of the sheet's top the line strip occupies, measured rather
-         than assumed (see stickyBarObserver). The sheet paints its own chrome from that offset down
-         instead of from its own top edge, so the strip's row has nothing behind it - see
-         .mobile-sticky-actions--sandbox. -->
+    <AnalysisCommitConfirm v-if="analysisMode" :plan="analysisCommitPlan" @confirm="$emit('analysis-commit')" />
     <div
       id="move-buttons"
       data-tutorial="game-controls"
@@ -111,7 +67,6 @@
         'mobile-sticky-actions': showStickyMobileBar,
         'mobile-sticky-actions--sandbox': showStickyMobileBar && analysisMode,
       }"
-      :style="{ '--sandbox-tabs-height': sandboxTabsHeight + 'px' }"
     >
       <!-- Same status line as #move-title above, shown only inside the mobile sticky bar (once it's
            actually pinned, i.e. narrow viewports - see the .sticky-bar-title/.hide-on-mobile-sticky
@@ -131,84 +86,49 @@
       <div
         v-if="showStickyMobileBar"
         class="sticky-bar-title d-flex align-items-center"
-        :class="
-          analysisMode
-            ? 'sticky-bar-title--analysis'
-            : premoveContext
-              ? `sticky-bar-title--${premoveContext.variant}`
-              : null
-        "
+        :class="{ 'sticky-bar-title--analysis': analysisMode }"
       >
-        <!-- While the board is taken over to compose a premove or a cancel rule, this band carries
-             what that compose is FOR. It used to be an `alert` at the top of Game.vue's commands
-             column - i.e. describing this bar from the other end of the page, usually scrolled out
-             of sight on a phone. Amber for a cancel rule, the ordinary banner colour for a premove,
-             hazard stripes for analysis (§5.1) - the board looks identical otherwise, and this is
-             the one cue telling them apart. -->
         <h5 class="mb-0">
           <template v-if="analysisMode"
-            >SANDBOX<template v-if="analysisSeedActive"> — choose a faction to play as</template></template
+            >Planning<template v-if="analysisSeedActive"> — choose a faction to play as</template></template
           >
-          <template v-else-if="premoveContext">{{ premoveContext.title }}</template>
           <RichTextView v-else :content="statusLine" />
         </h5>
+        <button
+          v-if="analysisOffered && !analysisMode"
+          class="btn btn-sm btn-outline-primary planning-entry"
+          title="Try moves without playing them"
+          @click="$emit('analysis-start')"
+        >
+          {{ actionsEnabled ? "Simulate moves" : "Plan a move" }}
+        </button>
         <span class="chat-shortcut-host"></span>
         <!-- No explainer buttons here either: the bar is never pinned during the ban/pick/bid phases
              (showStickyMobileBar excludes all three), so they could never show here. See
              SetupStatus.vue. -->
-        <b-dropdown
-          v-if="showAutoLeechSelect"
-          size="sm"
-          variant="outline-secondary"
-          right
-          dropup
-          boundary="window"
-          :popper-opts="{ positionFixed: true }"
-          class="ml-auto auto-leech-select"
-          v-b-tooltip.hover
-          title="Auto leech: automatically accept or decline power-charge offers up to this amount, instead of asking every time"
-        >
-          <template #button-content>
-            <span class="auto-leech-dot" :class="autoChargePowerActive ? 'active' : 'inactive'"></span>
-            {{ autoChargePowerShortLabel }}
-          </template>
-          <b-dropdown-item
-            v-for="opt in autoChargePowerOptions"
-            :key="opt.value"
-            :active="opt.value === autoChargePower"
-            @click="setAutoChargePower(opt.value)"
-          >
-            {{ opt.text }}
-          </b-dropdown-item>
-          <template v-if="showAutoChargePassedCapOptions">
-            <b-dropdown-divider />
-            <b-dropdown-item
-              v-for="opt in autoChargePassedCapOptions"
-              :key="`passed-${opt.value}`"
-              :active="opt.value === autoChargeMaxPassedRoundLeech"
-              @click="setAutoChargeMaxPassedRoundLeech(opt.value)"
-            >
-              {{ opt.text }}
-            </b-dropdown-item>
-          </template>
-        </b-dropdown>
+        <AutoChargeControl v-if="showAutoLeechSelect" class="ml-auto" dropup />
         <AnalysisHeaderControls
           v-else-if="analysisMode"
           :move-count="analysisMoveCount"
+          :can-edit="analysisCanEdit"
+          @undo="$emit('analysis-undo')"
+          @reset="$emit('analysis-reset')"
           :status="analysisStatus"
           :committable-moves="analysisCommittableMoves"
+          :plays-now="!!(analysisCommitPlan && analysisCommitPlan.live)"
           @commit="requestAnalysisCommit"
         />
       </div>
-      <div v-if="init" class="d-flex flex-wrap align-content-stretch">
-        <MoveButton
-          v-for="i in [2, 3, 4]"
-          :button="{ command: `init ${i} randomSeed`, label: `${i} players` }"
-          :controller="controller"
-          :key="i"
-        ></MoveButton>
-      </div>
-      <!-- Sandbox mode's round-0 faction seed (ANALYSIS_MODE_PLAN.md §11). It used to be a labelled
+      <template v-if="actionsEnabled">
+        <div v-if="init" class="d-flex flex-wrap align-content-stretch">
+          <MoveButton
+            v-for="i in [2, 3, 4]"
+            :button="{ command: `init ${i} randomSeed`, label: `${i} players` }"
+            :controller="controller"
+            :key="i"
+          ></MoveButton>
+        </div>
+        <!-- Sandbox mode's round-0 faction seed (ANALYSIS_MODE_PLAN.md §11). It used to be a labelled
            select plus a "Try this faction" button in AnalysisPanel.vue, i.e. a second container above
            the map, which on a phone is nowhere near where every other sandbox press happens. Owner
            instruction: every sandbox interaction belongs in this one action area, so it is a plain
@@ -220,166 +140,132 @@
            While it is up it REPLACES the ordinary round-0 buttons rather than sitting beside them:
            picking a faction here jumps straight past the pick/ban/bid the engine is offering, so
            showing both would be offering two different answers to the same question. -->
-      <div v-if="analysisSeedActive" class="d-flex flex-wrap align-content-stretch faction-picker-buttons">
-        <div v-for="choice in analysisFactionChoices" :key="choice.faction" class="move-button">
-          <b-btn
-            :class="['mr-2', 'mb-2', 'move-button']"
-            :title="`Play the rest of round 0 and round 1 as ${choice.name}`"
-            @click="$emit('analysis-seed-faction', choice.faction)"
-          >
-            <RichTextView :content="factionPickerLabel(choice.faction)" />
-          </b-btn>
+        <div v-if="analysisSeedActive" class="d-flex flex-wrap align-content-stretch faction-picker-buttons">
+          <div v-for="choice in analysisFactionChoices" :key="choice.faction" class="move-button">
+            <b-btn
+              :class="['mr-2', 'mb-2', 'move-button']"
+              :title="`Play the rest of round 0 and round 1 as ${choice.name}`"
+              @click="$emit('analysis-seed-faction', choice.faction)"
+            >
+              <RichTextView :content="factionPickerLabel(choice.faction)" />
+            </b-btn>
+          </div>
         </div>
-      </div>
-      <div v-else-if="!init" class="d-flex flex-wrap align-content-stretch">
-        <MoveButton
-          v-for="(button, i) in buttons"
-          :class="{ 'd-none': button.hide, shown: !button.hide, disabled: button.disabled }"
-          :ref="`button-${i}`"
-          :data-ref="`button-${i}`"
-          :button="button"
-          :controller="controller"
-          :key="(button.label || button.command) + '-' + i"
-        />
-        <!-- Wrapped in a `.move-button` div, exactly like MoveButton.vue's own root, and not merely
-             given the class: the sticky bar's keycap styling is `.move-button .btn`, i.e. a
-             DESCENDANT rule, so a b-btn that carries the class itself matches nothing and comes out
-             with Bootstrap's square-ish default corners next to properly rounded neighbours. -->
-        <!-- `key` on these three, and it is load-bearing, not tidiness (owner-reported bug, 2026-08-19).
-             They are unkeyed sibling `v-if`s over the same `<div class="move-button">`, so Vue's
-             `sameVnode` happily patches ONE INTO ANOTHER and reuses the same DOM `<button>`, swapping
-             only its click invoker. Back is showing exactly when Charge 1 is not (`canUndo` vs
-             `showAnalysisChargeButtons`), so pressing Back turned that element into Charge 1 - and
-             because browsers run a microtask checkpoint between event listeners, Vue re-rendered
-             mid-dispatch and the still-bubbling click then ran the NEW handler. One press of Back:
-             one +1 power `adjust` entry, every time, in sandbox mode. Distinct keys make `sameVnode`
-             false, so the element is destroyed and rebuilt instead of re-pointed. -->
-        <div v-if="canUndo" key="back-button" class="move-button">
-          <b-btn :class="['mr-2', 'mb-2', 'move-button']" @click="undo">
-            <template>
-              <Undo transform="scale(1.2)" />
-            </template>
-          </b-btn>
+        <div v-else-if="!init" class="d-flex flex-wrap align-content-stretch">
+          <MoveButton
+            v-for="(button, i) in buttons"
+            :class="{ 'd-none': button.hide, shown: !button.hide, disabled: button.disabled }"
+            :ref="`button-${i}`"
+            :data-ref="`button-${i}`"
+            :button="button"
+            :controller="controller"
+            :key="(button.label || button.command) + '-' + i"
+          />
+          <div v-if="canUndo" key="back-button" class="move-button">
+            <b-btn :class="['mr-2', 'mb-2', 'move-button']" @click="undo">
+              <template>
+                <Undo transform="scale(1.2)" />
+              </template>
+            </b-btn>
+          </div>
         </div>
-        <!-- Sandbox-only power cheat: a plain button, pressable as many times as you like, that gives
-             the sandbox seat 1 charged power per click (Game.vue's chargeAnalysisPower, an "adjust"
-             entry - see analysis.ts). Undo Charge is the same idea in reverse: it only pops the line's
-             last entry when that entry is itself a charge (Game.vue's undoAnalysisCharge), so it can
-             never accidentally discard a real move. Both only on the top-level round-move menu - see
-             `showAnalysisChargeButtons`. -->
-        <div v-if="showAnalysisChargeButtons" key="analysis-charge" class="move-button">
-          <b-btn
-            :class="['mr-2', 'mb-2', 'move-button']"
-            title="Sandbox: give yourself 1 charged power"
+        <div v-if="showAnalysisChargeButtons" class="analysis-simulation">
+          <span class="analysis-simulation__label">Simulation</span>
+          <button
+            type="button"
+            class="analysis-simulation__button"
+            title="Preview receiving 1 power charge. This is not a move or a premove condition."
             @click="$emit('analysis-charge')"
           >
-            Charge 1
-          </b-btn>
-        </div>
-        <div v-if="showAnalysisChargeButtons" key="analysis-undo-charge" class="move-button">
-          <b-btn
-            :class="['mr-2', 'mb-2', 'move-button']"
-            title="Sandbox: undo the last power charge"
+            Simulate charge +1
+          </button>
+          <span v-if="analysisStatus && analysisStatus.chargedPower" class="analysis-simulation__total"
+            >+{{ analysisStatus.chargedPower }} simulated</span
+          >
+          <button
+            v-if="analysisCanUndoCharge"
+            type="button"
+            class="analysis-simulation__button"
             @click="$emit('analysis-undo-charge')"
           >
-            Undo Charge
-          </b-btn>
+            Undo charge
+          </button>
+          <span class="analysis-simulation__hint">Preview only. Premoves use your actual resources.</span>
         </div>
-      </div>
-      <!-- The compose caveats ("build the move, then end the turn", the leech/income preview
-           warnings, the cascade warning). Same block as the title above: they belong next to the
-           buttons they qualify, not in a banner at the top of the page. -->
-      <div v-if="premoveContext && premoveContext.notes.length > 0" class="premove-context-notes">
-        <div v-for="(note, i) in premoveContext.notes" :key="i">{{ note }}</div>
-      </div>
-      <div v-if="showPremoveConfirm || showPremoveCancel" class="d-flex flex-wrap align-content-stretch">
-        <b-btn
-          v-if="showPremoveConfirm"
-          :class="['mr-2', 'mb-2', 'move-button', 'premove-inline-action', 'premove-inline-action--confirm']"
-          @click="$emit('confirm-premove')"
+        <div
+          v-if="isChoosingFaction && !analysisSeedActive"
+          class="d-flex flex-wrap align-content-stretch faction-picker-buttons"
         >
-          {{ premoveConfirmLabel }}
-        </b-btn>
-        <!-- "Discard", not "Cancel premove": this abandons what you are composing, while "Cancel
-             if…" in the sheet ARMS a rule and "Remove" deletes a queued entry. Three unrelated
-             actions all reading "cancel" is what made the flow ambiguous. -->
-        <b-btn
-          v-if="showPremoveCancel"
-          :class="['mr-2', 'mb-2', 'move-button', 'premove-inline-action']"
-          @click="$emit('cancel-premove')"
+          <MoveButton
+            v-for="faction in factionsToChoose.data"
+            :button="{
+              command: `${factionsToChoose.name} ${faction}`,
+              modal: factionInfoModal(faction),
+              richText: factionPickerLabel(faction),
+              shortcuts: [factionShortcut(faction)],
+            }"
+            :controller="controller"
+            :key="faction"
+          />
+          <MoveButton
+            v-if="!gameData.randomFactions"
+            :button="randomFactionButton"
+            :controller="controller"
+            @cancel="updateRandomFaction"
+          />
+        </div>
+        <div
+          v-if="isBanningFaction && !analysisSeedActive"
+          class="d-flex flex-wrap align-content-stretch faction-picker-buttons"
         >
-          Discard
-        </b-btn>
-      </div>
-      <div
-        v-if="isChoosingFaction && !analysisSeedActive"
-        class="d-flex flex-wrap align-content-stretch faction-picker-buttons"
-      >
-        <MoveButton
-          v-for="faction in factionsToChoose.data"
-          :button="{
-            command: `${factionsToChoose.name} ${faction}`,
-            modal: factionInfoModal(faction),
-            richText: factionPickerLabel(faction),
-            shortcuts: [factionShortcut(faction)],
-          }"
-          :controller="controller"
-          :key="faction"
-        />
-        <MoveButton
-          v-if="!gameData.randomFactions"
-          :button="randomFactionButton"
-          :controller="controller"
-          @cancel="updateRandomFaction"
-        />
-      </div>
-      <div
-        v-if="isBanningFaction && !analysisSeedActive"
-        class="d-flex flex-wrap align-content-stretch faction-picker-buttons"
-      >
-        <MoveButton
-          v-for="faction in factionToBan.data"
-          :button="{
-            command: `${factionToBan.name} ${faction}`,
-            modal: factionInfoModal(faction, 'OK, I ban this one!'),
-            richText: factionPickerLabel(faction),
-            shortcuts: [factionShortcut(faction)],
-          }"
-          :controller="controller"
-          :key="faction"
-        />
-      </div>
-      <!-- Legacy only. The Silent Auction's bid round is simultaneous as of 2026-08-12 and its form
+          <MoveButton
+            v-for="faction in factionToBan.data"
+            :button="{
+              command: `${factionToBan.name} ${faction}`,
+              modal: factionInfoModal(faction, 'OK, I ban this one!'),
+              richText: factionPickerLabel(faction),
+              shortcuts: [factionShortcut(faction)],
+            }"
+            :controller="controller"
+            :key="faction"
+          />
+        </div>
+        <!-- Legacy only. The Silent Auction's bid round is simultaneous as of 2026-08-12 and its form
            is SilentAuctionBid.vue, up in Game.vue's round-0 strip - see `isSilentBidding`, which is
            true only for a hosted game that had already started recording its bids one seat at a
            time when that changed, and which therefore has to finish that way. -->
-      <div v-if="isSilentBidding && !analysisSeedActive" class="silent-bid-form">
-        <p class="text-muted small">
-          Privately enter the most VP you're willing to pay for each faction - bid highest on the one you want most, and
-          0 on one you'd only take for free. Bids stay hidden until everyone has submitted, then the auction resolves
-          automatically. You never pay more than you bid, and usually a lot less.
-        </p>
-        <!-- The faction is a real button (FactionSheetButton) rather than a label, so the three
+        <div v-if="isSilentBidding && !analysisSeedActive" class="silent-bid-form">
+          <p class="text-muted small">
+            Privately enter the most VP you're willing to pay for each faction - bid highest on the one you want most,
+            and 0 on one you'd only take for free. Bids stay hidden until everyone has submitted, then the auction
+            resolves automatically. You never pay more than you bid, and usually a lot less.
+          </p>
+          <!-- The faction is a real button (FactionSheetButton) rather than a label, so the three
              factions being bid on can actually be read before committing VP to them - the picker
              that normally offers that is long gone by this phase. The name column is a fixed width
              so every bid input lines up, whatever the names are. -->
-        <div v-for="pos in silentBidCommand.data.bids" :key="pos.faction" class="d-flex align-items-center mb-2">
-          <FactionSheetButton :faction="pos.faction" class="silent-bid-faction mr-2" />
-          <b-form-input
-            type="number"
-            min="0"
-            :max="pos.bid[pos.bid.length - 1]"
-            v-model.number="silentBidValues[pos.faction]"
-            :aria-label="`Your bid for ${factionName(pos.faction)}`"
-            class="silent-bid-input"
-          />
+          <div v-for="pos in silentBidCommand.data.bids" :key="pos.faction" class="d-flex align-items-center mb-2">
+            <FactionSheetButton :faction="pos.faction" class="silent-bid-faction mr-2" />
+            <b-form-input
+              type="number"
+              min="0"
+              :max="pos.bid[pos.bid.length - 1]"
+              v-model.number="silentBidValues[pos.faction]"
+              :aria-label="`Your bid for ${factionName(pos.faction)}`"
+              class="silent-bid-input"
+            />
+          </div>
+          <b-btn variant="primary" class="silent-bid-submit" @click="submitSilentBid">Submit bids</b-btn>
         </div>
-        <b-btn variant="primary" class="silent-bid-submit" @click="submitSilentBid">Submit bids</b-btn>
-      </div>
-      <!-- Placed last (below the action buttons, at the very bottom of the sticky bar) - see the
+        <!-- Placed last (below the action buttons, at the very bottom of the sticky bar) - see the
            .sticky-resource-bar-row CSS for the divider separating it from the buttons above and the
            extra bottom clearance keeping it clear of the screen's rounded bottom corners. -->
-      <StickyResourceBar v-if="showResourceBar" :player="myPlayer" class="sticky-resource-bar-row" />
+        <StickyResourceBar v-if="showResourceBar" :player="myPlayer" class="sticky-resource-bar-row" />
+      </template>
+      <p v-else-if="analysisMode" class="small text-muted mt-2 mb-0" role="status">
+        This preview has no action available. You can switch plans, undo a move, clear the plan or return to the live
+        game.
+      </p>
     </div>
     <!-- reserves the sticky bar's actual rendered height (tracked live via ResizeObserver, capped
          by the bar's own max-height/overflow) so it never permanently covers page content it has
@@ -456,6 +342,7 @@ import AnalysisCommitConfirm from "./AnalysisCommitConfirm.vue";
 import AnalysisHeaderControls from "./AnalysisHeaderControls.vue";
 import AnalysisLineTabs from "./AnalysisLineTabs.vue";
 import AnalysisModeInfo from "./AnalysisModeInfo.vue";
+import AutoChargeControl from "./AutoChargeControl.vue";
 import FactionInfoCard from "./FactionInfoCard.vue";
 import FactionSheetButton from "./FactionSheetButton.vue";
 import MoveButton from "./MoveButton.vue";
@@ -516,6 +403,7 @@ export type EmitCommandParams = { disappear?: boolean; times?: number; warnings?
     },
   },
   components: {
+    AutoChargeControl,
     RichTextView,
     StickyResourceBar,
     MoveButton,
@@ -528,6 +416,12 @@ export type EmitCommandParams = { disappear?: boolean; times?: number; warnings?
   },
 })
 export default class Commands extends Vue implements CommandController {
+  @Prop({ default: true })
+  autoChargeEnabled: boolean;
+
+  @Prop({ default: true })
+  actionsEnabled: boolean;
+
   @Prop()
   currentMove?: string;
 
@@ -543,29 +437,16 @@ export default class Commands extends Vue implements CommandController {
   @Prop({ default: false })
   hideSpacer: boolean;
 
-  @Prop({ default: false })
-  showPremoveCancel: boolean;
-
-  @Prop({ default: false })
-  showPremoveConfirm: boolean;
-
-  @Prop({ default: "Queue now" })
-  premoveConfirmLabel: string;
-
-  /** What this bar is being borrowed for, while the board is taken over to compose a premove or a
-   * cancel rule (Game.vue's `premoveContext`). Null during ordinary play, when the bar shows the
-   * game's own status line instead. Carrying it here rather than in a separate banner is what keeps
-   * the whole premove flow on one surface. */
-  @Prop({ default: null })
-  premoveContext: { title: string; notes: string[]; variant: "premove" | "trigger" } | null;
-
   /** Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §5) - true for the whole time the board is
-   * taken over, not just while a turn is mid-compose (unlike premoveContext above), since the
+   * taken over, since the
    * striped header must read "not live" from the moment of entry through every turn played inside
    * it. Drives the header stripes (§5.1), replaces the auto-leech slot with the counter headline
    * (§2.9/§5.3), and makes tapping the header exit (§5.4). */
   @Prop({ default: false })
   analysisMode: boolean;
+
+  @Prop({ default: false })
+  analysisOffered: boolean;
 
   /** §12's compact status - the overdraft summary and assumed power, the two things the player board
    * cannot show for itself. Only ever set while analysisMode is also true. */
@@ -575,6 +456,12 @@ export default class Commands extends Vue implements CommandController {
   /** How many entries the analysis line holds, for the header's move count and its Undo/Reset gating. */
   @Prop({ default: 0 })
   analysisMoveCount: number;
+
+  @Prop({ default: false })
+  analysisCanEdit: boolean;
+
+  @Prop({ default: false })
+  analysisCanUndoCharge: boolean;
 
   /** One summary per line for the tab strip (§13) - see Game.vue's `analysisLineSummaries`. Empty
    * whenever analysis mode is off, since the strip is only rendered inside it. */
@@ -718,78 +605,11 @@ export default class Commands extends Vue implements CommandController {
     return !!this.silentBidCommand && !!this.$store.state.sealedBidBackend && isLegacySequentialBidRound(this.engine);
   }
 
-  get autoChargePower(): string {
-    return String(this.$store.state.preferences.autoChargePower ?? "ask");
-  }
-
-  get autoChargeMaxPassedRoundLeech(): string {
-    return String(this.$store.state.preferences.autoChargeMaxPassedRoundLeech ?? "0");
-  }
-
-  get autoChargePowerOptions() {
-    return [
-      { value: "ask", text: "Auto leech: off (ask every time)" },
-      { value: "decline-cost", text: "Auto leech: free only (decline anything with a cost)" },
-      { value: "1", text: "Auto leech: up to 1 power" },
-      { value: "2", text: "Auto leech: up to 2 power" },
-      { value: "3", text: "Auto leech: up to 3 power" },
-      { value: "4", text: "Auto leech: up to 4 power" },
-      { value: "5", text: "Auto leech: up to 5 power" },
-    ];
-  }
-
-  get autoChargePassedCapOptions() {
-    return [
-      { value: "0", text: "After passing: no total cap" },
-      { value: "1", text: "After passing: max 1 total power" },
-      { value: "2", text: "After passing: max 2 total power" },
-      { value: "3", text: "After passing: max 3 total power" },
-      { value: "4", text: "After passing: max 4 total power" },
-      { value: "5", text: "After passing: max 5 total power" },
-      { value: "6", text: "After passing: max 6 total power" },
-    ];
-  }
-
-  get showAutoChargePassedCapOptions(): boolean {
-    const player = this.myPlayer?.player;
-    return player !== undefined && (this.engine.passedPlayers ?? []).includes(player);
-  }
-
-  setAutoChargePower(value: string) {
-    this.$store.commit("preferences", { autoChargePower: value });
-  }
-
-  setAutoChargeMaxPassedRoundLeech(value: string) {
-    this.$store.commit("preferences", { autoChargeMaxPassedRoundLeech: value });
-  }
-
   /** Commit asks first (ANALYSIS_MODE_PLAN.md §6) - it is the only sandbox control whose effect
    * reaches the real game, where the sandbox's own Undo does not follow, and it clears the line on
    * the way out. The modal is what emits `analysis-commit`; this only opens it. */
   requestAnalysisCommit() {
     this.$bvModal.show("analysis-commit-confirm");
-  }
-
-  /** Whether auto-leech will currently act on its own instead of asking every time - drives the
-   * dot indicator on the dropdown button (pulsing green when active, static red when off), since
-   * the short label alone ("Leech: off" vs "Leech: 3") is easy to miss at a glance. */
-  get autoChargePowerActive(): boolean {
-    return this.autoChargePower !== "ask";
-  }
-
-  /** Short label for the auto-leech dropdown button itself - the full sentence lives in the menu
-   * options (autoChargePowerOptions), not on the button, so the button doesn't force the status
-   * line next to it to wrap. */
-  get autoChargePowerShortLabel(): string {
-    const cap = this.showAutoChargePassedCapOptions ? this.autoChargeMaxPassedRoundLeech : "0";
-    switch (this.autoChargePower) {
-      case "ask":
-        return "Leech: off";
-      case "decline-cost":
-        return cap === "0" ? "Leech: free" : `Leech: free cap ${cap}`;
-      default:
-        return cap === "0" ? `Leech: ${this.autoChargePower}` : `Leech: ${this.autoChargePower} cap ${cap}`;
-    }
   }
 
   submitSilentBid() {
@@ -863,18 +683,20 @@ export default class Commands extends Vue implements CommandController {
     return STICKY_SETUP_PHASES.includes(this.engine.phase) && this.buttons.length > 0;
   }
 
-  /** Auto-leech is a per-round-action preference - hide it during player-count/faction-picking/
+  /** Auto-charge is a per-round-action preference - hide it during player-count/faction-picking/
    * banning/silent-auction-bidding/initial-building setup, same "round 1+" boundary as
    * showStickyMobileBar, so it doesn't show before there's anything to leech from. Also meaningless
    * during analysis mode (§2.9) - opponent decisions are auto-resolved there regardless of this
    * preference - which is what frees up that slot for the counter headline instead (§5.3). */
   get showAutoLeechSelect(): boolean {
-    // Owner decision (2026-09): the Auto-leech control is removed from the viewer - the platform's
-    // own sidebar now exposes the same autoChargePower/autoChargeMaxPassedRoundLeech preferences.
-    // Kept as `false` (rather than deleting the dropdowns + option lists) so the markup and the
-    // per-browser preference storage stay intact for the platform to drive, and so a revert is a
-    // one-word change.
-    return false;
+    return (
+      !this.analysisMode &&
+      this.autoChargeEnabled &&
+      this.engine.round >= 1 &&
+      !this.engine.ended &&
+      (!this.$store.state.hosted ||
+        (!!this.$store.state.playerSettings && this.$store.state.player?.index !== undefined))
+    );
   }
 
   /** The viewing user's own player (not necessarily whoever's turn it is), same "viewing seat"
@@ -906,12 +728,10 @@ export default class Commands extends Vue implements CommandController {
   private stickyBarHeight = 0;
   private stickyBarObserver: ResizeObserver | null = null;
 
-  /** How much of the mobile sheet's top edge §13's line strip takes up, in px - 0 whenever the strip
-   * is not there. Feeds `--sandbox-tabs-height`; see the ResizeObserver that writes it. */
-  sandboxTabsHeight = 0;
   private zoomCompensation: ZoomCompensationHandle | null = null;
 
   get titles() {
+    if (!this.actionsEnabled && !this.analysisMode) return [`Playing - Round ${this.engine.round}`];
     return this.commandTitles.length === 0 ? [`Your turn - Round ${this.engine.round}`] : this.commandTitles;
   }
 
@@ -1007,8 +827,16 @@ export default class Commands extends Vue implements CommandController {
 
   autoChargePreference(): string {
     return encodeAutoChargePreference(
-      String(this.$store.state.preferences.autoChargePower ?? "ask"),
-      String(this.$store.state.preferences.autoChargeMaxPassedRoundLeech ?? "0")
+      String(
+        this.$store.state.hosted
+          ? (this.$store.state.playerSettings?.autoCharge ?? "ask")
+          : (this.$store.state.preferences.autoChargePower ?? "ask")
+      ),
+      String(
+        this.$store.state.hosted
+          ? (this.$store.state.playerSettings?.autoChargeMaxPassedRoundLeech ?? "0")
+          : (this.$store.state.preferences.autoChargeMaxPassedRoundLeech ?? "0")
+      )
     );
   }
 
@@ -1017,6 +845,7 @@ export default class Commands extends Vue implements CommandController {
   }
 
   get buttons(): ButtonData[] {
+    if (!this.actionsEnabled) return [];
     const commands = this.availableCommands;
     if (!commands) {
       return [];
@@ -1050,6 +879,11 @@ export default class Commands extends Vue implements CommandController {
   }
 
   get canUndo() {
+    // The mandatory setup building is opened automatically. Returning from its destination list
+    // would only show that same building button; keep Back once a destination has been selected.
+    if (this.engine.phase === Phase.SetupBuilding && this.buttonChain.length === 1 && this.buttonChain[0].hexes) {
+      return false;
+    }
     return this.$store.getters.canUndo;
   }
 
@@ -1133,7 +967,7 @@ export default class Commands extends Vue implements CommandController {
     const keyListener = (e) => {
       // Escape dismisses whatever text field has focus (or its autocomplete) before it means
       // "undo my move" - see logic/typing-target.ts.
-      if (isTypingTarget(e.target)) {
+      if (!this.actionsEnabled || isTypingTarget(e.target)) {
         return;
       }
       if (e.key == "Escape" && this.canUndo) {
@@ -1163,9 +997,8 @@ export default class Commands extends Vue implements CommandController {
     // bottom-left corner) keeps the bar's on-screen size and position constant regardless of zoom.
     //
     // ALL of it - the arithmetic, the listeners, the self-healing that stops a stale transform from
-    // floating this bar mid-screen - lives in logic/zoom-compensation.ts, shared byte-for-byte with
-    // PremoveBar.vue's off-turn bar. Keeping a second copy of the wiring here is what let the two
-    // bars drift apart last time; the only thing this component owns is when to re-measure.
+    // floating this bar mid-screen - lives in logic/zoom-compensation.ts.
+    // This component only owns when to re-measure.
     if (moveButtons) {
       this.zoomCompensation = attachZoomCompensation({
         element: moveButtons,
@@ -1177,18 +1010,6 @@ export default class Commands extends Vue implements CommandController {
       this.stickyBarObserver = new ResizeObserver(() => {
         // read the full border-box (incl. padding) so the spacer reserves the bar's real footprint
         this.stickyBarHeight = moveButtons.getBoundingClientRect().height;
-        // §13's line strip: how far down the sheet's own chrome has to start so that nothing is
-        // painted behind the tabs. Measured off the striped banner rather than off the tabs, because
-        // the banner's top edge IS where the chrome should start - the tabs deliberately overlap it
-        // by a few pixels, so measuring them would push the chrome down by that overlap and leave a
-        // hairline of map across the banner's top. Hardcoding it would be worse still: it is a
-        // function of the tabs' font size and padding, and a stale constant shows up either as a
-        // sliver of panel above them or as a clipped tab. Observing #move-buttons catches every
-        // change, since the strip lives inside it and its own height moves with the strip's.
-        const banner = moveButtons.querySelector(".sticky-bar-title--analysis");
-        this.sandboxTabsHeight = banner
-          ? Math.max(0, Math.round(banner.getBoundingClientRect().top - moveButtons.getBoundingClientRect().top))
-          : 0;
         this.$emit("sticky-bar-height", this.showStickyMobileBar ? this.stickyBarHeight : 0);
         // Covers #move-buttons first becoming the fixed sticky bar (e.g. once round 1 starts),
         // which isn't itself a visualViewport event.
@@ -1440,86 +1261,23 @@ export default class Commands extends Vue implements CommandController {
 </script>
 
 <style lang="scss">
-// Sandbox mode's hazard stripes (ANALYSIS_MODE_PLAN.md §5.1), shared by the desktop #move-title and
-// the mobile sticky band - two separate rules with two different box models, but there is no reason
-// for them to drift apart on the one thing that has to look identical.
-//
-// Deliberately dimmer and lower-contrast than the original full-strength #1c1c1c/#f5c518 (owner
-// instruction): at the size this banner actually renders, jet black against saturated warning yellow
-// read as glare rather than as information, and the banner sits directly under the board for the
-// whole time sandbox mode is on. A muted amber on a soft charcoal still says "hazard, not the live
-// game" at a glance while being much easier to sit next to. Legibility of what is ON the stripes
-// does not depend on them: every text run carries its own scrim.
-$analysis-stripe-dark: #2e2e32;
-$analysis-stripe-light: #c2a233;
-$analysis-stripes: repeating-linear-gradient(
-  45deg,
-  $analysis-stripe-dark 0px,
-  $analysis-stripe-dark 12px,
-  $analysis-stripe-light 12px,
-  $analysis-stripe-light 24px
-);
-// OPAQUE, not a translucent scrim (owner report, 2026-08-20). Every version of this was an alpha
-// over the stripes - 0.82, then 0.72 - and at every one of them the diagonals still showed through
-// the text backing, so the label read as a smear rather than as a chip: the complaint was not that
-// the contrast ratio was low (white on the 0.72 blend measures ~9:1) but that the text sits on a
-// moving pattern. A solid fill removes the pattern from behind the glyphs entirely; the stripes are
-// still the whole rest of the bar, so nothing about the hazard treatment is lost.
-$analysis-scrim: #1b1b20;
+// The planning header stays distinct from a live turn without covering it in hazard stripes.
+$planning-background: var(--ui-surface-muted);
+$planning-accent: var(--ui-warning-border);
 
-// Status dot on the auto-leech dropdown button - green/pulsing while it's set to actually act on
-// its own, static red while off ("ask every time"), so the button's current state reads at a
-// glance without parsing its ("Leech: off"/"Leech: 3") text.
-.auto-leech-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  margin-right: 0.3rem;
-  border-radius: 50%;
-
-  &.inactive {
-    background: var(--oxide, #ff160a);
-  }
-
-  &.active {
-    background: var(--highlighted, #2c4);
-    animation: auto-leech-pulse 1.6s infinite;
-  }
-}
-
-@keyframes auto-leech-pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(var(--highlighted-rgb, 32, 204, 68), 0.7);
-  }
-  70% {
-    box-shadow: 0 0 0 5px rgba(var(--highlighted-rgb, 32, 204, 68), 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(var(--highlighted-rgb, 32, 204, 68), 0);
-  }
-}
-
-.premove-inline-action {
-  border-radius: 10px;
+.planning-entry {
+  margin-left: auto;
+  flex-shrink: 0;
+  padding: 0.25rem 0.6rem;
+  color: var(--ui-text);
   border-color: var(--ui-border-strong);
+  background: linear-gradient(180deg, var(--ui-keycap-gradient-start), var(--ui-keycap-gradient-end));
   box-shadow: 0 1px 2px var(--ui-shadow-soft);
-
-  &--confirm {
-    background: linear-gradient(180deg, var(--ui-primary-hover) 0%, var(--ui-primary) 100%);
-    border-color: var(--ui-primary);
-  }
-}
-
-// The compose caveats. Unlike the title band above these are NOT sticky-bar-only: on desktop the
-// bar is in flow and there is no band to carry them, so they are the only place the caveats appear.
-.premove-context-notes {
-  font-size: 0.72rem;
-  line-height: 1.35;
-  color: var(--ui-text-muted);
-  margin-bottom: 0.4rem;
-
-  > div + div {
-    margin-top: 0.15rem;
+  &:hover,
+  &:focus {
+    color: var(--ui-text);
+    background: var(--ui-surface-muted);
+    border-color: var(--ui-border-strong);
   }
 }
 
@@ -1656,24 +1414,22 @@ $mobile-sticky-actions-max-height: 40vh;
   border-top: 1px solid var(--ui-border);
 }
 
-// Analysis mode on desktop (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §5.1): the standalone #move-title
-// never becomes the mobile sticky bar's #move-buttons band above, so without its own striping,
-// desktop would be the one place analysis mode looked like live play. Same stripes/scrim/click-to-
-// exit as the mobile band's &--analysis variant - kept as a standalone rule (not shared via a mixin)
-// since #move-title's own box model (in-flow, no grab handle, no border-radius) differs enough that
-// a shared mixin would need as many overrides as it saved.
+// Keep the planning heading separate from the game controls below it.
 #move-title.move-title--analysis {
-  background: $analysis-stripes;
-  cursor: pointer;
-  padding: 0.4rem 0.6rem;
+  background: $planning-background;
+  color: var(--ui-text);
+  border: 1px solid var(--ui-border);
+  border-left: 3px solid $planning-accent;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.7rem 0.85rem;
+  margin-bottom: 0.65rem;
   border-radius: 8px;
 
   h5 {
-    display: inline-block;
-    background: $analysis-scrim;
-    color: #fff;
-    padding: 0.15rem 0.5rem;
-    border-radius: 4px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.4;
     margin: 0;
   }
 }
@@ -1688,20 +1444,16 @@ $mobile-sticky-actions-max-height: 40vh;
   background: linear-gradient(135deg, var(--ui-banner-start) 0%, var(--ui-banner-end) 100%);
   color: var(--ui-banner-text);
 
-  // Amber while composing a cancel rule, so the takeover is distinguishable from composing an
-  // ordinary premove - the board itself looks identical in both. Matches PremoveBar's own
-  // `__band--amber`, since the two bands are halves of the same flow.
-  &--trigger {
-    background: linear-gradient(135deg, #a97514 0%, #8a6410 100%);
-  }
-
-  // Analysis mode (docs/lost-fleet/ANALYSIS_MODE_PLAN.md §5.1) - hazard stripes, since this is the
-  // ONE header state where the board underneath is genuinely not the live game. Stripes live in
-  // Clickable to exit (§5.4) - the map-anchored control can scroll off-screen on
-  // mobile, so the header is the reliable way out.
+  // Match the desktop planning heading in the mobile action tray.
   &--analysis {
-    background: $analysis-stripes;
-    cursor: pointer;
+    background: $planning-background;
+    border-left: 3px solid $planning-accent;
+    color: var(--ui-text);
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    padding-top: 0.65rem;
+    padding-bottom: 0.65rem;
+    margin-bottom: 0.65rem;
   }
 
   // Small enough that the status text stays on one (or two, at most) lines instead of the default
@@ -1713,14 +1465,11 @@ $mobile-sticky-actions-max-height: 40vh;
     color: inherit;
   }
 
-  // Raw text directly on the diagonal stripes above is unreadable either color it uses - a solid
-  // scrim behind just the text (not the whole bar, which would hide the stripes entirely) keeps
-  // both legible at once.
   &--analysis h5 {
     display: inline-block;
-    background: $analysis-scrim;
-    color: #fff;
-    padding: 0.15rem 0.5rem;
+    background: transparent;
+    color: var(--ui-text);
+    padding: 0;
     border-radius: 4px;
   }
 
@@ -1763,33 +1512,18 @@ $mobile-sticky-actions-max-height: 40vh;
   // ChatNotesPanel.vue's floating chat toggle (1040) - belt-and-suspenders alongside the
   // padding-right reservation above, in case the opened menu's own width still reaches the chat
   // toggle's corner on a narrow viewport, it should render on top of it, not tangled underneath.
-  .auto-leech-select ::v-deep(.dropdown-menu) {
+  .auto-leech-select .dropdown-menu {
     z-index: 1050;
   }
 }
 
-// The counter headline (§2.9/§5.3) - compact net deltas plus the feasibility verdict, in the slot
-// the auto-leech dropdown gives up during analysis mode. Same scrim reasoning as the h5 title text
-// above: it sits on the same striped background, in both #move-title (desktop) and .sticky-bar-title
-// (mobile), so it gets the identical treatment rather than a third one-off style.
-// §13's line strip, resting ON the striped banner's top edge rather than sitting inside it. The
-// negative bottom margin is what does it: the tabs' square bottoms overlap the banner by a couple of
-// pixels, so they read as one shape with it instead of as pills floating above it. `position:
-// relative` + `z-index` keep that overlap drawing over the stripes rather than under them.
-//
-// The left inset lines the first tab up with the banner's own text padding, and keeps it clear of
-// the desktop banner's 8px rounded corner.
+// Separate the plan tabs from the heading and game controls.
 #move .analysis-tabs {
   position: relative;
   z-index: 1;
-  margin: 0 0 -3px 0.6rem;
+  margin: 0.45rem 0 0.55rem;
 }
 
-// Inside the mobile sticky sheet the strip also has to take over the band's own negative top margin
-// (`.sticky-bar-title`'s `calc(-0.7rem)`), which exists to full-bleed the band over the sheet's top
-// padding. The strip is now the first thing in the sheet, so it is the thing that has to be pulled
-// up there - and the band's own margin is zeroed to match, or the two would fight over the same
-// space and the band would ride up through the tabs.
 #move-buttons .analysis-tabs--sticky {
   // Hidden by default and shown only inside the mobile media query, exactly as `.sticky-bar-title`
   // itself is. This is NOT inherited any more: the strip used to be a child of that band and went
@@ -1797,7 +1531,7 @@ $mobile-sticky-actions-max-height: 40vh;
   // sticky copy (its `v-if` is `showStickyMobileBar`, which is phase-gated in JS, not viewport-gated)
   // on top of the desktop copy, i.e. two line strips at once.
   display: none !important;
-  margin: calc(-0.7rem) 0 -3px calc(0.2rem + env(safe-area-inset-left));
+  margin: 0 0 0.55rem;
 }
 
 #move-buttons .sticky-bar-title--analysis {
@@ -1944,51 +1678,8 @@ $mobile-sticky-actions-max-height: 40vh;
     display: flex !important;
   }
 
-  // The strip's row has to be TRANSPARENT, so only the tabs themselves show above the banner (owner
-  // instruction). On desktop that is free - the strip sits on the page and the page is what shows
-  // through. Here it is not: the strip is the first thing inside the mobile sheet, and the sheet
-  // paints its own gradient, rounded top and drop shadow across its whole box - including the band
-  // the tabs stick up into, which read as a solid bar behind them.
-  //
-  // So while the strip is up, the sheet stops painting itself and hands that job to a pseudo-element
-  // that starts at the striped banner's top edge instead of the sheet's (--sandbox-tabs-height,
-  // measured - see the ResizeObserver). Everything the sheet actually contains is lifted above it.
-  //
-  // Why not simply move the strip out of the sheet: the sheet is `overflow-y: auto` (a long button
-  // list has to scroll in place), so anything positioned above its top edge is clipped, and making
-  // the strip `position: fixed` to escape that would decouple it from the sheet during the pinch-zoom
-  // counter-transform - the one thing zoom-compensation.ts exists to keep from happening.
   #move-buttons.mobile-sticky-actions--sandbox {
-    background: transparent;
-    box-shadow: none;
-
-    &::before {
-      content: "";
-      position: absolute;
-      top: var(--sandbox-tabs-height, 0px);
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 0;
-      pointer-events: none;
-      border-radius: 16px 16px 0 0;
-      background: linear-gradient(180deg, var(--ui-panel-gradient-start) 0%, var(--ui-panel-gradient-end) 100%);
-      // Only the hairline highlight, NOT the sheet's usual `0 -12px 28px` lift. A box-shadow with a
-      // negative y-offset paints ABOVE the edge it belongs to, so that one bled 12px of blur straight
-      // up into the strip's row - the row measured near-black at its lower edge and faded to the map
-      // colour at its top, which is exactly the "not actually transparent" the owner was seeing. The
-      // sheet loses nothing by it here: in sandbox mode its top edge is a yellow/black hazard banner,
-      // which separates it from the map far harder than any drop shadow.
-      box-shadow: 0 -1px 0 var(--ui-divider-highlight);
-    }
-
-    // ...and above that pseudo-element, which is a positioned child and would otherwise paint over
-    // every in-flow row in the sheet. The sheet is `position: fixed` with a z-index, so it is already
-    // a stacking context and these two levels cannot leak out of it.
-    > * {
-      position: relative;
-      z-index: 1;
-    }
+    background: linear-gradient(180deg, var(--ui-panel-gradient-start) 0%, var(--ui-panel-gradient-end) 100%);
   }
 
   // JS (Commands.vue's ResizeObserver) sets --sticky-bar-height to match the bar's actual
@@ -1998,5 +1689,39 @@ $mobile-sticky-actions-max-height: 40vh;
     height: var(--sticky-bar-height, 0px);
     max-height: $mobile-sticky-actions-max-height;
   }
+}
+</style>
+
+<style scoped lang="scss">
+.analysis-simulation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  border-top: 1px solid var(--ui-border);
+  margin-top: 0.3rem;
+  padding: 0.65rem 0;
+  color: var(--ui-text-muted);
+  font-size: 0.8rem;
+}
+.analysis-simulation__label {
+  font-weight: 600;
+}
+.analysis-simulation__button {
+  border: 0;
+  background: transparent;
+  color: var(--ui-info-text);
+  padding: 0.15rem 0;
+  font: inherit;
+  &:hover {
+    text-decoration: underline;
+  }
+}
+.analysis-simulation__hint {
+  flex-basis: 100%;
+  font-size: 0.75rem;
+}
+.analysis-simulation__total {
+  color: var(--ui-info-text);
 }
 </style>

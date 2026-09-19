@@ -161,11 +161,19 @@ describe("the analysis sandbox's second Trading Station (viewer ANALYSIS_MODE_PL
     expect(fullRun.player(PlayerEnum.Player1).data.credits).to.equal(14);
   });
 
-  it("cannot be played in a real game - there is no such entry to match", () => {
+  it("rejects the 3c constraint on an isolated real mine, even when 6c is affordable", () => {
     const engine = richGame();
     const isolated = tradingStations(engine).find((b) => b.cost === "6c,2o")!;
 
-    expect(() => engine.move(`terrans build ts ${isolated.coordinates} cheap.`)).to.throw();
+    expect(() => engine.move(`terrans build ts ${isolated.coordinates} cheap.`)).to.throw("not available for 3c");
+    expect(engine.player(PlayerEnum.Player1).data.credits).to.equal(20);
+  });
+
+  it("accepts the 3c constraint on a real mine that already has a neighbour", () => {
+    const engine = richGame();
+    const neighbour = tradingStations(engine).find((b) => b.cost === "3c,2o")!;
+    engine.move(`terrans build ts ${neighbour.coordinates} cheap.`);
+    expect(engine.player(PlayerEnum.Player1).data.credits).to.equal(17);
   });
 
   it("leaves an ordinary trailing log annotation alone", () => {
