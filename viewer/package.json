@@ -40,7 +40,7 @@
     "dist/package/css"
   ],
   "dependencies": {
-    "@boardgamers/protocol": "0.3.3",
+    "@boardgamers/protocol": "0.3.4",
     "@gaia-project/engine": "workspace:../engine",
     "bootstrap": "^4.4.1",
     "bootstrap-vue": "^2.12.0",
