@@ -1069,13 +1069,29 @@ lessons.push(
   )
 );
 
+function asteroidMoves(state: State): string[] {
+  const engine = Engine.fromData(copy(state.turn));
+  const command = engine.findAvailableCommand(0, Command.Build);
+  return command.data.buildings
+    .filter(
+      (building) =>
+        building.building === Building.Mine && engine.map.getS(building.coordinates).data.planet === Planet.Asteroid
+    )
+    .map((building) => `${engine.players[0].faction} build m ${building.coordinates}.`);
+}
+
 lessons.push(
   lesson(
     "new-planets",
     "lost-fleet",
     "Asteroids and protoplanets",
     "Settle an asteroid, then compare the cost and reward of a protoplanet.",
-    () => expansionPosition("lost-fleet-eclipse-asteroid-mine"),
+    () => {
+      const engine = expansionPosition("lost-fleet-eclipse-asteroid-mine");
+      engine.players[0].data.qics = 1;
+      engine.generateAvailableCommands();
+      return engine;
+    },
     [
       question(
         "asteroid",
@@ -1085,22 +1101,22 @@ lessons.push(
         "No",
         "Asteroid colonisation permanently consumes the Gaiaformer. You keep the mine and its income."
       ),
-      play(
-        "settle",
-        "Settle an asteroid",
-        "Use the normal mine action on an available asteroid. Select the indicated asteroid and confirm any range cost. Your pool of available Gaiaformers shrinks by one.",
-        (state) => {
-          const e = engineOf(state);
-          const c = e.findAvailableCommand(0, Command.Build);
-          const target = c.data.buildings.find(
-            (b) => b.building === Building.Mine && e.map.getS(b.coordinates).data.planet === Planet.Asteroid
-          );
-          if (!target) throw new Error("No asteroid target");
-          return `${e.players[0].faction} build m ${target.coordinates}.`;
+      {
+        id: "settle",
+        title: "Settle an asteroid",
+        text: "Use the normal mine action on any available asteroid and confirm any range cost. Your pool of available Gaiaformers shrinks by one.",
+        hint: "Settle any available asteroid",
+        target: "game-controls",
+        complete: (state) => state.moves >= 1,
+        validateMove(state, action) {
+          if (action.kind !== "move") return "Build a mine on any available asteroid using the game controls.";
+          const engine = Engine.fromData(copy(state.turn));
+          const actual = normalise(engine, action.move);
+          if (!asteroidMoves(state).some((move) => normalise(engine, move) === actual))
+            return "Choose an available asteroid for your mine. Other planet types do not consume a Gaiaformer this way.";
         },
-        1,
-        "Settle an asteroid"
-      ),
+        solution: (state) => ({ kind: "move", move: asteroidMoves(state)[0] }),
+      },
       question(
         "protoplanet",
         "Three terraforming steps, plus the mine",
@@ -1111,6 +1127,6 @@ lessons.push(
       ),
     ],
     "Asteroids consume a Gaiaformer and waive the mine’s ore and credit cost. Protoplanets require 3 terraforming steps plus the mine’s cost, and award 6 victory points. Extra range can cost Q.I.C. for either type.",
-    2
+    3
   )
 );
