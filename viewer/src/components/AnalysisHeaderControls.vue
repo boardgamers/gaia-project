@@ -15,9 +15,7 @@
         :class="{ 'analysis-controls__resource--gain': item.amount > 0 }"
         :aria-label="`${item.amount > 0 ? '+' : ''}${item.amount} ${resourceName(item.kind)}`"
       >
-        <svg width="45" height="42" viewBox="-12 -14 30 28" aria-hidden="true">
-          <Resource :kind="item.kind" :count="item.amount" :signed="true" />
-        </svg>
+        <RichTextView :content="parseRewardsForLog(`${item.amount}${item.kind}`)" />
       </span>
     </span>
     <span v-if="overdrawn.length || assumedPower" class="analysis-controls__shortfall" :title="shortfallTitle"
@@ -54,12 +52,14 @@
 <script lang="ts">
 import Vue from "vue";
 import type { AnalysisOverdraft, AnalysisResourceChange, AnalysisStatus } from "../logic/analysis";
-import Resource from "./Resource.vue";
+import { parseRewardsForLog } from "../logic/utils";
+import RichTextView from "./Resources/RichTextView.vue";
 
 export default Vue.extend({
   name: "AnalysisHeaderControls",
-  components: { Resource },
+  components: { RichTextView },
   methods: {
+    parseRewardsForLog,
     resourceName(kind: string): string {
       return { c: "credits", o: "ore", k: "knowledge", q: "QIC", vp: "victory points" }[kind];
     },
@@ -119,7 +119,7 @@ export default Vue.extend({
 }
 .analysis-controls__changes {
   flex-wrap: wrap;
-  gap: 0.25rem;
+  gap: 0;
 }
 .analysis-controls__resource {
   white-space: nowrap;
