@@ -654,7 +654,7 @@ describe("Game", () => {
       };
       const vm = mountAsSeat(0, position);
       await Vue.nextTick();
-      expect(vm.$el.querySelector(".premove-queue").textContent).to.contain("Cancel all");
+      expect(vm.$el.querySelector(".premove-queue").textContent).to.contain("Cancel");
       const stopped = JSON.parse(JSON.stringify(vm.engine));
       stopped.automation.plans[0].moves = [];
       stopped.automation.plans[0].notice = { kind: "stopped", text: "Premoves stopped: insufficient ore" };
@@ -980,7 +980,7 @@ describe("Game", () => {
         { round: 2, phase: Phase.RoundIncome },
         { round: 2, phase: Phase.RoundMove },
       ]);
-      expect(vm.$el.textContent).to.contain("appropriate round and phase");
+      expect(vm.$el.textContent).to.contain("preview only");
 
       vm.addAnalysisLine();
       await Vue.nextTick();

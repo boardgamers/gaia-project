@@ -22,6 +22,7 @@
     <PremoveQueue
       v-if="showPremovePanel"
       :plan="myPremovePlan"
+      :costs="premoveCosts"
       :notice-storage-key="premoveNoticeStorageKey"
       :pending="!!$store.state.pendingPlan"
       :active="analysisMode"
@@ -331,6 +332,7 @@ import type {
   AnalysisLineSummary,
   AnalysisMoveEntry,
   AnalysisStatus,
+  MoveCost,
 } from "../logic/analysis";
 import {
   advancePastOwnPass,
@@ -936,6 +938,30 @@ export default class Game extends Vue {
     );
   }
 
+  get premoveCosts(): MoveCost[] {
+    const seat = this.myLockedSeat;
+    if (seat === undefined || !this.myPremovePlan?.moves.length) return [];
+    try {
+      const origin = Engine.fromData(JSON.parse(JSON.stringify(this.realEngine)));
+      markAnalysisSeat(origin, seat);
+      advancePastOwnPass(origin, seat);
+      settleAnalysisClone(origin, seat);
+      if (this.myPremovePlan.timings?.[0]?.round !== undefined && this.myPremovePlan.timings[0].round !== origin.round)
+        return [];
+      const costs: MoveCost[] = [];
+      replayAnalysisLine(
+        origin,
+        this.myPremovePlan.moves.map((move) => ({ kind: "move", move })),
+        seat,
+        origin.round,
+        costs
+      );
+      return costs;
+    } catch {
+      return [];
+    }
+  }
+
   get myPremovePlan(): PremovePlan | undefined {
     return this.realEngine.automation?.plans[this.myLockedSeat];
   }
@@ -1063,6 +1089,8 @@ export default class Game extends Vue {
         return { round: engine.round, phase: engine.phase };
       });
     }
+    plan.costs = [];
+    replayAnalysisLine(this.analysisOrigin, entries, this.analysisSeat, this.analysisBaseRound, plan.costs);
     return plan;
   }
 

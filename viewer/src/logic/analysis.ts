@@ -862,11 +862,25 @@ export function dropPlayedAnalysisPrefix(
  * After each entry lands, opponent decisions are auto-resolved and solo turn order is restored,
  * including after income and other round transitions.
  */
+export type MoveCost = { type: Resource; count: number }[];
+const COST_RESOURCES = [
+  Resource.Credit,
+  Resource.Ore,
+  Resource.Knowledge,
+  Resource.Qic,
+  Resource.ChargePower,
+  Resource.GainToken,
+  Resource.GaiaFormer,
+  Resource.MoveTokenToGaiaArea,
+  Resource.VictoryPoint,
+];
+
 export function replayAnalysisLine(
   origin: Engine,
   entries: AnalysisEntry[],
   seat: number,
-  baseRound: number
+  baseRound: number,
+  costs?: MoveCost[]
 ): {
   engine: Engine;
   applied: number;
@@ -888,7 +902,24 @@ export function replayAnalysisLine(
     );
     try {
       if (entry.kind === "move") {
+        const cost: MoveCost = [];
+        const data = copy.players[seat]?.data;
+        if (costs && data) {
+          for (const type of COST_RESOURCES) {
+            data.on(`pay-${type}`, (count: number) => {
+              const existing = cost.find((resource) => resource.type === type);
+              if (existing) existing.count += count;
+              else cost.push({ type, count });
+            });
+          }
+        }
+        const gaiaformers = data?.gaiaformersUsedForAsteroid ?? 0;
         copy.move(entry.move);
+        if (costs) {
+          const used = (data?.gaiaformersUsedForAsteroid ?? 0) - gaiaformers;
+          if (used > 0) cost.push({ type: Resource.GaiaFormer, count: used });
+          costs.push(cost);
+        }
         copy.generateAvailableCommandsIfNeeded();
       } else {
         // Neither non-move entry kind runs the engine's own move pipeline, so the position's available
@@ -1064,6 +1095,7 @@ function ownMovePrefixLength(engine: Engine, moveEntries: AnalysisMoveEntry[], s
  * three things outside the line itself that bound a commit - whether the real game is waiting on
  * this seat, whether there is a premove queue at all, and how much room is left in it. */
 export interface AnalysisCommitPlan {
+  costs?: MoveCost[];
   /** Round and phase for each submitted move, in live-then-queued order. */
   timings?: PremoveTiming[];
   /** A submitted upgrade must keep the 3c neighbour price. */

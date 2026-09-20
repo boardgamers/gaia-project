@@ -11,33 +11,22 @@
     dialog-class="gaia-viewer-modal"
     @ok="$emit('confirm')"
   >
-    <p class="analysis-commit__lede">
-      {{ lede }}
-    </p>
-    <p v-if="view.queued.length" class="small">
-      Each premove uses your actual resources when your turn arrives. Simulated charges are not queued. If a move cannot
-      be played then, the queue stops; it does not wait for more charges.
-    </p>
-    <p v-if="view.simulatedNeighbour" class="analysis-commit__neighbour">
-      This Trading Station upgrade will only play at <strong>3c, plus ore</strong>. If that price is unavailable on your
-      turn, the premoves stop. It will never spend 6c or wait for a neighbour.
-    </p>
-
     <ol class="analysis-commit__list">
       <li v-if="view.live" class="analysis-commit__row analysis-commit__row--live">
         <span class="analysis-commit__badge analysis-commit__badge--live">plays now</span>
         <span class="analysis-commit__move">{{ view.live }}</span>
+        <MoveCost :cost="view.costs && view.costs[0]" />
       </li>
       <li v-for="(move, i) in view.queued" :key="`q${i}`" class="analysis-commit__row analysis-commit__row--queued">
-        <span class="analysis-commit__badge analysis-commit__badge--queued"
-          >premove {{ i + 1 }}<template v-if="view.live"> · after your live move</template></span
-        >
+        <span class="analysis-commit__badge analysis-commit__badge--queued">premove {{ i + 1 }}</span>
         <span v-if="view.timings" class="small text-muted">{{
           view.timings[i + (view.live ? 1 : 0)].round === 0
             ? "Setup"
             : `Round ${view.timings[i + (view.live ? 1 : 0)].round}`
         }}</span>
         <span class="analysis-commit__move">{{ move }}</span>
+        <MoveCost :cost="view.costs && view.costs[i + (view.live ? 1 : 0)]" />
+        <span v-if="isCheapAnalysisBuild(move)" class="small">3c only</span>
       </li>
     </ol>
 
@@ -54,18 +43,15 @@
         </li>
       </ol>
     </template>
-
-    <p class="analysis-commit__foot mb-0">
-      Your plans stay saved. Played moves are removed automatically.
-      <span v-if="view.queued.length">This replaces your current queue. You can view or cancel it at any time.</span>
-    </p>
   </b-modal>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
 import type { AnalysisCommitCut, AnalysisCommitPlan } from "../logic/analysis";
-import { MAX_COMMITTABLE_MOVES } from "../logic/analysis";
+import { isCheapAnalysisBuild, MAX_COMMITTABLE_MOVES } from "../logic/analysis";
+
+import MoveCost from "./MoveCost.vue";
 
 const EMPTY_PLAN: AnalysisCommitPlan = { live: null, queued: [], dropped: [], cut: null, limit: "line" };
 
@@ -84,6 +70,8 @@ const CUT_TEXT: Record<AnalysisCommitCut, string> = {
 
 export default Vue.extend({
   name: "AnalysisCommitConfirm",
+  components: { MoveCost },
+  methods: { isCheapAnalysisBuild },
   props: {
     /** Nullable rather than defaulted: Vue substitutes a prop default only for `undefined`, and
      * Commands.vue holds `null` whenever Game.vue has no plan to give (outside sandbox mode, or a
@@ -101,18 +89,6 @@ export default Vue.extend({
     okTitle(): string {
       return `${this.view.live ? "Play" : "Queue"} ${this.total} move${this.total === 1 ? "" : "s"}`;
     },
-    lede(): string {
-      const view = this.view as AnalysisCommitPlan;
-      const queued = view.queued.length;
-      if (view.live && queued === 0) {
-        return "This move is played in the real game as soon as you confirm.";
-      }
-      if (view.live) {
-        return "The first move plays now. The rest will play in order on your following turns, even with the browser closed.";
-      }
-      return `${queued === 1 ? "This move will play" : "These moves will play in order"} on your next ${queued === 1 ? "turn" : "turns"}, even with the browser closed. Charge decisions are handled separately.`;
-    },
-
     droppedReason(): string {
       const view = this.view as AnalysisCommitPlan;
       if (view.limit === "no-premoves") {
@@ -140,7 +116,8 @@ export default Vue.extend({
 
 .analysis-commit__row {
   display: flex;
-  align-items: baseline;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 0.5rem;
   padding: 0.3rem 0.5rem;
   border-radius: 0.35rem;

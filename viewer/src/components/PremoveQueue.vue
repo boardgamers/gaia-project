@@ -5,19 +5,6 @@
         <strong>{{
           moves.length ? `Your premoves · ${moves.length}` : active ? "Planning · preview only" : "Plan your next turn"
         }}</strong>
-        <div class="small text-muted">
-          {{
-            moves.length
-              ? "Attempts each move on your turn with your actual resources. Auto-charge continues as usual."
-              : active && previewRound
-                ? `Previewing round ${previewRound}. Queued moves will wait for the appropriate round and phase.`
-                : active
-                  ? "Try moves with the game controls. Nothing is played until you confirm."
-                  : queueEnabled
-                    ? "Prepare moves for your next turns, even while someone else is playing."
-                    : "Try moves and compare plans using the game controls."
-          }}
-        </div>
       </div>
       <div class="premove-queue__actions">
         <button v-if="active" class="btn btn-sm btn-outline-secondary" @click="$emit('exit')">
@@ -38,7 +25,7 @@
           :disabled="pending"
           @click="$emit('cancel', 0)"
         >
-          Cancel all
+          Cancel
         </button>
       </div>
     </div>
@@ -54,14 +41,7 @@
           title="Stops if the 3c price is unavailable"
           >3c only</span
         >
-        <button
-          class="btn btn-sm btn-link"
-          :disabled="pending"
-          :aria-label="`Cancel premove ${index + 1}${index !== moves.length - 1 ? ' and the moves after it' : ''}`"
-          @click="$emit('cancel', index)"
-        >
-          {{ index !== moves.length - 1 ? "Cancel from here" : "Cancel" }}
-        </button>
+        <MoveCost :cost="costs[index]" />
       </li>
     </ol>
     <div v-if="pending" class="small mt-2" role="status">Saving your plan…</div>
@@ -73,14 +53,16 @@
 import type { PremovePlan } from "@gaia-project/engine/src/premove-types";
 import Vue from "vue";
 import { isCheapAnalysisBuild } from "../logic/analysis";
+import MoveCost from "./MoveCost.vue";
 import PremoveNotice from "./PremoveNotice.vue";
 
 export default Vue.extend({
-  components: { PremoveNotice },
+  components: { PremoveNotice, MoveCost },
   methods: { isCheapAnalysisBuild },
   props: {
     plan: { type: Object as () => PremovePlan, default: undefined },
     noticeStorageKey: { type: String, required: true },
+    costs: { type: Array, default: () => [] },
     pending: Boolean,
     queueEnabled: { type: Boolean, default: true },
     active: Boolean,

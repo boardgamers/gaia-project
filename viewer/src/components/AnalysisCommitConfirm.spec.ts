@@ -61,27 +61,24 @@ describe("AnalysisCommitConfirm", () => {
   it("says nothing plays immediately when the commit happens off turn", async () => {
     const wrapper = await open(plan({ live: null, queued: ["terrans up nav."] }));
 
-    expect(dialogText()).to.contain("on your next turn");
+    expect(dialogText()).to.contain("Queue these premoves?");
     expect(dialogText()).to.not.contain("plays now");
     wrapper.destroy();
   });
 
   it("explains the 3c-only constraint when the plan used a simulated neighbour", async () => {
     await open(plan({ queued: ["terrans build ts 4A4 cheap."], simulatedNeighbour: true }));
-    const constraint = document.body.querySelector(".analysis-commit__neighbour");
-    expect(constraint).to.not.equal(null);
-    expect(constraint.textContent).to.contain("3c, plus ore");
-    expect(constraint.textContent).to.contain("never spend 6c");
+    expect(dialogText()).to.contain("3c only");
   });
 
-  it("lists the unsent moves and explains that plans stay saved", async () => {
+  it("lists unsent moves without the repeated saved-plan explanation", async () => {
     const wrapper = await open(plan({ live: "terrans up nav.", dropped: ["terrans build ts 1A2."], cut: "overdrawn" }));
 
     const text = dialogText();
     expect(text).to.contain("1 more move stays behind");
     expect(text).to.contain("spend more than you actually have");
     expect(text).to.contain("terrans build ts 1A2.");
-    expect(text).to.contain("Your plans stay saved");
+    expect(text).to.not.contain("Your plans stay saved");
     wrapper.destroy();
   });
 

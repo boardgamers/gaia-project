@@ -1,6 +1,6 @@
-import Engine, { AuctionVariant, Command, Faction, Phase, Round } from "@gaia-project/engine";
+import Engine, { AuctionVariant, Command, Faction, Phase, Resource, Round } from "@gaia-project/engine";
 import { expect } from "chai";
-import type { AnalysisEntry } from "./analysis";
+import type { AnalysisEntry, MoveCost } from "./analysis";
 import {
   advancePastOwnPass,
   analysisCommitPrefix,
@@ -50,6 +50,13 @@ const SETUP_MOVES = [
 const PARTIAL_SETUP_MOVES = SETUP_MOVES.slice(0, -1);
 
 describe("replayAnalysisLine", () => {
+  it("reports spending without subtracting the resources earned by the same move", () => {
+    const origin = new Engine(SETUP_MOVES);
+    const costs: MoveCost[] = [];
+    replayAnalysisLine(origin, [{ kind: "move", move: "terrans up sci." }], 0, 1, costs);
+    expect(costs).to.deep.equal([[{ type: Resource.Knowledge, count: 4 }]]);
+  });
+
   it("replays a legal line onto a fresh clone of the origin", () => {
     const origin = new Engine(SETUP_MOVES);
     const entries: AnalysisEntry[] = [{ kind: "move", move: "terrans up nav." }];
