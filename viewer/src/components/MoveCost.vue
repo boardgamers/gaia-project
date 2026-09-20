@@ -7,7 +7,7 @@
         v-for="(resource, index) in cost"
         :key="index"
         :kind="resource.type"
-        :count="resource.count"
+        :count="-resource.count"
         :no-plus="true"
         :transform="`translate(${index * 30}, 0)`"
       />
