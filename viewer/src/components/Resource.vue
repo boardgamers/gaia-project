@@ -197,7 +197,7 @@
       "
       :class="{ plus: count === '+', overdrawn: typeof count === 'number' && count < 0 }"
       :text-decoration="kind === 'burn-token' ? 'line-through' : ''"
-      >{{ !noPlus && (kind === "t" || kind === "ta3") && count > 0 ? "+" : "" }}{{ count }}</text
+      >{{ (signed || (!noPlus && (kind === "t" || kind === "ta3"))) && count > 0 ? "+" : "" }}{{ count }}</text
     >
     <text x="0" y="0" v-if="kind == 'brainstone'">B</text>
   </g>
@@ -248,6 +248,9 @@ export default class Resource extends Vue {
    * a sign at all). */
   @Prop({ default: false })
   noPlus: boolean;
+
+  @Prop({ type: Boolean, default: false })
+  signed: boolean;
 
   get flat() {
     return this.$store.state.preferences.flatBuildings;

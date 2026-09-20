@@ -53,8 +53,14 @@ describe("replayAnalysisLine", () => {
   it("reports spending without subtracting the resources earned by the same move", () => {
     const origin = new Engine(SETUP_MOVES);
     const costs: MoveCost[] = [];
-    replayAnalysisLine(origin, [{ kind: "move", move: "terrans up sci." }], 0, 1, costs);
-    expect(costs).to.deep.equal([[{ type: Resource.Knowledge, count: 4 }]]);
+    replayAnalysisLine(origin, [{ kind: "move", move: "terrans spend 1q for 1o. up sci." }], 0, 1, costs);
+    expect(costs).to.deep.equal([
+      [
+        { type: Resource.Qic, count: 1 },
+        { type: Resource.Ore, count: 1, gain: true },
+        { type: Resource.Knowledge, count: 4 },
+      ],
+    ]);
   });
 
   it("replays a legal line onto a fresh clone of the origin", () => {

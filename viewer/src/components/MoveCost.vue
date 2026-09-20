@@ -1,10 +1,15 @@
 <template>
-  <span class="move-cost" title="Estimated cost" aria-label="Estimated cost">
+  <span class="move-cost" title="Expected spending and gains" aria-label="Expected spending and gains">
     <span v-if="!cost">—</span>
     <span v-else-if="!cost.length">Free</span>
     <template v-else>
       <svg v-for="(resource, index) in cost" :key="index" viewBox="-12 -14 30 28" width="45" height="42">
-        <Resource :kind="resource.type" :count="-resource.count" :no-plus="true" />
+        <Resource
+          :kind="resource.type"
+          :count="resource.gain ? resource.count : -resource.count"
+          :signed="true"
+          :no-plus="true"
+        />
       </svg>
     </template>
   </span>

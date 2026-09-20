@@ -862,7 +862,7 @@ export function dropPlayedAnalysisPrefix(
  * After each entry lands, opponent decisions are auto-resolved and solo turn order is restored,
  * including after income and other round transitions.
  */
-export type MoveCost = { type: Resource; count: number }[];
+export type MoveCost = { type: Resource; count: number; gain?: boolean }[];
 const COST_RESOURCES = [
   Resource.Credit,
   Resource.Ore,
@@ -907,9 +907,14 @@ export function replayAnalysisLine(
         if (costs && data) {
           for (const type of COST_RESOURCES) {
             data.on(`pay-${type}`, (count: number) => {
-              const existing = cost.find((resource) => resource.type === type);
+              const existing = cost.find((resource) => resource.type === type && !resource.gain);
               if (existing) existing.count += count;
               else cost.push({ type, count });
+            });
+            data.on(`gain-${type}`, (count: number) => {
+              const existing = cost.find((resource) => resource.type === type && resource.gain);
+              if (existing) existing.count += count;
+              else cost.push({ type, count, gain: true });
             });
           }
         }

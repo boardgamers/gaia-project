@@ -15,8 +15,9 @@
         :class="{ 'analysis-controls__resource--gain': item.amount > 0 }"
         :aria-label="`${item.amount > 0 ? '+' : ''}${item.amount} ${resourceName(item.kind)}`"
       >
-        {{ item.amount > 0 ? "+" : "−" }}{{ Math.abs(item.amount) }}
-        <svg width="18" height="18" viewBox="-10 -10 20 20" aria-hidden="true"><Resource :kind="item.kind" /></svg>
+        <svg width="45" height="42" viewBox="-12 -14 30 28" aria-hidden="true">
+          <Resource :kind="item.kind" :count="item.amount" :signed="true" />
+        </svg>
       </span>
     </span>
     <span v-if="overdrawn.length || assumedPower" class="analysis-controls__shortfall" :title="shortfallTitle"
@@ -117,7 +118,8 @@ export default Vue.extend({
   gap: 0.25rem;
 }
 .analysis-controls__changes {
-  gap: 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.25rem;
 }
 .analysis-controls__resource {
   white-space: nowrap;
