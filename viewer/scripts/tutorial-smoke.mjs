@@ -5,6 +5,7 @@ import { playOnBoard } from "./tutorial-controls.mjs";
 import { previewServer } from "./tutorial-preview.mjs";
 const require = createRequire(import.meta.url);
 const { lessons } = require("./tutorial-manifest.cjs");
+const { default: Engine, Building, Command, Planet } = require("@gaia-project/engine");
 const server = previewServer();
 await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_EXECUTABLE });
@@ -28,7 +29,19 @@ try {
       let state = lesson.initialState();
       for (let index = 0; index < lesson.steps.length; index++) {
         const step = lesson.steps[index];
-        const action = step.solution(state);
+        let action = step.solution(state);
+        if (lesson.id === "new-planets" && step.id === "settle") {
+          const engine = Engine.fromData(structuredClone(state.game));
+          const asteroids = engine
+            .findAvailableCommand(0, Command.Build)
+            .data.buildings.filter(
+              (build) =>
+                build.building === Building.Mine && engine.map.getS(build.coordinates).data.planet === Planet.Asteroid
+            );
+          assert.equal(engine.players[0].data.qics, 1, "the chapter starts with one Q.I.C.");
+          assert.ok(asteroids.length > 0, "an asteroid is reachable with one Q.I.C.");
+          action = { kind: "move", move: `${engine.players[0].faction} build m ${asteroids.at(-1).coordinates}.` };
+        }
         console.log(`  ${step.id}`);
         if (["basic-range", "swap"].includes(step.id))
           await page.screenshot({ path: `/tmp/gaia-${lesson.id}-${step.id}-${width}.png`, fullPage: true });

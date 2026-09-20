@@ -15,7 +15,7 @@ import Engine, {
 import { describe, expect, it } from "vitest";
 import { detour, stationRoute } from "./federation-routes";
 import { lessons, sections } from "./lessons";
-import { copy, federationPosition } from "./position";
+import { copy, federationPosition, serialise } from "./position";
 
 for (const lesson of lessons) {
   describe(`tutorial: ${lesson.id}`, () => {
@@ -413,6 +413,72 @@ describe("teaching positions", () => {
     expect(controller.snapshot.step).toBe(0);
     expect(controller.snapshot.state).toEqual(before);
     expect(controller.snapshot.error).toContain("Victory points");
+    controller.destroy();
+  });
+});
+
+describe.each([1, 10])("asteroid tutorial choices with %i Q.I.C.", (qics) => {
+  const original = lessons.find((lesson) => lesson.id === "new-planets")!;
+  const lesson = {
+    ...original,
+    initialState() {
+      const state = original.initialState();
+      expect(state.game.players[0].data.qics).toBe(1);
+      const engine = Engine.fromData(copy(state.game));
+      engine.players[0].data.qics = qics;
+      engine.generateAvailableCommands();
+      const game = serialise(engine);
+      return { ...state, game, turn: copy(game) };
+    },
+  };
+  const initial = Engine.fromData(copy(lesson.initialState().game));
+  const builds = initial.findAvailableCommand(0, Command.Build).data.buildings;
+  const asteroids = builds.filter(
+    (build) => build.building === Building.Mine && initial.map.getS(build.coordinates).data.planet === Planet.Asteroid
+  );
+
+  it("offers reachable asteroids", () => {
+    expect(asteroids.length).toBeGreaterThan(qics === 1 ? 0 : 1);
+  });
+
+  for (const target of asteroids) {
+    it(`accepts ${target.coordinates}, completes the chapter and restores progress`, async () => {
+      const saved = new Map<string, string>();
+      const storage = {
+        getItem: (key: string) => saved.get(key) ?? null,
+        setItem: (key: string, value: string) => {
+          saved.set(key, value);
+        },
+      };
+      const controller = await createTutorial({ ...lesson, storage });
+      await controller.play(lesson.steps[0].solution!(controller.snapshot.state));
+      const move = `${initial.players[0].faction} build m ${target.coordinates}`;
+      expect(await controller.play({ kind: "move", move })).toBe(true);
+      expect(await controller.play({ kind: "move", move: move + "." })).toBe(true);
+      expect(controller.snapshot.step).toBe(2);
+      await controller.play(lesson.steps[2].solution!(controller.snapshot.state));
+      expect(controller.snapshot.completed).toBe(true);
+      const restored = await createTutorial({ ...lesson, storage });
+      expect(restored.snapshot.completed).toBe(true);
+      expect(restored.snapshot.state).toEqual(controller.snapshot.state);
+      controller.destroy();
+      restored.destroy();
+    });
+  }
+
+  it("rejects a legal mine on another planet without changing the game", async () => {
+    const controller = await createTutorial(lesson);
+    await controller.play(lesson.steps[0].solution!(controller.snapshot.state));
+    const before = copy(controller.snapshot.state.game);
+    const target = builds.find(
+      (build) => build.building === Building.Mine && initial.map.getS(build.coordinates).data.planet !== Planet.Asteroid
+    )!;
+    expect(target).toBeDefined();
+    expect(
+      await controller.play({ kind: "move", move: `${initial.players[0].faction} build m ${target.coordinates}.` })
+    ).toBe(false);
+    expect(controller.snapshot.step).toBe(1);
+    expect(controller.snapshot.state.game).toEqual(before);
     controller.destroy();
   });
 });
