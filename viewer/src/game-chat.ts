@@ -44,12 +44,19 @@ export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): 
 .bgs-game-chat .chat-mention{height:auto;padding:0 2px;border:0;background:transparent;color:inherit;font:inherit;font-weight:bold;text-decoration:underline}
 .bgs-game-chat article a{color:inherit;text-decoration:underline}
 .bgs-game-chat .chat-translate{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;width:24px;height:24px;min-height:0;padding:4px;margin-left:3px;border:0;background:transparent;color:inherit;opacity:.55}
+.bgs-game-chat .chat-edit{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;width:24px;height:24px;min-height:0;padding:4px;margin-left:3px;border:0;background:transparent;color:inherit;opacity:.55}
 .bgs-game-chat .chat-translate:hover,.bgs-game-chat .chat-translate:focus-visible{opacity:1}
+.bgs-game-chat .chat-edit:hover,.bgs-game-chat .chat-edit:focus-visible{opacity:1}
 .bgs-game-chat .chat-translate[aria-pressed="true"]{opacity:1;background:#75818d26}
+.bgs-game-chat .chat-edit[aria-pressed="true"]{opacity:1;background:#75818d26}
 .bgs-game-chat .chat-translate[aria-busy="true"]{background:transparent;cursor:wait}
+.bgs-game-chat .chat-edit[aria-busy="true"]{background:transparent;cursor:wait}
 .chat-suggestions{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
 .chat-suggestions:empty{display:none}
 .chat-suggestions button[aria-pressed="true"]{outline:2px solid #527f89}
+.bgs-game-chat .chat-editing{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;opacity:.85;padding:3px 0;flex-shrink:0}
+.bgs-game-chat .chat-editing[hidden]{display:none}
+.bgs-game-chat .chat-edit-cancel{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;min-height:0;padding:0;border:0;background:transparent;color:inherit;cursor:pointer}
 .bgs-game-chat .chat-status{font-size:12px;margin-top:6px}
 .bgs-game-chat .chat-status:empty{display:none}
 .chat-shortcut{position:fixed;left:16px;bottom:max(16px,env(safe-area-inset-bottom));z-index:900;padding:7px 12px;border:1px solid #6a8589;border-radius:3px;background:#203a45;color:#fff;font:600 14px Arial,sans-serif;cursor:pointer;box-shadow:0 2px 6px #0003}
