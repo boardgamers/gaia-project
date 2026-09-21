@@ -43,7 +43,10 @@ export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): 
 .bgs-game-chat button:disabled{color:var(--ui-text-muted);border-color:var(--ui-border);background:var(--ui-surface-muted);cursor:default}
 .bgs-game-chat .chat-mention{height:auto;padding:0 2px;border:0;background:transparent;color:inherit;font:inherit;font-weight:bold;text-decoration:underline}
 .bgs-game-chat article a{color:inherit;text-decoration:underline}
-.bgs-game-chat .chat-translate{height:auto;min-height:24px;padding:2px 4px;margin-left:6px;border:0;background:transparent;color:inherit;font-size:.8em;text-decoration:underline}
+.bgs-game-chat .chat-translate{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;width:24px;height:24px;min-height:0;padding:4px;margin-left:3px;border:0;background:transparent;color:inherit;opacity:.55}
+.bgs-game-chat .chat-translate:hover,.bgs-game-chat .chat-translate:focus-visible{opacity:1}
+.bgs-game-chat .chat-translate[aria-pressed="true"]{opacity:1;background:#75818d26}
+.bgs-game-chat .chat-translate[aria-busy="true"]{background:transparent;cursor:wait}
 .chat-suggestions{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
 .chat-suggestions:empty{display:none}
 .chat-suggestions button[aria-pressed="true"]{outline:2px solid #527f89}
