@@ -394,3 +394,47 @@ export function logSlice(engine: Engine, options?: { player?: number; start?: nu
 export function round(engine: Engine) {
   return engine.round;
 }
+
+export const analysisPolicy = "public";
+
+export function createAnalysis(data: Engine, options: { to: number; sourceEnded: boolean }): Engine {
+  const source = Engine.fromData(JSON.parse(JSON.stringify(data)));
+  const publicPosition = (e: Engine) =>
+    e.round > 0 || [Phase.SetupBuilding, Phase.SetupBooster, Phase.BeginGame, Phase.EndGame].includes(e.phase);
+  assert(options.sourceEnded || publicPosition(source), "Analyses are available after the setup auction");
+  assert(options.to >= 1 && options.to <= source.moveHistory.length, "Choose a position after game setup");
+  const copy = source.replayedTo(options.to, false);
+  assert(options.sourceEnded || publicPosition(copy), "Choose a position after the setup auction");
+  delete copy.automation;
+  delete (copy as any).messages;
+  for (const player of copy.players) {
+    player.dropped = false;
+    player.settings.autoIncome = false;
+    player.settings.autoBrainstone = false;
+    player.settings.itarsAutoChargeToArea3 = false;
+  }
+  copy.generateAvailableCommandsIfNeeded();
+  return copy;
+}
+
+export function analysisMove(data: Engine, command: string, player: number): Engine {
+  assert(typeof command === "string", "Premoves are not available in an analysis");
+  const copy = Engine.fromData(JSON.parse(JSON.stringify(data)));
+  assertOwnMove(copy, command, player);
+  copy.move(command);
+  copy.generateAvailableCommandsIfNeeded();
+  return copy;
+}
+
+export function analysisView(data: Engine, options: { player: number; start?: number; end?: number }) {
+  const copy = Engine.fromData(JSON.parse(JSON.stringify(data)));
+  copy.generateAvailableCommandsIfNeeded();
+  return {
+    state: copy,
+    log: {
+      state: copy,
+      log: copy.moveHistory.slice(options.start, options.end),
+      availableMoves: copy.availableCommands,
+    },
+  };
+}

@@ -931,6 +931,7 @@ export default class Game extends Vue {
   }
 
   get showPremovePanel(): boolean {
+    if (this.$store.state.preferences.analysis) return false;
     return (
       this.analysisMode ||
       ((this.premoveAvailable || this.analysisOffered) &&
@@ -1016,6 +1017,7 @@ export default class Game extends Vue {
   }
 
   get analysisOffered(): boolean {
+    if (this.$store.state.preferences.analysis) return false;
     if (this.tutorial) return false;
     if (this.analysisMode || this.ended) {
       return false;

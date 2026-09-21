@@ -2,7 +2,8 @@ import { expect } from "chai";
 import { PlayerEnum } from ".";
 import Beta2 from "./fixtures/Beta-2.json";
 import Engine from "./src/engine";
-import { automove, move, moveAI, replay, setPlayerSettings, toSave } from "./wrapper";
+import { Phase } from "./src/enums";
+import { analysisMove, automove, createAnalysis, move, moveAI, replay, setPlayerSettings, toSave } from "./wrapper";
 
 describe("wrapper", () => {
   describe("automove", () => {
@@ -247,3 +248,42 @@ const move2pwAndBrainstone = Engine.parseMoves(`
   itars charge 1pw
   itars build ts 2B0.
 `);
+
+describe("saved analyses", () => {
+  const history = Engine.parseMoves(`
+    init 2 randomSeed
+    p1 faction terrans
+    p2 faction nevlas
+    terrans build m -1x2
+    nevlas build m -1x0
+    nevlas build m 0x-4
+    terrans build m -4x-1
+    nevlas booster booster7
+    terrans booster booster3
+    terrans build ts -1x2.
+  `);
+  it("copies a public position without plans or automatic charging", () => {
+    const source = new Engine(history);
+    const original = JSON.stringify(source);
+    const copy = createAnalysis(source, { to: history.length, sourceEnded: false });
+    expect(copy.moveHistory).to.deep.equal(source.moveHistory);
+    expect(copy.automation).to.equal(undefined);
+    expect(copy.phase).to.equal(Phase.RoundLeech);
+    const result = analysisMove(copy, "nevlas charge 1pw", 1);
+    expect(result.moveHistory.length).to.equal(copy.moveHistory.length + 1);
+    expect(JSON.stringify(source)).to.equal(original);
+    expect(() => analysisMove(copy, { type: "premoves" } as any, 1)).to.throw("Premoves");
+  });
+  it("blocks ongoing hidden setup and rewinding an active game into setup", () => {
+    const source = new Engine(history);
+    expect(() => createAnalysis(source, { to: 1, sourceEnded: false })).to.throw("setup auction");
+    source.phase = Phase.SetupSilentBid;
+    source.round = 0;
+    expect(() => createAnalysis(source, { to: history.length, sourceEnded: false })).to.throw("setup auction");
+  });
+  it("can branch before the auction once the source has ended", () => {
+    const copy = createAnalysis(new Engine(history), { to: 1, sourceEnded: true });
+    expect(copy.moveHistory.length).to.equal(1);
+    expect(copy.ended).to.equal(false);
+  });
+});
