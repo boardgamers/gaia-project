@@ -3,7 +3,17 @@ import { PlayerEnum } from ".";
 import Beta2 from "./fixtures/Beta-2.json";
 import Engine from "./src/engine";
 import { Phase } from "./src/enums";
-import { analysisMove, automove, createAnalysis, move, moveAI, replay, setPlayerSettings, toSave } from "./wrapper";
+import {
+  analysisMove,
+  automove,
+  canLaunchAnalysisMode,
+  createAnalysis,
+  move,
+  moveAI,
+  replay,
+  setPlayerSettings,
+  toSave,
+} from "./wrapper";
 
 describe("wrapper", () => {
   describe("automove", () => {
@@ -276,10 +286,11 @@ describe("saved analyses", () => {
   });
   it("blocks ongoing hidden setup and rewinding an active game into setup", () => {
     const source = new Engine(history);
-    expect(() => createAnalysis(source, { to: 1, sourceEnded: false })).to.throw("setup auction");
+    expect(canLaunchAnalysisMode(source)).to.equal(true);
+    expect(canLaunchAnalysisMode(createAnalysis(source, { to: 1, sourceEnded: false }))).to.equal(false);
     source.phase = Phase.SetupSilentBid;
     source.round = 0;
-    expect(() => createAnalysis(source, { to: history.length, sourceEnded: false })).to.throw("setup auction");
+    expect(canLaunchAnalysisMode(source)).to.equal(false);
   });
   it("can branch before the auction once the source has ended", () => {
     const copy = createAnalysis(new Engine(history), { to: 1, sourceEnded: true });

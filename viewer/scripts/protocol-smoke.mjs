@@ -221,6 +221,48 @@ try {
           },
           "viewer settings stay confirmed until the host responds"
         );
+
+        await page.evaluate(() => {
+          window.translationsRequested = [];
+          host.on("chat:translate", (request) => {
+            translationsRequested.push(request);
+            host.emit("chat:translation", { ...request, ok: true, text: "Bonjour <img src=x>", language: "en" });
+          });
+          host.emit("chat:state", {
+            canSend: true,
+            translationTarget: "fr",
+            translationLabels: {
+              translate: "Traduire",
+              translating: "Traduction…",
+              translated: "Traduit",
+              original: "Voir l’original",
+              error: "Indisponible",
+              retry: "Réessayer",
+            },
+          });
+          host.emit("chat:messages", [
+            { _id: "000000000000000000000070", type: "text", text: "Hello", language: "en" },
+          ]);
+        });
+        await page.locator(".chat-translate").click();
+        await page.getByRole("button", { name: "Traduit · Voir l’original", exact: true }).waitFor();
+        assert.equal(await page.evaluate(() => translationsRequested.length), 1);
+        assert.equal(await page.locator('[data-message-id="000000000000000000000070"] img').count(), 0);
+        assert.match(
+          await page.locator('[data-message-id="000000000000000000000070"]').textContent(),
+          /Bonjour <img src=x>/
+        );
+        await page.locator(".chat-translate").click();
+        assert.match(await page.locator('[data-message-id="000000000000000000000070"]').textContent(), /Hello/);
+        assert.equal(
+          await page.evaluate(() => translationsRequested.length),
+          1,
+          "showing original needs no new request"
+        );
+        await page.evaluate(() => host.emit("preferences", { sound: false, analysis: true }));
+        await page.waitForFunction(() => !document.querySelector(".chat-translate")?.getBoundingClientRect().height);
+        await page.screenshot({ path: "/tmp/gaia-project-analysis-" + width + ".png", fullPage: true });
+        await page.evaluate(() => host.emit("preferences", { sound: false, analysis: false }));
         await page.screenshot({
           path: `/tmp/${game}-protocol-${ui}-${lostFleet ? "fleet" : "base"}-${width}.png`,
           fullPage: true,

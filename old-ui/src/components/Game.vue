@@ -33,6 +33,7 @@
             @command="handleCommand"
             :currentMove="currentMove"
             :hide-spacer="true"
+            :auto-charge-enabled="!replayData && !$store.state.preferences.analysis"
             :analysis-mode="analysisMode"
             :analysis-status="analysisStatus"
             :analysis-move-count="analysisAppliedEntries.length"
@@ -79,6 +80,7 @@
               cancelTriggerComposeActive ? 'Continue' : premoveEditSeq !== null ? 'Save changes' : 'Queue now'
             "
             :premove-context="premoveContext"
+            :auto-charge-enabled="!replayData && !$store.state.preferences.analysis"
             :analysis-mode="analysisMode"
             :analysis-status="analysisStatus"
             :analysis-move-count="analysisAppliedEntries.length"
@@ -188,6 +190,7 @@
         :currentMove="currentMove"
         :hide-spacer="true"
         @sticky-bar-height="stickyBarHeight = $event"
+        :auto-charge-enabled="!replayData && !$store.state.preferences.analysis"
         :analysis-mode="analysisMode"
         :analysis-status="analysisStatus"
         :analysis-move-count="analysisAppliedEntries.length"

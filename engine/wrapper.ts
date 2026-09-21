@@ -395,16 +395,16 @@ export function round(engine: Engine) {
   return engine.round;
 }
 
-export const analysisPolicy = "public";
+export function canLaunchAnalysisMode(data: Engine): boolean {
+  return (
+    data.round > 0 || [Phase.SetupBuilding, Phase.SetupBooster, Phase.BeginGame, Phase.EndGame].includes(data.phase)
+  );
+}
 
 export function createAnalysis(data: Engine, options: { to: number; sourceEnded: boolean }): Engine {
   const source = Engine.fromData(JSON.parse(JSON.stringify(data)));
-  const publicPosition = (e: Engine) =>
-    e.round > 0 || [Phase.SetupBuilding, Phase.SetupBooster, Phase.BeginGame, Phase.EndGame].includes(e.phase);
-  assert(options.sourceEnded || publicPosition(source), "Analyses are available after the setup auction");
   assert(options.to >= 1 && options.to <= source.moveHistory.length, "Choose a position after game setup");
   const copy = source.replayedTo(options.to, false);
-  assert(options.sourceEnded || publicPosition(copy), "Choose a position after the setup auction");
   delete copy.automation;
   delete (copy as any).messages;
   for (const player of copy.players) {

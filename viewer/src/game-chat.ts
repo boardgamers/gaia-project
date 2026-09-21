@@ -43,6 +43,7 @@ export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): 
 .bgs-game-chat button:disabled{color:var(--ui-text-muted);border-color:var(--ui-border);background:var(--ui-surface-muted);cursor:default}
 .bgs-game-chat .chat-mention{height:auto;padding:0 2px;border:0;background:transparent;color:inherit;font:inherit;font-weight:bold;text-decoration:underline}
 .bgs-game-chat article a{color:inherit;text-decoration:underline}
+.bgs-game-chat .chat-translate{height:auto;min-height:24px;padding:2px 4px;margin-left:6px;border:0;background:transparent;color:inherit;font-size:.8em;text-decoration:underline}
 .chat-suggestions{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
 .chat-suggestions:empty{display:none}
 .chat-suggestions button[aria-pressed="true"]{outline:2px solid #527f89}
@@ -65,6 +66,7 @@ export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): 
   let localPlayer: number | undefined;
   let avatars: string[] = [];
   let chatVisible = false;
+  let analysis = false;
   const shortcut = document.createElement("button");
   shortcut.type = "button";
   shortcut.className = "chat-shortcut";
@@ -129,7 +131,7 @@ export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): 
     shortcut.classList.toggle("chat-shortcut--inline", !!barSlot);
     const text = barSlot && count ? `Chat · ${count}` : label;
     if (shortcut.textContent !== text) shortcut.textContent = text;
-    shortcut.hidden = count === 0 || (!barSlot && chatVisible);
+    shortcut.hidden = analysis || count === 0 || (!barSlot && chatVisible);
     shortcut.setAttribute("aria-label", `Open ${label}`);
   }
   shortcut.onclick = () => {
@@ -137,6 +139,11 @@ export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): 
   };
   const dispose = [
     detach,
+    emitter.on("preferences", (preferences) => {
+      analysis = preferences.analysis === true;
+      slot.style.display = analysis ? "none" : "";
+      updateShortcut();
+    }),
     chat.subscribe(updateShortcut),
     emitter.on("state", (state) => {
       players = (state?.players || []).map((player: any, index: number) => ({ ...player, id: index }));
