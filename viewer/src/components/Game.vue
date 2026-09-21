@@ -68,7 +68,7 @@
           <Commands
             v-if="setupActionsAtTop && showCommands"
             :actions-enabled="canPlay"
-            :auto-charge-enabled="!replayData"
+            :auto-charge-enabled="!replayData && !$store.state.preferences.analysis"
             @command="handleCommand"
             :currentMove="currentMove"
             :hide-spacer="true"
@@ -190,7 +190,7 @@
             @command="handleCommand"
             v-if="showCommands && !setupActionsAtTop"
             :actions-enabled="canPlay"
-            :auto-charge-enabled="!replayData"
+            :auto-charge-enabled="!replayData && !$store.state.preferences.analysis"
             :currentMove="currentMove"
             :hide-spacer="true"
             :analysis-mode="analysisMode"
@@ -265,7 +265,7 @@
         @command="handleCommand"
         v-if="showCommands"
         :actions-enabled="canPlay"
-        :auto-charge-enabled="!replayData"
+        :auto-charge-enabled="!replayData && !$store.state.preferences.analysis"
         :currentMove="currentMove"
         :hide-spacer="true"
         @sticky-bar-height="stickyBarHeight = $event"
@@ -296,7 +296,11 @@
       <Table />
       <AdvancedLog :currentMove="currentMove" :hideLog.sync="hideLog" v-if="logPlacement === 'bottom'" />
     </div>
-    <div class="chat-host" :style="{ '--chat-footer-height': totalStickyFooterHeight + 'px' }"></div>
+    <div
+      v-show="!$store.state.preferences.analysis"
+      class="chat-host"
+      :style="{ '--chat-footer-height': totalStickyFooterHeight + 'px' }"
+    ></div>
     <div
       class="mobile-sticky-actions-spacer"
       :style="{ '--sticky-bar-height': totalStickyFooterHeight + 'px' }"
@@ -931,6 +935,7 @@ export default class Game extends Vue {
   }
 
   get showPremovePanel(): boolean {
+    if (this.$store.state.preferences.analysis) return false;
     return (
       this.analysisMode ||
       ((this.premoveAvailable || this.analysisOffered) &&
@@ -1016,6 +1021,7 @@ export default class Game extends Vue {
   }
 
   get analysisOffered(): boolean {
+    if (this.$store.state.preferences.analysis) return false;
     if (this.tutorial) return false;
     if (this.analysisMode || this.ended) {
       return false;
