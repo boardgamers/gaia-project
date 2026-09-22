@@ -1912,16 +1912,7 @@ export default class Game extends Vue {
 // `.game-board-layout` so other embeddings of the same `.gaia-viewer-game` class (e.g. a small
 // setup-preview board in its own row) keep their own proportions.
 //
-// What it fixes: `.space-map`'s 600px height cap (SetupPreviewBoard.vue's unscoped rule is where
-// it effectively comes from app-wide) made the near-square map draw at 600x600 inside a 1103px-wide
-// column on a 1080p screen - 45% of the map container was empty background, and the map column
-// finished 618px short of the research/ships column beside it. `.player-board`'s 700px cap left
-// another ~260px unused in each board cell.
-//
-// 65/35 is the split at which the two columns finish level: the map's height is ~1x its width
-// (viewBox aspect 1.007), the side column's is ~1.93x its own (research 1.16 + ship stack 0.77).
-// At 1920 that lands the map at 1229x1220 against a 1289px side column, with both filled edge to
-// edge instead of centered in their boxes.
+// Lost Fleet uses more width for its map, but keeps the whole map within the game viewport.
 // ---------------------------------------------------------------------------
 @media (min-width: 992px) {
   // Lost Fleet only: the map needs more of the row (65%) because the side column also carries the
@@ -1930,7 +1921,8 @@ export default class Game extends Vue {
     align-items: flex-start;
 
     > .space-map {
-      max-height: none;
+      max-height: calc(100vh - 5rem);
+      max-height: calc(100dvh - 5rem);
       flex: 0 0 65%;
       max-width: 65%;
     }
