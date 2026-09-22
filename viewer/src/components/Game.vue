@@ -1921,8 +1921,8 @@ export default class Game extends Vue {
     align-items: flex-start;
 
     > .space-map {
-      max-height: calc(100vh - 5rem);
-      max-height: calc(100dvh - 5rem);
+      max-height: calc(100vh - 1rem);
+      max-height: calc(100dvh - 1rem);
       flex: 0 0 65%;
       max-width: 65%;
     }
