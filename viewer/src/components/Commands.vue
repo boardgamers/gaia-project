@@ -18,6 +18,7 @@
       @close="$emit('analysis-close-line', $event)"
     />
     <div
+      v-if="!analysisEditActive"
       id="move-title"
       class="d-flex align-items-center"
       :class="{ 'hide-on-mobile-sticky': showStickyMobileBar, 'move-title--analysis': analysisMode }"
@@ -25,8 +26,8 @@
       <h5 class="mb-0">
         <span v-if="init">Pick the number of players</span>
 
-        <template v-if="analysisMode"
-          >Planning<template v-if="analysisSeedActive"> — choose a faction to play as</template></template
+        <template v-if="analysisMode">
+          Planning<template v-if="analysisSeedActive"> — choose a faction to play as</template></template
         >
         <RichTextView v-else :content="statusLine" />
       </h5>
@@ -46,7 +47,7 @@
            panel - also renders for players who aren't on turn. Two copies would also register the
            same modal id twice. -->
       <AnalysisHeaderControls
-        v-if="analysisMode"
+        v-if="analysisMode && !analysisEditActive"
         :move-count="analysisMoveCount"
         :can-edit="analysisCanEdit"
         @undo="$emit('analysis-undo')"
@@ -57,6 +58,16 @@
         @commit="requestAnalysisCommit"
       />
     </div>
+    <AnalysisMoves
+      v-if="analysisMode && analysisEntries.length && !analysisEditActive"
+      :entries="analysisEntries"
+      :applied-count="analysisAppliedCount"
+      :can-append="!engine.ended"
+      :disabled="analysisEditingIndex < 0 && !!currentMove"
+      @edit="$emit('analysis-edit-move', $event)"
+      @insert="$emit('analysis-insert-move', $event)"
+      @remove="$emit('analysis-remove-entry', $event)"
+    />
     <AnalysisModeInfo v-if="analysisMode" />
     <!-- Commit's confirmation step, rendered here for the same once-per-page reason as the info modal
          above. The Commit button only opens it; nothing leaves the sandbox until this is confirmed. -->
@@ -86,13 +97,13 @@
         @close="$emit('analysis-close-line', $event)"
       />
       <div
-        v-if="showStickyMobileBar"
+        v-if="showStickyMobileBar && !analysisEditActive"
         class="sticky-bar-title d-flex align-items-center"
         :class="{ 'sticky-bar-title--analysis': analysisMode }"
       >
         <h5 class="mb-0">
-          <template v-if="analysisMode"
-            >Planning<template v-if="analysisSeedActive"> — choose a faction to play as</template></template
+          <template v-if="analysisMode">
+            Planning<template v-if="analysisSeedActive"> — choose a faction to play as</template></template
           >
           <RichTextView v-else :content="statusLine" />
         </h5>
@@ -112,7 +123,7 @@
              (showStickyMobileBar excludes all three), so they could never show here. See
              SetupStatus.vue. -->
         <AnalysisHeaderControls
-          v-if="analysisMode"
+          v-if="analysisMode && !analysisEditActive"
           :move-count="analysisMoveCount"
           :can-edit="analysisCanEdit"
           @undo="$emit('analysis-undo')"
@@ -122,6 +133,31 @@
           :plays-now="!!(analysisCommitPlan && analysisCommitPlan.live)"
           @commit="requestAnalysisCommit"
         />
+      </div>
+      <div v-if="analysisEditActive" class="analysis-replace" role="status">
+        <div class="analysis-replace__original">
+          <strong class="analysis-replace__title"
+            >{{ analysisInsertingMove ? "Adding" : "Editing" }} move {{ analysisEditingMoveNumber }}</strong
+          >
+          <span v-if="analysisEditingMove"
+            ><span class="analysis-replace__label">{{ analysisInsertingMove ? "Before:" : "Original:" }}</span>
+            {{ analysisEditingMove }}</span
+          >
+          <span v-else class="analysis-replace__label">At the end of the plan</span>
+        </div>
+        <div class="analysis-replace__actions">
+          <button
+            v-if="currentMove"
+            type="button"
+            class="btn btn-sm btn-outline-secondary"
+            @click="$emit('analysis-restart-edit')"
+          >
+            Restart
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" @click="$emit('analysis-cancel-edit')">
+            Cancel
+          </button>
+        </div>
       </div>
       <template v-if="actionsEnabled">
         <div v-if="init" class="d-flex flex-wrap align-content-stretch">
@@ -328,7 +364,7 @@ import { enabledButtonWarnings, isWarningEnabled } from "../data/warnings";
 import type { RichText } from "../graphics/rich-text";
 import { richText } from "../graphics/rich-text";
 import { factionColor } from "../graphics/utils";
-import type { AnalysisCommitPlan, AnalysisLineSummary, AnalysisStatus } from "../logic/analysis";
+import type { AnalysisCommitPlan, AnalysisEntry, AnalysisLineSummary, AnalysisStatus } from "../logic/analysis";
 import { encodeAutoChargePreference } from "../logic/auto-decide";
 import { autoClickStrategy } from "../logic/buttons/autoClick";
 import { commandButtons, replaceRepeat } from "../logic/buttons/commands";
@@ -346,6 +382,7 @@ import AnalysisCommitConfirm from "./AnalysisCommitConfirm.vue";
 import AnalysisHeaderControls from "./AnalysisHeaderControls.vue";
 import AnalysisLineTabs from "./AnalysisLineTabs.vue";
 import AnalysisModeInfo from "./AnalysisModeInfo.vue";
+import AnalysisMoves from "./AnalysisMoves.vue";
 import AutoChargeControl from "./AutoChargeControl.vue";
 import FactionInfoCard from "./FactionInfoCard.vue";
 import FactionSheetButton from "./FactionSheetButton.vue";
@@ -417,6 +454,7 @@ export type EmitCommandParams = { disappear?: boolean; times?: number; warnings?
     AnalysisLineTabs,
     AnalysisCommitConfirm,
     AnalysisModeInfo,
+    AnalysisMoves,
   },
 })
 export default class Commands extends Vue implements CommandController {
@@ -475,6 +513,31 @@ export default class Commands extends Vue implements CommandController {
   /** Index into `analysisLineSummaries` of the line currently on the board. */
   @Prop({ default: 0 })
   analysisActiveLine: number;
+
+  @Prop({ default: () => [] })
+  analysisEntries: AnalysisEntry[];
+
+  @Prop({ default: 0 })
+  analysisAppliedCount: number;
+
+  @Prop({ default: -1 })
+  analysisEditingIndex: number;
+
+  @Prop({ default: false })
+  analysisInsertingMove: boolean;
+
+  get analysisEditActive(): boolean {
+    return this.analysisEditingIndex >= 0;
+  }
+
+  get analysisEditingMove(): string {
+    const entry = this.analysisEntries[this.analysisEditingIndex];
+    return entry?.kind === "move" ? entry.move : entry?.kind === "adjust" ? `Assume ${entry.charge} power charged` : "";
+  }
+
+  get analysisEditingMoveNumber(): number {
+    return this.analysisEntries.slice(0, this.analysisEditingIndex).filter((entry) => entry.kind === "move").length + 1;
+  }
 
   /** How many of those moves could actually be played for real (§6), gating the Commit button. */
   @Prop({ default: 0 })
@@ -1679,6 +1742,36 @@ $mobile-sticky-actions-max-height: 40vh;
 </style>
 
 <style scoped lang="scss">
+.analysis-replace {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.5rem 0.65rem;
+  margin-bottom: 0.65rem;
+  border-left: 3px solid var(--ui-info-text);
+  border-radius: 4px;
+  background: var(--ui-surface-muted);
+  font-size: 0.85rem;
+}
+.analysis-replace__original {
+  flex: 1 1 12rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.analysis-replace__label {
+  color: var(--ui-text-muted);
+}
+.analysis-replace__title {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+.analysis-replace__actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
 .analysis-simulation {
   display: flex;
   flex-wrap: wrap;

@@ -77,15 +77,25 @@
             @analysis-start="enterAnalysisMode"
             :analysis-status="analysisStatus"
             :analysis-move-count="analysisAppliedEntries.filter((entry) => entry.kind === 'move').length"
-            :analysis-can-edit="!!(analysisEntries.length || currentMove || analysisPendingCharge)"
+            :analysis-can-edit="!!(analysisEntries.length || currentMove || analysisPendingCharge || analysisUndo)"
             :analysis-can-undo-charge="
-              analysisPendingCharge > 0 || analysisAppliedEntries[analysisAppliedEntries.length - 1]?.kind === 'adjust'
+              analysisPendingCharge > 0 ||
+              (!analysisEdit && analysisAppliedEntries[analysisAppliedEntries.length - 1]?.kind === 'adjust')
             "
             :analysis-committable-moves="analysisCommittableMoves.length"
             :analysis-commit-plan="analysisCommitPlan"
             :analysis-faction-choices="analysisFactionChoices"
             :analysis-line-summaries="analysisLineSummaries"
             :analysis-active-line="analysisActiveLine"
+            :analysis-entries="analysisEntries"
+            :analysis-applied-count="analysisEdit ? analysisEdit.appliedCount : analysisAppliedCount"
+            :analysis-editing-index="analysisEdit ? analysisEdit.index : -1"
+            :analysis-inserting-move="!!analysisEdit && analysisEdit.mode === 'insert'"
+            @analysis-insert-move="insertAnalysisMove"
+            @analysis-remove-entry="removeAnalysisEntry"
+            @analysis-edit-move="startAnalysisMoveEdit"
+            @analysis-cancel-edit="cancelAnalysisMoveEdit"
+            @analysis-restart-edit="restartAnalysisMoveEdit"
             @analysis-seed-faction="seedAnalysisFaction"
             @analysis-commit="commitAnalysisLine"
             @analysis-charge="chargeAnalysisPower"
@@ -198,15 +208,25 @@
             @analysis-start="enterAnalysisMode"
             :analysis-status="analysisStatus"
             :analysis-move-count="analysisAppliedEntries.filter((entry) => entry.kind === 'move').length"
-            :analysis-can-edit="!!(analysisEntries.length || currentMove || analysisPendingCharge)"
+            :analysis-can-edit="!!(analysisEntries.length || currentMove || analysisPendingCharge || analysisUndo)"
             :analysis-can-undo-charge="
-              analysisPendingCharge > 0 || analysisAppliedEntries[analysisAppliedEntries.length - 1]?.kind === 'adjust'
+              analysisPendingCharge > 0 ||
+              (!analysisEdit && analysisAppliedEntries[analysisAppliedEntries.length - 1]?.kind === 'adjust')
             "
             :analysis-committable-moves="analysisCommittableMoves.length"
             :analysis-commit-plan="analysisCommitPlan"
             :analysis-faction-choices="analysisFactionChoices"
             :analysis-line-summaries="analysisLineSummaries"
             :analysis-active-line="analysisActiveLine"
+            :analysis-entries="analysisEntries"
+            :analysis-applied-count="analysisEdit ? analysisEdit.appliedCount : analysisAppliedCount"
+            :analysis-editing-index="analysisEdit ? analysisEdit.index : -1"
+            :analysis-inserting-move="!!analysisEdit && analysisEdit.mode === 'insert'"
+            @analysis-insert-move="insertAnalysisMove"
+            @analysis-remove-entry="removeAnalysisEntry"
+            @analysis-edit-move="startAnalysisMoveEdit"
+            @analysis-cancel-edit="cancelAnalysisMoveEdit"
+            @analysis-restart-edit="restartAnalysisMoveEdit"
             @analysis-seed-faction="seedAnalysisFaction"
             @analysis-commit="commitAnalysisLine"
             @analysis-charge="chargeAnalysisPower"
@@ -274,15 +294,25 @@
         @analysis-start="enterAnalysisMode"
         :analysis-status="analysisStatus"
         :analysis-move-count="analysisAppliedEntries.filter((entry) => entry.kind === 'move').length"
-        :analysis-can-edit="!!(analysisEntries.length || currentMove || analysisPendingCharge)"
+        :analysis-can-edit="!!(analysisEntries.length || currentMove || analysisPendingCharge || analysisUndo)"
         :analysis-can-undo-charge="
-          analysisPendingCharge > 0 || analysisAppliedEntries[analysisAppliedEntries.length - 1]?.kind === 'adjust'
+          analysisPendingCharge > 0 ||
+          (!analysisEdit && analysisAppliedEntries[analysisAppliedEntries.length - 1]?.kind === 'adjust')
         "
         :analysis-committable-moves="analysisCommittableMoves.length"
         :analysis-commit-plan="analysisCommitPlan"
         :analysis-faction-choices="analysisFactionChoices"
         :analysis-line-summaries="analysisLineSummaries"
         :analysis-active-line="analysisActiveLine"
+        :analysis-entries="analysisEntries"
+        :analysis-applied-count="analysisEdit ? analysisEdit.appliedCount : analysisAppliedCount"
+        :analysis-editing-index="analysisEdit ? analysisEdit.index : -1"
+        :analysis-inserting-move="!!analysisEdit && analysisEdit.mode === 'insert'"
+        @analysis-insert-move="insertAnalysisMove"
+        @analysis-remove-entry="removeAnalysisEntry"
+        @analysis-edit-move="startAnalysisMoveEdit"
+        @analysis-cancel-edit="cancelAnalysisMoveEdit"
+        @analysis-restart-edit="restartAnalysisMoveEdit"
         @analysis-seed-faction="seedAnalysisFaction"
         @analysis-commit="commitAnalysisLine"
         @analysis-charge="chargeAnalysisPower"
@@ -472,6 +502,10 @@ export default class Game extends Vue {
   // because every line already persists on every completed turn (see `setAnalysisEntries`).
   analysisLines: AnalysisEntry[][] = [[]];
   analysisActiveLine = 0;
+  // The saved line stays intact while the board temporarily shows a prefix for replacement.
+  analysisEdit: { index: number; appliedCount: number; mode: "replace" | "insert" } | null = null;
+  // Undo the most recent insertion, replacement or deletion without losing its original suffix.
+  analysisUndo: AnalysisEntry[] | null = null;
   // How many of the OPEN line's entries actually replayed onto the current origin - `analysisEntries`
   // is what is stored, `analysisAppliedEntries` is what is on the board, and the two differ only
   // while a line carries a tail that no longer applies.
@@ -582,11 +616,19 @@ export default class Game extends Vue {
             this.analysisBackup = JSON.parse(JSON.stringify(payload));
             return;
           }
+          const wasEditing = !!this.analysisEdit;
+          if (wasEditing) {
+            this.analysisEdit = null;
+            this.currentMove = "";
+            this.analysisPendingCharge = 0;
+          }
           // An opponent's turn is not, by itself, a reason to throw the player out of the sandbox -
           // see `reanchorAnalysisLine`. It re-bases the line onto the new real state in place and
           // takes over the whole handler when it can, so nothing below (including the handleData at
           // the end) runs and the takeover simply carries on.
           if (this.reanchorAnalysisLine(payload)) {
+            if (wasEditing)
+              this.analysisNotice = "The board changed. Your original plan was kept; select the move again to edit it.";
             return;
           }
           this.analysisMode = false;
@@ -1058,6 +1100,7 @@ export default class Game extends Vue {
     if (
       !this.analysisMode ||
       !this.analysisOrigin ||
+      this.analysisEdit ||
       this.analysisSeat === null ||
       (this.analysisRolledForward && !this.realEngine.automation?.roundPremoves) ||
       this.$store.state.pendingPlan
@@ -1173,6 +1216,7 @@ export default class Game extends Vue {
     this.$store.commit("setSealedBidBackend", null);
     this.$store.commit("setAnalysisMode", true);
     this.analysisMode = true;
+    this.analysisEdit = null;
     this.analysisNotice = null;
     this.analysisPendingRestore = null;
     this.analysisPendingCharge = 0;
@@ -1320,6 +1364,8 @@ export default class Game extends Vue {
       return;
     }
     const backup = this.analysisBackup;
+    this.analysisEdit = null;
+    this.analysisUndo = null;
     this.analysisMode = false;
     this.analysisBackup = null;
     this.analysisOrigin = null;
@@ -1373,17 +1419,29 @@ export default class Game extends Vue {
         // Same treatment an illegal adjust entry gets in replayAnalysisLine: drop it, keep the board.
       }
     }
-    if (copy.newTurn && (move || pending > 0)) {
+    if (copy.newTurn && (move || pending > 0) && !(this.analysisEdit && !move)) {
       // The turn is complete (or there was no turn and this is a bare charge), so the pending charge
       // becomes a real line entry - after the move, which is the order it was played in and the order
       // that replays back to exactly what was on screen. Cleared before `setAnalysisEntries` only for
       // clarity; that method zeroes it too.
       this.analysisPendingCharge = 0;
-      this.setAnalysisEntries([
-        ...this.analysisAppliedEntries,
+      const replacement: AnalysisEntry[] = [
         ...(move ? [{ kind: "move", move } as AnalysisEntry] : []),
         ...(pending > 0 ? [{ kind: "adjust", charge: pending } as AnalysisEntry] : []),
-      ]);
+      ];
+      if (this.analysisEdit) {
+        const { index, mode } = this.analysisEdit;
+        this.setAnalysisEntries(
+          [
+            ...this.analysisEntries.slice(0, index),
+            ...replacement,
+            ...this.analysisEntries.slice(index + (mode === "insert" ? 0 : 1)),
+          ],
+          { prune: false, history: "record" }
+        );
+      } else {
+        this.setAnalysisEntries([...this.analysisAppliedEntries, ...replacement]);
+      }
       return;
     }
     this.handleData(copy);
@@ -1466,6 +1524,7 @@ export default class Game extends Vue {
       this.applyAnalysisMove(this.currentMove);
       return;
     }
+    if (this.analysisEdit) return;
     const entries = this.analysisAppliedEntries;
     if (entries.length === 0 || entries[entries.length - 1].kind !== "adjust") {
       return;
@@ -1500,14 +1559,70 @@ export default class Game extends Vue {
     }
   }
 
+  /** Rewind only the displayed board. Persistence and the other variations keep the full plan. */
+  startAnalysisMoveEdit(index: number, insert = false) {
+    if (!this.analysisMode || !Number.isInteger(index) || index < 0 || index > this.analysisEntries.length) return;
+    if (!insert && this.analysisEntries[index]?.kind !== "move") return;
+    if (insert && this.analysisEntries[index]?.kind === "faction") return;
+    if (!this.analysisEdit && (this.currentMove || this.analysisPendingCharge)) return;
+    const { engine, applied } = replayAnalysisLine(
+      this.analysisOrigin,
+      this.analysisEntries.slice(0, index),
+      this.analysisSeat,
+      this.analysisBaseRound
+    );
+    if (applied !== index || !engine.newTurn || engine.ended) return;
+    this.analysisEdit = {
+      index,
+      appliedCount: this.analysisEdit?.appliedCount ?? this.analysisAppliedCount,
+      mode: insert ? "insert" : "replace",
+    };
+    this.analysisAppliedCount = applied;
+    this.analysisPendingCharge = 0;
+    this.analysisComposeBase = JSON.parse(JSON.stringify(engine));
+    this.analysisComposeAssumedPower = assumedPowerOf(engine, this.analysisSeat);
+    this.handleData(engine);
+  }
+
+  restartAnalysisMoveEdit() {
+    if (this.analysisEdit) this.startAnalysisMoveEdit(this.analysisEdit.index, this.analysisEdit.mode === "insert");
+  }
+
+  cancelAnalysisMoveEdit() {
+    if (this.analysisEdit) this.setAnalysisEntries(this.analysisEntries, { prune: false, history: "preserve" });
+  }
+
+  insertAnalysisMove(index: number) {
+    this.startAnalysisMoveEdit(index, true);
+  }
+
+  removeAnalysisEntry(index: number) {
+    if (!Number.isInteger(index)) return;
+    if (!this.analysisMode || this.analysisEdit || this.currentMove || this.analysisPendingCharge) return;
+    const entry = this.analysisEntries[index];
+    if (!entry || entry.kind === "faction") return;
+    this.setAnalysisEntries(
+      this.analysisEntries.filter((_, i) => i !== index),
+      { prune: false, history: "record" }
+    );
+  }
+
   /** Undo (§1 decision #3) - pop the last entry, replay. A line carrying a tail that no longer
    * applies loses that tail first, in one press: those entries are not on the board, so popping the
    * last of them would look like Undo doing nothing at all. */
   undoLastAnalysisEntry() {
     const entries = this.analysisEntries;
     if (!this.analysisMode) return;
+    if (this.analysisEdit) {
+      this.restartAnalysisMoveEdit();
+      return;
+    }
     if (this.currentMove || this.analysisPendingCharge) {
-      this.setAnalysisEntries(entries);
+      this.setAnalysisEntries(entries, { prune: false, history: "preserve" });
+      return;
+    }
+    if (this.analysisUndo) {
+      this.setAnalysisEntries(this.analysisUndo, { prune: false });
       return;
     }
     if (!entries.length) return;
@@ -1557,7 +1672,13 @@ export default class Game extends Vue {
    * strip flags the line, and the tail gets another chance every time the origin moves on.
    *
    * Returns `applied` so `resolveAnalysisStaleness`/`restoreAnalysisLine` can say what came back. */
-  private setAnalysisEntries(entries: AnalysisEntry[], options: { prune?: boolean; persist?: boolean } = {}): number {
+  private setAnalysisEntries(
+    entries: AnalysisEntry[],
+    options: { prune?: boolean; persist?: boolean; history?: "record" | "preserve" } = {}
+  ): number {
+    if (options.history === "record") this.analysisUndo = JSON.parse(JSON.stringify(this.analysisEntries));
+    else if (options.history !== "preserve") this.analysisUndo = null;
+    this.analysisEdit = null;
     const { engine, applied } = replayAnalysisLine(
       this.analysisOrigin,
       entries,
@@ -1684,12 +1805,11 @@ export default class Game extends Vue {
     if (!this.analysisMode || this.analysisLines.length >= MAX_ANALYSIS_LINES) {
       return;
     }
-    // Forks what is ON the board, not what is stored: a tail that does not replay is not part of the
-    // position being forked, and copying it into the new line would start it already broken.
-    const fork: AnalysisEntry[] = JSON.parse(JSON.stringify(this.analysisAppliedEntries));
+    // Keep blocked moves too, so the copy can be repaired without losing the original plan.
+    const fork: AnalysisEntry[] = JSON.parse(JSON.stringify(this.analysisEntries));
     this.analysisLines = [...this.analysisLines, fork];
     this.analysisActiveLine = this.analysisLines.length - 1;
-    this.setAnalysisEntries(fork);
+    this.setAnalysisEntries(fork, { prune: false });
   }
 
   /** Delete a line. Never the last one - the strip always has an open tab (see

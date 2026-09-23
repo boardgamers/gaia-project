@@ -49,9 +49,7 @@
       </button>
     </div>
 
-    <!-- `+` forks the OPEN line rather than starting an empty one - see Game.vue's addAnalysisLine
-         for why. The label says so, because a control that silently copies would otherwise be a
-         surprise; Reset blanks the fork in one press when starting over was what was wanted. -->
+    <!-- Make copying explicit; Clear plan can empty the new variation afterwards. -->
     <button
       type="button"
       class="analysis-tabs__add"
@@ -60,7 +58,7 @@
       :aria-label="addTitle"
       @click="$emit('add')"
     >
-      <span aria-hidden="true">+</span> Variation
+      {{ lines[active] && lines[active].moves > 0 ? "Copy plan" : "+ Variation" }}
     </button>
   </div>
 </template>
@@ -88,7 +86,7 @@ export default Vue.extend({
       const open = lines[this.active as number];
       // An empty line has nothing to fork, so the copy wording would only be confusing there.
       return open && open.moves > 0
-        ? `Try a variation of ${open.label}; the original plan is kept`
+        ? `Copy ${open.label} to a new variation`
         : "Start another plan from the same board";
     },
   },

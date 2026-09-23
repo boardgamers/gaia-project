@@ -1636,6 +1636,236 @@ describe("Game", () => {
       });
     });
 
+    describe("editing simulated moves on the board", () => {
+      it("inserts between moves without replacing the suffix, and can restart, cancel or undo the insertion", () => {
+        const vm = mountAsSeat(0, researchGame());
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("terrans up nav.");
+        vm.applyAnalysisMove("terrans up gaia.");
+        vm.addAnalysisLine();
+        const original = JSON.parse(JSON.stringify(vm.analysisEntries));
+        const saved = JSON.stringify(window.localStorage);
+        vm.insertAnalysisMove(1);
+        expect(vm.analysisEdit.mode).to.equal("insert");
+        expect(vm.analysisAppliedCount).to.equal(1);
+        vm.applyAnalysisMove("terrans spend 1o for 1c");
+        expect(JSON.stringify(window.localStorage)).to.equal(saved);
+        vm.restartAnalysisMoveEdit();
+        expect(vm.currentMove).to.equal("");
+        expect(vm.analysisEdit.mode).to.equal("insert");
+        vm.cancelAnalysisMoveEdit();
+        expect(vm.analysisEntries).to.deep.equal(original);
+        expect(vm.analysisAppliedCount).to.equal(2);
+        vm.insertAnalysisMove(1);
+        vm.applyAnalysisMove("terrans up sci.");
+        expect(vm.analysisEntries).to.deep.equal([original[0], { kind: "move", move: "terrans up sci." }, original[1]]);
+        expect(vm.analysisAppliedCount).to.equal(3);
+        expect(vm.analysisLines[0]).to.deep.equal(original);
+        vm.undoLastAnalysisEntry();
+        expect(vm.analysisEntries).to.deep.equal(original);
+        expect(vm.engine.players[0].data.knowledge).to.equal(4);
+        vm.$destroy();
+      });
+
+      it("keeps a blocked suffix after insertion and recovers it when the added move is deleted", () => {
+        const vm = mountAsSeat(0, researchGame());
+        vm.enterAnalysisMode();
+        for (const field of ["nav", "gaia", "eco"]) vm.applyAnalysisMove(`terrans up ${field}.`);
+        const original = JSON.parse(JSON.stringify(vm.analysisEntries));
+        vm.insertAnalysisMove(0);
+        vm.applyAnalysisMove("terrans up sci.");
+        expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up sci." }, ...original]);
+        expect(vm.analysisAppliedCount).to.equal(3);
+        vm.removeAnalysisEntry(0);
+        expect(vm.analysisEntries).to.deep.equal(original);
+        expect(vm.analysisAppliedCount).to.equal(3);
+        vm.undoLastAnalysisEntry();
+        expect(vm.analysisEntries).to.have.length(4);
+        expect(vm.analysisAppliedCount).to.equal(3);
+        vm.removeAnalysisEntry(3);
+        expect(vm.analysisEntries).to.have.length(3);
+        expect(vm.analysisAppliedCount).to.equal(3);
+        vm.$destroy();
+      });
+
+      it("deletes a middle move while keeping simulated charges, and supports adding at the end or undoing an empty plan", () => {
+        const vm = mountAsSeat(0, researchGame());
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("terrans up nav.");
+        vm.applyAnalysisMove("terrans up gaia.");
+        vm.chargeAnalysisPower();
+        vm.applyAnalysisMove("terrans up sci.");
+        const original = JSON.parse(JSON.stringify(vm.analysisEntries));
+        vm.removeAnalysisEntry(1);
+        expect(vm.analysisEntries).to.deep.equal([original[0], ...original.slice(2)]);
+        expect(vm.analysisAppliedCount).to.equal(3);
+        vm.insertAnalysisMove(vm.analysisEntries.length);
+        vm.applyAnalysisMove("terrans up eco.");
+        expect(vm.analysisEntries[3]).to.deep.equal({ kind: "move", move: "terrans up eco." });
+        expect(vm.analysisAppliedCount).to.equal(4);
+        vm.resetAnalysisLine();
+        vm.applyAnalysisMove("terrans up nav.");
+        vm.removeAnalysisEntry(0);
+        expect(vm.analysisEntries).to.have.length(0);
+        vm.undoLastAnalysisEntry();
+        expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
+        expect(vm.analysisAppliedCount).to.equal(1);
+        vm.$destroy();
+      });
+
+      it("rewinds a four-move copy without changing storage, then replaces only the selected move", () => {
+        const state = researchGame();
+        state.players[0].data.knowledge = 16;
+        const original = JSON.stringify(state);
+        const vm = mountAsSeat(0, state);
+        const dispatched = spyDispatch(vm);
+        vm.enterAnalysisMode();
+        for (const field of ["nav", "gaia", "terra", "eco"]) vm.applyAnalysisMove(`terrans up ${field}.`);
+        vm.addAnalysisLine();
+        const saved = JSON.stringify(window.localStorage);
+        vm.startAnalysisMoveEdit(1);
+        expect(vm.analysisEdit.index).to.equal(1);
+        expect(vm.analysisEntries).to.have.length(4);
+        expect(vm.analysisAppliedCount).to.equal(1);
+        expect(vm.engine.players[0].data.knowledge).to.equal(12);
+        expect(vm.engine.players[0].data.research.gaia).to.equal(1);
+        expect(JSON.stringify(window.localStorage)).to.equal(saved);
+        expect(vm.analysisCommittableMoves).to.deep.equal([]);
+        vm.commitAnalysisLine();
+        expect(dispatched.filter((action) => ["move", "submitPlan"].includes(action.type))).to.have.length(0);
+
+        vm.applyAnalysisMove("terrans up sci.");
+        expect(vm.analysisEdit).to.equal(null);
+        expect(vm.analysisAppliedCount).to.equal(4);
+        expect(vm.analysisLines[0][1].move).to.equal("terrans up gaia.");
+        expect(vm.analysisEntries.map((entry) => entry.move)).to.deep.equal([
+          "terrans up nav.",
+          "terrans up sci.",
+          "terrans up terra.",
+          "terrans up eco.",
+        ]);
+        expect(vm.engine.players[0].data.research.sci).to.equal(1);
+        const plans = JSON.parse(JSON.stringify(vm.analysisLines));
+        vm.exitAnalysisMode();
+        expect(vm.engine.moveHistory).to.deep.equal(JSON.parse(original).moveHistory);
+        vm.enterAnalysisMode();
+        expect(vm.analysisLines).to.deep.equal(plans);
+        expect(vm.analysisActiveLine).to.equal(1);
+        vm.$destroy();
+      });
+
+      it("restarts or cancels a partial replacement without losing the original complete move or its tail", () => {
+        const vm = mountAsSeat(0, researchGame());
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("terrans spend 1o for 1c. up nav.");
+        vm.applyAnalysisMove("terrans up gaia.");
+        const entries = JSON.stringify(vm.analysisEntries);
+        const board = JSON.stringify(vm.engine);
+        const saved = JSON.stringify(window.localStorage);
+        vm.startAnalysisMoveEdit(0);
+        expect(vm.analysisEntries[0].move).to.equal("terrans spend 1o for 1c. up nav.");
+        vm.applyAnalysisMove("terrans up nope.");
+        expect(vm.analysisEdit.index).to.equal(0);
+        vm.applyAnalysisMove("terrans spend 1k for 1c");
+        expect(vm.currentMove).to.contain("spend 1k");
+        expect(JSON.stringify(vm.analysisEntries)).to.equal(entries);
+        expect(JSON.stringify(window.localStorage)).to.equal(saved);
+        vm.restartAnalysisMoveEdit();
+        expect(vm.currentMove).to.equal("");
+        expect(vm.engine.players[0].data.knowledge).to.equal(12);
+        expect(vm.analysisEdit.index).to.equal(0);
+        vm.applyAnalysisMove("terrans spend 1k for 1c");
+        vm.cancelAnalysisMoveEdit();
+        expect(vm.analysisEdit).to.equal(null);
+        expect(vm.currentMove).to.equal("");
+        expect(JSON.stringify(vm.analysisEntries)).to.equal(entries);
+        expect(JSON.stringify(vm.engine)).to.equal(board);
+        expect(JSON.stringify(window.localStorage)).to.equal(saved);
+        vm.$destroy();
+      });
+
+      it("keeps a newly unaffordable tail and replays it again after repairing a copy", () => {
+        const vm = mountAsSeat(0, researchGame());
+        vm.enterAnalysisMode();
+        for (const field of ["nav", "gaia", "eco"]) vm.applyAnalysisMove(`terrans up ${field}.`);
+        vm.startAnalysisMoveEdit(0);
+        vm.applyAnalysisMove("terrans spend 1k for 1c. up nav.");
+        expect(vm.analysisAppliedCount).to.equal(2);
+        expect(vm.analysisEntries).to.have.length(3);
+        expect(vm.analysisEntries[2].move).to.equal("terrans up eco.");
+        vm.addAnalysisLine();
+        expect(vm.analysisEntries).to.have.length(3);
+        vm.startAnalysisMoveEdit(0);
+        vm.applyAnalysisMove("terrans up nav.");
+        expect(vm.analysisAppliedCount).to.equal(3);
+        expect(vm.analysisLines[0][0].move).to.equal("terrans spend 1k for 1c. up nav.");
+        vm.$destroy();
+      });
+
+      it("holds simulated charges until the replacement finishes and retains the old tail", () => {
+        const vm = mountAsSeat(0, researchGame());
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("terrans up nav.");
+        vm.chargeAnalysisPower();
+        vm.applyAnalysisMove("terrans up gaia.");
+        const original = JSON.parse(JSON.stringify(vm.analysisEntries));
+        vm.startAnalysisMoveEdit(0);
+        vm.chargeAnalysisPower();
+        expect(vm.analysisEdit.index).to.equal(0);
+        expect(vm.analysisPendingCharge).to.equal(1);
+        expect(vm.analysisEntries).to.deep.equal(original);
+        vm.undoAnalysisCharge();
+        expect(vm.analysisPendingCharge).to.equal(0);
+        vm.chargeAnalysisPower();
+        vm.applyAnalysisMove("terrans up sci.");
+        expect(vm.analysisEdit).to.equal(null);
+        expect(vm.analysisEntries).to.deep.equal([
+          { kind: "move", move: "terrans up sci." },
+          { kind: "adjust", charge: 1 },
+          ...original.slice(1),
+        ]);
+        vm.$destroy();
+      });
+
+      it("keeps the full plan when leaving midway through an edit or switching variations", () => {
+        const vm = mountAsSeat(0, researchGame());
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("terrans up nav.");
+        vm.applyAnalysisMove("terrans up gaia.");
+        vm.addAnalysisLine();
+        vm.startAnalysisMoveEdit(0);
+        vm.applyAnalysisMove("terrans spend 1o for 1c");
+        vm.selectAnalysisLine(0);
+        expect(vm.analysisEdit).to.equal(null);
+        expect(vm.analysisLines[1]).to.have.length(2);
+        expect(vm.analysisAppliedCount).to.equal(2);
+        vm.startAnalysisMoveEdit(0);
+        vm.exitAnalysisMode();
+        vm.enterAnalysisMode();
+        expect(vm.analysisEdit).to.equal(null);
+        expect(vm.analysisAppliedCount).to.equal(2);
+        expect(vm.analysisEntries[0].move).to.equal("terrans up nav.");
+        vm.$destroy();
+      });
+
+      it("cancels the replacement on a real board change without appending its partial draft", () => {
+        const vm = mountAsSeat(1, researchGame());
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("nevlas up nav.");
+        vm.applyAnalysisMove("nevlas up gaia.");
+        const entries = JSON.parse(JSON.stringify(vm.analysisEntries));
+        vm.startAnalysisMoveEdit(0);
+        vm.applyAnalysisMove("nevlas spend 1o for 1c");
+        const arrived = bgsMove(JSON.parse(JSON.stringify(vm.analysisBackup)), "terrans up nav.", 0);
+        vm.$store.dispatch("externalData", arrived);
+        expect(vm.analysisEdit).to.equal(null);
+        expect(vm.currentMove).to.equal("");
+        expect(vm.analysisEntries).to.deep.equal(entries);
+        expect(vm.analysisNotice).to.contain("original plan was kept");
+        vm.$destroy();
+      });
+    });
+
     describe("Phase 6 - staleness on re-entry (§3.5)", () => {
       it("restores a stored line silently, with no notice, when nothing changed since it was saved", () => {
         const first = mountAsSeat(0);

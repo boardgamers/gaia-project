@@ -94,9 +94,7 @@ describe("AnalysisLineTabs", () => {
   // a surprise. On an empty line there is nothing to fork and the copy wording would just confuse.
   it("says the plus carries the open line on, once that line has something in it", () => {
     const withMoves = tabs({ lines: [line({ moves: 3, victoryPoints: 5, applied: 3 })], active: 0 });
-    expect(withMoves.container.querySelector(".analysis-tabs__add").getAttribute("title")).to.contain(
-      "Try a variation of Plan A"
-    );
+    expect(withMoves.container.querySelector(".analysis-tabs__add").getAttribute("title")).to.contain("Copy Plan A");
 
     const empty = tabs({ lines: [line()], active: 0 });
     expect(empty.container.querySelector(".analysis-tabs__add").getAttribute("title")).to.contain("Start another plan");
