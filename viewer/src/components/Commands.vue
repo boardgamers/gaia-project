@@ -30,21 +30,23 @@
         >
         <RichTextView v-else :content="statusLine" />
       </h5>
-      <button
-        v-if="analysisOffered && !analysisMode"
-        class="btn btn-sm btn-outline-primary planning-entry"
-        title="Try moves without playing them"
-        @click="$emit('analysis-start')"
-      >
-        {{ actionsEnabled ? "Simulate moves" : "Plan a move" }}
-      </button>
+      <div v-if="!analysisMode && (analysisOffered || showAutoLeechSelect)" class="turn-tools">
+        <AutoChargeControl v-if="showAutoLeechSelect" />
+        <button
+          v-if="analysisOffered"
+          class="btn btn-sm btn-outline-primary planning-entry"
+          title="Try moves without playing them"
+          @click="$emit('analysis-start')"
+        >
+          {{ actionsEnabled ? "Simulate moves" : "Plan a move" }}
+        </button>
+      </div>
       <!-- The Silent Auction / ban-phase explainer buttons used to sit here. They now live in
            SetupStatus.vue's round-0 strip at the top of the page (Game.vue), which - unlike this
            panel - also renders for players who aren't on turn. Two copies would also register the
            same modal id twice. -->
-      <AutoChargeControl v-if="showAutoLeechSelect" class="ml-auto" />
       <AnalysisHeaderControls
-        v-else-if="analysisMode"
+        v-if="analysisMode"
         :move-count="analysisMoveCount"
         :can-edit="analysisCanEdit"
         @undo="$emit('analysis-undo')"
@@ -94,21 +96,23 @@
           >
           <RichTextView v-else :content="statusLine" />
         </h5>
-        <button
-          v-if="analysisOffered && !analysisMode"
-          class="btn btn-sm btn-outline-primary planning-entry"
-          title="Try moves without playing them"
-          @click="$emit('analysis-start')"
-        >
-          {{ actionsEnabled ? "Simulate moves" : "Plan a move" }}
-        </button>
         <span class="chat-shortcut-host"></span>
+        <div v-if="!analysisMode && (analysisOffered || showAutoLeechSelect)" class="turn-tools">
+          <AutoChargeControl v-if="showAutoLeechSelect" dropup />
+          <button
+            v-if="analysisOffered"
+            class="btn btn-sm btn-outline-primary planning-entry"
+            title="Try moves without playing them"
+            @click="$emit('analysis-start')"
+          >
+            {{ actionsEnabled ? "Simulate moves" : "Plan a move" }}
+          </button>
+        </div>
         <!-- No explainer buttons here either: the bar is never pinned during the ban/pick/bid phases
              (showStickyMobileBar excludes all three), so they could never show here. See
              SetupStatus.vue. -->
-        <AutoChargeControl v-if="showAutoLeechSelect" class="ml-auto" dropup />
         <AnalysisHeaderControls
-          v-else-if="analysisMode"
+          v-if="analysisMode"
           :move-count="analysisMoveCount"
           :can-edit="analysisCanEdit"
           @undo="$emit('analysis-undo')"
@@ -1265,19 +1269,45 @@ export default class Commands extends Vue implements CommandController {
 $planning-background: var(--ui-surface-muted);
 $planning-accent: var(--ui-warning-border);
 
-.planning-entry {
+#move-title:not(.move-title--analysis) {
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+  padding: 0.5rem 0 0.75rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid var(--ui-border);
+
+  h5 {
+    font-size: 1.1rem;
+    line-height: 1.4;
+  }
+}
+
+.turn-tools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   margin-left: auto;
-  flex-shrink: 0;
-  padding: 0.25rem 0.6rem;
-  color: var(--ui-text);
-  border-color: var(--ui-border-strong);
-  background: linear-gradient(180deg, var(--ui-keycap-gradient-start), var(--ui-keycap-gradient-end));
-  box-shadow: 0 1px 2px var(--ui-shadow-soft);
-  &:hover,
-  &:focus {
+
+  .planning-entry,
+  .auto-leech-select > .btn {
+    min-height: 2.25rem;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    white-space: nowrap;
+    border-radius: 6px;
     color: var(--ui-text);
-    background: var(--ui-surface-muted);
     border-color: var(--ui-border-strong);
+    background: linear-gradient(180deg, var(--ui-keycap-gradient-start), var(--ui-keycap-gradient-end));
+    box-shadow: 0 1px 2px var(--ui-shadow-soft);
+
+    &:hover,
+    &:focus {
+      color: var(--ui-text);
+      background: var(--ui-surface-hover);
+      border-color: var(--ui-border-strong);
+    }
   }
 }
 
@@ -1438,8 +1468,10 @@ $mobile-sticky-actions-max-height: 40vh;
 #move-buttons .sticky-bar-title {
   display: none !important;
   position: relative;
-  margin: calc(-0.7rem) calc(-0.5rem - env(safe-area-inset-right)) 0.4rem calc(-0.5rem - env(safe-area-inset-left));
-  padding: 0.35rem calc(0.7rem + env(safe-area-inset-right)) 0.35rem calc(0.7rem + env(safe-area-inset-left));
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: calc(-0.7rem) calc(-0.5rem - env(safe-area-inset-right)) 0.65rem calc(-0.5rem - env(safe-area-inset-left));
+  padding: 0.6rem calc(0.7rem + env(safe-area-inset-right)) 0.6rem calc(0.7rem + env(safe-area-inset-left));
   border-radius: 16px 16px 0 0;
   background: linear-gradient(135deg, var(--ui-banner-start) 0%, var(--ui-banner-end) 100%);
   color: var(--ui-banner-text);
@@ -1473,45 +1505,17 @@ $mobile-sticky-actions-max-height: 40vh;
     border-radius: 4px;
   }
 
-  // Sandbox mode's own controls opt OUT of the translucent treatment below and keep the solid keycap
-  // surface AnalysisHeaderControls.vue gives them. Without this exclusion that rule wins outright -
-  // it is `#move-buttons .sticky-bar-title .btn-outline-secondary` (1,3,0) against a scoped
-  // component rule's (0,3,0) - which is why Undo/Reset kept rendering as transparent outlines on the
-  // stripes no matter how solid the component's own CSS made them.
-  .btn-outline-secondary:not(.analysis-controls__btn) {
-    color: var(--ui-banner-text);
-    border-color: rgba(255, 255, 255, 0.3);
-    background: rgba(255, 255, 255, 0.08);
+  .turn-tools {
+    flex-basis: 100%;
+    margin-left: 0;
 
-    &:hover,
-    &:focus {
-      color: #fff;
-      background: rgba(255, 255, 255, 0.18);
-      border-color: rgba(255, 255, 255, 0.42);
+    .planning-entry,
+    .auto-leech-select > .btn {
+      min-height: 2.5rem;
     }
   }
 
-  // The auto-leech dropdown defaults to Bootstrap's grey outline styling, which reads as a muddy
-  // near-invisible smudge against a dark background - recolored to sit clearly on the dark header
-  // instead, same sizing/behavior otherwise.
-  .auto-leech-select .btn {
-    padding: 0.15rem 0.4rem;
-    font-size: 0.75rem;
-    color: var(--ui-banner-text);
-    background: rgba(255, 255, 255, 0.12);
-    border-color: rgba(255, 255, 255, 0.3);
-
-    &:hover,
-    &:focus {
-      color: #fff;
-      background: rgba(255, 255, 255, 0.2);
-    }
-  }
-
-  // Bootstrap's default dropdown-menu z-index (1000) sits below both this sticky bar (1030) and
-  // ChatNotesPanel.vue's floating chat toggle (1040) - belt-and-suspenders alongside the
-  // padding-right reservation above, in case the opened menu's own width still reaches the chat
-  // toggle's corner on a narrow viewport, it should render on top of it, not tangled underneath.
+  // Keep the open menu above the sticky tray's other controls.
   .auto-leech-select .dropdown-menu {
     z-index: 1050;
   }
@@ -1636,24 +1640,6 @@ $mobile-sticky-actions-max-height: 40vh;
 
     .sticky-bar-title {
       display: flex !important;
-      // ChatNotesPanel.vue's floating chat toggle sits fixed at `right: 1rem`, ~3rem wide, so its
-      // footprint covers roughly the rightmost 4rem of the viewport. The auto-leech dropdown here
-      // is `ml-auto` (pushed as far right as this row allows) and its popup menu opens `dropup` -
-      // without this, both the button and its opened menu land in that same corner, overlapping the
-      // chat toggle. Reserving that space up front (padding, not the toggle's own z-index/position)
-      // keeps the two apart regardless of the dropdown's open/closed state.
-      padding-right: calc(4rem + env(safe-area-inset-right));
-    }
-
-    // ...except in sandbox mode, where that reservation is bought with nothing: the auto-leech
-    // dropdown it exists for is not rendered at all then (showAutoLeechSelect excludes analysis
-    // mode), and the sandbox controls that take its slot are plain buttons with no popup to collide
-    // with anything. The chat toggle floats ABOVE this bar rather than on it, so the only thing the
-    // 4rem did here was strand the controls short of the right edge - reading as neither centred nor
-    // aligned, which is exactly what the owner saw. Back to the row's ordinary padding so
-    // `margin-left: auto` lands them flush against it.
-    .sticky-bar-title--analysis {
-      padding-right: calc(0.7rem + env(safe-area-inset-right));
     }
   }
 
