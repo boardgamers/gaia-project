@@ -98,6 +98,17 @@ try {
           { game, state, messages }
         );
         await page.waitForFunction(() => readyCount === 1);
+        await page.evaluate(() => host.emit("preferences", { sound: false, colorBlind: true }));
+        await page.waitForFunction(() =>
+          document.querySelector(".gaia-viewer-game")?.classList.contains("accessible-space-map")
+        );
+        await page.evaluate(() =>
+          host.emit("preferences", { sound: false, colorBlind: false, accessibleSpaceMap: true })
+        );
+        await page.waitForFunction(
+          () => !document.querySelector(".gaia-viewer-game")?.classList.contains("accessible-space-map")
+        );
+
         const panel = page.locator(".bgs-game-chat");
         const input = panel.locator("input");
         const list = panel.locator(".chat-messages");

@@ -92,3 +92,7 @@ window.gaiaViewer.launchSelfContained("#my-selector");
 // via import
 import { launchSelfContained } from "@gaia-project/viewer";
 ```
+
+## Shared accessibility preference
+
+The BGS `colorBlind` boolean is shared across games and defaults to false. The viewer applies it live to the distinctive red/green planet borders. Declare `colorBlind` as a checkbox in the game metadata; the platform displays the global control instead of a per-game option. Sound follows the shared `sound` preference independently.

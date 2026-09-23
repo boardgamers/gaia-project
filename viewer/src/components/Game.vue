@@ -916,7 +916,7 @@ export default class Game extends Vue {
       if (preferences.noFactionFill) {
         classes.push("no-faction-fill");
       }
-      if (preferences.accessibleSpaceMap) {
+      if (preferences.colorBlind) {
         classes.push("accessible-space-map");
       }
     }

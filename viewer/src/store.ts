@@ -31,7 +31,7 @@ Vue.use(Vuex);
 
 type Preference =
   | "sound"
-  | "accessibleSpaceMap"
+  | "colorBlind"
   | "noFactionFill"
   | "flatBuildings"
   | "highlightRecentActions"
@@ -160,7 +160,7 @@ const gaiaViewer = {
       },
       preferences: {
         sound: true,
-        accessibleSpaceMap: !!process.env.VUE_APP_accessibleSpaceMap,
+        colorBlind: !!process.env.VUE_APP_colorBlind,
         noFactionFill: !!process.env.VUE_APP_noFactionFill,
         flatBuildings: !!process.env.VUE_APP_flatBuildings,
         highlightRecentActions: !!process.env.VUE_APP_highlightRecentActions,
