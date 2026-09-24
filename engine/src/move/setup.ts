@@ -67,17 +67,16 @@ export function moveInit(engine: Engine, players: number, seed: string) {
     engine.lostFleetTerraformingRow = lostFleetTerraformingBoard(seed);
   }
 
-  // powerActions
-  BoardAction.values(engine.expansions).forEach((pos: BoardAction) => {
-    engine.boardActions[pos] = null;
-  });
-
   engine.players = [];
   engine.setup = [];
 
   for (let i = 0; i < players; i++) {
     engine.addPlayer(new Player(engine.expansions, i));
   }
+
+  engine.boardActionTypes.forEach((pos: BoardAction) => {
+    engine.boardActions[pos] = null;
+  });
 
   if (engine.options.randomFactions && !randomFactionsAfterBans(engine)) {
     drawRandomFactions(engine, engine.map.rng);

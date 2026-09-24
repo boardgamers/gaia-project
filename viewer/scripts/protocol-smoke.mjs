@@ -99,6 +99,13 @@ try {
           { game, state, messages }
         );
         await page.waitForFunction(() => readyCount === 1);
+        if (ui === "normal") {
+          assert.equal(
+            await page.evaluate(() => document.querySelector("#root").__vue__.player),
+            state.currentPlayer,
+            "the wrapper and viewer share one Engine class after a fresh engine build"
+          );
+        }
         await page.evaluate(() => host.emit("preferences", { sound: false, colorBlind: true }));
         await page.waitForFunction(() =>
           document.querySelector(".gaia-viewer-game")?.classList.contains("accessible-space-map")

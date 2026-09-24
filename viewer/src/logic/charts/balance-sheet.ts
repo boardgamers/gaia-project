@@ -143,7 +143,8 @@ export function balanceSheetEventSources(expansion: Expansion): BalanceSheetSour
     },
     {
       label: "Power/Q.I.C Actions",
-      costResources: rewardTypes(BoardAction.values(expansion).flatMap((a) => Reward.parse(boardActions[a].cost))),
+      // Include QIC costs for the optional Lost Fleet 2p tech action. Empty history groups stay empty.
+      costResources: rewardTypes(BoardAction.values().flatMap((a) => Reward.parse(boardActions[a].cost))),
       incomeResources: eventTypes(
         BoardAction.values(expansion).flatMap((a) => Event.parse(boardActions[a].income, null))
       ),

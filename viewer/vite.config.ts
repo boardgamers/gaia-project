@@ -113,22 +113,14 @@ export default defineConfig({
     },
   },
   resolve: {
-    // Array form so the dev-only engine aliases can be conditionally spread. The workspace-linked
-    // engine package is CJS (main = dist/index.js) which the dev server can't interop for named
-    // ESM imports (`Planet` fails with "does not provide an export"), and its /wrapper + /src/*
-    // subpaths have no package.json "exports" map for vite to follow - so dev maps everything
-    // onto the engine SOURCE (vite transpiles TS natively). The lib build (building=true) keeps
-    // the real package resolution: same emitted shapes, and `~` scss imports (~bootstrap/...,
-    // ~bootstrap-vue) must keep resolving into node_modules either way.
+    // Resolve the package and its subpaths to the same engine source in every mode. Mixing
+    // dist/index.js with wrapper.ts bundles two Engine classes: instanceof then fails and the
+    // wrapper tries to deserialize a live engine, breaking the action controls after an engine build.
     alias: [
       { find: "~", replacement: join(root, "node_modules") },
-      ...(building
-        ? []
-        : [
-            { find: /^@gaia-project\/engine\/wrapper$/, replacement: join(root, "..", "engine", "wrapper.ts") },
-            { find: /^@gaia-project\/engine\/src\//, replacement: join(root, "..", "engine", "src/") },
-            { find: /^@gaia-project\/engine$/, replacement: join(root, "..", "engine", "index.ts") },
-          ]),
+      { find: /^@gaia-project\/engine\/wrapper$/, replacement: join(root, "..", "engine", "wrapper.ts") },
+      { find: /^@gaia-project\/engine\/src\//, replacement: join(root, "..", "engine", "src/") },
+      { find: /^@gaia-project\/engine$/, replacement: join(root, "..", "engine", "index.ts") },
     ],
   },
 });

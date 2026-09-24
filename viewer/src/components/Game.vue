@@ -828,7 +828,7 @@ export default class Game extends Vue {
   }
 
   get actions(): BoardActionEnum[] {
-    return BoardActionEnum.values(this.expansions);
+    return this.engine.boardActionTypes;
   }
 
   // Horizontal shift applied to the whole action row. The base game keeps its long-standing

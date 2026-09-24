@@ -3,7 +3,6 @@ import { ISOLATED_DISTANCE } from "../available/types";
 import Engine from "../engine";
 import {
   ArtifactToken,
-  BoardAction,
   Building,
   Command,
   Condition,
@@ -364,7 +363,7 @@ function standardTechOpportunity(player: Player): number {
 }
 
 function sharedActionAvailability(player: Player, engine: Engine): number {
-  const boardAccess = BoardAction.values(engine.expansions).reduce((value, action) => {
+  const boardAccess = engine.boardActionTypes.reduce((value, action) => {
     if (engine.boardActions[action] !== null && engine.boardActions[action] !== undefined) {
       return value;
     }

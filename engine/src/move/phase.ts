@@ -546,7 +546,7 @@ function cleanUpPhase(engine: Engine) {
     }
   }
   // resets power and qic actions
-  BoardAction.values(engine.expansions).forEach((pos: BoardAction) => {
+  engine.boardActionTypes.forEach((pos: BoardAction) => {
     engine.boardActions[pos] = null;
   });
   // resets spaceship board actions

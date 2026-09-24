@@ -1,13 +1,4 @@
-import Engine, {
-  BoardAction,
-  Booster,
-  Federation,
-  Player,
-  PlayerEnum,
-  Resource,
-  Reward,
-  ScoringTile,
-} from "@gaia-project/engine";
+import Engine, { Booster, Federation, Player, PlayerEnum, Resource, Reward, ScoringTile } from "@gaia-project/engine";
 import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
 import { boardActionData } from "../../data/actions";
 import { boosterData } from "../../data/boosters";
@@ -57,7 +48,7 @@ export function generalTables(engine: Engine): GeneralTable[] {
   return [
     {
       caption: "Board Actions",
-      columns: BoardAction.values(engine.expansions).map((a) => ({
+      columns: engine.boardActionTypes.map((a) => ({
         header: {
           shortcut: boardActionData[a].shortcut,
           title: boardActionData[a].name,

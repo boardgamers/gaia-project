@@ -2,7 +2,6 @@ import { createHash } from "crypto";
 import Engine, { EngineOptions } from "../engine";
 import {
   AdvTechTilePos,
-  BoardAction,
   Booster,
   Building,
   Expansion,
@@ -232,7 +231,7 @@ export function projectCanonicalState(engine: Engine): CanonicalState {
       scoringExtensionSide: engine.scoringExtensionSide ?? null,
       lostFleetTerraformingRow: [...(engine.lostFleetTerraformingRow ?? [])],
       lostFleetEconomySide: engine.lostFleetEconomySide ?? null,
-      boardActions: BoardAction.values(engine.expansions).map((action) => ({
+      boardActions: engine.boardActionTypes.map((action) => ({
         action,
         owner: normalizeNullableNumber(engine.boardActions[action]),
       })),

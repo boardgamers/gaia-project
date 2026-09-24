@@ -142,6 +142,8 @@ export interface EngineOptions {
   flexibleFederations?: boolean;
   /** Lost Fleet expansion */
   lostFleet?: boolean;
+  /** House rule: keep the 4-QIC tech action in two-player Lost Fleet games. Off by default. */
+  lostFleet2pQicTech?: boolean;
   /**
    * Lost Fleet §H1 "official rules" map restriction: force the center sector(s) (the sector
    * bordering everything else at 2p/3p, or both hub sectors at 4p) to be drawn from sectors 1-4
@@ -404,6 +406,14 @@ export default class Engine {
 
   get expansions(): Expansion {
     return 0 | (this.options.lostFleet ? Expansion.LostFleet : 0);
+  }
+
+  get boardActionTypes(): BoardAction[] {
+    const actions = BoardAction.values(this.expansions);
+    if (this.options.lostFleet && this.players.length === 2 && this.options.lostFleet2pQicTech === true) {
+      actions.push(BoardAction.Qic1);
+    }
+    return actions;
   }
 
   round: number = Round.None;

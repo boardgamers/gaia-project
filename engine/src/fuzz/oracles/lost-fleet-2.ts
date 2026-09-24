@@ -356,6 +356,7 @@ export class QicOverlay implements Oracle {
     const messages: string[] = [];
 
     for (const key of ["qic1", "qic2", "qic3"]) {
+      if (key === "qic1" && engine.options.lostFleet2pQicTech === true && engine.players.length === 2) continue;
       if (key in engine.boardActions) {
         messages.push(`§E4 forbids the research-board ${key} action from existing under Lost Fleet`);
       }

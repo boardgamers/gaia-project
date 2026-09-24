@@ -1,0 +1,7 @@
+{
+  "name": "lostFleet2pQicTech",
+  "label": "Keep 4 QIC → tech tile (Lost Fleet, 2 players)",
+  "type": "checkbox",
+  "default": false,
+  "items": null
+}
