@@ -2,7 +2,13 @@
   <div class="turn-order">
     <h5>Turn order</h5>
     <svg viewBox="-1.2 -1.2 12.5 4">
-      <g v-for="(player, index) in turnOrder" :key="index" :transform="`translate(${index * 2.5})`">
+      <g
+        :data-bgs-player="profilePlayer(player, index) ? profilePlayer(player, index).player : undefined"
+        tabindex="0"
+        v-for="(player, index) in turnOrder"
+        :key="index"
+        :transform="`translate(${index * 2.5})`"
+      >
         <circle :r="1" :style="stroke(player)" :class="['player-token', 'planet-fill', planet(player, index)]" />
         <text
           :style="`font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(
@@ -16,6 +22,8 @@
 
       <g
         v-for="(player, index) in passedPlayers"
+        :data-bgs-player="profilePlayer(player, index) ? profilePlayer(player, index).player : undefined"
+        tabindex="0"
         :key="'p-' + index"
         :transform="`translate(${(index + 1 + turnOrder.length) * 2.5})`"
         style="opacity: 0.5"
@@ -122,15 +130,20 @@ export default class TurnOrder extends Vue {
     return "?";
   }
 
-  name(player: Player, index: number) {
+  profilePlayer(player: Player, index: number): Player | undefined {
     if (this.phaseBeforeSetupBuilding) {
       if (this.gameData.phase === Phase.SetupAuction) {
         player = this.gameData.players.find((pl) => pl.faction === this.gameData.setup[index]);
       } else {
-        return "";
+        return undefined;
       }
     }
+    return player;
+  }
 
+  name(player: Player, index: number) {
+    player = this.profilePlayer(player, index);
+    if (this.phaseBeforeSetupBuilding && this.gameData.phase !== Phase.SetupAuction) return "";
     if (player) {
       if (player.name) {
         return player.name.substring(0, 3);

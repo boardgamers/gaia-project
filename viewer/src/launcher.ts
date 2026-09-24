@@ -11,6 +11,7 @@ import Game from "./components/Game.vue";
 import Resource from "./components/Resource.vue";
 import TechContent from "./components/TechContent.vue";
 import { mountGameChat } from "./game-chat";
+import { createBoardThumbnail, installPlayerCards } from "./host-presentation";
 import { installBoardTouch } from "./logic/board-touch";
 import { installActionSounds } from "./sounds";
 import { makeStore } from "./store";
@@ -96,8 +97,13 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
 
   const item: EventEmitter & { store: typeof store; app: Vue } = Object.assign(new EventEmitter(), { store, app });
 
+  const thumbnail = createBoardThumbnail(app.$el);
   let replaying = false;
   const viewer = createViewer<Record<string, any>, string | PremoveCommand>({
+    async onThumbnail(size) {
+      await app.$nextTick();
+      return thumbnail.render(app.$el.querySelector(".space-map-canvas, .old-map-canvas"), size, "#10172b");
+    },
     async onState(data) {
       await store.dispatch("externalData", data);
       if (!replaying) viewer.replaceLog(data?.moveHistory || []);
@@ -159,8 +165,11 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
     item.on(event, (data) => store.commit(event, data));
   }
   installActionSounds(viewer.emitter);
+  const removeCards = installPlayerCards(app.$el, viewer);
   const removeChat = mountGameChat(viewer.emitter, app.$el);
   app.$once("hook:beforeDestroy", () => {
+    removeCards();
+    thumbnail.destroy();
     removeChat();
     viewer.destroy();
     item.removeAllListeners();

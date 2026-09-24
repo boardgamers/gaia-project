@@ -1,7 +1,14 @@
 <template>
   <div class="player-info no-gutters" v-if="player && player.faction">
     <div class="d-flex justify-content-between align-items-center" v-if="!preview">
-      <div style="display: flex; align-items: center" @click="playerClick(player)" role="button">
+      <div
+        style="display: flex; align-items: center"
+        @click="playerClick(player)"
+        @keydown.enter="playerClick(player)"
+        role="button"
+        tabindex="0"
+        :data-bgs-player="player.player"
+      >
         <img class="player-avatar" :alt="`${name}'s avatar`" :src="avatar" />
         <span :class="['player-name', { dropped: player.dropped }]" role="button">{{ name }}</span>
       </div>

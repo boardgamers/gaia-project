@@ -1,6 +1,6 @@
 {
   "name": "@gaia-project/viewer",
-  "version": "5.20.21",
+  "version": "5.20.22",
   "description": "Functions to visualize the map and boards for gaia project inside html canvas",
   "contributors": [
     "coyotte508",
@@ -40,7 +40,7 @@
     "dist/package/css"
   ],
   "dependencies": {
-    "@boardgamers/protocol": "0.5.0",
+    "@boardgamers/protocol": "0.6.0",
     "@gaia-project/engine": "workspace:../engine",
     "bootstrap": "^4.4.1",
     "bootstrap-vue": "^2.12.0",

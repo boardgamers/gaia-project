@@ -1,5 +1,5 @@
 <template>
-  <g>
+  <g :data-bgs-player="profilePlayer ? profilePlayer.player : undefined" tabindex="0">
     <title v-if="presenceTooltip">{{ presenceTooltip }}</title>
     <circle :r="1" :style="stroke()" :class="['player-token', 'planet-fill', planet()]" />
     <defs v-if="portrait && artwork"
@@ -135,7 +135,7 @@ export default class PlayerCircle extends Vue {
     return this.index != null && phaseBeforeSetupBuilding(this.gameData);
   }
 
-  name() {
+  get profilePlayer() {
     let player = this.player;
 
     if (this.phaseBeforeSetupBuilding()) {
@@ -148,6 +148,11 @@ export default class PlayerCircle extends Vue {
       }
     }
 
+    return player;
+  }
+
+  name() {
+    const player = this.profilePlayer;
     if (player) {
       if (player.name) {
         return player.name.substring(0, 3);

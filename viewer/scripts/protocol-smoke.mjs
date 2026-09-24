@@ -4,6 +4,7 @@ import { createServer } from "node:http";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
+import { checkHostPresentation } from "./host-presentation-smoke.mjs";
 
 const game = "gaia-project";
 const require = createRequire(import.meta.url);
@@ -293,6 +294,8 @@ try {
         assert.equal(await page.locator(".bgs-game-chat").count(), 1);
         assert.equal(await page.locator(".chat-messages article").count(), 0, "relaunch detaches old chat");
         assert.deepEqual(errors, [], "no browser errors");
+        await checkHostPresentation(page, "host", `/tmp/gaia-project-board-thumbnail-${width}.png`);
+        assert.deepEqual(errors, []);
         await page.close();
         console.log(`${game} ${ui} ${lostFleet ? "Lost Fleet" : "base"} ${width}px: protocol/chat smoke passed`);
       }

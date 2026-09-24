@@ -1,8 +1,14 @@
 <template>
   <div class="player-info no-gutters" v-if="player && player.faction">
-    <span @click="playerClick(player)" :class="['player-name', { dropped: player.dropped }]" role="button">{{
-      name
-    }}</span>
+    <span
+      :data-bgs-player="player.player"
+      tabindex="0"
+      @keydown.enter="playerClick(player)"
+      @click="playerClick(player)"
+      :class="['player-name', { dropped: player.dropped }]"
+      role="button"
+      >{{ name }}</span
+    >
     <div class="board mt-2">
       <svg :viewBox="`-0.2 -0.5 38.5 ${height}`" class="player-board" :style="`background-color: ${factionColor}`">
         <rect x="-1" y="-1" width="50" height="50" fill="#ffffff44"></rect>
