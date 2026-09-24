@@ -2,13 +2,7 @@
   <div class="turn-order">
     <h5>Turn order</h5>
     <svg viewBox="-1.2 -1.2 12.5 4">
-      <g
-        :data-bgs-player="profilePlayer(player, index) ? profilePlayer(player, index).player : undefined"
-        tabindex="0"
-        v-for="(player, index) in turnOrder"
-        :key="index"
-        :transform="`translate(${index * 2.5})`"
-      >
+      <g v-for="(player, index) in turnOrder" :key="index" :transform="`translate(${index * 2.5})`">
         <circle :r="1" :style="stroke(player)" :class="['player-token', 'planet-fill', planet(player, index)]" />
         <text
           :style="`font-size: 1.2px; text-anchor: middle; dominant-baseline: central; fill: ${planetFill(
@@ -17,13 +11,18 @@
         >
           {{ initial(player, index) }}
         </text>
-        <text :style="`font-size: 1px; text-anchor: middle;`" y="2">{{ name(player, index) }}</text>
+        <text
+          :data-bgs-player="profilePlayer(player, index) ? profilePlayer(player, index).player : undefined"
+          tabindex="0"
+          :style="`font-size: 1px; text-anchor: middle; pointer-events: all;`"
+          y="2"
+        >
+          {{ name(player, index) }}
+        </text>
       </g>
 
       <g
         v-for="(player, index) in passedPlayers"
-        :data-bgs-player="profilePlayer(player, index) ? profilePlayer(player, index).player : undefined"
-        tabindex="0"
         :key="'p-' + index"
         :transform="`translate(${(index + 1 + turnOrder.length) * 2.5})`"
         style="opacity: 0.5"
@@ -36,7 +35,14 @@
         >
           {{ initial(player, index) }}
         </text>
-        <text :style="`font-size: 1px; text-anchor: middle;`" y="2">{{ name(player, index) }}</text>
+        <text
+          :data-bgs-player="profilePlayer(player, index) ? profilePlayer(player, index).player : undefined"
+          tabindex="0"
+          :style="`font-size: 1px; text-anchor: middle; pointer-events: all;`"
+          y="2"
+        >
+          {{ name(player, index) }}
+        </text>
       </g>
     </svg>
   </div>

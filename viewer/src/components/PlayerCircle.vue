@@ -1,5 +1,5 @@
 <template>
-  <g :data-bgs-player="profilePlayer ? profilePlayer.player : undefined" tabindex="0">
+  <g>
     <title v-if="presenceTooltip">{{ presenceTooltip }}</title>
     <circle :r="1" :style="stroke()" :class="['player-token', 'planet-fill', planet()]" />
     <defs v-if="portrait && artwork"
@@ -23,7 +23,14 @@
     >
       {{ initial() }}
     </text>
-    <text class="player-circle__name" :style="`font-size: 1px; text-anchor: middle;`" y="2">{{ name() }}</text>
+    <text
+      :data-bgs-player="profilePlayer ? profilePlayer.player : undefined"
+      tabindex="0"
+      class="player-circle__name"
+      :style="`font-size: 1px; text-anchor: middle;`"
+      y="2"
+      >{{ name() }}</text
+    >
     <!-- Presence indicator (PROGRESS.md Gaia 9) - top-left of the token, only when a caller passes
          a status (TurnOrder.vue does; other PlayerCircle usages - the solo "current player"
          placeholder, charts - leave it unset and render exactly as before). -->
@@ -167,6 +174,7 @@ export default class PlayerCircle extends Vue {
 </script>
 <style lang="scss">
 .player-circle__name {
+  pointer-events: all;
   fill: var(--ui-text);
 }
 
