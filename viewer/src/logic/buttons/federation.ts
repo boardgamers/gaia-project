@@ -14,7 +14,7 @@ import type { FederationChoice } from "../../data/federations";
 import { federationChoiceDescription, federationChoiceRewards, federationChoiceShortcut } from "../../data/federations";
 import { tooltipWithShortcut } from "./shortcuts";
 import type { CommandController } from "./types";
-import { autoClickButton, customHexSelection, textButton } from "./utils";
+import { customHexSelection, textButton } from "./utils";
 import { buttonWarnings, commonButtonWarning, resourceWasteWarning, translateWarnings } from "./warnings";
 
 type Cycler = {
@@ -50,41 +50,35 @@ function customFederationButton(
 ) {
   return {
     label: "Custom location",
+    longLabel: "Select planets and empty space to be included in the federation",
     shortcuts: ["c"],
     buttons: [
-      autoClickButton({
-        label: "Select planets and empty space to be included in the federation",
-        buttons: [
-          textButton({
-            label: "End Selection",
-            needConfirm: true,
-            keepContext: true,
-            onShow: (button) => {
-              controller.subscribeHexClick(button, (hex) => {
-                const highlighted = controller.getHighlightedHexes().hexes;
+      textButton({
+        label: "End Selection",
+        needConfirm: true,
+        keepContext: true,
+        onShow: (button) => {
+          controller.subscribeHexClick(button, (hex) => {
+            const highlighted = controller.getHighlightedHexes().hexes;
 
-                if (highlighted.has(hex)) {
-                  highlighted.delete(hex);
-                } else {
-                  highlighted.set(hex, {});
-                }
+            if (highlighted.has(hex)) {
+              highlighted.delete(hex);
+            } else {
+              highlighted.set(hex, {});
+            }
 
-                const keys: GaiaHex[] = Array.from(highlighted.keys());
-                controller.highlightHexes(customHexSelection(new Map([...keys.map((key) => [key, {}])] as any)));
-              });
-              controller.highlightHexes(
-                customHexSelection(new Map<GaiaHex, HighlightHex>(initialHexes.map((hex) => [hex, {}])))
-              );
-            },
-            onClick: (button) => {
-              button.command = [...controller.getHighlightedHexes().hexes.keys()]
-                .map((hex) => hex.toString())
-                .join(",");
-              controller.emitButtonCommand(button);
-            },
-            buttons: fedTypeButtons,
-          }),
-        ],
+            const keys: GaiaHex[] = Array.from(highlighted.keys());
+            controller.highlightHexes(customHexSelection(new Map([...keys.map((key) => [key, {}])] as any)));
+          });
+          controller.highlightHexes(
+            customHexSelection(new Map<GaiaHex, HighlightHex>(initialHexes.map((hex) => [hex, {}])))
+          );
+        },
+        onClick: (button) => {
+          button.command = [...controller.getHighlightedHexes().hexes.keys()].map((hex) => hex.toString()).join(",");
+          controller.emitButtonCommand(button);
+        },
+        buttons: fedTypeButtons,
       }),
     ],
   };
@@ -99,7 +93,7 @@ export function selectCustomFederation(engine: Engine, controller: CommandContro
   const custom = customFederationButton(controller, buttons, hexes);
   controller.handleCommand(Command.FormFederation, {
     label: "Custom federation: select planets and empty space",
-    buttons: custom.buttons[0].buttons,
+    buttons: custom.buttons,
   });
 }
 

@@ -16,6 +16,7 @@ import { mount } from "@vue/test-utils";
 import BootstrapVue from "bootstrap-vue";
 import { expect } from "chai";
 import Vue from "vue";
+import { ExecuteBack } from "../logic/buttons/types";
 import { loadScenarioEngine } from "../self-contained-scenarios";
 import { makeStore } from "../store";
 import Commands from "./Commands.vue";
@@ -322,6 +323,47 @@ describe("Commands", () => {
       wrapper.destroy();
     } finally {
       (window as any).matchMedia = previousMatchMedia;
+    }
+  });
+
+  it("backs out of a custom-only federation without reopening the selection", async () => {
+    const engine = createLostFleetRoundMoveEngine();
+    engine.availableCommands = [
+      {
+        name: Command.FormFederation,
+        player: PlayerEnum.Player1,
+        data: { tiles: [Federation.Fed4], federations: [], claimableFederations: [] },
+      },
+    ];
+    const store = makeStore();
+    store.commit("receiveData", engine);
+    const wrapper = mount(Commands, { propsData: { currentMove: "" }, store });
+    const button = (text: string) =>
+      wrapper.findAll("button.move-button").wrappers.find((entry) => entry.isVisible() && entry.text().includes(text));
+    const back = async () => {
+      const request = new ExecuteBack();
+      await store.dispatch("back", request);
+      await Vue.nextTick();
+      expect(request.performed).to.equal(true);
+    };
+    try {
+      await button("Form federation")!.trigger("click");
+      await button("Custom location")!.trigger("click");
+      expect(button("End Selection")).to.not.equal(undefined);
+      await store.dispatch("hexClick", { hex: engine.map.getS("1A9") });
+      expect(store.state.context.highlighted.hexes.hexes.size).to.equal(1);
+
+      await back();
+      expect(button("Custom location"), "Back must return to the federation locations").to.not.equal(undefined);
+      expect(button("End Selection")).to.equal(undefined);
+      expect(store.state.context.highlighted.hexes).to.equal(null);
+
+      await back();
+      expect(button("Form federation")).to.not.equal(undefined);
+      expect(store.state.context.hasCommandChain).to.equal(false);
+      expect(wrapper.emitted("command")).to.equal(undefined);
+    } finally {
+      wrapper.destroy();
     }
   });
 
