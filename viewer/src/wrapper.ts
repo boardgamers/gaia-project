@@ -1,3 +1,4 @@
+import { localizeTutorial } from "./localization";
 // Import vue component
 import type { TutorialLaunchOptions } from "@boardgamers/protocol/tutorial";
 import { createTutorialLauncher } from "@boardgamers/protocol/tutorial";
@@ -5,7 +6,7 @@ import launchGame, { destroyViewer } from "./launcher";
 import launchOffline from "./self-contained";
 import { mountTutorial } from "./tutorial/mount";
 
-const tutorial = createTutorialLauncher(mountTutorial);
+const tutorial = createTutorialLauncher(localizeTutorial(mountTutorial));
 function launch(selector: string) {
   tutorial.destroy();
   return launchGame(selector);

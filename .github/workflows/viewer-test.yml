@@ -31,6 +31,7 @@ jobs:
           node-version: "24"
       - run: corepack enable
       - run: pnpm install
+      - run: pnpm --dir .. test:locales
       - run: pnpm lint
       # The full suite (810+ specs through mochapack/webpack) exceeds node's default ~4 GB heap (peaks ~10 GB; runners have 16 GB).
       - run: pnpm test

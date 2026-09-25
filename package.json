@@ -6,7 +6,8 @@
     "postinstall": "husky install",
     "prettier": "prettier --write .",
     "prettier-check": "prettier --check .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:locales": "node scripts/check-locales.mjs viewer/src/localization && node --test scripts/localization.test.mjs"
   },
   "devDependencies": {
     "husky": "^5.0.9",

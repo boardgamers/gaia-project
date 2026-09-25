@@ -1,6 +1,7 @@
 import { Resource as ResourceKind } from "@gaia-project/engine";
 import Vue from "vue";
 import Resource from "../components/Resource.vue";
+import { translateText } from "../localization";
 import type { makeStore } from "../store";
 
 const symbols = [
@@ -28,14 +29,28 @@ const words: Record<string, ResourceKind> = {
   "victory points": ResourceKind.VictoryPoint,
 };
 
-export function resourceTextParts(text: string): { text: string; kind?: ResourceKind }[] {
-  const pattern =
-    /\b(?:\d+(?:[–-]\d+)?[\s-]+)?(Q\.I\.C\.|QICs?|ores?|knowledge|credits?|power(?: tokens?)?|VP|victory points?)(?!\w)/gi;
+export function resourceTextParts(
+  text: string,
+  translate = (text: string) => text
+): { text: string; kind?: ResourceKind }[] {
+  const localizedWords = Object.fromEntries(
+    Object.entries(words).flatMap(([word, kind]) => [
+      [word, kind],
+      [translate(word).toLocaleLowerCase(), kind],
+    ])
+  );
+  const terms = Object.keys(localizedWords)
+    .sort((a, b) => b.length - a.length)
+    .map((word) => word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  const pattern = new RegExp(
+    "(?<![\\p{L}\\p{N}])(?:\\d+(?:[–-]\\d+)?[\\s-]+)?(Q\\.I\\.C\\.|" + terms.join("|") + ")(?![\\p{L}\\p{N}])",
+    "giu"
+  );
   const parts: { text: string; kind?: ResourceKind }[] = [];
   let end = 0;
   for (let match = pattern.exec(text); match; match = pattern.exec(text)) {
     if (match.index > end) parts.push({ text: text.slice(end, match.index) });
-    parts.push({ text: match[0], kind: words[match[1].toLowerCase().replace(/\./g, "")] });
+    parts.push({ text: match[0], kind: localizedWords[match[1].toLocaleLowerCase().replace(/\./g, "")] });
     end = match.index + match[0].length;
   }
   if (end < text.length) parts.push({ text: text.slice(end) });
@@ -68,7 +83,8 @@ export function createResourceText(store: ReturnType<typeof makeStore>) {
   return (target: HTMLElement) => {
     const doc = target.ownerDocument;
     const fragment = doc.createDocumentFragment();
-    for (const part of resourceTextParts(target.textContent ?? "")) {
+    const translate = (text: string) => translateText(text, target.ownerDocument.documentElement.lang);
+    for (const part of resourceTextParts(translate(target.textContent ?? ""), translate)) {
       if (!part.kind) {
         fragment.append(doc.createTextNode(part.text));
         continue;

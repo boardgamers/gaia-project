@@ -83,6 +83,17 @@ describe("chat beside the mobile action bar", () => {
     document.body.innerHTML = "";
   });
 
+  it("keeps the localized shortcut stable when its action-bar location changes", async () => {
+    emitter.emit("preferences", { locale: "fr" });
+    expect(shortcut.textContent).toBe("Discussion");
+    expect(shortcut.getAttribute("translate")).toBe("no");
+    document.querySelector("#host")!.append(document.createElement("span"));
+    await Promise.resolve();
+    expect(shortcut.textContent).toBe("Discussion");
+    emitter.emit("preferences", { locale: "en" });
+    expect(shortcut.textContent).toBe("Chat");
+  });
+
   it("does not count replacement history as unread", () => {
     vi.spyOn(panel, "getBoundingClientRect").mockReturnValue(rect(900, 130));
     vi.spyOn(list, "getBoundingClientRect").mockReturnValue(rect(920, 60));

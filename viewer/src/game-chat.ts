@@ -6,6 +6,7 @@ import { attachChat } from "@boardgamers/protocol/viewer";
 import { Faction } from "@gaia-project/engine";
 import { factionArt } from "./data/faction-art";
 import { factionColor } from "./graphics/utils";
+import { resolveLocale, translateText } from "./localization";
 type ChatEmitter = Pick<ViewerEmitter<any, any>, "on" | "emit">;
 export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): () => void {
   const chat = new ChatController();
@@ -72,6 +73,7 @@ export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): 
 
 `;
   slot.append(style);
+  let locale = "en";
   let players: { id: number; name: string; color?: string; faction?: string }[] = [];
   let localPlayer: number | undefined;
   let avatars: string[] = [];
@@ -133,16 +135,18 @@ export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): 
     return wrapper;
   }
   function updateShortcut() {
+    shortcut.setAttribute("translate", "no");
     const count = chat.unread;
-    const label = count ? `Chat · ${count} unread` : "Chat";
+    const sourceLabel = count ? `Chat · ${count} unread` : "Chat";
+    const label = translateText(sourceLabel, locale);
     const barSlot = window.innerWidth < 768 ? host.querySelector(".mobile-sticky-actions .chat-shortcut-host") : null;
     const destination = barSlot || slot;
     if (shortcut.parentElement !== destination) destination.append(shortcut);
     shortcut.classList.toggle("chat-shortcut--inline", !!barSlot);
-    const text = barSlot && count ? `Chat · ${count}` : label;
+    const text = barSlot && count ? translateText(`Chat · ${count}`, locale) : label;
     if (shortcut.textContent !== text) shortcut.textContent = text;
     shortcut.hidden = analysis || count === 0 || (!barSlot && chatVisible);
-    shortcut.setAttribute("aria-label", `Open ${label}`);
+    shortcut.setAttribute("aria-label", translateText(`Open ${sourceLabel}`, locale));
   }
   shortcut.onclick = () => {
     view.open();
@@ -150,6 +154,7 @@ export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): 
   const dispose = [
     detach,
     emitter.on("preferences", (preferences) => {
+      locale = resolveLocale(preferences.locale);
       analysis = preferences.analysis === true;
       slot.style.display = analysis ? "none" : "";
       updateShortcut();

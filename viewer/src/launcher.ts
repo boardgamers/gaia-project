@@ -12,6 +12,7 @@ import Resource from "./components/Resource.vue";
 import TechContent from "./components/TechContent.vue";
 import { mountGameChat } from "./game-chat";
 import { createBoardThumbnail, installPlayerCards } from "./host-presentation";
+import { mountLocalization } from "./localization";
 import { installBoardTouch } from "./logic/board-touch";
 import { installActionSounds } from "./sounds";
 import { makeStore } from "./store";
@@ -98,6 +99,7 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
   const item: EventEmitter & { store: typeof store; app: Vue } = Object.assign(new EventEmitter(), { store, app });
 
   const thumbnail = createBoardThumbnail(app.$el);
+  const localization = mountLocalization(target.ownerDocument.body);
   let replaying = false;
   const viewer = createViewer<Record<string, any>, string | PremoveCommand>({
     async onThumbnail(size) {
@@ -105,6 +107,7 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
       return thumbnail.render(app.$el.querySelector(".space-map-canvas, .old-map-canvas"), size, "#10172b");
     },
     async onState(data) {
+      localization.setState(data);
       await store.dispatch("externalData", data);
       if (!replaying) viewer.replaceLog(data?.moveHistory || []);
       await app.$nextTick();
@@ -116,6 +119,7 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
       store.commit("playerSettings", data);
     },
     onPreferences(data) {
+      localization.setLocale(data.locale);
       store.commit("preferences", data);
     },
     onPlayer(data) {
@@ -168,6 +172,7 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
   const removeCards = installPlayerCards(app.$el, viewer);
   const removeChat = mountGameChat(viewer.emitter, app.$el);
   app.$once("hook:beforeDestroy", () => {
+    localization.destroy();
     removeCards();
     thumbnail.destroy();
     removeChat();
