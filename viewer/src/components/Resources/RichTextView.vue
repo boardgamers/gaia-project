@@ -70,7 +70,13 @@
       <svg v-else-if="c.text === 'arrow'" :key="i" viewBox="0 0 10 10" width="20" height="20">
         <use xlink:href="#arrow" x="-2" y="5" />
       </svg>
-      <div v-else v-html="c.text" :key="i" class="text" />
+      <div
+        v-else
+        v-html="localizedText(c.text)"
+        :translate="isShortcutLabel(c.text) ? 'no' : null"
+        :key="i"
+        class="text"
+      />
     </template>
   </div>
 </template>
@@ -84,6 +90,8 @@ import { planetNames } from "../../data/planets";
 import { foregroundColor } from "../../graphics/colors";
 import type { RichText, RichTextBuilding, RichTextElement } from "../../graphics/rich-text";
 import { factionColorVar } from "../../graphics/utils";
+import { translateText } from "../../localization";
+import { isShortcutLabel, translateShortcutLabel } from "../../localization/shortcut-label";
 import ArtifactIcon from "../ArtifactIcon.vue";
 import BoardAction from "../BoardAction.vue";
 import Booster from "../Booster.vue";
@@ -97,6 +105,11 @@ import TechTile from "../TechTile.vue";
 })
 export default class RichTextView extends Vue {
   readonly planetNames = planetNames;
+  readonly isShortcutLabel = isShortcutLabel;
+
+  localizedText(text: string): string {
+    return translateShortcutLabel(text, (label) => translateText(label, this.$store?.state.preferences?.locale));
+  }
 
   @Prop()
   content: RichText;

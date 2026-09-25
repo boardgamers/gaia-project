@@ -1,8 +1,12 @@
 <template>
   <div v-if="engine.phase !== 'setupInit'">
     <div class="d-flex" style="justify-content: center">
-      <b-checkbox :checked="scope === 'all'" @change="toggleScope">Show ever<u>y</u>thing</b-checkbox>
-      <b-checkbox :checked="hideLog" @change="toggleLog"><u>H</u>ide log until next turn</b-checkbox>
+      <b-checkbox :checked="scope === 'all'" @change="toggleScope"
+        ><RichTextView :content="['Show ever<u>y</u>thing']"
+      /></b-checkbox>
+      <b-checkbox :checked="hideLog" @change="toggleLog"
+        ><RichTextView :content="['<u>H</u>ide log until next turn']"
+      /></b-checkbox>
     </div>
     <table class="table table-hover table-striped table-sm">
       <thead v-if="!hideLog" class="table-bordered">

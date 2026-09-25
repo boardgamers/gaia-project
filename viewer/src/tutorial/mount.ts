@@ -15,7 +15,7 @@ import { copy } from "./position";
 import { createResourceText } from "./resource-text";
 import "./tutorial.css";
 
-export const mountTutorial: TutorialMount = async (target, { chapter, onProgress, nextChapter }) => {
+export const mountTutorial: TutorialMount = async (target, { chapter, onProgress, nextChapter, locale }) => {
   const lesson = lessons.find((entry) => entry.id === chapter);
   if (!lesson) throw new Error(`Unknown Gaia Project chapter: ${chapter}`);
   target.className = "gaia-tutorial";
@@ -42,7 +42,7 @@ export const mountTutorial: TutorialMount = async (target, { chapter, onProgress
   const store = makeStore();
   store.commit("player", { index: 0 });
   store.commit("highlightMove", "");
-  store.commit("preferences", { highlightRecentActions: false });
+  store.commit("preferences", { highlightRecentActions: false, locale });
   const resourceText = createResourceText(store);
   const view = Vue.observable({ disabled: false });
   const appOptions = {

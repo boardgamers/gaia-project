@@ -4098,5 +4098,7 @@
   "translate({p0}, 5) scale(0.8)": "translate({p0}, 5) scale(0.8)",
   "{p0} move {p1}": "{p0} move {p1}",
   "{p0}break": "{p0}break",
-  "{p0} - {p1}": "{p0} - {p1}"
+  "{p0} - {p1}": "{p0} - {p1}",
+  "Show everything": "Show everything",
+  "Hide log until next turn": "Hide log until next turn"
 }
