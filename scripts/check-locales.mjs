@@ -7,7 +7,7 @@ if (!directory) {
 }
 const source = JSON.parse(await readFile(join(directory, "en.json"), "utf8"));
 const placeholders = (text) => [...text.matchAll(/\{\w+\}/g)].map((match) => match[0]).sort();
-const locales = ["en", "de", "fr", "pl", "ro", "el", "hi", "ru", "da", "pt-BR", "ko", "zh-TW", "vi", "it", "nl"];
+const locales = ["en", "de", "fr", "pl", "ro", "el", "hi", "ru", "da", "pt-BR", "ko", "zh-TW", "vi", "it", "nl", "fa"];
 for (const locale of locales) {
   const catalog = JSON.parse(await readFile(join(directory, `${locale}.json`), "utf8"));
   assert.deepEqual(Object.keys(catalog).sort(), Object.keys(source).sort(), `${locale}: missing or extra strings`);

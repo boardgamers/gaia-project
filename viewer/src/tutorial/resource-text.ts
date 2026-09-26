@@ -43,7 +43,7 @@ export function resourceTextParts(
     .sort((a, b) => b.length - a.length)
     .map((word) => word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
   const pattern = new RegExp(
-    "(?<![\\p{L}\\p{N}])(?:\\d+(?:[–-]\\d+)?[\\s-]+)?(Q\\.I\\.C\\.|" + terms.join("|") + ")(?![\\p{L}\\p{N}])",
+    "(?<![\\p{L}\\p{N}])(?:\\p{N}+(?:[–-]\\p{N}+)?[\\s-]+)?(Q\\.I\\.C\\.|" + terms.join("|") + ")(?![\\p{L}\\p{N}])",
     "giu"
   );
   const parts: { text: string; kind?: ResourceKind }[] = [];
@@ -83,7 +83,13 @@ export function createResourceText(store: ReturnType<typeof makeStore>) {
   return (target: HTMLElement) => {
     const doc = target.ownerDocument;
     const fragment = doc.createDocumentFragment();
-    const translate = (text: string) => translateText(text, target.ownerDocument.documentElement.lang);
+    // Answer buttons are decorated before insertion, so their locale must also
+    // come from the tutorial store rather than only from a DOM ancestor.
+    const locale =
+      store.state.preferences?.locale ??
+      target.closest("[lang]")?.getAttribute("lang") ??
+      target.ownerDocument.documentElement.lang;
+    const translate = (text: string) => translateText(text, locale);
     for (const part of resourceTextParts(translate(target.textContent ?? ""), translate)) {
       if (!part.kind) {
         fragment.append(doc.createTextNode(part.text));

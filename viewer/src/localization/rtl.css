@@ -1,0 +1,49 @@
+/* The map, SVG coordinates, board tracks and game layout keep their LTR geometry.
+   Only reading surfaces change direction. Never mirror the board with transforms. */
+[data-gaia-locale="fa"]
+  :is(
+    p,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    button,
+    label,
+    legend,
+    li,
+    summary,
+    textarea,
+    select,
+    option,
+    .tooltip-inner,
+    .popover-body,
+    .dropdown-item,
+    .bgs-tutorial-heading,
+    .bgs-tutorial-body,
+    .bgs-tutorial-feedback,
+    .tutorial-choices,
+    .tutorial-route-result,
+    .faction-info-card__label,
+    .faction-info-card__sublabel,
+    .auction-summary__text
+  ) {
+  direction: rtl;
+  unicode-bidi: plaintext;
+  text-align: start;
+}
+
+[data-gaia-locale="fa"] :is(.tutorial-resource, .badge) {
+  direction: rtl;
+  unicode-bidi: isolate;
+}
+
+[data-gaia-locale="fa"] :is(svg, canvas, code, pre, [translate="no"], [data-bgs-player]) {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+[data-gaia-locale="fa"] svg text {
+  unicode-bidi: plaintext;
+}

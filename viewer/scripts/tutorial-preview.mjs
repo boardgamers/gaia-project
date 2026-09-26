@@ -9,7 +9,7 @@ const files = {
   "/vue.js": require.resolve("vue/dist/vue.min.js"),
   "/bootstrap-vue.js": require.resolve("bootstrap-vue/dist/bootstrap-vue.min.js"),
 };
-const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Gaia Project tutorials</title><link rel="stylesheet" href="/bundle.css"></head><body><div id="app"></div><script src="/vue.js"></script><script src="/bootstrap-vue.js"></script><script src="/bundle.js"></script><script>const chapter=new URL(location.href).searchParams.get('chapter')||'first-mine'; gaiaViewer.launchTutorial('#app',{chapter,onProgress:p=>window.progress=p});</script></body></html>`;
+const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Gaia Project tutorials</title><link rel="stylesheet" href="/bundle.css"></head><body><div id="app"></div><script src="/vue.js"></script><script src="/bootstrap-vue.js"></script><script src="/bundle.js"></script><script>const chapter=new URL(location.href).searchParams.get('chapter')||'first-mine'; gaiaViewer.launchTutorial('#app',{chapter,locale:new URL(location.href).searchParams.get('locale')||undefined,onProgress:p=>window.progress=p});</script></body></html>`;
 export function previewServer() {
   return createServer(async (req, res) => {
     const path = new URL(req.url, "http://localhost").pathname;

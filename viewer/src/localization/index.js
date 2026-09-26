@@ -2,6 +2,7 @@ import catalog8 from "./da.json";
 import catalog1 from "./de.json";
 import catalog5 from "./el.json";
 import catalog0 from "./en.json";
+import catalogFa from "./fa.json";
 import catalog2 from "./fr.json";
 import catalog6 from "./hi.json";
 import catalog13 from "./it.json";
@@ -10,6 +11,7 @@ import catalog14 from "./nl.json";
 import catalog3 from "./pl.json";
 import catalog9 from "./pt-BR.json";
 import catalog4 from "./ro.json";
+import "./rtl.css";
 import catalog7 from "./ru.json";
 import { createTranslator, mountLocalization as mount } from "./runtime.js";
 import catalog12 from "./vi.json";
@@ -31,6 +33,7 @@ export const catalogs = {
   vi: catalog12,
   it: catalog13,
   nl: catalog14,
+  fa: catalogFa,
 };
 const translators = new Map();
 export function translateText(text, locale = "en") {

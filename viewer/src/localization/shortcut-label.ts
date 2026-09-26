@@ -6,10 +6,11 @@ export function translateShortcutLabel(html: string, translate: (text: string) =
   if (!isShortcutLabel(html)) return html;
   const template = document.createElement("template");
   template.innerHTML = html;
-  const shortcut = template.content.querySelector("u")!.textContent!;
+  const shortcut = template.content.querySelector("u")?.textContent;
+  if (!shortcut) return html;
   const prefix = /^<u>[^<>]+<\/u>:\s*/.exec(html);
   if (prefix) template.innerHTML = html.slice(prefix[0].length);
-  const text = translate(template.content.textContent!);
+  const text = translate(template.content.textContent ?? "");
   const escape = (value: string) => {
     const span = document.createElement("span");
     span.textContent = value;
