@@ -14,6 +14,7 @@ export const languages = {
   vi: "Tiếng Việt",
   it: "Italiano",
   nl: "Nederlands",
+  fa: "فارسی",
 };
 
 export function resolveLocale(value) {
@@ -73,6 +74,14 @@ export function createTranslator(catalogs, initialLocale = "en") {
     if (translated === undefined && cache.has(text)) {
       translated = cache.get(text);
     }
+    // Tutorial headings contain a progress prefix. Translate the complete title
+    // before broad patterns such as "{p0} {p1} to {p2}" can split its grammar.
+    if (translated === undefined) {
+      const prefix = /^(\d+\s*\/\s*\d+\s*·\s*)(.+)$/u.exec(text);
+      if (prefix && depth < 2) {
+        translated = prefix[1] + translate(prefix[2], depth + 1);
+      }
+    }
     if (translated === undefined && depth < 2 && text.length <= 2500) {
       for (const { source, pieces } of patterns) {
         if (!text.startsWith(pieces[0])) {
@@ -101,12 +110,6 @@ export function createTranslator(catalogs, initialLocale = "en") {
         }
         translated = catalog[source].replace(/\{p\d+\}/g, (key) => translate(parameters[key] ?? key, depth + 1));
         break;
-      }
-    }
-    if (translated === undefined) {
-      const prefix = /^(\d+\s*\/\s*\d+\s*·\s*)(.+)$/u.exec(text);
-      if (prefix && depth < 2) {
-        translated = prefix[1] + translate(prefix[2], depth + 1);
       }
     }
     if (translated === undefined) {
@@ -160,6 +163,7 @@ export function createTranslator(catalogs, initialLocale = "en") {
 // Only presentation text is changed. Never translate player input or rewrite game state.
 export function mountLocalization(target, catalogs, initialLocale = "en") {
   const translator = createTranslator(catalogs, initialLocale);
+  const initialAttributes = new Map(["lang", "dir", "data-gaia-locale"].map((key) => [key, target.getAttribute(key)]));
   const originals = new WeakMap();
   const attributes = ["title", "aria-label", "placeholder", "alt"];
   const excluded =
@@ -240,6 +244,10 @@ export function mountLocalization(target, catalogs, initialLocale = "en") {
   });
   function refresh() {
     target.lang = translator.locale;
+    // Preserve board/grid coordinates even when the surrounding BGS page is RTL.
+    // Persian prose receives its own direction through the scoped stylesheet.
+    target.dir = "ltr";
+    target.setAttribute("data-gaia-locale", translator.locale);
     visit(target);
   }
   refresh();
@@ -270,6 +278,10 @@ export function mountLocalization(target, catalogs, initialLocale = "en") {
     destroy() {
       destroyed = true;
       observer.disconnect();
+      for (const [key, value] of initialAttributes) {
+        if (value === null) target.removeAttribute(key);
+        else target.setAttribute(key, value);
+      }
     },
   };
 }
