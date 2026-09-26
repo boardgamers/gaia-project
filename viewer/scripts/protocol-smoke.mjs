@@ -301,6 +301,35 @@ try {
         assert.equal(await page.locator(".bgs-game-chat").count(), 1);
         assert.equal(await page.locator(".chat-messages article").count(), 0, "relaunch detaches old chat");
         assert.deepEqual(errors, [], "no browser errors");
+        // Reloaded history uses BGS's saved watermark, not just live append events.
+        await page.locator(".bgs-game-chat").evaluate((el) => {
+          el.open = false;
+        });
+        await page.evaluate(() => {
+          window.restoredReceipts = [];
+          host.on("chat:read", (payload) => restoredReceipts.push(payload));
+          host.emit("chat:state", { canSend: true, readState: { userId: "self", lastReadAt: 1000 } });
+          host.emit("chat:messages", [
+            { _id: "000000010000000000000001", type: "text", authorId: "bob", text: "Already read" },
+            { _id: "000000020000000000000001", type: "text", authorId: "bob", text: "Unread after reload" },
+            { _id: "000000030000000000000001", type: "text", authorId: "self", text: "My own message" },
+            { _id: "000000040000000000000001", type: "system", text: "Game started" },
+          ]);
+        });
+        await page.waitForFunction(() => /1 unread/.test(document.querySelector(".bgs-game-chat summary").textContent));
+        await page.waitForTimeout(650);
+        assert.equal(
+          await page.evaluate(() => restoredReceipts.length),
+          0,
+          "hidden chat does not mark restored history read"
+        );
+        await page.locator(".chat-shortcut").click();
+        await page.waitForFunction(() => restoredReceipts.length > 0);
+        assert.doesNotMatch(
+          await page.locator(".bgs-game-chat summary").textContent(),
+          /unread/,
+          "opening chat clears restored unread"
+        );
         await checkHostPresentation(page, "host", `/tmp/gaia-project-board-thumbnail-${width}.png`);
         assert.deepEqual(errors, []);
         await page.close();
