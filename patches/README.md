@@ -1,0 +1,1 @@
+The protocol 0.6.1 patch backports the [shared chat scrolling fix](https://codeberg.org/boardgamers/boardgamers/commit/7b4e1ff6). It prevents slow wheel and touch gestures from snapping back to the newest message. Remove the patch when upgrading to a protocol release containing that fix.
