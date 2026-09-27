@@ -47,6 +47,14 @@
               >Rules for the base game</a
             >
           </li>
+          <li>
+            <a
+              href="https://capstone-games.com/cdn/shop/files/GP_Exp_Rule_EN_V1_Web.pdf?v=6134275372584409409"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Rules for The Lost Fleet (English PDF)</a
+            >
+          </li>
           <li><a href="https://www.boardgamers.space/page/gaia-project/changes">Changes</a></li>
           <li><a href="https://www.boardgamers.space/page/gaia-project/auction">Rules for auction</a></li>
           <li><a href="https://www.boardgamers.space/page/gaia-project/settings">Game settings</a></li>
