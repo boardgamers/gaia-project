@@ -123,7 +123,10 @@
           <RichTextView v-else :content="statusLine" />
         </h5>
         <span class="chat-shortcut-host"></span>
-        <details v-if="!analysisMode && (analysisOffered || showAutoLeechSelect)" class="turn-tools mobile-turn-tools">
+        <details
+          v-if="actionsEnabled && !analysisMode && (analysisOffered || showAutoLeechSelect)"
+          class="turn-tools mobile-turn-tools"
+        >
           <summary aria-label="Game settings">⋯</summary>
           <div class="turn-tools-content">
             <AutoChargeControl v-if="showAutoLeechSelect" dropup />
@@ -151,6 +154,20 @@
           :plays-now="!!(analysisCommitPlan && analysisCommitPlan.live)"
           @commit="requestAnalysisCommit"
         />
+      </div>
+      <div
+        v-if="showStickyMobileBar && !actionsEnabled && !analysisMode && (analysisOffered || showAutoLeechSelect)"
+        class="turn-tools mobile-idle-tools"
+      >
+        <button
+          v-if="analysisOffered"
+          class="btn btn-sm btn-outline-primary planning-entry"
+          title="Try moves without playing them"
+          @click="$emit('analysis-start')"
+        >
+          Plan a move
+        </button>
+        <AutoChargeControl v-if="showAutoLeechSelect" dropup />
       </div>
       <div v-if="analysisEditActive" class="analysis-replace" role="status">
         <div class="analysis-replace__original">
@@ -1854,7 +1871,8 @@ $mobile-sticky-actions-max-height: 40vh;
 </style>
 
 <style lang="scss">
-.mobile-tray-handle {
+.mobile-tray-handle,
+.mobile-idle-tools {
   display: none;
 }
 .mobile-turn-tools > summary {
@@ -1931,6 +1949,12 @@ $mobile-sticky-actions-max-height: 40vh;
     .mobile-turn-tools[open] > .turn-tools-content {
       padding: 4px 0;
     }
+    .mobile-idle-tools {
+      display: flex;
+      margin-left: 0;
+      // BGS overlays its settings button in the bottom-right corner, outside the iframe.
+      padding-right: 78px;
+    }
     &.mobile-sticky-actions--collapsed {
       padding-bottom: env(safe-area-inset-bottom, 0px);
     }
@@ -1939,6 +1963,7 @@ $mobile-sticky-actions-max-height: 40vh;
     }
     &.mobile-sticky-actions--collapsed .sticky-bar-title {
       margin-bottom: 0;
+      padding-right: calc(78px + env(safe-area-inset-right, 0px));
     }
     &.mobile-sticky-actions--collapsed .sticky-bar-title > :not(h5):not(.chat-shortcut-host):not(.mobile-tray-handle) {
       display: none !important;
