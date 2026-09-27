@@ -68,6 +68,7 @@ export function researchButtons(
     autoClickButton({
       command: Command.UpgradeResearch,
       label: "Research",
+      mobileIcon: "research",
       shortcuts: ["r"],
       buttons: tracks.map((track) => {
         const d = researchData[track.field];
@@ -98,6 +99,7 @@ export function techTiles(
   return autoClickButton({
     command,
     label,
+    mobileIcon: command === Command.ChooseTechTile ? "tech" : undefined,
     buttons: tiles.map((tile) => {
       return symbolButton({
         command: tile.pos,

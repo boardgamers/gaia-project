@@ -4,9 +4,11 @@ import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 const require = createRequire(import.meta.url);
 const { default: Engine } = require("../../engine/dist/index.js");
+const { spaceshipBoards } = require("../../engine/dist/src/spaceships.js");
 const wrapper = require("../../engine/dist/wrapper.js");
 const { automation } = require("../../engine/dist/src/premoves.js");
 const files = {
+  "/button-gallery.js": fileURLToPath(new URL("./button-gallery.js", import.meta.url)),
   "/bundle.js": fileURLToPath(new URL("../dist/package/viewer.umd.js", import.meta.url)),
   "/bundle.css": fileURLToPath(new URL("../dist/package/viewer.css", import.meta.url)),
   "/vue.js": require.resolve("vue/dist/vue.min.js"),
@@ -49,13 +51,28 @@ const server = createServer(async (req, res) => {
     if (url.pathname === "/") {
       res.setHeader("Content-Type", "text/html; charset=utf-8");
       res.end(await readFile(new URL("./premove-preview.html", import.meta.url)));
+    } else if (url.pathname === "/gallery-data") {
+      res.setHeader("Content-Type", "application/json");
+      res.end(
+        JSON.stringify({
+          shipActions: Object.entries(spaceshipBoards).flatMap(([ship, board]) =>
+            board.actions.map(({ type }) => ({ ship, type }))
+          ),
+        })
+      );
     } else if (files[url.pathname]) {
       res.setHeader("Content-Type", url.pathname.endsWith(".css") ? "text/css" : "text/javascript");
       res.end(await readFile(files[url.pathname]));
     } else {
       res.setHeader("Content-Type", "application/json");
       if (req.method === "POST") {
-        if (url.pathname === "/reset") reset();
+        if (url.pathname === "/settings") {
+          let body = "";
+          for await (const chunk of req) body += chunk;
+          const { name, value } = JSON.parse(body);
+          wrapper.setPlayerSettings(state, seat, { [name]: value });
+          revision++;
+        } else if (url.pathname === "/reset") reset();
         else if (url.pathname === "/opponent") {
           const player = wrapper.currentPlayer(state);
           if (player === seat) throw new Error("It is your turn. Use the game controls or reset the preview.");
@@ -79,7 +96,13 @@ const server = createServer(async (req, res) => {
           return;
         }
       }
-      res.end(JSON.stringify({ revision, state: wrapper.stripSecret(state, seat) }));
+      res.end(
+        JSON.stringify({
+          revision,
+          state: wrapper.stripSecret(state, seat),
+          settings: wrapper.playerSettings(state, seat),
+        })
+      );
     }
   } catch (error) {
     res.writeHead(422, { "Content-Type": "application/json" });

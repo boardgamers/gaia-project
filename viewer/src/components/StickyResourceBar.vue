@@ -24,7 +24,7 @@
       viewBox="-10 -10 20 20"
       width="22"
       height="22"
-      v-b-tooltip.hover
+      v-b-tooltip.hover="{ boundary: 'viewport' }"
       :title="`Bowl ${area.label}: ${area.count} power${area.hasBrainstone ? ' (holds the Brainstone)' : ''}`"
     >
       <circle r="9.5" class="sticky-resource-bar__bowl" :style="`fill: ${area.color}`" />

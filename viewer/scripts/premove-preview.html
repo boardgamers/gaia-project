@@ -39,6 +39,38 @@
       #error:empty {
         display: none;
       }
+      #button-gallery {
+        padding: 12px;
+      }
+      #button-gallery h1 {
+        font-size: 22px;
+      }
+      #button-gallery h2 {
+        font-size: 18px;
+        margin: 22px 0 12px;
+      }
+      #button-gallery .gallery-buttons {
+        position: static !important;
+        max-height: none !important;
+        overflow: visible !important;
+        padding: 0;
+        box-shadow: none;
+      }
+      .gallery-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .gallery-item {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        max-width: 100%;
+      }
+      .gallery-item small {
+        max-width: 145px;
+        overflow-wrap: anywhere;
+      }
     </style>
   </head>
   <body>
@@ -52,6 +84,7 @@
     <script src="/vue.js"></script>
     <script src="/bootstrap.js"></script>
     <script src="/bundle.js"></script>
+    <script src="/button-gallery.js"></script>
     <script>
       const seat = Number(new URL(location.href).searchParams.get("seat") ?? 1);
       const host = gaiaViewer.launch("#app");
@@ -73,9 +106,11 @@
         document.querySelector("#error").textContent = "";
         revision = data.revision;
         host.emit("state", data.state);
+        if (data.settings) host.emit("settings", data.settings);
       }
       host.on("fetchState", () => send("/state"));
       host.on("move", (move) => send("/move", { move }));
+      host.on("update:setting", (setting) => send("/settings", setting));
       host.emit("player", { index: seat });
       host.emit("preferences", { sound: false });
       host.emit("chat:state", { canSend: false, mentions: [] });
@@ -96,9 +131,12 @@
         if (data.revision !== revision) {
           revision = data.revision;
           host.emit("state", data.state);
+          if (data.settings) host.emit("settings", data.settings);
         }
       }, 1000);
-      send("/state");
+      send("/state").then(() => {
+        if (new URL(location.href).searchParams.has("buttons")) showButtonGallery(host);
+      });
     </script>
   </body>
 </html>

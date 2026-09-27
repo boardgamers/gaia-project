@@ -1,6 +1,6 @@
 import Engine, { AvailableCommand, Command, Player } from "@gaia-project/engine";
 import type { ButtonData } from "../../data";
-import { boardActionsButton, specialActionsButton } from "./actions";
+import { boardActionsButton, combinedBoardActionsButton, specialActionsButton } from "./actions";
 import type { AutoClickStrategy } from "./autoClick";
 import { checkAutoClick } from "./autoClick";
 import { buildButtons } from "./buildings";
@@ -50,6 +50,7 @@ function commandButton(
           controller,
           autoClickButton({
             label: "Swap Planetary Institute",
+            mobileIcon: "swap-PI",
             command: command.name,
             hexes: hexMap(engine, command.data.buildings, false),
           })
@@ -155,6 +156,7 @@ function commandButton(
       return [
         autoClickButton({
           label: "Re-score federation",
+          mobileIcon: "rescore-federation",
           command: Command.ChooseFederationTile,
           buttons: federationTypeButtons(command.data.tiles, player),
         }),
@@ -186,6 +188,27 @@ export function commandButtons(
       c.name != Command.PreferenceBid
   )) {
     ret.push(...commandButton(command, engine, player, commands, conversions, controller));
+  }
+
+  const ships = ret.find((button) => button.command === Command.SpaceshipAction);
+  if (ships) {
+    const board = ret.find((button) => button.command === Command.Action);
+    const index = ret.indexOf(board ?? ships);
+    ret.splice(index, 1, combinedBoardActionsButton(board, ships, controller));
+    if (board) ret.splice(ret.indexOf(ships), 1);
+  }
+
+  for (let i = 0; i < ret.length; i++) {
+    const group = ret[i];
+    if (group.mobileIcon === "board-actions" && group.buttons?.length === 1) {
+      const choice = group.buttons[0];
+      ret[i] = {
+        ...choice,
+        command: [group.command, choice.command].filter(Boolean).join(" "),
+        shortcuts: group.shortcuts,
+        tooltip: choice.tooltip?.replace(/<\/?u>/g, ""),
+      };
+    }
   }
 
   if (conversions.free || conversions.burn) {

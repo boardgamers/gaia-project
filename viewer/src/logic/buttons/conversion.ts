@@ -204,6 +204,7 @@ export function freeAndBurnButton(
   return {
     button: autoClickButton({
       label: labels.join(" / "),
+      mobileIcon: "conversions",
       shortcuts: ["a"],
       buttons: sortBy(buttons, (b) => b.richText[0].rewards[0].type),
     }),

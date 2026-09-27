@@ -35,6 +35,7 @@ const spaceshipActionLabels: Record<SpaceshipActionType, string> = {
 export function exploreButton(command: AvailableCommand<Command.Explore>): ButtonData {
   return autoClickButton({
     label: "Explore",
+    mobileIcon: "explore",
     command: command.name,
     buttons: command.data.ships.map((ship) => {
       const button = symbolButton({
@@ -65,6 +66,7 @@ export function exploreButton(command: AvailableCommand<Command.Explore>): Butto
 export function spaceshipActionButton(command: AvailableCommand<Command.SpaceshipAction>): ButtonData {
   return autoClickButton({
     label: "Ship Action",
+    mobileIcon: "ship-action",
     command: command.name,
     buttons: command.data.actions.map((action) => {
       const effect = spaceshipBoards[action.ship].actions.find((entry) => entry.type === action.type)?.effect ?? "";
@@ -89,6 +91,7 @@ export function instantGaiaformingButton(
     controller,
     {
       label: "Instant Gaiaforming",
+      mobileIcon: "instant-gaiaforming",
       command: command.name,
       // `selectedLight: false` on purpose - a "light" selection is only `opacity: .7` over the
       // hex's normal dark fill (SpaceHex.vue), which is invisible as a highlight. The targets of
@@ -114,6 +117,7 @@ export function placePowerRingButton(
     controller,
     {
       label: "Place Power Ring",
+      mobileIcon: "power-ring",
       command: command.name,
       // Same reason as Instant Gaiaforming above, and unconditional here: power-ring targets are
       // the player's own built planets and carry no cost at all, so a "light" selection never
@@ -143,6 +147,7 @@ export function examineArtifactButton(command: AvailableCommand<Command.ExamineA
 export function chooseArtifactTokenButton(command: AvailableCommand<Command.ChooseArtifactToken>): ButtonData {
   return autoClickButton({
     label: "Choose Artifact",
+    mobileIcon: "artifact",
     command: command.name,
     buttons: command.data.tokens.map((token) => {
       const button = symbolButton({

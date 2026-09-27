@@ -30,15 +30,17 @@ export function boardActionsButton(
   player: Player,
   controller: CommandController
 ): ButtonData {
+  const choices = data.poweracts.map((act) => boardActionButton(act.name, player));
   return {
     label: "Power/Q.I.C Action",
+    mobileIcon: "board-actions",
     shortcuts: ["q"],
     command: Command.Action,
     onClick: (button) => {
       controller.highlightBoardActions(data.poweracts.map((act) => act.name));
       controller.subscribeFinal("boardActionClick", button);
     },
-    buttons: data.poweracts.map((act) => boardActionButton(act.name, player)),
+    buttons: choices,
   };
 }
 
@@ -62,14 +64,51 @@ export function specialActionsButton(
   player: Player,
   controller: CommandController
 ): ButtonData {
+  const choices = command.data.specialacts.map((act) => specialActionButton(act.income, player));
+  if (choices.length === 1) {
+    return symbolButton({ ...choices[0], command: `${Command.Special} ${choices[0].command}`, shortcuts: ["s"] });
+  }
   return {
     label: "Special Action",
+    mobileIcon: "special-actions",
     shortcuts: ["s"],
     command: Command.Special,
     onClick: (button) => {
       controller.highlightSpecialActions(command.data.specialacts.map((act) => act.income));
       controller.subscribeFinal("specialActionClick", button);
     },
-    buttons: command.data.specialacts.map((act) => specialActionButton(act.income, player)),
+    buttons: choices,
+  };
+}
+
+/** Shared public actions: preserve each engine command while exposing a single menu. */
+export function combinedBoardActionsButton(
+  board: ButtonData | undefined,
+  ships: ButtonData,
+  controller: CommandController
+): ButtonData {
+  const boardChoices = (board?.buttons ?? []).map((choice) => ({
+    ...choice,
+    command: `${Command.Action} ${choice.command}`,
+  }));
+  const shipChoices = (ships.buttons ?? []).map((choice) => ({
+    ...choice,
+    command: `${Command.SpaceshipAction} ${choice.command}`,
+  }));
+  return {
+    label: "Power/Q.I.C / Ship Action",
+    mobileIcon: "board-actions",
+    shortcuts: ["q"],
+    buttons: [...boardChoices, ...shipChoices],
+    onClick: (button) => {
+      controller.highlightBoardActions((board?.buttons ?? []).map((choice) => choice.command as BoardAction));
+      button.subscription?.();
+      button.subscription = controller.subscribeAction(({ type, payload }) => {
+        if (type !== "boardActionClick") return;
+        const choice = boardChoices.find((candidate) => candidate.command === `${Command.Action} ${payload.command}`);
+        if (choice) controller.handleButtonClick(choice);
+      });
+      controller.emitButtonCommand(button, null, { disappear: false });
+    },
   };
 }
