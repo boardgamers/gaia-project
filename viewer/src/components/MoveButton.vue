@@ -1,5 +1,5 @@
 <template>
-  <div class="move-button" :key="key">
+  <div class="move-button" :class="{ 'has-mobile-icon': button.mobileIcon }" :key="key">
     <b-btn
       v-if="button.times === undefined"
       :variant="variant"
@@ -7,11 +7,13 @@
       @click="controller.handleButtonClick(button)"
       @mouseenter="hover"
       @mouseleave="leave"
-      :title="button.tooltip"
-      v-b-tooltip.html
+      :title="button.tooltip || (button.mobileIcon ? button.label : undefined)"
+      :aria-label="button.mobileIcon ? button.label : undefined"
+      v-b-tooltip.html="{ boundary: 'viewport' }"
     >
       <template>
-        <RichTextView :content="label" />
+        <MobileActionIcon v-if="button.mobileIcon" :kind="button.mobileIcon" />
+        <span class="move-button-label"><RichTextView :content="label" /></span>
       </template>
     </b-btn>
     <b-dropdown
@@ -20,12 +22,14 @@
       v-else
       split
       right
-      :title="button.tooltip"
-      v-b-tooltip.html
+      :title="button.tooltip || (button.mobileIcon ? button.label : undefined)"
+      :aria-label="button.mobileIcon ? button.label : undefined"
+      v-b-tooltip.html="{ boundary: 'viewport' }"
       @click="handleRangeClick(button.times[0])"
     >
       <template #button-content>
-        <RichTextView :content="label" />
+        <MobileActionIcon v-if="button.mobileIcon" :kind="button.mobileIcon" />
+        <span class="move-button-label"><RichTextView :content="label" /></span>
       </template>
       <b-dropdown-item v-for="i in button.times" :key="i" @click="handleRangeClick(i)">{{ i }}</b-dropdown-item>
     </b-dropdown>
@@ -60,6 +64,7 @@ import { buttonRichTextLabel, callOnShow } from "../logic/buttons/utils";
 import { isTypingTarget } from "../logic/typing-target";
 import BoardAction from "./BoardAction.vue";
 import Booster from "./Booster.vue";
+import MobileActionIcon from "./MobileActionIcon.vue";
 import RichTextView from "./Resources/RichTextView.vue";
 import SpecialAction from "./SpecialAction.vue";
 import TechTile from "./TechTile.vue";
@@ -67,6 +72,7 @@ import TechTile from "./TechTile.vue";
 @Component({
   components: {
     RichTextView,
+    MobileActionIcon,
     Booster,
     TechTile,
     BoardAction,
@@ -215,5 +221,23 @@ export default class MoveButton extends Vue implements MoveButtonController {
 
 .warning {
   background-color: var(--warning);
+}
+</style>
+
+<style lang="scss">
+.has-mobile-icon {
+  .move-button-label {
+    display: none;
+  }
+  .mobile-action-icon {
+    display: block;
+    width: 38px;
+    height: 30px;
+  }
+  .btn {
+    min-width: 48px;
+    min-height: 44px;
+    padding: 5px 8px;
+  }
 }
 </style>

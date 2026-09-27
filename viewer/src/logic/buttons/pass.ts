@@ -179,6 +179,7 @@ export function passButton(
 
   return autoClickButton({
     label: command.name === Command.Pass ? "Pass" : "Pick booster",
+    mobileIcon: command.name === Command.ChooseRoundBooster ? "booster" : undefined,
     shortcuts: ["p"],
     command: command.name,
     buttons: command.data.boosters.map((booster) => {

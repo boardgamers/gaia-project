@@ -623,12 +623,10 @@ describe("Commands", () => {
       store,
     });
 
-    const labels = () =>
-      Array.from(container.querySelectorAll<HTMLButtonElement>("#move-buttons button.move-button")).map(
-        (button) => button.textContent?.trim() ?? ""
-      );
-
-    expect(labels()).to.include("Special Action");
+    expect(
+      container.querySelector('#move-buttons button.move-button .specialAction [event=">power-ring"]')
+    ).to.not.equal(null);
+    expect(container.textContent).not.to.include("Special Action");
   });
 
   it("duplicates the status line inside #move-buttons (for the mobile sticky bar) once round 1+ starts, alongside the standalone copy for wider viewports", () => {
@@ -927,6 +925,23 @@ describe("Commands", () => {
     await fireEvent.click(container.querySelector("#move-title"));
 
     expect(emitted()["analysis-exit"]).to.equal(undefined);
+  });
+
+  it("toggles the mobile action tray and reopens for a new action", async () => {
+    const engine = createLostFleetRoundMoveEngine();
+    const store = makeStore();
+    store.commit("receiveData", engine);
+    const { container, updateProps } = render(Commands, { props: { currentMove: "" }, store });
+    const handle = container.querySelector(".mobile-tray-handle")!;
+    const tray = container.querySelector("#move-buttons")!;
+    await fireEvent.click(handle);
+    expect(handle.getAttribute("aria-expanded")).to.equal("false");
+    expect(tray.classList.contains("mobile-sticky-actions--collapsed")).to.equal(true);
+    await fireEvent.click(handle);
+    expect(handle.getAttribute("aria-expanded")).to.equal("true");
+    await fireEvent.click(handle);
+    await updateProps({ currentMove: "build" });
+    expect(handle.getAttribute("aria-expanded")).to.equal("true");
   });
 
   it("drives the mobile sticky-bar spacer's height from a CSS custom property, not a direct inline height", () => {

@@ -238,6 +238,7 @@ export function federationButton(
 
   return textButton({
     label: "Form federation",
+    mobileIcon: "federation",
     longLabel: `Form federation (${player.maxSatellites} ${satType} can be used as satellites, ${
       MAX_SATELLITES - player.data.satellites
     } satellites are left)`,

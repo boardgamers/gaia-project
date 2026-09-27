@@ -29,6 +29,21 @@ export type ModalButtonData = {
 export type SpecialActionIncome = string;
 
 export interface ButtonData {
+  mobileIcon?:
+    | "research"
+    | "board-actions"
+    | "special-actions"
+    | "conversions"
+    | "federation"
+    | "rescore-federation"
+    | "explore"
+    | "ship-action"
+    | "instant-gaiaforming"
+    | "power-ring"
+    | "artifact"
+    | "tech"
+    | "booster"
+    | "swap-PI";
   label?: string;
   richText?: RichText;
   longLabel?: string;

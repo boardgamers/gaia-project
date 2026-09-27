@@ -79,6 +79,7 @@
       :class="{
         'mobile-sticky-actions': showStickyMobileBar,
         'mobile-sticky-actions--sandbox': showStickyMobileBar && analysisMode,
+        'mobile-sticky-actions--collapsed': mobileActionsCollapsed,
       }"
     >
       <!-- Same status line as #move-title above, shown only inside the mobile sticky bar (once it's
@@ -97,10 +98,24 @@
         @close="$emit('analysis-close-line', $event)"
       />
       <div
-        v-if="showStickyMobileBar && !analysisEditActive"
+        v-if="showStickyMobileBar"
         class="sticky-bar-title d-flex align-items-center"
         :class="{ 'sticky-bar-title--analysis': analysisMode }"
       >
+        <button
+          type="button"
+          class="mobile-tray-handle"
+          :aria-expanded="String(!mobileActionsCollapsed)"
+          aria-label="Actions"
+          @pointerdown="startTrayGesture"
+          @pointerup="endTrayGesture"
+          @pointercancel="cancelTrayGesture"
+          @click="toggleMobileTray"
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+            <path :d="mobileActionsCollapsed ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6'" />
+          </svg>
+        </button>
         <h5 class="mb-0">
           <template v-if="analysisMode">
             Planning<template v-if="analysisSeedActive"> — choose a faction to play as</template></template
@@ -108,17 +123,20 @@
           <RichTextView v-else :content="statusLine" />
         </h5>
         <span class="chat-shortcut-host"></span>
-        <div v-if="!analysisMode && (analysisOffered || showAutoLeechSelect)" class="turn-tools">
-          <AutoChargeControl v-if="showAutoLeechSelect" dropup />
-          <button
-            v-if="analysisOffered"
-            class="btn btn-sm btn-outline-primary planning-entry"
-            title="Try moves without playing them"
-            @click="$emit('analysis-start')"
-          >
-            {{ actionsEnabled ? "Simulate moves" : "Plan a move" }}
-          </button>
-        </div>
+        <details v-if="!analysisMode && (analysisOffered || showAutoLeechSelect)" class="turn-tools mobile-turn-tools">
+          <summary aria-label="Game settings">⋯</summary>
+          <div class="turn-tools-content">
+            <AutoChargeControl v-if="showAutoLeechSelect" dropup />
+            <button
+              v-if="analysisOffered"
+              class="btn btn-sm btn-outline-primary planning-entry"
+              title="Try moves without playing them"
+              @click="$emit('analysis-start')"
+            >
+              {{ actionsEnabled ? "Simulate moves" : "Plan a move" }}
+            </button>
+          </div>
+        </details>
         <!-- No explainer buttons here either: the bar is never pinned during the ban/pick/bid phases
              (showStickyMobileBar excludes all three), so they could never show here. See
              SetupStatus.vue. -->
@@ -403,6 +421,12 @@ export type EmitCommandParams = { disappear?: boolean; times?: number; warnings?
 
 @Component<Commands>({
   watch: {
+    actionsEnabled(this: Commands, enabled) {
+      if (enabled) this.mobileActionsCollapsed = false;
+    },
+    currentMove(this: Commands) {
+      this.mobileActionsCollapsed = false;
+    },
     availableCommands(this: Commands, val) {
       if (val) {
         this.loadCommands(val);
@@ -458,6 +482,30 @@ export type EmitCommandParams = { disappear?: boolean; times?: number; warnings?
   },
 })
 export default class Commands extends Vue implements CommandController {
+  mobileActionsCollapsed = false;
+  trayGestureStart: { id: number; y: number } | null = null;
+
+  startTrayGesture(event: PointerEvent) {
+    if (!event.isPrimary || event.button !== 0) return;
+    this.trayGestureStart = { id: event.pointerId, y: event.clientY };
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+  }
+
+  endTrayGesture(event: PointerEvent) {
+    if (this.trayGestureStart?.id !== event.pointerId) return;
+    const distance = event.clientY - this.trayGestureStart.y;
+    this.trayGestureStart = null;
+    this.mobileActionsCollapsed = Math.abs(distance) >= 24 ? distance > 0 : !this.mobileActionsCollapsed;
+  }
+
+  cancelTrayGesture() {
+    this.trayGestureStart = null;
+  }
+
+  toggleMobileTray(event: MouseEvent) {
+    if (event.detail === 0) this.mobileActionsCollapsed = !this.mobileActionsCollapsed;
+  }
+
   @Prop({ default: true })
   autoChargeEnabled: boolean;
 
@@ -1802,5 +1850,99 @@ $mobile-sticky-actions-max-height: 40vh;
 }
 .analysis-simulation__total {
   color: var(--ui-info-text);
+}
+</style>
+
+<style lang="scss">
+.mobile-tray-handle {
+  display: none;
+}
+.mobile-turn-tools > summary {
+  display: none;
+}
+.turn-tools-content {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+@media (max-width: 767px) {
+  #move-buttons.mobile-sticky-actions {
+    overscroll-behavior: auto;
+    max-height: calc(100dvh - 48px);
+    padding-top: 0;
+    .sticky-bar-title {
+      margin-top: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      gap: 4px;
+      min-height: 44px;
+    }
+    .sticky-bar-title h5 {
+      flex: 1;
+      min-width: 0;
+    }
+    .mobile-tray-handle {
+      display: flex;
+      flex: 0 0 40px;
+      min-height: 44px;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      border: 0;
+      color: inherit;
+      background: transparent;
+      cursor: ns-resize;
+      touch-action: none;
+    }
+    .mobile-tray-handle svg {
+      display: block;
+      width: 20px;
+      height: 20px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .sticky-bar-title .mobile-turn-tools {
+      flex: 0 0 auto;
+      margin-left: auto;
+      position: static;
+    }
+    .mobile-turn-tools > summary {
+      display: block;
+      cursor: pointer;
+      width: 40px;
+      min-height: 44px;
+      text-align: center;
+      font-size: 22px;
+      line-height: 44px;
+    }
+    .mobile-turn-tools:not([open]) > .turn-tools-content {
+      display: none;
+    }
+    .mobile-turn-tools[open] {
+      flex-basis: 100%;
+    }
+    .mobile-turn-tools[open] > summary {
+      float: right;
+    }
+    .mobile-turn-tools[open] > .turn-tools-content {
+      padding: 4px 0;
+    }
+    &.mobile-sticky-actions--collapsed {
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    &.mobile-sticky-actions--collapsed > :not(.sticky-bar-title) {
+      display: none !important;
+    }
+    &.mobile-sticky-actions--collapsed .sticky-bar-title {
+      margin-bottom: 0;
+    }
+    &.mobile-sticky-actions--collapsed .sticky-bar-title > :not(h5):not(.chat-shortcut-host):not(.mobile-tray-handle) {
+      display: none !important;
+    }
+  }
 }
 </style>
