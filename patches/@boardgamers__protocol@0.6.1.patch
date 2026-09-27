@@ -1,0 +1,42 @@
+diff --git a/dist/chat-viewport.js b/dist/chat-viewport.js
+index 84fdef2bdf411584349a54362663a379d6778808..e322c2a25c0456ada442bbbff2d49494d0db952b 100644
+--- a/dist/chat-viewport.js
++++ b/dist/chat-viewport.js
+@@ -74,6 +74,11 @@ export function bindChatViewport(list, options) {
+             chat.markRead(latest.dataset.messageId);
+         }
+     }
++    function updateFollowing() {
++        if (list.clientHeight && initialized && list.scrollTop !== programmedScroll) {
++            following = list.scrollHeight - list.scrollTop - list.clientHeight <= 1;
++        }
++    }
+     function refresh() {
+         if (disposed || frame !== undefined) {
+             return;
+@@ -81,11 +86,13 @@ export function bindChatViewport(list, options) {
+         frame = win.requestAnimationFrame(() => {
+             frame = undefined;
+             if (list.clientHeight && chat.snapshot.open && (options.isVisible?.() ?? true)) {
++                // Observers can run before the scroll event from a small wheel or touch movement.
++                updateFollowing();
+                 if (scrollToUnread) {
+                     const row = rows().find((element) => chat.snapshot.unreadIds.includes(element.dataset.messageId ?? ""));
+                     if (row) {
+                         list.scrollTop += row.getBoundingClientRect().top - list.getBoundingClientRect().top;
+-                        following = list.scrollHeight - list.scrollTop - list.clientHeight < 32;
++                        following = list.scrollHeight - list.scrollTop - list.clientHeight <= 1;
+                     }
+                     else {
+                         following = true;
+@@ -103,9 +110,7 @@ export function bindChatViewport(list, options) {
+         });
+     }
+     function scroll() {
+-        if (list.clientHeight && initialized && list.scrollTop !== programmedScroll) {
+-            following = list.scrollHeight - list.scrollTop - list.clientHeight < 32;
+-        }
++        updateFollowing();
+         refresh();
+     }
+     const resize = new ResizeObserver(refresh);

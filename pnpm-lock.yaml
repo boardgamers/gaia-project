@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  '@boardgamers/protocol@0.6.1': 4ec4a210cf846eebd6d902b2952c029dbcde5ed288f88dba1f9362a8a9caa953
+
 importers:
 
   .:
@@ -174,7 +177,7 @@ importers:
     dependencies:
       '@boardgamers/protocol':
         specifier: 0.6.1
-        version: 0.6.1
+        version: 0.6.1(patch_hash=4ec4a210cf846eebd6d902b2952c029dbcde5ed288f88dba1f9362a8a9caa953)
       '@gaia-project/engine':
         specifier: workspace:../engine
         version: link:../engine
@@ -7083,7 +7086,7 @@ snapshots:
 
   '@bcoe/v8-coverage@1.0.2': {}
 
-  '@boardgamers/protocol@0.6.1':
+  '@boardgamers/protocol@0.6.1(patch_hash=4ec4a210cf846eebd6d902b2952c029dbcde5ed288f88dba1f9362a8a9caa953)':
     dependencies:
       zod: 4.6.2
 
