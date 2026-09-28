@@ -4,9 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-patchedDependencies:
-  '@boardgamers/protocol@0.6.1': 4ec4a210cf846eebd6d902b2952c029dbcde5ed288f88dba1f9362a8a9caa953
-
 importers:
 
   .:
@@ -176,8 +173,8 @@ importers:
   viewer:
     dependencies:
       '@boardgamers/protocol':
-        specifier: 0.6.1
-        version: 0.6.1(patch_hash=4ec4a210cf846eebd6d902b2952c029dbcde5ed288f88dba1f9362a8a9caa953)
+        specifier: 0.6.2
+        version: 0.6.2
       '@gaia-project/engine':
         specifier: workspace:../engine
         version: link:../engine
@@ -436,8 +433,8 @@ packages:
     resolution: {integrity: sha512-6zABk/ECA/QYSCQ1NGiVwwbQerUCZ+TQbp64Q3AgmfNvurHH0j8TtXa1qbShXA6qqkpAj4V5W8pP6mLe1mcMqA==}
     engines: {node: '>=18'}
 
-  '@boardgamers/protocol@0.6.1':
-    resolution: {integrity: sha512-/SdqqYrRUNizjGqQygR4kxTZqCOqWfj190Uj/YHI8i0pD4eNXGofZJd2QhkB63n0iSRHMvJJRJReadof151wBg==}
+  '@boardgamers/protocol@0.6.2':
+    resolution: {integrity: sha512-6FKgLsB4guCzNww1rkanhrsLHIdQVajDs1B4qNsYcgtUobTBRM2VPt9T4mlc8ZDX4JDQltvJVHuK7XDZ1J556A==}
 
   '@bramus/specificity@2.4.2':
     resolution: {integrity: sha512-ctxtJ/eA+t+6q2++vj5j7FYX3nRu311q1wfYH3xjlLOsczhlhxAg2FWNUXhpGvAw3BWo1xBcvOV6/YLc2r5FJw==}
@@ -4975,6 +4972,7 @@ packages:
 
   path-dirname@1.0.2:
     resolution: {integrity: sha512-ALzNPpyNq9AqXMBjeymIjFDAkAFH06mHJH/cSBHAgU0s4vfpBn6b2nf8tiRLvagKD8RbTpq2FKTBg7cl9l3c7Q==}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   path-exists@2.1.0:
     resolution: {integrity: sha512-yTltuKuhtNeFJKa1PiRzfLAU5182q1y4Eb4XCJ3PBqyzEDkAZRzBrKKBct682ls9reBVHf9udYLN5Nd+K1B9BQ==}
@@ -7086,7 +7084,7 @@ snapshots:
 
   '@bcoe/v8-coverage@1.0.2': {}
 
-  '@boardgamers/protocol@0.6.1(patch_hash=4ec4a210cf846eebd6d902b2952c029dbcde5ed288f88dba1f9362a8a9caa953)':
+  '@boardgamers/protocol@0.6.2':
     dependencies:
       zod: 4.6.2
 
