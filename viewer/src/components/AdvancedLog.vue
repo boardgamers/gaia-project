@@ -49,7 +49,8 @@
             <td v-else-if="event.phase === 'roundMove'" colspan="3" class="phase-change">Move phase</td>
             <td v-else-if="event.phase === 'endGame'" colspan="3" class="phase-change">End scoring</td>
             <td v-else-if="j === 1" :rowspan="rowSpan(event)" class="move border-left">
-              <div>{{ event.move }}</div>
+              <!-- Engine command notation has no contextual translations. -->
+              <div translate="no">{{ event.move }}</div>
             </td>
             <td v-if="event.changes.length > 0" :class="[j === 1 ? 'first-change' : 'changes', 'border-left']">
               {{ event.changes[j - 1].source }}
