@@ -198,6 +198,9 @@ export function possibleSpaceshipBuildMine(
       if (oreCost.count > 0) {
         rewards.push(oreCost);
       }
+      if (hex.data.planet === Planet.Protoplanet) {
+        rewards.push(new Reward(-6, Resource.VictoryPoint));
+      }
     }
 
     if (qicNeeded.amount > 0) {

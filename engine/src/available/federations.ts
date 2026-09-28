@@ -158,7 +158,8 @@ function possibleFreeBuildMine(
       }
     }
 
-    if (hex.data.planet === Planet.Protoplanet && hex.data.planet !== pl.planet) {
+    // Only the initial setup mine is exempt, including for Protoplanet factions.
+    if (hex.data.planet === Planet.Protoplanet) {
       rewards.push(new Reward(-6, Resource.VictoryPoint));
     }
 

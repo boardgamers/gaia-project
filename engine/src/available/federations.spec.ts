@@ -22,7 +22,7 @@ import { terraformingStepsRequired } from "../planets";
 import { Power } from "../player-data";
 import Reward from "../reward";
 import { techTileEventWithSource } from "../tiles/techs";
-import { possibleFederationTokenBuildMine } from "./federations";
+import { possibleFederationTokenBuildMine, possibleSpaceshipTechTileBuildMine } from "./federations";
 
 function createLostFleetRoundMoveEngine(
   nbPlayers: number,
@@ -259,6 +259,25 @@ describe("possibleFederationTokenBuildMine", () => {
     player.build(Building.Mine, protoplanetHex, cost, engine.map, building.steps);
     expect(player.data.victoryPoints - beforeVp).to.equal(6);
   });
+
+  for (const faction of [Faction.Moweyds, Faction.SpaceGiants]) {
+    it(`grants ${faction} both Protoplanet and terraforming VP when using the spaceship tech's free mine`, () => {
+      const engine = createLostFleetRoundMoveEngine(2, [faction, Faction.Terrans]);
+      occupyStartingHex(engine, PlayerEnum.Player1);
+      const player = engine.player(PlayerEnum.Player1);
+      player.loadEvents(techTileEventWithSource(AdvTechTile.Terra, AdvTechTilePos.ScoringExtension));
+      const hex = findUnoccupiedHexOfPlanet(engine, Planet.Protoplanet);
+      const [command] = possibleSpaceshipTechTileBuildMine(engine, PlayerEnum.Player1);
+      const building = command.data.buildings.find((b) => b.coordinates === hex.toString());
+      expect(building, "the Protoplanet should be buildable").to.not.equal(undefined);
+
+      const beforeVp = player.data.victoryPoints;
+      player.build(Building.Mine, hex, Reward.parse(building.cost), engine.map, building.steps);
+
+      // 6 VP for colonizing a Protoplanet, plus 2 VP for each of its 3 terraforming steps.
+      expect(player.data.victoryPoints - beforeVp).to.equal(12);
+    });
+  }
 
   it("still charges the Gaia-forming QIC cost for Gaia planets with either token, on top of Terraform's range QIC", () => {
     const engine = createLostFleetRoundMoveEngine(2);

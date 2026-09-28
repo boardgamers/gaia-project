@@ -539,6 +539,23 @@ describe("Lost Fleet spaceship board actions", () => {
     expect(target.hex.data.player).to.equal(PlayerEnum.Player1);
   });
 
+  it("grants the Protoplanet's 6 VP when building via T F Mars's Credit action", () => {
+    const engine = createLostFleetRoundMoveEngine(3);
+    const player = engine.player(PlayerEnum.Player1);
+    player.data.explorationShips[Spaceship.TFMars] = 1;
+    occupyPlanetsOfDistinctTypes(engine, PlayerEnum.Player1, 1);
+    const hex = [...engine.map.grid.values()].find((h) => h.data.planet === Planet.Protoplanet && !h.occupied());
+    expect(hex, "need an unoccupied Protoplanet").to.not.equal(undefined);
+
+    const command = availableSpaceshipActionCommand(engine, PlayerEnum.Player1);
+    const beforeVp = player.data.victoryPoints;
+    engine.turnMoves = [`build m ${hex.toString()}`];
+    moveSpaceshipAction(engine, command, PlayerEnum.Player1, Spaceship.TFMars, "credit");
+
+    expect(hex.data.building).to.equal(Building.Mine);
+    expect(player.data.victoryPoints - beforeVp).to.equal(6);
+  });
+
   it("should pay 3 Power + 1 Ore and upgrade an isolated Mine into a Trading Station via Rebellion's Power action", () => {
     const engine = createLostFleetRoundMoveEngine(3);
     const player = engine.player(PlayerEnum.Player1);

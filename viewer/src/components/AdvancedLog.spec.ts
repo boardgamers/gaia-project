@@ -1,8 +1,29 @@
 import Engine, { AuctionVariant } from "@gaia-project/engine";
-import { shallowMount } from "@vue/test-utils";
+import { createLocalVue, mount, shallowMount } from "@vue/test-utils";
+import { BootstrapVue } from "bootstrap-vue";
 import { expect } from "chai";
 import { makeStore } from "../store";
 import AdvancedLog from "./AdvancedLog.vue";
+
+describe("AdvancedLog spectator controls", () => {
+  it("renders both checkbox labels and toggles history visibility", async () => {
+    const localVue = createLocalVue();
+    localVue.use(BootstrapVue);
+    const store = makeStore();
+    store.commit("receiveData", new Engine(["init 2 spectator-history-labels"]));
+    const wrapper = mount(AdvancedLog, { localVue, store });
+
+    expect(wrapper.findAll("label").wrappers.map((label) => label.text())).to.deep.equal([
+      "Show everything",
+      "Hide log until next turn",
+    ]);
+    await wrapper.findAll('input[type="checkbox"]').at(1).setChecked();
+    expect(wrapper.emitted("update:hideLog")).to.deep.equal([[true]]);
+    await wrapper.setProps({ hideLog: true });
+    expect(wrapper.find("thead").exists()).to.equal(false);
+    wrapper.destroy();
+  });
+});
 
 describe("AdvancedLog during setup", () => {
   // Regression, owner-reported 2026-08-06: the whole log panel vanished during the round-0 ban
