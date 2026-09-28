@@ -2,7 +2,7 @@
 
 Javascript engine for Gaia Project.
 
-## Demo
+## Play online at
 
 Check out [boardgamers.space](https://www.boardgamers.space)! Reach out to us if you want to contribute.
 
