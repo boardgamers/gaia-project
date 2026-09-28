@@ -34,6 +34,7 @@ import {
 } from "./enums";
 import Event, { EventSource } from "./events";
 import { factionVariantBoard, latestVariantVersion } from "./faction-boards";
+import type { LostFleetMapSetup } from "./lost-fleet-setup";
 import SpaceMap, { MapConfiguration } from "./map";
 import {
   moveAction,
@@ -383,6 +384,8 @@ export default class Engine {
   // seed — recomputing it lazily from `map.seed` after a fromData round trip broke §J3 determinism
   // (fuzzer finding LF-1, regression fixture lf-001).
   lostFleetTerraformingRow?: Planet[];
+
+  lostFleetMapSetup?: LostFleetMapSetup;
   // Lost Fleet's Economy research track overlay tile: the face-up side, decided once per game at
   // setup (§F1).
   lostFleetEconomySide?: LostFleetEconomySide;

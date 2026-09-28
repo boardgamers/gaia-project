@@ -22,6 +22,7 @@ import {
   TechTile,
   TechTilePos,
 } from "./enums";
+import { lostFleetSetupFactories } from "./lost-fleet-setup";
 import SpaceMap, { MapTile } from "./map";
 import { artifactSlotCount, SeededSpaceshipTech, shipsInPlay, spaceshipBoards } from "./spaceships";
 import assert from "./utils/assert";
@@ -38,6 +39,11 @@ export enum SetupType {
   SpaceshipTechTile = "spaceshipTechTile",
   SpaceshipFederation = "spaceshipFederation",
   ArtifactToken = "artifactToken",
+  InterspaceTile = "interspaceTile",
+  DeepSpaceTile = "deepSpaceTile",
+  ScoringExtensionSide = "scoringExtensionSide",
+  EconomySide = "economySide",
+  TerraformingColor = "terraformingColor",
 }
 
 export type SetupPosition = number | AnyTechTilePos | Spaceship;
@@ -59,7 +65,7 @@ type SetupFactoryOption = {
 
 export type AvailableSetupOption = { type: SetupType } & SetupFactoryOption;
 
-type SetupFactory = {
+export type SetupFactory = {
   type: SetupType;
   nextAvailable: () => SetupFactoryOption | null;
   applyOption: (option: SetupOption, position: SetupPosition) => void;
@@ -355,14 +361,21 @@ export function applyRandomBoardSetup(engine: Engine, seed: string, nbPlayers: n
   }
 }
 
+function customSetupFactories(engine: Engine): SetupFactory[] {
+  const factories = getFactories(engine);
+  return engine.options.lostFleet
+    ? [...factories.filter((factory) => factory.type !== SetupType.MapTile), ...lostFleetSetupFactories(engine)]
+    : factories;
+}
+
 export function initCustomSetup(engine: Engine) {
-  for (const factory of getFactories(engine)) {
+  for (const factory of customSetupFactories(engine)) {
     factory.init();
   }
 }
 
 function nextAvailableSetupOption(engine: Engine): AvailableSetupOption | null {
-  for (const factory of getFactories(engine)) {
+  for (const factory of customSetupFactories(engine)) {
     const o = factory.nextAvailable();
     if (o) {
       return {
@@ -376,7 +389,7 @@ function nextAvailableSetupOption(engine: Engine): AvailableSetupOption | null {
 }
 
 export function applySetupOption(engine: Engine, type: SetupType, position: SetupPosition, option: SetupOption) {
-  for (const factory of getFactories(engine)) {
+  for (const factory of customSetupFactories(engine)) {
     const o = factory.nextAvailable();
     if (o) {
       assert(factory.type === type, `expected option for ${factory.type}, but got option for ${type}`);
@@ -384,6 +397,7 @@ export function applySetupOption(engine: Engine, type: SetupType, position: Setu
         o.position.toString() === position.toString(),
         `option ${option} has wrong position ${position}, expected ${o.position}`
       );
+      assert(o.options.includes(option), `Invalid ${type} setup choice: ${option}`);
       factory.applyOption(option, position);
       return;
     }

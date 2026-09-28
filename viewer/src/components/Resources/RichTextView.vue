@@ -37,6 +37,18 @@
         :type="c.spaceshipAction.type"
       />
       <ArtifactIcon v-else-if="c.artifactToken != null" :key="i" :artifact="c.artifactToken" :size="48" />
+      <FederationTile
+        v-else-if="c.spaceshipFederation"
+        :key="i"
+        :spaceship-federation="c.spaceshipFederation"
+        :rewards-override="spaceshipFederationDisplayRewards(c.spaceshipFederation)"
+      />
+      <SetupDeepSpaceTile
+        v-else-if="c.deepSpaceTile"
+        :key="i"
+        :choice="c.deepSpaceTile.choice"
+        :position="c.deepSpaceTile.position"
+      />
       <SpecialAction
         v-else-if="c.specialAction != null"
         :key="i"
@@ -86,6 +98,7 @@ import { Building as BuildingEnum, Faction, Resource } from "@gaia-project/engin
 import Reward from "@gaia-project/engine/src/reward";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
+import { spaceshipFederationDisplayRewards } from "../../data/federations";
 import { planetNames } from "../../data/planets";
 import { foregroundColor } from "../../graphics/colors";
 import type { RichText, RichTextBuilding, RichTextElement } from "../../graphics/rich-text";
@@ -96,14 +109,27 @@ import ArtifactIcon from "../ArtifactIcon.vue";
 import BoardAction from "../BoardAction.vue";
 import Booster from "../Booster.vue";
 import Building from "../Building.vue";
+import FederationTile from "../FederationTile.vue";
+import SetupDeepSpaceTile from "../SetupDeepSpaceTile.vue";
 import ShipActionIcon from "../ShipActionIcon.vue";
 import SpecialAction from "../SpecialAction.vue";
 import TechTile from "../TechTile.vue";
 
 @Component({
-  components: { Booster, TechTile, BoardAction, Building, SpecialAction, ShipActionIcon, ArtifactIcon },
+  components: {
+    Booster,
+    TechTile,
+    BoardAction,
+    Building,
+    SpecialAction,
+    ShipActionIcon,
+    ArtifactIcon,
+    FederationTile,
+    SetupDeepSpaceTile,
+  },
 })
 export default class RichTextView extends Vue {
+  readonly spaceshipFederationDisplayRewards = spaceshipFederationDisplayRewards;
   readonly planetNames = planetNames;
   readonly isShortcutLabel = isShortcutLabel;
 
