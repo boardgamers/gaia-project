@@ -9,7 +9,9 @@ Checkout their READMEs:
 
 ## Play online at
 
-Check out [boardgamers.space](https://www.boardgamers.space)! Reach out to us if you want to contribute.
+[boardgamers.space](https://boardgamers.space/boardgame/gaia-project)
+
+Reach out to us if you want to contribute.
 
 ## Install
 

@@ -4,7 +4,7 @@ Javascript engine for Gaia Project.
 
 ## Play online at
 
-Check out [boardgamers.space](https://www.boardgamers.space)! Reach out to us if you want to contribute.
+Check out [boardgamers.space](https://boardgamers.space/boardgame/gaia-project)! Reach out to us if you want to contribute.
 
 ## Setup
 

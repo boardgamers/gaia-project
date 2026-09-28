@@ -4,7 +4,7 @@ A Vue.js / SVG UI for Gaia Project
 
 ## Play online at
 
-Check out [boardgamers.space](https://www.boardgamers.space)!
+Check out [boardgamers.space](https://boardgamers.space/boardgame/gaia-project)!
 
 ## Build and Run
 
