@@ -7,7 +7,7 @@ Checkout their READMEs:
 - [engine](./engine/README.md)
 - [viewer](./viewer/README.md)
 
-## Demo
+## Play online at
 
 Check out [boardgamers.space](https://www.boardgamers.space)! Reach out to us if you want to contribute.
 

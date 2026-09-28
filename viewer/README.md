@@ -2,7 +2,7 @@
 
 A Vue.js / SVG UI for Gaia Project
 
-## Demo
+## Play online at
 
 Check out [boardgamers.space](https://www.boardgamers.space)!
 
