@@ -1,41 +1,48 @@
-import catalog8 from "./da.json";
-import catalog1 from "./de.json";
-import catalog5 from "./el.json";
-import catalog0 from "./en.json";
-import catalogFa from "./fa.json";
-import catalog2 from "./fr.json";
-import catalog6 from "./hi.json";
-import catalog13 from "./it.json";
-import catalog10 from "./ko.json";
-import catalog14 from "./nl.json";
-import catalog3 from "./pl.json";
-import catalog9 from "./pt-BR.json";
-import catalog4 from "./ro.json";
 import "./rtl.css";
-import catalog7 from "./ru.json";
-import { createTranslator, mountLocalization as mount } from "./runtime.js";
-import catalog12 from "./vi.json";
-import catalog11 from "./zh-TW.json";
+import { createTranslator, mountLocalization as mount, resolveLocale } from "./runtime.js";
 export { languages, resolveLocale } from "./runtime.js";
-export const catalogs = {
-  en: catalog0,
-  de: catalog1,
-  fr: catalog2,
-  pl: catalog3,
-  ro: catalog4,
-  el: catalog5,
-  hi: catalog6,
-  ru: catalog7,
-  da: catalog8,
-  "pt-BR": catalog9,
-  ko: catalog10,
-  "zh-TW": catalog11,
-  vi: catalog12,
-  it: catalog13,
-  nl: catalog14,
-  fa: catalogFa,
-};
+
+const catalogUrls = import.meta.glob(["./*.json", "!./en.json"], {
+  eager: true,
+  query: "?url&no-inline",
+  import: "default",
+});
+async function fetchCatalog(locale) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20000);
+  try {
+    const response = await fetch(catalogUrls[`./${locale}.json`], { signal: controller.signal });
+    if (!response.ok) {
+      throw new Error(`Language ${locale}: HTTP ${response.status}`);
+    }
+    return { default: await response.json() };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+export const catalogs = { en: {} };
+const pending = new Map();
 const translators = new Map();
+export function loadLocale(value) {
+  const locale = resolveLocale(value);
+  if (catalogs[locale]) return Promise.resolve(locale);
+  if (!pending.has(locale)) {
+    pending.set(
+      locale,
+      fetchCatalog(locale)
+        .then((module) => {
+          catalogs[locale] = module.default;
+          translators.delete(locale);
+          return locale;
+        })
+        .catch((error) => {
+          pending.delete(locale);
+          throw error;
+        })
+    );
+  }
+  return pending.get(locale);
+}
 export function translateText(text, locale = "en") {
   if (!translators.has(locale)) {
     translators.set(locale, createTranslator(catalogs, locale));
@@ -43,12 +50,46 @@ export function translateText(text, locale = "en") {
   return translators.get(locale).translate(text);
 }
 export function mountLocalization(target, locale) {
-  return mount(target, catalogs, locale ?? target.ownerDocument.documentElement.lang ?? "en");
+  const localization = mount(target, catalogs, "en");
+  let revision = 0;
+  let ready = Promise.resolve(true);
+  function setLocale(value) {
+    const attempt = ++revision;
+    ready = loadLocale(value)
+      .then((loaded) => {
+        if (attempt !== revision) return false;
+        localization.setLocale(loaded);
+        return true;
+      })
+      .catch((error) => {
+        console.warn("Could not load game language", error);
+        if (attempt !== revision) return false;
+        localization.setLocale("en");
+        return true;
+      });
+    return ready;
+  }
+  setLocale(locale ?? target.ownerDocument.documentElement.lang ?? "en");
+  return {
+    ...localization,
+    setLocale,
+    get locale() {
+      return localization.locale;
+    },
+    get ready() {
+      return ready;
+    },
+    destroy() {
+      revision++;
+      localization.destroy();
+    },
+  };
 }
 export function localizeTutorial(mountTutorial) {
   return async (target, options) => {
     const localization = mountLocalization(target, options.locale);
     try {
+      await localization.ready;
       const dispose = await mountTutorial(target, options);
       localization.refresh();
       return () => {

@@ -1,6 +1,8 @@
 import { ViewerEmitter } from "@boardgamers/protocol/viewer";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mountGameChat } from "./game-chat";
+import { catalogs } from "./localization";
+import frenchCatalog from "./localization/fr.json";
 
 describe("chat beside the mobile action bar", () => {
   let emitter: ViewerEmitter;
@@ -14,6 +16,7 @@ describe("chat beside the mobile action bar", () => {
   }
 
   beforeEach(() => {
+    catalogs.fr = frenchCatalog;
     vi.useFakeTimers();
     vi.stubGlobal(
       "IntersectionObserver",

@@ -107,6 +107,7 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
       return thumbnail.render(app.$el.querySelector(".space-map-canvas, .old-map-canvas"), size, "#10172b");
     },
     async onState(data) {
+      await localization.ready;
       localization.setState(data);
       await store.dispatch("externalData", data);
       if (!replaying) viewer.replaceLog(data?.moveHistory || []);
@@ -118,8 +119,10 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
     onSettings(data) {
       store.commit("playerSettings", data);
     },
-    onPreferences(data) {
-      localization.setLocale(data.locale);
+    async onPreferences(data) {
+      if (!(await localization.setLocale(data.locale))) {
+        return;
+      }
       store.commit("preferences", data);
     },
     onPlayer(data) {

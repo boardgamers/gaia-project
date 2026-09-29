@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { translateText } from ".";
+import { catalogs, translateText } from ".";
+import de from "./de.json";
+import fr from "./fr.json";
+import ko from "./ko.json";
+import pl from "./pl.json";
+import ptBR from "./pt-BR.json";
 import { translateShortcutLabel } from "./shortcut-label";
+
+Object.assign(catalogs, { fr, de, pl, ko, "pt-BR": ptBR });
 
 describe("translated keyboard labels", () => {
   const french = (label: string) => translateText(label, "fr");
