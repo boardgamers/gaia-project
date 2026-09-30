@@ -79,6 +79,7 @@ export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): 
   let localPlayer: number | undefined;
   let avatars: string[] = [];
   let chatVisible = false;
+  let chatNotifications = true;
   let analysis = false;
   const shortcut = document.createElement("button");
   shortcut.type = "button";
@@ -146,7 +147,7 @@ export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): 
     shortcut.classList.toggle("chat-shortcut--inline", !!barSlot);
     const text = barSlot && count ? translateText(`Chat · ${count}`, locale) : label;
     if (shortcut.textContent !== text) shortcut.textContent = text;
-    shortcut.hidden = analysis || count === 0 || (!barSlot && chatVisible);
+    shortcut.hidden = !chatNotifications || analysis || count === 0 || (!barSlot && chatVisible);
     shortcut.setAttribute("aria-label", translateText(`Open ${sourceLabel}`, locale));
   }
   shortcut.onclick = () => {
@@ -155,6 +156,7 @@ export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): 
   const dispose = [
     detach,
     emitter.on("preferences", (preferences) => {
+      chatNotifications = preferences.chatNotifications !== false;
       locale = resolveLocale(preferences.locale);
       void loadLocale(locale)
         .then(() => {
