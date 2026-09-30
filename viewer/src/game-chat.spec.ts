@@ -105,6 +105,11 @@ describe("chat beside the mobile action bar", () => {
     emitter.emit("chat:appended", [next]);
     expect(shortcut.textContent).toContain("1 unread");
     expect(shortcut.hidden).toBe(false);
+    emitter.emit("preferences", { chatNotifications: false });
+    expect(shortcut.hidden).toBe(true);
+    expect(shortcut.textContent).toContain("1 unread");
+    emitter.emit("preferences", { chatNotifications: true });
+    expect(shortcut.hidden).toBe(false);
     emitter.emit("chat:messages", [message, next]);
     expect(shortcut.textContent).toContain("1 unread");
   });
@@ -156,6 +161,10 @@ describe("chat beside the mobile action bar", () => {
     expect(bar.contains(shortcut)).toBe(true);
     expect(shortcut.textContent).toBe("Chat · 1");
     expect(shortcut.getAttribute("aria-label")).toBe("Open Chat · 1 unread");
+    expect(shortcut.hidden).toBe(false);
+    emitter.emit("preferences", { chatNotifications: false });
+    expect(shortcut.hidden).toBe(true);
+    emitter.emit("preferences", { chatNotifications: true });
     expect(shortcut.hidden).toBe(false);
 
     vi.stubGlobal("innerWidth", 1280);
