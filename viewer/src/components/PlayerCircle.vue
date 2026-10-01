@@ -34,6 +34,18 @@
     <!-- Presence indicator (PROGRESS.md Gaia 9) - top-left of the token, only when a caller passes
          a status (TurnOrder.vue does; other PlayerCircle usages - the solo "current player"
          placeholder, charts - leave it unset and render exactly as before). -->
+    <image
+      v-if="
+        portrait && profilePlayer && $store.state.supporterSeats?.[profilePlayer.player] && $store.state.supporterBadge
+      "
+      :href="$store.state.supporterBadge.url"
+      :aria-label="$store.state.supporterBadge.label"
+      x=".46"
+      y="-1.06"
+      width=".6"
+      height=".6"
+      ><title>{{ $store.state.supporterBadge.label }}</title></image
+    >
     <circle v-if="presenceStatus" :cx="-0.75" :cy="-0.75" :r="0.28" :class="['presence-dot', presenceStatus]" />
   </g>
 </template>

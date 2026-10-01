@@ -9,7 +9,16 @@
         tabindex="0"
         :data-bgs-player="player.player"
       >
-        <img class="player-avatar" :alt="`${name}'s avatar`" :src="avatar" />
+        <span class="player-portrait">
+          <img class="player-avatar" :alt="`${name}'s avatar`" :src="avatar" />
+          <img
+            v-if="$store.state.supporterSeats?.[player.player] && $store.state.supporterBadge"
+            class="player-supporter-badge"
+            :src="$store.state.supporterBadge.url"
+            :alt="$store.state.supporterBadge.label"
+            :title="$store.state.supporterBadge.label"
+          />
+        </span>
         <span :class="['player-name', { dropped: player.dropped }]" role="button">{{ name }}</span>
       </div>
       <a
@@ -685,12 +694,26 @@ export default class PlayerInfo extends Vue {
     0 0 0 4px var(--recent);
 }
 
+.player-portrait {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  margin-right: 0.25rem;
+}
+
 .player-avatar {
   width: 2.25rem;
   height: 2.25rem;
   border-radius: 50%;
   border: 1px solid var(--ui-border-strong);
-  margin-right: 0.25rem;
+}
+
+.player-supporter-badge {
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  width: 15px;
+  height: 15px;
 }
 
 .player-token {
