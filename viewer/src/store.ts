@@ -70,6 +70,8 @@ export type State = {
   preferences: {
     [key in Preference]: boolean | string;
   };
+  supporterSeats?: boolean[];
+  supporterBadge?: { url: string; label: string } | null;
   player: { index?: number; auth?: string } | null;
   /** Tutorials mark this move with the normal gold markers. Null keeps the hosted opponent recap;
    * an empty string marks nothing in a chapter's initial teaching position. */
@@ -186,6 +188,8 @@ const gaiaViewer = {
       player: null,
       highlightedMove: null,
       avatars: [] as string[],
+      supporterSeats: [] as boolean[],
+      supporterBadge: null as { url: string; label: string } | null,
       hosted: false,
       playerSettings: null,
       pendingPlan: null,
@@ -315,6 +319,12 @@ const gaiaViewer = {
       state.player = data;
     },
 
+    supporterSeats(state, data: boolean[]) {
+      state.supporterSeats = data;
+    },
+    supporterBadge(state, data: { url: string; label: string } | null) {
+      state.supporterBadge = data;
+    },
     avatars(state, data) {
       state.avatars = data;
     },

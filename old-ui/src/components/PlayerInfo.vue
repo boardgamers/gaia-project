@@ -7,8 +7,15 @@
       @click="playerClick(player)"
       :class="['player-name', { dropped: player.dropped }]"
       role="button"
-      >{{ name }}</span
-    >
+      >{{ name }}
+      <img
+        v-if="$store.state.supporterSeats[player.player] && $store.state.supporterBadge"
+        class="supporter-badge"
+        :src="$store.state.supporterBadge.url"
+        :alt="$store.state.supporterBadge.label"
+        :title="$store.state.supporterBadge.label"
+      />
+    </span>
     <div class="board mt-2">
       <svg :viewBox="`-0.2 -0.5 38.5 ${height}`" class="player-board" :style="`background-color: ${factionColor}`">
         <rect x="-1" y="-1" width="50" height="50" fill="#ffffff44"></rect>
@@ -218,6 +225,13 @@ import TechTile from "./TechTile.vue";
 export default class PlayerInfo extends CurrentPlayerInfo {}
 </script>
 <style scoped>
+.supporter-badge {
+  width: 1rem;
+  height: 1rem;
+  margin-left: 0.25rem;
+  vertical-align: middle;
+}
+
 .player-board {
   width: 100%;
   height: auto;

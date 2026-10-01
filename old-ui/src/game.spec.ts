@@ -1,5 +1,4 @@
 import Engine from "@gaia-project/engine";
-import Vue from "vue";
 import { loadScenarioEngine, selfContainedScenarios } from "../../viewer/src/self-contained-scenarios";
 import launch from "./launcher";
 
@@ -12,8 +11,12 @@ describe("old UI on the current engine", () => {
     };
     vi.stubGlobal("IntersectionObserver", Observer);
     vi.stubGlobal("ResizeObserver", Observer);
+    Object.defineProperty(HTMLElement.prototype, "checkVisibility", { configurable: true, value: () => true });
   });
-  afterAll(() => vi.unstubAllGlobals());
+  afterAll(() => {
+    vi.unstubAllGlobals();
+    delete HTMLElement.prototype.checkVisibility;
+  });
   for (const id of ["base", ...selfContainedScenarios.map((s) => s.id)]) {
     it(`renders the actual old player/map components and current controls for ${id}`, async () => {
       const host = document.createElement("div");
@@ -28,7 +31,7 @@ describe("old UI on the current engine", () => {
         viewer.emit("state", JSON.parse(JSON.stringify(engine)));
         viewer.emit("chat:state", { canSend: true });
         viewer.emit("chat:messages", [{ type: "text", author: "Teammate", text: "Ready to explore" }]);
-        await Vue.nextTick();
+        await vi.waitFor(() => expect(viewer.app.$el.querySelector(".old-map-canvas")).not.toBeNull());
         expect(viewer.app.$el.querySelector(".old-ui-game")).not.toBeNull();
         expect(viewer.app.$el.querySelector(".old-map-canvas")).not.toBeNull();
         expect(viewer.app.$el.querySelector(".old-building")).not.toBeNull();

@@ -35,6 +35,24 @@ describe("launcher's store-to-emitter bridge", () => {
     container.remove();
   });
 
+  it("receives and clears optional Supporter seats without adding faction colour overrides", () => {
+    const container = document.createElement("div");
+    container.id = "launcher-supporters";
+    document.body.appendChild(container);
+    const item = launch("#launcher-supporters", Vue.extend({ render: (h) => h("div") }));
+    const supporterBadge = { url: "https://boardgamers.space/custom-badge.svg", label: "Supporter" };
+    item.emit("preferences", {
+      bgs: { players: [{ pro: false }, { pro: true }], supporterBadge, playerColors: ["#123456"] },
+    });
+    expect(item.store.state.supporterBadge).to.deep.equal(supporterBadge);
+    expect(item.store.state.supporterSeats).to.deep.equal([false, true]);
+    item.emit("preferences", {});
+    expect(item.store.state.supporterSeats).to.deep.equal([]);
+    expect(item.store.state.supporterBadge).to.equal(null);
+    item.app.$destroy();
+    container.remove();
+  });
+
   it("sends a premove plan as an ordinary protocol move", () => {
     const container = document.createElement("div");
     container.id = "launcher-premove";

@@ -120,9 +120,13 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
       store.commit("playerSettings", data);
     },
     async onPreferences(data) {
+      const bgs = data.bgs;
+      store.commit("supporterSeats", Array.isArray(bgs?.players) ? bgs.players.map((p) => p.pro === true) : []);
+      store.commit("supporterBadge", bgs?.supporterBadge ?? null);
       if (!(await localization.setLocale(data.locale))) {
         return;
       }
+
       store.commit("preferences", data);
     },
     onPlayer(data) {
