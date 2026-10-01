@@ -1,10 +1,19 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import Vue from "vue";
-import { catalogs, mountLocalization, resolveLocale, translateText } from ".";
+import { catalogs, loadLocale, mountLocalization, resolveLocale, translateText } from ".";
 import { makeStore } from "../store";
 import { createResourceText } from "../tutorial/resource-text";
+import persianCatalog from "./fa.json";
 
 describe("Persian viewer localization", () => {
+  beforeAll(async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(JSON.stringify(persianCatalog)))
+    );
+    await loadLocale("fa");
+  });
+  afterAll(() => vi.unstubAllGlobals());
   afterEach(() => document.body.replaceChildren());
 
   it("resolves regional preferences and preserves display parameters and machine strings", () => {
@@ -37,6 +46,7 @@ describe("Persian viewer localization", () => {
     target.append(app.$el);
     const group = target.querySelector("g");
     const localization = mountLocalization(target, "fa-IR");
+    await localization.ready;
     expect(target.querySelector("p")?.textContent).toBe("دور ۱");
     expect(target.querySelector("p")?.title).toBe("یک آزمایشگاه پژوهشی بسازید");
     expect(target.querySelector("[data-bgs-player]")?.textContent).toBe("Mine");
@@ -50,7 +60,7 @@ describe("Persian viewer localization", () => {
     expect(target.querySelector("p")?.textContent).toBe("دور ۲");
     expect(target.querySelector("g")).toBe(group);
     expect(group?.getAttribute("transform")).toBe("translate(2, 3)");
-    localization.setLocale("en");
+    await localization.setLocale("en");
     expect(target.querySelector("p")?.textContent).toBe("Round 2");
     expect(target.querySelector("p")?.title).toBe("Build a Research Lab");
     localization.destroy();
@@ -59,10 +69,11 @@ describe("Persian viewer localization", () => {
     app.$destroy();
   });
 
-  it("protects player names in Persian dynamic messages", () => {
+  it("protects player names in Persian dynamic messages", async () => {
     const target = document.createElement("div");
     target.textContent = "Mine's turn";
     const localization = mountLocalization(target, "fa");
+    await localization.ready;
     localization.setNames(["Mine"]);
     expect(target.textContent).toBe("نوبت Mine");
     localization.destroy();

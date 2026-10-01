@@ -171,7 +171,7 @@ describe("Game", () => {
 
     await fireEvent.click(buttonWithText("Choose Tinkering Tile")!);
     await Vue.nextTick();
-    await fireEvent.click(buttonWithText("Charge 4 Power")!);
+    await fireEvent.click(buttons().find((button) => button.querySelector('.specialAction [event=">4pw"]'))!);
     await Vue.nextTick();
 
     expect(labels().filter((label) => label.includes("Income 4pw"))).to.have.length(2);

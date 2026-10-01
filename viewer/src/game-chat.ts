@@ -6,7 +6,7 @@ import { attachChat } from "@boardgamers/protocol/viewer";
 import { Faction } from "@gaia-project/engine";
 import { factionArt } from "./data/faction-art";
 import { factionColor } from "./graphics/utils";
-import { resolveLocale, translateText } from "./localization";
+import { loadLocale, resolveLocale, translateText } from "./localization";
 type ChatEmitter = Pick<ViewerEmitter<any, any>, "on" | "emit">;
 export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): () => void {
   const chat = new ChatController();
@@ -74,6 +74,7 @@ export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): 
 `;
   slot.append(style);
   let locale = "en";
+  let disposed = false;
   let players: { id: number; name: string; color?: string; faction?: string }[] = [];
   let localPlayer: number | undefined;
   let avatars: string[] = [];
@@ -157,6 +158,11 @@ export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): 
     emitter.on("preferences", (preferences) => {
       chatNotifications = preferences.chatNotifications !== false;
       locale = resolveLocale(preferences.locale);
+      void loadLocale(locale)
+        .then(() => {
+          if (!disposed) updateShortcut();
+        })
+        .catch(() => {});
       analysis = preferences.analysis === true;
       slot.style.display = analysis ? "none" : "";
       updateShortcut();
@@ -198,6 +204,7 @@ export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): 
     () => resize.disconnect()
   );
   return () => {
+    disposed = true;
     dispose.forEach((cleanup) => cleanup());
     view.destroy();
     shortcut.remove();

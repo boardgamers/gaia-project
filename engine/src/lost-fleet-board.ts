@@ -29,7 +29,7 @@ import shuffleSeed from "./utils/shuffle";
  * uses all 10. Sectors 05/06/07 use the base game's existing per-count face choice as a stand-in for
  * the not-yet-available Lost Fleet revised face (§H4): B-side for 2p/3p, A-side for 4p.
  */
-function lostFleetSectorTiles(nbPlayers: number): MapTile[] {
+export function lostFleetSectorTiles(nbPlayers: number): MapTile[] {
   if (nbPlayers <= 2) {
     return [s1, s2, s3, s4, s5b, s6b, s7b];
   }

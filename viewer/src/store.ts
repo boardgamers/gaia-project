@@ -240,6 +240,7 @@ const gaiaViewer = {
     rotate(state: State, coords: CubeCoordinates) {
       const map = state.data.map;
       const center = map.configuration().centers.find((center) => map.distance(center, coords) <= 2);
+      if (!center) return; // Lost Fleet Interspace and Deep Space tiles are not rotatable sectors.
       const key = CubeCoordinates.toString(center);
       state.context.rotation.set(key, (state.context.rotation.get(key) || 0) + 1);
       state.context.rotation = new Map(state.context.rotation.entries());

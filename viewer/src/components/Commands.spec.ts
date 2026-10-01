@@ -158,13 +158,8 @@ describe("Commands", () => {
 
     await fireEvent.click(chooser!);
 
-    const buttons = Array.from(container.querySelectorAll<HTMLButtonElement>("#move-buttons button.move-button")).map(
-      (button) => button.textContent?.trim() ?? ""
-    );
-
-    expect(buttons).to.include("Terraform 1 Step");
-    expect(buttons).to.include("2: Charge 4 Power");
-    expect(buttons).to.include("3: Gain 1 QIC");
+    const actions = Array.from(container.querySelectorAll("#move-buttons button.move-button .specialAction [event]"));
+    expect(actions.map((action) => action.getAttribute("event"))).to.deep.equal([">step", ">4pw", ">q"]);
   });
 
   it("uses player temporary range for Lost Fleet ship-action build overlays", async () => {

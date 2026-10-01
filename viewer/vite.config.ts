@@ -10,14 +10,14 @@ const root = dirname(fileURLToPath(import.meta.url));
  * Lib build (replaces `vue-cli-service build --target lib src/wrapper.ts`).
  *
  * Contract to keep byte-compatible with the boardgamers.space host page:
- *  - ONE self-contained IIFE file exposing `window.gaiaViewer = { launch, launchSelfContained }`
+ *  - One IIFE entry exposing `window.gaiaViewer = { launch, launchSelfContained }`
  *    (the platform's iframe wrapper reads `viewer.topLevelVariable` = "gaiaViewer").
  *  - `vue` and `bootstrap-vue` stay EXTERNAL - the host page provides them
  *    (`window.Vue`, `window.BootstrapVue`). Vite's iife externals resolve them as
  *    plain global reads with no `.default` unwrapping, which is exactly what the
  *    CDN-provided Vue 2 needs (the old TS `vue_1.default` interop crash cannot happen here).
  *  - All svg assets inline as data URIs (Vite's default below assetsInlineLimit), so the
- *    UMD is one portable file with no img/ directory to host.
+ *    SVG icons stay inline; language JSON and faction JPG files are emitted separately.
  *  - CSS extracts to viewer.css alongside the bundle; the sourcemap's relative
  *    sourceMappingURL keeps working because js+map share the BGS bundle directory.
  */
@@ -43,6 +43,7 @@ export default defineConfig({
     "process.env.NODE_ENV": JSON.stringify(building ? "production" : "development"),
     "process.env": "({})",
   },
+  base: "./",
   plugins: [vue()],
   build: {
     outDir: "dist/package",

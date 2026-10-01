@@ -2,6 +2,17 @@
   <svg class="space-map-canvas" :viewBox="viewBox">
     <definitions />
     <g :transform="`rotate(${mapRotationDeg})`">
+      <use
+        v-for="slot in draftSlots"
+        :key="`draft-${slot.q}x${slot.r}`"
+        xlink:href="#space-hex"
+        :transform="`translate(${hexCenter(slot).x * spread}, ${hexCenter(slot).y * spread})`"
+        fill="transparent"
+        stroke="currentColor"
+        stroke-width="0.03"
+        opacity="0.3"
+        pointer-events="none"
+      />
       <Sector
         v-for="center in this.sectors"
         :center="center"
@@ -104,11 +115,13 @@ import Engine, {
   GaiaHex,
   hasExpansion,
   LostFleetSectorType,
+  Phase,
   Planet,
   SpaceMap as SpaceMapData,
 } from "@gaia-project/engine";
 import { lostFleetTerraformingBoard } from "@gaia-project/engine/src/factions";
-import { CubeCoordinates } from "hexagrid";
+import { findDeepSpaceNotches, findInterspaceHoles } from "@gaia-project/engine/src/lost-fleet-map";
+import { CubeCoordinates, Hex } from "hexagrid";
 import Vue from "vue";
 import { Component } from "vue-property-decorator";
 import type { MapMode } from "../data/actions";
@@ -250,6 +263,16 @@ export default class SpaceMap extends Vue {
     return this.map.configuration().centers;
   }
 
+  get draftSlots(): CubeCoordinates[] {
+    if (!this.isLostFleet || !this.engine.options.customBoardSetup || this.engine.phase !== Phase.SetupBoard) return [];
+    const centers = this.sectors;
+    return [
+      ...centers.flatMap((center) => Hex.hexagon(2).map((hex) => new Hex(center.q + hex.q, center.r + hex.r))),
+      ...findInterspaceHoles(centers),
+      ...findDeepSpaceNotches(centers).flat(),
+    ].filter((cell) => !this.map.grid.get(cell));
+  }
+
   get looseHexes(): GaiaHex[] {
     return Array.from(this.map.grid.values())
       .filter((hex) => classifySectorId(hex.data.sector) !== LostFleetSectorType.Space)
@@ -318,7 +341,7 @@ export default class SpaceMap extends Vue {
       return [];
     }
     const seed = gameSeed(this.engine);
-    return seed ? lostFleetTerraformingBoard(seed) : [];
+    return this.engine.lostFleetTerraformingRow ?? (seed ? lostFleetTerraformingBoard(seed) : []);
   }
 
   /**
@@ -447,7 +470,7 @@ export default class SpaceMap extends Vue {
     const cos = Math.cos(rad);
     const sin = Math.sin(rad);
     const points: Point[] = [];
-    for (const hex of this.map.grid.values()) {
+    for (const hex of [...this.map.grid.values(), ...this.draftSlots]) {
       const c = hexCenter(hex);
       points.push({ x: (c.x * cos - c.y * sin) * 1.01, y: (c.x * sin + c.y * cos) * 1.01 });
     }

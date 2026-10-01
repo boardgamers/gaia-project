@@ -158,7 +158,7 @@ describe("Map", () => {
       expect(() => map.isValid()).to.not.throw();
     });
 
-    it("should reject combining Lost Fleet with a custom map configuration or custom board setup", () => {
+    it("should reject a legacy custom map configuration with Lost Fleet", () => {
       expect(
         () =>
           new Engine(["init 2 randomSeed"], {
@@ -166,8 +166,6 @@ describe("Map", () => {
             map: { sectors: [{ sector: "1", rotation: 0 }] },
           })
       ).to.throw();
-
-      expect(() => new Engine(["init 2 randomSeed"], { lostFleet: true, customBoardSetup: true })).to.throw();
     });
 
     it("should build a Lost Fleet-shaped board end-to-end via Engine, distinct from the base game", () => {

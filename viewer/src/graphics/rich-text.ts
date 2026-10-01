@@ -6,6 +6,7 @@ import {
   Faction,
   Planet,
   Reward,
+  SpaceshipFederation,
   SpaceshipTechTile,
 } from "@gaia-project/engine";
 import type { AnyTechTile, AnyTechTilePos } from "@gaia-project/engine/src/enums";
@@ -29,6 +30,8 @@ export type RichTextElement = {
   planet?: Planet;
   spaceshipAction?: { ship: Spaceship; type: SpaceshipActionType };
   artifactToken?: ArtifactToken;
+  spaceshipFederation?: SpaceshipFederation;
+  deepSpaceTile?: { choice: string; position: number };
 };
 export type RichText = RichTextElement[];
 

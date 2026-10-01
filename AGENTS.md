@@ -44,31 +44,14 @@ All calls take `Authorization: Bearer <token>`.
         -H "Content-Type: application/octet-stream" \
         --data-binary @gaia-project-engine-<version>.tgz
    ```
-2. **Viewer files** — upload the freshly built bundle. `npm run package` emits
-   `dist/package/viewer.umd.js` (already minified) + `viewer.css`; the platform's doc expects the
-   js under the name `viewer.umd.min.js`, so copy/rename it first. These endpoints take the file
-   as the **raw request body** (no multipart!), with parameters in the query string; js+css share
-   a `bundle` id so they belong together:
-   ```bash
-   cp dist/package/viewer.umd.js dist/package/viewer.umd.min.js
-   # (optional) strip the trailing sourceMappingURL - the map isn't uploaded anyway:
-   # sed -i 's|//# sourceMappingURL=viewer.umd.js.map||' dist/package/viewer.umd.min.js
-   curl -X POST "$BASE/viewer/file?filename=viewer.umd.min.js&bundle=<new-bundle-id>" \
-        -H "Authorization: Bearer $TOKEN" -H "Content-Type: text/javascript" \
-        --data-binary @dist/package/viewer.umd.min.js
-   curl -X POST "$BASE/viewer/file?filename=viewer.css&bundle=<new-bundle-id>" \
-        -H "Authorization: Bearer $TOKEN" -H "Content-Type: text/css" \
-        --data-binary @dist/package/viewer.css
-   ```
-   No sourcemap upload needed — owner decision (2026-09): the platform doesn't deploy maps
-   in general. The bundle's trailing sourceMappingURL is harmless (the map 404s quietly).
-   Get a fresh `<new-bundle-id>` (uuidgen or a timestamped tag) — every upload gets a unique
-   one, and the doc's `viewer.url` then points at the new bundle's file URL.
-3. **Update the doc** — `GET $BASE` to fetch the current gameinfo doc, update the
-   `viewer.url` and `viewer.dependencies.stylesheets` (and engine fields if they changed), then
-   `PUT $BASE` with the whole doc. The PUT replaces the stored doc, so send everything back, not
-   just the changed fields. **Always GET right before PUT** — the engine-upload step mutates the
-   doc (sets `engine.package`), and a PUT based on an earlier GET silently reverts it.
+2. **Viewer files** — upload the complete `viewer/dist/package` directory (entry JS,
+   CSS, language JSON and faction JPG files). Repeat for `old-ui/dist/package` with
+   `--alternate`. Use BGS's `scripts/publish-viewer.mjs` or admin **Upload folder**;
+   see [viewer publishing](docs/viewer-publishing.md). All files must share the same
+   immutable bundle directory. BGS handles gzip automatically. Sourcemaps stay local.
+3. **Update the viewer** only after all files are uploaded and verified. Send
+   `{ viewer: ... }` to the version PUT endpoint to preserve engine and other metadata.
+   Read the current viewer immediately before updating to avoid overwriting another release.
 4. Verify on a real BGS game page afterwards (hard-reload; the platform may cache the old
    viewer URL per game).
 

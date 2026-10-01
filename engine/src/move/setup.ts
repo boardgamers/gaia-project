@@ -23,10 +23,6 @@ export function moveInit(engine: Engine, players: number, seed: string) {
     !(engine.options.lostFleet && engine.options.map?.sectors),
     "A custom map configuration cannot be combined with the Lost Fleet expansion"
   );
-  assert(
-    !(engine.options.lostFleet && engine.options.customBoardSetup),
-    "Custom (drafted) board setup is not supported with the Lost Fleet expansion"
-  );
   if (engine.options.auction === AuctionVariant.PreferenceSplit) {
     // Checked at the earliest possible moment (a game that reached its bid phase before anyone
     // noticed would have no legal way forward). The faction count needs no check of its own: the

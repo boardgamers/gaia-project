@@ -29,6 +29,13 @@ const server = createServer(async (req, res) => {
     if (req.url === "/") {
       res.setHeader("Content-Type", "text/html");
       res.end(html);
+    } else if (/^\/[a-zA-Z0-9-]+\.(json|jpg)$/.test(req.url)) {
+      res.setHeader("Content-Type", req.url.endsWith(".json") ? "application/json" : "image/jpeg");
+      res.end(
+        await readFile(
+          fileURLToPath(new URL((mode === "old" ? "old-ui/dist/package" : "viewer/dist/package") + req.url, repo))
+        )
+      );
     } else if (files[req.url]) {
       res.setHeader("Content-Type", req.url.endsWith(".css") ? "text/css" : "text/javascript; charset=utf-8");
       res.end(await readFile(files[req.url]));
