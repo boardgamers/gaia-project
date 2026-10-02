@@ -30,11 +30,19 @@
       :data-recent-opponent-move="recentOpponentMove.command"
       pointer-events="none"
     />
-    <use
+    <path
+      v-for="(l, i) in federationLines"
+      :key="`fl-outline-${i}`"
+      :d="l.path"
+      class="federation-path federation-path--outline"
+      pointer-events="none"
+    />
+    <path
       v-for="(l, i) in federationLines"
       :key="`fl-${i}`"
-      :xlink:href="l.id"
-      :transform="`rotate(${l.rotate})`"
+      :d="l.path"
+      :stroke="l.color"
+      class="federation-path federation-path--color"
       pointer-events="none"
     />
     <use v-if="powerHighlightClass" xlink:href="#space-hex" :class="['space-hex-federation', powerHighlightClass]" />
@@ -681,6 +689,24 @@ svg {
   .space-hex-star {
     fill: #dbe7ff;
     pointer-events: none;
+  }
+
+  .federation-path {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+
+    &--outline {
+      stroke: #080e20;
+      stroke-width: 0.18;
+      // The coloured caps overlap at shared midpoints; the outline must not cut into that join.
+      stroke-linecap: butt;
+      opacity: 0.8;
+    }
+
+    &--color {
+      stroke-width: 0.09;
+    }
   }
 
   .leech {
