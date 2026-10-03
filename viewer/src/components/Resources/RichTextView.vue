@@ -37,6 +37,7 @@
         :type="c.spaceshipAction.type"
       />
       <ArtifactIcon v-else-if="c.artifactToken != null" :key="i" :artifact="c.artifactToken" :size="48" />
+      <FederationTile v-else-if="c.federation" :key="i" :federation="c.federation" />
       <FederationTile
         v-else-if="c.spaceshipFederation"
         :key="i"

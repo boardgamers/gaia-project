@@ -258,9 +258,12 @@ describe("Commands", () => {
       await fireEvent.click(buttonWithText("Location 1")!);
       await Vue.nextTick();
 
-      const labels = visibleButtons().map((button) => button.textContent?.trim() ?? "");
-      expect(labels.some((label) => label.includes("8vp,q"))).to.equal(true);
-      expect(labels.some((label) => label.includes("8vp,8c"))).to.equal(true);
+      for (const reward of ["8vp,q", "8vp,8c"]) {
+        const button = visibleButtons().find((button) => button.getAttribute("aria-label")?.includes(reward));
+        expect(button).to.not.equal(undefined);
+        expect(button.querySelector(".federationTile")).to.not.equal(null);
+        expect(button.textContent).not.to.include("Federation");
+      }
     } finally {
       (window as any).matchMedia = previousMatchMedia;
     }
@@ -309,7 +312,7 @@ describe("Commands", () => {
       expect(okButton, "the confirmation must identify the tapped location").to.not.equal(undefined);
       await okButton!.trigger("click");
       await Vue.nextTick();
-      await buttonWithText("7vp,2o")!.trigger("click");
+      await wrapper.find('button[aria-label*="7vp,2o"]').trigger("click");
       await Vue.nextTick();
 
       const emitted = wrapper.emitted("command");
@@ -389,7 +392,7 @@ describe("Commands", () => {
           .wrappers.find((entry) => entry.isVisible() && entry.text().includes(text))!;
       await button("End Selection").trigger("click");
       await Vue.nextTick();
-      await button("7vp,2o").trigger("click");
+      await wrapper.find('button[aria-label*="7vp,2o"]').trigger("click");
       await Vue.nextTick();
       expect(wrapper.emitted("command")![0][0]).to.equal("terrans federation 1A9 fed4");
     } finally {

@@ -4,6 +4,7 @@ import {
   Booster,
   Building,
   Faction,
+  Federation,
   Planet,
   Reward,
   SpaceshipFederation,
@@ -30,6 +31,7 @@ export type RichTextElement = {
   planet?: Planet;
   spaceshipAction?: { ship: Spaceship; type: SpaceshipActionType };
   artifactToken?: ArtifactToken;
+  federation?: Federation;
   spaceshipFederation?: SpaceshipFederation;
   deepSpaceTile?: { choice: string; position: number };
 };

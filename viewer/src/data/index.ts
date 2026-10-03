@@ -45,6 +45,7 @@ export interface ButtonData {
     | "booster"
     | "swap-PI";
   label?: string;
+  ariaLabel?: string;
   richText?: RichText;
   longLabel?: string;
   command?: string;

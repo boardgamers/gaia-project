@@ -8,7 +8,7 @@
       @mouseenter="hover"
       @mouseleave="leave"
       :title="button.tooltip || (button.mobileIcon ? button.label : undefined)"
-      :aria-label="button.mobileIcon ? button.label : undefined"
+      :aria-label="button.ariaLabel || (button.mobileIcon ? button.label : undefined)"
       v-b-tooltip.html="{ boundary: 'viewport' }"
     >
       <template>
@@ -23,7 +23,7 @@
       split
       right
       :title="button.tooltip || (button.mobileIcon ? button.label : undefined)"
-      :aria-label="button.mobileIcon ? button.label : undefined"
+      :aria-label="button.ariaLabel || (button.mobileIcon ? button.label : undefined)"
       v-b-tooltip.html="{ boundary: 'viewport' }"
       @click="handleRangeClick(button.times[0])"
     >
