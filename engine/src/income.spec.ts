@@ -1,10 +1,88 @@
 import { expect } from "chai";
-import { PowerArea } from "./enums";
+import { Faction, PowerArea } from "./enums";
 import Event from "./events";
 import Player from "./player";
 import { Power } from "./player-data";
 
 describe("IncomeSelection", () => {
+  describe("automatic income without trade-offs", () => {
+    for (const charge of [3, 4]) {
+      it(`takes the token first with ${charge} charges, even without auto-income enabled`, () => {
+        const player = new Player();
+        player.data.power = new Power(0, 1, 0, 6);
+        player.loadEvents(Event.parse([`+${charge}pw`, "+1t"], null));
+
+        const selection = player.incomeSelection();
+        expect(player.settings.autoIncome).to.equal(false);
+        expect(selection.canAutoplay).to.equal(true);
+        player.receiveIncome(selection.autoplayEvents());
+        expect(player.data.power).to.deep.equal(new Power(0, 0, 2, 6));
+      });
+    }
+
+    it("charges first when that preserves every charge and gives more immediately spendable power", () => {
+      const player = new Player();
+      player.data.power = new Power(1);
+      player.loadEvents(Event.parse(["+1t", "+2pw"], null));
+      const selection = player.incomeSelection();
+      expect(selection.canAutoplay).to.equal(true);
+      player.receiveIncome(selection.autoplayEvents());
+      expect(player.data.power).to.deep.equal(new Power(1, 0, 1));
+    });
+
+    it("keeps the choice between extra spendable power and avoiding wasted charge", () => {
+      const player = new Player();
+      player.loadEvents(Event.parse(["+2t", "+2t", "+2pw", "+3pw"], null));
+      // 0/3/1 uses all five charges; 2/0/2 wastes one but gives two spendable power.
+      expect(player.incomeSelection().canAutoplay).to.equal(false);
+    });
+
+    it("resolves identical outcomes even with mixed resource income and partially charged bowls", () => {
+      const player = new Player();
+      player.faction = Faction.Itars;
+      player.data.power = new Power(2);
+      player.loadEvents(Event.parse(["+o,k,t", "+1pw"], null));
+      const selection = player.incomeSelection();
+      expect(selection.canAutoplay).to.equal(true);
+      player.receiveIncome(selection.autoplayEvents());
+      expect(player.data.power).to.deep.equal(new Power(2, 1));
+      expect(player.data.ores).to.equal(1);
+      expect(player.data.knowledge).to.equal(1);
+    });
+
+    it("preserves Itars' choice to keep tokens in bowl II for burning", () => {
+      const player = new Player();
+      player.faction = Faction.Itars;
+      player.data.power = new Power(0, 2);
+      player.loadEvents(Event.parse(["+t", "+1pw"], null));
+      expect(player.incomeSelection().canAutoplay).to.equal(false);
+
+      player.faction = Faction.Tinkeroids;
+      const selection = player.incomeSelection();
+      expect(selection.canAutoplay).to.equal(true);
+      player.receiveIncome(selection.autoplayEvents());
+      expect(player.data.power).to.deep.equal(new Power(1, 1, 1));
+    });
+
+    it("considers interleaving income sources for Itars even when fully charging is possible", () => {
+      const player = new Player();
+      player.faction = Faction.Itars;
+      player.loadEvents(Event.parse(["+t", "+t", "+1pw", "+3pw"], null));
+      // t, 3pw, t, 1pw leaves 0/1/1 instead of 0/0/2.
+      expect(player.incomeSelection().canAutoplay).to.equal(false);
+
+      player.settings.autoIncome = true;
+      expect(player.incomeSelection().canAutoplay).to.equal(true);
+    });
+
+    it("preserves manual Brainstone choices", () => {
+      const player = new Player();
+      player.data.brainstone = PowerArea.Area1;
+      player.loadEvents(Event.parse(["+1t", "+4pw"], null));
+      expect(player.incomeSelection().canAutoplay).to.equal(false);
+    });
+  });
+
   describe("remainingChargesAfterIncome", () => {
     const tests: {
       name: string;

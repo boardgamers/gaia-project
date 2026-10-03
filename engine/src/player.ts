@@ -821,7 +821,13 @@ export default class Player extends EventEmitter {
   }
 
   incomeSelection(additionalEvents?: Event[]): IncomeSelection {
-    return IncomeSelection.create(this.data, this.settings, this.events[Operator.Income], additionalEvents);
+    return IncomeSelection.create(
+      this.data,
+      this.settings,
+      this.events[Operator.Income],
+      additionalEvents,
+      this.faction
+    );
   }
 
   canGaiaTerrans(): boolean {

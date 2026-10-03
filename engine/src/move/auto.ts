@@ -164,13 +164,14 @@ export function passedRoundLeechAccepted(engine: Engine, player: number): number
 }
 
 /**
- * Automatically decide on income if autoIncome is enabled
+ * Resolve income when one order has no downside, or autoIncome is enabled.
  */
 function autoIncome(engine: Engine): string | false {
   const pl = engine.player(engine.playerToMove);
 
-  if (pl.settings.autoIncome) {
-    const events = pl.incomeSelection().autoplayEvents();
+  const selection = pl.incomeSelection();
+  if (selection.canAutoplay) {
+    const events = selection.autoplayEvents();
     const relevantReward = events[0]?.rewards.find(
       (rew) => rew.type === Resource.ChargePower || rew.type === Resource.GainToken
     );
