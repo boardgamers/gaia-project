@@ -1061,9 +1061,11 @@ export default class Engine {
       const pending = this.sealedBidPendingSeats();
       const isSealedBidMove = pending !== undefined && /^(p[1-7]|\S+)\s+(silentBid|preferenceBid)\b/.test(move.trim());
       if (isSealedBidMove) {
+        const expected = this.phase === Phase.SetupSilentBid ? "silentBid" : "preferenceBid";
+        assert(move.trim().split(/\s+/)[1] === expected, "Wrong sealed auction command");
         assert(
-          pending.includes(player as PlayerEnum),
-          "Player " + (player + 1) + " has already submitted their bids (or is not in this auction)"
+          pending.length > 0 && !!this.players[player] && !this.players[player].dropped,
+          "Player is not in an open sealed auction"
         );
       } else {
         assert(
@@ -1255,7 +1257,8 @@ export default class Engine {
     // illegal. `moveSilentBid`/`movePreferenceBid` do their own legality check (the shared
     // silentAuctionBidError / preferenceSplitBidError), which is the check that actually matters.
     const isSealedBid =
-      this.sealedBidPendingSeats() !== undefined && [Command.SilentBid, Command.PreferenceBid].includes(command);
+      (this.phase === Phase.SetupSilentBid && command === Command.SilentBid) ||
+      (this.phase === Phase.SetupPreferenceBid && command === Command.PreferenceBid);
     if (!this.availableCommand && !this.replay && !isSealedBid) {
       assert(this.availableCommand, `Command ${command} is not in the list of available commands`);
     }

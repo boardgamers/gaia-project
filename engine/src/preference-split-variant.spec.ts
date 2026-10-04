@@ -203,17 +203,17 @@ describe("Preference Split Auction variant", () => {
       );
     });
 
-    it("accepts exactly one submission per player", () => {
-      // p1 tries to submit again in p2's slot: rejected before it can overwrite or double-count.
-      expect(() =>
-        engineFor(
-          picks +
-            `
-              p1 preferenceBid itars 20 taklons 12 xenos 6 terrans 2
-              p1 preferenceBid itars 0 taklons 0 xenos 0 terrans 40
-            `
-        )
-      ).to.throw();
+    it("replaces an earlier split without counting the seat twice", () => {
+      const engine = engineFor(
+        picks +
+          `
+        p1 preferenceBid itars 20 taklons 12 xenos 6 terrans 2
+        p1 preferenceBid itars 0 taklons 0 xenos 0 terrans 40
+      `
+      );
+      expect(engine.preferenceSplitBids).to.have.length(4);
+      expect(engine.preferenceSplitBids.map((b) => b.points)).to.deep.equal([0, 0, 0, 40]);
+      expect(engine.sealedBidPendingSeats()).to.deep.equal([1, 2, 3]);
     });
 
     it("honours a configured budget instead of the default", () => {

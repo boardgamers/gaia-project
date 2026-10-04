@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { currentPlayer } from "../wrapper";
+import { canMoveOutOfTurn, currentPlayer, isLiveUpdate, move, stripSecret, timeIncrements } from "../wrapper";
 import Engine, { AuctionVariant } from "./engine";
 import { Phase } from "./enums";
 
@@ -57,10 +57,26 @@ describe("Silent Auction - simultaneous sealed bids", () => {
     expect(engine.phase).to.equal(Phase.SetupBuilding);
   });
 
-  it("rejects a second bid from a seat that already submitted", () => {
-    const engine = toBidPhase();
-    engine.move(bid(2, [7, 0, 0]));
-    expect(() => engine.move(bid(2, [9, 0, 0]))).to.throw();
+  it("replaces a submitted bid without clock credit, exposure, or changing pending seats", () => {
+    let engine = move(toBidPhase(), bid(2, [7, 0, 0]), 2);
+    const increments = [...timeIncrements(engine)];
+    const replacement = bid(2, [9, 0, 0]);
+    expect(canMoveOutOfTurn(engine, replacement, 2)).to.equal(true);
+    expect(canMoveOutOfTurn(engine, replacement, 1)).to.equal(false);
+    expect(canMoveOutOfTurn(engine, "p3 build m 0x0", 2)).to.equal(false);
+    engine = move(JSON.parse(JSON.stringify(engine)), replacement, 2);
+    expect(isLiveUpdate(engine)).to.equal(true);
+    expect(timeIncrements(engine)).to.deep.equal(increments);
+    expect(currentPlayer(engine)).to.deep.equal([0, 1]);
+    expect(engine.silentAuctionBids.filter((b) => b.player === 2)).to.have.length(3);
+    expect(stripSecret(engine, 0).silentAuctionBids.every((b) => b.player !== 2 || b.max === undefined)).to.equal(true);
+    expect(stripSecret(engine, 0).moveHistory.some((m) => m.includes("itars 9"))).to.equal(false);
+    expect(() => move(Engine.fromData(JSON.parse(JSON.stringify(engine))), bid(2, [41, 0, 0]), 2)).to.throw();
+    engine = move(engine, bid(0, [15, 0, 10]), 0);
+    engine = move(engine, bid(1, [15, 5, 8]), 1);
+    expect(engine.phase).to.equal(Phase.SetupBuilding);
+    expect(canMoveOutOfTurn(engine, replacement, 2)).to.equal(false);
+    expect(() => move(engine, replacement, 2)).to.throw();
   });
 
   it("rejects a non-bid move from a seat whose turn it isn't, even during the bid phase", () => {

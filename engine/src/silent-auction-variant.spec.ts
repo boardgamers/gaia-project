@@ -122,14 +122,11 @@ describe("Silent Auction variant", () => {
       expect(engine.players.map((pl) => pl.data.bid)).to.deep.equal([0, 0, 0]);
     });
 
-    it("refuses a second submission from the same seat", () => {
-      // The failure mode this guards is a real one: the reveal builds its move lines from the
-      // sealed rows, so a log that had also recorded a seat's bid as an ordinary move would
-      // otherwise count that seat twice. Two gates catch it - the phase's own turn order, which is
-      // what fires here, and `moveSilentBid`'s explicit duplicate check behind it.
-      expect(() =>
-        silent("p1 silentBid itars 15 xenos 0 taklons 10", "p1 silentBid itars 1 xenos 1 taklons 1")
-      ).to.throw();
+    it("replaces earlier values without counting the seat twice", () => {
+      const engine = silent("p1 silentBid itars 15 xenos 0 taklons 10", "p1 silentBid itars 1 xenos 1 taklons 1");
+      expect(engine.silentAuctionBids).to.have.length(3);
+      expect(engine.silentAuctionBids.map((b) => b.max)).to.deep.equal([1, 1, 1]);
+      expect(engine.sealedBidPendingSeats()).to.deep.equal([1, 2]);
     });
 
     it("rejects an illegal bid even on replay, where the available-command check is skipped", () => {

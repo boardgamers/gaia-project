@@ -49,13 +49,12 @@
       >
         {{ busy ? "Submitting…" : "Submit my bids" }}
       </b-btn>
+      <b-btn v-if="editing" variant="link" @click="editing = false">Cancel</b-btn>
     </template>
 
     <template v-else>
-      <p class="mb-1">
-        <b>Your bids are in.</b> They stay sealed until everyone has submitted - nobody can see them, and they cannot be
-        changed.
-      </p>
+      <p class="mb-1"><b>Your bids are in.</b> Choices stay hidden until everyone has confirmed.</p>
+      <b-btn v-if="canChange" variant="outline-primary" class="my-2" @click="changeChoice">Change bids</b-btn>
       <p class="text-muted small mb-0">{{ waitingText }}</p>
     </template>
 

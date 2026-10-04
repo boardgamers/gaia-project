@@ -30,6 +30,7 @@ const POLL_INTERVAL_MS = 5000;
 @Component
 export default class SealedBidPanel extends Vue {
   values: Record<string, number> = {};
+  editing = false;
   busy = false;
   error = "";
   /** Seats this device has submitted for, so the form doesn't come back for one of them while the
@@ -235,7 +236,27 @@ export default class SealedBidPanel extends Vue {
 
   /** True once this device has nothing left to submit - show the waiting screen instead. */
   get submitted(): boolean {
-    return this.mySeats.length > 0 && this.pendingSeats.length === 0;
+    return !this.editing && this.mySeats.length > 0 && this.pendingSeats.length === 0;
+  }
+
+  get canChange(): boolean {
+    return (
+      this.onlineSequential &&
+      this.bidding &&
+      this.mySeats.length === 1 &&
+      this.engineSubmittedSeats.includes(this.mySeats[0]) &&
+      this.submittedCount < this.playerCount
+    );
+  }
+
+  changeChoice() {
+    if (!this.canChange) return;
+    const seat = this.mySeats[0];
+    const entries = this.variant === "silent" ? this.gameData.silentAuctionBids : this.gameData.preferenceSplitBids;
+    this.values = Object.fromEntries(
+      entries.filter((b) => b.player === seat).map((b) => [b.faction, "max" in b ? b.max : b.points])
+    );
+    this.editing = true;
   }
 
   get visible(): boolean {
@@ -295,6 +316,7 @@ export default class SealedBidPanel extends Vue {
    * well after `created()`. Polling follows the phase in and out rather than running regardless. */
   @Watch("bidding")
   onBiddingChanged(bidding: boolean) {
+    if (!bidding) this.editing = false;
     if (bidding) {
       this.startPolling();
     } else {
@@ -358,6 +380,7 @@ export default class SealedBidPanel extends Vue {
           "command",
           `p${seat + 1} ${this.commandName} ${this.entries.map((e) => `${e.faction} ${e.points}`).join(" ")}`
         );
+        this.editing = false;
         this.resetValues();
       }
     } catch (err) {

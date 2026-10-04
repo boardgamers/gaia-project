@@ -247,14 +247,10 @@ export function moveSilentBid(
     uniq(entries.map((entry) => entry.faction)).length === entries.length,
     "Duplicate factions are not allowed in a silent bid"
   );
-  assert(
-    !engine.silentAuctionBids.some((bid) => bid.player === player),
-    `Player ${player} has already submitted their bids`
-  );
-
   const error = silentAuctionBidError(entries, engine.setup);
   assert(error === null, error);
 
+  engine.silentAuctionBids = engine.silentAuctionBids.filter((bid) => bid.player !== player);
   for (const entry of entries) {
     engine.silentAuctionBids.push({ player, faction: entry.faction as Faction, max: entry.points });
   }
@@ -284,14 +280,10 @@ export function movePreferenceBid(
     entries.push({ faction: params[i], points: +params[i + 1] });
   }
 
-  assert(
-    !engine.preferenceSplitBids.some((bid) => bid.player === player),
-    `Player ${player} has already submitted their bids`
-  );
-
   const error = preferenceSplitBidError(entries, engine.setup, engine.preferenceSplitBudget);
   assert(error === null, error);
 
+  engine.preferenceSplitBids = engine.preferenceSplitBids.filter((bid) => bid.player !== player);
   for (const entry of entries) {
     engine.preferenceSplitBids.push({ player, faction: entry.faction as Faction, points: entry.points });
   }

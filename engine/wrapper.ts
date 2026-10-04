@@ -132,6 +132,7 @@ export function move(engine: Engine, move: string | PremoveCommand, player: numb
     return engine;
   }
   assertOwnMove(engine, move, player);
+  const revision = canReviseSealedBid(engine, move, player);
 
   const round = engine.round;
   const phase = engine.phase;
@@ -153,7 +154,8 @@ export function move(engine: Engine, move: string | PremoveCommand, player: numb
   engine.generateAvailableCommandsIfNeeded();
 
   if (engine.newTurn) {
-    creditDecision(engine, player, phase);
+    if (revision) automation(engine).liveUpdate = true;
+    else creditDecision(engine, player, phase);
     reconcileManualPremoves(engine, player, round, phase);
     afterMove(engine, round);
 
@@ -198,8 +200,20 @@ export function automove(engine: Engine) {
   } while (modified);
 }
 
+function canReviseSealedBid(data: Engine, move: unknown, player: number): boolean {
+  if (typeof move !== "string" || !data.players[player] || data.players[player].dropped || data.ended) return false;
+  const engine = data instanceof Engine ? data : Engine.fromData(data);
+  const pending = engine.sealedBidPendingSeats();
+  if (!pending?.length || pending.includes(player)) return false;
+  const command = engine.phase === Phase.SetupSilentBid ? "silentBid" : "preferenceBid";
+  return new RegExp(`^p${player + 1}\\s+${command}\\s+`).test(move.trim());
+}
+
 export function canMoveOutOfTurn(engine: Engine, move: string | PremoveCommand, player: number): boolean {
-  return typeof move === "object" && move?.type === "premoves" && canQueue(engine, player);
+  return (
+    canReviseSealedBid(engine, move, player) ||
+    (typeof move === "object" && move?.type === "premoves" && canQueue(engine, player))
+  );
 }
 
 export function isLiveUpdate(engine: Engine): boolean {

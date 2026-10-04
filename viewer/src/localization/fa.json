@@ -4121,5 +4121,8 @@
   "Stops if the 3c price is unavailable": "اگر قیمت ۳ اعتبار موجود نباشد متوقف می‌شود",
   "Strategy Deck": "مجموعهٔ راهبردها",
   "Toggle dark mode": "تغییر حالت تیره",
-  "Victory Points, Resources, and more": "امتیاز پیروزی، منابع و بیشتر"
+  "Victory Points, Resources, and more": "امتیاز پیروزی، منابع و بیشتر",
+  "Change bids": "تغییر پیشنهادها",
+  "Change split": "تغییر توزیع",
+  "Choices stay hidden until everyone has confirmed.": "انتخاب‌ها تا تأیید همه مخفی می‌مانند."
 }

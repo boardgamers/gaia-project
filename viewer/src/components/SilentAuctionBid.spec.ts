@@ -83,6 +83,21 @@ function roster(container: Element): string[] {
 }
 
 describe("SilentAuctionBid", () => {
+  it("reopens its saved choice, lets the player cancel or revise, and hides it after resolution", async () => {
+    const { store } = biddingStore({ seat: 0, extraMoves: ["p1 silentBid itars 15 xenos 0 taklons 10"] });
+    const { container, getByText, emitted } = render(SilentAuctionBid, { store });
+    expect(inputs(container)).to.have.length(0);
+    await fireEvent.click(getByText("Change bids"));
+    expect(inputs(container).map((i) => i.value)).to.deep.equal(["15", "0", "10"]);
+    await fill(container, [12, 1, 8]);
+    await fireEvent.click(getByText("Cancel"));
+    expect(emitted().command).to.equal(undefined);
+    await fireEvent.click(getByText("Change bids"));
+    await fill(container, [12, 1, 8]);
+    await fireEvent.click(submitButton(container));
+    expect(emitted().command[0]).to.deep.equal(["p1 silentBid itars 12 xenos 1 taklons 8"]);
+  });
+
   it("offers one bid input per faction up for auction, capped at the ceiling", () => {
     const { store } = biddingStore({ hosted: true, seat: 0 });
     const { container } = render(SilentAuctionBid, { store });

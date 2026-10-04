@@ -76,6 +76,21 @@ function roster(container: Element): string[] {
 }
 
 describe("PreferenceSplitBid", () => {
+  it("reopens its saved choice, lets the player cancel or revise, and hides it after resolution", async () => {
+    const { store } = biddingStore({ seat: 0, extraMoves: ["p1 preferenceBid itars 20 taklons 12 xenos 6 terrans 2"] });
+    const { container, getByText, emitted } = render(PreferenceSplitBid, { store });
+    expect(inputs(container)).to.have.length(0);
+    await fireEvent.click(getByText("Change split"));
+    expect(inputs(container).map((i) => i.value)).to.deep.equal(["20", "12", "6", "2"]);
+    await fill(container, [10, 10, 10, 10]);
+    await fireEvent.click(getByText("Cancel"));
+    expect(emitted().command).to.equal(undefined);
+    await fireEvent.click(getByText("Change split"));
+    await fill(container, [10, 10, 10, 10]);
+    await fireEvent.click(submitButton(container));
+    expect(emitted().command[0]).to.deep.equal(["p1 preferenceBid itars 10 taklons 10 xenos 10 terrans 10"]);
+  });
+
   it("offers one whole-number input per faction up for auction", () => {
     const { store } = biddingStore({ hosted: true, seat: 0 });
     const { container } = render(PreferenceSplitBid, { store });

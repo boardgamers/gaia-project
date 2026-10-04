@@ -4121,5 +4121,8 @@
   "Stops if the 3c price is unavailable": "Stops if the 3c price is unavailable",
   "Strategy Deck": "Strategy Deck",
   "Toggle dark mode": "Toggle dark mode",
-  "Victory Points, Resources, and more": "Victory Points, Resources, and more"
+  "Victory Points, Resources, and more": "Victory Points, Resources, and more",
+  "Change bids": "更改出價",
+  "Change split": "更改分配",
+  "Choices stay hidden until everyone has confirmed.": "所有人確認之前，選擇會保持保密。"
 }
