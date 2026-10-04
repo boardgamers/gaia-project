@@ -34,6 +34,7 @@
     >
       {{ playsNow ? "Play moves" : "Queue moves" }}
     </b-button>
+    <b-button size="sm" variant="outline-secondary" @click="$emit('exit')">Return to live game</b-button>
     <!-- The modal itself is rendered once by Commands.vue (AnalysisModeInfo.vue) - see its comment for
          why it must not live in this twice-rendered component. -->
     <b-btn

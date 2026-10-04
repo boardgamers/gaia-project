@@ -56,6 +56,7 @@
         :committable-moves="analysisCommittableMoves"
         :plays-now="!!(analysisCommitPlan && analysisCommitPlan.live)"
         @commit="requestAnalysisCommit"
+        @exit="$emit('analysis-exit')"
       />
     </div>
     <AnalysisMoves
@@ -153,6 +154,7 @@
           :committable-moves="analysisCommittableMoves"
           :plays-now="!!(analysisCommitPlan && analysisCommitPlan.live)"
           @commit="requestAnalysisCommit"
+          @exit="$emit('analysis-exit')"
         />
       </div>
       <div
