@@ -535,8 +535,8 @@ Hard constraints:
 **It confirms first (added 2026-08-20, from an owner question).** Commit opens
 `AnalysisCommitConfirm.vue` — a modal listing every move that is about to go out, marked `plays now`
 or `premove N`, then every move being left behind with the one sentence saying why (the
-`AnalysisCommitCut` returned alongside the prefix by `analysisCommitPrefix`, or the premove queue's
-own remaining room). This does not contradict §12.4's "no confirmation press": that is about
+`AnalysisCommitCut` returned alongside the prefix by `analysisCommitPrefix`, or the absence of
+premoves in offline play). This does not contradict §12.4's "no confirmation press": that is about
 composing a turn INSIDE the sandbox, where Undo covers a misclick and nothing is real. Commit is the
 opposite case — it is the only control whose effect reaches the real game, where the sandbox's Undo
 does not follow, and it discards whatever it could not commit. `planAnalysisCommit` is what both the
