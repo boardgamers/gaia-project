@@ -1,52 +1,80 @@
 <template>
   <div class="analysis-controls" @click.stop>
-    <span class="analysis-controls__moves">{{ moveCount }} {{ moveCount === 1 ? "move" : "moves" }}</span>
+    <div class="analysis-controls__summary">
+      <span class="analysis-controls__moves">{{ moveCount }} {{ moveCount === 1 ? "move" : "moves" }}</span>
 
-    <span
-      v-if="changes.length"
-      class="analysis-controls__changes"
-      title="Net resource and VP changes since this plan started"
-    >
-      <span class="analysis-controls__label">Plan:</span>
       <span
-        v-for="item in changes"
-        :key="item.kind"
-        class="analysis-controls__resource"
-        :class="{ 'analysis-controls__resource--gain': item.amount > 0 }"
-        :aria-label="`${item.amount > 0 ? '+' : ''}${item.amount} ${resourceName(item.kind)}`"
+        v-if="changes.length"
+        class="analysis-controls__changes"
+        title="Net resource and VP changes since this plan started"
       >
-        <RichTextView :content="parseRewardsForLog(`${item.amount}${item.kind}`)" />
+        <span class="analysis-controls__label">Plan:</span>
+        <span
+          v-for="item in changes"
+          :key="item.kind"
+          class="analysis-controls__resource"
+          :class="{ 'analysis-controls__resource--gain': item.amount > 0 }"
+          :aria-label="`${item.amount > 0 ? '+' : ''}${item.amount} ${resourceName(item.kind)}`"
+        >
+          <RichTextView :content="parseRewardsForLog(`${item.amount}${item.kind}`)" />
+        </span>
       </span>
-    </span>
-    <span v-if="overdrawn.length || assumedPower" class="analysis-controls__shortfall" :title="shortfallTitle"
-      >Needs resources</span
-    >
-    <button class="analysis-controls__edit" :disabled="!canEdit" @click="$emit('undo')">Undo</button>
-    <button class="analysis-controls__edit" :disabled="!canEdit" @click="$emit('reset')">Clear plan</button>
-    <b-button
-      v-if="moveCount > 0"
-      size="sm"
-      variant="success"
-      class="analysis-controls__btn"
-      :disabled="committableMoves === 0"
-      :title="commitTitle"
-      @click="$emit('commit')"
-    >
-      {{ playsNow ? "Play moves" : "Queue moves" }}
-    </b-button>
-    <b-button size="sm" variant="outline-secondary" @click="$emit('exit')">Return to live game</b-button>
-    <!-- The modal itself is rendered once by Commands.vue (AnalysisModeInfo.vue) - see its comment for
+      <span v-if="overdrawn.length || assumedPower" class="analysis-controls__shortfall" :title="shortfallTitle"
+        >Needs resources</span
+      >
+      <!-- The modal itself is rendered once by Commands.vue (AnalysisModeInfo.vue) - see its comment for
          why it must not live in this twice-rendered component. -->
-    <b-btn
-      variant="link"
-      size="sm"
-      class="analysis-controls__info"
-      aria-label="How planning works"
-      title="How planning works"
-      @click="$bvModal.show('analysis-mode-info')"
-    >
-      <b-badge variant="info" pill>i</b-badge>
-    </b-btn>
+      <b-btn
+        variant="link"
+        size="sm"
+        class="analysis-controls__info"
+        aria-label="How planning works"
+        title="How planning works"
+        @click="$bvModal.show('analysis-mode-info')"
+      >
+        <b-badge variant="info" pill>i</b-badge>
+      </b-btn>
+    </div>
+    <div class="analysis-controls__actions">
+      <button
+        type="button"
+        class="analysis-controls__edit"
+        :disabled="!canEdit"
+        aria-label="Undo"
+        title="Undo"
+        @click="$emit('undo')"
+      >
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M5 2 1.5 5.5 5 9M2 5.5h7a4 4 0 0 1 0 8H6" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        class="analysis-controls__edit analysis-controls__clear"
+        :disabled="!canEdit"
+        aria-label="Clear plan"
+        title="Clear plan"
+        @click="$emit('reset')"
+      >
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M2.5 4h11M6 4V2h4v2M4 4l.7 10h6.6L12 4M6.5 6.5v5M9.5 6.5v5" />
+        </svg>
+      </button>
+      <b-button
+        v-if="moveCount > 0"
+        size="sm"
+        variant="success"
+        class="analysis-controls__btn"
+        :disabled="committableMoves === 0"
+        :title="commitTitle"
+        @click="$emit('commit')"
+      >
+        {{ playsNow ? "Play moves" : "Queue moves" }}
+      </b-button>
+      <b-button size="sm" variant="outline-secondary" class="analysis-controls__exit" @click="$emit('exit')"
+        >Exit simulation</b-button
+      >
+    </div>
   </div>
 </template>
 
@@ -108,6 +136,14 @@ export default Vue.extend({
   font-variant-numeric: tabular-nums;
 }
 
+.analysis-controls__summary,
+.analysis-controls__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
 .analysis-controls__moves,
 .analysis-controls__label {
   color: var(--ui-text-muted);
@@ -133,20 +169,49 @@ export default Vue.extend({
   font-size: 0.75rem;
 }
 .analysis-controls__edit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
   border: 0;
-  border-left: 1px solid var(--ui-border);
-  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  padding: 0;
   background: transparent;
   color: var(--ui-text);
-  font: inherit;
+  svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    path {
+      fill: none;
+    }
+  }
   &:hover:enabled {
     color: var(--ui-info-text);
-    text-decoration: underline;
+    background: var(--ui-surface-muted);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--ui-info-text);
+    outline-offset: 1px;
   }
   &:disabled {
     color: var(--ui-text-muted);
     opacity: 0.5;
   }
+}
+
+.analysis-controls__clear:hover:enabled {
+  color: var(--ui-danger-text);
+}
+
+.analysis-controls__exit {
+  white-space: nowrap;
 }
 
 .analysis-controls__btn {
@@ -173,8 +238,38 @@ export default Vue.extend({
 }
 
 .analysis-controls__info {
-  padding: 0 0.15rem;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
   line-height: 1;
   text-decoration: none;
+}
+
+@media (max-width: 767px) {
+  .analysis-controls__summary {
+    width: 100%;
+  }
+  .analysis-controls__info {
+    margin-left: auto;
+  }
+  .analysis-controls__actions {
+    gap: 0.25rem;
+  }
+  .analysis-controls__actions > button {
+    min-height: 2.75rem;
+  }
+  .analysis-controls__edit {
+    width: 2.5rem;
+  }
+}
+
+@media (max-width: 359px) {
+  .analysis-controls__edit {
+    width: 2rem;
+  }
+  .analysis-controls__btn,
+  .analysis-controls__exit {
+    font-size: 0.8rem;
+  }
 }
 </style>

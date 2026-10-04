@@ -7,9 +7,7 @@
         }}</strong>
       </div>
       <div class="premove-queue__actions">
-        <button v-if="active" class="btn btn-sm btn-outline-secondary" @click="$emit('exit')">
-          Return to live game
-        </button>
+        <button v-if="active" class="btn btn-sm btn-outline-secondary" @click="$emit('exit')">Exit simulation</button>
         <button
           v-if="moves.length"
           class="btn btn-sm btn-outline-primary"

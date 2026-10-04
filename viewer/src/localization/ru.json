@@ -1661,6 +1661,7 @@
   "Restore anyway": "Всё равно восстановить",
   "Restore this attempt": "Восстановить эту попытку",
   "Return to live game": "Вернуться к текущей партии",
+  "Exit simulation": "Выйти из симуляции",
   "Return to the live game to preview these moves": "Вернитесь к текущей партии, чтобы просмотреть эти ходы",
   "Review": "Обзор",
   "Review {p0} move before playing": "Проверьте {p0} ход перед розыгрышем",

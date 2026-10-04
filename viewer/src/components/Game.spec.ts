@@ -970,8 +970,8 @@ describe("Game", () => {
       expect(vm.engine.turnOrder).to.deep.equal([0]);
       expect(vm.canPlay).to.equal(true);
       expect(vm.$el.textContent).to.contain("Plan A");
-      expect(vm.$el.textContent).to.contain("Clear plan");
-      expect(vm.$el.textContent).to.contain("Return to live game");
+      expect(vm.$el.querySelector('button[aria-label="Clear plan"]')).to.not.equal(null);
+      expect(vm.$el.textContent).to.contain("Exit simulation");
       vm.applyAnalysisMove("itars up nav.");
       await Vue.nextTick();
       expect(vm.analysisEntries).to.have.length(2);
@@ -1009,11 +1009,11 @@ describe("Game", () => {
       expect(vm.engine.ended).to.equal(true);
       expect(vm.canPlay).to.equal(false);
       expect(vm.$el.textContent).to.contain("Plan A");
-      expect(vm.$el.textContent).to.contain("Clear plan");
-      expect(vm.$el.textContent).to.contain("Return to live game");
+      expect(vm.$el.querySelector('button[aria-label="Clear plan"]')).to.not.equal(null);
+      expect(vm.$el.textContent).to.contain("Exit simulation");
       expect(vm.$el.querySelectorAll("button.move-button")).to.have.length(0);
       const clear = Array.from(vm.$el.querySelectorAll("button")).find(
-        (button: HTMLButtonElement) => button.textContent.trim() === "Clear plan"
+        (button: HTMLButtonElement) => button.getAttribute("aria-label") === "Clear plan"
       ) as HTMLButtonElement;
       await fireEvent.click(clear);
       expect(vm.engine.ended).to.equal(false);

@@ -14,8 +14,8 @@ describe("AnalysisHeaderControls", () => {
     render(AnalysisHeaderControls, { props: { moveCount: 0, ...props } });
 
   function button(container: HTMLElement, label: string): HTMLButtonElement {
-    return Array.from(container.querySelectorAll("button")).find((b) =>
-      b.textContent.includes(label)
+    return Array.from(container.querySelectorAll("button")).find(
+      (b) => b.getAttribute("aria-label") === label || b.textContent.includes(label)
     ) as HTMLButtonElement;
   }
 

@@ -1661,6 +1661,7 @@
   "Restore anyway": "그래도 복원",
   "Restore this attempt": "이 시도 복원",
   "Return to live game": "실시간 게임으로 돌아가기",
+  "Exit simulation": "시뮬레이션 종료",
   "Return to the live game to preview these moves": "실시간 게임으로 돌아가 이 행동들을 미리 보세요",
   "Review": "검토",
   "Review {p0} move before playing": "플레이 전에 행동 {p0}개 검토",

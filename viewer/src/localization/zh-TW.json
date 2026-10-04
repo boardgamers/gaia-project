@@ -1661,6 +1661,7 @@
   "Restore anyway": "仍然還原",
   "Restore this attempt": "還原此嘗試",
   "Return to live game": "返回即時遊戲",
+  "Exit simulation": "退出模擬",
   "Return to the live game to preview these moves": "返回即時遊戲以預覽這些行動",
   "Review": "檢視",
   "Review {p0} move before playing": "在執行前檢視{p0}行動",
