@@ -1,6 +1,8 @@
 import { expect } from "chai";
 import Engine from "./src/engine";
-import { Phase } from "./src/enums";
+import { Operator, Phase, Resource } from "./src/enums";
+import Event from "./src/events";
+import { Power } from "./src/player-data";
 import { automation, PremoveCommand } from "./src/premoves";
 import {
   automove,
@@ -360,6 +362,13 @@ describe("BGS premoves", () => {
     ]);
     engine.players.forEach((player) => {
       player.settings.autoIncome = false;
+      // Keep a real trade-off: maximising usable power can waste a charge.
+      // Income with a dominant order now resolves even without autoIncome.
+      player.data.power = new Power();
+      player.events[Operator.Income] = player.events[Operator.Income].filter(
+        (event) => !event.rewards.some((reward) => [Resource.GainToken, Resource.ChargePower].includes(reward.type))
+      );
+      player.loadEvents(Event.parse(["+2t", "+2t", "+2pw", "+3pw"], null));
     });
     return engine;
   };
@@ -369,7 +378,7 @@ describe("BGS premoves", () => {
     engine = move(
       engine,
       {
-        ...command(engine, 0, ["itars income t", "itars up nav."]),
+        ...command(engine, 0, ["itars income 2t,2t", "itars up nav."]),
         timings: [
           { round: 2, phase: Phase.RoundIncome },
           { round: 2, phase: Phase.RoundMove },
@@ -378,12 +387,12 @@ describe("BGS premoves", () => {
       0
     );
     expect(isLiveUpdate(engine)).to.equal(true);
-    engine = move(json(engine), "ivits pass booster5", 1);
+    engine = move(json(engine), "ivits pass booster8", 1);
     expect(engine.phase).to.equal(Phase.RoundIncome);
     expect(engine.playerToMove).to.equal(1);
     expect(engine.automation.plans[0].moves).to.deep.equal(["itars up nav."]);
     expect(timeIncrements(engine)).to.deep.equal([1, 1]);
-    engine = move(json(engine), "ivits income t", 1);
+    engine = move(json(engine), "ivits income 2t,2t", 1);
     expect(engine.automation.plans[0].moves).to.deep.equal([]);
     expect(engine.players[0].data.research.nav).to.equal(1);
     expect(timeIncrements(engine)).to.deep.equal([2, 2]);
@@ -391,13 +400,13 @@ describe("BGS premoves", () => {
 
   it("waits for an unplanned manual income choice without clearing next-round moves", () => {
     let engine = queue(passedItarsGame(), 0, ["itars up nav."]);
-    engine = move(json(engine), "ivits pass booster5", 1);
+    engine = move(json(engine), "ivits pass booster8", 1);
     expect(engine.phase).to.equal(Phase.RoundIncome);
     expect(engine.playerToMove).to.equal(0);
     expect(engine.automation.plans[0].moves).to.have.length(1);
-    engine = move(json(engine), "itars income t", 0);
+    engine = move(json(engine), "itars income 2t,2t", 0);
     expect(engine.automation.plans[0].moves).to.have.length(1);
-    engine = move(json(engine), "ivits income t", 1);
+    engine = move(json(engine), "ivits income 2t,2t", 1);
     expect(engine.automation.plans[0].moves).to.have.length(0);
     expect(timeIncrements(engine)).to.deep.equal([2, 2]);
   });
@@ -410,7 +419,7 @@ describe("BGS premoves", () => {
     engine = move(
       engine,
       {
-        ...command(engine, 0, ["itars income t", "itars up nav."]),
+        ...command(engine, 0, ["itars income 2t,2t", "itars up nav."]),
         timings: [
           { round: 2, phase: Phase.RoundIncome },
           { round: 2, phase: Phase.RoundMove },
@@ -418,7 +427,7 @@ describe("BGS premoves", () => {
       },
       0
     );
-    engine = move(json(engine), "ivits pass booster5", 1);
+    engine = move(json(engine), "ivits pass booster8", 1);
     expect(engine.automation.plans[0].moves).to.deep.equal([]);
     expect(engine.players[0].data.research.nav).to.equal(1);
     expect(timeIncrements(engine)).to.deep.equal([1, 1]);
@@ -427,9 +436,9 @@ describe("BGS premoves", () => {
   it("can cancel next-round moves and rejects schedules that go backwards", () => {
     let engine = queue(passedItarsGame(), 0, ["itars up nav."]);
     engine = queue(engine, 0, []);
-    engine = move(json(engine), "ivits pass booster5", 1);
-    engine = move(json(engine), "itars income t", 0);
-    engine = move(json(engine), "ivits income t", 1);
+    engine = move(json(engine), "ivits pass booster8", 1);
+    engine = move(json(engine), "itars income 2t,2t", 0);
+    engine = move(json(engine), "ivits income 2t,2t", 1);
     expect(engine.players[0].data.research.nav).to.equal(0);
     expect(() =>
       move(

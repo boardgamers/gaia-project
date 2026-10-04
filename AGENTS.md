@@ -60,9 +60,24 @@ viewer verified in a real browser (see the loading test above).
 
 ## Repo conventions
 
-- `master` is the release branch; feature work lands via PRs. Keep CI green: prettier, engine
+- `master` is the release branch; changes published to BGS must be pushed there
+  as part of publication. Other feature work can land via PRs. Keep CI green: prettier, engine
   eslint (warnings tolerated, errors not), viewer eslint, both test suites.
 - lint-staged runs prettier on commit; if its import ordering fights a hand-made change,
   commit with `--no-verify` after confirming `npm run prettier` is clean.
 - Version bumps: `engine/package.json` and `viewer/package.json` independently, patch-level
   for fixes. The engine tarball version is what BGS games record per game.
+
+## BGS publication and Git delivery
+
+Whenever changes are published to BGS, commit the corresponding source, tests,
+dependency/lockfile changes and version bumps, then push them to this repository's
+`main` or `master` release branch in the same task. A BGS upload or a push only to
+a feature branch does not complete delivery. This is standing authorization to
+commit and push published changes without asking for separate confirmation.
+
+Fetch and integrate the latest release-branch changes, run the relevant repository
+checks, and push without force. Update any public mirrors required by this repo's
+existing workflow too. Keep credentials, generated artifacts excluded by the repo,
+and unrelated unfinished work out of the commit. Verify the remote branch contains
+the delivered commit and report any blocker instead of claiming delivery.

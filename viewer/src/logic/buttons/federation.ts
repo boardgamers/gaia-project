@@ -11,10 +11,15 @@ import Engine, {
 import { sortBy } from "lodash";
 import type { ButtonData, HighlightHex, HighlightHexData } from "../../data";
 import type { FederationChoice } from "../../data/federations";
-import { federationChoiceDescription, federationChoiceRewards, federationChoiceShortcut } from "../../data/federations";
+import {
+  federationChoiceDescription,
+  federationChoiceRewards,
+  federationChoiceShortcut,
+  isSpaceshipFederation,
+} from "../../data/federations";
 import { tooltipWithShortcut } from "./shortcuts";
 import type { CommandController } from "./types";
-import { customHexSelection, textButton } from "./utils";
+import { customHexSelection, symbolButton, textButton } from "./utils";
 import { buttonWarnings, commonButtonWarning, resourceWasteWarning, translateWarnings } from "./warnings";
 
 type Cycler = {
@@ -26,9 +31,12 @@ type Cycler = {
 export function federationTypeButtons(federations: FederationChoice[], player: Player) {
   return federations.map((fed, i) => {
     const rewards = federationChoiceRewards(fed);
-    return textButton({
+    const label = `Federation ${i + 1}: ${federationChoiceDescription(fed)}`;
+    return symbolButton({
       command: fed,
-      label: `Federation ${i + 1}: ${federationChoiceDescription(fed)}`,
+      label,
+      ariaLabel: label,
+      richText: [isSpaceshipFederation(fed) ? { spaceshipFederation: fed } : { federation: fed }],
       shortcuts: [federationChoiceShortcut(fed)],
       warning: resourceWasteWarning(player, rewards),
     });

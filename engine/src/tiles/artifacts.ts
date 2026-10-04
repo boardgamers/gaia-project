@@ -1,5 +1,9 @@
 import { ArtifactToken } from "../enums";
 
+function trackLevelEffect(track: string): string {
+  return `Immediately and only once gain 3 VP per step up the ${track} track.`;
+}
+
 // Effect text only - source RULES_CLARIFICATIONS.md §G6. Tokens are seeded face up
 // (nbPlayers of the 13 distinct tokens, chosen at random by setup.ts) on Twilight's
 // artifact slots, then claimed one at a time via the "Examine Artifact" action.
@@ -15,13 +19,10 @@ export const artifactTokenSpec: { [key in ArtifactToken]: string } = {
   [ArtifactToken.Protoplanet]:
     "Immediately and only once gain 7 VP; counts as building a mine and colonizing a Protoplanet " +
     "(no sector allocation, no 6 VP protoplanet bonus, no mine physically placed).",
-  [ArtifactToken.ResearchLevel]:
-    // VERIFY: rules text's owner-comment on which Research Area this token uses was cut off mid-sentence
-    // (RULES_CLARIFICATIONS.md §G6); assuming ResearchField.Science as the closest match to "Knowledge-themed".
-    "Immediately and only once gain 3 VP per level reached in the matching Research Area.",
+  [ArtifactToken.ResearchLevel]: trackLevelEffect("Science"),
   [ArtifactToken.ResearchTracks]: "Immediately and only once gain 3 VP for each Research Area at level 3 or higher.",
   [ArtifactToken.Federation]: "Re-score (re-trigger) a Federation token you already own.",
-  [ArtifactToken.GaiaProject]: "Immediately and only once gain 3 VP per step up the Gaiaforming track.",
+  [ArtifactToken.GaiaProject]: trackLevelEffect("Gaiaforming"),
   [ArtifactToken.PlanetTypes]: "Immediately and only once gain 3 VP + 1 VP per planet type colonized.",
   [ArtifactToken.DeepSpace]: "Immediately and only once gain 3 VP per Deep Space sector colonized.",
 };

@@ -8,7 +8,7 @@ import Engine, {
   PlayerEnum,
   Spaceship,
 } from "@gaia-project/engine";
-import { render } from "@testing-library/vue";
+import { cleanup, render } from "@testing-library/vue";
 import { expect } from "chai";
 import fs from "fs";
 import { hexCenter } from "../graphics/hex";
@@ -72,12 +72,58 @@ describe("SpaceMap", () => {
     const hexes = container.querySelectorAll("g.sector > g");
     expect(hexes.length).to.equal(engine.map.grid.size);
 
-    // Definitions.vue/Filters.vue/Buildings.vue each declare one static <defs> block,
-    // rendered once globally regardless of hex count. This guards against a regression of the
-    // pre-fix bug where federation gradients were duplicated into every SpaceHex instance
-    // (~4,500 nodes for ~90 hexes) instead of being hoisted into FederationGradients.vue.
+    // Definitions remain shared instead of being repeated for every hex.
     expect(container.querySelectorAll("defs").length).to.equal(3);
-    expect(container.querySelector("#federation-gradient-line-r")).to.not.be.null;
+    expect(container.querySelector(".federation-path--color")).to.not.be.null;
+  });
+
+  it("joins federation paths at the same rendered midpoint across sectors and Lost Fleet tiles", () => {
+    for (const lostFleet of [false, true]) {
+      const engine = new Engine(["init 2 federation-seams", "p1 faction terrans", "p2 faction nevlas"], {
+        lostFleet,
+      });
+      for (const hex of engine.map.grid.values()) hex.data.federations = [PlayerEnum.Player1];
+      const store = makeStore();
+      store.commit("receiveData", engine);
+      const { container } = render(SpaceMap, { store });
+      const cells = new Map([...container.querySelectorAll(".space-hex-cell")].map((cell) => [cell.id, cell]));
+      const position = (cell: Element) => {
+        const sectorTransform = cell.parentElement.classList.contains("sector")
+          ? matrixOf(cell.parentElement.getAttribute("style") ?? "")
+          : [1, 0, 0, 1, 0, 0];
+        const transform = multiply(sectorTransform, matrixOf(cell.getAttribute("transform") ?? ""));
+        return { x: transform[4], y: transform[5] };
+      };
+      let boundaryConnections = 0;
+      let curves = 0;
+      for (const hex of engine.map.grid.values()) {
+        const cell = cells.get(hex.toString());
+        const center = position(cell);
+        const midpoints = engine.map.grid.neighbours(hex).map((neighbour) => {
+          const other = position(cells.get(neighbour.toString()));
+          if (hex.data.sector !== neighbour.data.sector) boundaryConnections++;
+          return { x: (center.x + other.x) / 2, y: (center.y + other.y) / 2 };
+        });
+        for (const path of [...cell.querySelectorAll(".federation-path--color")]) {
+          const d = path.getAttribute("d");
+          const coordinates = d.match(/-?\d+(?:\.\d+)?(?:e[+-]?\d+)?/gi).map(Number);
+          const endpoints = [coordinates.slice(-2)];
+          if (d.includes("Q")) {
+            curves++;
+            endpoints.push(coordinates.slice(0, 2));
+          }
+          for (const [x, y] of endpoints) {
+            expect(
+              midpoints.some((point) => Math.hypot(point.x - center.x - x, point.y - center.y - y) < 1e-9),
+              `${hex}: ${d} must meet its neighbour exactly`
+            ).to.equal(true);
+          }
+        }
+      }
+      expect(boundaryConnections).to.be.greaterThan(0);
+      expect(curves).to.be.greaterThan(0);
+      cleanup();
+    }
   });
 
   it("marks every hex an opponent's moves touched since the viewer's previous turn", () => {
