@@ -62,6 +62,7 @@
     <AnalysisMoves
       v-if="analysisMode && analysisEntries.length && !analysisEditActive"
       :entries="analysisEntries"
+      :costs="analysisMoveCosts"
       :applied-count="analysisAppliedCount"
       :can-append="!engine.ended"
       :disabled="analysisEditingIndex < 0 && !!currentMove"
@@ -401,7 +402,13 @@ import { enabledButtonWarnings, isWarningEnabled } from "../data/warnings";
 import type { RichText } from "../graphics/rich-text";
 import { richText } from "../graphics/rich-text";
 import { factionColor } from "../graphics/utils";
-import type { AnalysisCommitPlan, AnalysisEntry, AnalysisLineSummary, AnalysisStatus } from "../logic/analysis";
+import type {
+  AnalysisCommitPlan,
+  AnalysisEntry,
+  AnalysisLineSummary,
+  AnalysisStatus,
+  MoveCost,
+} from "../logic/analysis";
 import { encodeAutoChargePreference } from "../logic/auto-decide";
 import { autoClickStrategy } from "../logic/buttons/autoClick";
 import { commandButtons, replaceRepeat } from "../logic/buttons/commands";
@@ -583,6 +590,9 @@ export default class Commands extends Vue implements CommandController {
 
   @Prop({ default: () => [] })
   analysisEntries: AnalysisEntry[];
+
+  @Prop({ default: () => [] })
+  analysisMoveCosts: MoveCost[];
 
   @Prop({ default: 0 })
   analysisAppliedCount: number;

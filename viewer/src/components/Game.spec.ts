@@ -1637,6 +1637,35 @@ describe("Game", () => {
     });
 
     describe("editing simulated moves on the board", () => {
+      it("shows each move's spending and gains after simulated charges and edits", async () => {
+        const vm = mountAsSeat(0, researchGame());
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("terrans up nav.");
+        vm.chargeAnalysisPower();
+        vm.applyAnalysisMove("terrans action qic3.");
+        await Vue.nextTick();
+
+        const changes = () => Array.from(vm.$el.querySelectorAll(".analysis-moves__changes"));
+        expect(changes()).to.have.length(2);
+        const research = [{ type: "k", count: 4 }];
+        const points = [
+          { type: "q", count: 2 },
+          { type: "vp", count: 4, gain: true },
+        ];
+        expect(changes().map((el: any) => el.__vue__.cost)).to.deep.equal([
+          [...research, { type: "q", count: 1, gain: true }],
+          points,
+        ]);
+        // The charge entry must not shift the costs onto the following move.
+        expect(vm.$el.querySelectorAll(".analysis-moves__row")[1].querySelector(".move-cost")).to.equal(null);
+
+        vm.startAnalysisMoveEdit(0);
+        vm.applyAnalysisMove("terrans up sci.");
+        await Vue.nextTick();
+        expect(changes().map((el: any) => el.__vue__.cost)).to.deep.equal([research, points]);
+        vm.$destroy();
+      });
+
       it("inserts between moves without replacing the suffix, and can restart, cancel or undo the insertion", () => {
         const vm = mountAsSeat(0, researchGame());
         vm.enterAnalysisMode();

@@ -89,6 +89,7 @@
             :analysis-line-summaries="analysisLineSummaries"
             :analysis-active-line="analysisActiveLine"
             :analysis-entries="analysisEntries"
+            :analysis-move-costs="analysisMoveCosts"
             :analysis-applied-count="analysisEdit ? analysisEdit.appliedCount : analysisAppliedCount"
             :analysis-editing-index="analysisEdit ? analysisEdit.index : -1"
             :analysis-inserting-move="!!analysisEdit && analysisEdit.mode === 'insert'"
@@ -221,6 +222,7 @@
             :analysis-line-summaries="analysisLineSummaries"
             :analysis-active-line="analysisActiveLine"
             :analysis-entries="analysisEntries"
+            :analysis-move-costs="analysisMoveCosts"
             :analysis-applied-count="analysisEdit ? analysisEdit.appliedCount : analysisAppliedCount"
             :analysis-editing-index="analysisEdit ? analysisEdit.index : -1"
             :analysis-inserting-move="!!analysisEdit && analysisEdit.mode === 'insert'"
@@ -308,6 +310,7 @@
         :analysis-line-summaries="analysisLineSummaries"
         :analysis-active-line="analysisActiveLine"
         :analysis-entries="analysisEntries"
+        :analysis-move-costs="analysisMoveCosts"
         :analysis-applied-count="analysisEdit ? analysisEdit.appliedCount : analysisAppliedCount"
         :analysis-editing-index="analysisEdit ? analysisEdit.index : -1"
         :analysis-inserting-move="!!analysisEdit && analysisEdit.mode === 'insert'"
@@ -519,6 +522,8 @@ export default class Game extends Vue {
   // `applied` is short of its `moves` (AnalysisLineTabs.vue's `~`), the dead tail gets another chance
   // on every re-anchor, and it is dropped only when the player themselves edits the line.
   analysisAppliedCount = 0;
+  // Spending and gains for each replayed move, excluding assumed-charge and faction entries.
+  analysisMoveCosts: MoveCost[] = [];
   // Charge 1 presses made while a turn is half-composed (see `chargeAnalysisPower`). They are applied
   // to the board as displayed and only become an `adjust` entry once that turn completes, so the
   // charge lands where the player is looking rather than ahead of the turn in progress.
@@ -1380,6 +1385,7 @@ export default class Game extends Vue {
     this.analysisLines = [[]];
     this.analysisActiveLine = 0;
     this.analysisAppliedCount = 0;
+    this.analysisMoveCosts = [];
     this.analysisPendingCharge = 0;
     this.analysisRealHistory = [];
     this.analysisLineSummaries = [];
@@ -1680,14 +1686,17 @@ export default class Game extends Vue {
     if (options.history === "record") this.analysisUndo = JSON.parse(JSON.stringify(this.analysisEntries));
     else if (options.history !== "preserve") this.analysisUndo = null;
     this.analysisEdit = null;
+    const costs: MoveCost[] = [];
     const { engine, applied } = replayAnalysisLine(
       this.analysisOrigin,
       entries,
       this.analysisSeat,
-      this.analysisBaseRound
+      this.analysisBaseRound,
+      costs
     );
     const kept = options.prune === false ? entries : entries.slice(0, applied);
     this.analysisAppliedCount = applied;
+    this.analysisMoveCosts = costs;
     // A pending mid-turn charge belongs to the turn that was being composed; replacing the line
     // replaces that turn too (see `editAnalysisLineKeepingComposedTurn`, which re-applies it after).
     this.analysisPendingCharge = 0;

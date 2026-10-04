@@ -28,7 +28,14 @@
           @keydown.stop
         >
           <span class="analysis-moves__number">{{ moveNumber(index) }}</span>
-          <span class="analysis-moves__text">{{ entry.move }}</span>
+          <span class="analysis-moves__detail">
+            <span class="analysis-moves__text">{{ entry.move }}</span>
+            <MoveCost
+              v-if="index < appliedCount && costs[moveNumber(index) - 1]?.length"
+              :cost="costs[moveNumber(index) - 1]"
+              class="analysis-moves__changes"
+            />
+          </span>
           <span v-if="index === appliedCount" class="analysis-moves__state">Needs update</span>
           <svg class="analysis-moves__pencil" viewBox="0 0 16 16" aria-hidden="true">
             <path d="m10.7 2.3 3 3-8.4 8.4-3.8.8.8-3.8Zm1.1-1.1 1-1a1 1 0 0 1 1.4 0l1.6 1.6a1 1 0 0 1 0 1.4l-1 1Z" />
@@ -82,12 +89,15 @@
 <script lang="ts">
 import type { PropType } from "vue";
 import Vue from "vue";
-import type { AnalysisEntry } from "../logic/analysis";
+import type { AnalysisEntry, MoveCost as MoveCostData } from "../logic/analysis";
+import MoveCost from "./MoveCost.vue";
 
 export default Vue.extend({
   name: "AnalysisMoves",
+  components: { MoveCost },
   props: {
     entries: { type: Array as PropType<AnalysisEntry[]>, default: () => [] },
+    costs: { type: Array as PropType<MoveCostData[]>, default: () => [] },
     appliedCount: { type: Number, default: 0 },
     disabled: Boolean,
     canAppend: { type: Boolean, default: true },
@@ -198,10 +208,20 @@ export default Vue.extend({
   color: var(--ui-text-muted);
   font-variant-numeric: tabular-nums;
 }
-.analysis-moves__text {
+.analysis-moves__detail {
   flex: 1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  column-gap: 0.5rem;
+  min-width: 0;
+}
+.analysis-moves__text {
   overflow-wrap: anywhere;
   min-width: 0;
+}
+.analysis-moves__changes {
+  margin-left: 0;
 }
 .analysis-moves__state {
   font-size: 0.75rem;
