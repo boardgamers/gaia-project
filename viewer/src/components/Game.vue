@@ -352,7 +352,6 @@ import Engine, {
   Round,
 } from "@gaia-project/engine";
 import type { PremoveCommand, PremovePlan, PremoveTiming } from "@gaia-project/engine/src/premove-types";
-import { MAX_PREMOVES } from "@gaia-project/engine/src/premove-types";
 import { currentPlayer } from "@gaia-project/engine/wrapper";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
@@ -1123,7 +1122,6 @@ export default class Game extends Vue {
       lineMoves: entries.filter((e): e is AnalysisMoveEntry => e.kind === "move").map((e) => e.move),
       onTurn: this.analysisSeatIsOnTurnForReal,
       hosted: this.premoveAvailable,
-      queueRoom: MAX_PREMOVES - (this.analysisSeatIsOnTurnForReal ? 1 : 0),
     });
     if (this.realEngine.automation?.roundPremoves) {
       const submitted = plan.live === null ? plan.queued : [plan.live, ...plan.queued];

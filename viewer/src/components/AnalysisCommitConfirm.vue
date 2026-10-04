@@ -49,7 +49,7 @@
 <script lang="ts">
 import Vue from "vue";
 import type { AnalysisCommitCut, AnalysisCommitPlan } from "../logic/analysis";
-import { isCheapAnalysisBuild, MAX_COMMITTABLE_MOVES } from "../logic/analysis";
+import { isCheapAnalysisBuild } from "../logic/analysis";
 
 import MoveCost from "./MoveCost.vue";
 
@@ -65,7 +65,6 @@ const CUT_TEXT: Record<AnalysisCommitCut, string> = {
   "assumed-power":
     "the next move only worked because the simulation added power — charge it for real first and it can be committed later.",
   foreign: "the next move belongs to another seat, and committing it would take somebody else's turn.",
-  cap: `you can submit up to ${MAX_COMMITTABLE_MOVES} moves at once.`,
 };
 
 export default Vue.extend({
@@ -93,9 +92,6 @@ export default Vue.extend({
       const view = this.view as AnalysisCommitPlan;
       if (view.limit === "no-premoves") {
         return "offline games have no premove queue, so only the move you play right now can be committed.";
-      }
-      if (view.limit === "queue") {
-        return "you can queue up to three moves at once.";
       }
       return view.cut ? CUT_TEXT[view.cut] : "they are past what can be committed in one go.";
     },

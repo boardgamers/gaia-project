@@ -123,7 +123,7 @@ Scope: hosted and self-contained/offline modes both. Nothing about it is server-
 | 10  | How far can a line run?                  | **Current round + one more round. Hard cap.**                                                     |
 | 11  | Shared single-use resources              | **Out of scope.** Do not build "assume this board action is taken". Document the limitation.      |
 | 12  | Leech power you would realistically gain | **In scope.** A manual "assume I leech N power" adjustment. See §4.4.                             |
-| 13  | Commit the line for real                 | **In scope**, capped at 4 moves. See §6.                                                          |
+| 13  | Commit the line for real                 | **In scope**, with no move-count limit. See §6.                                                   |
 | 14  | Visual treatment                         | Yellow/black hazard stripes: full strength on the sticky header, dimmed on the map. See §5.       |
 
 ---
@@ -323,9 +323,10 @@ down the left. **Bottom-right and top-centre are free.** `bounds` (`SpaceMap.vue
 footprints so hexes do not overlap map UI, and `SpaceMap.spec.ts` tests that clearance — a new
 occupant must be added to that reservation logic.
 
-### 2.11 The premove queue caps at 3
+### 2.11 The premove queue accepts the full valid plan
 
-`PremoveBar.vue:179` — `:disabled="rows.length >= 3"`. This is what bounds the commit path in §6.
+The original three-move limit was removed from both the viewer and engine on 2026-10-04.
+The confirmation submits every valid move; the engine rechecks each turn against the live position.
 
 ---
 
@@ -518,8 +519,8 @@ The natural end of an analysis is "yes, do that". The premove system already pro
 workaround — in a real game opponents move between your turns, so anything past move 1 _is_ a premove
 by definition.
 
-The cap therefore is not arbitrary: `PremoveBar.vue:179` caps the queue at 3 rows, so **4 moves total**
-(1 live + 3 queued). Offer the first 4 and grey out the rest.
+There is no move-count cap: submit the full valid prefix, with the first move played immediately
+when it is the player's turn and all remaining moves queued.
 
 Hard constraints:
 

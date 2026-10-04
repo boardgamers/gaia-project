@@ -3,7 +3,6 @@ import { Phase, Round } from "./enums";
 import assert from "./utils/assert";
 
 import type { AutomationState, PremoveCommand, PremovePlan, PremoveTiming } from "./premove-types";
-import { MAX_PREMOVES } from "./premove-types";
 export type { AutomationState, PremoveCommand, PremovePlan } from "./premove-types";
 
 export function automation(engine: Engine): AutomationState {
@@ -58,7 +57,7 @@ export function setPremoves(engine: Engine, command: PremoveCommand, seat: numbe
     return;
   }
   assert(command.revision === (old?.revision ?? 0), "Your premove queue changed. Please check it and try again.");
-  assert(Array.isArray(command.moves) && command.moves.length <= MAX_PREMOVES, "Queue at most three moves");
+  assert(Array.isArray(command.moves), "Invalid premove queue");
   let nextRound = engine.round + (engine.passedPlayers?.includes(seat) ? 1 : 0);
   const timings =
     command.timings ??

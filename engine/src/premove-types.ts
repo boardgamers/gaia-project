@@ -30,5 +30,3 @@ export type PremoveCommand = {
   turn: number;
   revision: number;
 };
-
-export const MAX_PREMOVES = 3;

@@ -959,9 +959,6 @@ export function replayAnalysisLine(
   return { engine, applied };
 }
 
-// Bound both previews and server submissions to three turns.
-export const MAX_COMMITTABLE_MOVES = 3;
-
 /** Moves that can be submitted now, replayed without simulated charges. Faction changes and
  * other players' moves cannot be submitted. The returned prefix stops at the first invalid move. */
 export function committableAnalysisMoves(
@@ -989,9 +986,7 @@ export type AnalysisCommitCut =
   /** The move's power cost was topped up (§12) - as hypothetical as an `adjust` entry. */
   | "assumed-power"
   /** Setup pass-and-play put another seat's move here; committing it would move for somebody else. */
-  | "foreign"
-  /** `MAX_COMMITTABLE_MOVES` - the line is fine, there is just nowhere left to put the rest. */
-  | "cap";
+  | "foreign";
 
 /** The committable prefix plus the reason it ends there. See `committableAnalysisMoves` (the thin
  * wrapper above) for the full account of the rules; this is the same computation, reporting its cut.
@@ -1059,17 +1054,13 @@ export function analysisCommitPrefix(
       }
     }
     affordable = count;
-    if (count >= MAX_COMMITTABLE_MOVES) {
-      cut = count < moveEntries.length ? "cap" : null;
-      break;
-    }
   }
   if (affordable === 0) {
     return { moves: [], cut };
   }
   const { engine } = replayPrefix(affordable);
   const ownCount = ownMovePrefixLength(engine, moveEntries, seat);
-  const length = Math.min(affordable, ownCount, MAX_COMMITTABLE_MOVES);
+  const length = Math.min(affordable, ownCount);
   // A foreign move is the better explanation whenever it lands at or before wherever the replay
   // stopped: the line does not end because of this seat's resources, it ends because the next turn
   // belongs to somebody else - which is also the usual reason the replay could not apply it.
@@ -1096,9 +1087,8 @@ function ownMovePrefixLength(engine: Engine, moveEntries: AnalysisMoveEntry[], s
 
 /** What pressing Commit is actually about to do, in the shape the confirmation modal
  * (`AnalysisCommitConfirm.vue`) reads it: which single move goes live, which ones queue behind it as
- * premoves, and what is being left behind. Built by `planAnalysisCommit`, whose inputs are the only
- * three things outside the line itself that bound a commit - whether the real game is waiting on
- * this seat, whether there is a premove queue at all, and how much room is left in it. */
+ * premoves, and what is being left behind. Whether the real game is waiting on this seat and
+ * whether it supports premoves determine how the committable line is submitted. */
 export interface AnalysisCommitPlan {
   costs?: MoveCost[];
   /** Round and phase for each submitted move, in live-then-queued order. */
@@ -1114,14 +1104,11 @@ export interface AnalysisCommitPlan {
   dropped: string[];
   /** Why the line itself stops where it does - null when the line was not the limit. */
   cut: AnalysisCommitCut | null;
-  /** Which limit actually bound this commit: the line's own feasibility, the premove queue's
-   * remaining room, or the absence of a queue entirely in self-contained/hot-seat play. */
-  limit: "line" | "queue" | "no-premoves";
+  /** Whether the line's feasibility or the absence of premoves prevents submitting the rest. */
+  limit: "line" | "no-premoves";
 }
 
-/** §6/decision #13, made explicit so the player can read it before pressing anything. Applies the
- * two caps that live outside the line (the three-move limit and hosted-only premoves) to
- * the committable prefix, and reports what is left behind either way. */
+/** Submit the full valid prefix in hosted play; offline play can only commit the current move. */
 export function planAnalysisCommit(args: {
   /** The committable prefix - `analysisCommitPrefix().moves`. */
   committable: string[];
@@ -1133,16 +1120,12 @@ export function planAnalysisCommit(args: {
   onTurn: boolean;
   /** Hosted play has a premove queue; self-contained/hot-seat does not. */
   hosted: boolean;
-  /** Number of planned turns allowed after any move played immediately. The submitted plan replaces the queue. */
-  queueRoom: number;
 }): AnalysisCommitPlan {
-  const { committable, cut, lineMoves, onTurn, hosted, queueRoom } = args;
-  const room = Math.max(0, queueRoom);
-  const allowed = hosted ? committable.slice(0, onTurn ? 1 + room : room) : onTurn ? committable.slice(0, 1) : [];
+  const { committable, cut, lineMoves, onTurn, hosted } = args;
+  const allowed = hosted ? committable : onTurn ? committable.slice(0, 1) : [];
   const live = onTurn && allowed.length > 0 ? allowed[0] : null;
   const queued = live !== null ? allowed.slice(1) : allowed;
-  const limit: AnalysisCommitPlan["limit"] =
-    allowed.length < committable.length ? (hosted ? "queue" : "no-premoves") : "line";
+  const limit: AnalysisCommitPlan["limit"] = allowed.length < committable.length ? "no-premoves" : "line";
   return {
     live,
     queued,

@@ -865,6 +865,14 @@ describe("committableAnalysisMoves (§6, decision #13)", () => {
 });
 
 describe("analysisCommitPrefix - the cut reason behind the prefix", () => {
+  it("includes the fourth move when the whole line is legal", () => {
+    const origin = new Engine(SETUP_MOVES);
+    origin.players[0].data.knowledge = 12;
+    const moves = ["terrans up nav.", "terrans up terra.", "terrans up int.", "terrans pass booster4"];
+    const entries: AnalysisEntry[] = moves.map((move) => ({ kind: "move", move }));
+    expect(analysisCommitPrefix(origin, entries, 0, 1)).to.deep.equal({ moves, cut: null });
+  });
+
   it("requires enough resources in the simulated position even for future premoves", () => {
     const origin = new Engine(SETUP_MOVES);
     origin.players[0].data.knowledge = 0;
@@ -952,7 +960,6 @@ describe("planAnalysisCommit - what the Commit confirmation shows (§6)", () => 
       lineMoves: line,
       onTurn: true,
       hosted: true,
-      queueRoom: 3,
     });
 
     expect(plan.live).to.equal("a");
@@ -964,34 +971,31 @@ describe("planAnalysisCommit - what the Commit confirmation shows (§6)", () => 
 
   it("queues everything and plays nothing live off turn - there is no turn for a live move to go into", () => {
     const plan = planAnalysisCommit({
-      committable: ["a", "b"],
+      committable: line,
       cut: null,
-      lineMoves: ["a", "b"],
+      lineMoves: line,
       onTurn: false,
       hosted: true,
-      queueRoom: 3,
     });
 
     expect(plan.live).to.equal(null);
-    expect(plan.queued).to.deep.equal(["a", "b"]);
+    expect(plan.queued).to.deep.equal(line);
     expect(plan.dropped).to.deep.equal([]);
   });
 
-  it("reports the premove queue, not the line, as the limit when the queue is the shorter of the two", () => {
+  it("plays the first move and queues every remaining valid move without a count limit", () => {
     const plan = planAnalysisCommit({
-      committable: ["a", "b", "c", "d"],
-      cut: "cap",
+      committable: line,
+      cut: null,
       lineMoves: line,
       onTurn: true,
       hosted: true,
-      queueRoom: 1, // two rows already queued for this seat
     });
 
     expect(plan.live).to.equal("a");
-    expect(plan.queued).to.deep.equal(["b"]);
-    expect(plan.dropped).to.deep.equal(["c", "d", "e"]);
-    expect(plan.limit).to.equal("queue");
-    // The line's own cut is no longer the reason anything was left behind, so it is not reported as one.
+    expect(plan.queued).to.deep.equal(["b", "c", "d", "e"]);
+    expect(plan.dropped).to.deep.equal([]);
+    expect(plan.limit).to.equal("line");
     expect(plan.cut).to.equal(null);
   });
 
@@ -1002,7 +1006,6 @@ describe("planAnalysisCommit - what the Commit confirmation shows (§6)", () => 
       lineMoves: ["a", "b", "c"],
       onTurn: true,
       hosted: false,
-      queueRoom: 3,
     });
 
     expect(plan.live).to.equal("a");
@@ -1018,7 +1021,6 @@ describe("planAnalysisCommit - what the Commit confirmation shows (§6)", () => 
       lineMoves: ["a"],
       onTurn: false,
       hosted: false,
-      queueRoom: 3,
     });
 
     expect(plan.live).to.equal(null);

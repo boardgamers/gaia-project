@@ -343,8 +343,24 @@ describe("BGS premoves", () => {
     expect(timeIncrements(engine)).to.deep.equal([2, 1]);
   });
 
-  it("still limits the queue to three moves", () => {
-    expect(() => queue(game(), 1, Array(4).fill("nevlas up nav."))).to.throw("at most three");
+  it("queues and executes more than three moves without losing the tail", () => {
+    let engine = game();
+    engine.players[1].data.knowledge = 12;
+    const moves = ["nevlas up nav.", "nevlas up terra.", "nevlas up int.", "nevlas pass booster3"];
+    engine = queue(engine, 1, moves);
+    expect(stripSecret(engine, 1).automation.plans[1].moves).to.deep.equal(moves);
+    expect(engine.moveHistory).to.deep.equal(game().moveHistory);
+
+    engine = move(json(engine), "terrans pass booster4", 0);
+    expect(engine.automation.plans[1].moves).to.deep.equal([]);
+    expect(engine.automation.plans[1].notice.kind).to.equal("played");
+    for (const planned of moves) {
+      expect(engine.moveHistory.some((move) => move.startsWith(planned.replace(/\.$/, "")))).to.equal(true);
+    }
+    expect(engine.players[1].data.research.nav).to.equal(1);
+    expect(engine.players[1].data.research.terra).to.equal(1);
+    expect(engine.players[1].data.research.int).to.equal(1);
+    expect(engine.round).to.equal(2);
   });
 
   const passedItarsGame = () => {

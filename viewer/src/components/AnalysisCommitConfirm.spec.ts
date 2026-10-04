@@ -82,11 +82,12 @@ describe("AnalysisCommitConfirm", () => {
     wrapper.destroy();
   });
 
-  it("blames the premove queue rather than the line when the queue is what ran out", async () => {
-    const wrapper = await open(plan({ live: "a", queued: ["b"], dropped: ["c", "d"], limit: "queue" }));
+  it("confirms a longer queue without a move-limit warning", async () => {
+    const wrapper = await open(plan({ live: "a", queued: ["b", "c", "d", "e"] }));
 
-    expect(dialogText()).to.contain("2 more moves stay behind");
-    expect(dialogText()).to.contain("up to three moves");
+    expect(dialogText()).to.contain("premove 4");
+    expect(dialogText()).to.not.contain("stay behind");
+    expect(footerButton("Play 5 moves")).to.not.equal(undefined);
     wrapper.destroy();
   });
 
