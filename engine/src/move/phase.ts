@@ -96,6 +96,7 @@ export function phaseSetupAuction(engine: Engine, move: string) {
  * once every one of them is in, so no player can read another's numbers first.
  */
 export function phaseSetupSilentBid(engine: Engine, move: string) {
+  const submitted = engine.silentAuctionBids.length;
   engine.loadTurnMoves(move, { split: false, processFirst: true });
 
   // Simultaneous collection: resolve as soon as the LAST pending bid lands, regardless of the
@@ -103,7 +104,8 @@ export function phaseSetupSilentBid(engine: Engine, move: string) {
   // `moveToNextPlayer` walk is no longer what gates resolution). The old sequential walk is kept
   // only to keep `currentPlayer` moving for any client still reading it, but it no longer decides
   // when the auction resolves.
-  engine.moveToNextPlayer(engine.turnOrder, { loop: false });
+  // Revisions replace one existing decision; they must not consume another turn-order entry.
+  if (engine.silentAuctionBids.length > submitted) engine.moveToNextPlayer(engine.turnOrder, { loop: false });
 
   if ((engine.sealedBidPendingSeats() ?? []).length === 0) {
     const nominatedFaction = new Map(engine.players.map((pl) => [pl.player as PlayerEnum, pl.faction]));
@@ -141,10 +143,11 @@ export function phaseSetupSilentBid(engine: Engine, move: string) {
  * reproduces the same result - a reload can never reroll a tie.
  */
 export function phaseSetupPreferenceBid(engine: Engine, move: string) {
+  const submitted = engine.preferenceSplitBids.length;
   engine.loadTurnMoves(move, { split: false, processFirst: true });
 
   // Simultaneous collection: resolve as soon as the last pending bid lands (see phaseSetupSilentBid).
-  engine.moveToNextPlayer(engine.turnOrder, { loop: false });
+  if (engine.preferenceSplitBids.length > submitted) engine.moveToNextPlayer(engine.turnOrder, { loop: false });
 
   if ((engine.sealedBidPendingSeats() ?? []).length === 0) {
     resolvePreferenceSplitPhase(engine);

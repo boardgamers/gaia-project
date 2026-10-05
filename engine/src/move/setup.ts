@@ -250,10 +250,10 @@ export function moveSilentBid(
   const error = silentAuctionBidError(entries, engine.setup);
   assert(error === null, error);
 
-  engine.silentAuctionBids = engine.silentAuctionBids.filter((bid) => bid.player !== player);
-  for (const entry of entries) {
-    engine.silentAuctionBids.push({ player, faction: entry.faction as Faction, max: entry.points });
-  }
+  const bids = entries.map((entry) => ({ player, faction: entry.faction as Faction, max: entry.points }));
+  const existing = engine.silentAuctionBids.findIndex((bid) => bid.player === player);
+  if (existing < 0) engine.silentAuctionBids.push(...bids);
+  else engine.silentAuctionBids.splice(existing, bids.length, ...bids);
 }
 
 /**
@@ -283,8 +283,8 @@ export function movePreferenceBid(
   const error = preferenceSplitBidError(entries, engine.setup, engine.preferenceSplitBudget);
   assert(error === null, error);
 
-  engine.preferenceSplitBids = engine.preferenceSplitBids.filter((bid) => bid.player !== player);
-  for (const entry of entries) {
-    engine.preferenceSplitBids.push({ player, faction: entry.faction as Faction, points: entry.points });
-  }
+  const bids = entries.map((entry) => ({ player, faction: entry.faction as Faction, points: entry.points }));
+  const existing = engine.preferenceSplitBids.findIndex((bid) => bid.player === player);
+  if (existing < 0) engine.preferenceSplitBids.push(...bids);
+  else engine.preferenceSplitBids.splice(existing, bids.length, ...bids);
 }

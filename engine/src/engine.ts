@@ -542,11 +542,34 @@ export default class Engine {
       const seatMatch = /^p([1-7])\b/.exec(move);
       if (seatMatch) {
         actingPlayer = (+seatMatch[1] - 1) as PlayerEnum;
+      } else {
+        actingPlayer = this.players.find((player) => player.faction === move.split(/\s+/)[0])?.player;
+      }
+    }
+    // A sealed submission stays mutable until the last seat submits. Keep its original replay
+    // position and advanced-log row when replacing it, even if other seats submitted in between.
+    // Use the latest matching slot for saves made before replacements were compacted: an older
+    // appended revision must not overwrite the new value when that history is replayed. Historical
+    // replay itself keeps those older rows so their existing move indices do not shift.
+    let replacementIndex = -1;
+    if (!this.replay && isSealedBid && actingPlayer !== undefined && !pendingSeats.includes(actingPlayer)) {
+      const command = move.split(/\s+/)[1];
+      for (let i = this.moveHistory.length - 1; i >= 0; i--) {
+        const [seat, previousCommand] = this.moveHistory[i].split(/\s+/);
+        if (
+          previousCommand === command &&
+          (seat === `p${actingPlayer + 1}` || seat === this.player(actingPlayer).faction)
+        ) {
+          replacementIndex = i;
+          break;
+        }
       }
     }
     if (actingPlayer !== undefined) {
-      this.log(actingPlayer, undefined, 0, undefined);
-      moveToShow = createMoveToShow(move, this.player(actingPlayer), this.map, execute);
+      if (replacementIndex < 0) this.log(actingPlayer, undefined, 0, undefined);
+      // Secret-log masking identifies sealed bids by seat, even when a caller used a faction alias.
+      if (isSealedBid) moveToShow = move.replace(/^\S+/, `p${actingPlayer + 1}`);
+      moveToShow = createMoveToShow(moveToShow, this.player(actingPlayer), this.map, execute);
     } else {
       execute();
     }
@@ -555,7 +578,8 @@ export default class Engine {
       assert(this.turnMoves.length === 0, "Unnecessary commands at the end of the turn: " + this.turnMoves.join(". "));
     }
     this.pendingMove = this.newTurn ? "" : move;
-    this.moveHistory.push(moveToShow);
+    if (replacementIndex < 0) this.moveHistory.push(moveToShow);
+    else this.moveHistory[replacementIndex] = moveToShow;
   }
 
   log(player: PlayerEnum, resource: Resource, amount: number, source: EventSource) {
