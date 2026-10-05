@@ -43,7 +43,13 @@
       </li>
     </ol>
     <div v-if="pending" class="small mt-2" role="status">Saving your plan…</div>
-    <PremoveNotice v-else-if="plan && plan.notice" :plan="plan" :storage-key="noticeStorageKey" class="mt-2" />
+    <PremoveNotice
+      v-else-if="plan && plan.notice"
+      :plan="plan"
+      :storage-key="noticeStorageKey"
+      :move-history="moveHistory"
+      class="mt-2"
+    />
   </section>
 </template>
 
@@ -59,6 +65,7 @@ export default Vue.extend({
   methods: { isCheapAnalysisBuild },
   props: {
     plan: { type: Object as () => PremovePlan, default: undefined },
+    moveHistory: { type: String, default: "" },
     noticeStorageKey: { type: String, required: true },
     costs: { type: Array, default: () => [] },
     pending: Boolean,

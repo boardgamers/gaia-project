@@ -29,6 +29,30 @@ describe("premove notice dismissal", () => {
     refreshed.destroy();
   });
 
+  it("dismisses an unchanged notice after another real move and keeps it dismissed on reload", async () => {
+    const propsData = { plan, storageKey: "notice:game-1:seat-0", moveHistory: "first position" };
+    const wrapper = mount(PremoveNotice, { propsData });
+    await wrapper.setProps({ moveHistory: "first position" });
+    expect(wrapper.find(".premove-notice").exists()).to.equal(true);
+    await wrapper.setProps({ moveHistory: "next position" });
+    expect(wrapper.find(".premove-notice").exists()).to.equal(false);
+    wrapper.destroy();
+    const refreshed = mount(PremoveNotice, { propsData: { ...propsData, moveHistory: "next position" } });
+    expect(refreshed.find(".premove-notice").exists()).to.equal(false);
+    refreshed.destroy();
+  });
+
+  it("shows a new result arriving with a move, then clears it on later play", async () => {
+    const wrapper = mount(PremoveNotice, {
+      propsData: { plan, storageKey: "notice:game-1:seat-0", moveHistory: "first position" },
+    });
+    await wrapper.setProps({ plan: { ...plan, revision: 3 }, moveHistory: "next position" });
+    expect(wrapper.find(".premove-notice").exists()).to.equal(true);
+    await wrapper.setProps({ moveHistory: "later position" });
+    expect(wrapper.find(".premove-notice").exists()).to.equal(false);
+    wrapper.destroy();
+  });
+
   it("can dismiss a stopped empty queue and isolates the dismissal by game and seat", async () => {
     const stopped: PremovePlan = {
       ...plan,

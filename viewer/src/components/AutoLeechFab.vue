@@ -139,19 +139,6 @@ export default Vue.extend({
 
   &.active {
     background: var(--highlighted, #2c4);
-    animation: auto-leech-pulse 1.6s infinite;
-  }
-}
-
-@keyframes auto-leech-pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(var(--highlighted-rgb, 32, 204, 68), 0.7);
-  }
-  70% {
-    box-shadow: 0 0 0 5px rgba(var(--highlighted-rgb, 32, 204, 68), 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(var(--highlighted-rgb, 32, 204, 68), 0);
   }
 }
 

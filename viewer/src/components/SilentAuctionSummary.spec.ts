@@ -53,6 +53,20 @@ describe("SilentAuctionSummary", () => {
     wrapper.destroy();
   });
 
+  it("clears the announcement after play advances, including on reload", async () => {
+    const engine = resolvedAuction();
+    const wrapper = mountFor(engine);
+    const next = Engine.fromData(JSON.parse(JSON.stringify(engine)));
+    next.moveHistory.push("taklons build m -1x-4");
+    wrapper.vm.$store.commit("receiveData", next);
+    await Vue.nextTick();
+    expect(wrapper.find(".auction-summary").exists()).to.equal(false);
+    wrapper.destroy();
+    const refreshed = mountFor(next);
+    expect(refreshed.find(".auction-summary").exists()).to.equal(false);
+    refreshed.destroy();
+  });
+
   it("shows nothing before an auction has resolved", () => {
     const engine = new Engine(["init 3 auction-summary"], { auction: AuctionVariant.Silent });
     const wrapper = mountFor(engine);

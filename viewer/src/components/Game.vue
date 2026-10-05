@@ -24,6 +24,7 @@
       :plan="myPremovePlan"
       :costs="premoveCosts"
       :notice-storage-key="premoveNoticeStorageKey"
+      :move-history="premoveNoticeHistory"
       :pending="!!$store.state.pendingPlan"
       :active="analysisMode"
       :preview-round="analysisMode && analysisRolledForward ? analysisBaseRound : undefined"
@@ -37,6 +38,7 @@
       v-else-if="myPremovePlan && myPremovePlan.notice"
       :plan="myPremovePlan"
       :storage-key="premoveNoticeStorageKey"
+      :move-history="premoveNoticeHistory"
       class="mb-3"
     />
     <div v-if="$store.state.planError" class="alert alert-warning" role="status">{{ $store.state.planError }}</div>
@@ -1018,6 +1020,10 @@ export default class Game extends Vue {
 
   get myPremovePlan(): PremovePlan | undefined {
     return this.realEngine.automation?.plans[this.myLockedSeat];
+  }
+
+  get premoveNoticeHistory(): string {
+    return JSON.stringify([this.realEngine.moveHistory, this.realEngine.pendingMove]);
   }
 
   get premoveNoticeStorageKey(): string {

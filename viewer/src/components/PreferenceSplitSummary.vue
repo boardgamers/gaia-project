@@ -64,8 +64,15 @@ export default class PreferenceSplitSummary extends Vue {
     return window.localStorage.getItem(DISMISSED_KEY_PREFIX + this.gameKey) === "1";
   }
 
+  get justResolved(): boolean {
+    // Results stay in the engine forever; the announcement belongs to the resolving move.
+    const data = this.gameData;
+    const latestMove = data?.pendingMove || data?.moveHistory?.[data.moveHistory.length - 1] || "";
+    return latestMove.split(/\s+/)[1] === "preferenceBid";
+  }
+
   get visible(): boolean {
-    return !this.dismissed && this.results.length > 0;
+    return this.justResolved && !this.dismissed && this.results.length > 0;
   }
 
   get results(): { faction: string; winner: string; price: number }[] {

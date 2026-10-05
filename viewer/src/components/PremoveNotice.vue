@@ -24,15 +24,25 @@ import Vue from "vue";
 export default Vue.extend({
   props: {
     plan: { type: Object as () => PremovePlan, required: true },
+    moveHistory: { type: String, default: "" },
     storageKey: { type: String, required: true },
   },
   data: () => ({ dismissedId: "" }),
   computed: {
+    noticeContext(): string[] {
+      return [this.storageKey, this.noticeId, this.moveHistory];
+    },
     noticeId(): string {
       return JSON.stringify([this.plan.requestId, this.plan.revision, this.plan.notice]);
     },
   },
   watch: {
+    noticeContext(current: string[], previous: string[]) {
+      // Refetches and new notices must survive; acknowledge an unchanged notice after play advances.
+      if (current[0] === previous[0] && current[1] === previous[1] && current[2] !== previous[2]) {
+        this.dismiss();
+      }
+    },
     storageKey: {
       immediate: true,
       handler(key: string) {

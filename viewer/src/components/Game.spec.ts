@@ -662,6 +662,15 @@ describe("Game", () => {
       await Vue.nextTick();
       expect(vm.$el.querySelector(".premove-queue")).to.equal(null);
       expect(vm.$el.querySelector(".premove-notice").textContent).to.contain("Premoves stopped: insufficient ore");
+      // An unchanged notice survives refetching, then clears when the live position advances.
+      await vm.$store.dispatch("externalData", JSON.parse(JSON.stringify(stopped)));
+      await Vue.nextTick();
+      expect(vm.$el.querySelector(".premove-notice")).not.to.equal(null);
+      const advanced = new Engine([...SETUP_MOVES, "terrans up nav."]);
+      advanced.automation = stopped.automation;
+      await vm.$store.dispatch("externalData", JSON.parse(JSON.stringify(advanced)));
+      await Vue.nextTick();
+      expect(vm.$el.querySelector(".premove-notice")).to.equal(null);
       vm.$el.remove();
       vm.$destroy();
     });

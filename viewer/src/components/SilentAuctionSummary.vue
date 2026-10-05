@@ -62,8 +62,20 @@ export default class SilentAuctionSummary extends Vue {
     return window.localStorage.getItem(DISMISSED_KEY_PREFIX + this.gameKey) === "1";
   }
 
+  get justResolved(): boolean {
+    // Results stay in the engine forever; the announcement belongs to the resolving move.
+    const data = this.gameData;
+    const latestMove = data?.pendingMove || data?.moveHistory?.[data.moveHistory.length - 1] || "";
+    return latestMove.split(/\s+/)[1] === "silentBid";
+  }
+
   get visible(): boolean {
-    return !this.dismissed && (this.gameData?.silentAuctionLog?.length ?? 0) > 0 && this.results.length > 0;
+    return (
+      this.justResolved &&
+      !this.dismissed &&
+      (this.gameData?.silentAuctionLog?.length ?? 0) > 0 &&
+      this.results.length > 0
+    );
   }
 
   /** Same shape SilentAuctionLog's result table uses: `setup` order is pick order, which is also

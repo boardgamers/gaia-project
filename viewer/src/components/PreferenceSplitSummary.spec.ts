@@ -1,5 +1,6 @@
 import Engine, { AuctionVariant } from "@gaia-project/engine";
 import { fireEvent, render } from "@testing-library/vue";
+import { mount as mountComponent } from "@vue/test-utils";
 import BootstrapVue from "bootstrap-vue";
 import { expect } from "chai";
 import Vue from "vue";
@@ -69,6 +70,22 @@ describe("PreferenceSplitSummary", () => {
     // ...while a different game is unaffected (a different seed = a different storage key).
     const other = mount(RESOLVED.map((move) => move.replace("init 4 djfjjv4k", "init 4 otherseed")));
     expect(other.container.querySelector(".auction-summary")).to.not.equal(null);
+  });
+
+  it("clears the announcement after play advances, including on reload", async () => {
+    const engine = new Engine([...RESOLVED], { auction: AuctionVariant.PreferenceSplit, auctionBudget: 40 });
+    const store = makeStore();
+    store.commit("receiveData", engine);
+    const wrapper = mountComponent(PreferenceSplitSummary, { store });
+    const next = Engine.fromData(JSON.parse(JSON.stringify(engine)));
+    next.moveHistory.push("itars build m -1x-4");
+    store.commit("receiveData", next);
+    await Vue.nextTick();
+    expect(wrapper.find(".auction-summary").exists()).to.equal(false);
+    wrapper.destroy();
+    const refreshed = mountComponent(PreferenceSplitSummary, { store });
+    expect(refreshed.find(".auction-summary").exists()).to.equal(false);
+    refreshed.destroy();
   });
 
   it("shows nothing at all before the auction has resolved", () => {
