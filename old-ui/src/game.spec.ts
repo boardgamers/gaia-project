@@ -2,6 +2,12 @@ import Engine from "@gaia-project/engine";
 import { loadScenarioEngine, selfContainedScenarios } from "../../viewer/src/self-contained-scenarios";
 import launch from "./launcher";
 
+const federationFixture = () => {
+  const data = JSON.parse(JSON.stringify(require("@gaia-project/engine/fixtures/Beta-2.json")));
+  expect(data.map.some((hex: any) => hex.data?.federations?.length)).toBe(true);
+  return data;
+};
+
 describe("old UI on the current engine", () => {
   beforeAll(() => {
     const Observer = class {
@@ -53,6 +59,14 @@ describe("old UI on the current engine", () => {
           expect(action.getAttribute("transform")).toMatch(/^translate\(/);
         }
         expect(document.querySelector(".bgs-game-chat")?.textContent).toContain("Ready to explore");
+
+        const fedFixture = federationFixture();
+        viewer.emit("state", fedFixture);
+        await vi.waitFor(() => {
+          expect(viewer.app.$el.querySelectorAll("path.federation-path--color").length).toBeGreaterThan(0);
+        });
+        // No dangling <use> references to the removed global federation defs
+        expect(viewer.app.$el.querySelectorAll("use[xlink\\:href^='#federation']").length).toBe(0);
       } finally {
         viewer.app.$destroy();
         document.body.replaceChildren();

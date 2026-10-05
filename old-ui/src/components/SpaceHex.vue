@@ -10,11 +10,19 @@
       :data-recent-opponent-move="recentOpponentMove.command"
       pointer-events="none"
     />
-    <use
+    <path
+      v-for="(l, i) in federationLines"
+      :key="`fl-outline-${i}`"
+      :d="l.path"
+      class="federation-path federation-path--outline"
+      pointer-events="none"
+    />
+    <path
       v-for="(l, i) in federationLines"
       :key="`fl-${i}`"
-      :xlink:href="l.id"
-      :transform="`rotate(${l.rotate})`"
+      :d="l.path"
+      :stroke="l.color"
+      class="federation-path federation-path--color"
       pointer-events="none"
     />
     <use v-if="powerHighlightClass" xlink:href="#space-hex" :class="['space-hex-federation', powerHighlightClass]" />
