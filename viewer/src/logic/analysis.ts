@@ -918,11 +918,8 @@ export function replayAnalysisLine(
             });
           }
         }
-        const gaiaformers = data?.gaiaformersUsedForAsteroid ?? 0;
         copy.move(entry.move);
         if (costs) {
-          const used = (data?.gaiaformersUsedForAsteroid ?? 0) - gaiaformers;
-          if (used > 0) cost.push({ type: Resource.GaiaFormer, count: used });
           costs.push(cost);
         }
         copy.generateAvailableCommandsIfNeeded();

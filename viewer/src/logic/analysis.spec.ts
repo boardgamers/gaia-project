@@ -1,4 +1,4 @@
-import Engine, { AuctionVariant, Command, Faction, Phase, Resource, Round } from "@gaia-project/engine";
+import Engine, { AuctionVariant, Command, Faction, Phase, Planet, Resource, Round } from "@gaia-project/engine";
 import { expect } from "chai";
 import type { AnalysisEntry, MoveCost } from "./analysis";
 import {
@@ -99,6 +99,28 @@ describe("replayAnalysisLine", () => {
     const { engine, applied } = replayAnalysisLine(origin, entries, 0, 1);
     expect(applied).to.equal(1);
     expect(engine.moveHistory[engine.moveHistory.length - 1]).to.equal("terrans up nav (0 ⇒ 1).");
+  });
+
+  it("shows an asteroid's spent Gaiaformer exactly once in simulated costs and the log", () => {
+    const origin = new Engine(SETUP_MOVES);
+    origin.map.getS("0x2").data.planet = Planet.Asteroid;
+    origin.clearAvailableCommands();
+    const before = JSON.stringify(origin);
+    const costs: MoveCost[] = [];
+    const { engine, applied } = replayAnalysisLine(
+      origin,
+      [{ kind: "move", move: "terrans build m 0x2." }],
+      0,
+      1,
+      costs
+    );
+    expect(applied).to.equal(1);
+    expect(costs[0].filter((cost) => cost.type === Resource.GaiaFormer)).to.deep.equal([
+      { type: Resource.GaiaFormer, count: 1 },
+    ]);
+    const entry = engine.advancedLog.find((entry) => entry.changes?.[Command.Build]?.[Resource.GaiaFormer] === -1);
+    expect(entry).to.not.equal(undefined);
+    expect(JSON.stringify(origin)).to.equal(before);
   });
 
   it("leaves the original engine untouched", () => {

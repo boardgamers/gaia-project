@@ -676,6 +676,8 @@ export default class Player extends EventEmitter {
     // Gaiaformer and let the §G3 "former" booster award negative VP.)
     if (isNewAsteroidColonization && consumesAsteroidGaiaformer) {
       this.data.gaiaformersUsedForAsteroid += 1;
+      // Permanent consumption uses its own counter, but is still a resource payment.
+      this.data.emit(`pay-${Resource.GaiaFormer}`, 1, Command.Build);
     }
 
     // excluding Gaiaformers as occupied

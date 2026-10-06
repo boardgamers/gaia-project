@@ -775,6 +775,7 @@ export default class Engine {
       Resource.Brainstone,
       Resource.MoveTokenFromGaiaAreaToArea1,
       Resource.MoveGaiaFormerFromGaiaAreaToArea1,
+      Resource.GaiaFormer,
     ]) {
       player.data.on(`gain-${resource}`, (amount: number, source: EventSource) =>
         this.log(player.player, resource, amount, source)

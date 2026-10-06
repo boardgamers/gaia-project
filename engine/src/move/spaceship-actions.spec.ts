@@ -493,6 +493,7 @@ describe("Lost Fleet spaceship board actions", () => {
 
     expect(target.hex.data.building).to.equal(Building.Mine);
     expect(player.data.gaiaformersUsedForAsteroid).to.equal(0);
+    expect(engine.advancedLog.some((entry) => entry.changes?.[Command.Build]?.[Resource.GaiaFormer] < 0)).to.be.false;
   });
 
   it("should not offer Eclipse's Credit action at all when there is no legal Mine target (all Mines already placed)", () => {

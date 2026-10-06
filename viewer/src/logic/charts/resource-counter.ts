@@ -129,7 +129,15 @@ export function newResourceSimulator(want: Player, expansions: Expansion): Resou
 
   function gainRewards(source: EventSource, rewards: Reward[]) {
     simulationPlayer.data.gainRewards(
-      rewards.map((rew) => simulationPlayer.factionReward(rew, source, false)),
+      rewards
+        .filter((reward) => {
+          if (source === Command.Build && reward.type === Resource.GaiaFormer && reward.count < 0) {
+            playerData.gaiaformersUsedForAsteroid -= reward.count;
+            return false;
+          }
+          return true;
+        })
+        .map((rew) => simulationPlayer.factionReward(rew, source, false)),
       false,
       null
     );

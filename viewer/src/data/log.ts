@@ -8,6 +8,7 @@ import Engine, {
   Phase,
   Player,
   PlayerEnum,
+  Resource,
   Spaceship,
   TechTilePos,
 } from "@gaia-project/engine";
@@ -236,7 +237,11 @@ function newPlayerLogCounter(engine: Engine, p: Player): LogCounter {
   const resourceSimulator = newResourceSimulator(p, engine.expansions);
   const playerData = resourceSimulator.playerData;
   const buildings = new BuildingCounter(playerData);
-  const research = new ResearchCounter(p, playerData);
+  const gaiaformersFromLog = engine.advancedLog.some(
+    (entry) =>
+      entry.player === p.player && Object.values(entry.changes ?? {}).some((change) => change[Resource.GaiaFormer] > 0)
+  );
+  const research = new ResearchCounter(p, playerData, gaiaformersFromLog);
 
   return {
     faction: p.faction,

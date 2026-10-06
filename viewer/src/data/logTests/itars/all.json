@@ -2539,6 +2539,10 @@
         "changes": "1o, 1q"
       },
       {
+        "source": "gaia",
+        "changes": "1gf"
+      },
+      {
         "source": "roundGaia",
         "changes": "1tg->t"
       }
@@ -3456,7 +3460,7 @@
       },
       {
         "source": "gaia",
-        "changes": "3t, 3pw"
+        "changes": "3t, 1gf, 3pw"
       }
     ],
     "color": "#000000",
@@ -4276,6 +4280,10 @@
       {
         "source": "up",
         "changes": "-4k"
+      },
+      {
+        "source": "gaia",
+        "changes": "1gf"
       }
     ],
     "color": "#000000",

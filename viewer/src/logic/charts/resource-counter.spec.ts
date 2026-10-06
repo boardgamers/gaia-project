@@ -2,7 +2,9 @@ import Engine, {
   BrainstoneDest,
   Command,
   EventSource,
+  Faction,
   Phase,
+  Player,
   PlayerData,
   PlayerEnum,
   PowerArea,
@@ -241,5 +243,24 @@ describe("Resource Counter", () => {
         });
       }
     });
+  });
+});
+
+describe("Asteroid Gaiaformer resource simulation", () => {
+  it("keeps permanent build payments out of the Gaia area", () => {
+    const player = new Player();
+    player.faction = Faction.Terrans;
+    const simulator = newResourceSimulator(player, 0);
+    simulator.playerData.gaiaformers = 1;
+    const changes = simulator.simulateResources({
+      log: { player: player.player, changes: { [Command.Build]: { [Resource.GaiaFormer]: -1 } } },
+      cmd: null,
+      cmdIndex: 0,
+      allCommands: [],
+    });
+    expect(changes[Command.Build]).to.deep.equal([{ type: Resource.GaiaFormer, count: -1 }]);
+    expect(simulator.playerData.gaiaformersUsedForAsteroid).to.equal(1);
+    expect(simulator.playerData.gaiaformersInGaia).to.equal(0);
+    expect(simulator.playerData.getResources(Resource.GaiaFormer)).to.equal(0);
   });
 });

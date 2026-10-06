@@ -19,7 +19,11 @@ export class ResearchCounter {
   player: Player;
   playerData: PlayerData;
 
-  constructor(player: Player, playerData: PlayerData = new PlayerData()) {
+  constructor(
+    player: Player,
+    playerData: PlayerData = new PlayerData(),
+    private gaiaformersFromLog = false
+  ) {
     this.player = player;
     this.playerData = playerData;
 
@@ -39,10 +43,11 @@ export class ResearchCounter {
 
   private advance(field: ResearchField) {
     this.playerData.research[field]++;
+    if (this.gaiaformersFromLog) return;
     for (const r of researchEvents(field, this.playerData.research[field], Expansion.None)
       .flatMap((e) => e.rewards)
       .filter((r) => r.type === Resource.GaiaFormer)) {
-      //workaround because gaia formers don't appear in advanced log
+      // Older stored logs omit Gaiaformer gains; reconstruct those from research.
       this.playerData.gaiaformers += r.count;
     }
   }

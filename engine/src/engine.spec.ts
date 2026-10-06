@@ -17,6 +17,7 @@ import {
 } from "./enums";
 import { autoChargePower } from "./move/auto";
 import PlayerData, { MoveTokens } from "./player-data";
+import Reward from "./reward";
 import { techTileEventWithSource } from "./tiles/techs";
 import { AssertionError } from "./utils/assert";
 
@@ -170,6 +171,37 @@ describe("Engine", () => {
     ]);
   });
 
+  it("logs permanent asteroid Gaiaformer spending as a build resource change", () => {
+    const engine = new Engine(["init 2 asteroid-resource-log"], { lostFleet: true });
+    const player = engine.player(PlayerEnum.Player1);
+    player.faction = Faction.Terrans;
+    player.loadFaction(null, engine.expansions);
+    player.data.qics = 10;
+    const hex = [...engine.map.grid.values()].find((entry) => entry.data.planet === Planet.Asteroid);
+    expect(hex).to.not.equal(undefined);
+    const before = player.data.getResources(Resource.GaiaFormer);
+    const { cost } = player.canBuild(engine.map, hex, Planet.Asteroid, Building.Mine, false, false);
+    player.build(Building.Mine, hex, cost, engine.map);
+    const latestLog = engine.advancedLog[engine.advancedLog.length - 1];
+    expect(latestLog.changes[Command.Build][Resource.GaiaFormer]).to.equal(-1);
+    expect(player.data.getResources(Resource.GaiaFormer)).to.equal(before - 1);
+    expect(player.data.gaiaformersInGaia).to.equal(0);
+    expect(player.data.gaiaformersUsedForAsteroid).to.equal(1);
+  });
+
+  it("logs Gaiaformer payments and gains through the ordinary resource event path", () => {
+    const engine = new Engine(["init 2 gaiaformer-resource-log"]);
+    const player = engine.player(PlayerEnum.Player1);
+    player.faction = Faction.BalTaks;
+    player.loadFaction(null, engine.expansions);
+    player.payCosts([new Reward(1, Resource.GaiaFormer)], Command.Spend);
+    expect(engine.advancedLog[engine.advancedLog.length - 1].changes[Command.Spend][Resource.GaiaFormer]).to.equal(-1);
+    player.gainRewards([new Reward(1, Resource.GaiaFormer)], Phase.RoundIncome);
+    expect(engine.advancedLog[engine.advancedLog.length - 1].changes[Phase.RoundIncome][Resource.GaiaFormer]).to.equal(
+      1
+    );
+  });
+
   it("should not consume a Gaiaformer for a starting building on a home Asteroid (fuzzer finding LF-3)", () => {
     // §E2's Gaiaformer consumption is a cost of the "Build a Mine" ACTION (rulebook p.10);
     // starting buildings (§B1/§B2, p.13) are placed outside that action and factions own 0
@@ -191,6 +223,7 @@ describe("Engine", () => {
     const darkanians = engine.player(PlayerEnum.Player1);
     expect(darkanians.data.occupied.some((hex) => hex.data.planet === Planet.Asteroid)).to.be.true;
     expect(darkanians.data.gaiaformersUsedForAsteroid).to.equal(0);
+    expect(engine.advancedLog.some((entry) => entry.changes?.[Command.Build]?.[Resource.GaiaFormer] < 0)).to.be.false;
   });
 
   it("should have passedPlayers empty at beginning of a new round", () => {
