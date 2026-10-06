@@ -51,7 +51,9 @@ export function createTranslator(catalogs, initialLocale = "en") {
         .map(([source, value]) => [source.toLocaleUpperCase(), value.toLocaleUpperCase()])
     );
     patterns = Object.keys(catalogs[locale] ?? {})
-      .filter((source) => /\{p\d+\}/.test(source) && source.replace(/\{p\d+\}/g, "").trim().length >= 1)
+      .filter(
+        (source) => source !== "IS{p0}" && /\{p\d+\}/.test(source) && source.replace(/\{p\d+\}/g, "").trim().length >= 1
+      )
       .sort((a, b) => b.replace(/\{p\d+\}/g, "").length - a.replace(/\{p\d+\}/g, "").length)
       .map((source) => ({ source, pieces: source.split(/(\{p\d+\})/) }))
       .filter(({ pieces }) =>
@@ -63,7 +65,7 @@ export function createTranslator(catalogs, initialLocale = "en") {
       return value;
     }
     const text = normalize(value);
-    if (!text || names.has(text) || !/[A-Za-zÀ-ž]/.test(text)) {
+    if (!text || names.has(text) || /^(?:IS\d+|DS\d+_\d+)$/.test(text) || !/[A-Za-zÀ-ž]/.test(text)) {
       return value;
     }
     const catalog = catalogs[locale] ?? {};

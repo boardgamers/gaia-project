@@ -33,6 +33,15 @@ describe("translated keyboard labels", () => {
 });
 
 describe("context-sensitive game vocabulary", () => {
+  it("preserves canonical Interspace addresses in labels and tooltip parameters", () => {
+    for (const locale of ["fr", "de", "pl", "pt-BR"]) {
+      expect(translateText("IS0", locale)).toBe("IS0");
+      expect(translateText("IS10", locale)).toBe("IS10");
+      expect(translateText("Coordinates: IS0", locale)).toContain("IS0");
+      expect(translateText("terrans build m IS0.", locale)).toContain("IS0.");
+    }
+  });
+
   it("keeps charge about power and Gaiaformers about units", () => {
     expect(translateText("Undo charge", "pt-BR")).toBe("Desfazer carga de poder");
     expect(translateText("(Other players can charge power)", "de")).toBe("(Andere Spieler dürfen Macht aufladen)");

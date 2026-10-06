@@ -77,7 +77,7 @@
         transform="translate(-0.84,-0.79)"
       >
         <rect :width="badgeWidth" height="0.34" rx="0.12" ry="0.12" />
-        <text :x="badgeWidth / 2" y="0.17">{{ lostFleetSectorBadge.label }}</text>
+        <text :x="badgeWidth / 2" y="0.17" dy="0.091">{{ lostFleetSectorBadge.label }}</text>
       </g>
       <text class="sector-name" v-if="isCenter" x="0" y="0" dy="0.35">
         {{ hex.data.sector[0] === "s" ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector) }}
@@ -417,10 +417,7 @@ export default class SpaceHex extends Vue {
   // of the 3 hexes happens to hold a planet.
   get lostFleetSectorBadge(): { kind: "interspace"; label: string } | null {
     if (this.sectorType === LostFleetSectorType.Interspace) {
-      // Interspace tiles sit between sectors and have no id printed on the physical tile, so
-      // reference them by which sectors they border (e.g. "IS123" borders sectors 1, 2, 3)
-      // instead of an arbitrary internal id.
-      return { kind: "interspace", label: this.interspaceBorderLabel };
+      return { kind: "interspace", label: this.hex.toString() };
     }
     return null;
   }
@@ -428,26 +425,6 @@ export default class SpaceHex extends Vue {
   get badgeWidth(): number {
     const label = this.lostFleetSectorBadge?.label ?? "";
     return Math.max(0.72, 0.22 + label.length * 0.13);
-  }
-
-  /**
-   * Sorted, deduped sector numbers this Interspace hex is grid-adjacent to, e.g. "IS123". Space
-   * sector ids are never plain digits for sectors 5/6/7 - they're always a face-letter variant
-   * (`map.ts`'s `s5`/`s5b`/`s6`/`s6b`/`s7`/`s7b` name to "5A"/"5B"/"6A"/"6B"/"7A"/"7B", one face or
-   * the other always in play, per RULES_CLARIFICATIONS.md §H4/H1) - so the trailing face letter
-   * must be stripped, not just an occasional leading "s", or it leaks into the label (e.g. the old
-   * "IS1235B" bug) and breaks the "named for the 3 adjacent sector numbers" convention.
-   */
-  private get interspaceBorderLabel(): string {
-    const sectorNumber = (sector: string): string => sector.replace(/^s/, "").replace(/[A-Za-z]+$/, "");
-    const borders = new Set<string>();
-    for (const neighbour of this.map.grid.neighbours(this.hex)) {
-      if (classifySectorId(neighbour.data.sector) === LostFleetSectorType.Space) {
-        borders.add(sectorNumber(neighbour.data.sector));
-      }
-    }
-    const sorted = [...borders].sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
-    return "IS" + sorted.join("");
   }
 
   private get sectorTypeLabel(): string {
@@ -760,10 +737,9 @@ svg {
 
     text {
       fill: white;
-      font-size: 0.18px;
+      font-size: 0.26px;
       font-weight: 700;
       text-anchor: middle;
-      dominant-baseline: central;
       letter-spacing: 0.03em;
     }
 

@@ -257,13 +257,14 @@ describe("SpaceMap", () => {
       expect(label.classList.contains("sector-name")).to.equal(true, "should match sector-number styling");
     });
 
-    // Interspace badges reference the sectors they border (e.g. "IS123"), not an arbitrary id.
-    // Deep Space labels are now a bare number, not "DS<n>". Sectors 5/6/7 are always named with a
-    // face-letter suffix ("5A"/"5B" etc, see map.ts) - lost-fleet-space-map at 2p includes
-    // 5B/6B/7B, so this regression-tests that the letter never leaks into the "IS..." label
-    // (digits only after "IS", per the naming convention).
-    container.querySelectorAll('[data-sector-type="interspace"] text').forEach((badge) => {
-      expect(badge.textContent.trim()).to.match(/^IS\d+$/);
+    // Map labels, tooltips and recorded moves share the short canonical IS address.
+    container.querySelectorAll('[data-sector-type="interspace"]').forEach((badge) => {
+      const cell = badge.closest("g.space-hex-cell");
+      const address = cell.id;
+      expect(address).to.match(/^IS\d+$/);
+      expect(badge.querySelector("text").textContent.trim()).to.equal(address);
+      expect(cell.querySelector("title").textContent).to.contain(`Coordinates: ${address} `);
+      expect(engine.map.getS(address).toString()).to.equal(address);
     });
     deepSpaceLabels.forEach((label) => {
       expect(label.textContent.trim()).to.match(/^\d+$/);
