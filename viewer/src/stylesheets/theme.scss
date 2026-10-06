@@ -65,7 +65,6 @@
   --ui-board-action: #f8fafc;
   --ui-board-action-border: #7d899b;
   --ui-svg-neutral-text: #212529;
-  --ui-map-icon-filter: none;
 
   // Compatibility aliases for existing component styles. Bootstrap 4 itself does not expose
   // these CSS variables, but a few newer components already reference them.
@@ -142,7 +141,6 @@
   --ui-board-action: #4b586b;
   --ui-board-action-border: #8796ad;
   --ui-svg-neutral-text: #f1f4f8;
-  --ui-map-icon-filter: invert(1) brightness(1.45);
   --bs-body-bg: var(--ui-bg);
   --bs-body-color: var(--ui-text);
   --warning: var(--ui-warning);
@@ -762,5 +760,6 @@ kbd {
 }
 
 .space-map__chart-button {
-  filter: var(--ui-map-icon-filter);
+  // Directly color the inline shape: CSS filters on SVG images fail in some Safari versions.
+  fill: var(--ui-svg-neutral-text);
 }
