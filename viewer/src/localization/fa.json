@@ -4128,5 +4128,7 @@
   "Instant Gaiaforming: place a Gaia Former on a Transdim planet in range, which becomes a Gaia planet right away. No power tokens are moved to your Gaia area.": "گایاسازی فوری: یک گایاساز روی یک سیارهٔ فرابُعدی در برد بگذارید؛ آن سیاره بی‌درنگ به سیارهٔ گایا تبدیل می‌شود. هیچ مهرهٔ نیرویی به ناحیهٔ گایا منتقل نمی‌شود.",
   "Instant Gaiaforming (booster)": "گایاسازی فوری (تقویت‌کننده)",
   "Instant Gaiaforming ({p0}, {p1})": "گایاسازی فوری ({p0}، {p1})",
-  "Once per round, as a special action, perform instant Gaiaforming: {p0}": "یک‌بار در هر دور، به‌عنوان عمل ویژه، گایاسازی فوری انجام دهید: {p0}"
+  "Once per round, as a special action, perform instant Gaiaforming: {p0}": "یک‌بار در هر دور، به‌عنوان عمل ویژه، گایاسازی فوری انجام دهید: {p0}",
+  "Chosen this round": "در این دور انتخاب شده",
+  "Used in an earlier round": "در یکی از دورهای قبل استفاده شده"
 }

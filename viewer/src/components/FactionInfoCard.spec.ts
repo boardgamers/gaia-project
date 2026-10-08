@@ -1,4 +1,5 @@
 import Engine, { Expansion, Faction } from "@gaia-project/engine";
+import { TinkeringTile } from "@gaia-project/engine/src/enums";
 import { render } from "@testing-library/vue";
 import { expect } from "chai";
 import Vue from "vue";
@@ -71,6 +72,48 @@ describe("FactionInfoCard", () => {
     expect(container.textContent).to.include("Tinkering tiles");
     expect(container.textContent).to.include("Rounds 1-3");
     expect(container.textContent).to.include("Rounds 4-6");
+  });
+
+  it("crosses out the Tinkering tiles the game's Tinkeroids already took, this round's included", () => {
+    const engine = new Engine(["init 2 faction-info-tink-used"], { lostFleet: true });
+    const tinkeroids = engine.players[1];
+    tinkeroids.faction = Faction.Tinkeroids;
+    tinkeroids.data.usedTinkeringTiles = [TinkeringTile.Step1];
+    tinkeroids.data.currentTinkeringTile = TinkeringTile.Power4;
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(FactionInfoCard, {
+      props: { faction: Faction.Tinkeroids, variant: null, expansion: Expansion.LostFleet },
+      store,
+    });
+
+    const tiles = [...container.querySelectorAll(".faction-info-card__tinkering-tile")];
+    const crossedOut = tiles.map((tile) => tile.querySelector("g.specialAction.disabled") !== null);
+    // Rounds 1-3 are step, 4pw, q; rounds 4-6 are 3 steps, 3k, 2q.
+    expect(crossedOut).to.deep.equal([true, true, false, false, false, false]);
+    expect(tiles.map((tile) => tile.getAttribute("title"))).to.deep.equal([
+      "Used in an earlier round",
+      "Chosen this round",
+      null,
+      null,
+      null,
+      null,
+    ]);
+  });
+
+  it("crosses out no Tinkering tile without Tinkeroids in the game", () => {
+    const engine = new Engine(["init 2 faction-info-tink-none"], { lostFleet: true });
+    const store = makeStore();
+    store.commit("receiveData", engine);
+
+    const { container } = render(FactionInfoCard, {
+      props: { faction: Faction.Tinkeroids, variant: null, expansion: Expansion.LostFleet },
+      store,
+    });
+
+    expect(container.querySelectorAll(".faction-info-card__tinkering-tile")).to.have.length(6);
+    expect(container.querySelectorAll(".faction-info-card__tinkering-tile g.specialAction.disabled")).to.have.length(0);
   });
 
   it("renders Lantids without throwing (its filler opponent must not also be Terrans, its opposite faction)", () => {

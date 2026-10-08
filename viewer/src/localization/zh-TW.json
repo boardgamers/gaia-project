@@ -4128,5 +4128,7 @@
   "Instant Gaiaforming: place a Gaia Former on a Transdim planet in range, which becomes a Gaia planet right away. No power tokens are moved to your Gaia area.": "即時蓋亞化：將一個蓋亞改造機放到航程內的一顆跨次元行星上，該行星立即成為蓋亞行星。不會有能量標記移到你的蓋亞區。",
   "Instant Gaiaforming (booster)": "即時蓋亞化（強化板塊）",
   "Instant Gaiaforming ({p0}, {p1})": "即時蓋亞化（{p0}，{p1}）",
-  "Once per round, as a special action, perform instant Gaiaforming: {p0}": "每輪一次，作為特殊行動，執行即時蓋亞化：{p0}"
+  "Once per round, as a special action, perform instant Gaiaforming: {p0}": "每輪一次，作為特殊行動，執行即時蓋亞化：{p0}",
+  "Chosen this round": "本輪已選擇",
+  "Used in an earlier round": "已於先前輪次使用"
 }

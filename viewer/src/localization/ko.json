@@ -4128,5 +4128,7 @@
   "Instant Gaiaforming: place a Gaia Former on a Transdim planet in range, which becomes a Gaia planet right away. No power tokens are moved to your Gaia area.": "즉시 가이아포밍: 사거리 내의 트랜스딤 행성에 가이아포머를 놓으면 그 행성은 즉시 가이아 행성이 됩니다. 파워 토큰은 가이아 구역으로 이동하지 않습니다.",
   "Instant Gaiaforming (booster)": "즉시 가이아포밍 (부스터)",
   "Instant Gaiaforming ({p0}, {p1})": "즉시 가이아포밍 ({p0}, {p1})",
-  "Once per round, as a special action, perform instant Gaiaforming: {p0}": "라운드당 한 번, 특별 행동으로, 즉시 가이아포밍 수행: {p0}"
+  "Once per round, as a special action, perform instant Gaiaforming: {p0}": "라운드당 한 번, 특별 행동으로, 즉시 가이아포밍 수행: {p0}",
+  "Chosen this round": "이번 라운드에 선택함",
+  "Used in an earlier round": "이전 라운드에 사용함"
 }

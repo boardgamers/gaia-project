@@ -64,7 +64,14 @@
       <div class="faction-info-card__label">Tinkering tiles (one special action per round)</div>
       <div v-for="(round, i) in tinkering" :key="'tk-' + i" class="faction-info-card__tinkering-row">
         <span class="faction-info-card__tinkering-label">{{ round.label }}</span>
-        <SpecialAction v-for="(tile, j) in round.tiles" :key="'tk-' + i + '-' + j" :action="[tile]" board />
+        <span
+          v-for="(tile, j) in round.tiles"
+          :key="'tk-' + i + '-' + j"
+          class="faction-info-card__tinkering-tile"
+          :title="tinkeringTitle(tile.state)"
+        >
+          <SpecialAction :action="[tile.spec]" board :disabled="tile.state !== 'available'" />
+        </span>
       </div>
     </div>
 
@@ -139,7 +146,7 @@ import type { FactionBoardRaw } from "@gaia-project/engine/src/faction-boards";
 import { lostFleetTerraformingBoard } from "@gaia-project/engine/src/factions";
 import Vue, { markRaw } from "vue";
 import { Component, Prop, Watch } from "vue-property-decorator";
-import type { BuildingSpecialAction, Conversion, TinkeringRound } from "../data/faction-overview";
+import type { BuildingSpecialAction, Conversion, TinkeringRound, TinkeringTileState } from "../data/faction-overview";
 import {
   baseFactionLostFleetChanges,
   boardActionNote,
@@ -361,8 +368,17 @@ export default class FactionInfoCard extends Vue {
     return piGrantsTechTile(this.board);
   }
 
+  // Opened from a game with Tinkeroids in it, the tiles they already took are crossed out.
   get tinkering(): TinkeringRound[] | null {
-    return this.faction === Faction.Tinkeroids ? tinkeringRounds() : null;
+    if (this.faction !== Faction.Tinkeroids) {
+      return null;
+    }
+    const engine = this.$store.state.data as Engine;
+    return tinkeringRounds(engine?.players.find((pl) => pl.faction === Faction.Tinkeroids)?.data);
+  }
+
+  tinkeringTitle(state: TinkeringTileState): string | null {
+    return { available: null, chosen: "Chosen this round", used: "Used in an earlier round" }[state];
   }
 
   get lostFleetChanges(): string[] {
@@ -602,6 +618,10 @@ export default class FactionInfoCard extends Vue {
   font-size: 0.82rem;
   font-weight: 600;
   min-width: 5rem;
+}
+
+.faction-info-card__tinkering-tile {
+  display: flex;
 }
 
 // Native <details> accordion for the ability text - one item per ability, closed by default.

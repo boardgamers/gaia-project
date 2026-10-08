@@ -1,3 +1,4 @@
+import type { PlayerData } from "@gaia-project/engine";
 import Engine, {
   Building,
   Faction,
@@ -135,15 +136,23 @@ export function exploreNote(faction: Faction): string | null {
 // surcharged faction.
 export const DEFAULT_GAIA_MINE_COST: Reward = new Reward(1, Resource.Qic);
 
-export type TinkeringRound = { label: string; tiles: string[] };
+/** "used" in an earlier round, or "chosen" for the current one - either way it can't be chosen again. */
+export type TinkeringTileState = "available" | "chosen" | "used";
+export type TinkeringRound = { label: string; tiles: { spec: string; state: TinkeringTileState }[] };
 
 // Tinkeroids only: the per-round Tinkering tile options as reward specs (rendered as special-action
-// octagons, since each is a once-per-round action). Rounds 1-3 and 4-6 each offer three tiles.
-export function tinkeringRounds(): TinkeringRound[] {
-  const specs = (tiles: TinkeringTile[]) => tiles.map((tile) => tinkeringTileSpec(tile));
+// octagons, since each is a once-per-round action). Rounds 1-3 and 4-6 each offer three tiles. With
+// the Tinkeroids player's data, the tiles they already took are marked.
+export function tinkeringRounds(
+  data?: Pick<PlayerData, "usedTinkeringTiles" | "currentTinkeringTile">
+): TinkeringRound[] {
+  const state = (tile: TinkeringTile): TinkeringTileState =>
+    data?.currentTinkeringTile === tile ? "chosen" : data?.usedTinkeringTiles.includes(tile) ? "used" : "available";
+  const tiles = (round: number) =>
+    tinkeringTilesForRound(round).map((tile) => ({ spec: tinkeringTileSpec(tile), state: state(tile) }));
   return [
-    { label: "Rounds 1-3", tiles: specs(tinkeringTilesForRound(1)) },
-    { label: "Rounds 4-6", tiles: specs(tinkeringTilesForRound(4)) },
+    { label: "Rounds 1-3", tiles: tiles(1) },
+    { label: "Rounds 4-6", tiles: tiles(4) },
   ];
 }
 

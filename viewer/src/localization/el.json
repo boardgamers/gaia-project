@@ -4128,5 +4128,7 @@
   "Instant Gaiaforming: place a Gaia Former on a Transdim planet in range, which becomes a Gaia planet right away. No power tokens are moved to your Gaia area.": "Άμεση Γαιομόρφωση: τοποθέτησε έναν Γαιοδιαμορφωτή σε έναν πλανήτη transdim εντός εμβέλειας, ο οποίος γίνεται αμέσως πλανήτης Γαία. Καμία μάρκα ισχύος δεν μετακινείται στην περιοχή Γαίας σου.",
   "Instant Gaiaforming (booster)": "Άμεση Γαιομόρφωση (booster)",
   "Instant Gaiaforming ({p0}, {p1})": "Άμεση Γαιομόρφωση ({p0}, {p1})",
-  "Once per round, as a special action, perform instant Gaiaforming: {p0}": "Μία φορά ανά γύρο, ως ειδική ενέργεια, εκτέλεσε Άμεση Γαιομόρφωση: {p0}"
+  "Once per round, as a special action, perform instant Gaiaforming: {p0}": "Μία φορά ανά γύρο, ως ειδική ενέργεια, εκτέλεσε Άμεση Γαιομόρφωση: {p0}",
+  "Chosen this round": "Επιλέχθηκε σε αυτόν τον γύρο",
+  "Used in an earlier round": "Χρησιμοποιήθηκε σε προηγούμενο γύρο"
 }

@@ -4128,5 +4128,7 @@
   "Instant Gaiaforming: place a Gaia Former on a Transdim planet in range, which becomes a Gaia planet right away. No power tokens are moved to your Gaia area.": "Gaia hóa tức thời: đặt một Gaiaformer lên một hành tinh transdim trong tầm, hành tinh đó lập tức trở thành hành tinh Gaia. Không có token năng lượng nào bị chuyển vào khu Gaia của bạn.",
   "Instant Gaiaforming (booster)": "Gaia hóa tức thời (gói tăng cường)",
   "Instant Gaiaforming ({p0}, {p1})": "Gaia hóa tức thời ({p0}, {p1})",
-  "Once per round, as a special action, perform instant Gaiaforming: {p0}": "Mỗi vòng một lần, như một hành động đặc biệt, thực hiện Gaia hóa tức thời: {p0}"
+  "Once per round, as a special action, perform instant Gaiaforming: {p0}": "Mỗi vòng một lần, như một hành động đặc biệt, thực hiện Gaia hóa tức thời: {p0}",
+  "Chosen this round": "Đã chọn trong vòng này",
+  "Used in an earlier round": "Đã dùng ở một vòng trước"
 }

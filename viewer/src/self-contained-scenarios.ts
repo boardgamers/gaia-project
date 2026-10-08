@@ -12,6 +12,7 @@ import {
   Spaceship,
   SpaceshipFederation,
   SpaceshipTechTile,
+  TinkeringTile,
 } from "@gaia-project/engine/src/enums";
 import { GaiaHex } from "@gaia-project/engine/src/gaia-hex";
 import { Power } from "@gaia-project/engine/src/player-data";
@@ -294,6 +295,23 @@ export const selfContainedScenarios: SelfContainedScenario[] = [
       player.data.power = new Power(6, 3, 3, 0);
       player.getRoundBooster(Booster.LostFleetInstant);
       engine.tiles.boosters[Booster.LostFleetInstant] = false;
+      occupyPlanetsOfDistinctTypes(engine, PlayerEnum.Player1, 1);
+
+      return finalizeScenario(engine);
+    },
+  },
+  {
+    id: "lost-fleet-tinkeroids-tinkering",
+    label: "Tinkeroids Tinkering Tiles",
+    description:
+      "Round 3 Tinkeroids have used two Tinkering tiles and chosen the third; their faction sheet crosses all three out.",
+    tags: ["tinkeroids", "special-action", "faction-sheet"],
+    build: () => {
+      const engine = createLostFleetRoundMoveEngine(3, [Faction.Tinkeroids, Faction.Lantids, Faction.Terrans]);
+      const player = engine.player(PlayerEnum.Player1);
+
+      player.data.usedTinkeringTiles = [TinkeringTile.Step1, TinkeringTile.Power4];
+      player.chooseTinkeringTile(engine.round, TinkeringTile.Qic1);
       occupyPlanetsOfDistinctTypes(engine, PlayerEnum.Player1, 1);
 
       return finalizeScenario(engine);

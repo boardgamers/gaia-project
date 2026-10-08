@@ -4128,5 +4128,7 @@
   "Instant Gaiaforming: place a Gaia Former on a Transdim planet in range, which becomes a Gaia planet right away. No power tokens are moved to your Gaia area.": "तुरंत Gaiaforming: रेंज के भीतर किसी ट्रांसडिम ग्रह पर एक गैयाफॉर्मर रखें, जो तुरंत गैया ग्रह बन जाता है। कोई भी ऊर्जा टोकन आपके गैया क्षेत्र में नहीं जाता।",
   "Instant Gaiaforming (booster)": "तुरंत Gaiaforming (बूस्टर)",
   "Instant Gaiaforming ({p0}, {p1})": "तुरंत Gaiaforming ({p0}, {p1})",
-  "Once per round, as a special action, perform instant Gaiaforming: {p0}": "प्रति दौर एक बार, विशेष क्रिया के रूप में, तुरंत Gaiaforming करें: {p0}"
+  "Once per round, as a special action, perform instant Gaiaforming: {p0}": "प्रति दौर एक बार, विशेष क्रिया के रूप में, तुरंत Gaiaforming करें: {p0}",
+  "Chosen this round": "इस दौर में चुनी गई",
+  "Used in an earlier round": "पिछले दौर में उपयोग की गई"
 }

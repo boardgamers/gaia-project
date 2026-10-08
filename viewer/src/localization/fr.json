@@ -4128,5 +4128,7 @@
   "Instant Gaiaforming: place a Gaia Former on a Transdim planet in range, which becomes a Gaia planet right away. No power tokens are moved to your Gaia area.": "Gaïaformation instantanée : placez une Unité de Gaiaformation sur une planète transdim à portée, qui devient immédiatement une planète Gaia. Aucun pion Puissance n'est déplacé vers votre zone Gaia.",
   "Instant Gaiaforming (booster)": "Gaïaformation instantanée (booster)",
   "Instant Gaiaforming ({p0}, {p1})": "Gaïaformation instantanée ({p0}, {p1})",
-  "Once per round, as a special action, perform instant Gaiaforming: {p0}": "Une fois par manche, comme action spéciale, effectuez une Gaïaformation instantanée : {p0}"
+  "Once per round, as a special action, perform instant Gaiaforming: {p0}": "Une fois par manche, comme action spéciale, effectuez une Gaïaformation instantanée : {p0}",
+  "Chosen this round": "Choisie cette manche",
+  "Used in an earlier round": "Utilisée lors d'une manche précédente"
 }
