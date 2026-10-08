@@ -1022,6 +1022,15 @@ export default class Engine {
     engine.loadMoves(oldHistory.slice(1));
     assert(engine.newTurn, "Last move of the game is incomplete");
 
+    // Faction boards are only loaded when the faction selection ends. Before that point the
+    // carried-over variant belongs to a pick that can still change, and the end of the
+    // selection would load it on whatever faction is picked instead.
+    for (const player of engine.players) {
+      if (!player.board) {
+        player.variant = null;
+      }
+    }
+
     engine.replay = keepReplayMode;
 
     engine.generateAvailableCommandsIfNeeded();

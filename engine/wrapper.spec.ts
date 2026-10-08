@@ -2,7 +2,8 @@ import { expect } from "chai";
 import { PlayerEnum } from ".";
 import Beta2 from "./fixtures/Beta-2.json";
 import Engine from "./src/engine";
-import { Phase } from "./src/enums";
+import { Faction, Phase } from "./src/enums";
+import { factionVariantBoard } from "./src/faction-boards";
 import {
   analysisMove,
   automove,
@@ -198,6 +199,31 @@ describe("wrapper", () => {
 
       expect(replayed.moveHistory.length).to.equal(moves2pw.length + 1);
       expect(replayed.moveHistory.slice(-1).pop()).to.equal("terrans charge 2pw (4/4/0/0 ⇒ 2/6/0/0)");
+    });
+
+    it("should load the faction picked again after replaying to the faction selection", async () => {
+      const engine = new Engine(
+        Engine.parseMoves(`
+          init 2 randomSeed
+          p1 faction terrans
+          p2 faction nevlas
+          terrans build m -1x2
+        `),
+        { factionVariant: "beta" }
+      );
+      expect(engine.player(PlayerEnum.Player1).variant.board).to.not.be.undefined;
+
+      const replayed = await replay(JSON.parse(JSON.stringify(engine)), { to: 1 });
+      expect(replayed.players.map((pl) => pl.variant)).to.deep.equal([null, null]);
+
+      replayed.move("p1 faction gleens");
+      replayed.move("p2 faction nevlas");
+      const gleens = factionVariantBoard(replayed.factionCustomization, Faction.Gleens);
+      expect(gleens).to.not.be.null;
+      expect(replayed.player(PlayerEnum.Player1).variant).to.deep.equal({
+        board: gleens.board,
+        version: gleens.version,
+      });
     });
   });
 
