@@ -1003,9 +1003,11 @@ export default class Engine {
     }
     const engine = new Engine(oldHistory.slice(0, 1), options, this.version ?? "1.0.0", true);
 
+    // Per-player data set outside of moves: the move history can't rebuild it
     for (let i = 0; i < oldPlayers.length && i < engine.players.length; i++) {
       engine.players[i].name = oldPlayers[i].name;
       engine.players[i].dropped = oldPlayers[i].dropped;
+      engine.players[i].settings = { ...oldPlayers[i].settings };
       if ((oldPlayers[i] as any).factionVariant && !oldPlayers[i].variant) {
         // LEGACY
         engine.players[i].variant = {

@@ -6,6 +6,7 @@ import {
   defaultAutoCharge,
   defaultAutoChargeMaxPassedRoundLeech,
   defaultAutoChargeTargetSpendablePower,
+  Settings,
 } from "./src/player";
 import type { PremoveCommand } from "./src/premove-types";
 import {
@@ -423,9 +424,7 @@ export function createAnalysis(data: Engine, options: { to: number; sourceEnded:
   delete (copy as any).messages;
   for (const player of copy.players) {
     player.dropped = false;
-    player.settings.autoIncome = false;
-    player.settings.autoBrainstone = false;
-    player.settings.itarsAutoChargeToArea3 = false;
+    player.settings = new Settings();
   }
   copy.generateAvailableCommandsIfNeeded();
   return copy;

@@ -10,6 +10,7 @@ import {
   createAnalysis,
   move,
   moveAI,
+  playerSettings,
   replay,
   setPlayerSettings,
   toSave,
@@ -154,6 +155,50 @@ describe("wrapper", () => {
     it("should replay a game with beta variants", () => {
       expect(() => replay(Engine.fromData(Beta2))).to.not.throw();
     });
+
+    it("should keep player settings", async () => {
+      const moves = Engine.parseMoves(`
+        init 2 randomSeed
+        p1 faction terrans
+        p2 faction nevlas
+        terrans build m -1x2
+        nevlas build m -1x0
+        nevlas build m 0x-4
+        terrans build m -4x-1
+        nevlas booster booster7
+        terrans booster booster3
+      `);
+      const settings = {
+        autoCharge: "3",
+        autoChargeTargetSpendablePower: "2",
+        autoChargeMaxPassedRoundLeech: "1",
+        autoIncome: true,
+        autoBrainstone: true,
+        itarsAutoChargeToArea3: true,
+      };
+      const engine = new Engine(moves);
+      setPlayerSettings(engine, PlayerEnum.Player1, settings);
+      setPlayerSettings(engine, PlayerEnum.Player2, { autoCharge: "decline-cost" });
+
+      // Like undoing a move on the platform, which hands the wrapper serialized data
+      const data = JSON.parse(JSON.stringify(move(engine, "terrans up nav.", PlayerEnum.Player1)));
+      const replayed = await replay(data, { to: moves.length });
+
+      expect(replayed.moveHistory.length).to.equal(moves.length);
+      expect(playerSettings(replayed, PlayerEnum.Player1)).to.deep.equal(settings);
+      expect(playerSettings(replayed, PlayerEnum.Player2).autoCharge).to.equal("decline-cost");
+    });
+
+    it("should automatically charge 2pw after replaying when the setting is set", async () => {
+      const engine = new Engine(moves2pw.slice(0, 5));
+      setPlayerSettings(engine, PlayerEnum.Player1, { autoCharge: "2" });
+      engine.loadMoves(moves2pw.slice(5));
+
+      const replayed = await replay(JSON.parse(JSON.stringify(engine)));
+
+      expect(replayed.moveHistory.length).to.equal(moves2pw.length + 1);
+      expect(replayed.moveHistory.slice(-1).pop()).to.equal("terrans charge 2pw (4/4/0/0 ⇒ 2/6/0/0)");
+    });
   });
 
   describe("moveAI", () => {
@@ -291,6 +336,12 @@ describe("saved analyses", () => {
     source.phase = Phase.SetupSilentBid;
     source.round = 0;
     expect(canLaunchAnalysisMode(source)).to.equal(false);
+  });
+  it("starts every player with default settings", () => {
+    const source = new Engine(history);
+    setPlayerSettings(source, 0, { autoCharge: "2", autoIncome: true });
+    const copy = createAnalysis(source, { to: history.length, sourceEnded: false });
+    expect(playerSettings(copy, 0)).to.deep.equal(playerSettings(new Engine(history), 0));
   });
   it("can branch before the auction once the source has ended", () => {
     const copy = createAnalysis(new Engine(history), { to: 1, sourceEnded: true });
