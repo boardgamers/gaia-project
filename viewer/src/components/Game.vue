@@ -76,6 +76,7 @@
             :hide-spacer="true"
             :analysis-mode="analysisMode"
             :analysis-offered="analysisOffered && !replayData"
+            :take-back-offered="takeBackOffered"
             @analysis-start="enterAnalysisMode"
             @analysis-exit="exitAnalysisMode"
             :analysis-status="analysisStatus"
@@ -209,6 +210,7 @@
             :hide-spacer="true"
             :analysis-mode="analysisMode"
             :analysis-offered="analysisOffered && !replayData"
+            :take-back-offered="takeBackOffered"
             @analysis-start="enterAnalysisMode"
             @analysis-exit="exitAnalysisMode"
             :analysis-status="analysisStatus"
@@ -297,6 +299,7 @@
         @sticky-bar-height="stickyBarHeight = $event"
         :analysis-mode="analysisMode"
         :analysis-offered="analysisOffered && !replayData"
+        :take-back-offered="takeBackOffered"
         @analysis-start="enterAnalysisMode"
         @analysis-exit="exitAnalysisMode"
         :analysis-status="analysisStatus"
@@ -441,6 +444,11 @@ const BOARD_ACTION_INNER_OFFSET = 28;
 const BOARD_ACTION_OCTAGON_LEFT = -26;
 const BOARD_ACTION_OCTAGON_BOTTOM = 19;
 const BOARD_ACTION_BASE_X = -20;
+
+/** Whether `next` is the shown position or a later one of the same game (every shown move kept). */
+function continuesHistory(shown: string[], next: string[]): boolean {
+  return shown.length <= next.length && shown.every((move, index) => move === next[index]);
+}
 
 @Component<Game>({
   components: {
@@ -653,6 +661,12 @@ export default class Game extends Vue {
           this.$store.commit("setSealedBidBackend", this.analysisSealedBidBackendBackup);
           this.analysisSealedBidBackendBackup = null;
           this.$store.commit("setAnalysisMode", false);
+        }
+        // An EARLIER position ("Undo my move" against bots): highlights and the active button were
+        // picked on a board that no longer exists. The new state resets the turn being composed
+        // itself (handleData) and its command chain (Commands.vue's `loadCommands`).
+        if (!continuesHistory(this.engine.moveHistory, payload.moveHistory ?? [])) {
+          this.$store.commit("clearContext");
         }
         this.handleData(Engine.fromData(payload));
         return;
@@ -1090,6 +1104,23 @@ export default class Game extends Vue {
     // sandbox of somebody else's seat, with a Commit button that dispatches a move on that player's
     // behalf. Nothing to analyse there, so it is not offered at all.
     return !this.isHostedMode && this.canPlay;
+  }
+
+  /** "Undo my move": BGS lets the only human of a game against bots take back their last saved move
+   * (protocol `undo:available`). Shown on that player's live board only - not to spectators, nor in
+   * replays, planning, BGS analysis or tutorials, nor while a queued plan awaits the server. */
+  get takeBackOffered(): boolean {
+    return (
+      this.$store.state.undoAvailable &&
+      this.myLockedSeat !== undefined &&
+      !this.replayData &&
+      !this.analysisMode &&
+      !this.tutorial &&
+      !this.interactionDisabled &&
+      !this.ended &&
+      !this.$store.state.preferences.analysis &&
+      !this.$store.state.pendingPlan
+    );
   }
 
   /** Include the unfinished turn in resource deltas; read live data to retain power assumptions. */

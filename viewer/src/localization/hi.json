@@ -4130,5 +4130,6 @@
   "Instant Gaiaforming ({p0}, {p1})": "तुरंत Gaiaforming ({p0}, {p1})",
   "Once per round, as a special action, perform instant Gaiaforming: {p0}": "प्रति दौर एक बार, विशेष क्रिया के रूप में, तुरंत Gaiaforming करें: {p0}",
   "Chosen this round": "इस दौर में चुनी गई",
-  "Used in an earlier round": "पिछले दौर में उपयोग की गई"
+  "Used in an earlier round": "पिछले दौर में उपयोग की गई",
+  "Undo my move": "अपनी चाल वापस लें"
 }

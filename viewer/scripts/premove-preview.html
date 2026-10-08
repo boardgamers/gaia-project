@@ -107,9 +107,11 @@
         revision = data.revision;
         host.emit("state", data.state);
         if (data.settings) host.emit("settings", data.settings);
+        host.emit("undo:available", data.undoAvailable);
       }
       host.on("fetchState", () => send("/state"));
       host.on("move", (move) => send("/move", { move }));
+      host.on("undo", () => send("/undo", {}));
       host.on("update:setting", (setting) => send("/settings", setting));
       host.emit("player", { index: seat });
       host.emit("preferences", { sound: false });
@@ -132,6 +134,7 @@
           revision = data.revision;
           host.emit("state", data.state);
           if (data.settings) host.emit("settings", data.settings);
+          host.emit("undo:available", data.undoAvailable);
         }
       }, 1000);
       send("/state").then(() => {

@@ -4130,5 +4130,6 @@
   "Instant Gaiaforming ({p0}, {p1})": "Gaiaformação Instantânea ({p0}, {p1})",
   "Once per round, as a special action, perform instant Gaiaforming: {p0}": "Uma vez por rodada, como ação especial, realizar Gaiaformação instantânea: {p0}",
   "Chosen this round": "Escolhida nesta rodada",
-  "Used in an earlier round": "Usada em uma rodada anterior"
+  "Used in an earlier round": "Usada em uma rodada anterior",
+  "Undo my move": "Desfazer jogada"
 }

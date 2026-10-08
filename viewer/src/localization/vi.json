@@ -4130,5 +4130,6 @@
   "Instant Gaiaforming ({p0}, {p1})": "Gaia hóa tức thời ({p0}, {p1})",
   "Once per round, as a special action, perform instant Gaiaforming: {p0}": "Mỗi vòng một lần, như một hành động đặc biệt, thực hiện Gaia hóa tức thời: {p0}",
   "Chosen this round": "Đã chọn trong vòng này",
-  "Used in an earlier round": "Đã dùng ở một vòng trước"
+  "Used in an earlier round": "Đã dùng ở một vòng trước",
+  "Undo my move": "Hoàn tác nước đi"
 }

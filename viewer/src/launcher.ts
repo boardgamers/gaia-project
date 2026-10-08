@@ -135,6 +135,9 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
     onAvatars(data) {
       store.commit("avatars", data);
     },
+    onUndoAvailable(available) {
+      store.commit("undoAvailable", available);
+    },
     onTheme({ dark }) {
       document.documentElement.dataset.theme = dark ? "dark" : "light";
     },
@@ -222,6 +225,12 @@ function launch(selector: string, component: VueConstructor<Vue> = Game) {
         viewer.fetchState();
       }, 15000);
       viewer.move(payload);
+      return;
+    }
+
+    if (type === "takeBackMove") {
+      // BGS replays the game to before the player's last saved move and sends that state back.
+      viewer.undo();
       return;
     }
 

@@ -69,4 +69,25 @@ describe("launcher's store-to-emitter bridge", () => {
     item.app.$destroy();
     container.remove();
   });
+
+  it("follows BGS's undo availability and asks BGS to take the last saved move back", () => {
+    const container = document.createElement("div");
+    container.id = "launcher-undo";
+    document.body.appendChild(container);
+    const item = launch("#launcher-undo", Vue.extend({ render: (h) => h("div") }));
+    expect(item.store.state.undoAvailable).to.equal(false);
+    item.emit("undo:available", true);
+    expect(item.store.state.undoAvailable).to.equal(true);
+    let requests = 0;
+    item.on("undo", () => requests++);
+    item.store.dispatch("takeBackMove");
+    expect(requests).to.equal(1);
+    // Back through the turn being composed stays local.
+    item.store.dispatch("undo");
+    expect(requests).to.equal(1);
+    item.emit("undo:available", false);
+    expect(item.store.state.undoAvailable).to.equal(false);
+    item.app.$destroy();
+    container.remove();
+  });
 });

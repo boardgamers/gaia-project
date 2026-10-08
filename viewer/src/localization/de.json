@@ -4130,5 +4130,6 @@
   "Instant Gaiaforming ({p0}, {p1})": "Sofort-Gaiaforming ({p0}, {p1})",
   "Once per round, as a special action, perform instant Gaiaforming: {p0}": "Einmal pro Runde, als Sonderaktion, sofortiges Gaiaforming durchführen: {p0}",
   "Chosen this round": "In dieser Runde gewählt",
-  "Used in an earlier round": "In einer früheren Runde verwendet"
+  "Used in an earlier round": "In einer früheren Runde verwendet",
+  "Undo my move": "Zug zurücknehmen"
 }

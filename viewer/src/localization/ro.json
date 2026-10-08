@@ -4130,5 +4130,6 @@
   "Instant Gaiaforming ({p0}, {p1})": "Gaiaformare instantanee ({p0}, {p1})",
   "Once per round, as a special action, perform instant Gaiaforming: {p0}": "O dată pe rundă, ca acțiune specială, efectuează Gaiaformare instantanee: {p0}",
   "Chosen this round": "Aleasă în această rundă",
-  "Used in an earlier round": "Folosită într-o rundă anterioară"
+  "Used in an earlier round": "Folosită într-o rundă anterioară",
+  "Undo my move": "Anulează mutarea"
 }

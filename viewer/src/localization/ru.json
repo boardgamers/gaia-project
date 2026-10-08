@@ -4130,5 +4130,6 @@
   "Instant Gaiaforming ({p0}, {p1})": "Мгновенное геяформирование ({p0}, {p1})",
   "Once per round, as a special action, perform instant Gaiaforming: {p0}": "Один раз за раунд, как особое действие, выполни мгновенное геяформирование: {p0}",
   "Chosen this round": "Выбрана в этом раунде",
-  "Used in an earlier round": "Использована в одном из прошлых раундов"
+  "Used in an earlier round": "Использована в одном из прошлых раундов",
+  "Undo my move": "Отменить ход"
 }

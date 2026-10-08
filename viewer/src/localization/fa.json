@@ -4130,5 +4130,6 @@
   "Instant Gaiaforming ({p0}, {p1})": "گایاسازی فوری ({p0}، {p1})",
   "Once per round, as a special action, perform instant Gaiaforming: {p0}": "یک‌بار در هر دور، به‌عنوان عمل ویژه، گایاسازی فوری انجام دهید: {p0}",
   "Chosen this round": "در این دور انتخاب شده",
-  "Used in an earlier round": "در یکی از دورهای قبل استفاده شده"
+  "Used in an earlier round": "در یکی از دورهای قبل استفاده شده",
+  "Undo my move": "بازگرداندن حرکت"
 }

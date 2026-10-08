@@ -27,7 +27,11 @@ terrans booster booster3
 `);
 let state;
 let revision = 0;
+// Like BGS against bots: each seat can take back its own saved moves ("Play opponent's turn" is the bot).
+let undoPoints = {};
+const undoAvailable = (seat) => !state.ended && !!undoPoints[seat]?.length;
 function reset() {
+  undoPoints = {};
   state = new Engine(setup);
   state.players[0].name = "Alex";
   state.players[1].name = "You";
@@ -89,11 +93,20 @@ const server = createServer(async (req, res) => {
           if (current !== seat && !wrapper.canMoveOutOfTurn(state, move, seat)) throw new Error("It is not your turn.");
           const result = wrapper.move(clone(), move, seat);
           if (wrapper.toSave(result)) {
+            undoPoints[seat] = [...(undoPoints[seat] ?? []), state.moveHistory.length];
             state = result;
             revision++;
           }
-          res.end(JSON.stringify({ revision, state: wrapper.stripSecret(result, seat) }));
+          res.end(
+            JSON.stringify({ revision, state: wrapper.stripSecret(result, seat), undoAvailable: undoAvailable(seat) })
+          );
           return;
+        } else if (url.pathname === "/undo") {
+          const to = undoPoints[seat]?.at(-1);
+          if (to === undefined || state.ended) throw new Error("There is no move to undo.");
+          state = await wrapper.replay(clone(), { to });
+          for (const key of Object.keys(undoPoints)) undoPoints[key] = undoPoints[key].filter((point) => point < to);
+          revision++;
         }
       }
       res.end(
@@ -101,6 +114,7 @@ const server = createServer(async (req, res) => {
           revision,
           state: wrapper.stripSecret(state, seat),
           settings: wrapper.playerSettings(state, seat),
+          undoAvailable: undoAvailable(seat),
         })
       );
     }

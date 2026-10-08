@@ -4130,5 +4130,6 @@
   "Instant Gaiaforming ({p0}, {p1})": "Direct gaiaformen ({p0}, {p1})",
   "Once per round, as a special action, perform instant Gaiaforming: {p0}": "Eén keer per ronde, als speciale actie, voer direct gaiaformen uit: {p0}",
   "Chosen this round": "Deze ronde gekozen",
-  "Used in an earlier round": "In een eerdere ronde gebruikt"
+  "Used in an earlier round": "In een eerdere ronde gebruikt",
+  "Undo my move": "Zet ongedaan maken"
 }

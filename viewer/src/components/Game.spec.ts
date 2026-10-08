@@ -1,5 +1,5 @@
 import Engine, { AuctionVariant, Building, Command, Faction, Phase, Planet, PlayerEnum } from "@gaia-project/engine";
-import { move as bgsMove, stripSecret } from "@gaia-project/engine/wrapper";
+import { move as bgsMove, replay, stripSecret } from "@gaia-project/engine/wrapper";
 import { fireEvent } from "@testing-library/vue";
 import BootstrapVue from "bootstrap-vue";
 import { expect } from "chai";
@@ -2495,6 +2495,160 @@ describe("Game", () => {
       expect(vm.setupActionsAtTop).to.equal(false);
 
       vm.$destroy();
+    });
+  });
+
+  // BGS lets the only human of a game against bots take back their last saved move (protocol
+  // `undo:available` / `undo`); the launcher turns `takeBackMove` into the protocol command.
+  describe("Undo my move", () => {
+    const SETUP = [
+      "init 2 randomSeed",
+      "p1 faction terrans",
+      "p2 faction nevlas",
+      "terrans build m -1x2",
+      "nevlas build m -1x0",
+      "nevlas build m 0x-4",
+      "terrans build m -4x-1",
+      "nevlas booster booster7",
+      "terrans booster booster3",
+    ];
+
+    function mountHostedSeat(seat: number | null, engine = new Engine(SETUP)) {
+      const store = makeStore();
+      store.commit("hosted", true);
+      // A hosted spectator's `player` message carries no seat.
+      store.commit("player", seat === null ? {} : { index: seat });
+      const vm = new (Vue.extend(Game as any))({ store }) as any;
+      vm.isDesktopViewport = true;
+      vm.handleData(engine);
+      vm.$mount();
+      document.body.appendChild(vm.$el);
+      return vm;
+    }
+
+    function dispatchedTypes(vm: any): string[] {
+      const types: string[] = [];
+      const dispatch = vm.$store.dispatch.bind(vm.$store);
+      vm.$store.dispatch = (type: string, payload?: unknown) => {
+        types.push(type);
+        return dispatch(type, payload);
+      };
+      return types;
+    }
+
+    const control = (vm: any) => vm.$el.querySelector("#move-title [data-undo-move]");
+    const controls = (vm: any) => vm.$el.querySelectorAll("[data-undo-move]").length;
+
+    afterEach(() => {
+      window.localStorage.clear();
+    });
+
+    it("stays hidden until BGS offers it, then asks BGS to take the last saved move back", async () => {
+      const vm = mountHostedSeat(0);
+      await Vue.nextTick();
+      expect(controls(vm)).to.equal(0);
+
+      vm.$store.commit("undoAvailable", true);
+      await Vue.nextTick();
+      const button = control(vm);
+      expect(button.textContent.trim()).to.equal("Undo my move");
+      expect(button.getAttribute("title")).to.equal("Undo my move");
+      // The mobile tray's title bar has an icon-only copy; CSS shows one of the two.
+      const compact = vm.$el.querySelector(".sticky-bar-title [data-undo-move]");
+      expect(compact.textContent.trim()).to.equal("");
+      expect(compact.getAttribute("aria-label")).to.equal("Undo my move");
+
+      const types = dispatchedTypes(vm);
+      await fireEvent.click(button);
+      await fireEvent.click(compact);
+      // Never the local Back (`undo`), which only steps through the turn being composed.
+      expect(types).to.deep.equal(["takeBackMove", "takeBackMove"]);
+
+      vm.$store.commit("undoAvailable", false);
+      await Vue.nextTick();
+      expect(controls(vm)).to.equal(0);
+    });
+
+    it("is offered off turn too, but never to a spectator", async () => {
+      const offTurn = mountHostedSeat(1);
+      offTurn.$store.commit("undoAvailable", true);
+      await Vue.nextTick();
+      expect(offTurn.canPlay).to.equal(false);
+      expect(control(offTurn)).to.not.equal(null);
+
+      const spectator = mountHostedSeat(null);
+      spectator.$store.commit("undoAvailable", true);
+      await Vue.nextTick();
+      expect(spectator.takeBackOffered).to.equal(false);
+      expect(controls(spectator)).to.equal(0);
+    });
+
+    it("hides during replays, planning and while a queued plan awaits the server", async () => {
+      const vm = mountHostedSeat(0);
+      vm.$store.commit("undoAvailable", true);
+      await Vue.nextTick();
+      expect(control(vm)).to.not.equal(null);
+
+      await vm.$store.dispatch("replayStart");
+      await Vue.nextTick();
+      expect(controls(vm)).to.equal(0);
+      await vm.$store.dispatch("replayEnd");
+      await Vue.nextTick();
+      expect(control(vm)).to.not.equal(null);
+
+      vm.enterAnalysisMode();
+      await Vue.nextTick();
+      expect(vm.analysisMode).to.equal(true);
+      expect(controls(vm)).to.equal(0);
+      vm.exitAnalysisMode();
+      await Vue.nextTick();
+      expect(control(vm)).to.not.equal(null);
+
+      vm.$store.commit("submittingPlan", {
+        type: "premoves",
+        requestId: "r",
+        moves: [],
+        round: 1,
+        turn: 0,
+        revision: 0,
+      });
+      await Vue.nextTick();
+      expect(controls(vm)).to.equal(0);
+      vm.$store.commit("planSaved");
+      await Vue.nextTick();
+      expect(control(vm)).to.not.equal(null);
+    });
+
+    it("renders the earlier position BGS sends back and drops what was being composed on the later one", async () => {
+      const later = new Engine([...SETUP, "terrans up nav.", "nevlas up nav."]);
+      const vm = mountHostedSeat(0, later);
+      vm.$store.commit("undoAvailable", true);
+      // Half a turn on the later board (BGS echoes partial moves), then a mine being placed.
+      const partial = Engine.fromData(JSON.parse(JSON.stringify(later)));
+      partial.move("terrans burn 1");
+      partial.generateAvailableCommandsIfNeeded();
+      await vm.$store.dispatch("externalData", JSON.parse(JSON.stringify(partial)));
+      await Vue.nextTick();
+      expect(vm.currentMove).to.equal("terrans burn 1");
+      await fireEvent.click(vm.$el.querySelector("#move-buttons .move-button button"));
+      expect(vm.$store.state.context.highlighted.hexes).to.not.equal(null);
+      expect(vm.$store.state.context.hasCommandChain).to.equal(true);
+      expect(vm.$el.querySelectorAll(".undo-badge").length).to.be.greaterThan(0);
+
+      await fireEvent.click(control(vm));
+      // What BGS sends back: the game replayed to before the player's last saved move.
+      const earlier = await replay(JSON.parse(JSON.stringify(later)), { to: SETUP.length });
+      await vm.$store.dispatch("externalData", JSON.parse(JSON.stringify(earlier)));
+      await Vue.nextTick();
+
+      expect(vm.engine.moveHistory.length).to.equal(SETUP.length);
+      expect(vm.engine.players[0].data.research.nav).to.equal(0);
+      expect(vm.currentMove).to.equal("");
+      expect(vm.$store.state.context.highlighted.hexes).to.equal(null);
+      expect(vm.$store.state.context.activeButton).to.equal(null);
+      expect(vm.$store.state.context.hasCommandChain).to.equal(false);
+      expect(vm.$el.querySelectorAll(".undo-badge").length, "no Back left from the later board").to.equal(0);
+      expect(vm.$el.querySelector("#move-title h5").textContent).to.contain("Your turn");
     });
   });
 });

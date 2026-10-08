@@ -31,7 +31,8 @@
         >
         <RichTextView v-else :content="statusLine" />
       </h5>
-      <div v-if="!analysisMode && (analysisOffered || showAutoLeechSelect)" class="turn-tools">
+      <div v-if="!analysisMode && (analysisOffered || showAutoLeechSelect || takeBackOffered)" class="turn-tools">
+        <TakeBackButton v-if="takeBackOffered" />
         <AutoChargeControl v-if="showAutoLeechSelect" />
         <button
           v-if="analysisOffered"
@@ -125,6 +126,8 @@
           <RichTextView v-else :content="statusLine" />
         </h5>
         <span class="chat-shortcut-host"></span>
+        <!-- Kept out of the ⋯ menu: a misclick is best taken back with one press. -->
+        <TakeBackButton v-if="takeBackOffered" compact />
         <details
           v-if="actionsEnabled && !analysisMode && (analysisOffered || showAutoLeechSelect)"
           class="turn-tools mobile-turn-tools"
@@ -434,6 +437,7 @@ import MoveButton from "./MoveButton.vue";
 import RichTextView from "./Resources/RichTextView.vue";
 import Undo from "./Resources/Undo.vue";
 import StickyResourceBar from "./StickyResourceBar.vue";
+import TakeBackButton from "./TakeBackButton.vue";
 
 let show = false;
 
@@ -500,6 +504,7 @@ export type EmitCommandParams = { disappear?: boolean; times?: number; warnings?
     MoveButton,
     FactionSheetButton,
     Undo,
+    TakeBackButton,
     AnalysisHeaderControls,
     AnalysisLineTabs,
     AnalysisCommitConfirm,
@@ -563,6 +568,11 @@ export default class Commands extends Vue implements CommandController {
 
   @Prop({ default: false })
   analysisOffered: boolean;
+
+  /** "Undo my move" (Game.vue's `takeBackOffered`): BGS can take back this player's last saved move
+   * in a game against bots. Back only steps through the turn being composed; this rewinds the game. */
+  @Prop({ default: false })
+  takeBackOffered: boolean;
 
   /** §12's compact status - the overdraft summary and assumed power, the two things the player board
    * cannot show for itself. Only ever set while analysisMode is also true. */
@@ -1430,6 +1440,7 @@ $planning-accent: var(--ui-warning-border);
   margin-left: auto;
 
   .planning-entry,
+  .take-back,
   .auto-leech-select > .btn {
     min-height: 2.25rem;
     padding: 0.35rem 0.65rem;

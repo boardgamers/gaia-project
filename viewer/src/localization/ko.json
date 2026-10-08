@@ -4130,5 +4130,6 @@
   "Instant Gaiaforming ({p0}, {p1})": "즉시 가이아포밍 ({p0}, {p1})",
   "Once per round, as a special action, perform instant Gaiaforming: {p0}": "라운드당 한 번, 특별 행동으로, 즉시 가이아포밍 수행: {p0}",
   "Chosen this round": "이번 라운드에 선택함",
-  "Used in an earlier round": "이전 라운드에 사용함"
+  "Used in an earlier round": "이전 라운드에 사용함",
+  "Undo my move": "내 수 되돌리기"
 }

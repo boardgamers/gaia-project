@@ -80,6 +80,9 @@ export type State = {
   playerSettings: Record<string, unknown> | null;
   pendingPlan: PremoveCommand | null;
   planError: string | null;
+  /** Hosted mode only (protocol `undo:available`) - BGS lets the only human of a game against bots
+   * take back their last saved move. Game.vue's `takeBackOffered` decides where it is shown. */
+  undoAvailable: boolean;
   /** Hosted mode only - seat -> user id, for matching a seat to its presence entry below. Never
    * populated in self-contained hot-seat play (no accounts/seats to map). */
   seatUsers: Record<number, string | null>;
@@ -194,6 +197,7 @@ const gaiaViewer = {
       playerSettings: null,
       pendingPlan: null,
       planError: null,
+      undoAvailable: false,
       seatUsers: {},
       seatLastActive: {},
       presence: {},
@@ -344,6 +348,9 @@ const gaiaViewer = {
       state.pendingPlan = null;
       state.planError = message;
     },
+    undoAvailable(state: State, available: boolean) {
+      state.undoAvailable = available;
+    },
     seatUsers(state: State, data: Record<number, string | null>) {
       state.seatUsers = data;
     },
@@ -386,6 +393,9 @@ const gaiaViewer = {
     move(context: any, move: string) {},
     analysisMove(context: any, move: string) {},
     submitPlan(context: any, command: PremoveCommand) {},
+    // "Undo my move": asks BGS to take back the last SAVED move (games against bots), unlike `undo`
+    // below, which only steps back through the turn being composed.
+    takeBackMove(context: any) {},
     replayInfo(context: any, info: { start: number; end: number; current: number }) {},
     // ^ up - down v
     externalData(context: any, data: Engine) {},

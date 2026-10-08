@@ -4130,5 +4130,6 @@
   "Instant Gaiaforming ({p0}, {p1})": "Øjeblikkelig Gaiaformning ({p0}, {p1})",
   "Once per round, as a special action, perform instant Gaiaforming: {p0}": "Én gang pr. runde, som specialhandling, udfør øjeblikkelig Gaiaformning: {p0}",
   "Chosen this round": "Valgt i denne runde",
-  "Used in an earlier round": "Brugt i en tidligere runde"
+  "Used in an earlier round": "Brugt i en tidligere runde",
+  "Undo my move": "Fortryd mit træk"
 }

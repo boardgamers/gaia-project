@@ -4130,5 +4130,6 @@
   "Instant Gaiaforming ({p0}, {p1})": "Instant Gaiaforming ({p0}, {p1})",
   "Once per round, as a special action, perform instant Gaiaforming: {p0}": "Once per round, as a special action, perform instant Gaiaforming: {p0}",
   "Chosen this round": "Chosen this round",
-  "Used in an earlier round": "Used in an earlier round"
+  "Used in an earlier round": "Used in an earlier round",
+  "Undo my move": "Undo my move"
 }
