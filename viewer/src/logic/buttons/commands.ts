@@ -42,7 +42,7 @@ function commandButton(
       return [setupButton(command.data, controller, engine)];
 
     case Command.Build:
-      return buildButtons(controller, engine, command, player);
+      return buildButtons(controller, engine, command, player, commands);
 
     case Command.PISwap:
       return [

@@ -1123,7 +1123,6 @@
   "Insert before step": "चरण से पहले डालें",
   "Insert before step {p0}": "चरण {p0} से पहले डालें",
   "Instant Gaiaforming": "तुरंत Gaiaforming",
-  "Instant Gaiaforming: convert a transdim planet in range into a Gaia planet": "तुरंत Gaiaforming: सीमा में एक ट्रांसडिम ग्रह को Gaia ग्रह में बदलें",
   "Intelligence": "बुद्धिमत्ता",
   "Internal atomic expansion is restricted to Phase 1.3 RoundMove replay nodes": "आंतरिक परमाणु विस्तार केवल Phase 1.3 RoundMove रीप्ले नोड्स तक सीमित है",
   "Internal supplied-command expansion is restricted to Phase 1.3 RoundMove replay nodes": "आंतरिक आपूर्ति-कमांड विस्तार केवल Phase 1.3 RoundMove रीप्ले नोड्स तक सीमित है",
@@ -3168,7 +3167,6 @@
   "payPower=": "payPower=",
   "pays": "भुगतान करता है",
   "per-plan resource reserve and reserve-violation transition score": "प्रति-योजना संसाधन आरक्षित और आरक्षित-उल्लंघन संक्रमण स्कोर",
-  "perform instant Gaiaforming": "तत्काल गैयाफ़ॉर्मिंग करें",
   "permanent Advanced Tech tier": "स्थायी उन्नत तकनीक स्तर",
   "permanent Standard Tech tier": "स्थायी मानक तकनीक स्तर",
   "permanent ship tier": "स्थायी जहाज़ स्तर",
@@ -4124,5 +4122,11 @@
   "Victory Points, Resources, and more": "Victory Points, Resources, and more",
   "Change bids": "बोलियाँ बदलें",
   "Change split": "वितरण बदलें",
-  "Choices stay hidden until everyone has confirmed.": "सभी की पुष्टि तक चयन गुप्त रहते हैं।"
+  "Choices stay hidden until everyone has confirmed.": "सभी की पुष्टि तक चयन गुप्त रहते हैं।",
+  "place a Gaia Former on a Transdim planet in range, which becomes a Gaia planet right away. No power tokens are moved to your Gaia area.": "रेंज के भीतर किसी ट्रांसडिम ग्रह पर एक गैयाफॉर्मर रखें, जो तुरंत गैया ग्रह बन जाता है। कोई भी ऊर्जा टोकन आपके गैया क्षेत्र में नहीं जाता।",
+  "perform instant Gaiaforming: {p0}": "तुरंत Gaiaforming करें: {p0}",
+  "Instant Gaiaforming: place a Gaia Former on a Transdim planet in range, which becomes a Gaia planet right away. No power tokens are moved to your Gaia area.": "तुरंत Gaiaforming: रेंज के भीतर किसी ट्रांसडिम ग्रह पर एक गैयाफॉर्मर रखें, जो तुरंत गैया ग्रह बन जाता है। कोई भी ऊर्जा टोकन आपके गैया क्षेत्र में नहीं जाता।",
+  "Instant Gaiaforming (booster)": "तुरंत Gaiaforming (बूस्टर)",
+  "Instant Gaiaforming ({p0}, {p1})": "तुरंत Gaiaforming ({p0}, {p1})",
+  "Once per round, as a special action, perform instant Gaiaforming: {p0}": "प्रति दौर एक बार, विशेष क्रिया के रूप में, तुरंत Gaiaforming करें: {p0}"
 }

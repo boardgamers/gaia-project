@@ -1123,7 +1123,6 @@
   "Insert before step": "Вставить перед шагом",
   "Insert before step {p0}": "Вставить перед шагом {p0}",
   "Instant Gaiaforming": "Мгновенное геяформирование",
-  "Instant Gaiaforming: convert a transdim planet in range into a Gaia planet": "Мгновенное геяформирование: превратить трансдим-планету в пределах досягаемости в планету Геи",
   "Intelligence": "Интеллект",
   "Internal atomic expansion is restricted to Phase 1.3 RoundMove replay nodes": "Внутреннее атомарное расширение ограничено узлами повтора RoundMove фазы 1.3",
   "Internal supplied-command expansion is restricted to Phase 1.3 RoundMove replay nodes": "Внутреннее расширение поставляемых команд ограничено узлами повтора RoundMove фазы 1.3",
@@ -3168,7 +3167,6 @@
   "payPower=": "payPower=",
   "pays": "платит",
   "per-plan resource reserve and reserve-violation transition score": "ресурсный резерв по плану и оценка перехода при нарушении резерва",
-  "perform instant Gaiaforming": "выполнить мгновенное терраформирование Геи",
   "permanent Advanced Tech tier": "постоянный уровень продвинутой технологии",
   "permanent Standard Tech tier": "постоянный уровень стандартной технологии",
   "permanent ship tier": "постоянный уровень корабля",
@@ -4124,5 +4122,11 @@
   "Victory Points, Resources, and more": "Victory Points, Resources, and more",
   "Change bids": "Изменить ставки",
   "Change split": "Изменить распределение",
-  "Choices stay hidden until everyone has confirmed.": "Выбор остаётся тайным, пока все не подтвердят."
+  "Choices stay hidden until everyone has confirmed.": "Выбор остаётся тайным, пока все не подтвердят.",
+  "place a Gaia Former on a Transdim planet in range, which becomes a Gaia planet right away. No power tokens are moved to your Gaia area.": "помести Гайаформер на трансдим-планету в пределах досягаемости — она сразу становится планетой Геи. Жетоны энергии не перемещаются в твою зону Геи.",
+  "perform instant Gaiaforming: {p0}": "выполни мгновенное геяформирование: {p0}",
+  "Instant Gaiaforming: place a Gaia Former on a Transdim planet in range, which becomes a Gaia planet right away. No power tokens are moved to your Gaia area.": "Мгновенное геяформирование: помести Гайаформер на трансдим-планету в пределах досягаемости — она сразу становится планетой Геи. Жетоны энергии не перемещаются в твою зону Геи.",
+  "Instant Gaiaforming (booster)": "Мгновенное геяформирование (бустер)",
+  "Instant Gaiaforming ({p0}, {p1})": "Мгновенное геяформирование ({p0}, {p1})",
+  "Once per round, as a special action, perform instant Gaiaforming: {p0}": "Один раз за раунд, как особое действие, выполни мгновенное геяформирование: {p0}"
 }

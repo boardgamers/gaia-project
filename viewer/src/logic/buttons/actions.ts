@@ -6,12 +6,15 @@ import {
   Command,
   Event,
   Player,
+  Resource,
   Reward,
 } from "@gaia-project/engine";
 import type { ButtonData, ButtonWarning } from "../../data";
 import { boardActionData } from "../../data/actions";
+import { instantGaiaformingEffect } from "../../data/event";
 import { resourceData, translateResources } from "../../data/resources";
 import { conversionButton } from "./conversion";
+import { tooltipWithShortcut } from "./shortcuts";
 import type { CommandController } from "./types";
 import { symbolButton } from "./utils";
 import { resourceWasteWarning } from "./warnings";
@@ -48,15 +51,23 @@ function specialActionWarning(player: Player, income: string): ButtonWarning | n
   return resourceWasteWarning(player, [new Reward(income)]);
 }
 
-export function specialActionButton(income: string, player: Player | null): ButtonData {
+export function specialActionButton(income: string, player: Player | null, shortcut?: string): ButtonData {
   const rewards = Reward.parse(income);
-  return symbolButton({
+  const button = symbolButton({
     label: translateResources(rewards, false),
     richText: [{ specialAction: income }],
     command: income,
     warning: player ? specialActionWarning(player, income) : null,
-    shortcuts: [resourceData[rewards[0].type].shortcut],
+    shortcuts: [shortcut ?? resourceData[rewards[0].type].shortcut],
   });
+  if (rewards[0].type === Resource.InstantGaiaforming) {
+    button.tooltip = tooltipWithShortcut(
+      `${resourceData[Resource.InstantGaiaforming].label}: ${instantGaiaformingEffect}`,
+      button.warning,
+      button.shortcuts[0]
+    );
+  }
+  return button;
 }
 
 export function specialActionsButton(
@@ -66,7 +77,8 @@ export function specialActionsButton(
 ): ButtonData {
   const choices = command.data.specialacts.map((act) => specialActionButton(act.income, player));
   if (choices.length === 1) {
-    return symbolButton({ ...choices[0], command: `${Command.Special} ${choices[0].command}`, shortcuts: ["s"] });
+    const income = command.data.specialacts[0].income;
+    return { ...specialActionButton(income, player, "s"), command: `${Command.Special} ${income}` };
   }
   return {
     label: "Special Action",

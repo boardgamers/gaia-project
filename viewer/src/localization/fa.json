@@ -1123,7 +1123,6 @@
   "Insert before step": "درج پیش از گام",
   "Insert before step {p0}": "درج پیش از گام {p0}",
   "Instant Gaiaforming": "گایاسازی فوری",
-  "Instant Gaiaforming: convert a transdim planet in range into a Gaia planet": "گایاسازی فوری: تبدیل سیارهٔ فرابُعدی در برد به سیارهٔ گایا",
   "Intelligence": "هوش مصنوعی",
   "Internal atomic expansion is restricted to Phase 1.3 RoundMove replay nodes": "Internal atomic expansion is restricted to Phase 1.3 RoundMove replay nodes",
   "Internal supplied-command expansion is restricted to Phase 1.3 RoundMove replay nodes": "Internal supplied-command expansion is restricted to Phase 1.3 RoundMove replay nodes",
@@ -3168,7 +3167,6 @@
   "payPower=": "payPower=",
   "pays": "می‌پردازد",
   "per-plan resource reserve and reserve-violation transition score": "per-plan resource reserve and reserve-violation transition score",
-  "perform instant Gaiaforming": "گایاسازی فوری انجام دهید",
   "permanent Advanced Tech tier": "permanent Advanced Tech tier",
   "permanent Standard Tech tier": "permanent Standard Tech tier",
   "permanent ship tier": "permanent ship tier",
@@ -4124,5 +4122,11 @@
   "Victory Points, Resources, and more": "امتیاز پیروزی، منابع و بیشتر",
   "Change bids": "تغییر پیشنهادها",
   "Change split": "تغییر توزیع",
-  "Choices stay hidden until everyone has confirmed.": "انتخاب‌ها تا تأیید همه مخفی می‌مانند."
+  "Choices stay hidden until everyone has confirmed.": "انتخاب‌ها تا تأیید همه مخفی می‌مانند.",
+  "place a Gaia Former on a Transdim planet in range, which becomes a Gaia planet right away. No power tokens are moved to your Gaia area.": "یک گایاساز روی یک سیارهٔ فرابُعدی در برد بگذارید؛ آن سیاره بی‌درنگ به سیارهٔ گایا تبدیل می‌شود. هیچ مهرهٔ نیرویی به ناحیهٔ گایا منتقل نمی‌شود.",
+  "perform instant Gaiaforming: {p0}": "گایاسازی فوری انجام دهید: {p0}",
+  "Instant Gaiaforming: place a Gaia Former on a Transdim planet in range, which becomes a Gaia planet right away. No power tokens are moved to your Gaia area.": "گایاسازی فوری: یک گایاساز روی یک سیارهٔ فرابُعدی در برد بگذارید؛ آن سیاره بی‌درنگ به سیارهٔ گایا تبدیل می‌شود. هیچ مهرهٔ نیرویی به ناحیهٔ گایا منتقل نمی‌شود.",
+  "Instant Gaiaforming (booster)": "گایاسازی فوری (تقویت‌کننده)",
+  "Instant Gaiaforming ({p0}, {p1})": "گایاسازی فوری ({p0}، {p1})",
+  "Once per round, as a special action, perform instant Gaiaforming: {p0}": "یک‌بار در هر دور، به‌عنوان عمل ویژه، گایاسازی فوری انجام دهید: {p0}"
 }

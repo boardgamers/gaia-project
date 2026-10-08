@@ -1123,7 +1123,6 @@
   "Insert before step": "Invoegen voor stap",
   "Insert before step {p0}": "Invoegen voor stap {p0}",
   "Instant Gaiaforming": "Direct gaiaformen",
-  "Instant Gaiaforming: convert a transdim planet in range into a Gaia planet": "Direct gaiaformen: zet een transdim-planeet binnen bereik om in een Gaia-planeet",
   "Intelligence": "Intelligentie",
   "Internal atomic expansion is restricted to Phase 1.3 RoundMove replay nodes": "Interne atomaire uitbreiding is beperkt tot Fase 1.3 RoundMove-replayknooppunten",
   "Internal supplied-command expansion is restricted to Phase 1.3 RoundMove replay nodes": "Interne geleverde-commando-uitbreiding is beperkt tot Fase 1.3 RoundMove-replayknooppunten",
@@ -3168,7 +3167,6 @@
   "payPower=": "betaalKracht=",
   "pays": "betaalt",
   "per-plan resource reserve and reserve-violation transition score": "per-plan grondstofreserve en reserve-overtredingsovergangsscore",
-  "perform instant Gaiaforming": "voer direct Gaiaforming uit",
   "permanent Advanced Tech tier": "permanente Gevorderde Tech-laag",
   "permanent Standard Tech tier": "permanente Standaard Tech-laag",
   "permanent ship tier": "permanente scheepslaag",
@@ -4124,5 +4122,11 @@
   "Victory Points, Resources, and more": "Victory Points, Resources, and more",
   "Change bids": "Biedingen wijzigen",
   "Change split": "Verdeling wijzigen",
-  "Choices stay hidden until everyone has confirmed.": "Keuzes blijven geheim totdat iedereen heeft bevestigd."
+  "Choices stay hidden until everyone has confirmed.": "Keuzes blijven geheim totdat iedereen heeft bevestigd.",
+  "place a Gaia Former on a Transdim planet in range, which becomes a Gaia planet right away. No power tokens are moved to your Gaia area.": "plaats een Gaiaformer op een transdim-planeet binnen bereik, die meteen een Gaia-planeet wordt. Er worden geen machtsfiches naar je Gaiagebied verplaatst.",
+  "perform instant Gaiaforming: {p0}": "voer direct gaiaformen uit: {p0}",
+  "Instant Gaiaforming: place a Gaia Former on a Transdim planet in range, which becomes a Gaia planet right away. No power tokens are moved to your Gaia area.": "Direct gaiaformen: plaats een Gaiaformer op een transdim-planeet binnen bereik, die meteen een Gaia-planeet wordt. Er worden geen machtsfiches naar je Gaiagebied verplaatst.",
+  "Instant Gaiaforming (booster)": "Direct gaiaformen (booster)",
+  "Instant Gaiaforming ({p0}, {p1})": "Direct gaiaformen ({p0}, {p1})",
+  "Once per round, as a special action, perform instant Gaiaforming: {p0}": "Eén keer per ronde, als speciale actie, voer direct gaiaformen uit: {p0}"
 }

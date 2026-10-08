@@ -2,6 +2,7 @@ import Engine, { AuctionVariant } from "@gaia-project/engine";
 import { possibleSpecialActions } from "@gaia-project/engine/src/available/actions";
 import {
   ArtifactToken,
+  Booster,
   Building,
   Faction,
   Phase,
@@ -273,6 +274,26 @@ export const selfContainedScenarios: SelfContainedScenario[] = [
       const player = engine.player(PlayerEnum.Player1);
 
       player.data.explorationShips[Spaceship.TFMars] = 1;
+      occupyPlanetsOfDistinctTypes(engine, PlayerEnum.Player1, 1);
+
+      return finalizeScenario(engine);
+    },
+  },
+  {
+    id: "lost-fleet-instant-gaiaforming-booster",
+    label: "Instant Gaiaforming Booster",
+    description:
+      "The instant Gaiaforming booster is unused and a normal Gaia Project is affordable too; open Place a Gaia Former to compare both.",
+    tags: ["booster", "gaiaforming", "special-action"],
+    build: () => {
+      const engine = createLostFleetRoundMoveEngine(3, [Faction.HadschHallas, Faction.Lantids, Faction.Terrans]);
+      const player = engine.player(PlayerEnum.Player1);
+
+      player.data.research[ResearchField.GaiaProject] = 1;
+      player.data.gaiaformers = 1;
+      player.data.power = new Power(6, 3, 3, 0);
+      player.getRoundBooster(Booster.LostFleetInstant);
+      engine.tiles.boosters[Booster.LostFleetInstant] = false;
       occupyPlanetsOfDistinctTypes(engine, PlayerEnum.Player1, 1);
 
       return finalizeScenario(engine);

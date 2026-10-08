@@ -1123,7 +1123,6 @@
   "Insert before step": "Chèn trước bước",
   "Insert before step {p0}": "Chèn trước bước {p0}",
   "Instant Gaiaforming": "Gaia hóa tức thời",
-  "Instant Gaiaforming: convert a transdim planet in range into a Gaia planet": "Gaia hóa tức thời: biến một hành tinh transdim trong tầm thành hành tinh Gaia",
   "Intelligence": "Trí tuệ",
   "Internal atomic expansion is restricted to Phase 1.3 RoundMove replay nodes": "Mở rộng nguyên tử nội bộ bị giới hạn ở các nút phát lại Phase 1.3 RoundMove",
   "Internal supplied-command expansion is restricted to Phase 1.3 RoundMove replay nodes": "Mở rộng lệnh cung cấp nội bộ bị giới hạn ở các nút phát lại Phase 1.3 RoundMove",
@@ -3168,7 +3167,6 @@
   "payPower=": "trảNăngLượng=",
   "pays": "trả",
   "per-plan resource reserve and reserve-violation transition score": "dự trữ tài nguyên theo kế hoạch và điểm chuyển tiếp vi phạm dự trữ",
-  "perform instant Gaiaforming": "thực hiện Gaiaforming tức thì",
   "permanent Advanced Tech tier": "bậc Công nghệ Cao cấp vĩnh viễn",
   "permanent Standard Tech tier": "bậc Công nghệ Chuẩn vĩnh viễn",
   "permanent ship tier": "bậc tàu vĩnh viễn",
@@ -4124,5 +4122,11 @@
   "Victory Points, Resources, and more": "Victory Points, Resources, and more",
   "Change bids": "Đổi các giá đấu",
   "Change split": "Đổi phân bổ",
-  "Choices stay hidden until everyone has confirmed.": "Các lựa chọn được giữ kín cho đến khi mọi người xác nhận."
+  "Choices stay hidden until everyone has confirmed.": "Các lựa chọn được giữ kín cho đến khi mọi người xác nhận.",
+  "place a Gaia Former on a Transdim planet in range, which becomes a Gaia planet right away. No power tokens are moved to your Gaia area.": "đặt một Gaiaformer lên một hành tinh transdim trong tầm, hành tinh đó lập tức trở thành hành tinh Gaia. Không có token năng lượng nào bị chuyển vào khu Gaia của bạn.",
+  "perform instant Gaiaforming: {p0}": "thực hiện Gaia hóa tức thời: {p0}",
+  "Instant Gaiaforming: place a Gaia Former on a Transdim planet in range, which becomes a Gaia planet right away. No power tokens are moved to your Gaia area.": "Gaia hóa tức thời: đặt một Gaiaformer lên một hành tinh transdim trong tầm, hành tinh đó lập tức trở thành hành tinh Gaia. Không có token năng lượng nào bị chuyển vào khu Gaia của bạn.",
+  "Instant Gaiaforming (booster)": "Gaia hóa tức thời (gói tăng cường)",
+  "Instant Gaiaforming ({p0}, {p1})": "Gaia hóa tức thời ({p0}, {p1})",
+  "Once per round, as a special action, perform instant Gaiaforming: {p0}": "Mỗi vòng một lần, như một hành động đặc biệt, thực hiện Gaia hóa tức thời: {p0}"
 }

@@ -46,6 +46,12 @@ const operators = {
     "Planetary institutes and academies have a power value of 4, when forming federations and charging power.",
 };
 
+/** What Instant Gaiaforming does, spelled out wherever it is offered: players otherwise start a
+ * normal Gaia Project first and expect the action to finish it, but the action places the Gaia
+ * Former itself - and can no longer target a planet that already has one. */
+export const instantGaiaformingEffect =
+  "place a Gaia Former on a Transdim planet in range, which becomes a Gaia planet right away. No power tokens are moved to your Gaia area.";
+
 function rewardDesc(rewards: Reward[], long: boolean) {
   return rewards
     .map((reward) => {
@@ -63,7 +69,7 @@ function rewardDesc(rewards: Reward[], long: boolean) {
         case Resource.RescoreFederation:
           return `gain the rewards from one of your federation tokens`;
         case Resource.InstantGaiaforming:
-          return `perform instant Gaiaforming`;
+          return `perform instant Gaiaforming: ${instantGaiaformingEffect}`;
         case Resource.Turn:
           return `play an extra ${reward.count} turn${reward.count > 1 ? "s" : ""} at once`;
         default:

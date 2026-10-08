@@ -2670,7 +2670,7 @@
           },
           {
             "cost": "2pw",
-            "effect": "Instant Gaiaforming: convert a transdim planet in range into a Gaia planet",
+            "effect": "Instant Gaiaforming: place a Gaia Former on a Transdim planet in range, which becomes a Gaia planet right away. No power tokens are moved to your Gaia area.",
             "type": "power"
           },
           {

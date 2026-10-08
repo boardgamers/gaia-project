@@ -1123,7 +1123,6 @@
   "Insert before step": "在步驟前插入",
   "Insert before step {p0}": "在步驟{p0}前插入",
   "Instant Gaiaforming": "即時蓋亞化",
-  "Instant Gaiaforming: convert a transdim planet in range into a Gaia planet": "即時蓋亞化：將航程內的一顆跨維行星轉化為蓋亞行星",
   "Intelligence": "智力",
   "Internal atomic expansion is restricted to Phase 1.3 RoundMove replay nodes": "內部原子擴展僅限於階段1.3 RoundMove重播節點",
   "Internal supplied-command expansion is restricted to Phase 1.3 RoundMove replay nodes": "內部供應指令擴展僅限於階段1.3 RoundMove重播節點",
@@ -3168,7 +3167,6 @@
   "payPower=": "支付能量=",
   "pays": "支付",
   "per-plan resource reserve and reserve-violation transition score": "每計畫資源儲備與儲備違規轉換分數",
-  "perform instant Gaiaforming": "執行立即蓋亞化",
   "permanent Advanced Tech tier": "永久進階科技層級",
   "permanent Standard Tech tier": "永久標準科技層級",
   "permanent ship tier": "永久飛船層級",
@@ -4124,5 +4122,11 @@
   "Victory Points, Resources, and more": "Victory Points, Resources, and more",
   "Change bids": "更改出價",
   "Change split": "更改分配",
-  "Choices stay hidden until everyone has confirmed.": "所有人確認之前，選擇會保持保密。"
+  "Choices stay hidden until everyone has confirmed.": "所有人確認之前，選擇會保持保密。",
+  "place a Gaia Former on a Transdim planet in range, which becomes a Gaia planet right away. No power tokens are moved to your Gaia area.": "將一個蓋亞改造機放到航程內的一顆跨次元行星上，該行星立即成為蓋亞行星。不會有能量標記移到你的蓋亞區。",
+  "perform instant Gaiaforming: {p0}": "執行即時蓋亞化：{p0}",
+  "Instant Gaiaforming: place a Gaia Former on a Transdim planet in range, which becomes a Gaia planet right away. No power tokens are moved to your Gaia area.": "即時蓋亞化：將一個蓋亞改造機放到航程內的一顆跨次元行星上，該行星立即成為蓋亞行星。不會有能量標記移到你的蓋亞區。",
+  "Instant Gaiaforming (booster)": "即時蓋亞化（強化板塊）",
+  "Instant Gaiaforming ({p0}, {p1})": "即時蓋亞化（{p0}，{p1}）",
+  "Once per round, as a special action, perform instant Gaiaforming: {p0}": "每輪一次，作為特殊行動，執行即時蓋亞化：{p0}"
 }

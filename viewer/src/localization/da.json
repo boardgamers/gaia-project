@@ -1123,7 +1123,6 @@
   "Insert before step": "Indsæt før trin",
   "Insert before step {p0}": "Indsæt før trin {p0}",
   "Instant Gaiaforming": "Øjeblikkelig Gaiaformning",
-  "Instant Gaiaforming: convert a transdim planet in range into a Gaia planet": "Øjeblikkelig Gaiaformning: konverter en transdim-planet inden for rækkevidde til en Gaia-planet",
   "Intelligence": "Intelligens",
   "Internal atomic expansion is restricted to Phase 1.3 RoundMove replay nodes": "Intern atomisk udvidelse er begrænset til Fase 1.3 RoundMove-genafspilningsnoder",
   "Internal supplied-command expansion is restricted to Phase 1.3 RoundMove replay nodes": "Intern leveret-kommando-udvidelse er begrænset til Fase 1.3 RoundMove-genafspilningsnoder",
@@ -3168,7 +3167,6 @@
   "payPower=": "payPower=",
   "pays": "betaler",
   "per-plan resource reserve and reserve-violation transition score": "per-plan ressourcebuffer og bufferovertrædelses-overgangsscore",
-  "perform instant Gaiaforming": "udfør øjeblikkelig Gaiaformning",
   "permanent Advanced Tech tier": "permanent Avanceret Tek-niveau",
   "permanent Standard Tech tier": "permanent Standard Tek-niveau",
   "permanent ship tier": "permanent skibsniveau",
@@ -4124,5 +4122,11 @@
   "Victory Points, Resources, and more": "Victory Points, Resources, and more",
   "Change bids": "Ændr bud",
   "Change split": "Ændr fordeling",
-  "Choices stay hidden until everyone has confirmed.": "Valgene forbliver hemmelige, indtil alle har bekræftet."
+  "Choices stay hidden until everyone has confirmed.": "Valgene forbliver hemmelige, indtil alle har bekræftet.",
+  "place a Gaia Former on a Transdim planet in range, which becomes a Gaia planet right away. No power tokens are moved to your Gaia area.": "placer en Gaiaformer på en transdim-planet inden for rækkevidde, som straks bliver en Gaia-planet. Ingen energibrikker flyttes til dit Gaia-område.",
+  "perform instant Gaiaforming: {p0}": "udfør øjeblikkelig Gaiaformning: {p0}",
+  "Instant Gaiaforming: place a Gaia Former on a Transdim planet in range, which becomes a Gaia planet right away. No power tokens are moved to your Gaia area.": "Øjeblikkelig Gaiaformning: placer en Gaiaformer på en transdim-planet inden for rækkevidde, som straks bliver en Gaia-planet. Ingen energibrikker flyttes til dit Gaia-område.",
+  "Instant Gaiaforming (booster)": "Øjeblikkelig Gaiaformning (booster)",
+  "Instant Gaiaforming ({p0}, {p1})": "Øjeblikkelig Gaiaformning ({p0}, {p1})",
+  "Once per round, as a special action, perform instant Gaiaforming: {p0}": "Én gang pr. runde, som specialhandling, udfør øjeblikkelig Gaiaformning: {p0}"
 }

@@ -1123,7 +1123,6 @@
   "Insert before step": "Insérer avant l'étape",
   "Insert before step {p0}": "Insérer avant l'étape {p0}",
   "Instant Gaiaforming": "Gaïaformation instantanée",
-  "Instant Gaiaforming: convert a transdim planet in range into a Gaia planet": "Gaïaformation instantanée : convertissez une planète transdim à portée en planète Gaia",
   "Intelligence": "Intelligence",
   "Internal atomic expansion is restricted to Phase 1.3 RoundMove replay nodes": "L'expansion atomique interne est limitée aux nœuds de relecture RoundMove de la phase 1.3",
   "Internal supplied-command expansion is restricted to Phase 1.3 RoundMove replay nodes": "L'expansion de commande fournie interne est limitée aux nœuds de relecture RoundMove de la phase 1.3",
@@ -3168,7 +3167,6 @@
   "payPower=": "payerPouvoir=",
   "pays": "paie",
   "per-plan resource reserve and reserve-violation transition score": "réserve de ressources par plan et score de transition de violation de réserve",
-  "perform instant Gaiaforming": "Gaiaformation instantanée",
   "permanent Advanced Tech tier": "niveau permanent de Tech Avancée",
   "permanent Standard Tech tier": "niveau permanent de Tech Standard",
   "permanent ship tier": "niveau permanent de vaisseau",
@@ -4124,5 +4122,11 @@
   "Victory Points, Resources, and more": "Victory Points, Resources, and more",
   "Change bids": "Modifier les enchères",
   "Change split": "Modifier la répartition",
-  "Choices stay hidden until everyone has confirmed.": "Les choix restent secrets jusqu’à la confirmation de tout le monde."
+  "Choices stay hidden until everyone has confirmed.": "Les choix restent secrets jusqu’à la confirmation de tout le monde.",
+  "place a Gaia Former on a Transdim planet in range, which becomes a Gaia planet right away. No power tokens are moved to your Gaia area.": "placez une Unité de Gaiaformation sur une planète transdim à portée, qui devient immédiatement une planète Gaia. Aucun pion Puissance n'est déplacé vers votre zone Gaia.",
+  "perform instant Gaiaforming: {p0}": "effectuez une Gaïaformation instantanée : {p0}",
+  "Instant Gaiaforming: place a Gaia Former on a Transdim planet in range, which becomes a Gaia planet right away. No power tokens are moved to your Gaia area.": "Gaïaformation instantanée : placez une Unité de Gaiaformation sur une planète transdim à portée, qui devient immédiatement une planète Gaia. Aucun pion Puissance n'est déplacé vers votre zone Gaia.",
+  "Instant Gaiaforming (booster)": "Gaïaformation instantanée (booster)",
+  "Instant Gaiaforming ({p0}, {p1})": "Gaïaformation instantanée ({p0}, {p1})",
+  "Once per round, as a special action, perform instant Gaiaforming: {p0}": "Une fois par manche, comme action spéciale, effectuez une Gaïaformation instantanée : {p0}"
 }

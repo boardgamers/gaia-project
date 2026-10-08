@@ -19,6 +19,7 @@ import type { RichText } from "../../graphics/rich-text";
 import { richText, richTextArrow, richTextBuilding } from "../../graphics/rich-text";
 import { pick, sortBy } from "../lodash-utils";
 import { hexSelectionButton } from "./hex";
+import { instantGaiaformingChoices } from "./lost-fleet";
 import { withShortcut } from "./shortcuts";
 import type { CommandController } from "./types";
 import { confirmationButton, hexMap, isFree, symbolButton, textButton } from "./utils";
@@ -131,12 +132,34 @@ function buildingButton(
   return parent;
 }
 
+/** Offers Instant Gaiaforming ahead of the hex list of the Gaia Former menu. */
+function offerInstantGaiaforming(controller: CommandController, button: ButtonData, instant: ButtonData[]) {
+  // The instant choices are moves of their own (`special ...`, `spaceshipAction ...`), so the menu
+  // can't prefix its children with `build gf` anymore: each hex carries the whole command instead.
+  for (const child of button.buttons) {
+    child.command = `${button.command} ${child.command}`;
+  }
+  delete button.command;
+  button.buttons.unshift(...instant);
+  // The instant choices never warn (no power tokens involved), so "every location has a warning"
+  // no longer holds and opening the menu shouldn't ask for confirmation.
+  button.warning = commonButtonWarning(
+    controller,
+    "choice",
+    button.buttons.map((b) => b.warning?.body ?? [])
+  );
+  symbolButton(button);
+}
+
 export function buildButtons(
   controller: CommandController,
   engine: Engine,
   command: AvailableCommand<Command.Build>,
-  player: Player
+  player: Player,
+  /** Every command available alongside this one - for what else could take the place of a build. */
+  commands: AvailableCommand[] = []
 ): ButtonData[] {
+  const instantGaiaforming = instantGaiaformingChoices(commands);
   const byTypeLabel = new Map<string, AvailableBuilding[]>();
   const faction = engine.player(command.player).faction;
   // Only true inside the sandbox, and only where a hex was isolated enough to be worth duplicating.
@@ -206,22 +229,24 @@ export function buildButtons(
 
       menus.set(menu.label, buttons);
     } else {
-      ret.push(
-        buildingButton(
-          controller,
-          building,
-          label.label,
-          label.richText,
-          shortcut,
-          `${Command.Build} ${building}`,
-          engine,
-          buildings,
-          engine.round === Round.None ? confirmationButton(`Confirm ${buildingName(building, faction)}`) : null,
-          b.upgrade,
-          player,
-          b.analysisCheap ? ANALYSIS_CHEAP_BUILD : undefined
-        )
+      const button = buildingButton(
+        controller,
+        building,
+        label.label,
+        label.richText,
+        shortcut,
+        `${Command.Build} ${building}`,
+        engine,
+        buildings,
+        engine.round === Round.None ? confirmationButton(`Confirm ${buildingName(building, faction)}`) : null,
+        b.upgrade,
+        player,
+        b.analysisCheap ? ANALYSIS_CHEAP_BUILD : undefined
       );
+      if (building === Building.GaiaFormer && instantGaiaforming.length > 0) {
+        offerInstantGaiaforming(controller, button, instantGaiaforming);
+      }
+      ret.push(button);
     }
   }
   for (const button of menuButtons) {

@@ -90,7 +90,8 @@ export const spaceshipBoards: { [key in Spaceship]: SpaceshipBoardSpec } = {
       {
         type: "power",
         cost: "2pw",
-        effect: "Instant Gaiaforming: convert a transdim planet in range into a Gaia planet",
+        effect:
+          "Instant Gaiaforming: place a Gaia Former on a Transdim planet in range, which becomes a Gaia planet right away. No power tokens are moved to your Gaia area.",
       },
       { type: "credit", cost: "3c", effect: "Terraform 1 step and build a mine" },
     ],

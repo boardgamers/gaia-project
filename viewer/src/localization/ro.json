@@ -1123,7 +1123,6 @@
   "Insert before step": "Inserează înainte de pas",
   "Insert before step {p0}": "Inserează înainte de pas {p0}",
   "Instant Gaiaforming": "Gaiaformare instantanee",
-  "Instant Gaiaforming: convert a transdim planet in range into a Gaia planet": "Gaiaformare instantanee: convertește o planetă transdim din rază într-o planetă Gaia",
   "Intelligence": "Inteligență",
   "Internal atomic expansion is restricted to Phase 1.3 RoundMove replay nodes": "Expansiunea atomică internă este restricționată la nodurile de rejucare RoundMove din Faza 1.3",
   "Internal supplied-command expansion is restricted to Phase 1.3 RoundMove replay nodes": "Expansiunea internă a comenzilor furnizate este restricționată la nodurile de rejucare RoundMove din Faza 1.3",
@@ -3168,7 +3167,6 @@
   "payPower=": "platăPutere=",
   "pays": "plătește",
   "per-plan resource reserve and reserve-violation transition score": "rezerva de resurse per plan și scorul de tranziție al încălcării rezervei",
-  "perform instant Gaiaforming": "efectuează Gaiaformare instantanee",
   "permanent Advanced Tech tier": "nivel permanent de Tehnologie Avansată",
   "permanent Standard Tech tier": "nivel permanent de Tehnologie Standard",
   "permanent ship tier": "nivel permanent de navă",
@@ -4124,5 +4122,11 @@
   "Victory Points, Resources, and more": "Victory Points, Resources, and more",
   "Change bids": "Modifică ofertele",
   "Change split": "Modifică distribuția",
-  "Choices stay hidden until everyone has confirmed.": "Alegerile rămân secrete până când confirmă toți."
+  "Choices stay hidden until everyone has confirmed.": "Alegerile rămân secrete până când confirmă toți.",
+  "place a Gaia Former on a Transdim planet in range, which becomes a Gaia planet right away. No power tokens are moved to your Gaia area.": "plasează un Gaiaformer pe o planetă transdim din rază, care devine imediat o planetă Gaia. Nu se mută niciun jeton de putere în zona ta Gaia.",
+  "perform instant Gaiaforming: {p0}": "efectuează Gaiaformare instantanee: {p0}",
+  "Instant Gaiaforming: place a Gaia Former on a Transdim planet in range, which becomes a Gaia planet right away. No power tokens are moved to your Gaia area.": "Gaiaformare instantanee: plasează un Gaiaformer pe o planetă transdim din rază, care devine imediat o planetă Gaia. Nu se mută niciun jeton de putere în zona ta Gaia.",
+  "Instant Gaiaforming (booster)": "Gaiaformare instantanee (booster)",
+  "Instant Gaiaforming ({p0}, {p1})": "Gaiaformare instantanee ({p0}, {p1})",
+  "Once per round, as a special action, perform instant Gaiaforming: {p0}": "O dată pe rundă, ca acțiune specială, efectuează Gaiaformare instantanee: {p0}"
 }

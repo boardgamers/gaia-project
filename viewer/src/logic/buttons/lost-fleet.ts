@@ -1,11 +1,14 @@
-import Engine, { ArtifactToken, AvailableCommand, Command, Resource, Reward } from "@gaia-project/engine";
+import Engine, { ArtifactToken, AvailableCommand, Command, Resource, Reward, Spaceship } from "@gaia-project/engine";
 import type { SpaceshipActionType } from "@gaia-project/engine/src/spaceships";
 import { spaceshipBoards } from "@gaia-project/engine/src/spaceships";
 import { artifactTokenSpec } from "@gaia-project/engine/src/tiles/artifacts";
 import type { ButtonData } from "../../data";
+import { instantGaiaformingEffect } from "../../data/event";
 import { spaceshipNames } from "../../data/spaceships";
+import type { RichTextElement } from "../../graphics/rich-text";
 import { richText, richTextRewards } from "../../graphics/rich-text";
 import { hexSelectionButton } from "./hex";
+import { tooltipWithShortcut } from "./shortcuts";
 import type { CommandController } from "./types";
 import { autoClickButton, hexMap, symbolButton, textButton } from "./utils";
 
@@ -106,6 +109,48 @@ export function instantGaiaformingButton(
     undefined,
     autoClickButton
   );
+}
+
+/**
+ * Instant Gaiaforming offered from the Gaia Former menu, for each source that can do it this turn:
+ * the round booster's special action and T F Mars's Power action. Players who own one tend to start
+ * a normal Gaia Project instead (moving power tokens to the Gaia area) and expect the action to
+ * finish it, but the action places the Gaia Former itself. Each choice is the same move as taking
+ * the action from its usual menu, which then asks for the Transdim planet.
+ */
+export function instantGaiaformingChoices(commands: AvailableCommand[]): ButtonData[] {
+  const sources: { label: string; command: string; icon: RichTextElement }[] = [];
+
+  const special = commands.find((c) => c.name === Command.Special) as AvailableCommand<Command.Special> | undefined;
+  if (special?.data.specialacts.some((act) => act.income === Resource.InstantGaiaforming)) {
+    sources.push({
+      label: "Instant Gaiaforming (booster)",
+      command: `${Command.Special} ${Resource.InstantGaiaforming}`,
+      icon: { specialAction: Resource.InstantGaiaforming },
+    });
+  }
+
+  const ships = commands.find((c) => c.name === Command.SpaceshipAction) as
+    AvailableCommand<Command.SpaceshipAction> | undefined;
+  const tfMars = ships?.data.actions.find((action) => action.ship === Spaceship.TFMars && action.type === "power");
+  if (tfMars) {
+    sources.push({
+      label: `Instant Gaiaforming (${spaceshipNames[tfMars.ship]}, ${tfMars.cost})`,
+      command: `${Command.SpaceshipAction} ${tfMars.ship} ${tfMars.type}`,
+      icon: { spaceshipAction: { ship: tfMars.ship, type: tfMars.type } },
+    });
+  }
+
+  // Letters, because the hex choices next to these already take the number keys.
+  const shortcuts = ["g", "i"];
+  return sources.map((source, i) => ({
+    label: source.label,
+    // Icon only, like the special action itself - the tooltip carries the name and the shortcut.
+    richText: [source.icon],
+    command: source.command,
+    shortcuts: [shortcuts[i]],
+    tooltip: tooltipWithShortcut(`${source.label}: ${instantGaiaformingEffect}`, null, shortcuts[i]),
+  }));
 }
 
 export function placePowerRingButton(
