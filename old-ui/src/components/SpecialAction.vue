@@ -6,9 +6,9 @@
         transform="scale(24)"
         @click="onClick"
       />
-      <text>
+      <text :style="{ fontSize: `${labelFontSize}px` }">
         <tspan x="0" v-for="(line, i) in lines" :dy="`${i === 0 ? -0.5 * (lines.length - 1) * 11 : 11}px`" :key="i">
-          {{ line.replace(/ /g, "") }}
+          {{ line }}
         </tspan>
       </text>
     </g>
@@ -25,7 +25,12 @@ import CurrentAction from "../../../viewer/src/components/SpecialAction.vue";
 @Component
 export default class SpecialAction extends CurrentAction {
   get lines() {
-    return this.income.split(",");
+    return this.income.replace(/ /g, "").split(/,|-(?=[a-z])/i);
+  }
+
+  get labelFontSize() {
+    // Keep long words such as "gaiaforming" inside the octagon after wrapping.
+    return Math.min(12, 84 / Math.max(...this.lines.map((line) => line.length)));
   }
 }
 </script>
