@@ -208,16 +208,17 @@
         </g>
 
         <SpecialAction
-          v-for="(action, i) in player.actionsWithoutTile"
+          v-for="(action, i) in boardActions"
+          :data-player-action="action.rewards"
           :action="[action.rewards]"
           :player="player"
           :recent="recentAction(i)"
           :disabled="!action.enabled || passed"
           :key="action.rewards + '-' + i"
-          :y="height - 4"
+          :y="17.4 + Math.floor(i / 6) * 3.3"
           width="3.1"
           height="3.1"
-          :x="3.3 * i"
+          :x="3.3 * (i % 6)"
         />
       </svg>
     </div>
@@ -281,6 +282,7 @@ import Engine, {
   SpaceshipFederation,
 } from "@gaia-project/engine";
 import type { AnyTechTilePos } from "@gaia-project/engine/src/enums";
+import { isTileOrBoosterSource } from "@gaia-project/engine/src/events";
 import { lostFleetTerraformingBoard } from "@gaia-project/engine/src/factions";
 import { techTileEventSource } from "@gaia-project/engine/src/tiles/techs";
 import Vue from "vue";
@@ -396,8 +398,17 @@ export default class PlayerInfo extends Vue {
     return factionName(this.faction);
   }
 
+  /** Keep faction/academy actions first, followed by the owned tile and booster actions. */
+  get boardActions() {
+    const events = this.player.events[Operator.Activate];
+    return [
+      ...events.filter((event) => !isTileOrBoosterSource(event.source)),
+      ...events.filter((event) => isTileOrBoosterSource(event.source)),
+    ].map((event) => event.action());
+  }
+
   recentAction(i: number): boolean {
-    const action = this.player.actionsWithoutTile[i];
+    const action = this.boardActions[i];
     if (this.recentOpponentSpecials.has(action.rewards)) {
       return true;
     }
@@ -412,7 +423,7 @@ export default class PlayerInfo extends Vue {
 
   /**
    * Which tile a recent special action came from, so the gold mark lands on the tech tile or booster
-   * that carries it - `actionsWithoutTile` only covers the faction's own (PI, ability) octagons.
+   * that carries it as well as on the player board's action row.
    * Matched by `source` the same way `boosterSpecialActionUsed` does.
    */
   get recentOpponentSpecialSources(): Set<string> {
@@ -645,7 +656,7 @@ export default class PlayerInfo extends Vue {
   }
 
   get height() {
-    return "21.4";
+    return 21.4 + Math.max(0, Math.ceil(this.boardActions.length / 6) - 1) * 3.3;
   }
 
   togglePlanetHighlight(planet: Planet) {

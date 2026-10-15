@@ -145,15 +145,16 @@
         </g>
 
         <SpecialAction
-          v-for="(action, i) in player.actionsWithoutTile"
+          v-for="(action, i) in boardActions"
+          :data-player-action="action.rewards"
           :action="[action.rewards]"
           :player="player"
           :disabled="!action.enabled || passed"
           :key="'action-' + i"
-          :y="height - 4"
+          :y="17.4 + Math.floor(i / 6) * 3.3"
           width="3.1"
           height="3.1"
-          :x="3.3 * i"
+          :x="3.3 * (i % 6)"
         />
       </svg>
       <span v-if="player.faction === 'ivits'">

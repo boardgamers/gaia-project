@@ -26,6 +26,7 @@
 </template>
 
 <script lang="ts">
+import type { Player } from "@gaia-project/engine";
 import Engine, { Event, Planet } from "@gaia-project/engine";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
@@ -54,7 +55,11 @@ export default class SpecialAction extends Vue {
   @Prop()
   planet: Planet;
 
+  @Prop()
+  player: Player;
+
   onClick() {
+    if (this.disabled) return;
     if (!this._highlighted) {
       this.$emit("click");
       return;
@@ -79,7 +84,7 @@ export default class SpecialAction extends Vue {
       return null;
     }
     const player = this.$store.state.player?.index ?? this.gameData.currentPlayer;
-    return specialActionButton(this.income, this.gameData.player(player));
+    return specialActionButton(this.income, this.player ?? this.gameData.player(player));
   }
 
   get warning(): boolean {
@@ -89,12 +94,14 @@ export default class SpecialAction extends Vue {
 
   /** When the action content is highlighted - not the parent component */
   get _highlighted() {
+    const seat = this.$store.state.player?.index ?? this.gameData.currentPlayer;
+    if (this.disabled || (this.player && this.player.player !== seat)) return false;
     const actions = this.$store.state.context.highlighted.specialActions;
     return actions.has(this.income) || actions.has(this.income.replace(/>/g, ""));
   }
 
   get isHighlighted() {
-    return this.highlighted || this._highlighted;
+    return !this.disabled && (this.highlighted || this._highlighted);
   }
 
   tooltipTriggerConfig = tooltipTriggerConfig;

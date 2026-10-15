@@ -12,6 +12,10 @@
         </tspan>
       </text>
     </g>
+    <g v-if="disabled" stroke="#333" stroke-width="5" pointer-events="none">
+      <line x1="-14" y1="-14" x2="14" y2="14" />
+      <line x1="-14" y1="14" x2="14" y2="-14" />
+    </g>
   </svg>
 </template>
 
