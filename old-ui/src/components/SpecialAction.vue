@@ -6,7 +6,7 @@
         transform="scale(24)"
         @click="onClick"
       />
-      <text :style="{ fontSize: `${labelFontSize}px` }">
+      <text translate="no" :style="{ fontSize: `${labelFontSize}px` }">
         <tspan x="0" v-for="(line, i) in lines" :dy="`${i === 0 ? -0.5 * (lines.length - 1) * 11 : 11}px`" :key="i">
           {{ line }}
         </tspan>
