@@ -25,6 +25,7 @@ import {
   ResearchField,
   Resource,
   Resource as ResourceEnum,
+  RoundScoring,
   Spaceship,
   SpaceshipFederation,
   TechTile,
@@ -717,14 +718,20 @@ export default class Player extends EventEmitter {
       this.removeEvents(this.board.buildings[upgradedBuilding].income[this.data.buildings[upgradedBuilding]]);
     }
 
+    // Lantids can add a mine to an opponent's already occupied planet.
+    const isAdditionalMine = !upgradedBuilding && hex.occupied();
+
+    // Round-scoring VP must be available when the building asks for a tech tile: they can
+    // unlock the Lost Fleet extension's 25-VP condition. Do not award these events again below.
+    const roundScoringEvents = this.events[Operator.Trigger].filter((event) =>
+      RoundScoring.values().includes(event.source as RoundScoring)
+    );
+    this.receiveBuildingTriggerIncome(building, hex.data.planet, isAdditionalMine, roundScoringEvents);
+
     // NEEDS TO BE AFTER REMOVAL, so the tech ts > 4vp counts the correct number of ts after being upgraded from a lab
     if (!isNewLostPlanet) {
       this.loadEvents(this.board.buildings[building].income[this.data.buildings[building] - 1]);
     }
-
-    // If the planet is already occupied by someone else
-    // Lantids
-    const isAdditionalMine = !upgradedBuilding && hex.occupied();
 
     if (isAdditionalMine) {
       hex.data.additionalMine = this.player;
@@ -738,7 +745,12 @@ export default class Player extends EventEmitter {
     this.addBuildingToNearbyFederation(building, hex, map);
 
     // get triggered income for new building
-    this.receiveBuildingTriggerIncome(building, hex.data.planet, isAdditionalMine);
+    this.receiveBuildingTriggerIncome(
+      building,
+      hex.data.planet,
+      isAdditionalMine,
+      this.events[Operator.Trigger].filter((event) => !roundScoringEvents.includes(event))
+    );
 
     // Lost Fleet round scoring tiles "sector3"/"planet3": a mine in a sector, or on a planet type,
     // this player had not colonized before this build (RULES_CLARIFICATIONS.md §G4).
@@ -899,9 +911,14 @@ export default class Player extends EventEmitter {
     }
   }
 
-  receiveBuildingTriggerIncome(building: Building, planet: Planet, isAdditionalMine: boolean) {
+  receiveBuildingTriggerIncome(
+    building: Building,
+    planet: Planet,
+    isAdditionalMine: boolean,
+    events: Event[] = this.events[Operator.Trigger]
+  ) {
     // this is for roundboosters, techtiles and adv tile
-    for (const event of this.events[Operator.Trigger]) {
+    for (const event of events) {
       // only new mine trigger event for Lantids in other's planet
       if (
         Condition.matchesBuilding(event.condition, building, planet) &&
