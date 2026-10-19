@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import "mocha";
+import { finalRankings, gainFinalScoringVictoryPoints } from "../algorithms/scoring";
 import { AvailableCommand } from "../available/types";
 import Engine from "../engine";
 import {
@@ -9,6 +10,7 @@ import {
   Condition,
   Faction,
   Federation,
+  FinalTile,
   Phase,
   Planet,
   Player as PlayerEnum,
@@ -377,6 +379,45 @@ describe("Artifact token effects (RULES_CLARIFICATIONS.md §G6)", () => {
     expect(player.eventConditionCount(Condition.Mine)).to.equal(beforeMines + 1);
     expect(player.eventConditionCount(Condition.Asteroid)).to.equal(beforeAsteroids);
   });
+
+  for (const artifacts of [
+    [ArtifactToken.Asteroid],
+    [ArtifactToken.Protoplanet],
+    [ArtifactToken.Asteroid, ArtifactToken.Protoplanet],
+  ]) {
+    it(`${artifacts.join(" + ")}: counts virtual mines in building-count progress and final scoring`, () => {
+      const engine = createLostFleetRoundMoveEngine(3);
+      occupyPlanetsOfDistinctTypes(engine, PlayerEnum.Player1, 3);
+      occupyPlanetsOfDistinctTypes(engine, PlayerEnum.Player2, 4);
+      occupyPlanetsOfDistinctTypes(engine, PlayerEnum.Player3, 2);
+      const player = engine.player(PlayerEnum.Player1);
+      const sectors = player.finalCount(FinalTile.Sector);
+      engine.tiles.artifacts = [...artifacts];
+
+      for (const artifact of artifacts) {
+        moveChooseArtifactToken(
+          engine,
+          availableArtifactTokenCommand(engine, PlayerEnum.Player1),
+          PlayerEnum.Player1,
+          artifact
+        );
+      }
+
+      // Both the live objective and final scoring must include artifacts saved in existing games.
+      const restored = Engine.fromData(JSON.parse(JSON.stringify(engine)));
+      const restoredPlayer = restored.player(PlayerEnum.Player1);
+      expect(restoredPlayer.progress(FinalTile.Structure)).to.equal(3 + artifacts.length);
+      expect(restoredPlayer.finalCount(FinalTile.Structure)).to.equal(3 + artifacts.length);
+      expect(restoredPlayer.finalCount(FinalTile.StructureFed)).to.equal(0);
+      expect(restoredPlayer.finalCount(FinalTile.Sector)).to.equal(sectors);
+      expect(restoredPlayer.data.occupied).to.have.length(3);
+
+      const beforeVp = restoredPlayer.data.victoryPoints;
+      gainFinalScoringVictoryPoints(finalRankings([FinalTile.Structure], restored.players), restoredPlayer);
+      // One artifact ties for first; two artifacts take first outright.
+      expect(restoredPlayer.data.victoryPoints).to.equal(beforeVp + (artifacts.length === 1 ? 15 : 18));
+    });
+  }
 
   it("Protoplanet: does not re-trigger the planet3 round scoring bonus if already colonized via a mine", () => {
     const engine = createLostFleetRoundMoveEngine(3);

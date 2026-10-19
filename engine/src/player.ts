@@ -1163,7 +1163,10 @@ export default class Player extends EventEmitter {
             .map((hex) => hex.data.sector)
         ).length;
       case Condition.Structure:
-        return this.data.occupied.filter((hex) => hex.colonizedBy(this.player)).length;
+        // Planet artifacts count as mines even though they do not occupy a map hex (LF rules, p. 15).
+        return (
+          this.data.occupied.filter((hex) => hex.colonizedBy(this.player)).length + this.data.artifactPlanetTypes.length
+        );
       case Condition.StructureFed:
         return this.data.occupied.filter(
           (hex) => hex.colonizedBy(this.player) && hex.belongsToFederationOf(this.player)
