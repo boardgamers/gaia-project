@@ -4,7 +4,7 @@
       <!-- <thead>
         <tr>
           <th scope="col">Log</th>
-          <th scope="col">Victory points</th>
+          <th scope="col">Victory Points</th>
         </tr>
       </thead> -->
       <tbody>
