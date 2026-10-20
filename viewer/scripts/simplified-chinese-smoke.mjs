@@ -42,7 +42,17 @@ const server = createServer(async (req, res) => {
 });
 await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_EXECUTABLE });
-const url = `http://127.0.0.1:${server.address().port}/`;
+const localUrl = `http://127.0.0.1:${server.address().port}/`;
+const hosted = Boolean(process.env.GAIA_SMOKE_URL);
+const url = hosted ? "https://boardgamers.space/__gaia_locale_smoke__" : localUrl;
+async function routeHostedPage(page) {
+  if (hosted) {
+    await page.route(url, async (route) => {
+      const response = await fetch(localUrl);
+      await route.fulfill({ contentType: "text/html", body: await response.text() });
+    });
+  }
+}
 try {
   for (const mode of [false, true]) {
     old = mode;
@@ -50,6 +60,7 @@ try {
       const page = await browser.newPage({ viewport: { width, height: 950 } });
       const errors = [];
       page.on("pageerror", (error) => errors.push(error.message));
+      await routeHostedPage(page);
       await page.goto(url);
       const state = new Engine(["init 3 17"], { randomFactions: true });
       state.generateAvailableCommandsIfNeeded();
@@ -84,6 +95,7 @@ try {
     old = false;
     for (const lesson of lessons) {
       const page = await browser.newPage({ viewport: { width: 390, height: 950 } });
+      await routeHostedPage(page);
       await page.goto(url);
       await page.evaluate(
         (chapter) =>
