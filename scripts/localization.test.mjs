@@ -24,7 +24,12 @@ test("regional language preferences select supported catalogues", () => {
   assert.equal(resolveLocale("nl-BE"), "nl");
   assert.equal(resolveLocale("pt-PT"), "pt-BR");
   assert.equal(resolveLocale("zh-Hant-TW"), "zh-TW");
-  assert.equal(resolveLocale("zh-CN"), "en");
+  for (const tag of ["zh", "zh-CN", "zh_SG", "zh-Hans", "zh-Hans-CN"]) {
+    assert.equal(resolveLocale(tag), "zh-CN");
+  }
+  for (const tag of ["zh-TW", "zh-Hant-CN", "zh-HK", "zh-MO"]) {
+    assert.equal(resolveLocale(tag), "zh-TW");
+  }
   assert.equal(resolveLocale(undefined), "en");
 });
 test("dynamic values are reordered while player names stay unchanged", () => {
@@ -60,4 +65,14 @@ test("decorative arrows and attached currency values keep their meaning", () => 
   const t = createTranslator(catalogs, "nl");
   assert.equal(t.translate("Draw →"), "Tekenen →");
   assert.equal(t.translate("Your cash: $20"), "Je geld: $20");
+});
+
+test("Simplified Chinese preserves names and interpolates game messages", async () => {
+  const chinese = JSON.parse(await readFile(new URL("../viewer/src/localization/zh-CN.json", import.meta.url), "utf8"));
+  const translator = createTranslator({ "zh-CN": chinese }, "zh-Hans");
+  translator.setNames(["Build"]);
+  assert.equal(translator.translate("Build"), "Build");
+  assert.equal(translator.translate("Build wins it with a bid of 12, and pays 8 VP"), "Build以12的出价获胜，并支付8分");
+  assert.equal(translator.translate("Your turn - Round 3"), "轮到你了——第3轮");
+  assert.equal(translator.translate("Choose your faction"), "选择你的种族");
 });
