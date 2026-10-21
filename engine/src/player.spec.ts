@@ -300,6 +300,10 @@ describe("Player", () => {
       player.data.artifactPlanetTypes.push(Planet.Asteroid);
 
       expect(player.finalCount(FinalTile.Asteroid)).to.equal(2);
+      expect(player.ownedPlanetsCount[Planet.Asteroid]).to.equal(2);
+      player.data.artifactPlanetTypes.push(Planet.Protoplanet);
+      expect(player.ownedPlanetsCount[Planet.Protoplanet]).to.equal(1);
+      expect(player.finalCount(FinalTile.Asteroid)).to.equal(2);
     });
 
     it("should count unique Deep Space tiles, not individual hexes, for the Lost Fleet deep-space final scoring", () => {

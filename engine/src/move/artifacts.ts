@@ -92,16 +92,15 @@ function applyArtifactToken(engine: Engine, player: PlayerEnum, token: ArtifactT
   }
 }
 
-// The Asteroid/Protoplanet artifacts count as building a mine and colonizing that planet type
-// (RULES_CLARIFICATIONS.md §G6) - including, for the rest of the game, the Lost Fleet round
-// scoring tile that rewards the first mine on a new planet type (§G4 "planet3"), same as a real
-// build would via player.ts's build()/Condition.NewPlanetType trigger.
+// Planet artifacts trigger mine-building and new-planet-type rewards (§G6), then keep counting
+// as a mine on that planet type without occupying a hex or using a mine from the faction board.
 function applyArtifactPlanetType(pl: Player, planet: Planet) {
   const alreadyColonized =
     pl.ownedPlanets.some((hex) => hex.data.planet === planet) || pl.data.artifactPlanetTypes.includes(planet);
 
   pl.gainRewards([new Reward(7, Resource.VictoryPoint)], Spaceship.Twilight);
   pl.data.artifactPlanetTypes.push(planet);
+  pl.receiveTriggerIncome(Condition.Mine);
 
   if (!alreadyColonized) {
     pl.receiveTriggerIncome(Condition.NewPlanetType);

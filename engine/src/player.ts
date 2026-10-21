@@ -191,7 +191,7 @@ export default class Player extends EventEmitter {
   }
 
   get ownedPlanetsCount() {
-    return countBy(this.ownedPlanets, "data.planet");
+    return countBy([...this.ownedPlanets.map((hex) => hex.data.planet), ...this.data.artifactPlanetTypes]);
   }
 
   toJSON() {
@@ -1193,11 +1193,7 @@ export default class Player extends EventEmitter {
           this.data.gaiaformersUsedForOther
         );
       case Condition.Asteroid:
-        // Include the Asteroid-themed Artifact token's virtual mine (§G6) alongside real owned Asteroid hexes.
-        return (
-          this.ownedPlanets.filter((hex) => hex.data.planet === Planet.Asteroid).length +
-          this.data.artifactPlanetTypes.filter((planet) => planet === Planet.Asteroid).length
-        );
+        return this.ownedPlanetsCount[Planet.Asteroid] ?? 0;
       case Condition.DeepSpaceSector:
         return colonizedDeepSpaceSectorCount(this.ownedPlanets);
       case Condition.PlanetaryInstituteAcademyDistance: {

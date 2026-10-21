@@ -15,6 +15,7 @@ import {
 import { boosterEvents } from "@gaia-project/engine/src/tiles/boosters";
 import { fireEvent, render } from "@testing-library/vue";
 import { expect } from "chai";
+import AlternatePlayerInfo from "../../../old-ui/src/components/PlayerInfo.vue";
 import { makeStore } from "../store";
 import PlayerInfo from "./PlayerInfo.vue";
 
@@ -199,6 +200,29 @@ describe("PlayerInfo terraforming strip", () => {
     );
   });
 });
+
+for (const [name, component] of [
+  ["regular", PlayerInfo],
+  ["alternate", AlternatePlayerInfo],
+] as const) {
+  it(`${name} player board includes both planet artifacts in its counters`, () => {
+    const engine = new Engine(["init 2 artifact-counters", "p1 faction terrans", "p2 faction hadsch-hallas"], {
+      lostFleet: true,
+    });
+    const player = engine.players[0];
+    player.data.artifactPlanetTypes = [Planet.Asteroid, Planet.Protoplanet];
+    player.data.artifacts = [ArtifactToken.Asteroid, ArtifactToken.Protoplanet];
+    const store = makeStore();
+    store.commit("receiveData", engine);
+    const { container } = render(component, { props: { player }, store });
+
+    for (const planet of [Planet.Asteroid, Planet.Protoplanet]) {
+      expect(
+        container.querySelector(`.planet-fill.${planet}`)?.parentElement?.querySelector("text")?.textContent?.trim()
+      ).to.equal("1");
+    }
+  });
+}
 
 function bowlCount(container: HTMLElement, area: 1 | 2): string | undefined {
   return container.querySelector(`.power-bowl--${area} text`)?.textContent?.trim();

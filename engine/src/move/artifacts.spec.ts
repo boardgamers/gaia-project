@@ -4,6 +4,8 @@ import { finalRankings, gainFinalScoringVictoryPoints } from "../algorithms/scor
 import { AvailableCommand } from "../available/types";
 import Engine from "../engine";
 import {
+  AdvTechTile,
+  AdvTechTilePos,
   ArtifactToken,
   Building,
   Command,
@@ -24,6 +26,7 @@ import { GaiaHex } from "../gaia-hex";
 import { classifySectorId, LostFleetSectorType } from "../lost-fleet-map";
 import { Power } from "../player-data";
 import { roundScoringEvents } from "../tiles/scoring";
+import { techTileEventWithSource } from "../tiles/techs";
 import { moveChooseArtifactToken, moveExamineArtifact } from "./artifacts";
 
 function createLostFleetRoundMoveEngine(
@@ -334,6 +337,29 @@ describe("Artifact token effects (RULES_CLARIFICATIONS.md §G6)", () => {
     expect(player.data.victoryPoints).to.equal(beforeVp + 7);
     expect(player.data.artifactPlanetTypes).to.include(Planet.Protoplanet);
   });
+
+  for (const token of [ArtifactToken.Asteroid, ArtifactToken.Protoplanet]) {
+    it(`${token}: triggers mine-building round and advanced-tech bonuses without placing a mine`, () => {
+      const engine = createLostFleetRoundMoveEngine(3);
+      const player = engine.player(PlayerEnum.Player1);
+      engine.tiles.artifacts = [token];
+      player.loadEvents(roundScoringEvents(ScoringTile.Score3, 1));
+      player.loadEvents(techTileEventWithSource(AdvTechTile.AdvTech14, AdvTechTilePos.Navigation));
+      const beforeVp = player.data.victoryPoints;
+      const beforeMines = player.data.buildings[Building.Mine];
+
+      moveChooseArtifactToken(
+        engine,
+        availableArtifactTokenCommand(engine, PlayerEnum.Player1),
+        PlayerEnum.Player1,
+        token
+      );
+
+      expect(player.data.victoryPoints).to.equal(beforeVp + 7 + 2 + 3);
+      expect(player.data.buildings[Building.Mine]).to.equal(beforeMines);
+      expect(player.data.occupied).to.have.length(0);
+    });
+  }
 
   it("Asteroid: also triggers the Lost Fleet planet3 round scoring bonus for a new planet type", () => {
     const engine = createLostFleetRoundMoveEngine(3);
