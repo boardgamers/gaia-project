@@ -758,7 +758,12 @@ export default class Player extends EventEmitter {
       if (isNewLostFleetSector(this.data.occupied, hex)) {
         this.receiveTriggerIncome(Condition.NewSector);
       }
-      if (!this.data.occupied.some((other) => other !== hex && other.data.planet === hex.data.planet)) {
+      // Shared Lantids mines do not count as colonized planet types; planet artifacts do.
+      if (
+        !isAdditionalMine &&
+        !this.data.artifactPlanetTypes.includes(hex.data.planet) &&
+        !this.ownedPlanets.some((other) => other !== hex && other.data.planet === hex.data.planet)
+      ) {
         this.receiveTriggerIncome(Condition.NewPlanetType);
       }
     }

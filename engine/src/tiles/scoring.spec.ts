@@ -113,6 +113,45 @@ describe("Lost Fleet round scoring tiles (RULES_CLARIFICATIONS.md §G4)", () => 
     expect(player.data.victoryPoints, "mine of a distinct planet type triggers again").to.equal(beforeVp + 6);
   });
 
+  it("lfplanet3: shared Lantids mines neither score nor prevent scoring the first colonization of that type", () => {
+    const map = new SpaceMap(2, "lf-scoring-lantids-protoplanet");
+    const [shared, first, second] = colonizableHexes(map);
+    for (const hex of [shared, first, second]) {
+      hex.data.planet = Planet.Protoplanet;
+    }
+    shared.data.player = PlayerEnum.Player2;
+    shared.data.building = Building.Mine;
+
+    const player = newPlayer(Faction.Lantids);
+    player.loadEvents(roundScoringEvents(ScoringTile.LfPlanet3, 1));
+    const beforeVp = player.data.victoryPoints;
+
+    player.build(Building.Mine, shared, [], map);
+    expect(player.data.victoryPoints, "sharing an opponent's planet is not a new planet type").to.equal(beforeVp);
+
+    player.build(Building.Mine, first, [], map);
+    expect(player.data.victoryPoints, "the first owned protoplanet still scores").to.equal(beforeVp + 3);
+
+    player.build(Building.Mine, second, [], map);
+    expect(player.data.victoryPoints, "a second owned protoplanet does not score again").to.equal(beforeVp + 3);
+  });
+
+  for (const planet of [Planet.Asteroid, Planet.Protoplanet]) {
+    it(`lfplanet3: a physical ${planet} mine does not score a new type already colonized by an artifact`, () => {
+      const map = new SpaceMap(2, "lf-scoring-planet-artifact");
+      const [hex] = colonizableHexes(map);
+      hex.data.planet = planet;
+      const player = newPlayer();
+      player.data.artifactPlanetTypes.push(planet);
+      player.loadEvents(roundScoringEvents(ScoringTile.LfPlanet3, 1));
+      const beforeVp = player.data.victoryPoints;
+
+      player.build(Building.Mine, hex, [], map);
+
+      expect(player.data.victoryPoints).to.equal(beforeVp);
+    });
+  }
+
   it("ScoringTile.values() only includes the 3 Lost Fleet tiles under the Lost Fleet expansion", () => {
     expect(ScoringTile.values(Expansion.None)).to.not.include.members([
       ScoringTile.LfLab4,
