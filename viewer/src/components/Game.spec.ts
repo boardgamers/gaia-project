@@ -1309,16 +1309,16 @@ describe("Game", () => {
         vm.$destroy();
       });
 
-      it("still renders every seat's commands during setup, which is what pass-and-play needs (§2.6)", () => {
+      it("never exposes an opponent’s setup commands while planning", () => {
         const vm = mountAsSeat(0, new Engine(SETUP_MOVES.slice(0, -1))); // still mid-setup
         vm.enterAnalysisMode();
 
-        // Round 0: whoever the clone points at is whose choice the player is making.
+        // The ownership guard also applies if a setup clone gets stranded on another seat.
         const opponentsTurn = Engine.fromData(JSON.parse(JSON.stringify(vm.engine)));
         opponentsTurn.currentPlayer = 1;
         vm.handleData(opponentsTurn);
 
-        expect(vm.canPlay).to.equal(true);
+        expect(vm.canPlay).to.equal(false);
 
         vm.$el.remove();
         vm.$destroy();
@@ -1390,18 +1390,15 @@ describe("Game", () => {
         vm.$destroy();
       });
 
-      it("places the opponents' setup mines for them, so only this seat is ever asked (owner instruction, 2026-08-19)", () => {
-        // This used to be decision #7's pass-and-play: the player placed EVERY seat's starting mines
-        // by hand, and the opponent's move went into the line as an ordinary entry. The owner's
-        // instruction is "no mine placement for other factions" - you pick a faction and place your
-        // own - so the opponents' placements are made for them and never touch the line.
+      it("leaves opponents' setup boards untouched while I plan my own placements", () => {
         const vm = mountAsSeat(0, new Engine(PARTIAL_SETUP_MOVES));
         vm.enterAnalysisMode();
 
         vm.applyAnalysisMove("terrans build m -1x2"); // this seat's own first mine
 
         expect(vm.engine.playerToMove, "control comes straight back to me").to.equal(0);
-        expect(vm.engine.players[1].data.occupied.length, "their mines went down on their own").to.be.greaterThan(0);
+        expect(vm.engine.players[1].data.occupied).to.have.length(0);
+        expect(vm.engine.moveHistory.slice(PARTIAL_SETUP_MOVES.length)).to.deep.equal(["terrans build m -1x2"]);
         expect(vm.analysisEntries.map((e: { move: string }) => e.move)).to.deep.equal(["terrans build m -1x2"]);
 
         vm.$el.remove();
@@ -2326,14 +2323,14 @@ describe("Game", () => {
         vm.$destroy();
       });
 
-      it("queues only my second starting mine, not the other players' simulated placements", async () => {
+      it("queues my second starting mine without simulating the other players’ placements", async () => {
         const real = new Engine(SETUP_MOVES.slice(0, 4));
         const vm = mountAsSeat(0, Engine.fromData(stripSecret(real, 0)));
         vm.$store.commit("hosted", true);
         expect(vm.premoveAvailable).to.equal(true);
         vm.enterAnalysisMode();
         vm.applyAnalysisMove("terrans build m -4x-1");
-        expect(vm.engine.moveHistory.length).to.be.greaterThan(real.moveHistory.length + 1);
+        expect(vm.engine.moveHistory.slice(real.moveHistory.length)).to.deep.equal(["terrans build m -4x-1"]);
         expect(vm.analysisCommittableMoves).to.deep.equal(["terrans build m -4x-1"]);
         expect(vm.analysisCommitPlan.timings).to.deep.equal([{ round: 0, phase: Phase.SetupBuilding }]);
         await Vue.nextTick();

@@ -196,17 +196,23 @@ function moveToNextPlayerWithoutAChosenFaction(engine: Engine) {
 
 export function phaseSetupBuilding(engine: Engine, move: string) {
   engine.loadTurnMoves(move, { split: false, processFirst: true });
-
-  if (!engine.moveToNextPlayer(engine.turnOrder, { loop: false })) {
-    beginSetupBoosterPhase(engine);
-  }
+  advanceSetupTurn(engine);
 }
 
 export function phaseSetupBooster(engine: Engine, move: string) {
   engine.loadTurnMoves(move, { split: false, processFirst: true });
+  advanceSetupTurn(engine);
+}
 
+/** Advance after a setup choice. Analysis clones also use this to skip opponents without playing for them. */
+export function advanceSetupTurn(engine: Engine) {
+  assert(engine.phase === Phase.SetupBuilding || engine.phase === Phase.SetupBooster);
   if (!engine.moveToNextPlayer(engine.turnOrder, { loop: false })) {
-    beginRoundStartPhase(engine);
+    if (engine.phase === Phase.SetupBuilding) {
+      beginSetupBoosterPhase(engine);
+    } else {
+      beginRoundStartPhase(engine);
+    }
   }
 }
 

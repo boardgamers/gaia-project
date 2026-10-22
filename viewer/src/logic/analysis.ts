@@ -1,4 +1,5 @@
 import Engine, {
+  advanceSetupTurn,
   ANALYSIS_CHEAP_BUILD,
   Command,
   endSetupFactionPhase,
@@ -35,8 +36,8 @@ export interface AnalysisAdjustEntry {
 
 /** The round-0 faction seed (§11) - "let me try this faction", the one thing round 0 could not do
  * before: it assigns a whole seat-ordered faction lineup on the clone and takes the engine's own
- * exit from faction selection straight into setup building, so the player places everyone's starting
- * mines (decision #7) and then plays round 1 solo, without first walking every seat's pick - or, in
+ * exit from faction selection straight into setup building, so the player places their own starting
+ * mines and then plays round 1 solo, without first walking every seat's pick - or, in
  * an auction game, every seat's bid, whose resolution would have decided their faction FOR them.
  *
  * The lineup is stored per seat rather than recomputed on replay because the pool it is drawn from
@@ -468,7 +469,7 @@ export function settleAnalysisClone(engine: Engine, seat: number): void {
 /** The round-0 phases a faction seed (§11) can be applied from - everything between the board setup
  * and the first starting mine, i.e. every phase in which who ends up with which faction is still
  * open. `SetupBuilding` onwards is deliberately excluded: factions are loaded and mines are already
- * going down by then, so pass-and-play (§2.6) is what covers it and reseeding would silently
+ * going down by then, and reseeding would silently
  * discard placements the player had already made. */
 const FACTION_SEED_PHASES: Phase[] = [
   Phase.SetupBoard,
@@ -624,6 +625,14 @@ export function resolveOpponentDecisions(engine: Engine, seat: number): void {
     if (toMove === undefined || toMove === seat) {
       break;
     }
+    // Keep opponents' real placements and picks, but never invent their remaining setup moves.
+    // Use the normal phase transition so our own placement count and round-one income stay intact.
+    if (engine.phase === Phase.SetupBuilding || engine.phase === Phase.SetupBooster) {
+      advanceSetupTurn(engine);
+      engine.clearAvailableCommands();
+      engine.generateAvailableCommands();
+      continue;
+    }
     const faction = engine.players[toMove].faction ?? `p${toMove + 1}`;
     const decline = engine.findAvailableCommand(toMove, Command.Decline);
     if (decline) {
@@ -636,54 +645,6 @@ export function resolveOpponentDecisions(engine: Engine, seat: number): void {
           offers.length
             ? offers.map((offer) => `${faction} ${Command.Decline} ${offer}`)
             : [`${faction} ${Command.Decline}`]
-        )
-      ) {
-        continue;
-      }
-    }
-    // The round-0 booster pick (owner instruction): setup pass-and-play (§2.6/decision #7) exists so
-    // the player can place everyone's starting mines, not so they have to choose a booster for each
-    // opponent - an opponent's booster is worth nothing in a sandbox where they never take a turn.
-    // Taken first-available rather than randomly, so a stored line always replays the same table -
-    // but only to satisfy the engine's own turn-order bookkeeping (phaseSetupBooster won't advance
-    // to round 1 until every seat in turnOrder has completed this move). It is immediately handed
-    // back, mirroring exactly what a real mid-round Pass does when a player gives up their old
-    // booster (player.ts's `pass()`): opponents must not actually keep a booster (owner instruction
-    // - the pool should show every tile as available except the one the sandbox seat itself
-    // picked), and this is the same undo the engine already relies on elsewhere, not a new one.
-    const booster = engine.findAvailableCommand(toMove, Command.ChooseRoundBooster);
-    if (booster) {
-      const boosters = booster.data?.boosters ?? [];
-      if (
-        tryMoves(
-          engine,
-          boosters.map((b) => `${faction} ${Command.ChooseRoundBooster} ${b}`)
-        )
-      ) {
-        const player = engine.players[toMove];
-        const picked = player.data.tiles.booster;
-        if (picked !== undefined) {
-          player.removeRoundBoosterEvents();
-          player.data.tiles.booster = undefined;
-          engine.tiles.boosters[picked] = true;
-        }
-        continue;
-      }
-    }
-    // Opponents' STARTING MINES (owner instruction, 2026-08-19). Setup pass-and-play used to hand the
-    // player every seat's placements to make by hand - decision #7's original reading of §2.6 - and
-    // the owner's answer is "no mine placement for other factions": you pick a faction and place your
-    // own. The engine has no auto-play for this (`autoMove()` returns false in `Phase.SetupBuilding`)
-    // and it refuses to advance to round 1 until every seat has placed, so the sandbox places them.
-    // First offer from the opponent's OWN available command, so bans/range/planet rules are the
-    // engine's to enforce and a stored line always replays the same board.
-    if (engine.phase === Phase.SetupBuilding) {
-      const build = engine.findAvailableCommand(toMove, Command.Build);
-      const offers = build?.data?.buildings ?? [];
-      if (
-        tryMoves(
-          engine,
-          offers.map((b) => `${faction} ${Command.Build} ${b.building} ${b.coordinates}`)
         )
       ) {
         continue;

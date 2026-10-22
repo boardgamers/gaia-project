@@ -503,8 +503,8 @@ export default class Game extends Vue {
   analysisBaseRound: number = null;
   analysisBaseMoveCount: number = null;
   // The REAL move history the origin was cloned from. Not `analysisOrigin.moveHistory`, which is a
-  // different list: `settleAnalysisClone`/`advancePastOwnPass` play opponents' declines, boosters,
-  // starting mines and passes through `engine.move()`, and every one of those is pushed onto the
+  // different list: `settleAnalysisClone`/`advancePastOwnPass` play opponents' declines
+  // and passes through `engine.move()`, and every one of those is pushed onto the
   // clone's own history. That drift is why an opponent's turn used to force-close the sandbox
   // whenever it had been opened during a leech pause or after this seat had passed - see
   // `reanchorAnalysisLine`, which compares against this instead.
@@ -909,7 +909,7 @@ export default class Game extends Vue {
     }
 
     if (this.analysisMode) {
-      return isBeforeRound1(this.engine) || this.engine.playerToMove === this.analysisSeat;
+      return factionSeedAvailable(this.engine) || this.engine.playerToMove === this.analysisSeat;
     }
 
     const lockedSeat = this.$store.state.player?.index;

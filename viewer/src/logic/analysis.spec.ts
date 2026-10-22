@@ -448,32 +448,51 @@ describe("resolveOpponentDecisions", () => {
   });
 });
 
-describe("opponents' own setup turns (owner instruction, 2026-08-19)", () => {
-  it("places an opponent's starting mines for them, so only this seat is ever asked", () => {
-    // Decision #7 used to read "pass-and-play: you place EVERY seat's starting mines". The owner's
-    // instruction is the opposite - "no mine placement for other factions" - and the engine will not
-    // advance to round 1 until every seat has placed, so the sandbox has to place them itself.
-    const engine = new Engine(["init 2 randomSeed", "p1 faction terrans", "p2 faction nevlas"]);
-    expect(engine.phase).to.equal(Phase.SetupBuilding);
+describe("opponents' setup turns in planning", () => {
+  it("skips remaining placements without moving for opponents or changing their board", () => {
+    // Nevlas has placed one real mine and is due to place another before our next turn.
+    const engine = new Engine(SETUP_MOVES.slice(0, 5));
     markAnalysisSeat(engine, 0);
-
-    // Seat 0 places first here, so take that turn and hand control back to the opponents.
-    const first = engine.findAvailableCommand(0, Command.Build).data.buildings[0];
-    engine.move(`terrans build ${first.building} ${first.coordinates}`);
-    engine.generateAvailableCommandsIfNeeded();
-    expect(engine.playerToMove, "the opponent is up next").to.equal(1);
-
-    resolveOpponentDecisions(engine, 0);
-
-    expect(engine.playerToMove, "control comes back without asking me to place for them").to.equal(0);
-    expect(engine.player(1).data.occupied.length, "their mines went down").to.be.greaterThan(0);
+    const opponent = JSON.stringify(engine.player(1));
+    const history = [...engine.moveHistory];
+    settleAnalysisClone(engine, 0);
+    expect(engine.playerToMove).to.equal(0);
+    expect(engine.phase).to.equal(Phase.SetupBuilding);
+    expect(JSON.stringify(engine.player(1))).to.equal(opponent);
+    expect(engine.moveHistory).to.deep.equal(history);
   });
 
-  it("is what `autoMove` cannot do - the engine has no auto-play for a setup placement", () => {
-    // The reason this needs its own branch rather than falling through to resolveOpponentDecisions'
-    // existing `autoMove()` step, which is what handles brainstones and income choices.
-    const engine = new Engine(["init 2 randomSeed", "p1 faction terrans", "p2 faction nevlas"]);
-    expect(engine.autoMove()).to.equal(false);
+  it("skips an opponent's booster pick after our own and enters round one without a fictitious pick", () => {
+    const engine = new Engine(SETUP_MOVES.slice(0, 7));
+    markAnalysisSeat(engine, 1);
+    settleAnalysisClone(engine, 1);
+    const history = [...engine.moveHistory];
+    const { engine: result, applied } = replayAnalysisLine(
+      engine,
+      [{ kind: "move", move: "nevlas booster booster7" }],
+      1,
+      Round.Round1
+    );
+    expect(applied).to.equal(1);
+    expect(result.phase).to.equal(Phase.RoundMove);
+    expect(result.playerToMove).to.equal(1);
+    expect(result.players[0].data.tiles.booster ?? null).to.equal(null);
+    expect(result.moveHistory.slice(history.length)).to.deep.equal(["nevlas booster booster7"]);
+    expect(result.tiles.boosters.booster3).to.equal(true);
+  });
+
+  it("can enter after our setup is finished without replaying our booster or placing more mines", () => {
+    const engine = new Engine(SETUP_MOVES.slice(0, 8));
+    markAnalysisSeat(engine, 1);
+    const history = [...engine.moveHistory];
+    const occupied = [...engine.players[1].data.occupied];
+    settleAnalysisClone(engine, 1);
+    expect(engine.phase).to.equal(Phase.RoundMove);
+    expect(engine.playerToMove).to.equal(1);
+    expect(engine.players[1].data.occupied).to.deep.equal(occupied);
+    expect(engine.players[1].data.tiles.booster).to.equal("booster7");
+    expect(engine.players[0].data.tiles.booster ?? null).to.equal(null);
+    expect(engine.moveHistory).to.deep.equal(history);
   });
 });
 
@@ -1182,13 +1201,10 @@ describe("the round-0 faction seed (§11)", () => {
   it("runs the whole round-0 flow: seed a faction, place only MY mines, then round 1 solo", () => {
     const origin = freshGame();
     applySoloRoundFlow(origin, 0); // what enterAnalysisMode does for a round-0 entry
-    // Owner instruction, 2026-08-19: "no mine placement for other factions". The line holds this
-    // seat's own placements and nothing else - opponents' starting mines and their booster are both
-    // resolved for them by `resolveOpponentDecisions` after every entry.
+    // Only our own placements and booster are simulated; opponents keep their current boards.
     const entries: AnalysisEntry[] = [{ kind: "faction", lineup: [Faction.Terrans, Faction.Nevlas] }];
 
-    // Take whatever the engine offers first each time: the opponent's own mines are already down by
-    // the time this seat is asked, so a hardcoded hex could be one they were given.
+    // Follow the engine’s placement offers for this faction.
     for (let i = 0; i < 4; i++) {
       const { engine } = replayAnalysisLine(origin, entries, 0, Round.Round1);
       if (engine.phase !== Phase.SetupBuilding) {
@@ -1201,8 +1217,8 @@ describe("the round-0 faction seed (§11)", () => {
 
     const mid = replayAnalysisLine(origin, entries, 0, Round.Round1);
     expect(mid.engine.phase).to.equal(Phase.SetupBooster);
-    expect(mid.engine.playerToMove).to.equal(0); // nevlas' pick was made for me
-    expect(mid.engine.players[1].data.occupied.length, "the opponent's own mines went down too").to.be.greaterThan(0);
+    expect(mid.engine.playerToMove).to.equal(0); // nevlas' pick was skipped
+    expect(mid.engine.players[1].data.occupied).to.have.length(0);
     const mine = mid.engine.findAvailableCommand(0, Command.ChooseRoundBooster).data.boosters[0];
     entries.push({ kind: "move", move: `terrans booster ${mine}` });
 
@@ -1213,9 +1229,10 @@ describe("the round-0 faction seed (§11)", () => {
     expect(engine.round).to.equal(Round.Round1);
     expect(engine.turnOrder).to.deep.equal([0]); // solo from here (§2.5)
     expect(engine.playerToMove).to.equal(0);
-    // The opponent's pick was made for them only to satisfy the engine's turn-order bookkeeping and
-    // handed straight back (owner instruction, PROGRESS #181) - they must not actually keep a
-    // booster in a sandbox where they never take a turn, so the pool shows every tile except mine.
+    // Skipped opponents neither consume boosters nor add moves to the history.
+    expect(engine.moveHistory.slice(origin.moveHistory.length).every((move) => move.startsWith("terrans "))).to.equal(
+      true
+    );
     expect(engine.players[1].data.tiles.booster ?? null).to.equal(null);
     expect(engine.tiles.boosters[mine]).to.equal(false);
     expect(Object.values(engine.tiles.boosters).filter((available) => available === false)).to.have.length(1);

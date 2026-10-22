@@ -92,7 +92,7 @@ export { applyChargePowers } from "./src/income";
 export { classifySectorId, LostFleetSectorType } from "./src/lost-fleet-map";
 export { moveAI } from "./src/move/ai";
 export { ANALYSIS_CHEAP_BUILD } from "./src/move/buildings";
-export { endSetupFactionPhase, leechPossible } from "./src/move/phase";
+export { advanceSetupTurn, endSetupFactionPhase, leechPossible } from "./src/move/phase";
 export { planetNames, terraformingStepsRequired } from "./src/planets";
 export { lastTile, researchEvents } from "./src/research-tracks";
 export { SetupType } from "./src/setup";

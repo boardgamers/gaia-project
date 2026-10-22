@@ -1,5 +1,12 @@
 # Analysis Mode — Implementation Plan (ready for handoff)
 
+> **Setup update (2026-10-22):** Planning skips opponents’ remaining placements and booster picks;
+> it never invents moves for them. Existing placements and picks stay on the cloned board.
+> `advanceSetupTurn` preserves the normal setup order and transition to round-one income.
+> Booster choices are limited to the tiles selected for this game. During setup, opponents’ chosen
+> boosters remain unavailable; later rounds may assume they become available again.
+> This supersedes the historical pass-and-play and unrestricted booster-pool descriptions below.
+
 > Status: **Phases 1-7 all done, plus §5.4, off-turn entry, §11's round-0 faction seed, and §12's
 > simplification pass (viewer v5.69.0, 2026-08-17, PROGRESS.md #166-179) — the whole feature is
 > landed. §12 is the one to read before touching anything here: it replaced the injected sandbox
