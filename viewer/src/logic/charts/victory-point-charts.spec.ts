@@ -1,7 +1,65 @@
-import Engine, { BoardAction, Expansion, PlayerEnum, Resource } from "@gaia-project/engine";
+import Engine, {
+  BoardAction,
+  Expansion,
+  Faction,
+  Phase,
+  PlayerEnum,
+  ResearchField,
+  Resource,
+} from "@gaia-project/engine";
 import { expect } from "chai";
 import { extractChanges, getDataPoints } from "./charts";
-import { victoryPointSources } from "./victory-point-charts";
+import { victoryPointDetails, victoryPointSources } from "./victory-point-charts";
+
+describe("victoryPointSources research rewards", () => {
+  it("separates Economy income from Gaia level 5 without including end-game research scoring twice", () => {
+    const engine = new Engine(["init 2 victory-point-charts-economy"], { lostFleet: true });
+    const player = engine.players[0];
+    player.faction = Faction.Terrans;
+    player.loadFaction(null, Expansion.LostFleet);
+    engine.advancedLog = [
+      { round: 3 },
+      { player: player.player, changes: { [ResearchField.Economy]: { [Resource.VictoryPoint]: 1 } } },
+      { round: 4 },
+      { player: player.player, changes: { [ResearchField.Economy]: { [Resource.VictoryPoint]: 1 } } },
+      { player: player.player, changes: { [ResearchField.GaiaProject]: { [Resource.VictoryPoint]: 11 } } },
+      { round: 5 },
+      { player: player.player, changes: { [ResearchField.Economy]: { [Resource.VictoryPoint]: 1 } } },
+      { player: PlayerEnum.Player2, changes: { [ResearchField.Economy]: { [Resource.VictoryPoint]: 1 } } },
+    ];
+    const sources = victoryPointSources((tile) => `final${tile}`, Expansion.LostFleet, [player.faction]).filter(
+      (source) => source.label === "Gaia" || source.label === "Economy"
+    );
+    const totals = () =>
+      victoryPointDetails(engine, player.player, sources, "last").map((source) => ({
+        label: source.label,
+        vp: source.getDataPoints()[0],
+      }));
+    const expected = [
+      { label: "Gaia", vp: 11 },
+      { label: "Economy", vp: 3 },
+    ];
+    expect(totals()).to.deep.equal(expected);
+
+    engine.advancedLog.push(
+      { phase: Phase.EndGame },
+      {
+        player: player.player,
+        changes: {
+          [ResearchField.GaiaProject]: { [Resource.VictoryPoint]: 12 },
+          [ResearchField.Economy]: { [Resource.VictoryPoint]: 8 },
+        },
+      }
+    );
+    expect(totals()).to.deep.equal(expected);
+  });
+
+  it("keeps the Economy income row out of base-game statistics", () => {
+    expect(victoryPointSources((tile) => `final${tile}`, Expansion.None, []).map((s) => s.label)).not.to.include(
+      "Economy"
+    );
+  });
+});
 
 // Regression for a real reported bug (PROGRESS.md's "solar drift" report): rescoring a Federation
 // tile always tags its reward BoardAction.Qic2 (move/federation.ts), regardless of what triggered

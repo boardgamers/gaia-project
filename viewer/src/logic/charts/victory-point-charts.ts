@@ -10,6 +10,7 @@ import Engine, {
   Faction,
   finalRankings,
   gainFinalScoringVictoryPoints,
+  hasExpansion,
   Player,
   PlayerEnum,
   ResearchField,
@@ -209,12 +210,19 @@ export const victoryPointSources = (
       color: "--res-knowledge",
     },
     {
-      types: ResearchField.values(expansion),
+      types: [ResearchField.GaiaProject],
       label: "Gaia",
       description: "Gaia forming level 5",
       color: "--rt-gaia",
       ignoreEndScoring: true, //this is where the game scores research regularly
       aggregate: otherScoring,
+    },
+    {
+      types: [ResearchField.Economy],
+      label: "Economy",
+      description: "Victory points from Economy track income",
+      color: "--rt-eco",
+      ignoreEndScoring: true,
     },
     {
       types: AdvTechTilePos.values(expansion),
@@ -285,7 +293,11 @@ export const victoryPointSources = (
   // The Gleens VP source only ever scores for a Gleens player, so drop its (always-empty) column
   // unless Gleens is actually in the game (owner request). Statistics mode passes every faction, so
   // it stays there.
-  return factions.includes(Faction.Gleens) ? sources : sources.filter((s) => s.label !== "Gleens");
+  return sources.filter(
+    (s) =>
+      (s.label !== "Gleens" || factions.includes(Faction.Gleens)) &&
+      (s.label !== "Economy" || hasExpansion(expansion, Expansion.LostFleet))
+  );
 };
 
 function advancedTechTileTypes(e: Engine, tile: AdvTechTile): AdvTechTilePos[] {
