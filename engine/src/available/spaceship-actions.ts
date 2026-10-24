@@ -188,6 +188,11 @@ export function possibleSpaceshipBuildMine(
     if (data.ship === Spaceship.TFMars) {
       const planet = hex.occupied() ? pl.planet : hex.data.planet;
       steps = terraformingStepsRequired(pl.faction, planet, pl.data.lostFleetCost3Planets);
+      // Mars follows the base-game terraforming action: at least one step must be used.
+      // Gaia and home planets cannot use it. Keep past moves replayable at their original cost.
+      if (steps === 0 && !engine.replay) {
+        continue;
+      }
       const oreCost = terraformingCost(pl.data, Math.max(steps - 1, 0), engine.replay);
       if (oreCost === null) {
         continue;

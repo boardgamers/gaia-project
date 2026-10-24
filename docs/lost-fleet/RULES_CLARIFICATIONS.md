@@ -253,6 +253,8 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
   still cost their normal building/ore price — the 3 credits replace only the ore cost of the first
   step (owner-confirmed 2026-06-28: "the 3 coins only covers 1 terraforming step. You still have to
   pay for the mine itself and any additional terraforming steps").
+  At least one terraforming step must be used, so Gaia and home planets are not legal targets,
+  as for the base-game power action (`RULEBOOK-TEXT` p.14; [rules clarification #76](https://github.com/boardgamers/gaia-project/issues/76)).
 - Standard-tech slots: 1 — same mechanism, see the assignment note under C4. Source: `RULEBOOK-TEXT`
   p.6. CONFIRMED.
 

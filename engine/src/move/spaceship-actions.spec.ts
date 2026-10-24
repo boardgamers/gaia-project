@@ -1,5 +1,7 @@
 import { expect } from "chai";
 import "mocha";
+import { possibleBuildings } from "../available/buildings";
+import { possibleSpaceshipBuildMine } from "../available/spaceship-actions";
 import { AvailableCommand } from "../available/types";
 import { qicForDistance, terraformingCost } from "../cost";
 import Engine from "../engine";
@@ -538,6 +540,50 @@ describe("Lost Fleet spaceship board actions", () => {
     expect(player.data.ores).to.equal(beforeOres - mineOreCost - expectedOreCost);
     expect(target.hex.data.building).to.equal(Building.Mine);
     expect(target.hex.data.player).to.equal(PlayerEnum.Player1);
+  });
+
+  for (const analysis of [false, true]) {
+    it(`requires terraforming for Mars's Credit action in ${analysis ? "simulation" : "regular play"}`, () => {
+      const engine = createLostFleetRoundMoveEngine(3);
+      const player = engine.player(PlayerEnum.Player1);
+      player.data.analysis = analysis;
+      occupyPlanetsOfDistinctTypes(engine, PlayerEnum.Player1, 1);
+      const gaia = [...engine.map.grid.values()].find(
+        (hex) =>
+          hex.data.planet === Planet.Gaia &&
+          !hex.occupied() &&
+          qicForDistance(engine.map, hex, player, engine.replay).amount === 1
+      );
+      expect(gaia, "need a Gaia planet costing 1 QIC for range").to.not.equal(undefined);
+
+      const normalBuild = possibleBuildings(engine, PlayerEnum.Player1)[0].data.buildings.find(
+        (build) => build.coordinates === gaia.toString()
+      );
+      expect(normalBuild.cost).to.equal("2c,o,2q");
+
+      const marsBuilds = possibleSpaceshipBuildMine(engine, PlayerEnum.Player1, { ship: Spaceship.TFMars })[0].data
+        .buildings;
+      expect(marsBuilds.some((build) => build.coordinates === gaia.toString())).to.equal(false);
+      expect(marsBuilds.every((build) => build.steps > 0)).to.equal(true);
+      expect(marsBuilds.some((build) => build.steps === 1)).to.equal(true);
+    });
+  }
+
+  it("keeps historical Mars builds on Gaia planets replayable at their original cost", () => {
+    const engine = createLostFleetRoundMoveEngine(3);
+    const player = engine.player(PlayerEnum.Player1);
+    occupyPlanetsOfDistinctTypes(engine, PlayerEnum.Player1, 1);
+    engine.replay = true;
+    const gaia = [...engine.map.grid.values()].find(
+      (hex) =>
+        hex.data.planet === Planet.Gaia &&
+        !hex.occupied() &&
+        qicForDistance(engine.map, hex, player, engine.replay).amount === 1
+    );
+    const build = possibleSpaceshipBuildMine(engine, PlayerEnum.Player1, {
+      ship: Spaceship.TFMars,
+    })[0].data.buildings.find((build) => build.coordinates === gaia.toString());
+    expect(build.cost).to.equal("2c,o,q");
   });
 
   it("grants the Protoplanet's 6 VP when building via T F Mars's Credit action", () => {
