@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { PlayerEnum } from ".";
 import Beta2 from "./fixtures/Beta-2.json";
 import Engine from "./src/engine";
-import { Faction, Phase } from "./src/enums";
+import { Command, Faction, Phase } from "./src/enums";
 import { factionVariantBoard } from "./src/faction-boards";
 import {
   analysisMove,
@@ -19,6 +19,54 @@ import {
 
 describe("wrapper", () => {
   describe("automove", () => {
+    describe("Tinkeroids tile choices", () => {
+      const roundOne = () =>
+        new Engine(
+          Engine.parseMoves(`
+            init 2 dropped-tinkeroids
+            p1 faction tinkeroids
+            p2 faction terrans
+            terrans build m 4A6
+            terrans build m 1B5
+            tinkeroids build PI IS2
+            terrans booster booster5
+            tinkeroids booster booster6
+          `),
+          { lostFleet: true }
+        );
+
+      it("lets a dropped Tinkeroids player choose a tile and pass in every round", () => {
+        let engine = roundOne();
+        engine.players[0].dropped = true;
+        setPlayerSettings(engine, 1, { autoIncome: true });
+        automove(engine);
+
+        for (let round = 1; round <= 6; round++) {
+          expect(engine.round).to.equal(round);
+          expect(engine.phase).to.equal(Phase.RoundMove);
+          expect(engine.playerToMove).to.equal(PlayerEnum.Player2);
+          expect(engine.passedPlayers).to.deep.equal([PlayerEnum.Player1]);
+          const pass = engine.findAvailableCommand(PlayerEnum.Player2, Command.Pass);
+          const booster = pass.data.boosters[0];
+          engine = move(JSON.parse(JSON.stringify(engine)), `terrans pass${booster ? ` ${booster}` : ""}`, 1);
+        }
+
+        expect(engine.ended).to.equal(true);
+        const choices = engine.moveHistory.filter((move) => move.startsWith("tinkeroids chooseTinkeringTile "));
+        expect(choices).to.have.length(6);
+        expect(new Set(choices.map((move) => move.split(/[ .]/)[2])).size).to.equal(6);
+      });
+
+      it("leaves the tinkering tile choice to an active player", () => {
+        const engine = roundOne();
+        const moves = [...engine.moveHistory];
+        automove(engine);
+
+        expect(engine.moveHistory).to.deep.equal(moves);
+        expect(engine.findAvailableCommand(PlayerEnum.Player1, Command.ChooseTinkeringTile)).to.not.equal(undefined);
+      });
+    });
+
     it("should automatically charge 1pw", () => {
       const moves = Engine.parseMoves(`
         init 2 randomSeed

@@ -229,6 +229,10 @@ function autoPass(engine: Engine): string | undefined {
     } else {
       return `${Command.Pass}`;
     }
+  } else if (engine.availableCommands.some((cmd) => cmd.name === Command.ChooseTinkeringTile)) {
+    // A dropped Tinkeroids player must finish this round-start choice before income and passing.
+    const cmd = engine.findAvailableCommand(toMove, Command.ChooseTinkeringTile);
+    return `${Command.ChooseTinkeringTile} ${cmd.data.tiles[0]}`;
   } else if (engine.availableCommands.some((cmd) => cmd.name === Command.ChooseIncome)) {
     const cmd = engine.findAvailableCommand(engine.playerToMove, Command.ChooseIncome);
     return `${Command.ChooseIncome} ${cmd.data}`;
