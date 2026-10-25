@@ -31,8 +31,12 @@
         >
         <RichTextView v-else :content="statusLine" />
       </h5>
-      <div v-if="!analysisMode && (analysisOffered || showAutoLeechSelect || takeBackOffered)" class="turn-tools">
+      <div
+        v-if="!analysisMode && (analysisOffered || showAutoLeechSelect || takeBackOffered || premovePlan)"
+        class="turn-tools"
+      >
         <TakeBackButton v-if="takeBackOffered" />
+        <PremoveHistoryButton :plan="premovePlan" />
         <AutoChargeControl v-if="showAutoLeechSelect" />
         <button
           v-if="analysisOffered"
@@ -51,6 +55,7 @@
         v-if="analysisMode && !analysisEditActive"
         :move-count="analysisMoveCount"
         :move-summary="analysisMoveSummary"
+        :premove-plan="premovePlan"
         :can-edit="analysisCanEdit"
         @undo="$emit('analysis-undo')"
         @reset="$emit('analysis-reset')"
@@ -131,6 +136,7 @@
         <span class="chat-shortcut-host"></span>
         <!-- Kept out of the ⋯ menu: a misclick is best taken back with one press. -->
         <TakeBackButton v-if="takeBackOffered" compact />
+        <PremoveHistoryButton v-if="!analysisMode" :plan="premovePlan" />
         <details
           v-if="actionsEnabled && !analysisMode && (analysisOffered || showAutoLeechSelect)"
           class="turn-tools mobile-turn-tools"
@@ -155,6 +161,7 @@
           v-if="analysisMode && !analysisEditActive"
           :move-count="analysisMoveCount"
           :move-summary="analysisMoveSummary"
+          :premove-plan="premovePlan"
           :can-edit="analysisCanEdit"
           @undo="$emit('analysis-undo')"
           @reset="$emit('analysis-reset')"
@@ -390,6 +397,7 @@ import Engine, {
 } from "@gaia-project/engine";
 import type { FactionCustomization } from "@gaia-project/engine/src/engine";
 import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
+import type { PremovePlan } from "@gaia-project/engine/src/premove-types";
 import { CubeCoordinates } from "hexagrid";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
@@ -439,6 +447,7 @@ import AutoChargeControl from "./AutoChargeControl.vue";
 import FactionInfoCard from "./FactionInfoCard.vue";
 import FactionSheetButton from "./FactionSheetButton.vue";
 import MoveButton from "./MoveButton.vue";
+import PremoveHistoryButton from "./PremoveHistoryButton.vue";
 import RichTextView from "./Resources/RichTextView.vue";
 import Undo from "./Resources/Undo.vue";
 import StickyResourceBar from "./StickyResourceBar.vue";
@@ -511,6 +520,7 @@ export type EmitCommandParams = { disappear?: boolean; times?: number; warnings?
     Undo,
     TakeBackButton,
     AnalysisHeaderControls,
+    PremoveHistoryButton,
     AnalysisLineTabs,
     AnalysisCommitConfirm,
     AnalysisModeInfo,
@@ -602,6 +612,9 @@ export default class Commands extends Vue implements CommandController {
   /** Index into `analysisLineSummaries` of the line currently on the board. */
   @Prop({ default: 0 })
   analysisActiveLine: number;
+
+  @Prop({ default: undefined })
+  premovePlan: PremovePlan;
 
   @Prop({ default: () => [] })
   analysisEntries: AnalysisEntry[];

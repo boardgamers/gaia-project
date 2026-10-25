@@ -39,8 +39,8 @@
       all complete turns. If it is your turn, <strong>Play moves</strong> plays the first immediately. The rest run on
       your following turns, even with the browser closed. Moves for later rounds wait for their round and phase. You can
       view or cancel them at any time. If a move cannot be played with your actual resources when your turn arrives, the
-      queue stops. Its history shows the stopping point, reason and unplayed moves. The last ten queues stay available
-      across devices; use Review remaining to edit a stopped queue before submitting it again.
+      queue stops. The history button in the action bar opens its stopping point, reason and unplayed moves. The last
+      ten queues stay available across devices; use Review remaining to edit a stopped queue before submitting it again.
     </p>
   </b-modal>
 </template>

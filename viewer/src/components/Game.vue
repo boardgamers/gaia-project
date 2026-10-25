@@ -19,28 +19,30 @@
       </div>
     </div>
 
-    <PremoveQueue
-      v-if="showPremovePanel"
-      :plan="myPremovePlan"
-      :costs="premoveCosts"
-      :notice-storage-key="premoveNoticeStorageKey"
-      :move-history="premoveNoticeHistory"
-      :pending="!!$store.state.pendingPlan"
-      :active="analysisMode"
-      :preview-round="analysisMode && analysisRolledForward ? analysisBaseRound : undefined"
-      :queue-enabled="premoveAvailable"
-      :can-preview="!replayData && (analysisMode || analysisOffered)"
-      @exit="exitAnalysisMode"
-      @view="viewPremoves"
-      @cancel="cancelPremoves"
-    />
-    <PremoveNotice
-      v-else-if="myPremovePlan && myPremovePlan.notice"
-      :plan="myPremovePlan"
-      :storage-key="premoveNoticeStorageKey"
-      :move-history="premoveNoticeHistory"
-      class="mb-3"
-    />
+    <b-modal
+      id="premove-history"
+      v-model="premoveHistoryVisible"
+      title="Premoves"
+      size="lg"
+      ok-only
+      ok-title="Close"
+      dialog-class="gaia-viewer-modal"
+    >
+      <PremoveQueue
+        v-if="premoveHistoryVisible"
+        :plan="myPremovePlan"
+        :costs="premoveCosts"
+        :notice-storage-key="premoveNoticeStorageKey"
+        :move-history="premoveNoticeHistory"
+        :pending="!!$store.state.pendingPlan"
+        :active="analysisMode"
+        :queue-enabled="premoveAvailable"
+        :can-preview="!replayData && (analysisMode || analysisOffered)"
+        @exit="exitAnalysisMode"
+        @view="viewPremoves"
+        @cancel="cancelPremoves"
+      />
+    </b-modal>
     <div v-if="$store.state.planError" class="alert alert-warning" role="status">{{ $store.state.planError }}</div>
     <template v-if="uiMode === 'graphical'">
       <!-- Round 0 only (ban/pick/bid/starting buildings/booster): says whose turn it is and what
@@ -91,6 +93,7 @@
             :analysis-faction-choices="analysisFactionChoices"
             :analysis-line-summaries="analysisLineSummaries"
             :analysis-active-line="analysisActiveLine"
+            :premove-plan="myPremovePlan"
             :analysis-entries="analysisEntries"
             :analysis-played="analysisPlayed[analysisActiveLine] || []"
             :analysis-blocked-reason="analysisBlockedReason"
@@ -227,6 +230,7 @@
             :analysis-faction-choices="analysisFactionChoices"
             :analysis-line-summaries="analysisLineSummaries"
             :analysis-active-line="analysisActiveLine"
+            :premove-plan="myPremovePlan"
             :analysis-entries="analysisEntries"
             :analysis-played="analysisPlayed[analysisActiveLine] || []"
             :analysis-blocked-reason="analysisBlockedReason"
@@ -318,6 +322,7 @@
         :analysis-faction-choices="analysisFactionChoices"
         :analysis-line-summaries="analysisLineSummaries"
         :analysis-active-line="analysisActiveLine"
+        :premove-plan="myPremovePlan"
         :analysis-entries="analysisEntries"
         :analysis-played="analysisPlayed[analysisActiveLine] || []"
         :analysis-blocked-reason="analysisBlockedReason"
@@ -427,7 +432,6 @@ import PlayerInfo from "./PlayerInfo.vue";
 import Pool from "./Pool.vue";
 import PreferenceSplitBid from "./PreferenceSplitBid.vue";
 import PreferenceSplitSummary from "./PreferenceSplitSummary.vue";
-import PremoveNotice from "./PremoveNotice.vue";
 import PremoveQueue from "./PremoveQueue.vue";
 import ResearchBoard from "./ResearchBoard.vue";
 import ResearchPanel from "./ResearchPanel.vue";
@@ -481,7 +485,6 @@ function continuesHistory(shown: string[], next: string[]): boolean {
     Rules,
     Table,
     PremoveQueue,
-    PremoveNotice,
     // Static import (rather than the previous `() => import("./Charts.vue")`) so the published
     // UMD lib stays a single file - an async chunk would resolve against the baked-in publicPath,
     // which breaks when the bundle is hosted anywhere other than that exact CDN path.
@@ -526,6 +529,7 @@ export default class Game extends Vue {
   analysisLines: AnalysisEntry[][] = [[]];
   analysisPlayed: AnalysisPlayedMove[][] = [[]];
   analysisBlockedReason = "";
+  premoveHistoryVisible = false;
   analysisActiveLine = 0;
   // The saved line stays intact while the board temporarily shows a prefix for replacement.
   analysisEdit: { index: number; appliedCount: number; mode: "replace" | "insert" } | null = null;
@@ -1009,16 +1013,6 @@ export default class Game extends Vue {
     );
   }
 
-  get showPremovePanel(): boolean {
-    if (this.$store.state.preferences.analysis) return false;
-    return (
-      this.analysisMode ||
-      !!this.myPremovePlan?.runs?.length ||
-      ((this.premoveAvailable || this.analysisOffered) &&
-        (!!this.myPremovePlan?.moves.length || !!this.$store.state.pendingPlan))
-    );
-  }
-
   get premoveCosts(): MoveCost[] {
     const seat = this.myLockedSeat;
     if (seat === undefined || !this.myPremovePlan?.moves.length) return [];
@@ -1080,6 +1074,7 @@ export default class Game extends Vue {
 
   viewPremoves(run?: PremoveRun) {
     if (this.replayData) return;
+    this.$bvModal.hide("premove-history");
     const moves = run
       ? run.steps
           .filter((step) => ["queued", "blocked", "unplayed", "undone"].includes(step.status))

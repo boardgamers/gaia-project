@@ -110,12 +110,7 @@ export default Vue.extend({
 
 <style scoped>
 .premove-queue {
-  background: var(--ui-surface-muted);
-  border: 1px solid var(--ui-border-strong);
-  border-left: 3px solid var(--ui-info, #4294c4);
-  border-radius: 0.4rem;
-  padding: 0.75rem 1rem;
-  margin-bottom: 1rem;
+  margin: 0;
 }
 .premove-queue__previous {
   margin-top: 0.5rem;

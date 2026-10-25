@@ -607,7 +607,7 @@ describe("Game", () => {
       expect(start.classList.contains("btn-outline-primary")).to.equal(true);
       await fireEvent.click(start);
       expect(vm.analysisMode).to.equal(true);
-      expect(vm.$el.querySelector(".premove-queue")).not.to.equal(null);
+      expect(vm.$el.querySelector(".premove-queue")).to.equal(null);
       vm.exitAnalysisMode();
       await Vue.nextTick();
       expect(vm.$el.querySelector(".premove-queue")).to.equal(null);
@@ -636,7 +636,7 @@ describe("Game", () => {
       vm.$el.remove();
     });
 
-    it("still shows queued moves and cancellation while on turn", async () => {
+    it("keeps queued moves and stop details behind the history button", async () => {
       const position = new Engine(SETUP_MOVES);
       position.automation = {
         version: 1,
@@ -654,23 +654,21 @@ describe("Game", () => {
       };
       const vm = mountAsSeat(0, position);
       await Vue.nextTick();
-      expect(vm.$el.querySelector(".premove-queue").textContent).to.contain("Cancel");
+      expect(document.querySelector(".premove-queue")).to.equal(null);
+      await fireEvent.click(vm.$el.querySelector('[aria-label="Premoves: 1 queued — view history"]'));
+      await vi.waitFor(() => expect(document.querySelector(".premove-queue")?.textContent).to.contain("Cancel"));
+      expect(document.querySelector('[role="dialog"]')?.textContent).to.contain("terrans up nav.");
       const stopped = JSON.parse(JSON.stringify(vm.engine));
       stopped.automation.plans[0].moves = [];
       stopped.automation.plans[0].notice = { kind: "stopped", text: "Premoves stopped: insufficient ore" };
       await vm.$store.dispatch("externalData", stopped);
-      await Vue.nextTick();
-      expect(vm.$el.querySelector(".premove-queue")).to.equal(null);
-      expect(vm.$el.querySelector(".premove-notice").textContent).to.contain("Premoves stopped: insufficient ore");
-      // An unchanged notice survives refetching, then clears when the live position advances.
-      await vm.$store.dispatch("externalData", JSON.parse(JSON.stringify(stopped)));
-      await Vue.nextTick();
-      expect(vm.$el.querySelector(".premove-notice")).not.to.equal(null);
-      const advanced = new Engine([...SETUP_MOVES, "terrans up nav."]);
-      advanced.automation = stopped.automation;
-      await vm.$store.dispatch("externalData", JSON.parse(JSON.stringify(advanced)));
-      await Vue.nextTick();
-      expect(vm.$el.querySelector(".premove-notice")).to.equal(null);
+      await vi.waitFor(() =>
+        expect(document.querySelector(".premove-notice")?.textContent).to.contain("Premoves stopped: insufficient ore")
+      );
+      vm.$bvModal.hide("premove-history");
+      await vi.waitFor(() => expect(document.querySelector(".premove-queue")).to.equal(null));
+      expect(vm.$el.querySelector('[aria-label="Premoves stopped — view history"]')).not.to.equal(null);
+      expect(vm.$el.textContent).not.to.contain("insufficient ore");
       vm.$el.remove();
       vm.$destroy();
     });
@@ -989,7 +987,7 @@ describe("Game", () => {
         { round: 2, phase: Phase.RoundIncome },
         { round: 2, phase: Phase.RoundMove },
       ]);
-      expect(vm.$el.textContent).to.contain("preview only");
+      expect(vm.$el.textContent).to.contain("Preview only");
 
       vm.addAnalysisLine();
       await Vue.nextTick();
@@ -2475,7 +2473,11 @@ describe("Game", () => {
         vm.enterAnalysisMode();
         vm.applyAnalysisMove("nevlas up terra.");
         await Vue.nextTick();
-        expect(vm.$el.textContent).to.contain("nevlas up nav.");
+        expect(vm.$el.querySelector(".premove-queue")).to.equal(null);
+        await fireEvent.click(vm.$el.querySelector('[aria-label="Premoves: 1 queued — view history"]'));
+        await vi.waitFor(() =>
+          expect(document.querySelector(".premove-queue")?.textContent).to.contain("nevlas up nav.")
+        );
         const dispatched = spyDispatch(vm);
         vm.cancelPremoves();
         vm.$store.commit("submittingPlan", dispatched[0].payload);

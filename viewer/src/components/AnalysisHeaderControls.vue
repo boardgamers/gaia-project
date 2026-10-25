@@ -38,6 +38,7 @@
       </b-btn>
     </div>
     <div class="analysis-controls__actions">
+      <PremoveHistoryButton :plan="premovePlan" />
       <button
         type="button"
         class="analysis-controls__edit"
@@ -81,14 +82,16 @@
 </template>
 
 <script lang="ts">
+import type { PremovePlan } from "@gaia-project/engine/src/premove-types";
 import Vue from "vue";
 import type { AnalysisOverdraft, AnalysisResourceChange, AnalysisStatus } from "../logic/analysis";
 import { parseRewardsForLog } from "../logic/utils";
+import PremoveHistoryButton from "./PremoveHistoryButton.vue";
 import RichTextView from "./Resources/RichTextView.vue";
 
 export default Vue.extend({
   name: "AnalysisHeaderControls",
-  components: { RichTextView },
+  components: { PremoveHistoryButton, RichTextView },
   methods: {
     parseRewardsForLog,
     resourceName(kind: string): string {
@@ -99,6 +102,7 @@ export default Vue.extend({
     playsNow: Boolean,
     canEdit: Boolean,
     moveCount: { type: Number, default: 0 },
+    premovePlan: { type: Object as () => PremovePlan, default: undefined },
     moveSummary: { type: String, default: "" },
     status: { type: Object as () => AnalysisStatus | null, default: null },
     committableMoves: { type: Number, default: 0 },

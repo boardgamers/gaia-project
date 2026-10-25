@@ -59,14 +59,19 @@ terrans booster booster3`)
     try {
       viewer.emit("player", { index: 1 });
       viewer.emit("state", stripSecret(engine, 1));
-      await vi.waitFor(() => expect(viewer.app.$el.textContent).toContain("Stopped at 3"));
-      const review = [...viewer.app.$el.querySelectorAll("button")].find(
+      const historySelector = '[aria-label="Premoves stopped at move 3 — view history"]';
+      await vi.waitFor(() => expect(viewer.app.$el.querySelector(historySelector)).not.toBeNull());
+      expect(document.querySelector(".premove-queue")).toBeNull();
+      (viewer.app.$el.querySelector(historySelector) as HTMLButtonElement).click();
+      await vi.waitFor(() => expect(document.querySelector(".premove-queue")?.textContent).toContain("Stopped at 3"));
+      const review = [...document.querySelectorAll("button")].find(
         (button) => button.textContent.trim() === "Review remaining"
       ) as HTMLButtonElement;
       review.click();
       await vi.waitFor(() => expect(viewer.app.$el.querySelectorAll(".analysis-moves__past").length).toBe(2));
       expect(viewer.app.$el.querySelector('[aria-label="Edit move 3: nevlas up eco."]')).not.toBeNull();
       expect(viewer.app.$el.textContent).toContain("2 played · 2 left");
+      await vi.waitFor(() => expect(document.querySelector(".premove-queue")).toBeNull());
     } finally {
       viewer.app.$destroy();
       document.body.replaceChildren();

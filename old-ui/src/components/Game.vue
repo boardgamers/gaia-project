@@ -18,28 +18,30 @@
       </div>
     </div>
 
-    <PremoveQueue
-      v-if="showPremovePanel"
-      :plan="myPremovePlan"
-      :costs="premoveCosts"
-      :notice-storage-key="premoveNoticeStorageKey"
-      :move-history="premoveNoticeHistory"
-      :pending="!!$store.state.pendingPlan"
-      :active="analysisMode"
-      :preview-round="analysisMode && analysisRolledForward ? analysisBaseRound : undefined"
-      :queue-enabled="premoveAvailable"
-      :can-preview="!replayData && (analysisMode || analysisOffered)"
-      @exit="exitAnalysisMode"
-      @view="viewPremoves"
-      @cancel="cancelPremoves"
-    />
-    <PremoveNotice
-      v-else-if="myPremovePlan && myPremovePlan.notice"
-      :plan="myPremovePlan"
-      :storage-key="premoveNoticeStorageKey"
-      :move-history="premoveNoticeHistory"
-      class="mb-3"
-    />
+    <b-modal
+      id="premove-history"
+      v-model="premoveHistoryVisible"
+      title="Premoves"
+      size="lg"
+      ok-only
+      ok-title="Close"
+      dialog-class="gaia-viewer-modal"
+    >
+      <PremoveQueue
+        v-if="premoveHistoryVisible"
+        :plan="myPremovePlan"
+        :costs="premoveCosts"
+        :notice-storage-key="premoveNoticeStorageKey"
+        :move-history="premoveNoticeHistory"
+        :pending="!!$store.state.pendingPlan"
+        :active="analysisMode"
+        :queue-enabled="premoveAvailable"
+        :can-preview="!replayData && (analysisMode || analysisOffered)"
+        @exit="exitAnalysisMode"
+        @view="viewPremoves"
+        @cancel="cancelPremoves"
+      />
+    </b-modal>
     <div v-if="$store.state.planError" class="alert alert-warning" role="status">{{ $store.state.planError }}</div>
     <template v-if="uiMode === 'graphical'">
       <div class="row" v-if="!ended">
@@ -75,6 +77,7 @@
             :analysis-faction-choices="analysisFactionChoices"
             :analysis-line-summaries="analysisLineSummaries"
             :analysis-active-line="analysisActiveLine"
+            :premove-plan="myPremovePlan"
             :analysis-entries="analysisEntries"
             :analysis-played="analysisPlayed[analysisActiveLine] || []"
             :analysis-blocked-reason="analysisBlockedReason"
@@ -140,6 +143,7 @@
             :analysis-faction-choices="analysisFactionChoices"
             :analysis-line-summaries="analysisLineSummaries"
             :analysis-active-line="analysisActiveLine"
+            :premove-plan="myPremovePlan"
             :analysis-entries="analysisEntries"
             :analysis-played="analysisPlayed[analysisActiveLine] || []"
             :analysis-blocked-reason="analysisBlockedReason"
@@ -239,6 +243,7 @@
         :analysis-faction-choices="analysisFactionChoices"
         :analysis-line-summaries="analysisLineSummaries"
         :analysis-active-line="analysisActiveLine"
+        :premove-plan="myPremovePlan"
         :analysis-entries="analysisEntries"
         :analysis-played="analysisPlayed[analysisActiveLine] || []"
         :analysis-blocked-reason="analysisBlockedReason"
