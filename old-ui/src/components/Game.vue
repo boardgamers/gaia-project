@@ -18,6 +18,29 @@
       </div>
     </div>
 
+    <PremoveQueue
+      v-if="showPremovePanel"
+      :plan="myPremovePlan"
+      :costs="premoveCosts"
+      :notice-storage-key="premoveNoticeStorageKey"
+      :move-history="premoveNoticeHistory"
+      :pending="!!$store.state.pendingPlan"
+      :active="analysisMode"
+      :preview-round="analysisMode && analysisRolledForward ? analysisBaseRound : undefined"
+      :queue-enabled="premoveAvailable"
+      :can-preview="!replayData && (analysisMode || analysisOffered)"
+      @exit="exitAnalysisMode"
+      @view="viewPremoves"
+      @cancel="cancelPremoves"
+    />
+    <PremoveNotice
+      v-else-if="myPremovePlan && myPremovePlan.notice"
+      :plan="myPremovePlan"
+      :storage-key="premoveNoticeStorageKey"
+      :move-history="premoveNoticeHistory"
+      class="mb-3"
+    />
+    <div v-if="$store.state.planError" class="alert alert-warning" role="status">{{ $store.state.planError }}</div>
     <template v-if="uiMode === 'graphical'">
       <div class="row" v-if="!ended">
         <div class="col-12">
@@ -29,24 +52,47 @@
           <SilentAuctionBid @command="handleCommand" />
 
           <Commands
-            v-if="setupActionsAtTop && canPlay"
+            v-if="setupActionsAtTop && showCommands"
+            :actions-enabled="canPlay"
+            :auto-charge-enabled="!replayData && !$store.state.preferences.analysis"
             @command="handleCommand"
             :currentMove="currentMove"
             :hide-spacer="true"
-            :auto-charge-enabled="!replayData && !$store.state.preferences.analysis"
             :analysis-mode="analysisMode"
+            :analysis-offered="analysisOffered && !replayData"
             :take-back-offered="takeBackOffered"
+            @analysis-start="enterAnalysisMode"
+            @analysis-exit="exitAnalysisMode"
             :analysis-status="analysisStatus"
-            :analysis-move-count="analysisAppliedEntries.length"
+            :analysis-move-count="analysisAppliedEntries.filter((entry) => entry.kind === 'move').length"
+            :analysis-can-edit="!!(analysisEntries.length || currentMove || analysisPendingCharge || analysisUndo)"
+            :analysis-can-undo-charge="
+              analysisPendingCharge > 0 ||
+              (!analysisEdit && analysisAppliedEntries[analysisAppliedEntries.length - 1]?.kind === 'adjust')
+            "
             :analysis-committable-moves="analysisCommittableMoves.length"
             :analysis-commit-plan="analysisCommitPlan"
             :analysis-faction-choices="analysisFactionChoices"
             :analysis-line-summaries="analysisLineSummaries"
             :analysis-active-line="analysisActiveLine"
+            :analysis-entries="analysisEntries"
+            :analysis-played="analysisPlayed[analysisActiveLine] || []"
+            :analysis-blocked-reason="analysisBlockedReason"
+            :analysis-move-costs="analysisMoveCosts"
+            :analysis-applied-count="analysisEdit ? analysisEdit.appliedCount : analysisAppliedCount"
+            :analysis-editing-index="analysisEdit ? analysisEdit.index : -1"
+            :analysis-inserting-move="!!analysisEdit && analysisEdit.mode === 'insert'"
+            @analysis-insert-move="insertAnalysisMove"
+            @analysis-remove-entry="removeAnalysisEntry"
+            @analysis-edit-move="startAnalysisMoveEdit"
+            @analysis-cancel-edit="cancelAnalysisMoveEdit"
+            @analysis-restart-edit="restartAnalysisMoveEdit"
             @analysis-seed-faction="seedAnalysisFaction"
             @analysis-commit="commitAnalysisLine"
             @analysis-charge="chargeAnalysisPower"
             @analysis-undo-charge="undoAnalysisCharge"
+            @analysis-undo="undoLastAnalysisEntry"
+            @analysis-reset="resetAnalysisLine"
             @analysis-select-line="selectAnalysisLine"
             @analysis-add-line="addAnalysisLine"
             @analysis-close-line="closeAnalysisLine"
@@ -72,67 +118,55 @@
         <div :class="commandsColumnClass">
           <Commands
             @command="handleCommand"
-            v-if="canPlay && !setupActionsAtTop"
+            v-if="showCommands && !setupActionsAtTop"
+            :actions-enabled="canPlay"
+            :auto-charge-enabled="!replayData && !$store.state.preferences.analysis"
             :currentMove="currentMove"
             :hide-spacer="true"
-            :show-premove-cancel="premoveMode || cancelTriggerComposeActive"
-            :show-premove-confirm="(premoveMode && premoveReady) || (cancelTriggerComposeActive && cancelTriggerReady)"
-            :premove-confirm-label="
-              cancelTriggerComposeActive ? 'Continue' : premoveEditSeq !== null ? 'Save changes' : 'Queue now'
-            "
-            :premove-context="premoveContext"
-            :auto-charge-enabled="!replayData && !$store.state.preferences.analysis"
             :analysis-mode="analysisMode"
+            :analysis-offered="analysisOffered && !replayData"
             :take-back-offered="takeBackOffered"
+            @analysis-start="enterAnalysisMode"
+            @analysis-exit="exitAnalysisMode"
             :analysis-status="analysisStatus"
-            :analysis-move-count="analysisAppliedEntries.length"
+            :analysis-move-count="analysisAppliedEntries.filter((entry) => entry.kind === 'move').length"
+            :analysis-can-edit="!!(analysisEntries.length || currentMove || analysisPendingCharge || analysisUndo)"
+            :analysis-can-undo-charge="
+              analysisPendingCharge > 0 ||
+              (!analysisEdit && analysisAppliedEntries[analysisAppliedEntries.length - 1]?.kind === 'adjust')
+            "
             :analysis-committable-moves="analysisCommittableMoves.length"
             :analysis-commit-plan="analysisCommitPlan"
             :analysis-faction-choices="analysisFactionChoices"
             :analysis-line-summaries="analysisLineSummaries"
             :analysis-active-line="analysisActiveLine"
+            :analysis-entries="analysisEntries"
+            :analysis-played="analysisPlayed[analysisActiveLine] || []"
+            :analysis-blocked-reason="analysisBlockedReason"
+            :analysis-move-costs="analysisMoveCosts"
+            :analysis-applied-count="analysisEdit ? analysisEdit.appliedCount : analysisAppliedCount"
+            :analysis-editing-index="analysisEdit ? analysisEdit.index : -1"
+            :analysis-inserting-move="!!analysisEdit && analysisEdit.mode === 'insert'"
+            @analysis-insert-move="insertAnalysisMove"
+            @analysis-remove-entry="removeAnalysisEntry"
+            @analysis-edit-move="startAnalysisMoveEdit"
+            @analysis-cancel-edit="cancelAnalysisMoveEdit"
+            @analysis-restart-edit="restartAnalysisMoveEdit"
             @analysis-seed-faction="seedAnalysisFaction"
             @analysis-commit="commitAnalysisLine"
             @analysis-charge="chargeAnalysisPower"
             @analysis-undo-charge="undoAnalysisCharge"
+            @analysis-undo="undoLastAnalysisEntry"
+            @analysis-reset="resetAnalysisLine"
             @analysis-select-line="selectAnalysisLine"
             @analysis-add-line="addAnalysisLine"
             @analysis-close-line="closeAnalysisLine"
-            @cancel-premove="cancelTriggerComposeActive ? cancelCancelTriggerCompose() : cancelPremoveMode()"
-            @confirm-premove="cancelTriggerComposeActive ? confirmCancelTriggerCompose() : queueCurrentPremove()"
             @sticky-bar-height="stickyBarHeight = $event"
           />
 
           <div v-else-if="offlineMirrorWaiting" class="text-muted small">
             Waiting for {{ turnPlayer.name || "the other player" }}. This is your offline copy of an online game, so you
             play only your own seats here; their move arrives the next time you open the game with a connection.
-          </div>
-
-          <div v-if="showPremoveSheet" class="mt-2">
-            <PremoveBar
-              :seat="myLockedSeat"
-              :compose-mode-preference="premoveModePreference"
-              :sticky-mobile="!canPlay"
-              :bottom-offset="0"
-              :stage="cancelTriggerStage"
-              :watched-seat="cancelTriggerWatchedSeat"
-              :draft-move="cancelTriggerDraftMove"
-              :editing-atoms="cancelTriggerEditingAtoms"
-              :editing-leech-config="cancelTriggerEditingLeechConfig"
-              :edit-cascade-notice="premoveEditCascadeNotice"
-              @mode-preference="setPremoveModePreference"
-              @start-new="onStartNewPremove"
-              @start-edit="startEditPremove"
-              @start-cancel-trigger="startCancelTriggerPicker"
-              @start-edit-cancel-trigger="startEditCancelTrigger"
-              @pick-opponent="pickCancelTriggerOpponent"
-              @pick-leech="pickCancelTriggerLeech"
-              @arm-refine="armCancelTriggerFromRefine"
-              @arm-leech="armLeechTrigger"
-              @close-cancel-trigger="closeCancelTriggerStep"
-              @dismiss-cascade="premoveEditCascadeNotice = null"
-              @bar-height="premoveBarHeight = $event"
-            />
           </div>
 
           <FactionBrowser v-if="!setupActionsAtTop" :on-turn="canPlay" />
@@ -166,12 +200,6 @@
           v-if="logPlacement === 'bottom'"
         />
       </div>
-
-      <AutoLeechFab
-        v-if="showOffTurnAutoLeechFab"
-        :bottom-offset="offTurnAutoLeechBottomOffset"
-        :show-passed-cap-options="myLockedSeatHasPassed"
-      />
     </template>
     <div v-else class="d-flex flex-column">
       <SetupStatus v-if="!ended" />
@@ -188,24 +216,47 @@
       <AdvancedLog :currentMove="currentMove" :hideLog.sync="hideLog" v-if="logPlacement === 'top'" />
       <Commands
         @command="handleCommand"
-        v-if="canPlay"
+        v-if="showCommands"
+        :actions-enabled="canPlay"
+        :auto-charge-enabled="!replayData && !$store.state.preferences.analysis"
         :currentMove="currentMove"
         :hide-spacer="true"
         @sticky-bar-height="stickyBarHeight = $event"
-        :auto-charge-enabled="!replayData && !$store.state.preferences.analysis"
         :analysis-mode="analysisMode"
+        :analysis-offered="analysisOffered && !replayData"
         :take-back-offered="takeBackOffered"
+        @analysis-start="enterAnalysisMode"
+        @analysis-exit="exitAnalysisMode"
         :analysis-status="analysisStatus"
-        :analysis-move-count="analysisAppliedEntries.length"
+        :analysis-move-count="analysisAppliedEntries.filter((entry) => entry.kind === 'move').length"
+        :analysis-can-edit="!!(analysisEntries.length || currentMove || analysisPendingCharge || analysisUndo)"
+        :analysis-can-undo-charge="
+          analysisPendingCharge > 0 ||
+          (!analysisEdit && analysisAppliedEntries[analysisAppliedEntries.length - 1]?.kind === 'adjust')
+        "
         :analysis-committable-moves="analysisCommittableMoves.length"
         :analysis-commit-plan="analysisCommitPlan"
         :analysis-faction-choices="analysisFactionChoices"
         :analysis-line-summaries="analysisLineSummaries"
         :analysis-active-line="analysisActiveLine"
+        :analysis-entries="analysisEntries"
+        :analysis-played="analysisPlayed[analysisActiveLine] || []"
+        :analysis-blocked-reason="analysisBlockedReason"
+        :analysis-move-costs="analysisMoveCosts"
+        :analysis-applied-count="analysisEdit ? analysisEdit.appliedCount : analysisAppliedCount"
+        :analysis-editing-index="analysisEdit ? analysisEdit.index : -1"
+        :analysis-inserting-move="!!analysisEdit && analysisEdit.mode === 'insert'"
+        @analysis-insert-move="insertAnalysisMove"
+        @analysis-remove-entry="removeAnalysisEntry"
+        @analysis-edit-move="startAnalysisMoveEdit"
+        @analysis-cancel-edit="cancelAnalysisMoveEdit"
+        @analysis-restart-edit="restartAnalysisMoveEdit"
         @analysis-seed-faction="seedAnalysisFaction"
         @analysis-commit="commitAnalysisLine"
         @analysis-charge="chargeAnalysisPower"
         @analysis-undo-charge="undoAnalysisCharge"
+        @analysis-undo="undoLastAnalysisEntry"
+        @analysis-reset="resetAnalysisLine"
         @analysis-select-line="selectAnalysisLine"
         @analysis-add-line="addAnalysisLine"
         @analysis-close-line="closeAnalysisLine"

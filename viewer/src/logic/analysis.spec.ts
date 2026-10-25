@@ -66,7 +66,8 @@ describe("replayAnalysisLine", () => {
   it("replays a legal line onto a fresh clone of the origin", () => {
     const origin = new Engine(SETUP_MOVES);
     const entries: AnalysisEntry[] = [{ kind: "move", move: "terrans up nav." }];
-    const { engine, applied } = replayAnalysisLine(origin, entries, 0, 1);
+    const { engine, applied, blockedReason } = replayAnalysisLine(origin, entries, 0, 1);
+    expect(blockedReason).to.equal(undefined);
     expect(applied).to.equal(1);
     expect(engine.moveHistory[engine.moveHistory.length - 1]).to.equal("terrans up nav (0 ⇒ 1).");
   });
@@ -96,7 +97,8 @@ describe("replayAnalysisLine", () => {
       { kind: "move", move: "terrans build m 99x99." },
       { kind: "move", move: "nevlas up nav." },
     ];
-    const { engine, applied } = replayAnalysisLine(origin, entries, 0, 1);
+    const { engine, applied, blockedReason } = replayAnalysisLine(origin, entries, 0, 1);
+    expect(blockedReason).to.be.a("string").and.not.equal("");
     expect(applied).to.equal(1);
     expect(engine.moveHistory[engine.moveHistory.length - 1]).to.equal("terrans up nav (0 ⇒ 1).");
   });
@@ -288,6 +290,10 @@ describe("dropPlayedAnalysisPrefix", () => {
     ]);
     expect(result.entries).to.deep.equal([nav]);
     expect(result.dropped).to.equal(2);
+    expect(result.played.map((entry) => entry.moveIndex)).to.deep.equal([
+      engine.moveHistory.length - 4,
+      engine.moveHistory.length - 1,
+    ]);
   });
 
   it("does not trim a different move, even when that planned move has become invalid", () => {

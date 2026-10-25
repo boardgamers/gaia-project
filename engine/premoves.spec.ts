@@ -50,6 +50,77 @@ function json(engine: Engine): Engine {
 }
 
 describe("BGS premoves", () => {
+  it("keeps played, blocked and unplayed steps privately across refreshes and new queues", () => {
+    let engine = game();
+    engine.players[1].data.knowledge = 8;
+    const moves = ["nevlas up nav.", "nevlas up gaia.", "nevlas up eco.", "nevlas build ts -1x0."];
+    engine = move(engine, { ...command(engine, 1, moves), label: "Plan B" }, 1);
+    engine = move(json(engine), "terrans build ts -1x2.", 0);
+    engine = move(json(engine), "terrans pass booster8", 0);
+    const plan = engine.automation.plans[1];
+    expect(plan.moves).to.deep.equal([]);
+    expect(plan.runs[0].label).to.equal("Plan B");
+    expect(plan.runs[0].steps.map((step) => step.move)).to.deep.equal(moves);
+    expect(plan.runs[0].steps.map((step) => step.status)).to.deep.equal(["played", "played", "blocked", "unplayed"]);
+    expect(plan.runs[0].status).to.equal("stopped");
+    expect(plan.runs[0].reason).to.be.a("string").and.not.equal("");
+    for (const step of plan.runs[0].steps.filter((step) => step.status === "played")) {
+      expect(engine.moveHistory[step.moveIndex]).to.contain(step.move.split(".")[0]);
+    }
+    const snapshot = JSON.parse(JSON.stringify(plan.runs));
+    engine = Engine.fromData(json(engine));
+    automove(engine);
+    expect(engine.automation.plans[1].runs).to.deep.equal(snapshot);
+    expect(stripSecret(engine, 0).automation.plans).to.deep.equal({});
+    expect(stripSecret(engine).automation.plans).to.deep.equal({});
+    expect(stripSecret(engine, 1).automation.plans[1].runs).to.deep.equal(snapshot);
+    expect(logSlice(engine).state.automation.plans).to.deep.equal({});
+    engine = queue(engine, 1, ["nevlas pass booster3"]);
+    expect(engine.automation.plans[1].runs[1]).to.deep.equal(snapshot[0]);
+    expect(engine.automation.plans[1].runs[0].status).to.equal("completed");
+  });
+
+  it("marks taken-back premoves without deleting their remaining plan", async () => {
+    let engine = queue(game(), 1, ["nevlas up nav.", "nevlas up gaia."]);
+    engine = move(json(engine), "terrans build ts -1x2.", 0);
+    expect(engine.automation.plans[1].runs[0].steps[0].status).to.equal("played");
+    engine = await replay(engine, { to: setup.length });
+    expect(engine.automation.plans[1].moves).to.deep.equal([]);
+    expect(engine.automation.plans[1].runs[0].steps.map((step) => step.status)).to.deep.equal(["undone", "unplayed"]);
+    expect(engine.automation.plans[1].runs[0].reason).to.equal("The game was taken back.");
+  });
+
+  it("records cancellation and replacement without deleting the pending steps", () => {
+    let engine = queue(game(), 1, ["nevlas up nav.", "nevlas up gaia."]);
+    engine = queue(engine, 1, ["nevlas up eco."]);
+    expect(engine.automation.plans[1].runs[1].status).to.equal("replaced");
+    expect(engine.automation.plans[1].runs[1].steps.map((step) => step.status)).to.deep.equal(["unplayed", "unplayed"]);
+    engine = queue(engine, 1, []);
+    expect(engine.automation.plans[1].runs[0].status).to.equal("cancelled");
+    expect(engine.automation.plans[1].runs[0].steps[0].move).to.equal("nevlas up eco.");
+    expect(engine.automation.plans[1].moves).to.deep.equal([]);
+  });
+
+  it("adopts legacy queues and records manual interruptions and players leaving", () => {
+    let engine = queue(game(), 1, ["nevlas up nav."]);
+    delete engine.automation.plans[1].runs;
+    engine = move(json(engine), "terrans build ts -1x2.", 0);
+    expect(engine.automation.plans[1].runs[0].steps[0].status).to.equal("played");
+    expect(engine.automation.plans[1].runs[0].status).to.equal("completed");
+
+    engine = game();
+    automation(engine).plans[0] = { moves: ["terrans up nav."], revision: 1, round: 1 };
+    engine = move(engine, "terrans build ts -1x2.", 0);
+    expect(engine.automation.plans[0].runs[0].status).to.equal("stopped");
+    expect(engine.automation.plans[0].runs[0].reason).to.contain("manually");
+
+    engine = queue(game(), 1, ["nevlas up nav."]);
+    engine.players[1].dropped = true;
+    automove(engine);
+    expect(engine.automation.plans[1].runs[0].reason).to.equal("You left the game.");
+    expect(engine.automation.plans[1].runs[0].steps[0].status).to.equal("unplayed");
+  });
+
   it("queues a second starting mine off turn without simulating other players in the real game", () => {
     let engine = new Engine(setup.slice(0, 4));
     const history = [...engine.moveHistory];
@@ -446,6 +517,7 @@ describe("BGS premoves", () => {
     engine = move(json(engine), "ivits pass booster8", 1);
     expect(engine.automation.plans[0].moves).to.deep.equal([]);
     expect(engine.players[0].data.research.nav).to.equal(1);
+    expect(engine.automation.plans[0].runs[0].steps.map((step) => step.status)).to.deep.equal(["skipped", "played"]);
     expect(timeIncrements(engine)).to.deep.equal([1, 1]);
   });
 
@@ -476,6 +548,7 @@ describe("BGS premoves", () => {
     const counts = timeIncrements(engine);
     engine = await replay(json(engine), { to: setup.length });
     expect(timeIncrements(engine)).to.deep.equal(counts);
-    expect(engine.automation.plans).to.deep.equal({});
+    expect(engine.automation.plans[1].moves).to.deep.equal([]);
+    expect(engine.automation.plans[1].runs[0].status).to.equal("stopped");
   });
 });

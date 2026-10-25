@@ -2186,8 +2186,36 @@ describe("Game", () => {
 
         expect(second.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
         expect(second.analysisNotice).to.contain("already played");
+        expect(second.analysisPlayed[0]).to.have.length(1);
+        const recorded = JSON.parse(JSON.stringify(second.analysisPlayed));
+        second.exitAnalysisMode();
+        second.enterAnalysisMode();
+        expect(second.analysisPlayed).to.deep.equal(recorded);
+        expect(second.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
         second.$el.remove();
         second.$destroy();
+      });
+
+      it("restores a taken-back played prefix as editable moves", () => {
+        const first = mountAsSeat(0);
+        first.enterAnalysisMode();
+        first.applyAnalysisMove("terrans up nav.");
+        first.$el.remove();
+        first.$destroy();
+        const later = mountAsSeat(0, new Engine([...SETUP_MOVES, "terrans up nav."]));
+        later.enterAnalysisMode();
+        expect(later.analysisPlayed[0]).to.have.length(1);
+        later.$el.remove();
+        later.$destroy();
+        const earlier = mountAsSeat(0);
+        earlier.enterAnalysisMode();
+        expect(earlier.analysisPendingRestore).not.to.equal(null);
+        earlier.restoreAnalysisLine();
+        expect(earlier.analysisPlayed[0]).to.deep.equal([]);
+        expect(earlier.analysisEntries).to.have.length(1);
+        expect(earlier.analysisAppliedCount).to.equal(1);
+        earlier.$el.remove();
+        earlier.$destroy();
       });
 
       it("leaves a line the player did NOT play alone - nothing is dropped without a real move behind it", () => {
@@ -2375,6 +2403,15 @@ describe("Game", () => {
         expect(vm.analysisMode).to.equal(true);
         expect(vm.analysisLines).to.deep.equal([[], [{ kind: "move", move: "nevlas up gaia." }]]);
         expect(vm.myPremovePlan.moves).to.deep.equal([]);
+        expect(vm.analysisPlayed.map((line) => line.map((entry) => entry.move))).to.deep.equal([
+          ["nevlas up nav (0 ⇒ 1)."],
+          ["nevlas up nav (0 ⇒ 1)."],
+        ]);
+        expect(vm.analysisCommittableMoves).to.deep.equal(["nevlas up gaia."]);
+        vm.addAnalysisLine();
+        expect(vm.analysisPlayed[2]).to.deep.equal(vm.analysisPlayed[1]);
+        vm.closeAnalysisLine(0);
+        expect(vm.analysisPlayed).to.have.length(2);
         // An unchanged refresh must never consume the remaining plan twice.
         await vm.$store.dispatch("externalData", stripSecret(executed, 1));
         expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "nevlas up gaia." }]);

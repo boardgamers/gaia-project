@@ -29,7 +29,7 @@
       :active="analysisMode"
       :preview-round="analysisMode && analysisRolledForward ? analysisBaseRound : undefined"
       :queue-enabled="premoveAvailable"
-      :can-preview="!replayData"
+      :can-preview="!replayData && (analysisMode || analysisOffered)"
       @exit="exitAnalysisMode"
       @view="viewPremoves"
       @cancel="cancelPremoves"
@@ -92,6 +92,8 @@
             :analysis-line-summaries="analysisLineSummaries"
             :analysis-active-line="analysisActiveLine"
             :analysis-entries="analysisEntries"
+            :analysis-played="analysisPlayed[analysisActiveLine] || []"
+            :analysis-blocked-reason="analysisBlockedReason"
             :analysis-move-costs="analysisMoveCosts"
             :analysis-applied-count="analysisEdit ? analysisEdit.appliedCount : analysisAppliedCount"
             :analysis-editing-index="analysisEdit ? analysisEdit.index : -1"
@@ -226,6 +228,8 @@
             :analysis-line-summaries="analysisLineSummaries"
             :analysis-active-line="analysisActiveLine"
             :analysis-entries="analysisEntries"
+            :analysis-played="analysisPlayed[analysisActiveLine] || []"
+            :analysis-blocked-reason="analysisBlockedReason"
             :analysis-move-costs="analysisMoveCosts"
             :analysis-applied-count="analysisEdit ? analysisEdit.appliedCount : analysisAppliedCount"
             :analysis-editing-index="analysisEdit ? analysisEdit.index : -1"
@@ -315,6 +319,8 @@
         :analysis-line-summaries="analysisLineSummaries"
         :analysis-active-line="analysisActiveLine"
         :analysis-entries="analysisEntries"
+        :analysis-played="analysisPlayed[analysisActiveLine] || []"
+        :analysis-blocked-reason="analysisBlockedReason"
         :analysis-move-costs="analysisMoveCosts"
         :analysis-applied-count="analysisEdit ? analysisEdit.appliedCount : analysisAppliedCount"
         :analysis-editing-index="analysisEdit ? analysisEdit.index : -1"
@@ -362,7 +368,7 @@ import Engine, {
   ResearchField,
   Round,
 } from "@gaia-project/engine";
-import type { PremoveCommand, PremovePlan, PremoveTiming } from "@gaia-project/engine/src/premove-types";
+import type { PremoveCommand, PremovePlan, PremoveRun, PremoveTiming } from "@gaia-project/engine/src/premove-types";
 import { currentPlayer } from "@gaia-project/engine/wrapper";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
@@ -375,6 +381,7 @@ import type {
   AnalysisLineSet,
   AnalysisLineSummary,
   AnalysisMoveEntry,
+  AnalysisPlayedMove,
   AnalysisStatus,
   MoveCost,
 } from "../logic/analysis";
@@ -382,6 +389,7 @@ import {
   advancePastOwnPass,
   analysisCommitPrefix,
   analysisFactionPool,
+  analysisLineLabel,
   applyLeechAdjustment,
   assumedPowerOf,
   buildAnalysisLineup,
@@ -516,6 +524,8 @@ export default class Game extends Vue {
   // the sandbox opens: Line 1 is not something the player has to create, and there is no Save button
   // because every line already persists on every completed turn (see `setAnalysisEntries`).
   analysisLines: AnalysisEntry[][] = [[]];
+  analysisPlayed: AnalysisPlayedMove[][] = [[]];
+  analysisBlockedReason = "";
   analysisActiveLine = 0;
   // The saved line stays intact while the board temporarily shows a prefix for replacement.
   analysisEdit: { index: number; appliedCount: number; mode: "replace" | "insert" } | null = null;
@@ -1003,6 +1013,7 @@ export default class Game extends Vue {
     if (this.$store.state.preferences.analysis) return false;
     return (
       this.analysisMode ||
+      !!this.myPremovePlan?.runs?.length ||
       ((this.premoveAvailable || this.analysisOffered) &&
         (!!this.myPremovePlan?.moves.length || !!this.$store.state.pendingPlan))
     );
@@ -1053,6 +1064,7 @@ export default class Game extends Vue {
     this.$store.dispatch("submitPlan", {
       type: "premoves",
       requestId,
+      ...(this.analysisMode ? { label: analysisLineLabel(this.analysisActiveLine) } : {}),
       moves,
       ...(timings ? { timings } : {}),
       round: real.round,
@@ -1066,11 +1078,16 @@ export default class Game extends Vue {
     this.submitPremoves((this.myPremovePlan?.moves ?? []).slice(0, from), this.myPremovePlan?.timings?.slice(0, from));
   }
 
-  viewPremoves() {
+  viewPremoves(run?: PremoveRun) {
     if (this.replayData) return;
-    const moves = this.myPremovePlan?.moves ?? [];
+    const moves = run
+      ? run.steps
+          .filter((step) => ["queued", "blocked", "unplayed", "undone"].includes(step.status))
+          .map((step) => step.move)
+      : (this.myPremovePlan?.moves ?? []);
     if (!moves.length) return;
     if (!this.analysisMode) this.enterAnalysisMode();
+    if (!this.analysisMode) return;
     const matching = this.analysisLines.findIndex((entries) => {
       const planned = entries.filter((entry) => entry.kind === "move");
       return moves.every((move, index) => planned[index]?.move === move);
@@ -1086,7 +1103,19 @@ export default class Game extends Vue {
       }
       this.addAnalysisLine();
     }
-    this.setAnalysisEntries(moves.map((move) => ({ kind: "move", move })));
+    this.$set(
+      this.analysisPlayed,
+      this.analysisActiveLine,
+      run
+        ? run.steps
+            .filter((step) => step.status === "played")
+            .map((step) => ({ move: this.analysisRealHistory[step.moveIndex] ?? step.move, moveIndex: step.moveIndex }))
+        : []
+    );
+    this.setAnalysisEntries(
+      moves.map((move) => ({ kind: "move", move })),
+      { prune: false }
+    );
   }
 
   get analysisOffered(): boolean {
@@ -1267,8 +1296,8 @@ export default class Game extends Vue {
     this.resolveAnalysisStaleness(seat, loadAnalysisLines(seat, this.analysisStorageScope));
   }
 
-  /** Keep planning open across real moves. Every variation loses only the matching actions
-   * already played, then replays against the new board. Divergent histories still need review. */
+  /** Keep planning open across real moves. Matching actions become read-only history;
+   * the remaining entries replay against the new board. Divergent histories still need review. */
   private reanchorAnalysisLine(payload: any): boolean {
     const seat = this.analysisSeat;
     if (seat === null || !this.analysisOrigin) {
@@ -1294,8 +1323,9 @@ export default class Game extends Vue {
     const incoming = markAnalysisSeat(Engine.fromData(JSON.parse(JSON.stringify(payload))), seat);
     const newMoves = incomingHistory.slice(originHistory.length);
     let played = 0;
-    this.analysisLines = this.analysisLines.map((entries) => {
-      const result = dropPlayedAnalysisPrefix(incoming, entries, seat, newMoves);
+    this.analysisLines = this.analysisLines.map((entries, index) => {
+      const result = dropPlayedAnalysisPrefix(incoming, entries, seat, newMoves, originHistory.length);
+      this.$set(this.analysisPlayed, index, [...(this.analysisPlayed[index] ?? []), ...result.played]);
       played = Math.max(played, result.dropped);
       return result.entries;
     });
@@ -1330,7 +1360,7 @@ export default class Game extends Vue {
     if (draft) this.applyAnalysisMove(draft);
     this.analysisNotice =
       played > 0
-        ? `Removed ${played} already played ${played === 1 ? "move" : "moves"} from matching plans. Remaining moves were updated for the current board.`
+        ? `${played} already played ${played === 1 ? "move" : "moves"} kept in plan history.`
         : entries.length > 0
           ? "The board changed. Your plans were updated."
           : null;
@@ -1366,16 +1396,18 @@ export default class Game extends Vue {
     }
     const newMoves = this.analysisRealHistory.slice(stored.baseMoveCount);
     let played = 0;
-    const lines = stored.lines.map((entries) => {
-      const result = dropPlayedAnalysisPrefix(this.analysisOrigin, entries, seat, newMoves);
+    const histories: AnalysisPlayedMove[][] = [];
+    const lines = stored.lines.map((entries, index) => {
+      const result = dropPlayedAnalysisPrefix(this.analysisOrigin, entries, seat, newMoves, stored.baseMoveCount);
+      histories.push([...(stored.played?.[index] ?? []), ...result.played]);
       played = Math.max(played, result.dropped);
       return result.entries;
     });
     const active = lines[normalizeAnalysisLineSet(stored).active] ?? [];
-    const applied = this.setAnalysisLineSet({ ...stored, lines }, { prune: false });
+    const applied = this.setAnalysisLineSet({ ...stored, lines, played: histories }, { prune: false });
     this.analysisNotice =
       played > 0
-        ? `Removed ${played} already played ${played === 1 ? "move" : "moves"} from matching plans.`
+        ? `${played} already played ${played === 1 ? "move" : "moves"} kept in plan history.`
         : "The board changed. Your plans were updated.";
     if (applied < active.length) {
       this.analysisNotice = "The board changed. Some planned moves no longer apply; they are kept for you to edit.";
@@ -1387,7 +1419,16 @@ export default class Game extends Vue {
     if (!this.analysisPendingRestore) return;
     const stored = this.analysisPendingRestore;
     this.analysisPendingRestore = null;
-    this.setAnalysisLineSet(stored, { prune: false });
+    const played = stored.lines.map((_, index) =>
+      (stored.played?.[index] ?? []).filter((entry) => this.analysisRealHistory[entry.moveIndex] === entry.move)
+    );
+    const lines = stored.lines.map((entries, index) => [
+      ...(stored.played?.[index] ?? [])
+        .filter((entry) => this.analysisRealHistory[entry.moveIndex] !== entry.move)
+        .map((entry) => ({ kind: "move" as const, move: entry.move })),
+      ...entries,
+    ]);
+    this.setAnalysisLineSet({ ...stored, lines, played }, { prune: false });
   }
 
   discardPendingAnalysisLine() {
@@ -1420,6 +1461,8 @@ export default class Game extends Vue {
     // The strip's in-memory state only. Nothing is being thrown away: every line was persisted as it
     // was played, so re-entering reads them all back - including which one was open (§13).
     this.analysisLines = [[]];
+    this.analysisPlayed = [[]];
+    this.analysisBlockedReason = "";
     this.analysisActiveLine = 0;
     this.analysisAppliedCount = 0;
     this.analysisMoveCosts = [];
@@ -1609,7 +1652,7 @@ export default class Game extends Vue {
     if (!insert && this.analysisEntries[index]?.kind !== "move") return;
     if (insert && this.analysisEntries[index]?.kind === "faction") return;
     if (!this.analysisEdit && (this.currentMove || this.analysisPendingCharge)) return;
-    const { engine, applied } = replayAnalysisLine(
+    const { engine, applied, blockedReason } = replayAnalysisLine(
       this.analysisOrigin,
       this.analysisEntries.slice(0, index),
       this.analysisSeat,
@@ -1622,6 +1665,7 @@ export default class Game extends Vue {
       mode: insert ? "insert" : "replace",
     };
     this.analysisAppliedCount = applied;
+    this.analysisBlockedReason = blockedReason ?? "";
     this.analysisPendingCharge = 0;
     this.analysisComposeBase = JSON.parse(JSON.stringify(engine));
     this.analysisComposeAssumedPower = assumedPowerOf(engine, this.analysisSeat);
@@ -1724,7 +1768,7 @@ export default class Game extends Vue {
     else if (options.history !== "preserve") this.analysisUndo = null;
     this.analysisEdit = null;
     const costs: MoveCost[] = [];
-    const { engine, applied } = replayAnalysisLine(
+    const { engine, applied, blockedReason } = replayAnalysisLine(
       this.analysisOrigin,
       entries,
       this.analysisSeat,
@@ -1733,6 +1777,7 @@ export default class Game extends Vue {
     );
     const kept = options.prune === false ? entries : entries.slice(0, applied);
     this.analysisAppliedCount = applied;
+    this.analysisBlockedReason = blockedReason ?? "";
     this.analysisMoveCosts = costs;
     // A pending mid-turn charge belongs to the turn that was being composed; replacing the line
     // replaces that turn too (see `editAnalysisLineKeepingComposedTurn`, which re-applies it after).
@@ -1761,6 +1806,7 @@ export default class Game extends Vue {
   private setAnalysisLineSet(set: AnalysisLineSet, options: { prune?: boolean; persist?: boolean } = {}): number {
     const normalized = normalizeAnalysisLineSet(set);
     this.analysisLines = normalized.lines;
+    this.analysisPlayed = normalized.lines.map((_, index) => normalized.played?.[index] ?? []);
     this.analysisActiveLine = normalized.active;
     return this.setAnalysisEntries(this.analysisEntries, options);
   }
@@ -1774,6 +1820,7 @@ export default class Game extends Vue {
       this.analysisSeat,
       {
         lines: this.analysisLines,
+        played: this.analysisPlayed,
         active: this.analysisActiveLine,
         baseRound: this.analysisBaseRound,
         baseMoveCount: this.analysisBaseMoveCount,
@@ -1854,6 +1901,7 @@ export default class Game extends Vue {
     }
     // Keep blocked moves too, so the copy can be repaired without losing the original plan.
     const fork: AnalysisEntry[] = JSON.parse(JSON.stringify(this.analysisEntries));
+    this.analysisPlayed = [...this.analysisPlayed, [...(this.analysisPlayed[this.analysisActiveLine] ?? [])]];
     this.analysisLines = [...this.analysisLines, fork];
     this.analysisActiveLine = this.analysisLines.length - 1;
     this.setAnalysisEntries(fork, { prune: false });
@@ -1874,6 +1922,7 @@ export default class Game extends Vue {
         ? this.analysisActiveLine - 1
         : Math.min(this.analysisActiveLine, lines.length - 1);
     this.analysisLines = lines;
+    this.analysisPlayed = this.analysisPlayed.filter((_, i) => i !== index);
     this.analysisActiveLine = active;
     this.setAnalysisEntries(this.analysisEntries, { prune: false });
   }

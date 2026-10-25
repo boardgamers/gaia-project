@@ -15,8 +15,8 @@
       Each tab is an alternative plan: <strong>Plan A</strong>, <strong>Plan B</strong>, and so on. Use
       <strong>+</strong> to copy the current plan and try a variation. The selected plan shows its resource and VP
       changes together. Undo removes the last move; Clear starts that plan again. Drafts are saved in this browser.
-      Saving a queue keeps all your plans. When you play a matching move, manually or by premove, it is removed from
-      each plan so you can continue with the remaining moves.
+      Saving a queue keeps all your plans. When you play a matching move, manually or by premove, it stays marked as
+      played in each matching plan. Only the remaining moves are simulated or queued again.
     </p>
     <h6>Try future possibilities</h6>
     <p>
@@ -35,11 +35,12 @@
     </p>
     <h6>Save premoves</h6>
     <p class="mb-0">
-      Finish a simulated turn, then choose <strong>Queue moves</strong>. Only the selected plan is submitted, with up to
-      three complete turns. If it is your turn, <strong>Play moves</strong> plays the first immediately. The rest run on
+      Finish a simulated turn, then choose <strong>Queue moves</strong>. Only the selected plan is submitted, including
+      all complete turns. If it is your turn, <strong>Play moves</strong> plays the first immediately. The rest run on
       your following turns, even with the browser closed. Moves for later rounds wait for their round and phase. You can
       view or cancel them at any time. If a move cannot be played with your actual resources when your turn arrives, the
-      queue stops. It does not wait for a charge or another player's move.
+      queue stops. Its history shows the stopping point, reason and unplayed moves. The last ten queues stay available
+      across devices; use Review remaining to edit a stopped queue before submitting it again.
     </p>
   </b-modal>
 </template>

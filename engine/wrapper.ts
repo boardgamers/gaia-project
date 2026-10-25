@@ -16,6 +16,7 @@ import {
   clearExpiredPremoves,
   creditDecision,
   playNextPremove,
+  premoveHistoryAfterReplay,
   reconcileManualPremoves,
   setPremoves,
 } from "./src/premoves";
@@ -248,7 +249,11 @@ export async function replay(engine: Engine, { to = Infinity } = { to: Infinity 
 
   const previous = automation(engine);
   engine = engine.replayedTo(to, false);
-  engine.automation = { ...previous, plans: {}, liveUpdate: false };
+  engine.automation = {
+    ...previous,
+    plans: premoveHistoryAfterReplay(previous.plans, engine.moveHistory.length),
+    liveUpdate: false,
+  };
 
   automove(engine);
 

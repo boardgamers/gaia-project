@@ -1,5 +1,10 @@
 <template>
   <ol class="analysis-moves" aria-label="Simulated moves">
+    <li v-for="(entry, index) in played" :key="`played-${index}`" class="analysis-moves__past">
+      <span class="analysis-moves__number">{{ index + 1 }}</span>
+      <span class="analysis-moves__text">{{ entry.move }}</span>
+      <span class="analysis-moves__played">✓ Played</span>
+    </li>
     <li v-for="(entry, index) in entries" :key="index">
       <button
         v-if="entry.kind !== 'faction'"
@@ -31,12 +36,13 @@
           <span class="analysis-moves__detail">
             <span class="analysis-moves__text">{{ entry.move }}</span>
             <MoveCost
-              v-if="index < appliedCount && costs[moveNumber(index) - 1]?.length"
-              :cost="costs[moveNumber(index) - 1]"
+              v-if="index < appliedCount && costs[moveNumber(index) - played.length - 1]?.length"
+              :cost="costs[moveNumber(index) - played.length - 1]"
               class="analysis-moves__changes"
             />
           </span>
           <span v-if="index === appliedCount" class="analysis-moves__state">Needs update</span>
+          <span v-else-if="index > appliedCount" class="analysis-moves__state">Not simulated</span>
           <svg class="analysis-moves__pencil" viewBox="0 0 16 16" aria-hidden="true">
             <path d="m10.7 2.3 3 3-8.4 8.4-3.8.8.8-3.8Zm1.1-1.1 1-1a1 1 0 0 1 1.4 0l1.6 1.6a1 1 0 0 1 0 1.4l-1 1Z" />
           </svg>
@@ -69,6 +75,9 @@
           </svg>
         </button>
       </div>
+      <div v-if="index === appliedCount && blockedReason" class="analysis-moves__reason" role="status">
+        {{ blockedReason }}
+      </div>
     </li>
     <li>
       <button
@@ -89,7 +98,7 @@
 <script lang="ts">
 import type { PropType } from "vue";
 import Vue from "vue";
-import type { AnalysisEntry, MoveCost as MoveCostData } from "../logic/analysis";
+import type { AnalysisEntry, AnalysisPlayedMove, MoveCost as MoveCostData } from "../logic/analysis";
 import MoveCost from "./MoveCost.vue";
 
 export default Vue.extend({
@@ -97,6 +106,8 @@ export default Vue.extend({
   components: { MoveCost },
   props: {
     entries: { type: Array as PropType<AnalysisEntry[]>, default: () => [] },
+    played: { type: Array as PropType<AnalysisPlayedMove[]>, default: () => [] },
+    blockedReason: { type: String, default: "" },
     costs: { type: Array as PropType<MoveCostData[]>, default: () => [] },
     appliedCount: { type: Number, default: 0 },
     disabled: Boolean,
@@ -104,7 +115,7 @@ export default Vue.extend({
   },
   methods: {
     moveNumber(index: number): number {
-      return this.entries.slice(0, index + 1).filter((entry) => entry.kind === "move").length;
+      return this.played.length + this.entries.slice(0, index + 1).filter((entry) => entry.kind === "move").length;
     },
     insertLabel(index: number): string {
       return this.entries[index].kind === "move"
@@ -125,6 +136,26 @@ export default Vue.extend({
 .analysis-moves__row {
   display: flex;
   align-items: stretch;
+}
+.analysis-moves__past {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.75rem;
+  color: var(--ui-text-muted);
+  border-bottom: 1px solid var(--ui-border);
+  .analysis-moves__text {
+    flex: 1;
+  }
+}
+.analysis-moves__played {
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+.analysis-moves__reason {
+  padding: 0.25rem 0.75rem 0.5rem 2.5rem;
+  color: var(--ui-warning-text);
+  overflow-wrap: anywhere;
 }
 .analysis-moves__insert {
   display: flex;

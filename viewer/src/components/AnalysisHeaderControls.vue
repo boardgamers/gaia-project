@@ -1,7 +1,9 @@
 <template>
   <div class="analysis-controls" @click.stop>
     <div class="analysis-controls__summary">
-      <span class="analysis-controls__moves">{{ moveCount }} {{ moveCount === 1 ? "move" : "moves" }}</span>
+      <span class="analysis-controls__moves">{{
+        moveSummary || `${moveCount} ${moveCount === 1 ? "move" : "moves"}`
+      }}</span>
 
       <span
         v-if="changes.length"
@@ -97,6 +99,7 @@ export default Vue.extend({
     playsNow: Boolean,
     canEdit: Boolean,
     moveCount: { type: Number, default: 0 },
+    moveSummary: { type: String, default: "" },
     status: { type: Object as () => AnalysisStatus | null, default: null },
     committableMoves: { type: Number, default: 0 },
   },

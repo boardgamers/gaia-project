@@ -1,9 +1,11 @@
 import Engine from "@gaia-project/engine";
+import betaFixture from "@gaia-project/engine/fixtures/Beta-2.json";
+import { move, stripSecret } from "@gaia-project/engine/wrapper";
 import { loadScenarioEngine, selfContainedScenarios } from "../../viewer/src/self-contained-scenarios";
 import launch from "./launcher";
 
 const federationFixture = () => {
-  const data = JSON.parse(JSON.stringify(require("@gaia-project/engine/fixtures/Beta-2.json")));
+  const data = JSON.parse(JSON.stringify(betaFixture));
   expect(data.map.some((hex: any) => hex.data?.federations?.length)).toBe(true);
   return data;
 };
@@ -23,6 +25,54 @@ describe("old UI on the current engine", () => {
     vi.unstubAllGlobals();
     delete HTMLElement.prototype.checkVisibility;
   });
+  it("shows stopped premoves and opens their remaining steps with read-only played history", async () => {
+    let engine = new Engine(
+      Engine.parseMoves(`init 2 randomSeed
+p1 faction terrans
+p2 faction nevlas
+terrans build m -1x2
+nevlas build m -1x0
+nevlas build m 0x-4
+terrans build m -4x-1
+nevlas booster booster7
+terrans booster booster3`)
+    );
+    engine.players[1].data.knowledge = 8;
+    engine = move(
+      JSON.parse(JSON.stringify(engine)),
+      {
+        type: "premoves",
+        requestId: "history",
+        moves: ["nevlas up nav.", "nevlas up gaia.", "nevlas up eco.", "nevlas build ts -1x0."],
+        round: 1,
+        turn: 0,
+        revision: 0,
+      },
+      1
+    );
+    engine = move(JSON.parse(JSON.stringify(engine)), "terrans build ts -1x2.", 0);
+    engine = move(JSON.parse(JSON.stringify(engine)), "terrans pass booster8", 0);
+    const host = document.createElement("div");
+    host.id = "old-test";
+    document.body.append(host);
+    const viewer = launch("#old-test");
+    try {
+      viewer.emit("player", { index: 1 });
+      viewer.emit("state", stripSecret(engine, 1));
+      await vi.waitFor(() => expect(viewer.app.$el.textContent).toContain("Stopped at 3"));
+      const review = [...viewer.app.$el.querySelectorAll("button")].find(
+        (button) => button.textContent.trim() === "Review remaining"
+      ) as HTMLButtonElement;
+      review.click();
+      await vi.waitFor(() => expect(viewer.app.$el.querySelectorAll(".analysis-moves__past").length).toBe(2));
+      expect(viewer.app.$el.querySelector('[aria-label="Edit move 3: nevlas up eco."]')).not.toBeNull();
+      expect(viewer.app.$el.textContent).toContain("2 played · 2 left");
+    } finally {
+      viewer.app.$destroy();
+      document.body.replaceChildren();
+    }
+  });
+
   for (const id of ["base", ...selfContainedScenarios.map((s) => s.id)]) {
     it(`renders the actual old player/map components and current controls for ${id}`, async () => {
       const host = document.createElement("div");

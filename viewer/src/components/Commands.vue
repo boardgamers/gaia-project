@@ -50,6 +50,7 @@
       <AnalysisHeaderControls
         v-if="analysisMode && !analysisEditActive"
         :move-count="analysisMoveCount"
+        :move-summary="analysisMoveSummary"
         :can-edit="analysisCanEdit"
         @undo="$emit('analysis-undo')"
         @reset="$emit('analysis-reset')"
@@ -61,8 +62,10 @@
       />
     </div>
     <AnalysisMoves
-      v-if="analysisMode && analysisEntries.length && !analysisEditActive"
+      v-if="analysisMode && (analysisEntries.length || analysisPlayed.length) && !analysisEditActive"
       :entries="analysisEntries"
+      :played="analysisPlayed"
+      :blocked-reason="analysisBlockedReason"
       :costs="analysisMoveCosts"
       :applied-count="analysisAppliedCount"
       :can-append="!engine.ended"
@@ -151,6 +154,7 @@
         <AnalysisHeaderControls
           v-if="analysisMode && !analysisEditActive"
           :move-count="analysisMoveCount"
+          :move-summary="analysisMoveSummary"
           :can-edit="analysisCanEdit"
           @undo="$emit('analysis-undo')"
           @reset="$emit('analysis-reset')"
@@ -409,6 +413,7 @@ import type {
   AnalysisCommitPlan,
   AnalysisEntry,
   AnalysisLineSummary,
+  AnalysisPlayedMove,
   AnalysisStatus,
   MoveCost,
 } from "../logic/analysis";
@@ -602,6 +607,12 @@ export default class Commands extends Vue implements CommandController {
   analysisEntries: AnalysisEntry[];
 
   @Prop({ default: () => [] })
+  analysisPlayed: AnalysisPlayedMove[];
+
+  @Prop({ default: "" })
+  analysisBlockedReason: string;
+
+  @Prop({ default: () => [] })
   analysisMoveCosts: MoveCost[];
 
   @Prop({ default: 0 })
@@ -613,6 +624,12 @@ export default class Commands extends Vue implements CommandController {
   @Prop({ default: false })
   analysisInsertingMove: boolean;
 
+  get analysisMoveSummary(): string {
+    const remaining = this.analysisEntries.filter((entry) => entry.kind === "move").length;
+    if (this.analysisPlayed.length) return `${this.analysisPlayed.length} played · ${remaining} left`;
+    return this.analysisBlockedReason ? `${this.analysisMoveCount}/${remaining} simulated` : "";
+  }
+
   get analysisEditActive(): boolean {
     return this.analysisEditingIndex >= 0;
   }
@@ -623,7 +640,11 @@ export default class Commands extends Vue implements CommandController {
   }
 
   get analysisEditingMoveNumber(): number {
-    return this.analysisEntries.slice(0, this.analysisEditingIndex).filter((entry) => entry.kind === "move").length + 1;
+    return (
+      this.analysisPlayed.length +
+      this.analysisEntries.slice(0, this.analysisEditingIndex).filter((entry) => entry.kind === "move").length +
+      1
+    );
   }
 
   /** How many of those moves could actually be played for real (§6), gating the Commit button. */

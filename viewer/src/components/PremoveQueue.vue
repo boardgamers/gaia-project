@@ -1,6 +1,28 @@
 <template>
   <section class="premove-queue" :aria-label="queueEnabled ? 'Your premoves' : 'Planning'">
-    <div class="premove-queue__heading">
+    <template v-if="runs.length">
+      <PremoveTimeline
+        :key="runs[0].id"
+        :run="runs[0]"
+        :costs="costs"
+        :expanded="['queued', 'stopped'].includes(runs[0].status)"
+        :pending="pending"
+        :can-preview="canPreview"
+        @review="$emit('view', $event)"
+        @cancel="$emit('cancel', 0)"
+      />
+      <details v-if="runs.length > 1" class="premove-queue__previous">
+        <summary>Previous queues ({{ runs.length - 1 }})</summary>
+        <PremoveTimeline
+          v-for="run in runs.slice(1)"
+          :key="run.id"
+          :run="run"
+          :can-preview="canPreview"
+          @review="$emit('view', $event)"
+        />
+      </details>
+    </template>
+    <div v-else class="premove-queue__heading">
       <div>
         <strong>{{
           moves.length ? `Your premoves · ${moves.length}` : active ? "Planning · preview only" : "Plan your next turn"
@@ -27,7 +49,7 @@
         </button>
       </div>
     </div>
-    <ol v-if="moves.length" class="premove-queue__moves">
+    <ol v-if="moves.length && !runs.length" class="premove-queue__moves">
       <li v-for="(move, index) in moves" :key="index">
         <span v-if="plan.timings" class="premove-queue__price premove-queue__round">{{
           plan.timings[index].round === 0 ? "Setup" : `Round ${plan.timings[index].round}`
@@ -44,7 +66,7 @@
     </ol>
     <div v-if="pending" class="small mt-2" role="status">Saving your plan…</div>
     <PremoveNotice
-      v-else-if="plan && plan.notice"
+      v-else-if="plan && plan.notice && !runs.length"
       :plan="plan"
       :storage-key="noticeStorageKey"
       :move-history="moveHistory"
@@ -59,9 +81,10 @@ import Vue from "vue";
 import { isCheapAnalysisBuild } from "../logic/analysis";
 import MoveCost from "./MoveCost.vue";
 import PremoveNotice from "./PremoveNotice.vue";
+import PremoveTimeline from "./PremoveTimeline.vue";
 
 export default Vue.extend({
-  components: { PremoveNotice, MoveCost },
+  components: { PremoveNotice, PremoveTimeline, MoveCost },
   methods: { isCheapAnalysisBuild },
   props: {
     plan: { type: Object as () => PremovePlan, default: undefined },
@@ -75,6 +98,9 @@ export default Vue.extend({
     canPreview: { type: Boolean, default: true },
   },
   computed: {
+    runs() {
+      return this.plan?.runs ?? [];
+    },
     moves(): string[] {
       return this.plan?.moves ?? [];
     },
@@ -90,6 +116,14 @@ export default Vue.extend({
   border-radius: 0.4rem;
   padding: 0.75rem 1rem;
   margin-bottom: 1rem;
+}
+.premove-queue__previous {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+}
+.premove-queue__previous > summary {
+  cursor: pointer;
+  color: var(--ui-text-muted);
 }
 .premove-queue__heading,
 .premove-queue__actions {

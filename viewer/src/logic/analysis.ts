@@ -170,10 +170,14 @@ export interface AnalysisLine {
  * `active` is stored too, so leaving the sandbox and coming back reopens the line you were on
  * rather than dumping you back on Line 1.
  */
+export type AnalysisPlayedMove = { move: string; moveIndex: number };
+
 export interface AnalysisLineSet {
   /** Always at least one, even when that one is empty - Line 1 exists from the moment the sandbox
    * opens, so the strip never has a zero state to design for. */
   lines: AnalysisEntry[][];
+  /** Real moves kept for display only; never replayed or submitted again. */
+  played?: AnalysisPlayedMove[][];
   /** Index into `lines`. Always in range once `normalizeAnalysisLineSet` has seen the value. */
   active: number;
   baseRound: number;
@@ -213,7 +217,7 @@ export function emptyAnalysisLineSet(baseRound: number, baseMoveCount: number): 
 /** Every entry across every line, for the "is there anything here at all" questions (the restore
  * prompt's count, and whether a stored set is worth prompting about). */
 export function analysisLineSetSize(set: AnalysisLineSet): number {
-  return set.lines.reduce((total, entries) => total + entries.length, 0);
+  return set.lines.reduce((total, entries, index) => total + entries.length + (set.played?.[index]?.length ?? 0), 0);
 }
 
 function storageKey(seat: number, scope?: string): string {
@@ -791,11 +795,13 @@ export function dropPlayedAnalysisPrefix(
   engine: Engine,
   entries: AnalysisEntry[],
   seat: number,
-  playedMoves: string[]
-): { entries: AnalysisEntry[]; dropped: number } {
+  playedMoves: string[],
+  firstMoveIndex = engine.moveHistory.length - playedMoves.length
+): { entries: AnalysisEntry[]; dropped: number; played: AnalysisPlayedMove[] } {
   let consumed = 0;
   let dropped = 0;
-  for (const move of playedMoves) {
+  const played: AnalysisPlayedMove[] = [];
+  for (const [index, move] of playedMoves.entries()) {
     if (!moveBelongsToSeat(engine, move, seat)) continue;
     let next = consumed;
     while (entries[next]?.kind === "adjust") next++;
@@ -804,9 +810,10 @@ export function dropPlayedAnalysisPrefix(
     if (analysisMoveKey(engine, entry.move) === analysisMoveKey(engine, move)) {
       consumed = next + 1;
       dropped++;
+      played.push({ move, moveIndex: firstMoveIndex + index });
     }
   }
-  return { entries: consumed ? entries.slice(consumed) : entries, dropped };
+  return { entries: consumed ? entries.slice(consumed) : entries, dropped, played };
 }
 
 /**
@@ -845,6 +852,7 @@ export function replayAnalysisLine(
 ): {
   engine: Engine;
   applied: number;
+  blockedReason?: string;
 } {
   let engine = markAnalysisSeat(
     Engine.fromData(JSON.parse(JSON.stringify(origin))),
@@ -897,8 +905,8 @@ export function replayAnalysisLine(
         copy.clearAvailableCommands();
         copy.generateAvailableCommands();
       }
-    } catch {
-      break;
+    } catch (error) {
+      return { engine, applied, blockedReason: error instanceof Error ? error.message : String(error) };
     }
     // Finishing income/setup can enter a round with the real multiplayer turn order. Reapply the
     // solo turn order after resolving opponents, just as when entering or rebasing a preview.
