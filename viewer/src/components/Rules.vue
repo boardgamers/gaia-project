@@ -1,5 +1,5 @@
 <template>
-  <b-modal :id="id" size="lg" title="Rules and Factions" footer-class="rules">
+  <b-modal :id="id" size="lg" title="Rules and Factions" footer-class="rules" @show="resetRule">
     <div class="gaia-viewer-modal">
       <div class="d-flex" style="justify-content: center; align-items: center">
         <b-dropdown size="sm" class="mr-2 mb-2" text="Type">
@@ -75,7 +75,7 @@ import type { FactionBoardRaw } from "@gaia-project/engine/src/faction-boards";
 import { factionName } from "../data/factions";
 
 import Engine, { Faction, factionVariantBoard } from "@gaia-project/engine";
-import { Component, Prop, Vue } from "vue-property-decorator";
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { factionColor, factionPiecePlanet, planetFill } from "../graphics/utils";
 import { finalScoringFields, finalScoringItems } from "../logic/final-scoring-rules";
 
@@ -109,7 +109,11 @@ export default class Rules extends Vue {
   mounted() {
     this.finalScoringFields = finalScoringFields();
     this.finalScoringItems = finalScoringItems();
+  }
 
+  // An auction can assign this seat a different faction without remounting its board.
+  @Watch("type", { immediate: true })
+  resetRule() {
     this.selectRule(this.type ?? "rules");
   }
 
