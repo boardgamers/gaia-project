@@ -67,7 +67,7 @@ export default class SealedBidPanel extends Vue {
   /** What this device's own finished submission is called, e.g. "Your split is in." */
   get waitingText(): string {
     if (!this.backend && !this.onlineSequential) {
-      return "Pass the device to the next player.";
+      return "";
     }
     return this.submittedCount >= this.playerCount
       ? "Everyone has submitted - resolving the auction…"

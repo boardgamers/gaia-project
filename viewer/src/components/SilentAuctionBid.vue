@@ -55,7 +55,7 @@
     <template v-else>
       <p class="mb-1"><b>Your bids are in.</b> Choices stay hidden until everyone has confirmed.</p>
       <b-btn v-if="canChange" variant="outline-primary" class="my-2" @click="changeChoice">Change bids</b-btn>
-      <p class="text-muted small mb-0">{{ waitingText }}</p>
+      <p v-if="waitingText" class="text-muted small mb-0">{{ waitingText }}</p>
     </template>
 
     <!-- Who is still deciding. Shown while the form is open too, not just afterwards: knowing you
@@ -134,7 +134,7 @@ export default class SilentAuctionBid extends SealedBidPanel {
    * reported, so the two can never drift apart or say the same thing twice. */
   get waitingText(): string {
     if (!this.backend) {
-      return "Pass the device to the next player.";
+      return "";
     }
     return this.submittedCount >= this.playerCount
       ? "Everyone has submitted - resolving the auction…"
