@@ -4,8 +4,14 @@
     v-if="player && player.faction"
     :aria-label="player.isAutoma ? 'Automa opponent' : null"
   >
-    <div v-if="player.isAutoma" class="player-name">Automa · {{ factionName }}</div>
-    <div class="d-flex justify-content-between align-items-center" v-else-if="!preview">
+    <div v-if="player.isAutoma" class="player-header d-flex align-items-center">
+      <span class="player-portrait"
+        ><span class="player-avatar automa-avatar"><img :src="automaPortrait" alt="" /></span
+      ></span>
+      <strong>Automa</strong>
+      <small v-if="automaDifficulty" class="ml-auto">{{ automaDifficulty }}</small>
+    </div>
+    <div class="player-header d-flex justify-content-between align-items-center" v-else-if="!preview">
       <div
         style="display: flex; align-items: center"
         @click="playerClick(player)"
@@ -162,6 +168,7 @@
           />
         </g>
 
+        <AutomaFactionCard v-if="player.isAutoma" :player="player" transform="translate(25.2, 9.4) scale(.1)" />
         <PowerBowls
           v-if="!player.isAutoma"
           :transform="`translate(30,${height - 7})`"
@@ -303,6 +310,8 @@ import Vue from "vue";
 import { Component, Prop, Watch } from "vue-property-decorator";
 import type { MapMode } from "../data/actions";
 import { MapModeType } from "../data/actions";
+import { automaDifficulties } from "../data/automa";
+import { factionArt } from "../data/faction-art";
 import { terraformCost3Set } from "../data/faction-overview";
 import { effectivePreviewPlayer } from "../data/faction-preview";
 import { factionData, factionName, planetsWithSteps } from "../data/factions";
@@ -311,6 +320,7 @@ import { mapModeTypeOptions } from "../data/stats";
 import { factionColor } from "../graphics/utils";
 import { gameSeed } from "../logic/utils";
 import ArtifactIcon from "./ArtifactIcon.vue";
+import AutomaFactionCard from "./AutomaFactionCard.vue";
 import AutomaInfo from "./AutomaInfo.vue";
 import Booster from "./Booster.vue";
 import FederationTile from "./FederationTile.vue";
@@ -332,6 +342,7 @@ type TerraformingMarker = {
 @Component({
   components: {
     AutomaInfo,
+    AutomaFactionCard,
     TechTile,
     Booster,
     SpecialAction,
@@ -675,9 +686,21 @@ export default class PlayerInfo extends Vue {
     return this.referenceEngine ?? this.$store.state.data;
   }
 
+  get automaPortrait() {
+    return factionArt[this.faction];
+  }
+
+  get automaDifficulty() {
+    const difficulty = this.engine.automa?.difficulty;
+    return difficulty && difficulty !== "automa" ? automaDifficulties[difficulty] : null;
+  }
+
   get height() {
-    if (this.player.isAutoma) return 18.2;
-    return 21.4 + Math.max(0, Math.ceil(this.boardActions.length / 6) - 1) * 3.3;
+    // Solo boards stay aligned even when the human acquires a second row of actions.
+    const count = this.engine.automa
+      ? this.engine.players[0].events[Operator.Activate].length
+      : this.boardActions.length;
+    return 21.4 + Math.max(0, Math.ceil(count / 6) - 1) * 3.3;
   }
 
   togglePlanetHighlight(planet: Planet) {
@@ -724,6 +747,20 @@ export default class PlayerInfo extends Vue {
   box-shadow:
     0 0 0 2px var(--ui-bg),
     0 0 0 4px var(--recent);
+}
+
+.player-header {
+  min-height: 2.375rem;
+}
+
+.automa-avatar {
+  overflow: hidden;
+  img {
+    width: 234%;
+    height: 100%;
+    max-width: none;
+    transform: translateX(-3.4%);
+  }
 }
 
 .player-portrait {

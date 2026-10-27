@@ -28,11 +28,13 @@ for (const component of [PlayerInfo, AlternatePlayerInfo]) {
     engine.players[1].data.buildings.ac1 = 1;
     engine.automa.action = "2";
     engine.automa.support = "3";
+    for (let i = 0; i < 7; i++) engine.players[0].loadEvent(new Event("=> 1q"), "test");
     const store = makeStore();
     store.commit("receiveData", engine);
     const { container } = render(component, { props: { player: engine.players[1] }, store });
     expect(container.querySelector('[aria-label="Automa opponent"]')).not.to.equal(null);
-    expect(container.textContent).to.include("Automa · Taklons");
+    expect(container.querySelector(".player-header").textContent.trim()).to.equal("Automa");
+    expect(container.textContent).to.include("Taklons");
     expect(container.querySelector(".player-board")).not.to.equal(null);
     expect(container.querySelectorAll(".building-group")).to.have.length(5);
     // 8 mines + 4 trading stations + 3 labs + 2 academies + institute, minus the placed pieces.
@@ -41,7 +43,19 @@ for (const component of [PlayerInfo, AlternatePlayerInfo]) {
     expect(container.querySelector(".building-group .resource")).to.equal(null);
     expect(container.querySelector("[data-player-action]")).to.equal(null);
     expect(container.querySelector("details")).to.equal(null);
-    expect(container.textContent).to.include("Faction action:");
+    expect(container.querySelector(".player-board .automa-faction-card").getAttribute("aria-label")).to.include(
+      "range 3"
+    );
+    expect(
+      container.querySelector(".automa-faction-card .resource.vp, .automa-faction-card .resource .vp")
+    ).not.to.equal(null);
+    expect(container.textContent).not.to.include("no income or power");
+    expect(container.textContent).not.to.include("Ready for this round");
+    // Both boards also grow together when the human has enough actions for another row.
+    const human = render(component, { props: { player: engine.players[0] }, store });
+    expect(container.querySelector(".player-board").getAttribute("viewBox")).to.equal(
+      human.container.querySelector(".player-board").getAttribute("viewBox")
+    );
     expect(container.textContent).to.include("Support card");
   });
 }

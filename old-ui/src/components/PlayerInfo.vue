@@ -4,24 +4,29 @@
     v-if="player && player.faction"
     :aria-label="player.isAutoma ? 'Automa opponent' : null"
   >
-    <span v-if="player.isAutoma" class="player-name">Automa · {{ factionName }}</span>
-    <span
-      v-else
-      :data-bgs-player="player.player"
-      tabindex="0"
-      @keydown.enter="playerClick(player)"
-      @click="playerClick(player)"
-      :class="['player-name', { dropped: player.dropped }]"
-      role="button"
-      >{{ name }}
-      <img
-        v-if="$store.state.supporterSeats[player.player] && $store.state.supporterBadge"
-        class="supporter-badge"
-        :src="$store.state.supporterBadge.url"
-        :alt="$store.state.supporterBadge.label"
-        :title="$store.state.supporterBadge.label"
-      />
-    </span>
+    <div class="player-header d-flex align-items-center">
+      <template v-if="player.isAutoma">
+        <strong>Automa</strong>
+        <small v-if="automaDifficulty" class="ml-auto">{{ automaDifficulty }}</small>
+      </template>
+      <span
+        v-else
+        :data-bgs-player="player.player"
+        tabindex="0"
+        @keydown.enter="playerClick(player)"
+        @click="playerClick(player)"
+        :class="['player-name', { dropped: player.dropped }]"
+        role="button"
+        >{{ name }}
+        <img
+          v-if="$store.state.supporterSeats[player.player] && $store.state.supporterBadge"
+          class="supporter-badge"
+          :src="$store.state.supporterBadge.url"
+          :alt="$store.state.supporterBadge.label"
+          :title="$store.state.supporterBadge.label"
+        />
+      </span>
+    </div>
     <div class="board mt-2">
       <svg :viewBox="`-0.2 -0.5 38.5 ${height}`" class="player-board" :style="`background-color: ${factionColor}`">
         <rect x="-1" y="-1" width="50" height="50" fill="#ffffff44"></rect>
@@ -93,6 +98,7 @@
           :asteroid-consumed="playerData.gaiaformersUsedForAsteroid"
           :resource="[]"
         />
+        <AutomaFactionCard v-if="player.isAutoma" :player="player" flat transform="translate(25.2, 9.4) scale(.1)" />
         <PowerBowls
           v-if="!player.isAutoma"
           :transform="`translate(29,${height - 7})`"

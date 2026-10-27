@@ -44,7 +44,6 @@
           </g>
           <Resource kind="q" :count="data.qics" :center-left="true" transform="translate(12.5,0) scale(0.1)" />
         </g>
-        <text v-if="player.isAutoma" class="board-text" transform="scale(0.75)">Automa · no income or power</text>
         <g
           v-if="!preview && !player.isAutoma"
           v-b-tooltip.hover
