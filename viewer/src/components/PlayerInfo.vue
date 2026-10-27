@@ -171,7 +171,7 @@
           v-if="player.isAutoma && engine.automa"
           :player="player"
           :engine="engine"
-          @details="showAutomaDetails(false)"
+          @details="showAutomaDetails()"
         />
         <AutomaFactionCard
           v-if="player.isAutoma"
@@ -184,14 +184,14 @@
           :player="player"
           :engine="engine"
           transform="translate(25.7, 8.9) scale(.085)"
-          @details="showAutomaDetails(false)"
+          @details="showAutomaDetails()"
         />
         <AutomaSupportCard
           v-if="player.isAutoma && engine.automa"
           :player="player"
           :engine="engine"
           transform="translate(31.7, 8.9) scale(.085)"
-          @details="showAutomaDetails(true)"
+          @details="showAutomaDetails()"
         />
         <PowerBowls
           v-if="!player.isAutoma"
@@ -312,7 +312,6 @@
     <AutomaInfo
       v-if="player.isAutoma && engine.automa"
       :open.sync="automaDetailsOpen"
-      :decision-details-open="automaDecisionDetailsOpen"
       :player="player"
       :engine="engine"
     />
@@ -391,10 +390,8 @@ type TerraformingMarker = {
 })
 export default class PlayerInfo extends Vue {
   automaDetailsOpen = false;
-  automaDecisionDetailsOpen = false;
 
-  showAutomaDetails(decisionDetails: boolean) {
-    this.automaDecisionDetailsOpen = decisionDetails;
+  showAutomaDetails() {
     this.automaDetailsOpen = true;
   }
 

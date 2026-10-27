@@ -115,7 +115,7 @@ export default class AutomaSupportCard extends Vue {
     return automaSupportUsage(this.engine, this.player);
   }
   get descriptions() {
-    return automaSupportDescriptions(this.engine, this.player);
+    return automaSupportDescriptions(this.engine);
   }
   get symbols() {
     return this.usage.pass ? ["booster"] : ["scoring", "range", "direction", "numbered"];

@@ -67,7 +67,7 @@ for (const component of [PlayerInfo, AlternatePlayerInfo]) {
     expect(container.querySelector(".automa-last-turn").getAttribute("aria-label")).to.include("1x1");
     expect(container.querySelector(".automa-action-card .automa-last-turn")).to.equal(null);
   });
-  it("keeps repeatable faction actions available and moves decision details behind the deck", async () => {
+  it("keeps repeatable faction actions available and shows expanded card details", async () => {
     const engine = new Engine(["init 1 automa-details", "p1 faction terrans", "p2 faction itars"], {
       automaSeed: "test",
     });
@@ -95,24 +95,24 @@ for (const component of [PlayerInfo, AlternatePlayerInfo]) {
     expect(container.querySelector('[data-support="range"]').getAttribute("title")).to.include(
       "Range 2 when placing mines"
     );
-    expect(container.querySelector('[data-support="range"]').getAttribute("title")).to.include(
-      "Not used for the last action"
-    );
     expect(container.querySelector('[data-support="numbered"]').getAttribute("title")).to.include(
       "counting from the right"
     );
-    expect(container.querySelector('[data-support="numbered"]').getAttribute("title")).to.include(
-      "Relevant to the last action"
-    );
+    for (const symbol of container.querySelectorAll("[data-support]")) {
+      expect(symbol.getAttribute("title")).not.to.include("last action");
+    }
     expect(
       Array.from(container.querySelectorAll(".support-symbol.active")).map((el) => el.getAttribute("data-support"))
     ).to.deep.equal(["numbered"]);
     expect(container.querySelector('[data-support="numbered"]').textContent.trim()).to.equal("1");
     await fireEvent.click(getByRole("button", { name: "Automa behavior — support card 6. Show details" }));
-    expect(container.querySelector(".automa-details").textContent).to.include("Decision details");
-    expect(container.querySelector("details").hasAttribute("open")).to.equal(true);
+    expect(container.querySelector(".automa-details").textContent).to.include(
+      "previous action card becomes the support card"
+    );
+    expect(container.querySelector(".automa-details dl").textContent).to.include("Mining range");
+    expect(container.querySelector("details")).to.equal(null);
     await fireEvent.click(getByRole("button", { name: "5 cards left in Automa's draw pile — show details" }));
-    expect(container.querySelector("details").hasAttribute("open")).to.equal(false);
+    expect(container.querySelector(".automa-details dl").textContent).to.include("Mining range");
     engine.automa.discard.push("13");
     engine.automa.action = "5";
     store.commit("receiveData", Engine.fromData(JSON.parse(JSON.stringify(engine))));

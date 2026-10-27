@@ -43,12 +43,11 @@ export function automaSupportUsage(engine: Engine, player: Player) {
   };
 }
 
-export function automaSupportDescriptions(engine: Engine, player: Player) {
+export function automaSupportDescriptions(engine: Engine) {
   const support = cards.find((card) => card.id === engine.automa?.support);
   if (!support) return {};
-  const usage = automaSupportUsage(engine, player);
   const preference = automaMiningPreference(engine);
-  const descriptions = {
+  return {
     range: `Range ${support.range} when placing mines with a Build a Mine card. The mine must be within ${support.range} spaces of an Automa planet. Faction actions can specify a different range.`,
     scoring:
       support.scoringFinalTiebreaker === "none"
@@ -62,12 +61,6 @@ export function automaSupportDescriptions(engine: Engine, player: Player) {
       ? "Last round: Automa passes without taking another booster."
       : `When passing, take the ${support.roundBoosterSelection} booster from Automa's ordered row of three available boosters.`,
   };
-  return Object.fromEntries(
-    Object.entries(descriptions).map(([kind, description]) => [
-      kind,
-      `${description} ${usage[kind === "booster" ? "pass" : kind] ? "Relevant to the last action." : "Not used for the last action."}`,
-    ])
-  );
 }
 
 export function describeAutomaAction(action: string): string {

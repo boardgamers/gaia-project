@@ -6,8 +6,8 @@
         <strong>{{ result }}</strong>
       </p>
       <p>
-        Automa draws cards to choose its actions. BGS resolves them automatically. Its faction action happens whenever a
-        card calls for it, even several times in a round.
+        Each Automa turn, the previous action card becomes the support card, then a new action card is drawn. Its first
+        turn each round draws two cards.
       </p>
       <p v-if="engine.round">
         <strong>{{ state.remaining }} cards left.</strong> Automa can pass before the pile is empty.
@@ -18,15 +18,8 @@
           <li v-for="(action, i) in lastActions" :key="i">{{ describeAction(action) }}</li>
         </ul>
       </template>
-      <details v-if="support" :open="decisionDetailsOpen">
-        <summary>Decision details</summary>
-        <p class="mt-2">
-          These values come from the current support card. They change when a new card is drawn. Highlighted symbols on
-          the board apply to the last action; faded symbols were not needed.
-        </p>
+      <template v-if="support">
         <dl>
-          <dt>Cards</dt>
-          <dd>Action: {{ state.action || "—" }} · Support: {{ support.id }}</dd>
           <dt>Mining range</dt>
           <dd>{{ support.range }} spaces, unless the faction action overrides it.</dd>
           <dt>Final scoring preference</dt>
@@ -42,8 +35,7 @@
             {{ support.numberedSelection === "right" ? "left" : "right" }}; wrap around if needed.
           </dd>
         </dl>
-        <p>Each action uses only the selection rules that apply to it.</p>
-      </details>
+      </template>
       <a
         class="d-inline-block mt-3"
         href="https://www.feuerland-spiele.de/fileadmin/game/Gaia_Project/Gaia_Project_Automa_rules_EN_Web.pdf"
@@ -67,7 +59,6 @@ export default class AutomaInfo extends Vue {
   @Prop() player: Player;
   @Prop() engine: Engine;
   @Prop({ default: false, type: Boolean }) open: boolean;
-  @Prop({ default: false, type: Boolean }) decisionDetailsOpen: boolean;
   describeAction = describeAutomaAction;
   get difficulty() {
     return automaDifficulties[this.state.difficulty];
@@ -96,9 +87,6 @@ export default class AutomaInfo extends Vue {
 </script>
 
 <style scoped>
-summary {
-  cursor: pointer;
-}
 dd {
   margin-bottom: 0.75rem;
 }
