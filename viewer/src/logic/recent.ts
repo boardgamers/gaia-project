@@ -192,7 +192,14 @@ export function spaceshipActionMoves(moves: CommandObject[]): Set<string> {
   return result;
 }
 
-const outOfTurn = [Command.ChargePower, Command.BrainStone, Command.ChooseIncome, Command.Decline];
+const outOfTurn = [
+  Command.ChargePower,
+  Command.BrainStone,
+  Command.ChooseIncome,
+  Command.Decline,
+  Command.WaitForCharges,
+  Command.ResumeCharges,
+];
 
 export function ownTurn(move?: ParsedMove): boolean {
   return !!move && move.commands.some((c) => !outOfTurn.includes(c.command));

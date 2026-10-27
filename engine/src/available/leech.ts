@@ -34,6 +34,12 @@ export function possibleLeech(engine: Engine, player: Player) {
           cost: offers[0].cost,
           // new format
           offers,
+          ...(engine.options.concurrentCharges
+            ? {
+                requestId: engine.pendingCharges.find((charge) => charge.player === player)?.id,
+                source: engine.pendingCharges.find((charge) => charge.player === player)?.source,
+              }
+            : {}),
         },
       })
     );

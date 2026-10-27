@@ -26,6 +26,7 @@ import {
   startingSetupPlacements,
 } from "../factions";
 import { GaiaHex } from "../gaia-hex";
+import { refreshPendingCharges } from "../pending-charges";
 import Player from "../player";
 import { lastTile } from "../research-tracks";
 import Reward from "../reward";
@@ -256,7 +257,12 @@ export function phaseRoundMove(engine: Engine, move: string) {
 
     if (executedCommand === Command.Pass) {
       if (engine.turnOrder.length === 0) {
-        cleanUpPhase(engine);
+        if (engine.options.concurrentCharges && engine.pendingCharges.length) {
+          engine.currentPlayer = engine.tempCurrentPlayer = undefined;
+          engine.changePhase(Phase.RoundMove);
+        } else {
+          cleanUpPhase(engine);
+        }
         return;
       } else {
         break;
@@ -274,12 +280,22 @@ export function phaseRoundMove(engine: Engine, move: string) {
     }
   }
 
+  if (engine.options.concurrentCharges) engine.tempCurrentPlayer = undefined;
   beginLeechingPhase(engine);
   engine.currentPlayer = playerAfter;
 }
 
 export function phaseRoundLeech(engine: Engine, move: string) {
   engine.loadTurnMoves(move, { split: false, processFirst: true });
+  if (engine.options.concurrentCharges) {
+    const index = engine.pendingCharges.findIndex((charge) => charge.player === engine.processedPlayer);
+    engine.pendingCharges.splice(index, 1);
+    refreshPendingCharges(engine);
+    engine.tempCurrentPlayer = undefined;
+    engine.changePhase(Phase.RoundMove);
+    if (!engine.pendingCharges.length && !engine.turnOrder.length) cleanUpPhase(engine);
+    return;
+  }
   engine.tempCurrentPlayer = engine.tempTurnOrder.shift();
 
   // Current leech round ended
@@ -588,6 +604,23 @@ function finalScoringPhase(engine: Engine) {
 }
 
 function beginLeechingPhase(engine: Engine) {
+  if (engine.options.concurrentCharges) {
+    while (engine.leechSources.length) {
+      const source = engine.leechSources.shift();
+      const sourceHex = engine.map.getS(source.coordinates);
+      if (stdBuildingValue(sourceHex.buildingOf(source.player)) === 0) continue;
+      for (const pl of engine.playersInTableOrderFrom(source.player)) {
+        if (pl.player === source.player) continue;
+        const amount = leechPossible(engine, sourceHex, (hex) =>
+          pl.buildingValue(engine.map.grid.get(hex), { building: hex.buildingOf(pl.player) })
+        );
+        if (amount > 0) engine.pendingCharges.push({ id: engine.nextChargeId++, player: pl.player, source, amount });
+      }
+    }
+    refreshPendingCharges(engine);
+    engine.changePhase(Phase.RoundMove);
+    return;
+  }
   if (engine.leechSources.length === 0) {
     beginRoundMovePhase(engine);
     return;

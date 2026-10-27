@@ -25,7 +25,7 @@ export function declineButton(command: AvailableCommand<Command.Decline>): Butto
     richText: r,
     label: r == null ? `Decline ${offer}` : null,
     shortcuts: ["d"],
-    command: `${Command.Decline} ${offer}`,
+    command: `${Command.Decline} ${offer}${command.data.requestId === undefined ? "" : ` @${command.data.requestId}`}`,
     warning: message ? buttonWarnings([{ message, disableKey: WarningKey.declineFree }]) : null,
   });
 }

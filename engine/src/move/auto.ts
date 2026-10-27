@@ -2,15 +2,27 @@ import { ChargeDecision, ChargeRequest, decideChargeRequest } from "../auto-char
 import { AvailableCommand, AvailableFreeActionData } from "../available/types";
 import Engine, { AuctionVariant } from "../engine";
 import { Command, Faction, PowerArea, Resource } from "../enums";
+import { chargeDecisionSeats, hasConcurrentCharges, waitingForCharges } from "../pending-charges";
 import assert from "../utils/assert";
 
 /** Automatically generate moves based on player settings */
-export function autoMove(engine: Engine, partialMove?: string, options?: { autoPass?: boolean }): boolean {
+export function autoMove(
+  engine: Engine,
+  partialMove?: string,
+  options?: { autoPass?: boolean; player?: number }
+): boolean {
+  if (!partialMove && hasConcurrentCharges(engine) && options?.player === undefined) {
+    for (const player of chargeDecisionSeats(engine)) {
+      if (autoMove(engine, undefined, { ...options, player })) return true;
+    }
+    return false;
+  }
+  if (options?.player !== undefined && waitingForCharges(engine, options.player)) return false;
   if (engine.playerToMove === undefined) {
     return false;
   }
 
-  const toMove = engine.playerToMove;
+  const toMove = options?.player ?? engine.playerToMove;
   const factionOrPlayer = engine.player(toMove).faction ?? `p${toMove + 1}`;
 
   let _copy: Engine;
@@ -33,7 +45,7 @@ export function autoMove(engine: Engine, partialMove?: string, options?: { autoP
       Command.BrainStone,
       (cmd: AvailableCommand) => autoBrainstone(copyOrThis(), cmd as AvailableCommand<Command.BrainStone>),
     ],
-    ...(options?.autoPass ? [[undefined, () => autoPass(copyOrThis())] as const] : []),
+    ...(options?.autoPass ? [[undefined, () => autoPass(copyOrThis(), toMove)] as const] : []),
   ] as const;
 
   if (partialMove) {
@@ -99,7 +111,8 @@ function autoChooseFaction(engine: Engine, cmd: AvailableCommand<Command.ChooseF
  */
 export function autoChargePower(engine: Engine, cmd: AvailableCommand<Command.ChargePower>): string | false {
   const offers = cmd.data.offers;
-  const pl = engine.player(engine.playerToMove);
+  const pl = engine.player(cmd.player);
+  const suffix = cmd.data.requestId === undefined ? "" : ` @${cmd.data.requestId}`;
   const playerHasPassed = engine.passedPlayers.includes(pl.player);
   const request = new ChargeRequest(
     pl,
@@ -119,10 +132,10 @@ export function autoChargePower(engine: Engine, cmd: AvailableCommand<Command.Ch
         return false;
       }
       assert(offer, `could not find max offer: ${JSON.stringify([offers, pl.settings])}`);
-      return `${Command.ChargePower} ${offer.offer}`;
+      return `${Command.ChargePower} ${offer.offer}${suffix}`;
     }
     case ChargeDecision.No:
-      return `${Command.Decline} ${offers[0].offer}`;
+      return `${Command.Decline} ${offers[0].offer}${suffix}`;
     case ChargeDecision.Ask:
       return false;
     case ChargeDecision.Undecided:
@@ -210,18 +223,16 @@ function autoBrainstone(engine: Engine, cmd: AvailableCommand<Command.BrainStone
 }
 
 /** Return move a dropped player would make */
-function autoPass(engine: Engine): string | undefined {
-  const toMove = engine.playerToMove;
-
+function autoPass(engine: Engine, toMove = engine.playerToMove): string | undefined {
   assert(toMove !== undefined, "Can't execute a move when no player can move");
 
   const pl = engine.player(toMove);
 
-  if (engine.availableCommands.some((cmd) => cmd.name === Command.Decline)) {
-    const cmd = engine.findAvailableCommand(engine.playerToMove, Command.Decline);
-    return `${Command.Decline} ${cmd.data.offers[0].offer}`;
-  } else if (engine.availableCommands.some((cmd) => cmd.name === Command.Pass)) {
-    const cmd = engine.findAvailableCommand(engine.playerToMove, Command.Pass);
+  if (engine.availableCommands.filter((cmd) => cmd.player === toMove).some((cmd) => cmd.name === Command.Decline)) {
+    const cmd = engine.findAvailableCommand(toMove, Command.Decline);
+    return `${Command.Decline} ${cmd.data.offers[0].offer}${cmd.data.requestId === undefined ? "" : ` @${cmd.data.requestId}`}`;
+  } else if (engine.availableCommands.filter((cmd) => cmd.player === toMove).some((cmd) => cmd.name === Command.Pass)) {
+    const cmd = engine.findAvailableCommand(toMove, Command.Pass);
     const boosters = cmd.data.boosters;
 
     if (boosters.length > 0) {
@@ -229,22 +240,32 @@ function autoPass(engine: Engine): string | undefined {
     } else {
       return `${Command.Pass}`;
     }
-  } else if (engine.availableCommands.some((cmd) => cmd.name === Command.ChooseTinkeringTile)) {
+  } else if (
+    engine.availableCommands
+      .filter((cmd) => cmd.player === toMove)
+      .some((cmd) => cmd.name === Command.ChooseTinkeringTile)
+  ) {
     // A dropped Tinkeroids player must finish this round-start choice before income and passing.
     const cmd = engine.findAvailableCommand(toMove, Command.ChooseTinkeringTile);
     return `${Command.ChooseTinkeringTile} ${cmd.data.tiles[0]}`;
-  } else if (engine.availableCommands.some((cmd) => cmd.name === Command.ChooseIncome)) {
-    const cmd = engine.findAvailableCommand(engine.playerToMove, Command.ChooseIncome);
+  } else if (
+    engine.availableCommands.filter((cmd) => cmd.player === toMove).some((cmd) => cmd.name === Command.ChooseIncome)
+  ) {
+    const cmd = engine.findAvailableCommand(toMove, Command.ChooseIncome);
     return `${Command.ChooseIncome} ${cmd.data}`;
-  } else if (engine.availableCommands.some((cmd) => cmd.name === Command.BrainStone)) {
-    const cmd = engine.findAvailableCommand(engine.playerToMove, Command.BrainStone);
+  } else if (
+    engine.availableCommands.filter((cmd) => cmd.player === toMove).some((cmd) => cmd.name === Command.BrainStone)
+  ) {
+    const cmd = engine.findAvailableCommand(toMove, Command.BrainStone);
     return `${Command.BrainStone} ${cmd.data.choices[0].area}`;
   } else if (
-    engine.availableCommands.some(
-      (cmd) =>
-        cmd.name === Command.Spend &&
-        (cmd.data as AvailableFreeActionData).acts[0].cost.includes(Resource.GainTokenGaiaArea)
-    )
+    engine.availableCommands
+      .filter((cmd) => cmd.player === toMove)
+      .some(
+        (cmd) =>
+          cmd.name === Command.Spend &&
+          (cmd.data as AvailableFreeActionData).acts[0].cost.includes(Resource.GainTokenGaiaArea)
+      )
   ) {
     // Terrans spending power in gaia phase to create resources
     return `${Command.Spend} ${pl.data.power.gaia}${Resource.GainTokenGaiaArea} for ${pl.data.power.gaia}${Resource.Credit}`;

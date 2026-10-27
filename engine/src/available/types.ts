@@ -130,7 +130,7 @@ interface CommandData {
   [Command.BrainStone]: BrainstoneActionData;
   [Command.Build]: AvailableBuildCommandData;
   [Command.BurnPower]: number[];
-  [Command.ChargePower]: { offers: Offer[] };
+  [Command.ChargePower]: { offers: Offer[]; requestId?: number; source?: { player: number; coordinates: string } };
   [Command.ChooseArtifactToken]: {
     tokens: ArtifactToken[];
     /** Lost Fleet §G6, owner ruling 2026-07-03: which of `tokens` would currently have no effect
@@ -146,7 +146,7 @@ interface CommandData {
   [Command.ChooseTinkeringTile]: { tiles: TinkeringTile[] };
   [Command.ChooseTechTile]: { tiles: ChooseTechTile[] };
   [Command.DeadEnd]: SubPhase; // for debugging
-  [Command.Decline]: { offers: Offer[] };
+  [Command.Decline]: { offers: Offer[]; requestId?: number; source?: { player: number; coordinates: string } };
   [Command.EndTurn]: never;
   [Command.ExamineArtifact]: { cost: string };
   [Command.Explore]: AvailableExploreActionData;

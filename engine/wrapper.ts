@@ -1,7 +1,8 @@
 import crypto from "crypto";
 import { set } from "lodash";
 import Engine, { EngineOptions } from "./src/engine";
-import { Phase, Round } from "./src/enums";
+import { Command, Phase, Round } from "./src/enums";
+import { chargeDecisionSeats, chargeFor, hasConcurrentCharges, waitingForCharges } from "./src/pending-charges";
 import {
   defaultAutoCharge,
   defaultAutoChargeMaxPassedRoundLeech,
@@ -40,7 +41,7 @@ export async function init(
     options.lostFleet = true;
   }
 
-  const engine = new Engine([`init ${nbPlayers} ${seed}`], options);
+  const engine = new Engine([`init ${nbPlayers} ${seed}`], { concurrentCharges: true, ...options });
   engine.generateAvailableCommandsIfNeeded();
 
   automove(engine);
@@ -137,7 +138,11 @@ export function move(engine: Engine, move: string | PremoveCommand, player: numb
   const revision = canReviseSealedBid(engine, move, player);
 
   const round = engine.round;
-  const phase = engine.phase;
+  const command = move.trim().split(/\s+/)[1];
+  const charge = hasConcurrentCharges(engine) && [Command.ChargePower, Command.Decline].includes(command as Command);
+  const waiting =
+    hasConcurrentCharges(engine) && [Command.WaitForCharges, Command.ResumeCharges].includes(command as Command);
+  const phase = charge ? Phase.RoundLeech : engine.phase;
   const backup = JSON.stringify(engine);
 
   engine.move(move);
@@ -148,7 +153,7 @@ export function move(engine: Engine, move: string | PremoveCommand, player: numb
 
     const copy = Engine.fromData(JSON.parse(backup));
 
-    if (copy.autoMove(move)) {
+    if (copy.autoMove(move, charge ? { player } : undefined)) {
       engine = copy;
     }
   }
@@ -156,9 +161,9 @@ export function move(engine: Engine, move: string | PremoveCommand, player: numb
   engine.generateAvailableCommandsIfNeeded();
 
   if (engine.newTurn) {
-    if (revision) automation(engine).liveUpdate = true;
+    if (revision || waiting) automation(engine).liveUpdate = true;
     else creditDecision(engine, player, phase);
-    reconcileManualPremoves(engine, player, round, phase);
+    if (!waiting) reconcileManualPremoves(engine, player, round, phase);
     afterMove(engine, round);
 
     automove(engine);
@@ -179,8 +184,12 @@ export function automove(engine: Engine) {
     modified = false;
     let oldRound = engine.round;
 
-    while (!cancelled(engine) && !ended(engine) && engine.player(engine.playerToMove).dropped) {
-      assert(engine.autoMove(undefined, { autoPass: true }), "Autopass not working");
+    const dropped = () =>
+      (hasConcurrentCharges(engine) ? chargeDecisionSeats(engine) : [engine.playerToMove]).find(
+        (seat) => engine.player(seat)?.dropped
+      );
+    while (!cancelled(engine) && !ended(engine) && dropped() !== undefined) {
+      assert(engine.autoMove(undefined, { autoPass: true, player: dropped() }), "Autopass not working");
 
       afterMove(engine, oldRound);
       modified = true;
@@ -214,6 +223,10 @@ function canReviseSealedBid(data: Engine, move: unknown, player: number): boolea
 export function canMoveOutOfTurn(engine: Engine, move: string | PremoveCommand, player: number): boolean {
   return (
     canReviseSealedBid(engine, move, player) ||
+    (typeof move === "string" &&
+      waitingForCharges(engine instanceof Engine ? engine : Engine.fromData(engine), player) &&
+      (move.trim() === `p${player + 1} ${Command.ResumeCharges}` ||
+        move.trim() === `${engine.players[player]?.faction} ${Command.ResumeCharges}`)) ||
     (typeof move === "object" && move?.type === "premoves" && canQueue(engine, player))
   );
 }
@@ -267,15 +280,18 @@ export function moveAI(engine: Engine, player: number) {
     engine = Engine.fromData(engine);
   }
 
-  if (engine.ended || engine.playerToMove !== player) {
+  if (
+    engine.ended ||
+    (hasConcurrentCharges(engine) ? !chargeDecisionSeats(engine).includes(player) : engine.playerToMove !== player)
+  ) {
     return engine;
   }
 
   const round = engine.round;
-  const phase = engine.phase;
+  const phase = hasConcurrentCharges(engine) && chargeFor(engine, player) ? Phase.RoundLeech : engine.phase;
   automation(engine).liveUpdate = false;
 
-  if (engine.moveAI()) {
+  if (engine.moveAI(player)) {
     creditDecision(engine, player, phase);
     afterMove(engine, round);
     engine.generateAvailableCommandsIfNeeded();
@@ -317,6 +333,10 @@ export function currentPlayer(engine: Engine): number | number[] | undefined {
   // usually NOT an `Engine` instance. `sealedBidPendingSeats`/`playerToMove` are instance members -
   // rehydrate first or they are undefined and this throws "sealedBidPendingSeats is not a function".
   const e = engine instanceof Engine ? engine : Engine.fromData(engine);
+  if (hasConcurrentCharges(e) && e.newTurn) {
+    const seats = chargeDecisionSeats(e);
+    return seats.length === 1 ? seats[0] : seats.length ? seats : undefined;
+  }
   const pending = e.sealedBidPendingSeats();
   if (pending !== undefined) {
     if (pending.length === 0) {

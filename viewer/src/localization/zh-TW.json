@@ -4130,5 +4130,10 @@
   "Once per round, as a special action, perform instant Gaiaforming: {p0}": "每輪一次，作為特殊行動，執行即時蓋亞化：{p0}",
   "Chosen this round": "本輪已選擇",
   "Used in an earlier round": "已於先前輪次使用",
-  "Undo my move": "撤回我的行動"
+  "Undo my move": "撤回我的行動",
+  "Pending charges": "待決定的能量充能",
+  "Waiting for charges": "等待能量充能決定",
+  "Wait": "等待",
+  "Resume": "繼續",
+  "Wait for charges": "等待能量充能"
 }

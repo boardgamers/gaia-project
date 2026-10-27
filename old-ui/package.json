@@ -1,6 +1,6 @@
 {
   "name": "@gaia-project/old-ui",
-  "version": "1.0.38",
+  "version": "1.1.0",
   "scripts": {
     "serve": "vite --port 5193",
     "build": "vite build",

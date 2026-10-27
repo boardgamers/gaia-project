@@ -373,6 +373,7 @@ import Engine, {
   ResearchField,
   Round,
 } from "@gaia-project/engine";
+import { chargeDecisionSeats, hasConcurrentCharges } from "@gaia-project/engine/src/pending-charges";
 import type { PremoveCommand, PremovePlan, PremoveRun, PremoveTiming } from "@gaia-project/engine/src/premove-types";
 import { currentPlayer } from "@gaia-project/engine/wrapper";
 import Vue from "vue";
@@ -682,6 +683,35 @@ export default class Game extends Vue {
         if (!continuesHistory(this.engine.moveHistory, payload.moveHistory ?? [])) {
           this.$store.commit("clearContext");
         }
+        if (
+          this.currentMove &&
+          payload.newTurn &&
+          this.engine.options.concurrentCharges &&
+          continuesHistory(this.engine.moveHistory, payload.moveHistory ?? [])
+        ) {
+          const added = (payload.moveHistory ?? []).slice(this.engine.moveHistory.length);
+          const seat = this.myLockedSeat;
+          const faction = this.engine.players[seat]?.faction;
+          if (
+            seat !== undefined &&
+            added.length &&
+            added.every((move) => {
+              const actor = move.trim().split(/\s+/)[0];
+              return actor !== `p${seat + 1}` && actor !== faction;
+            })
+          ) {
+            const rebased = Engine.fromData(JSON.parse(JSON.stringify(payload)));
+            try {
+              rebased.move(this.currentMove);
+              if (!rebased.newTurn) {
+                this.handleData(rebased);
+                return;
+              }
+            } catch {
+              /* The updated position invalidated the draft; show the real state below. */
+            }
+          }
+        }
         this.handleData(Engine.fromData(payload));
         return;
       }
@@ -928,7 +958,12 @@ export default class Game extends Vue {
 
     const lockedSeat = this.$store.state.player?.index;
     if (lockedSeat !== undefined) {
-      return lockedSeat >= 0 && lockedSeat === this.engine.playerToMove;
+      return (
+        lockedSeat >= 0 &&
+        (hasConcurrentCharges(this.engine) && this.engine.newTurn
+          ? chargeDecisionSeats(this.engine).includes(lockedSeat)
+          : lockedSeat === this.engine.playerToMove)
+      );
     }
 
     // A hosted viewer with NO locked seat is a spectator: the host always sends a `player` message
@@ -970,7 +1005,12 @@ export default class Game extends Vue {
   }
 
   get player() {
-    return currentPlayer(this.engine);
+    const player = currentPlayer(this.engine);
+    return Array.isArray(player)
+      ? player.includes(this.myLockedSeat)
+        ? this.myLockedSeat
+        : this.engine.playerToMove
+      : player;
   }
 
   get turnPlayer() {

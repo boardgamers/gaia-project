@@ -211,6 +211,7 @@
           </button>
         </div>
       </div>
+      <ChargeWait v-if="autoChargeEnabled && !analysisMode && !currentMove" @command="$emit('command', $event)" />
       <template v-if="actionsEnabled">
         <div v-if="init" class="d-flex flex-wrap align-content-stretch">
           <MoveButton
@@ -397,6 +398,7 @@ import Engine, {
 } from "@gaia-project/engine";
 import type { FactionCustomization } from "@gaia-project/engine/src/engine";
 import { factionVariantBoard } from "@gaia-project/engine/src/faction-boards";
+import { hasConcurrentCharges, waitingForCharges } from "@gaia-project/engine/src/pending-charges";
 import type { PremovePlan } from "@gaia-project/engine/src/premove-types";
 import { CubeCoordinates } from "hexagrid";
 import Vue from "vue";
@@ -444,6 +446,7 @@ import AnalysisLineTabs from "./AnalysisLineTabs.vue";
 import AnalysisModeInfo from "./AnalysisModeInfo.vue";
 import AnalysisMoves from "./AnalysisMoves.vue";
 import AutoChargeControl from "./AutoChargeControl.vue";
+import ChargeWait from "./ChargeWait.vue";
 import FactionInfoCard from "./FactionInfoCard.vue";
 import FactionSheetButton from "./FactionSheetButton.vue";
 import MoveButton from "./MoveButton.vue";
@@ -471,7 +474,12 @@ export type EmitCommandParams = { disappear?: boolean; times?: number; warnings?
     currentMove(this: Commands) {
       this.mobileActionsCollapsed = false;
     },
-    availableCommands(this: Commands, val) {
+    availableCommands(this: Commands, val, previous) {
+      if (hasConcurrentCharges(this.engine) && previous) {
+        const choices = (commands: AvailableCommand[]) =>
+          commands?.filter((command) => ![Command.WaitForCharges, Command.ResumeCharges].includes(command.name));
+        if (JSON.stringify(choices(val)) === JSON.stringify(choices(previous))) return;
+      }
       if (val) {
         this.loadCommands(val);
       }
@@ -512,6 +520,7 @@ export type EmitCommandParams = { disappear?: boolean; times?: number; warnings?
     },
   },
   components: {
+    ChargeWait,
     AutoChargeControl,
     RichTextView,
     StickyResourceBar,
@@ -760,7 +769,10 @@ export default class Commands extends Vue implements CommandController {
   }
 
   get availableCommands(): AvailableCommand[] {
-    return this.engine.availableCommands;
+    const commands = this.engine.availableCommands;
+    if (!hasConcurrentCharges(this.engine)) return commands;
+    const seat = this.$store.state.player?.index ?? this.engine.playerToMove;
+    return commands?.filter((command) => command.player === seat);
   }
 
   get command(): AvailableCommand {
@@ -821,7 +833,7 @@ export default class Commands extends Vue implements CommandController {
   }
 
   get player(): Player {
-    return this.engine.players[this.command?.player];
+    return this.engine.players[this.command?.player ?? this.engine.playerToMove];
   }
 
   get playerSlug(): string {
@@ -919,6 +931,10 @@ export default class Commands extends Vue implements CommandController {
   private zoomCompensation: ZoomCompensationHandle | null = null;
 
   get titles() {
+    if (this.command && hasConcurrentCharges(this.engine)) {
+      if (waitingForCharges(this.engine, this.command.player)) return ["Waiting for charges"];
+      if (this.availableCommands.some((command) => command.name === Command.ChargePower)) return ["Charge power"];
+    }
     if (!this.actionsEnabled && !this.analysisMode) return [`Playing - Round ${this.engine.round}`];
     return this.commandTitles.length === 0 ? [`Your turn - Round ${this.engine.round}`] : this.commandTitles;
   }

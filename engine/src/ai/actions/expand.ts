@@ -360,7 +360,7 @@ function expandCommand(
           { offer: offer.offer },
           resourceFlow([offer.cost], [offer.offer]),
           [],
-          `${Command.ChargePower} ${offer.offer}`
+          `${Command.ChargePower} ${offer.offer}${command.data.requestId === undefined ? "" : ` @${command.data.requestId}`}`
         )
       );
 
@@ -487,7 +487,9 @@ function expandCommand(
           { offers: sortedUnique(command.data.offers.map((offer) => offer.offer)) },
           resourceFlow(),
           [],
-          Command.Decline
+          command.data.requestId === undefined
+            ? Command.Decline
+            : `${Command.Decline} ${command.data.offers[0].offer} @${command.data.requestId}`
         ),
       ];
 
@@ -719,6 +721,8 @@ function expandCommand(
         )
       );
 
+    case Command.WaitForCharges:
+    case Command.ResumeCharges:
     case Command.BanFaction:
     case Command.Bid:
     case Command.Init:

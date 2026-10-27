@@ -4130,5 +4130,10 @@
   "Once per round, as a special action, perform instant Gaiaforming: {p0}": "Una volta per round, come azione speciale, esegui la Gaiaformazione istantanea: {p0}",
   "Chosen this round": "Scelta in questo round",
   "Used in an earlier round": "Usata in un round precedente",
-  "Undo my move": "Annulla la mossa"
+  "Undo my move": "Annulla la mossa",
+  "Pending charges": "Ricariche in sospeso",
+  "Waiting for charges": "In attesa delle ricariche",
+  "Wait": "Attendi",
+  "Resume": "Riprendi",
+  "Wait for charges": "Attendi le ricariche"
 }

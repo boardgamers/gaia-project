@@ -264,6 +264,8 @@ export enum Command {
   Build = "build",
   BurnPower = "burn",
   ChargePower = "charge",
+  WaitForCharges = "waitForCharges",
+  ResumeCharges = "resumeCharges",
   ChooseCoverTechTile = "cover",
   ChooseFaction = "faction",
   ChooseFederationTile = "fedtile",

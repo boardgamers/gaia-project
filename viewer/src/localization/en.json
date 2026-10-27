@@ -4130,5 +4130,10 @@
   "Once per round, as a special action, perform instant Gaiaforming: {p0}": "Once per round, as a special action, perform instant Gaiaforming: {p0}",
   "Chosen this round": "Chosen this round",
   "Used in an earlier round": "Used in an earlier round",
-  "Undo my move": "Undo my move"
+  "Undo my move": "Undo my move",
+  "Pending charges": "Pending charges",
+  "Waiting for charges": "Waiting for charges",
+  "Wait": "Wait",
+  "Resume": "Resume",
+  "Wait for charges": "Wait for charges"
 }

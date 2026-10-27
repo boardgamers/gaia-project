@@ -1,4 +1,5 @@
 import Engine from "@gaia-project/engine";
+import { chargeDecisionSeats, hasConcurrentCharges } from "@gaia-project/engine/src/pending-charges";
 import type { AutoCharge } from "@gaia-project/engine/src/player";
 
 /**
@@ -65,12 +66,20 @@ export function autoDecideChargePower(
 ): string | null {
   const before = engine.moveHistory.length;
   let iterations = 0;
-  while (engine.playerToMove !== undefined && isEligibleSeat(engine.playerToMove) && iterations++ < 20) {
-    engine.player(engine.playerToMove).settings.autoChargePower = autoChargePower;
-    engine.player(engine.playerToMove).settings.autoChargeMaxPassedRoundLeech = autoChargeMaxPassedRoundLeech;
-    if (!engine.autoMove()) {
-      break;
+  while (iterations++ < 20) {
+    const seats = (hasConcurrentCharges(engine) ? chargeDecisionSeats(engine) : [engine.playerToMove]).filter(
+      (seat) => seat !== undefined && isEligibleSeat(seat)
+    );
+    let moved = false;
+    for (const seat of seats) {
+      engine.player(seat).settings.autoChargePower = autoChargePower;
+      engine.player(seat).settings.autoChargeMaxPassedRoundLeech = autoChargeMaxPassedRoundLeech;
+      if (engine.autoMove(undefined, { player: seat })) {
+        moved = true;
+        break;
+      }
     }
+    if (!moved) break;
   }
 
   return engine.moveHistory.length > before ? engine.moveHistory.slice(before).join(". ") : null;

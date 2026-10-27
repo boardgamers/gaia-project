@@ -4130,5 +4130,10 @@
   "Once per round, as a special action, perform instant Gaiaforming: {p0}": "Einmal pro Runde, als Sonderaktion, sofortiges Gaiaforming durchführen: {p0}",
   "Chosen this round": "In dieser Runde gewählt",
   "Used in an earlier round": "In einer früheren Runde verwendet",
-  "Undo my move": "Zug zurücknehmen"
+  "Undo my move": "Zug zurücknehmen",
+  "Pending charges": "Offene Machtentscheidungen",
+  "Waiting for charges": "Warten auf Machtentscheidungen",
+  "Wait": "Warten",
+  "Resume": "Fortsetzen",
+  "Wait for charges": "Auf Machtentscheidungen warten"
 }

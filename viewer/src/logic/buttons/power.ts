@@ -52,7 +52,7 @@ export function chargePowerButtons(
               ]
             : [richText(withShortcut(action, shortcut)), richTextRewards(Reward.parse(leech))],
         shortcuts: [shortcut],
-        command: `${Command.ChargePower} ${leech}`,
+        command: `${Command.ChargePower} ${leech}${command.data.requestId === undefined ? "" : ` @${command.data.requestId}`}`,
         warning: chargeWarning(engine, player, leech),
       })
     );

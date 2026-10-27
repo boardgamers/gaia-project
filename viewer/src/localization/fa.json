@@ -4130,5 +4130,10 @@
   "Once per round, as a special action, perform instant Gaiaforming: {p0}": "یک‌بار در هر دور، به‌عنوان عمل ویژه، گایاسازی فوری انجام دهید: {p0}",
   "Chosen this round": "در این دور انتخاب شده",
   "Used in an earlier round": "در یکی از دورهای قبل استفاده شده",
-  "Undo my move": "بازگرداندن حرکت"
+  "Undo my move": "بازگرداندن حرکت",
+  "Pending charges": "شارژهای معلق",
+  "Waiting for charges": "در انتظار شارژها",
+  "Wait": "انتظار",
+  "Resume": "ادامه",
+  "Wait for charges": "انتظار برای شارژها"
 }

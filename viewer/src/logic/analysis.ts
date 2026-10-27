@@ -70,6 +70,9 @@ export interface AnalysisResourceView {
 /** Enables explicit planning options while preserving the position's normal resource checks.
  * Re-applied after cloning because the flag is intentionally not serialized. */
 export function markAnalysisSeat(engine: Engine, seat: number, assumedPower = 0): Engine {
+  engine.options = { ...engine.options, concurrentCharges: false };
+  engine.pendingCharges = [];
+  engine.chargeWaits = {};
   const data = engine.players[seat]?.data;
   if (data) {
     data.analysis = true;

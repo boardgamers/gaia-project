@@ -80,6 +80,16 @@ import {
   repairBannedRandomFactions,
 } from "./move/setup";
 import { moveGaiaFormTransdim, moveSpaceshipAction } from "./move/spaceship-actions";
+import type { PendingCharge } from "./pending-charges";
+import {
+  canTakeTurn,
+  changeChargeWait,
+  chargeDecisionSeats,
+  chargeFor,
+  hasConcurrentCharges,
+  pendingChargeCommands,
+  waitingForCharges,
+} from "./pending-charges";
 import Player from "./player";
 import { MoveTokens, powerLogString } from "./player-data";
 import type { AutomationState } from "./premove-types";
@@ -131,6 +141,8 @@ export type FactionCustomization = {
 export type Layout = "standard" | "balanced" | "xshape";
 
 export interface EngineOptions {
+  /** Let charges be answered independently of other players' decisions. */
+  concurrentCharges?: boolean;
   /** Allow last player to rotate sector BEFORE faction selection */
   advancedRules?: boolean;
   /** Allow last player the entire board */
@@ -444,6 +456,11 @@ export default class Engine {
     coordinates: string;
   };
 
+  pendingCharges: PendingCharge[] = [];
+  nextChargeId = 1;
+  chargeWaits: Record<number, number[]> = {};
+  private _processingMove = false;
+
   // All moves
   moveHistory: string[] = [];
   // Advanced log
@@ -538,7 +555,7 @@ export default class Engine {
     const pendingSeats = this.sealedBidPendingSeats();
     const isSealedBid = pendingSeats !== undefined && /^(p[1-7]|\S+)\s+(silentBid|preferenceBid)\b/.test(move);
     let actingPlayer = this.playerToMove;
-    if (isSealedBid) {
+    if (isSealedBid || hasConcurrentCharges(this)) {
       const seatMatch = /^p([1-7])\b/.exec(move);
       if (seatMatch) {
         actingPlayer = (+seatMatch[1] - 1) as PlayerEnum;
@@ -634,6 +651,19 @@ export default class Engine {
   }
 
   generateAvailableCommands(subphase: SubPhase = null, data?: any): AvailableCommand[] {
+    if (hasConcurrentCharges(this) && !this._processingMove && this.newTurn && !subphase) {
+      const commands = pendingChargeCommands(this);
+      if (canTakeTurn(this, this.currentPlayer)) {
+        const previous = this.tempCurrentPlayer;
+        this.tempCurrentPlayer = this.currentPlayer;
+        try {
+          commands.push(...generateAvailableCommands(this, SubPhase.BeforeMove));
+        } finally {
+          this.tempCurrentPlayer = previous;
+        }
+      }
+      return (this.availableCommands = commands);
+    }
     return (this.availableCommands = generateAvailableCommands(this, subphase, data));
   }
 
@@ -666,6 +696,9 @@ export default class Engine {
    * command list for a Sequential premove chained after one that offers an opponent a leech.
    */
   forcePremovePreviewTurn(seat: PlayerEnum) {
+    this.options = { ...this.options, concurrentCharges: false };
+    this.pendingCharges = [];
+    this.chargeWaits = {};
     this.phase = Phase.RoundMove;
     this.currentPlayer = seat;
     this.tempCurrentPlayer = undefined;
@@ -813,6 +846,10 @@ export default class Engine {
       return this.tempCurrentPlayer;
     }
 
+    if (hasConcurrentCharges(this) && !this._processingMove) {
+      if (canTakeTurn(this, this.currentPlayer)) return this.currentPlayer;
+      return chargeDecisionSeats(this)[0];
+    }
     return this.currentPlayer;
   }
 
@@ -835,7 +872,7 @@ export default class Engine {
   }
 
   /** Automatically generate moves based on player settings */
-  autoMove(partialMove?: string, options?: { autoPass?: boolean }): boolean {
+  autoMove(partialMove?: string, options?: { autoPass?: boolean; player?: PlayerEnum }): boolean {
     return autoMove(this, partialMove, options);
   }
 
@@ -848,8 +885,8 @@ export default class Engine {
    * can be a dead end (e.g. upgrading a mine with no ore left to rebuild), in
    * which case the engine is left unchanged.
    */
-  moveAI(): boolean {
-    if (this.ended || this.playerToMove === undefined) {
+  moveAI(player = this.playerToMove): boolean {
+    if (this.ended || player === undefined) {
       return false;
     }
 
@@ -859,7 +896,7 @@ export default class Engine {
     // only way to execute several commands in one turn. The salt makes each
     // attempt draw different random choices.
     for (let attempt = 0; attempt < 20; attempt++) {
-      const move = generateAIMove(this, this.playerToMove, attempt);
+      const move = generateAIMove(this, player, attempt);
 
       if (!move) {
         return false;
@@ -976,6 +1013,7 @@ export default class Engine {
     // Export getters as well as data
     const proto = Object.getPrototypeOf(this);
     const jsonObj: any = Object.assign({}, this);
+    delete jsonObj._processingMove;
 
     Object.entries(Object.getOwnPropertyDescriptors(proto))
       .filter(([key, descriptor]) => typeof descriptor.get === "function")
@@ -1139,6 +1177,34 @@ export default class Engine {
    * @param move
    */
   executeMove(move: string) {
+    const concurrent = hasConcurrentCharges(this);
+    if (concurrent) {
+      const [slug, command] = move.trim().split(/\s+/);
+      const seat = /^p[1-7]$/.test(slug)
+        ? ((+slug[1] - 1) as PlayerEnum)
+        : this.players.find((player) => player.faction === slug)?.player;
+      assert(seat !== undefined, "Unknown player");
+      if (command === Command.WaitForCharges || command === Command.ResumeCharges) {
+        assert(move.trim().split(/\s+/).length === 2, "Unexpected wait arguments");
+        changeChargeWait(this, seat, command);
+        this.turnMoves = [];
+        this.clearAvailableCommands();
+        return true;
+      }
+      assert(!waitingForCharges(this, seat), "Resume or wait for the pending charge decisions");
+      const charge = chargeFor(this, seat);
+      if (command === Command.ChargePower || command === Command.Decline) {
+        assert(charge, "No pending charge for this player");
+        this.lastLeechSource = charge.source;
+        this.phase = Phase.RoundLeech;
+      } else {
+        assert(canTakeTurn(this, seat), "Resolve your own charges before taking your turn");
+        this.phase = Phase.RoundMove;
+      }
+      this.tempCurrentPlayer = seat;
+      this.clearAvailableCommands();
+    }
+    this._processingMove = true;
     const phaseRegistry: {
       [key in Phase]: (engine: Engine, move: string) => void;
     } = {
@@ -1179,6 +1245,8 @@ export default class Engine {
       } else {
         throw err;
       }
+    } finally {
+      this._processingMove = false;
     }
 
     return true;
@@ -1237,6 +1305,12 @@ export default class Engine {
     const moveRegistry: {
       [key in Command]: (engine: Engine, command: AvailableCommand, player: PlayerEnum, ...args: any) => void;
     } = {
+      [Command.WaitForCharges]: () => {
+        throw new Error("Wait is only available between turns");
+      },
+      [Command.ResumeCharges]: () => {
+        throw new Error("Resume is only available between turns");
+      },
       [Command.Init]: () => {
         throw new Error("init cannot be executed");
       },

@@ -43,6 +43,7 @@ type CanonicalPoint = {
 };
 
 type CanonicalOptions = {
+  concurrentCharges?: true;
   advancedRules: boolean;
   customBoardSetup: boolean;
   noFedCheck: boolean;
@@ -156,6 +157,9 @@ export type CanonicalState = {
     tempTurnOrder: PlayerEnum[];
     leechSources: Array<{ player: PlayerEnum; coordinates: string }>;
     lastLeechSource: { player: PlayerEnum; coordinates: string } | null;
+    pendingCharges?: Engine["pendingCharges"];
+    chargeWaits?: Engine["chargeWaits"];
+    nextChargeId?: number;
   };
   setup: {
     factionSelectionOrder: string[];
@@ -209,6 +213,9 @@ export function projectCanonicalState(engine: Engine): CanonicalState {
     phase: engine.phase,
     round: engine.round,
     actors: {
+      ...(engine.options.concurrentCharges
+        ? { pendingCharges: engine.pendingCharges, chargeWaits: engine.chargeWaits, nextChargeId: engine.nextChargeId }
+        : {}),
       currentPlayer: normalizeNullableNumber(engine.currentPlayer),
       tempCurrentPlayer: normalizeNullableNumber(engine.tempCurrentPlayer),
       turnOrder: [...engine.turnOrder],
@@ -490,6 +497,7 @@ function assertCanonicalStateSupported(engine: Engine) {
 
 function projectOptions(options: EngineOptions): CanonicalOptions {
   return {
+    ...(options.concurrentCharges ? { concurrentCharges: true as const } : {}),
     advancedRules: !!options.advancedRules,
     customBoardSetup: !!options.customBoardSetup,
     noFedCheck: !!options.noFedCheck,

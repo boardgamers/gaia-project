@@ -58,9 +58,14 @@ export function moveAI(engine: Engine, player: PlayerEnum, salt = 0): string {
   const mainCommands: [Command, (cmd: AvailableCommand) => string][] = [
     [
       Command.ChargePower,
-      (cmd: AvailableCommand<Command.ChargePower>) => `${Command.ChargePower} ${randomOffer(cmd.data.offers)}`,
+      (cmd: AvailableCommand<Command.ChargePower>) =>
+        `${Command.ChargePower} ${randomOffer(cmd.data.offers)}${cmd.data.requestId === undefined ? "" : ` @${cmd.data.requestId}`}`,
     ],
-    [Command.Decline, (cmd: AvailableCommand<Command.Decline>) => `${Command.Decline} ${cmd.data.offers[0].offer}`],
+    [
+      Command.Decline,
+      (cmd: AvailableCommand<Command.Decline>) =>
+        `${Command.Decline} ${cmd.data.offers[0].offer}${cmd.data.requestId === undefined ? "" : ` @${cmd.data.requestId}`}`,
+    ],
     [
       Command.ChooseIncome,
       (cmd: AvailableCommand<Command.ChooseIncome>) => `${Command.ChooseIncome} ${pick(rng, cmd.data)}`,

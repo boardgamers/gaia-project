@@ -4130,5 +4130,10 @@
   "Once per round, as a special action, perform instant Gaiaforming: {p0}": "Une fois par manche, comme action spéciale, effectuez une Gaïaformation instantanée : {p0}",
   "Chosen this round": "Choisie cette manche",
   "Used in an earlier round": "Utilisée lors d'une manche précédente",
-  "Undo my move": "Annuler mon coup"
+  "Undo my move": "Annuler mon coup",
+  "Pending charges": "Charges en attente",
+  "Waiting for charges": "En attente des charges",
+  "Wait": "Attendre",
+  "Resume": "Reprendre",
+  "Wait for charges": "Attendre les charges"
 }

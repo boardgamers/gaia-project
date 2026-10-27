@@ -9,9 +9,14 @@ export function moveChargePower(
   engine: Engine,
   command: AvailableCommand<Command.ChargePower>,
   player: PlayerEnum,
-  income: string
+  income: string,
+  requestId?: string
 ) {
   const leechCommand = command.data;
+  assert(
+    leechCommand.requestId === undefined || requestId === `@${leechCommand.requestId}`,
+    "This charge offer has changed. Refresh and try again."
+  );
   // leech rewards are including +t, if needed and in the right sequence
   const leechRewards = Reward.parse(income);
 
@@ -37,7 +42,17 @@ export function moveChargePower(
   engine.player(player).payCosts(Reward.parse(offer.cost), Command.ChargePower);
 }
 
-export function moveDecline(engine: Engine, command: AvailableCommand<Command.Decline>, player: PlayerEnum) {
+export function moveDecline(
+  engine: Engine,
+  command: AvailableCommand<Command.Decline>,
+  player: PlayerEnum,
+  offer?: string,
+  requestId?: string
+) {
+  assert(
+    command?.data.requestId === undefined || requestId === `@${command.data.requestId}`,
+    "This charge offer has changed. Refresh and try again."
+  );
   engine.player(player).declined = true;
 }
 

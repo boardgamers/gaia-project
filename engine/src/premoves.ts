@@ -1,5 +1,6 @@
 import Engine from "./engine";
 import { Phase, Round } from "./enums";
+import { canTakeTurn, hasConcurrentCharges } from "./pending-charges";
 import assert from "./utils/assert";
 
 import type { AutomationState, PremoveCommand, PremovePlan, PremoveRun, PremoveTiming } from "./premove-types";
@@ -185,7 +186,10 @@ export function setPremoves(engine: Engine, command: PremoveCommand, seat: numbe
       // Validate the shape of future turns without assuming today's wallet is final. Charges
       // and income may arrive before them. Only this disposable preview may overdraw resources;
       // playNextPremove always checks the entire turn again on the real, unmodified position.
-      const playsNow = engine.phase === Phase.RoundMove && engine.newTurn && engine.playerToMove === seat;
+      const playsNow =
+        engine.phase === Phase.RoundMove &&
+        engine.newTurn &&
+        (hasConcurrentCharges(engine) ? canTakeTurn(engine, seat) : engine.playerToMove === seat);
       preview.players[seat].data.analysis = true;
       preview.players[seat].data.validatingFuturePremove = !(playsNow && index === 0);
       preview.forcePremovePreviewTurn(seat);
@@ -244,6 +248,7 @@ export function clearExpiredPremoves(engine: Engine) {
 
 export function playNextPremove(engine: Engine): boolean {
   if (engine.ended || !phases.includes(engine.phase) || !engine.newTurn) return false;
+  if (hasConcurrentCharges(engine) && !canTakeTurn(engine, engine.currentPlayer)) return false;
   const seat = engine.playerToMove;
   const state = automation(engine);
   const plan = state.plans[seat];

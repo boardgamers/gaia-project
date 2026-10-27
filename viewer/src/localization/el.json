@@ -4130,5 +4130,10 @@
   "Once per round, as a special action, perform instant Gaiaforming: {p0}": "Μία φορά ανά γύρο, ως ειδική ενέργεια, εκτέλεσε Άμεση Γαιομόρφωση: {p0}",
   "Chosen this round": "Επιλέχθηκε σε αυτόν τον γύρο",
   "Used in an earlier round": "Χρησιμοποιήθηκε σε προηγούμενο γύρο",
-  "Undo my move": "Αναίρεση κίνησης"
+  "Undo my move": "Αναίρεση κίνησης",
+  "Pending charges": "Εκκρεμείς φορτίσεις",
+  "Waiting for charges": "Αναμονή για φορτίσεις",
+  "Wait": "Αναμονή",
+  "Resume": "Συνέχεια",
+  "Wait for charges": "Αναμονή για φορτίσεις"
 }

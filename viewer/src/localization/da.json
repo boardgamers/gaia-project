@@ -4130,5 +4130,10 @@
   "Once per round, as a special action, perform instant Gaiaforming: {p0}": "Én gang pr. runde, som specialhandling, udfør øjeblikkelig Gaiaformning: {p0}",
   "Chosen this round": "Valgt i denne runde",
   "Used in an earlier round": "Brugt i en tidligere runde",
-  "Undo my move": "Fortryd mit træk"
+  "Undo my move": "Fortryd mit træk",
+  "Pending charges": "Afventende opladninger",
+  "Waiting for charges": "Venter på opladninger",
+  "Wait": "Vent",
+  "Resume": "Fortsæt",
+  "Wait for charges": "Vent på opladninger"
 }
