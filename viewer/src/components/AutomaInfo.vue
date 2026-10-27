@@ -18,10 +18,11 @@
           <li v-for="(action, i) in lastActions" :key="i">{{ describeAction(action) }}</li>
         </ul>
       </template>
-      <details v-if="support">
+      <details v-if="support" :open="decisionDetailsOpen">
         <summary>Decision details</summary>
         <p class="mt-2">
-          These are references to the physical cards. The support card settles choices when several options are valid.
+          These values come from the current support card. They change when a new card is drawn. Highlighted symbols on
+          the board apply to the last action; faded symbols were not needed.
         </p>
         <dl>
           <dt>Cards</dt>
@@ -66,6 +67,7 @@ export default class AutomaInfo extends Vue {
   @Prop() player: Player;
   @Prop() engine: Engine;
   @Prop({ default: false, type: Boolean }) open: boolean;
+  @Prop({ default: false, type: Boolean }) decisionDetailsOpen: boolean;
   describeAction = describeAutomaAction;
   get difficulty() {
     return automaDifficulties[this.state.difficulty];

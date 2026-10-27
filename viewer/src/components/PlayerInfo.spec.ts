@@ -80,18 +80,43 @@ for (const component of [PlayerInfo, AlternatePlayerInfo]) {
     expect(action().classList.contains("recent")).to.equal(true);
     expect(action().classList.contains("disabled")).to.equal(false);
     expect(container.querySelector(".automa-details")).to.equal(null);
-    await fireEvent.click(getByRole("button", { name: "5 cards left in Automa's draw pile — show details" }));
+    expect(
+      Array.from(container.querySelectorAll(".support-symbol.active")).map((el) => el.getAttribute("data-support"))
+    ).to.deep.equal(["numbered"]);
+    expect(container.querySelector('[data-support="numbered"]').textContent.trim()).to.equal("1");
+    await fireEvent.click(
+      getByRole("button", { name: "Support card 6 — values for the last Automa turn. Show details" })
+    );
     expect(container.querySelector(".automa-details").textContent).to.include("Decision details");
+    expect(container.querySelector("details").hasAttribute("open")).to.equal(true);
+    await fireEvent.click(getByRole("button", { name: "5 cards left in Automa's draw pile — show details" }));
+    expect(container.querySelector("details").hasAttribute("open")).to.equal(false);
     engine.automa.discard.push("13");
     engine.automa.action = "5";
     store.commit("receiveData", Engine.fromData(JSON.parse(JSON.stringify(engine))));
     await Vue.nextTick();
     expect(action().classList.contains("recent")).to.equal(false);
     expect(action().classList.contains("disabled")).to.equal(false);
+    engine.automa.action = "4";
+    engine.automa.support = "8";
+    engine.automa.lastActions = ["build m 1x1"];
+    store.commit("receiveData", Engine.fromData(JSON.parse(JSON.stringify(engine))));
+    await Vue.nextTick();
+    expect(
+      Array.from(container.querySelectorAll(".support-symbol.active")).map((el) => el.getAttribute("data-support"))
+    ).to.deep.equal(["scoring", "range", "direction"]);
+    expect(container.querySelector('[data-support="range"]').textContent.trim()).to.equal("4");
+    expect(container.querySelector(".automa-support-card").getAttribute("aria-label")).to.include("Support card 8");
     engine.passedPlayers = [1];
+    engine.automa.lastActions = ["pass booster4"];
     store.commit("receiveData", Engine.fromData(JSON.parse(JSON.stringify(engine))));
     await Vue.nextTick();
     expect(action().classList.contains("disabled")).to.equal(true);
+    expect(container.querySelector('[data-support="booster"]')).not.to.equal(null);
+    engine.automa.support = engine.automa.action = undefined;
+    store.commit("receiveData", Engine.fromData(JSON.parse(JSON.stringify(engine))));
+    await Vue.nextTick();
+    expect(container.querySelector(".automa-support-card")).to.equal(null);
   });
 }
 

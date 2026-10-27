@@ -1,7 +1,31 @@
+import type Engine from "@gaia-project/engine";
+import type { Player } from "@gaia-project/engine";
+import { cards } from "@gaia-project/engine/src/automa/cards";
 import { boardActionData } from "./actions";
 import { buildingData } from "./building";
 import { researchData } from "./research";
 import { spaceshipNames } from "./spaceships";
+
+export function automaSupportUsage(engine: Engine, player: Player) {
+  const state = engine.automa;
+  const action = cards.find((card) => card.id === state?.action)?.action;
+  const moves = state?.lastActions ?? [];
+  const pass = moves.some((move) => move.startsWith("pass"));
+  const mine = moves.some((move) => move.startsWith("build m "));
+  return {
+    pass,
+    range: !pass && action === "build-mine",
+    scoring: !pass && mine,
+    direction: !pass && moves.some((move) => move.startsWith("build ")),
+    numbered:
+      !pass &&
+      moves.some(
+        (move) =>
+          /^(block|explore|remove|up) /.test(move) &&
+          !(action === "faction" && player.faction === "terrans" && move === "up gaia")
+      ),
+  };
+}
 
 export function describeAutomaAction(action: string): string {
   const [command, target] = action.split(" ");

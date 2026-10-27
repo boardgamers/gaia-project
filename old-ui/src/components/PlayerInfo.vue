@@ -102,14 +102,21 @@
           v-if="player.isAutoma && engine.automa"
           :player="player"
           :engine="engine"
-          @details="automaDetailsOpen = true"
+          @details="showAutomaDetails(false)"
         />
         <AutomaFactionCard
           v-if="player.isAutoma"
           :player="player"
           :engine="engine"
           flat
-          transform="translate(25.2, 9.4) scale(.1)"
+          transform="translate(23.8, 10) scale(.075)"
+        />
+        <AutomaSupportCard
+          v-if="player.isAutoma && engine.automa"
+          :player="player"
+          :engine="engine"
+          transform="translate(31.7, 9.2) scale(.09)"
+          @details="showAutomaDetails(true)"
         />
         <PowerBowls
           v-if="!player.isAutoma"
@@ -238,6 +245,7 @@
     <AutomaInfo
       v-if="player.isAutoma && engine.automa"
       :open.sync="automaDetailsOpen"
+      :decision-details-open="automaDecisionDetailsOpen"
       :player="player"
       :engine="engine"
     />

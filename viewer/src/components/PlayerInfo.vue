@@ -171,13 +171,20 @@
           v-if="player.isAutoma && engine.automa"
           :player="player"
           :engine="engine"
-          @details="automaDetailsOpen = true"
+          @details="showAutomaDetails(false)"
         />
         <AutomaFactionCard
           v-if="player.isAutoma"
           :player="player"
           :engine="engine"
-          transform="translate(25.2, 9.4) scale(.1)"
+          transform="translate(23.8, 10) scale(.075)"
+        />
+        <AutomaSupportCard
+          v-if="player.isAutoma && engine.automa"
+          :player="player"
+          :engine="engine"
+          transform="translate(31.7, 9.2) scale(.09)"
+          @details="showAutomaDetails(true)"
         />
         <PowerBowls
           v-if="!player.isAutoma"
@@ -298,6 +305,7 @@
     <AutomaInfo
       v-if="player.isAutoma && engine.automa"
       :open.sync="automaDetailsOpen"
+      :decision-details-open="automaDecisionDetailsOpen"
       :player="player"
       :engine="engine"
     />
@@ -337,6 +345,7 @@ import ArtifactIcon from "./ArtifactIcon.vue";
 import AutomaFactionCard from "./AutomaFactionCard.vue";
 import AutomaInfo from "./AutomaInfo.vue";
 import AutomaStatus from "./AutomaStatus.vue";
+import AutomaSupportCard from "./AutomaSupportCard.vue";
 import Booster from "./Booster.vue";
 import FederationTile from "./FederationTile.vue";
 import BuildingGroup from "./PlayerBoard/BuildingGroup.vue";
@@ -358,6 +367,7 @@ type TerraformingMarker = {
   components: {
     AutomaInfo,
     AutomaStatus,
+    AutomaSupportCard,
     AutomaFactionCard,
     TechTile,
     Booster,
@@ -372,6 +382,13 @@ type TerraformingMarker = {
 })
 export default class PlayerInfo extends Vue {
   automaDetailsOpen = false;
+  automaDecisionDetailsOpen = false;
+
+  showAutomaDetails(decisionDetails: boolean) {
+    this.automaDecisionDetailsOpen = decisionDetails;
+    this.automaDetailsOpen = true;
+  }
+
   @Prop()
   player: Player;
 
