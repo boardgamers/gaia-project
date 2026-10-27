@@ -1,20 +1,43 @@
 <template>
-  <g
-    v-if="support"
-    class="automa-support-card"
-    role="button"
-    tabindex="0"
-    :aria-label="label"
-    :title="label"
-    @click.stop="$emit('details')"
-    @keydown.enter.prevent="$emit('details')"
-    @keydown.space.prevent="$emit('details')"
-  >
-    <rect class="card-face" width="60" height="112" rx="5" />
-    <g aria-hidden="true" class="card-symbols">
-      <template v-if="!usage.pass">
-        <g :class="['support-symbol', { active: usage.scoring }]" data-support="scoring" transform="translate(30, 15)">
-          <rect class="symbol-highlight" x="-26" y="-11" width="52" height="24" rx="3" />
+  <g v-if="support" class="automa-support-card" role="group" :aria-label="`Support card ${support.id}`">
+    <rect class="card-face" width="60" height="130" rx="5" />
+    <g
+      class="behavior-heading"
+      role="button"
+      tabindex="0"
+      :aria-label="label"
+      :title="label"
+      @click.stop="$emit('details')"
+      @keydown.enter.prevent="$emit('details')"
+      @keydown.space.prevent="$emit('details')"
+    >
+      <rect class="heading-hit-area" x="2" y="2" width="56" height="20" rx="3" />
+      <g class="symbol-art" aria-hidden="true">
+        <g class="robot-icon" transform="translate(17, 12)">
+          <path d="M0-7v-3M-11-2v5M11-2v5" />
+          <rect x="-9" y="-6" width="18" height="13" rx="3" />
+          <circle cx="-4" cy="-1" r="1.3" /><circle cx="4" cy="-1" r="1.3" />
+          <path d="M-3 4h6" />
+        </g>
+        <text x="43" y="16" class="card-number">#{{ support.id }}</text>
+      </g>
+    </g>
+    <g
+      v-for="(symbol, i) in symbols"
+      :key="symbol"
+      :class="['support-symbol', { active: usage[symbol === 'booster' ? 'pass' : symbol] }]"
+      :data-support="symbol"
+      :transform="`translate(30, ${usage.pass ? 76 : 38 + i * 26})`"
+      role="img"
+      tabindex="0"
+      :aria-label="descriptions[symbol]"
+      :title="descriptions[symbol]"
+      v-b-tooltip.nofade="tooltipConfig"
+      @click.stop
+    >
+      <rect class="symbol-highlight" x="-26" y="-12" width="52" height="25" rx="3" />
+      <g class="symbol-art" aria-hidden="true">
+        <template v-if="symbol === 'scoring'">
           <rect
             x="-9"
             y="-10"
@@ -34,50 +57,38 @@
             stroke="#333"
           />
           <path v-if="support.scoringFinalTiebreaker === 'none'" d="M-12 15L12-12" class="selection-arrow" />
-        </g>
-        <g :class="['support-symbol', { active: usage.range }]" data-support="range" transform="translate(30, 42)">
-          <rect class="symbol-highlight" x="-26" y="-12" width="52" height="24" rx="3" />
-          <Resource kind="r" :count="support.range" transform="scale(.85)" />
-        </g>
+        </template>
+        <Resource v-else-if="symbol === 'range'" kind="r" :count="support.range" transform="scale(.85)" />
         <g
-          :class="['support-symbol', { active: usage.direction }]"
-          data-support="direction"
-          transform="translate(30, 69)"
+          v-else-if="symbol === 'direction'"
+          :transform="support.directionalSelection === 'right-down' ? '' : 'rotate(180)'"
         >
-          <rect class="symbol-highlight" x="-26" y="-12" width="52" height="24" rx="3" />
-          <g :transform="support.directionalSelection === 'right-down' ? '' : 'rotate(180)'">
-            <path d="M-18-8H18L-18 1H18L-18 10H18m-5-4 5 4-5 4" class="selection-arrow" />
-          </g>
+          <path d="M-18-8H18L-18 1H18L-18 10H18m-5-4 5 4-5 4" class="selection-arrow" />
         </g>
-        <g
-          :class="['support-symbol', { active: usage.numbered }]"
-          data-support="numbered"
-          transform="translate(30, 96)"
-        >
-          <rect class="symbol-highlight" x="-26" y="-12" width="52" height="24" rx="3" />
+        <template v-else-if="symbol === 'numbered'">
           <text y="0">{{ support.numberedSelectionCount }}</text>
           <path
             :transform="support.numberedSelection === 'right' ? '' : 'scale(-1, 1)'"
             d="M-18 7H18m-6-5 6 5-6 5"
             class="selection-arrow"
           />
-        </g>
-      </template>
-      <g v-else data-support="booster" transform="translate(30, 56)">
-        <path v-if="engine.isLastRound" d="M-14 0l9 9 20-22" class="selection-arrow" />
-        <g v-else>
-          <rect
-            v-for="(slot, i) in ['left', 'middle', 'right']"
-            :key="slot"
-            :x="-23 + i * 17"
-            y="-15"
-            width="12"
-            height="30"
-            rx="2"
-            :fill="support.roundBoosterSelection === slot ? '#4aaf51' : '#eee'"
-            stroke="#333"
-          />
-        </g>
+        </template>
+        <template v-else>
+          <path v-if="engine.isLastRound" d="M-14 0l9 9 20-22" class="selection-arrow" />
+          <g v-else>
+            <rect
+              v-for="(slot, index) in ['left', 'middle', 'right']"
+              :key="slot"
+              :x="-23 + index * 17"
+              y="-15"
+              width="12"
+              height="30"
+              rx="2"
+              :fill="support.roundBoosterSelection === slot ? '#4aaf51' : '#eee'"
+              stroke="#333"
+            />
+          </g>
+        </template>
       </g>
     </g>
   </g>
@@ -88,7 +99,8 @@ import type Engine from "@gaia-project/engine";
 import type { Player } from "@gaia-project/engine";
 import { cards } from "@gaia-project/engine/src/automa/cards";
 import { Component, Prop, Vue } from "vue-property-decorator";
-import { automaSupportUsage } from "../data/automa";
+import { automaSupportDescriptions, automaSupportUsage } from "../data/automa";
+import { tooltipTriggerConfig } from "../logic/tooltip";
 import Resource from "./Resource.vue";
 
 @Component({ components: { Resource } })
@@ -102,40 +114,70 @@ export default class AutomaSupportCard extends Vue {
   get usage() {
     return automaSupportUsage(this.engine, this.player);
   }
+  get descriptions() {
+    return automaSupportDescriptions(this.engine, this.player);
+  }
+  get symbols() {
+    return this.usage.pass ? ["booster"] : ["scoring", "range", "direction", "numbered"];
+  }
   get label() {
-    return `Support card ${this.support.id} — values for the last Automa turn. Show details`;
+    return `Automa behavior — support card ${this.support.id}. Show details`;
+  }
+  get tooltipConfig() {
+    return { trigger: `${tooltipTriggerConfig().trigger} focus`, html: false };
   }
 }
 </script>
 
 <style scoped>
-.automa-support-card {
-  cursor: pointer;
-}
 .card-face {
   fill: #fff;
   stroke: #555;
   stroke-width: 1.3;
 }
-.automa-support-card:hover .card-face,
-.automa-support-card:focus-visible .card-face {
-  stroke: #2878aa;
-  stroke-width: 2.5;
+.behavior-heading {
+  cursor: pointer;
 }
-.card-symbols {
+.heading-hit-area {
+  fill: #e3eff6;
+}
+.behavior-heading:hover .heading-hit-area,
+.behavior-heading:focus-visible .heading-hit-area {
+  stroke: #2878aa;
+}
+.symbol-art {
   pointer-events: none;
 }
+.robot-icon {
+  fill: none;
+  stroke: #283f51;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+.robot-icon circle {
+  fill: #283f51;
+  stroke: none;
+}
 .support-symbol {
+  cursor: help;
+}
+.support-symbol .symbol-art {
   opacity: 0.45;
 }
-.support-symbol.active {
+.support-symbol.active .symbol-art,
+.support-symbol:hover .symbol-art,
+.support-symbol:focus .symbol-art {
   opacity: 1;
 }
 .symbol-highlight {
-  fill: none;
+  fill: transparent;
 }
 .active .symbol-highlight {
   fill: #e3eff6;
+}
+.support-symbol:hover .symbol-highlight,
+.support-symbol:focus-visible .symbol-highlight {
+  stroke: #2878aa;
 }
 .selection-arrow {
   fill: none;
@@ -149,5 +191,8 @@ text {
   font-weight: bold;
   font-size: 15px;
   fill: #111;
+}
+.card-number {
+  font-size: 12px;
 }
 </style>

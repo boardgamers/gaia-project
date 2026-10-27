@@ -4,6 +4,7 @@ import {
   Booster,
   Faction,
   Federation,
+  FinalTile,
   Phase,
   Planet,
   Spaceship,
@@ -71,6 +72,8 @@ for (const component of [PlayerInfo, AlternatePlayerInfo]) {
     engine.round = 1;
     engine.automa.action = "13";
     engine.automa.support = "6";
+    engine.tiles.scorings.final[0] = FinalTile.Sector;
+    engine.tiles.scorings.final[1] = FinalTile.Sector;
     engine.automa.remaining = 5;
     engine.automa.lastActions = ["block power1", "block power3"];
     const store = makeStore();
@@ -80,13 +83,26 @@ for (const component of [PlayerInfo, AlternatePlayerInfo]) {
     expect(action().classList.contains("recent")).to.equal(true);
     expect(action().classList.contains("disabled")).to.equal(false);
     expect(container.querySelector(".automa-details")).to.equal(null);
+    expect(container.querySelector(".robot-icon")).not.to.equal(null);
+    expect(container.querySelector(".automa-action-card .card-number").textContent).to.equal("#13");
+    expect(container.querySelector(".automa-support-card .card-number").textContent).to.equal("#6");
+    expect(container.querySelector('[data-support="range"]').getAttribute("title")).to.include(
+      "Range 2 when placing mines"
+    );
+    expect(container.querySelector('[data-support="range"]').getAttribute("title")).to.include(
+      "Not used for the last action"
+    );
+    expect(container.querySelector('[data-support="numbered"]').getAttribute("title")).to.include(
+      "counting from the right"
+    );
+    expect(container.querySelector('[data-support="numbered"]').getAttribute("title")).to.include(
+      "Relevant to the last action"
+    );
     expect(
       Array.from(container.querySelectorAll(".support-symbol.active")).map((el) => el.getAttribute("data-support"))
     ).to.deep.equal(["numbered"]);
     expect(container.querySelector('[data-support="numbered"]').textContent.trim()).to.equal("1");
-    await fireEvent.click(
-      getByRole("button", { name: "Support card 6 — values for the last Automa turn. Show details" })
-    );
+    await fireEvent.click(getByRole("button", { name: "Automa behavior — support card 6. Show details" }));
     expect(container.querySelector(".automa-details").textContent).to.include("Decision details");
     expect(container.querySelector("details").hasAttribute("open")).to.equal(true);
     await fireEvent.click(getByRole("button", { name: "5 cards left in Automa's draw pile — show details" }));

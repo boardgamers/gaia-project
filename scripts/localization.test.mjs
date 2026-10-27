@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 const source = await readFile(new URL("../viewer/src/localization/runtime.js", import.meta.url), "utf8");
-const { createTranslator, resolveLocale } = await import(
+const { createTranslator, languages, resolveLocale } = await import(
   "data:text/javascript;base64," + Buffer.from(source).toString("base64")
 );
 const catalogs = {
@@ -75,4 +75,44 @@ test("Simplified Chinese preserves names and interpolates game messages", async 
   assert.equal(translator.translate("Build wins it with a bid of 12, and pays 8 VP"), "Build以12的出价获胜，并支付8分");
   assert.equal(translator.translate("Your turn - Round 3"), "轮到你了——第3轮");
   assert.equal(translator.translate("Choose your faction"), "选择你的种族");
+});
+
+test("untranslated Automa prose stays intact in every language", async () => {
+  const sentences = [
+    "Automa draws cards to choose its actions.",
+    "Automa draws cards to choose its actions. BGS resolves them automatically. Its faction action happens whenever a card calls for it, even several times in a round.",
+    "The support card settles choices when several options are valid.",
+    "Automa can pass before the pile is empty.",
+    "These values come from the current support card. They change when a new card is drawn.",
+    "Automa draws cards to choose its actions. It does not use normal resources.",
+    "Triggered by decision cards; it can happen more than once per round.",
+    "Support card 6 — values for the last Automa turn. Show details",
+  ];
+  for (const locale of Object.keys(languages)) {
+    if (locale === "en") continue;
+    const catalog = JSON.parse(
+      await readFile(new URL(`../viewer/src/localization/${locale}.json`, import.meta.url), "utf8")
+    );
+    const translator = createTranslator({ [locale]: catalog }, locale);
+    for (const sentence of sentences) {
+      assert.equal(translator.translate(sentence), sentence, `${locale}: ${sentence}`);
+    }
+  }
+});
+
+test("grammar-only templates still translate known labels and quantities", () => {
+  const translator = createTranslator(
+    {
+      fr: {
+        Ore: "Minerai",
+        Round: "Manche",
+        "{p0} for {p1}": "{p0} pour {p1}",
+        "{p0} of {p1}": "{p0} sur {p1}",
+      },
+    },
+    "fr"
+  );
+  assert.equal(translator.translate("Ore for 2"), "Minerai pour 2");
+  assert.equal(translator.translate("Round 2 of 6"), "Manche 2 sur 6");
+  assert.equal(translator.translate("Useful details for the last action"), "Useful details for the last action");
 });

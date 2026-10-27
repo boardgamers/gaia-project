@@ -183,7 +183,7 @@
           v-if="player.isAutoma && engine.automa"
           :player="player"
           :engine="engine"
-          transform="translate(31.7, 9.2) scale(.09)"
+          transform="translate(31.7, 8.9) scale(.085)"
           @details="showAutomaDetails(true)"
         />
         <PowerBowls

@@ -45,7 +45,7 @@ import type { Player } from "@gaia-project/engine";
 import { cards } from "@gaia-project/engine/src/automa/cards";
 import { Component, Prop, Vue } from "vue-property-decorator";
 import type { AutomaIcon } from "../data/automa";
-import { automaAbilities } from "../data/automa";
+import { automaAbilities, automaFactionAction } from "../data/automa";
 import { tooltipTriggerConfig } from "../logic/tooltip";
 import AutomaActionIcon from "./AutomaActionIcon.vue";
 
@@ -72,21 +72,7 @@ export default class AutomaFactionCard extends Vue {
   }
 
   get action(): AutomaIcon[] {
-    const mine = (range: number): AutomaIcon => ({ kind: "mine", count: range });
-    const vp = (count: number): AutomaIcon => ({ kind: "vp", count });
-    const block: AutomaIcon = { kind: "block" };
-    const research: AutomaIcon = { kind: "research" };
-    const upgrade: AutomaIcon = { kind: "upgrade" };
-    const actions: Record<string, AutomaIcon[]> = {
-      terrans: [{ kind: "gaia-research" }, mine(4), vp(2)],
-      xenos: [mine(2), block, vp(2)],
-      taklons: [mine(3), block, vp(2)],
-      "hadsch-hallas": [upgrade, mine(3), vp(1)],
-      geodens: [research, block, vp(1)],
-      firaks: [upgrade, { kind: "down-lab" }, vp(2)],
-      itars: [block, block, vp(4)],
-    };
-    return actions[this.player.faction];
+    return automaFactionAction(this.player.faction);
   }
 
   get bonus(): AutomaIcon[] | null {

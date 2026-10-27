@@ -59,7 +59,19 @@ export function createTranslator(catalogs, initialLocale = "en") {
         (source) => source !== "IS{p0}" && /\{p\d+\}/.test(source) && source.replace(/\{p\d+\}/g, "").trim().length >= 1
       )
       .sort((a, b) => b.replace(/\{p\d+\}/g, "").length - a.replace(/\{p\d+\}/g, "").length)
-      .map((source) => ({ source, pieces: source.split(/(\{p\d+\})/) }))
+      .map((source) => {
+        const words = source.replace(/\{p\d+\}/g, "").match(/[A-Za-z]+/g) ?? [];
+        return {
+          source,
+          pieces: source.split(/(\{p\d+\})/),
+          grammarOnly:
+            source.startsWith("{p") &&
+            words.length > 0 &&
+            words.every((word) =>
+              /^(?:to|from|for|of|in|on|at|by|with|and|or|a|an|the|is|are|as|per|more|less|than|vp|pass)$/i.test(word)
+            ),
+        };
+      })
       .filter(({ pieces }) =>
         pieces.every((piece, i) => i === 0 || i === pieces.length - 1 || i % 2 !== 0 || piece.length > 0)
       );
@@ -89,7 +101,7 @@ export function createTranslator(catalogs, initialLocale = "en") {
       }
     }
     if (translated === undefined && depth < 2 && text.length <= 2500) {
-      for (const { source, pieces } of patterns) {
+      for (const { source, pieces, grammarOnly } of patterns) {
         if (!text.startsWith(pieces[0])) {
           continue;
         }
@@ -112,6 +124,23 @@ export function createTranslator(catalogs, initialLocale = "en") {
           offset = end + delimiter.length;
         }
         if (!matches || offset !== text.length) {
+          continue;
+        }
+        // A log fragment such as "{p0} {p1} to {p2}" must not turn an unknown
+        // English sentence into "Automa draws cards vers choose its actions".
+        // Use grammar-only patterns only with recognized labels/names or values.
+        if (
+          grammarOnly &&
+          Object.values(parameters).some((value) => {
+            const parameter = normalize(value);
+            return (
+              /[A-Za-zÀ-ž]/.test(parameter) &&
+              !names.has(parameter) &&
+              !Object.prototype.hasOwnProperty.call(catalog, parameter) &&
+              translate(parameter, depth + 1) === parameter
+            );
+          })
+        ) {
           continue;
         }
         translated = catalog[source].replace(/\{p\d+\}/g, (key) => translate(parameters[key] ?? key, depth + 1));
