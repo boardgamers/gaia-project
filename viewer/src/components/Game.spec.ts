@@ -1272,6 +1272,38 @@ describe("Game", () => {
     });
 
     describe("Phase 3 - round flow (§2.5/§2.8/§3.7)", () => {
+      it("keeps opponents' live boards visible while simulating ahead and refreshes them on real moves", async () => {
+        const real = new Engine([...SETUP_MOVES, "terrans pass booster5"]);
+        real.players[1].data.credits = 1;
+        real.players[1].data.knowledge = 12;
+        const originalBooster = real.players[1].data.tiles.booster;
+        const vm = mountAsSeat(0, real);
+        vm.enterAnalysisMode();
+        await Vue.nextTick();
+
+        expect(vm.engine.round).to.equal(2);
+        expect(vm.engine.turnOrder).to.deep.equal([0]);
+        expect(vm.$el.querySelectorAll(".player-info")).to.have.length(2);
+        expect(vm.orderedPlayers.map((player) => player.player)).to.deep.equal([1, 0]);
+        const opponent = vm.orderedPlayers.find((player) => player.player === 1);
+        expect(opponent.data.credits).to.equal(1);
+        expect(opponent.data.tiles.booster).to.equal(originalBooster);
+        expect(vm.orderedPlayers.find((player) => player.player === 0)).to.equal(vm.engine.players[0]);
+
+        vm.applyAnalysisMove("terrans up nav.");
+        expect(vm.orderedPlayers.find((player) => player.player === 1).data.knowledge).to.equal(12);
+        const arrived = bgsMove(JSON.parse(JSON.stringify(real)), "nevlas up nav.", 1);
+        vm.$store.dispatch("externalData", arrived);
+        await Vue.nextTick();
+        expect(vm.analysisMode).to.equal(true);
+        expect(vm.$el.querySelectorAll(".player-info")).to.have.length(2);
+        expect(vm.orderedPlayers.find((player) => player.player === 1).data.knowledge).to.equal(8);
+        vm.exitAnalysisMode();
+        expect(vm.analysisReferenceEngine).to.equal(undefined);
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
       it("shrinks turnOrder to just this seat on entry", () => {
         const vm = mountAsSeat(0);
 

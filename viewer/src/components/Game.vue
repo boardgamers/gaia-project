@@ -271,13 +271,20 @@
       />
       <div class="row mt-2">
         <template v-if="sessionPlayer === undefined">
-          <PlayerInfo v-for="player in orderedPlayers" :player="player" :key="player.player" class="col-md-6 order-6" />
+          <PlayerInfo
+            v-for="player in orderedPlayers"
+            :player="player"
+            :reference-engine="player.player !== analysisSeat ? analysisReferenceEngine : undefined"
+            :key="player.player"
+            class="col-md-6 order-6"
+          />
         </template>
         <template v-else>
           <PlayerInfo :player="sessionPlayer" class="col-md-6 order-3" />
           <PlayerInfo
             v-for="player in orderedPlayers.filter((pl) => pl !== sessionPlayer)"
             :player="player"
+            :reference-engine="analysisReferenceEngine"
             :key="player.player"
             class="col-md-6 order-6"
           />
@@ -345,7 +352,7 @@
         @analysis-add-line="addAnalysisLine"
         @analysis-close-line="closeAnalysisLine"
       />
-      <Table />
+      <Table :players="orderedPlayers" />
       <AdvancedLog :currentMove="currentMove" :hideLog.sync="hideLog" v-if="logPlacement === 'bottom'" />
     </div>
     <div
@@ -926,7 +933,19 @@ export default class Game extends Vue {
   }
 
   get orderedPlayers(): Player[] {
+    if (this.analysisReferenceEngine) {
+      return orderedPlayers(this.analysisReferenceEngine).map((player) =>
+        player.player === this.analysisSeat || !player.faction ? this.engine.players[player.player] : player
+      );
+    }
     return orderedPlayers(this.engine);
+  }
+
+  /** Opponents remain a live reference, including when the simulated round moves ahead. */
+  get analysisReferenceEngine(): Engine | undefined {
+    return this.analysisMode && this.analysisBackup
+      ? Engine.fromData(JSON.parse(JSON.stringify(this.analysisBackup)))
+      : undefined;
   }
 
   // Lost Fleet only, desktop only (see the template comment by its usage) - narrows the buttons

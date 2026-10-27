@@ -184,13 +184,20 @@
       />
       <div class="row mt-2">
         <template v-if="sessionPlayer === undefined">
-          <PlayerInfo v-for="player in orderedPlayers" :player="player" :key="player.player" class="col-md-6 order-6" />
+          <PlayerInfo
+            v-for="player in orderedPlayers"
+            :player="player"
+            :reference-engine="player.player !== analysisSeat ? analysisReferenceEngine : undefined"
+            :key="player.player"
+            class="col-md-6 order-6"
+          />
         </template>
         <template v-else>
           <PlayerInfo :player="sessionPlayer" class="col-md-6 order-3" />
           <PlayerInfo
             v-for="player in orderedPlayers.filter((pl) => pl !== sessionPlayer)"
             :player="player"
+            :reference-engine="analysisReferenceEngine"
             :key="player.player"
             class="col-md-6 order-6"
           />
@@ -266,7 +273,7 @@
         @analysis-add-line="addAnalysisLine"
         @analysis-close-line="closeAnalysisLine"
       />
-      <Table />
+      <Table :players="orderedPlayers" />
       <AdvancedLog :currentMove="currentMove" :hideLog.sync="hideLog" v-if="logPlacement === 'bottom'" />
     </div>
     <div class="chat-host" :style="{ '--chat-footer-height': totalStickyFooterHeight + 'px' }"></div>

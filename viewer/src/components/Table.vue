@@ -45,7 +45,7 @@
 <script lang="ts">
 import Engine, { Player, PlayerEnum, PowerArea, Resource as ResourceEnum } from "@gaia-project/engine";
 import type { InfoTable } from "src/logic/table/types";
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Prop, Vue } from "vue-property-decorator";
 import type { MapMode } from "../data/actions";
 import { MapModeType } from "../data/actions";
 import { orderedPlayers } from "../data/player";
@@ -61,12 +61,15 @@ import TableCell from "./TableCell.vue";
   },
 })
 export default class Table extends Vue {
+  @Prop()
+  players: Player[];
+
   get engine(): Engine {
     return this.$store.state.data;
   }
 
   get orderedPlayers(): Player[] {
-    const players = orderedPlayers(this.engine);
+    const players = this.players ?? orderedPlayers(this.engine);
     const s = this.sessionPlayer;
     return s ? this.passedLast(rotate(players, s)) : players;
   }

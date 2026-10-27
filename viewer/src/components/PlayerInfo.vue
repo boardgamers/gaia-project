@@ -331,6 +331,9 @@ export default class PlayerInfo extends Vue {
   @Prop()
   player: Player;
 
+  @Prop()
+  referenceEngine: Engine;
+
   // Read-only "duplicate of the in-game faction board" mode for the faction pick/ban window: hides
   // the player-chrome (avatar, name, map-mode select, tiles, per-faction Rules) and interactions,
   // rendering only the faction board itself from a preview store (see FactionInfoCard.vue).
@@ -652,7 +655,7 @@ export default class PlayerInfo extends Vue {
   }
 
   get engine() {
-    return this.$store.state.data;
+    return this.referenceEngine ?? this.$store.state.data;
   }
 
   get height() {
