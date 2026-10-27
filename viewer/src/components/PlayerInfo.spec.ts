@@ -78,6 +78,9 @@ for (const component of [PlayerInfo, AlternatePlayerInfo]) {
     engine.tiles.scorings.final[1] = FinalTile.Sector;
     engine.automa.remaining = 5;
     engine.automa.lastActions = ["block power1", "block power3"];
+    const move = engine.moveHistory.length;
+    engine.moveHistory.push("itars automa 6,13 [block power1; block power3]");
+    engine.advancedLog.push({ player: 1, move, changes: { itars: { vp: 4 } } });
     const store = makeStore();
     store.commit("receiveData", engine);
     const { container, getByRole } = render(component, { props: { player: engine.players[1] }, store });
@@ -87,6 +90,9 @@ for (const component of [PlayerInfo, AlternatePlayerInfo]) {
     expect(container.querySelector(".automa-details")).to.equal(null);
     expect(container.querySelector(".robot-icon")).not.to.equal(null);
     expect(container.querySelector(".automa-action-card .card-number").textContent).to.equal("#13");
+    expect(container.querySelector(".automa-pass-symbol")).to.equal(null);
+    expect(container.querySelector(".automa-last-vp").textContent.trim()).to.equal("4");
+    expect(container.querySelector(".automa-last-turn").getAttribute("aria-label")).to.include("4 VP");
     expect(container.querySelectorAll(".automa-action-card .faction-action-reference .specialAction")).to.have.length(
       1
     );
@@ -115,10 +121,15 @@ for (const component of [PlayerInfo, AlternatePlayerInfo]) {
     expect(container.querySelector(".automa-details dl").textContent).to.include("Mining range");
     engine.automa.discard.push("13");
     engine.automa.action = "5";
+    engine.automa.remaining = 3;
     store.commit("receiveData", Engine.fromData(JSON.parse(JSON.stringify(engine))));
     await Vue.nextTick();
     expect(action().classList.contains("recent")).to.equal(false);
     expect(action().classList.contains("disabled")).to.equal(false);
+    expect(container.querySelector(".automa-pass-symbol.inactive")).not.to.equal(null);
+    expect(container.querySelector(".card-action-symbol.inactive")).to.equal(null);
+    expect(container.querySelector(".card-vp-symbol.inactive")).to.equal(null);
+    expect(container.querySelector(".automa-pass-symbol").getAttribute("aria-label")).to.include("last three cards");
     engine.automa.action = "4";
     engine.automa.support = "8";
     engine.automa.lastActions = ["build m 1x1"];
@@ -129,12 +140,19 @@ for (const component of [PlayerInfo, AlternatePlayerInfo]) {
     ).to.deep.equal(["scoring", "range", "direction"]);
     expect(container.querySelector('[data-support="range"]').textContent.trim()).to.equal("4");
     expect(container.querySelector(".automa-support-card").getAttribute("aria-label")).to.include("Support card 8");
+    expect(container.querySelector(".automa-pass-symbol")).to.equal(null);
     engine.passedPlayers = [1];
+    engine.automa.action = "8";
+    engine.automa.remaining = 2;
     engine.automa.lastActions = ["pass booster4"];
     store.commit("receiveData", Engine.fromData(JSON.parse(JSON.stringify(engine))));
     await Vue.nextTick();
     expect(action().classList.contains("disabled")).to.equal(true);
     expect(container.querySelector('[data-support="booster"]')).not.to.equal(null);
+    expect(container.querySelector(".automa-pass-symbol.active")).not.to.equal(null);
+    expect(container.querySelector(".card-action-symbol.inactive")).not.to.equal(null);
+    expect(container.querySelector(".card-vp-symbol.inactive").textContent.trim()).to.equal("3");
+    expect(container.querySelector(".card-vp-symbol").getAttribute("aria-label")).to.include("round tile instead");
     engine.automa.support = engine.automa.action = undefined;
     store.commit("receiveData", Engine.fromData(JSON.parse(JSON.stringify(engine))));
     await Vue.nextTick();

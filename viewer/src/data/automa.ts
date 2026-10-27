@@ -7,6 +7,30 @@ import { buildingData } from "./building";
 import { researchData } from "./research";
 import { spaceshipNames } from "./spaceships";
 
+export function automaLastTurnPoints(engine: Engine, player: Player): number {
+  if (!engine.automa?.action && !(engine.passedPlayers ?? []).includes(player.player)) return 0;
+  let move = engine.moveHistory.length - 1;
+  while (
+    move >= 0 &&
+    !engine.moveHistory[move].startsWith(`${player.faction} automa `) &&
+    !engine.moveHistory[move].startsWith(`p${player.player + 1} automa `)
+  )
+    move--;
+  if (move < 0) return 0;
+  const start = engine.advancedLog.findIndex((entry) => entry.move === move);
+  if (start < 0) return 0;
+  let points = 0;
+  for (const entry of engine.advancedLog.slice(start)) {
+    // End-of-round income and final scoring are separate from the Automa turn.
+    if (entry.phase !== undefined || entry.round !== undefined || (entry.move !== undefined && entry.move !== move))
+      break;
+    if (entry.player === player.player) {
+      for (const change of Object.values(entry.changes ?? {})) points += change.vp ?? 0;
+    }
+  }
+  return points;
+}
+
 const miningPreferences = {
   [FinalTile.Sector]: "a sector without an Automa planet",
   [FinalTile.PlanetType]: "a planet type Automa has not colonized",

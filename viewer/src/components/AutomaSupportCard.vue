@@ -11,7 +11,7 @@
       @keydown.enter.prevent="$emit('details')"
       @keydown.space.prevent="$emit('details')"
     >
-      <rect class="heading-hit-area" x="2" y="2" width="56" height="20" rx="3" />
+      <path class="heading-hit-area" d="M0 22V5Q0 0 5 0H55Q60 0 60 5V22Z" />
       <g class="symbol-art" aria-hidden="true">
         <g class="robot-icon" transform="translate(17, 12)">
           <path d="M0-7v-3M-11-2v5M11-2v5" />
@@ -35,7 +35,8 @@
       v-b-tooltip.nofade="tooltipConfig"
       @click.stop
     >
-      <rect class="symbol-highlight" x="-26" y="-12" width="52" height="25" rx="3" />
+      <path v-if="symbol === 'numbered'" class="symbol-highlight" d="M-30-13H30V9Q30 14 25 14H-25Q-30 14-30 9Z" />
+      <rect v-else class="symbol-highlight" x="-30" y="-13" width="60" height="26" />
       <g class="symbol-art" aria-hidden="true">
         <template v-if="symbol === 'scoring'">
           <rect
@@ -91,6 +92,7 @@
         </template>
       </g>
     </g>
+    <rect class="card-outline" width="60" height="130" rx="5" />
   </g>
 </template>
 
@@ -132,8 +134,12 @@ export default class AutomaSupportCard extends Vue {
 <style scoped>
 .card-face {
   fill: #fff;
+}
+.card-outline {
+  fill: none;
   stroke: #555;
   stroke-width: 1.3;
+  pointer-events: none;
 }
 .behavior-heading {
   cursor: pointer;

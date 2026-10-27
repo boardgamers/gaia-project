@@ -11,7 +11,7 @@
     >
       <rect x="-5" y="-18" width="136" height="36" fill="transparent" />
       <g aria-hidden="true" class="status-icons">
-        <g v-if="actions.length">
+        <g v-if="hasLastTurn">
           <path
             d="M3 8a7 7 0 1 1 .5 6M3 3v5h5M10 6v4l3 2"
             transform="translate(-3, -10)"
@@ -21,7 +21,7 @@
             stroke-linecap="round"
             stroke-linejoin="round"
           />
-          <g v-for="(action, i) in actions" :key="i" :transform="`translate(${40 + i * 36}, 0)`">
+          <g v-for="(action, i) in actions" :key="i" :transform="`translate(${40 + i * resultSpacing}, 0)`">
             <Building
               v-if="action[0] === 'build'"
               :building="action[1]"
@@ -57,6 +57,13 @@
             />
             <path v-else-if="action[0] === 'pass'" d="M-9 1l6 6 14-16" fill="none" stroke="#333" stroke-width="3" />
           </g>
+          <Resource
+            v-if="victoryPoints"
+            class="automa-last-vp"
+            kind="vp"
+            :count="victoryPoints"
+            :transform="`translate(${40 + actions.length * resultSpacing}, 0) scale(1.4)`"
+          />
         </g>
         <g v-else>
           <rect x="2" y="-12" width="17" height="24" rx="2" fill="#fff" stroke="#333" />
@@ -93,7 +100,7 @@ import type Engine from "@gaia-project/engine";
 import type { Player } from "@gaia-project/engine";
 import { boardActions } from "@gaia-project/engine";
 import { Component, Prop, Vue } from "vue-property-decorator";
-import { describeAutomaAction } from "../data/automa";
+import { automaLastTurnPoints, describeAutomaAction } from "../data/automa";
 import { tooltipTriggerConfig } from "../logic/tooltip";
 import Building from "./Building.vue";
 import Condition from "./Condition.vue";
@@ -109,17 +116,26 @@ export default class AutomaStatus extends Vue {
   @Prop() engine: Engine;
   @Prop({ type: Boolean, default: false }) flat: boolean;
 
+  get hasLastTurn() {
+    return !!this.engine.automa.action || (this.engine.passedPlayers ?? []).includes(this.player.player);
+  }
   get actions() {
     const state = this.engine.automa;
     // A new round clears the action card, but still retains the previous round's lastActions.
-    return state.action || (this.engine.passedPlayers ?? []).includes(this.player.player)
-      ? (state.lastActions ?? []).map((action) => action.split(" "))
-      : [];
+    return this.hasLastTurn ? (state.lastActions ?? []).map((action) => action.split(" ")) : [];
+  }
+  get victoryPoints() {
+    return automaLastTurnPoints(this.engine, this.player);
+  }
+  get resultSpacing() {
+    const count = this.actions.length + (this.victoryPoints ? 1 : 0);
+    return Math.min(36, 72 / Math.max(1, count - 1));
   }
   get lastTurnLabel() {
-    return this.actions.length
-      ? `Last Automa turn: ${this.actions.map((a) => describeAutomaAction(a.join(" "))).join("; ")}`
-      : "Automa draws cards to choose its actions. It does not use normal resources.";
+    if (!this.hasLastTurn) return "Automa draws cards to choose its actions. It does not use normal resources.";
+    const results = this.actions.map((a) => describeAutomaAction(a.join(" ")));
+    if (this.victoryPoints) results.push(`${this.victoryPoints} VP`);
+    return `Last Automa turn: ${results.join("; ") || "no available action"}`;
   }
   get deckLabel() {
     return this.engine.round
