@@ -18,7 +18,7 @@
         :portrait="true"
         :index="index"
         :transform="`translate(${(index + 1 + turnOrder.length) * 2.5})`"
-        style="opacity: 0.5"
+        :style="{ opacity: activePlayers.includes(player.player) ? 1 : 0.5 }"
         :presence-status="presenceFor(player)"
       />
     </svg>
@@ -26,6 +26,7 @@
 </template>
 <script lang="ts">
 import Engine, { Phase, Player, Round } from "@gaia-project/engine";
+import { chargeDecisionSeats, hasConcurrentCharges } from "@gaia-project/engine/src/pending-charges";
 import { Component, Prop, Vue } from "vue-property-decorator";
 import type { PresenceStatus } from "../logic/presence";
 import { presenceStatus } from "../logic/presence";
@@ -43,6 +44,12 @@ export default class TurnOrder extends Vue {
 
   get gameData(): Engine {
     return this.$store.state.data;
+  }
+
+  get activePlayers(): number[] {
+    return hasConcurrentCharges(this.gameData) && this.gameData.newTurn
+      ? chargeDecisionSeats(this.gameData)
+      : [this.gameData.playerToMove];
   }
 
   // Hosted mode only - self-contained/hot-seat play has no "?game=" URL and no accounts to have

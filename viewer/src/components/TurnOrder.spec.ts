@@ -1,4 +1,4 @@
-import Engine, { Faction } from "@gaia-project/engine";
+import Engine, { Faction, Phase } from "@gaia-project/engine";
 import { render } from "@testing-library/vue";
 import { expect } from "chai";
 import { makeStore } from "../store";
@@ -70,6 +70,25 @@ describe("TurnOrder presence dots", () => {
 });
 
 describe("TurnOrder passedPlayers (docs/lost-fleet/ANALYSIS_MODE_PLAN.md)", () => {
+  it("marks a passed player with a pending charge as active alongside the turn player", () => {
+    const engine = new Engine(["init 2 turn-order-pending-charge"], { concurrentCharges: true });
+    engine.phase = Phase.RoundMove;
+    engine.round = 1;
+    engine.currentPlayer = 0;
+    engine.turnOrder = [0];
+    engine.passedPlayers = [1];
+    engine.pendingCharges = [{ id: 1, player: 1, source: { player: 0, coordinates: "1A0" }, amount: 1 }];
+    const store = makeStore();
+    store.commit("receiveData", engine);
+    const { container } = render(TurnOrder, { store });
+    const circles = container.querySelectorAll<SVGCircleElement>(".player-token");
+    expect(circles.length).to.equal(2);
+    expect(circles[0].style.stroke).to.equal("rgb(34, 204, 68)");
+    expect(circles[1].style.stroke).to.equal("rgb(34, 204, 68)");
+    expect(circles[1].parentElement.style.opacity).to.equal("1");
+    expect(circles[1].parentElement.querySelector("title").textContent).to.equal("Charge power");
+  });
+
   it("never shows a passed player before round 1, even if passedPlayers is non-empty", () => {
     // Real games never populate `passedPlayers` before round 1 (only beginRoundStartPhase does,
     // once per round transition) - this fixture reproduces analysis mode's own setup-phase pre-seed

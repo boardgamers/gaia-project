@@ -1,0 +1,7 @@
+{
+  "name": "concurrentCharges",
+  "label": "Play while charges are pending",
+  "type": "checkbox",
+  "default": false,
+  "items": null
+}

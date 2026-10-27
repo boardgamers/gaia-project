@@ -1,5 +1,6 @@
 <template>
   <g>
+    <title v-if="chargePending">Charge power</title>
     <title v-if="presenceTooltip">{{ presenceTooltip }}</title>
     <circle :r="1" :style="stroke()" :class="['player-token', 'planet-fill', planet()]" />
     <defs v-if="portrait && artwork"
@@ -51,6 +52,7 @@
 </template>
 <script lang="ts">
 import Engine, { AuctionVariant, Phase, Planet, Player, PlayerEnum } from "@gaia-project/engine";
+import { chargeDecisionSeats, chargeFor, hasConcurrentCharges } from "@gaia-project/engine/src/pending-charges";
 import { Component, Prop, Vue } from "vue-property-decorator";
 import { factionArt } from "../data/faction-art";
 import { factionPiecePlanet } from "../graphics/utils";
@@ -99,9 +101,20 @@ export default class PlayerCircle extends Vue {
     return this.$store.state.data;
   }
 
+  get chargePending(): boolean {
+    return !this.chart && hasConcurrentCharges(this.gameData) && !!chargeFor(this.gameData, this.player?.player);
+  }
+
   stroke() {
     if (this.chart) {
       return "";
+    }
+
+    if (hasConcurrentCharges(this.gameData)) {
+      const active = this.gameData.newTurn
+        ? chargeDecisionSeats(this.gameData).includes(this.player?.player)
+        : this.gameData.playerToMove === this.player?.player;
+      return active ? "stroke-width: 0.22px !important; stroke: #2C4" : "stroke-width: 0.06px !important";
     }
 
     if (this.gameData.players[this.gameData.currentPlayer] === this.player) {

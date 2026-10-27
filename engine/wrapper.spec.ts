@@ -9,6 +9,7 @@ import {
   automove,
   canLaunchAnalysisMode,
   createAnalysis,
+  init,
   move,
   moveAI,
   playerSettings,
@@ -18,6 +19,16 @@ import {
 } from "./wrapper";
 
 describe("wrapper", () => {
+  it("only enables independent charges when selected in setup", async () => {
+    const standard = await init(4, [], {}, "charge-option-default");
+    const disabled = await init(4, [], { concurrentCharges: false }, "charge-option-off");
+    const enabled = await init(4, [], { concurrentCharges: true }, "charge-option-on");
+
+    expect(standard.options.concurrentCharges).not.to.equal(true);
+    expect(disabled.options.concurrentCharges).to.equal(false);
+    expect(enabled.options.concurrentCharges).to.equal(true);
+  });
+
   describe("automove", () => {
     describe("Tinkeroids tile choices", () => {
       const roundOne = () =>

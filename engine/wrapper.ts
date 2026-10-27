@@ -41,7 +41,7 @@ export async function init(
     options.lostFleet = true;
   }
 
-  const engine = new Engine([`init ${nbPlayers} ${seed}`], { concurrentCharges: true, ...options });
+  const engine = new Engine([`init ${nbPlayers} ${seed}`], options);
   engine.generateAvailableCommandsIfNeeded();
 
   automove(engine);

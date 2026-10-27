@@ -141,7 +141,7 @@ export type FactionCustomization = {
 export type Layout = "standard" | "balanced" | "xshape";
 
 export interface EngineOptions {
-  /** Let charges be answered independently of other players' decisions. */
+  /** Opt-in: let charges be answered independently while the next player takes their turn. */
   concurrentCharges?: boolean;
   /** Allow last player to rotate sector BEFORE faction selection */
   advancedRules?: boolean;
