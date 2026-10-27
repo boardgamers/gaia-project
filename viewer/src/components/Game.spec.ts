@@ -1900,6 +1900,53 @@ describe("Game", () => {
     });
 
     describe("Phase 6 - staleness on re-entry (§3.5)", () => {
+      it("repairs an already-saved blocked income and keeps the Gaia conversion in played history", () => {
+        const live = new Engine(SETUP_MOVES);
+        const pass = "terrans pass booster2 returning booster7";
+        const passIndex = live.moveHistory.length;
+        live.moveHistory.push(pass, "terrans income t. income 2t", "terrans spend 6tg for 6c");
+        window.localStorage.setItem(
+          "analysis-mode::0",
+          JSON.stringify({
+            lines: [
+              [
+                { kind: "move", move: "terrans income 2t. income t" },
+                { kind: "move", move: "terrans spend 6tg for 6c" },
+              ],
+            ],
+            played: [[{ move: pass, moveIndex: passIndex }]],
+            active: 0,
+            baseRound: 1,
+            baseMoveCount: live.moveHistory.length,
+            baseMove: live.moveHistory[live.moveHistory.length - 1],
+          })
+        );
+        const vm = mountAsSeat(0, live);
+        vm.enterAnalysisMode();
+        expect(vm.analysisEntries).to.deep.equal([]);
+        expect(vm.analysisPlayed[0]).to.have.length(3);
+        expect(vm.analysisPlayed[0][1].incomeResolved).to.equal(true);
+        vm.exitAnalysisMode();
+        vm.enterAnalysisMode();
+        expect(vm.analysisEntries).to.deep.equal([]);
+        expect(vm.analysisPlayed[0]).to.have.length(3);
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
+      it("can start a blank variation without copying moves or played history", () => {
+        const vm = mountAsSeat(0);
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("terrans up nav.");
+        const original = JSON.parse(JSON.stringify(vm.analysisEntries));
+        vm.analysisPlayed = [[{ move: "terrans up eco.", moveIndex: 0 }]];
+        vm.addAnalysisLine(false);
+        expect(vm.analysisLines).to.deep.equal([original, []]);
+        expect(vm.analysisPlayed[1]).to.deep.equal([]);
+        expect(vm.analysisActiveLine).to.equal(1);
+        vm.$el.remove();
+        vm.$destroy();
+      });
       it("restores a stored line silently, with no notice, when nothing changed since it was saved", () => {
         const first = mountAsSeat(0);
         first.enterAnalysisMode();

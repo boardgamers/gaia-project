@@ -1359,7 +1359,14 @@ export default class Game extends Vue {
     const newMoves = incomingHistory.slice(originHistory.length);
     let played = 0;
     this.analysisLines = this.analysisLines.map((entries, index) => {
-      const result = dropPlayedAnalysisPrefix(incoming, entries, seat, newMoves, originHistory.length);
+      const result = dropPlayedAnalysisPrefix(
+        incoming,
+        entries,
+        seat,
+        newMoves,
+        originHistory.length,
+        this.analysisPlayed[index]
+      );
       this.$set(this.analysisPlayed, index, [...(this.analysisPlayed[index] ?? []), ...result.played]);
       played = Math.max(played, result.dropped);
       return result.entries;
@@ -1414,13 +1421,7 @@ export default class Game extends Vue {
       fresh();
       return;
     }
-    if (
-      stored.baseMoveCount === this.analysisBaseMoveCount &&
-      (stored.baseMove === undefined || stored.baseMove === this.analysisRealHistory[stored.baseMoveCount - 1])
-    ) {
-      this.setAnalysisLineSet(stored, { prune: false });
-      return;
-    }
+    const sameBase = stored.baseMoveCount === this.analysisBaseMoveCount;
     if (
       stored.baseMoveCount > this.analysisBaseMoveCount ||
       (stored.baseMove !== undefined && this.analysisRealHistory[stored.baseMoveCount - 1] !== stored.baseMove)
@@ -1433,13 +1434,21 @@ export default class Game extends Vue {
     let played = 0;
     const histories: AnalysisPlayedMove[][] = [];
     const lines = stored.lines.map((entries, index) => {
-      const result = dropPlayedAnalysisPrefix(this.analysisOrigin, entries, seat, newMoves, stored.baseMoveCount);
+      const result = dropPlayedAnalysisPrefix(
+        this.analysisOrigin,
+        entries,
+        seat,
+        newMoves,
+        stored.baseMoveCount,
+        stored.played?.[index]
+      );
       histories.push([...(stored.played?.[index] ?? []), ...result.played]);
       played = Math.max(played, result.dropped);
       return result.entries;
     });
     const active = lines[normalizeAnalysisLineSet(stored).active] ?? [];
     const applied = this.setAnalysisLineSet({ ...stored, lines, played: histories }, { prune: false });
+    if (sameBase && played === 0) return;
     this.analysisNotice =
       played > 0
         ? `${played} already played ${played === 1 ? "move" : "moves"} kept in plan history.`
@@ -1455,11 +1464,13 @@ export default class Game extends Vue {
     const stored = this.analysisPendingRestore;
     this.analysisPendingRestore = null;
     const played = stored.lines.map((_, index) =>
-      (stored.played?.[index] ?? []).filter((entry) => this.analysisRealHistory[entry.moveIndex] === entry.move)
+      (stored.played?.[index] ?? []).filter(
+        (entry) => this.analysisRealHistory[entry.moveIndex] === (entry.historyMove ?? entry.move)
+      )
     );
     const lines = stored.lines.map((entries, index) => [
       ...(stored.played?.[index] ?? [])
-        .filter((entry) => this.analysisRealHistory[entry.moveIndex] !== entry.move)
+        .filter((entry) => this.analysisRealHistory[entry.moveIndex] !== (entry.historyMove ?? entry.move))
         .map((entry) => ({ kind: "move" as const, move: entry.move })),
       ...entries,
     ]);
@@ -1917,26 +1928,17 @@ export default class Game extends Vue {
     this.setAnalysisEntries(this.analysisEntries, { prune: false });
   }
 
-  /**
-   * The strip's `+` - fork the open line into a new one, and open that (owner instruction,
-   * 2026-08-20). It started as an EMPTY new line, on the reasoning that "new line" is what the
-   * control says; in use that was backwards. The comparison you actually want is almost always
-   * "three moves in, X or Y?", and an empty tab makes you re-click the shared prefix by hand for
-   * every alternative - tedious, and worse, a misclick while re-entering it compares two lines that
-   * do not share the prefix you think they do. Copying makes forking the default and costs nothing,
-   * because Reset already blanks a line in one press for the times you did want to start over.
-   *
-   * Deep-copied rather than sharing the entry objects: nothing edits an entry in place today (every
-   * path replaces the whole array), but two lines pointing at the same objects is a trap waiting for
-   * the first path that does, and the entries are small plain data.
-   */
-  addAnalysisLine() {
+  /** Copy the open variation, or start an independent empty plan on the current real board. */
+  addAnalysisLine(copy = true) {
     if (!this.analysisMode || this.analysisLines.length >= MAX_ANALYSIS_LINES) {
       return;
     }
     // Keep blocked moves too, so the copy can be repaired without losing the original plan.
-    const fork: AnalysisEntry[] = JSON.parse(JSON.stringify(this.analysisEntries));
-    this.analysisPlayed = [...this.analysisPlayed, [...(this.analysisPlayed[this.analysisActiveLine] ?? [])]];
+    const fork: AnalysisEntry[] = copy ? JSON.parse(JSON.stringify(this.analysisEntries)) : [];
+    this.analysisPlayed = [
+      ...this.analysisPlayed,
+      copy ? [...(this.analysisPlayed[this.analysisActiveLine] ?? [])] : [],
+    ];
     this.analysisLines = [...this.analysisLines, fork];
     this.analysisActiveLine = this.analysisLines.length - 1;
     this.setAnalysisEntries(fork, { prune: false });

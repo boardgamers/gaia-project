@@ -14,7 +14,7 @@
       :lines="analysisLineSummaries"
       :active="analysisActiveLine"
       @select="$emit('analysis-select-line', $event)"
-      @add="$emit('analysis-add-line')"
+      @add="$emit('analysis-add-line', $event)"
       @close="$emit('analysis-close-line', $event)"
     />
     <div
@@ -105,7 +105,7 @@
         :lines="analysisLineSummaries"
         :active="analysisActiveLine"
         @select="$emit('analysis-select-line', $event)"
-        @add="$emit('analysis-add-line')"
+        @add="$emit('analysis-add-line', $event)"
         @close="$emit('analysis-close-line', $event)"
       />
       <div
@@ -829,7 +829,7 @@ export default class Commands extends Vue implements CommandController {
     if (pl.name) {
       return pl.name;
     }
-    return "Player " + (this.command.player + 1);
+    return "Player " + (pl.player + 1);
   }
 
   get player(): Player {

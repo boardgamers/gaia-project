@@ -49,16 +49,26 @@
       </button>
     </div>
 
-    <!-- Make copying explicit; Clear plan can empty the new variation afterwards. -->
+    <button
+      v-if="lines[active] && lines[active].moves > 0"
+      type="button"
+      class="analysis-tabs__add"
+      :disabled="lines.length >= maxLines"
+      :title="copyTitle"
+      :aria-label="copyTitle"
+      @click="$emit('add', true)"
+    >
+      Copy plan
+    </button>
     <button
       type="button"
       class="analysis-tabs__add"
       :disabled="lines.length >= maxLines"
-      :title="addTitle"
-      :aria-label="addTitle"
-      @click="$emit('add')"
+      :title="newTitle"
+      aria-label="New plan"
+      @click="$emit('add', false)"
     >
-      {{ lines[active] && lines[active].moves > 0 ? "Copy plan" : "+ Variation" }}
+      <span aria-hidden="true">+</span> New plan
     </button>
   </div>
 </template>
@@ -78,16 +88,19 @@ export default Vue.extend({
     maxLines(): number {
       return MAX_ANALYSIS_LINES;
     },
-    addTitle(): string {
+    limitTitle(): string {
+      return `You can compare up to ${MAX_ANALYSIS_LINES} plans. Delete one to try another.`;
+    },
+    newTitle(): string {
+      return this.lines.length >= MAX_ANALYSIS_LINES ? this.limitTitle : "Start another plan from the same board";
+    },
+    copyTitle(): string {
       const lines = this.lines as AnalysisLineSummary[];
       if (lines.length >= MAX_ANALYSIS_LINES) {
-        return `You can compare up to ${MAX_ANALYSIS_LINES} plans. Delete one to try another.`;
+        return this.limitTitle;
       }
       const open = lines[this.active as number];
-      // An empty line has nothing to fork, so the copy wording would only be confusing there.
-      return open && open.moves > 0
-        ? `Copy ${open.label} to a new variation`
-        : "Start another plan from the same board";
+      return `Copy ${open.label} to a new variation`;
     },
   },
   methods: {

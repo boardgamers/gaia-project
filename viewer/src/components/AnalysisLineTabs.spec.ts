@@ -87,7 +87,14 @@ describe("AnalysisLineTabs", () => {
   it("reports the plus as a new line", async () => {
     const { container, emitted } = tabs();
     await fireEvent.click(container.querySelector(".analysis-tabs__add"));
-    expect(emitted().add.length).to.equal(1);
+    expect(emitted().add).to.deep.equal([[false]]);
+  });
+
+  it("offers a separate empty plan when the current variation has moves", async () => {
+    const { getByRole, emitted } = tabs({ lines: [line({ moves: 3, applied: 3 })] });
+    await fireEvent.click(getByRole("button", { name: "New plan" }));
+    await fireEvent.click(getByRole("button", { name: "Copy Plan A to a new variation" }));
+    expect(emitted().add).to.deep.equal([[false], [true]]);
   });
 
   // `+` forks the open line, so the control has to say so - a copy that arrived unannounced would be

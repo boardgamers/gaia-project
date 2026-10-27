@@ -274,6 +274,64 @@ describe("dropPlayedAnalysisPrefix", () => {
   const nav = move("terrans up nav.");
   const mine = move("terrans build m 2A3.");
 
+  it("continues after income was resolved in a different order, including the Terrans Gaia conversion", () => {
+    const income = move("terrans income 2t. income t");
+    const gaia = move("terrans spend 6tg for 6c");
+    const result = dropPlayedAnalysisPrefix(engine, [income, gaia], 0, [
+      "nevlas income 4pw",
+      "terrans income t. income 2t (0/1/0/6 ⇒ 0/1/3/6)",
+      "terrans spend 6tg for 6c (0/1/3/6 ⇒ 0/7/3/0)",
+    ]);
+    expect(result.entries).to.deep.equal([]);
+    expect(result.played[0].incomeResolved).to.equal(true);
+    expect(result.played[1].incomeResolved).to.equal(undefined);
+  });
+
+  it("uses the server's skipped-income receipt when automatic income adds no own log move", () => {
+    const live = new Engine(SETUP_MOVES);
+    const income = "terrans income 2t. income t";
+    const base = live.moveHistory.length;
+    const newMoves = ["nevlas pass booster5", "terrans spend 6tg for 6c"];
+    live.moveHistory.push(...newMoves);
+    live.automation = {
+      version: 1,
+      increments: [],
+      turns: [],
+      liveUpdate: false,
+      plans: {
+        0: {
+          revision: 1,
+          round: 2,
+          moves: [],
+          runs: [
+            {
+              id: "income",
+              status: "completed",
+              steps: [
+                { move: income, timing: { round: 2, phase: Phase.RoundIncome }, status: "skipped", moveIndex: base },
+              ],
+            },
+          ],
+        },
+      },
+    };
+    const result = dropPlayedAnalysisPrefix(live, [move(income), move(newMoves[1])], 0, newMoves, base);
+    expect(result.entries).to.deep.equal([]);
+    expect(result.played[0]).to.deep.equal({
+      move: income,
+      moveIndex: base,
+      incomeResolved: true,
+      historyMove: newMoves[0],
+    });
+    // A future income choice cannot consume the same receipt again.
+    expect(dropPlayedAnalysisPrefix(live, [move(income)], 0, [], live.moveHistory.length).entries).to.have.length(1);
+  });
+
+  it("does not mistake a multi-command turn containing income for an income-only choice", () => {
+    const entry = move("terrans income t. spend 1q for 1o");
+    expect(dropPlayedAnalysisPrefix(engine, [entry], 0, ["terrans income t"]).entries).to.deep.equal([entry]);
+  });
+
   it("trims a played research once even though it can still be researched again", () => {
     const result = dropPlayedAnalysisPrefix(engine, [nav, nav, mine], 0, ["terrans up nav (0 ⇒ 1)."]);
     expect(result.dropped).to.equal(1);

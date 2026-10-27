@@ -3,7 +3,7 @@
     <li v-for="(entry, index) in played" :key="`played-${index}`" class="analysis-moves__past">
       <span class="analysis-moves__number">{{ index + 1 }}</span>
       <span class="analysis-moves__text">{{ entry.move }}</span>
-      <span class="analysis-moves__played">✓ Played</span>
+      <span class="analysis-moves__played">{{ entry.incomeResolved ? "✓ Income resolved" : "✓ Played" }}</span>
     </li>
     <li v-for="(entry, index) in entries" :key="index">
       <button

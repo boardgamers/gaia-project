@@ -173,7 +173,13 @@ export interface AnalysisLine {
  * `active` is stored too, so leaving the sandbox and coming back reopens the line you were on
  * rather than dumping you back on Line 1.
  */
-export type AnalysisPlayedMove = { move: string; moveIndex: number };
+export type AnalysisPlayedMove = {
+  move: string;
+  moveIndex: number;
+  incomeResolved?: true;
+  /** A skipped income choice may be anchored to another player's real move. */
+  historyMove?: string;
+};
 
 export interface AnalysisLineSet {
   /** Always at least one, even when that one is empty - Line 1 exists from the moment the sandbox
@@ -790,6 +796,11 @@ function analysisMoveKey(engine: Engine, move: string): string {
   );
 }
 
+function isIncomeMove(move: string): boolean {
+  const commands = parseCommands(move);
+  return commands.length > 0 && commands.every(({ command }) => command === Command.ChooseIncome);
+}
+
 /** Trim only a matching prefix actually present in this seat's new real history.
  * A repeatable action (research, for example) is consumed once per real turn. An invalid
  * alternative is never mistaken for a played move. Assumed charges leading into a consumed
@@ -799,21 +810,54 @@ export function dropPlayedAnalysisPrefix(
   entries: AnalysisEntry[],
   seat: number,
   playedMoves: string[],
-  firstMoveIndex = engine.moveHistory.length - playedMoves.length
+  firstMoveIndex = engine.moveHistory.length - playedMoves.length,
+  previousPlayed: AnalysisPlayedMove[] = []
 ): { entries: AnalysisEntry[]; dropped: number; played: AnalysisPlayedMove[] } {
   let consumed = 0;
   let dropped = 0;
   const played: AnalysisPlayedMove[] = [];
+  // Older viewers saved an already-resolved income choice as a blocked entry after a played pass.
+  // Recheck that round transition even when the saved base has already advanced past it.
+  const lastPlayed = previousPlayed[previousPlayed.length - 1];
+  const firstEntry = entries.find((entry) => entry.kind !== "adjust");
+  if (
+    firstEntry?.kind === "move" &&
+    isIncomeMove(firstEntry.move) &&
+    lastPlayed &&
+    parseCommands(lastPlayed.move).some(({ command }) => command === Command.Pass) &&
+    engine.moveHistory[lastPlayed.moveIndex] === lastPlayed.move &&
+    lastPlayed.moveIndex + 1 < firstMoveIndex
+  ) {
+    playedMoves = [...engine.moveHistory.slice(lastPlayed.moveIndex + 1, firstMoveIndex), ...playedMoves];
+    firstMoveIndex = lastPlayed.moveIndex + 1;
+  }
+  const skipped = (engine.automation?.plans[seat]?.runs ?? []).flatMap((run) =>
+    run.steps.filter((step) => step.status === "skipped" && step.moveIndex !== undefined)
+  );
   for (const [index, move] of playedMoves.entries()) {
-    if (!moveBelongsToSeat(engine, move, seat)) continue;
     let next = consumed;
     while (entries[next]?.kind === "adjust") next++;
     const entry = entries[next];
     if (entry?.kind !== "move" || !moveBelongsToSeat(engine, entry.move, seat)) continue;
-    if (analysisMoveKey(engine, entry.move) === analysisMoveKey(engine, move)) {
+    const moveIndex = firstMoveIndex + index;
+    // Like the server queue, retire an income choice once actual income has answered it.
+    // Its order can differ, or automatic income can leave only a skipped-step receipt.
+    const incomeResolved =
+      isIncomeMove(entry.move) &&
+      (skipped.some(
+        (step) =>
+          step.moveIndex === moveIndex && analysisMoveKey(engine, step.move) === analysisMoveKey(engine, entry.move)
+      ) ||
+        (moveBelongsToSeat(engine, move, seat) && isIncomeMove(move)));
+    if (
+      incomeResolved ||
+      (moveBelongsToSeat(engine, move, seat) && analysisMoveKey(engine, entry.move) === analysisMoveKey(engine, move))
+    ) {
       consumed = next + 1;
       dropped++;
-      played.push({ move, moveIndex: firstMoveIndex + index });
+      played.push(
+        incomeResolved ? { move: entry.move, moveIndex, incomeResolved: true, historyMove: move } : { move, moveIndex }
+      );
     }
   }
   return { entries: consumed ? entries.slice(consumed) : entries, dropped, played };
