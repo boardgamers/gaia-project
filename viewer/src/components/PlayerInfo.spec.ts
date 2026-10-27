@@ -15,6 +15,7 @@ import {
 import { boosterEvents } from "@gaia-project/engine/src/tiles/boosters";
 import { fireEvent, render } from "@testing-library/vue";
 import { expect } from "chai";
+import Vue from "vue";
 import AlternatePlayerInfo from "../../../old-ui/src/components/PlayerInfo.vue";
 import { makeStore } from "../store";
 import PlayerInfo from "./PlayerInfo.vue";
@@ -28,6 +29,7 @@ for (const component of [PlayerInfo, AlternatePlayerInfo]) {
     engine.players[1].data.buildings.ac1 = 1;
     engine.automa.action = "2";
     engine.automa.support = "3";
+    engine.automa.lastActions = ["build m 1x1", "block power1"];
     for (let i = 0; i < 7; i++) engine.players[0].loadEvent(new Event("=> 1q"), "test");
     const store = makeStore();
     store.commit("receiveData", engine);
@@ -56,7 +58,40 @@ for (const component of [PlayerInfo, AlternatePlayerInfo]) {
     expect(container.querySelector(".player-board").getAttribute("viewBox")).to.equal(
       human.container.querySelector(".player-board").getAttribute("viewBox")
     );
-    expect(container.textContent).to.include("Support card");
+    expect(container.textContent).not.to.include("Support card");
+    expect(container.textContent).not.to.include("Faction action");
+    expect(container.textContent).not.to.include("cards left");
+    expect(container.querySelector(".automa-deck").getAttribute("role")).to.equal("button");
+    expect(container.querySelector(".automa-last-turn").getAttribute("aria-label")).to.include("3 knowledge");
+  });
+  it("keeps repeatable faction actions available and moves decision details behind the deck", async () => {
+    const engine = new Engine(["init 1 automa-details", "p1 faction terrans", "p2 faction itars"], {
+      automaSeed: "test",
+    });
+    engine.round = 1;
+    engine.automa.action = "13";
+    engine.automa.support = "6";
+    engine.automa.remaining = 5;
+    engine.automa.lastActions = ["block power1", "block power3"];
+    const store = makeStore();
+    store.commit("receiveData", engine);
+    const { container, getByRole } = render(component, { props: { player: engine.players[1] }, store });
+    const action = () => container.querySelector(".automa-faction-card > .specialAction");
+    expect(action().classList.contains("recent")).to.equal(true);
+    expect(action().classList.contains("disabled")).to.equal(false);
+    expect(container.querySelector(".automa-details")).to.equal(null);
+    await fireEvent.click(getByRole("button", { name: "5 cards left in Automa's draw pile — show details" }));
+    expect(container.querySelector(".automa-details").textContent).to.include("Decision details");
+    engine.automa.discard.push("13");
+    engine.automa.action = "5";
+    store.commit("receiveData", Engine.fromData(JSON.parse(JSON.stringify(engine))));
+    await Vue.nextTick();
+    expect(action().classList.contains("recent")).to.equal(false);
+    expect(action().classList.contains("disabled")).to.equal(false);
+    engine.passedPlayers = [1];
+    store.commit("receiveData", Engine.fromData(JSON.parse(JSON.stringify(engine))));
+    await Vue.nextTick();
+    expect(action().classList.contains("disabled")).to.equal(true);
   });
 }
 

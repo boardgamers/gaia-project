@@ -9,7 +9,6 @@
         ><span class="player-avatar automa-avatar"><img :src="automaPortrait" alt="" /></span
       ></span>
       <strong>Automa</strong>
-      <small v-if="automaDifficulty" class="ml-auto">{{ automaDifficulty }}</small>
     </div>
     <div class="player-header d-flex justify-content-between align-items-center" v-else-if="!preview">
       <div
@@ -168,7 +167,18 @@
           />
         </g>
 
-        <AutomaFactionCard v-if="player.isAutoma" :player="player" transform="translate(25.2, 9.4) scale(.1)" />
+        <AutomaStatus
+          v-if="player.isAutoma && engine.automa"
+          :player="player"
+          :engine="engine"
+          @details="automaDetailsOpen = true"
+        />
+        <AutomaFactionCard
+          v-if="player.isAutoma"
+          :player="player"
+          :engine="engine"
+          transform="translate(25.2, 9.4) scale(.1)"
+        />
         <PowerBowls
           v-if="!player.isAutoma"
           :transform="`translate(30,${height - 7})`"
@@ -285,7 +295,12 @@
         <ArtifactIcon :artifact="artifact" />
       </span>
     </div>
-    <AutomaInfo v-if="player.isAutoma && engine.automa" :player="player" :engine="engine" />
+    <AutomaInfo
+      v-if="player.isAutoma && engine.automa"
+      :open.sync="automaDetailsOpen"
+      :player="player"
+      :engine="engine"
+    />
     <Rules v-if="!preview && !player.isAutoma" :id="player.faction" :type="player.faction" />
   </div>
 </template>
@@ -310,7 +325,6 @@ import Vue from "vue";
 import { Component, Prop, Watch } from "vue-property-decorator";
 import type { MapMode } from "../data/actions";
 import { MapModeType } from "../data/actions";
-import { automaDifficulties } from "../data/automa";
 import { factionArt } from "../data/faction-art";
 import { terraformCost3Set } from "../data/faction-overview";
 import { effectivePreviewPlayer } from "../data/faction-preview";
@@ -322,6 +336,7 @@ import { gameSeed } from "../logic/utils";
 import ArtifactIcon from "./ArtifactIcon.vue";
 import AutomaFactionCard from "./AutomaFactionCard.vue";
 import AutomaInfo from "./AutomaInfo.vue";
+import AutomaStatus from "./AutomaStatus.vue";
 import Booster from "./Booster.vue";
 import FederationTile from "./FederationTile.vue";
 import BuildingGroup from "./PlayerBoard/BuildingGroup.vue";
@@ -342,6 +357,7 @@ type TerraformingMarker = {
 @Component({
   components: {
     AutomaInfo,
+    AutomaStatus,
     AutomaFactionCard,
     TechTile,
     Booster,
@@ -355,6 +371,7 @@ type TerraformingMarker = {
   },
 })
 export default class PlayerInfo extends Vue {
+  automaDetailsOpen = false;
   @Prop()
   player: Player;
 
@@ -688,11 +705,6 @@ export default class PlayerInfo extends Vue {
 
   get automaPortrait() {
     return factionArt[this.faction];
-  }
-
-  get automaDifficulty() {
-    const difficulty = this.engine.automa?.difficulty;
-    return difficulty && difficulty !== "automa" ? automaDifficulties[difficulty] : null;
   }
 
   get height() {

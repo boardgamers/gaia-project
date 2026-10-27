@@ -7,7 +7,6 @@
     <div class="player-header d-flex align-items-center">
       <template v-if="player.isAutoma">
         <strong>Automa</strong>
-        <small v-if="automaDifficulty" class="ml-auto">{{ automaDifficulty }}</small>
       </template>
       <span
         v-else
@@ -98,7 +97,20 @@
           :asteroid-consumed="playerData.gaiaformersUsedForAsteroid"
           :resource="[]"
         />
-        <AutomaFactionCard v-if="player.isAutoma" :player="player" flat transform="translate(25.2, 9.4) scale(.1)" />
+        <AutomaStatus
+          flat
+          v-if="player.isAutoma && engine.automa"
+          :player="player"
+          :engine="engine"
+          @details="automaDetailsOpen = true"
+        />
+        <AutomaFactionCard
+          v-if="player.isAutoma"
+          :player="player"
+          :engine="engine"
+          flat
+          transform="translate(25.2, 9.4) scale(.1)"
+        />
         <PowerBowls
           v-if="!player.isAutoma"
           :transform="`translate(29,${height - 7})`"
@@ -223,7 +235,12 @@
         :player="player.player"
       />
     </div>
-    <AutomaInfo v-if="player.isAutoma && engine.automa" :player="player" :engine="engine" />
+    <AutomaInfo
+      v-if="player.isAutoma && engine.automa"
+      :open.sync="automaDetailsOpen"
+      :player="player"
+      :engine="engine"
+    />
     <Rules v-else :id="player.faction" :type="player.faction" />
   </div>
 </template>

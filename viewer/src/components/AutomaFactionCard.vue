@@ -7,23 +7,21 @@
     v-b-tooltip.nofade="tooltipConfig"
     :title="ability"
   >
-    <rect width="116" height="104" rx="4" fill="#ffffff75" stroke="#222" stroke-width=".7" />
-    <text x="58" y="15" class="card-label">Faction action</text>
-    <g class="card-icons" :transform="`translate(0, ${bonus ? 41 : 54})`" aria-hidden="true">
-      <AutomaActionIcon
-        v-for="(icon, index) in action"
-        :key="index"
-        :icon="icon"
-        :faction="player.faction"
-        :flat="flat"
-        :transform="`translate(${58 + (index - (action.length - 1) / 2) * 36}, 0)`"
-      />
-      <text v-if="['hadsch-hallas', 'firaks'].includes(player.faction)" x="40" y="3" class="card-label card-or"
-        >or</text
-      >
+    <g :class="['specialAction', { recent: lastWasFaction, disabled: passed }]">
+      <polygon points="20,22 42,0 74,0 96,22 96,54 74,76 42,76 20,54" />
+      <g class="card-icons" aria-hidden="true">
+        <AutomaActionIcon
+          v-for="(icon, index) in action"
+          :key="index"
+          :icon="icon"
+          :faction="player.faction"
+          :flat="flat"
+          :transform="index === 2 ? 'translate(58, 56)' : `translate(${41 + index * 34}, 25) scale(.9)`"
+        />
+        <path v-if="['hadsch-hallas', 'firaks'].includes(player.faction)" d="M56 30l4-10" fill="none" stroke="#111" />
+      </g>
     </g>
-    <g v-if="bonus" class="card-icons" transform="translate(0, 82)" aria-hidden="true">
-      <line x1="10" x2="106" y1="-18" y2="-18" stroke="#222" stroke-opacity=".2" />
+    <g v-if="bonus" class="card-icons" transform="translate(0, 99)" aria-hidden="true">
       <AutomaActionIcon
         :icon="bonus[0]"
         :faction="player.faction"
@@ -42,7 +40,9 @@
 </template>
 
 <script lang="ts">
+import type Engine from "@gaia-project/engine";
 import type { Player } from "@gaia-project/engine";
+import { cards } from "@gaia-project/engine/src/automa/cards";
 import { Component, Prop, Vue } from "vue-property-decorator";
 import type { AutomaIcon } from "../data/automa";
 import { automaAbilities } from "../data/automa";
@@ -52,10 +52,19 @@ import AutomaActionIcon from "./AutomaActionIcon.vue";
 @Component({ components: { AutomaActionIcon } })
 export default class AutomaFactionCard extends Vue {
   @Prop() player: Player;
+  @Prop() engine: Engine;
   @Prop({ type: Boolean, default: false }) flat: boolean;
 
   get ability() {
-    return automaAbilities[this.player.faction];
+    return `${automaAbilities[this.player.faction]} Triggered by decision cards; it can happen more than once per round.`;
+  }
+
+  get passed() {
+    return this.engine.ended || (this.engine.passedPlayers ?? []).includes(this.player.player);
+  }
+
+  get lastWasFaction() {
+    return !this.passed && cards.find((c) => c.id === this.engine.automa?.action)?.action === "faction";
   }
 
   get tooltipConfig() {
@@ -96,17 +105,6 @@ export default class AutomaFactionCard extends Vue {
 .automa-faction-card {
   cursor: help;
   color: #111;
-}
-.card-label {
-  font-size: 8px;
-  font-weight: 600;
-  fill: #111;
-  text-anchor: middle;
-  pointer-events: none;
-}
-.card-or {
-  font-size: 7px;
-  font-weight: normal;
 }
 .card-icons {
   pointer-events: none;
