@@ -149,6 +149,17 @@ describe("Official solo Automa", () => {
     expect(engine.spaceshipActions[Spaceship.Rebellion]?.power).to.equal(1);
   });
 
+  for (const humanAlreadyExplored of [false, true]) {
+    it(`uses the actual shuttle slot when exploring (human already there: ${humanAlreadyExplored})`, () => {
+      const engine = ready(Faction.Taklons, true);
+      engine.players[1].data.explorationShips = { [Spaceship.TFMars]: 1 };
+      engine.players[0].data.explorationShips = humanAlreadyExplored ? { [Spaceship.Rebellion]: 1 } : {};
+      for (const action of engine.boardActionTypes) engine.boardActions[action] = 0;
+      forceDraw(engine, "1", "5");
+      expect(engine.players[1].data.explorationShips[Spaceship.Rebellion]).to.equal(humanAlreadyExplored ? 2 : 1);
+    });
+  }
+
   it("passes on a pass card only among the last three cards", () => {
     const engine = ready();
     forceDraw(engine, "4", "1");

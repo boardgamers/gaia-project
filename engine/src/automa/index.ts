@@ -11,6 +11,7 @@ import {
   ScoringTile,
   Spaceship,
 } from "../enums";
+import { nextFreeExplorationSlot } from "../exploration";
 import { factionPlanet } from "../factions";
 import { GaiaHex } from "../gaia-hex";
 import { terraformingStepsRequired } from "../planets";
@@ -91,7 +92,7 @@ export function setupAutoma(engine: Engine, player: Player) {
       [Spaceship.Rebellion, Spaceship.Eclipse, Spaceship.TFMars],
       `${engine.moveHistory[0]}:automa-ship`
     )[0];
-    player.data.explorationShips[ship] = 0;
+    player.data.explorationShips[ship] = nextFreeExplorationSlot(engine.players, ship);
   }
 }
 
@@ -366,9 +367,7 @@ function power(engine: Engine, support: AutomaCard) {
     for (const ship of [Spaceship.Rebellion, Spaceship.Eclipse, Spaceship.TFMars]) {
       if (pl.data.explorationShips[ship] === undefined) {
         options.push(() => {
-          pl.data.explorationShips[ship] = engine.players.some((p) => p.data.explorationShips[ship] !== undefined)
-            ? 1
-            : 0;
+          pl.data.explorationShips[ship] = nextFreeExplorationSlot(engine.players, ship);
           engine.automa.lastActions.push(`explore ${ship}`);
         });
       } else {

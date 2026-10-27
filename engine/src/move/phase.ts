@@ -399,7 +399,6 @@ export function endSetupFactionPhase(engine: Engine) {
     const faction = pl.faction;
     const board = pl.variant ?? factionVariantBoard(engine.factionCustomization, faction);
     pl.loadFaction(board, engine.expansions, false, engine.players.length, engine.lostFleetEconomySide);
-    if (pl.isAutoma) setupAutoma(engine, pl);
   }
 
   if (engine.options.lostFleet) {
@@ -424,6 +423,9 @@ export function endSetupFactionPhase(engine: Engine) {
     }
   }
 
+  for (const pl of engine.players) {
+    if (pl.isAutoma) setupAutoma(engine, pl);
+  }
   beginSetupBuildingPhase(engine);
 }
 
