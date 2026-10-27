@@ -109,7 +109,15 @@
           :player="player"
           :engine="engine"
           flat
-          transform="translate(23.8, 10) scale(.075)"
+          transform="translate(0, 17.4) scale(.062)"
+        />
+        <AutomaDecisionCard
+          v-if="player.isAutoma && engine.automa"
+          :player="player"
+          :engine="engine"
+          flat
+          transform="translate(25.7, 8.9) scale(.085)"
+          @details="showAutomaDetails(false)"
         />
         <AutomaSupportCard
           v-if="player.isAutoma && engine.automa"

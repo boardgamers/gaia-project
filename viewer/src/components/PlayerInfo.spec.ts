@@ -64,6 +64,8 @@ for (const component of [PlayerInfo, AlternatePlayerInfo]) {
     expect(container.textContent).not.to.include("cards left");
     expect(container.querySelector(".automa-deck").getAttribute("role")).to.equal("button");
     expect(container.querySelector(".automa-last-turn").getAttribute("aria-label")).to.include("3 knowledge");
+    expect(container.querySelector(".automa-last-turn").getAttribute("aria-label")).to.include("1x1");
+    expect(container.querySelector(".automa-action-card .automa-last-turn")).to.equal(null);
   });
   it("keeps repeatable faction actions available and moves decision details behind the deck", async () => {
     const engine = new Engine(["init 1 automa-details", "p1 faction terrans", "p2 faction itars"], {
@@ -85,6 +87,10 @@ for (const component of [PlayerInfo, AlternatePlayerInfo]) {
     expect(container.querySelector(".automa-details")).to.equal(null);
     expect(container.querySelector(".robot-icon")).not.to.equal(null);
     expect(container.querySelector(".automa-action-card .card-number").textContent).to.equal("#13");
+    expect(container.querySelectorAll(".automa-action-card .faction-action-reference .specialAction")).to.have.length(
+      1
+    );
+    expect(container.querySelector(".automa-last-turn").getAttribute("aria-label")).to.include("2 ore");
     expect(container.querySelector(".automa-support-card .card-number").textContent).to.equal("#6");
     expect(container.querySelector('[data-support="range"]').getAttribute("title")).to.include(
       "Range 2 when placing mines"

@@ -71,22 +71,22 @@ export function automaSupportDescriptions(engine: Engine, player: Player) {
 }
 
 export function describeAutomaAction(action: string): string {
-  const [command, target] = action.split(" ");
+  const [command, target, detail] = action.split(" ");
   switch (command) {
     case "build":
-      return `${buildingData[target]?.name ?? "Structure"} built`;
+      return `${buildingData[target]?.name ?? "Structure"} built${detail ? ` at ${detail}` : ""}`;
     case "up":
       return `Advanced ${researchData[target]?.name ?? "research"}`;
     case "remove":
       return `Removed the advanced tech tile on ${researchData[target.replace("adv-", "")]?.name ?? "research"}`;
     case "block":
       return spaceshipNames[target]
-        ? `Blocked an action on ${spaceshipNames[target]}`
+        ? `Blocked the ${detail ?? "spaceship"} action on ${spaceshipNames[target]}`
         : `Blocked the ${boardActionData[target]?.name ?? "power / Q.I.C."} action`;
     case "explore":
       return `Explored ${spaceshipNames[target] ?? "a spaceship"}`;
     case "pass":
-      return "Passed";
+      return target ? `Passed and took ${target}` : "Passed";
     default:
       return "Action resolved";
   }

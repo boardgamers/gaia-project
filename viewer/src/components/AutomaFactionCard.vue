@@ -8,7 +8,7 @@
     :title="ability"
   >
     <g :class="['specialAction', { recent: lastWasFaction, disabled: passed }]">
-      <polygon points="20,22 42,0 74,0 96,22 96,54 74,76 42,76 20,54" />
+      <polygon points="10,0 154,0 164,10 164,40 154,50 10,50 0,40 0,10" />
       <g class="card-icons" aria-hidden="true">
         <AutomaActionIcon
           v-for="(icon, index) in action"
@@ -16,12 +16,12 @@
           :icon="icon"
           :faction="player.faction"
           :flat="flat"
-          :transform="index === 2 ? 'translate(58, 56)' : `translate(${41 + index * 34}, 25) scale(.9)`"
+          :transform="`translate(${30 + index * 52}, 25) scale(.9)`"
         />
-        <path v-if="['hadsch-hallas', 'firaks'].includes(player.faction)" d="M56 30l4-10" fill="none" stroke="#111" />
+        <path v-if="['hadsch-hallas', 'firaks'].includes(player.faction)" d="M54 30l4-10" fill="none" stroke="#111" />
       </g>
     </g>
-    <g v-if="bonus" class="card-icons" transform="translate(0, 99)" aria-hidden="true">
+    <g v-if="bonus" class="card-icons" transform="translate(170, 25)" aria-hidden="true">
       <AutomaActionIcon
         :icon="bonus[0]"
         :faction="player.faction"

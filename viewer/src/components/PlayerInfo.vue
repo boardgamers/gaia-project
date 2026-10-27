@@ -177,7 +177,14 @@
           v-if="player.isAutoma"
           :player="player"
           :engine="engine"
-          transform="translate(23.8, 10) scale(.075)"
+          transform="translate(0, 17.4) scale(.062)"
+        />
+        <AutomaDecisionCard
+          v-if="player.isAutoma && engine.automa"
+          :player="player"
+          :engine="engine"
+          transform="translate(25.7, 8.9) scale(.085)"
+          @details="showAutomaDetails(false)"
         />
         <AutomaSupportCard
           v-if="player.isAutoma && engine.automa"
@@ -342,6 +349,7 @@ import { mapModeTypeOptions } from "../data/stats";
 import { factionColor } from "../graphics/utils";
 import { gameSeed } from "../logic/utils";
 import ArtifactIcon from "./ArtifactIcon.vue";
+import AutomaDecisionCard from "./AutomaDecisionCard.vue";
 import AutomaFactionCard from "./AutomaFactionCard.vue";
 import AutomaInfo from "./AutomaInfo.vue";
 import AutomaStatus from "./AutomaStatus.vue";
@@ -369,6 +377,7 @@ type TerraformingMarker = {
     AutomaStatus,
     AutomaSupportCard,
     AutomaFactionCard,
+    AutomaDecisionCard,
     TechTile,
     Booster,
     SpecialAction,
