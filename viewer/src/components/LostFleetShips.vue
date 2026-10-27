@@ -399,7 +399,7 @@ export default class LostFleetShips extends Vue {
   }
 
   get ships(): Spaceship[] {
-    return shipsInPlay(this.engine.expansions, this.engine.players.length);
+    return shipsInPlay(this.engine.expansions, this.engine.setupPlayerCount);
   }
 
   get flat(): boolean {

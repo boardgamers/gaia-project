@@ -8,6 +8,7 @@ import {
   preferenceSplitBidError,
 } from "../algorithms/preference-split-auction";
 import { silentAuctionBidError } from "../algorithms/silent-auction";
+import { initAutoma } from "../automa";
 import { AvailableCommand } from "../available/types";
 import Engine, { AuctionVariant } from "../engine";
 import { BoardAction, Command, Faction, Phase, Player as PlayerEnum } from "../enums";
@@ -18,7 +19,9 @@ import { applyRandomBoardSetup, applySetupOption, SetupOption, SetupPosition, Se
 import assert from "../utils/assert";
 
 export function moveInit(engine: Engine, players: number, seed: string) {
-  assert(players >= 2 && players <= 5, "Invalid number of players");
+  assert(players >= 1 && players <= 5, "Invalid number of players");
+  const solo = players === 1;
+  if (solo) initAutoma(engine);
   assert(
     !(engine.options.lostFleet && engine.options.map?.sectors),
     "A custom map configuration cannot be combined with the Lost Fleet expansion"
@@ -53,7 +56,8 @@ export function moveInit(engine: Engine, players: number, seed: string) {
   }
   engine.options.map = engine.map.placement;
 
-  applyRandomBoardSetup(engine, seed, players);
+  applyRandomBoardSetup(engine, seed, solo ? 2 : players);
+  if (solo) engine.automa.boosters = Object.keys(engine.tiles.boosters) as any;
 
   if (engine.options.lostFleet) {
     // §B5 (rulebook p.8): the Moweyds/Tinkeroids Terraforming board's randomized 7-color row is
@@ -66,8 +70,11 @@ export function moveInit(engine: Engine, players: number, seed: string) {
   engine.players = [];
   engine.setup = [];
 
-  for (let i = 0; i < players; i++) {
-    engine.addPlayer(new Player(engine.expansions, i));
+  for (let i = 0; i < (solo ? 2 : players); i++) {
+    const player = new Player(engine.expansions, i);
+    player.isAutoma = solo && i === 1;
+    if (player.isAutoma) player.name = "Automa";
+    engine.addPlayer(player);
   }
 
   engine.boardActionTypes.forEach((pos: BoardAction) => {

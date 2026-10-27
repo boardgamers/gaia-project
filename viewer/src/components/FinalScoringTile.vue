@@ -105,7 +105,12 @@ import Token from "./Token.vue";
       // The tile shows no text title (the icon carries it), so lead the tooltip with the
       // spelled-out condition.
       const lines = players.map((pl) => {
-        const name = pl.faction === "automa" ? "Automa" : factionName(pl.faction);
+        const name =
+          pl.faction === "automa"
+            ? this.$store.state.data.automa
+              ? "Neutral player"
+              : "Automa"
+            : factionName(pl.faction);
         const points = this.progress(pl);
         return `- ${name}: ${points}`;
       });

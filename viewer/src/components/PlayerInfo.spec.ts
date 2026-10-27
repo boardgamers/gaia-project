@@ -19,6 +19,21 @@ import AlternatePlayerInfo from "../../../old-ui/src/components/PlayerInfo.vue";
 import { makeStore } from "../store";
 import PlayerInfo from "./PlayerInfo.vue";
 
+for (const component of [PlayerInfo, AlternatePlayerInfo]) {
+  it("renders the official Automa card instead of a normal faction economy", () => {
+    const engine = new Engine(["init 1 automa-panel", "p1 faction terrans", "p2 faction taklons"], {
+      automaSeed: "test",
+    });
+    const store = makeStore();
+    store.commit("receiveData", engine);
+    const { container } = render(component, { props: { player: engine.players[1] }, store });
+    expect(container.querySelector('[aria-label="Automa opponent"]')).not.to.equal(null);
+    expect(container.textContent).to.include("Automa · Taklons");
+    expect(container.querySelector(".player-board")).to.equal(null);
+    expect(container.querySelector("details")?.open).to.equal(false);
+  });
+}
+
 describe("PlayerInfo terraforming strip", () => {
   it("keeps the default full-size markers for base factions", () => {
     const engine = new Engine(["init 2 player-info-base", "p1 faction terrans", "p2 faction hadsch-hallas"]);

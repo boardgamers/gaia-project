@@ -41,6 +41,7 @@ export async function init(
     options.lostFleet = true;
   }
 
+  if (nbPlayers === 1) options = { ...options, automaSeed: crypto.randomBytes(24).toString("hex") };
   const engine = new Engine([`init ${nbPlayers} ${seed}`], options);
   engine.generateAvailableCommandsIfNeeded();
 
@@ -236,7 +237,10 @@ export function isLiveUpdate(engine: Engine): boolean {
 }
 
 export function timeIncrements(engine: Engine): number[] {
-  return engine.automation?.increments ?? engine.players.map(() => 0);
+  return (engine.automation?.increments ?? engine.players.map(() => 0)).slice(
+    0,
+    engine.automa ? 1 : engine.players.length
+  );
 }
 
 export function ended(engine: Engine) {
@@ -248,11 +252,15 @@ export function cancelled(engine: Engine) {
 }
 
 export function scores(engine: Engine) {
-  return engine.players.map((pl) => pl.data.victoryPoints);
+  return engine.players.filter((pl) => !pl.isAutoma).map((pl) => pl.data.victoryPoints);
+}
+
+export function rankings(engine: Engine): number[] | undefined {
+  if (engine.automa) return [engine.players[0].data.victoryPoints >= engine.players[1].data.victoryPoints ? 1 : 2];
 }
 
 export function factions(engine: Engine) {
-  return engine.players.map((pl) => pl.faction);
+  return engine.players.filter((pl) => !pl.isAutoma).map((pl) => pl.faction);
 }
 
 export async function replay(engine: Engine, { to = Infinity } = { to: Infinity }): Promise<Engine> {
@@ -393,6 +401,8 @@ export function stripSecret(engine: Engine, player?: number): Engine {
   // Plain-JSON copy: this runs on both live Engine instances and the saved plain data, and the
   // platform JSON-serializes whatever we return anyway.
   const data = JSON.parse(JSON.stringify(engine)) as Engine;
+  delete data.options.automaSeed;
+  if (data.automa) delete data.automa.deck;
   const state = automation(data);
   state.plans = player === undefined || !state.plans[player] ? {} : { [player]: state.plans[player] };
 
@@ -446,6 +456,8 @@ export function createAnalysis(data: Engine, options: { to: number; sourceEnded:
   assert(options.to >= 1 && options.to <= source.moveHistory.length, "Choose a position after game setup");
   const copy = source.replayedTo(options.to, false);
   delete copy.automation;
+  delete copy.options.automaSeed;
+  if (copy.automa) delete copy.automa.deck;
   delete (copy as any).messages;
   for (const player of copy.players) {
     player.dropped = false;
@@ -465,7 +477,7 @@ export function analysisMove(data: Engine, command: string, player: number): Eng
 }
 
 export function analysisView(data: Engine, options: { player: number; start?: number; end?: number }) {
-  const copy = Engine.fromData(JSON.parse(JSON.stringify(data)));
+  const copy = Engine.fromData(stripSecret(data, options.player));
   copy.generateAvailableCommandsIfNeeded();
   return {
     state: copy,

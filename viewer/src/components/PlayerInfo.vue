@@ -1,5 +1,6 @@
 <template>
-  <div class="player-info no-gutters" v-if="player && player.faction">
+  <AutomaInfo v-if="player && player.isAutoma && engine.automa" :player="player" :engine="engine" />
+  <div class="player-info no-gutters" v-else-if="player && player.faction">
     <div class="d-flex justify-content-between align-items-center" v-if="!preview">
       <div
         style="display: flex; align-items: center"
@@ -297,6 +298,7 @@ import { mapModeTypeOptions } from "../data/stats";
 import { factionColor } from "../graphics/utils";
 import { gameSeed } from "../logic/utils";
 import ArtifactIcon from "./ArtifactIcon.vue";
+import AutomaInfo from "./AutomaInfo.vue";
 import Booster from "./Booster.vue";
 import FederationTile from "./FederationTile.vue";
 import BuildingGroup from "./PlayerBoard/BuildingGroup.vue";
@@ -316,6 +318,7 @@ type TerraformingMarker = {
 
 @Component({
   components: {
+    AutomaInfo,
     TechTile,
     Booster,
     SpecialAction,

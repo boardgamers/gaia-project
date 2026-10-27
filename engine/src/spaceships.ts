@@ -116,7 +116,9 @@ export function artifactSlotCount(ship: Spaceship, nbPlayers: number): number {
 
 /** Rebellion is removed from the game entirely in 2-player games. */
 export function shipsInPlay(expansions: Expansion, nbPlayers: number): Spaceship[] {
-  return Spaceship.values(expansions).filter((ship) => nbPlayers > 2 || ship !== Spaceship.Rebellion);
+  return Spaceship.values(expansions).filter((ship) =>
+    nbPlayers === 1 ? ship !== Spaceship.Twilight : nbPlayers > 2 || ship !== Spaceship.Rebellion
+  );
 }
 
 export function claimableSpaceshipFederations(

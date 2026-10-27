@@ -18,6 +18,16 @@ export type MovesSlice = { index: number; moves: ParsedMove[]; allMoves: ParsedM
 
 export function parseCommands(move: string): CommandObject[] {
   move = move.trim();
+  const automa = /^(\S+) automa [^ ]+ \[(.*)\]$/.exec(move);
+  if (automa) {
+    return automa[2]
+      .split("; ")
+      .flatMap((action) =>
+        parseCommands(
+          `${automa[1]} ${action.replace(/^block (power\d|qic\d)$/, "action $1").replace(/^block (\S+) (\S+)$/, "spaceshipAction $1 $2")}`
+        )
+      );
+  }
   const factionIndex = move.indexOf(" ");
   const faction = move.substring(0, factionIndex) as Faction;
 

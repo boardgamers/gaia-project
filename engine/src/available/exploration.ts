@@ -26,7 +26,7 @@ export function possibleExplorations(engine: Engine, player: Player): AvailableC
 
   const ships: AvailableExploreAction[] = [];
 
-  for (const ship of shipsInPlay(engine.expansions, engine.players.length)) {
+  for (const ship of shipsInPlay(engine.expansions, engine.setupPlayerCount)) {
     if (pl.data.hasExplored(ship)) {
       continue;
     }

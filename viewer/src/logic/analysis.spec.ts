@@ -50,6 +50,43 @@ const SETUP_MOVES = [
 const PARTIAL_SETUP_MOVES = SETUP_MOVES.slice(0, -1);
 
 describe("replayAnalysisLine", () => {
+  it("can plan into the next solo round without drawing future Automa cards", () => {
+    const origin = new Engine(["init 1 solo-planning"], { automaFaction: Faction.Taklons, automaSeed: "private-seed" });
+    origin.move("p1 faction hadsch-hallas");
+    origin.players[0].settings.autoIncome = true;
+    while (!origin.round) {
+      while (origin.autoMove()) {}
+      if (origin.round) break;
+      origin.generateAvailableCommands();
+      const cmd = origin.availableCommands[0];
+      if (cmd.name === Command.Build) {
+        const build = cmd.data.buildings[0];
+        origin.move(`p1 build ${build.building} ${build.coordinates}`);
+      } else origin.move(`p1 booster ${cmd.data.boosters[0]}`);
+    }
+    const original = JSON.stringify(origin);
+    const booster = Object.keys(origin.tiles.boosters).find((b) => origin.tiles.boosters[b]);
+    const planning = markAnalysisSeat(Engine.fromData(JSON.parse(original)), 0);
+    applySoloRoundFlow(planning, 0);
+    const { engine, applied, blockedReason } = replayAnalysisLine(
+      planning,
+      [{ kind: "move", move: `hadsch-hallas pass ${booster}` }],
+      0,
+      1
+    );
+    expect(blockedReason).to.equal(undefined);
+    expect(applied).to.equal(1);
+    expect(engine.round).to.equal(2);
+    expect(engine.options.automaSeed).to.equal(undefined);
+    expect(engine.automa.deck).to.equal(undefined);
+    expect(JSON.stringify(origin)).to.equal(original);
+    const passed = markAnalysisSeat(Engine.fromData(JSON.parse(original)), 0);
+    passed.move(`hadsch-hallas pass ${booster}`);
+    expect(advancePastOwnPass(passed, 0)).to.equal(true);
+    expect(passed.round).to.equal(2);
+    expect(passed.automa.deck).to.equal(undefined);
+  });
+
   it("reports spending without subtracting the resources earned by the same move", () => {
     const origin = new Engine(SETUP_MOVES);
     const costs: MoveCost[] = [];

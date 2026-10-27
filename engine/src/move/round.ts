@@ -14,6 +14,7 @@ export function moveChooseRoundBooster(
 
   assert(boosters.includes(booster), `${booster} is not in the available boosters`);
 
+  if (engine.automa) engine.automa.boosters = engine.automa.boosters.filter((b) => b !== booster);
   engine.tiles.boosters[booster] = false;
   engine.players[player].getRoundBooster(booster);
 }
@@ -24,13 +25,15 @@ export function movePass(
   player: PlayerEnum,
   booster: Booster
 ) {
-  engine.tiles.boosters[engine.players[player].data.tiles.booster] = true;
+  const previousBooster = engine.players[player].data.tiles.booster;
+  engine.tiles.boosters[previousBooster] = true;
   engine.players[player].pass();
 
   if (!engine.isLastRound) {
     moveChooseRoundBooster(engine, command as any as AvailableCommand<Command.ChooseRoundBooster>, player, booster);
   }
 
+  if (engine.automa) engine.automa.boosters.push(previousBooster);
   engine.passedPlayers.push(player);
   engine.turnOrder.splice(engine.turnOrder.indexOf(player), 1);
 }

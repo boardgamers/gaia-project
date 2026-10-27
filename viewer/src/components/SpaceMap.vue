@@ -374,6 +374,7 @@ export default class SpaceMap extends Vue {
    * before - not a regression, just nothing to exploit there.
    */
   get mapRotationDeg(): number {
+    if (this.engine.automa) return 30;
     if (!this.isLostFleet) {
       return 0;
     }

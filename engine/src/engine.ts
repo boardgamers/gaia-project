@@ -6,6 +6,7 @@ import {
   PreferenceSplitResult,
 } from "./algorithms/preference-split-auction";
 import { SilentAuctionBid, SilentAuctionStep } from "./algorithms/silent-auction";
+import type { AutomaDifficulty, AutomaState } from "./automa";
 import { generate as generateAvailableCommands } from "./available/available-command";
 import { AvailableCommand, BrainstoneActionData } from "./available/types";
 import {
@@ -141,6 +142,10 @@ export type FactionCustomization = {
 export type Layout = "standard" | "balanced" | "xshape";
 
 export interface EngineOptions {
+  automaDifficulty?: AutomaDifficulty;
+  automaFaction?: Faction;
+  /** Server-only shuffle secret, independent of the public board seed. */
+  automaSeed?: string;
   /** Opt-in: let charges be answered independently while the next player takes their turn. */
   concurrentCharges?: boolean;
   /** Allow last player to rotate sector BEFORE faction selection */
@@ -473,6 +478,12 @@ export default class Engine {
   // Tells the UI if the new move should be on the same line or not
   newTurn = true;
   automation?: AutomationState;
+  automa?: AutomaState;
+
+  /** One human plus an internal Automa uses the official solo map and ships. */
+  get setupPlayerCount(): number {
+    return this.automa ? 1 : this.players.length;
+  }
 
   constructor(moves: string[] = [], options: EngineOptions = {}, engineVersion?: string, replay?: boolean) {
     this.options = options;
@@ -586,7 +597,8 @@ export default class Engine {
       if (replacementIndex < 0) this.log(actingPlayer, undefined, 0, undefined);
       // Secret-log masking identifies sealed bids by seat, even when a caller used a faction alias.
       if (isSealedBid) moveToShow = move.replace(/^\S+/, `p${actingPlayer + 1}`);
-      moveToShow = createMoveToShow(moveToShow, this.player(actingPlayer), this.map, execute);
+      if (this.player(actingPlayer).isAutoma && /^\S+ automa /.test(moveToShow)) execute();
+      else moveToShow = createMoveToShow(moveToShow, this.player(actingPlayer), this.map, execute);
     } else {
       execute();
     }
@@ -595,6 +607,9 @@ export default class Engine {
       assert(this.turnMoves.length === 0, "Unnecessary commands at the end of the turn: " + this.turnMoves.join(". "));
     }
     this.pendingMove = this.newTurn ? "" : move;
+    if (this.automa && /^\S+ automa /.test(moveToShow)) {
+      moveToShow = moveToShow.replace(/ \[.*\]$/, "") + ` [${this.automa.lastActions.join("; ") || "no action"}]`;
+    }
     if (replacementIndex < 0) this.moveHistory.push(moveToShow);
     else this.moveHistory[replacementIndex] = moveToShow;
   }
@@ -962,7 +977,7 @@ export default class Engine {
 
     if (data.map) {
       engine.map = SpaceMap.fromData(data.map);
-      engine.map.nbPlayers = data.players.length;
+      engine.map.nbPlayers = engine.automa ? 1 : data.players.length;
       engine.map.layout = engine.options.layout;
       engine.map.lostFleet = engine.options.lostFleet;
       engine.map.placement = engine.options.map;

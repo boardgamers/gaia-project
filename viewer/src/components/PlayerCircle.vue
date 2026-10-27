@@ -25,7 +25,7 @@
       {{ initial() }}
     </text>
     <text
-      :data-bgs-player="profilePlayer ? profilePlayer.player : undefined"
+      :data-bgs-player="profilePlayer && !profilePlayer.isAutoma ? profilePlayer.player : undefined"
       tabindex="0"
       class="player-circle__name"
       :style="`font-size: 1px; text-anchor: middle;`"

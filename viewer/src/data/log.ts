@@ -60,6 +60,11 @@ export function replaceMove(data: Engine, move: ParsedMove): ParsedMove {
   return {
     commands: move.commands,
     move: move.move
+      .replace(
+        /^(\S+) automa ([^ ]+) \[(.*)\]$/,
+        (_all, faction, draw, actions) =>
+          `${faction} · Automa${draw === "pass" ? "" : ` (${draw.includes(",") ? "cards" : "card"} ${draw})`}: ${actions}`
+      )
       .replace(/(\b(?:charge|decline) [^ .]+) @\d+/g, "$1")
       .replace(/\bwaitForCharges\b/g, "Wait for charges")
       .replace(/\bresumeCharges\b/g, "Resume")

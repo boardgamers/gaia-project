@@ -71,6 +71,8 @@ export interface AnalysisResourceView {
  * Re-applied after cloning because the flag is intentionally not serialized. */
 export function markAnalysisSeat(engine: Engine, seat: number, assumedPower = 0): Engine {
   engine.options = { ...engine.options, concurrentCharges: false };
+  delete engine.options.automaSeed;
+  if (engine.automa) delete engine.automa.deck;
   engine.pendingCharges = [];
   engine.chargeWaits = {};
   const data = engine.players[seat]?.data;
@@ -437,6 +439,14 @@ export function advancePastOwnPass(engine: Engine, seat: number): boolean {
       break;
     }
     const player = engine.players[toMove];
+    if (player.isAutoma && engine.automa) {
+      // End this round on the analysis clone without drawing any hidden opponent cards.
+      engine.automa.remaining = 0;
+      engine.automa.action = engine.automa.action ?? engine.automa.support ?? "4";
+      delete engine.automa.deck;
+      engine.move(`${player.faction} automa pass`);
+      continue;
+    }
     const faction = player.faction ?? `p${toMove + 1}`;
     const boosters = engine.findAvailableCommand(toMove, Command.Pass)?.data?.boosters ?? [];
     if (

@@ -45,6 +45,7 @@ import { AvailableCommand, UPGRADE_RESEARCH_COST } from "./types";
 
 export function generate(engine: Engine, subPhase: SubPhase = null, data?: any): AvailableCommand[] {
   const player = engine.playerToMove;
+  if (engine.player(player)?.isAutoma && engine.phase === Phase.RoundMove) return [];
 
   if (engine.phase === Phase.RoundMove && !subPhase) {
     subPhase = SubPhase.BeforeMove;

@@ -2,6 +2,7 @@ import { range } from "lodash";
 import { resolvePreferenceSplitAuction } from "../algorithms/preference-split-auction";
 import { finalRankings, gainFinalScoringVictoryPoints } from "../algorithms/scoring";
 import { resolveSilentAuction } from "../algorithms/silent-auction";
+import { playAutomaTurn, setupAutoma, startAutomaRound } from "../automa";
 import { stdBuildingValue } from "../buildings";
 import Engine, { AuctionVariant, LEECHING_DISTANCE } from "../engine";
 import {
@@ -237,6 +238,20 @@ export function phaseRoundGaia(engine: Engine, move: string) {
 
 export function phaseRoundMove(engine: Engine, move: string) {
   const pl = engine.player(engine.playerToMove);
+  if (pl.isAutoma) {
+    engine.processedPlayer = pl.player;
+    engine.oldPhase = engine.phase;
+    engine.turnMoves = [];
+    const next = engine.getNextPlayer();
+    const passed = playAutomaTurn(engine, move);
+    if (passed && !engine.turnOrder.length) {
+      cleanUpPhase(engine);
+      return;
+    }
+    beginLeechingPhase(engine);
+    engine.currentPlayer = next;
+    return;
+  }
   pl.data.turns = 1;
 
   engine.loadTurnMoves(move);
@@ -315,7 +330,7 @@ function beginSetupBoardPhase(engine: Engine) {
     engine.currentPlayer = engine.players[engine.options.creator ?? 0].player;
   } else if (engine.options.advancedRules) {
     // The last player is the one to rotate the sectors
-    engine.currentPlayer = engine.players.slice(-1).pop().player;
+    engine.currentPlayer = engine.automa ? 0 : engine.players.slice(-1).pop().player;
   } else {
     beginSetupFactionPhaseOrBan(engine);
   }
@@ -384,6 +399,7 @@ export function endSetupFactionPhase(engine: Engine) {
     const faction = pl.faction;
     const board = pl.variant ?? factionVariantBoard(engine.factionCustomization, faction);
     pl.loadFaction(board, engine.expansions, false, engine.players.length, engine.lostFleetEconomySide);
+    if (pl.isAutoma) setupAutoma(engine, pl);
   }
 
   if (engine.options.lostFleet) {
@@ -445,6 +461,8 @@ function beginSetupBuildingPhase(engine: Engine) {
 }
 
 function beginSetupBoosterPhase(engine: Engine) {
+  if (engine.automa)
+    engine.automa.boosters = Object.keys(engine.tiles.boosters).filter((b) => engine.tiles.boosters[b]) as any;
   engine.changePhase(Phase.SetupBooster);
   engine.turnOrder = engine.turnOrderAfterSetupAuction.reverse();
   engine.moveToNextPlayer(engine.turnOrder, { loop: false });
@@ -452,13 +470,14 @@ function beginSetupBoosterPhase(engine: Engine) {
 
 function beginRoundStartPhase(engine: Engine) {
   engine.round += 1;
+  startAutomaRound(engine);
   engine.addAdvancedLog({ round: engine.round });
   engine.turnOrder = engine.passedPlayers || engine.turnOrderAfterSetupAuction;
   engine.passedPlayers = [];
   engine.currentPlayer = engine.turnOrder[0];
 
   for (const player of engine.playersInOrder()) {
-    player.loadEvents(engine.currentRoundScoringEvents);
+    if (!player.isAutoma) player.loadEvents(engine.currentRoundScoringEvents);
   }
 
   beginIncomePhase(engine);

@@ -1,4 +1,5 @@
 import { ChargeDecision, ChargeRequest, decideChargeRequest } from "../auto-charge";
+import { nextAutomaMove } from "../automa";
 import { AvailableCommand, AvailableFreeActionData } from "../available/types";
 import Engine, { AuctionVariant } from "../engine";
 import { Command, Faction, PowerArea, Resource } from "../enums";
@@ -11,6 +12,13 @@ export function autoMove(
   partialMove?: string,
   options?: { autoPass?: boolean; player?: number }
 ): boolean {
+  if (!partialMove) {
+    const move = nextAutomaMove(engine);
+    if (move) {
+      engine.move(move);
+      return true;
+    }
+  }
   if (!partialMove && hasConcurrentCharges(engine) && options?.player === undefined) {
     for (const player of chargeDecisionSeats(engine)) {
       if (autoMove(engine, undefined, { ...options, player })) return true;

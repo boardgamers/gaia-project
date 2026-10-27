@@ -58,6 +58,7 @@ function findOperator(spec: string): [Operator, string] {
 }
 
 export type EventSource =
+  | "automa"
   | Booster
   | TechPos
   | AdvTechTilePos

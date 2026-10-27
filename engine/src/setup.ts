@@ -256,7 +256,7 @@ const getFactories = (engine: Engine, nbPlayers = engine.players.length): SetupF
     type: SetupType.TerraformingFederation,
     init: () => {
       for (const federation of Federation.values(engine.expansions)) {
-        engine.tiles.federations[federation] = 3;
+        engine.tiles.federations[federation] = engine.automa ? 2 : 3;
         engine.terraformingFederation = null;
       }
     },
@@ -288,14 +288,16 @@ const getFactories = (engine: Engine, nbPlayers = engine.players.length): SetupF
     2
   ),
   spaceshipTechAssignmentFactory(
-    shipsInPlay(engine.expansions, nbPlayers).filter((ship) => spaceshipBoards[ship].hasStandardTechSlot),
+    shipsInPlay(engine.expansions, engine.automa ? 1 : nbPlayers).filter(
+      (ship) => spaceshipBoards[ship].hasStandardTechSlot
+    ),
     SpaceshipTechTile.values(engine.expansions),
     engine.tiles.spaceshipTechs,
     nbPlayers
   ),
   shipAssignmentFactory(
     SetupType.SpaceshipFederation,
-    shipsInPlay(engine.expansions, nbPlayers),
+    shipsInPlay(engine.expansions, engine.automa ? 1 : nbPlayers),
     SpaceshipFederation.values(engine.expansions),
     engine.tiles.spaceshipFederations
   ),
@@ -304,7 +306,11 @@ const getFactories = (engine: Engine, nbPlayers = engine.players.length): SetupF
     SetupType.ArtifactToken,
     ArtifactToken.values(engine.expansions),
     engine.tiles.artifacts,
-    hasExpansion(engine.expansions, Expansion.LostFleet) ? artifactSlotCount(Spaceship.Twilight, nbPlayers) : 0
+    hasExpansion(engine.expansions, Expansion.LostFleet)
+      ? engine.automa
+        ? 0
+        : artifactSlotCount(Spaceship.Twilight, nbPlayers)
+      : 0
   ),
   {
     type: SetupType.MapTile,

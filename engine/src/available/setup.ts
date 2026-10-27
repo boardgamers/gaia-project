@@ -1,8 +1,9 @@
 import { difference, range } from "lodash";
 import { MAX_SILENT_BID } from "../algorithms/silent-auction";
+import { automaFactions } from "../automa";
 import Engine, { AuctionVariant } from "../engine";
 import { Command, Faction, Player } from "../enums";
-import { remainingFactions } from "../factions";
+import { factionPlanet, remainingFactions } from "../factions";
 import { AvailableCommand, PossibleBid } from "./types";
 
 export { MAX_SILENT_BID };
@@ -35,6 +36,11 @@ export function choosableFactions(engine: Engine) {
   } else {
     // Standard
     factions = remainingFactions(engine.setup, engine.expansions);
+  }
+  if (engine.automa) {
+    if (engine.playerToMove === 1) factions = factions.filter((f) => automaFactions.includes(f));
+    else if (engine.options.automaFaction)
+      factions = factions.filter((f) => factionPlanet(f) !== factionPlanet(engine.options.automaFaction));
   }
   return difference(factions, engine.bannedFactions);
 }

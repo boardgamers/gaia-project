@@ -110,6 +110,7 @@ export enum BuildWarning {
 export type BuildCheck = { cost: Reward[]; steps: number; warnings: BuildWarning[] };
 
 export default class Player extends EventEmitter {
+  isAutoma = false;
   faction: Faction = null;
   variant: {
     board: FactionBoardRaw;
@@ -197,6 +198,7 @@ export default class Player extends EventEmitter {
   toJSON() {
     const json = {
       player: this.player,
+      isAutoma: this.isAutoma,
       faction: this.faction,
       data: this.data,
       settings: this.settings,
@@ -238,6 +240,7 @@ export default class Player extends EventEmitter {
     const player = new Player(expansions, data.player);
 
     player.faction = data.faction;
+    player.isAutoma = !!data.isAutoma;
 
     if (data.variant || data.factionVariant) {
       // Legacy
@@ -516,8 +519,8 @@ export default class Player extends EventEmitter {
     this.loadBoard(
       factionBoard(this.faction, this.variant.board, expansions),
       expansions,
-      skipIncome,
-      true,
+      skipIncome || this.isAutoma,
+      !this.isAutoma,
       nbPlayers,
       lostFleetEconomySide
     );
@@ -810,7 +813,7 @@ export default class Player extends EventEmitter {
   getRoundBooster(roundBooster: Booster) {
     // add the booster to the the player
     this.data.tiles.booster = roundBooster;
-    this.loadEvents(boosterEvents(roundBooster));
+    if (!this.isAutoma) this.loadEvents(boosterEvents(roundBooster));
   }
 
   gainTechTile(chooseTechTile: ChooseTechTile) {
@@ -1022,6 +1025,7 @@ export default class Player extends EventEmitter {
   }
 
   canLeech(): boolean {
+    if (this.isAutoma) return false;
     if (!this.data.leechPossible) {
       return false;
     }
@@ -1173,6 +1177,7 @@ export default class Player extends EventEmitter {
           this.data.occupied.filter((hex) => hex.colonizedBy(this.player)).length + this.data.artifactPlanetTypes.length
         );
       case Condition.StructureFed:
+        if (this.isAutoma) return Math.max(0, this.ownedPlanets.length - 1);
         return this.data.occupied.filter(
           (hex) => hex.colonizedBy(this.player) && hex.belongsToFederationOf(this.player)
         ).length;

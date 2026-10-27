@@ -1,4 +1,5 @@
 import { isEqual } from "lodash";
+import { placeAutomaBuilding } from "../automa";
 import { AvailableBuilding, AvailableCommand } from "../available/types";
 import Engine from "../engine";
 import { Building, Command, Phase, Planet, Player as PlayerEnum, Resource } from "../enums";
@@ -54,6 +55,10 @@ export function moveBuild(
 
 export function placeBuilding(engine: Engine, pl: Player, building: AvailableBuilding) {
   const hex = engine.map.getS(building.coordinates);
+  if (pl.isAutoma) {
+    placeAutomaBuilding(engine, hex, building.building);
+    return;
+  }
   pl.build(
     building.building,
     hex,

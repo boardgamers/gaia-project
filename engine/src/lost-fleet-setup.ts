@@ -37,7 +37,7 @@ function rebuildMap(engine: Engine) {
     }
   });
   const holes = findInterspaceHoles(centers);
-  const ships = shipsInPlay(engine.expansions, engine.players.length);
+  const ships = shipsInPlay(engine.expansions, engine.setupPlayerCount);
   draft.interspace.forEach((choice, i) => {
     const spaceship = ships.find((ship) => ship === choice);
     grid.push(
@@ -72,7 +72,7 @@ function rebuildMap(engine: Engine) {
 function interspaceOptions(engine: Engine): string[] {
   const draft = engine.lostFleetMapSetup.interspace;
   const set = interspaceSet(engine.players.length);
-  const ships = shipsInPlay(engine.expansions, engine.players.length);
+  const ships = shipsInPlay(engine.expansions, engine.setupPlayerCount);
   const pool = [
     ...ships,
     ...Array(set.asteroid).fill(Planet.Asteroid),

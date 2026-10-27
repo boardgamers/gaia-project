@@ -351,6 +351,7 @@ export interface InterspaceSet {
  * (BOARD-ART, owner-CONFIRMED). Only aggregate counts matter — tiles are placed at random.
  */
 export const INTERSPACE_SETS: { [nbPlayers: number]: InterspaceSet } = {
+  1: { asteroid: 2, protoplanet: 1, spaceships: 3, excludedShips: [Spaceship.Twilight], blank: 0, total: 6 },
   2: { asteroid: 2, protoplanet: 1, spaceships: 3, excludedShips: [Spaceship.Rebellion], blank: 0, total: 6 },
   3: { asteroid: 2, protoplanet: 1, spaceships: 4, excludedShips: [], blank: 1, total: 8 },
   4: { asteroid: 4, protoplanet: 1, spaceships: 4, excludedShips: [], blank: 1, total: 10 },
@@ -358,7 +359,7 @@ export const INTERSPACE_SETS: { [nbPlayers: number]: InterspaceSet } = {
 
 /** The Interspace tile set for a player count (2-4). */
 export function interspaceSet(nbPlayers: number): InterspaceSet {
-  const set = INTERSPACE_SETS[Math.min(Math.max(nbPlayers, 2), 4)];
+  const set = INTERSPACE_SETS[Math.min(Math.max(nbPlayers, 1), 4)];
   return set;
 }
 

@@ -1,5 +1,6 @@
 <template>
-  <div class="player-info no-gutters" v-if="player && player.faction">
+  <AutomaInfo v-if="player && player.isAutoma && engine.automa" :player="player" :engine="engine" />
+  <div class="player-info no-gutters" v-else-if="player && player.faction">
     <span
       :data-bgs-player="player.player"
       tabindex="0"

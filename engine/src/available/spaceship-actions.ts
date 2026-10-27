@@ -12,7 +12,7 @@ export function possibleSpaceshipActions(engine: Engine, player: Player): Availa
   const pl = engine.player(player);
   const actions: AvailableSpaceshipBoardAction[] = [];
 
-  for (const ship of shipsInPlay(engine.expansions, engine.players.length)) {
+  for (const ship of shipsInPlay(engine.expansions, engine.setupPlayerCount)) {
     if (!pl.data.hasExplored(ship)) {
       continue;
     }
