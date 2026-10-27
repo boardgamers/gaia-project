@@ -86,7 +86,7 @@
         v-b-tooltip.nofade="tooltipConfig"
         @click.stop
       >
-        <path class="symbol-hit-area pass-background" d="M0 102H60V125Q60 130 55 130H5Q0 130 0 125Z" />
+        <rect class="symbol-hit-area" y="102" width="60" height="28" />
         <path class="symbol-art" aria-hidden="true" d="M20 116l6 6 14-16" fill="none" stroke="#333" stroke-width="3" />
       </g>
     </template>
@@ -192,7 +192,7 @@ export default class AutomaDecisionCard extends Vue {
   pointer-events: none;
 }
 .automa-action-card:hover .card-outline,
-.automa-action-card:focus-visible .card-outline {
+.automa-action-card:focus-within .card-outline {
   stroke: #2878aa;
   stroke-width: 2;
 }
@@ -207,13 +207,6 @@ export default class AutomaDecisionCard extends Vue {
 }
 .symbol-hit-area {
   fill: transparent;
-}
-.active .pass-background {
-  fill: #e3eff6;
-}
-.decision-symbol:hover .symbol-hit-area,
-.decision-symbol:focus-visible .symbol-hit-area {
-  stroke: #2878aa;
 }
 .card-number {
   text-anchor: middle;

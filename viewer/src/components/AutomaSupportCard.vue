@@ -35,8 +35,7 @@
       v-b-tooltip.nofade="tooltipConfig"
       @click.stop
     >
-      <path v-if="symbol === 'numbered'" class="symbol-highlight" d="M-30-13H30V9Q30 14 25 14H-25Q-30 14-30 9Z" />
-      <rect v-else class="symbol-highlight" x="-30" y="-13" width="60" height="26" />
+      <rect class="symbol-hit-area" x="-30" :y="usage.pass ? -20 : -13" width="60" :height="usage.pass ? 40 : 26" />
       <g class="symbol-art" aria-hidden="true">
         <template v-if="symbol === 'scoring'">
           <rect
@@ -147,8 +146,8 @@ export default class AutomaSupportCard extends Vue {
 .heading-hit-area {
   fill: #e3eff6;
 }
-.behavior-heading:hover .heading-hit-area,
-.behavior-heading:focus-visible .heading-hit-area {
+.automa-support-card:hover .card-outline,
+.automa-support-card:focus-within .card-outline {
   stroke: #2878aa;
 }
 .symbol-art {
@@ -170,20 +169,11 @@ export default class AutomaSupportCard extends Vue {
 .support-symbol .symbol-art {
   opacity: 0.45;
 }
-.support-symbol.active .symbol-art,
-.support-symbol:hover .symbol-art,
-.support-symbol:focus .symbol-art {
+.support-symbol.active .symbol-art {
   opacity: 1;
 }
-.symbol-highlight {
+.symbol-hit-area {
   fill: transparent;
-}
-.active .symbol-highlight {
-  fill: #e3eff6;
-}
-.support-symbol:hover .symbol-highlight,
-.support-symbol:focus-visible .symbol-highlight {
-  stroke: #2878aa;
 }
 .selection-arrow {
   fill: none;
