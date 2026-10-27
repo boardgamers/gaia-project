@@ -13,34 +13,40 @@
     />
     <g transform="translate(0, 0.5)">
       <text class="faction-name">
-        <tspan class="faction-name" v-b-modal.modal-center="faction" role="button">{{ factionName }}</tspan>
+        <tspan v-if="player.isAutoma">{{ factionName }}</tspan>
+        <tspan v-else class="faction-name" v-b-modal.modal-center="faction" role="button">{{ factionName }}</tspan>
       </text>
     </g>
     <!-- Resources / Income -->
     <g transform="translate(0, 3)">
       <g>
-        <text class="board-text">R</text>
-        <g transform="translate(2.2, 0)">
-          <Resource kind="c" :count="data.credits" transform="scale(0.1)" />
-          <text :class="['board-text', { 'max-resource': data.ores >= 30 }]" transform="translate(1,0) scale(0.7)"
-            >/30
-          </text>
+        <g v-if="!player.isAutoma">
+          <text class="board-text">R</text>
+          <g transform="translate(2.2, 0)">
+            <Resource kind="c" :count="data.credits" transform="scale(0.1)" />
+            <text :class="['board-text', { 'max-resource': data.ores >= 30 }]" transform="translate(1,0) scale(0.7)"
+              >/30
+            </text>
+          </g>
+          <g transform="translate(5.5, 0)">
+            <Resource kind="o" :count="data.ores" transform="scale(0.1)" />
+            <text :class="['board-text', { 'max-resource': data.ores >= 15 }]" transform="translate(1,0) scale(0.7)"
+              >/15
+            </text>
+          </g>
+          <g transform="translate(9, 0)">
+            <Resource kind="k" :count="data.knowledge" transform="scale(0.1)" />
+            <text
+              :class="['board-text', { 'max-resource': data.knowledge >= 15 }]"
+              transform="translate(1,0) scale(0.7)"
+              >/15
+            </text>
+          </g>
+          <Resource kind="q" :count="data.qics" :center-left="true" transform="translate(12.5,0) scale(0.1)" />
         </g>
-        <g transform="translate(5.5, 0)">
-          <Resource kind="o" :count="data.ores" transform="scale(0.1)" />
-          <text :class="['board-text', { 'max-resource': data.ores >= 15 }]" transform="translate(1,0) scale(0.7)"
-            >/15
-          </text>
-        </g>
-        <g transform="translate(9, 0)">
-          <Resource kind="k" :count="data.knowledge" transform="scale(0.1)" />
-          <text :class="['board-text', { 'max-resource': data.knowledge >= 15 }]" transform="translate(1,0) scale(0.7)"
-            >/15
-          </text>
-        </g>
-        <Resource kind="q" :count="data.qics" :center-left="true" transform="translate(12.5,0) scale(0.1)" />
+        <text v-if="player.isAutoma" class="board-text" transform="scale(0.75)">Automa · no income or power</text>
         <g
-          v-if="!preview"
+          v-if="!preview && !player.isAutoma"
           v-b-tooltip.hover
           title="Charge network - number of upgradable buildings by other players within charging distance"
           :transform="`translate(33.5,${height - 16.6}) scale(.08)`"
@@ -59,7 +65,7 @@
             {{ leechNetwork }}
           </text>
         </g>
-        <g v-if="!preview" :transform="`translate(34.7,${height - 6.8}) scale(.1)`">
+        <g v-if="!preview && !player.isAutoma" :transform="`translate(34.7,${height - 6.8}) scale(.1)`">
           <Undo v-if="canUndo" transform="translate(-8, -8) scale(.9)" />
           <use v-else xlink:href="#info" v-b-tooltip.hover.click.html="buttonTooltip" style="cursor: pointer" />
         </g>
@@ -101,6 +107,7 @@
           <text class="board-text" transform="translate(1.4,-.1) scale(0.8)" text-anchor="middle">{{ sectors }}</text>
         </g>
         <g
+          v-if="!player.isAutoma"
           transform="translate(15.2, 3.5)"
           v-b-tooltip.hover
           title="Power value of structures in federations, outside of federations"
@@ -119,18 +126,20 @@
             >{{ player.fedValue }}, {{ player.structureValue - player.fedValue }}
           </text>
         </g>
-        <circle
-          r="1.7"
-          v-for="(r, i) in ['c', 'o', 'k', 'q']"
-          :key="i"
-          :transform="`translate(${i * 3.5 + 2},0)`"
-          style="opacity: 0"
-          @click="convert(r)"
-          v-b-tooltip.hover.html
-          :disabled="!convertTooltip(r)"
-          :style="convertTooltip(r) ? 'cursor: pointer' : ''"
-          :title="convertTooltip(r)"
-        />
+        <g v-if="!player.isAutoma">
+          <circle
+            r="1.7"
+            v-for="(r, i) in ['c', 'o', 'k', 'q']"
+            :key="i"
+            :transform="`translate(${i * 3.5 + 2},0)`"
+            style="opacity: 0"
+            @click="convert(r)"
+            v-b-tooltip.hover.html
+            :disabled="!convertTooltip(r)"
+            :style="convertTooltip(r) ? 'cursor: pointer' : ''"
+            :title="convertTooltip(r)"
+          />
+        </g>
       </g>
       <g transform="translate(0, 1.5)" v-if="showIncome">
         <text class="board-text" x="0.25">I</text>
@@ -270,7 +279,7 @@ export default class PlayerBoardInfo extends Vue {
   }
 
   get showIncome() {
-    return showIncome(this.engine, this.player);
+    return !this.player.isAutoma && showIncome(this.engine, this.player);
   }
 
   researchTooltip(index: number): string {

@@ -20,17 +20,29 @@ import { makeStore } from "../store";
 import PlayerInfo from "./PlayerInfo.vue";
 
 for (const component of [PlayerInfo, AlternatePlayerInfo]) {
-  it("renders the official Automa card instead of a normal faction economy", () => {
+  it("shows the Automa faction board and always-visible cards without a human economy", () => {
     const engine = new Engine(["init 1 automa-panel", "p1 faction terrans", "p2 faction taklons"], {
       automaSeed: "test",
     });
+    engine.players[1].data.buildings.m = 2;
+    engine.players[1].data.buildings.ac1 = 1;
+    engine.automa.action = "2";
+    engine.automa.support = "3";
     const store = makeStore();
     store.commit("receiveData", engine);
     const { container } = render(component, { props: { player: engine.players[1] }, store });
     expect(container.querySelector('[aria-label="Automa opponent"]')).not.to.equal(null);
     expect(container.textContent).to.include("Automa · Taklons");
-    expect(container.querySelector(".player-board")).to.equal(null);
-    expect(container.querySelector("details")?.open).to.equal(false);
+    expect(container.querySelector(".player-board")).not.to.equal(null);
+    expect(container.querySelectorAll(".building-group")).to.have.length(5);
+    // 8 mines + 4 trading stations + 3 labs + 2 academies + institute, minus the placed pieces.
+    expect(container.querySelectorAll(".building-in-group, .old-building-in-group")).to.have.length(15);
+    expect(container.querySelector(".power-bowls")).to.equal(null);
+    expect(container.querySelector(".building-group .resource")).to.equal(null);
+    expect(container.querySelector("[data-player-action]")).to.equal(null);
+    expect(container.querySelector("details")).to.equal(null);
+    expect(container.textContent).to.include("Faction action:");
+    expect(container.textContent).to.include("Support card");
   });
 }
 

@@ -1,80 +1,59 @@
 <template>
-  <section class="player-info automa-info" aria-label="Automa opponent">
-    <div class="automa-panel" :style="{ borderColor: color }">
-      <header>
-        <strong>Automa · {{ name }}</strong>
-        <span class="automa-difficulty">{{ difficulty }}</span>
-        <svg viewBox="-13 -13 26 26" width="38" height="38" :aria-label="`${player.data.victoryPoints} VP`">
-          <Resource kind="vp" :count="player.data.victoryPoints" />
-        </svg>
-      </header>
-      <p v-if="engine.ended" class="automa-result">{{ result }}</p>
-      <div class="automa-turn" v-else-if="state.action || state.support">
-        <span
-          ><b>{{ passed ? "Passed" : actionName }}</b
-          ><small v-if="state.action"> · Card {{ state.action }}</small></span
-        >
-        <span class="automa-difficulty">{{ state.remaining }} cards left</span>
+  <section class="automa-info" aria-label="Automa cards and faction">
+    <header>
+      <strong v-if="engine.ended">{{ result }}</strong>
+      <strong v-else-if="passed">Passed</strong>
+      <strong v-else-if="state.action"
+        >{{ actionName }} <small>· Card {{ state.action }}</small></strong
+      >
+      <strong v-else>{{ engine.round ? "Ready for this round" : "Setting up" }}</strong>
+      <span class="automa-difficulty"
+        >{{ difficulty }}<template v-if="engine.round"> · {{ state.remaining }} cards left</template></span
+      >
+    </header>
+    <p class="automa-ability">{{ ability }}</p>
+    <dl v-if="support" class="automa-card">
+      <div>
+        <dt>Support card</dt>
+        <dd>{{ support.id }}</dd>
       </div>
-      <p v-else class="automa-difficulty">{{ engine.round ? "Ready for this round" : "Setting up" }}</p>
-      <details>
-        <summary>Cards &amp; faction</summary>
-        <p class="automa-ability">{{ ability }}</p>
-        <dl v-if="support" class="automa-card">
-          <dt>Support card</dt>
-          <dd>{{ support.id }}</dd>
-          <dt>Range</dt>
-          <dd>{{ support.range }}</dd>
-          <dt>Final scoring tiebreaker</dt>
-          <dd>{{ support.scoringFinalTiebreaker }}</dd>
-          <dt>Direction</dt>
-          <dd>
-            {{ support.directionalSelection === "right-down" ? "Top left → bottom right" : "Bottom right → top left" }}
-          </dd>
-          <dt>Numbered choice</dt>
-          <dd>
-            {{ support.numberedSelectionCount }} from the {{ support.numberedSelection === "right" ? "left" : "right" }}
-          </dd>
-        </dl>
-        <p v-if="state.discard.length" class="automa-difficulty">Earlier cards: {{ state.discard.join(", ") }}</p>
-        <div class="automa-supply">
-          <span v-for="building in buildings" :key="building" :title="`Remaining ${building}`">
-            <svg viewBox="-6 -6 12 12" width="32" height="32">
-              <Building :building="building" :faction="player.faction" />
-            </svg>
-            {{ player.maxBuildings(building) - player.data.buildings[building] }}
-          </span>
-          <span>{{ player.data.satellites }} satellites</span>
-          <Booster v-if="player.data.tiles.booster" :booster="player.data.tiles.booster" width="35" height="70" />
-        </div>
-      </details>
-    </div>
+      <div>
+        <dt>Range</dt>
+        <dd>{{ support.range }}</dd>
+      </div>
+      <div>
+        <dt>Final scoring tiebreaker</dt>
+        <dd>{{ support.scoringFinalTiebreaker }}</dd>
+      </div>
+      <div>
+        <dt>Direction</dt>
+        <dd>
+          {{ support.directionalSelection === "right-down" ? "Top left → bottom right" : "Bottom right → top left" }}
+        </dd>
+      </div>
+      <div>
+        <dt>Numbered choice</dt>
+        <dd>
+          {{ support.numberedSelectionCount }} from the {{ support.numberedSelection === "right" ? "left" : "right" }}
+        </dd>
+      </div>
+    </dl>
+    <p v-if="state.discard.length" class="automa-discard">Earlier cards: {{ state.discard.join(", ") }}</p>
   </section>
 </template>
 
 <script lang="ts">
 import type Engine from "@gaia-project/engine";
-import { Building as BuildingEnum, Player } from "@gaia-project/engine";
+import type { Player } from "@gaia-project/engine";
 import { cards } from "@gaia-project/engine/src/automa/cards";
 import { Component, Prop, Vue } from "vue-property-decorator";
-import { factionName } from "../data/factions";
-import { factionColor } from "../graphics/utils";
-import Booster from "./Booster.vue";
-import Building from "./Building.vue";
-import Resource from "./Resource.vue";
 
-@Component({ components: { Resource, Building, Booster } })
+@Component
 export default class AutomaInfo extends Vue {
   @Prop() player: Player;
   @Prop() engine: Engine;
-  get name() {
-    return factionName(this.player.faction);
-  }
   get state() {
     return this.engine.automa;
-  }
-  get color() {
-    return factionColor(this.player.faction);
   }
   get difficulty() {
     return {
@@ -102,21 +81,11 @@ export default class AutomaInfo extends Vue {
     );
   }
   get passed() {
-    return this.engine.passedPlayers.includes(this.player.player);
+    return (this.engine.passedPlayers ?? []).includes(this.player.player);
   }
   get result() {
     const score = this.engine.players[0].data.victoryPoints - this.player.data.victoryPoints;
     return score > 0 ? "You win!" : score < 0 ? "Automa wins" : "Draw";
-  }
-  get buildings() {
-    return [
-      BuildingEnum.Mine,
-      BuildingEnum.TradingStation,
-      BuildingEnum.ResearchLab,
-      BuildingEnum.Academy1,
-      BuildingEnum.Academy2,
-      BuildingEnum.PlanetaryInstitute,
-    ];
   }
   get ability() {
     return {
@@ -139,55 +108,43 @@ export default class AutomaInfo extends Vue {
 </script>
 
 <style scoped>
-.automa-panel {
-  border: 1px solid;
-  border-left-width: 4px;
-  border-radius: 6px;
-  padding: 0.7rem 0.9rem;
-  margin-top: 0.5rem;
+.automa-info {
+  max-width: 700px;
+  margin-top: 0.6rem;
 }
-header,
-.automa-turn,
-.automa-supply {
+header {
   display: flex;
-  align-items: center;
-  gap: 0.7rem;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
   flex-wrap: wrap;
 }
-header strong {
-  flex: 1;
-}
-.automa-turn {
-  justify-content: space-between;
-  margin: 0.4rem 0 0.6rem;
-}
 .automa-difficulty,
+.automa-discard,
 small {
   opacity: 0.72;
   font-size: 0.9em;
 }
-summary {
-  cursor: pointer;
-  font-size: 0.9em;
-}
 .automa-ability {
-  margin: 0.7rem 0;
+  margin: 0.5rem 0;
 }
 .automa-card {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.2rem 1rem;
+  display: flex;
+  gap: 0.4rem 1.4rem;
+  flex-wrap: wrap;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--ui-border);
+  margin-bottom: 0.5rem;
   font-size: 0.9em;
+}
+dt {
+  font-weight: normal;
+  opacity: 0.72;
 }
 dd {
   margin: 0;
 }
-.automa-supply > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-.automa-result {
-  font-weight: 600;
+.automa-discard {
+  margin-bottom: 0;
 }
 </style>

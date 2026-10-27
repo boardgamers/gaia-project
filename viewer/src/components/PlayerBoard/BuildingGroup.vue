@@ -166,6 +166,7 @@ export default class BuildingGroup extends Vue {
 
   tooltip(i: number) {
     const building = this.building;
+    if (this.player.isAutoma) return buildingName(building, this.faction);
     const b = this.board.buildings[building];
     const cost = this.discount
       ? b.cost.map((c) => `${c.count - this.discount}${c.type}`).join(", ")
@@ -204,6 +205,7 @@ export default class BuildingGroup extends Vue {
   }
 
   get incomeTypes() {
+    if (this.player.isAutoma) return 2;
     return Math.max(
       2,
       this.board.buildings[this.building].income[0].filter((e) => e.operator == Operator.Income).length
@@ -211,6 +213,7 @@ export default class BuildingGroup extends Vue {
   }
 
   get factionIncome(): Reward[] {
+    if (this.player.isAutoma) return [];
     const income: Reward[] = [].concat(
       ...this.board.income.filter((ev) => ev.operator === Operator.Income).map((ev) => ev.rewards)
     );
@@ -293,6 +296,7 @@ export default class BuildingGroup extends Vue {
   }
 
   resources(i: number, tooltip = false): Array<string | Reward> {
+    if (this.player.isAutoma) return [];
     if (this.showBuilding(i) && !tooltip) {
       return [];
     }

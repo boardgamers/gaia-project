@@ -1,7 +1,11 @@
 <template>
-  <AutomaInfo v-if="player && player.isAutoma && engine.automa" :player="player" :engine="engine" />
-  <div class="player-info no-gutters" v-else-if="player && player.faction">
-    <div class="d-flex justify-content-between align-items-center" v-if="!preview">
+  <div
+    class="player-info no-gutters"
+    v-if="player && player.faction"
+    :aria-label="player.isAutoma ? 'Automa opponent' : null"
+  >
+    <div v-if="player.isAutoma" class="player-name">Automa · {{ factionName }}</div>
+    <div class="d-flex justify-content-between align-items-center" v-else-if="!preview">
       <div
         style="display: flex; align-items: center"
         @click="playerClick(player)"
@@ -115,6 +119,7 @@
         </g>
 
         <Resource
+          v-if="!player.isAutoma"
           kind="d"
           tooltip="Terraforming Cost"
           :count="playerData.terraformCostDiscount"
@@ -122,6 +127,7 @@
           style="opacity: 0.7"
         />
         <Resource
+          v-if="!player.isAutoma"
           kind="r"
           :data-tutorial="`player-range-${player.player}`"
           :tooltip="rangeTooltip"
@@ -131,6 +137,7 @@
         />
 
         <BuildingGroup
+          v-if="!player.isAutoma"
           transform="translate(21, 1.2)"
           :nBuildings="playerData.gaiaformers"
           building="gf"
@@ -155,7 +162,12 @@
           />
         </g>
 
-        <PowerBowls :transform="`translate(30,${height - 7})`" :player="player" :data="playerData" />
+        <PowerBowls
+          v-if="!player.isAutoma"
+          :transform="`translate(30,${height - 7})`"
+          :player="player"
+          :data="playerData"
+        />
 
         <g transform="translate(29.3, 4.7) scale(0.9) translate(0, 1)">
           <g v-for="i in [0, 1, 2, 3]" :key="i" :transform="`translate(${(i - 2) * 3.8}, 0)`">
@@ -266,7 +278,8 @@
         <ArtifactIcon :artifact="artifact" />
       </span>
     </div>
-    <Rules v-if="!preview" :id="player.faction" :type="player.faction" />
+    <AutomaInfo v-if="player.isAutoma && engine.automa" :player="player" :engine="engine" />
+    <Rules v-if="!preview && !player.isAutoma" :id="player.faction" :type="player.faction" />
   </div>
 </template>
 
@@ -352,7 +365,7 @@ export default class PlayerInfo extends Vue {
   // shows what it will actually start with, exactly like the physical board does the moment a
   // faction is settled.
   get playerData() {
-    return this.player ? effectivePreviewPlayer(this.player).data : undefined;
+    return this.player ? (this.player.isAutoma ? this.player : effectivePreviewPlayer(this.player)).data : undefined;
   }
 
   get playerRange(): number {
@@ -406,6 +419,7 @@ export default class PlayerInfo extends Vue {
 
   /** Keep faction/academy actions first, followed by the owned tile and booster actions. */
   get boardActions() {
+    if (this.player.isAutoma) return [];
     const events = this.player.events[Operator.Activate];
     return [
       ...events.filter((event) => !isTileOrBoosterSource(event.source)),
@@ -662,6 +676,7 @@ export default class PlayerInfo extends Vue {
   }
 
   get height() {
+    if (this.player.isAutoma) return 18.2;
     return 21.4 + Math.max(0, Math.ceil(this.boardActions.length / 6) - 1) * 3.3;
   }
 

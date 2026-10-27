@@ -1,7 +1,12 @@
 <template>
-  <AutomaInfo v-if="player && player.isAutoma && engine.automa" :player="player" :engine="engine" />
-  <div class="player-info no-gutters" v-else-if="player && player.faction">
+  <div
+    class="player-info no-gutters"
+    v-if="player && player.faction"
+    :aria-label="player.isAutoma ? 'Automa opponent' : null"
+  >
+    <span v-if="player.isAutoma" class="player-name">Automa · {{ factionName }}</span>
     <span
+      v-else
       :data-bgs-player="player.player"
       tabindex="0"
       @keydown.enter="playerClick(player)"
@@ -78,6 +83,7 @@
         <!-- TS to LAB -->
         <line x1="10.4" x2="11" y1="13.0" y2="13.0" stroke="black" stroke-width="0.06" />
         <BuildingGroup
+          v-if="!player.isAutoma"
           transform="translate(21,1.2)"
           :nBuildings="playerData.gaiaformers"
           building="gf"
@@ -88,6 +94,7 @@
           :resource="[]"
         />
         <PowerBowls
+          v-if="!player.isAutoma"
           :transform="`translate(29,${height - 7})`"
           :faction="player.faction"
           :data="playerData"
@@ -210,7 +217,8 @@
         :player="player.player"
       />
     </div>
-    <Rules :id="player.faction" :type="player.faction" />
+    <AutomaInfo v-if="player.isAutoma && engine.automa" :player="player" :engine="engine" />
+    <Rules v-else :id="player.faction" :type="player.faction" />
   </div>
 </template>
 
