@@ -446,7 +446,7 @@ export default class Player extends EventEmitter {
         addedCost.push(reward);
 
         const scoredPlanet = hex?.data?.planet ?? targetPlanet;
-        if (scoredPlanet === Planet.Protoplanet) {
+        if (scoredPlanet === Planet.Protoplanet && !hex?.occupied()) {
           addedCost.push(new Reward(-6, Resource.VictoryPoint));
         } else if (targetPlanet === Planet.Asteroid) {
           if (!this.data.hasResource(new Reward(1, Resource.GaiaFormer))) {

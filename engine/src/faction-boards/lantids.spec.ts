@@ -1,13 +1,70 @@
 import { expect } from "chai";
 import Engine from "../engine";
-import { Building, Command, Expansion, Faction, Operator, Planet, Player as PlayerEnum, Resource } from "../enums";
+import {
+  Building,
+  Command,
+  Expansion,
+  Faction,
+  Operator,
+  Phase,
+  Planet,
+  Player as PlayerEnum,
+  Resource,
+  ScoringTile,
+} from "../enums";
 import SpaceMap from "../map";
 import Player from "../player";
 import { Power } from "../player-data";
+import { roundScoringEvents } from "../tiles/scoring";
 
 const parseMoves = Engine.parseMoves;
 
 describe("Lantids", () => {
+  for (const shared of [true, false]) {
+    it(`should ${shared ? "not grant" : "grant"} the 6 VP bonus when ${shared ? "sharing" : "colonizing"} a protoplanet`, () => {
+      const engine = new Engine(["init 4 lantids-protoplanet-bonus"], { lostFleet: true });
+      const factions = [Faction.Lantids, Faction.Geodens, Faction.Xenos, Faction.Darkanians];
+      engine.players.forEach((player, seat) => {
+        player.faction = factions[seat];
+        player.loadFaction(null, engine.expansions);
+      });
+      engine.phase = Phase.RoundMove;
+      engine.round = 3;
+      engine.turnOrder = engine.players.map((player) => player.player);
+      engine.currentPlayer = PlayerEnum.Player1;
+      engine.clearAvailableCommands();
+
+      const player = engine.player(PlayerEnum.Player1);
+      const home = [...engine.map.grid.values()].find((hex) => hex.data.planet === Planet.Terra);
+      player.build(Building.Mine, home, [], engine.map);
+      player.data.buildings[Building.PlanetaryInstitute] = 1;
+      player.data.credits = 20;
+      player.data.ores = 20;
+      player.data.range = 99;
+      player.loadEvents(roundScoringEvents(ScoringTile.LfSector3, 3));
+
+      const target = [...engine.map.grid.values()].find(
+        (hex) => hex.data.planet === Planet.Protoplanet && hex.data.sector.startsWith("DS")
+      );
+      if (shared) {
+        engine.player(PlayerEnum.Player2).build(Building.Mine, target, [], engine.map);
+      }
+      const beforeVp = player.data.victoryPoints;
+      const beforeKnowledge = player.data.knowledge;
+      const command = engine.findAvailableCommand(PlayerEnum.Player1, Command.Build);
+      const build = command.data.buildings.find((entry) => entry.coordinates === target.toString());
+      expect(build.cost).to.equal(shared ? "2c,o" : "2c,10o,-6vp");
+      expect(build.steps).to.equal(shared ? 0 : 3);
+
+      engine.move(`lantids build m ${target.toString()}.`);
+
+      expect(player.data.victoryPoints - beforeVp).to.equal(shared ? 3 : 9);
+      expect(player.data.knowledge - beforeKnowledge).to.equal(shared ? 2 : 0);
+      expect(target.data.player).to.equal(shared ? PlayerEnum.Player2 : PlayerEnum.Player1);
+      expect(target.data.additionalMine).to.equal(shared ? PlayerEnum.Player1 : undefined);
+    });
+  }
+
   it("should be able to build a mine on other players' planets", () => {
     const moves = parseMoves(`
       init 2 randomSeed
