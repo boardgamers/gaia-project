@@ -1,10 +1,10 @@
 <template>
   <div class="analysis-controls" @click.stop>
-    <div class="analysis-controls__summary">
-      <span class="analysis-controls__moves">{{
-        moveSummary || `${moveCount} ${moveCount === 1 ? "move" : "moves"}`
-      }}</span>
+    <span class="analysis-controls__moves">{{
+      moveSummary || `${moveCount} ${moveCount === 1 ? "move" : "moves"}`
+    }}</span>
 
+    <div class="analysis-controls__details">
       <span
         v-if="changes.length"
         class="analysis-controls__changes"
@@ -24,60 +24,70 @@
       <span v-if="overdrawn.length || assumedPower" class="analysis-controls__shortfall" :title="shortfallTitle"
         >Needs resources</span
       >
-      <!-- The modal itself is rendered once by Commands.vue (AnalysisModeInfo.vue) - see its comment for
+      <div class="analysis-controls__actions">
+        <PremoveHistoryButton :plan="premovePlan" />
+        <button
+          type="button"
+          class="analysis-controls__edit"
+          :disabled="!canEdit"
+          aria-label="Undo"
+          title="Undo"
+          @click="$emit('undo')"
+        >
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M5 2 1.5 5.5 5 9M2 5.5h7a4 4 0 0 1 0 8H6" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="analysis-controls__edit analysis-controls__clear"
+          :disabled="!canEdit"
+          aria-label="Clear plan"
+          title="Clear plan"
+          @click="$emit('reset')"
+        >
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M2.5 4h11M6 4V2h4v2M4 4l.7 10h6.6L12 4M6.5 6.5v5M9.5 6.5v5" />
+          </svg>
+        </button>
+        <b-button
+          v-if="moveCount > 0"
+          size="sm"
+          variant="success"
+          class="analysis-controls__btn"
+          :disabled="committableMoves === 0"
+          :title="commitTitle"
+          @click="$emit('commit')"
+        >
+          {{ playsNow ? "Play moves" : "Queue moves" }}
+        </b-button>
+      </div>
+    </div>
+    <!-- The modal itself is rendered once by Commands.vue (AnalysisModeInfo.vue) - see its comment for
          why it must not live in this twice-rendered component. -->
-      <b-btn
-        variant="link"
-        size="sm"
-        class="analysis-controls__info"
-        aria-label="How planning works"
-        title="How planning works"
-        @click="$bvModal.show('analysis-mode-info')"
-      >
-        <b-badge variant="info" pill>i</b-badge>
-      </b-btn>
-    </div>
-    <div class="analysis-controls__actions">
-      <PremoveHistoryButton :plan="premovePlan" />
-      <button
-        type="button"
-        class="analysis-controls__edit"
-        :disabled="!canEdit"
-        aria-label="Undo"
-        title="Undo"
-        @click="$emit('undo')"
-      >
-        <svg viewBox="0 0 16 16" aria-hidden="true">
-          <path d="M5 2 1.5 5.5 5 9M2 5.5h7a4 4 0 0 1 0 8H6" />
-        </svg>
-      </button>
-      <button
-        type="button"
-        class="analysis-controls__edit analysis-controls__clear"
-        :disabled="!canEdit"
-        aria-label="Clear plan"
-        title="Clear plan"
-        @click="$emit('reset')"
-      >
-        <svg viewBox="0 0 16 16" aria-hidden="true">
-          <path d="M2.5 4h11M6 4V2h4v2M4 4l.7 10h6.6L12 4M6.5 6.5v5M9.5 6.5v5" />
-        </svg>
-      </button>
-      <b-button
-        v-if="moveCount > 0"
-        size="sm"
-        variant="success"
-        class="analysis-controls__btn"
-        :disabled="committableMoves === 0"
-        :title="commitTitle"
-        @click="$emit('commit')"
-      >
-        {{ playsNow ? "Play moves" : "Queue moves" }}
-      </b-button>
-      <b-button size="sm" variant="outline-secondary" class="analysis-controls__exit" @click="$emit('exit')"
-        >Exit simulation</b-button
-      >
-    </div>
+    <b-btn
+      variant="link"
+      size="sm"
+      class="analysis-controls__info"
+      aria-label="How planning works"
+      title="How planning works"
+      @click="$bvModal.show('analysis-mode-info')"
+    >
+      <b-badge variant="info" pill>i</b-badge>
+    </b-btn>
+    <b-button
+      size="sm"
+      variant="outline-secondary"
+      class="analysis-controls__exit"
+      aria-label="Exit simulation"
+      title="Exit simulation"
+      @click="$emit('exit')"
+    >
+      <svg class="analysis-controls__exit-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M10 4H4v16h6M14 8l4 4-4 4M8 12h10" />
+      </svg>
+      <span class="analysis-controls__exit-label">Exit simulation</span>
+    </b-button>
   </div>
 </template>
 
@@ -143,7 +153,6 @@ export default Vue.extend({
   font-variant-numeric: tabular-nums;
 }
 
-.analysis-controls__summary,
 .analysis-controls__actions {
   display: flex;
   align-items: center;
@@ -220,6 +229,16 @@ export default Vue.extend({
 .analysis-controls__exit {
   white-space: nowrap;
 }
+.analysis-controls__exit-icon {
+  display: none;
+}
+.analysis-controls__details {
+  display: contents;
+}
+.analysis-controls__actions,
+.analysis-controls__exit {
+  order: 1;
+}
 
 .analysis-controls__btn {
   padding: 0.25rem 0.6rem;
@@ -253,11 +272,34 @@ export default Vue.extend({
 }
 
 @media (max-width: 767px) {
-  .analysis-controls__summary {
-    width: 100%;
+  .analysis-controls {
+    margin-left: 0;
+  }
+  .analysis-controls__exit-icon {
+    display: block;
+    width: 1.25rem;
+    height: 1.25rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .analysis-controls__exit-label {
+    display: none;
+  }
+  .analysis-controls__exit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0;
   }
   .analysis-controls__info {
-    margin-left: auto;
+    width: 2.75rem;
+    height: 2.75rem;
+    flex-shrink: 0;
   }
   .analysis-controls__actions {
     gap: 0.25rem;

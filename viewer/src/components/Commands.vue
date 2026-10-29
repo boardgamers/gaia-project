@@ -1867,6 +1867,46 @@ $mobile-sticky-actions-max-height: 40vh;
 
   #move-buttons.mobile-sticky-actions--sandbox {
     background: linear-gradient(180deg, var(--ui-panel-gradient-start) 0%, var(--ui-panel-gradient-end) 100%);
+
+    .sticky-bar-title--analysis {
+      .analysis-controls {
+        display: contents;
+      }
+      .analysis-controls__moves {
+        font-size: 0.75rem;
+        max-width: 7rem;
+        line-height: 1.25;
+      }
+      .analysis-controls__exit {
+        order: 0;
+      }
+      .analysis-controls__details {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        flex-basis: 100%;
+        order: 1;
+        gap: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+        padding-bottom: 0.25rem;
+      }
+      .analysis-controls__actions {
+        margin-left: auto;
+      }
+      .analysis-controls__edit:disabled,
+      .analysis-controls__label,
+      .analysis-controls__details:not(
+        :has(
+          .analysis-controls__changes,
+          .analysis-controls__shortfall,
+          .analysis-controls__edit:enabled,
+          .analysis-controls__btn,
+          .premove-history-button
+        )
+      ) {
+        display: none;
+      }
+    }
   }
 
   // JS (Commands.vue's ResizeObserver) sets --sticky-bar-height to match the bar's actual
