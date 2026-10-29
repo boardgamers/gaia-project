@@ -1,5 +1,6 @@
 import Engine, { AuctionVariant, Command, Faction, Phase, Planet, Resource, Round } from "@gaia-project/engine";
 import { expect } from "chai";
+import { passedChargeGame } from "../testing/passed-charge";
 import type { AnalysisEntry, MoveCost } from "./analysis";
 import {
   advancePastOwnPass,
@@ -600,6 +601,33 @@ describe("opponents' setup turns in planning", () => {
 describe("advancePastOwnPass", () => {
   const passedGame = () => new Engine([...SETUP_MOVES, "terrans pass booster4"]);
 
+  for (const accepted of [false, true]) {
+    it(`keeps a passed player's next-round income ${accepted ? "after accepting power" : "while power is offered"}`, () => {
+      const real = passedChargeGame();
+      if (accepted) real.move("firaks charge 1pw");
+      expect(real.phase).to.equal(Phase.RoundLeech);
+      expect(real.playerToMove).to.equal(accepted ? 0 : 2);
+      const original = JSON.stringify(real);
+      const engine = markAnalysisSeat(Engine.fromData(JSON.parse(original)), 2);
+      const expected = markAnalysisSeat(Engine.fromData(JSON.parse(original)), 2);
+      if (!accepted) expected.move("firaks decline 1pw");
+      expected.move("terrans decline 1pw");
+      expect(advancePastOwnPass(expected, 2)).to.equal(true);
+      settleAnalysisClone(expected, 2);
+
+      expect(advancePastOwnPass(engine, 2)).to.equal(true);
+      settleAnalysisClone(engine, 2);
+
+      expect(engine.round).to.equal(Round.Round2);
+      expect(engine.playerToMove).to.equal(2);
+      expect(engine.players[2].data.power).to.deep.equal(expected.players[2].data.power);
+      expect(engine.players[2].data.credits).to.equal(expected.players[2].data.credits);
+      expect(engine.players[2].data.ores).to.equal(expected.players[2].data.ores);
+      expect(engine.players[2].data.knowledge).to.equal(expected.players[2].data.knowledge);
+      expect(JSON.stringify(real)).to.equal(original);
+    });
+  }
+
   it("rolls a seat that has already passed into the next round instead of re-opening this one", () => {
     const engine = passedGame();
     expect(engine.round).to.equal(Round.Round1);
@@ -632,7 +660,7 @@ describe("advancePastOwnPass", () => {
     expect(JSON.stringify(engine)).to.equal(before);
   });
 
-  it("does nothing outside RoundMove", () => {
+  it("does nothing during setup", () => {
     const engine = new Engine(PARTIAL_SETUP_MOVES);
     expect(advancePastOwnPass(engine, 0)).to.equal(false);
   });

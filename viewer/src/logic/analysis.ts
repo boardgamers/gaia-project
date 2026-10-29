@@ -428,10 +428,18 @@ export function applySoloRoundFlow(engine: Engine, seat: number): void {
  * a line played in round N+1 describes moves the real game, still sitting in round N, cannot accept.
  */
 export function advancePastOwnPass(engine: Engine, seat: number): boolean {
-  if (engine.phase !== Phase.RoundMove || !engine.passedPlayers?.includes(seat)) {
+  if (
+    !engine.passedPlayers?.includes(seat) ||
+    (engine.phase !== Phase.RoundMove && engine.phase !== Phase.RoundLeech)
+  ) {
     return false;
   }
   const startingRound = engine.round;
+  // A passed player can still charge. Finish the clone's remaining offers before the solo
+  // turn order clears passedPlayers; already accepted power stays in the cloned resources.
+  if (engine.phase === Phase.RoundLeech) {
+    resolveOpponentDecisions(engine, seat);
+  }
   // Bounded by the table size; the loop exits on its own as soon as control is back on this seat.
   for (let i = 0; i < 10; i++) {
     const toMove = engine.playerToMove;
@@ -648,6 +656,9 @@ export function resolveOpponentDecisions(engine: Engine, seat: number): void {
     if (toMove === undefined || toMove === seat) {
       break;
     }
+    if (engine.phase === Phase.RoundMove && engine.passedPlayers?.includes(seat)) {
+      break;
+    }
     // Keep opponents' real placements and picks, but never invent their remaining setup moves.
     // Use the normal phase transition so our own placement count and round-one income stay intact.
     if (engine.phase === Phase.SetupBuilding || engine.phase === Phase.SetupBooster) {
@@ -692,12 +703,12 @@ export function resolveOpponentDecisions(engine: Engine, seat: number): void {
     }
     break; // Nothing this function knows how to resolve - stop rather than guess at a move.
   }
-  abandonLeechPhase(engine, seat);
+  abandonLeechPhase(engine);
 }
 
 /**
  * The last resort behind `resolveOpponentDecisions`' loop: if the clone is STILL sitting in
- * `Phase.RoundLeech` once the loop has given up, force it back to the analysis seat's move phase.
+ * `Phase.RoundLeech` once the loop has given up, return to the interrupted move phase.
  *
  * The loop declines through real engine code and normally lands this itself; this covers the case
  * where some offer it does not know how to answer survives. A surviving leech pause is not cosmetic -
@@ -706,14 +717,13 @@ export function resolveOpponentDecisions(engine: Engine, seat: number): void {
  * declining them all would have produced (a decline changes nothing but `declined`), so nothing is
  * lost by taking the shortcut.
  */
-function abandonLeechPhase(engine: Engine, seat: number): void {
+function abandonLeechPhase(engine: Engine): void {
   if (engine.phase !== Phase.RoundLeech) {
     return;
   }
   engine.leechSources = [];
   engine.tempTurnOrder = [];
   engine.tempCurrentPlayer = undefined;
-  engine.currentPlayer = seat;
   engine.changePhase(Phase.RoundMove);
   engine.clearAvailableCommands();
 }

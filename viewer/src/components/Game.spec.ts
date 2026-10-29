@@ -6,6 +6,7 @@ import { expect } from "chai";
 import Vue from "vue";
 import { MAX_ANALYSIS_LINES } from "../logic/analysis";
 import { makeStore } from "../store";
+import { passedChargeGame } from "../testing/passed-charge";
 import Game from "./Game.vue";
 
 Vue.use(BootstrapVue);
@@ -940,6 +941,42 @@ describe("Game", () => {
       expect(vm.analysisCommittableMoves).to.deep.equal([]);
 
       vm.$el.remove();
+      vm.$destroy();
+    });
+
+    it("keeps next-round planning after a passed player accepts power while another decision is pending", async () => {
+      const real = passedChargeGame();
+      const vm = mountAsSeat(2, Engine.fromData(stripSecret(real, 2)));
+      vm.$store.commit("hosted", true);
+      vm.enterAnalysisMode();
+      expect(vm.engine.round).to.equal(2);
+      vm.applyAnalysisMove("firaks up nav.");
+      expect(vm.analysisEntries).to.have.length(1);
+
+      real.move("firaks charge 1pw");
+      expect(real.phase).to.equal(Phase.RoundLeech);
+      expect(real.playerToMove).to.equal(0);
+      const charged = JSON.stringify(real);
+      await vm.$store.dispatch("externalData", stripSecret(real, 2));
+
+      expect(vm.analysisMode).to.equal(true);
+      expect(vm.analysisRolledForward).to.equal(true);
+      expect(vm.engine.round).to.equal(2);
+      expect(vm.analysisBaseRound).to.equal(2);
+      expect(vm.engine.playerToMove).to.equal(2);
+      expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "firaks up nav." }]);
+      expect(vm.analysisCommitPlan.live).to.equal(null);
+      expect(vm.analysisCommitPlan.queued).to.deep.equal(["firaks up nav."]);
+      expect(vm.analysisCommitPlan.timings).to.deep.equal([{ round: 2, phase: Phase.RoundMove }]);
+      const power = JSON.parse(JSON.stringify(vm.engine.players[2].data.power));
+
+      vm.exitAnalysisMode();
+      expect(vm.engine.round).to.equal(1);
+      expect(vm.engine.passedPlayers).to.include(2);
+      vm.enterAnalysisMode();
+      expect(vm.engine.round).to.equal(2);
+      expect(vm.engine.players[2].data.power).to.deep.equal(power);
+      expect(JSON.stringify(real)).to.equal(charged);
       vm.$destroy();
     });
 
