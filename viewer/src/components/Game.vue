@@ -45,14 +45,7 @@
     </b-modal>
     <div v-if="$store.state.planError" class="alert alert-warning" role="status">{{ $store.state.planError }}</div>
     <template v-if="uiMode === 'graphical'">
-      <!-- Round 0 only (ban/pick/bid/starting buildings/booster): says whose turn it is and what
-           they have to do, plus the auction/ban explainer buttons. Deliberately above the map
-           rather than down in the commands column - during setup the board matters least and
-           "whose turn, doing what" matters most, and the commands column is both below the whole
-           map+research row on mobile AND only rendered for the player on turn (`canPlay`), so
-           everyone else used to have nothing but a green ring on a turn-order circle to go on.
-           Rendered here (inside the viewer) so hosted and self-contained/hot-seat play get the
-           same strip. -->
+      <!-- Setup rules and simultaneous-bid forms are available to every seat. -->
       <div class="row" v-if="!ended">
         <div class="col-12">
           <SilentAuctionSummary />
@@ -65,7 +58,7 @@
           <PreferenceSplitBid @command="handleCommand" />
           <SilentAuctionBid @command="handleCommand" />
           <!-- Mobile only (`setupActionsAtTop`): during round 0 the pick/ban buttons move up here,
-               directly under the status strip, instead of sitting below the whole map+research row
+               alongside the setup forms, instead of sitting below the whole map+research row
                where they normally live. Desktop keeps them in the commands column, unchanged. The
                matching `v-if` on the commands column's own <Commands> keeps exactly one of the two
                mounted - never both, which would duplicate its element ids and modals. -->
