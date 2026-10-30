@@ -3,11 +3,8 @@ import { expect } from "chai";
 import { makeStore } from "../store";
 import Resource from "./Resource.vue";
 
-// Analysis mode (ANALYSIS_MODE_PLAN.md §12) is the only way a resource count goes below zero: the
-// sandbox seat keeps its real numbers and may overspend them. Every surface that shows a count goes
-// through this component - the player board and the mobile sticky resource bar both - so this one
-// class is what makes an unaffordable line obvious from the board itself, which is why the panel no
-// longer needs to print the same figures.
+// Costs in logs and deficits in simulation use the same signed resource counts as player boards
+// and the mobile resource bar. The minus sign must remain visible independently of color.
 describe("Resource", () => {
   // Knowledge and QIC read the store for their icon variant, so every case gets one.
   const count = (kind: string, value: number) => {

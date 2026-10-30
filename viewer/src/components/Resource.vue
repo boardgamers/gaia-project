@@ -173,6 +173,7 @@
     <text
       x="0"
       y="0"
+      class="resource-count"
       v-if="
         (count != null &&
           [
@@ -257,13 +258,18 @@ export default class Resource extends Vue {
 
 <style lang="scss">
 g.resource {
-  // Analysis mode (ANALYSIS_MODE_PLAN.md §12) is the only way a resource count goes below zero: the
-  // sandbox seat keeps its real numbers and is allowed to overspend them, and this is the signal that
-  // it has. One rule covers every surface that renders a count - the player board and the mobile
-  // sticky resource bar both go through this component.
+  // Negative amounts include log costs as well as simulation deficits. Keep their normal
+  // high-contrast ink: the minus sign conveys the loss without relying on red over colored icons.
   text.overdrawn {
-    fill: var(--oxide, #d92626);
     font-weight: bold;
+  }
+
+  text.resource-count {
+    // Paint behind the white glyphs so the outline does not thin their strokes at small sizes.
+    paint-order: stroke fill;
+    stroke: #111;
+    stroke-width: 1px;
+    stroke-linejoin: round;
   }
 
   &.no-tooltip {
@@ -325,6 +331,7 @@ g.resource {
   .building.r {
     & + text {
       fill: black;
+      stroke: none;
     }
   }
 
