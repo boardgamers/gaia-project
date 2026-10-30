@@ -471,6 +471,8 @@ function beginSetupBoosterPhase(engine: Engine) {
 }
 
 function beginRoundStartPhase(engine: Engine) {
+  // The last concurrent turn must not override the next round's income/Gaia player.
+  engine.tempCurrentPlayer = undefined;
   engine.round += 1;
   startAutomaRound(engine);
   engine.addAdvancedLog({ round: engine.round });

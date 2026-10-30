@@ -1,7 +1,8 @@
 import { expect } from "chai";
 import { automove, canMoveOutOfTurn, currentPlayer, move as hostedMove, moveAI } from "../wrapper";
 import Engine from "./engine";
-import { Command } from "./enums";
+import { Command, Operator, Phase } from "./enums";
+import Event from "./events";
 import { chargeDecisionSeats, chargeFor, waitingForCharges } from "./pending-charges";
 
 const setup = [
@@ -172,6 +173,9 @@ describe("independent charge decisions", () => {
     const copy = Engine.fromData(JSON.parse(JSON.stringify(engine)));
     copy.move(`taklons charge 2pw @${id}`);
     expect(copy.newTurn).to.equal(false);
+    const restored = Engine.fromData(JSON.parse(JSON.stringify(copy)));
+    expect(restored.tempCurrentPlayer).to.equal(0);
+    expect(restored.findAvailableCommand(0, Command.BrainStone)).to.not.equal(undefined);
     expect(copy.findAvailableCommand(0, Command.BrainStone)).to.not.equal(undefined);
     engine.players[0].settings.autoBrainstone = true;
     const completed = hostedMove(engine, `taklons charge 2pw @${id}`, 0);
@@ -189,6 +193,60 @@ describe("independent charge decisions", () => {
     expect(chargeFor(engine, 3)).to.equal(undefined);
     expect(engine.currentPlayer).to.equal(1);
     expect(engine.automation.turns[3]).to.equal(0);
+  });
+
+  it("hands income to the first passer after the last concurrent turn ends", () => {
+    const engine = game();
+    // Both the first and last passers have an income choice, as in Silver-signal-3116.
+    for (const seat of [0, 3]) engine.player(seat).loadEvents(Event.parse(["+t", "+4pw"], null));
+    for (let i = 0; i < 4; i++) pass(engine);
+
+    expect(engine.round).to.equal(2);
+    expect(engine.phase).to.equal(Phase.RoundIncome);
+    expect(engine.tempCurrentPlayer).to.equal(undefined);
+    expect(engine.playerToMove).to.equal(0);
+    expect(currentPlayer(JSON.parse(JSON.stringify(engine)))).to.equal(0);
+    const choices = engine.generateAvailableCommandsIfNeeded();
+    expect(choices.map((command) => command.player)).to.deep.equal([0]);
+    expect(choices[0].name).to.equal(Command.ChooseIncome);
+
+    const completed = hostedMove(JSON.parse(JSON.stringify(engine)), "terrans income t", 0);
+    expect(completed.newTurn).to.equal(true);
+    expect(completed.phase).to.equal(Phase.RoundMove);
+    expect(completed.playerToMove).to.equal(0);
+    expect(
+      completed.moveHistory.slice(engine.moveHistory.length).some((move) => move.startsWith("hadsch-hallas income"))
+    ).to.equal(true);
+  });
+
+  it("keeps the first passer's turn when income needs no choices", () => {
+    const engine = game();
+    for (const player of engine.players) player.events[Operator.Income] = [];
+    for (let i = 0; i < 4; i++) pass(engine);
+
+    expect(engine.round).to.equal(2);
+    expect(engine.phase).to.equal(Phase.RoundMove);
+    expect(engine.tempCurrentPlayer).to.equal(undefined);
+    expect(engine.playerToMove).to.equal(0);
+    expect(currentPlayer(JSON.parse(JSON.stringify(engine)))).to.equal(0);
+  });
+
+  it("repairs a saved last-passer override without changing resources or history", () => {
+    const engine = game();
+    for (const seat of [0, 3]) engine.player(seat).loadEvents(Event.parse(["+t", "+4pw"], null));
+    for (let i = 0; i < 4; i++) pass(engine);
+    const saved = JSON.parse(JSON.stringify(engine));
+    saved.tempCurrentPlayer = 3;
+    saved.availableCommands = [{ name: Command.ChooseIncome, player: 3, data: ["t", "4pw"] }];
+
+    const restored = Engine.fromData(saved);
+    expect(restored.playerToMove).to.equal(0);
+    expect(restored.generateAvailableCommandsIfNeeded().map((command) => command.player)).to.deep.equal([0]);
+    expect(JSON.parse(JSON.stringify(restored.players))).to.deep.equal(saved.players);
+    expect(restored.moveHistory).to.deep.equal(saved.moveHistory);
+    const completed = hostedMove(restored, "terrans income t", 0);
+    expect(completed.newTurn).to.equal(true);
+    expect(completed.phase).to.equal(Phase.RoundMove);
   });
 
   it("settles remaining charges before starting the next round", () => {

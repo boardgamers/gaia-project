@@ -1020,6 +1020,14 @@ export default class Engine {
       }
     }
 
+    // Older concurrent games could retain the last passer as the temporary actor into the
+    // next round. Completed turns have no temporary actor; partial moves (e.g. Brainstone)
+    // must keep theirs. Discard commands generated for that stale actor as well.
+    if (engine.options.concurrentCharges && engine.newTurn && engine.tempCurrentPlayer !== undefined) {
+      engine.tempCurrentPlayer = undefined;
+      engine.clearAvailableCommands();
+    }
+
     repairBannedRandomFactions(engine);
     return engine;
   }
