@@ -90,6 +90,7 @@ terrans booster booster3`)
             ? new Engine(["init 3 old-test", "p1 faction terrans", "p2 faction nevlas", "p3 faction firaks"])
             : loadScenarioEngine(id);
         viewer.emit("state", JSON.parse(JSON.stringify(engine)));
+        viewer.emit("preferences", { platformChat: true });
         viewer.emit("chat:state", { canSend: true });
         viewer.emit("chat:messages", [{ type: "text", author: "Teammate", text: "Ready to explore" }]);
         await vi.waitFor(() => expect(viewer.app.$el.querySelector(".old-map-canvas")).not.toBeNull());
@@ -113,7 +114,13 @@ terrans booster booster3`)
         for (const action of viewer.app.$el.querySelectorAll(".old-board-action")) {
           expect(action.getAttribute("transform")).toMatch(/^translate\(/);
         }
-        expect(document.querySelector(".bgs-game-chat")?.textContent).toContain("Ready to explore");
+        expect(document.querySelector(".bgs-game-chat, .chat-shortcut")).toBeNull();
+        const openChat = vi.fn();
+        viewer.on("chat:open", openChat);
+        const chatButton = document.querySelector<HTMLButtonElement>(".game-chat-button")!;
+        expect(chatButton.hidden).toBe(false);
+        chatButton.click();
+        expect(openChat).toHaveBeenCalledOnce();
 
         const fedFixture = federationFixture();
         viewer.emit("state", fedFixture);

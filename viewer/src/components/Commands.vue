@@ -65,6 +65,7 @@
         @commit="requestAnalysisCommit"
         @exit="$emit('analysis-exit')"
       />
+      <span class="game-chat-button-host game-chat-button-host--desktop"></span>
     </div>
     <AnalysisMoves
       v-if="analysisMode && (analysisEntries.length || analysisPlayed.length) && !analysisEditActive"
@@ -133,7 +134,7 @@
           >
           <RichTextView v-else :content="statusLine" />
         </h5>
-        <span class="chat-shortcut-host"></span>
+        <span class="game-chat-button-host game-chat-button-host--mobile"></span>
         <!-- Kept out of the ⋯ menu: a misclick is best taken back with one press. -->
         <TakeBackButton v-if="takeBackOffered" compact />
         <PremoveHistoryButton v-if="!analysisMode" :plan="premovePlan" />
@@ -2078,7 +2079,9 @@ $mobile-sticky-actions-max-height: 40vh;
       margin-bottom: 0;
       padding-right: calc(78px + env(safe-area-inset-right, 0px));
     }
-    &.mobile-sticky-actions--collapsed .sticky-bar-title > :not(h5):not(.chat-shortcut-host):not(.mobile-tray-handle) {
+    &.mobile-sticky-actions--collapsed
+      .sticky-bar-title
+      > :not(h5):not(.game-chat-button-host):not(.mobile-tray-handle) {
       display: none !important;
     }
   }

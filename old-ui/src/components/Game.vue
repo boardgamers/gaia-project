@@ -4,6 +4,7 @@
       <Charts />
     </b-modal>
     <Rules id="rules" />
+    <div class="game-chat-button-host game-chat-button-host--fallback"></div>
 
     <div v-if="analysisNotice || analysisPendingRestore" class="row">
       <div class="col-12">
@@ -276,7 +277,7 @@
       <Table :players="orderedPlayers" />
       <AdvancedLog :currentMove="currentMove" :hideLog.sync="hideLog" v-if="logPlacement === 'bottom'" />
     </div>
-    <div class="chat-host" :style="{ '--chat-footer-height': totalStickyFooterHeight + 'px' }"></div>
+
     <div
       class="mobile-sticky-actions-spacer"
       :style="{ '--sticky-bar-height': totalStickyFooterHeight + 'px' }"

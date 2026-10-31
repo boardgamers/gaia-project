@@ -11,12 +11,9 @@ type ChatEmitter = Pick<ViewerEmitter<any, any>, "on" | "emit">;
 export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): () => void {
   const chat = new ChatController();
   const detach = attachChat(emitter, chat);
-  const slot = host.querySelector<HTMLElement>(".chat-host") || document.createElement("div");
-  if (!slot.parentElement) host.insertAdjacentElement("afterend", slot);
   const style = document.createElement("style");
   style.textContent = `
 .bgs-game-chat{box-sizing:border-box;font-family:inherit;font-size:14px;line-height:1.45;width:calc(100% - 30px);max-width:760px;border:1px solid var(--ui-border);border-radius:2px;margin:8px 15px;padding:0 8px 8px;background:var(--ui-surface);color:var(--ui-text)}
-.chat-host .bgs-game-chat{width:100%;margin:8px 0}
 .bgs-game-chat summary{cursor:pointer;font-weight:600;border-bottom:1px solid var(--ui-border);padding:5px 8px;margin:0 -8px;background:var(--ui-surface-muted)}
 .bgs-game-chat summary:hover{color:#126778}
 .bgs-game-chat summary:focus-visible,.bgs-game-chat button:focus-visible{outline:2px solid #247d8c;outline-offset:3px}
@@ -60,47 +57,84 @@ export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): 
 .bgs-game-chat .chat-edit-cancel{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;min-height:0;padding:0;border:0;background:transparent;color:inherit;cursor:pointer}
 .bgs-game-chat .chat-status{font-size:12px;margin-top:6px}
 .bgs-game-chat .chat-status:empty{display:none}
-.chat-shortcut{position:fixed;left:16px;bottom:max(16px,env(safe-area-inset-bottom));z-index:900;padding:7px 12px;border:1px solid #6a8589;border-radius:3px;background:#203a45;color:#fff;font:600 14px Arial,sans-serif;cursor:pointer;box-shadow:0 2px 6px #0003}
-.chat-shortcut[hidden]{display:none}
-.chat-shortcut:hover{background:#315966}
-.chat-shortcut:focus-visible{outline:2px solid #fff;outline-offset:2px}
-.chat-shortcut-host{margin-left:auto;padding-left:8px;flex-shrink:0}
-.chat-shortcut.chat-shortcut--inline{position:static;padding:3px 8px;border-color:#ffffff66;background:#ffffff15;color:inherit;box-shadow:none;font-size:12px;line-height:20px;white-space:nowrap}
+.game-chat-button-host{display:inline-flex;flex-shrink:0;margin-left:auto}
+.game-chat-button-host:empty{display:none}
+.game-chat-button-host--desktop{margin-left:.4rem}
+.game-chat-button-host--fallback{display:flex;justify-content:flex-end}
+.game-chat-button{position:relative;display:inline-grid;place-items:center;flex-shrink:0;width:40px;height:40px;padding:7px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--ui-text-muted);cursor:pointer;line-height:1}
+.game-chat-button[hidden],.game-chat-unread[hidden]{display:none}
+.game-chat-button:hover,.game-chat-button:focus-visible{background:var(--ui-surface-hover);border-color:var(--ui-border);color:var(--ui-text)}
+.game-chat-button:focus-visible{outline:2px solid #97c8ff;outline-offset:2px}
+.game-chat-unread{position:absolute;right:0;top:0;min-width:17px;height:17px;padding:0 3px;border:2px solid var(--ui-bg);border-radius:10px;background:#f1c457;color:#18202a;font:700 10px/13px system-ui;text-align:center}
+.game-chat-dialog{margin:auto;padding:16px;width:min(600px,calc(100vw - 24px));max-height:calc(100dvh - 24px);border:1px solid var(--ui-border);border-radius:12px;background:var(--ui-surface);color:var(--ui-text)}
+.game-chat-dialog::backdrop{background:#0a172580}
+.game-chat-dialog h2{margin:0 40px 12px 0;font-size:1.1rem}
+.game-chat-dialog .game-chat-close{position:absolute;top:8px;right:8px;width:36px;height:36px;background:transparent;color:inherit;border:0;font-size:24px;cursor:pointer}
+.game-chat-dialog .bgs-game-chat{width:100%;max-width:none;margin:0;padding:0;border:0}
+.game-chat-dialog .bgs-game-chat summary{display:none}
+.game-chat-dialog .chat-messages{max-height:min(440px,50dvh)}
 @media(max-width:767px){
-  .chat-shortcut{bottom:calc(var(--chat-footer-height,0px) + max(16px,env(safe-area-inset-bottom)))}
-  .bgs-game-chat .chat-messages{max-height:clamp(48px,calc(100dvh - var(--chat-footer-height,0px) - 120px),250px)}
+  .game-chat-button-host--mobile .game-chat-button{width:42px;height:42px;margin:-7px 0;color:inherit}
+  .game-chat-button-host--mobile .game-chat-unread{border-color:var(--ui-banner-end)}
 }
 
 `;
-  slot.append(style);
+  document.head.append(style);
   let locale = "en";
   let disposed = false;
   let players: { id: number; name: string; color?: string; faction?: string }[] = [];
   let localPlayer: number | undefined;
   let avatars: string[] = [];
-  let chatVisible = false;
   let chatNotifications = true;
   let analysis = false;
-  const shortcut = document.createElement("button");
-  shortcut.type = "button";
-  shortcut.className = "chat-shortcut";
-  shortcut.hidden = true;
-  slot.append(shortcut);
-  const footer = host.querySelector(".mobile-sticky-actions-spacer");
-  function viewport() {
-    return { bottom: Math.max(0, window.innerHeight - (footer?.getBoundingClientRect().height || 0)) };
+  let platformChat = false;
+  let view: ReturnType<typeof mountChat> | undefined;
+  let dialog: HTMLDialogElement | undefined;
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "game-chat-button";
+  button.setAttribute("translate", "no");
+  button.hidden = true;
+  button.innerHTML = `<svg viewBox="0 0 16 16" width="23" height="23" fill="currentColor" aria-hidden="true"><path d="M2.678 11.894a1 1 0 0 1 .287.801a10.97 10.97 0 0 1-.398 2c1.395-.323 2.247-.697 2.634-.893a1 1 0 0 1 .71-.074A8.06 8.06 0 0 0 8 14c3.996 0 7-2.807 7-6c0-3.192-3.004-6-7-6S1 4.808 1 8c0 1.468.617 2.83 1.678 3.894zm-.493 3.905a21.682 21.682 0 0 1-.713.129c-.2.032-.352-.176-.273-.362a9.68 9.68 0 0 1 .244-.637l.003-.01c.248-.72.45-1.548.524-2.319C.743 11.37 0 9.76 0 8c0-3.866 3.582-7 8-7s8 3.134 8 7s-3.582 7-8 7a9.06 9.06 0 0 1-2.347-.306c-.52.263-1.639.742-3.468 1.105z"/></svg>`;
+  const badge = document.createElement("span");
+  badge.className = "game-chat-unread";
+  badge.setAttribute("aria-hidden", "true");
+  badge.hidden = true;
+  button.append(badge);
+
+  function closeLocalChat() {
+    dialog?.close();
+    chat.setOpen(false);
   }
-  const view = mountChat(slot, {
-    chat,
-    styles: false,
-    openPlayer: (index) => emitter.emit("player:clicked", { index }),
-    renderAuthor,
-    onVisibilityChange(visible) {
-      chatVisible = visible;
-      updateShortcut();
-    },
-    viewport,
-  });
+  function openLocalChat() {
+    if (!dialog) {
+      dialog = document.createElement("dialog");
+      dialog.className = "game-chat-dialog";
+      const title = document.createElement("h2");
+      const close = document.createElement("button");
+      close.type = "button";
+      close.className = "game-chat-close";
+      close.textContent = "×";
+      close.onclick = closeLocalChat;
+      dialog.append(title, close);
+      host.append(dialog);
+      dialog.addEventListener("close", () => chat.setOpen(false));
+      dialog.addEventListener("keydown", (event) => event.stopPropagation());
+      view = mountChat(dialog, {
+        chat,
+        styles: false,
+        openPlayer: (index) => emitter.emit("player:clicked", { index }),
+        renderAuthor,
+      });
+    }
+    dialog.setAttribute("aria-label", translateText("Chat", locale));
+    const title = dialog.querySelector("h2");
+    if (title) title.textContent = translateText("Chat", locale);
+    dialog.querySelector(".game-chat-close")?.setAttribute("aria-label", translateText("Close", locale));
+    dialog.showModal();
+    chat.setOpen(true);
+    view?.refresh();
+  }
   function renderAuthor(message: ChatMessage): Node {
     const author = document.createElement("strong");
     author.textContent = message.author || "Game";
@@ -136,22 +170,26 @@ export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): 
     wrapper.append(author);
     return wrapper;
   }
-  function updateShortcut() {
-    shortcut.setAttribute("translate", "no");
-    const count = chat.unread;
+  function updateButton() {
+    const count = chatNotifications ? chat.unread : 0;
     const sourceLabel = count ? `Chat · ${count} unread` : "Chat";
-    const label = translateText(sourceLabel, locale);
-    const barSlot = window.innerWidth < 768 ? host.querySelector(".mobile-sticky-actions .chat-shortcut-host") : null;
-    const destination = barSlot || slot;
-    if (shortcut.parentElement !== destination) destination.append(shortcut);
-    shortcut.classList.toggle("chat-shortcut--inline", !!barSlot);
-    const text = barSlot && count ? translateText(`Chat · ${count}`, locale) : label;
-    if (shortcut.textContent !== text) shortcut.textContent = text;
-    shortcut.hidden = !chatNotifications || analysis || count === 0 || (!barSlot && chatVisible);
-    shortcut.setAttribute("aria-label", translateText(`Open ${sourceLabel}`, locale));
+    const mobileSlot =
+      window.innerWidth < 768 ? host.querySelector(".mobile-sticky-actions .game-chat-button-host--mobile") : null;
+    const destination =
+      mobileSlot ||
+      host.querySelector(".game-chat-button-host--desktop") ||
+      host.querySelector(".game-chat-button-host--fallback");
+    if (destination && button.parentElement !== destination) destination.append(button);
+    button.hidden = analysis || !chat.snapshot.enabled;
+    const text = String(count);
+    if (badge.textContent !== text) badge.textContent = text;
+    badge.hidden = count === 0;
+    button.title = translateText(sourceLabel, locale);
+    button.setAttribute("aria-label", translateText(`Open ${sourceLabel}`, locale));
   }
-  shortcut.onclick = () => {
-    view.open();
+  button.onclick = () => {
+    if (platformChat) emitter.emit("chat:open");
+    else openLocalChat();
   };
   const dispose = [
     detach,
@@ -160,54 +198,54 @@ export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): 
       locale = resolveLocale(preferences.locale);
       void loadLocale(locale)
         .then(() => {
-          if (!disposed) updateShortcut();
+          if (!disposed) updateButton();
         })
         .catch(() => {});
       analysis = preferences.analysis === true;
-      slot.style.display = analysis ? "none" : "";
-      updateShortcut();
+      platformChat = preferences.platformChat === true;
+      if (analysis || platformChat) closeLocalChat();
+      if (platformChat && dialog) {
+        view?.destroy();
+        view = undefined;
+        dialog.remove();
+        dialog = undefined;
+      }
+      updateButton();
     }),
-    chat.subscribe(updateShortcut),
+    chat.subscribe(updateButton),
     emitter.on("state", (state) => {
       players = (state?.players || []).map((player: any, index: number) => ({ ...player, id: index }));
-      view.refresh();
+      view?.refresh();
     }),
     emitter.on("gamelog", ({ data }: any) => {
       if (data?.state) {
         players = (data.state.players || []).map((player: any, index: number) => ({ ...player, id: index }));
-        view.refresh();
+        view?.refresh();
       }
     }),
     emitter.on("player", (player) => {
       localPlayer = player?.index;
-      view.refresh();
+      view?.refresh();
     }),
   ];
   dispose.push(
     emitter.on("avatars", (data) => {
       avatars = data;
-      view.refresh();
+      view?.refresh();
     })
   );
   // The action bar is mounted and removed as turns change.
-  window.addEventListener("resize", updateShortcut);
-  dispose.push(() => window.removeEventListener("resize", updateShortcut));
-  const mutation = new MutationObserver(updateShortcut);
+  window.addEventListener("resize", updateButton);
+  dispose.push(() => window.removeEventListener("resize", updateButton));
+  const mutation = new MutationObserver(updateButton);
   mutation.observe(host, { childList: true, subtree: true });
-  const resize = new ResizeObserver(() => {
-    view.refresh();
-    updateShortcut();
-  });
-  if (footer) resize.observe(footer);
-  dispose.push(
-    () => mutation.disconnect(),
-    () => resize.disconnect()
-  );
+  dispose.push(() => mutation.disconnect());
   return () => {
     disposed = true;
     dispose.forEach((cleanup) => cleanup());
-    view.destroy();
-    shortcut.remove();
+    view?.destroy();
+    dialog?.remove();
+    button.remove();
     style.remove();
   };
 }

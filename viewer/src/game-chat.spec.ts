@@ -4,53 +4,30 @@ import { mountGameChat } from "./game-chat";
 import { catalogs } from "./localization";
 import frenchCatalog from "./localization/fr.json";
 
-describe("chat beside the mobile action bar", () => {
+describe("game chat icon", () => {
   let emitter: ViewerEmitter;
   let dispose: () => void;
-  let panel: HTMLElement;
-  let list: HTMLElement;
-  let shortcut: HTMLButtonElement;
-
-  function rect(top: number, height: number): DOMRect {
-    return { top, bottom: top + height, left: 0, right: 390, width: 390, height } as DOMRect;
-  }
+  let host: HTMLElement;
+  let button: HTMLButtonElement;
+  const message = {
+    _id: "6ae5d8400000000000000001",
+    type: "text" as const,
+    author: "Nevlas",
+    text: "Hello",
+    createdAt: "2026-10-31T12:00:00Z",
+  };
+  const next = { ...message, _id: "6ae5d87c0000000000000001", createdAt: "2026-10-31T12:01:00Z" };
+  const badge = () => button.querySelector<HTMLElement>(".game-chat-unread")!;
 
   beforeEach(() => {
     catalogs.fr = frenchCatalog;
-    vi.useFakeTimers();
+    vi.stubGlobal("innerWidth", 1280);
     vi.stubGlobal(
       "IntersectionObserver",
       class {
-        targets = new Set<Element>();
-        constructor(private callback: IntersectionObserverCallback) {
-          this.refresh = this.refresh.bind(this);
-          window.addEventListener("scroll", this.refresh);
-        }
-        refresh() {
-          this.callback(
-            Array.from(
-              this.targets,
-              (target) =>
-                ({
-                  target,
-                  isIntersecting: true,
-                  intersectionRect: target.getBoundingClientRect(),
-                }) as IntersectionObserverEntry
-            ),
-            this as unknown as IntersectionObserver
-          );
-        }
-        observe(target: Element) {
-          this.targets.add(target);
-          this.refresh();
-        }
-        unobserve(target: Element) {
-          this.targets.delete(target);
-        }
-        disconnect() {
-          window.removeEventListener("scroll", this.refresh);
-          this.targets.clear();
-        }
+        observe() {}
+        disconnect() {}
+        unobserve() {}
       }
     );
     vi.stubGlobal(
@@ -58,148 +35,157 @@ describe("chat beside the mobile action bar", () => {
       class {
         observe() {}
         disconnect() {}
+        unobserve() {}
       }
     );
-    vi.stubGlobal("innerHeight", 800);
-    vi.spyOn(document, "hasFocus").mockReturnValue(false);
-    Object.defineProperty(HTMLElement.prototype, "checkVisibility", { value: () => true, configurable: true });
     document.body.innerHTML =
-      '<div id="host"><div class="chat-host"></div><div class="mobile-sticky-actions-spacer"></div></div>';
-    const host = document.querySelector("#host")!;
-    vi.spyOn(host.querySelector(".mobile-sticky-actions-spacer")!, "getBoundingClientRect").mockReturnValue(
-      rect(900, 180)
-    );
+      '<div id="host"><div class="game-chat-button-host--fallback"></div><div id="move-title"><span class="game-chat-button-host--desktop"></span></div></div>';
+    host = document.querySelector("#host")!;
     emitter = new ViewerEmitter();
     dispose = mountGameChat(emitter, host);
-    panel = host.querySelector(".bgs-game-chat")!;
-    list = host.querySelector(".chat-messages")!;
-    shortcut = host.querySelector(".chat-shortcut")!;
+    emitter.emit("preferences", { platformChat: true });
+    emitter.emit("chat:state", { canSend: true });
+    button = host.querySelector(".game-chat-button")!;
   });
 
   afterEach(() => {
     dispose();
     emitter.destroy();
-    vi.clearAllTimers();
-    vi.useRealTimers();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
-    document.body.innerHTML = "";
+    document.body.replaceChildren();
   });
 
-  it("keeps the localized shortcut stable when its action-bar location changes", async () => {
-    emitter.emit("preferences", { locale: "fr" });
-    expect(shortcut.textContent).toBe("Discussion");
-    expect(shortcut.getAttribute("translate")).toBe("no");
-    document.querySelector("#host")!.append(document.createElement("span"));
+  it("opens the native chat even with no unread messages, without an embedded panel or floating shortcut", () => {
+    const open = vi.fn();
+    emitter.on("chat:open", open);
+    expect(button.hidden).toBe(false);
+    expect(badge().hidden).toBe(true);
+    button.click();
+    expect(open).toHaveBeenCalledOnce();
+    expect(document.querySelector(".bgs-game-chat, .chat-shortcut, .game-chat-dialog")).toBeNull();
+  });
+
+  it("keeps translated accessible labels when moving between header slots", async () => {
+    emitter.emit("preferences", { platformChat: true, locale: "fr" });
+    expect(button.title).toBe("Discussion");
+    expect(button.getAttribute("translate")).toBe("no");
+    expect(button.querySelector("svg")).not.toBeNull();
+    host.append(document.createElement("span"));
     await Promise.resolve();
-    expect(shortcut.textContent).toBe("Discussion");
-    emitter.emit("preferences", { locale: "en" });
-    expect(shortcut.textContent).toBe("Chat");
+    expect(button.title).toBe("Discussion");
+    emitter.emit("preferences", { platformChat: true, locale: "en" });
+    expect(button.title).toBe("Chat");
   });
 
-  it("does not count replacement history as unread", () => {
-    vi.spyOn(panel, "getBoundingClientRect").mockReturnValue(rect(900, 130));
-    vi.spyOn(list, "getBoundingClientRect").mockReturnValue(rect(920, 60));
-    const message = { _id: "000000000000000000000001", type: "text" as const, author: "Nevlas", text: "Hello" };
-    emitter.emit("chat:messages", [message]);
-    expect(shortcut.textContent).toBe("Chat");
-    expect(shortcut.hidden).toBe(true);
-    const next = { ...message, _id: "000000000000000000000002" };
-    emitter.emit("chat:appended", [next]);
-    expect(shortcut.textContent).toContain("1 unread");
-    expect(shortcut.hidden).toBe(false);
-    emitter.emit("preferences", { chatNotifications: false });
-    expect(shortcut.hidden).toBe(true);
-    expect(shortcut.textContent).toContain("1 unread");
-    emitter.emit("preferences", { chatNotifications: true });
-    expect(shortcut.hidden).toBe(false);
-    emitter.emit("chat:messages", [message, next]);
-    expect(shortcut.textContent).toContain("1 unread");
-  });
-
-  it("keeps a message unread while the action bar covers it", () => {
+  it("shows only a badge for unread messages and lets the host acknowledge native-chat reads", () => {
     const read = vi.fn();
     emitter.on("chat:read", read);
-    vi.spyOn(panel, "getBoundingClientRect").mockReturnValue(rect(650, 130));
-    vi.spyOn(list, "getBoundingClientRect").mockReturnValue(rect(680, 60));
-    emitter.emit("chat:appended", [
-      { _id: "000000000000000000000001", type: "text" as const, author: "Nevlas", text: "Hello" },
-    ]);
-    const row = list.querySelector("[data-message-id]")!;
-    const rowBounds = vi.spyOn(row, "getBoundingClientRect").mockReturnValue(rect(690, 40));
-    window.dispatchEvent(new Event("scroll"));
-    vi.advanceTimersByTime(600);
-
+    emitter.emit("chat:state", {
+      canSend: true,
+      readState: { userId: "local", lastReadAt: Date.parse(message.createdAt) },
+    });
+    emitter.emit("chat:messages", [message, next]);
+    expect(badge().hidden).toBe(false);
+    expect(badge().textContent).toBe("1");
+    expect(button.getAttribute("aria-label")).toBe("Open Chat · 1 unread");
+    button.click();
     expect(read).not.toHaveBeenCalled();
-    expect(shortcut.hidden).toBe(false);
-    expect(shortcut.textContent).toContain("1 unread");
-
-    vi.mocked(panel.getBoundingClientRect).mockReturnValue(rect(350, 130));
-    vi.mocked(list.getBoundingClientRect).mockReturnValue(rect(380, 60));
-    rowBounds.mockReturnValue(rect(390, 40));
-    window.dispatchEvent(new Event("scroll"));
-    vi.advanceTimersByTime(600);
-
-    expect(read).toHaveBeenCalledExactlyOnceWith({ messageId: "000000000000000000000001" });
-    expect(shortcut.hidden).toBe(true);
-    expect(shortcut.textContent).toBe("Chat");
-    window.dispatchEvent(new Event("scroll"));
-    vi.advanceTimersByTime(600);
-    expect(read).toHaveBeenCalledTimes(1);
+    expect(badge().hidden).toBe(false);
+    emitter.emit("chat:state", {
+      canSend: true,
+      readState: { userId: "local", lastReadAt: Date.parse(next.createdAt) },
+    });
+    expect(badge().hidden).toBe(true);
+    expect(button.hidden).toBe(false);
+    expect(button.getAttribute("aria-label")).toBe("Open Chat");
   });
 
-  it("moves the same unread shortcut into the action bar and restores it off turn", async () => {
+  it("does not treat replacement history as new and clears deleted unread messages", () => {
+    emitter.emit("chat:messages", [message]);
+    expect(badge().hidden).toBe(true);
+    emitter.emit("chat:appended", [next]);
+    expect(badge().textContent).toBe("1");
+    expect(badge().hidden).toBe(false);
+    emitter.emit("chat:messages", [message, next]);
+    expect(badge().textContent).toBe("1");
+    emitter.emit("chat:deleted", [next._id]);
+    expect(badge().hidden).toBe(true);
+    expect(button.hidden).toBe(false);
+  });
+
+  it("keeps chat accessible when notifications are suppressed, but hides it in standalone analyses", () => {
+    emitter.emit("chat:appended", [message]);
+    emitter.emit("preferences", { platformChat: true, chatNotifications: false });
+    expect(badge().hidden).toBe(true);
+    expect(button.hidden).toBe(false);
+    emitter.emit("preferences", { platformChat: true, chatNotifications: true });
+    expect(badge().hidden).toBe(false);
+    emitter.emit("preferences", { platformChat: true, analysis: true });
+    expect(button.hidden).toBe(true);
+    emitter.emit("preferences", { platformChat: true, analysis: false });
+    expect(button.hidden).toBe(false);
+  });
+
+  it("moves one icon between desktop, mobile and fallback headers when controls remount", async () => {
+    const desktop = host.querySelector(".game-chat-button-host--desktop")!;
+    const mobile = document.createElement("div");
+    mobile.className = "mobile-sticky-actions mobile-sticky-actions--collapsed";
+    mobile.innerHTML = '<span class="game-chat-button-host--mobile"></span>';
+    host.append(mobile);
     vi.stubGlobal("innerWidth", 390);
-    vi.spyOn(panel, "getBoundingClientRect").mockReturnValue(rect(900, 130));
-    vi.spyOn(list, "getBoundingClientRect").mockReturnValue(rect(930, 60));
-    emitter.emit("chat:appended", [
-      { _id: "000000000000000000000001", type: "text" as const, author: "Nevlas", text: "Hello" },
-    ]);
-    const bar = document.createElement("div");
-    bar.className = "mobile-sticky-actions";
-    bar.innerHTML = '<span class="chat-shortcut-host"></span>';
-    document.querySelector("#host")!.prepend(bar);
-    await Promise.resolve();
-
-    expect(bar.contains(shortcut)).toBe(true);
-    expect(shortcut.textContent).toBe("Chat · 1");
-    expect(shortcut.getAttribute("aria-label")).toBe("Open Chat · 1 unread");
-    expect(shortcut.hidden).toBe(false);
-    emitter.emit("preferences", { chatNotifications: false });
-    expect(shortcut.hidden).toBe(true);
-    emitter.emit("preferences", { chatNotifications: true });
-    expect(shortcut.hidden).toBe(false);
-
+    window.dispatchEvent(new Event("resize"));
+    expect(mobile.contains(button)).toBe(true);
     vi.stubGlobal("innerWidth", 1280);
     window.dispatchEvent(new Event("resize"));
-    expect(bar.contains(shortcut)).toBe(false);
-    expect(shortcut.textContent).toBe("Chat · 1 unread");
-
+    expect(desktop.contains(button)).toBe(true);
     vi.stubGlobal("innerWidth", 390);
     window.dispatchEvent(new Event("resize"));
-    expect(bar.contains(shortcut)).toBe(true);
-    bar.remove();
+    mobile.remove();
     await Promise.resolve();
-    expect(shortcut.parentElement!.className).toBe("chat-host");
-    expect(shortcut.textContent).toBe("Chat · 1 unread");
-    expect(document.querySelectorAll(".chat-shortcut")).toHaveLength(1);
+    expect(desktop.contains(button)).toBe(true);
+    desktop.remove();
+    await Promise.resolve();
+    expect(host.querySelector(".game-chat-button-host--fallback")!.contains(button)).toBe(true);
+    expect(host.querySelectorAll(".game-chat-button")).toHaveLength(1);
   });
 
-  it("hides the action-bar shortcut without unread messages, including after deletion", async () => {
-    vi.stubGlobal("innerWidth", 390);
-    vi.spyOn(panel, "getBoundingClientRect").mockReturnValue(rect(900, 130));
-    vi.spyOn(list, "getBoundingClientRect").mockReturnValue(rect(930, 60));
-    const bar = document.createElement("div");
-    bar.className = "mobile-sticky-actions";
-    bar.innerHTML = '<span class="chat-shortcut-host"></span>';
-    document.querySelector("#host")!.prepend(bar);
-    await Promise.resolve();
+  it("opens a local dialog on hosts without system chat and removes it when system chat becomes available", () => {
+    const createElement = document.createElement.bind(document);
+    vi.spyOn(document, "createElement").mockImplementation((tag, options) => {
+      const element = createElement(tag, options);
+      if (tag === "dialog")
+        Object.assign(element, {
+          showModal(this: HTMLDialogElement) {
+            this.open = true;
+          },
+          close(this: HTMLDialogElement) {
+            this.open = false;
+            this.dispatchEvent(new Event("close"));
+          },
+        });
+      return element;
+    });
+    emitter.emit("preferences", { platformChat: false });
+    emitter.emit("chat:messages", [message]);
+    expect(document.querySelector(".bgs-game-chat")).toBeNull();
+    button.click();
+    const dialog = document.querySelector<HTMLDialogElement>(".game-chat-dialog")!;
+    expect(dialog.open).toBe(true);
+    expect(dialog.textContent).toContain("Hello");
+    expect(dialog.querySelector("input")).not.toBeNull();
+    (dialog.querySelector(".game-chat-close") as HTMLButtonElement).click();
+    expect(dialog.open).toBe(false);
+    emitter.emit("preferences", { platformChat: true });
+    expect(document.querySelector(".game-chat-dialog, .bgs-game-chat")).toBeNull();
+  });
 
-    expect(bar.contains(shortcut)).toBe(true);
-    expect(shortcut.hidden).toBe(true);
-    emitter.emit("chat:appended", [{ _id: "000000000000000000000001", type: "text", author: "Nevlas", text: "Hello" }]);
-    expect(shortcut.hidden).toBe(false);
-    emitter.emit("chat:deleted", ["000000000000000000000001"]);
-    expect(shortcut.hidden).toBe(true);
+  it("removes the button and its listeners on disposal", async () => {
+    dispose();
+    host.append(document.createElement("span"));
+    emitter.emit("chat:appended", [message]);
+    window.dispatchEvent(new Event("resize"));
+    await Promise.resolve();
+    expect(document.querySelector(".game-chat-button, .game-chat-dialog")).toBeNull();
   });
 });
