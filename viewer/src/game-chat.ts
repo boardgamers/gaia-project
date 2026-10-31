@@ -176,10 +176,11 @@ export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): 
     const sourceLabel = count ? `Chat · ${count} unread` : "Chat";
     const mobileSlot =
       window.innerWidth < 768 ? host.querySelector(".mobile-sticky-actions .game-chat-button-host--mobile") : null;
+    const actions = host.querySelector(".game-chat-button-host--desktop");
+    const turnOrder = host.querySelector(".game-chat-button-host--turn-order");
     const destination =
       mobileSlot ||
-      host.querySelector(".game-chat-button-host--desktop") ||
-      host.querySelector(".game-chat-button-host--turn-order") ||
+      (window.innerWidth < 768 ? actions || turnOrder : turnOrder || actions) ||
       host.querySelector(".game-chat-button-host--fallback");
     if (destination && button.parentElement !== destination) destination.append(button);
     button.hidden = analysis || !chat.snapshot.enabled;

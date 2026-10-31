@@ -129,6 +129,8 @@ describe("game chat icon", () => {
 
   it("moves one icon between action controls, spectator turn order and the remaining game controls", async () => {
     const desktop = host.querySelector(".game-chat-button-host--desktop")!;
+    const turnOrder = host.querySelector(".turn-order")!;
+    expect(turnOrder.contains(button)).toBe(true);
     const mobile = document.createElement("div");
     mobile.className = "mobile-sticky-actions mobile-sticky-actions--collapsed";
     mobile.innerHTML = '<span class="game-chat-button-host--mobile"></span>';
@@ -138,7 +140,7 @@ describe("game chat icon", () => {
     expect(mobile.contains(button)).toBe(true);
     vi.stubGlobal("innerWidth", 1280);
     window.dispatchEvent(new Event("resize"));
-    expect(desktop.contains(button)).toBe(true);
+    expect(turnOrder.contains(button)).toBe(true);
     vi.stubGlobal("innerWidth", 390);
     window.dispatchEvent(new Event("resize"));
     mobile.remove();
@@ -146,7 +148,6 @@ describe("game chat icon", () => {
     expect(desktop.contains(button)).toBe(true);
     desktop.remove();
     await Promise.resolve();
-    const turnOrder = host.querySelector(".turn-order")!;
     expect(turnOrder.contains(button)).toBe(true);
     button.click();
     turnOrder.remove();
