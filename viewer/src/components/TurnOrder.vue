@@ -1,6 +1,9 @@
 <template>
   <div class="turn-order">
-    <h5 v-if="!compact">Turn order</h5>
+    <div v-if="!compact" class="turn-order-heading">
+      <h5>Turn order</h5>
+      <span class="game-chat-button-host game-chat-button-host--turn-order"></span>
+    </div>
     <svg viewBox="-1.2 -1.2 12.5 4" :width="compact ? 170 : 250" :height="compact ? 60 : 80" style="max-width: 100%">
       <PlayerCircle
         v-for="(player, index) in turnOrder"
@@ -94,6 +97,16 @@ export default class TurnOrder extends Vue {
 </script>
 <style lang="scss">
 .turn-order {
+  .turn-order-heading {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-bottom: 0.5rem;
+
+    h5 {
+      margin: 0;
+    }
+  }
   & > svg {
     max-width: 250px;
   }

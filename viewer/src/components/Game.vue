@@ -4,7 +4,6 @@
       <Charts />
     </b-modal>
     <Rules id="rules" />
-    <div class="game-chat-button-host game-chat-button-host--fallback"></div>
 
     <!-- Show planning and queue details above the board; own-turn simulation starts beside the actions. -->
     <div v-if="analysisNotice || analysisPendingRestore" class="row">
@@ -255,6 +254,7 @@
           </div>
 
           <FactionBrowser v-if="!setupActionsAtTop" :on-turn="canPlay" />
+          <span class="game-chat-button-host game-chat-button-host--fallback"></span>
         </div>
       </div>
       <AdvancedLog
@@ -297,6 +297,7 @@
     <div v-else class="d-flex flex-column">
       <SetupStatus v-if="!ended" />
       <SpaceMap v-if="hasMap" :class="['mb-1', 'space-map', 'col-md-7']" />
+      <span class="game-chat-button-host game-chat-button-host--fallback"></span>
       <AdvancedLog :currentMove="currentMove" :hideLog.sync="hideLog" v-if="logPlacement === 'top'" />
       <Commands
         @command="handleCommand"

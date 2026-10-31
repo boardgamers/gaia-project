@@ -39,7 +39,7 @@ describe("game chat icon", () => {
       }
     );
     document.body.innerHTML =
-      '<div id="host"><div class="game-chat-button-host--fallback"></div><div id="move-title"><span class="game-chat-button-host--desktop"></span></div></div>';
+      '<div id="host"><div class="game-chat-button-host--fallback"></div><div class="turn-order"><span class="game-chat-button-host--turn-order"></span></div><div id="move-title"><span class="game-chat-button-host--desktop"></span></div></div>';
     host = document.querySelector("#host")!;
     emitter = new ViewerEmitter();
     dispose = mountGameChat(emitter, host);
@@ -127,7 +127,7 @@ describe("game chat icon", () => {
     expect(button.hidden).toBe(false);
   });
 
-  it("moves one icon between desktop, mobile and fallback headers when controls remount", async () => {
+  it("moves one icon between action controls, spectator turn order and the remaining game controls", async () => {
     const desktop = host.querySelector(".game-chat-button-host--desktop")!;
     const mobile = document.createElement("div");
     mobile.className = "mobile-sticky-actions mobile-sticky-actions--collapsed";
@@ -145,6 +145,11 @@ describe("game chat icon", () => {
     await Promise.resolve();
     expect(desktop.contains(button)).toBe(true);
     desktop.remove();
+    await Promise.resolve();
+    const turnOrder = host.querySelector(".turn-order")!;
+    expect(turnOrder.contains(button)).toBe(true);
+    button.click();
+    turnOrder.remove();
     await Promise.resolve();
     expect(host.querySelector(".game-chat-button-host--fallback")!.contains(button)).toBe(true);
     expect(host.querySelectorAll(".game-chat-button")).toHaveLength(1);

@@ -4,7 +4,6 @@
       <Charts />
     </b-modal>
     <Rules id="rules" />
-    <div class="game-chat-button-host game-chat-button-host--fallback"></div>
 
     <div v-if="analysisNotice || analysisPendingRestore" class="row">
       <div class="col-12">
@@ -175,6 +174,7 @@
           </div>
 
           <FactionBrowser v-if="!setupActionsAtTop" :on-turn="canPlay" />
+          <span class="game-chat-button-host game-chat-button-host--fallback"></span>
         </div>
       </div>
       <AdvancedLog
@@ -225,6 +225,7 @@
         @analysis-undo="undoLastAnalysisEntry"
         @analysis-reset="resetAnalysisLine"
       />
+      <span class="game-chat-button-host game-chat-button-host--fallback"></span>
       <AdvancedLog :currentMove="currentMove" :hideLog.sync="hideLog" v-if="logPlacement === 'top'" />
       <Commands
         @command="handleCommand"

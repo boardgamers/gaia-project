@@ -60,7 +60,8 @@ export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): 
 .game-chat-button-host{display:inline-flex;flex-shrink:0;margin-left:auto}
 .game-chat-button-host:empty{display:none}
 .game-chat-button-host--desktop{margin-left:.4rem}
-.game-chat-button-host--fallback{display:flex;justify-content:flex-end}
+.game-chat-button-host--turn-order,.game-chat-button-host--fallback{margin-left:0}
+.game-chat-button-host--turn-order .game-chat-button{margin:-8px 0}
 .game-chat-button{position:relative;display:inline-grid;place-items:center;flex-shrink:0;width:40px;height:40px;padding:7px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--ui-text-muted);cursor:pointer;line-height:1}
 .game-chat-button[hidden],.game-chat-unread[hidden]{display:none}
 .game-chat-button:hover,.game-chat-button:focus-visible{background:var(--ui-surface-hover);border-color:var(--ui-border);color:var(--ui-text)}
@@ -178,6 +179,7 @@ export function mountGameChat(emitter: ViewerEmitter<any, any>, host: Element): 
     const destination =
       mobileSlot ||
       host.querySelector(".game-chat-button-host--desktop") ||
+      host.querySelector(".game-chat-button-host--turn-order") ||
       host.querySelector(".game-chat-button-host--fallback");
     if (destination && button.parentElement !== destination) destination.append(button);
     button.hidden = analysis || !chat.snapshot.enabled;
