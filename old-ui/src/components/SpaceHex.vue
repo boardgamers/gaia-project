@@ -55,6 +55,19 @@
       </text>
       <g v-if="lostFleetSpaceship" class="lost-fleet-spaceship">
         <text class="lost-fleet-spaceship__label" y="0" dy="0.315">{{ lostFleetSpaceshipLabel }}</text>
+        <g
+          v-for="(explorer, index) in explorers"
+          :key="explorer.player"
+          class="lost-fleet-spaceship__explorer"
+          :class="{ recent: recentExploration(explorer) }"
+          :data-player="explorer.player"
+          :transform="`translate(${[-0.65, 0.65, 0, 0][index]}, ${[0, 0, -0.57, 0.57][index]})`"
+          role="img"
+          :aria-label="explorerLabel(explorer)"
+        >
+          <circle class="lost-fleet-spaceship__explorer-outline" r="0.3" />
+          <circle :class="['planet-fill', playerPlanet(explorer.player)]" r="0.25" />
+        </g>
       </g>
       <Planet
         v-if="showPlanet"
