@@ -136,17 +136,18 @@ function possibleFreeBuildMine(
     if (hex.data.planet === Planet.Transdim || !pl.canOccupy(hex)) {
       continue;
     }
-    if (hex.data.planet === Planet.Asteroid && !pl.data.hasResource(new Reward(1, Resource.GaiaFormer))) {
+    // Shared Lantids mines have no habitability cost or planet-specific reward.
+    const planet = hex.occupied() ? pl.planet : hex.data.planet;
+    if (planet === Planet.Asteroid && !pl.data.hasResource(new Reward(1, Resource.GaiaFormer))) {
       continue;
     }
 
     const rewards: Reward[] = [];
     let steps = 0;
 
-    if (hex.data.planet === Planet.Gaia) {
+    if (planet === Planet.Gaia) {
       rewards.push(pl.gaiaFormingCost());
     } else {
-      const planet = hex.occupied() ? pl.planet : hex.data.planet;
       steps = terraformingStepsRequired(pl.faction, planet, pl.data.lostFleetCost3Planets);
       const discountedSteps = Math.max(steps - discount.terraformDiscount, 0);
       const oreCost = terraformingCost(pl.data, discountedSteps, engine.replay);
@@ -158,8 +159,7 @@ function possibleFreeBuildMine(
       }
     }
 
-    // Only the initial setup mine is exempt, including for Protoplanet factions.
-    if (hex.data.planet === Planet.Protoplanet) {
+    if (planet === Planet.Protoplanet) {
       rewards.push(new Reward(-6, Resource.VictoryPoint));
     }
 

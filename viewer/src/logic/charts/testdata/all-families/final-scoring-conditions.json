@@ -15,9 +15,9 @@
         "label": "Taklons",
         "total": 7
       },
-      "Lantids (8)": {
+      "Lantids (9)": {
         "label": "Lantids",
-        "total": 8
+        "total": 9
       }
     }
   },
@@ -35,8 +35,8 @@
       "data": [0, 2, 3, 2, 4, 3]
     },
     {
-      "label": "Lantids (8)",
-      "data": [0, 0, 3, 0, 5, 0]
+      "label": "Lantids (9)",
+      "data": [0, 1, 3, 0, 5, 0]
     },
     {
       "label": "Taklons (7)",

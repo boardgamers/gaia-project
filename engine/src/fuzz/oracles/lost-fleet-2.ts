@@ -232,12 +232,11 @@ function countDistinctPlanetTypes(engine: Engine, pl: Player): number {
   return new Set([...real, ...pl.data.artifactPlanetTypes]).size;
 }
 
-/** Mirrors `Player.ownedPlanets` (main-occupier only — excludes a Lantids-style "additional
- * mine" guest colonization, which does not count as this player's own colonization). */
+/** Sector presence includes shared Lantids mines; only planet-type scoring excludes them. */
 function countDeepSpaceSectors(engine: Engine, player: number): number {
   const keys = new Set<string>();
   for (const hex of engine.map.grid.values()) {
-    if (!hex.isMainOccupier(player)) {
+    if (!hex.colonizedBy(player)) {
       continue;
     }
     if (classifySectorId(hex.data.sector) !== LostFleetSectorType.DeepSpace) {

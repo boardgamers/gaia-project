@@ -729,6 +729,13 @@ yellow = Credit action.** Source for C1–C4 effects/costs below: owner board-re
 
 - I1. Ivits — **CLOSED**, see I7: power 2/2 (table-confirmed, matches p.8 and pre-existing vanilla
   value), no LF-specific ability or other delta found.
+- I2a. Lantids shared mines count for **sector presence**, including the Lost Fleet Deep Space
+  final goal, booster and Advanced Tech tiles. They do not count for planet-type/Gaia/asteroid
+  conditions or grant the 6-VP protoplanet reward. The exclusion is about planet types, not sector
+  presence. Use `colonizedBy(player)` for sector counts, not `isMainOccupier(player)`.
+  The earlier fuzzer note calling shared Deep Space mines an oracle bug was incorrect;
+  both the engine and oracle were excluding valid mines. See [Lantids audit](LANTIDS_AUDIT.md)
+  for sources, verified mechanics and regression coverage (2026-11-01).
 - I2. Lantids: +1 power Area I income (CONFIRMED, p.8). Adjusted PI tile, text-only (no image in the
   uiqoo.kr randomizer, see COMPONENTS.md §8), both sides: **solo/2-player side** — gain 2 knowledge
   both when adding a mine to a colonized planet AND when building a mine on the Lantids' home planet

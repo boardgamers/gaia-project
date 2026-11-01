@@ -1205,7 +1205,8 @@ export default class Player extends EventEmitter {
       case Condition.Asteroid:
         return this.ownedPlanetsCount[Planet.Asteroid] ?? 0;
       case Condition.DeepSpaceSector:
-        return colonizedDeepSpaceSectorCount(this.ownedPlanets);
+        // Sector scoring counts shared Lantids mines, unlike planet-type scoring.
+        return colonizedDeepSpaceSectorCount(this.data.occupied.filter((hex) => hex.colonizedBy(this.player)));
       case Condition.PlanetaryInstituteAcademyDistance: {
         const pi = this.data.occupied.find((hex) => hex.buildingOf(this.player) === Building.PlanetaryInstitute);
         const academies = this.data.occupied.filter((hex) => isAcademy(hex.buildingOf(this.player)));

@@ -160,10 +160,10 @@ export function planetCounter<T extends ChartKind>(
   countTransdim = true,
   value: (cmd: CommandObject, log: LogEntry, planet: Planet, location: string) => number = () => 1
 ): ExtractLog<ChartSource<T>> {
-  const transdim = new Set<string>();
-  const owners: { [key: string]: Faction } = {};
-
   return ExtractLog.new((want) => {
+    // Each player/source and each chart rebuild needs its own history.
+    const transdim = new Set<string>();
+    const owners: { [key: string]: Faction } = {};
     return (e) => {
       const cmd = e.cmd;
       if (!cmd) {
@@ -173,6 +173,7 @@ export function planetCounter<T extends ChartKind>(
       const source = e.source;
       switch (cmd.command) {
         case Command.PlaceLostPlanet:
+          owners[data.map.getS(cmd.args[0]).toString()] = cmd.faction;
           return cmd.faction == want.faction && includeLostPlanet(source)
             ? value(cmd, e.log, Planet.Lost, cmd.args[0])
             : 0;
@@ -183,20 +184,21 @@ export function planetCounter<T extends ChartKind>(
           const hex = data.map.grid.get({ q, r });
           const planet = hex.data.planet;
 
-          const owner = owners[location];
+          const key = hex.toString();
+          const owner = owners[key];
           if (owner == null) {
-            owners[location] = cmd.faction;
+            owners[key] = cmd.faction;
           }
           if (cmd.faction != want.faction) {
             return 0;
           }
 
-          if (owner != want.faction && want.faction == Faction.Lantids) {
+          if (owner != null && owner != want.faction && want.faction == Faction.Lantids) {
             return includeLantidsGuestMine(source) ? value(cmd, e.log, planet, location) : 0;
           }
 
           if (building == Building.GaiaFormer && countTransdim) {
-            transdim.add(location);
+            transdim.add(key);
 
             if (includeRegularPlanet(Planet.Transdim, source.type, want)) {
               return value(cmd, e.log, Planet.Transdim, location);
@@ -206,7 +208,7 @@ export function planetCounter<T extends ChartKind>(
           if (
             includeRegularPlanet(planet, source.type, want) &&
             (building == Building.Mine || (building == Building.PlanetaryInstitute && want.faction == Faction.Ivits)) &&
-            !transdim.has(location)
+            !transdim.has(key)
           ) {
             return value(cmd, e.log, planet, location);
           }

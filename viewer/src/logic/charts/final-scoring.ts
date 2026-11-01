@@ -178,80 +178,26 @@ const asteroids: FinalScoringExtractLog = planetCounter(
   false
 );
 
-const deepSpaceSectors: FinalScoringExtractLog = ExtractLog.new((want) => {
-  const sectors = new Set<string>();
-  const transdim = new Set<string>();
-  const owners: { [key: string]: Faction } = {};
-
-  return (e) => {
-    const cmd = e.cmd;
-    if (!cmd) {
-      return 0;
-    }
-
-    switch (cmd.command) {
-      case Command.PlaceLostPlanet: {
-        if (cmd.faction !== want.faction) {
-          return 0;
-        }
-
-        const hex = e.data.map.getS(cmd.args[0]);
-        if (classifySectorId(hex.data.sector) !== LostFleetSectorType.DeepSpace) {
-          return 0;
-        }
-
-        const sectorKey = hex.data.sector.replace(/_\d+$/, "");
-        if (sectors.has(sectorKey)) {
-          return 0;
-        }
-
-        sectors.add(sectorKey);
-        return 1;
+const deepSpaceSectors: FinalScoringExtractLog = ExtractLog.wrapper((player, source, engine) => {
+  const seen = new Set<string>();
+  return planetCounter(
+    () => true,
+    () => true,
+    () => true,
+    false,
+    (cmd, log, planet, location) => {
+      const sector = engine.map.getS(location).data.sector;
+      if (classifySectorId(sector) !== LostFleetSectorType.DeepSpace) {
+        return 0;
       }
-
-      case Command.Build: {
-        const building = cmd.args[0] as Building;
-        const location = cmd.args[1];
-        const hex = e.data.map.getS(location);
-        const sectorType = classifySectorId(hex.data.sector);
-        const owner = owners[location];
-
-        if (owner == null) {
-          owners[location] = cmd.faction;
-        }
-
-        if (cmd.faction !== want.faction) {
-          return 0;
-        }
-
-        if (owner !== want.faction && want.faction === Faction.Lantids) {
-          return 0;
-        }
-
-        if (building === Building.GaiaFormer) {
-          transdim.add(location);
-          return 0;
-        }
-
-        if (
-          sectorType === LostFleetSectorType.DeepSpace &&
-          (building === Building.Mine ||
-            (building === Building.PlanetaryInstitute && want.faction === Faction.Ivits)) &&
-          !transdim.has(location)
-        ) {
-          const sectorKey = hex.data.sector.replace(/_\d+$/, "");
-          if (sectors.has(sectorKey)) {
-            return 0;
-          }
-
-          sectors.add(sectorKey);
-          return 1;
-        }
+      const key = sector.replace(/_\d+$/, "");
+      if (seen.has(key)) {
+        return 0;
       }
+      seen.add(key);
+      return 1;
     }
-
-    return 0;
-  };
+  );
 });
 
 const piAcademyDistance: FinalScoringExtractLog = ExtractLog.wrapper((want) => {
@@ -331,7 +277,7 @@ export const finalScoringSources: { [key in FinalTile]: FinalScoringSource } = {
     extractLog: piAcademyDistance,
   }),
   [FinalTile.DeepSpaceSector]: {
-    contributors: ["Regular Building", "Lost Planet"],
+    contributors: ["Regular Building", "Lost Planet", "Lantids Guest Mine"],
     shortcut: "d",
     name: "Deep Space sectors",
     color: "--lost",

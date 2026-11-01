@@ -16,7 +16,8 @@ function gainAdjustedPiBonus(player: Player, hex: GaiaHex) {
     return;
   }
 
-  if (player.nbPlayers <= 2 && hex.data.planet === Planet.Terra) {
+  // A shared mine already received the PI reward in build(), regardless of its planet type.
+  if (player.nbPlayers <= 2 && hex.data.planet === Planet.Terra && hex.isMainOccupier(player.player)) {
     player.gainRewards(Reward.parse("2k"), Faction.Lantids);
   }
 
