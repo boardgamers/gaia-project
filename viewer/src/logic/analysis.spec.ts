@@ -1,4 +1,13 @@
-import Engine, { AuctionVariant, Command, Faction, Phase, Planet, Resource, Round } from "@gaia-project/engine";
+import Engine, {
+  AuctionVariant,
+  Building,
+  Command,
+  Faction,
+  Phase,
+  Planet,
+  Resource,
+  Round,
+} from "@gaia-project/engine";
 import { expect } from "chai";
 import { passedChargeGame } from "../testing/passed-charge";
 import type { AnalysisEntry, MoveCost } from "./analysis";
@@ -415,6 +424,151 @@ describe("dropPlayedAnalysisPrefix", () => {
     expect(
       dropPlayedAnalysisPrefix(engine, [ts, nav], 0, ["terrans build ts 3A3. (2/4/0/0 ⇒ 1/5/0/0)"]).entries
     ).to.deep.equal([nav]);
+  });
+
+  const federation = "terrans federation 1A4,1A5,1B2,2A1,9A8,9A9 ship-fed-range. build m 8A6.";
+  const loggedFederation =
+    "terrans federation 1A4,1A5,1B2,2A1,9A8,9A9 ship-fed-range using area2: 1, area3: 1. build m 8A6. (0/1/10/0 ⇒ 0/0/9/0)";
+
+  it("matches the Devious-basket-7886 federation despite its power-payment annotation", () => {
+    const charge: AnalysisEntry = { kind: "adjust", charge: 2 };
+    const result = dropPlayedAnalysisPrefix(engine, [charge, move(federation), nav], 0, [loggedFederation]);
+    expect(result.entries).to.deep.equal([nav]);
+    expect(result.dropped).to.equal(1);
+    expect(result.played[0].move).to.equal(loggedFederation);
+  });
+
+  it("matches federation hex sets regardless of order or coordinate aliases, including sector centres", () => {
+    const hexes = ["1A4", "1B2", "1C"];
+    const coordinates = hexes.map((hex) => {
+      const { q, r } = engine.map.parse(hex);
+      return `${q}x${r}`;
+    });
+    const planned = move(`terrans federation ${hexes.join(",")} fed3.`);
+    const result = dropPlayedAnalysisPrefix(engine, [planned, nav], 0, [
+      `terrans federation ${coordinates.reverse().join(",")} fed3 using area1: 1.`,
+    ]);
+    expect(result.entries).to.deep.equal([nav]);
+  });
+
+  it("keeps federation alternatives with a different hex, token, follow-up build or conversion", () => {
+    for (const alternative of [
+      federation.replace("1A4", "1A3"),
+      federation.replace("ship-fed-range", "fed3"),
+      federation.replace("8A6", "8A7"),
+      federation.replace(". build m 8A6.", "."),
+      federation.replace("terrans ", "terrans spend 1q for 1o. "),
+    ]) {
+      const entry = move(alternative);
+      expect(dropPlayedAnalysisPrefix(engine, [entry], 0, [loggedFederation]).entries).to.deep.equal([entry]);
+    }
+    expect(
+      dropPlayedAnalysisPrefix(engine, [move(federation)], 0, [loggedFederation.replace("terrans", "nevlas")]).dropped
+    ).to.equal(0);
+  });
+
+  it("repairs a federation saved past its actual move and consumes subsequent turns only once", () => {
+    const live = new Engine(SETUP_MOVES);
+    const base = live.moveHistory.length;
+    live.moveHistory.push("terrans up eco (0 ⇒ 1).", loggedFederation, "nevlas up nav.", "terrans up nav.");
+    const previousPlayed = [{ move: live.moveHistory[base], moveIndex: base }];
+    const result = dropPlayedAnalysisPrefix(
+      live,
+      [move(federation), nav, nav],
+      0,
+      [],
+      live.moveHistory.length,
+      previousPlayed
+    );
+    expect(result.entries).to.deep.equal([nav]);
+    expect(result.played).to.deep.equal([
+      { move: loggedFederation, moveIndex: base + 1 },
+      { move: "terrans up nav.", moveIndex: base + 3 },
+    ]);
+    const reopened = dropPlayedAnalysisPrefix(live, result.entries, 0, [], live.moveHistory.length, [
+      ...previousPlayed,
+      ...result.played,
+    ]);
+    expect(reopened.entries).to.deep.equal([nav]);
+    expect(reopened.played).to.deep.equal([]);
+  });
+
+  it("recovers across the saved base without consuming a subsequent research twice", () => {
+    const live = new Engine(SETUP_MOVES);
+    const federationIndex = live.moveHistory.length;
+    live.moveHistory.push(loggedFederation, "nevlas up nav.");
+    const base = live.moveHistory.length;
+    const newMoves = ["terrans up nav.", "nevlas charge 1."];
+    live.moveHistory.push(...newMoves);
+    const result = dropPlayedAnalysisPrefix(live, [move(federation), nav, nav], 0, newMoves, base);
+    expect(result.entries).to.deep.equal([nav]);
+    expect(result.played).to.deep.equal([
+      { move: loggedFederation, moveIndex: federationIndex },
+      { move: newMoves[0], moveIndex: base },
+    ]);
+  });
+
+  it("preserves a fresh Ivits plan that legally federates the same hexes and token again", () => {
+    const live = new Engine(["init 2 randomSeed", "p1 faction ivits", "p2 faction terrans"]);
+    live.phase = Phase.RoundMove;
+    live.round = 1;
+    live.turnOrder = [0];
+    live.currentPlayer = 0;
+    const player = live.players[0];
+    player.data.qics = 10;
+    const coords = ["0x0", "1x0", "2x0", "0x1", "1x1", "2x1"];
+    const buildings = [
+      Building.PlanetaryInstitute,
+      Building.Academy1,
+      Building.ResearchLab,
+      Building.ResearchLab,
+      Building.TradingStation,
+      Building.TradingStation,
+    ];
+    coords.forEach((coord, index) => {
+      const hex = live.map.getS(coord);
+      hex.data.planet = Planet.Terra;
+      hex.data.player = 0;
+      hex.data.building = buildings[index];
+      player.data.occupied.push(hex);
+      player.data.buildings[buildings[index]]++;
+    });
+    live.clearAvailableCommands();
+    const entry = move(`ivits federation ${coords.join(",")} fed2.`);
+    live.move(entry.move);
+    expect(player.data.federationCount).to.equal(1);
+    const base = live.moveHistory.length;
+    expect(dropPlayedAnalysisPrefix(live, [entry], 0, [], base).entries).to.deep.equal([entry]);
+    live.move(entry.move);
+    expect(player.data.federationCount).to.equal(2);
+    expect(dropPlayedAnalysisPrefix(live, [entry], 0, live.moveHistory.slice(base), base).entries).to.deep.equal([]);
+  });
+
+  it("recovers a stale federation even when it was the first planned turn", () => {
+    const live = new Engine(SETUP_MOVES);
+    live.moveHistory.push(loggedFederation);
+    const result = dropPlayedAnalysisPrefix(live, [move(federation), nav], 0, [], live.moveHistory.length);
+    expect(result.entries).to.deep.equal([nav]);
+    expect(result.played[0]).to.deep.equal({ move: loggedFederation, moveIndex: live.moveHistory.length - 1 });
+  });
+
+  it("does not recover an alternative, an already-retired federation or a divergent played history", () => {
+    const live = new Engine(SETUP_MOVES);
+    const base = live.moveHistory.length;
+    live.moveHistory.push(loggedFederation, "terrans up nav.");
+    const entry = move(federation);
+    const different = move(federation.replace("8A6", "8A7"));
+    expect(dropPlayedAnalysisPrefix(live, [different], 0, [], live.moveHistory.length).entries).to.deep.equal([
+      different,
+    ]);
+    for (const previousPlayed of [
+      [{ move: loggedFederation, moveIndex: base }],
+      [{ move: "terrans up gaia.", moveIndex: base - 1 }],
+    ]) {
+      expect(
+        dropPlayedAnalysisPrefix(live, [entry], 0, [], live.moveHistory.length, previousPlayed).entries
+      ).to.deep.equal([entry]);
+    }
   });
 
   it("keeps the whole turn when only one command matches", () => {

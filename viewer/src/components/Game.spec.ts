@@ -2003,6 +2003,40 @@ describe("Game", () => {
         vm.$destroy();
       });
 
+      it("repairs and persists a stale federation after reloading without replaying the next research twice", () => {
+        const live = new Engine(SETUP_MOVES);
+        const federation = "terrans federation 1A4,1A5,1B2,2A1,9A8,9A9 ship-fed-range. build m 8A6.";
+        const recorded = federation.replace("ship-fed-range.", "ship-fed-range using area2: 1, area3: 1.");
+        const moveIndex = live.moveHistory.length;
+        live.moveHistory.push(recorded, "terrans up nav (0 ⇒ 1).");
+        const nav = { kind: "move", move: "terrans up nav." };
+        window.localStorage.setItem(
+          "analysis-mode::0",
+          JSON.stringify({
+            lines: [[{ kind: "move", move: federation }, nav, nav]],
+            active: 0,
+            baseRound: 1,
+            baseMoveCount: live.moveHistory.length,
+            baseMove: live.moveHistory[live.moveHistory.length - 1],
+          })
+        );
+        for (let attempt = 0; attempt < 2; attempt++) {
+          const vm = mountAsSeat(0, live);
+          vm.enterAnalysisMode();
+          expect(vm.analysisEntries).to.deep.equal([nav]);
+          expect(vm.analysisAppliedCount).to.equal(1);
+          expect(vm.analysisPlayed[0]).to.deep.equal([
+            { move: recorded, moveIndex },
+            { move: "terrans up nav (0 ⇒ 1).", moveIndex: moveIndex + 1 },
+          ]);
+          const saved = JSON.parse(window.localStorage.getItem("analysis-mode::0"));
+          expect(saved.lines).to.deep.equal([[nav]]);
+          expect(saved.played[0]).to.have.length(2);
+          vm.$el.remove();
+          vm.$destroy();
+        }
+      });
+
       it("can start a blank variation without copying moves or played history", () => {
         const vm = mountAsSeat(0);
         vm.enterAnalysisMode();

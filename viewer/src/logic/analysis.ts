@@ -793,24 +793,24 @@ export function ownMoveCount(engine: Engine, moves: string[], seat: number): num
 function analysisMoveKey(engine: Engine, move: string): string {
   return JSON.stringify(
     parseCommands(move).map(({ command, args }) => {
-      if (command === Command.Build) args = args.slice(0, 2);
+      // Federation logs append "using areaN: ..." after the hexes and token, not another command.
+      if (command === Command.Build || command === Command.FormFederation) args = args.slice(0, 2);
       if (command === Command.Pass || command === Command.UpgradeResearch) args = args.slice(0, 1);
       return [
         command,
-        ...args.map((arg) =>
-          arg
-            .split(",")
-            .map((token) => {
-              if (!/^(?:-?\d+x-?\d+|\d+[AB]\d+|IS\d+|DS\d+_\d+)$/.test(token)) return token;
-              try {
-                const { q, r } = engine.map.parse(token);
-                return `${q}x${r}`;
-              } catch {
-                return token;
-              }
-            })
-            .join(",")
-        ),
+        ...args.map((arg, index) => {
+          const tokens = arg.split(",").map((token) => {
+            if (!/^(?:-?\d+x-?\d+|\d+(?:[AB]\d+|C)|IS\d+|DS\d+_\d+)$/.test(token)) return token;
+            try {
+              const { q, r } = engine.map.parse(token);
+              return `${q}x${r}`;
+            } catch {
+              return token;
+            }
+          });
+          if (command === Command.FormFederation && index === 0) tokens.sort();
+          return tokens.join(",");
+        }),
       ];
     })
   );
@@ -850,6 +850,29 @@ export function dropPlayedAnalysisPrefix(
   ) {
     playedMoves = [...engine.moveHistory.slice(lastPlayed.moveIndex + 1, firstMoveIndex), ...playedMoves];
     firstMoveIndex = lastPlayed.moveIndex + 1;
+  }
+  // A failed federation match in older viewers still advanced the saved base. Recover from the
+  // exact real turn, never from illegality alone. Ivits can federate the same hexes/token again,
+  // so only new history can prove their move was played. Other factions cannot reuse those hexes.
+  if (
+    firstEntry?.kind === "move" &&
+    engine.players[seat]?.faction !== Faction.Ivits &&
+    moveBelongsToSeat(engine, firstEntry.move, seat) &&
+    parseCommands(firstEntry.move).some(({ command }) => command === Command.FormFederation) &&
+    (!lastPlayed || engine.moveHistory[lastPlayed.moveIndex] === (lastPlayed.historyMove ?? lastPlayed.move))
+  ) {
+    const key = analysisMoveKey(engine, firstEntry.move);
+    const recoveredIndex = engine.moveHistory.findIndex(
+      (move, index) =>
+        index > (lastPlayed?.moveIndex ?? -1) &&
+        index < firstMoveIndex &&
+        moveBelongsToSeat(engine, move, seat) &&
+        analysisMoveKey(engine, move) === key
+    );
+    if (recoveredIndex !== -1) {
+      playedMoves = [...engine.moveHistory.slice(recoveredIndex, firstMoveIndex), ...playedMoves];
+      firstMoveIndex = recoveredIndex;
+    }
   }
   const skipped = (engine.automation?.plans[seat]?.runs ?? []).flatMap((run) =>
     run.steps.filter((step) => step.status === "skipped" && step.moveIndex !== undefined)
