@@ -124,6 +124,10 @@ try {
           () => !document.querySelector(".gaia-viewer-game")?.classList.contains("accessible-space-map")
         );
 
+        const chatButton = page.locator(".game-chat-button");
+        const unreadBadge = chatButton.locator(".game-chat-unread");
+        assert.equal(await page.locator(".bgs-game-chat").count(), 0, "local chat mounts only when opened");
+        await chatButton.click();
         const panel = page.locator(".bgs-game-chat");
         const input = panel.locator("input");
         const list = panel.locator(".chat-messages");
@@ -150,11 +154,10 @@ try {
         );
         assert.equal(await input.inputValue(), "next draft");
         assert.match(await panel.locator(".chat-status").textContent(), /Try again/);
-        await panel.evaluate((el) => {
-          el.open = false;
-        });
+        await page.locator(".game-chat-close").click();
+        await page.locator(".game-chat-dialog").waitFor({ state: "hidden" });
         await page.evaluate(() => window.scrollTo(0, 0));
-        await page.waitForFunction(() => document.querySelector(".chat-shortcut").hidden);
+        await unreadBadge.waitFor({ state: "hidden" });
         const incoming = {
           _id: id(40),
           type: "text",
@@ -171,15 +174,12 @@ try {
           host.emit("chat:appended", [incoming]);
           host.emit("chat:appended", [incoming]);
         }, incoming);
-        assert.match(await panel.locator("summary").textContent(), /1 unread/);
-        await page.locator(".chat-shortcut").waitFor({ state: "visible" });
+        assert.match(await chatButton.getAttribute("aria-label"), /1 unread/);
+        await unreadBadge.waitFor({ state: "visible" });
+        assert.equal(await unreadBadge.textContent(), "1");
         assert.equal(await list.locator("article").count(), 36, "duplicate append is ignored");
         await page.evaluate((messages) => host.emit("chat:messages", messages), [...messages, incoming]);
-        assert.match(
-          await panel.locator("summary").textContent(),
-          /1 unread/,
-          "history refresh preserves known unread"
-        );
+        assert.match(await chatButton.getAttribute("aria-label"), /1 unread/, "history refresh preserves known unread");
         const link = list.locator("a");
         assert.equal(await link.getAttribute("href"), "https://example.com");
         assert.match(await link.getAttribute("rel"), /noopener/);
@@ -191,9 +191,7 @@ try {
         assert.equal(await list.locator("article").last().locator("img").count(), 0);
         assert.match(await list.locator("article").last().textContent(), /<img/);
         await page.evaluate((incoming) => host.emit("chat:updated", [incoming]), incoming);
-        await panel.evaluate((el) => {
-          el.open = true;
-        });
+        await chatButton.click();
         await panel.scrollIntoViewIfNeeded();
         await list.evaluate((el) => {
           el.scrollTop = el.scrollHeight;
@@ -202,7 +200,7 @@ try {
         await list.locator(".chat-mention").click();
         assert.deepEqual(await page.evaluate(() => playerClicks), [{ index: 0 }]);
         await page.waitForFunction(() => receipts.some((r) => r.messageId === "000000000000000000000028"));
-        await page.waitForFunction(() => document.querySelector(".chat-shortcut").hidden);
+        await unreadBadge.waitFor({ state: "hidden" });
         const receiptCount = await page.evaluate(() => receipts.length);
         await list.evaluate((el) => {
           el.scrollTop = 0;
@@ -305,13 +303,15 @@ try {
           },
           { state, incoming }
         );
+        assert.equal(await page.locator(".bgs-game-chat, .game-chat-dialog").count(), 0, "relaunch removes old chat");
+        assert.equal(await chatButton.count(), 1);
+        await chatButton.click();
         assert.equal(await page.locator(".bgs-game-chat").count(), 1);
         assert.equal(await page.locator(".chat-messages article").count(), 0, "relaunch detaches old chat");
         assert.deepEqual(errors, [], "no browser errors");
         // Reloaded history uses BGS's saved watermark, not just live append events.
-        await page.locator(".bgs-game-chat").evaluate((el) => {
-          el.open = false;
-        });
+        await page.locator(".game-chat-close").click();
+        await page.locator(".game-chat-dialog").waitFor({ state: "hidden" });
         await page.evaluate(() => {
           window.restoredReceipts = [];
           host.on("chat:read", (payload) => restoredReceipts.push(payload));
@@ -323,20 +323,31 @@ try {
             { _id: "000000040000000000000001", type: "system", text: "Game started" },
           ]);
         });
-        await page.waitForFunction(() => /1 unread/.test(document.querySelector(".bgs-game-chat summary").textContent));
+        await unreadBadge.waitFor({ state: "visible" });
+        assert.match(await chatButton.getAttribute("aria-label"), /1 unread/);
         await page.waitForTimeout(650);
         assert.equal(
           await page.evaluate(() => restoredReceipts.length),
           0,
           "hidden chat does not mark restored history read"
         );
-        await page.locator(".chat-shortcut").click();
+        await chatButton.click();
         await page.waitForFunction(() => restoredReceipts.length > 0);
         assert.doesNotMatch(
-          await page.locator(".bgs-game-chat summary").textContent(),
+          await chatButton.getAttribute("aria-label"),
           /unread/,
           "opening chat clears restored unread"
         );
+        await page.locator(".game-chat-close").click();
+        await page.locator(".game-chat-dialog").waitFor({ state: "hidden" });
+        await page.evaluate(() => {
+          window.nativeChatOpens = 0;
+          host.on("chat:open", () => nativeChatOpens++);
+          host.emit("preferences", { sound: false, platformChat: true });
+        });
+        await chatButton.click();
+        assert.equal(await page.evaluate(() => nativeChatOpens), 1, "platform chat uses the host's native panel");
+        assert.equal(await page.locator(".bgs-game-chat, .game-chat-dialog").count(), 0);
         await checkHostPresentation(page, "host", `/tmp/gaia-project-board-thumbnail-${width}.png`);
         assert.deepEqual(errors, []);
         await page.close();
