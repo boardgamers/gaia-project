@@ -1154,6 +1154,7 @@
   "Judge an opening by Round-2 income, power, knowledge/tech access, reach, and a feasible next productive action—not Round-1 VP alone.": "評估開局應看第2輪的收入、能量、知識/科技取得、航程，以及下一個可行的有效行動——而非僅看第1輪的VP。",
   "Keep a green token for the top level": "保留一個綠色標記給最高等級",
   "Keep access to several ships": "保留多艘太空船的使用權",
+  "Keep planning": "繼續規劃",
   "Keep your income tile": "保留你的收入板塊",
   "Knowledge": "知識",
   "Knowledge + Ore": "知識＋礦石",
@@ -4137,5 +4138,7 @@
   "Resume": "繼續",
   "Wait for charges": "等待能量充能",
   "New plan": "新計畫",
-  "✓ Income resolved": "✓ 收入已結算"
+  "✓ Income resolved": "✓ 收入已結算",
+  "Program up to move {p0}": "編排至第 {p0} 步",
+  "Kept for later": "保留供之後使用"
 }

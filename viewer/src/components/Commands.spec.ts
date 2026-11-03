@@ -869,6 +869,48 @@ describe("Commands", () => {
     expect(container.querySelectorAll("#analysis-commit-confirm").length).to.be.at.most(1);
   });
 
+  it("opens a row prefix without submitting, and the header restores the full proposal", async () => {
+    const store = makeStore();
+    store.commit("receiveData", createLostFleetRoundMoveEngine());
+    const wrapper = mount(Commands, {
+      store,
+      propsData: {
+        currentMove: "",
+        analysisMode: true,
+        analysisMoveCount: 3,
+        analysisAppliedCount: 4,
+        analysisCommittableMoves: 3,
+        analysisPlayed: [{ move: "played" }],
+        analysisEntries: [
+          { kind: "move", move: "a" },
+          { kind: "adjust", charge: 2 },
+          { kind: "move", move: "b" },
+          { kind: "move", move: "c" },
+        ],
+        analysisCommitPlan: { live: null, queued: ["a", "b", "c"], dropped: [], cut: null, limit: "line" },
+      },
+    });
+    await wrapper.findAll(".analysis-moves__program").at(1).trigger("click");
+    await Vue.nextTick();
+    await Vue.nextTick();
+    const confirmation = wrapper.findComponent({ name: "AnalysisCommitConfirm" });
+    expect(confirmation.props("initialLimit")).to.equal(2);
+    expect((confirmation.vm as any).view.queued).to.deep.equal(["a", "b"]);
+    expect((confirmation.vm as any).view.deferred).to.deep.equal(["c"]);
+    expect(wrapper.emitted("analysis-commit")).to.equal(undefined);
+    confirmation.findComponent({ name: "BModal" }).vm.$emit("cancel");
+    expect(wrapper.emitted("analysis-commit")).to.equal(undefined);
+    await wrapper.find(".analysis-controls__btn").trigger("click");
+    expect(confirmation.props("initialLimit")).to.equal(null);
+    // BootstrapVue's show event snapshots the limit on each fresh opening.
+    confirmation.findComponent({ name: "BModal" }).vm.$emit("show");
+    await Vue.nextTick();
+    expect((confirmation.vm as any).view.queued).to.deep.equal(["a", "b", "c"]);
+    confirmation.findComponent({ name: "BModal" }).vm.$emit("ok");
+    expect(wrapper.emitted("analysis-commit")).to.deep.equal([[3]]);
+    wrapper.destroy();
+  });
+
   it("asks before committing instead of firing the moves off the button press (§6)", async () => {
     const engine = createLostFleetRoundMoveEngine();
     const store = makeStore();
@@ -900,6 +942,13 @@ describe("Commands", () => {
     expect((document.body.querySelector(".modal")?.textContent ?? "").replace(/\s+/g, " ")).to.contain(
       "terrans up nav."
     );
+    expect(document.body.querySelector("#analysis-commit-count")).to.equal(null);
+    const confirm = Array.from(document.body.querySelectorAll(".modal-footer button")).find(
+      (button) => button.textContent.trim() === "Play 2 moves"
+    );
+    expect(confirm).not.to.equal(undefined);
+    await fireEvent.click(confirm);
+    expect(emitted()["analysis-commit"]).to.deep.equal([[2]]);
   });
 
   it("stripes both headers and reads SANDBOX during sandbox mode, without exiting when tapped (§5.1/§12)", async () => {

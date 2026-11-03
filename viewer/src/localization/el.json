@@ -1154,6 +1154,7 @@
   "Judge an opening by Round-2 income, power, knowledge/tech access, reach, and a feasible next productive action—not Round-1 VP alone.": "Κρίνε ένα άνοιγμα από το εισόδημα του Γύρου 2, την ενέργεια, την πρόσβαση σε γνώση/τεχνολογία, την εμβέλεια και μια εφικτή επόμενη παραγωγική ενέργεια—όχι μόνο από τους ΠΝ του Γύρου 1.",
   "Keep a green token for the top level": "Κράτησε μια πράσινη μάρκα για το ανώτατο επίπεδο",
   "Keep access to several ships": "Διατήρησε πρόσβαση σε πολλά πλοία",
+  "Keep planning": "Συνέχεια σχεδιασμού",
   "Keep your income tile": "Κράτησε το πλακίδιο εισοδήματός σου",
   "Knowledge": "Γνώση",
   "Knowledge + Ore": "Γνώση + Μετάλλευμα",
@@ -4137,5 +4138,7 @@
   "Resume": "Συνέχεια",
   "Wait for charges": "Αναμονή για φορτίσεις",
   "New plan": "Νέο σχέδιο",
-  "✓ Income resolved": "✓ Το εισόδημα διευθετήθηκε"
+  "✓ Income resolved": "✓ Το εισόδημα διευθετήθηκε",
+  "Program up to move {p0}": "Προγραμματισμός έως την κίνηση {p0}",
+  "Kept for later": "Αποθηκευμένες για αργότερα"
 }

@@ -1143,12 +1143,32 @@ export interface AnalysisCommitPlan {
   live: string | null;
   /** Queued as Sequential premoves, in line order, behind `live`. */
   queued: string[];
-  /** Everything in the line that stays behind. Never committed, and cleared with the line. */
+  /** Ineligible or unavailable moves left in the saved draft, never submitted by this plan. */
   dropped: string[];
+  /** Eligible moves deliberately left in the saved draft for a later explicit commit. */
+  deferred?: string[];
   /** Why the line itself stops where it does - null when the line was not the limit. */
   cut: AnalysisCommitCut | null;
   /** Whether the line's feasibility or the absence of premoves prevents submitting the rest. */
   limit: "line" | "no-premoves";
+}
+
+/** Select only an already-eligible prefix, counting the live move first when present.
+ * Invalid counts select nothing; limiting a plan again can never restore deferred/dropped moves. */
+export function limitAnalysisCommit(plan: AnalysisCommitPlan, count: number): AnalysisCommitPlan {
+  const eligible = plan.live === null ? plan.queued : [plan.live, ...plan.queued];
+  const selectedCount = Number.isInteger(count) && count > 0 ? Math.min(count, eligible.length) : 0;
+  const selected = eligible.slice(0, selectedCount);
+  const live = selectedCount > 0 ? plan.live : null;
+  return {
+    ...plan,
+    live,
+    queued: live === null ? selected : selected.slice(1),
+    ...(plan.timings ? { timings: plan.timings.slice(0, selectedCount) } : {}),
+    ...(plan.costs ? { costs: plan.costs.slice(0, selectedCount) } : {}),
+    simulatedNeighbour: selected.some(isCheapAnalysisBuild),
+    deferred: [...eligible.slice(selectedCount), ...(plan.deferred ?? [])],
+  };
 }
 
 /** Submit the full valid prefix in hosted play; offline play can only commit the current move. */

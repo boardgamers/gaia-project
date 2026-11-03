@@ -1154,6 +1154,7 @@
   "Judge an opening by Round-2 income, power, knowledge/tech access, reach, and a feasible next productive action—not Round-1 VP alone.": "Judge an opening by Round-2 income, power, knowledge/tech access, reach, and a feasible next productive action—not Round-1 VP alone.",
   "Keep a green token for the top level": "Keep a green token for the top level",
   "Keep access to several ships": "Keep access to several ships",
+  "Keep planning": "Keep planning",
   "Keep your income tile": "Keep your income tile",
   "Knowledge": "Knowledge",
   "Knowledge + Ore": "Knowledge + Ore",
@@ -4137,5 +4138,7 @@
   "Resume": "Resume",
   "Wait for charges": "Wait for charges",
   "New plan": "New plan",
-  "✓ Income resolved": "✓ Income resolved"
+  "✓ Income resolved": "✓ Income resolved",
+  "Program up to move {p0}": "Program up to move {p0}",
+  "Kept for later": "Kept for later"
 }

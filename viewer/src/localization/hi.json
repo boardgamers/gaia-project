@@ -1154,6 +1154,7 @@
   "Judge an opening by Round-2 income, power, knowledge/tech access, reach, and a feasible next productive action—not Round-1 VP alone.": "किसी शुरुआत का मूल्यांकन दौर-2 की आय, ऊर्जा, ज्ञान/तकनीक पहुँच, पहुँच और एक व्यवहार्य अगली उत्पादक क्रिया से करें—न कि केवल दौर-1 के वीपी से।",
   "Keep a green token for the top level": "शीर्ष स्तर के लिए एक हरा टोकन रखें",
   "Keep access to several ships": "कई जहाजों तक पहुँच रखें",
+  "Keep planning": "योजना बनाना जारी रखें",
   "Keep your income tile": "अपनी आय टाइल रखें",
   "Knowledge": "ज्ञान",
   "Knowledge + Ore": "ज्ञान + अयस्क",
@@ -4137,5 +4138,7 @@
   "Resume": "जारी रखें",
   "Wait for charges": "शक्ति चार्ज का इंतज़ार करें",
   "New plan": "नई योजना",
-  "✓ Income resolved": "✓ आय प्राप्त हो गई"
+  "✓ Income resolved": "✓ आय प्राप्त हो गई",
+  "Program up to move {p0}": "चाल {p0} तक प्रोग्राम करें",
+  "Kept for later": "बाद के लिए सुरक्षित"
 }

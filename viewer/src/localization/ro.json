@@ -1154,6 +1154,7 @@
   "Judge an opening by Round-2 income, power, knowledge/tech access, reach, and a feasible next productive action—not Round-1 VP alone.": "Evaluează o deschidere după venitul din Runda 2, putere, acces la cunoaștere/tehnologie, rază și o următoare acțiune productivă fezabilă—nu doar VP din Runda 1.",
   "Keep a green token for the top level": "Păstrează un jeton verde pentru nivelul superior",
   "Keep access to several ships": "Păstrează accesul la mai multe nave",
+  "Keep planning": "Continuă planificarea",
   "Keep your income tile": "Păstrează-ți cartonașul de venit",
   "Knowledge": "Cunoaștere",
   "Knowledge + Ore": "Cunoaștere + Minereu",
@@ -4137,5 +4138,7 @@
   "Resume": "Continuă",
   "Wait for charges": "Așteaptă încărcările",
   "New plan": "Plan nou",
-  "✓ Income resolved": "✓ Venit rezolvat"
+  "✓ Income resolved": "✓ Venit rezolvat",
+  "Program up to move {p0}": "Programează până la mutarea {p0}",
+  "Kept for later": "Păstrate pentru mai târziu"
 }

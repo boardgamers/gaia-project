@@ -1154,6 +1154,7 @@
   "Judge an opening by Round-2 income, power, knowledge/tech access, reach, and a feasible next productive action—not Round-1 VP alone.": "Beoordeel een opening op ronde-2-inkomen, macht, kennis/tech-toegang, bereik en een haalbare volgende productieve actie—niet alleen op ronde-1-VP.",
   "Keep a green token for the top level": "Bewaar een groen fiche voor het hoogste niveau",
   "Keep access to several ships": "Houd toegang tot meerdere schepen",
+  "Keep planning": "Verder plannen",
   "Keep your income tile": "Houd je inkomenstegel",
   "Knowledge": "Kennis",
   "Knowledge + Ore": "Kennis + Erts",
@@ -4137,5 +4138,7 @@
   "Resume": "Hervatten",
   "Wait for charges": "Wacht op laadkeuzes",
   "New plan": "Nieuw plan",
-  "✓ Income resolved": "✓ Inkomsten afgehandeld"
+  "✓ Income resolved": "✓ Inkomsten afgehandeld",
+  "Program up to move {p0}": "Programmeer tot en met zet {p0}",
+  "Kept for later": "Bewaard voor later"
 }

@@ -402,6 +402,7 @@ import {
   dropPlayedAnalysisPrefix,
   emptyAnalysisLineSet,
   factionSeedAvailable,
+  limitAnalysisCommit,
   loadAnalysisLines,
   markAnalysisSeat,
   MAX_ANALYSIS_LINES,
@@ -1277,11 +1278,12 @@ export default class Game extends Vue {
     );
   }
 
-  commitAnalysisLine() {
+  commitAnalysisLine(moveCount?: number) {
     if (!this.analysisMode) {
       return;
     }
-    const { live, queued, timings } = this.analysisCommitPlan;
+    const plan = this.analysisCommitPlan;
+    const { live, queued, timings } = moveCount === undefined ? plan : limitAnalysisCommit(plan, moveCount);
     if (live === null && queued.length === 0) {
       return;
     }

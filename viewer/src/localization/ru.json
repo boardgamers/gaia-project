@@ -1154,6 +1154,7 @@
   "Judge an opening by Round-2 income, power, knowledge/tech access, reach, and a feasible next productive action—not Round-1 VP alone.": "Оценивай дебют по доходу 2-го раунда, энергии, доступу к знаниям/технологиям, досягаемости и осуществимому следующему продуктивному действию — а не только по ПО 1-го раунда.",
   "Keep a green token for the top level": "Сохрани зелёный жетон для верхнего уровня",
   "Keep access to several ships": "Сохрани доступ к нескольким кораблям",
+  "Keep planning": "Продолжить планирование",
   "Keep your income tile": "Сохрани свой жетон дохода",
   "Knowledge": "Знания",
   "Knowledge + Ore": "Знания + Руда",
@@ -4137,5 +4138,7 @@
   "Resume": "Продолжить",
   "Wait for charges": "Ждать зарядки",
   "New plan": "Новый план",
-  "✓ Income resolved": "✓ Доход получен"
+  "✓ Income resolved": "✓ Доход получен",
+  "Program up to move {p0}": "Запрограммировать до хода {p0}",
+  "Kept for later": "Сохранены на потом"
 }

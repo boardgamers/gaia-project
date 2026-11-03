@@ -4,7 +4,7 @@ import { fireEvent } from "@testing-library/vue";
 import BootstrapVue from "bootstrap-vue";
 import { expect } from "chai";
 import Vue from "vue";
-import { MAX_ANALYSIS_LINES } from "../logic/analysis";
+import { loadAnalysisLines, MAX_ANALYSIS_LINES } from "../logic/analysis";
 import { makeStore } from "../store";
 import { passedChargeGame } from "../testing/passed-charge";
 import Game from "./Game.vue";
@@ -2599,6 +2599,207 @@ describe("Game", () => {
         expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "nevlas up gaia." }]);
         vm.$el.remove();
         vm.$destroy();
+      });
+
+      describe("programming only a prefix", () => {
+        for (const [seat, count] of [
+          [0, 1],
+          [0, 2],
+          [1, 2],
+          [1, 100],
+          [1, undefined],
+        ]) {
+          it(`submits ${count ?? "all"} moves for seat ${seat}, counting any live move and matching timings`, () => {
+            const vm = mountAsSeat(seat, Engine.fromData(stripSecret(researchGame(), seat)));
+            vm.$store.commit("hosted", true);
+            vm.enterAnalysisMode();
+            const faction = seat === 0 ? "terrans" : "nevlas";
+            const moves = ["nav", "gaia", "terra"].map((field) => `${faction} up ${field}.`);
+            for (const move of moves) vm.applyAnalysisMove(move);
+            const plan = vm.analysisCommitPlan;
+            const draft = loadAnalysisLines(seat, vm.analysisStorageScope);
+            expect(plan.live).to.equal(seat === 0 ? moves[0] : null);
+            expect(plan.timings).to.have.length(3);
+            const dispatched = spyDispatch(vm);
+
+            vm.commitAnalysisLine(count);
+
+            expect(dispatched).to.have.length(1);
+            expect(dispatched[0].type).to.equal("submitPlan");
+            const payload = dispatched[0].payload;
+            const selected = Math.min(count ?? moves.length, moves.length);
+            expect(payload.moves).to.deep.equal(moves.slice(0, selected));
+            expect(payload.timings).to.deep.equal(plan.timings.slice(0, selected));
+            expect(payload.timings).to.have.length(payload.moves.length);
+            expect(vm.analysisCommitPlan).to.deep.equal(plan);
+            expect(loadAnalysisLines(seat, vm.analysisStorageScope)).to.deep.equal(draft);
+            expect(vm.analysisMode).to.equal(true);
+            vm.$el.remove();
+            vm.$destroy();
+          });
+        }
+
+        it("does not dispatch, leave planning or change the saved draft for invalid counts", () => {
+          const vm = mountAsSeat(0, Engine.fromData(stripSecret(researchGame(), 0)));
+          vm.$store.commit("hosted", true);
+          vm.enterAnalysisMode();
+          vm.applyAnalysisMove("terrans up nav.");
+          vm.applyAnalysisMove("terrans up gaia.");
+          const draft = loadAnalysisLines(0, vm.analysisStorageScope);
+          const dispatched = spyDispatch(vm);
+          for (const count of [NaN, Infinity, -Infinity, -1, 1.5, 0, null, "1", true, { type: "click" }]) {
+            vm.commitAnalysisLine(count);
+            expect(dispatched, `count ${count}`).to.deep.equal([]);
+            expect(vm.analysisMode).to.equal(true);
+            expect(vm.analysisSubmission).to.equal(null);
+            expect(loadAnalysisLines(0, vm.analysisStorageScope)).to.deep.equal(draft);
+          }
+          vm.$el.remove();
+          vm.$destroy();
+        });
+
+        it("still submits at most one live move offline and keeps the entire saved draft", () => {
+          const vm = mountAsSeat(0, researchGame());
+          vm.enterAnalysisMode();
+          vm.applyAnalysisMove("terrans up nav.");
+          vm.applyAnalysisMove("terrans up gaia.");
+          vm.applyAnalysisMove("terrans up terra.");
+          const draft = loadAnalysisLines(0, vm.analysisStorageScope);
+          const dispatched = spyDispatch(vm);
+          vm.commitAnalysisLine(100);
+          expect(dispatched).to.deep.equal([{ type: "move", payload: "terrans up nav." }]);
+          expect(vm.analysisMode).to.equal(false);
+          expect(loadAnalysisLines(0, vm.analysisStorageScope)).to.deep.equal(draft);
+          vm.$el.remove();
+          vm.$destroy();
+        });
+
+        it("replaces an existing server queue with the selected prefix, never appending either tail", () => {
+          const real = bgsMove(
+            JSON.parse(JSON.stringify(researchGame())),
+            {
+              type: "premoves",
+              requestId: "old-queue",
+              moves: ["nevlas up nav.", "nevlas up gaia."],
+              revision: 0,
+              turn: 0,
+              round: 1,
+            },
+            1
+          );
+          const vm = mountAsSeat(1, Engine.fromData(stripSecret(real, 1)));
+          vm.$store.commit("hosted", true);
+          vm.enterAnalysisMode();
+          vm.applyAnalysisMove("nevlas up terra.");
+          vm.applyAnalysisMove("nevlas up nav.");
+          const draft = loadAnalysisLines(1, vm.analysisStorageScope);
+          const dispatched = spyDispatch(vm);
+          // Invalid selections must not send an empty replacement and cancel an existing queue.
+          for (const count of [0, NaN, Infinity, -1, 1.5, null, "1", { type: "click" }]) vm.commitAnalysisLine(count);
+          expect(dispatched).to.deep.equal([]);
+          expect(vm.myPremovePlan.moves).to.deep.equal(["nevlas up nav.", "nevlas up gaia."]);
+          expect(loadAnalysisLines(1, vm.analysisStorageScope)).to.deep.equal(draft);
+          vm.commitAnalysisLine(1);
+          expect(dispatched[0].payload.moves).to.deep.equal(["nevlas up terra."]);
+          expect(dispatched[0].payload.timings).to.have.length(1);
+          expect(dispatched[0].payload.revision).to.equal(real.automation.plans[1].revision);
+          const saved = bgsMove(real, dispatched[0].payload, 1);
+          expect(saved.automation.plans[1].moves).to.deep.equal(["nevlas up terra."]);
+          expect(saved.automation.plans[1].runs[1].status).to.equal("replaced");
+          expect(loadAnalysisLines(1, vm.analysisStorageScope)).to.deep.equal(draft);
+          vm.$el.remove();
+          vm.$destroy();
+        });
+
+        it("keeps the full draft across acknowledgement/reload, then stops after the prefix until another commit", async () => {
+          const real = researchGame();
+          const first = mountAsSeat(1, Engine.fromData(stripSecret(real, 1)));
+          first.$store.commit("hosted", true);
+          first.enterAnalysisMode();
+          for (const field of ["nav", "gaia", "terra"]) first.applyAnalysisMove(`nevlas up ${field}.`);
+          first.addAnalysisLine();
+          first.startAnalysisMoveEdit(2);
+          first.applyAnalysisMove("nevlas up eco.");
+          first.selectAnalysisLine(0);
+          const draft = loadAnalysisLines(1, first.analysisStorageScope);
+          const submitted = spyDispatch(first);
+          first.commitAnalysisLine(2);
+          expect(submitted[0].payload.moves).to.deep.equal(["nevlas up nav.", "nevlas up gaia."]);
+          expect(submitted[0].payload.timings).to.have.length(2);
+          first.$store.commit("submittingPlan", submitted[0].payload);
+          const saved = bgsMove(JSON.parse(JSON.stringify(real)), submitted[0].payload, 1);
+          await first.$store.dispatch("externalData", stripSecret(saved, 1));
+          expect(first.analysisMode).to.equal(false);
+          expect(loadAnalysisLines(1, first.analysisStorageScope)).to.deep.equal(draft);
+          first.$el.remove();
+          first.$destroy();
+
+          const vm = mountAsSeat(1, Engine.fromData(stripSecret(saved, 1)));
+          vm.$store.commit("hosted", true);
+          vm.enterAnalysisMode();
+          expect(vm.analysisPendingRestore).to.equal(null);
+          expect(vm.analysisLines).to.deep.equal(draft.lines);
+          expect(vm.analysisPlayed).to.deep.equal(draft.played);
+          expect(vm.analysisActiveLine).to.equal(draft.active);
+          expect(vm.myPremovePlan.moves).to.deep.equal(["nevlas up nav.", "nevlas up gaia."]);
+          const dispatched = spyDispatch(vm);
+          const submissions = () => dispatched.filter(({ type }) => type === "submitPlan");
+
+          const firstPlayed = bgsMove(saved, "terrans up nav.", 0);
+          await vm.$store.dispatch("externalData", stripSecret(firstPlayed, 1));
+          expect(vm.analysisMode).to.equal(true);
+          expect(vm.analysisLines).to.deep.equal(draft.lines.map((line) => line.slice(1)));
+          expect(vm.analysisPlayed.map((line) => line.length)).to.deep.equal([1, 1]);
+          expect(vm.myPremovePlan.moves).to.deep.equal(["nevlas up gaia."]);
+          expect(vm.myPremovePlan.timings).to.have.length(1);
+
+          const prefixPlayed = bgsMove(firstPlayed, "terrans up gaia.", 0);
+          await vm.$store.dispatch("externalData", stripSecret(prefixPlayed, 1));
+          const remaining = draft.lines.map((line) => line.slice(2));
+          expect(vm.analysisLines).to.deep.equal(remaining);
+          expect(vm.analysisPlayed.map((line) => line.length)).to.deep.equal([2, 2]);
+          expect(vm.myPremovePlan.moves).to.deep.equal([]);
+          expect(vm.myPremovePlan.timings).to.deep.equal([]);
+          expect(vm.myPremovePlan.runs[0].status).to.equal("completed");
+          expect(vm.myPremovePlan.runs[0].steps).to.have.length(2);
+          const played = JSON.parse(JSON.stringify(vm.analysisPlayed));
+          const persisted = loadAnalysisLines(1, vm.analysisStorageScope);
+          expect(persisted.lines).to.deep.equal(remaining);
+          expect(persisted.played).to.deep.equal(played);
+          vm.exitAnalysisMode();
+          vm.enterAnalysisMode();
+          expect(vm.analysisLines).to.deep.equal(remaining);
+          expect(vm.analysisPlayed).to.deep.equal(played);
+
+          // It is now our turn again, but the local third move is not a server premove.
+          const waiting = bgsMove(prefixPlayed, "terrans up terra.", 0);
+          await vm.$store.dispatch("externalData", stripSecret(waiting, 1));
+          expect(waiting.playerToMove).to.equal(1);
+          expect(vm.myPremovePlan.moves).to.deep.equal([]);
+          expect(vm.analysisLines).to.deep.equal(remaining);
+          expect(vm.analysisPlayed).to.deep.equal(played);
+          vm.startAnalysisMoveEdit(0);
+          expect(vm.analysisEdit).to.include({ index: 0, mode: "replace" });
+          vm.applyAnalysisMove("nevlas up nav.");
+          expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "nevlas up nav." }]);
+          expect(vm.analysisLines[1]).to.deep.equal(remaining[1]);
+          expect(vm.analysisPlayed).to.deep.equal(played);
+          expect(submissions()).to.deep.equal([]);
+
+          const edited = loadAnalysisLines(1, vm.analysisStorageScope);
+          vm.commitAnalysisLine(1);
+          expect(submissions()).to.have.length(1);
+          const next = submissions()[0].payload;
+          expect(next.moves).to.deep.equal(["nevlas up nav."]);
+          expect(next.timings).to.have.length(1);
+          expect(loadAnalysisLines(1, vm.analysisStorageScope)).to.deep.equal(edited);
+          expect(vm.analysisPlayed).to.deep.equal(played);
+          const resumed = bgsMove(waiting, next, 1);
+          expect(resumed.moveHistory[resumed.moveHistory.length - 1]).to.match(/^nevlas up nav/);
+          expect(resumed.automation.plans[1].moves).to.deep.equal([]);
+          vm.$el.remove();
+          vm.$destroy();
+        });
       });
 
       it("keeps the sandbox and a partial turn open across this seat's automatic leech", async () => {

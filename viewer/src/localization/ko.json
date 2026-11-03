@@ -1154,6 +1154,7 @@
   "Judge an opening by Round-2 income, power, knowledge/tech access, reach, and a feasible next productive action—not Round-1 VP alone.": "오프닝을 판단할 때 라운드 2 수입, 파워, 지식/기술 접근성, 도달 범위, 그리고 실행 가능한 다음 생산적 행동을 기준으로 하세요. 라운드 1 VP만으로 판단하지 마세요.",
   "Keep a green token for the top level": "최상위 레벨을 위해 녹색 토큰을 유지하세요",
   "Keep access to several ships": "여러 우주선에 접근할 수 있게 유지하세요",
+  "Keep planning": "계속 계획하기",
   "Keep your income tile": "수입 타일을 유지하세요",
   "Knowledge": "지식",
   "Knowledge + Ore": "지식 + 광석",
@@ -4137,5 +4138,7 @@
   "Resume": "계속하기",
   "Wait for charges": "파워 충전 기다리기",
   "New plan": "새 계획",
-  "✓ Income resolved": "✓ 수입 처리 완료"
+  "✓ Income resolved": "✓ 수입 처리 완료",
+  "Program up to move {p0}": "{p0}번째 수까지 예약",
+  "Kept for later": "나중을 위해 보관됨"
 }

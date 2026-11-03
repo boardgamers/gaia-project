@@ -1154,6 +1154,7 @@
   "Judge an opening by Round-2 income, power, knowledge/tech access, reach, and a feasible next productive action—not Round-1 VP alone.": "Đánh giá khai cuộc bằng thu nhập Vòng 2, năng lượng, khả năng tiếp cận tri thức/công nghệ, tầm với và một hành động sản xuất khả thi tiếp theo—không chỉ riêng VP Vòng 1.",
   "Keep a green token for the top level": "Giữ một token xanh cho cấp cao nhất",
   "Keep access to several ships": "Giữ quyền tiếp cận nhiều tàu",
+  "Keep planning": "Tiếp tục lên kế hoạch",
   "Keep your income tile": "Giữ ô thu nhập của bạn",
   "Knowledge": "Tri thức",
   "Knowledge + Ore": "Tri thức + Quặng",
@@ -4137,5 +4138,7 @@
   "Resume": "Tiếp tục",
   "Wait for charges": "Chờ nạp năng lượng",
   "New plan": "Kế hoạch mới",
-  "✓ Income resolved": "✓ Đã xử lý thu nhập"
+  "✓ Income resolved": "✓ Đã xử lý thu nhập",
+  "Program up to move {p0}": "Lập trình đến nước đi {p0}",
+  "Kept for later": "Giữ lại để dùng sau"
 }

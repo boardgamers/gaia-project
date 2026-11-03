@@ -9,7 +9,8 @@
     cancel-title="Keep planning"
     :ok-disabled="total === 0"
     dialog-class="gaia-viewer-modal"
-    @ok="$emit('confirm')"
+    @show="resetSelection"
+    @ok="confirm"
   >
     <ol class="analysis-commit__list">
       <li v-if="view.live" class="analysis-commit__row analysis-commit__row--live">
@@ -18,19 +19,22 @@
         <MoveCost :cost="view.costs && view.costs[0]" />
       </li>
       <li v-for="(move, i) in view.queued" :key="`q${i}`" class="analysis-commit__row analysis-commit__row--queued">
-        <span class="analysis-commit__badge analysis-commit__badge--queued">premove {{ i + 1 }}</span>
-        <span v-if="view.timings" class="small text-muted">{{
-          view.timings[i + (view.live ? 1 : 0)].round === 0
-            ? "Setup"
-            : `Round ${view.timings[i + (view.live ? 1 : 0)].round}`
-        }}</span>
         <span class="analysis-commit__move">{{ move }}</span>
         <MoveCost :cost="view.costs && view.costs[i + (view.live ? 1 : 0)]" />
         <span v-if="isCheapAnalysisBuild(move)" class="small">3c only</span>
       </li>
     </ol>
 
-    <!-- Show the unsent tail; it stays in the local plan. -->
+    <section v-if="view.deferred && view.deferred.length" class="analysis-commit__deferred">
+      <h6>Kept for later</h6>
+      <ol class="analysis-commit__list analysis-commit__list--dropped">
+        <li v-for="(move, i) in view.deferred" :key="`later${i}`" class="analysis-commit__row">
+          <span class="analysis-commit__move">{{ move }}</span>
+        </li>
+      </ol>
+    </section>
+
+    <!-- Show the unavailable tail separately from moves deliberately kept for later. -->
     <template v-if="view.dropped.length > 0">
       <p class="analysis-commit__dropped-head">
         {{ view.dropped.length }} more {{ view.dropped.length === 1 ? "move stays" : "moves stay" }} behind —
@@ -38,7 +42,6 @@
       </p>
       <ol class="analysis-commit__list analysis-commit__list--dropped">
         <li v-for="(move, i) in view.dropped" :key="`d${i}`" class="analysis-commit__row">
-          <span class="analysis-commit__badge analysis-commit__badge--dropped">not committed</span>
           <span class="analysis-commit__move">{{ move }}</span>
         </li>
       </ol>
@@ -49,7 +52,7 @@
 <script lang="ts">
 import Vue from "vue";
 import type { AnalysisCommitCut, AnalysisCommitPlan } from "../logic/analysis";
-import { isCheapAnalysisBuild } from "../logic/analysis";
+import { isCheapAnalysisBuild, limitAnalysisCommit } from "../logic/analysis";
 
 import MoveCost from "./MoveCost.vue";
 
@@ -70,16 +73,48 @@ const CUT_TEXT: Record<AnalysisCommitCut, string> = {
 export default Vue.extend({
   name: "AnalysisCommitConfirm",
   components: { MoveCost },
-  methods: { isCheapAnalysisBuild },
+  data() {
+    return { selectedCount: null as number | null, proposalChanged: false };
+  },
+  methods: {
+    isCheapAnalysisBuild,
+    resetSelection() {
+      this.selectedCount = this.initialLimit ?? this.availableTotal;
+      this.proposalChanged = false;
+    },
+    confirm() {
+      if (!this.proposalChanged && this.total > 0) this.$emit("confirm", this.total);
+    },
+  },
   props: {
     /** Nullable rather than defaulted: Vue substitutes a prop default only for `undefined`, and
      * Commands.vue holds `null` whenever Game.vue has no plan to give (outside sandbox mode, or a
      * line with nothing committable in it) - which would otherwise render this as `null.live`. */
     plan: { type: Object as () => AnalysisCommitPlan | null, default: null },
+    initialLimit: { type: Number, default: null },
+  },
+  watch: {
+    proposalKey() {
+      // Real moves can retire the beginning of the draft while this dialog is open. Do not
+      // silently shift a chosen stopping point to later moves; ask the player to reopen it.
+      this.proposalChanged = true;
+      this.$bvModal.hide("analysis-commit-confirm");
+    },
   },
   computed: {
-    view(): AnalysisCommitPlan {
+    availablePlan(): AnalysisCommitPlan {
       return (this.plan as AnalysisCommitPlan | null) ?? EMPTY_PLAN;
+    },
+    availableTotal(): number {
+      return (this.availablePlan.live ? 1 : 0) + this.availablePlan.queued.length;
+    },
+    proposalKey(): string {
+      const plan = this.availablePlan as AnalysisCommitPlan;
+      return JSON.stringify([plan.live, plan.queued, plan.timings]);
+    },
+
+    view(): AnalysisCommitPlan {
+      return limitAnalysisCommit(this.availablePlan, this.selectedCount ?? this.availableTotal);
     },
     total(): number {
       const view = this.view as AnalysisCommitPlan;
@@ -100,8 +135,9 @@ export default Vue.extend({
 </script>
 
 <style lang="scss" scoped>
-.analysis-commit__lede {
-  margin-bottom: 0.75rem;
+.analysis-commit__deferred {
+  border-top: 1px solid var(--ui-border-strong);
+  padding-top: 0.75rem;
 }
 
 .analysis-commit__list {
@@ -138,14 +174,6 @@ export default Vue.extend({
   color: var(--ui-success);
 }
 
-.analysis-commit__badge--queued {
-  color: var(--ui-text-muted);
-}
-
-.analysis-commit__badge--dropped {
-  color: var(--ui-text-subtle);
-}
-
 // The move string itself, in the same raw form the premove bar lists a queued row in - so the entry
 // confirmed here and the row that shows up in the queue afterwards read identically.
 .analysis-commit__move {
@@ -161,10 +189,5 @@ export default Vue.extend({
 .analysis-commit__dropped-head {
   margin-bottom: 0.4rem;
   font-size: 0.9rem;
-}
-
-.analysis-commit__foot {
-  font-size: 0.85rem;
-  color: var(--ui-text-muted);
 }
 </style>

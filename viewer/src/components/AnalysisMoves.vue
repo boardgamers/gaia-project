@@ -51,6 +51,20 @@
           entry.kind === "adjust" ? `Assume ${entry.charge} power charged` : `Faction setup: ${entry.lineup.join(", ")}`
         }}</span>
         <button
+          v-if="entry.kind === 'move'"
+          type="button"
+          class="analysis-moves__program"
+          :disabled="disabled || index >= appliedCount || moveNumber(index) - played.length > committableMoves"
+          :title="`Program up to move ${moveNumber(index)}`"
+          :aria-label="`Program up to move ${moveNumber(index)}`"
+          @click="$emit('commit', moveNumber(index) - played.length)"
+          @keydown.stop
+        >
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M2 2.5v11L10 8ZM12 2.5h2v11h-2Z" />
+          </svg>
+        </button>
+        <button
           v-if="entry.kind !== 'faction'"
           type="button"
           class="analysis-moves__remove"
@@ -110,6 +124,7 @@ export default Vue.extend({
     blockedReason: { type: String, default: "" },
     costs: { type: Array as PropType<MoveCostData[]>, default: () => [] },
     appliedCount: { type: Number, default: 0 },
+    committableMoves: { type: Number, default: 0 },
     disabled: Boolean,
     canAppend: { type: Boolean, default: true },
   },
@@ -183,6 +198,7 @@ export default Vue.extend({
     opacity: 0.4;
   }
 }
+.analysis-moves__program,
 .analysis-moves__remove {
   display: inline-flex;
   align-items: center;
@@ -205,6 +221,15 @@ export default Vue.extend({
   }
   &:disabled {
     opacity: 0.4;
+  }
+}
+.analysis-moves__program {
+  flex-basis: 2.5rem;
+  min-height: 2.5rem;
+  color: var(--ui-success);
+  &:hover:enabled,
+  &:focus-visible {
+    color: var(--ui-success);
   }
 }
 .analysis-moves__move {

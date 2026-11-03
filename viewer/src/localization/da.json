@@ -1154,6 +1154,7 @@
   "Judge an opening by Round-2 income, power, knowledge/tech access, reach, and a feasible next productive action—not Round-1 VP alone.": "Bedøm en åbning ud fra runde-2-indkomst, energi, viden/teknologiadgang, rækkevidde og en mulig næste produktiv handling – ikke kun sejrspoint i runde 1.",
   "Keep a green token for the top level": "Gem en grøn brik til øverste niveau",
   "Keep access to several ships": "Behold adgang til flere skibe",
+  "Keep planning": "Fortsæt planlægningen",
   "Keep your income tile": "Behold din indkomstbrik",
   "Knowledge": "Viden",
   "Knowledge + Ore": "Viden + Malm",
@@ -4137,5 +4138,7 @@
   "Resume": "Fortsæt",
   "Wait for charges": "Vent på opladninger",
   "New plan": "Ny plan",
-  "✓ Income resolved": "✓ Indkomst afviklet"
+  "✓ Income resolved": "✓ Indkomst afviklet",
+  "Program up to move {p0}": "Programmér til og med træk {p0}",
+  "Kept for later": "Gemt til senere"
 }

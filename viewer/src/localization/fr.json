@@ -1154,6 +1154,7 @@
   "Judge an opening by Round-2 income, power, knowledge/tech access, reach, and a feasible next productive action—not Round-1 VP alone.": "Évaluez une ouverture selon vos revenus de deuxième manche, votre puissance, votre accès à la recherche, votre portée et votre prochaine action utile, plutôt que les seuls PV de première manche.",
   "Keep a green token for the top level": "Gardez un jeton vert pour le niveau supérieur",
   "Keep access to several ships": "Gardez l'accès à plusieurs vaisseaux",
+  "Keep planning": "Continuer la planification",
   "Keep your income tile": "Gardez votre tuile de revenu",
   "Knowledge": "Connaissance",
   "Knowledge + Ore": "Connaissance + Minerai",
@@ -4137,5 +4138,7 @@
   "Resume": "Reprendre",
   "Wait for charges": "Attendre les charges",
   "New plan": "Nouveau plan",
-  "✓ Income resolved": "✓ Revenus résolus"
+  "✓ Income resolved": "✓ Revenus résolus",
+  "Program up to move {p0}": "Programmer jusqu’au coup {p0}",
+  "Kept for later": "Conservés pour plus tard"
 }

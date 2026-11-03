@@ -1154,6 +1154,7 @@
   "Judge an opening by Round-2 income, power, knowledge/tech access, reach, and a feasible next productive action—not Round-1 VP alone.": "Beurteile eine Eröffnung nach Runde-2-Einnahmen, Macht, Wissens-/Tech-Zugang, Reichweite und einer machbaren nächsten produktiven Aktion – nicht allein nach Runde-1-SP.",
   "Keep a green token for the top level": "Behalte ein grünes Plättchen für die oberste Stufe",
   "Keep access to several ships": "Behalte Zugang zu mehreren Schiffen",
+  "Keep planning": "Weiterplanen",
   "Keep your income tile": "Behalte dein Einnahmeplättchen",
   "Knowledge": "Wissen",
   "Knowledge + Ore": "Wissen + Erz",
@@ -4137,5 +4138,7 @@
   "Resume": "Fortsetzen",
   "Wait for charges": "Auf Machtentscheidungen warten",
   "New plan": "Neuer Plan",
-  "✓ Income resolved": "✓ Einkommen abgehandelt"
+  "✓ Income resolved": "✓ Einkommen abgehandelt",
+  "Program up to move {p0}": "Bis zu Zug {p0} programmieren",
+  "Kept for later": "Für später gespeichert"
 }

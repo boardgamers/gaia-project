@@ -74,6 +74,8 @@
       :blocked-reason="analysisBlockedReason"
       :costs="analysisMoveCosts"
       :applied-count="analysisAppliedCount"
+      :committable-moves="analysisCommittableMoves"
+      @commit="requestAnalysisCommit($event)"
       :can-append="!engine.ended"
       :disabled="analysisEditingIndex < 0 && !!currentMove"
       @edit="$emit('analysis-edit-move', $event)"
@@ -83,7 +85,12 @@
     <AnalysisModeInfo v-if="analysisMode" />
     <!-- Commit's confirmation step, rendered here for the same once-per-page reason as the info modal
          above. The Commit button only opens it; nothing leaves the sandbox until this is confirmed. -->
-    <AnalysisCommitConfirm v-if="analysisMode" :plan="analysisCommitPlan" @confirm="$emit('analysis-commit')" />
+    <AnalysisCommitConfirm
+      v-if="analysisMode"
+      :plan="analysisCommitPlan"
+      :initial-limit="analysisCommitLimit"
+      @confirm="$emit('analysis-commit', $event)"
+    />
     <div
       id="move-buttons"
       data-tutorial="game-controls"
@@ -806,10 +813,13 @@ export default class Commands extends Vue implements CommandController {
     return !!this.silentBidCommand && !!this.$store.state.sealedBidBackend && isLegacySequentialBidRound(this.engine);
   }
 
-  /** Commit asks first (ANALYSIS_MODE_PLAN.md §6) - it is the only sandbox control whose effect
-   * reaches the real game, where the sandbox's own Undo does not follow, and it clears the line on
-   * the way out. The modal is what emits `analysis-commit`; this only opens it. */
-  requestAnalysisCommit() {
+  analysisCommitLimit: number | null = null;
+
+  /** A row chooses a stopping point; the header proposes every eligible move.
+   * Only confirmation emits `analysis-commit`; the full draft stays saved for later review. */
+  async requestAnalysisCommit(count?: number) {
+    this.analysisCommitLimit = typeof count === "number" ? count : null;
+    await this.$nextTick();
     this.$bvModal.show("analysis-commit-confirm");
   }
 

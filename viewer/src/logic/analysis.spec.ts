@@ -10,7 +10,7 @@ import Engine, {
 } from "@gaia-project/engine";
 import { expect } from "chai";
 import { passedChargeGame } from "../testing/passed-charge";
-import type { AnalysisEntry, AnalysisLineSet, MoveCost } from "./analysis";
+import type { AnalysisCommitPlan, AnalysisEntry, AnalysisLineSet, MoveCost } from "./analysis";
 import {
   advancePastOwnPass,
   analysisCommitPrefix,
@@ -28,6 +28,7 @@ import {
   emptyAnalysisLineSet,
   factionSeedAvailable,
   isCheapAnalysisBuild,
+  limitAnalysisCommit,
   loadAnalysisLines,
   markAnalysisSeat,
   MAX_ANALYSIS_LINES,
@@ -1374,6 +1375,117 @@ describe("planAnalysisCommit - what the Commit confirmation shows (§6)", () => 
     expect(plan.live).to.equal(null);
     expect(plan.queued).to.deep.equal([]);
     expect(plan.dropped).to.deep.equal(["a"]);
+  });
+});
+
+describe("limitAnalysisCommit - program only the selected eligible prefix", () => {
+  const moves = ["terrans up nav.", "terrans up gaia.", "terrans build ts -1x2 cheap."];
+  const makePlan = (onTurn = true): AnalysisCommitPlan => ({
+    ...planAnalysisCommit({
+      committable: moves,
+      lineMoves: [...moves, "terrans unavailable"],
+      cut: "illegal",
+      onTurn,
+      hosted: true,
+    }),
+    timings: [
+      { round: 1, phase: Phase.RoundMove },
+      { round: 2, phase: Phase.RoundMove },
+      { round: 3, phase: Phase.RoundMove },
+    ],
+    costs: [
+      [{ type: Resource.Knowledge, count: 4 }],
+      [{ type: Resource.Knowledge, count: 4 }],
+      [{ type: Resource.Credit, count: 3 }],
+    ],
+  });
+
+  for (const onTurn of [true, false]) {
+    it(`selects a prefix ${onTurn ? "including the live move" : "entirely from the off-turn queue"}`, () => {
+      const plan = makePlan(onTurn);
+      const before = JSON.parse(JSON.stringify(plan));
+      const limited = limitAnalysisCommit(plan, 2);
+      expect(limited.live).to.equal(onTurn ? moves[0] : null);
+      expect(limited.queued).to.deep.equal(onTurn ? [moves[1]] : moves.slice(0, 2));
+      expect(limited.deferred).to.deep.equal([moves[2]]);
+      expect(limited.dropped).to.deep.equal(plan.dropped);
+      expect(limited.cut).to.equal("illegal");
+      expect(limited.limit).to.equal("line");
+      expect(limited.timings).to.deep.equal(plan.timings.slice(0, 2));
+      expect(limited.costs).to.deep.equal(plan.costs.slice(0, 2));
+      expect(limited.simulatedNeighbour).to.equal(false);
+      expect(limited.queued).not.to.equal(plan.queued);
+      expect(limited.timings).not.to.equal(plan.timings);
+      expect(limited.costs).not.to.equal(plan.costs);
+      expect(plan).to.deep.equal(before);
+    });
+  }
+
+  it("counts an immediate move as the first selected move, not as an extra queue slot", () => {
+    const plan = makePlan();
+    const limited = limitAnalysisCommit(plan, 1);
+    expect(limited.live).to.equal(moves[0]);
+    expect(limited.queued).to.deep.equal([]);
+    expect(limited.timings).to.deep.equal(plan.timings.slice(0, 1));
+    expect(limited.costs).to.deep.equal(plan.costs.slice(0, 1));
+    expect(limited.deferred).to.deep.equal(moves.slice(1));
+  });
+
+  for (const count of [NaN, Infinity, -Infinity, -1, 1.5, 0]) {
+    it(`selects nothing for invalid count ${count}`, () => {
+      const plan = makePlan();
+      const limited = limitAnalysisCommit(plan, count);
+      expect(limited.live).to.equal(null);
+      expect(limited.queued).to.deep.equal([]);
+      expect(limited.timings).to.deep.equal([]);
+      expect(limited.costs).to.deep.equal([]);
+      expect(limited.deferred).to.deep.equal(moves);
+      expect(limited.dropped).to.deep.equal(plan.dropped);
+      expect(limited.cut).to.equal(plan.cut);
+      expect(limited.limit).to.equal(plan.limit);
+      expect(limited.simulatedNeighbour).to.equal(false);
+    });
+  }
+
+  for (const count of [3, 100]) {
+    it(`keeps the full eligible prefix for count ${count}, including its neighbour requirement`, () => {
+      const plan = makePlan();
+      const limited = limitAnalysisCommit(plan, count);
+      expect(limited.live).to.equal(plan.live);
+      expect(limited.queued).to.deep.equal(plan.queued);
+      expect(limited.timings).to.deep.equal(plan.timings);
+      expect(limited.costs).to.deep.equal(plan.costs);
+      expect(limited.deferred).to.deep.equal([]);
+      expect(limited.dropped).to.deep.equal(plan.dropped);
+      expect(limited.simulatedNeighbour).to.equal(true);
+    });
+  }
+
+  it("preserves optional metadata when absent and never expands offline eligibility", () => {
+    for (const onTurn of [true, false]) {
+      const plan = planAnalysisCommit({ committable: moves, lineMoves: moves, cut: null, onTurn, hosted: false });
+      const limited = limitAnalysisCommit(plan, 100);
+      expect(limited.live).to.equal(onTurn ? moves[0] : null);
+      expect(limited.queued).to.deep.equal([]);
+      expect(limited.deferred).to.deep.equal([]);
+      expect(limited.dropped).to.deep.equal(onTurn ? moves.slice(1) : moves);
+      expect(limited.limit).to.equal("no-premoves");
+      expect(limited.cut).to.equal(null);
+      expect(limited.timings).to.equal(undefined);
+      expect(limited.costs).to.equal(undefined);
+    }
+  });
+
+  it("can narrow a plan repeatedly without reviving deferred moves or losing their order", () => {
+    const plan = makePlan();
+    const first = limitAnalysisCommit(plan, 2);
+    const second = limitAnalysisCommit(first, 1);
+    const expanded = limitAnalysisCommit(second, 100);
+    expect(first.deferred).to.deep.equal([moves[2]]);
+    expect(second.deferred).to.deep.equal(moves.slice(1));
+    expect(expanded).to.deep.equal(second);
+    expect(expanded.dropped).to.deep.equal(plan.dropped);
+    expect(limitAnalysisCommit(second, 0).deferred).to.deep.equal(moves);
   });
 });
 

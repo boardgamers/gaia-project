@@ -1154,6 +1154,7 @@
   "Judge an opening by Round-2 income, power, knowledge/tech access, reach, and a feasible next productive action—not Round-1 VP alone.": "شروع را با درآمد دور ۲، نیرو، دسترسی به دانش و فناوری، برد و عمل مفید بعدی بسنجید؛ نه فقط امتیاز دور اول.",
   "Keep a green token for the top level": "یک نشان سبز برای بالاترین سطح نگه دارید",
   "Keep access to several ships": "دسترسی به چند سفینه را حفظ کنید",
+  "Keep planning": "ادامهٔ برنامه‌ریزی",
   "Keep your income tile": "کاشی درآمد خود را نگه دارید",
   "Knowledge": "دانش",
   "Knowledge + Ore": "دانش + سنگ معدن",
@@ -4137,5 +4138,7 @@
   "Resume": "ادامه",
   "Wait for charges": "انتظار برای شارژها",
   "New plan": "برنامهٔ جدید",
-  "✓ Income resolved": "✓ درآمد دریافت شد"
+  "✓ Income resolved": "✓ درآمد دریافت شد",
+  "Program up to move {p0}": "برنامه‌ریزی تا حرکت {p0}",
+  "Kept for later": "نگه‌داشته‌شده برای بعد"
 }
