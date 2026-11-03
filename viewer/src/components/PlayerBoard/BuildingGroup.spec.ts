@@ -2,7 +2,10 @@ import Engine from "@gaia-project/engine";
 import { render } from "@testing-library/vue";
 import { expect } from "chai";
 import { makeStore } from "../../store";
+import { sharedMineBuildingGroupTests } from "../../testing/shared-mine-building-group";
 import BuildingGroup from "./BuildingGroup.vue";
+
+sharedMineBuildingGroupTests(BuildingGroup, "g.building.building-in-group");
 
 describe("BuildingGroup", () => {
   it("does not render an available Gaiaformer token for one permanently consumed to colonize an Asteroid (Lost Fleet §E2)", () => {

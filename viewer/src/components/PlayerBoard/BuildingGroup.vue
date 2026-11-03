@@ -66,6 +66,11 @@
            gone for good), unlike one placed on Gaia/a transdim/Protoplanet - so mark its board slot
            with the same "used" X as a power/special action, scaled down to fit this circle. -->
       <UsedActionMark v-if="isAsteroidConsumed(i)" class="asteroid-consumed-mark" transform="scale(0.05)" />
+      <!-- Shared mines cannot return through an upgrade. Their income is included in the left-hand total. -->
+      <g v-if="isSharedMine(i)" class="shared-mine-mark">
+        <title>Shared mine (cannot be upgraded)</title>
+        <UsedActionMark transform="scale(0.05)" />
+      </g>
     </g>
   </g>
 </template>
@@ -73,6 +78,7 @@
 <script lang="ts">
 import Engine, {
   Building as BuildingEnum,
+  Faction,
   factionBoard,
   factionVariantBoard,
   Operator,
@@ -174,7 +180,9 @@ export default class BuildingGroup extends Vue {
     const isolatedCost = b.isolatedCost ? " Isolated cost: " + (b.isolatedCost.join(", ") || "~") : "";
     const income = building === BuildingEnum.GaiaFormer ? null : this.resources(i, true).join(", ") || "~";
     const rows = [
-      buildingName(building, this.faction) + (this.isAsteroidConsumed(i) ? " (crashed on an Asteroid)" : ""),
+      this.isSharedMine(i)
+        ? "Shared mine (cannot be upgraded)"
+        : buildingName(building, this.faction) + (this.isAsteroidConsumed(i) ? " (crashed on an Asteroid)" : ""),
       `Cost: ${cost}${isolatedCost}`,
       income,
       `Power Value: ${this.player.buildingValue(null, { building })}`,
@@ -214,9 +222,20 @@ export default class BuildingGroup extends Vue {
 
   get factionIncome(): Reward[] {
     if (this.player.isAutoma) return [];
-    const income: Reward[] = [].concat(
+    let income: Reward[] = [].concat(
       ...this.board.income.filter((ev) => ev.operator === Operator.Income).map((ev) => ev.rewards)
     );
+
+    if (this.sharedMines > 0) {
+      // Move only the income under the fixed Xs into the left-hand icon. Read the actual track:
+      // the third mine slot is blank, so adding one ore per shared mine would overstate income.
+      for (const i of this.buildingList.filter((slot) => this.isSharedMine(slot))) {
+        for (const event of this.board.buildings[BuildingEnum.Mine].income[i]) {
+          if (event.operator === Operator.Income) income.push(...event.rewards);
+        }
+      }
+      income = Reward.merge(income);
+    }
 
     return income.filter((rew) => this.resource.includes(rew.type));
   }
@@ -233,6 +252,19 @@ export default class BuildingGroup extends Vue {
       return i === 0 ? !this.ac1 : !this.ac2;
     }
     return i >= this.placed + this.gaia + this.asteroidConsumed;
+  }
+
+  get sharedMines(): number {
+    if (this.revealIncome || this.building !== BuildingEnum.Mine || this.faction !== Faction.Lantids) {
+      return 0;
+    }
+    return this.player.data.occupied.filter((hex) => hex.data.additionalMine === this.player.player).length;
+  }
+
+  isSharedMine(i: number): boolean {
+    // Shared mines never return to supply. Anchor them on the left so ordinary builds/upgrades
+    // cannot move their markers. `placed` already includes them: do not consume any extra pieces.
+    return i >= 0 && i < this.sharedMines && i < this.placed;
   }
 
   isAsteroidConsumed(i: number): boolean {
@@ -297,7 +329,7 @@ export default class BuildingGroup extends Vue {
 
   resources(i: number, tooltip = false): Array<string | Reward> {
     if (this.player.isAutoma) return [];
-    if (this.showBuilding(i) && !tooltip) {
+    if (!tooltip && (this.showBuilding(i) || this.isSharedMine(i))) {
       return [];
     }
 

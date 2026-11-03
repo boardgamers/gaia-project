@@ -50,6 +50,10 @@
         :count="resource.count"
         :transform="`translate(${index * 1.5 + isPI * 0.5}, 0) scale(0.08)`"
       />
+      <g v-if="isSharedMine(i)" class="shared-mine-mark">
+        <title>Shared mine (cannot be upgraded)</title>
+        <UsedActionMark transform="scale(0.05)" />
+      </g>
     </g>
   </g>
 </template>
