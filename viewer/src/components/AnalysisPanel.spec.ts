@@ -42,7 +42,6 @@ describe("AnalysisPanel", () => {
       const pendingRestore = {
         lines: [[{ kind: "move", move: "terrans up nav." }]],
         active: 0,
-        baseRound: 1,
         baseMoveCount: 9,
       };
       const { container, emitted } = render(AnalysisPanel, { props: { active: true, pendingRestore } });
@@ -65,7 +64,6 @@ describe("AnalysisPanel", () => {
       const pendingRestore = {
         lines: [[{ kind: "move", move: "terrans up nav." }], [{ kind: "move", move: "terrans up gaia." }], []],
         active: 1,
-        baseRound: 1,
         baseMoveCount: 9,
       };
       const { container } = render(AnalysisPanel, { props: { active: true, pendingRestore } });
@@ -78,7 +76,6 @@ describe("AnalysisPanel", () => {
       const pendingRestore = {
         lines: [[{ kind: "move", move: "terrans up nav." }]],
         active: 0,
-        baseRound: 1,
         baseMoveCount: 9,
       };
       const { container } = render(AnalysisPanel, { props: { active: false, pendingRestore } });

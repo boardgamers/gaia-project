@@ -933,7 +933,6 @@ describe("Game", () => {
 
       expect(vm.analysisRolledForward).to.equal(true);
       expect(vm.engine.round).to.equal(2);
-      expect(vm.analysisBaseRound).to.equal(2);
       expect(vm.engine.playerToMove).to.equal(0);
 
       vm.applyAnalysisMove("terrans up nav.");
@@ -962,7 +961,6 @@ describe("Game", () => {
       expect(vm.analysisMode).to.equal(true);
       expect(vm.analysisRolledForward).to.equal(true);
       expect(vm.engine.round).to.equal(2);
-      expect(vm.analysisBaseRound).to.equal(2);
       expect(vm.engine.playerToMove).to.equal(2);
       expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "firaks up nav." }]);
       expect(vm.analysisCommitPlan.live).to.equal(null);
@@ -1476,7 +1474,7 @@ describe("Game", () => {
         // terrans still owes their own booster pick - the last setup move before round 1.
         const vm = mountAsSeat(0, new Engine(SETUP_MOVES.slice(0, -1)));
         vm.enterAnalysisMode();
-        expect(vm.analysisBaseRound).to.equal(1); // §3.7 - "setup gives you setup plus round 1"
+        expect(vm.engine.phase).to.equal(Phase.SetupBooster);
 
         vm.applyAnalysisMove("terrans booster booster3");
 
@@ -1969,6 +1967,32 @@ describe("Game", () => {
     });
 
     describe("Phase 6 - staleness on re-entry (§3.5)", () => {
+      it("restores a pre-tabs draft and saves it without obsolete round metadata", () => {
+        const live = new Engine(SETUP_MOVES);
+        const entries = [{ kind: "move", move: "terrans up nav." }];
+        window.localStorage.setItem(
+          "analysis-mode::0",
+          JSON.stringify({ entries, baseRound: 1, baseMoveCount: live.moveHistory.length })
+        );
+        const vm = mountAsSeat(0, live);
+        vm.enterAnalysisMode();
+        expect(vm.analysisEntries).to.deep.equal(entries);
+        expect(vm.analysisAppliedCount).to.equal(1);
+        expect(JSON.parse(window.localStorage.getItem("analysis-mode::0"))).to.deep.equal({
+          lines: [entries],
+          played: [[]],
+          active: 0,
+          baseMoveCount: live.moveHistory.length,
+          baseMove: live.moveHistory[live.moveHistory.length - 1],
+        });
+        vm.exitAnalysisMode();
+        vm.enterAnalysisMode();
+        expect(vm.analysisEntries).to.deep.equal(entries);
+        expect(vm.analysisAppliedCount).to.equal(1);
+        vm.$el.remove();
+        vm.$destroy();
+      });
+
       it("repairs an already-saved blocked income and keeps the Gaia conversion in played history", () => {
         const live = new Engine(SETUP_MOVES);
         const pass = "terrans pass booster2 returning booster7";
@@ -2031,7 +2055,10 @@ describe("Game", () => {
           ]);
           const saved = JSON.parse(window.localStorage.getItem("analysis-mode::0"));
           expect(saved.lines).to.deep.equal([[nav]]);
-          expect(saved.played[0]).to.have.length(2);
+          expect(saved.played).to.deep.equal(vm.analysisPlayed);
+          expect(saved.baseMoveCount).to.equal(live.moveHistory.length);
+          expect(saved.baseMove).to.equal(live.moveHistory[live.moveHistory.length - 1]);
+          expect(saved).not.to.have.property("baseRound");
           vm.$el.remove();
           vm.$destroy();
         }
@@ -2068,7 +2095,7 @@ describe("Game", () => {
         second.$destroy();
       });
 
-      it("auto-replays a stored line and shows a notice when only opponents moved since it was saved", () => {
+      it("silently auto-replays a stored line when only opponents moved since it was saved", async () => {
         const first = mountAsSeat(0);
         first.enterAnalysisMode();
         first.applyAnalysisMove("terrans up nav.");
@@ -2088,7 +2115,9 @@ describe("Game", () => {
 
         expect(second.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
         expect(second.analysisPendingRestore).to.equal(null);
-        expect(second.analysisNotice).to.contain("board changed");
+        expect(second.analysisNotice).to.equal(null);
+        await second.$nextTick();
+        expect(second.$el.querySelector(".analysis-strip")).to.equal(null);
 
         second.$el.remove();
         second.$destroy();
@@ -2196,14 +2225,14 @@ describe("Game", () => {
 
         const liveEngine = new Engine(SETUP_MOVES);
         liveEngine.moveHistory.push("nevlas up nav (0 ⇒ 1).");
-        liveEngine.round = 3; // baseRound was 1, so round > baseRound + 1 - the window has moved on
+        liveEngine.round = 3; // Plans do not expire when the live game advances.
 
         const second = mountAsSeat(0, liveEngine);
         second.enterAnalysisMode();
 
         expect(second.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
         expect(second.analysisPendingRestore).to.equal(null);
-        expect(second.analysisNotice).to.contain("board changed");
+        expect(second.analysisNotice).to.equal(null);
 
         second.$el.remove();
         second.$destroy();
@@ -2236,7 +2265,7 @@ describe("Game", () => {
         vm.$destroy();
       });
 
-      it("trims a matching manual move without closing planning, and persists the remainder", () => {
+      it("silently trims a matching manual move without closing planning, and persists the remainder", async () => {
         const vm = mountAsSeat(0, researchGame());
         vm.enterAnalysisMode();
         vm.applyAnalysisMove("terrans up nav.");
@@ -2245,6 +2274,9 @@ describe("Game", () => {
         vm.$store.dispatch("externalData", arrived);
         expect(vm.analysisMode).to.equal(true);
         expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up gaia." }]);
+        expect(vm.analysisNotice).to.equal(null);
+        await vm.$nextTick();
+        expect(vm.$el.querySelector(".analysis-strip")).to.equal(null);
         vm.$el.remove();
         vm.$destroy();
         const second = mountAsSeat(0, Engine.fromData(JSON.parse(JSON.stringify(arrived))));
@@ -2254,7 +2286,7 @@ describe("Game", () => {
         second.$destroy();
       });
 
-      it("keeps the sandbox OPEN and re-bases the line when an opponent moves - their turn does not invalidate it", () => {
+      it("silently keeps the sandbox open and re-bases the line when an opponent moves", async () => {
         // The reported bug: any incoming move closed sandbox mode, so a line was treated as dead
         // because somebody built on the far side of the map.
         const vm = mountAsSeat(0);
@@ -2270,7 +2302,9 @@ describe("Game", () => {
         expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
         // Re-anchored onto the new history, so the stored line is not stale next time either.
         expect(vm.analysisBaseMoveCount).to.equal(baseBefore + 1);
-        expect(vm.analysisNotice).to.contain("plans were updated");
+        expect(vm.analysisNotice).to.equal(null);
+        await vm.$nextTick();
+        expect(vm.$el.querySelector(".analysis-strip")).to.equal(null);
         // Exiting now restores the NEW real board, not the one from before the opponent moved.
         vm.exitAnalysisMode();
         expect(vm.engine.moveHistory.length).to.equal(arrived.moveHistory.length);
@@ -2333,7 +2367,7 @@ describe("Game", () => {
         expect(second.analysisPendingRestore).to.equal(null);
 
         expect(second.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
-        expect(second.analysisNotice).to.contain("already played");
+        expect(second.analysisNotice).to.equal(null);
         expect(second.analysisPlayed[0]).to.have.length(1);
         const recorded = JSON.parse(JSON.stringify(second.analysisPlayed));
         second.exitAnalysisMode();
@@ -2379,7 +2413,7 @@ describe("Game", () => {
         second.restoreAnalysisLine();
 
         expect(second.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans build m 2A3." }]);
-        expect(second.analysisNotice).to.contain("board changed");
+        expect(second.analysisNotice).to.contain("no longer apply");
         second.$el.remove();
         second.$destroy();
       });
@@ -2411,7 +2445,7 @@ describe("Game", () => {
 
         const arrived = JSON.parse(JSON.stringify(vm.analysisBackup));
         arrived.moveHistory = [...arrived.moveHistory, "nevlas up nav."];
-        arrived.round = 3; // baseRound was 1 - no amount of re-basing brings that window back
+        arrived.round = 3; // Plans do not expire when the live game advances.
         vm.$store.dispatch("externalData", arrived);
 
         expect(vm.analysisMode).to.equal(true);

@@ -10,7 +10,7 @@ import Engine, {
 } from "@gaia-project/engine";
 import { expect } from "chai";
 import { passedChargeGame } from "../testing/passed-charge";
-import type { AnalysisEntry, MoveCost } from "./analysis";
+import type { AnalysisEntry, AnalysisLineSet, MoveCost } from "./analysis";
 import {
   advancePastOwnPass,
   analysisCommitPrefix,
@@ -81,8 +81,7 @@ describe("replayAnalysisLine", () => {
     const { engine, applied, blockedReason } = replayAnalysisLine(
       planning,
       [{ kind: "move", move: `hadsch-hallas pass ${booster}` }],
-      0,
-      1
+      0
     );
     expect(blockedReason).to.equal(undefined);
     expect(applied).to.equal(1);
@@ -100,7 +99,7 @@ describe("replayAnalysisLine", () => {
   it("reports spending without subtracting the resources earned by the same move", () => {
     const origin = new Engine(SETUP_MOVES);
     const costs: MoveCost[] = [];
-    replayAnalysisLine(origin, [{ kind: "move", move: "terrans spend 1q for 1o. up sci." }], 0, 1, costs);
+    replayAnalysisLine(origin, [{ kind: "move", move: "terrans spend 1q for 1o. up sci." }], 0, costs);
     expect(costs).to.deep.equal([
       [
         { type: Resource.Qic, count: 1 },
@@ -113,7 +112,7 @@ describe("replayAnalysisLine", () => {
   it("replays a legal line onto a fresh clone of the origin", () => {
     const origin = new Engine(SETUP_MOVES);
     const entries: AnalysisEntry[] = [{ kind: "move", move: "terrans up nav." }];
-    const { engine, applied, blockedReason } = replayAnalysisLine(origin, entries, 0, 1);
+    const { engine, applied, blockedReason } = replayAnalysisLine(origin, entries, 0);
     expect(blockedReason).to.equal(undefined);
     expect(applied).to.equal(1);
     expect(engine.moveHistory[engine.moveHistory.length - 1]).to.equal("terrans up nav (0 ⇒ 1).");
@@ -129,8 +128,7 @@ describe("replayAnalysisLine", () => {
         { kind: "move", move: "terrans action power3." },
         { kind: "move", move: "terrans action power4." },
       ],
-      0,
-      1
+      0
     );
     expect(applied).to.equal(1);
     expect(engine.players[0].data.power.area3).to.equal(0);
@@ -144,7 +142,7 @@ describe("replayAnalysisLine", () => {
       { kind: "move", move: "terrans build m 99x99." },
       { kind: "move", move: "nevlas up nav." },
     ];
-    const { engine, applied, blockedReason } = replayAnalysisLine(origin, entries, 0, 1);
+    const { engine, applied, blockedReason } = replayAnalysisLine(origin, entries, 0);
     expect(blockedReason).to.be.a("string").and.not.equal("");
     expect(applied).to.equal(1);
     expect(engine.moveHistory[engine.moveHistory.length - 1]).to.equal("terrans up nav (0 ⇒ 1).");
@@ -156,13 +154,7 @@ describe("replayAnalysisLine", () => {
     origin.clearAvailableCommands();
     const before = JSON.stringify(origin);
     const costs: MoveCost[] = [];
-    const { engine, applied } = replayAnalysisLine(
-      origin,
-      [{ kind: "move", move: "terrans build m 0x2." }],
-      0,
-      1,
-      costs
-    );
+    const { engine, applied } = replayAnalysisLine(origin, [{ kind: "move", move: "terrans build m 0x2." }], 0, costs);
     expect(applied).to.equal(1);
     expect(costs[0].filter((cost) => cost.type === Resource.GaiaFormer)).to.deep.equal([
       { type: Resource.GaiaFormer, count: 1 },
@@ -175,20 +167,20 @@ describe("replayAnalysisLine", () => {
   it("leaves the original engine untouched", () => {
     const origin = new Engine(SETUP_MOVES);
     const before = JSON.stringify(origin);
-    replayAnalysisLine(origin, [{ kind: "move", move: "terrans up nav." }], 0, 1);
+    replayAnalysisLine(origin, [{ kind: "move", move: "terrans up nav." }], 0);
     expect(JSON.stringify(origin)).to.equal(before);
   });
 
   it("returns the origin itself, unmodified, for an empty line", () => {
     const origin = new Engine(SETUP_MOVES);
-    const { engine, applied } = replayAnalysisLine(origin, [], 0, 1);
+    const { engine, applied } = replayAnalysisLine(origin, [], 0);
     expect(applied).to.equal(0);
     expect(engine.moveHistory).to.deep.equal(origin.moveHistory);
   });
 
   it("marks the seat's player data as the sandbox seat on the replayed engine", () => {
     const origin = new Engine(SETUP_MOVES);
-    const { engine } = replayAnalysisLine(origin, [{ kind: "move", move: "terrans up nav." }], 0, 1);
+    const { engine } = replayAnalysisLine(origin, [{ kind: "move", move: "terrans up nav." }], 0);
     expect(engine.players[0].data.analysis).to.equal(true);
   });
 
@@ -198,7 +190,7 @@ describe("replayAnalysisLine", () => {
       applySoloRoundFlow(origin, 0);
       const entries: AnalysisEntry[] = [{ kind: "move", move: "terrans booster booster3" }]; // last setup move
 
-      const { engine } = replayAnalysisLine(origin, entries, 0, 1);
+      const { engine } = replayAnalysisLine(origin, entries, 0);
 
       expect(engine.phase).to.equal(Phase.RoundMove);
       expect(engine.round).to.equal(1);
@@ -214,8 +206,8 @@ describe("replayAnalysisLine", () => {
       applySoloRoundFlow(origin, 0);
       const entries: AnalysisEntry[] = [{ kind: "move", move: "terrans booster booster3" }];
 
-      const first = replayAnalysisLine(origin, entries, 0, 1);
-      const second = replayAnalysisLine(origin, entries, 0, 1);
+      const first = replayAnalysisLine(origin, entries, 0);
+      const second = replayAnalysisLine(origin, entries, 0);
 
       expect(second.engine.players[0].data.credits).to.equal(first.engine.players[0].data.credits);
     });
@@ -226,7 +218,7 @@ describe("replayAnalysisLine", () => {
       origin.player(0).data.credits = 0;
       origin.player(0).data.ores = 0; // cannot afford a trading station at all
 
-      const { engine, applied } = replayAnalysisLine(origin, [{ kind: "move", move: "terrans build ts -1x2." }], 0, 1);
+      const { engine, applied } = replayAnalysisLine(origin, [{ kind: "move", move: "terrans build ts -1x2." }], 0);
 
       expect(applied).to.equal(0);
       const data = engine.players[0].data;
@@ -238,7 +230,7 @@ describe("replayAnalysisLine", () => {
       const origin = new Engine(SETUP_MOVES);
       applySoloRoundFlow(origin, 0);
       Object.assign(origin.player(0).data.power, { area1: 0, area2: 0, area3: 0 });
-      const { engine, applied } = replayAnalysisLine(origin, [{ kind: "move", move: "terrans action power3." }], 0, 1);
+      const { engine, applied } = replayAnalysisLine(origin, [{ kind: "move", move: "terrans action power3." }], 0);
       expect(applied).to.equal(0);
       expect(engine.players[0].data.power).to.deep.equal(origin.players[0].data.power);
       expect(engine.players[0].data.analysisAssumedPower).to.equal(0);
@@ -252,7 +244,7 @@ describe("replayAnalysisLine", () => {
       const before = { ...origin.players[0].data.power };
       const entries: AnalysisEntry[] = [{ kind: "adjust", charge: 2 }];
 
-      const { engine, applied } = replayAnalysisLine(origin, entries, 0, 1);
+      const { engine, applied } = replayAnalysisLine(origin, entries, 0);
 
       expect(applied).to.equal(1);
       // chargePower moves tokens up a level - the receiving areas grow by the charge regardless of
@@ -270,7 +262,7 @@ describe("replayAnalysisLine", () => {
         { kind: "move", move: "terrans up nav." },
       ];
 
-      const { applied } = replayAnalysisLine(origin, entries, 0, 1);
+      const { applied } = replayAnalysisLine(origin, entries, 0);
 
       expect(applied).to.equal(0);
     });
@@ -283,7 +275,7 @@ describe("replayAnalysisLine", () => {
         { kind: "adjust", charge: 3 },
       ];
 
-      const { applied } = replayAnalysisLine(origin, entries, 0, 1);
+      const { applied } = replayAnalysisLine(origin, entries, 0);
 
       expect(applied).to.equal(2);
     });
@@ -679,7 +671,7 @@ describe("resolveOpponentDecisions", () => {
     const origin = new Engine(SETUP_MOVES);
     applySoloRoundFlow(origin, 0);
 
-    const { engine, applied } = replayAnalysisLine(origin, [{ kind: "move", move: "terrans build ts -1x2." }], 0, 1);
+    const { engine, applied } = replayAnalysisLine(origin, [{ kind: "move", move: "terrans build ts -1x2." }], 0);
 
     expect(applied).to.equal(1);
     expect(engine.phase).to.equal(Phase.RoundMove);
@@ -726,8 +718,7 @@ describe("opponents' setup turns in planning", () => {
     const { engine: result, applied } = replayAnalysisLine(
       engine,
       [{ kind: "move", move: "nevlas booster booster7" }],
-      1,
-      Round.Round1
+      1
     );
     expect(applied).to.equal(1);
     expect(result.phase).to.equal(Phase.RoundMove);
@@ -951,21 +942,63 @@ describe("analysis line persistence", () => {
   });
 
   it("round-trips a saved set for the same seat", () => {
-    const set = { lines: [[up], []], active: 1, baseRound: 1, baseMoveCount: 9 };
+    const set = { lines: [[up], []], active: 1, baseMoveCount: 9 };
     saveAnalysisLines(0, set);
     expect(loadAnalysisLines(0)).to.deep.equal(set);
   });
 
+  it("drops obsolete metadata from stored multi-plan drafts while retaining the base move and played history", () => {
+    const key = `analysis-mode:${window.location.search}:0`;
+    const set: AnalysisLineSet = {
+      lines: [[up], []],
+      active: 1,
+      baseMoveCount: 14,
+      baseMove: "nevlas pass booster4",
+      played: [
+        [
+          { move: "terrans pass booster5", moveIndex: 12 },
+          { move: "terrans income 2t", moveIndex: 13, incomeResolved: true, historyMove: "nevlas pass booster4" },
+        ],
+        [],
+      ],
+    };
+    const obsolete = { ...set, baseRound: 2, obsoleteMetadata: "ignored" };
+    window.localStorage.setItem(key, JSON.stringify(obsolete));
+
+    const loaded = loadAnalysisLines(0);
+    expect(loaded).to.deep.equal(set);
+    saveAnalysisLines(0, loaded);
+    expect(JSON.parse(window.localStorage.getItem(key))).to.deep.equal(set);
+
+    // Saving an old-shaped object directly must also discard fields that are no longer used.
+    saveAnalysisLines(0, obsolete);
+    expect(JSON.parse(window.localStorage.getItem(key))).to.deep.equal(set);
+  });
+
+  it("preserves whether optional fields were absent or explicitly present during normalization", () => {
+    const empty = emptyAnalysisLineSet(9);
+    expect(empty).to.deep.equal({ lines: [[]], active: 0, baseMoveCount: 9 });
+    for (const set of [
+      empty,
+      { ...empty, baseMove: "", played: [] },
+      { ...empty, baseMove: undefined, played: undefined },
+    ]) {
+      const normalized = normalizeAnalysisLineSet(set);
+      expect(normalized).to.deep.equal(set);
+      expect(normalized).to.have.all.keys(Object.keys(set));
+    }
+  });
+
   it("keeps different seats' lines separate", () => {
-    saveAnalysisLines(0, emptyAnalysisLineSet(1, 9));
+    saveAnalysisLines(0, emptyAnalysisLineSet(9));
     expect(loadAnalysisLines(1)).to.equal(null);
   });
 
   it("keeps hosted games separate even when their iframe URL and seat match", () => {
-    const set = { lines: [[up]], active: 0, baseRound: 1, baseMoveCount: 9 };
+    const set = { lines: [[up]], active: 0, baseMoveCount: 9 };
     saveAnalysisLines(0, set, "init 2 first-game");
     expect(loadAnalysisLines(0, "init 2 second-game")).to.equal(null);
-    saveAnalysisLines(0, emptyAnalysisLineSet(1, 9), "init 2 second-game");
+    saveAnalysisLines(0, emptyAnalysisLineSet(9), "init 2 second-game");
     clearAnalysisLine(0, "init 2 second-game");
     expect(loadAnalysisLines(0, "init 2 first-game")).to.deep.equal(set);
   });
@@ -975,7 +1008,7 @@ describe("analysis line persistence", () => {
   });
 
   it("clearAnalysisLine removes every stored line outright, not just empties them", () => {
-    saveAnalysisLines(0, { lines: [[up], [up]], active: 0, baseRound: 1, baseMoveCount: 9 });
+    saveAnalysisLines(0, { lines: [[up], [up]], active: 0, baseMoveCount: 9 });
     clearAnalysisLine(0);
     expect(loadAnalysisLines(0)).to.equal(null);
   });
@@ -983,12 +1016,14 @@ describe("analysis line persistence", () => {
   // §13's migration. Real in-progress games are carrying a pre-tabs value right now (master deploys
   // to production on push), so a single stored line has to come back as Line 1 rather than as
   // "nothing stored" - losing a line the player can see in the UI is not an acceptable upgrade.
-  it("reads a pre-tabs single line back as Line 1", () => {
-    window.localStorage.setItem(
-      `analysis-mode:${window.location.search}:0`,
-      JSON.stringify({ entries: [up], baseRound: 2, baseMoveCount: 14 })
-    );
-    expect(loadAnalysisLines(0)).to.deep.equal({ lines: [[up]], active: 0, baseRound: 2, baseMoveCount: 14 });
+  it("reads a pre-tabs single line back as Line 1 and drops baseRound when saving it", () => {
+    const key = `analysis-mode:${window.location.search}:0`;
+    window.localStorage.setItem(key, JSON.stringify({ entries: [up], baseRound: 2, baseMoveCount: 14 }));
+    const expected = { lines: [[up]], active: 0, baseMoveCount: 14 };
+    const loaded = loadAnalysisLines(0);
+    expect(loaded).to.deep.equal(expected);
+    saveAnalysisLines(0, loaded);
+    expect(JSON.parse(window.localStorage.getItem(key))).to.deep.equal(expected);
   });
 
   it("treats a stored value of neither shape as nothing stored", () => {
@@ -997,25 +1032,22 @@ describe("analysis line persistence", () => {
   });
 
   it("normalizes a set with no lines or an out-of-range active index", () => {
-    expect(normalizeAnalysisLineSet({ lines: [], active: 4, baseRound: 1, baseMoveCount: 9 })).to.deep.equal({
+    expect(normalizeAnalysisLineSet({ lines: [], active: 4, baseMoveCount: 9 })).to.deep.equal({
       lines: [[]],
       active: 0,
-      baseRound: 1,
       baseMoveCount: 9,
     });
-    expect(normalizeAnalysisLineSet({ lines: [[up], []], active: 7, baseRound: 1, baseMoveCount: 9 }).active).to.equal(
-      1
-    );
+    expect(normalizeAnalysisLineSet({ lines: [[up], []], active: 7, baseMoveCount: 9 }).active).to.equal(1);
   });
 
   it("caps a set at MAX_ANALYSIS_LINES", () => {
     const lines = Array.from({ length: MAX_ANALYSIS_LINES + 3 }, () => [up]);
-    const capped = normalizeAnalysisLineSet({ lines, active: 0, baseRound: 1, baseMoveCount: 9 });
+    const capped = normalizeAnalysisLineSet({ lines, active: 0, baseMoveCount: 9 });
     expect(capped.lines.length).to.equal(MAX_ANALYSIS_LINES);
   });
 
   it("counts every move across every line", () => {
-    expect(analysisLineSetSize({ lines: [[up, up], [], [up]], active: 0, baseRound: 1, baseMoveCount: 9 })).to.equal(3);
+    expect(analysisLineSetSize({ lines: [[up, up], [], [up]], active: 0, baseMoveCount: 9 })).to.equal(3);
   });
 
   it("labels alternative plans alphabetically", () => {
@@ -1034,14 +1066,14 @@ describe("summarizeAnalysisLine (§13)", () => {
       { kind: "move", move: "terrans up nav." },
       { kind: "adjust", charge: 1 },
     ];
-    const summary = summarizeAnalysisLine(origin, entries, 0, Round.Round1, 0);
+    const summary = summarizeAnalysisLine(origin, entries, 0, 0);
     expect(summary.moves).to.equal(1);
     expect(summary.applied).to.equal(1);
   });
 
   it("reports an empty line as no moves and no change", () => {
     const origin = markAnalysisSeat(new Engine(SETUP_MOVES), 0);
-    expect(summarizeAnalysisLine(origin, [], 0, Round.Round1, 0)).to.deep.equal({
+    expect(summarizeAnalysisLine(origin, [], 0, 0)).to.deep.equal({
       label: "Plan A",
       moves: 0,
       victoryPoints: 0,
@@ -1054,8 +1086,8 @@ describe("summarizeAnalysisLine (§13)", () => {
     const origin = markAnalysisSeat(new Engine(SETUP_MOVES), 0);
     const base = origin.players[0].data.victoryPoints;
     const entries: AnalysisEntry[] = [{ kind: "move", move: "terrans up nav." }];
-    const summary = summarizeAnalysisLine(origin, entries, 0, Round.Round1, 1);
-    const { engine } = replayAnalysisLine(origin, entries, 0, Round.Round1);
+    const summary = summarizeAnalysisLine(origin, entries, 0, 1);
+    const { engine } = replayAnalysisLine(origin, entries, 0);
     expect(summary.label).to.equal("Plan B");
     expect(summary.moves).to.equal(1);
     expect(summary.applied).to.equal(1);
@@ -1067,13 +1099,7 @@ describe("summarizeAnalysisLine (§13)", () => {
     applySoloRoundFlow(origin, 0);
     origin.player(0).data.credits = 0;
     origin.player(0).data.ores = 0;
-    const summary = summarizeAnalysisLine(
-      origin,
-      [{ kind: "move", move: "terrans build ts -1x2." }],
-      0,
-      Round.Round1,
-      0
-    );
+    const summary = summarizeAnalysisLine(origin, [{ kind: "move", move: "terrans build ts -1x2." }], 0, 0);
     expect(summary.moves).to.equal(1);
     expect(summary.applied).to.equal(0);
     expect(summary.overdrawn).to.equal(false);
@@ -1087,7 +1113,7 @@ describe("summarizeAnalysisLine (§13)", () => {
       { kind: "move", move: "terrans up nav." },
       { kind: "move", move: "terrans up nonsense." },
     ];
-    const summary = summarizeAnalysisLine(origin, entries, 0, Round.Round1, 0);
+    const summary = summarizeAnalysisLine(origin, entries, 0, 0);
     expect(summary.moves).to.equal(2);
     expect(summary.applied).to.equal(1);
   });
@@ -1099,7 +1125,7 @@ describe("committableAnalysisMoves (§6, decision #13)", () => {
     applySoloRoundFlow(origin, 0);
     const entries: AnalysisEntry[] = [{ kind: "move", move: "terrans up nav." }];
 
-    const moves = committableAnalysisMoves(origin, entries, 0, 1);
+    const moves = committableAnalysisMoves(origin, entries, 0);
 
     expect(moves).to.deep.equal(["terrans up nav."]);
   });
@@ -1112,7 +1138,7 @@ describe("committableAnalysisMoves (§6, decision #13)", () => {
       { kind: "adjust", charge: 2 },
     ];
 
-    const moves = committableAnalysisMoves(origin, entries, 0, 1);
+    const moves = committableAnalysisMoves(origin, entries, 0);
 
     expect(moves).to.deep.equal(["terrans up nav."]);
   });
@@ -1124,7 +1150,7 @@ describe("committableAnalysisMoves (§6, decision #13)", () => {
     origin.player(0).data.ores = 0; // nothing real to spend - only the sandbox grant can pay for this
     const entries: AnalysisEntry[] = [{ kind: "move", move: "terrans build ts -1x2." }];
 
-    const moves = committableAnalysisMoves(origin, entries, 0, 1);
+    const moves = committableAnalysisMoves(origin, entries, 0);
 
     expect(moves).to.deep.equal([]);
   });
@@ -1134,7 +1160,7 @@ describe("committableAnalysisMoves (§6, decision #13)", () => {
     applySoloRoundFlow(origin, 0);
     const entries: AnalysisEntry[] = [{ kind: "move", move: "terrans build m -1x2" }];
 
-    const moves = committableAnalysisMoves(origin, entries, 0, 1);
+    const moves = committableAnalysisMoves(origin, entries, 0);
 
     expect(moves).to.deep.equal(["terrans build m -1x2"]);
   });
@@ -1147,8 +1173,8 @@ describe("committableAnalysisMoves (§6, decision #13)", () => {
       { kind: "move", move: "terrans build ts 4A4 cheap." },
     ];
 
-    expect(committableAnalysisMoves(origin, entries, 0, Round.Round1)).to.deep.equal(["terrans up nav."]);
-    expect(analysisCommitPrefix(origin, entries, 0, Round.Round1, 1).moves).to.deep.equal([
+    expect(committableAnalysisMoves(origin, entries, 0)).to.deep.equal(["terrans up nav."]);
+    expect(analysisCommitPrefix(origin, entries, 0, 1).moves).to.deep.equal([
       "terrans up nav.",
       "terrans build ts 4A4 cheap.",
     ]);
@@ -1158,8 +1184,8 @@ describe("committableAnalysisMoves (§6, decision #13)", () => {
     const origin = new Engine(SETUP_MOVES);
     applySoloRoundFlow(origin, 0);
 
-    expect(committableAnalysisMoves(origin, [], 0, 1)).to.deep.equal([]);
-    expect(committableAnalysisMoves(origin, [{ kind: "adjust", charge: 1 }], 0, 1)).to.deep.equal([]);
+    expect(committableAnalysisMoves(origin, [], 0)).to.deep.equal([]);
+    expect(committableAnalysisMoves(origin, [{ kind: "adjust", charge: 1 }], 0)).to.deep.equal([]);
   });
 
   it("truncates at an opponent's move, which setup pass-and-play puts in the line as an ordinary entry", () => {
@@ -1171,7 +1197,7 @@ describe("committableAnalysisMoves (§6, decision #13)", () => {
       { kind: "move", move: "nevlas build m 0x-4" },
     ];
 
-    const moves = committableAnalysisMoves(origin, entries, 0, 1);
+    const moves = committableAnalysisMoves(origin, entries, 0);
 
     expect(moves).to.deep.equal(["terrans build m -1x2"]);
   });
@@ -1184,7 +1210,7 @@ describe("committableAnalysisMoves (§6, decision #13)", () => {
       { kind: "move", move: "terrans build m -1x2" },
     ];
 
-    expect(committableAnalysisMoves(origin, entries, 0, 1)).to.deep.equal([]);
+    expect(committableAnalysisMoves(origin, entries, 0)).to.deep.equal([]);
   });
 });
 
@@ -1194,7 +1220,7 @@ describe("analysisCommitPrefix - the cut reason behind the prefix", () => {
     origin.players[0].data.knowledge = 12;
     const moves = ["terrans up nav.", "terrans up terra.", "terrans up int.", "terrans pass booster4"];
     const entries: AnalysisEntry[] = moves.map((move) => ({ kind: "move", move }));
-    expect(analysisCommitPrefix(origin, entries, 0, 1)).to.deep.equal({ moves, cut: null });
+    expect(analysisCommitPrefix(origin, entries, 0)).to.deep.equal({ moves, cut: null });
   });
 
   it("requires enough resources in the simulated position even for future premoves", () => {
@@ -1204,8 +1230,8 @@ describe("analysisCommitPrefix - the cut reason behind the prefix", () => {
       { kind: "adjust", charge: 1 },
       { kind: "move", move: "terrans up nav." },
     ];
-    expect(analysisCommitPrefix(origin, entries, 0, 1, 0).moves).to.deep.equal([]);
-    expect(analysisCommitPrefix(origin, entries, 0, 1, 1).moves).to.deep.equal([]);
+    expect(analysisCommitPrefix(origin, entries, 0, 0).moves).to.deep.equal([]);
+    expect(analysisCommitPrefix(origin, entries, 0, 1).moves).to.deep.equal([]);
   });
 
   it("can queue a power action after explicit simulated charges, but cannot play it immediately", () => {
@@ -1215,15 +1241,15 @@ describe("analysisCommitPrefix - the cut reason behind the prefix", () => {
       { kind: "adjust", charge: 4 },
       { kind: "move", move: "terrans action power3." },
     ];
-    expect(analysisCommitPrefix(origin, entries, 0, 1, 0).moves).to.deep.equal(["terrans action power3."]);
-    expect(analysisCommitPrefix(origin, entries, 0, 1, 1).moves).to.deep.equal([]);
+    expect(analysisCommitPrefix(origin, entries, 0, 0).moves).to.deep.equal(["terrans action power3."]);
+    expect(analysisCommitPrefix(origin, entries, 0, 1).moves).to.deep.equal([]);
   });
 
   it("reports no cut for a line that is committable end to end", () => {
     const origin = new Engine(SETUP_MOVES);
     applySoloRoundFlow(origin, 0);
 
-    const { moves, cut } = analysisCommitPrefix(origin, [{ kind: "move", move: "terrans up nav." }], 0, 1);
+    const { moves, cut } = analysisCommitPrefix(origin, [{ kind: "move", move: "terrans up nav." }], 0);
 
     expect(moves).to.deep.equal(["terrans up nav."]);
     expect(cut).to.equal(null);
@@ -1235,7 +1261,7 @@ describe("analysisCommitPrefix - the cut reason behind the prefix", () => {
     origin.player(0).data.credits = 0;
     origin.player(0).data.ores = 0;
 
-    const { moves, cut } = analysisCommitPrefix(origin, [{ kind: "move", move: "terrans build ts -1x2." }], 0, 1);
+    const { moves, cut } = analysisCommitPrefix(origin, [{ kind: "move", move: "terrans build ts -1x2." }], 0);
 
     expect(moves).to.deep.equal([]);
     expect(cut).to.equal("illegal");
@@ -1245,17 +1271,15 @@ describe("analysisCommitPrefix - the cut reason behind the prefix", () => {
     const seeded = new Engine(["init 2 randomSeed"]);
     applySoloRoundFlow(seeded, 0);
     expect(
-      analysisCommitPrefix(seeded, [{ kind: "faction", lineup: [Faction.Terrans, Faction.Nevlas] }], 0, 1).cut
+      analysisCommitPrefix(seeded, [{ kind: "faction", lineup: [Faction.Terrans, Faction.Nevlas] }], 0).cut
     ).to.equal("faction");
 
     const origin = new Engine(SETUP_MOVES);
     const entries: AnalysisEntry[] = [{ kind: "move", move: "terrans build ts 4A4 cheap." }];
-    expect(analysisCommitPrefix(origin, entries, 0, Round.Round1, 0).moves).to.deep.equal([
-      "terrans build ts 4A4 cheap.",
-    ]);
-    expect(analysisCommitPrefix(origin, entries, 0, Round.Round1, 1).moves).to.deep.equal([]);
+    expect(analysisCommitPrefix(origin, entries, 0, 0).moves).to.deep.equal(["terrans build ts 4A4 cheap."]);
+    expect(analysisCommitPrefix(origin, entries, 0, 1).moves).to.deep.equal([]);
     expect(
-      analysisCommitPrefix(origin, [{ kind: "move", move: "terrans build ts 3A3 cheap." }], 0, Round.Round1, 1).moves
+      analysisCommitPrefix(origin, [{ kind: "move", move: "terrans build ts 3A3 cheap." }], 0, 1).moves
     ).to.deep.equal(["terrans build ts 3A3 cheap."]);
   });
 
@@ -1267,7 +1291,7 @@ describe("analysisCommitPrefix - the cut reason behind the prefix", () => {
       { kind: "move", move: "nevlas build m -1x0" },
     ];
 
-    const { moves, cut } = analysisCommitPrefix(origin, entries, 0, 1);
+    const { moves, cut } = analysisCommitPrefix(origin, entries, 0);
 
     expect(moves).to.deep.equal(["terrans build m -1x2"]);
     expect(cut).to.equal("foreign");
@@ -1489,7 +1513,7 @@ describe("the round-0 faction seed (§11)", () => {
 
     // Follow the engine’s placement offers for this faction.
     for (let i = 0; i < 4; i++) {
-      const { engine } = replayAnalysisLine(origin, entries, 0, Round.Round1);
+      const { engine } = replayAnalysisLine(origin, entries, 0);
       if (engine.phase !== Phase.SetupBuilding) {
         break;
       }
@@ -1498,14 +1522,14 @@ describe("the round-0 faction seed (§11)", () => {
       entries.push({ kind: "move", move: `terrans build ${first.building} ${first.coordinates}` });
     }
 
-    const mid = replayAnalysisLine(origin, entries, 0, Round.Round1);
+    const mid = replayAnalysisLine(origin, entries, 0);
     expect(mid.engine.phase).to.equal(Phase.SetupBooster);
     expect(mid.engine.playerToMove).to.equal(0); // nevlas' pick was skipped
     expect(mid.engine.players[1].data.occupied).to.have.length(0);
     const mine = mid.engine.findAvailableCommand(0, Command.ChooseRoundBooster).data.boosters[0];
     entries.push({ kind: "move", move: `terrans booster ${mine}` });
 
-    const { engine, applied } = replayAnalysisLine(origin, entries, 0, Round.Round1);
+    const { engine, applied } = replayAnalysisLine(origin, entries, 0);
 
     expect(applied).to.equal(entries.length);
     expect(engine.phase).to.equal(Phase.RoundMove);
@@ -1526,7 +1550,7 @@ describe("the round-0 faction seed (§11)", () => {
     applySoloRoundFlow(origin, 0);
     const entries: AnalysisEntry[] = [{ kind: "faction", lineup: [Faction.Nevlas, Faction.Terrans] }];
 
-    const { engine, applied } = replayAnalysisLine(origin, entries, 0, Round.Round1);
+    const { engine, applied } = replayAnalysisLine(origin, entries, 0);
 
     expect(applied).to.equal(1);
     expect(engine.phase).to.equal(Phase.SetupBuilding);
@@ -1538,8 +1562,8 @@ describe("the round-0 faction seed (§11)", () => {
     applySoloRoundFlow(origin, 0);
     const entries: AnalysisEntry[] = [{ kind: "faction", lineup: [Faction.Itars, Faction.Terrans] }];
 
-    const first = replayAnalysisLine(origin, entries, 0, Round.Round1);
-    const second = replayAnalysisLine(origin, entries, 0, Round.Round1);
+    const first = replayAnalysisLine(origin, entries, 0);
+    const second = replayAnalysisLine(origin, entries, 0);
 
     expect(first.engine.players.map((pl) => pl.faction)).to.deep.equal([Faction.Itars, Faction.Terrans]);
     expect(second.engine.players.map((pl) => pl.faction)).to.deep.equal([Faction.Itars, Faction.Terrans]);
@@ -1550,7 +1574,7 @@ describe("the round-0 faction seed (§11)", () => {
     applySoloRoundFlow(origin, 0);
     const before = JSON.stringify(origin);
 
-    replayAnalysisLine(origin, [{ kind: "faction", lineup: [Faction.Itars, Faction.Terrans] }], 0, Round.Round1);
+    replayAnalysisLine(origin, [{ kind: "faction", lineup: [Faction.Itars, Faction.Terrans] }], 0);
 
     expect(JSON.stringify(origin)).to.equal(before);
   });
@@ -1562,7 +1586,7 @@ describe("the round-0 faction seed (§11)", () => {
       { kind: "move", move: "terrans up nav." },
     ];
 
-    const { applied } = replayAnalysisLine(origin, entries, 0, Round.Round1);
+    const { applied } = replayAnalysisLine(origin, entries, 0);
 
     expect(applied).to.equal(0);
   });

@@ -369,7 +369,6 @@ import Engine, {
   Phase,
   Player,
   ResearchField,
-  Round,
 } from "@gaia-project/engine";
 import { chargeDecisionSeats, hasConcurrentCharges } from "@gaia-project/engine/src/pending-charges";
 import type { PremoveCommand, PremovePlan, PremoveRun, PremoveTiming } from "@gaia-project/engine/src/premove-types";
@@ -510,7 +509,6 @@ export default class Game extends Vue {
   analysisOrigin: Engine = null;
   analysisComposeBase: Engine = null;
   analysisSeat: number = null;
-  analysisBaseRound: number = null;
   analysisBaseMoveCount: number = null;
   // The REAL move history the origin was cloned from. Not `analysisOrigin.moveHistory`, which is a
   // different list: `settleAnalysisClone`/`advancePastOwnPass` play opponents' declines
@@ -520,8 +518,8 @@ export default class Game extends Vue {
   // `reanchorAnalysisLine`, which compares against this instead.
   analysisRealHistory: string[] = [];
   // §13's lines. Every line is rooted at the same `analysisOrigin` (that is what makes switching
-  // between them a replay rather than a second board takeover), so `analysisBaseRound`/
-  // `analysisBaseMoveCount` above stay session-wide rather than becoming per-line - and staleness
+  // between them a replay rather than a second board takeover), so `analysisBaseMoveCount` above
+  // stays session-wide rather than becoming per-line - and staleness
   // (§3.5) stays one decision for the whole set. There is always at least one line, from the moment
   // the sandbox opens: Line 1 is not something the player has to create, and there is no Save button
   // because every line already persists on every completed turn (see `setAnalysisEntries`).
@@ -1078,7 +1076,6 @@ export default class Game extends Vue {
         origin,
         this.myPremovePlan.moves.map((move) => ({ kind: "move", move })),
         seat,
-        origin.round,
         costs
       );
       return costs;
@@ -1232,7 +1229,6 @@ export default class Game extends Vue {
       this.analysisOrigin,
       entries,
       this.analysisSeat,
-      this.analysisBaseRound,
       this.premoveAvailable ? (this.analysisSeatIsOnTurnForReal ? 1 : 0) : Infinity
     );
     const plan = planAnalysisCommit({
@@ -1249,14 +1245,13 @@ export default class Game extends Vue {
         const { engine } = replayAnalysisLine(
           this.analysisOrigin,
           entries.slice(0, entries.indexOf(moveEntries[index])),
-          this.analysisSeat,
-          this.analysisBaseRound
+          this.analysisSeat
         );
         return { round: engine.round, phase: engine.phase };
       });
     }
     plan.costs = [];
-    replayAnalysisLine(this.analysisOrigin, entries, this.analysisSeat, this.analysisBaseRound, plan.costs);
+    replayAnalysisLine(this.analysisOrigin, entries, this.analysisSeat, plan.costs);
     return plan;
   }
 
@@ -1322,9 +1317,6 @@ export default class Game extends Vue {
     // leech answer (the state a live async game spends most of its time in) used to open a sandbox
     // with no commands for this seat at all and no way to play anything.
     settleAnalysisClone(this.analysisOrigin, seat);
-    // Read the first playable round from the settled clone, including when entry rolls past
-    // our own pass. Setup itself is not a playable round.
-    this.analysisBaseRound = Math.max(this.analysisOrigin.round, Round.Round1);
     // Sealed-bid auctions (§2.7) - null the real backend for the duration, so a Preference Split/
     // Silent bid phase submits an ordinary local move instead of going through the server; restored
     // on exit. `analysisMode` (store state, not just this component) is what SealedBidPanel.ts's
@@ -1367,7 +1359,6 @@ export default class Game extends Vue {
     }
     const incoming = markAnalysisSeat(Engine.fromData(JSON.parse(JSON.stringify(payload))), seat);
     const newMoves = incomingHistory.slice(originHistory.length);
-    let played = 0;
     this.analysisLines = this.analysisLines.map((entries, index) => {
       const result = dropPlayedAnalysisPrefix(
         incoming,
@@ -1378,7 +1369,6 @@ export default class Game extends Vue {
         this.analysisPlayed[index]
       );
       this.$set(this.analysisPlayed, index, [...(this.analysisPlayed[index] ?? []), ...result.played]);
-      played = Math.max(played, result.dropped);
       return result.entries;
     });
     const ownMove = ownMoveCount(incoming, newMoves, seat) > 0;
@@ -1411,14 +1401,9 @@ export default class Game extends Vue {
     this.analysisPendingCharge = pendingCharge;
     if (draft) this.applyAnalysisMove(draft);
     this.analysisNotice =
-      played > 0
-        ? `${played} already played ${played === 1 ? "move" : "moves"} kept in plan history.`
-        : entries.length > 0
-          ? "The board changed. Your plans were updated."
-          : null;
-    if (applied < entries.length) {
-      this.analysisNotice = "The board changed. Some planned moves no longer apply; they are kept for you to edit.";
-    }
+      applied < entries.length
+        ? "The board changed. Some planned moves no longer apply; they are kept for you to edit."
+        : null;
     return true;
   }
 
@@ -1426,7 +1411,7 @@ export default class Game extends Vue {
    * Only a rollback/divergence needs an explicit restore; ordinary progress is automatic. */
   private resolveAnalysisStaleness(seat: number, stored: AnalysisLineSet | null) {
     const fresh = (options: { persist?: boolean } = {}) =>
-      this.setAnalysisLineSet(emptyAnalysisLineSet(this.analysisBaseRound, this.analysisBaseMoveCount), options);
+      this.setAnalysisLineSet(emptyAnalysisLineSet(this.analysisBaseMoveCount), options);
     if (!stored) {
       fresh();
       return;
@@ -1458,14 +1443,10 @@ export default class Game extends Vue {
     });
     const active = lines[normalizeAnalysisLineSet(stored).active] ?? [];
     const applied = this.setAnalysisLineSet({ ...stored, lines, played: histories }, { prune: false });
-    if (sameBase && played === 0) return;
     this.analysisNotice =
-      played > 0
-        ? `${played} already played ${played === 1 ? "move" : "moves"} kept in plan history.`
-        : "The board changed. Your plans were updated.";
-    if (applied < active.length) {
-      this.analysisNotice = "The board changed. Some planned moves no longer apply; they are kept for you to edit.";
-    }
+      (!sameBase || played > 0) && applied < active.length
+        ? "The board changed. Some planned moves no longer apply; they are kept for you to edit."
+        : null;
   }
 
   /** A divergent history cannot prove which moves were played. Restore without deleting any. */
@@ -1711,8 +1692,7 @@ export default class Game extends Vue {
     const { engine, applied, blockedReason } = replayAnalysisLine(
       this.analysisOrigin,
       this.analysisEntries.slice(0, index),
-      this.analysisSeat,
-      this.analysisBaseRound
+      this.analysisSeat
     );
     if (applied !== index || !engine.newTurn || engine.ended) return;
     this.analysisEdit = {
@@ -1828,7 +1808,6 @@ export default class Game extends Vue {
       this.analysisOrigin,
       entries,
       this.analysisSeat,
-      this.analysisBaseRound,
       costs
     );
     const kept = options.prune === false ? entries : entries.slice(0, applied);
@@ -1878,7 +1857,6 @@ export default class Game extends Vue {
         lines: this.analysisLines,
         played: this.analysisPlayed,
         active: this.analysisActiveLine,
-        baseRound: this.analysisBaseRound,
         baseMoveCount: this.analysisBaseMoveCount,
         baseMove: this.analysisRealHistory[this.analysisBaseMoveCount - 1],
       },
@@ -1909,13 +1887,7 @@ export default class Game extends Vue {
       if (hit) {
         return hit;
       }
-      const summary = summarizeAnalysisLine(
-        this.analysisOrigin,
-        entries,
-        this.analysisSeat,
-        this.analysisBaseRound,
-        index
-      );
+      const summary = summarizeAnalysisLine(this.analysisOrigin, entries, this.analysisSeat, index);
       cache.set(key, summary);
       return summary;
     });

@@ -159,14 +159,13 @@ export function computeAnalysisStatus(
  * now, and dropping it on read would throw away work the player can see in the UI. */
 export interface AnalysisLine {
   entries: AnalysisEntry[];
-  baseRound: number;
   baseMoveCount: number;
 }
 
 /**
  * Several lines at once (§13) - "work out line A, work out line B, flip between them".
  *
- * `baseRound`/`baseMoveCount` sit on the SET, not on each line, because every line in it is rooted
+ * `baseMoveCount` sits on the SET, not on each line, because every line in it is rooted
  * at the same `analysisOrigin`: the sandbox clones the board once on entry and each line is just a
  * different sequence of turns played from that one point. That is what keeps staleness (§3.5) a
  * single decision for the whole set rather than a per-line one, and it is why switching lines is
@@ -191,7 +190,6 @@ export interface AnalysisLineSet {
   played?: AnalysisPlayedMove[][];
   /** Index into `lines`. Always in range once `normalizeAnalysisLineSet` has seen the value. */
   active: number;
-  baseRound: number;
   baseMoveCount: number;
   /** Last real move at the saved base, used to detect a rollback before trimming. */
   baseMove?: string;
@@ -216,13 +214,17 @@ export function normalizeAnalysisLineSet(set: AnalysisLineSet): AnalysisLineSet 
     lines.push([]);
   }
   const active = Number.isInteger(set.active) ? Math.min(Math.max(set.active, 0), lines.length - 1) : 0;
-  return { ...set, lines, active };
+  // Select only active fields so obsolete metadata from older saves is not written back.
+  const normalized: AnalysisLineSet = { lines, active, baseMoveCount: set.baseMoveCount };
+  if (Object.prototype.hasOwnProperty.call(set, "baseMove")) normalized.baseMove = set.baseMove;
+  if (Object.prototype.hasOwnProperty.call(set, "played")) normalized.played = set.played;
+  return normalized;
 }
 
-/** An empty set rooted at the given base - the sandbox's opening state, and what a cleared or
- * expired set is replaced by. */
-export function emptyAnalysisLineSet(baseRound: number, baseMoveCount: number): AnalysisLineSet {
-  return { lines: [[]], active: 0, baseRound, baseMoveCount };
+/** An empty set rooted at the given base - the sandbox's opening state, and what an explicitly
+ * discarded set is replaced by. */
+export function emptyAnalysisLineSet(baseMoveCount: number): AnalysisLineSet {
+  return { lines: [[]], active: 0, baseMoveCount };
 }
 
 /** Every entry across every line, for the "is there anything here at all" questions (the restore
@@ -263,7 +265,6 @@ export function loadAnalysisLines(seat: number, scope?: string): AnalysisLineSet
       return normalizeAnalysisLineSet({
         lines: [line.entries],
         active: 0,
-        baseRound: line.baseRound,
         baseMoveCount: line.baseMoveCount,
       });
     }
@@ -324,7 +325,6 @@ export function summarizeAnalysisLine(
   origin: Engine,
   entries: AnalysisEntry[],
   seat: number,
-  baseRound: number,
   index: number
 ): AnalysisLineSummary {
   const baseVictoryPoints = origin.players[seat]?.data.victoryPoints ?? 0;
@@ -332,7 +332,7 @@ export function summarizeAnalysisLine(
   if (entries.length === 0) {
     return { label, moves: 0, victoryPoints: 0, overdrawn: false, applied: 0 };
   }
-  const { engine, applied } = replayAnalysisLine(origin, entries, seat, baseRound);
+  const { engine, applied } = replayAnalysisLine(origin, entries, seat);
   const data = engine.players[seat]?.data;
   return {
     label,
@@ -343,14 +343,8 @@ export function summarizeAnalysisLine(
   };
 }
 
-/** §6/decision #13 - committing "clears the line", unlike a normal exit (decision #2), which keeps
- * it for later restoration. Removes the storage key outright rather than persisting an empty line,
- * so nothing is left for a later `loadAnalysisLines` to find.
- *
- * With §13's tab strip that means ALL lines, not just the committed one, and deliberately so: every
- * other line in the set was an ALTERNATIVE to the move that has now been played for real, worked out
- * from a board state the game has since left. Keeping them would leave tabs sitting there whose
- * numbers describe a table that no longer exists. */
+/** Explicitly discards the pending saved set, not a committed plan. Remove the storage key before
+ * the caller saves its fresh set, so a failed write cannot leave the discarded plans behind. */
 export function clearAnalysisLine(seat: number, scope?: string): void {
   if (typeof window !== "undefined") {
     try {
@@ -937,7 +931,6 @@ export function replayAnalysisLine(
   origin: Engine,
   entries: AnalysisEntry[],
   seat: number,
-  baseRound: number,
   costs?: MoveCost[]
 ): {
   engine: Engine;
@@ -1017,13 +1010,8 @@ export function replayAnalysisLine(
 
 /** Moves that can be submitted now, replayed without simulated charges. Faction changes and
  * other players' moves cannot be submitted. The returned prefix stops at the first invalid move. */
-export function committableAnalysisMoves(
-  origin: Engine,
-  entries: AnalysisEntry[],
-  seat: number,
-  baseRound: number
-): string[] {
-  return analysisCommitPrefix(origin, entries, seat, baseRound).moves;
+export function committableAnalysisMoves(origin: Engine, entries: AnalysisEntry[], seat: number): string[] {
+  return analysisCommitPrefix(origin, entries, seat).moves;
 }
 
 /** Why the committable prefix stops where it does - the one thing `committableAnalysisMoves`' bare
@@ -1053,7 +1041,6 @@ export function analysisCommitPrefix(
   origin: Engine,
   entries: AnalysisEntry[],
   seat: number,
-  baseRound: number,
   affordableTurns = Infinity
 ): { moves: string[]; cut: AnalysisCommitCut | null } {
   if (entries.some((entry) => entry.kind === "faction")) {
@@ -1070,7 +1057,7 @@ export function analysisCommitPrefix(
       count <= affordableTurns
         ? moveEntries.slice(0, count)
         : entries.slice(0, entries.indexOf(moveEntries[count - 1]) + 1);
-    return replayAnalysisLine(origin, prefix, seat, baseRound);
+    return replayAnalysisLine(origin, prefix, seat);
   };
   let affordable = 0;
   let cut: AnalysisCommitCut | null = null;
