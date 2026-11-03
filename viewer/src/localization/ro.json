@@ -4141,5 +4141,13 @@
   "New plan": "Plan nou",
   "✓ Income resolved": "✓ Venit rezolvat",
   "Program up to move {p0}": "Programează până la mutarea {p0}",
-  "Kept for later": "Păstrate pentru mai târziu"
+  "Kept for later": "Păstrate pentru mai târziu",
+  "View after move {p0}: {p1}": "Vezi după mutarea {p0}: {p1}",
+  "View position after this move": "Vezi poziția după această mutare",
+  "Viewing": "Vizualizare",
+  "After move {p0}": "După mutarea {p0}",
+  "Previous planned move": "Mutarea planificată anterioară",
+  "Next planned move": "Următoarea mutare planificată",
+  "Edit this move": "Editează această mutare",
+  "Return to end": "Revino la final"
 }

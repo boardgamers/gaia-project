@@ -4141,5 +4141,13 @@
   "New plan": "New plan",
   "✓ Income resolved": "✓ Income resolved",
   "Program up to move {p0}": "Program up to move {p0}",
-  "Kept for later": "Kept for later"
+  "Kept for later": "Kept for later",
+  "View after move {p0}: {p1}": "View after move {p0}: {p1}",
+  "View position after this move": "View position after this move",
+  "Viewing": "Viewing",
+  "After move {p0}": "After move {p0}",
+  "Previous planned move": "Previous planned move",
+  "Next planned move": "Next planned move",
+  "Edit this move": "Edit this move",
+  "Return to end": "Return to end"
 }

@@ -4141,5 +4141,13 @@
   "New plan": "Nuovo piano",
   "✓ Income resolved": "✓ Reddito risolto",
   "Program up to move {p0}": "Programma fino alla mossa {p0}",
-  "Kept for later": "Conservate per dopo"
+  "Kept for later": "Conservate per dopo",
+  "View after move {p0}: {p1}": "Visualizza dopo la mossa {p0}: {p1}",
+  "View position after this move": "Visualizza la posizione dopo questa mossa",
+  "Viewing": "Visualizzazione",
+  "After move {p0}": "Dopo la mossa {p0}",
+  "Previous planned move": "Mossa pianificata precedente",
+  "Next planned move": "Mossa pianificata successiva",
+  "Edit this move": "Modifica questa mossa",
+  "Return to end": "Torna alla fine"
 }

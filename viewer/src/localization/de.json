@@ -4141,5 +4141,13 @@
   "New plan": "Neuer Plan",
   "✓ Income resolved": "✓ Einkommen abgehandelt",
   "Program up to move {p0}": "Bis zu Zug {p0} programmieren",
-  "Kept for later": "Für später gespeichert"
+  "Kept for later": "Für später gespeichert",
+  "View after move {p0}: {p1}": "Nach Zug {p0} ansehen: {p1}",
+  "View position after this move": "Spielstand nach diesem Zug ansehen",
+  "Viewing": "Ansicht",
+  "After move {p0}": "Nach Zug {p0}",
+  "Previous planned move": "Vorheriger geplanter Zug",
+  "Next planned move": "Nächster geplanter Zug",
+  "Edit this move": "Diesen Zug bearbeiten",
+  "Return to end": "Zum Ende zurückkehren"
 }

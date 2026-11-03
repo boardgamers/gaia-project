@@ -1707,6 +1707,351 @@ describe("Game", () => {
       });
     });
 
+    describe("inspecting simulated moves on the board", () => {
+      it("jumps directly to positions AFTER each move while keeping the full list, costs and saved plan", async () => {
+        const vm = mountAsSeat(0, researchGame());
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("terrans up nav.");
+        const firstBoard = JSON.stringify(vm.engine);
+        const firstStatus = JSON.stringify(vm.analysisStatus);
+        vm.chargeAnalysisPower();
+        vm.applyAnalysisMove("terrans up gaia.");
+        const secondBoard = JSON.stringify(vm.engine);
+        const secondStatus = JSON.stringify(vm.analysisStatus);
+        vm.applyAnalysisMove("terrans up sci.");
+        const endBoard = JSON.stringify(vm.engine);
+        const lines = vm.analysisLines;
+        const played = vm.analysisPlayed;
+        const costs = vm.analysisMoveCosts;
+        const summaries = vm.analysisLineSummaries;
+        const saved = JSON.stringify(window.localStorage);
+        const dispatched = spyDispatch(vm);
+        const write = vi.spyOn(Storage.prototype, "setItem");
+        await Vue.nextTick();
+        try {
+          // The charge row occupies entry 1, but move 2 still inspects original entry 2.
+          const moves = () => vm.$el.querySelectorAll(".analysis-moves__move");
+          await fireEvent.click(moves()[0]);
+          expect(vm.analysisEdit).to.deep.equal({ index: 0, appliedCount: 4, mode: "inspect" });
+          expect(vm.analysisAppliedCount).to.equal(1);
+          expect(JSON.stringify(vm.engine)).to.equal(firstBoard);
+          expect(JSON.stringify(vm.analysisStatus)).to.equal(firstStatus);
+          expect(vm.engine.players[0].data.knowledge).to.equal(8);
+          expect(vm.canPlay).to.equal(false);
+          expect(moves()).to.have.length(3);
+          expect(vm.$el.querySelectorAll(".analysis-moves__changes")).to.have.length(3);
+          expect(vm.$el.querySelector('[aria-current="step"]').textContent).to.contain("terrans up nav.");
+
+          await fireEvent.click(moves()[1]);
+          expect(vm.analysisEdit).to.deep.equal({ index: 2, appliedCount: 4, mode: "inspect" });
+          expect(vm.analysisAppliedCount).to.equal(3);
+          expect(JSON.stringify(vm.engine)).to.equal(secondBoard);
+          expect(JSON.stringify(vm.analysisStatus)).to.equal(secondStatus);
+          expect(vm.engine.players[0].data.knowledge).to.equal(4);
+          expect(vm.$el.querySelector('[aria-current="step"]').textContent).to.contain("terrans up gaia.");
+
+          await fireEvent.click(moves()[2]);
+          expect(vm.analysisEdit.index).to.equal(3);
+          expect(JSON.stringify(vm.engine)).to.equal(endBoard);
+          await fireEvent.click(moves()[0]);
+          expect(JSON.stringify(vm.engine)).to.equal(firstBoard);
+          expect(vm.analysisLines).to.equal(lines);
+          expect(vm.analysisPlayed).to.equal(played);
+          expect(vm.analysisMoveCosts).to.equal(costs);
+          expect(vm.analysisLineSummaries).to.equal(summaries);
+          expect(JSON.stringify(window.localStorage)).to.equal(saved);
+          expect(write.mock.calls).to.have.length(0);
+          expect(
+            dispatched.filter((action) => ["move", "analysisMove", "submitPlan"].includes(action.type))
+          ).to.have.length(0);
+
+          vm.cancelAnalysisMoveEdit();
+          expect(vm.analysisEdit).to.equal(null);
+          expect(vm.analysisAppliedCount).to.equal(4);
+          expect(vm.canPlay).to.equal(true);
+          expect(JSON.stringify(vm.engine)).to.equal(endBoard);
+          expect(JSON.stringify(window.localStorage)).to.equal(saved);
+          expect(write.mock.calls).to.have.length(0);
+        } finally {
+          write.mockRestore();
+          vm.$destroy();
+        }
+      });
+
+      it("clears transient selection and rejects game inputs, commits and accidental edit restarts while inspecting", () => {
+        const vm = mountAsSeat(0, researchGame());
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("terrans up nav.");
+        vm.chargeAnalysisPower();
+        vm.applyAnalysisMove("terrans up gaia.");
+        vm.$store.state.context.activeButton = { name: "stale" };
+        vm.$store.state.context.highlighted.hexes = ["-1x2"];
+        vm.$store.commit("setAutoClick", [[true]]);
+        vm.inspectAnalysisMove(0);
+        expect(vm.$store.state.context.activeButton).to.equal(null);
+        expect(vm.$store.state.context.highlighted.hexes).to.equal(null);
+        expect(vm.autoClick).to.deep.equal([]);
+        const board = JSON.stringify(vm.engine);
+        const saved = JSON.stringify(window.localStorage);
+        const entries = vm.analysisEntries;
+        const dispatched = spyDispatch(vm);
+        vm.applyAnalysisMove("terrans up sci.");
+        vm.applyAnalysisMove("");
+        vm.handleCommand("terrans up sci");
+        vm.handleCommand("init 2 ignored");
+        vm.addMove("terrans up sci.");
+        vm.chargeAnalysisPower();
+        vm.undoAnalysisCharge();
+        vm.seedAnalysisFaction(Faction.Itars);
+        vm.removeAnalysisEntry(0);
+        vm.commitAnalysisLine();
+        vm.commitAnalysisLine(1);
+        vm.restartAnalysisMoveEdit();
+        expect(vm.analysisEdit.mode).to.equal("inspect");
+        expect(vm.analysisPendingCharge).to.equal(0);
+        expect(vm.currentMove).to.equal("");
+        expect(vm.analysisCommittableMoves).to.deep.equal([]);
+        expect(vm.analysisEntries).to.equal(entries);
+        expect(JSON.stringify(vm.engine)).to.equal(board);
+        expect(JSON.stringify(window.localStorage)).to.equal(saved);
+        expect(dispatched).to.have.length(0);
+        vm.$destroy();
+      });
+
+      it("opens the pencil BEFORE the viewed move and replaces only that move, retaining its tail and undo history", async () => {
+        const vm = mountAsSeat(0, researchGame());
+        vm.enterAnalysisMode();
+        for (const field of ["nav", "gaia", "eco"]) vm.applyAnalysisMove(`terrans up ${field}.`);
+        const original = JSON.parse(JSON.stringify(vm.analysisEntries));
+        vm.inspectAnalysisMove(1);
+        expect(vm.engine.players[0].data.knowledge).to.equal(4);
+        await Vue.nextTick();
+        await fireEvent.click(vm.$el.querySelectorAll(".analysis-moves__edit")[1]);
+        expect(vm.analysisEdit).to.deep.equal({ index: 1, appliedCount: 3, mode: "replace" });
+        expect(vm.engine.players[0].data.knowledge).to.equal(8);
+        expect(vm.canPlay).to.equal(true);
+        // An untouched edit can switch directly back to inspection, or to another pencil.
+        vm.inspectAnalysisMove(2);
+        expect(vm.analysisEdit.index).to.equal(2);
+        vm.startAnalysisMoveEdit(1);
+        vm.applyAnalysisMove("terrans up sci.");
+        expect(vm.analysisEdit).to.equal(null);
+        expect(vm.analysisEntries).to.deep.equal([original[0], { kind: "move", move: "terrans up sci." }, original[2]]);
+        vm.inspectAnalysisMove(0);
+        vm.cancelAnalysisMoveEdit();
+        vm.undoLastAnalysisEntry();
+        expect(vm.analysisEntries).to.deep.equal(original);
+        vm.$destroy();
+      });
+
+      it("does not discard a half-composed replacement or pending charge when switching to another step", () => {
+        const vm = mountAsSeat(0, researchGame());
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("terrans up nav.");
+        vm.applyAnalysisMove("terrans up gaia.");
+        vm.startAnalysisMoveEdit(0);
+        vm.applyAnalysisMove("terrans spend 1o for 1c");
+        const draft = JSON.stringify(vm.engine);
+        vm.inspectAnalysisMove(1);
+        vm.startAnalysisMoveEdit(1);
+        vm.insertAnalysisMove(1);
+        expect(vm.analysisEdit).to.deep.equal({ index: 0, appliedCount: 2, mode: "replace" });
+        expect(JSON.stringify(vm.engine)).to.equal(draft);
+        expect(vm.currentMove).to.contain("spend 1o");
+        vm.restartAnalysisMoveEdit();
+        expect(vm.currentMove).to.equal("");
+        vm.chargeAnalysisPower();
+        vm.inspectAnalysisMove(1);
+        vm.startAnalysisMoveEdit(1);
+        expect(vm.analysisEdit.index).to.equal(0);
+        expect(vm.analysisPendingCharge).to.equal(1);
+        vm.restartAnalysisMoveEdit();
+        expect(vm.analysisPendingCharge).to.equal(0);
+        vm.inspectAnalysisMove(1);
+        expect(vm.analysisEdit).to.deep.equal({ index: 1, appliedCount: 2, mode: "inspect" });
+        vm.cancelAnalysisMoveEdit();
+        vm.applyAnalysisMove("terrans spend 1o for 1c");
+        vm.inspectAnalysisMove(0);
+        expect(vm.analysisEdit).to.equal(null);
+        expect(vm.currentMove).to.contain("spend 1o");
+        vm.$destroy();
+      });
+
+      it("rejects invalid indices, adjustments and blocked suffixes without hiding the full plan's blocked reason", async () => {
+        const vm = mountAsSeat(0, researchGame());
+        vm.enterAnalysisMode();
+        for (const field of ["nav", "gaia", "eco"]) vm.applyAnalysisMove(`terrans up ${field}.`);
+        vm.startAnalysisMoveEdit(0);
+        vm.applyAnalysisMove("terrans spend 1k for 1c. up nav.");
+        const reason = vm.analysisBlockedReason;
+        expect(reason).not.to.equal("");
+        expect(vm.analysisAppliedCount).to.equal(2);
+        const before = JSON.stringify(vm.engine);
+        for (const index of [-1, 0.5, NaN, Infinity, 2, 3]) vm.inspectAnalysisMove(index);
+        expect(vm.analysisEdit).to.equal(null);
+        expect(JSON.stringify(vm.engine)).to.equal(before);
+        vm.inspectAnalysisMove(0);
+        vm.inspectAnalysisMove(2);
+        expect(vm.analysisEdit).to.deep.equal({ index: 0, appliedCount: 2, mode: "inspect" });
+        expect(vm.analysisBlockedReason).to.equal(reason);
+        await Vue.nextTick();
+        expect(vm.$el.querySelector(".analysis-moves__reason").textContent).to.contain(reason);
+        expect(vm.$el.querySelectorAll(".analysis-moves__move")[2].disabled).to.equal(true);
+        vm.cancelAnalysisMoveEdit();
+        vm.resetAnalysisLine();
+        vm.chargeAnalysisPower();
+        vm.applyAnalysisMove("terrans up nav.");
+        vm.inspectAnalysisMove(0);
+        expect(vm.analysisEdit).to.equal(null);
+        vm.inspectAnalysisMove(1);
+        expect(vm.analysisEdit.index).to.equal(1);
+        vm.$destroy();
+      });
+
+      it("undo returns to the full end position without editing the plan, through either undo entry point", () => {
+        const vm = mountAsSeat(0, researchGame());
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("terrans up nav.");
+        vm.applyAnalysisMove("terrans up gaia.");
+        const board = JSON.stringify(vm.engine);
+        const saved = JSON.stringify(window.localStorage);
+        const dispatched = spyDispatch(vm);
+        for (const undo of ["undoLastAnalysisEntry", "undoMove"]) {
+          vm.inspectAnalysisMove(0);
+          vm[undo]();
+          expect(vm.analysisEdit).to.equal(null);
+          expect(vm.analysisEntries).to.have.length(2);
+          expect(JSON.stringify(vm.engine)).to.equal(board);
+          expect(JSON.stringify(window.localStorage)).to.equal(saved);
+        }
+        expect(dispatched).to.have.length(0);
+        vm.$destroy();
+      });
+
+      it("retains inspection on identical refresh, but reanchors the full plan on real progress without a top alert", async () => {
+        const vm = mountAsSeat(1, researchGame());
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("nevlas up nav.");
+        vm.applyAnalysisMove("nevlas up gaia.");
+        const entries = JSON.parse(JSON.stringify(vm.analysisEntries));
+        vm.inspectAnalysisMove(0);
+        const board = JSON.stringify(vm.engine);
+        await vm.$store.dispatch("externalData", JSON.parse(JSON.stringify(vm.analysisBackup)));
+        expect(vm.analysisEdit).to.deep.equal({ index: 0, appliedCount: 2, mode: "inspect" });
+        expect(JSON.stringify(vm.engine)).to.equal(board);
+        const arrived = bgsMove(JSON.parse(JSON.stringify(vm.analysisBackup)), "terrans up nav.", 0);
+        await vm.$store.dispatch("externalData", arrived);
+        expect(vm.analysisEdit).to.equal(null);
+        expect(vm.analysisEntries).to.deep.equal(entries);
+        expect(vm.analysisAppliedCount).to.equal(2);
+        expect(vm.$el.querySelector(".analysis-strip, #root > [role='alert']")).to.equal(null);
+        vm.inspectAnalysisMove(0);
+        const own = bgsMove(JSON.parse(JSON.stringify(vm.analysisBackup)), "nevlas up nav.", 1);
+        await vm.$store.dispatch("externalData", own);
+        expect(vm.analysisEdit).to.equal(null);
+        expect(vm.analysisEntries).to.deep.equal(entries.slice(1));
+        expect(vm.analysisPlayed[0]).to.have.length(1);
+        expect(vm.analysisAppliedCount).to.equal(1);
+        expect(vm.$el.querySelector(".analysis-strip, #root > [role='alert']")).to.equal(null);
+        vm.$destroy();
+      });
+
+      for (const uiMode of ["graphical", "table"]) {
+        it(`keeps hotseat final-pass resources and disables end insertion while inspecting an earlier step (${uiMode})`, async () => {
+          const engine = researchGame();
+          engine.round = 6;
+          engine.clearAvailableCommands();
+          engine.generateAvailableCommands();
+          const vm = mountAsSeat(undefined, engine);
+          vm.$store.commit("preferences", { uiMode });
+          expect(vm.myLockedSeat).to.equal(undefined);
+          vm.enterAnalysisMode();
+          vm.applyAnalysisMove("terrans up nav.");
+          vm.applyAnalysisMove("terrans pass");
+          const endedBoard = JSON.stringify(vm.engine);
+          expect(vm.engine.ended).to.equal(true);
+          expect(vm.analysisCanAppend).to.equal(false);
+          vm.inspectAnalysisMove(1);
+          expect(vm.analysisEdit).to.deep.equal({ index: 1, appliedCount: 2, mode: "inspect" });
+          expect(JSON.stringify(vm.engine)).to.equal(endedBoard);
+          await Vue.nextTick();
+          const resourceBar = vm.$el.querySelector(".sticky-resource-bar");
+          expect(resourceBar, "the final-pass resource readout remains visible without a locked seat").not.to.equal(
+            null
+          );
+          expect(resourceBar.__vue__.player).to.equal(vm.engine.players[vm.analysisSeat]);
+          const addAtEnd = () => vm.$el.querySelector('[aria-label="Add move at end"]');
+          expect(addAtEnd().disabled).to.equal(true);
+
+          await fireEvent.click(vm.$el.querySelectorAll(".analysis-moves__move")[0]);
+          expect(vm.engine.ended).to.equal(false);
+          expect(vm.analysisEdit.index).to.equal(0);
+          expect(vm.analysisCanAppend).to.equal(false);
+          expect(addAtEnd().disabled, "the full plan ends the game even though this prefix does not").to.equal(true);
+          vm.startAnalysisMoveEdit(1);
+          await Vue.nextTick();
+          expect(vm.analysisEdit.mode).to.equal("replace");
+          expect(vm.analysisCanAppend).to.equal(false);
+          expect(addAtEnd().disabled).to.equal(true);
+          vm.cancelAnalysisMoveEdit();
+          expect(JSON.stringify(vm.engine)).to.equal(endedBoard);
+          vm.undoLastAnalysisEntry();
+          await Vue.nextTick();
+          expect(vm.analysisCanAppend).to.equal(true);
+          expect(addAtEnd().disabled).to.equal(false);
+          vm.$destroy();
+        });
+      }
+
+      it("abandons the temporary view on a real rollback while retaining the complete saved draft", async () => {
+        const vm = mountAsSeat(0, researchGame());
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("terrans up nav.");
+        vm.applyAnalysisMove("terrans up gaia.");
+        const saved = JSON.stringify(window.localStorage);
+        vm.inspectAnalysisMove(0);
+        const rolledBack = new Engine(SETUP_MOVES.slice(0, -1));
+        await vm.$store.dispatch("externalData", JSON.parse(JSON.stringify(rolledBack)));
+        expect(vm.analysisEdit).to.equal(null);
+        expect(vm.analysisMode).to.equal(false);
+        expect(vm.currentMove).to.equal("");
+        expect(vm.engine.moveHistory).to.deep.equal(rolledBack.moveHistory);
+        expect(JSON.stringify(window.localStorage)).to.equal(saved);
+        expect(vm.$el.querySelector(".analysis-strip, #root > [role='alert']")).to.equal(null);
+        vm.$destroy();
+      });
+
+      it("clears inspection on variation changes, reset, exit and reload without ever persisting the cursor", () => {
+        const vm = mountAsSeat(0, researchGame());
+        vm.enterAnalysisMode();
+        vm.applyAnalysisMove("terrans up nav.");
+        vm.applyAnalysisMove("terrans up gaia.");
+        vm.addAnalysisLine();
+        vm.inspectAnalysisMove(0);
+        vm.selectAnalysisLine(0);
+        expect(vm.analysisEdit).to.equal(null);
+        expect(vm.analysisAppliedCount).to.equal(2);
+        vm.inspectAnalysisMove(0);
+        vm.exitAnalysisMode();
+        vm.enterAnalysisMode();
+        expect(vm.analysisEdit).to.equal(null);
+        expect(vm.analysisAppliedCount).to.equal(2);
+        vm.inspectAnalysisMove(0);
+        vm.$destroy();
+        const reopened = mountAsSeat(0, researchGame());
+        reopened.enterAnalysisMode();
+        expect(reopened.analysisEdit).to.equal(null);
+        expect(reopened.analysisAppliedCount).to.equal(2);
+        expect(reopened.analysisEntries).to.have.length(2);
+        reopened.inspectAnalysisMove(0);
+        reopened.resetAnalysisLine();
+        expect(reopened.analysisEdit).to.equal(null);
+        expect(reopened.analysisEntries).to.have.length(0);
+        expect(reopened.analysisLines[1]).to.have.length(2);
+        reopened.$destroy();
+      });
+    });
+
     describe("editing simulated moves on the board", () => {
       it("shows each move's spending and gains after simulated charges and edits", async () => {
         const vm = mountAsSeat(0, researchGame());
@@ -1948,7 +2293,7 @@ describe("Game", () => {
         vm.$destroy();
       });
 
-      it("cancels the replacement on a real board change without appending its partial draft", () => {
+      it("cancels the replacement on a real board change without appending its partial draft", async () => {
         const vm = mountAsSeat(1, researchGame());
         vm.enterAnalysisMode();
         vm.applyAnalysisMove("nevlas up nav.");
@@ -1961,7 +2306,8 @@ describe("Game", () => {
         expect(vm.analysisEdit).to.equal(null);
         expect(vm.currentMove).to.equal("");
         expect(vm.analysisEntries).to.deep.equal(entries);
-        expect(vm.analysisNotice).to.contain("original plan was kept");
+        await vm.$nextTick();
+        expect(vm.$el.querySelector(".analysis-strip, #root > [role='alert']")).to.equal(null);
         vm.$destroy();
       });
     });
@@ -2077,7 +2423,7 @@ describe("Game", () => {
         vm.$el.remove();
         vm.$destroy();
       });
-      it("restores a stored line silently, with no notice, when nothing changed since it was saved", () => {
+      it("restores a stored line without a top alert when nothing changed since it was saved", async () => {
         const first = mountAsSeat(0);
         first.enterAnalysisMode();
         first.applyAnalysisMove("terrans up nav.");
@@ -2088,7 +2434,8 @@ describe("Game", () => {
         second.enterAnalysisMode();
 
         expect(second.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
-        expect(second.analysisNotice).to.equal(null);
+        await second.$nextTick();
+        expect(second.$el.querySelector(".analysis-strip, #root > [role='alert']")).to.equal(null);
         expect(second.analysisPendingRestore).to.equal(null);
 
         second.$el.remove();
@@ -2115,9 +2462,8 @@ describe("Game", () => {
 
         expect(second.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
         expect(second.analysisPendingRestore).to.equal(null);
-        expect(second.analysisNotice).to.equal(null);
         await second.$nextTick();
-        expect(second.$el.querySelector(".analysis-strip")).to.equal(null);
+        expect(second.$el.querySelector(".analysis-strip, #root > [role='alert']")).to.equal(null);
 
         second.$el.remove();
         second.$destroy();
@@ -2170,7 +2516,7 @@ describe("Game", () => {
         }
       });
 
-      it("stays open through a refetch that carries no new move, even when the origin auto-played opponents", () => {
+      it("stays open through a refetch that carries no new move, even when the origin auto-played opponents", async () => {
         // The other half of the same root cause as the re-anchor gate: the no-op-refetch guard read
         // `analysisOrigin.moveHistory`, which settleAnalysisClone/advancePastOwnPass have already
         // grown past the real history. A plain refetch then looked like a new move and force-closed
@@ -2185,13 +2531,14 @@ describe("Game", () => {
         vm.$store.dispatch("externalData", JSON.parse(JSON.stringify(vm.analysisBackup)));
 
         expect(vm.analysisMode).to.equal(true);
-        expect(vm.analysisNotice).to.equal(null);
+        await vm.$nextTick();
+        expect(vm.$el.querySelector(".analysis-strip, #root > [role='alert']")).to.equal(null);
         expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
         vm.$el.remove();
         vm.$destroy();
       });
 
-      it("discardPendingAnalysisLine clears the prompt and starts fresh instead of restoring", () => {
+      it("the inline Discard control clears rollback recovery and starts fresh", async () => {
         const first = mountAsSeat(0, new Engine([...SETUP_MOVES, "terrans build m 5A2."]));
         first.enterAnalysisMode();
         first.applyAnalysisMove("terrans up nav.");
@@ -2204,8 +2551,16 @@ describe("Game", () => {
         second.enterAnalysisMode();
         expect(second.analysisPendingRestore).to.not.equal(null);
 
-        second.discardPendingAnalysisLine();
+        await second.$nextTick();
+        expect(second.$el.querySelector(".analysis-strip, #root > [role='alert']")).to.equal(null);
+        const prompt = second.$el.querySelector("#move .analysis-restore");
+        expect(prompt, "rollback recovery is available beside the plan controls").not.to.equal(null);
+        const discard = Array.from(prompt.querySelectorAll("button")).find(
+          (button: HTMLButtonElement) => button.textContent.trim() === "Discard"
+        );
+        await fireEvent.click(discard as HTMLElement);
 
+        expect(second.$el.querySelector(".analysis-restore")).to.equal(null);
         expect(second.analysisPendingRestore).to.equal(null);
         expect(second.analysisEntries).to.deep.equal([]);
         // Discard is now what actually deletes it - the prompt no longer wipes storage up front, so
@@ -2216,7 +2571,7 @@ describe("Game", () => {
         second.$destroy();
       });
 
-      it("keeps a stored plan when the live game advances several rounds", () => {
+      it("keeps a stored plan when the live game advances several rounds", async () => {
         const first = mountAsSeat(0);
         first.enterAnalysisMode();
         first.applyAnalysisMove("terrans up nav.");
@@ -2232,7 +2587,8 @@ describe("Game", () => {
 
         expect(second.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
         expect(second.analysisPendingRestore).to.equal(null);
-        expect(second.analysisNotice).to.equal(null);
+        await second.$nextTick();
+        expect(second.$el.querySelector(".analysis-strip, #root > [role='alert']")).to.equal(null);
 
         second.$el.remove();
         second.$destroy();
@@ -2254,17 +2610,6 @@ describe("Game", () => {
         vm.$destroy();
       });
 
-      it("dismissAnalysisNotice clears a shown notice", () => {
-        const vm = mountAsSeat(0);
-        vm.analysisNotice = "something happened";
-
-        vm.dismissAnalysisNotice();
-
-        expect(vm.analysisNotice).to.equal(null);
-        vm.$el.remove();
-        vm.$destroy();
-      });
-
       it("silently trims a matching manual move without closing planning, and persists the remainder", async () => {
         const vm = mountAsSeat(0, researchGame());
         vm.enterAnalysisMode();
@@ -2274,9 +2619,8 @@ describe("Game", () => {
         vm.$store.dispatch("externalData", arrived);
         expect(vm.analysisMode).to.equal(true);
         expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up gaia." }]);
-        expect(vm.analysisNotice).to.equal(null);
         await vm.$nextTick();
-        expect(vm.$el.querySelector(".analysis-strip")).to.equal(null);
+        expect(vm.$el.querySelector(".analysis-strip, #root > [role='alert']")).to.equal(null);
         vm.$el.remove();
         vm.$destroy();
         const second = mountAsSeat(0, Engine.fromData(JSON.parse(JSON.stringify(arrived))));
@@ -2302,9 +2646,8 @@ describe("Game", () => {
         expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
         // Re-anchored onto the new history, so the stored line is not stale next time either.
         expect(vm.analysisBaseMoveCount).to.equal(baseBefore + 1);
-        expect(vm.analysisNotice).to.equal(null);
         await vm.$nextTick();
-        expect(vm.$el.querySelector(".analysis-strip")).to.equal(null);
+        expect(vm.$el.querySelector(".analysis-strip, #root > [role='alert']")).to.equal(null);
         // Exiting now restores the NEW real board, not the one from before the opponent moved.
         vm.exitAnalysisMode();
         expect(vm.engine.moveHistory.length).to.equal(arrived.moveHistory.length);
@@ -2313,7 +2656,7 @@ describe("Game", () => {
         vm.$destroy();
       });
 
-      it("truncates and says so when an opponent's move genuinely does invalidate part of the line", () => {
+      it("retains blocked plan rows without a top alert when an opponent invalidates a move", async () => {
         // Seat 1 (nevlas) analyses taking a board action while seat 0 is on turn; seat 0 then takes
         // that very action for real. Board actions are single-use, so the line really is dead.
         const position = new Engine(SETUP_MOVES);
@@ -2332,9 +2675,13 @@ describe("Game", () => {
 
         vm.$store.dispatch("externalData", JSON.parse(JSON.stringify(real)));
 
-        expect(vm.analysisMode).to.equal(true); // still in the sandbox - just with less line
+        expect(vm.analysisMode).to.equal(true);
         expect(vm.analysisAppliedEntries).to.deep.equal([]); // nothing of it is on the board
-        expect(vm.analysisNotice).to.contain("no longer apply");
+        await vm.$nextTick();
+        expect(vm.$el.querySelector(".analysis-strip, #root > [role='alert']")).to.equal(null);
+        const blocked = vm.$el.querySelector(".analysis-moves__move--blocked");
+        expect(blocked.textContent).to.contain("nevlas action power3.");
+        expect(blocked.textContent).to.contain("Needs update");
         // ...but the entry itself is NOT deleted: the strip flags the line (applied < moves) and the
         // player decides. Silently destroying it was the old behaviour, and it had no undo.
         expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "nevlas action power3." }]);
@@ -2349,7 +2696,7 @@ describe("Game", () => {
         vm.$destroy();
       });
 
-      it("restores the REST of a line the player then played for real, instead of nothing at all", () => {
+      it("restores the REST of a line the player then played for real, instead of nothing at all", async () => {
         // The reported bug: follow your sandbox line at the table, come back, press Restore anyway,
         // and get "0 moves restored" - because the replay starts at entry 1, which is exactly the
         // move that has just been played and can never be played twice.
@@ -2367,7 +2714,8 @@ describe("Game", () => {
         expect(second.analysisPendingRestore).to.equal(null);
 
         expect(second.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
-        expect(second.analysisNotice).to.equal(null);
+        await second.$nextTick();
+        expect(second.$el.querySelector(".analysis-strip, #root > [role='alert']")).to.equal(null);
         expect(second.analysisPlayed[0]).to.have.length(1);
         const recorded = JSON.parse(JSON.stringify(second.analysisPlayed));
         second.exitAnalysisMode();
@@ -2378,7 +2726,7 @@ describe("Game", () => {
         second.$destroy();
       });
 
-      it("restores a taken-back played prefix as editable moves", () => {
+      it("the inline Restore control recovers a taken-back played prefix as editable moves", async () => {
         const first = mountAsSeat(0);
         first.enterAnalysisMode();
         first.applyAnalysisMove("terrans up nav.");
@@ -2392,7 +2740,16 @@ describe("Game", () => {
         const earlier = mountAsSeat(0);
         earlier.enterAnalysisMode();
         expect(earlier.analysisPendingRestore).not.to.equal(null);
-        earlier.restoreAnalysisLine();
+        await earlier.$nextTick();
+        expect(earlier.$el.querySelector(".analysis-strip, #root > [role='alert']")).to.equal(null);
+        const prompt = earlier.$el.querySelector("#move .analysis-restore");
+        expect(prompt, "rollback recovery is available beside the plan controls").not.to.equal(null);
+        const restore = Array.from(prompt.querySelectorAll("button")).find(
+          (button: HTMLButtonElement) => button.textContent.trim() === "Restore anyway"
+        );
+        await fireEvent.click(restore as HTMLElement);
+        expect(earlier.$el.querySelector(".analysis-restore")).to.equal(null);
+        expect(earlier.analysisPendingRestore).to.equal(null);
         expect(earlier.analysisPlayed[0]).to.deep.equal([]);
         expect(earlier.analysisEntries).to.have.length(1);
         expect(earlier.analysisAppliedCount).to.equal(1);
@@ -2400,7 +2757,7 @@ describe("Game", () => {
         earlier.$destroy();
       });
 
-      it("leaves a line the player did NOT play alone - nothing is dropped without a real move behind it", () => {
+      it("leaves a line the player did NOT play alone - nothing is dropped without a real move behind it", async () => {
         const first = mountAsSeat(0);
         first.enterAnalysisMode();
         first.applyAnalysisMove("terrans build m 2A3.");
@@ -2413,7 +2770,10 @@ describe("Game", () => {
         second.restoreAnalysisLine();
 
         expect(second.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans build m 2A3." }]);
-        expect(second.analysisNotice).to.contain("no longer apply");
+        expect(second.analysisAppliedCount).to.equal(0);
+        await second.$nextTick();
+        expect(second.$el.querySelector(".analysis-strip, #root > [role='alert']")).to.equal(null);
+        expect(second.$el.querySelector(".analysis-moves__move--blocked").textContent).to.contain("Needs update");
         second.$el.remove();
         second.$destroy();
       });
@@ -2467,7 +2827,7 @@ describe("Game", () => {
         vm.$destroy();
       });
 
-      it("leaves the sandbox open when the same state is refetched (a reconnect, not a move)", () => {
+      it("leaves the sandbox open when the same state is refetched (a reconnect, not a move)", async () => {
         // Minimizing the tab and reopening it dispatches externalData with the SAME real state,
         // which used to force-close the sandbox as if somebody had moved.
         const vm = mountAsSeat(0);
@@ -2477,7 +2837,8 @@ describe("Game", () => {
         vm.$store.dispatch("externalData", JSON.parse(JSON.stringify(vm.analysisBackup)));
 
         expect(vm.analysisMode).to.equal(true);
-        expect(vm.analysisNotice).to.equal(null);
+        await vm.$nextTick();
+        expect(vm.$el.querySelector(".analysis-strip, #root > [role='alert']")).to.equal(null);
         expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: "terrans up nav." }]);
         vm.$el.remove();
         vm.$destroy();

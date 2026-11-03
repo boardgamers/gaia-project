@@ -4141,5 +4141,13 @@
   "New plan": "Nieuw plan",
   "✓ Income resolved": "✓ Inkomsten afgehandeld",
   "Program up to move {p0}": "Programmeer tot en met zet {p0}",
-  "Kept for later": "Bewaard voor later"
+  "Kept for later": "Bewaard voor later",
+  "View after move {p0}: {p1}": "Bekijk na zet {p0}: {p1}",
+  "View position after this move": "Bekijk de positie na deze zet",
+  "Viewing": "Weergave",
+  "After move {p0}": "Na zet {p0}",
+  "Previous planned move": "Vorige geplande zet",
+  "Next planned move": "Volgende geplande zet",
+  "Edit this move": "Deze zet bewerken",
+  "Return to end": "Terug naar het einde"
 }

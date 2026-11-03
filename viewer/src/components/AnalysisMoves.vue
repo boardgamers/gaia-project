@@ -10,6 +10,7 @@
         v-if="entry.kind !== 'faction'"
         type="button"
         class="analysis-moves__insert"
+        :class="{ 'analysis-moves__insert--selected': activeIndex === index && inserting }"
         :disabled="disabled || index > appliedCount"
         :aria-label="insertLabel(index)"
         :title="insertLabel(index)"
@@ -18,7 +19,11 @@
       >
         <span aria-hidden="true">+</span>
       </button>
-      <div class="analysis-moves__row">
+      <div
+        class="analysis-moves__row"
+        :class="{ 'analysis-moves__row--selected': activeIndex === index && !inserting }"
+        :aria-current="activeIndex === index && !inserting ? 'step' : null"
+      >
         <button
           v-if="entry.kind === 'move'"
           type="button"
@@ -26,10 +31,10 @@
           :class="{
             'analysis-moves__move--blocked': index === appliedCount,
           }"
-          :disabled="disabled || index > appliedCount"
-          :aria-label="`Edit move ${moveNumber(index)}: ${entry.move}`"
-          title="Replay this move from the beginning"
-          @click="$emit('edit', index)"
+          :disabled="disabled || index >= appliedCount"
+          :aria-label="`View after move ${moveNumber(index)}: ${entry.move}`"
+          title="View position after this move"
+          @click="$emit('inspect', index)"
           @keydown.stop
         >
           <span class="analysis-moves__number">{{ moveNumber(index) }}</span>
@@ -41,11 +46,11 @@
               class="analysis-moves__changes"
             />
           </span>
-          <span v-if="index === appliedCount" class="analysis-moves__state">Needs update</span>
+          <span v-if="activeIndex === index && !inserting" class="analysis-moves__selected-state">{{
+            inspecting ? "Viewing" : "Editing"
+          }}</span>
+          <span v-else-if="index === appliedCount" class="analysis-moves__state">Needs update</span>
           <span v-else-if="index > appliedCount" class="analysis-moves__state">Not simulated</span>
-          <svg class="analysis-moves__pencil" viewBox="0 0 16 16" aria-hidden="true">
-            <path d="m10.7 2.3 3 3-8.4 8.4-3.8.8.8-3.8Zm1.1-1.1 1-1a1 1 0 0 1 1.4 0l1.6 1.6a1 1 0 0 1 0 1.4l-1 1Z" />
-          </svg>
         </button>
         <span v-else class="analysis-moves__adjustment">{{
           entry.kind === "adjust" ? `Assume ${entry.charge} power charged` : `Faction setup: ${entry.lineup.join(", ")}`
@@ -53,8 +58,27 @@
         <button
           v-if="entry.kind === 'move'"
           type="button"
+          class="analysis-moves__edit"
+          :disabled="disabled || index > appliedCount"
+          :aria-label="`Edit move ${moveNumber(index)}: ${entry.move}`"
+          title="Replay this move from the beginning"
+          @click="$emit('edit', index)"
+          @keydown.stop
+        >
+          <svg class="analysis-moves__pencil" viewBox="0 0 16 16" aria-hidden="true">
+            <path d="m10.7 2.3 3 3-8.4 8.4-3.8.8.8-3.8Zm1.1-1.1 1-1a1 1 0 0 1 1.4 0l1.6 1.6a1 1 0 0 1 0 1.4l-1 1Z" />
+          </svg>
+        </button>
+        <button
+          v-if="entry.kind === 'move'"
+          type="button"
           class="analysis-moves__program"
-          :disabled="disabled || index >= appliedCount || moveNumber(index) - played.length > committableMoves"
+          :disabled="
+            disabled ||
+            mutationsDisabled ||
+            index >= appliedCount ||
+            moveNumber(index) - played.length > committableMoves
+          "
           :title="`Program up to move ${moveNumber(index)}`"
           :aria-label="`Program up to move ${moveNumber(index)}`"
           @click="$emit('commit', moveNumber(index) - played.length)"
@@ -68,7 +92,7 @@
           v-if="entry.kind !== 'faction'"
           type="button"
           class="analysis-moves__remove"
-          :disabled="disabled"
+          :disabled="disabled || mutationsDisabled"
           :aria-label="
             entry.kind === 'move' ? `Remove move ${moveNumber(index)}` : `Remove simulated charge at step ${index + 1}`
           "
@@ -97,6 +121,7 @@
       <button
         type="button"
         class="analysis-moves__insert"
+        :class="{ 'analysis-moves__insert--selected': activeIndex === entries.length && inserting }"
         :disabled="disabled || appliedCount < entries.length || !canAppend"
         aria-label="Add move at end"
         title="Add move at end"
@@ -126,6 +151,10 @@ export default Vue.extend({
     appliedCount: { type: Number, default: 0 },
     committableMoves: { type: Number, default: 0 },
     disabled: Boolean,
+    mutationsDisabled: Boolean,
+    activeIndex: { type: Number, default: -1 },
+    inspecting: Boolean,
+    inserting: Boolean,
     canAppend: { type: Boolean, default: true },
   },
   methods: {
@@ -151,6 +180,19 @@ export default Vue.extend({
 .analysis-moves__row {
   display: flex;
   align-items: stretch;
+  border-radius: 3px;
+  &--selected {
+    background: var(--ui-info-bg);
+    box-shadow: inset 3px 0 var(--ui-info-text);
+    .analysis-moves__move,
+    .analysis-moves__move:hover:enabled {
+      background: transparent;
+    }
+  }
+}
+.analysis-moves__selected-state {
+  font-size: 0.75rem;
+  color: var(--ui-info-text);
 }
 .analysis-moves__past {
   display: flex;
@@ -198,6 +240,11 @@ export default Vue.extend({
     opacity: 0.4;
   }
 }
+.analysis-moves__insert--selected {
+  background: var(--ui-info-bg);
+  color: var(--ui-info-text);
+}
+.analysis-moves__edit,
 .analysis-moves__program,
 .analysis-moves__remove {
   display: inline-flex;
@@ -221,6 +268,12 @@ export default Vue.extend({
   }
   &:disabled {
     opacity: 0.4;
+  }
+}
+.analysis-moves__edit {
+  &:hover:enabled,
+  &:focus-visible {
+    color: var(--ui-info-text);
   }
 }
 .analysis-moves__program {

@@ -50,9 +50,11 @@ describe("premove history", () => {
     });
     expect(view.find(".analysis-moves__past").text()).to.include("✓ Played");
     expect(view.find(".analysis-moves__past button").exists()).to.equal(false);
-    expect(view.find(".analysis-moves__move").attributes("aria-label")).to.equal("Edit move 2: nevlas up gaia.");
+    expect(view.find(".analysis-moves__edit").attributes("aria-label")).to.equal("Edit move 2: nevlas up gaia.");
     expect(view.text()).to.include("Not enough knowledge").and.include("Not simulated");
     await view.find(".analysis-moves__move").trigger("click");
+    expect(view.emitted("inspect")).to.equal(undefined);
+    await view.find(".analysis-moves__edit").trigger("click");
     expect(view.emitted("edit")).to.deep.equal([[0]]);
     view.destroy();
   });

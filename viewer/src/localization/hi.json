@@ -4141,5 +4141,13 @@
   "New plan": "नई योजना",
   "✓ Income resolved": "✓ आय प्राप्त हो गई",
   "Program up to move {p0}": "चाल {p0} तक प्रोग्राम करें",
-  "Kept for later": "बाद के लिए सुरक्षित"
+  "Kept for later": "बाद के लिए सुरक्षित",
+  "View after move {p0}: {p1}": "चाल {p0} के बाद देखें: {p1}",
+  "View position after this move": "इस चाल के बाद की स्थिति देखें",
+  "Viewing": "अवलोकन",
+  "After move {p0}": "चाल {p0} के बाद",
+  "Previous planned move": "पिछली नियोजित चाल",
+  "Next planned move": "अगली नियोजित चाल",
+  "Edit this move": "इस चाल को संपादित करें",
+  "Return to end": "अंत पर लौटें"
 }

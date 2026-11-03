@@ -5,19 +5,6 @@
     </b-modal>
     <Rules id="rules" />
 
-    <div v-if="analysisNotice || analysisPendingRestore" class="row">
-      <div class="col-12">
-        <AnalysisPanel
-          :active="analysisMode"
-          :notice="analysisNotice"
-          :pending-restore="analysisPendingRestore"
-          @dismiss-notice="dismissAnalysisNotice"
-          @restore="restoreAnalysisLine"
-          @discard-restore="discardPendingAnalysisLine"
-        />
-      </div>
-    </div>
-
     <b-modal
       id="premove-history"
       v-model="premoveHistoryVisible"
@@ -61,6 +48,11 @@
             :currentMove="currentMove"
             :hide-spacer="true"
             :analysis-mode="analysisMode"
+            :analysis-player-index="analysisSeat"
+            :analysis-can-append="analysisCanAppend"
+            :analysis-pending-restore="analysisPendingRestore"
+            @analysis-restore="restoreAnalysisLine"
+            @analysis-discard-restore="discardPendingAnalysisLine"
             :analysis-offered="analysisOffered && !replayData"
             :take-back-offered="takeBackOffered"
             @analysis-start="enterAnalysisMode"
@@ -85,6 +77,9 @@
             :analysis-applied-count="analysisEdit ? analysisEdit.appliedCount : analysisAppliedCount"
             :analysis-editing-index="analysisEdit ? analysisEdit.index : -1"
             :analysis-inserting-move="!!analysisEdit && analysisEdit.mode === 'insert'"
+            :analysis-inspecting-move="!!analysisEdit && analysisEdit.mode === 'inspect'"
+            :analysis-navigation-disabled="!!currentMove || analysisPendingCharge > 0"
+            @analysis-inspect-move="inspectAnalysisMove"
             @analysis-insert-move="insertAnalysisMove"
             @analysis-remove-entry="removeAnalysisEntry"
             @analysis-edit-move="startAnalysisMoveEdit"
@@ -127,6 +122,11 @@
             :currentMove="currentMove"
             :hide-spacer="true"
             :analysis-mode="analysisMode"
+            :analysis-player-index="analysisSeat"
+            :analysis-can-append="analysisCanAppend"
+            :analysis-pending-restore="analysisPendingRestore"
+            @analysis-restore="restoreAnalysisLine"
+            @analysis-discard-restore="discardPendingAnalysisLine"
             :analysis-offered="analysisOffered && !replayData"
             :take-back-offered="takeBackOffered"
             @analysis-start="enterAnalysisMode"
@@ -151,6 +151,9 @@
             :analysis-applied-count="analysisEdit ? analysisEdit.appliedCount : analysisAppliedCount"
             :analysis-editing-index="analysisEdit ? analysisEdit.index : -1"
             :analysis-inserting-move="!!analysisEdit && analysisEdit.mode === 'insert'"
+            :analysis-inspecting-move="!!analysisEdit && analysisEdit.mode === 'inspect'"
+            :analysis-navigation-disabled="!!currentMove || analysisPendingCharge > 0"
+            @analysis-inspect-move="inspectAnalysisMove"
             @analysis-insert-move="insertAnalysisMove"
             @analysis-remove-entry="removeAnalysisEntry"
             @analysis-edit-move="startAnalysisMoveEdit"
@@ -236,6 +239,11 @@
         :hide-spacer="true"
         @sticky-bar-height="stickyBarHeight = $event"
         :analysis-mode="analysisMode"
+        :analysis-player-index="analysisSeat"
+        :analysis-can-append="analysisCanAppend"
+        :analysis-pending-restore="analysisPendingRestore"
+        @analysis-restore="restoreAnalysisLine"
+        @analysis-discard-restore="discardPendingAnalysisLine"
         :analysis-offered="analysisOffered && !replayData"
         :take-back-offered="takeBackOffered"
         @analysis-start="enterAnalysisMode"
@@ -260,6 +268,9 @@
         :analysis-applied-count="analysisEdit ? analysisEdit.appliedCount : analysisAppliedCount"
         :analysis-editing-index="analysisEdit ? analysisEdit.index : -1"
         :analysis-inserting-move="!!analysisEdit && analysisEdit.mode === 'insert'"
+        :analysis-inspecting-move="!!analysisEdit && analysisEdit.mode === 'inspect'"
+        :analysis-navigation-disabled="!!currentMove || analysisPendingCharge > 0"
+        @analysis-inspect-move="inspectAnalysisMove"
         @analysis-insert-move="insertAnalysisMove"
         @analysis-remove-entry="removeAnalysisEntry"
         @analysis-edit-move="startAnalysisMoveEdit"

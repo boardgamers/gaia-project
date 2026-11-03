@@ -10,6 +10,22 @@ const federationFixture = () => {
   return data;
 };
 
+const planningEngine = () => {
+  const engine = new Engine(
+    Engine.parseMoves(`init 2 randomSeed
+p1 faction terrans
+p2 faction nevlas
+terrans build m -1x2
+nevlas build m -1x0
+nevlas build m 0x-4
+terrans build m -4x-1
+nevlas booster booster7
+terrans booster booster3`)
+  );
+  engine.players[0].data.knowledge = 12;
+  return engine;
+};
+
 describe("old UI on the current engine", () => {
   beforeAll(() => {
     const Observer = class {
@@ -77,6 +93,158 @@ terrans booster booster3`)
       document.body.replaceChildren();
     }
   });
+
+  it("inspects plan steps directly in the old UI without losing the list, then opens the explicit pencil", async () => {
+    const engine = new Engine(
+      Engine.parseMoves(`init 2 randomSeed
+p1 faction terrans
+p2 faction nevlas
+terrans build m -1x2
+nevlas build m -1x0
+nevlas build m 0x-4
+terrans build m -4x-1
+nevlas booster booster7
+terrans booster booster3`)
+    );
+    engine.players[0].data.knowledge = 12;
+    const host = document.createElement("div");
+    host.id = "old-test";
+    document.body.append(host);
+    const viewer = launch("#old-test");
+    try {
+      viewer.emit("player", { index: 0 });
+      viewer.emit("state", JSON.parse(JSON.stringify(engine)));
+      await vi.waitFor(() => expect(viewer.app.$el.querySelector(".old-map-canvas")).not.toBeNull());
+      const game = (viewer.app.$el.querySelector(".old-ui-game") as any).__vue__;
+      game.enterAnalysisMode();
+      game.resetAnalysisLine();
+      game.applyAnalysisMove("terrans up nav.");
+      game.chargeAnalysisPower();
+      game.applyAnalysisMove("terrans up gaia.");
+      await game.$nextTick();
+      const moves = () => viewer.app.$el.querySelectorAll<HTMLButtonElement>(".analysis-moves__move");
+      moves()[0].click();
+      await game.$nextTick();
+      expect(game.analysisEdit).toEqual({ index: 0, appliedCount: 3, mode: "inspect" });
+      expect(game.engine.players[0].data.knowledge).toBe(8);
+      expect(game.canPlay).toBe(false);
+      expect(moves()).toHaveLength(2);
+      moves()[1].click();
+      await game.$nextTick();
+      expect(game.analysisEdit.index).toBe(2);
+      expect(game.engine.players[0].data.knowledge).toBe(4);
+      expect(viewer.app.$el.querySelector('[aria-current="step"]')?.textContent).toContain("terrans up gaia.");
+      viewer.app.$el.querySelectorAll<HTMLButtonElement>(".analysis-moves__edit")[1].click();
+      await game.$nextTick();
+      expect(game.analysisEdit).toEqual({ index: 2, appliedCount: 3, mode: "replace" });
+      expect(game.engine.players[0].data.knowledge).toBe(8);
+      expect(game.canPlay).toBe(true);
+      expect(game.analysisEntries).toHaveLength(3);
+    } finally {
+      viewer.app.$destroy();
+      window.localStorage.clear();
+      document.body.replaceChildren();
+    }
+  });
+
+  for (const uiMode of ["graphical", "table"]) {
+    it(`keeps hotseat final-pass resources and disables end insertion at earlier steps (${uiMode})`, async () => {
+      const engine = planningEngine();
+      engine.round = 6;
+      engine.clearAvailableCommands();
+      engine.generateAvailableCommands();
+      const host = document.createElement("div");
+      host.id = "old-test";
+      document.body.append(host);
+      const viewer = launch("#old-test");
+      try {
+        // No "player" event: this is hotseat, with no locked seat to identify the plan's owner.
+        viewer.emit("state", JSON.parse(JSON.stringify(engine)));
+        viewer.emit("preferences", { uiMode });
+        await vi.waitFor(() => expect(viewer.app.$el.querySelector(".old-ui-game")).not.toBeNull());
+        const game = (viewer.app.$el.querySelector(".old-ui-game") as any).__vue__;
+        await vi.waitFor(() => expect(game.engine.moveHistory).toEqual(engine.moveHistory));
+        await vi.waitFor(() => expect(game.uiMode).toBe(uiMode));
+        viewer.store.commit("hosted", false);
+        expect(game.myLockedSeat).toBeUndefined();
+        game.enterAnalysisMode();
+        expect(game.analysisMode).toBe(true);
+        game.resetAnalysisLine();
+        game.applyAnalysisMove("terrans up nav.");
+        game.applyAnalysisMove("terrans pass");
+        expect(game.engine.ended).toBe(true);
+        expect(game.analysisCanAppend).toBe(false);
+        game.inspectAnalysisMove(1);
+        await game.$nextTick();
+        const resourceBar = viewer.app.$el.querySelector(".sticky-resource-bar") as any;
+        expect(resourceBar).not.toBeNull();
+        expect(resourceBar.__vue__.player).toBe(game.engine.players[game.analysisSeat]);
+        const addAtEnd = () => viewer.app.$el.querySelector<HTMLButtonElement>('[aria-label="Add move at end"]');
+        expect(addAtEnd().disabled).toBe(true);
+        viewer.app.$el.querySelectorAll<HTMLButtonElement>(".analysis-moves__move")[0].click();
+        await game.$nextTick();
+        expect(game.analysisEdit).toEqual({ index: 0, appliedCount: 2, mode: "inspect" });
+        expect(game.engine.ended).toBe(false);
+        expect(game.analysisCanAppend).toBe(false);
+        expect(addAtEnd().disabled).toBe(true);
+        expect(viewer.app.$el.querySelector(".analysis-strip, #root > [role='alert']")).toBeNull();
+      } finally {
+        viewer.app.$destroy();
+        window.localStorage.clear();
+        document.body.replaceChildren();
+      }
+    });
+
+    it(`keeps rollback restore/discard controls inline without a top alert (${uiMode})`, async () => {
+      const engine = planningEngine();
+      const entries = [{ kind: "move", move: "terrans up nav." }];
+      const saveDivergentPlan = () =>
+        window.localStorage.setItem(
+          "analysis-mode::0",
+          JSON.stringify({ lines: [entries], active: 0, baseMoveCount: engine.moveHistory.length + 1 })
+        );
+      const host = document.createElement("div");
+      host.id = "old-test";
+      document.body.append(host);
+      const viewer = launch("#old-test");
+      try {
+        viewer.emit("player", { index: 0 });
+        viewer.emit("state", JSON.parse(JSON.stringify(engine)));
+        viewer.emit("preferences", { uiMode });
+        await vi.waitFor(() => expect(viewer.app.$el.querySelector(".old-ui-game")).not.toBeNull());
+        const game = (viewer.app.$el.querySelector(".old-ui-game") as any).__vue__;
+        await vi.waitFor(() => expect(game.engine.moveHistory).toEqual(engine.moveHistory));
+        await vi.waitFor(() => expect(game.uiMode).toBe(uiMode));
+        viewer.store.commit("hosted", false);
+        for (const choice of ["Restore anyway", "Discard"]) {
+          saveDivergentPlan();
+          game.enterAnalysisMode();
+          await game.$nextTick();
+          expect(game.analysisPendingRestore).not.toBeNull();
+          expect(viewer.app.$el.querySelector(".analysis-strip, #root > [role='alert']")).toBeNull();
+          const prompt = viewer.app.$el.querySelector("#move .analysis-restore");
+          expect(prompt).not.toBeNull();
+          const button = [...prompt.querySelectorAll<HTMLButtonElement>("button")].find(
+            (button) => button.textContent.trim() === choice
+          );
+          button.click();
+          await game.$nextTick();
+          expect(game.analysisPendingRestore).toBeNull();
+          expect(viewer.app.$el.querySelector(".analysis-restore")).toBeNull();
+          expect(game.analysisEntries).toEqual(choice === "Restore anyway" ? entries : []);
+          if (choice === "Restore anyway") {
+            expect(viewer.app.$el.querySelector(".analysis-moves__move")?.textContent).toContain("terrans up nav.");
+          }
+          game.exitAnalysisMode();
+          await game.$nextTick();
+        }
+      } finally {
+        viewer.app.$destroy();
+        window.localStorage.clear();
+        document.body.replaceChildren();
+      }
+    });
+  }
 
   for (const id of ["base", ...selfContainedScenarios.map((s) => s.id)]) {
     it(`renders the actual old player/map components and current controls for ${id}`, async () => {

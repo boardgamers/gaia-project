@@ -4141,5 +4141,13 @@
   "New plan": "Novo plano",
   "✓ Income resolved": "✓ Renda resolvida",
   "Program up to move {p0}": "Programar até a jogada {p0}",
-  "Kept for later": "Guardados para depois"
+  "Kept for later": "Guardados para depois",
+  "View after move {p0}: {p1}": "Ver após a jogada {p0}: {p1}",
+  "View position after this move": "Ver a posição após esta jogada",
+  "Viewing": "Visualização",
+  "After move {p0}": "Após a jogada {p0}",
+  "Previous planned move": "Jogada planejada anterior",
+  "Next planned move": "Próxima jogada planejada",
+  "Edit this move": "Editar esta jogada",
+  "Return to end": "Voltar ao final"
 }

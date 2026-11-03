@@ -4141,5 +4141,13 @@
   "New plan": "Ny plan",
   "✓ Income resolved": "✓ Indkomst afviklet",
   "Program up to move {p0}": "Programmér til og med træk {p0}",
-  "Kept for later": "Gemt til senere"
+  "Kept for later": "Gemt til senere",
+  "View after move {p0}: {p1}": "Vis efter træk {p0}: {p1}",
+  "View position after this move": "Vis stillingen efter dette træk",
+  "Viewing": "Visning",
+  "After move {p0}": "Efter træk {p0}",
+  "Previous planned move": "Forrige planlagte træk",
+  "Next planned move": "Næste planlagte træk",
+  "Edit this move": "Rediger dette træk",
+  "Return to end": "Tilbage til slutningen"
 }

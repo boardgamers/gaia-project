@@ -4141,5 +4141,13 @@
   "New plan": "برنامهٔ جدید",
   "✓ Income resolved": "✓ درآمد دریافت شد",
   "Program up to move {p0}": "برنامه‌ریزی تا حرکت {p0}",
-  "Kept for later": "نگه‌داشته‌شده برای بعد"
+  "Kept for later": "نگه‌داشته‌شده برای بعد",
+  "View after move {p0}: {p1}": "مشاهده پس از حرکت {p0}: {p1}",
+  "View position after this move": "مشاهدهٔ وضعیت پس از این حرکت",
+  "Viewing": "در حال مشاهده",
+  "After move {p0}": "پس از حرکت {p0}",
+  "Previous planned move": "حرکت برنامه‌ریزی‌شدهٔ قبلی",
+  "Next planned move": "حرکت برنامه‌ریزی‌شدهٔ بعدی",
+  "Edit this move": "ویرایش این حرکت",
+  "Return to end": "بازگشت به پایان"
 }

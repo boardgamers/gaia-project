@@ -4141,5 +4141,13 @@
   "New plan": "新计划",
   "✓ Income resolved": "✓ 收入已结算",
   "Program up to move {p0}": "编排至第 {p0} 步",
-  "Kept for later": "保留供以后使用"
+  "Kept for later": "保留供以后使用",
+  "View after move {p0}: {p1}": "查看第 {p0} 步之后：{p1}",
+  "View position after this move": "查看此行动后的局面",
+  "Viewing": "查看中",
+  "After move {p0}": "第 {p0} 步之后",
+  "Previous planned move": "上一个计划行动",
+  "Next planned move": "下一个计划行动",
+  "Edit this move": "编辑此行动",
+  "Return to end": "返回末尾"
 }

@@ -4141,5 +4141,13 @@
   "New plan": "Новый план",
   "✓ Income resolved": "✓ Доход получен",
   "Program up to move {p0}": "Запрограммировать до хода {p0}",
-  "Kept for later": "Сохранены на потом"
+  "Kept for later": "Сохранены на потом",
+  "View after move {p0}: {p1}": "Посмотреть после хода {p0}: {p1}",
+  "View position after this move": "Посмотреть позицию после этого хода",
+  "Viewing": "Просмотр",
+  "After move {p0}": "После хода {p0}",
+  "Previous planned move": "Предыдущий запланированный ход",
+  "Next planned move": "Следующий запланированный ход",
+  "Edit this move": "Изменить этот ход",
+  "Return to end": "Вернуться в конец"
 }

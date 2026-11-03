@@ -869,6 +869,109 @@ describe("Commands", () => {
     expect(container.querySelectorAll("#analysis-commit-confirm").length).to.be.at.most(1);
   });
 
+  it("keeps the complete move list and resources visible while inspecting, with direct step navigation", async () => {
+    const store = makeStore();
+    store.commit("receiveData", createLostFleetRoundMoveEngine());
+    const wrapper = mount(Commands, {
+      store,
+      propsData: {
+        currentMove: "",
+        actionsEnabled: false,
+        analysisMode: true,
+        analysisMoveCount: 1,
+        analysisAppliedCount: 4,
+        analysisEditingIndex: 0,
+        analysisInspectingMove: true,
+        analysisPlayed: [{ move: "played" }],
+        analysisEntries: [
+          { kind: "move", move: "a" },
+          { kind: "adjust", charge: 1 },
+          { kind: "move", move: "b" },
+          { kind: "move", move: "c" },
+          { kind: "move", move: "blocked" },
+        ],
+      },
+    });
+    expect(wrapper.findAll(".analysis-moves__row")).to.have.length(5);
+    expect(wrapper.find(".analysis-replace__title").text()).to.equal("After move 2");
+    expect(wrapper.find(".sticky-resource-bar-row--inspect").exists()).to.equal(true);
+    expect(wrapper.findComponent({ name: "StickyResourceBar" }).props("player")).to.equal(store.state.data.players[0]);
+    expect(wrapper.text()).not.to.contain("This preview has no action available");
+    expect(wrapper.find('[aria-label="Previous planned move"]').attributes("disabled")).to.equal("disabled");
+    await wrapper.find('[aria-label="Next planned move"]').trigger("click");
+    expect(wrapper.emitted("analysis-inspect-move")).to.deep.equal([[2]]);
+    await wrapper.setProps({ analysisEditingIndex: 3 });
+    expect(wrapper.find('[aria-label="Next planned move"]').attributes("disabled")).to.equal("disabled");
+    await wrapper.find('[aria-label="Previous planned move"]').trigger("click");
+    expect(wrapper.emitted("analysis-inspect-move")).to.deep.equal([[2], [2]]);
+    await wrapper.findAll(".analysis-moves__move").at(0).trigger("click");
+    expect(wrapper.emitted("analysis-inspect-move")).to.deep.equal([[2], [2], [0]]);
+    const edit = wrapper
+      .findAll(".analysis-replace__actions button")
+      .wrappers.find((b) => b.text() === "Edit this move");
+    await edit.trigger("click");
+    expect(wrapper.emitted("analysis-edit-move")).to.deep.equal([[3]]);
+    const end = wrapper.findAll(".analysis-replace__actions button").wrappers.find((b) => b.text() === "Return to end");
+    await end.trigger("click");
+    expect(wrapper.emitted("analysis-cancel-edit")).to.have.length(1);
+    wrapper.destroy();
+  });
+
+  it("keeps saved-plan recovery beside the plan instead of in a top-of-board alert", async () => {
+    const store = makeStore();
+    store.commit("receiveData", createLostFleetRoundMoveEngine());
+    const wrapper = mount(Commands, {
+      store,
+      propsData: {
+        currentMove: "",
+        analysisMode: true,
+        analysisPendingRestore: {
+          lines: [[{ kind: "move", move: "terrans up nav." }]],
+          active: 0,
+          baseMoveCount: 15,
+        },
+      },
+    });
+    const recovery = wrapper.findComponent({ name: "AnalysisPanel" });
+    expect(recovery.exists()).to.equal(true);
+    await recovery.findAll("button").at(0).trigger("click");
+    await recovery.findAll("button").at(1).trigger("click");
+    expect(wrapper.emitted("analysis-restore")).to.have.length(1);
+    expect(wrapper.emitted("analysis-discard-restore")).to.have.length(1);
+    expect(wrapper.find(".analysis-strip__banner").exists()).to.equal(false);
+    await wrapper.setProps({ analysisPendingRestore: null });
+    expect(wrapper.findComponent({ name: "AnalysisPanel" }).exists()).to.equal(false);
+    wrapper.destroy();
+  });
+
+  it("keeps the list during editing but protects a partial replacement from a navigation click", async () => {
+    const store = makeStore();
+    store.commit("receiveData", createLostFleetRoundMoveEngine());
+    const wrapper = mount(Commands, {
+      store,
+      propsData: {
+        currentMove: "",
+        analysisMode: true,
+        analysisAppliedCount: 2,
+        analysisEditingIndex: 0,
+        analysisEntries: [
+          { kind: "move", move: "a" },
+          { kind: "move", move: "b" },
+        ],
+      },
+    });
+    expect(wrapper.findAll(".analysis-moves__row")).to.have.length(2);
+    expect(wrapper.find(".analysis-replace__title").text()).to.equal("Editing move 1");
+    await wrapper.findAll(".analysis-moves__edit").at(1).trigger("click");
+    expect(wrapper.emitted("analysis-edit-move")).to.deep.equal([[1]]);
+    await wrapper.setProps({ analysisNavigationDisabled: true });
+    await wrapper.findAll(".analysis-moves__edit").at(0).trigger("click");
+    await wrapper.findAll(".analysis-moves__move").at(0).trigger("click");
+    expect(wrapper.emitted("analysis-edit-move")).to.have.length(1);
+    expect(wrapper.emitted("analysis-inspect-move")).to.equal(undefined);
+    wrapper.destroy();
+  });
+
   it("opens a row prefix without submitting, and the header restores the full proposal", async () => {
     const store = makeStore();
     store.commit("receiveData", createLostFleetRoundMoveEngine());

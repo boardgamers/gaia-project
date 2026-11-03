@@ -4141,5 +4141,13 @@
   "New plan": "Kế hoạch mới",
   "✓ Income resolved": "✓ Đã xử lý thu nhập",
   "Program up to move {p0}": "Lập trình đến nước đi {p0}",
-  "Kept for later": "Giữ lại để dùng sau"
+  "Kept for later": "Giữ lại để dùng sau",
+  "View after move {p0}: {p1}": "Xem sau nước đi {p0}: {p1}",
+  "View position after this move": "Xem trạng thái sau nước đi này",
+  "Viewing": "Đang xem",
+  "After move {p0}": "Sau nước đi {p0}",
+  "Previous planned move": "Nước đi đã lên kế hoạch trước",
+  "Next planned move": "Nước đi đã lên kế hoạch tiếp theo",
+  "Edit this move": "Chỉnh sửa nước đi này",
+  "Return to end": "Trở về cuối"
 }

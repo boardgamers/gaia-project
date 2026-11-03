@@ -4141,5 +4141,13 @@
   "New plan": "Nouveau plan",
   "✓ Income resolved": "✓ Revenus résolus",
   "Program up to move {p0}": "Programmer jusqu’au coup {p0}",
-  "Kept for later": "Conservés pour plus tard"
+  "Kept for later": "Conservés pour plus tard",
+  "View after move {p0}: {p1}": "Voir après le coup {p0} : {p1}",
+  "View position after this move": "Voir la position après ce coup",
+  "Viewing": "Consultation",
+  "After move {p0}": "Après le coup {p0}",
+  "Previous planned move": "Coup planifié précédent",
+  "Next planned move": "Coup planifié suivant",
+  "Edit this move": "Modifier ce coup",
+  "Return to end": "Revenir à la fin"
 }

@@ -4141,5 +4141,13 @@
   "New plan": "새 계획",
   "✓ Income resolved": "✓ 수입 처리 완료",
   "Program up to move {p0}": "{p0}번째 수까지 예약",
-  "Kept for later": "나중을 위해 보관됨"
+  "Kept for later": "나중을 위해 보관됨",
+  "View after move {p0}: {p1}": "{p0}번째 수 이후 보기: {p1}",
+  "View position after this move": "이 수 이후의 상태 보기",
+  "Viewing": "보는 중",
+  "After move {p0}": "{p0}번째 수 이후",
+  "Previous planned move": "이전 계획된 수",
+  "Next planned move": "다음 계획된 수",
+  "Edit this move": "이 수 수정",
+  "Return to end": "끝으로 돌아가기"
 }

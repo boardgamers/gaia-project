@@ -1,16 +1,9 @@
 <template>
-  <!-- Planning notices and recovery after a rollback. -->
-  <div v-if="notice || pendingRestore" class="analysis-strip">
-    <div v-if="notice" class="analysis-strip__banner">
-      <span class="flex-grow-1">{{ notice }}</span>
-      <button type="button" class="analysis-strip__banner-x" @click="$emit('dismiss-notice')">✕</button>
-    </div>
-
-    <div v-if="active && pendingRestore" class="analysis-strip__banner analysis-strip__banner--confirm">
-      <span class="flex-grow-1"> {{ pendingRestoreLabel }} from a different board position. </span>
-      <b-button size="sm" variant="outline-secondary" class="mr-1" @click="$emit('restore')">Restore anyway</b-button>
-      <b-button size="sm" variant="outline-secondary" @click="$emit('discard-restore')">Discard</b-button>
-    </div>
+  <!-- Inline recovery controls beside the plan list, only for a rollback or divergent history. -->
+  <div v-if="active && pendingRestore" class="analysis-restore">
+    <span class="flex-grow-1"> {{ pendingRestoreLabel }} from a different board position. </span>
+    <b-button size="sm" variant="outline-secondary" class="mr-1" @click="$emit('restore')">Restore anyway</b-button>
+    <b-button size="sm" variant="outline-secondary" @click="$emit('discard-restore')">Discard</b-button>
   </div>
 </template>
 
@@ -23,7 +16,6 @@ export default Vue.extend({
   name: "AnalysisPanel",
   props: {
     active: { type: Boolean, default: false },
-    notice: { type: String, default: null },
     pendingRestore: { type: Object as () => AnalysisLineSet | null, default: null },
   },
   computed: {
@@ -46,36 +38,14 @@ export default Vue.extend({
 </script>
 
 <style lang="scss" scoped>
-.analysis-strip {
-  margin-bottom: 0.5rem;
-  font-size: 0.8rem;
-}
-
-.analysis-strip__banner {
+.analysis-restore {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  line-height: 1.3;
-  border: 1px solid var(--ui-border);
-  border-radius: 0.45rem;
-  padding: 0.4rem 0.5rem;
-  background: var(--ui-surface);
-  color: var(--ui-text);
-  margin-bottom: 0.4rem;
-}
-
-.analysis-strip__banner--confirm {
   flex-wrap: wrap;
-}
-
-.analysis-strip__banner-x {
-  border: 0;
-  background: transparent;
-  color: var(--ui-text-muted);
-  font-size: 0.75rem;
-  line-height: 1;
-  padding: 0.15rem 0.25rem;
-  cursor: pointer;
-  flex: 0 0 auto;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+  line-height: 1.3;
+  color: var(--ui-text);
 }
 </style>

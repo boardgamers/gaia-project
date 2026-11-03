@@ -18,7 +18,6 @@
       @close="$emit('analysis-close-line', $event)"
     />
     <div
-      v-if="!analysisEditActive"
       id="move-title"
       class="d-flex align-items-center"
       :class="{ 'hide-on-mobile-sticky': showStickyMobileBar, 'move-title--analysis': analysisMode }"
@@ -52,11 +51,11 @@
            panel - also renders for players who aren't on turn. Two copies would also register the
            same modal id twice. -->
       <AnalysisHeaderControls
-        v-if="analysisMode && !analysisEditActive"
-        :move-count="analysisMoveCount"
+        v-if="analysisMode"
+        :move-count="analysisDisplayedMoveCount"
         :move-summary="analysisMoveSummary"
         :premove-plan="premovePlan"
-        :can-edit="analysisCanEdit"
+        :can-edit="analysisCanEdit && !analysisEditActive"
         @undo="$emit('analysis-undo')"
         @reset="$emit('analysis-reset')"
         :status="analysisStatus"
@@ -67,8 +66,15 @@
       />
       <span class="game-chat-button-host game-chat-button-host--desktop"></span>
     </div>
+    <AnalysisPanel
+      v-if="analysisMode && analysisPendingRestore"
+      :active="analysisMode"
+      :pending-restore="analysisPendingRestore"
+      @restore="$emit('analysis-restore')"
+      @discard-restore="$emit('analysis-discard-restore')"
+    />
     <AnalysisMoves
-      v-if="analysisMode && (analysisEntries.length || analysisPlayed.length) && !analysisEditActive"
+      v-if="analysisMode && (analysisEntries.length || analysisPlayed.length)"
       :entries="analysisEntries"
       :played="analysisPlayed"
       :blocked-reason="analysisBlockedReason"
@@ -76,8 +82,13 @@
       :applied-count="analysisAppliedCount"
       :committable-moves="analysisCommittableMoves"
       @commit="requestAnalysisCommit($event)"
-      :can-append="!engine.ended"
-      :disabled="analysisEditingIndex < 0 && !!currentMove"
+      :can-append="analysisCanAppend && !engine.ended"
+      :disabled="analysisNavigationDisabled || !!currentMove"
+      :mutations-disabled="analysisEditActive"
+      :active-index="analysisEditingIndex"
+      :inspecting="analysisInspectingMove"
+      :inserting="analysisInsertingMove"
+      @inspect="$emit('analysis-inspect-move', $event)"
       @edit="$emit('analysis-edit-move', $event)"
       @insert="$emit('analysis-insert-move', $event)"
       @remove="$emit('analysis-remove-entry', $event)"
@@ -166,11 +177,11 @@
              (showStickyMobileBar excludes all three), so they could never show here. See
              SetupStatus.vue. -->
         <AnalysisHeaderControls
-          v-if="analysisMode && !analysisEditActive"
-          :move-count="analysisMoveCount"
+          v-if="analysisMode"
+          :move-count="analysisDisplayedMoveCount"
           :move-summary="analysisMoveSummary"
           :premove-plan="premovePlan"
-          :can-edit="analysisCanEdit"
+          :can-edit="analysisCanEdit && !analysisEditActive"
           @undo="$emit('analysis-undo')"
           @reset="$emit('analysis-reset')"
           :status="analysisStatus"
@@ -196,18 +207,53 @@
       </div>
       <div v-if="analysisEditActive" class="analysis-replace" role="status">
         <div class="analysis-replace__original">
-          <strong class="analysis-replace__title"
+          <strong v-if="analysisInspectingMove" class="analysis-replace__title">{{
+            `After move ${analysisEditingMoveNumber}`
+          }}</strong>
+          <strong v-else class="analysis-replace__title"
             >{{ analysisInsertingMove ? "Adding" : "Editing" }} move {{ analysisEditingMoveNumber }}</strong
           >
-          <span v-if="analysisEditingMove"
+          <span v-if="analysisInspectingMove">{{ analysisEditingMove }}</span>
+          <span v-else-if="analysisEditingMove"
             ><span class="analysis-replace__label">{{ analysisInsertingMove ? "Before:" : "Original:" }}</span>
             {{ analysisEditingMove }}</span
           >
           <span v-else class="analysis-replace__label">At the end of the plan</span>
         </div>
         <div class="analysis-replace__actions">
+          <template v-if="analysisInspectingMove">
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-secondary"
+              aria-label="Previous planned move"
+              title="Previous planned move"
+              :disabled="analysisPreviousMove < 0"
+              @click="$emit('analysis-inspect-move', analysisPreviousMove)"
+              @keydown.stop
+            >
+              <span aria-hidden="true">←</span>
+            </button>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-secondary"
+              aria-label="Next planned move"
+              title="Next planned move"
+              :disabled="analysisNextMove < 0"
+              @click="$emit('analysis-inspect-move', analysisNextMove)"
+              @keydown.stop
+            >
+              <span aria-hidden="true">→</span>
+            </button>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-secondary"
+              @click="$emit('analysis-edit-move', analysisEditingIndex)"
+            >
+              Edit this move
+            </button>
+          </template>
           <button
-            v-if="currentMove"
+            v-if="currentMove && !analysisInspectingMove"
             type="button"
             class="btn btn-sm btn-outline-secondary"
             @click="$emit('analysis-restart-edit')"
@@ -215,12 +261,12 @@
             Restart
           </button>
           <button type="button" class="btn btn-sm btn-outline-secondary" @click="$emit('analysis-cancel-edit')">
-            Cancel
+            {{ analysisInspectingMove ? "Return to end" : "Cancel" }}
           </button>
         </div>
       </div>
       <ChargeWait v-if="autoChargeEnabled && !analysisMode && !currentMove" @command="$emit('command', $event)" />
-      <template v-if="actionsEnabled">
+      <template v-if="actionsEnabled && !analysisInspectingMove">
         <div v-if="init" class="d-flex flex-wrap align-content-stretch">
           <MoveButton
             v-for="i in [2, 3, 4]"
@@ -358,15 +404,18 @@
           </div>
           <b-btn variant="primary" class="silent-bid-submit" @click="submitSilentBid">Submit bids</b-btn>
         </div>
-        <!-- Placed last (below the action buttons, at the very bottom of the sticky bar) - see the
-           .sticky-resource-bar-row CSS for the divider separating it from the buttons above and the
-           extra bottom clearance keeping it clear of the screen's rounded bottom corners. -->
-        <StickyResourceBar v-if="showResourceBar" :player="myPlayer" class="sticky-resource-bar-row" />
       </template>
-      <p v-else-if="analysisMode" class="small text-muted mt-2 mb-0" role="status">
+      <p v-else-if="analysisMode && !analysisInspectingMove" class="small text-muted mt-2 mb-0" role="status">
         This preview has no action available. You can switch plans, undo a move, clear the plan or return to the live
         game.
       </p>
+      <!-- Inspection is read-only, but its resource totals must stay visible on every screen size. -->
+      <StickyResourceBar
+        v-if="showResourceBar && (actionsEnabled || analysisInspectingMove)"
+        :player="myPlayer"
+        class="sticky-resource-bar-row"
+        :class="{ 'sticky-resource-bar-row--inspect': analysisInspectingMove }"
+      />
     </div>
     <!-- reserves the sticky bar's actual rendered height (tracked live via ResizeObserver, capped
          by the bar's own max-height/overflow) so it never permanently covers page content it has
@@ -430,6 +479,7 @@ import { factionColor } from "../graphics/utils";
 import type {
   AnalysisCommitPlan,
   AnalysisEntry,
+  AnalysisLineSet,
   AnalysisLineSummary,
   AnalysisPlayedMove,
   AnalysisStatus,
@@ -453,6 +503,7 @@ import AnalysisHeaderControls from "./AnalysisHeaderControls.vue";
 import AnalysisLineTabs from "./AnalysisLineTabs.vue";
 import AnalysisModeInfo from "./AnalysisModeInfo.vue";
 import AnalysisMoves from "./AnalysisMoves.vue";
+import AnalysisPanel from "./AnalysisPanel.vue";
 import AutoChargeControl from "./AutoChargeControl.vue";
 import ChargeWait from "./ChargeWait.vue";
 import FactionInfoCard from "./FactionInfoCard.vue";
@@ -481,6 +532,12 @@ export type EmitCommandParams = { disappear?: boolean; times?: number; warnings?
     },
     currentMove(this: Commands) {
       this.mobileActionsCollapsed = false;
+    },
+    analysisEditingIndex(this: Commands, index: number) {
+      if (index >= 0) this.mobileActionsCollapsed = false;
+    },
+    analysisInspectingMove(this: Commands, inspecting: boolean) {
+      if (inspecting) this.mobileActionsCollapsed = false;
     },
     availableCommands(this: Commands, val, previous) {
       if (hasConcurrentCharges(this.engine) && previous) {
@@ -542,6 +599,7 @@ export type EmitCommandParams = { disappear?: boolean; times?: number; warnings?
     AnalysisCommitConfirm,
     AnalysisModeInfo,
     AnalysisMoves,
+    AnalysisPanel,
   },
 })
 export default class Commands extends Vue implements CommandController {
@@ -654,10 +712,47 @@ export default class Commands extends Vue implements CommandController {
   @Prop({ default: false })
   analysisInsertingMove: boolean;
 
+  @Prop({ default: false })
+  analysisInspectingMove: boolean;
+
+  @Prop({ default: false })
+  analysisNavigationDisabled: boolean;
+
+  @Prop({ default: null })
+  analysisPlayerIndex: number | null;
+
+  @Prop({ default: true })
+  analysisCanAppend: boolean;
+
+  @Prop({ default: null })
+  analysisPendingRestore: AnalysisLineSet | null;
+
+  get analysisPreviousMove(): number {
+    return this.analysisEntries.reduce(
+      (previous, entry, index) =>
+        entry.kind === "move" && index < this.analysisEditingIndex && index < this.analysisAppliedCount
+          ? index
+          : previous,
+      -1
+    );
+  }
+
+  get analysisNextMove(): number {
+    return this.analysisEntries.findIndex(
+      (entry, index) => entry.kind === "move" && index > this.analysisEditingIndex && index < this.analysisAppliedCount
+    );
+  }
+
+  get analysisDisplayedMoveCount(): number {
+    return this.analysisEditActive
+      ? this.analysisEntries.slice(0, this.analysisAppliedCount).filter((entry) => entry.kind === "move").length
+      : this.analysisMoveCount;
+  }
+
   get analysisMoveSummary(): string {
     const remaining = this.analysisEntries.filter((entry) => entry.kind === "move").length;
     if (this.analysisPlayed.length) return `${this.analysisPlayed.length} played · ${remaining} left`;
-    return this.analysisBlockedReason ? `${this.analysisMoveCount}/${remaining} simulated` : "";
+    return this.analysisBlockedReason ? `${this.analysisDisplayedMoveCount}/${remaining} simulated` : "";
   }
 
   get analysisEditActive(): boolean {
@@ -914,7 +1009,10 @@ export default class Commands extends Vue implements CommandController {
    * lookup used elsewhere (e.g. FactionWheel.vue, BoardAction.vue) - falls back to the active
    * player in self-contained/hot-seat mode, where there's no separate logged-in seat. */
   get myPlayer(): Player | null {
-    const index = this.$store.state.player?.index ?? this.engine.currentPlayer;
+    const index =
+      this.analysisMode && this.analysisPlayerIndex !== null
+        ? this.analysisPlayerIndex
+        : (this.$store.state.player?.index ?? this.engine.currentPlayer);
     return index == null ? null : this.engine.players[index];
   }
 
@@ -1656,6 +1754,10 @@ $mobile-sticky-actions-max-height: 40vh;
   border-top: 1px solid var(--ui-border);
 }
 
+#move-buttons .sticky-resource-bar-row--inspect {
+  display: flex !important;
+}
+
 // Keep the planning heading separate from the game controls below it.
 #move-title.move-title--analysis {
   background: $planning-background;
@@ -1957,6 +2059,7 @@ $mobile-sticky-actions-max-height: 40vh;
 }
 .analysis-replace__actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.4rem;
   margin-left: auto;
 }
