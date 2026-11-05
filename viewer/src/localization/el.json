@@ -4149,5 +4149,12 @@
   "Previous planned move": "Προηγούμενη προγραμματισμένη κίνηση",
   "Next planned move": "Επόμενη προγραμματισμένη κίνηση",
   "Edit this move": "Επεξεργασία αυτής της κίνησης",
-  "Return to end": "Επιστροφή στο τέλος"
+  "Return to end": "Επιστροφή στο τέλος",
+  "Exploration shuttles remaining: {p0} of {p1}": "Εναπομείναντα σκάφη εξερεύνησης: {p0} από {p1}",
+  "Space sectors with a colonized planet. Click to highlight all colonized sectors.": "Διαστημικοί τομείς με αποικισμένο πλανήτη. Κάντε κλικ για να επισημάνετε όλους τους αποικισμένους τομείς.",
+  "Deep Space sectors with a colonized planet. Click to highlight all colonized sectors.": "Τομείς βαθέος διαστήματος με αποικισμένο πλανήτη. Κάντε κλικ για να επισημάνετε όλους τους αποικισμένους τομείς.",
+  "Twilight — Nautilaks": "Twilight — Nautilaks",
+  "Rebellion — Vo'Kron": "Rebellion — Vo'Kron",
+  "T F Mars — Gaia Federation": "T F Mars — Ομοσπονδία Gaia",
+  "Eclipse — Eridani Empire": "Eclipse — Eridani Empire"
 }

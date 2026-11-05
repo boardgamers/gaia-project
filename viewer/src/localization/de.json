@@ -4149,5 +4149,12 @@
   "Previous planned move": "Vorheriger geplanter Zug",
   "Next planned move": "Nächster geplanter Zug",
   "Edit this move": "Diesen Zug bearbeiten",
-  "Return to end": "Zum Ende zurückkehren"
+  "Return to end": "Zum Ende zurückkehren",
+  "Exploration shuttles remaining: {p0} of {p1}": "Verbleibende Erkundungsshuttles: {p0} von {p1}",
+  "Space sectors with a colonized planet. Click to highlight all colonized sectors.": "Weltraumsektoren mit einem kolonisierten Planeten. Klicken, um alle kolonisierten Sektoren hervorzuheben.",
+  "Deep Space sectors with a colonized planet. Click to highlight all colonized sectors.": "Deep-Space-Sektoren mit einem kolonisierten Planeten. Klicken, um alle kolonisierten Sektoren hervorzuheben.",
+  "Twilight — Nautilaks": "Twilight — Nautilaks",
+  "Rebellion — Vo'Kron": "Rebellion — Vo'Kron",
+  "T F Mars — Gaia Federation": "T F Mars — Gaia-Föderation",
+  "Eclipse — Eridani Empire": "Eclipse — Eridani-Imperium"
 }

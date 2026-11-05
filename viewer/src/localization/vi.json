@@ -4149,5 +4149,12 @@
   "Previous planned move": "Nước đi đã lên kế hoạch trước",
   "Next planned move": "Nước đi đã lên kế hoạch tiếp theo",
   "Edit this move": "Chỉnh sửa nước đi này",
-  "Return to end": "Trở về cuối"
+  "Return to end": "Trở về cuối",
+  "Exploration shuttles remaining: {p0} of {p1}": "Tàu con thoi thám hiểm còn lại: {p0} trên {p1}",
+  "Space sectors with a colonized planet. Click to highlight all colonized sectors.": "Các khu vực không gian có hành tinh đã thuộc địa hóa. Nhấp để làm nổi bật tất cả khu vực đã thuộc địa hóa.",
+  "Deep Space sectors with a colonized planet. Click to highlight all colonized sectors.": "Các khu vực không gian sâu có hành tinh đã thuộc địa hóa. Nhấp để làm nổi bật tất cả khu vực đã thuộc địa hóa.",
+  "Twilight — Nautilaks": "Twilight — Nautilaks",
+  "Rebellion — Vo'Kron": "Rebellion — Vo'Kron",
+  "T F Mars — Gaia Federation": "T F Mars — Liên bang Gaia",
+  "Eclipse — Eridani Empire": "Eclipse — Đế chế Eridani"
 }

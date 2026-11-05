@@ -164,14 +164,12 @@
           </g>
 
           <!-- Left tab: the ship name, sitting like a folder tab on the card's top-left border, filled in
-           the ship color. The first letter sits in a white hexagon badge (echoing the map hex) so it
-           reads as the ship's identity even on the colored tab; the rest of the name follows in dark
-           text (dark reads better than white on the lighter ship colors). -->
+           the ship color. The insignia precedes the FULL name: replacing the old initial must not
+           remove the first letter from the visible title. The alternate UI owns its own template. -->
           <g class="lost-fleet-ship__tab" v-b-tooltip.nofade="tooltipTriggerConfig()" :title="shipLabel(ship)">
             <path :d="nameTabPath(ship)" :style="{ fill: shipColor(ship) }" class="lost-fleet-ship__tab-shape" />
-            <polygon :points="nameHexPoints" class="lost-fleet-ship__name-hex" />
-            <text x="15" y="-10" dy="3.8" class="lost-fleet-ship__name-letter">{{ shipFirstLetter(ship) }}</text>
-            <text x="25" y="-10" dy="3.8" class="lost-fleet-ship__name-rest">{{ shipNameRest(ship) }}</text>
+            <SpaceshipEmblem :ship="ship" transform="translate(15, -10) scale(0.75)" />
+            <text x="25" y="-10" dy="3.8" class="lost-fleet-ship__name-rest">{{ shipHeaderName(ship) }}</text>
           </g>
 
           <!-- Right tab: the 4 exploration/player slots, its negative space filled in the ship color and
@@ -238,6 +236,7 @@ import {
   spaceshipColors,
   spaceshipDisplayNames,
   spaceshipLabels,
+  spaceshipNames,
 } from "../data/spaceships";
 import { corners } from "../graphics/hex";
 import { factionPiecePlanet } from "../graphics/utils";
@@ -248,6 +247,7 @@ import Building from "./Building.vue";
 import Condition from "./Condition.vue";
 import FederationTile from "./FederationTile.vue";
 import Resource from "./Resource.vue";
+import SpaceshipEmblem from "./SpaceshipEmblem.vue";
 import SpecialAction from "./SpecialAction.vue";
 import TechTile from "./TechTile.vue";
 import Token from "./Token.vue";
@@ -320,6 +320,7 @@ export const SHIP_BOARD_VIEWBOX_WIDTH = 291 - ACTION_COMPRESSION;
     FederationTile,
     Resource,
     SpecialAction,
+    SpaceshipEmblem,
     TechTile,
     Token,
     UsedActionMark,
@@ -423,6 +424,11 @@ export default class LostFleetShips extends Vue {
     return spaceshipDisplayNames[ship].toUpperCase();
   }
 
+  /** Primary headers retain the complete printed ship name beside the insignia. */
+  shipHeaderName(ship: Spaceship): string {
+    return spaceshipNames[ship].toUpperCase();
+  }
+
   /** First letter of the name (drawn inside the white hex badge in the left tab). */
   shipFirstLetter(ship: Spaceship): string {
     return this.shipFullName(ship).charAt(0);
@@ -458,7 +464,7 @@ export default class LostFleetShips extends Vue {
    * never born too narrow and clipping the name. Same height as the slots tab (tabPath default top). */
   nameTabPath(ship: Spaceship): string {
     const measuredRight = this.nameTabRights[ship];
-    const textRight = measuredRight ?? 25 + this.shipNameRest(ship).length * 7.6;
+    const textRight = measuredRight ?? 25 + this.shipHeaderName(ship).length * 7.6;
     return this.tabPath(NAME_TAB_X0, textRight + NAME_TAB_PAD);
   }
 

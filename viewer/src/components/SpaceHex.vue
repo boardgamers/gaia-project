@@ -55,17 +55,6 @@
         sectorMapMode ? 'space-hex-sector-highlight' : 'space-hex-federation planet',
       ]"
     />
-    <!-- Lost Fleet spaceship hex: fill the entire hex with the ship's identity color (rulebook
-         page 7 - Twilight purple / Rebellion brown / T F Mars grey / Eclipse yellow). Drawn here,
-         outside the `contentRotation` counter-rotation below, so the hexagon stays aligned to the
-         cell's own outline; the upright letter lives in the counter-rotated group instead. -->
-    <use
-      v-if="lostFleetSpaceship"
-      xlink:href="#space-hex"
-      class="lost-fleet-spaceship__hex"
-      :data-ship="lostFleetSpaceship"
-      :style="{ fill: lostFleetSpaceshipColor }"
-    />
     <!-- Content that must stay upright regardless of the whole-board `contentRotation` screen-fit
          rotation (numbers, labels, buildings, gaiaformers, ships) - counter-rotated here so it
          doesn't inherit that purely-cosmetic tilt. This deliberately does NOT cancel out any
@@ -86,12 +75,10 @@
       <text class="sector-name" v-if="isCenter" x="0" y="0" dy="0.35">
         {{ hex.data.sector[0] === "s" ? parseInt(hex.data.sector.slice(1)) : parseInt(hex.data.sector) }}
       </text>
-      <g v-if="lostFleetSpaceship" class="lost-fleet-spaceship">
-        <!-- y=0 + a plain-number dy (user units, ≈0.35 * font-size) centers the uppercase glyph the
-             same in every browser. This deliberately avoids `dy="…em"` (mobile WebKit drops the em
-             unit, leaving the letter on the baseline / high in the hex) and `dominant-baseline`
-             (iOS Safari renders it off) - the same proven mechanism the `.sector-name` labels use. -->
-        <text class="lost-fleet-spaceship__label" y="0" dy="0.315">{{ lostFleetSpaceshipLabel }}</text>
+      <g v-if="lostFleetSpaceship" class="lost-fleet-spaceship" :data-ship="lostFleetSpaceship">
+        <!-- Fill most of the ship hex with its upright insignia. Explorer tokens are painted
+             afterwards at their normal size, intentionally overlapping the emblem. -->
+        <SpaceshipEmblem :ship="lostFleetSpaceship" transform="scale(0.08)" />
         <g
           v-for="(explorer, index) in explorers"
           :key="explorer.player"
@@ -182,12 +169,14 @@ import { hexMoveLabel } from "../logic/recent";
 import { leechPlanets, upgradableBuildingsOfOtherPlayers } from "../logic/utils";
 import Building from "./Building.vue";
 import Planet from "./Planet.vue";
+import SpaceshipEmblem from "./SpaceshipEmblem.vue";
 
 type BuildingOverride = { building: BuildingEnum; player: PlayerEnum };
 @Component<SpaceHex>({
   components: {
     Planet,
     Building,
+    SpaceshipEmblem,
   },
 })
 export default class SpaceHex extends Vue {
@@ -768,7 +757,7 @@ svg {
     }
   }
 
-  // The whole-hex ship-color fill (see template). `fill` is set per-ship inline via
+  // The alternate UI keeps whole-hex ship colors behind its initials. `fill` comes from
   // spaceshipColors; pointer-events off so it never intercepts the hex's own click.
   .lost-fleet-spaceship__hex {
     stroke: #172e62;

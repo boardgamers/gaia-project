@@ -4149,5 +4149,12 @@
   "Previous planned move": "Mutarea planificată anterioară",
   "Next planned move": "Următoarea mutare planificată",
   "Edit this move": "Editează această mutare",
-  "Return to end": "Revino la final"
+  "Return to end": "Revino la final",
+  "Exploration shuttles remaining: {p0} of {p1}": "Navete de explorare rămase: {p0} din {p1}",
+  "Space sectors with a colonized planet. Click to highlight all colonized sectors.": "Sectoare spațiale cu o planetă colonizată. Clic pentru a evidenția toate sectoarele colonizate.",
+  "Deep Space sectors with a colonized planet. Click to highlight all colonized sectors.": "Sectoare de spațiu îndepărtat cu o planetă colonizată. Clic pentru a evidenția toate sectoarele colonizate.",
+  "Twilight — Nautilaks": "Twilight — Nautilaks",
+  "Rebellion — Vo'Kron": "Rebellion — Vo'Kron",
+  "T F Mars — Gaia Federation": "T F Mars — Federația Gaia",
+  "Eclipse — Eridani Empire": "Eclipse — Imperiul Eridani"
 }

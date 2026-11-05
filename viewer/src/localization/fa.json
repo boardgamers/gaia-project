@@ -4149,5 +4149,12 @@
   "Previous planned move": "حرکت برنامه‌ریزی‌شدهٔ قبلی",
   "Next planned move": "حرکت برنامه‌ریزی‌شدهٔ بعدی",
   "Edit this move": "ویرایش این حرکت",
-  "Return to end": "بازگشت به پایان"
+  "Return to end": "بازگشت به پایان",
+  "Exploration shuttles remaining: {p0} of {p1}": "شاتل‌های اکتشافی باقی‌مانده: {p0} از {p1}",
+  "Space sectors with a colonized planet. Click to highlight all colonized sectors.": "بخش‌های فضایی دارای سیارهٔ مستعمره‌شده. برای برجسته‌کردن همهٔ بخش‌های مستعمره‌شده کلیک کنید.",
+  "Deep Space sectors with a colonized planet. Click to highlight all colonized sectors.": "بخش‌های فضای عمیق دارای سیارهٔ مستعمره‌شده. برای برجسته‌کردن همهٔ بخش‌های مستعمره‌شده کلیک کنید.",
+  "Twilight — Nautilaks": "Twilight — نوتیلاک",
+  "Rebellion — Vo'Kron": "Rebellion — وُکرون",
+  "T F Mars — Gaia Federation": "T F Mars — فدراسیون گایا",
+  "Eclipse — Eridani Empire": "Eclipse — امپراتوری اریدانی"
 }

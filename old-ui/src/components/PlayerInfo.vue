@@ -35,6 +35,7 @@
           :faction="player.faction"
           :data="playerData"
           :height="height"
+          :reference-engine="engine"
         />
         <BuildingGroup
           :transform="player.faction !== 'bescods' ? 'translate(2.2, 10)' : 'translate(12, 10)'"
@@ -88,7 +89,7 @@
         <line x1="10.4" x2="11" y1="13.0" y2="13.0" stroke="black" stroke-width="0.06" />
         <BuildingGroup
           v-if="!player.isAutoma"
-          transform="translate(21,1.2)"
+          :transform="`translate(${isLostFleet ? 20 : 21}, 1.2)`"
           :nBuildings="playerData.gaiaformers"
           building="gf"
           :gaia="playerData.gaiaformersInGaia"

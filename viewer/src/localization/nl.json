@@ -4149,5 +4149,12 @@
   "Previous planned move": "Vorige geplande zet",
   "Next planned move": "Volgende geplande zet",
   "Edit this move": "Deze zet bewerken",
-  "Return to end": "Terug naar het einde"
+  "Return to end": "Terug naar het einde",
+  "Exploration shuttles remaining: {p0} of {p1}": "Resterende verkenningsshuttles: {p0} van {p1}",
+  "Space sectors with a colonized planet. Click to highlight all colonized sectors.": "Ruimtesectoren met een gekoloniseerde planeet. Klik om alle gekoloniseerde sectoren te markeren.",
+  "Deep Space sectors with a colonized planet. Click to highlight all colonized sectors.": "Dieperuimtesectoren met een gekoloniseerde planeet. Klik om alle gekoloniseerde sectoren te markeren.",
+  "Twilight — Nautilaks": "Twilight — Nautilaks",
+  "Rebellion — Vo'Kron": "Rebellion — Vo'Kron",
+  "T F Mars — Gaia Federation": "T F Mars — Gaia-federatie",
+  "Eclipse — Eridani Empire": "Eclipse — Eridani Empire"
 }

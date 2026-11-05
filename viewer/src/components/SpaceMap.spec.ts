@@ -204,7 +204,7 @@ describe("SpaceMap", () => {
     store.commit("player", { index: 0 });
     store.commit("receiveData", engine);
     const { container } = render(SpaceMap, { store });
-    const ship = (name: Spaceship) => container.querySelector(`[data-ship="${name}"]`).parentElement;
+    const ship = (name: Spaceship) => container.querySelector(`[data-ship="${name}"]`).closest(".space-hex-cell");
     const markers = Array.from(ship(Spaceship.Twilight).querySelectorAll(".lost-fleet-spaceship__explorer"));
     expect(markers.map((marker) => marker.getAttribute("data-player"))).to.deep.equal(["3", "2", "1", "0"]);
     expect(markers[1].querySelector(".planet-fill.p")).not.to.equal(null);
@@ -271,18 +271,18 @@ describe("SpaceMap", () => {
     });
     expect(container.querySelectorAll("g.space-hex-cell .lost-fleet-spaceship").length).to.equal(spaceshipHexCount);
     // per-hex ship marker fills the whole hex with the ship's identity color (rulebook page 7:
-    // Twilight purple / Rebellion brown / T F Mars grey / Eclipse yellow) plus a single bold,
-    // centered letter - no separate orbit ring or "Ship" caption pill on top of it
+    // Twilight purple / Rebellion brown / T F Mars grey / Eclipse yellow) plus an upright
+    // insignia - no separate orbit ring or "Ship" caption pill on top of it
     const mapShipMarker = container.querySelector("g.space-hex-cell .lost-fleet-spaceship");
     if (mapShipMarker) {
       expect(mapShipMarker.querySelector(".lost-fleet-spaceship__orbit")).to.equal(null);
       expect(mapShipMarker.querySelector(".lost-fleet-spaceship__pill")).to.equal(null);
-      expect(mapShipMarker.querySelectorAll("text").length).to.equal(1);
-      expect(mapShipMarker.querySelector("text").textContent).to.match(/^[TRME]$/);
-      // the ship color fills the whole hex via a hex-shaped <use>, not a small circle
+      expect(mapShipMarker.querySelectorAll(".spaceship-emblem").length).to.equal(1);
+      expect(mapShipMarker.querySelector(".spaceship-emblem").getAttribute("aria-label")).to.contain("Twilight");
+      // The large medallion identifies the ship; the underlying space hex has no identity-color fill.
       const cell = mapShipMarker.closest("g.space-hex-cell");
-      expect(cell.querySelector(".lost-fleet-spaceship__hex")).to.not.equal(null);
-      expect(cell.querySelectorAll(".lost-fleet-spaceship circle").length).to.equal(0);
+      expect(cell.querySelector(".lost-fleet-spaceship__hex")).to.equal(null);
+      expect(cell.querySelector(".spaceship-emblem > circle")).to.not.equal(null);
     }
 
     // the Lost Fleet legend (Interspace/Deep Space/Ship swatches) was removed entirely

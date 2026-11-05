@@ -26,10 +26,10 @@ export default defineConfig({
     exclude: ["src/testing/stack-traces.spec.ts"],
     globals: true,
     setupFiles: ["./vitest.setup.ts"],
-    // The suite is big (800+ specs); run all files in ONE forked process sequentially like
-    // mocha did (avoids 800 module-graph re-instantiations; memory is bounded by one process).
+    // Bound memory to one worker. Vitest 4 no longer recognizes singleFork; without
+    // maxWorkers it launches parallel forks and can exhaust memory on the full suite.
     pool: "forks",
-    singleFork: true,
+    maxWorkers: 1,
     testTimeout: 15000,
   },
 });

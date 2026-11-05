@@ -22,6 +22,25 @@ import { makeStore } from "../store";
 import PlayerInfo from "./PlayerInfo.vue";
 
 for (const component of [PlayerInfo, AlternatePlayerInfo]) {
+  it("fits Lost Fleet supplies and sector stats in the info panel without adding a row or moving actions", () => {
+    const engine = new Engine(["init 2 shuttle-layout", "p1 faction terrans", "p2 faction xenos"], { lostFleet: true });
+    engine.players[0].data.gaiaformers = 3;
+    for (let i = 0; i < 7; i++) engine.players[0].loadEvent(new Event("=> 1q"), "test");
+    const store = makeStore();
+    store.commit("receiveData", engine);
+    const { container } = render(component, { props: { player: engine.players[0] }, store });
+    const groups = container.querySelectorAll(".building-group");
+    expect(groups[groups.length - 1].getAttribute("transform")).to.equal("translate(20, 1.2)");
+    const supply = container.querySelector(".exploration-supply");
+    expect(supply.getAttribute("transform")).to.equal("translate(15.5, 0.65)");
+    expect(supply.closest(".board-info")).not.to.equal(null);
+    expect(container.querySelector('[data-board-stat="deep-space-sectors"]')).not.to.equal(null);
+    expect(supply.querySelector("rect, circle")).to.equal(null);
+    expect(supply.querySelectorAll(".shuttle-symbol")).to.have.length(1);
+    expect(supply.querySelectorAll(".remaining-count")).to.have.length(1);
+    expect(container.querySelector("[data-player-action]").getAttribute("y")).to.equal("17.4");
+    expect(container.querySelector(".player-board").getAttribute("viewBox")).to.equal("-0.2 -0.5 38.5 24.7");
+  });
   it("shows the Automa faction board and always-visible cards without a human economy", () => {
     const engine = new Engine(["init 1 automa-panel", "p1 faction terrans", "p2 faction taklons"], {
       automaSeed: "test",

@@ -240,9 +240,10 @@ describe("LostFleetShips", () => {
     for (let i = 1; i < sortedXs.length; i++) {
       expect(sortedXs[i] - sortedXs[i - 1]).to.equal(17);
     }
-    // the ship name is spelled out in the left tab: a first-letter hex badge + the rest of the name
-    expect(twilight.querySelector(".lost-fleet-ship__name-letter").textContent).to.equal("T");
-    expect(twilight.querySelector(".lost-fleet-ship__name-rest").textContent).to.equal("WILIGHT");
+    // The insignia is separate from the FULL name, never a replacement for its first letter.
+    expect(twilight.querySelector(".lost-fleet-ship__name-letter")).to.equal(null);
+    expect(twilight.querySelector(".spaceship-emblem").getAttribute("aria-label")).to.contain("Twilight");
+    expect(twilight.querySelector(".lost-fleet-ship__name-rest").textContent).to.equal("TWILIGHT");
     slots.forEach((slot) => {
       expect(slot.querySelector(".lost-fleet-ship__slot-ordinal")).to.equal(null);
     });

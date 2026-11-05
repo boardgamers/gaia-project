@@ -79,7 +79,13 @@
             <text class="board-text" transform="scale(4)">+{{ income("vp") }}</text>
           </g>
         </g>
-        <g transform="translate(15.2, 1.4)" v-b-tooltip title="Satellites and space stations, satellites left ">
+        <ExplorationSupply transform="translate(15.5, 0.65)" :data="data" :engine="engine" :automa="player.isAutoma" />
+        <g
+          data-board-stat="satellites"
+          :transform="isLostFleet ? 'translate(15.5, 2.05)' : 'translate(15.2, 1.4)'"
+          v-b-tooltip
+          title="Satellites and space stations, satellites left "
+        >
           <image
             xlink:href="../../assets/other/satellite.svg"
             :height="(155 / 211) * 22"
@@ -88,26 +94,56 @@
             y="-8"
             transform="scale(0.07)"
           />
-          <text class="board-text" transform="translate(1,0) scale(0.8)"
-            >{{ data.satellites + data.buildings.sp }}, {{ satellitesLeft }}
+          <text class="board-text" :transform="`translate(${isLostFleet ? 0.95 : 1},0) scale(0.8)`">
+            {{ statPair(data.satellites + data.buildings.sp, satellitesLeft) }}
           </text>
         </g>
-        <g transform="translate(12.4, 3.5)" v-b-tooltip title="Sectors with a colonized planet">
+        <g
+          data-board-stat="sectors"
+          :transform="isLostFleet ? 'translate(10.35, 3.5)' : 'translate(12.4, 3.5)'"
+          v-b-tooltip
+          :title="
+            isLostFleet
+              ? 'Space sectors with a colonized planet. Click to highlight all colonized sectors.'
+              : 'Sectors with a colonized planet'
+          "
+        >
           <image
             xlink:href="../../assets/conditions/sector.svg"
-            :height="(155 / 211) * 22"
-            width="22"
-            x="-11"
-            y="-8"
-            transform="scale(0.1)"
+            :height="isLostFleet ? (458 / 430) * 18 : (155 / 211) * 22"
+            :width="isLostFleet ? 18 : 22"
+            :x="isLostFleet ? -9 : -11"
+            :y="isLostFleet ? (-458 / 430) * 9 : -8"
+            :transform="isLostFleet ? 'scale(0.075)' : 'scale(0.1)'"
             @click="toggleMapMode('sectors')"
             style="cursor: pointer"
           />
-          <text class="board-text" transform="translate(1.4,-.1) scale(0.8)" text-anchor="middle">{{ sectors }}</text>
+          <text
+            class="board-text"
+            :transform="`translate(${isLostFleet ? 0.9 : 1.4},-.1) scale(0.8)`"
+            :text-anchor="isLostFleet ? 'start' : 'middle'"
+            >{{ sectors }}</text
+          >
+        </g>
+        <g
+          v-if="isLostFleet"
+          data-board-stat="deep-space-sectors"
+          transform="translate(13, 3.5)"
+          v-b-tooltip
+          title="Deep Space sectors with a colonized planet. Click to highlight all colonized sectors."
+        >
+          <DeepSpaceSector
+            :white="true"
+            transform="scale(0.065)"
+            @click.native="toggleMapMode('sectors')"
+            style="cursor: pointer"
+          />
+          <text class="board-text" transform="translate(0.9,-.1) scale(0.8)">{{ deepSpaceSectors }}</text>
         </g>
         <g
           v-if="!player.isAutoma"
-          transform="translate(15.2, 3.5)"
+          data-board-stat="federations"
+          :transform="isLostFleet ? 'translate(15.5, 3.5)' : 'translate(15.2, 3.5)'"
           v-b-tooltip.hover
           title="Power value of structures in federations, outside of federations"
         >
@@ -117,12 +153,12 @@
             width="22"
             x="-11"
             y="-8"
-            transform="scale(0.1)"
+            :transform="isLostFleet ? 'scale(0.075)' : 'scale(0.1)'"
             @click="toggleMapMode('federations')"
             style="cursor: pointer"
           />
-          <text class="board-text" transform="translate(1,-.1) scale(0.8)"
-            >{{ player.fedValue }}, {{ player.structureValue - player.fedValue }}
+          <text class="board-text" :transform="`translate(${isLostFleet ? 0.95 : 1},-.1) scale(0.8)`">
+            {{ statPair(player.fedValue, player.structureValue - player.fedValue) }}
           </text>
         </g>
         <g v-if="!player.isAutoma">
@@ -158,14 +194,15 @@
       <g
         v-for="i in researchFields"
         :key="i"
-        :transform="`translate(${(i * 2 + -1.4) * 1},3.5) scale(1)`"
+        class="research-counter"
+        :transform="`translate(${isLostFleet ? (i - 1) * 1.65 + 0.5 : i * 2 - 1.4},3.5) scale(1)`"
         v-b-tooltip.hover
         :title="researchTooltip(i - 1)"
       >
         <polygon
           points="-7.5,3 -3,7.5 3,7.5 7.5,3 7.5,-3 3,-7.5 -3,-7.5 -7.5,-3"
           :transform="`scale(0.1)`"
-          :class="['board-info', 'research-tile', researchClass(i - 1)]"
+          :class="['board-info', 'research-tile', { 'research-tile--outlined': isLostFleet }, researchClass(i - 1)]"
           :style="`fill: ${researchStyle(i - 1).backgroundColor}`"
         />
         <text class="board-text" transform="scale(0.8)" x="-.35" y="-.15" :style="`fill: ${researchStyle(i - 1).color}`"
@@ -178,7 +215,9 @@
 
 <script lang="ts">
 import Engine, {
+  Expansion,
   Faction,
+  hasExpansion,
   MAX_SATELLITES,
   Player,
   PlayerData,
@@ -193,14 +232,18 @@ import { effectivePreviewPlayer } from "../../data/faction-preview";
 import { factionName } from "../../data/factions";
 import { researchColor, researchData } from "../../data/research";
 import { showIncome } from "../../data/resources";
-import { leechNetwork, sectors } from "../../data/stats";
+import { deepSpaceSectors, leechNetwork, sectors } from "../../data/stats";
 import type { CellStyle } from "../../graphics/colors";
+import DeepSpaceSector from "../Conditions/DeepSpaceSector.vue";
 import Resource from "../Resource.vue";
 import Undo from "../Resources/Undo.vue";
 import VictoryPoint from "../Resources/VictoryPoint.vue";
+import ExplorationSupply from "./ExplorationSupply.vue";
 
 @Component({
   components: {
+    DeepSpaceSector,
+    ExplorationSupply,
     Resource,
     VictoryPoint,
     Undo,
@@ -224,8 +267,19 @@ export default class PlayerBoardInfo extends Vue {
   @Prop({ default: false })
   preview: boolean;
 
+  @Prop()
+  referenceEngine: Engine;
+
   get engine(): Engine {
-    return this.$store.state.data;
+    return this.referenceEngine ?? this.$store.state.data;
+  }
+
+  get isLostFleet(): boolean {
+    return hasExpansion(this.engine.expansions, Expansion.LostFleet);
+  }
+
+  statPair(first: number, second: number): string {
+    return `${first},${this.isLostFleet ? "" : " "}${second}`;
   }
 
   get researchFields(): number {
@@ -305,6 +359,10 @@ export default class PlayerBoardInfo extends Vue {
     return sectors(this.player);
   }
 
+  get deepSpaceSectors(): number {
+    return deepSpaceSectors(this.player);
+  }
+
   get satellitesLeft(): number {
     return MAX_SATELLITES - this.data.satellites;
   }
@@ -330,6 +388,14 @@ export default class PlayerBoardInfo extends Vue {
   fill: white;
   font-weight: 600;
   text-anchor: middle;
+}
+
+/* A thin edge separates matching track/faction colors (notably Science on Lantids).
+   Recent/current-round strokes below keep their stronger highlight styling. */
+.board-info.research-tile--outlined {
+  stroke: rgba(0, 0, 0, 0.45);
+  stroke-width: 0.6;
+  stroke-linejoin: round;
 }
 
 .board-info.research-tile.recent {

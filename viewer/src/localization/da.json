@@ -4149,5 +4149,12 @@
   "Previous planned move": "Forrige planlagte træk",
   "Next planned move": "Næste planlagte træk",
   "Edit this move": "Rediger dette træk",
-  "Return to end": "Tilbage til slutningen"
+  "Return to end": "Tilbage til slutningen",
+  "Exploration shuttles remaining: {p0} of {p1}": "Resterende udforskningsfærger: {p0} af {p1}",
+  "Space sectors with a colonized planet. Click to highlight all colonized sectors.": "Rumsektorer med en koloniseret planet. Klik for at fremhæve alle koloniserede sektorer.",
+  "Deep Space sectors with a colonized planet. Click to highlight all colonized sectors.": "Dybrumssektorer med en koloniseret planet. Klik for at fremhæve alle koloniserede sektorer.",
+  "Twilight — Nautilaks": "Twilight — Nautilakker",
+  "Rebellion — Vo'Kron": "Rebellion — Vo'Kron",
+  "T F Mars — Gaia Federation": "T F Mars — Gaia Føderation",
+  "Eclipse — Eridani Empire": "Eclipse — Eridani-imperiet"
 }

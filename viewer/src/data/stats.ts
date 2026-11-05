@@ -1,4 +1,6 @@
-import Engine, { Condition, GaiaHex, Player, PlayerEnum } from "@gaia-project/engine";
+import type Engine from "@gaia-project/engine";
+import type { GaiaHex, Player, PlayerEnum } from "@gaia-project/engine";
+import { Condition } from "@gaia-project/engine";
 import { sum } from "../logic/lodash-utils";
 import { leechPlanets, upgradableBuildingsOfOtherPlayers } from "../logic/utils";
 import { MapModeType } from "./actions";
@@ -8,6 +10,11 @@ import { MapModeType } from "./actions";
  * (owner ruling), which a second from-scratch implementation had silently drifted away from. */
 export function sectors(player: Player): number {
   return player.eventConditionCount(Condition.Sector);
+}
+
+/** Counts colonized physical Deep Space tiles using the engine's scoring rules. */
+export function deepSpaceSectors(player: Player): number {
+  return player.eventConditionCount(Condition.DeepSpaceSector);
 }
 
 export function leechNetwork(engine: Engine, player: PlayerEnum): number {

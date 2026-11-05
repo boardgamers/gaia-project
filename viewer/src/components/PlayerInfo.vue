@@ -55,6 +55,7 @@
           :faction="player.faction"
           :data="playerData"
           :height="height"
+          :reference-engine="engine"
           :preview="preview"
         />
         <g transform="translate(4.4, 0)">
@@ -143,7 +144,7 @@
 
         <BuildingGroup
           v-if="!player.isAutoma"
-          transform="translate(21, 1.2)"
+          :transform="`translate(${isLostFleet ? 20 : 21}, 1.2)`"
           :nBuildings="playerData.gaiaformers"
           building="gf"
           :gaia="playerData.gaiaformersInGaia"
