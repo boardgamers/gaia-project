@@ -15,8 +15,9 @@ describe("Lost Fleet counter localization", () => {
         expect(translated).not.toMatch(/\{p\d\}/);
       }
       for (const source of [
-        "Space sectors with a colonized planet. Click to highlight all colonized sectors.",
-        "Deep Space sectors with a colonized planet. Click to highlight all colonized sectors.",
+        "Deep Space sectors",
+        "Space sectors with a colonized planet. Click to highlight colonized Space sectors.",
+        "Deep Space sectors with a colonized planet. Click to highlight colonized Deep Space sectors.",
       ]) {
         expect(translator.translate(source)).not.toBe(source);
       }

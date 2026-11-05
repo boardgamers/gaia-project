@@ -1,6 +1,6 @@
 import type Engine from "@gaia-project/engine";
 import type { GaiaHex, Player, PlayerEnum } from "@gaia-project/engine";
-import { Condition } from "@gaia-project/engine";
+import { Condition, Expansion, hasExpansion } from "@gaia-project/engine";
 import { sum } from "../logic/lodash-utils";
 import { leechPlanets, upgradableBuildingsOfOtherPlayers } from "../logic/utils";
 import { MapModeType } from "./actions";
@@ -32,9 +32,14 @@ export function leechNetwork(engine: Engine, player: PlayerEnum): number {
   );
 }
 
-export const mapModeTypeOptions = [
-  { value: MapModeType.default, text: "Default" },
-  { value: MapModeType.sectors, text: "Sectors" },
-  { value: MapModeType.federations, text: "Federations" },
-  { value: MapModeType.leech, text: "Charge Network" },
-];
+export function mapModeTypeOptions(expansions: Expansion) {
+  return [
+    { value: MapModeType.default, text: "Default" },
+    { value: MapModeType.sectors, text: "Sectors" },
+    ...(hasExpansion(expansions, Expansion.LostFleet)
+      ? [{ value: MapModeType.deepSpaceSectors, text: "Deep Space sectors" }]
+      : []),
+    { value: MapModeType.federations, text: "Federations" },
+    { value: MapModeType.leech, text: "Charge Network" },
+  ];
+}

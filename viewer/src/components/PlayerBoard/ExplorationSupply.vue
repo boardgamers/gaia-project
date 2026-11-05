@@ -15,7 +15,7 @@
       class="shuttle-symbol"
       transform="scale(0.04)"
       fill="black"
-      opacity="0.8"
+      opacity="1"
       fill-rule="evenodd"
       d="M-9 -7 Q-9 -11 -5 -11 H5 Q9 -11 9 -7 V0 L13 10 Q13 12 11 12 H7 L4 5 Q2 2 2 6 V12 H-3 V6 Q-3 2 -5 5 L-8 12 H-12 Q-14 12 -13 9 L-9 0Z M-6 -7 Q-6 -8 -5 -8 H5 Q6 -8 6 -7 V-3 Q6 -2 5 -2 H-5 Q-6 -2 -6 -3Z"
     />

@@ -752,7 +752,7 @@ export default class PlayerInfo extends Vue {
   }
 
   get mapModeTypeOptions() {
-    return mapModeTypeOptions;
+    return mapModeTypeOptions(this.engine.expansions);
   }
 
   toggleMapMode(mode: MapModeType) {

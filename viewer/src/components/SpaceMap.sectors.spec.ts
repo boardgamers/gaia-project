@@ -18,6 +18,7 @@ import { MapModeType } from "../data/actions";
 import { sectors as sectorCount } from "../data/stats";
 import { makeStore } from "../store";
 import FinalScoringTile from "./FinalScoringTile.vue";
+import PlayerBoardInfo from "./PlayerBoard/Info.vue";
 import SpaceMap from "./SpaceMap.vue";
 
 function position(lostFleet: boolean) {
@@ -112,10 +113,7 @@ for (const [name, component] of [
 
         store.commit("toggleMapMode", { type: MapModeType.sectors, player: PlayerEnum.Player1 });
         await Vue.nextTick();
-        expect([...highlightedKeys(container, engine)]).to.have.members([
-          ...regularKeys,
-          ...(lostFleet ? [deepKey] : []),
-        ]);
+        expect([...highlightedKeys(container, engine)]).to.have.members(regularKeys);
         // Exactly the normal positions and polygons: no extra spacing, boundary layer, or strokes
         // expanding into the normal 1% inter-sector gap. The old .planet + .space-hex-federation
         // classes brought a 0.1-unit faction stroke, wider than the gap between adjacent sectors.
@@ -135,7 +133,11 @@ for (const [name, component] of [
           expect(highlight.compareDocumentPosition(content) & Node.DOCUMENT_POSITION_FOLLOWING).not.to.equal(0);
         }
         if (lostFleet) {
-          const deepHighlights = highlights.filter((node) => node.parentElement.id.startsWith(`${deepKey}_`));
+          store.commit("toggleMapMode", { type: MapModeType.deepSpaceSectors, player: PlayerEnum.Player1 });
+          await Vue.nextTick();
+          expect([...highlightedKeys(container, engine)]).to.have.members([deepKey]);
+          expect(geometry()).to.deep.equal(defaultGeometry);
+          const deepHighlights = [...container.querySelectorAll(".space-hex-sector-highlight")];
           expect(deepHighlights.length).to.equal(3);
           // All three have planets: background tint must not depend on an empty hex being available.
           expect(deepHighlights.every((node) => engine.map.getS(node.parentElement.id).hasPlanet())).to.equal(true);
@@ -144,7 +146,9 @@ for (const [name, component] of [
         }
         const ring = container.querySelector(".space-hex-power-ring");
         expect(
-          highlights.every((node) => !!(node.compareDocumentPosition(ring) & Node.DOCUMENT_POSITION_FOLLOWING))
+          [...container.querySelectorAll(".space-hex-sector-highlight")].every(
+            (node) => !!(node.compareDocumentPosition(ring) & Node.DOCUMENT_POSITION_FOLLOWING)
+          )
         ).to.equal(true);
         expect(container.querySelectorAll("defs").length).to.equal(3);
         // The visual request must NOT change base sector scoring or the player-board statistic.
@@ -153,11 +157,13 @@ for (const [name, component] of [
 
         store.commit("toggleMapMode", { type: MapModeType.sectors, player: PlayerEnum.Player2 });
         await Vue.nextTick();
-        expect([...highlightedKeys(container, engine)]).to.have.members([
-          regularKeys[0],
-          otherKeys[0],
-          ...(lostFleet ? [deepKey] : []),
-        ]);
+        expect([...highlightedKeys(container, engine)]).to.have.members([regularKeys[0], otherKeys[0]]);
+        if (lostFleet) {
+          // Lantids' shared mine grants presence in the physical Deep Space tile, but not Interspace.
+          store.commit("toggleMapMode", { type: MapModeType.deepSpaceSectors, player: PlayerEnum.Player2 });
+          await Vue.nextTick();
+          expect([...highlightedKeys(container, engine)]).to.have.members([deepKey]);
+        }
         store.commit("toggleMapMode", { type: MapModeType.default, player: PlayerEnum.Player2 });
         await Vue.nextTick();
         expect(container.querySelector(".sector-boundaries")).to.equal(null);
@@ -168,8 +174,34 @@ for (const [name, component] of [
   });
 }
 
+for (const [name, component] of [
+  ["primary", SpaceMap],
+  ["alternate", AlternateSpaceMap],
+] as const) {
+  it(`${name}: the Deep Space counter selects only colonized Deep Space tiles and toggles off`, async () => {
+    const { engine, regularKeys, deepKey } = position(true);
+    const store = makeStore();
+    store.commit("receiveData", engine);
+    const map = render(component, { store });
+    const player = engine.players[0];
+    const info = render(PlayerBoardInfo, {
+      store,
+      props: { player, faction: player.faction, data: player.data, height: 21.4 },
+    });
+    const deep = info.container.querySelector('[data-board-stat="deep-space-sectors"] polygon');
+    await fireEvent.click(deep);
+    expect([...highlightedKeys(map.container, engine)]).to.have.members([deepKey]);
+    expect(map.container.querySelectorAll(".space-hex-sector-highlight")).to.have.length(3);
+    await fireEvent.click(deep);
+    expect(highlightedKeys(map.container, engine).size).to.equal(0);
+    await fireEvent.click(info.container.querySelector('[data-board-stat="sectors"] image'));
+    expect([...highlightedKeys(map.container, engine)]).to.have.members(regularKeys);
+    cleanup();
+  });
+}
+
 describe("base final sector-scoring map shortcut", () => {
-  it("excludes Deep Space from its scoring explanation without narrowing the player dropdown view", async () => {
+  it("keeps ordinary sector scoring separate from the Deep Space dropdown view", async () => {
     const { engine, regularKeys, deepKey } = position(true);
     engine.tiles.scorings.final[0] = FinalTile.Sector;
     const store = makeStore();
@@ -181,10 +213,13 @@ describe("base final sector-scoring map shortcut", () => {
       { type: MapModeType.sectors, player: PlayerEnum.Player1, spaceSectorsOnly: true },
     ]);
     expect([...highlightedKeys(map.container, engine)]).to.have.members(regularKeys);
-    // Switching back to the ordinary player dropdown restores Deep Space to the visual selection.
+    // Ordinary and Deep Space dropdown choices now explain their corresponding counters separately.
     store.commit("toggleMapMode", { type: MapModeType.sectors, player: PlayerEnum.Player1 });
     await Vue.nextTick();
-    expect([...highlightedKeys(map.container, engine)]).to.have.members([...regularKeys, deepKey]);
+    expect([...highlightedKeys(map.container, engine)]).to.have.members(regularKeys);
+    store.commit("toggleMapMode", { type: MapModeType.deepSpaceSectors, player: PlayerEnum.Player1 });
+    await Vue.nextTick();
+    expect([...highlightedKeys(map.container, engine)]).to.have.members([deepKey]);
     expect(engine.players[0].progress(FinalTile.Sector)).to.equal(2);
   });
 });

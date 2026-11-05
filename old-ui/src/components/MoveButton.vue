@@ -54,7 +54,7 @@ export default class MoveButton extends Vue {
   @Prop()
   public button: ButtonData;
 
-  private subscription: () => {} = null;
+  private subscription: () => void = null;
   private modalShow = false;
   private customLabel = "";
   private startingHex = null; // For range command

@@ -30,7 +30,7 @@ describe("ExplorationSupply local proposal", () => {
       expect(container.querySelectorAll("path")).to.have.length(1);
       const symbol = container.querySelector(".shuttle-symbol");
       expect(symbol.getAttribute("fill")).to.equal("black");
-      expect(symbol.getAttribute("opacity")).to.equal("0.8");
+      expect(symbol.getAttribute("opacity")).to.equal("1");
       expect(symbol.getAttribute("transform")).to.equal("scale(0.04)");
       // One silhouette with an actual transparent cockpit cutout, not a white/shaded overlay.
       expect(symbol.getAttribute("fill-rule")).to.equal("evenodd");

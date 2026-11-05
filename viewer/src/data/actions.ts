@@ -29,6 +29,7 @@ export enum MapModeType {
   default = "default",
   federations = "federations",
   sectors = "sectors",
+  deepSpaceSectors = "deepSpaceSectors",
   leech = "leech",
   planetType = "planetType",
 }
@@ -37,8 +38,8 @@ export type MapMode = {
   type: MapModeType;
   player?: PlayerEnum;
   planet?: Planet;
-  /** The base final-scoring shortcut explains Condition.Sector, which excludes Deep Space.
-   * Player-board Sectors mode leaves this unset to show all physical sector tiles instead. */
+  /** Explicit scope marker used by the base final-scoring shortcut. The ordinary Sectors
+   * view also excludes Deep Space; that now has its own deepSpaceSectors view. */
   spaceSectorsOnly?: boolean;
 };
 

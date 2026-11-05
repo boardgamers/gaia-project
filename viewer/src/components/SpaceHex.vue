@@ -433,7 +433,7 @@ export default class SpaceHex extends Vue {
   }
 
   get sectorMapMode(): MapMode | null {
-    return this.playerMapMode(MapModeType.sectors);
+    return this.playerMapMode(MapModeType.sectors) ?? this.playerMapMode(MapModeType.deepSpaceSectors);
   }
 
   get mapModeHighlight(): PlayerEnum | null {
@@ -444,7 +444,8 @@ export default class SpaceHex extends Vue {
     if (
       sec &&
       (this.planet === PlanetEnum.Empty || this.sectorType === LostFleetSectorType.DeepSpace) &&
-      (!sec.spaceSectorsOnly || this.sectorType === LostFleetSectorType.Space) &&
+      this.sectorType ===
+        (sec.type === MapModeType.deepSpaceSectors ? LostFleetSectorType.DeepSpace : LostFleetSectorType.Space) &&
       isColonizedSector(this.hex, this.player(sec.player))
     ) {
       return sec.player;

@@ -103,7 +103,7 @@ export default class Table extends Vue {
   }
 
   get mapModeTypeOptions() {
-    return mapModeTypeOptions;
+    return mapModeTypeOptions(this.engine.expansions);
   }
 
   selectedMapMode(player: PlayerEnum): MapModeType {

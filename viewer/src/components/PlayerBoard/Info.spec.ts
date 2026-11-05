@@ -42,14 +42,14 @@ describe("PlayerBoardInfo Lost Fleet stats", () => {
     );
   });
 
-  it("outlines research counters on Lost Fleet Lantids boards without changing base-game counters", () => {
+  it("outlines research counters on both base-game and Lost Fleet Lantids boards", () => {
     for (const lostFleet of [false, true]) {
       const { props, store } = setup(lostFleet, Faction.Lantids);
       const { container } = render(PlayerBoardInfo, { props, store });
       const counters = container.querySelectorAll(".research-counter .research-tile");
       expect(counters).to.have.length(6);
       for (const counter of Array.from(counters)) {
-        expect(counter.classList.contains("research-tile--outlined")).to.equal(lostFleet);
+        expect(counter.classList.contains("research-tile--outlined")).to.equal(true);
       }
     }
   });
@@ -71,7 +71,7 @@ describe("PlayerBoardInfo Lost Fleet stats", () => {
     expect(container.querySelector(".board-info > rect").getAttribute("height")).to.equal("8");
   });
 
-  it("shows separate ordinary and Deep Space tile counts and keeps the combined sector shortcut", async () => {
+  it("shows separate ordinary and Deep Space counts with matching map shortcuts", async () => {
     const { props, store, player } = setup();
     player.data.occupied.push(colony("s1", 1), colony("s2", 2), ...[0, 1, 2].map((i) => colony(`DS11_${i}`, 3 + i)));
     const { container } = render(PlayerBoardInfo, { props, store });
@@ -83,6 +83,10 @@ describe("PlayerBoardInfo Lost Fleet stats", () => {
     expect(deep.querySelectorAll("polygon")).to.have.length(3);
     expect(deep.querySelector(".deep-space-sector--white")).not.to.equal(null);
     await fireEvent.click(deep.querySelector("polygon"));
+    expect(store.getters.mapModes).to.deep.equal([{ type: MapModeType.deepSpaceSectors, player: 0 }]);
+    await fireEvent.click(deep.querySelector("polygon"));
+    expect(store.getters.mapModes).to.deep.equal([]);
+    await fireEvent.click(normal.querySelector("image"));
     expect(store.getters.mapModes).to.deep.equal([{ type: MapModeType.sectors, player: 0 }]);
     player.data.occupied.push(colony("DS12_0", 6));
     await Vue.nextTick();

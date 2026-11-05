@@ -104,7 +104,7 @@
           v-b-tooltip
           :title="
             isLostFleet
-              ? 'Space sectors with a colonized planet. Click to highlight all colonized sectors.'
+              ? 'Space sectors with a colonized planet. Click to highlight colonized Space sectors.'
               : 'Sectors with a colonized planet'
           "
         >
@@ -130,12 +130,12 @@
           data-board-stat="deep-space-sectors"
           transform="translate(13, 3.5)"
           v-b-tooltip
-          title="Deep Space sectors with a colonized planet. Click to highlight all colonized sectors."
+          title="Deep Space sectors with a colonized planet. Click to highlight colonized Deep Space sectors."
         >
           <DeepSpaceSector
             :white="true"
             transform="scale(0.065)"
-            @click.native="toggleMapMode('sectors')"
+            @click.native="toggleMapMode('deepSpaceSectors')"
             style="cursor: pointer"
           />
           <text class="board-text" transform="translate(0.9,-.1) scale(0.8)">{{ deepSpaceSectors }}</text>
@@ -202,7 +202,7 @@
         <polygon
           points="-7.5,3 -3,7.5 3,7.5 7.5,3 7.5,-3 3,-7.5 -3,-7.5 -7.5,-3"
           :transform="`scale(0.1)`"
-          :class="['board-info', 'research-tile', { 'research-tile--outlined': isLostFleet }, researchClass(i - 1)]"
+          :class="['board-info', 'research-tile', 'research-tile--outlined', researchClass(i - 1)]"
           :style="`fill: ${researchStyle(i - 1).backgroundColor}`"
         />
         <text class="board-text" transform="scale(0.8)" x="-.35" y="-.15" :style="`fill: ${researchStyle(i - 1).color}`"
