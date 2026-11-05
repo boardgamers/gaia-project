@@ -851,6 +851,133 @@ describe("settleAnalysisClone", () => {
   });
 });
 
+describe("analysis booster reservations", () => {
+  function game() {
+    return new Engine([
+      "init 4 concurrent-charge-test",
+      "p1 faction terrans",
+      "p2 faction nevlas",
+      "p3 faction firaks",
+      "p4 faction hadsch-hallas",
+      "p1 build m 8A2",
+      "p2 build m 8B1",
+      "p3 build m 8B3",
+      "p4 build m 7B5",
+      "p4 build m 1A2",
+      "p3 build m 7A4",
+      "p2 build m 5A2",
+      "p1 build m 4A4",
+      "p4 booster booster2",
+      "p3 booster booster4",
+      "p2 booster booster5",
+      "p1 booster booster6",
+      "hadsch-hallas income 2t",
+      "terrans pass booster9",
+      "nevlas pass booster8",
+    ]);
+  }
+
+  function preview(real: Engine, seat: number) {
+    const engine = markAnalysisSeat(Engine.fromData(JSON.parse(JSON.stringify(real))), seat);
+    advancePastOwnPass(engine, seat);
+    settleAnalysisClone(engine, seat);
+    return engine;
+  }
+
+  function passBoosters(engine: Engine, seat: number) {
+    return engine.findAvailableCommand(seat, Command.Pass).data.boosters;
+  }
+
+  for (const seat of [2, 3]) {
+    it(`keeps already-passed opponents' next boosters out of the pass menu ${seat === 2 ? "on turn" : "off turn"}`, () => {
+      const real = game();
+      const original = JSON.stringify(real);
+      expect(real.playerToMove).to.equal(2);
+      expect(real.passedPlayers).to.deep.equal([0, 1]);
+      const origin = preview(real, seat);
+      const { engine, applied, blockedReason } = replayAnalysisLine(
+        origin,
+        [{ kind: "move", move: `${real.players[seat].faction} up nav.` }],
+        seat
+      );
+      expect(applied).to.equal(1);
+      expect(blockedReason).to.equal(undefined);
+      expect(engine.turnOrder).to.deep.equal([seat]);
+      expect(engine.round).to.equal(1);
+      expect(passBoosters(engine, seat)).to.have.members(
+        Object.keys(real.tiles.boosters).filter(
+          (booster) => !["booster8", "booster9", real.players[seat].data.tiles.booster].includes(booster)
+        )
+      );
+      // Still assume a not-yet-passed opponent can return their old booster before our pass.
+      expect(passBoosters(engine, seat)).to.include(seat === 2 ? "booster2" : "booster4");
+      expect(passBoosters(engine, seat)).to.include("booster6"); // actually returned by Terrans
+      expect(passBoosters(engine, seat)).to.include("booster5"); // actually returned by Nevlas
+      expect(JSON.stringify(real)).to.equal(original);
+    });
+  }
+
+  it("rejects a reserved selection during replay without mutating the real game, origin or saved line", () => {
+    const real = game();
+    const origin = preview(real, 2);
+    const original = JSON.stringify(real);
+    const base = JSON.stringify(origin);
+    const entries: AnalysisEntry[] = [
+      { kind: "move", move: "firaks up nav." },
+      { kind: "move", move: "firaks pass booster8" },
+    ];
+    const saved = JSON.stringify(entries);
+    const result = replayAnalysisLine(origin, entries, 2);
+    expect(result.applied).to.equal(1);
+    expect(result.blockedReason).to.contain("booster8 is not in the available boosters");
+    expect(result.engine.round).to.equal(1);
+    expect(result.engine.players[2].data.tiles.booster).to.equal("booster4");
+    expect(JSON.stringify(real)).to.equal(original);
+    expect(JSON.stringify(origin)).to.equal(base);
+    expect(JSON.stringify(entries)).to.equal(saved);
+  });
+
+  it("expires reservations at the round boundary, keeps solo flow, and returns our old booster", () => {
+    const real = game();
+    const original = JSON.stringify(real);
+    const origin = preview(real, 2);
+    const first = replayAnalysisLine(origin, [{ kind: "move", move: "firaks pass booster5" }], 2);
+    expect(first.blockedReason).to.equal(undefined);
+    expect(first.applied).to.equal(1);
+    expect(first.engine.round).to.equal(2);
+    expect(first.engine.turnOrder).to.deep.equal([2]);
+    expect(first.engine.passedPlayers).to.deep.equal([]);
+    expect(first.engine.playerToMove).to.equal(2);
+    expect(passBoosters(first.engine, 2)).to.include.members(["booster8", "booster9", "booster4"]);
+    expect(passBoosters(first.engine, 2)).to.not.include("booster5");
+
+    // The choice now targets round 3, not the round 2 those real opponents reserved.
+    const later = replayAnalysisLine(first.engine, [{ kind: "move", move: "firaks pass booster8" }], 2);
+    expect(later.blockedReason).to.equal(undefined);
+    expect(later.applied).to.equal(1);
+    expect(later.engine.round).to.equal(3);
+    expect(later.engine.turnOrder).to.deep.equal([2]);
+    expect(passBoosters(later.engine, 2)).to.include.members(["booster5", "booster9"]);
+    expect(passBoosters(later.engine, 2)).to.not.include("booster8");
+    expect(JSON.stringify(real)).to.equal(original);
+  });
+
+  it("does not extend already-passed opponents' reservations after entering with our own seat passed", () => {
+    const real = game();
+    real.move("firaks pass booster5");
+    const original = JSON.stringify(real);
+    expect(real.passedPlayers).to.deep.equal([0, 1, 2]);
+    const engine = preview(real, 2);
+    expect(engine.round).to.equal(2);
+    expect(engine.turnOrder).to.deep.equal([2]);
+    expect(engine.playerToMove).to.equal(2);
+    expect(engine.players[2].data.tiles.booster).to.equal("booster5");
+    expect(passBoosters(engine, 2)).to.include.members(["booster8", "booster9", "booster4", "booster2"]);
+    expect(passBoosters(engine, 2)).to.not.include("booster5");
+    expect(JSON.stringify(real)).to.equal(original);
+  });
+});
+
 describe("markAnalysisSeat", () => {
   it("sets the analysis flag on the given seat's player data", () => {
     const engine = new Engine(SETUP_MOVES);

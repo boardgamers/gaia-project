@@ -25,7 +25,7 @@
       <SpaceHex
         v-for="hex in looseHexes"
         :key="hex.toString()"
-        :transform="`translate(${hexCenter(hex).x * spread}, ${hexCenter(hex).y * spread})`"
+        :transform="`translate(${displayedHexCenter(hex).x}, ${displayedHexCenter(hex).y})`"
         :hex="hex"
         :isCenter="false"
         :contentRotation="mapRotationDeg"
@@ -130,7 +130,7 @@ import Vue from "vue";
 import { Component } from "vue-property-decorator";
 import type { MapMode } from "../data/actions";
 import { MapModeType } from "../data/actions";
-import { HEX_SPREAD, hexCenter } from "../graphics/hex";
+import { deepSpaceOffset, displayedHexCenter, HEX_SPREAD, hexCenter } from "../graphics/hex";
 import { factionPiecePlanet } from "../graphics/utils";
 import { gameSeed, isBeforeRound1 } from "../logic/utils";
 import FactionWheel from "./FactionWheel.vue";
@@ -217,6 +217,10 @@ export default class SpaceMap extends Vue {
     return hexCenter(hex);
   }
 
+  displayedHexCenter(hex: GaiaHex) {
+    return displayedHexCenter(hex, this.map.grid);
+  }
+
   /** Exposed for the template, which places sectors and loose hexes at the same 1% spread. */
   get spread(): number {
     return HEX_SPREAD;
@@ -249,7 +253,8 @@ export default class SpaceMap extends Vue {
   private hexTransform(hex: GaiaHex): string {
     const spread = (point: Point) => `translate(${point.x * HEX_SPREAD}, ${point.y * HEX_SPREAD})`;
     if (classifySectorId(hex.data.sector) !== LostFleetSectorType.Space) {
-      return spread(hexCenter(hex));
+      const point = this.displayedHexCenter(hex);
+      return `translate(${point.x}, ${point.y})`;
     }
     const center = this.sectors.find((sector) => this.map.distance(sector, hex) <= 2);
     if (!center) {
@@ -304,9 +309,9 @@ export default class SpaceMap extends Vue {
       }
     }
     return Array.from(groups.entries()).map(([id, hexes]) => {
-      const centers = hexes.map((h) => hexCenter(h));
-      const x = (centers.reduce((sum, c) => sum + c.x, 0) / centers.length) * HEX_SPREAD;
-      const y = (centers.reduce((sum, c) => sum + c.y, 0) / centers.length) * HEX_SPREAD;
+      const centers = hexes.map((h) => this.displayedHexCenter(h));
+      const x = centers.reduce((sum, c) => sum + c.x, 0) / centers.length;
+      const y = centers.reduce((sum, c) => sum + c.y, 0) / centers.length;
       return { id, x, y };
     });
   }
@@ -477,7 +482,10 @@ export default class SpaceMap extends Vue {
     const points: Point[] = [];
     for (const hex of [...this.map.grid.values(), ...this.draftSlots]) {
       const c = hexCenter(hex);
-      points.push({ x: (c.x * cos - c.y * sin) * 1.01, y: (c.x * sin + c.y * cos) * 1.01 });
+      const offset = "data" in hex ? deepSpaceOffset(hex as GaiaHex, this.map.grid) : { x: 0, y: 0 };
+      const x = c.x * HEX_SPREAD + offset.x;
+      const y = c.y * HEX_SPREAD + offset.y;
+      points.push({ x: x * cos - y * sin, y: x * sin + y * cos });
     }
     return points;
   }

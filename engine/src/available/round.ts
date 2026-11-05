@@ -4,13 +4,18 @@ import { Booster, Command, Phase, Player } from "../enums";
 export function possibleRoundBoosters(engine: Engine, player: Player) {
   const commands = [];
   const pl = engine.player(player);
-  // Future rounds may assume an opponent returns a booster, but only tiles drawn for this game
-  // exist. During setup, already chosen boosters cannot become available before our first pick.
+  // An opponent still playing may return their old booster before our planned pass. An opponent
+  // who already passed has reserved their NEW booster for next round; that choice is no longer
+  // hypothetical. passedPlayers resets at the round boundary, so this is not a permanent ban.
+  // During setup, already chosen boosters cannot become available before our first pick.
+  const reserved = (engine.passedPlayers ?? []).map((seat) => engine.player(seat).data.tiles.booster);
   const boosters = engine.isLastRound
     ? []
     : Booster.values(engine.expansions).filter((booster) =>
         pl?.data.analysis && engine.phase !== Phase.SetupBooster
-          ? engine.tiles.boosters[booster] !== undefined && booster !== pl.data.tiles.booster
+          ? engine.tiles.boosters[booster] !== undefined &&
+            booster !== pl.data.tiles.booster &&
+            !reserved.includes(booster)
           : engine.tiles.boosters[booster]
       );
 

@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import Engine from "../engine";
-import { Booster, Phase, Player as PlayerEnum } from "../enums";
+import { Booster, Command, Phase, Player as PlayerEnum } from "../enums";
 import { possibleRoundBoosters } from "./round";
 
 describe("possibleRoundBoosters", () => {
@@ -29,7 +29,7 @@ describe("possibleRoundBoosters", () => {
     expect(command.data.boosters.length).to.be.greaterThan(0);
   });
 
-  it("in analysis mode, offers only this game’s boosters except the one currently held", () => {
+  it("before anyone has passed, offers this game's boosters except the planning seat's current one", () => {
     const engine = game();
     engine.player(PlayerEnum.Player1).data.analysis = true;
 
@@ -37,8 +37,8 @@ describe("possibleRoundBoosters", () => {
 
     // Player1 (terrans) is holding booster3 - can't pick the one you just had.
     expect(command.data.boosters).to.not.include(Booster.Booster3);
-    // booster7 is off the table in a real game (held by the other player), but analysis assumes
-    // it's still pickable since opponents are frozen and might not really have taken it.
+    // booster7 is currently held by the other player, who has not passed yet. Planning allows
+    // for that player returning it before our future pass.
     expect(command.data.boosters).to.include(Booster.Booster7);
     expect(command.data.boosters).to.have.members(
       Object.keys(engine.tiles.boosters).filter((booster) => booster !== Booster.Booster3)
@@ -46,6 +46,38 @@ describe("possibleRoundBoosters", () => {
     const unused = Booster.values(engine.expansions).filter((booster) => engine.tiles.boosters[booster] === undefined);
     expect(unused.length).to.be.greaterThan(0);
     expect(command.data.boosters).to.not.include.members(unused);
+  });
+
+  it("respects an opponent's completed pass when generating and validating a planning pass", () => {
+    const real = new Engine([...SETUP, "terrans pass booster4"]);
+    const original = JSON.stringify(real);
+    const engine = Engine.fromData(JSON.parse(original));
+    engine.player(PlayerEnum.Player2).data.analysis = true;
+    engine.clearAvailableCommands();
+    engine.generateAvailableCommands();
+
+    const command = engine.findAvailableCommand(PlayerEnum.Player2, Command.Pass);
+    expect(command.data.boosters).to.have.members(
+      Object.keys(real.tiles.boosters).filter((booster) => real.tiles.boosters[booster])
+    );
+    // The old booster was returned; the new one is already reserved for round 2.
+    expect(command.data.boosters).to.include(Booster.Booster3);
+    expect(command.data.boosters).to.not.include(Booster.Booster4);
+    expect(command.data.boosters).to.not.include(Booster.Booster7);
+    expect(() => engine.move("nevlas pass booster4")).to.throw("booster4 is not in the available boosters");
+    expect(JSON.stringify(real)).to.equal(original);
+  });
+
+  it("keeps real pass order and booster ownership intact across the next round", () => {
+    const engine = new Engine([...SETUP, "terrans pass booster4", "nevlas pass booster5"]);
+    expect(engine.round).to.equal(2);
+    expect(engine.turnOrder).to.deep.equal([PlayerEnum.Player1, PlayerEnum.Player2]);
+    expect(engine.passedPlayers).to.deep.equal([]);
+    const command = engine.findAvailableCommand(PlayerEnum.Player1, Command.Pass);
+    expect(command.data.boosters).to.include(Booster.Booster3);
+    expect(command.data.boosters).to.include(Booster.Booster7);
+    expect(command.data.boosters).to.not.include(Booster.Booster4);
+    expect(command.data.boosters).to.not.include(Booster.Booster5);
   });
 
   it("during setup, excludes unused boosters and those already picked by opponents", () => {

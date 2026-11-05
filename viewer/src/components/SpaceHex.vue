@@ -49,7 +49,11 @@
     <use
       v-if="mapModeHighlight !== null"
       xlink:href="#space-hex"
-      :class="['space-hex-federation', 'planet', 'planet-fill', playerPlanet(mapModeHighlight)]"
+      :class="[
+        'planet-fill',
+        playerPlanet(mapModeHighlight),
+        sectorMapMode ? 'space-hex-sector-highlight' : 'space-hex-federation planet',
+      ]"
     />
     <!-- Lost Fleet spaceship hex: fill the entire hex with the ship's identity color (rulebook
          page 7 - Twilight purple / Rebellion brown / T F Mars grey / Eclipse yellow). Drawn here,
@@ -169,6 +173,7 @@ import { spaceshipColors } from "../data/spaceships";
 import { isWarningEnabled } from "../data/warnings";
 import type { FederationLine } from "../graphics/hex";
 import { corners, playerFederationLines } from "../graphics/hex";
+import { isColonizedSector } from "../graphics/sectors";
 import { hexStarField } from "../graphics/stars";
 import { factionPiecePlanet } from "../graphics/utils";
 import { isFree } from "../logic/buttons/utils";
@@ -438,18 +443,25 @@ export default class SpaceHex extends Vue {
     }
   }
 
-  get mapModeHighlight(): PlayerEnum | null {
-    if (this.planet === "e") {
-      const sec = this.playerMapMode(MapModeType.sectors);
-      if (
-        sec &&
-        this.player(sec.player).data.occupied.some(
-          (hex) => hex.colonizedBy(sec.player) && hex.data.sector === this.hex.data.sector
-        )
-      ) {
-        return sec.player;
-      }
+  get sectorMapMode(): MapMode | null {
+    return this.playerMapMode(MapModeType.sectors);
+  }
 
+  get mapModeHighlight(): PlayerEnum | null {
+    const sec = this.sectorMapMode;
+    // Deep Space's three per-hex IDs share one sector; Interspace is never a sector. Tint every
+    // DS background (even a tile with three planets must remain visible), underneath its content.
+    // Keep ordinary sectors' existing empty-cell highlighting unchanged.
+    if (
+      sec &&
+      (this.planet === PlanetEnum.Empty || this.sectorType === LostFleetSectorType.DeepSpace) &&
+      (!sec.spaceSectorsOnly || this.sectorType === LostFleetSectorType.Space) &&
+      isColonizedSector(this.hex, this.player(sec.player))
+    ) {
+      return sec.player;
+    }
+
+    if (this.planet === "e") {
       const fed = this.playerMapMode(MapModeType.federations);
       if (fed && this.hex.federations.some((f) => f === fed.player)) {
         return fed.player;
@@ -647,6 +659,14 @@ svg {
     &.recent {
       fill: var(--recent);
     }
+  }
+
+  // Sector tint must stop at the SAME hex outline as the normal map. Reusing the federation/
+  // planet stroke expands the fill into the existing 1% inter-sector gap, merging neighbouring
+  // highlighted tiles. Fill only: no new borders, spacing, or changes to federation highlights.
+  .space-hex-sector-highlight {
+    stroke: none;
+    pointer-events: none;
   }
 
   .space-hex-federation {

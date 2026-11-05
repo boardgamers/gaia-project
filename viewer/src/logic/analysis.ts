@@ -370,14 +370,13 @@ export function clearAnalysisLine(seat: number, scope?: string): void {
  *    `[seat, seat]` the moment it happens.
  * 2. If `engine` is already sitting in `Phase.RoundMove` (entry landed mid-round, or the setup ->
  *    round 1 transition above already ran), `turnOrder` is still the real multiplayer list for the
- *    round in progress - shrink it directly, and reset `passedPlayers` to a fresh `[]` so this
- *    seat's own future pass accumulates cleanly (mirrors what `beginRoundStartPhase` itself already
- *    does at every ordinary round boundary).
+ *    round in progress - shrink it directly. Keep opponents in `passedPlayers`: their new boosters
+ *    are already reserved for the next round, unlike old boosters held by opponents still playing.
+ *    Remove only this seat so its own future pass accumulates once.
  *
- * Either way, the loop is self-sustaining from here: `beginRoundStartPhase`'s
- * `turnOrder = passedPlayers` at every later boundary reads back exactly `[seat]`, since only this
- * seat ever passes again - this function only ever needs to run once (from `enterAnalysisMode`),
- * never on every replay step.
+ * At the next boundary `beginRoundStartPhase` selects only the analysis seat from `passedPlayers`
+ * for the new turn order, then clears that accumulator normally. This expires the reservations at
+ * exactly the right round and keeps future rounds solo without extra state to persist or reanchor.
  *
  * Deliberately does NOT touch `engine.setup` (the array backing the `turnOrderAfterSetupAuction`
  * getter, which has no setter - the fallback above can only be steered via `passedPlayers`).
@@ -397,7 +396,7 @@ export function applySoloRoundFlow(engine: Engine, seat: number): void {
     return;
   }
   engine.turnOrder = [seat];
-  engine.passedPlayers = [];
+  engine.passedPlayers = engine.passedPlayers.filter((passed) => passed !== seat);
   engine.currentPlayer = seat;
   engine.tempCurrentPlayer = undefined;
   engine.clearAvailableCommands();
@@ -412,11 +411,11 @@ export function applySoloRoundFlow(engine: Engine, seat: number): void {
  *
  * So roll the clone forward instead: every opponent still in `turnOrder` passes, through real engine
  * code, which runs the ordinary end-of-round machinery (scoring, income, Gaia) and lands in the next
- * round with `beginRoundStartPhase` reading `turnOrder = passedPlayers` - i.e. this seat, alone,
- * exactly as the solo flow wants it. Opponents pass rather than being auto-played, because the
- * sandbox's premise is that they never take a turn; their booster is handed straight back for the
- * same reason `resolveOpponentDecisions` hands back the round-0 one (the pool must show every tile
- * free except the one the sandbox seat itself holds).
+ * round with `beginRoundStartPhase` selecting only the analysis seat for the next turn order.
+ * Opponents pass rather than being auto-played, because the sandbox's premise is that they never
+ * take a turn; their fictitious booster pick is handed straight back. Real earlier picks remain
+ * on their boards, but the round boundary expires those reservations too: our next pass will
+ * choose a booster for the round AFTER the one they already reserved.
  *
  * Returns whether the clone actually moved to a later round - `Game.vue` blocks Commit on that, since
  * a line played in round N+1 describes moves the real game, still sitting in round N, cannot accept.

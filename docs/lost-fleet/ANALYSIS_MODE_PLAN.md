@@ -260,6 +260,11 @@ happen lazily, mid-replay, at the exact point the clone first reaches round 1's 
 `|| turnOrderAfterSetupAuction` fallback never triggers, rather than shrinking `setup` and risking
 the same leech-adjacency breakage for round 1 itself.
 
+**Booster reservation correction:** keep already-passed opponents in `passedPlayers` while shrinking
+`turnOrder`, so their new boosters stay reserved for the upcoming round (§4.5). At the next boundary,
+`beginRoundStartPhase` selects only the analysis seat for income/Gaia/turns and clears `passedPlayers`
+as usual. This preserves solo flow and naturally expires those reservations without extra saved state.
+
 ### 2.6 Setup already does what decision #7 wants — if you leave it alone
 
 `beginSetupBuildingPhase` (`phase.ts:366`) builds the setup turn order including Lost Fleet expansion
@@ -470,6 +475,15 @@ Board actions, tech tiles, boosters and federation tiles are **shared, single-us
 opponents frozen, analysis shows all of them available, so a line built on the 7-credit power action
 assumes nobody takes it first. This is deliberately out of scope. State it in the panel's help text so
 the number is not over-trusted.
+
+For boosters, this assumption applies only to future **undecided** choices: the pool contains only
+this game's drawn tiles, excludes your current booster, and excludes the new boosters already chosen
+by opponents who passed in the current real round. Opponents still playing may return their old
+boosters before your planned pass, so those remain selectable. Existing reservations expire once
+the simulation enters the next round; its next pass chooses for a later round, not the one already
+reserved. Entering after your own real pass starts in that next round too. Setup still uses actual
+availability. Reanchoring or reloading derives reservations from the current real position, without
+adding metadata to saved plans.
 
 ---
 

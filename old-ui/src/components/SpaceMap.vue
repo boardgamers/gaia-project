@@ -14,7 +14,7 @@
       :key="hex.toString()"
       :hex="hex"
       :isCenter="false"
-      :transform="`translate(${hexCenter(hex).x * spread},${hexCenter(hex).y * spread})`"
+      :transform="`translate(${displayedHexCenter(hex).x},${displayedHexCenter(hex).y})`"
     />
     <use
       v-for="ring in powerRings"

@@ -29,7 +29,11 @@
     <use
       v-if="mapModeHighlight !== null"
       xlink:href="#space-hex"
-      :class="['space-hex-federation', 'planet', 'planet-fill', playerPlanet(mapModeHighlight)]"
+      :class="[
+        'planet-fill',
+        playerPlanet(mapModeHighlight),
+        sectorMapMode ? 'space-hex-sector-highlight' : 'space-hex-federation planet',
+      ]"
     />
 
     <use

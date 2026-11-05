@@ -1,4 +1,5 @@
 import { classifySectorId, GaiaHex, LostFleetSectorType, Player } from "@gaia-project/engine";
+import { lostFleetSectorKey } from "@gaia-project/engine/src/lost-fleet-map";
 import { Direction, Grid } from "hexagrid";
 import { CubeCoordinatesPartial } from "hexagrid/src/cubecoordinates";
 import { factionColor, lightenDarkenColor } from "./utils";
@@ -21,11 +22,36 @@ export function hexCenter(hex: CubeCoordinatesPartial, radius = 1) {
   };
 }
 
+/** A tiny rigid translation of each physical Deep Space tile away from its neighbouring
+ * regular sectors. Derive the outward direction from the local notch, not the board origin:
+ * the asymmetric 3/4-player boards also have notches along their sides. */
+export function deepSpaceOffset(hex: GaiaHex, grid?: Grid<GaiaHex>) {
+  if (!grid || classifySectorId(hex.data.sector) !== LostFleetSectorType.DeepSpace) return { x: 0, y: 0 };
+  const tile = [...grid.values()].filter((other) => lostFleetSectorKey(other) === lostFleetSectorKey(hex));
+  // Sum distinct boundary normals rather than weighting by the number of touching
+  // cells. The notch has opposing side walls: their normals cancel, leaving the
+  // opening direction (so sliding outward never narrows either side wall).
+  const normals = new Map<string, { x: number; y: number }>();
+  for (const cell of tile) {
+    for (const neighbour of grid.neighbours(cell)) {
+      if (classifySectorId(neighbour.data.sector) !== LostFleetSectorType.Space) continue;
+      const q = cell.q - neighbour.q;
+      const r = cell.r - neighbour.r;
+      normals.set(`${q},${r}`, hexCenter({ q, r }));
+    }
+  }
+  const dx = [...normals.values()].reduce((sum, p) => sum + p.x, 0);
+  const dy = [...normals.values()].reduce((sum, p) => sum + p.y, 0);
+  const length = Math.hypot(dx, dy);
+  return length ? { x: (dx / length) * 0.035, y: (dy / length) * 0.035 } : { x: 0, y: 0 };
+}
+
 /** Sectors are spread apart as whole tiles; their internal hex spacing stays unchanged. */
-export function displayedHexCenter(hex: GaiaHex) {
+export function displayedHexCenter(hex: GaiaHex, grid?: Grid<GaiaHex>) {
   const point = hexCenter(hex);
   if (classifySectorId(hex.data.sector) !== LostFleetSectorType.Space) {
-    return { x: point.x * HEX_SPREAD, y: point.y * HEX_SPREAD };
+    const offset = deepSpaceOffset(hex, grid);
+    return { x: point.x * HEX_SPREAD + offset.x, y: point.y * HEX_SPREAD + offset.y };
   }
   const relative = hex.relativeCoordinates;
   const center = hexCenter({ q: hex.q - relative.q, r: hex.r - relative.r });
@@ -52,10 +78,10 @@ function rotateRight(d: Direction, times: number): Direction {
 
 export function playerFederationLines(grid: Grid<GaiaHex>, hex: GaiaHex, player: Player): FederationLine[] {
   const directions = Direction.list().filter((d) => grid.neighbour(hex, d)?.federations?.includes(player.player));
-  const center = displayedHexCenter(hex);
+  const center = displayedHexCenter(hex, grid);
   const color = lightenDarkenColor(factionColor(player.faction), 30);
   const midpoint = (direction: Direction) => {
-    const neighbour = displayedHexCenter(grid.neighbour(hex, direction));
+    const neighbour = displayedHexCenter(grid.neighbour(hex, direction), grid);
     return `${(neighbour.x - center.x) / 2} ${(neighbour.y - center.y) / 2}`;
   };
 

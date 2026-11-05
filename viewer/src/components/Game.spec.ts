@@ -924,6 +924,79 @@ describe("Game", () => {
       vm.$destroy();
     });
 
+    it("renders only unreserved booster choices after the first planned move and inspecting it", async () => {
+      const real = new Engine([...SETUP_MOVES, "terrans pass booster4"]);
+      const original = JSON.stringify(real);
+      const vm = mountAsSeat(1, Engine.fromData(JSON.parse(original)));
+      vm.enterAnalysisMode();
+      vm.applyAnalysisMove("nevlas up nav.");
+      vm.inspectAnalysisMove(0);
+      expect(vm.engine.findAvailableCommand(1, Command.Pass).data.boosters).to.have.members([
+        "booster3",
+        "booster5",
+        "booster8",
+      ]);
+      vm.cancelAnalysisMoveEdit();
+      await Vue.nextTick();
+      const pass = Array.from(vm.$el.querySelectorAll("#move-buttons button")).find(
+        (button: HTMLButtonElement) => button.textContent.trim() === "Pass"
+      );
+      expect(pass).not.to.equal(undefined);
+      await fireEvent.click(pass as HTMLElement);
+      const offered = Array.from(vm.$el.querySelectorAll("#move-buttons .booster")).map(
+        (element: any) => element.__vue__.booster
+      );
+      expect(offered).to.have.members(["booster3", "booster5", "booster8"]);
+      expect(vm.engine.passedPlayers).to.deep.equal([0]);
+      vm.exitAnalysisMode();
+      expect(JSON.parse(JSON.stringify(vm.engine))).to.deep.equal(JSON.parse(original));
+      vm.$el.remove();
+      vm.$destroy();
+    });
+
+    it("refreshes booster reservations on real progress and reload without losing a blocked saved pass", async () => {
+      const real = new Engine(SETUP_MOVES);
+      const vm = mountAsSeat(1, real);
+      vm.enterAnalysisMode(); // Off turn: Terrans has not passed yet.
+      vm.applyAnalysisMove("nevlas up nav.");
+      vm.applyAnalysisMove("nevlas pass booster4");
+      const entries = JSON.parse(JSON.stringify(vm.analysisEntries));
+      expect(vm.analysisAppliedCount).to.equal(2);
+      const arrived = bgsMove(JSON.parse(JSON.stringify(real)), "terrans pass booster4", 0);
+      const original = JSON.stringify(arrived);
+      await vm.$store.dispatch("externalData", arrived);
+      expect(vm.analysisMode).to.equal(true);
+      expect(vm.analysisEntries).to.deep.equal(entries);
+      expect(vm.analysisAppliedCount).to.equal(1);
+      expect(vm.analysisBlockedReason).to.contain("booster4 is not in the available boosters");
+      expect(vm.engine.findAvailableCommand(1, Command.Pass).data.boosters).to.have.members([
+        "booster3",
+        "booster5",
+        "booster8",
+      ]);
+      expect(loadAnalysisLines(1).lines[0]).to.deep.equal(entries);
+      vm.$el.remove();
+      vm.$destroy();
+
+      const reloaded = mountAsSeat(1, Engine.fromData(JSON.parse(original)));
+      reloaded.enterAnalysisMode();
+      expect(reloaded.analysisEntries).to.deep.equal(entries);
+      expect(reloaded.analysisAppliedCount).to.equal(1);
+      expect(reloaded.analysisBlockedReason).to.contain("booster4 is not in the available boosters");
+      expect(reloaded.engine.findAvailableCommand(1, Command.Pass).data.boosters).not.to.include("booster4");
+      reloaded.startAnalysisMoveEdit(1);
+      reloaded.applyAnalysisMove("nevlas pass booster3");
+      expect(reloaded.engine.round).to.equal(2);
+      expect(reloaded.engine.turnOrder).to.deep.equal([1]);
+      // A round-2 pass chooses for round 3; Terrans' round-2 reservation has expired.
+      expect(reloaded.engine.findAvailableCommand(1, Command.Pass).data.boosters).to.include("booster4");
+      expect(reloaded.engine.findAvailableCommand(1, Command.Pass).data.boosters).not.to.include("booster3");
+      reloaded.exitAnalysisMode();
+      expect(JSON.parse(JSON.stringify(reloaded.engine))).to.deep.equal(JSON.parse(original));
+      reloaded.$el.remove();
+      reloaded.$destroy();
+    });
+
     it("rolls a seat that has already passed into the next round, and commits nothing from it", () => {
       // applySoloRoundFlow used to wipe passedPlayers outright, handing back a full turn - Pass button
       // and all - in a round this seat is out of, and reporting those moves as committable.
@@ -938,6 +1011,14 @@ describe("Game", () => {
       vm.applyAnalysisMove("terrans up nav.");
       expect(vm.analysisEntries).to.have.length(1);
       expect(vm.analysisCommittableMoves).to.deep.equal([]);
+      vm.inspectAnalysisMove(0);
+      expect(vm.engine.round).to.equal(2);
+      expect(vm.engine.findAvailableCommand(0, Command.Pass).data.boosters).to.have.members([
+        "booster3",
+        "booster5",
+        "booster7",
+        "booster8",
+      ]);
 
       vm.$el.remove();
       vm.$destroy();

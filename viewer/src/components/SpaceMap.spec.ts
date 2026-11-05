@@ -11,7 +11,7 @@ import Engine, {
 import { cleanup, render } from "@testing-library/vue";
 import { expect } from "chai";
 import fs from "fs";
-import { hexCenter } from "../graphics/hex";
+import { displayedHexCenter, hexCenter } from "../graphics/hex";
 import { makeStore } from "../store";
 import SpaceMap from "./SpaceMap.vue";
 
@@ -316,6 +316,9 @@ describe("SpaceMap", () => {
       expect(labelForId, `expected a label for ${id}`).to.not.equal(undefined);
       const transform = labelForId.getAttribute("transform");
       const [tx, ty] = /translate\((-?[\d.]+),\s*(-?[\d.]+)\)/.exec(transform).slice(1).map(Number);
+      const centers = hexes.map((hex) => displayedHexCenter(hex, engine.map.grid));
+      expect(tx).to.be.closeTo(centers.reduce((sum, c) => sum + c.x, 0) / 3, 1e-9);
+      expect(ty).to.be.closeTo(centers.reduce((sum, c) => sum + c.y, 0) / 3, 1e-9);
       // the centroid must not coincide with any single one of the tile's 3 hex centers (that was
       // the old per-hex-badge bug this replaces) - it should sit roughly between all 3.
       for (const hex of hexes) {
@@ -532,6 +535,20 @@ describe("SpaceMap", () => {
     expect(sector, "the ringed hex renders inside a sector").to.not.equal(null);
     const expected = multiply(matrixOf(sector.getAttribute("style")), matrixOf(cell.getAttribute("transform")));
     matrixOf(ring.getAttribute("transform")).forEach((value, i) => expect(value).to.be.closeTo(expected[i], 1e-9));
+  });
+
+  it("keeps a Deep Space Power Ring aligned with its translated tile", () => {
+    const engine = new Engine(["init 2 deep-ring", "p1 faction moweyds", "p2 faction terrans"], { lostFleet: true });
+    const hex = [...engine.map.grid.values()].find(
+      (h) => classifySectorId(h.data.sector) === LostFleetSectorType.DeepSpace
+    );
+    hex.data.powerRing = engine.players[0].player;
+    const store = makeStore();
+    store.commit("receiveData", engine);
+    const { container } = render(SpaceMap, { store });
+    const cell = container.querySelector(`g.space-hex-cell[id="${hex}"]`);
+    const ring = container.querySelector(".space-hex-power-ring");
+    expect(matrixOf(ring.getAttribute("transform"))).to.deep.equal(matrixOf(cell.getAttribute("transform")));
   });
 
   it("does not render final scoring on the map itself (it lives in ResearchBoard's 7th column instead)", () => {

@@ -37,6 +37,9 @@ export type MapMode = {
   type: MapModeType;
   player?: PlayerEnum;
   planet?: Planet;
+  /** The base final-scoring shortcut explains Condition.Sector, which excludes Deep Space.
+   * Player-board Sectors mode leaves this unset to show all physical sector tiles instead. */
+  spaceSectorsOnly?: boolean;
 };
 
 export const freeActionShortcuts: { [key in FreeAction]: { shortcut: string; fast: FastConversion } } = {

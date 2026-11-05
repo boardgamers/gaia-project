@@ -477,6 +477,11 @@ function beginRoundStartPhase(engine: Engine) {
   startAutomaRound(engine);
   engine.addAdvancedLog({ round: engine.round });
   engine.turnOrder = engine.passedPlayers || engine.turnOrderAfterSetupAuction;
+  // Solo planning preserves real passedPlayers until this boundary to reserve their next-round
+  // boosters. Do not bring those opponents back into the clone's income/Gaia/turn order. The
+  // analysis flag is never serialized in real player data; ordinary games keep the full order.
+  const analysisPlayers = engine.turnOrder.filter((seat) => engine.player(seat).data.analysis);
+  if (analysisPlayers.length) engine.turnOrder = analysisPlayers;
   engine.passedPlayers = [];
   engine.currentPlayer = engine.turnOrder[0];
 

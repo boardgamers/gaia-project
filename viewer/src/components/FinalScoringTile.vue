@@ -180,7 +180,11 @@ export default class FinalScoringTile extends Vue {
   }
 
   toggleMapMode(mode: MapModeType, player: Player) {
-    this.$store.commit("toggleMapMode", { type: mode, player: player.player } as MapMode);
+    this.$store.commit("toggleMapMode", {
+      type: mode,
+      player: player.player,
+      ...(mode === MapModeType.sectors ? { spaceSectorsOnly: true } : {}),
+    } as MapMode);
   }
 
   get content() {
