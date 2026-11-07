@@ -77,7 +77,9 @@ export function checkAutoClick(controller: CommandController, buttons: ButtonDat
   // itself is auto-clicked, and only when it is the lone remaining button with no warning on it -
   // ordinary single-option buttons still obey the player's own auto-click preference below, so
   // opening a menu never fires a move by itself.
-  if (controller.analysisMode && buttons[0].needConfirm) {
+  // Intermediate confirmations still collect input: federation's End Selection must wait for
+  // map clicks before advancing to its tile choices. Only a leaf confirms a fully composed move.
+  if (controller.analysisMode && buttons[0].needConfirm && !buttons[0].buttons?.length) {
     setAutoClick(controller, buttons[0]);
     return;
   }

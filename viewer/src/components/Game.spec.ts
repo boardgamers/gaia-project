@@ -552,6 +552,65 @@ describe("Game", () => {
       return vm;
     }
 
+    it("forms a custom federation through planning's map and tile controls without changing the live game", async () => {
+      const engine = researchGame();
+      const player = engine.players[0];
+      const buildings = [Building.PlanetaryInstitute, Building.Academy1];
+      player.data.occupied.forEach((hex, index) => {
+        hex.data.building = buildings[index];
+        player.data.buildings[buildings[index]] = 1;
+      });
+      player.data.buildings[Building.Mine] = 0;
+      const extra = [...engine.map.grid.values()].find(
+        (hex) =>
+          hex.hasPlanet() && !hex.occupied() && hex.data.planet !== Planet.Transdim && hex.data.planet !== Planet.Gaia
+      )!;
+      extra.data.player = PlayerEnum.Player1;
+      extra.data.building = Building.TradingStation;
+      player.data.occupied.push(extra);
+      player.data.buildings[Building.TradingStation] = 1;
+      player.data.power.area1 = 30;
+      engine.clearAvailableCommands();
+      engine.generateAvailableCommands();
+      const location = engine.findAvailableCommand(PlayerEnum.Player1, Command.FormFederation)!.data.federations[0]
+        .hexes;
+      const liveBefore = JSON.stringify(engine);
+      const vm = mountAsSeat(0, engine);
+      const clickButton = async (text: string) => {
+        const button = (Array.from(vm.$el.querySelectorAll("button.move-button")) as HTMLElement[]).find(
+          (el) => !el.parentElement.classList.contains("d-none") && el.textContent.includes(text)
+        );
+        expect(button, text).to.not.equal(undefined);
+        await fireEvent.click(button!);
+        await Vue.nextTick();
+      };
+      try {
+        await fireEvent.click(vm.$el.querySelector(".planning-entry"));
+        await Vue.nextTick();
+        expect(vm.analysisMode).to.equal(true);
+        await clickButton("Form federation");
+        await clickButton("Custom location");
+        expect(vm.analysisEntries).to.deep.equal([]);
+        for (const coord of location.split(",")) {
+          await fireEvent.click(vm.$el.querySelector(`.space-hex-cell[id="${coord}"] > use`));
+          await Vue.nextTick();
+        }
+        expect([...vm.$store.state.context.highlighted.hexes.hexes.keys()].map((hex) => hex.toString())).to.deep.equal(
+          location.split(",")
+        );
+        await clickButton("End Selection");
+        await fireEvent.click(vm.$el.querySelector('button[aria-label*="7vp,2o"]'));
+        await Vue.nextTick();
+        expect(vm.currentMove).to.contain(`terrans federation ${location} fed4`);
+        await clickButton("End Turn");
+        expect(vm.analysisEntries).to.deep.equal([{ kind: "move", move: `terrans federation ${location} fed4.` }]);
+        expect(JSON.stringify(engine)).to.equal(liveBefore);
+      } finally {
+        vm.$el.remove();
+        vm.$destroy();
+      }
+    });
+
     function spyDispatch(vm: any): any[] {
       const dispatched: any[] = [];
       const originalDispatch = vm.$store.dispatch.bind(vm.$store);

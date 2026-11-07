@@ -324,6 +324,40 @@ describe("Commands", () => {
     }
   });
 
+  it.each([false, true])("selects a custom-only federation's hexes and tile (analysis=%s)", async (analysisMode) => {
+    const engine = createLostFleetRoundMoveEngine();
+    engine.availableCommands = [
+      {
+        name: Command.FormFederation,
+        player: PlayerEnum.Player1,
+        data: { tiles: [Federation.Fed4], federations: [], claimableFederations: [] },
+      },
+    ];
+    const store = makeStore();
+    store.commit("receiveData", engine);
+    const wrapper = mount(Commands, { propsData: { currentMove: "", analysisMode }, store });
+    const button = (text: string) =>
+      wrapper.findAll("button.move-button").wrappers.find((entry) => entry.isVisible() && entry.text().includes(text))!;
+    const selected = () => [...store.state.context.highlighted.hexes.hexes.keys()].map((hex) => hex.toString());
+    try {
+      await button("Form federation").trigger("click");
+      await button("Custom location").trigger("click");
+      expect(button("End Selection").attributes("disabled")).to.equal(undefined);
+      expect(wrapper.emitted("command")).to.equal(undefined);
+      for (const coord of ["1A9", "6A6", "1A9"]) {
+        await store.dispatch("hexClick", { hex: engine.map.getS(coord) });
+        await Vue.nextTick();
+      }
+      expect(selected()).to.deep.equal(["6A6"]);
+      await button("End Selection").trigger("click");
+      await Vue.nextTick();
+      await wrapper.find('button[aria-label*="7vp,2o"]').trigger("click");
+      expect(wrapper.emitted("command")![0][0]).to.equal("terrans federation 6A6 fed4");
+    } finally {
+      wrapper.destroy();
+    }
+  });
+
   it("backs out of a custom-only federation without reopening the selection", async () => {
     const engine = createLostFleetRoundMoveEngine();
     engine.availableCommands = [
@@ -365,40 +399,43 @@ describe("Commands", () => {
     }
   });
 
-  it("opens an editable custom federation with a prefilled selection", async () => {
-    const engine = createLostFleetRoundMoveEngine();
-    engine.availableCommands = [
-      {
-        name: Command.FormFederation,
-        player: PlayerEnum.Player1,
-        data: { tiles: [Federation.Fed4], federations: [], claimableFederations: [] },
-      },
-    ];
-    const store = makeStore();
-    store.commit("receiveData", engine);
-    const options = { propsData: { currentMove: "" }, store };
-    const wrapper = mount(Commands, options);
-    try {
-      await store.dispatch("selectFederation", "1A9,6A6");
-      await Vue.nextTick();
-      const selected = () => [...store.state.context.highlighted.hexes.hexes.keys()].map((hex) => hex.toString());
-      expect(selected()).to.deep.equal(["1A9", "6A6"]);
-      await store.dispatch("hexClick", { hex: engine.map.getS("6A6") });
-      await Vue.nextTick();
-      expect(selected()).to.deep.equal(["1A9"]);
-      const button = (text: string) =>
-        wrapper
-          .findAll("button.move-button")
-          .wrappers.find((entry) => entry.isVisible() && entry.text().includes(text))!;
-      await button("End Selection").trigger("click");
-      await Vue.nextTick();
-      await wrapper.find('button[aria-label*="7vp,2o"]').trigger("click");
-      await Vue.nextTick();
-      expect(wrapper.emitted("command")![0][0]).to.equal("terrans federation 1A9 fed4");
-    } finally {
-      wrapper.destroy();
+  it.each([false, true])(
+    "opens an editable custom federation with a prefilled selection (analysis=%s)",
+    async (analysisMode) => {
+      const engine = createLostFleetRoundMoveEngine();
+      engine.availableCommands = [
+        {
+          name: Command.FormFederation,
+          player: PlayerEnum.Player1,
+          data: { tiles: [Federation.Fed4], federations: [], claimableFederations: [] },
+        },
+      ];
+      const store = makeStore();
+      store.commit("receiveData", engine);
+      const options = { propsData: { currentMove: "", analysisMode }, store };
+      const wrapper = mount(Commands, options);
+      try {
+        await store.dispatch("selectFederation", "1A9,6A6");
+        await Vue.nextTick();
+        const selected = () => [...store.state.context.highlighted.hexes.hexes.keys()].map((hex) => hex.toString());
+        expect(selected()).to.deep.equal(["1A9", "6A6"]);
+        await store.dispatch("hexClick", { hex: engine.map.getS("6A6") });
+        await Vue.nextTick();
+        expect(selected()).to.deep.equal(["1A9"]);
+        const button = (text: string) =>
+          wrapper
+            .findAll("button.move-button")
+            .wrappers.find((entry) => entry.isVisible() && entry.text().includes(text))!;
+        await button("End Selection").trigger("click");
+        await Vue.nextTick();
+        await wrapper.find('button[aria-label*="7vp,2o"]').trigger("click");
+        await Vue.nextTick();
+        expect(wrapper.emitted("command")![0][0]).to.equal("terrans federation 1A9 fed4");
+      } finally {
+        wrapper.destroy();
+      }
     }
-  });
+  );
 
   it("renders Lost Fleet ship tech choices in the normal tech-pick command", async () => {
     const engine = loadScenarioEngine("lost-fleet-ship-tech-claim");

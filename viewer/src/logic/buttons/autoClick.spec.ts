@@ -32,6 +32,20 @@ describe("checkAutoClick", () => {
     expect(armed(button)).to.equal(true);
   });
 
+  it("does not auto-finish a selection with further choices, even nested in analysis mode", () => {
+    const selection: ButtonData = {
+      label: "End Selection",
+      needConfirm: true,
+      buttons: [{ command: "fed4" }],
+    };
+    const parent: ButtonData = { label: "Custom location", buttons: [selection] };
+
+    checkAutoClick(controllerStub(true), [parent], strategy);
+
+    expect(armed(selection)).to.equal(false);
+    expect(selection.disabled).to.not.equal(true);
+  });
+
   it("leaves the confirmation alone in ordinary play", () => {
     const button: ButtonData = { label: "Confirm Mine", command: "", needConfirm: true };
 
