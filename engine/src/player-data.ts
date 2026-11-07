@@ -20,6 +20,7 @@ import {
 import { EventSource } from "./events";
 import { FactionBoard } from "./faction-boards";
 import { GaiaHex } from "./gaia-hex";
+import { observePower, withoutPowerObservation } from "./premove-power";
 import Reward from "./reward";
 import assert from "./utils/assert";
 
@@ -487,6 +488,7 @@ export default class PlayerData extends EventEmitter {
    * @param power Power charged
    */
   chargePower(power: number, apply = true, followBrainStoneHeuristics = true): number {
+    const requested = power;
     let brainstoneUsage = 0;
     let brainstonePos = this.brainstone;
 
@@ -517,6 +519,7 @@ export default class PlayerData extends EventEmitter {
     const area2ToUp = Math.min(power, this.power.area2 + area1ToUp);
 
     if (apply) {
+      observePower(this, "charge", Math.max(0, requested - area1ToUp - area2ToUp - brainstoneUsage));
       this.power.area1 -= area1ToUp;
       this.power.area2 += area1ToUp - area2ToUp;
       this.power.area3 += area2ToUp;
@@ -542,7 +545,7 @@ export default class PlayerData extends EventEmitter {
       if (this.power.area1 + this.power.area2 === 0) {
         break;
       }
-      this.chargePower(1, true, false);
+      withoutPowerObservation(this, () => this.chargePower(1, true, false));
       this.analysisAssumedPower += 1;
     }
     const shortfall = power - this.spendablePowerTokens();
@@ -632,6 +635,7 @@ export default class PlayerData extends EventEmitter {
   }
 
   private moveTokens(power: number, targetArea: PowerArea.Gaia | null) {
+    const originalBrainstone = this.brainstone;
     const brainstoneEvent = targetArea ?? "discard";
 
     let movedBrainstone = 0;
@@ -660,6 +664,13 @@ export default class PlayerData extends EventEmitter {
     const area2ToGaia = Math.min(power - area1ToGaia, this.power.area2);
     const area3ToGaia = Math.min(power - area1ToGaia - area2ToGaia, this.power.area3);
 
+    observePower(
+      this,
+      targetArea ? "gaia" : "discard",
+      0,
+      area2ToGaia + (movedBrainstone && originalBrainstone === PowerArea.Area2 ? 1 : 0),
+      area3ToGaia + (movedBrainstone && originalBrainstone === PowerArea.Area3 ? 1 : 0)
+    );
     this.power.area1 -= area1ToGaia;
     this.power.area2 -= area2ToGaia;
     this.power.area3 -= area3ToGaia;

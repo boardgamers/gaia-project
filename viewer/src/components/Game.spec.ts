@@ -696,41 +696,95 @@ describe("Game", () => {
       vm.$el.remove();
     });
 
-    it("keeps queued moves and stop details behind the history button", async () => {
-      const position = new Engine(SETUP_MOVES);
-      position.automation = {
+    for (const reason of [
+      "Premoves stopped: insufficient ore",
+      "Premoves stopped: power changed",
+      "Premoves stopped: hex occupied",
+    ]) {
+      it(`opens the remaining plan directly with its reason: ${reason}`, async () => {
+        const vm = mountAsSeat(0);
+        const stopped = JSON.parse(JSON.stringify(vm.engine));
+        const run = {
+          id: reason,
+          status: "stopped",
+          reason,
+          steps: [
+            { move: "terrans up eco.", status: "played", moveIndex: 0 },
+            { move: "terrans up sci.", status: "skipped" },
+            { move: "terrans up nav.", status: "blocked" },
+            { move: "terrans up terra.", status: "unplayed" },
+          ],
+        };
+        stopped.automation = {
+          version: 1,
+          plans: { 0: { moves: [], revision: 1, round: 1, runs: [run] } },
+          turns: [0, 0],
+          increments: [0, 0],
+          liveUpdate: false,
+        };
+        await vm.$store.dispatch("externalData", stopped);
+        await Vue.nextTick();
+        expect(vm.analysisMode).to.equal(true);
+        expect(vm.analysisEntries).to.deep.equal([
+          { kind: "move", move: "terrans up nav." },
+          { kind: "move", move: "terrans up terra." },
+        ]);
+        expect(vm.analysisPlayed[vm.analysisActiveLine]).to.have.length(1);
+        expect(vm.stoppedPremoveReview.reason).to.equal(reason);
+        expect(vm.$el.textContent).to.contain(reason);
+        expect(document.querySelector('[role="dialog"]')).to.equal(null);
+        vm.exitAnalysisMode();
+        await vm.$store.dispatch("externalData", stopped);
+        await Vue.nextTick();
+        expect(vm.analysisMode).to.equal(false);
+        await fireEvent.click(vm.$el.querySelector('[aria-label="Premoves stopped at move 3 — review plan"]'));
+        expect(vm.analysisMode).to.equal(true);
+        expect(vm.stoppedPremoveReview.reason).to.equal(reason);
+        expect(document.querySelector('[role="dialog"]')).to.equal(null);
+        vm.exitAnalysisMode();
+        vm.$destroy();
+        vm.$el.remove();
+        const reloaded = mountAsSeat(0, Engine.fromData(stopped));
+        await Vue.nextTick();
+        expect(reloaded.analysisMode).to.equal(false);
+        stopped.automation.plans[0].revision++;
+        stopped.automation.plans[0].runs[0].id += "-new";
+        await reloaded.$store.dispatch("externalData", stopped);
+        await Vue.nextTick();
+        expect(reloaded.analysisMode).to.equal(true);
+        reloaded.$destroy();
+        reloaded.$el.remove();
+      });
+    }
+
+    it("does not replace an active draft when a premove stops, and supports legacy stop notices", async () => {
+      const vm = mountAsSeat(0);
+      vm.enterAnalysisMode();
+      vm.applyAnalysisMove("terrans up nav.");
+      const entries = JSON.parse(JSON.stringify(vm.analysisEntries));
+      const stopped = JSON.parse(JSON.stringify(vm.analysisBackup));
+      stopped.automation = {
         version: 1,
-        plans: {
-          0: {
-            moves: ["terrans up nav."],
-            revision: 1,
-            round: 1,
-            requestId: "queued",
-          },
-        },
-        increments: [0, 0],
+        plans: { 0: { moves: [], revision: 8, round: 1, notice: { kind: "stopped", text: "Legacy stop reason" } } },
         turns: [0, 0],
+        increments: [0, 0],
         liveUpdate: false,
       };
-      const vm = mountAsSeat(0, position);
-      await Vue.nextTick();
-      expect(document.querySelector(".premove-queue")).to.equal(null);
-      await fireEvent.click(vm.$el.querySelector('[aria-label="Premoves: 1 queued — view history"]'));
-      await vi.waitFor(() => expect(document.querySelector(".premove-queue")?.textContent).to.contain("Cancel"));
-      expect(document.querySelector('[role="dialog"]')?.textContent).to.contain("terrans up nav.");
-      const stopped = JSON.parse(JSON.stringify(vm.engine));
-      stopped.automation.plans[0].moves = [];
-      stopped.automation.plans[0].notice = { kind: "stopped", text: "Premoves stopped: insufficient ore" };
       await vm.$store.dispatch("externalData", stopped);
-      await vi.waitFor(() =>
-        expect(document.querySelector(".premove-notice")?.textContent).to.contain("Premoves stopped: insufficient ore")
-      );
-      vm.$bvModal.hide("premove-history");
-      await vi.waitFor(() => expect(document.querySelector(".premove-queue")).to.equal(null));
-      expect(vm.$el.querySelector('[aria-label="Premoves stopped — view history"]')).not.to.equal(null);
-      expect(vm.$el.textContent).not.to.contain("insufficient ore");
-      vm.$el.remove();
+      await Vue.nextTick();
+      expect(vm.analysisEntries).to.deep.equal(entries);
+      expect(vm.stoppedPremoveReview).to.equal(null);
+      vm.exitAnalysisMode();
+      await Vue.nextTick();
+      expect(vm.analysisMode).to.equal(false);
+      await fireEvent.click(vm.$el.querySelector('[aria-label="Premoves stopped — review plan"]'));
+      expect(vm.analysisMode).to.equal(true);
+      expect(vm.$el.textContent).to.contain("Legacy stop reason");
+      expect(document.querySelector('[role="dialog"]')).to.equal(null);
+      await fireEvent.click(vm.$el.querySelector('[aria-label="Dismiss premove stop reason"]'));
+      expect(vm.$el.textContent).not.to.contain("Legacy stop reason");
       vm.$destroy();
+      vm.$el.remove();
     });
 
     it("actually lets an off-turn locked seat compose and complete their own turn inside the sandbox", () => {
@@ -3131,6 +3185,8 @@ describe("Game", () => {
             const selected = Math.min(count ?? moves.length, moves.length);
             expect(payload.moves).to.deep.equal(moves.slice(0, selected));
             expect(payload.timings).to.deep.equal(plan.timings.slice(0, selected));
+            expect(payload.power).to.deep.equal(plan.power.slice(0, selected));
+            expect(payload.power).to.have.length(payload.moves.length);
             expect(payload.timings).to.have.length(payload.moves.length);
             expect(vm.analysisCommitPlan).to.deep.equal(plan);
             expect(loadAnalysisLines(seat, vm.analysisStorageScope)).to.deep.equal(draft);

@@ -93,6 +93,7 @@ import {
 } from "./pending-charges";
 import Player from "./player";
 import { MoveTokens, powerLogString } from "./player-data";
+import { observePowerCommand } from "./premove-power";
 import type { AutomationState } from "./premove-types";
 import { lastTile } from "./research-tracks";
 import { SeededSpaceshipTech, SpaceshipActionType } from "./spaceships";
@@ -1374,7 +1375,12 @@ export default class Engine {
       [Command.ExamineArtifact]: moveExamineArtifact,
       [Command.ChooseArtifactToken]: moveChooseArtifactToken,
     };
-    moveRegistry[move.command](this, this.avCommand(), this.actingSeat, ...move.args);
+    const finishPowerCommand = observePowerCommand(this, [move.command, ...move.args].join(" "));
+    try {
+      moveRegistry[move.command](this, this.avCommand(), this.actingSeat, ...move.args);
+    } finally {
+      finishPowerCommand();
+    }
 
     return move;
   }

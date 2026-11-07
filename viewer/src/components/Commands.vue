@@ -73,6 +73,20 @@
       @restore="$emit('analysis-restore')"
       @discard-restore="$emit('analysis-discard-restore')"
     />
+    <div
+      v-if="analysisMode && analysisStopReason"
+      class="small text-warning d-flex align-items-center py-1"
+      role="status"
+    >
+      <span>{{ analysisStopReason }}</span>
+      <button
+        class="btn btn-sm btn-link"
+        aria-label="Dismiss premove stop reason"
+        @click="$emit('dismiss-premove-stop')"
+      >
+        ✕
+      </button>
+    </div>
     <AnalysisMoves
       v-if="analysisMode && (analysisEntries.length || analysisPlayed.length)"
       :entries="analysisEntries"
@@ -699,6 +713,9 @@ export default class Commands extends Vue implements CommandController {
 
   @Prop({ default: "" })
   analysisBlockedReason: string;
+
+  @Prop({ default: "" })
+  analysisStopReason: string;
 
   @Prop({ default: () => [] })
   analysisMoveCosts: MoveCost[];

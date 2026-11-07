@@ -75,19 +75,26 @@ terrans booster booster3`)
     try {
       viewer.emit("player", { index: 1 });
       viewer.emit("state", stripSecret(engine, 1));
-      const historySelector = '[aria-label="Premoves stopped at move 3 — view history"]';
-      await vi.waitFor(() => expect(viewer.app.$el.querySelector(historySelector)).not.toBeNull());
+      // A newly stopped plan opens directly, without a history dialog or a second review click.
+      await vi.waitFor(() =>
+        expect(viewer.app.$el.querySelector('[aria-label="Dismiss premove stop reason"]')).not.toBeNull()
+      );
       expect(document.querySelector(".premove-queue")).toBeNull();
-      (viewer.app.$el.querySelector(historySelector) as HTMLButtonElement).click();
-      await vi.waitFor(() => expect(document.querySelector(".premove-queue")?.textContent).toContain("Stopped at 3"));
-      const review = [...document.querySelectorAll("button")].find(
-        (button) => button.textContent.trim() === "Review remaining"
-      ) as HTMLButtonElement;
-      review.click();
       await vi.waitFor(() => expect(viewer.app.$el.querySelectorAll(".analysis-moves__past").length).toBe(2));
       expect(viewer.app.$el.querySelector('[aria-label="Edit move 3: nevlas up eco."]')).not.toBeNull();
       expect(viewer.app.$el.textContent).toContain("2 played · 2 left");
       await vi.waitFor(() => expect(document.querySelector(".premove-queue")).toBeNull());
+      const game = (viewer.app.$el.querySelector(".old-ui-game") as any).__vue__;
+      expect(game.stoppedPremoveReview.reason).toBeTruthy();
+      (viewer.app.$el.querySelector('[aria-label="Dismiss premove stop reason"]') as HTMLButtonElement).click();
+      await vi.waitFor(() => expect(game.stoppedPremoveReview).toBeNull());
+      game.exitAnalysisMode();
+      await game.$nextTick();
+      (
+        viewer.app.$el.querySelector('[aria-label="Premoves stopped at move 3 — review plan"]') as HTMLButtonElement
+      ).click();
+      await vi.waitFor(() => expect(game.stoppedPremoveReview.reason).toBeTruthy());
+      expect(document.querySelector(".premove-queue")).toBeNull();
     } finally {
       viewer.app.$destroy();
       document.body.replaceChildren();

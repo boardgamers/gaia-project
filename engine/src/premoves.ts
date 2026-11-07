@@ -1,6 +1,7 @@
 import Engine from "./engine";
 import { Phase, Round } from "./enums";
 import { canTakeTurn, hasConcurrentCharges } from "./pending-charges";
+import { assertPremovePower, capturePremovePower, validatePremovePower } from "./premove-power";
 import assert from "./utils/assert";
 
 import type { AutomationState, PremoveCommand, PremovePlan, PremoveRun, PremoveTiming } from "./premove-types";
@@ -37,7 +38,12 @@ function currentRun(plan: PremovePlan): PremoveRun {
       {
         id: plan.requestId ?? `legacy-${plan.revision}`,
         status: "queued",
-        steps: plan.moves.map((move, index) => ({ move, timing: timings[index], status: "queued" })),
+        steps: plan.moves.map((move, index) => ({
+          move,
+          timing: timings[index],
+          power: plan.power?.[index],
+          status: "queued",
+        })),
       },
     ];
   }
@@ -80,6 +86,7 @@ export function premoveHistoryAfterReplay(plans: AutomationState["plans"], moveC
       }
     }
     plan.moves = [];
+    plan.power = [];
     plan.timings = [];
     plan.revision++;
     delete plan.notice;
@@ -130,12 +137,22 @@ export function setPremoves(engine: Engine, command: PremoveCommand, seat: numbe
       return timing;
     });
   assert(Array.isArray(timings) && timings.length === command.moves.length, "Invalid premove schedule");
+  if (command.power !== undefined) {
+    assert(
+      Array.isArray(command.power) && command.power.length === command.moves.length,
+      "Invalid premove power baselines"
+    );
+    command.power.forEach(validatePremovePower);
+  }
   const cancelling =
     old &&
     command.moves.length < old.moves.length &&
     command.moves.every(
       (move, i) => move === old.moves[i] && timings[i] && sameTiming(timings[i], premoveTimings(old)[i])
     );
+  // A prefix cancellation keeps the original intent even if the board changed meanwhile.
+  const suppliedPower = cancelling ? old.power?.slice(0, command.moves.length) : command.power;
+  const power = suppliedPower ? JSON.parse(JSON.stringify(suppliedPower)) : undefined;
   let previous = position({ round: engine.round, phase: engine.phase });
   for (const timing of cancelling ? [] : timings) {
     assert(
@@ -210,11 +227,17 @@ export function setPremoves(engine: Engine, command: PremoveCommand, seat: numbe
       id: command.requestId,
       ...(command.label ? { label: command.label } : {}),
       status: "queued",
-      steps: command.moves.map((move, index) => ({ move, timing: { ...timings[index] }, status: "queued" })),
+      steps: command.moves.map((move, index) => ({
+        move,
+        timing: { ...timings[index] },
+        power: power?.[index],
+        status: "queued",
+      })),
     });
   }
   state.plans[seat] = {
     moves: [...command.moves],
+    ...(power ? { power: JSON.parse(JSON.stringify(power)) } : {}),
     timings: timings.map((timing) => ({ ...timing })),
     revision: (old?.revision ?? 0) + 1,
     round: engine.round,
@@ -236,6 +259,7 @@ export function clearExpiredPremoves(engine: Engine) {
     if (plan.moves.length && (engine.ended || engine.players[+seat].dropped)) {
       stopPremoves(plan, "stopped", engine.ended ? "The game ended." : "You left the game.");
       plan.moves = [];
+      plan.power = [];
       plan.timings = [];
       plan.revision++;
       plan.notice = {
@@ -262,6 +286,7 @@ export function playNextPremove(engine: Engine): boolean {
   if (timing.round === engine.round && timing.phase === Phase.RoundIncome && engine.phase !== Phase.RoundIncome) {
     recordPremove(plan, "skipped", engine.moveHistory.length - 1);
     plan.moves.shift();
+    plan.power?.shift();
     plan.timings = timings.slice(1);
     plan.revision++;
     return true;
@@ -271,11 +296,13 @@ export function playNextPremove(engine: Engine): boolean {
     assert(sameTiming(timing, current), "The round or phase planned for this move has already passed");
     const probe = Engine.fromData(JSON.parse(JSON.stringify(engine)));
     assertOwnMove(probe, move, seat);
-    probe.move(move);
+    const actualPower = capturePremovePower(probe, seat, move);
+    assertPremovePower(actualPower, plan.power?.[0]);
     assert(probe.newTurn, "The planned move no longer completes a turn");
   } catch (error) {
     stopPremoves(plan, "stopped", error instanceof Error ? error.message : String(error), true);
     plan.moves = [];
+    plan.power = [];
     plan.timings = [];
     plan.revision++;
     plan.notice = {
@@ -289,6 +316,7 @@ export function playNextPremove(engine: Engine): boolean {
   engine.generateAvailableCommandsIfNeeded();
   recordPremove(plan, "played", engine.moveHistory.length - 1);
   plan.moves.shift();
+  plan.power?.shift();
   plan.timings = timings.slice(1);
   plan.revision++;
   plan.notice = { kind: "played", text: `Played for you: ${move}` };
@@ -306,10 +334,12 @@ export function reconcileManualPremoves(engine: Engine, seat: number, round: num
   if (phase === Phase.RoundIncome) {
     recordPremove(plan, "skipped", engine.moveHistory.length - 1);
     plan.moves.shift();
+    plan.power?.shift();
     plan.timings = timings.slice(1);
   } else {
     stopPremoves(plan, "stopped", `A move was played manually: ${engine.moveHistory[engine.moveHistory.length - 1]}`);
     plan.moves = [];
+    plan.power = [];
     plan.timings = [];
   }
   plan.revision++;

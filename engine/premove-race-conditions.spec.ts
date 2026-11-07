@@ -14,6 +14,7 @@ import {
 } from "./src/enums";
 import { GaiaHex } from "./src/gaia-hex";
 import { Power } from "./src/player-data";
+import { capturePremovePower } from "./src/premove-power";
 import { automation, playNextPremove } from "./src/premoves";
 
 const parseMoves = Engine.parseMoves;
@@ -135,6 +136,26 @@ describe("Premove race-condition regressions (#69 audit)", () => {
 
     // Sanity: this move IS legal right now (proves the fixture, not just the contended clone).
     expect(() => new Engine([...moves, queuedMove])).to.not.throw();
+
+    // Satellite payments are legal from any bowl, but automation must preserve the original
+    // bowl-I-only intent. An intervening charge must not silently sacrifice charged tokens.
+    for (const initiallyCharged of [false, true]) {
+      const planned = cloneEngineLike(engine);
+      planned.players[0].data.power = initiallyCharged ? new Power(0, 8, 0) : new Power(8, 0, 0);
+      const completeMove = queuedMove + ".";
+      const power = capturePremovePower(cloneEngineLike(planned), 0, completeMove);
+      automation(planned).plans[0] = { moves: [completeMove], power: [power], round: planned.round, revision: 1 };
+      planned.players[0].data.chargePower(8);
+      const before = JSON.stringify(planned.players[0].data);
+      const history = planned.moveHistory.length;
+      const played = playNextPremove(planned);
+      expect(played, planned.automation.plans[0].notice?.text).to.equal(initiallyCharged);
+      if (!initiallyCharged) {
+        expect(JSON.stringify(planned.players[0].data)).to.equal(before);
+        expect(planned.moveHistory.length).to.equal(history);
+        expect(planned.automation.plans[0].notice.text).to.contain("bowls II or III");
+      }
+    }
 
     // Someone else claimed the last fed2 token in the meantime.
     const contested = Engine.fromData(JSON.parse(JSON.stringify(engine)));

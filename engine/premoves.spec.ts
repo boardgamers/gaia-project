@@ -3,7 +3,8 @@ import Engine from "./src/engine";
 import { Operator, Phase, Resource } from "./src/enums";
 import Event from "./src/events";
 import { Power } from "./src/player-data";
-import { automation, PremoveCommand } from "./src/premoves";
+import { capturePremovePower } from "./src/premove-power";
+import { automation, playNextPremove, PremoveCommand, setPremoves } from "./src/premoves";
 import {
   automove,
   canMoveOutOfTurn,
@@ -550,5 +551,71 @@ describe("BGS premoves", () => {
     expect(timeIncrements(engine)).to.deep.equal(counts);
     expect(engine.automation.plans[1].moves).to.deep.equal([]);
     expect(engine.automation.plans[1].runs[0].status).to.equal("stopped");
+  });
+});
+
+describe("planned power safety", () => {
+  it("preserves baseline alignment through prefix cancellation and private history", () => {
+    const engine = game();
+    const moves = ["nevlas up nav.", "nevlas up gaia."];
+    const preview = Engine.fromData(json(engine));
+    preview.forcePremovePreviewTurn(1);
+    const power = [capturePremovePower(preview, 1, moves[0])];
+    preview.forcePremovePreviewTurn(1);
+    preview.players[1].data.knowledge = 4;
+    power.push(capturePremovePower(preview, 1, moves[1]));
+    setPremoves(engine, { ...command(engine, 1, moves), power }, 1);
+    setPremoves(engine, command(engine, 1, moves.slice(0, 1)), 1);
+    expect(engine.automation.plans[1].power).to.deep.equal(power.slice(0, 1));
+    expect(engine.automation.plans[1].runs[0].steps[0].power).to.deep.equal(power[0]);
+    expect(stripSecret(engine, 0).automation.plans).to.deep.equal({});
+    engine.forcePremovePreviewTurn(1);
+    expect(playNextPremove(engine)).to.equal(true);
+    expect(engine.automation.plans[1].power).to.deep.equal([]);
+    expect(engine.automation.plans[1].runs[0].steps[0].power).to.deep.equal(power[0]);
+  });
+
+  for (const originallyFull of [false, true]) {
+    it(`checks original charge waste before any live command (originally full: ${originallyFull})`, () => {
+      const engine = game();
+      engine.players[0].data.research.nav = 2;
+      Object.assign(engine.players[0].data.power, {
+        area1: originallyFull ? 0 : 3,
+        area2: 0,
+        area3: originallyFull ? 3 : 0,
+      });
+      const planned = "terrans spend 1q for 1o. up nav.";
+      const preview = Engine.fromData(json(engine));
+      const power = [capturePremovePower(preview, 0, planned)];
+      setPremoves(engine, { ...command(engine, 0, [planned]), power }, 0);
+      const saved = Engine.fromData(json(engine));
+      expect(saved.automation.plans[0].power).to.deep.equal(power);
+      saved.players[0].data.chargePower(6);
+      const before = JSON.stringify(saved.players[0].data);
+      const history = saved.moveHistory.length;
+      expect(playNextPremove(saved)).to.equal(originallyFull);
+      if (!originallyFull) {
+        expect(JSON.stringify(saved.players[0].data)).to.equal(before);
+        expect(saved.moveHistory.length).to.equal(history);
+        expect(saved.automation.plans[0].notice.text).to.contain("waste more power");
+      }
+    });
+  }
+
+  it("rejects malformed baselines and stops risky legacy plans rather than inventing intent", () => {
+    const engine = game();
+    engine.players[0].data.research.nav = 2;
+    Object.assign(engine.players[0].data.power, { area1: 0, area2: 0, area3: 3 });
+    const request = command(engine, 0, ["terrans up nav."]);
+    expect(() =>
+      setPremoves(
+        engine,
+        { ...request, power: [[{ command: "up nav", events: [{ kind: "charge", waste: -1, area2: 0, area3: 0 }] }]] },
+        0
+      )
+    ).to.throw("Invalid premove power");
+    setPremoves(engine, request, 0);
+    expect(playNextPremove(engine)).to.equal(false);
+    expect(engine.automation.plans[0].notice.text).to.contain("older plan");
   });
 });

@@ -73,6 +73,12 @@
             :analysis-entries="analysisEntries"
             :analysis-played="analysisPlayed[analysisActiveLine] || []"
             :analysis-blocked-reason="analysisBlockedReason"
+            :analysis-stop-reason="
+              stoppedPremoveReview && stoppedPremoveReview.line === analysisActiveLine
+                ? stoppedPremoveReview.reason
+                : ''
+            "
+            @dismiss-premove-stop="stoppedPremoveReview = null"
             :analysis-move-costs="analysisMoveCosts"
             :analysis-applied-count="analysisEdit ? analysisEdit.appliedCount : analysisAppliedCount"
             :analysis-editing-index="analysisEdit ? analysisEdit.index : -1"
@@ -147,6 +153,12 @@
             :analysis-entries="analysisEntries"
             :analysis-played="analysisPlayed[analysisActiveLine] || []"
             :analysis-blocked-reason="analysisBlockedReason"
+            :analysis-stop-reason="
+              stoppedPremoveReview && stoppedPremoveReview.line === analysisActiveLine
+                ? stoppedPremoveReview.reason
+                : ''
+            "
+            @dismiss-premove-stop="stoppedPremoveReview = null"
             :analysis-move-costs="analysisMoveCosts"
             :analysis-applied-count="analysisEdit ? analysisEdit.appliedCount : analysisAppliedCount"
             :analysis-editing-index="analysisEdit ? analysisEdit.index : -1"
@@ -264,6 +276,10 @@
         :analysis-entries="analysisEntries"
         :analysis-played="analysisPlayed[analysisActiveLine] || []"
         :analysis-blocked-reason="analysisBlockedReason"
+        :analysis-stop-reason="
+          stoppedPremoveReview && stoppedPremoveReview.line === analysisActiveLine ? stoppedPremoveReview.reason : ''
+        "
+        @dismiss-premove-stop="stoppedPremoveReview = null"
         :analysis-move-costs="analysisMoveCosts"
         :analysis-applied-count="analysisEdit ? analysisEdit.appliedCount : analysisAppliedCount"
         :analysis-editing-index="analysisEdit ? analysisEdit.index : -1"

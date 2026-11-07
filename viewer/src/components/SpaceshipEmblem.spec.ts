@@ -9,7 +9,7 @@ import SpaceHex from "./SpaceHex.vue";
 import SpaceshipEmblem from "./SpaceshipEmblem.vue";
 
 // The alternate UI inherits ship-board methods but owns its template. Exercise that real template,
-// not a CSS-hidden variant, to protect its initial markers and unchanged headings.
+// not a CSS-hidden variant, to protect its initial markers and canonical ship headings.
 describe("Spaceship insignia proposal", () => {
   it("gives every insignia a graphic and its full accessible ship name, including Rebellion", () => {
     for (const ship of [Spaceship.Twilight, Spaceship.Rebellion, Spaceship.TFMars, Spaceship.Eclipse]) {
@@ -66,7 +66,7 @@ describe("Spaceship insignia proposal", () => {
     }
   });
 
-  it("leaves the alternate board template and complete legacy names unchanged", () => {
+  it("keeps the alternate board template with complete canonical ship names", () => {
     const store = makeStore();
     store.commit("receiveData", new Engine(["init 4 emblem-alternate"], { lostFleet: true }));
     const { container } = render(AlternateShips, { store });
@@ -74,7 +74,7 @@ describe("Spaceship insignia proposal", () => {
     expect(Array.from(container.querySelectorAll("header strong")).map((node) => node.textContent)).to.have.members([
       "TWILIGHT",
       "REBELLION",
-      "MARS",
+      "T F MARS",
       "ECLIPSE",
     ]);
   });

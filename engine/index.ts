@@ -121,3 +121,5 @@ export {
 };
 
 export default Engine;
+
+export { capturePremovePower } from "./src/premove-power";

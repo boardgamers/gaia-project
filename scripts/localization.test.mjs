@@ -116,3 +116,70 @@ test("grammar-only templates still translate known labels and quantities", () =>
   assert.equal(translator.translate("Round 2 of 6"), "Manche 2 sur 6");
   assert.equal(translator.translate("Useful details for the last action"), "Useful details for the last action");
 });
+
+test("spaceship proper names stay canonical in all catalogues and composed labels", async () => {
+  const names = ["Twilight", "Eclipse", "Rebellion", "T F Mars"];
+  assert.equal(Object.keys(languages).length, 17);
+  for (const locale of Object.keys(languages)) {
+    const catalog = JSON.parse(
+      await readFile(new URL(`../viewer/src/localization/${locale}.json`, import.meta.url), "utf8")
+    );
+    const translator = createTranslator({ [locale]: catalog }, locale);
+    // Lowercase replay IDs share uppercase lookup keys with the printed names.
+    for (const id of ["twilight", "eclipse", "rebellion", "tfmars", "Mars"]) {
+      assert.equal(catalog[id], id, `${locale}: ship identifier ${id}`);
+    }
+    for (const [source, translation] of Object.entries(catalog)) {
+      if (source.includes("spaceshipAction twilight")) {
+        assert.ok(translation.includes("twilight"), `${locale}: ${source}`);
+      }
+    }
+    for (const name of names) {
+      assert.equal(catalog[name], name, `${locale}: standalone ${name}`);
+      assert.equal(translator.translate(name), name);
+      assert.equal(translator.translate(name.toUpperCase()), name.toUpperCase());
+      // Both fixed prose and template literals (including combined emblem labels) must
+      // retain every occurrence, not just the first ship name in a tooltip.
+      for (const [source, translation] of Object.entries(catalog)) {
+        const occurrences = source.split(name).length - 1;
+        if (!occurrences) continue;
+        assert.equal(translation.split(name).length - 1, occurrences, `${locale}: ${source}`);
+        const rendered = translator.translate(source.replace(/\{p\d+\}/g, "2"));
+        assert.equal(rendered.split(name).length - 1, occurrences, `${locale}: rendered ${source}`);
+      }
+      for (const label of [`Lost Fleet spaceship: ${name}`, `Instant Gaiaforming (${name}, 2pw)`]) {
+        assert.ok(translator.translate(label).includes(name), `${locale}: ${label}`);
+      }
+    }
+  }
+});
+
+test("power safeguards and direct stopped-plan review are localized in every catalogue", async () => {
+  const waste = "This action would waste more power charges than planned.";
+  const payment = "This action would remove power tokens from bowls II or III instead of bowl I as planned.";
+  const legacy = "This older plan has no power baseline; review and queue it again.";
+  for (const locale of Object.keys(languages)) {
+    const catalog = JSON.parse(
+      await readFile(new URL(`../viewer/src/localization/${locale}.json`, import.meta.url), "utf8")
+    );
+    const translator = createTranslator({ [locale]: catalog }, locale);
+    for (const text of [
+      waste,
+      payment,
+      legacy,
+      `${waste} ${legacy}`,
+      `${payment} ${legacy}`,
+      "Dismiss premove stop reason",
+      "Premoves stopped — review plan",
+      "Premoves stopped at move {p0} — review plan",
+    ]) {
+      assert.ok(catalog[text], `${locale}: ${text}`);
+      if (locale !== "en")
+        assert.notEqual(
+          translator.translate(text.replace("{p0}", "2")),
+          text.replace("{p0}", "2"),
+          `${locale}: ${text}`
+        );
+    }
+  }
+});

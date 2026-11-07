@@ -5,7 +5,7 @@
     class="premove-history-button"
     :aria-label="label"
     :title="label"
-    @click.stop="$bvModal.show('premove-history')"
+    @click.stop="open"
   >
     <svg
       viewBox="0 0 20 20"
@@ -29,6 +29,12 @@ import type { PremovePlan } from "@gaia-project/engine/src/premove-types";
 import Vue from "vue";
 export default Vue.extend({
   props: { plan: { type: Object as () => PremovePlan, default: undefined } },
+  methods: {
+    open() {
+      if (this.stopped) this.$root.$emit("review-stopped-premoves");
+      else this.$bvModal.show("premove-history");
+    },
+  },
   computed: {
     visible(): boolean {
       return !!(this.plan?.moves.length || this.plan?.runs?.length || this.plan?.notice);
@@ -43,7 +49,7 @@ export default Vue.extend({
       const run = this.plan?.runs?.[0];
       const index = run?.steps.findIndex((step) => ["blocked", "unplayed", "undone"].includes(step.status));
       if (this.stopped)
-        return index >= 0 ? `Premoves stopped at move ${index + 1} — view history` : "Premoves stopped — view history";
+        return index >= 0 ? `Premoves stopped at move ${index + 1} — review plan` : "Premoves stopped — review plan";
       return this.plan?.moves.length ? `Premoves: ${this.plan.moves.length} queued — view history` : "Premove history";
     },
   },

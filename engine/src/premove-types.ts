@@ -1,9 +1,16 @@
 import type { Phase } from "./enums";
 
+/** Per command, per actual power operation in the original planning simulation. */
+export type PremovePower = {
+  command: string;
+  events: { kind: "charge" | "discard" | "gaia"; waste: number; area2: number; area3: number }[];
+}[];
+
 export type PremoveTiming = { round: number; phase: Phase };
 
 export type PremoveStep = {
   move: string;
+  power?: PremovePower;
   timing: PremoveTiming;
   status: "queued" | "played" | "skipped" | "blocked" | "unplayed" | "undone";
   /** Index in the real move history, never the simulation. */
@@ -20,6 +27,7 @@ export type PremoveRun = {
 
 export type PremovePlan = {
   moves: string[];
+  power?: PremovePower[];
   timings?: PremoveTiming[];
   revision: number;
   round: number;
@@ -44,6 +52,7 @@ export type PremoveCommand = {
   requestId: string;
   label?: string;
   moves: string[];
+  power?: PremovePower[];
   timings?: PremoveTiming[];
   round: number;
   turn: number;

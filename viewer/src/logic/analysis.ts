@@ -1,6 +1,7 @@
 import Engine, {
   advanceSetupTurn,
   ANALYSIS_CHEAP_BUILD,
+  capturePremovePower,
   Command,
   endSetupFactionPhase,
   Faction,
@@ -9,7 +10,7 @@ import Engine, {
   Reward,
   Round,
 } from "@gaia-project/engine";
-import type { PremoveTiming } from "@gaia-project/engine/src/premove-types";
+import type { PremovePower, PremoveTiming } from "@gaia-project/engine/src/premove-types";
 
 import { parseCommands } from "./recent";
 
@@ -930,7 +931,8 @@ export function replayAnalysisLine(
   origin: Engine,
   entries: AnalysisEntry[],
   seat: number,
-  costs?: MoveCost[]
+  costs?: MoveCost[],
+  power?: PremovePower[]
 ): {
   engine: Engine;
   applied: number;
@@ -969,7 +971,8 @@ export function replayAnalysisLine(
             });
           }
         }
-        copy.move(entry.move);
+        const baseline = capturePremovePower(copy, seat, entry.move);
+        power?.push(baseline);
         if (costs) {
           costs.push(cost);
         }
@@ -1133,6 +1136,7 @@ function ownMovePrefixLength(engine: Engine, moveEntries: AnalysisMoveEntry[], s
  * whether it supports premoves determine how the committable line is submitted. */
 export interface AnalysisCommitPlan {
   costs?: MoveCost[];
+  power?: PremovePower[];
   /** Round and phase for each submitted move, in live-then-queued order. */
   timings?: PremoveTiming[];
   /** A submitted upgrade must keep the 3c neighbour price. */
@@ -1164,6 +1168,7 @@ export function limitAnalysisCommit(plan: AnalysisCommitPlan, count: number): An
     live,
     queued: live === null ? selected : selected.slice(1),
     ...(plan.timings ? { timings: plan.timings.slice(0, selectedCount) } : {}),
+    ...(plan.power ? { power: plan.power.slice(0, selectedCount) } : {}),
     ...(plan.costs ? { costs: plan.costs.slice(0, selectedCount) } : {}),
     simulatedNeighbour: selected.some(isCheapAnalysisBuild),
     deferred: [...eligible.slice(selectedCount), ...(plan.deferred ?? [])],

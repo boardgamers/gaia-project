@@ -2,7 +2,7 @@
   <div v-if="isLostFleet" class="lost-fleet-ships old-ships">
     <section v-for="ship in ships" :key="ship" class="lost-fleet-ship old-ship" :data-ship="ship">
       <header :style="{ background: shipColor(ship) }">
-        <strong>{{ shipFullName(ship) }}</strong>
+        <strong>{{ shipHeaderName(ship) }}</strong>
         <span class="old-ship-slots">
           <span
             v-for="slot in explorationSlots(ship)"

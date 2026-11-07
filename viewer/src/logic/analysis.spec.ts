@@ -8,6 +8,7 @@ import Engine, {
   Resource,
   Round,
 } from "@gaia-project/engine";
+import type { PremovePower } from "@gaia-project/engine/src/premove-types";
 import { expect } from "chai";
 import { passedChargeGame } from "../testing/passed-charge";
 import type { AnalysisCommitPlan, AnalysisEntry, AnalysisLineSet, MoveCost } from "./analysis";
@@ -1844,5 +1845,32 @@ describe("isCheapAnalysisBuild", () => {
 
   it("finds it in any turn of a multi-command move string", () => {
     expect(isCheapAnalysisBuild("terrans spend 1o for 1c. build ts 4A4 cheap.")).to.equal(true);
+  });
+});
+
+describe("planning power baselines", () => {
+  it("captures original move rewards, excluding simulated charge adjustments", () => {
+    const origin = new Engine(SETUP_MOVES);
+    origin.players[0].data.research.nav = 2;
+    Object.assign(origin.players[0].data.power, { area1: 3, area2: 0, area3: 0 });
+    const power: PremovePower[] = [];
+    replayAnalysisLine(origin, [{ kind: "move", move: "terrans up nav." }], 0, undefined, power);
+    expect(power).to.have.length(1);
+    expect(
+      power[0]
+        .flatMap((command) => command.events)
+        .filter((event) => event.kind === "charge")
+        .map((event) => event.waste)
+    ).to.deep.equal([0]);
+    origin.players[0].data.chargePower(6);
+    const full: PremovePower[] = [];
+    replayAnalysisLine(origin, [{ kind: "move", move: "terrans up nav." }], 0, undefined, full);
+    expect(
+      full[0]
+        .flatMap((command) => command.events)
+        .filter((event) => event.kind === "charge")
+        .map((event) => event.waste)
+    ).to.deep.equal([3]);
+    expect(power[0].flatMap((command) => command.events)[0].waste).to.equal(0);
   });
 });

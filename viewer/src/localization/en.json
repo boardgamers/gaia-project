@@ -4156,5 +4156,15 @@
   "Twilight — Nautilaks": "Twilight — Nautilaks",
   "Rebellion — Vo'Kron": "Rebellion — Vo'Kron",
   "T F Mars — Gaia Federation": "T F Mars — Gaia Federation",
-  "Eclipse — Eridani Empire": "Eclipse — Eridani Empire"
+  "Eclipse — Eridani Empire": "Eclipse — Eridani Empire",
+  "This action would waste more power charges than planned.": "This action would waste more power charges than planned.",
+  "This action would remove power tokens from bowls II or III instead of bowl I as planned.": "This action would remove power tokens from bowls II or III instead of bowl I as planned.",
+  "This older plan has no power baseline; review and queue it again.": "This older plan has no power baseline; review and queue it again.",
+  "Dismiss premove stop reason": "Dismiss premove stop reason",
+  "Premoves stopped — review plan": "Premoves stopped — review plan",
+  "Premoves stopped at move {p0} — review plan": "Premoves stopped at move {p0} — review plan",
+  "This action would waste more power charges than planned. This older plan has no power baseline; review and queue it again.": "This action would waste more power charges than planned. This older plan has no power baseline; review and queue it again.",
+  "This action would remove power tokens from bowls II or III instead of bowl I as planned. This older plan has no power baseline; review and queue it again.": "This action would remove power tokens from bowls II or III instead of bowl I as planned. This older plan has no power baseline; review and queue it again.",
+  "Premoves stopped.": "Premoves stopped.",
+  "plays the first immediately. The rest run on your following turns, even with the browser closed. Moves for later rounds wait for their round and phase. You can view or cancel them at any time. If a move cannot be played with your actual resources when your turn arrives, the queue stops. The remaining plan opens with the reason it stopped, unless you are already editing. The stopped-plan button in the action bar opens it directly. The last ten queues stay available across devices; use Review remaining to edit a stopped queue before submitting it again.": "plays the first immediately. The rest run on your following turns, even with the browser closed. Moves for later rounds wait for their round and phase. You can view or cancel them at any time. If a move cannot be played with your actual resources when your turn arrives, the queue stops. The remaining plan opens with the reason it stopped, unless you are already editing. The stopped-plan button in the action bar opens it directly. The last ten queues stay available across devices; use Review remaining to edit a stopped queue before submitting it again."
 }

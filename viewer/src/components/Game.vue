@@ -81,6 +81,12 @@
             :analysis-entries="analysisEntries"
             :analysis-played="analysisPlayed[analysisActiveLine] || []"
             :analysis-blocked-reason="analysisBlockedReason"
+            :analysis-stop-reason="
+              stoppedPremoveReview && stoppedPremoveReview.line === analysisActiveLine
+                ? stoppedPremoveReview.reason
+                : ''
+            "
+            @dismiss-premove-stop="stoppedPremoveReview = null"
             :analysis-move-costs="analysisMoveCosts"
             :analysis-applied-count="analysisEdit ? analysisEdit.appliedCount : analysisAppliedCount"
             :analysis-editing-index="analysisEdit ? analysisEdit.index : -1"
@@ -226,6 +232,12 @@
             :analysis-entries="analysisEntries"
             :analysis-played="analysisPlayed[analysisActiveLine] || []"
             :analysis-blocked-reason="analysisBlockedReason"
+            :analysis-stop-reason="
+              stoppedPremoveReview && stoppedPremoveReview.line === analysisActiveLine
+                ? stoppedPremoveReview.reason
+                : ''
+            "
+            @dismiss-premove-stop="stoppedPremoveReview = null"
             :analysis-move-costs="analysisMoveCosts"
             :analysis-applied-count="analysisEdit ? analysisEdit.appliedCount : analysisAppliedCount"
             :analysis-editing-index="analysisEdit ? analysisEdit.index : -1"
@@ -335,6 +347,10 @@
         :analysis-entries="analysisEntries"
         :analysis-played="analysisPlayed[analysisActiveLine] || []"
         :analysis-blocked-reason="analysisBlockedReason"
+        :analysis-stop-reason="
+          stoppedPremoveReview && stoppedPremoveReview.line === analysisActiveLine ? stoppedPremoveReview.reason : ''
+        "
+        @dismiss-premove-stop="stoppedPremoveReview = null"
         :analysis-move-costs="analysisMoveCosts"
         :analysis-applied-count="analysisEdit ? analysisEdit.appliedCount : analysisAppliedCount"
         :analysis-editing-index="analysisEdit ? analysisEdit.index : -1"
@@ -381,7 +397,13 @@ import Engine, {
   ResearchField,
 } from "@gaia-project/engine";
 import { chargeDecisionSeats, hasConcurrentCharges } from "@gaia-project/engine/src/pending-charges";
-import type { PremoveCommand, PremovePlan, PremoveRun, PremoveTiming } from "@gaia-project/engine/src/premove-types";
+import type {
+  PremoveCommand,
+  PremovePlan,
+  PremovePower,
+  PremoveRun,
+  PremoveTiming,
+} from "@gaia-project/engine/src/premove-types";
 import { currentPlayer } from "@gaia-project/engine/wrapper";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
@@ -536,6 +558,8 @@ export default class Game extends Vue {
   analysisPlayed: AnalysisPlayedMove[][] = [[]];
   analysisBlockedReason = "";
   premoveHistoryVisible = false;
+  stoppedPremoveReview: { line: number; reason: string } | null = null;
+  seenPremoveStop = "";
   analysisActiveLine = 0;
   // The saved line stays intact while the board shows a prefix for inspection or editing.
   analysisEdit: { index: number; appliedCount: number; mode: "replace" | "insert" | "inspect" } | null = null;
@@ -598,6 +622,14 @@ export default class Game extends Vue {
   options: EngineOptions;
 
   mounted() {
+    const reviewStopped = () => this.viewPremoves(this.myPremovePlan?.runs?.[0]);
+    this.$root.$on("review-stopped-premoves", reviewStopped);
+    this.$on("hook:beforeDestroy", () => this.$root.$off("review-stopped-premoves", reviewStopped));
+    this.$watch(
+      () => this.premoveStopId,
+      () => this.openNewPremoveStop(),
+      { immediate: true }
+    );
     const undoListener = this.$store.subscribeAction(({ type, payload }) => {
       if (type === "undo") {
         this.undoMove();
@@ -1104,7 +1136,31 @@ export default class Game extends Vue {
     return `premove-notice:${JSON.stringify([this.realEngine.moveHistory[0], this.myLockedSeat])}`;
   }
 
-  submitPremoves(moves: string[], timings?: PremoveTiming[]) {
+  get premoveStopId(): string {
+    const plan = this.myPremovePlan;
+    const run = plan?.runs?.[0];
+    if (run ? run.status !== "stopped" : plan?.notice?.kind !== "stopped") return "";
+    return JSON.stringify([this.premoveNoticeStorageKey, plan.revision, run?.id, run?.reason, plan.notice]);
+  }
+
+  openNewPremoveStop() {
+    const id = this.premoveStopId;
+    if (!id || this.seenPremoveStop === id) return;
+    this.seenPremoveStop = id;
+    const key = `${this.premoveNoticeStorageKey}:opened-stop`;
+    try {
+      if (window.localStorage.getItem(key) === id) return;
+      window.localStorage.setItem(key, id);
+    } catch {
+      // A disabled browser store still permits one automatic opening per mounted view.
+    }
+    // Never interrupt a draft, a partially composed live move, or a historical position.
+    // The stopped-plan button remains available for an explicit review instead.
+    if (this.analysisMode || this.currentMove || this.replayData || this.interactionDisabled) return;
+    this.viewPremoves(this.myPremovePlan?.runs?.[0]);
+  }
+
+  submitPremoves(moves: string[], timings?: PremoveTiming[], power?: PremovePower[]) {
     const real = this.realEngine;
     const seat = this.myLockedSeat;
     if (seat === undefined || this.$store.state.pendingPlan) return;
@@ -1115,6 +1171,7 @@ export default class Game extends Vue {
       ...(this.analysisMode ? { label: analysisLineLabel(this.analysisActiveLine) } : {}),
       moves,
       ...(timings ? { timings } : {}),
+      ...(power ? { power } : {}),
       round: real.round,
       turn: real.automation?.turns[seat] ?? 0,
       revision: real.automation?.plans[seat]?.revision ?? 0,
@@ -1134,23 +1191,27 @@ export default class Game extends Vue {
           .filter((step) => ["queued", "blocked", "unplayed", "undone"].includes(step.status))
           .map((step) => step.move)
       : (this.myPremovePlan?.moves ?? []);
-    if (!moves.length) return;
+    if (!moves.length && !this.premoveStopId) return;
     if (!this.analysisMode) this.enterAnalysisMode();
     if (!this.analysisMode) return;
     const matching = this.analysisLines.findIndex((entries) => {
       const planned = entries.filter((entry) => entry.kind === "move");
-      return moves.every((move, index) => planned[index]?.move === move);
+      return planned.length === moves.length && moves.every((move, index) => planned[index]?.move === move);
     });
     if (matching >= 0) {
       this.selectAnalysisLine(matching);
-      return;
-    }
-    if (this.analysisEntries.length) {
+    } else if (this.analysisEntries.length) {
       if (this.analysisLines.length >= MAX_ANALYSIS_LINES) {
         return;
       }
       this.addAnalysisLine();
     }
+    this.stoppedPremoveReview = (run ? run.status === "stopped" : !!this.premoveStopId)
+      ? {
+          line: this.analysisActiveLine,
+          reason: run?.reason || this.myPremovePlan?.notice?.text || "Premoves stopped.",
+        }
+      : null;
     this.$set(
       this.analysisPlayed,
       this.analysisActiveLine,
@@ -1160,6 +1221,8 @@ export default class Game extends Vue {
             .map((step) => ({ move: this.analysisRealHistory[step.moveIndex] ?? step.move, moveIndex: step.moveIndex }))
         : []
     );
+    // An existing matching line can contain charge assumptions; retain those on review.
+    if (matching >= 0) return;
     this.setAnalysisEntries(
       moves.map((move) => ({ kind: "move", move })),
       { prune: false }
@@ -1257,7 +1320,9 @@ export default class Game extends Vue {
       });
     }
     plan.costs = [];
-    replayAnalysisLine(this.analysisOrigin, entries, this.analysisSeat, plan.costs);
+    plan.power = [];
+    replayAnalysisLine(this.analysisOrigin, entries, this.analysisSeat, plan.costs, plan.power);
+    plan.power = plan.power.slice(0, moves.length);
     return plan;
   }
 
@@ -1288,12 +1353,12 @@ export default class Game extends Vue {
       return;
     }
     const plan = this.analysisCommitPlan;
-    const { live, queued, timings } = moveCount === undefined ? plan : limitAnalysisCommit(plan, moveCount);
+    const { live, queued, timings, power } = moveCount === undefined ? plan : limitAnalysisCommit(plan, moveCount);
     if (live === null && queued.length === 0) {
       return;
     }
     if (this.premoveAvailable) {
-      this.analysisSubmission = this.submitPremoves(live === null ? queued : [live, ...queued], timings) ?? null;
+      this.analysisSubmission = this.submitPremoves(live === null ? queued : [live, ...queued], timings, power) ?? null;
       return;
     }
     this.exitAnalysisMode();
@@ -1478,6 +1543,7 @@ export default class Game extends Vue {
     this.analysisEdit = null;
     this.analysisUndo = null;
     this.analysisMode = false;
+    this.stoppedPremoveReview = null;
     this.analysisBackup = null;
     this.analysisOrigin = null;
     this.analysisComposeBase = null;
