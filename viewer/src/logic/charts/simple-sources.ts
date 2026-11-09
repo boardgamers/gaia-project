@@ -19,6 +19,7 @@ import { ChartSource, getDataPoints, playerLabel } from "./charts";
 import { factionSourceFactory } from "./factions";
 import { federationsSourceFactory } from "./federations";
 import { finalScoringSourceFactory } from "./final-scoring";
+import { lostFleetSourceFactories } from "./lost-fleet";
 import { planetsSourceFactory } from "./plantets";
 import { researchSourceFactory } from "./research";
 import { boardActionSourceFactory, boosterSourceFactory, freeActionSourceFactory } from "./resources";
@@ -39,13 +40,14 @@ export const createSimpleSourceFactories = (
     leechSourceFactory,
     factionSourceFactory(factions),
     freeActionSourceFactory,
-    boardActionSourceFactory,
+    boardActionSourceFactory(expansion),
     buildingsSourceFactory(expansion),
     researchSourceFactory(expansion),
     planetsSourceFactory,
     terraformingStepsSourceFactory,
     boosterSourceFactory(boosters),
     federationsSourceFactory(expansion),
+    ...lostFleetSourceFactories(expansion),
     baseTechSourceFactory(expansion),
     advancedTechSourceFactory(advTechTiles),
     finalScoringSourceFactory(finalTiles, expansion),
@@ -95,7 +97,7 @@ function simpleChartDetails<Source extends ChartSource<any>>(
     return {
       backgroundColor: resolveColor(s.color, pl),
       label: s.label,
-      description: "",
+      description: s.description ?? "",
       fill: false,
       getDataPoints: () => getDataPoints(data, initialValue, extractChange, extractLog, null, includeRounds),
       weight: s.weight,

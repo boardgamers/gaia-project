@@ -17,6 +17,7 @@ import {
   ResearchField,
   Resource,
   Reward,
+  Spaceship,
   TechPos,
   TechTile,
 } from "@gaia-project/engine";
@@ -107,7 +108,10 @@ export function balanceSheetEventSources(expansion: Expansion): BalanceSheetSour
           .flatMap((t) => techTileRewards(t))
       ),
       eventSources: (TechPos.values(expansion) as (TechPos | AdvTechTilePos)[]).concat(
-        AdvTechTilePos.values(expansion)
+        AdvTechTilePos.values(expansion),
+        // The implicit free research step uses the same prefixed event source
+        // for ship tech positions as it does for ordinary tech positions.
+        Spaceship.values(expansion).map((ship) => techTileEventSource(ship as unknown as AnyTechTilePos))
       ),
       color: "--current-round",
     },
@@ -145,12 +149,35 @@ export function balanceSheetEventSources(expansion: Expansion): BalanceSheetSour
       label: "Power/Q.I.C Actions",
       // Include QIC costs for the optional Lost Fleet 2p tech action. Empty history groups stay empty.
       costResources: rewardTypes(BoardAction.values().flatMap((a) => Reward.parse(boardActions[a].cost))),
-      incomeResources: eventTypes(
-        BoardAction.values(expansion).flatMap((a) => Event.parse(boardActions[a].income, null))
+      incomeResources: uniq(
+        eventTypes(BoardAction.values(expansion).flatMap((a) => Event.parse(boardActions[a].income, null))).concat(
+          // Twilight federation re-scoring still logs its reward under qic2, and
+          // the indirect ">fed" effect does not enumerate the token's resources.
+          expansion & Expansion.LostFleet ? balanceSheetResources : []
+        )
       ),
       eventSources: BoardAction.values(),
       color: "--specialAction",
     },
+    ...((expansion & Expansion.LostFleet) !== 0
+      ? [
+          {
+            label: "Spaceships and artifacts",
+            description: "Spaceship board actions and Twilight artifact costs and rewards",
+            costResources: balanceSheetResources,
+            incomeResources: balanceSheetResources,
+            eventSources: Spaceship.values(expansion),
+            color: "--specialAction",
+          },
+          {
+            label: "Exploration",
+            costResources: balanceSheetResources,
+            incomeResources: balanceSheetResources,
+            eventSources: [Command.Explore],
+            color: "--res-qic",
+          },
+        ]
+      : []),
     {
       label: "Free Charge",
       incomeResources: [Resource.ChargePower, Resource.GainToken],

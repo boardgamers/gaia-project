@@ -8,11 +8,13 @@ import Engine, {
   parseFederationLocation,
   Player,
   Resource,
+  SpaceshipFederation,
   TechTile,
 } from "@gaia-project/engine";
 import SpaceMap from "@gaia-project/engine/src/map";
 import { federationRewards } from "@gaia-project/engine/src/tiles/federations";
-import { federationData } from "../../data/federations";
+import type { FederationChoice } from "../../data/federations";
+import { federationChoiceDescription, federationData, isSpaceshipFederation } from "../../data/federations";
 import { sum } from "../lodash-utils";
 import type { CommandObject } from "../recent";
 import { BuildingCounter } from "./buildings";
@@ -21,7 +23,7 @@ import type { SimpleSourceFactory } from "./simple-charts";
 import { ChartSummary, ExtractLog } from "./simple-charts";
 
 function isSpecialOperator(data: Engine, cmd: CommandObject) {
-  return data.tiles.techs[cmd.args[0]].tile == TechTile.Tech3;
+  return data.tiles.techs[cmd.args[0]]?.tile == TechTile.Tech3;
 }
 
 export class BuildingPowerValueCounter {
@@ -103,7 +105,7 @@ export const federationDiscount = (
     });
   });
 
-export function federationsSourceFactory(expansions: Expansion): SimpleSourceFactory<ChartSource<Federation>> {
+export function federationsSourceFactory(expansions: Expansion): SimpleSourceFactory<ChartSource<FederationChoice>> {
   return {
     name: "Federations",
     summary: ChartSummary.total,
@@ -113,7 +115,11 @@ export function federationsSourceFactory(expansions: Expansion): SimpleSourceFac
       if (e.cmd.command == Command.FormFederation) {
         return (e.cmd.args[1] as Federation) == type ? 1 : 0;
       }
-      if (e.allCommands[0] === e.cmd && !e.allCommands.find((c) => c.command == Command.FormFederation)) {
+      if (
+        !isSpaceshipFederation(type) &&
+        e.allCommands[0] === e.cmd &&
+        !e.allCommands.find((c) => c.command == Command.FormFederation)
+      ) {
         //only take the federation from changes once, i.e. when seeing the first command
         const c = e.log.changes?.[Command.FormFederation];
         if (c != null) {
@@ -127,11 +133,13 @@ export function federationsSourceFactory(expansions: Expansion): SimpleSourceFac
       }
       return 0;
     }),
-    sources: Federation.values(expansions)
+    sources: [...Federation.values(expansions), ...SpaceshipFederation.values(expansions)]
       .map((f) => ({
         type: f,
-        label: federationRewards(f).join(","),
-        color: federationData[f].color,
+        label: isSpaceshipFederation(f)
+          ? `Spaceship federation: ${federationChoiceDescription(f)}`
+          : federationChoiceDescription(f),
+        color: isSpaceshipFederation(f) ? "--lost" : federationData[f].color,
         weight: 1,
       }))
       .concat({

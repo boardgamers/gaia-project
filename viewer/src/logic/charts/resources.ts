@@ -1,10 +1,23 @@
-import { BoardAction, Booster, Command, Faction, Planet, Resource, Reward } from "@gaia-project/engine";
+import {
+  BoardAction,
+  Booster,
+  Command,
+  Expansion,
+  Faction,
+  Planet,
+  Resource,
+  Reward,
+  Spaceship,
+} from "@gaia-project/engine";
+import type { SpaceshipActionType } from "@gaia-project/engine/src/spaceships";
+import { spaceshipBoards } from "@gaia-project/engine/src/spaceships";
 import { boardActionData } from "../../data/actions";
 import { boosterData } from "../../data/boosters";
 import { resourceData } from "../../data/resources";
+import { spaceshipColors, spaceshipNames } from "../../data/spaceships";
 import { colorCodes } from "../color-codes";
 import { sum } from "../lodash-utils";
-import { ChartSource } from "./charts";
+import type { ChartSource } from "./charts";
 import type { SimpleSourceFactory } from "./simple-charts";
 import { ChartSummary, commandCounterArg0EqualsSource, ExtractLog, planetCounter } from "./simple-charts";
 
@@ -98,18 +111,48 @@ export const freeActionSourceFactory: SimpleSourceFactory<FreeActionSource> = {
   sources: freeActionSources,
 };
 
-export const boardActionSourceFactory: SimpleSourceFactory<ChartSource<BoardAction>> = {
+const shipActionLabels: Record<Spaceship, Partial<Record<SpaceshipActionType, string>>> = {
+  [Spaceship.Twilight]: { qic: "Re-score federation", power: "Research lab", knowledge: "Range +3" },
+  [Spaceship.Rebellion]: { qic: "Tech tile", power: "Trading station", knowledge: "2 credits + 1 QIC" },
+  [Spaceship.TFMars]: { qic: "VP for tech tiles", power: "Instant Gaiaforming", credit: "1 step + mine" },
+  [Spaceship.Eclipse]: { qic: "VP for planet types", power: "Research advance", credit: "Asteroid mine" },
+};
+
+export const boardActionSourceFactory = (expansion: Expansion): SimpleSourceFactory<ChartSource<string>> => ({
   name: "Board actions",
   playerSummaryLineChartTitle: `Board actions taken by all players`,
   summary: ChartSummary.total,
-  extractLog: commandCounterArg0EqualsSource(Command.Action),
-  sources: BoardAction.values().map((action) => ({
-    type: action,
-    label: boardActionData[action].name,
-    color: boardActionData[action].color,
-    weight: 1,
-  })),
-};
+  // Count the action command, not its resource changes or follow-up commands
+  // (tech tile, research, federation reward, build, etc.). Ship and action together
+  // identify a row: every ship has a QIC action, but they do different things.
+  extractLog: ExtractLog.filterPlayer(({ cmd, source }) => {
+    if (cmd.command === Command.Action) {
+      return cmd.args[0] === source.type ? 1 : 0;
+    }
+    if (cmd.command === Command.SpaceshipAction) {
+      return `spaceshipAction:${cmd.args[0]}:${cmd.args[1]}` === source.type ? 1 : 0;
+    }
+    return 0;
+  }),
+  sources: BoardAction.values()
+    .map((action): ChartSource<string> => ({
+      type: action,
+      label: boardActionData[action].name,
+      color: boardActionData[action].color,
+      weight: 1,
+    }))
+    .concat(
+      Spaceship.values(expansion).flatMap((ship) =>
+        spaceshipBoards[ship].actions.map((action) => ({
+          type: `spaceshipAction:${ship}:${action.type}`,
+          label: `${spaceshipNames[ship]}: ${shipActionLabels[ship][action.type]}`,
+          description: `${spaceshipNames[ship]}: ${action.effect} (cost: ${action.cost})`,
+          color: spaceshipColors[ship],
+          weight: 1,
+        }))
+      )
+    ),
+});
 
 export const boosterSourceFactory = (boosters: Booster[]): SimpleSourceFactory<ChartSource<Booster>> => ({
   name: "Boosters",

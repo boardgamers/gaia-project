@@ -80,6 +80,7 @@ const commandEventSource = (c: CommandObject): EventSource[] => {
     case Command.BurnPower:
       return [Faction.Itars];
     case Command.Action:
+    case Command.SpaceshipAction:
     case Command.ChooseTechTile:
       return [c.args[0] as EventSource];
     case Command.UpgradeResearch:
