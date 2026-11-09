@@ -183,3 +183,22 @@ test("power safeguards and direct stopped-plan review are localized in every cat
     }
   }
 });
+
+test("committed charge wait status and new errors are localized in every catalogue", async () => {
+  for (const locale of Object.keys(languages)) {
+    const catalog = JSON.parse(
+      await readFile(new URL(`../viewer/src/localization/${locale}.json`, import.meta.url), "utf8")
+    );
+    const translator = createTranslator({ [locale]: catalog }, locale);
+    for (const text of [
+      "Waiting for charges",
+      "Pending charges",
+      "Wait for the pending charge decisions",
+      "Already waiting for charge decisions",
+      "Unexpected wait arguments",
+    ]) {
+      assert.ok(catalog[text], `${locale}: ${text}`);
+      if (locale !== "en") assert.notEqual(translator.translate(text), text, `${locale}: ${text}`);
+    }
+  }
+});

@@ -1,11 +1,10 @@
 <template>
   <div v-if="visible" class="charge-wait">
-    <span
-      >{{ waiting ? "Waiting for charges" : "Pending charges" }}: <span>{{ names }}</span></span
-    >
-    <button v-if="canWait || waiting" type="button" class="btn btn-link btn-sm" @click="changeWait">
-      {{ waiting ? "Resume" : "Wait" }}
-    </button>
+    <span>
+      <span>{{ waiting ? "Waiting for charges" : "Pending charges" }}</span
+      >: <span>{{ names }}</span>
+    </span>
+    <button v-if="canWait" type="button" class="btn btn-link btn-sm" @click="changeWait">Wait</button>
   </div>
 </template>
 
@@ -33,16 +32,14 @@ export default class ChargeWait extends Vue {
     return waitingForCharges(this.engine, this.seat);
   }
   get canWait() {
-    return chargesToWaitFor(this.engine, this.seat).length > 0;
+    return !this.waiting && chargesToWaitFor(this.engine, this.seat).length > 0;
   }
   get names() {
     return [...new Set(this.others.map((charge) => factionName(this.engine.player(charge.player).faction)))].join(", ");
   }
   changeWait() {
-    this.$emit(
-      "command",
-      `${this.engine.player(this.seat).faction} ${this.waiting ? Command.ResumeCharges : Command.WaitForCharges}`
-    );
+    if (!this.canWait) return;
+    this.$emit("command", `${this.engine.player(this.seat).faction} ${Command.WaitForCharges}`);
   }
 }
 </script>

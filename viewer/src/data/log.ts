@@ -66,8 +66,8 @@ export function replaceMove(data: Engine, move: ParsedMove): ParsedMove {
           `${faction} · Automa${draw === "pass" ? "" : ` (${draw.includes(",") ? "cards" : "card"} ${draw})`}: ${actions}`
       )
       .replace(/(\b(?:charge|decline) [^ .]+) @\d+/g, "$1")
-      .replace(/\bwaitForCharges\b/g, "Wait for charges")
-      .replace(/\bresumeCharges\b/g, "Resume")
+      .replace(/\bwaitForCharges\b/g, "wait")
+      .replace(/\bresumeCharges\b/g, "resume")
       .replace(/\b(tech|cover) [a-z0-9-]+|fed[0-9]+|booster[0-9]+/g, (match, _group, offset: number, full: string) => {
         // The Lost Fleet federation token "ship-fed-tech" ends in "-tech", and a hyphen is a
         // non-word char, so \b still fires right there - a "using areaX: N" power-usage suffix

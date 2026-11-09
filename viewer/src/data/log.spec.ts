@@ -11,6 +11,10 @@ describe("Advanced log details", () => {
   data.tiles.techs[AdvTechTilePos.GaiaProject] = { tile: AdvTechTile.AdvTech4, count: 1 };
 
   describe("moves", () => {
+    it("uses lowercase wait and historical resume labels", () => {
+      expect(replaceMove(data, parsedMove("nevlas waitForCharges")).move).to.equal("nevlas wait");
+      expect(replaceMove(data, parsedMove("nevlas resumeCharges")).move).to.equal("nevlas resume");
+    });
     it("federation tile", () => {
       expect(replaceMove(data, parsedMove("ivits spend 4pw for 1q. action qic2. fedtile fed4.")).move).to.equal(
         "ivits spend 4pw for 1q. action qic2. fedtile fed4 (7vp,2o)."

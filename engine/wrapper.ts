@@ -128,6 +128,16 @@ export function move(engine: Engine, move: string | PremoveCommand, player: numb
     engine = Engine.fromData(engine);
   }
 
+  if (typeof move === "string") {
+    const command = move.trim().split(/\s+/)[1];
+    // Engine.move also reconstructs historical games containing resumeCharges.
+    // Reject new cancellations here, before touching history, resources or automation.
+    assert(command !== Command.ResumeCharges, "Wait for the pending charge decisions");
+    if (command === Command.WaitForCharges) {
+      assert(!waitingForCharges(engine, player), "Already waiting for charge decisions");
+    }
+  }
+
   automation(engine).liveUpdate = false;
   if (typeof move !== "string") {
     assert(move?.type === "premoves", "Unknown move");
@@ -141,8 +151,7 @@ export function move(engine: Engine, move: string | PremoveCommand, player: numb
   const round = engine.round;
   const command = move.trim().split(/\s+/)[1];
   const charge = hasConcurrentCharges(engine) && [Command.ChargePower, Command.Decline].includes(command as Command);
-  const waiting =
-    hasConcurrentCharges(engine) && [Command.WaitForCharges, Command.ResumeCharges].includes(command as Command);
+  const waiting = hasConcurrentCharges(engine) && command === Command.WaitForCharges;
   const phase = charge ? Phase.RoundLeech : engine.phase;
   const backup = JSON.stringify(engine);
 
@@ -224,10 +233,6 @@ function canReviseSealedBid(data: Engine, move: unknown, player: number): boolea
 export function canMoveOutOfTurn(engine: Engine, move: string | PremoveCommand, player: number): boolean {
   return (
     canReviseSealedBid(engine, move, player) ||
-    (typeof move === "string" &&
-      waitingForCharges(engine instanceof Engine ? engine : Engine.fromData(engine), player) &&
-      (move.trim() === `p${player + 1} ${Command.ResumeCharges}` ||
-        move.trim() === `${engine.players[player]?.faction} ${Command.ResumeCharges}`)) ||
     (typeof move === "object" && move?.type === "premoves" && canQueue(engine, player))
   );
 }

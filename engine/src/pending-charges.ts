@@ -63,10 +63,7 @@ export function pendingChargeCommands(engine: Engine): AvailableCommand[] {
   for (const seat of [...new Set(engine.pendingCharges.map((charge) => charge.player)), engine.currentPlayer]) {
     if (seat === undefined) continue;
     if (commands.some((command) => command.player === seat)) continue;
-    if (waitingForCharges(engine, seat)) {
-      commands.push({ name: Command.ResumeCharges, player: seat });
-      continue;
-    }
+    if (waitingForCharges(engine, seat)) continue;
     const charge = chargeFor(engine, seat);
     if (charge) {
       commands.push(
@@ -82,7 +79,10 @@ export function pendingChargeCommands(engine: Engine): AvailableCommand[] {
 }
 
 export function changeChargeWait(engine: Engine, seat: Seat, command: Command) {
+  // Historical move streams may contain cancellations. Keep replaying them, but never
+  // offer ResumeCharges or accept it through the hosted live-move boundary.
   if (command === Command.ResumeCharges) {
+    assert(engine.allowsHistoricalChargeResume, "Wait for the pending charge decisions");
     assert(waitingForCharges(engine, seat), "You are not waiting for charges");
     delete engine.chargeWaits[seat];
   } else {

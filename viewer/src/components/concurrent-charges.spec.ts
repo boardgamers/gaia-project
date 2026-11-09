@@ -67,7 +67,7 @@ describe("concurrent charge controls", () => {
     }
   });
 
-  it("lets the turn player wait and resume, while the charging seat sees only its own decisions", async () => {
+  it("commits the turn player to waiting until the other charge resolves", async () => {
     let saved = position();
     const vm = mountGame(1, Engine.fromData(JSON.parse(JSON.stringify(saved))));
     const pending = mountGame(3, Engine.fromData(JSON.parse(JSON.stringify(saved))));
@@ -89,9 +89,15 @@ describe("concurrent charge controls", () => {
     expect(actions).to.deep.equal(["nevlas waitForCharges"]);
     expect(vm.canPlay).to.equal(false);
     expect(button(vm, "Research")).to.equal(undefined);
-    await fireEvent.click(button(vm, "Resume"));
+    expect(button(vm, "Resume")).to.equal(undefined);
+    expect(button(vm, "Wait")).to.equal(undefined);
+    expect(vm.$el.querySelector(".charge-wait").textContent).to.contain("Waiting for charges");
+    // Keep the status in its own text node so the DOM localizer can match its catalog key.
+    expect(vm.$el.querySelector(".charge-wait > span > span").textContent).to.equal("Waiting for charges");
+    saved = hostedMove(saved, "hadsch-hallas decline 1pw @2", 3);
+    vm.handleData(Engine.fromData(JSON.parse(JSON.stringify(saved))));
     await Vue.nextTick();
-    expect(actions[1]).to.equal("nevlas resumeCharges");
+    expect(actions).to.deep.equal(["nevlas waitForCharges"]);
     expect(vm.canPlay).to.equal(true);
     expect(button(vm, "Research")).not.to.equal(undefined);
   });

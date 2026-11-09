@@ -54,6 +54,49 @@ describe("self-contained setup", () => {
     expect(JSON.parse(JSON.stringify(restored))).to.deep.equal(JSON.parse(JSON.stringify(engine)));
   });
 
+  it("strictly imports historical charge resumes without allowing new cancellations", () => {
+    const history = [
+      "init 4 concurrent-charge-test",
+      "p1 faction terrans",
+      "p2 faction nevlas",
+      "p3 faction firaks",
+      "p4 faction hadsch-hallas",
+      "p1 build m 8A2",
+      "p2 build m 8B1",
+      "p3 build m 8B3",
+      "p4 build m 7B5",
+      "p4 build m 1A2",
+      "p3 build m 7A4",
+      "p2 build m 5A2",
+      "p1 build m 4A4",
+      "p4 booster booster2",
+      "p3 booster booster4",
+      "p2 booster booster5",
+      "p1 booster booster6",
+      "hadsch-hallas income 2t",
+      "terrans build ts 8A2.",
+      "nevlas decline 1pw @1",
+      "nevlas waitForCharges",
+      "nevlas resumeCharges",
+      "nevlas waitForCharges",
+    ];
+    const engineData = { moveHistory: history, options: { concurrentCharges: true } };
+    const restored = loadEngineFromData({ engineData, type: LoadFromJsonType.strictReplay });
+    expect(restored.moveHistory.slice(-3)).to.deep.equal(history.slice(-3));
+    expect(restored.replay).not.to.equal(true);
+    const before = JSON.stringify(restored);
+    expect(() => restored.move("nevlas resumeCharges")).to.throw();
+    expect(JSON.stringify(restored)).to.equal(before);
+
+    // This incomplete turn is accepted by permissive replay, but not strict import.
+    const invalid = {
+      ...engineData,
+      moveHistory: [...history, "hadsch-hallas decline 1pw @2", "nevlas up eco", "nevlas ."],
+    };
+    expect(() => loadEngineFromData({ engineData: invalid, type: LoadFromJsonType.strictReplay })).to.throw();
+    expect(() => loadEngineFromData({ engineData: invalid, type: LoadFromJsonType.permissiveReplay })).not.to.throw();
+  });
+
   it("supports stopMove with a shared state URL by replaying to an earlier move", () => {
     const engine = new Engine(["init 2 lf-share-stop", "p1 faction terrans", "p2 faction xenos"], { lostFleet: true });
 

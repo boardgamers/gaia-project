@@ -87,6 +87,7 @@ import {
   changeChargeWait,
   chargeDecisionSeats,
   chargeFor,
+  chargesToWaitFor,
   hasConcurrentCharges,
   pendingChargeCommands,
   waitingForCharges,
@@ -320,6 +321,10 @@ export type SpaceshipActions = {
   [key in Spaceship]?: { [key in SpaceshipActionType]?: PlayerEnum };
 };
 
+// Constructor history reconstruction may include retired wait cancellations. Keep this
+// context outside serialized state and independent of permissive replay validation.
+const reconstructingHistory = new WeakSet<Engine>();
+
 export default class Engine {
   map: SpaceMap;
   players: Player[] = [];
@@ -496,7 +501,17 @@ export default class Engine {
       this.options.factionVariantVersion = latestVariantVersion(this.options.factionVariant);
     }
     this.sanitizeOptions();
-    this.loadMoves(moves);
+    reconstructingHistory.add(this);
+    try {
+      this.loadMoves(moves);
+    } finally {
+      reconstructingHistory.delete(this);
+    }
+  }
+
+  /** Only historical reconstruction can execute the retired resume command. */
+  get allowsHistoricalChargeResume(): boolean {
+    return this.replay || reconstructingHistory.has(this);
   }
 
   /** Fix old options passed. To remove when legacy data is no more in database */
@@ -543,6 +558,22 @@ export default class Engine {
   }
 
   move(_move: string, allowIncomplete = true) {
+    // Validate wait controls before pendingMove, log entries or any other state changes.
+    const [slug, command] = _move.trim().split(/\s+/);
+    if (command === Command.ResumeCharges) {
+      assert(this.allowsHistoricalChargeResume, "Wait for the pending charge decisions");
+    }
+    if (hasConcurrentCharges(this) && command === Command.WaitForCharges) {
+      const seat = /^p[1-7]$/.test(slug)
+        ? ((+slug[1] - 1) as PlayerEnum)
+        : this.players.find((player) => player.faction === slug)?.player;
+      assert(seat !== undefined, "Unknown player");
+      assert(_move.trim().split(/\s+/).length === 2, "Unexpected wait arguments");
+      assert(
+        chargesToWaitFor(this, seat).length > 0 && !waitingForCharges(this, seat),
+        "No earlier charge decisions to wait for"
+      );
+    }
     if (this.replay) {
       this.newTurn = true;
     } else {
@@ -1029,6 +1060,11 @@ export default class Engine {
       engine.clearAvailableCommands();
     }
 
+    // Saved command caches from before waits became final may still offer Resume.
+    if (engine.availableCommands?.some((command) => command.name === Command.ResumeCharges)) {
+      engine.clearAvailableCommands();
+    }
+
     repairBannedRandomFactions(engine);
     return engine;
   }
@@ -1215,7 +1251,7 @@ export default class Engine {
         this.clearAvailableCommands();
         return true;
       }
-      assert(!waitingForCharges(this, seat), "Resume or wait for the pending charge decisions");
+      assert(!waitingForCharges(this, seat), "Wait for the pending charge decisions");
       const charge = chargeFor(this, seat);
       if (command === Command.ChargePower || command === Command.Decline) {
         assert(charge, "No pending charge for this player");

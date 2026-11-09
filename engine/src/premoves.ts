@@ -1,5 +1,5 @@
 import Engine from "./engine";
-import { Phase, Round } from "./enums";
+import { Command, Phase, Round } from "./enums";
 import { canTakeTurn, hasConcurrentCharges } from "./pending-charges";
 import { assertPremovePower, capturePremovePower, validatePremovePower } from "./premove-power";
 import assert from "./utils/assert";
@@ -96,7 +96,8 @@ export function premoveHistoryAfterReplay(plans: AutomationState["plans"], moveC
 
 export function assertOwnMove(engine: Engine, move: string, seat: number) {
   assert(typeof move === "string" && move.length <= 8000, "Invalid move");
-  const actor = move.trim().split(/\s+/)[0];
+  const [actor, command] = move.trim().split(/\s+/);
+  assert(command !== Command.ResumeCharges, "Wait for the pending charge decisions");
   assert(actor === `p${seat + 1}` || actor === engine.players[seat]?.faction, "You may only play your own moves");
 }
 

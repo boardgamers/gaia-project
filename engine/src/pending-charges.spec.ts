@@ -68,22 +68,115 @@ describe("independent charge decisions", () => {
     expect(engine.playerToMove).to.equal(3);
   });
 
-  it("persists optional waits without deadlocking, and allows cancelling the wait", () => {
+  it("persists committed waits without deadlocking and clears them automatically", () => {
     const engine = game();
     engine.move("terrans build ts 8A2.");
     answer(engine, 1, true);
-    let waited = hostedMove(engine, "nevlas waitForCharges", 1);
+    const waited = hostedMove(engine, "nevlas waitForCharges", 1);
     expect(waitingForCharges(waited, 1)).to.equal(true);
     expect(currentPlayer(JSON.parse(JSON.stringify(waited)))).to.equal(3);
     expect(waited.automation.turns[1]).to.equal(0);
-    expect(canMoveOutOfTurn(waited, "nevlas resumeCharges", 1)).to.equal(true);
-    waited = hostedMove(waited, "nevlas resumeCharges", 1);
-    expect(waitingForCharges(waited, 1)).to.equal(false);
+    expect(canMoveOutOfTurn(waited, "nevlas resumeCharges", 1)).to.equal(false);
+    expect(waited.generateAvailableCommandsIfNeeded().some((command) => command.player === 1)).to.equal(false);
+    const before = JSON.stringify(waited);
+    for (const move of ["nevlas resumeCharges", "p2 resumeCharges", "nevlas waitForCharges", "p2 waitForCharges"]) {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        expect(() => hostedMove(waited, move, 1)).to.throw();
+        expect(JSON.stringify(waited)).to.equal(before);
+        expect(() => waited.move(move)).to.throw();
+        expect(JSON.stringify(waited)).to.equal(before);
+      }
+    }
     expect(() => Engine.fromData(JSON.parse(JSON.stringify(waited))).move("hadsch-hallas waitForCharges")).to.throw();
-    waited.move("nevlas waitForCharges");
     answer(waited, 3, true);
     expect(waitingForCharges(waited, 1)).to.equal(false);
     expect(waited.playerToMove).to.equal(1);
+    expect(waited.chargeWaits).to.deep.equal({});
+  });
+
+  it("replays historical wait/resume cycles without rewriting history", () => {
+    const history = [
+      ...setup,
+      "terrans build ts 8A2.",
+      "nevlas decline 1pw @1",
+      "nevlas waitForCharges",
+      "nevlas resumeCharges",
+      "nevlas waitForCharges",
+    ];
+    const strict = new Engine(history, { concurrentCharges: true });
+    expect(strict.moveHistory.slice(-3)).to.deep.equal(history.slice(-3));
+    expect(strict.replay).not.to.equal(true);
+    expect(strict.allowsHistoricalChargeResume).to.equal(false);
+    expect(waitingForCharges(strict, 1)).to.equal(true);
+    const strictBefore = JSON.stringify(strict);
+    expect(() => strict.move("nevlas resumeCharges")).to.throw();
+    expect(() => strict.loadMoves(["nevlas resumeCharges"])).to.throw();
+    expect(() => hostedMove(strict, "p2 resumeCharges", 1)).to.throw();
+    expect(JSON.stringify(strict)).to.equal(strictBefore);
+    // The compatibility context must not bypass ordinary strict move validation.
+    expect(() => new Engine([...history, "hadsch-hallas up eco"], { concurrentCharges: true })).to.throw();
+    expect(() => new Engine([...history.slice(0, -2), "firaks resumeCharges"], { concurrentCharges: true })).to.throw(
+      "You are not waiting for charges"
+    );
+    const replay = new Engine(history, { concurrentCharges: true }, undefined, true);
+    expect(replay.moveHistory.slice(-3)).to.deep.equal(history.slice(-3));
+    expect(waitingForCharges(replay, 1)).to.equal(true);
+    const resumed = replay.replayedTo(history.length - 1, false);
+    expect(waitingForCharges(resumed, 1)).to.equal(false);
+    expect(resumed.moveHistory).to.deep.equal(replay.moveHistory.slice(0, -1));
+    resumed.move("nevlas waitForCharges");
+    const before = JSON.stringify(resumed);
+    expect(() => resumed.move("nevlas resumeCharges")).to.throw();
+    expect(JSON.stringify(resumed)).to.equal(before);
+    const replayBefore = JSON.stringify(replay);
+    expect(() => hostedMove(replay, "p2 resumeCharges", 1)).to.throw();
+    expect(JSON.stringify(replay)).to.equal(replayBefore);
+    const serialized = JSON.parse(replayBefore);
+    expect(() => hostedMove(serialized, "nevlas resumeCharges", 1)).to.throw();
+    expect(JSON.stringify(serialized)).to.equal(replayBefore);
+
+    const saved = JSON.parse(JSON.stringify(replay));
+    saved.availableCommands = [{ name: Command.ResumeCharges, player: 1 }];
+    const restored = Engine.fromData(saved);
+    expect(restored.generateAvailableCommandsIfNeeded().some((c) => c.name === Command.ResumeCharges)).to.equal(false);
+    expect(restored.moveHistory).to.deep.equal(replay.moveHistory);
+    answer(restored, 3, true);
+    expect(waitingForCharges(restored, 1)).to.equal(false);
+  });
+
+  it("allows only earlier offers to be waited on, preventing cycles", () => {
+    const engine = game();
+    engine.move("terrans build ts 8A2.");
+    answer(engine, 1, true);
+    engine.move("nevlas build ts 8B1.");
+    engine.move("firaks waitForCharges");
+    expect(engine.chargeWaits[2]).to.deep.equal([chargeFor(engine, 3).id]);
+    expect(() => hostedMove(engine, "hadsch-hallas waitForCharges", 3)).to.throw();
+    answer(engine, 3, true);
+    expect(waitingForCharges(engine, 2)).to.equal(false);
+    expect(chargeFor(engine, 0)).not.to.equal(undefined);
+    expect(
+      engine.generateAvailableCommandsIfNeeded().some((c) => c.player === 2 && c.name === Command.ChargePower)
+    ).to.equal(true);
+  });
+
+  it("waits for every referenced offer, but not offers added later", () => {
+    const engine = game();
+    engine.move("terrans build ts 8A2.");
+    answer(engine, 1, true);
+    engine.move("nevlas build ts 8B1.");
+    engine.move("terrans waitForCharges");
+    const ids = engine.chargeWaits[0].slice();
+    expect(ids).to.have.length(2);
+    // A later offer for the same opponent must not extend this committed wait.
+    engine.pendingCharges.push({ ...chargeFor(engine, 3), id: engine.nextChargeId++ });
+    answer(engine, 3, true);
+    expect(waitingForCharges(engine, 0)).to.equal(true);
+    expect(engine.chargeWaits[0]).to.deep.equal(ids);
+    answer(engine, 2, true);
+    expect(waitingForCharges(engine, 0)).to.equal(false);
+    expect(engine.chargeWaits[0]).to.equal(undefined);
+    expect(chargeFor(engine, 3)).not.to.equal(undefined);
   });
 
   it("rejects a stale answer instead of consuming the next offer", () => {
