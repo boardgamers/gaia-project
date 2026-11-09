@@ -8,6 +8,7 @@ import {
   LogEntryChanges,
   Player,
   PlayerData,
+  PowerArea,
   Resource,
   Reward,
   TechPos,
@@ -164,7 +165,23 @@ export function newResourceSimulator(want: Player, expansions: Expansion): Resou
     const powerUsage = parsePowerUsage(cmd);
     if (powerUsage) {
       const r = [new Reward(-sum(Object.values(powerUsage)), type)];
-      gainRewards(source, r);
+      if (expansions & Expansion.LostFleet) {
+        // Replay the recorded bowl selection rather than discarding from the
+        // lowest bowl again. Otherwise later ship costs and Taklons' brainstone
+        // decisions diverge from the actual game.
+        for (const area of [PowerArea.Area1, PowerArea.Area2, PowerArea.Area3]) {
+          playerData.power[area] -= powerUsage[area];
+        }
+        if (type === Resource.MoveTokenToGaiaArea) {
+          playerData.power.gaia += powerUsage.area1 + powerUsage.area2 + powerUsage.area3;
+        }
+        if (powerUsage.brainstone) {
+          playerData.brainstone = type === Resource.MoveTokenToGaiaArea ? PowerArea.Gaia : null;
+        }
+        commandChanges[source] = Reward.merge(r.concat(commandChanges[source] ?? []));
+      } else {
+        gainRewards(source, r);
+      }
       if (source) {
         addProcessedChange(r, source);
       }

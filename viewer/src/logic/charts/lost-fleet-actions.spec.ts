@@ -9,6 +9,7 @@ import Engine, {
   Phase,
   Planet,
   PlayerEnum,
+  PowerArea,
   Resource,
   Spaceship,
   SpaceshipTechTile,
@@ -65,6 +66,49 @@ function fixture() {
 const style = { type: "table" as const, label: "Table", compact: false };
 
 describe("Lost Fleet board-action statistics", () => {
+  it("replays explicit federation bowl choices without consuming other bowls or the brainstone", () => {
+    const engine = fixture();
+    engine.players[0].faction = Faction.Taklons;
+    const simulator = newResourceSimulator(engine.players[0], engine.expansions);
+    simulator.playerData.power = new Power(2, 2, 0, 0);
+    simulator.playerData.brainstone = PowerArea.Area1;
+    const commands = parseCommands("taklons federation 0x0 ship-fed-vp using area2: 2");
+    simulator.simulateResources({
+      cmd: commands[0],
+      cmdIndex: 0,
+      allCommands: commands,
+      log: { player: PlayerEnum.Player1, changes: { [Command.FormFederation]: { [Resource.GainToken]: -2 } } },
+      data: engine,
+      source: null,
+    });
+    expect(simulator.playerData.power.area1).to.equal(2);
+    expect(simulator.playerData.power.area2).to.equal(0);
+    expect(simulator.playerData.brainstone).to.equal("area1");
+  });
+
+  it("maps Lost Fleet faction income and Gaia-phase token returns in resource breakdowns", () => {
+    const engine = fixture();
+    engine.addAdvancedLog({
+      round: 1,
+      player: PlayerEnum.Player1,
+      changes: {
+        [Faction.Darkanians]: { [Resource.Credit]: 2, [Resource.Knowledge]: 1 },
+        [Phase.RoundGaia]: { [Resource.GainToken]: 1 },
+      },
+    });
+    const setup = new ChartSetup(engine);
+    for (const resource of balanceSheetResources) {
+      const factory = setup.factory(ChartGroup.resources, balanceSheetResourceName(resource));
+      const result = setup.newBarChart(style, factory, engine, (c) => c);
+      const dataset = result.chart.data.datasets.find((d) => d.label.startsWith("Terrans"));
+      if (resource === Resource.Credit) {
+        expect(dataset.data[result.chart.data.labels.indexOf("Faction abilities income")]).to.equal(2);
+      }
+      if (resource === Resource.GainToken) {
+        expect(dataset.data[result.chart.data.labels.indexOf("Base income")]).to.equal(1);
+      }
+    }
+  });
   it("keeps base-game rows unchanged and gives all twelve ship actions distinct names and keys", () => {
     const base = boardActionSourceFactory(Expansion.None);
     const expanded = boardActionSourceFactory(Expansion.LostFleet);
