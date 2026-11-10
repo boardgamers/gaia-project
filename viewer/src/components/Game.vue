@@ -994,13 +994,22 @@ export default class Game extends Vue {
   }
 
   get canPlay() {
-    if (this.interactionDisabled || this.analysisEdit?.mode === "inspect") return false;
+    if (this.interactionDisabled || this.replayData || this.analysisEdit?.mode === "inspect") return false;
     if (this.ended) {
       return false;
     }
 
     if (this.analysisMode) {
       return factionSeedAvailable(this.engine) || this.engine.playerToMove === this.analysisSeat;
+    }
+
+    // Saved BGS analyses are manual, all-seat games, not the local solo planning sandbox.
+    // The original game's ownership (including spectator status) must not hide the next
+    // decision. For concurrent charges, `player` still prefers the host-selected seat.
+    // The host must submit analysisMove as that decision's seat; this only enables UI,
+    // and does not bypass engine ownership validation or analysisView's secret masking.
+    if (this.$store.state.preferences.analysis) {
+      return this.turnPlayer !== undefined;
     }
 
     const lockedSeat = this.$store.state.player?.index;

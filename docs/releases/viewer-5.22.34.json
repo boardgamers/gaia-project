@@ -1,0 +1,594 @@
+{
+  "game": "gaia-project",
+  "gameinfoVersion": 3,
+  "engineVersion": "4.17.7",
+  "enginePublished": false,
+  "description": "Saved-analysis controls follow host-selected decision seats; replay remains read-only. Engine runtime unchanged.",
+  "lockfile": "Offline lockfile-only install completed with no lockfile changes required.",
+  "checks": {
+    "viewer": {
+      "files": 99,
+      "passed": 1162,
+      "gameSpecPassed": 135,
+      "nodeOptions": "--max-old-space-size=16384",
+      "maxWorkers": 1
+    },
+    "engine": {
+      "passed": 982,
+      "pending": 4
+    },
+    "alternate": {
+      "files": 3,
+      "passed": 42
+    },
+    "lint": "Engine and full viewer ESLint passed; changed-file Prettier passed.",
+    "locales": "Passed",
+    "build": "Engine, viewer and alternate builds passed",
+    "browser": "Built primary and alternate: manual charge click, following seat, no autoplay and replay denial passed.",
+    "assets": "All 72 deployed files fetched and SHA-256 matched local build before activation.",
+    "live": [
+      {
+        "game": "Romulans-forever",
+        "alternate": false,
+        "errors": [],
+        "bad": []
+      },
+      {
+        "game": "Romulans-forever",
+        "alternate": true,
+        "errors": [],
+        "bad": []
+      },
+      {
+        "game": "Devious-basket-7886",
+        "alternate": false,
+        "errors": [],
+        "bad": []
+      },
+      {
+        "game": "Devious-basket-7886",
+        "alternate": true,
+        "errors": [],
+        "bad": []
+      },
+      {
+        "game": "Wicked-banana-8201",
+        "alternate": false,
+        "errors": [],
+        "bad": []
+      },
+      {
+        "game": "Wicked-banana-8201",
+        "alternate": true,
+        "errors": [],
+        "bad": []
+      }
+    ]
+  },
+  "bundles": [
+    {
+      "viewer": "primary",
+      "version": "5.22.34",
+      "bundle": "split-e667cd1d4d2770165f65",
+      "activated": true,
+      "previousUrl": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-39be4b49828ee8dd6232/viewer.umd.js",
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/viewer.umd.js",
+      "files": [
+        {
+          "name": "ambas.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/ambas.jpg",
+          "bytes": 26115,
+          "storedBytes": 26115,
+          "sha256": "75ee8098fb6b76445d4a580a47a24a3fd444575d23124dbf0e4cf2957b553fed"
+        },
+        {
+          "name": "baltaks.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/baltaks.jpg",
+          "bytes": 28696,
+          "storedBytes": 28696,
+          "sha256": "84e74163497a5b90b9dde76d72ff2e130fa31b88f46486400090d0577ebde68e"
+        },
+        {
+          "name": "bescods.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/bescods.jpg",
+          "bytes": 27005,
+          "storedBytes": 27005,
+          "sha256": "aac494b6ca9ae7e1acc18fdfa69241f07b6a111296c8973746b8c2c5e2467c6a"
+        },
+        {
+          "name": "da.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/da.json",
+          "bytes": 339819,
+          "storedBytes": 100428,
+          "sha256": "7f785f9c29e389d2274208f274f708db510f7b683afe34810b3acb55e3e200b5"
+        },
+        {
+          "name": "darkanians.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/darkanians.jpg",
+          "bytes": 47576,
+          "storedBytes": 47576,
+          "sha256": "312687adedc5faf74b61ea8f608bd6f505c1ac9a836ae537fb15dd87da77d81b"
+        },
+        {
+          "name": "de.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/de.json",
+          "bytes": 354242,
+          "storedBytes": 106512,
+          "sha256": "9223e4f9dc17d7add42cf8e310fd5f0dee022ee4288ad54cc1d9cdec5b98c6c6"
+        },
+        {
+          "name": "el.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/el.json",
+          "bytes": 493644,
+          "storedBytes": 126408,
+          "sha256": "3e7ffe0fa911b260cc2134b6e32e49a8b7bb873e445f5dfdbab546562e5ae2bd"
+        },
+        {
+          "name": "fa.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/fa.json",
+          "bytes": 403846,
+          "storedBytes": 102582,
+          "sha256": "87376353a07edecc42346215015a9e09b74cde71e23c3f3387baf8c3902c1480"
+        },
+        {
+          "name": "firaks.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/firaks.jpg",
+          "bytes": 24068,
+          "storedBytes": 24068,
+          "sha256": "d6a04fc4fe9b2426cf4c04e26974f32c6dff7b70503e7a05bc4672b2da8a9ca8"
+        },
+        {
+          "name": "fr.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/fr.json",
+          "bytes": 361267,
+          "storedBytes": 104952,
+          "sha256": "006f843e5830e798ed7e976f0998e7fd18bb1dd5bfe4bda191075793e80216ee"
+        },
+        {
+          "name": "geodens.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/geodens.jpg",
+          "bytes": 28467,
+          "storedBytes": 28467,
+          "sha256": "915067d842c34e3ed8907011391935e196464681af36647a0be3eec7f2ba3a6e"
+        },
+        {
+          "name": "gleens.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/gleens.jpg",
+          "bytes": 27278,
+          "storedBytes": 27278,
+          "sha256": "0fcaa4fc1e6948bebdc8b7094faa5b97f14381d1c18e5ad5bf39cc212f28539b"
+        },
+        {
+          "name": "hadsch-hallas.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/hadsch-hallas.jpg",
+          "bytes": 26792,
+          "storedBytes": 26792,
+          "sha256": "a802d0425503db30a660905aaf9378b1caf8731c9d259664e5fa0cba7b50f950"
+        },
+        {
+          "name": "hi.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/hi.json",
+          "bytes": 535423,
+          "storedBytes": 120531,
+          "sha256": "27b7faefa6d4b2d9ec39c647d59d9bd72bdad6adc47746718e156df4cc5dfe67"
+        },
+        {
+          "name": "it.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/it.json",
+          "bytes": 355974,
+          "storedBytes": 103582,
+          "sha256": "fbd3fba7994ac83f79d9419ec92c02b36b5f50a8a23b61e5df09b2ce0b4f9063"
+        },
+        {
+          "name": "itars.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/itars.jpg",
+          "bytes": 23773,
+          "storedBytes": 23773,
+          "sha256": "a83f4affbebdecbdbadf06d38bbea1e06db0f2bc1a635ba9b7bb9b61ea13f2cc"
+        },
+        {
+          "name": "ivits.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/ivits.jpg",
+          "bytes": 27341,
+          "storedBytes": 27341,
+          "sha256": "e0307d8944befe8f991f685834d9d02a5ff89f472793be8a018552e819aeaec9"
+        },
+        {
+          "name": "ko.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/ko.json",
+          "bytes": 360277,
+          "storedBytes": 108537,
+          "sha256": "397771549445cd9dc06b2644b20211aea8c713a983b09ecad5195fed4b98225e"
+        },
+        {
+          "name": "lantids.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/lantids.jpg",
+          "bytes": 25870,
+          "storedBytes": 25870,
+          "sha256": "2332ee2596e6a6ecdfac00c9a3f4bfc7186d57ac1bd319d11ccae9c7f0d8e811"
+        },
+        {
+          "name": "mowyeds.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/mowyeds.jpg",
+          "bytes": 47770,
+          "storedBytes": 47770,
+          "sha256": "9ee2bf809ab77a6362b148bdf865c82c7ca67854570222316ac28765959dcdaf"
+        },
+        {
+          "name": "nevlas.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/nevlas.jpg",
+          "bytes": 24569,
+          "storedBytes": 24569,
+          "sha256": "e5c464d4e423ae252984f7224fa48063d3966331169c9defb411f719d96d9ccf"
+        },
+        {
+          "name": "nl.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/nl.json",
+          "bytes": 344159,
+          "storedBytes": 101866,
+          "sha256": "b575a9ca7e937854a78fd9700d614618f9fc6492f35634356217d323b0ae33fe"
+        },
+        {
+          "name": "pl.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/pl.json",
+          "bytes": 350308,
+          "storedBytes": 108183,
+          "sha256": "884e74ef2ddf20428b06e8264dd0e0e4b684a9eb2d5cc756119e81f41686513e"
+        },
+        {
+          "name": "pt-BR.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/pt-BR.json",
+          "bytes": 355551,
+          "storedBytes": 103725,
+          "sha256": "a3134d082b43955f18ceffeb16f3c71bc0d705ac0528eb66b0e12e19c321d5fd"
+        },
+        {
+          "name": "ro.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/ro.json",
+          "bytes": 359765,
+          "storedBytes": 105650,
+          "sha256": "4ac2a49e3a4a2689f1c603c2bcb1c5f0d8762d0b301694382881fba26c56ca36"
+        },
+        {
+          "name": "ru.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/ru.json",
+          "bytes": 467822,
+          "storedBytes": 122866,
+          "sha256": "badf546f81397ff998366433e43a0f6b471198dfcc37508840c662a5fea6e38c"
+        },
+        {
+          "name": "space-giants.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/space-giants.jpg",
+          "bytes": 47318,
+          "storedBytes": 47318,
+          "sha256": "fd232a4a41658f4545fc90dd991db496bc8e028b10d914935615b869d20cc64a"
+        },
+        {
+          "name": "taklons.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/taklons.jpg",
+          "bytes": 25473,
+          "storedBytes": 25473,
+          "sha256": "437eeac297fe498a51542c7ce6fcb02794558df1c651204d6cc1ab2d8ae5063f"
+        },
+        {
+          "name": "terrans.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/terrans.jpg",
+          "bytes": 26968,
+          "storedBytes": 26968,
+          "sha256": "36e356e4de96a96b481244fa6d2a774ab71498d81fe2ca73df0eff2dc12614ad"
+        },
+        {
+          "name": "tinkeroids.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/tinkeroids.jpg",
+          "bytes": 46866,
+          "storedBytes": 46866,
+          "sha256": "7aa4f8725c3feb39ac68a25366185108d24fcf27b33aebb4f140eed30d108144"
+        },
+        {
+          "name": "vi.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/vi.json",
+          "bytes": 382815,
+          "storedBytes": 106514,
+          "sha256": "48fbbf7ded1767573fdd1b067c1add8da58d25373d79c19a14da687cbac41768"
+        },
+        {
+          "name": "viewer.css",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/viewer.css",
+          "bytes": 326742,
+          "storedBytes": 51445,
+          "sha256": "c415aae3924a324fc465e3c69891ddcdb6a966400d14dfcb7835568408760e71"
+        },
+        {
+          "name": "viewer.umd.js",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/viewer.umd.js",
+          "bytes": 1164251,
+          "storedBytes": 340328,
+          "sha256": "72e0dfafa09ed5ca9ba9495a065ea976d130c9d8967f3ef7a2d1a77db331989e"
+        },
+        {
+          "name": "xenos.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/xenos.jpg",
+          "bytes": 25907,
+          "storedBytes": 25907,
+          "sha256": "a5d61249be68a07b3109cf3d3e0238e828bd21423e106e1038bdcd235d006ce7"
+        },
+        {
+          "name": "zh-CN.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/zh-CN.json",
+          "bytes": 325683,
+          "storedBytes": 100743,
+          "sha256": "2945fbdd929230a3763c01f732571b432c92366d676c93d0b1c83fec85e4025e"
+        },
+        {
+          "name": "zh-TW.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer/split-e667cd1d4d2770165f65/zh-TW.json",
+          "bytes": 324065,
+          "storedBytes": 107823,
+          "sha256": "a5de0555d0b874947a3b0a0c4f9a514c4598748392d3e2bbcdd7df078cc139aa"
+        }
+      ]
+    },
+    {
+      "viewer": "alternate",
+      "version": "1.2.34",
+      "bundle": "split-3394ae5060564522c841",
+      "activated": true,
+      "previousUrl": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-da22833042df278440e3/old-ui.umd.js",
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/old-ui.umd.js",
+      "files": [
+        {
+          "name": "ambas.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/ambas.jpg",
+          "bytes": 26115,
+          "storedBytes": 26115,
+          "sha256": "75ee8098fb6b76445d4a580a47a24a3fd444575d23124dbf0e4cf2957b553fed"
+        },
+        {
+          "name": "baltaks.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/baltaks.jpg",
+          "bytes": 28696,
+          "storedBytes": 28696,
+          "sha256": "84e74163497a5b90b9dde76d72ff2e130fa31b88f46486400090d0577ebde68e"
+        },
+        {
+          "name": "bescods.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/bescods.jpg",
+          "bytes": 27005,
+          "storedBytes": 27005,
+          "sha256": "aac494b6ca9ae7e1acc18fdfa69241f07b6a111296c8973746b8c2c5e2467c6a"
+        },
+        {
+          "name": "da.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/da.json",
+          "bytes": 339819,
+          "storedBytes": 100428,
+          "sha256": "7f785f9c29e389d2274208f274f708db510f7b683afe34810b3acb55e3e200b5"
+        },
+        {
+          "name": "darkanians.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/darkanians.jpg",
+          "bytes": 47576,
+          "storedBytes": 47576,
+          "sha256": "312687adedc5faf74b61ea8f608bd6f505c1ac9a836ae537fb15dd87da77d81b"
+        },
+        {
+          "name": "de.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/de.json",
+          "bytes": 354242,
+          "storedBytes": 106512,
+          "sha256": "9223e4f9dc17d7add42cf8e310fd5f0dee022ee4288ad54cc1d9cdec5b98c6c6"
+        },
+        {
+          "name": "el.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/el.json",
+          "bytes": 493644,
+          "storedBytes": 126408,
+          "sha256": "3e7ffe0fa911b260cc2134b6e32e49a8b7bb873e445f5dfdbab546562e5ae2bd"
+        },
+        {
+          "name": "fa.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/fa.json",
+          "bytes": 403846,
+          "storedBytes": 102582,
+          "sha256": "87376353a07edecc42346215015a9e09b74cde71e23c3f3387baf8c3902c1480"
+        },
+        {
+          "name": "firaks.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/firaks.jpg",
+          "bytes": 24068,
+          "storedBytes": 24068,
+          "sha256": "d6a04fc4fe9b2426cf4c04e26974f32c6dff7b70503e7a05bc4672b2da8a9ca8"
+        },
+        {
+          "name": "fr.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/fr.json",
+          "bytes": 361267,
+          "storedBytes": 104952,
+          "sha256": "006f843e5830e798ed7e976f0998e7fd18bb1dd5bfe4bda191075793e80216ee"
+        },
+        {
+          "name": "geodens.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/geodens.jpg",
+          "bytes": 28467,
+          "storedBytes": 28467,
+          "sha256": "915067d842c34e3ed8907011391935e196464681af36647a0be3eec7f2ba3a6e"
+        },
+        {
+          "name": "gleens.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/gleens.jpg",
+          "bytes": 27278,
+          "storedBytes": 27278,
+          "sha256": "0fcaa4fc1e6948bebdc8b7094faa5b97f14381d1c18e5ad5bf39cc212f28539b"
+        },
+        {
+          "name": "hadsch-hallas.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/hadsch-hallas.jpg",
+          "bytes": 26792,
+          "storedBytes": 26792,
+          "sha256": "a802d0425503db30a660905aaf9378b1caf8731c9d259664e5fa0cba7b50f950"
+        },
+        {
+          "name": "hi.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/hi.json",
+          "bytes": 535423,
+          "storedBytes": 120531,
+          "sha256": "27b7faefa6d4b2d9ec39c647d59d9bd72bdad6adc47746718e156df4cc5dfe67"
+        },
+        {
+          "name": "it.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/it.json",
+          "bytes": 355974,
+          "storedBytes": 103582,
+          "sha256": "fbd3fba7994ac83f79d9419ec92c02b36b5f50a8a23b61e5df09b2ce0b4f9063"
+        },
+        {
+          "name": "itars.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/itars.jpg",
+          "bytes": 23773,
+          "storedBytes": 23773,
+          "sha256": "a83f4affbebdecbdbadf06d38bbea1e06db0f2bc1a635ba9b7bb9b61ea13f2cc"
+        },
+        {
+          "name": "ivits.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/ivits.jpg",
+          "bytes": 27341,
+          "storedBytes": 27341,
+          "sha256": "e0307d8944befe8f991f685834d9d02a5ff89f472793be8a018552e819aeaec9"
+        },
+        {
+          "name": "ko.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/ko.json",
+          "bytes": 360277,
+          "storedBytes": 108537,
+          "sha256": "397771549445cd9dc06b2644b20211aea8c713a983b09ecad5195fed4b98225e"
+        },
+        {
+          "name": "lantids.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/lantids.jpg",
+          "bytes": 25870,
+          "storedBytes": 25870,
+          "sha256": "2332ee2596e6a6ecdfac00c9a3f4bfc7186d57ac1bd319d11ccae9c7f0d8e811"
+        },
+        {
+          "name": "mowyeds.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/mowyeds.jpg",
+          "bytes": 47770,
+          "storedBytes": 47770,
+          "sha256": "9ee2bf809ab77a6362b148bdf865c82c7ca67854570222316ac28765959dcdaf"
+        },
+        {
+          "name": "nevlas.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/nevlas.jpg",
+          "bytes": 24569,
+          "storedBytes": 24569,
+          "sha256": "e5c464d4e423ae252984f7224fa48063d3966331169c9defb411f719d96d9ccf"
+        },
+        {
+          "name": "nl.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/nl.json",
+          "bytes": 344159,
+          "storedBytes": 101866,
+          "sha256": "b575a9ca7e937854a78fd9700d614618f9fc6492f35634356217d323b0ae33fe"
+        },
+        {
+          "name": "old-ui.css",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/old-ui.css",
+          "bytes": 327226,
+          "storedBytes": 51608,
+          "sha256": "d5bd0a95012b3463602eaf4b361d61e064d937f92d89657ef0872c181e707960"
+        },
+        {
+          "name": "old-ui.umd.js",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/old-ui.umd.js",
+          "bytes": 1160003,
+          "storedBytes": 333811,
+          "sha256": "9a3e2667174bc72ad56cf41f2cf0d8abc5d5ccb06faaf84636e5b80eb2f0120d"
+        },
+        {
+          "name": "pl.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/pl.json",
+          "bytes": 350308,
+          "storedBytes": 108183,
+          "sha256": "884e74ef2ddf20428b06e8264dd0e0e4b684a9eb2d5cc756119e81f41686513e"
+        },
+        {
+          "name": "pt-BR.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/pt-BR.json",
+          "bytes": 355551,
+          "storedBytes": 103725,
+          "sha256": "a3134d082b43955f18ceffeb16f3c71bc0d705ac0528eb66b0e12e19c321d5fd"
+        },
+        {
+          "name": "ro.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/ro.json",
+          "bytes": 359765,
+          "storedBytes": 105650,
+          "sha256": "4ac2a49e3a4a2689f1c603c2bcb1c5f0d8762d0b301694382881fba26c56ca36"
+        },
+        {
+          "name": "ru.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/ru.json",
+          "bytes": 467822,
+          "storedBytes": 122866,
+          "sha256": "badf546f81397ff998366433e43a0f6b471198dfcc37508840c662a5fea6e38c"
+        },
+        {
+          "name": "space-giants.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/space-giants.jpg",
+          "bytes": 47318,
+          "storedBytes": 47318,
+          "sha256": "fd232a4a41658f4545fc90dd991db496bc8e028b10d914935615b869d20cc64a"
+        },
+        {
+          "name": "taklons.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/taklons.jpg",
+          "bytes": 25473,
+          "storedBytes": 25473,
+          "sha256": "437eeac297fe498a51542c7ce6fcb02794558df1c651204d6cc1ab2d8ae5063f"
+        },
+        {
+          "name": "terrans.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/terrans.jpg",
+          "bytes": 26968,
+          "storedBytes": 26968,
+          "sha256": "36e356e4de96a96b481244fa6d2a774ab71498d81fe2ca73df0eff2dc12614ad"
+        },
+        {
+          "name": "tinkeroids.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/tinkeroids.jpg",
+          "bytes": 46866,
+          "storedBytes": 46866,
+          "sha256": "7aa4f8725c3feb39ac68a25366185108d24fcf27b33aebb4f140eed30d108144"
+        },
+        {
+          "name": "vi.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/vi.json",
+          "bytes": 382815,
+          "storedBytes": 106514,
+          "sha256": "48fbbf7ded1767573fdd1b067c1add8da58d25373d79c19a14da687cbac41768"
+        },
+        {
+          "name": "xenos.jpg",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/xenos.jpg",
+          "bytes": 25907,
+          "storedBytes": 25907,
+          "sha256": "a5d61249be68a07b3109cf3d3e0238e828bd21423e106e1038bdcd235d006ce7"
+        },
+        {
+          "name": "zh-CN.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/zh-CN.json",
+          "bytes": 325683,
+          "storedBytes": 100743,
+          "sha256": "2945fbdd929230a3763c01f732571b432c92366d676c93d0b1c83fec85e4025e"
+        },
+        {
+          "name": "zh-TW.json",
+          "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/viewer-alternate/split-3394ae5060564522c841/zh-TW.json",
+          "bytes": 324065,
+          "storedBytes": 107823,
+          "sha256": "a5de0555d0b874947a3b0a0c4f9a514c4598748392d3e2bbcdd7df078cc139aa"
+        }
+      ]
+    }
+  ]
+}

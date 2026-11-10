@@ -414,6 +414,22 @@ describe("saved analyses", () => {
     expect(JSON.stringify(source)).to.equal(original);
     expect(() => analysisMove(copy, { type: "premoves" } as any, 1)).to.throw("Premoves");
   });
+  it("leaves opponent charging and the following turn manual, with selected-seat validation", () => {
+    const source = new Engine(history);
+    const copy = createAnalysis(source, { to: history.length - 1, sourceEnded: false });
+    setPlayerSettings(copy, 1, { autoCharge: "3", autoIncome: true });
+    const built = analysisMove(copy, "terrans build ts -1x2.", 0);
+    expect(built.moveHistory).to.have.length(copy.moveHistory.length + 1);
+    expect(built.phase).to.equal(Phase.RoundLeech);
+    expect(built.playerToMove).to.equal(1);
+    expect(() => analysisMove(built, "nevlas charge 1pw", 0)).to.throw("You may only play your own moves");
+    const charged = analysisMove(built, "nevlas charge 1pw", 1);
+    expect(charged.moveHistory).to.have.length(built.moveHistory.length + 1);
+    expect(charged.phase).to.equal(Phase.RoundMove);
+    expect(charged.playerToMove).to.equal(1);
+    expect(built.phase).to.equal(Phase.RoundLeech);
+  });
+
   it("blocks ongoing hidden setup and rewinding an active game into setup", () => {
     const source = new Engine(history);
     expect(canLaunchAnalysisMode(source)).to.equal(true);

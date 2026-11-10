@@ -1,5 +1,5 @@
 import Engine, { Command } from "@gaia-project/engine";
-import { move as hostedMove } from "@gaia-project/engine/wrapper";
+import { analysisView, move as hostedMove } from "@gaia-project/engine/wrapper";
 import { fireEvent } from "@testing-library/vue";
 import BootstrapVue from "bootstrap-vue";
 import { expect } from "chai";
@@ -65,6 +65,35 @@ describe("concurrent charge controls", () => {
       (element as any).__vue__?.$destroy();
       element.remove();
     }
+  });
+
+  it("uses the host-selected analysis seat for concurrent charges rather than the next main turn", async () => {
+    const saved = position();
+    const vm = mountGame(0, analysisView(saved, { player: 0 }).state);
+    expect(vm.canPlay).to.equal(false);
+    vm.$store.commit("preferences", { analysis: true });
+    vm.$store.commit("player", { index: 3 });
+    vm.handleData(analysisView(saved, { player: 3 }).state);
+    const actions = [];
+    vm.$store.subscribeAction(({ type, payload }) => {
+      if (type === "move") actions.push(payload);
+    });
+    await Vue.nextTick();
+    expect(vm.engine.playerToMove).to.equal(1);
+    expect(vm.player).to.equal(3);
+    expect(vm.canPlay).to.equal(true);
+    expect(vm.analysisMode).to.equal(false);
+    expect(vm.$el.querySelector("#move").textContent).to.contain("Charge power");
+    expect(button(vm, "Research")).to.equal(undefined);
+    expect(actions).to.deep.equal([]);
+    vm.$store.commit("player", { index: 1 });
+    vm.handleData(analysisView(saved, { player: 1 }).state);
+    await Vue.nextTick();
+    expect(vm.player).to.equal(1);
+    expect(button(vm, "Research")).not.to.equal(undefined);
+    expect(actions).to.deep.equal([]);
+    vm.$el.remove();
+    vm.$destroy();
   });
 
   it("commits the turn player to waiting until the other charge resolves", async () => {
