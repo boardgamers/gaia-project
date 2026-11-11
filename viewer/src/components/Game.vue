@@ -2059,6 +2059,12 @@ export default class Game extends Vue {
       data.moveHistory.pop();
     }
 
+    // fromData discards obsolete concurrent-charge caches (e.g. legacy Resume).
+    // Rebuild those decisions before committing the non-deeply-reactive engine;
+    // otherwise the active recipient gets a turn banner but no action buttons.
+    if (hasConcurrentCharges(data) && data.newTurn) {
+      data.generateAvailableCommandsIfNeeded();
+    }
     this.$store.commit("receiveData", data);
 
     setTimeout(() => {

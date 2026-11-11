@@ -131,6 +131,41 @@ describe("concurrent charge controls", () => {
     expect(button(vm, "Research")).not.to.equal(undefined);
   });
 
+  for (const answer of ["charge", "decline"]) {
+    it(`restores a legacy wait cache's charge controls and resolves ${answer} locally`, async () => {
+      const saved = hostedMove(JSON.parse(JSON.stringify(position())), "nevlas waitForCharges", 1);
+      // Old saved games include Resume alongside another seat's pending decision.
+      // fromData invalidates that cache; the viewer must rebuild it before rendering.
+      const incoming = JSON.parse(JSON.stringify(saved));
+      incoming.version = "4.17.3";
+      incoming.availableCommands.push({ name: Command.ResumeCharges, player: 1 });
+      const before = JSON.stringify(incoming);
+      const vm = mountGame(3, position());
+      await vm.$store.dispatch("externalData", incoming);
+      await Vue.nextTick();
+      expect(vm.canPlay).to.equal(true);
+      expect(vm.engine.availableCommands).not.to.equal(null);
+      expect(vm.$el.querySelector("#move").textContent).to.contain("Charge power");
+      expect(button(vm, "Decline")).not.to.equal(undefined);
+      expect(button(vm, "Resume")).to.equal(undefined);
+      expect(button(vm, "Research")).to.equal(undefined);
+      expect(JSON.stringify(incoming)).to.equal(before);
+
+      vm.$store.commit("player", { index: 1 });
+      await Vue.nextTick();
+      expect(vm.canPlay).to.equal(false);
+      expect(button(vm, "Resume")).to.equal(undefined);
+      expect(button(vm, "Research")).to.equal(undefined);
+      const resolved = hostedMove(incoming, `hadsch-hallas ${answer} 1pw @2`, 3);
+      await vm.$store.dispatch("externalData", JSON.parse(JSON.stringify(resolved)));
+      await Vue.nextTick();
+      expect(vm.engine.pendingCharges).to.have.length(0);
+      expect(vm.engine.chargeWaits).to.deep.equal({});
+      expect(vm.canPlay).to.equal(true);
+      expect(button(vm, "Research")).not.to.equal(undefined);
+    });
+  }
+
   it("keeps an unfinished turn when an opponent answers, without modifying the incoming saved position", async () => {
     const saved = position();
     const partial = Engine.fromData(JSON.parse(JSON.stringify(saved)));
