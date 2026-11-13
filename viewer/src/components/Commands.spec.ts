@@ -108,6 +108,8 @@ describe("Commands", () => {
         button.textContent?.includes(name)
       );
 
+    expect(container.querySelector(".faction-picker-prompt")).to.equal(null);
+
     const portraits = ["Tinkeroids", "Darkanians", "Moweyds", "Space Giants"].map((name) => {
       const image = buttonFor(name)?.querySelector<HTMLImageElement>("img");
       expect(image, `${name} portrait`).to.not.equal(null);
@@ -540,6 +542,11 @@ describe("Commands", () => {
       .filter((w) => w.text().includes("Terrans"));
 
     expect(terransButton.length).to.equal(1);
+    const prompt = wrapper.find("#move-buttons .faction-picker-buttons > .faction-picker-prompt");
+    expect(prompt.text()).to.equal("Ban a faction");
+    expect(prompt.isVisible()).to.equal(true);
+    expect(prompt.element.nextElementSibling?.contains(terransButton.at(0).element)).to.equal(true);
+    expect(prompt.element.closest("#move-title, .sticky-bar-title, .alert")).to.equal(null);
 
     await terransButton.at(0).trigger("click");
     await Vue.nextTick();
@@ -860,10 +867,11 @@ describe("Commands", () => {
     expect(title.querySelector(".analysis-controls__shortfall").getAttribute("title")).to.contain("7 credits, 2 power");
   });
 
-  it("puts round 0's faction seed in the action area as one button per faction, announced in the header", async () => {
+  it.each([false, true])("keeps round 0's planning faction seed separate from banning (ban=%s)", async (ban) => {
     // Owner instruction: every sandbox press belongs in this one action area. The picker used to be a
     // select plus a "Try this faction" button in AnalysisPanel.vue, above the map.
-    const engine = new Engine(["init 2 lf-viewer-temporary-range"]);
+    const engine = new Engine(["init 2 lf-viewer-temporary-range"], ban ? { auction: AuctionVariant.Silent } : {});
+    engine.generateAvailableCommandsIfNeeded();
     const store = makeStore();
     store.commit("receiveData", engine);
     const choices = [
@@ -877,6 +885,7 @@ describe("Commands", () => {
     });
 
     expect(container.querySelector("#move-title").textContent).to.contain("choose a faction to play as");
+    expect(container.querySelector(".faction-picker-prompt")).to.equal(null);
     const buttons = Array.from(container.querySelectorAll("#move-buttons .faction-picker-buttons button"));
     expect(buttons.map((b) => b.textContent.trim())).to.deep.equal(["Terrans", "Nevlas"]);
 

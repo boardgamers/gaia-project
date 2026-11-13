@@ -1,4 +1,4 @@
-import Engine from "@gaia-project/engine";
+import Engine, { AuctionVariant, Command } from "@gaia-project/engine";
 import betaFixture from "@gaia-project/engine/fixtures/Beta-2.json";
 import { move, stripSecret } from "@gaia-project/engine/wrapper";
 import { loadScenarioEngine, selfContainedScenarios } from "../../viewer/src/self-contained-scenarios";
@@ -41,6 +41,33 @@ describe("old UI on the current engine", () => {
     vi.unstubAllGlobals();
     delete HTMLElement.prototype.checkVisibility;
   });
+  it.each([true, false])("labels the faction buttons only when banning (ban=%s)", async (ban) => {
+    const engine = new Engine(["init 3 ban-label"], ban ? { auction: AuctionVariant.Silent } : {});
+    engine.generateAvailableCommandsIfNeeded();
+    expect(engine.availableCommands[0].name).toBe(ban ? Command.BanFaction : Command.ChooseFaction);
+    const host = document.createElement("div");
+    host.id = "old-ban-test";
+    document.body.append(host);
+    const viewer = launch("#old-ban-test");
+    try {
+      viewer.emit("player", { index: 0 });
+      viewer.emit("state", JSON.parse(JSON.stringify(engine)));
+      await vi.waitFor(() => expect(host.querySelector("#move-buttons .faction-picker-buttons")).not.toBeNull());
+      const picker = host.querySelector("#move-buttons .faction-picker-buttons")!;
+      const prompt = picker.querySelector(".faction-picker-prompt");
+      if (ban) {
+        expect(prompt?.textContent).toBe("Ban a faction");
+        expect(prompt?.nextElementSibling?.querySelector("button.move-button")).not.toBeNull();
+        expect(prompt?.closest("#move-title, .sticky-bar-title, .alert")).toBeNull();
+      } else {
+        expect(prompt).toBeNull();
+      }
+    } finally {
+      viewer.app.$destroy();
+      document.body.replaceChildren();
+    }
+  });
+
   it("shows stopped premoves and opens their remaining steps with read-only played history", async () => {
     let engine = new Engine(
       Engine.parseMoves(`init 2 randomSeed
