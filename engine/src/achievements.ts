@@ -51,20 +51,20 @@ function displayName(id: string): string {
 /** The complete catalog, independent of the current game's mode or faction selection. */
 export function achievementDefinitions(): AchievementManifest {
   const definitions: AchievementDefinition[] = Faction.values(Expansion.All).map((faction) => ({
-    id: `win.faction.${faction}`,
+    id: `win-faction-${faction}`,
     name: `${displayName(faction)} Victory`,
     description: `Win as ${displayName(faction)}. Shared first place counts; either ruleset qualifies.`,
   }));
   for (const mode of ["base", "lost-fleet"]) {
     const name = mode === "base" ? "Base Game" : "Lost Fleet";
     definitions.push({
-      id: `win.mode.${mode}`,
+      id: `win-mode-${mode}`,
       name: `${name} Victory`,
       description: `Win a ${name} game, including shared first place.`,
     });
     for (const threshold of [150, 200]) {
       definitions.push({
-        id: `score.${mode}.${threshold}`,
+        id: `score-${mode}-${threshold}`,
         name: `${name}: ${threshold} Points`,
         description: `Finish a ${name} game with at least ${threshold} final victory points, after auction deductions. No win required.`,
       });
@@ -72,48 +72,48 @@ export function achievementDefinitions(): AchievementManifest {
   }
   for (const difficulty of automaDifficulties) {
     definitions.push({
-      id: `win.automa.${difficulty}`,
+      id: `win-automa-${difficulty}`,
       name: `Defeat ${displayName(difficulty)}`,
       description: `Win against Automa at exactly ${difficulty} difficulty. A tied score counts as a human win.`,
     });
   }
   definitions.push(
     {
-      id: "build.all-standard",
+      id: "build-all-standard",
       name: "Full Deployment",
       description:
         "Finish with all 18 standard building pieces simultaneously deployed: 8 mines, 4 trading stations, 3 research labs, the institute and both academies. Excludes Lost Planet, artifacts, Gaiaformers and space stations. No win required.",
     },
     {
-      id: "federation.form.3",
+      id: "federation-form-3",
       name: "Federation Builder",
       description:
         "Complete at least three federation formations in one game (extensions of the growing federation for Ivits). Token rewards and rescores do not count. No win required.",
     },
     {
-      id: "explore.all-types.base",
+      id: "explore-all-types-base",
       name: "Every World: Base Game",
       description:
         "Finish a base game with main-owned colonies on all seven ordinary planet types, Gaia and the Lost Planet. Gaiaformers and Lantids shared mines do not count. No win required.",
     },
     {
-      id: "explore.all-types.lost-fleet",
+      id: "explore-all-types-lost-fleet",
       name: "Every World: Lost Fleet",
       description:
         "Finish a Lost Fleet game with main-owned colonies on all seven ordinary types, Gaia, Lost Planet, Asteroid and Protoplanet. Artifacts, Gaiaformers and Lantids shared mines do not count. No win required.",
     },
     {
-      id: "faction.ivits.growing-federation",
+      id: "faction-ivits-growing-federation",
       name: "Growing Federation",
       description: "As Ivits, complete three federation formation milestones in one game. No win required.",
     },
     {
-      id: "faction.lantids.shared-civilization",
+      id: "faction-lantids-shared-civilization",
       name: "Shared Civilization",
       description: "As Lantids, finish with at least six additional mines on opponents' colonies. No win required.",
     },
     {
-      id: "faction.bescods.balanced-research",
+      id: "faction-bescods-balanced-research",
       name: "Balanced Research",
       description: "As Bescods, finish at level 3 or higher on all six research tracks. No win required.",
     }
@@ -147,33 +147,33 @@ export function achievements(data: Engine | Record<string, any>): SeatAchievemen
     const earned: string[] = [];
     const won = player.data.victoryPoints >= bestScore;
     if (won) {
-      earned.push(`win.faction.${player.faction}`, `win.mode.${mode}`);
-      if (engine.automa) earned.push(`win.automa.${engine.automa.difficulty}`);
+      earned.push(`win-faction-${player.faction}`, `win-mode-${mode}`);
+      if (engine.automa) earned.push(`win-automa-${engine.automa.difficulty}`);
     }
     for (const threshold of [150, 200]) {
-      if (player.data.victoryPoints >= threshold) earned.push(`score.${mode}.${threshold}`);
+      if (player.data.victoryPoints >= threshold) earned.push(`score-${mode}-${threshold}`);
     }
     if (standardBuildings.every((building) => player.data.buildings[building] === player.maxBuildings(building))) {
-      earned.push("build.all-standard");
+      earned.push("build-all-standard");
     }
     if (player.data.federationCount >= 3) {
-      earned.push("federation.form.3");
-      if (player.faction === Faction.Ivits) earned.push("faction.ivits.growing-federation");
+      earned.push("federation-form-3");
+      if (player.faction === Faction.Ivits) earned.push("faction-ivits-growing-federation");
     }
     // Unlike Condition.PlanetType, ownedPlanets excludes virtual artifact types and shared mines.
     const physicalTypes = new Set(player.ownedPlanets.map((hex) => hex.data.planet));
-    if (requiredTypes.every((type) => physicalTypes.has(type))) earned.push(`explore.all-types.${mode}`);
+    if (requiredTypes.every((type) => physicalTypes.has(type))) earned.push(`explore-all-types-${mode}`);
     if (
       player.faction === Faction.Lantids &&
       [...engine.map.grid.values()].filter((hex) => hex.data.additionalMine === player.player).length >= 6
     ) {
-      earned.push("faction.lantids.shared-civilization");
+      earned.push("faction-lantids-shared-civilization");
     }
     if (
       player.faction === Faction.Bescods &&
       ResearchField.values(engine.expansions).every((field) => player.data.research[field] >= 3)
     ) {
-      earned.push("faction.bescods.balanced-research");
+      earned.push("faction-bescods-balanced-research");
     }
     return { seat, earned, outcome: won ? "win" : "loss" };
   });

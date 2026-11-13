@@ -40,6 +40,11 @@ return `{ seat, earned: [] }`, with no outcome, rather than shifting later seats
 
 ## Revision 1 catalog (36 IDs)
 
+IDs follow BGS's `^[a-z0-9][a-z0-9-]{0,63}$` validator: lowercase letters,
+ASCII digits, and hyphens, at most 64 characters. All 36 IDs are unique. The
+pre-publication dotted spellings were replaced with hyphens; they are not aliases
+and were never published. The initial manifest therefore remains revision 1.
+
 ### Faction victories (18)
 
 Each requires a win as the named faction; either ruleset qualifies where that
@@ -47,35 +52,35 @@ faction is available.
 
 | ID                          | Faction       |
 | --------------------------- | ------------- |
-| `win.faction.terrans`       | Terrans       |
-| `win.faction.lantids`       | Lantids       |
-| `win.faction.hadsch-hallas` | Hadsch Hallas |
-| `win.faction.ivits`         | Ivits         |
-| `win.faction.geodens`       | Geodens       |
-| `win.faction.baltaks`       | Bal T'aks     |
-| `win.faction.xenos`         | Xenos         |
-| `win.faction.gleens`        | Gleens        |
-| `win.faction.taklons`       | Taklons       |
-| `win.faction.ambas`         | Ambas         |
-| `win.faction.firaks`        | Firaks        |
-| `win.faction.bescods`       | Bescods       |
-| `win.faction.nevlas`        | Nevlas        |
-| `win.faction.itars`         | Itars         |
-| `win.faction.tinkeroids`    | Tinkeroids    |
-| `win.faction.darkanians`    | Darkanians    |
-| `win.faction.moweyds`       | Moweyds       |
-| `win.faction.space-giants`  | Space Giants  |
+| `win-faction-terrans`       | Terrans       |
+| `win-faction-lantids`       | Lantids       |
+| `win-faction-hadsch-hallas` | Hadsch Hallas |
+| `win-faction-ivits`         | Ivits         |
+| `win-faction-geodens`       | Geodens       |
+| `win-faction-baltaks`       | Bal T'aks     |
+| `win-faction-xenos`         | Xenos         |
+| `win-faction-gleens`        | Gleens        |
+| `win-faction-taklons`       | Taklons       |
+| `win-faction-ambas`         | Ambas         |
+| `win-faction-firaks`        | Firaks        |
+| `win-faction-bescods`       | Bescods       |
+| `win-faction-nevlas`        | Nevlas        |
+| `win-faction-itars`         | Itars         |
+| `win-faction-tinkeroids`    | Tinkeroids    |
+| `win-faction-darkanians`    | Darkanians    |
+| `win-faction-moweyds`       | Moweyds       |
+| `win-faction-space-giants`  | Space Giants  |
 
 ### Ruleset victories and scores (6)
 
 | ID                     | Requirement                                         |
 | ---------------------- | --------------------------------------------------- |
-| `win.mode.base`        | Win a base game                                     |
-| `win.mode.lost-fleet`  | Win a Lost Fleet game                               |
-| `score.base.150`       | Finish a base game with at least 150 final VP       |
-| `score.base.200`       | Finish a base game with at least 200 final VP       |
-| `score.lost-fleet.150` | Finish a Lost Fleet game with at least 150 final VP |
-| `score.lost-fleet.200` | Finish a Lost Fleet game with at least 200 final VP |
+| `win-mode-base`        | Win a base game                                     |
+| `win-mode-lost-fleet`  | Win a Lost Fleet game                               |
+| `score-base-150`       | Finish a base game with at least 150 final VP       |
+| `score-base-200`       | Finish a base game with at least 200 final VP       |
+| `score-lost-fleet-150` | Finish a Lost Fleet game with at least 150 final VP |
+| `score-lost-fleet-200` | Finish a Lost Fleet game with at least 200 final VP |
 
 `options.lostFleet` selects the ruleset; a Lost Fleet game does not also award base
 mode IDs. Score achievements require **no win**, and 200 VP earns both thresholds
@@ -85,11 +90,11 @@ for the selected mode.
 
 | ID                        | Exact difficulty |
 | ------------------------- | ---------------- |
-| `win.automa.automalein`   | `automalein`     |
-| `win.automa.automa`       | `automa`         |
-| `win.automa.automaechtig` | `automaechtig`   |
-| `win.automa.ultoma`       | `ultoma`         |
-| `win.automa.alptrauma`    | `alptrauma`      |
+| `win-automa-automalein`   | `automalein`     |
+| `win-automa-automa`       | `automa`         |
+| `win-automa-automaechtig` | `automaechtig`   |
+| `win-automa-ultoma`       | `ultoma`         |
+| `win-automa-alptrauma`    | `alptrauma`      |
 
 Only the configured difficulty's ID is earned, not all lower difficulties.
 In both multiplayer and solo Automa games, a human at the highest final score
@@ -104,13 +109,13 @@ human in an authoritatively completed game.
 
 | ID                                    | Requirement                                                                  |
 | ------------------------------------- | ---------------------------------------------------------------------------- |
-| `build.all-standard`                  | All 18 standard building pieces simultaneously deployed at game end          |
-| `federation.form.3`                   | At least three federation formations in one game                             |
-| `explore.all-types.base`              | Main-owned colonies on all 9 required physical types in a base game          |
-| `explore.all-types.lost-fleet`        | Main-owned colonies on all 11 required physical types in a Lost Fleet game   |
-| `faction.ivits.growing-federation`    | As Ivits, at least three federation formation milestones                     |
-| `faction.lantids.shared-civilization` | As Lantids, at least six additional mines on opponents' colonies at game end |
-| `faction.bescods.balanced-research`   | As Bescods, finish at level 3 or higher on all six research tracks           |
+| `build-all-standard`                  | All 18 standard building pieces simultaneously deployed at game end          |
+| `federation-form-3`                   | At least three federation formations in one game                             |
+| `explore-all-types-base`              | Main-owned colonies on all 9 required physical types in a base game          |
+| `explore-all-types-lost-fleet`        | Main-owned colonies on all 11 required physical types in a Lost Fleet game   |
+| `faction-ivits-growing-federation`    | As Ivits, at least three federation formation milestones                     |
+| `faction-lantids-shared-civilization` | As Lantids, at least six additional mines on opponents' colonies at game end |
+| `faction-bescods-balanced-research`   | As Bescods, finish at level 3 or higher on all six research tracks           |
 
 **Full deployment:** the standard supply is 8 mines, 4 trading stations, 3 research
 labs, 1 planetary institute, and both academies (18 pieces). The predicate checks
