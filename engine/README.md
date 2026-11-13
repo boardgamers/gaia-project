@@ -2,6 +2,11 @@
 
 Javascript engine for Gaia Project.
 
+## Achievements
+
+See the [achievement hooks and revision 1 catalog](../docs/achievements.md) for the
+optional BGS contract, completion requirements, award semantics, and verification scope.
+
 ## Play online at
 
 Check out [boardgamers.space](https://boardgamers.space/boardgame/gaia-project)! Reach out to us if you want to contribute.
