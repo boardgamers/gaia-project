@@ -1,0 +1,62 @@
+{
+  "game": "gaia-project",
+  "gameinfoVersion": 3,
+  "engineVersion": "4.17.8",
+  "manifestRevision": 3,
+  "assets": [
+    {
+      "key": "achievement-faction-ambas",
+      "inputPath": "artifacts/achievement-portraits/achievement-faction-ambas.png",
+      "inputSha256": "df6acb77b185a8ae30b01f623c6f43ffa8035bcaaa53d6345c37ae0a38180e42",
+      "expectedWidth": 167,
+      "expectedHeight": 167,
+      "uploadStatus": 200,
+      "uploadedAt": "2026-11-13T22:52:32.793Z",
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/assets/gaia-project/achievement-faction-ambas/d7937048f3aa6c75/achievement-faction-ambas.webp",
+      "contentType": "image/webp",
+      "size": 8578,
+      "publicStatus": 403
+    }
+  ],
+  "startedAt": "2026-11-13T22:52:32.553967+00:00",
+  "status": "blocked-public-asset-access",
+  "blocker": "Named asset PUT succeeded, but anonymous fetch returned 403 AccessDenied. Remaining 19 assets and engine publication stopped. No production activation.",
+  "enginePublished": false,
+  "activeEngineVersion": "4.17.7",
+  "sourceMergeCommit": "0f37489aa3f265ae765d589097fb5e9ed877f502",
+  "versionCommit": "ef589687d8cd0da0201734a0c527a495d948e6d5",
+  "pullRequest": "https://github.com/boardgamers/gaia-project/pull/343",
+  "platformPullRequest": "https://codeberg.org/boardgamers/boardgamers/pulls/578",
+  "checks": {
+    "engine": {
+      "passed": 999,
+      "pending": 4
+    },
+    "viewer": {
+      "files": 100,
+      "passed": 1171,
+      "nodeOptions": "--max-old-space-size=12288",
+      "maxWorkers": 1
+    },
+    "portraitGenerator": {
+      "passed": 2
+    },
+    "engineBuild": "passed",
+    "viewerBuild": "passed; not published",
+    "engineLint": {
+      "errors": 0,
+      "warnings": 247
+    },
+    "viewerLint": "passed",
+    "prettier": "passed",
+    "actualPlatformSchemas": "manifest revision3,36 IDs,22 asset refs,20 keys and fixture results passed",
+    "builtViewerBrowser": "CDN Vue2/BootstrapVue IIFE launch and completed fixture render passed, no uncaught JS errors; legacy fixture resource requests returned 410",
+    "lockfile": "Frozen install passed; no dependency changes required for version bump"
+  },
+  "tarball": {
+    "filename": "gaia-project-engine-4.17.8.tgz",
+    "sha256": "8d5ea585200f239699532529d0e8897cb666d2b918a5ff34f14733b8b8108cce",
+    "bytes": 914850
+  },
+  "verificationAt": "2026-11-13T22:53:14.596723+00:00"
+}
