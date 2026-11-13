@@ -60,8 +60,10 @@ describe("BGS achievement hooks", () => {
     expect(manifest.revision).to.equal(1);
     expect(ids).to.have.length(36);
     expect(new Set(ids).size).to.equal(ids.length);
-    for (const faction of Faction.values(Expansion.All)) expect(ids).to.include(`win.faction.${faction}`);
-    for (const difficulty of automaDifficulties) expect(ids).to.include(`win.automa.${difficulty}`);
+    // BGS packages/protocol/achievements.ts: achievementIdSchema.
+    for (const id of ids) expect(id).to.match(/^[a-z0-9][a-z0-9-]{0,63}$/);
+    for (const faction of Faction.values(Expansion.All)) expect(ids).to.include(`win-faction-${faction}`);
+    for (const difficulty of automaDifficulties) expect(ids).to.include(`win-automa-${difficulty}`);
     expect(manifest.achievements.every((definition) => definition.name && definition.description)).to.equal(true);
     manifest.achievements[0].name = "mutated";
     expect(achievementDefinitions().achievements[0].name).not.to.equal("mutated");
@@ -76,14 +78,14 @@ describe("BGS achievement hooks", () => {
     expect(factions(engine)[2]).to.equal(Faction.HadschHallas);
     expect(result[2].outcome).to.equal("win");
     expect(result[2].earned).to.include.members([
-      "win.faction.hadsch-hallas",
-      "win.mode.base",
-      "score.base.150",
-      "score.base.200",
+      "win-faction-hadsch-hallas",
+      "win-mode-base",
+      "score-base-150",
+      "score-base-200",
     ]);
     expect(result[0].outcome).to.equal("loss");
-    expect(result[0].earned).to.include("score.base.150");
-    expect(result[0].earned.some((id) => id.startsWith("win."))).to.equal(false);
+    expect(result[0].earned).to.include("score-base-150");
+    expect(result[0].earned.some((id) => id.startsWith("win-"))).to.equal(false);
     expect(achievements(engine)).to.deep.equal(result);
     expect(achievements(data)).to.deep.equal(result);
     const ids = new Set(achievementDefinitions().achievements.map((definition) => definition.id));
@@ -123,7 +125,7 @@ describe("BGS achievement hooks", () => {
     const result = achievements(data);
     expect(result[0]).to.deep.equal({ seat: 0, earned: [] });
     expect(result[2].seat).to.equal(2);
-    expect(result[2].earned).to.include("win.faction.hadsch-hallas");
+    expect(result[2].earned).to.include("win-faction-hadsch-hallas");
   });
 
   it("treats multiplayer tied first place as wins, not draws", () => {
@@ -143,10 +145,10 @@ describe("BGS achievement hooks", () => {
         expect(result[0].seat).to.equal(0);
         const won = rankings(Engine.fromData(data))[0] === 1;
         expect(result[0].outcome).to.equal(won ? "win" : "loss");
-        expect(result[0].earned.filter((id) => id.startsWith("win.automa."))).to.deep.equal(
-          won ? [`win.automa.${difficulty}`] : []
+        expect(result[0].earned.filter((id) => id.startsWith("win-automa-"))).to.deep.equal(
+          won ? [`win-automa-${difficulty}`] : []
         );
-        expect(result[0].earned).to.include("score.base.200");
+        expect(result[0].earned).to.include("score-base-200");
       }
     }
   });
@@ -159,11 +161,11 @@ describe("BGS achievement hooks", () => {
       for (const score of [149, 150, 199, 200]) {
         data.players[0].data.victoryPoints = score;
         const ids = earned(data);
-        expect(ids.includes(`score.${mode}.150`)).to.equal(score >= 150);
-        expect(ids.includes(`score.${mode}.200`)).to.equal(score >= 200);
-        expect(ids.some((id) => id.startsWith(`score.${lostFleet ? "base" : "lost-fleet"}.`))).to.equal(false);
+        expect(ids.includes(`score-${mode}-150`)).to.equal(score >= 150);
+        expect(ids.includes(`score-${mode}-200`)).to.equal(score >= 200);
+        expect(ids.some((id) => id.startsWith(`score-${lostFleet ? "base" : "lost-fleet"}-`))).to.equal(false);
       }
-      expect(earned(data, 2)).to.include(`win.mode.${mode}`);
+      expect(earned(data, 2)).to.include(`win-mode-${mode}`);
     }
   });
 
@@ -173,7 +175,7 @@ describe("BGS achievement hooks", () => {
       data.options.lostFleet = true;
       data.players[2].faction = faction;
       delete data.players[2].variant;
-      expect(earned(data, 2)).to.include(`win.faction.${faction}`);
+      expect(earned(data, 2)).to.include(`win-faction-${faction}`);
     }
   });
 
@@ -188,12 +190,12 @@ describe("BGS achievement hooks", () => {
       [Building.Academy2]: 1,
     };
     Object.assign(data.players[0].data.buildings, buildings);
-    expect(earned(data)).to.include("build.all-standard");
+    expect(earned(data)).to.include("build-all-standard");
     for (const building of Object.keys(buildings)) {
       data.players[0].data.buildings[building]--;
       data.players[0].data.lostPlanet = 1;
       data.players[0].data.artifactPlanetTypes = [Planet.Asteroid, Planet.Protoplanet];
-      expect(earned(data)).not.to.include("build.all-standard");
+      expect(earned(data)).not.to.include("build-all-standard");
       data.players[0].data.buildings[building]++;
     }
   });
@@ -203,29 +205,29 @@ describe("BGS achievement hooks", () => {
     data.players[0].data.federationCount = 2;
     data.players[0].data.tiles.federations = Array(5).fill({ tile: "fed1", green: true });
     data.players[0].data.spaceshipFederations = [{ tile: "unused", green: true }];
-    expect(earned(data)).not.to.include("federation.form.3");
+    expect(earned(data)).not.to.include("federation-form-3");
     data.players[0].data.federationCount = 3;
     data.players[0].data.tiles.federations = [];
     data.players[0].data.spaceshipFederations = [];
-    expect(earned(data)).to.include("federation.form.3");
-    expect(earned(data)).not.to.include("faction.ivits.growing-federation");
+    expect(earned(data)).to.include("federation-form-3");
+    expect(earned(data)).not.to.include("faction-ivits-growing-federation");
     data.players[0].faction = Faction.Ivits;
     delete data.players[0].variant;
-    expect(earned(data)).to.include("faction.ivits.growing-federation");
+    expect(earned(data)).to.include("faction-ivits-growing-federation");
   });
 
   it("requires all nine physical base types including Lost, but never Transdim", () => {
     const data = state();
     colonies(data, baseTypes);
-    expect(earned(data)).to.include("explore.all-types.base");
+    expect(earned(data)).to.include("explore-all-types-base");
     for (let index = 0; index < baseTypes.length; index++) {
       const hex = data.map[index];
       hex.data.planet = Planet.Transdim;
-      expect(earned(data)).not.to.include("explore.all-types.base");
+      expect(earned(data)).not.to.include("explore-all-types-base");
       hex.data.planet = baseTypes[index];
     }
     data.map[7].data.building = Building.GaiaFormer;
-    expect(earned(data)).not.to.include("explore.all-types.base");
+    expect(earned(data)).not.to.include("explore-all-types-base");
   });
 
   it("requires physical asteroid and protoplanet colonies in Lost Fleet, not artifact types", () => {
@@ -233,10 +235,10 @@ describe("BGS achievement hooks", () => {
     data.options.lostFleet = true;
     colonies(data, baseTypes);
     data.players[0].data.artifactPlanetTypes = [Planet.Asteroid, Planet.Protoplanet];
-    expect(earned(data)).not.to.include("explore.all-types.lost-fleet");
+    expect(earned(data)).not.to.include("explore-all-types-lost-fleet");
     colonies(data, [...baseTypes, Planet.Asteroid, Planet.Protoplanet]);
-    expect(earned(data)).to.include("explore.all-types.lost-fleet");
-    expect(earned(data)).not.to.include("explore.all-types.base");
+    expect(earned(data)).to.include("explore-all-types-lost-fleet");
+    expect(earned(data)).not.to.include("explore-all-types-base");
   });
 
   it("counts Lantids shared mines separately from main-owned planet types", () => {
@@ -247,22 +249,22 @@ describe("BGS achievement hooks", () => {
     for (let index = 0; index < 6; index++) {
       Object.assign(data.map[index].data, { player: 1, additionalMine: 0 });
     }
-    expect(earned(data)).to.include("faction.lantids.shared-civilization");
-    expect(earned(data)).not.to.include("explore.all-types.base");
+    expect(earned(data)).to.include("faction-lantids-shared-civilization");
+    expect(earned(data)).not.to.include("explore-all-types-base");
     delete data.map[5].data.additionalMine;
-    expect(earned(data)).not.to.include("faction.lantids.shared-civilization");
+    expect(earned(data)).not.to.include("faction-lantids-shared-civilization");
   });
 
   it("requires Bescods and all six research tracks at level three or above", () => {
     const data = state();
     for (const field of ResearchField.values(Expansion.All)) data.players[0].data.research[field] = 3;
-    expect(earned(data)).not.to.include("faction.bescods.balanced-research");
+    expect(earned(data)).not.to.include("faction-bescods-balanced-research");
     data.players[0].faction = Faction.Bescods;
     delete data.players[0].variant;
-    expect(earned(data)).to.include("faction.bescods.balanced-research");
+    expect(earned(data)).to.include("faction-bescods-balanced-research");
     for (const field of ResearchField.values(Expansion.All)) {
       data.players[0].data.research[field] = 2;
-      expect(earned(data)).not.to.include("faction.bescods.balanced-research");
+      expect(earned(data)).not.to.include("faction-bescods-balanced-research");
       data.players[0].data.research[field] = 4;
     }
   });
