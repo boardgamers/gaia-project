@@ -3,8 +3,8 @@ packages:
   - "engine"
   - "old-ui"
 # pnpm 11 (resolved via corepack in CI) blocks dependency postinstall scripts by default.
-# These are all no-op or cosmetic (core-js/ejs banners, an optional native watcher);
-# allow them so `pnpm install` exits 0.
+# Allow the existing dependency setup scripts and Sharp's native-library check
+# (used by the local achievement-portrait generator) so `pnpm install` exits 0.
 allowBuilds:
   "@parcel/watcher": true
   bootstrap-vue: true
@@ -13,6 +13,7 @@ allowBuilds:
   ejs: true
   esbuild: true
   nodent-runtime: true
+  sharp: true
   yorkie: true
 minimumReleaseAgeExclude:
   - "@boardgamers/protocol@0.2.2 || 0.3.3 || 0.3.4 || 0.4.0 || 0.4.2 || 0.5.0 || 0.6.0 || 0.6.1 || 0.6.2 || 0.8.1 || 0.10.0"

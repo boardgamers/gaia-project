@@ -3,10 +3,13 @@ import Engine from "./engine";
 import { Building, Expansion, Faction, Phase, Planet, ResearchField, Round } from "./enums";
 
 // Structural BGS protocol types: optional named exports need no runtime protocol dependency.
+export type AchievementIcon = { type: "asset"; key: string } | { type: "text"; text: string };
+
 export interface AchievementDefinition {
   id: string;
   name: string;
   description: string;
+  icon?: AchievementIcon;
 }
 
 export interface AchievementManifest {
@@ -52,6 +55,7 @@ function displayName(id: string): string {
 export function achievementDefinitions(): AchievementManifest {
   const definitions: AchievementDefinition[] = Faction.values(Expansion.All).map((faction) => ({
     id: `win-faction-${faction}`,
+    icon: { type: "asset", key: `achievement-faction-${faction}` },
     name: `${displayName(faction)} Victory`,
     description: `Win as ${displayName(faction)}. Shared first place counts; either ruleset qualifies.`,
   }));
@@ -65,6 +69,7 @@ export function achievementDefinitions(): AchievementManifest {
     for (const threshold of [150, 200]) {
       definitions.push({
         id: `score-${mode}-${threshold}`,
+        icon: { type: "text", text: String(threshold) },
         name: `${name}: ${threshold} Points`,
         description: `Finish a ${name} game with at least ${threshold} final victory points, after auction deductions. No win required.`,
       });
@@ -118,7 +123,7 @@ export function achievementDefinitions(): AchievementManifest {
       description: "As Bescods, finish at level 3 or higher on all six research tracks. No win required.",
     }
   );
-  return { revision: 1, achievements: definitions };
+  return { revision: 2, achievements: definitions };
 }
 
 /** Evaluate authoritative completed state only; never advance play or recompute final scoring. */

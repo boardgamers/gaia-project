@@ -7,8 +7,11 @@ or a claim that achievements have been enabled on the hosted service.
 
 ## Hook contract
 
-- `achievementDefinitions()` returns `{ revision: 1, achievements }`. Each definition
-  has string `id`, `name`, and `description` fields. The complete 36-entry catalog is
+- `achievementDefinitions()` returns `{ revision: 2, achievements }`. Each definition
+  has string `id`, `name`, and `description` fields and an optional strict `icon`:
+  `{ type: "asset", key: string }` or `{ type: "text", text: string }`. Asset keys
+  match `^[a-z0-9][a-z0-9-]{0,63}$`; text matches `^[A-Za-z0-9]{1,4}$`. No URLs,
+  style, crop, HTML, or SVG payloads are accepted. The complete 36-entry catalog is
   returned regardless of the current game's ruleset or selected factions.
 - `achievements(data)` accepts an `Engine` or serialized engine state and returns
   `{ seat, earned, outcome? }[]`. `earned` contains catalog IDs. The structural
@@ -38,12 +41,20 @@ player order after removing Automa players; they are not raw engine player numbe
 Automa never receives a result. Dropped humans retain their human seat index and
 return `{ seat, earned: [] }`, with no outcome, rather than shifting later seats.
 
-## Revision 1 catalog (36 IDs)
+## Revision 2 catalog (36 stable IDs)
 
 IDs follow BGS's `^[a-z0-9][a-z0-9-]{0,63}$` validator: lowercase letters,
 ASCII digits, and hyphens, at most 64 characters. All 36 IDs are unique. The
 pre-publication dotted spellings were replaced with hyphens; they are not aliases
-and were never published. The initial manifest therefore remains revision 1.
+and were never published. Revision 2 adds icons without changing revision 1's IDs
+or earned predicates: 18 faction asset references, four 150/200 text emblems,
+and no icon on the remaining 14 definitions.
+
+**Deployment order:** the platform icon contract (platform commit
+`fca050c9509c1dec3afd8d4631cc57245f834f29`, platform PR
+[578](https://codeberg.org/boardgamers/boardgamers/pulls/578)) must be deployed
+before activating this revision-2 manifest. Older strict validators reject `icon`.
+No production assets or achievement activation are implied by this source change.
 
 ### Faction victories (18)
 
@@ -139,6 +150,57 @@ condition that includes virtual artifact planet types. Artifact bonuses cannot
 substitute for a physical colony. Gaiaformers and Lantids' shared/additional mines
 do not satisfy this main-ownership requirement. Lantids' additional mines instead
 count toward their separate shared-civilization feat.
+
+## Portrait assets and release procedure
+
+Faction win icons reference **named game assets**, not viewer-bundle URLs:
+`achievement-faction-<faction-id>`. Score badges use platform-rendered text `150`
+or `200`, shared across the two rulesets, and require no uploaded image.
+
+Source artwork is in `viewer/src/assets/factions/*.jpg`, with provenance in
+[`viewer/src/assets/factions/README.md`](../viewer/src/assets/factions/README.md).
+Artwork is by Dennis Lohausen, published by Feuerland Spiele, used with publisher
+permission as confirmed by BGS; it is **not** covered by the source-code license.
+The faction `moweyds` intentionally maps to source file `mowyeds.jpg`.
+
+Generate local release inputs (no network requests or uploads):
+
+```sh
+pnpm install --frozen-lockfile
+pnpm run generate:achievement-portraits
+pnpm run test:achievement-portraits
+```
+
+The generator crops a 167×167 square at x=13, y=0 from each 392×167 header,
+matching the existing viewer's left-side portrait framing. Outputs are square
+raster PNGs without a baked-in circular mask; the platform controls presentation.
+Outputs are written to `artifacts/achievement-portraits/`: 18
+`achievement-faction-<id>.png` files, `contact-sheet.png` (all 18 labeled crops),
+and `manifest.json` recording source/output hashes, crop coordinates and toolchain.
+Review all 18 crops on the generated contact sheet before uploading. Generated
+assets are ignored build outputs, not committed artwork copies. The source map,
+crop coordinates and dependency lockfile are the reproducible inputs.
+
+**Release only after separate publication authorization:**
+
+1. Deploy the platform's revision-2 icon support first; do not activate this
+   engine's icon manifest against an older strict schema.
+2. Generate and visually inspect the portraits locally. Keep the generated
+   input/output hash manifest with the release verification record.
+3. For each generated `achievement-faction-<id>.png`, upload its raw bytes to
+   `PUT /api/admin/gameinfo/gaia-project/assets/achievement-faction-<id>` with
+   `Content-Type: image/png` and the authorized admin bearer token. This is the
+   **version-independent named game asset** endpoint, not `/gaia-project/3/viewer`.
+   Do not upload the contact sheet or hash manifest as achievement images.
+4. BGS re-encodes images to WebP and records the content-hashed URL under the
+   metadata asset key. Verify all 18 keys resolve to the expected portraits and
+   verify the platform fallback for a missing asset. Do not invent public URLs
+   or embed them in engine definitions; viewer-bundle retention is irrelevant.
+5. Only then publish/activate the engine/catalog through the normal authorized
+   release workflow and verify portraits and 150/200 emblems in the platform UI.
+
+This PR generates inputs only: no named asset is claimed to exist in production,
+and no upload, engine publication, npm publication or BGS activation is performed.
 
 ## Verification and scope
 

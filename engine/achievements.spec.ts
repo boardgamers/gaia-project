@@ -54,10 +54,10 @@ function solo(difficulty = "automa"): Record<string, any> {
 }
 
 describe("BGS achievement hooks", () => {
-  it("exports a complete, unique, isolated revision-1 catalog", () => {
+  it("exports a complete, unique, isolated revision-2 catalog", () => {
     const manifest = achievementDefinitions();
     const ids = manifest.achievements.map((definition) => definition.id);
-    expect(manifest.revision).to.equal(1);
+    expect(manifest.revision).to.equal(2);
     expect(ids).to.have.length(36);
     expect(new Set(ids).size).to.equal(ids.length);
     // BGS packages/protocol/achievements.ts: achievementIdSchema.
@@ -67,6 +67,46 @@ describe("BGS achievement hooks", () => {
     expect(manifest.achievements.every((definition) => definition.name && definition.description)).to.equal(true);
     manifest.achievements[0].name = "mutated";
     expect(achievementDefinitions().achievements[0].name).not.to.equal("mutated");
+  });
+
+  it("adds only 18 named faction assets and four score text emblems without changing IDs", () => {
+    const definitions = achievementDefinitions().achievements;
+    const assets = definitions.filter((definition) => definition.icon?.type === "asset");
+    const texts = definitions.filter((definition) => definition.icon?.type === "text");
+    expect(assets).to.have.length(18);
+    expect(texts).to.have.length(4);
+    for (const faction of Faction.values(Expansion.All)) {
+      expect(definitions.find((definition) => definition.id === `win-faction-${faction}`).icon).to.deep.equal({
+        type: "asset",
+        key: `achievement-faction-${faction}`,
+      });
+    }
+    for (const mode of ["base", "lost-fleet"]) {
+      for (const score of [150, 200]) {
+        expect(definitions.find((definition) => definition.id === `score-${mode}-${score}`).icon).to.deep.equal({
+          type: "text",
+          text: String(score),
+        });
+      }
+    }
+    for (const definition of definitions) {
+      const icon = definition.icon;
+      if (icon?.type === "asset") {
+        expect(Object.keys(icon).sort()).to.deep.equal(["key", "type"]);
+        expect(icon.key).to.match(/^[a-z0-9][a-z0-9-]{0,63}$/);
+      } else if (icon?.type === "text") {
+        expect(Object.keys(icon).sort()).to.deep.equal(["text", "type"]);
+        expect(icon.text).to.match(/^[A-Za-z0-9]{1,4}$/);
+      } else {
+        expect(definition).not.to.have.property("icon");
+        expect(definition.id.startsWith("win-faction-") || definition.id.startsWith("score-")).to.equal(false);
+      }
+    }
+    const first = assets[0];
+    if (first.icon.type === "asset") first.icon.key = "mutated";
+    expect(
+      achievementDefinitions().achievements.find((definition) => definition.id === first.id).icon
+    ).not.to.deep.equal(first.icon);
   });
 
   it("hydrates the existing completed fixture, agrees with wrapper outcomes, and is deterministic", () => {
