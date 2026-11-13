@@ -7,13 +7,16 @@
     "prettier": "prettier --write .",
     "prettier-check": "prettier --check .",
     "test": "vitest run",
-    "test:locales": "node scripts/check-locales.mjs viewer/src/localization && node --test scripts/localization.test.mjs"
+    "test:locales": "node scripts/check-locales.mjs viewer/src/localization && node --test scripts/localization.test.mjs",
+    "generate:achievement-portraits": "node scripts/generate-achievement-portraits.mjs",
+    "test:achievement-portraits": "node --test scripts/achievement-portraits.test.mjs"
   },
   "devDependencies": {
     "husky": "^5.0.9",
     "lint-staged": "^10.5.4",
     "prettier": "^3.9.6",
     "prettier-plugin-organize-imports": "^4.3.0",
+    "sharp": "0.34.5",
     "typescript": "^5.9.3",
     "vue-tsc": "^2.2.12"
   },

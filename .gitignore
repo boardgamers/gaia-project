@@ -3,3 +3,4 @@ batch/replay/
 batch/dist/
 .pnpm-store
 .playwright-mcp/
+/artifacts/achievement-portraits/
