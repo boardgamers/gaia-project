@@ -310,6 +310,11 @@ export default class SpaceHex extends Vue {
     if (highlightHex) {
       ret.push("highlighted");
     }
+    // Keep white planets legible on the white planet-type highlight, without
+    // treating a map filter as a build selection or changing other planet types.
+    if (hex.data.planet === PlanetEnum.Ice && this.planetMapMode) {
+      ret.push("planet-type-highlighted");
+    }
     return ret;
   }
 

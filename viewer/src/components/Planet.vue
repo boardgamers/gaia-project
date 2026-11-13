@@ -107,7 +107,8 @@ svg {
     &.i {
       stroke: var(--ice);
 
-      &.highlighted:not(.warn) {
+      &.highlighted:not(.warn),
+      &.planet-type-highlighted:not(.warn) {
         stroke-width: 0.1;
         stroke: black;
       }
