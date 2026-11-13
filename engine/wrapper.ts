@@ -23,6 +23,8 @@ import {
 } from "./src/premoves";
 import assert from "./src/utils/assert";
 
+export { achievementDefinitions, achievements } from "./src/achievements";
+
 export async function init(
   nbPlayers: number,
   expansions: string[],
