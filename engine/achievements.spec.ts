@@ -54,10 +54,10 @@ function solo(difficulty = "automa"): Record<string, any> {
 }
 
 describe("BGS achievement hooks", () => {
-  it("exports a complete, unique, isolated revision-2 catalog", () => {
+  it("exports a complete, unique, isolated revision-3 catalog", () => {
     const manifest = achievementDefinitions();
     const ids = manifest.achievements.map((definition) => definition.id);
-    expect(manifest.revision).to.equal(2);
+    expect(manifest.revision).to.equal(3);
     expect(ids).to.have.length(36);
     expect(new Set(ids).size).to.equal(ids.length);
     // BGS packages/protocol/achievements.ts: achievementIdSchema.
@@ -69,12 +69,14 @@ describe("BGS achievement hooks", () => {
     expect(achievementDefinitions().achievements[0].name).not.to.equal("mutated");
   });
 
-  it("adds only 18 named faction assets and four score text emblems without changing IDs", () => {
+  it("references 18 faction assets and two shared score assets without changing IDs", () => {
     const definitions = achievementDefinitions().achievements;
     const assets = definitions.filter((definition) => definition.icon?.type === "asset");
     const texts = definitions.filter((definition) => definition.icon?.type === "text");
-    expect(assets).to.have.length(18);
-    expect(texts).to.have.length(4);
+    expect(assets).to.have.length(22);
+    expect(texts).to.have.length(0);
+    const keys = assets.map((definition) => (definition.icon.type === "asset" ? definition.icon.key : ""));
+    expect(new Set(keys).size).to.equal(20);
     for (const faction of Faction.values(Expansion.All)) {
       expect(definitions.find((definition) => definition.id === `win-faction-${faction}`).icon).to.deep.equal({
         type: "asset",
@@ -84,8 +86,8 @@ describe("BGS achievement hooks", () => {
     for (const mode of ["base", "lost-fleet"]) {
       for (const score of [150, 200]) {
         expect(definitions.find((definition) => definition.id === `score-${mode}-${score}`).icon).to.deep.equal({
-          type: "text",
-          text: String(score),
+          type: "asset",
+          key: `achievement-score-${score}`,
         });
       }
     }

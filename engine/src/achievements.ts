@@ -69,7 +69,7 @@ export function achievementDefinitions(): AchievementManifest {
     for (const threshold of [150, 200]) {
       definitions.push({
         id: `score-${mode}-${threshold}`,
-        icon: { type: "text", text: String(threshold) },
+        icon: { type: "asset", key: `achievement-score-${threshold}` },
         name: `${name}: ${threshold} Points`,
         description: `Finish a ${name} game with at least ${threshold} final victory points, after auction deductions. No win required.`,
       });
@@ -123,7 +123,7 @@ export function achievementDefinitions(): AchievementManifest {
       description: "As Bescods, finish at level 3 or higher on all six research tracks. No win required.",
     }
   );
-  return { revision: 2, achievements: definitions };
+  return { revision: 3, achievements: definitions };
 }
 
 /** Evaluate authoritative completed state only; never advance play or recompute final scoring. */

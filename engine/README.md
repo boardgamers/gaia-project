@@ -4,7 +4,7 @@ Javascript engine for Gaia Project.
 
 ## Achievements
 
-See the [achievement hooks and revision 2 catalog](../docs/achievements.md) for the
+See the [achievement hooks and revision 3 catalog](../docs/achievements.md) for the
 optional BGS contract, completion requirements, award semantics, and verification scope.
 
 ## Play online at
