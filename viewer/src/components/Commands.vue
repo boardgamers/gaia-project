@@ -379,6 +379,7 @@
           v-if="isBanningFaction && !analysisSeedActive"
           class="d-flex flex-wrap align-content-stretch faction-picker-buttons"
         >
+          <p class="faction-picker-prompt w-100 small mb-1">Ban a faction</p>
           <MoveButton
             v-for="faction in factionToBan.data"
             :button="{
