@@ -1,0 +1,936 @@
+{
+  "schema": 1,
+  "game": "gaia-project",
+  "status": "activated-and-verified",
+  "sourceCommit": "a96681aa6123b1e607763bdb37cbf1b9ed231e3d",
+  "envelopeSha256": "9e4db39d946d5a8cb94d712e6f2dfdb7f3f69fd152b1ee9421a71b29a2a0cb16",
+  "privateReceiptSha256": "14c7d53d628d51cda7bedc37ff9ecebacab03acd2a2f825d84cf5ef164521b6b",
+  "assets": {
+    "achievement-build-all-standard": {
+      "sourceSha256": "733ac94fc16d4b367ce7460cfce95f4f612c2ebae0e921a4e9c9337a30cdc993",
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-build-all-standard/8cf83a5cc369f8ad/achievement-build-all-standard.webp",
+      "sha256": "8cf83a5cc369f8adbeb8758eb5cf002cf3da6b1eb424a15fe43b378f0bd72989",
+      "size": 13834,
+      "format": "webp",
+      "width": 512,
+      "height": 512,
+      "verifiedAt": "2026-11-14T12:46:05.006Z",
+      "metadataPreserved": true
+    },
+    "achievement-explore-all-types-base": {
+      "sourceSha256": "f519bf72ab631881f3d7df67dac59f9b9b6e4e1d88fffcd4bcebcc4d566e80e0",
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-explore-all-types-base/7147fa7c3baa8bed/achievement-explore-all-types-base.webp",
+      "sha256": "7147fa7c3baa8bed26de64053b0b10f85be916dc886ae437be97b8fa4a8542c8",
+      "size": 20686,
+      "format": "webp",
+      "width": 512,
+      "height": 512,
+      "verifiedAt": "2026-11-14T12:46:05.043Z",
+      "metadataPreserved": true
+    },
+    "achievement-explore-all-types-lost-fleet": {
+      "sourceSha256": "ef465d87272ff673460f47450a005f42132c2479d632a50167d1bbb5711fea1a",
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-explore-all-types-lost-fleet/9c853c76171c624f/achievement-explore-all-types-lost-fleet.webp",
+      "sha256": "9c853c76171c624fdfffac046b1fea5207f5ae4105bcd6cb018956514f998521",
+      "size": 22502,
+      "format": "webp",
+      "width": 512,
+      "height": 512,
+      "verifiedAt": "2026-11-14T12:46:05.147Z",
+      "metadataPreserved": true
+    },
+    "achievement-faction-bescods-balanced-research": {
+      "sourceSha256": "ff6c0061eab0c7bbf8165781c3c387bdf5420d469557a8389a488711f174e494",
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-bescods-balanced-research/f7ef5932b383392b/achievement-faction-bescods-balanced-research.webp",
+      "sha256": "f7ef5932b383392bc527e89267bf1218b714cfee9bbeb5d083c96281a8cd6933",
+      "size": 13720,
+      "format": "webp",
+      "width": 512,
+      "height": 512,
+      "verifiedAt": "2026-11-14T12:46:05.190Z",
+      "metadataPreserved": true
+    },
+    "achievement-faction-ivits-growing-federation": {
+      "sourceSha256": "6c6d23c2a634c0b59528147bfb13c8e6287dbfc011f2966567feb41307eac393",
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-ivits-growing-federation/7167f0b15979c573/achievement-faction-ivits-growing-federation.webp",
+      "sha256": "7167f0b15979c57329404d3bab890404775a26b1f48a9060e2fd6d325c19872c",
+      "size": 14564,
+      "format": "webp",
+      "width": 512,
+      "height": 512,
+      "verifiedAt": "2026-11-14T12:46:05.220Z",
+      "metadataPreserved": true
+    },
+    "achievement-faction-lantids-shared-civilization": {
+      "sourceSha256": "b7efe38eb028e9d160f54c4e0121ef3989d99a48a6e631cdd81f88fd04f3b5d2",
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-lantids-shared-civilization/e8a687dc00861891/achievement-faction-lantids-shared-civilization.webp",
+      "sha256": "e8a687dc008618916da47b0ac660a6678aaaf803c7e64b64c8cc81919c52c286",
+      "size": 18568,
+      "format": "webp",
+      "width": 512,
+      "height": 512,
+      "verifiedAt": "2026-11-14T12:46:05.254Z",
+      "metadataPreserved": true
+    },
+    "achievement-federation-form-4": {
+      "sourceSha256": "4af6c26009889ac856b801c1ec08067034ee3052e179be6b28704637634bb9c9",
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-federation-form-4/7f148d86b726f823/achievement-federation-form-4.webp",
+      "sha256": "7f148d86b726f823c33f32809f66b49acb4700d4a0b7936ed6aa8e55cc3b7d30",
+      "size": 15356,
+      "format": "webp",
+      "width": 512,
+      "height": 512,
+      "verifiedAt": "2026-11-14T12:46:05.289Z",
+      "metadataPreserved": true
+    },
+    "achievement-win-automa-alptrauma": {
+      "sourceSha256": "2d16d888cb1987b768872831ba7d7294617bd62b8f658c791a7148f81f753e80",
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-win-automa-alptrauma/4e8048fdedb43b42/achievement-win-automa-alptrauma.webp",
+      "sha256": "4e8048fdedb43b421ac7355e6f4556a595d96dca4c6b99bc0348be739a71fb36",
+      "size": 17582,
+      "format": "webp",
+      "width": 512,
+      "height": 512,
+      "verifiedAt": "2026-11-14T12:46:05.323Z",
+      "metadataPreserved": true
+    },
+    "achievement-win-automa-automa": {
+      "sourceSha256": "b72d601f3d0c218bd0275ab2f26581e3463499a84a4729b71f81c10a5f1b51d5",
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-win-automa-automa/6a4c705d0f6ac810/achievement-win-automa-automa.webp",
+      "sha256": "6a4c705d0f6ac810c965ce5b4899209acb70c6c76365caee1d53750cfd37592f",
+      "size": 15464,
+      "format": "webp",
+      "width": 512,
+      "height": 512,
+      "verifiedAt": "2026-11-14T12:46:05.383Z",
+      "metadataPreserved": true
+    },
+    "achievement-win-automa-automaechtig": {
+      "sourceSha256": "c6a97a930ec03d2dc7547f0b6e9639b0cfec881a80df2842140a46efdcebee61",
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-win-automa-automaechtig/7a48232431034501/achievement-win-automa-automaechtig.webp",
+      "sha256": "7a48232431034501dc7a07a97ee4da091faa2d9b1d86be12c7277a88c7797e26",
+      "size": 16146,
+      "format": "webp",
+      "width": 512,
+      "height": 512,
+      "verifiedAt": "2026-11-14T12:46:05.717Z",
+      "metadataPreserved": true
+    },
+    "achievement-win-automa-automalein": {
+      "sourceSha256": "0efdf83ec7d624a1d25ed278d89766a562801ec89a3c45f90d2e95bdcc14bda9",
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-win-automa-automalein/1249beb87d342bac/achievement-win-automa-automalein.webp",
+      "sha256": "1249beb87d342bac6fb533a908e7e554222c8a317eba4cf1151b983dc33b643d",
+      "size": 14806,
+      "format": "webp",
+      "width": 512,
+      "height": 512,
+      "verifiedAt": "2026-11-14T12:46:05.748Z",
+      "metadataPreserved": true
+    },
+    "achievement-win-automa-ultoma": {
+      "sourceSha256": "3d8752bbe24f181619e31cc689e1f71e8cb3587c70967f9a55ca801c57bc30bf",
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-win-automa-ultoma/7c37bb4988578b08/achievement-win-automa-ultoma.webp",
+      "sha256": "7c37bb4988578b08a77656900a013fdd9a83c7400bca2ea144c17c62b227024a",
+      "size": 16748,
+      "format": "webp",
+      "width": 512,
+      "height": 512,
+      "verifiedAt": "2026-11-14T12:46:05.801Z",
+      "metadataPreserved": true
+    },
+    "achievement-win-mode-base": {
+      "sourceSha256": "75dab63aec00f5fe19dbfb4a4eecdc74c8bda3425434604e46fc2ccc695d221e",
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-win-mode-base/1a4c4898d833485a/achievement-win-mode-base.webp",
+      "sha256": "1a4c4898d833485aebbba1f2d660bd761b56146ea65fbb96e1928106042d2428",
+      "size": 18566,
+      "format": "webp",
+      "width": 512,
+      "height": 512,
+      "verifiedAt": "2026-11-14T12:46:05.836Z",
+      "metadataPreserved": true
+    },
+    "achievement-win-mode-lost-fleet": {
+      "sourceSha256": "b9fa460ea945dfc3e7c51c343653ced48e2fc79a7bc9845b9e2342e1694e0f03",
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-win-mode-lost-fleet/a8c4bf3f4ed49e72/achievement-win-mode-lost-fleet.webp",
+      "sha256": "a8c4bf3f4ed49e726b6d6fef818867fe70f909cd91f7e6751533d3802c616be5",
+      "size": 18964,
+      "format": "webp",
+      "width": 512,
+      "height": 512,
+      "verifiedAt": "2026-11-14T12:46:05.872Z",
+      "metadataPreserved": true
+    }
+  },
+  "preserved": {
+    "achievement-faction-ambas": {
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-ambas/d7937048f3aa6c75/achievement-faction-ambas.webp",
+      "sha256": "d7937048f3aa6c7546b31c0ca479cd5ed80a7edc215653bab3f279ca8d77de91",
+      "size": 8578,
+      "format": "webp",
+      "width": 167,
+      "height": 167,
+      "verifiedAt": "2026-11-14T12:46:05.907Z",
+      "metadata": {
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-ambas/d7937048f3aa6c75/achievement-faction-ambas.webp",
+        "contentType": "image/webp",
+        "size": 8578,
+        "uploadedAt": "2026-11-14T00:21:55.887Z"
+      }
+    },
+    "achievement-faction-baltaks": {
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-baltaks/d4e2cc2591b0e088/achievement-faction-baltaks.webp",
+      "sha256": "d4e2cc2591b0e088a6f0bb41d8fed1119bf7d0556d541c89b8809bc41aee58a8",
+      "size": 8368,
+      "format": "webp",
+      "width": 167,
+      "height": 167,
+      "verifiedAt": "2026-11-14T12:46:05.932Z",
+      "metadata": {
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-baltaks/d4e2cc2591b0e088/achievement-faction-baltaks.webp",
+        "contentType": "image/webp",
+        "size": 8368,
+        "uploadedAt": "2026-11-14T00:21:56.410Z"
+      }
+    },
+    "achievement-faction-bescods": {
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-bescods/6d05714af6d47492/achievement-faction-bescods.webp",
+      "sha256": "6d05714af6d47492f6168d0dab128ceaee9f383444871cfdb33bf4555ac5c51c",
+      "size": 9766,
+      "format": "webp",
+      "width": 167,
+      "height": 167,
+      "verifiedAt": "2026-11-14T12:46:05.958Z",
+      "metadata": {
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-bescods/6d05714af6d47492/achievement-faction-bescods.webp",
+        "contentType": "image/webp",
+        "size": 9766,
+        "uploadedAt": "2026-11-14T00:21:56.891Z"
+      }
+    },
+    "achievement-faction-darkanians": {
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-darkanians/6f11567b37a79672/achievement-faction-darkanians.webp",
+      "sha256": "6f11567b37a79672e0805e416b32f878f540af89f702c2dd9643cef8867ea6e4",
+      "size": 9200,
+      "format": "webp",
+      "width": 167,
+      "height": 167,
+      "verifiedAt": "2026-11-14T12:46:05.988Z",
+      "metadata": {
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-darkanians/6f11567b37a79672/achievement-faction-darkanians.webp",
+        "contentType": "image/webp",
+        "size": 9200,
+        "uploadedAt": "2026-11-14T00:21:57.284Z"
+      }
+    },
+    "achievement-faction-firaks": {
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-firaks/187a5c29e5ebc1b1/achievement-faction-firaks.webp",
+      "sha256": "187a5c29e5ebc1b1621c178ce7473901f81d1f9b9806a7fb43b7b2c50f380c17",
+      "size": 8514,
+      "format": "webp",
+      "width": 167,
+      "height": 167,
+      "verifiedAt": "2026-11-14T12:46:06.014Z",
+      "metadata": {
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-firaks/187a5c29e5ebc1b1/achievement-faction-firaks.webp",
+        "contentType": "image/webp",
+        "size": 8514,
+        "uploadedAt": "2026-11-14T00:21:57.662Z"
+      }
+    },
+    "achievement-faction-geodens": {
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-geodens/16ea770361a16fdf/achievement-faction-geodens.webp",
+      "sha256": "16ea770361a16fdfa98d6faca956be309dd03906afa3d0714537ddf9ef5e7248",
+      "size": 8838,
+      "format": "webp",
+      "width": 167,
+      "height": 167,
+      "verifiedAt": "2026-11-14T12:46:06.041Z",
+      "metadata": {
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-geodens/16ea770361a16fdf/achievement-faction-geodens.webp",
+        "contentType": "image/webp",
+        "size": 8838,
+        "uploadedAt": "2026-11-14T00:21:58.061Z"
+      }
+    },
+    "achievement-faction-gleens": {
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-gleens/5cd106e053ca3952/achievement-faction-gleens.webp",
+      "sha256": "5cd106e053ca39527be8d27602ef52093fbae90b3573819fb6ff9ee8e451a8a1",
+      "size": 8268,
+      "format": "webp",
+      "width": 167,
+      "height": 167,
+      "verifiedAt": "2026-11-14T12:46:06.069Z",
+      "metadata": {
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-gleens/5cd106e053ca3952/achievement-faction-gleens.webp",
+        "contentType": "image/webp",
+        "size": 8268,
+        "uploadedAt": "2026-11-14T00:21:58.510Z"
+      }
+    },
+    "achievement-faction-hadsch-hallas": {
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-hadsch-hallas/91d1136703d94477/achievement-faction-hadsch-hallas.webp",
+      "sha256": "91d1136703d944777ef09b0abcd34af439b9507f980176798a2b31668937508a",
+      "size": 8490,
+      "format": "webp",
+      "width": 167,
+      "height": 167,
+      "verifiedAt": "2026-11-14T12:46:06.095Z",
+      "metadata": {
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-hadsch-hallas/91d1136703d94477/achievement-faction-hadsch-hallas.webp",
+        "contentType": "image/webp",
+        "size": 8490,
+        "uploadedAt": "2026-11-14T00:21:58.888Z"
+      }
+    },
+    "achievement-faction-itars": {
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-itars/7240e6d9dad1ee01/achievement-faction-itars.webp",
+      "sha256": "7240e6d9dad1ee01cde60116f90f016b5049c1bed1600f63d7ab9da973d83d4b",
+      "size": 7866,
+      "format": "webp",
+      "width": 167,
+      "height": 167,
+      "verifiedAt": "2026-11-14T12:46:06.120Z",
+      "metadata": {
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-itars/7240e6d9dad1ee01/achievement-faction-itars.webp",
+        "contentType": "image/webp",
+        "size": 7866,
+        "uploadedAt": "2026-11-14T00:21:59.311Z"
+      }
+    },
+    "achievement-faction-ivits": {
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-ivits/a7cae70e778b234e/achievement-faction-ivits.webp",
+      "sha256": "a7cae70e778b234e975921bf0bcb398b175f0a1f9c935fa00888bdad88465ca4",
+      "size": 7780,
+      "format": "webp",
+      "width": 167,
+      "height": 167,
+      "verifiedAt": "2026-11-14T12:46:06.150Z",
+      "metadata": {
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-ivits/a7cae70e778b234e/achievement-faction-ivits.webp",
+        "contentType": "image/webp",
+        "size": 7780,
+        "uploadedAt": "2026-11-14T00:21:59.745Z"
+      }
+    },
+    "achievement-faction-lantids": {
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-lantids/a45146b469f0f697/achievement-faction-lantids.webp",
+      "sha256": "a45146b469f0f69743438224b12b87d5eb333451ae4dd959eb0b94732abdcb7c",
+      "size": 7730,
+      "format": "webp",
+      "width": 167,
+      "height": 167,
+      "verifiedAt": "2026-11-14T12:46:06.182Z",
+      "metadata": {
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-lantids/a45146b469f0f697/achievement-faction-lantids.webp",
+        "contentType": "image/webp",
+        "size": 7730,
+        "uploadedAt": "2026-11-14T00:22:00.319Z"
+      }
+    },
+    "achievement-faction-moweyds": {
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-moweyds/43cf990e3907d58c/achievement-faction-moweyds.webp",
+      "sha256": "43cf990e3907d58c63c4dfba3dd92c7dc8493e30447f09e23a6f37f6ab6b3e9e",
+      "size": 9238,
+      "format": "webp",
+      "width": 167,
+      "height": 167,
+      "verifiedAt": "2026-11-14T12:46:06.210Z",
+      "metadata": {
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-moweyds/43cf990e3907d58c/achievement-faction-moweyds.webp",
+        "contentType": "image/webp",
+        "size": 9238,
+        "uploadedAt": "2026-11-14T00:22:00.717Z"
+      }
+    },
+    "achievement-faction-nevlas": {
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-nevlas/9150358d281068e8/achievement-faction-nevlas.webp",
+      "sha256": "9150358d281068e847f37eab4473b783d6d460b3d12a77f6ff18fa7383fb0a59",
+      "size": 7982,
+      "format": "webp",
+      "width": 167,
+      "height": 167,
+      "verifiedAt": "2026-11-14T12:46:06.234Z",
+      "metadata": {
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-nevlas/9150358d281068e8/achievement-faction-nevlas.webp",
+        "contentType": "image/webp",
+        "size": 7982,
+        "uploadedAt": "2026-11-14T00:22:01.097Z"
+      }
+    },
+    "achievement-faction-space-giants": {
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-space-giants/be1ff3af83185a17/achievement-faction-space-giants.webp",
+      "sha256": "be1ff3af83185a174d2a0175e5f80c811fb27ded1056c7859847676e1a905368",
+      "size": 9194,
+      "format": "webp",
+      "width": 167,
+      "height": 167,
+      "verifiedAt": "2026-11-14T12:46:06.260Z",
+      "metadata": {
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-space-giants/be1ff3af83185a17/achievement-faction-space-giants.webp",
+        "contentType": "image/webp",
+        "size": 9194,
+        "uploadedAt": "2026-11-14T00:22:01.524Z"
+      }
+    },
+    "achievement-faction-taklons": {
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-taklons/7d4ef15dfc3bc15a/achievement-faction-taklons.webp",
+      "sha256": "7d4ef15dfc3bc15ac149df6476d9c2e10fe16dfefd7b6ea5f3d26ace9658abb9",
+      "size": 8118,
+      "format": "webp",
+      "width": 167,
+      "height": 167,
+      "verifiedAt": "2026-11-14T12:46:06.298Z",
+      "metadata": {
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-taklons/7d4ef15dfc3bc15a/achievement-faction-taklons.webp",
+        "contentType": "image/webp",
+        "size": 8118,
+        "uploadedAt": "2026-11-14T00:22:01.962Z"
+      }
+    },
+    "achievement-faction-terrans": {
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-terrans/a30b9d5e3f9dbbc6/achievement-faction-terrans.webp",
+      "sha256": "a30b9d5e3f9dbbc6acdec984510f291923dd6099501c43b89dcc59c2d8646c2f",
+      "size": 8922,
+      "format": "webp",
+      "width": 167,
+      "height": 167,
+      "verifiedAt": "2026-11-14T12:46:06.327Z",
+      "metadata": {
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-terrans/a30b9d5e3f9dbbc6/achievement-faction-terrans.webp",
+        "contentType": "image/webp",
+        "size": 8922,
+        "uploadedAt": "2026-11-14T00:22:02.416Z"
+      }
+    },
+    "achievement-faction-tinkeroids": {
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-tinkeroids/ddf22fc3ea7a43e7/achievement-faction-tinkeroids.webp",
+      "sha256": "ddf22fc3ea7a43e70f0806450c95945b2bfc5439ce7379387bcf2277d5ea06f6",
+      "size": 8940,
+      "format": "webp",
+      "width": 167,
+      "height": 167,
+      "verifiedAt": "2026-11-14T12:46:06.361Z",
+      "metadata": {
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-tinkeroids/ddf22fc3ea7a43e7/achievement-faction-tinkeroids.webp",
+        "contentType": "image/webp",
+        "size": 8940,
+        "uploadedAt": "2026-11-14T00:22:02.836Z"
+      }
+    },
+    "achievement-faction-xenos": {
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-xenos/3ab0339586a45d6e/achievement-faction-xenos.webp",
+      "sha256": "3ab0339586a45d6e69bbf4d4e007655b3bb9b3f5fc7580210de0e590ba719ddf",
+      "size": 8392,
+      "format": "webp",
+      "width": 167,
+      "height": 167,
+      "verifiedAt": "2026-11-14T12:46:06.386Z",
+      "metadata": {
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-faction-xenos/3ab0339586a45d6e/achievement-faction-xenos.webp",
+        "contentType": "image/webp",
+        "size": 8392,
+        "uploadedAt": "2026-11-14T00:22:03.349Z"
+      }
+    },
+    "achievement-score-150": {
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-score-150/6ba2bb28578f2f20/achievement-score-150.webp",
+      "sha256": "6ba2bb28578f2f20f35835a00f5b51cdec38490b3b6e0625e921ec8eb668449a",
+      "size": 16454,
+      "format": "webp",
+      "width": 512,
+      "height": 512,
+      "verifiedAt": "2026-11-14T12:46:06.420Z",
+      "metadata": {
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-score-150/6ba2bb28578f2f20/achievement-score-150.webp",
+        "contentType": "image/webp",
+        "size": 16454,
+        "uploadedAt": "2026-11-14T00:22:03.957Z"
+      }
+    },
+    "achievement-score-200": {
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-score-200/c2c299dc2850cd0c/achievement-score-200.webp",
+      "sha256": "c2c299dc2850cd0c94acd11e21e5a56a6ae691b580458d0906a514625154796b",
+      "size": 19724,
+      "format": "webp",
+      "width": 512,
+      "height": 512,
+      "verifiedAt": "2026-11-14T12:46:06.762Z",
+      "metadata": {
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/achievements/gaia-project/achievement-score-200/c2c299dc2850cd0c/achievement-score-200.webp",
+        "contentType": "image/webp",
+        "size": 19724,
+        "uploadedAt": "2026-11-14T00:22:04.531Z"
+      }
+    },
+    "pictogram": {
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/assets/gaia-project/pictogram/09bdce75fb8e0020/pictogram.webp",
+      "sha256": "09bdce75fb8e0020a1b52e9e4352d62bced93b117e94704549e0662e04093a62",
+      "size": 29934,
+      "format": "webp",
+      "width": 256,
+      "height": 256,
+      "verifiedAt": "2026-11-14T12:46:06.786Z",
+      "metadata": {
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/assets/gaia-project/pictogram/09bdce75fb8e0020/pictogram.webp",
+        "contentType": "image/webp",
+        "size": 29934,
+        "uploadedAt": "2026-09-28T23:30:11.491Z",
+        "name": "Game pictogram"
+      }
+    },
+    "screenshot-showcase-1": {
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/assets/gaia-project/screenshot-showcase-1/ccc2f1db5fd8e665/screenshot-showcase-1.webp",
+      "sha256": "ccc2f1db5fd8e6654075d9d8629e3f20e0e6f9abd56efe8e85b58bd25c1dc7c8",
+      "size": 223980,
+      "format": "webp",
+      "width": 1536,
+      "height": 993,
+      "verifiedAt": "2026-11-14T12:46:06.868Z",
+      "metadata": {
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/assets/gaia-project/screenshot-showcase-1/ccc2f1db5fd8e665/screenshot-showcase-1.webp",
+        "contentType": "image/webp",
+        "size": 223980,
+        "name": "Explore the galaxy with The Lost Fleet",
+        "uploadedAt": "2026-10-04T22:16:59.964Z"
+      }
+    },
+    "screenshot-showcase-1-dark": {
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/assets/gaia-project/screenshot-showcase-1-dark/3ab3ef4a571e52de/screenshot-showcase-1-dark.webp",
+      "sha256": "3ab3ef4a571e52de7fb3199b6dcd95562ecd886721d8cc753b0fa5ff52c57f92",
+      "size": 213022,
+      "format": "webp",
+      "width": 1536,
+      "height": 993,
+      "verifiedAt": "2026-11-14T12:46:06.941Z",
+      "metadata": {
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/assets/gaia-project/screenshot-showcase-1-dark/3ab3ef4a571e52de/screenshot-showcase-1-dark.webp",
+        "contentType": "image/webp",
+        "size": 213022,
+        "name": "Explore the galaxy with The Lost Fleet",
+        "uploadedAt": "2026-10-04T22:17:00.047Z"
+      }
+    },
+    "screenshot-showcase-2": {
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/assets/gaia-project/screenshot-showcase-2/59a59d64eb3940d5/screenshot-showcase-2.webp",
+      "sha256": "59a59d64eb3940d5484d5b5d70827b4ede7cf68919fc821c3c5aed3b40596411",
+      "size": 55186,
+      "format": "webp",
+      "width": 768,
+      "height": 542,
+      "verifiedAt": "2026-11-14T12:46:06.977Z",
+      "metadata": {
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/assets/gaia-project/screenshot-showcase-2/59a59d64eb3940d5/screenshot-showcase-2.webp",
+        "contentType": "image/webp",
+        "size": 55186,
+        "name": "Your faction board: buildings, resources and power",
+        "uploadedAt": "2026-10-04T22:17:00.123Z"
+      }
+    },
+    "screenshot-showcase-2-dark": {
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/assets/gaia-project/screenshot-showcase-2-dark/ae2cb0e097f947ed/screenshot-showcase-2-dark.webp",
+      "sha256": "ae2cb0e097f947ed6d990070ab115e495f1a2a99a354db4c29f56e3dc71dc266",
+      "size": 54732,
+      "format": "webp",
+      "width": 768,
+      "height": 542,
+      "verifiedAt": "2026-11-14T12:46:07.013Z",
+      "metadata": {
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/assets/gaia-project/screenshot-showcase-2-dark/ae2cb0e097f947ed/screenshot-showcase-2-dark.webp",
+        "contentType": "image/webp",
+        "size": 54732,
+        "name": "Your faction board: buildings, resources and power",
+        "uploadedAt": "2026-10-04T22:17:00.281Z"
+      }
+    },
+    "screenshot-showcase-3": {
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/assets/gaia-project/screenshot-showcase-3/7e7bdf1548c8c7ad/screenshot-showcase-3.webp",
+      "sha256": "7e7bdf1548c8c7ad13e9bc9e2b6f93b9c701af24e1ab5994233af097a4a365a8",
+      "size": 32518,
+      "format": "webp",
+      "width": 1276,
+      "height": 350,
+      "verifiedAt": "2026-11-14T12:46:07.050Z",
+      "metadata": {
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/assets/gaia-project/screenshot-showcase-3/7e7bdf1548c8c7ad/screenshot-showcase-3.webp",
+        "contentType": "image/webp",
+        "size": 32518,
+        "name": "Follow every move and resource change in the game log",
+        "uploadedAt": "2026-10-04T22:17:00.367Z"
+      }
+    },
+    "screenshot-showcase-3-dark": {
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/assets/gaia-project/screenshot-showcase-3-dark/1047e87797338aac/screenshot-showcase-3-dark.webp",
+      "sha256": "1047e87797338aacc7b8d6fe0d4644b9aee286493e1609245418fb742cebc9f8",
+      "size": 31898,
+      "format": "webp",
+      "width": 1276,
+      "height": 350,
+      "verifiedAt": "2026-11-14T12:46:07.162Z",
+      "metadata": {
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/assets/gaia-project/screenshot-showcase-3-dark/1047e87797338aac/screenshot-showcase-3-dark.webp",
+        "contentType": "image/webp",
+        "size": 31898,
+        "name": "Follow every move and resource change in the game log",
+        "uploadedAt": "2026-10-04T22:17:00.419Z"
+      }
+    }
+  },
+  "planSha256": "af86352546069a0a95c3480fa6e6a0378f0558e431fa5c28f0d34f00cd8b1a71",
+  "activationReceiptSha256": "233c7f2afe85eef8a21fd5d1d351509107ad8fe29b4311d3f5aa7040a4ce6bc2",
+  "tgzSha256": "a21b4c587f6488fb1c75a9c6a81c182230b2ed7e9272172f33866e0d0e1df151",
+  "package": {
+    "name": "@gaia-project/engine",
+    "version": "4.17.10",
+    "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/engine/a21b4c587f6488fb/gaia-project-engine-4.17.10.tgz",
+    "size": 915098,
+    "sha256": "a21b4c587f6488fb1c75a9c6a81c182230b2ed7e9272172f33866e0d0e1df151"
+  },
+  "hostedPackage": {
+    "name": "@gaia-project/engine",
+    "version": "4.17.10",
+    "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/engine/a21b4c587f6488fb/gaia-project-engine-4.17.10.tgz",
+    "size": 915098,
+    "sha256": "a21b4c587f6488fb1c75a9c6a81c182230b2ed7e9272172f33866e0d0e1df151"
+  },
+  "manifest": {
+    "revision": 5,
+    "achievements": [
+      {
+        "id": "win-faction-terrans",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-faction-terrans"
+        },
+        "name": "Terrans Victory",
+        "description": "Win as Terrans. Shared first place counts; either ruleset qualifies."
+      },
+      {
+        "id": "win-faction-lantids",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-faction-lantids"
+        },
+        "name": "Lantids Victory",
+        "description": "Win as Lantids. Shared first place counts; either ruleset qualifies."
+      },
+      {
+        "id": "win-faction-hadsch-hallas",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-faction-hadsch-hallas"
+        },
+        "name": "Hadsch Hallas Victory",
+        "description": "Win as Hadsch Hallas. Shared first place counts; either ruleset qualifies."
+      },
+      {
+        "id": "win-faction-ivits",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-faction-ivits"
+        },
+        "name": "Ivits Victory",
+        "description": "Win as Ivits. Shared first place counts; either ruleset qualifies."
+      },
+      {
+        "id": "win-faction-geodens",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-faction-geodens"
+        },
+        "name": "Geodens Victory",
+        "description": "Win as Geodens. Shared first place counts; either ruleset qualifies."
+      },
+      {
+        "id": "win-faction-baltaks",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-faction-baltaks"
+        },
+        "name": "Baltaks Victory",
+        "description": "Win as Baltaks. Shared first place counts; either ruleset qualifies."
+      },
+      {
+        "id": "win-faction-xenos",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-faction-xenos"
+        },
+        "name": "Xenos Victory",
+        "description": "Win as Xenos. Shared first place counts; either ruleset qualifies."
+      },
+      {
+        "id": "win-faction-gleens",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-faction-gleens"
+        },
+        "name": "Gleens Victory",
+        "description": "Win as Gleens. Shared first place counts; either ruleset qualifies."
+      },
+      {
+        "id": "win-faction-taklons",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-faction-taklons"
+        },
+        "name": "Taklons Victory",
+        "description": "Win as Taklons. Shared first place counts; either ruleset qualifies."
+      },
+      {
+        "id": "win-faction-ambas",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-faction-ambas"
+        },
+        "name": "Ambas Victory",
+        "description": "Win as Ambas. Shared first place counts; either ruleset qualifies."
+      },
+      {
+        "id": "win-faction-firaks",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-faction-firaks"
+        },
+        "name": "Firaks Victory",
+        "description": "Win as Firaks. Shared first place counts; either ruleset qualifies."
+      },
+      {
+        "id": "win-faction-bescods",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-faction-bescods"
+        },
+        "name": "Bescods Victory",
+        "description": "Win as Bescods. Shared first place counts; either ruleset qualifies."
+      },
+      {
+        "id": "win-faction-nevlas",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-faction-nevlas"
+        },
+        "name": "Nevlas Victory",
+        "description": "Win as Nevlas. Shared first place counts; either ruleset qualifies."
+      },
+      {
+        "id": "win-faction-itars",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-faction-itars"
+        },
+        "name": "Itars Victory",
+        "description": "Win as Itars. Shared first place counts; either ruleset qualifies."
+      },
+      {
+        "id": "win-faction-tinkeroids",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-faction-tinkeroids"
+        },
+        "name": "Tinkeroids Victory",
+        "description": "Win as Tinkeroids. Shared first place counts; either ruleset qualifies."
+      },
+      {
+        "id": "win-faction-darkanians",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-faction-darkanians"
+        },
+        "name": "Darkanians Victory",
+        "description": "Win as Darkanians. Shared first place counts; either ruleset qualifies."
+      },
+      {
+        "id": "win-faction-moweyds",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-faction-moweyds"
+        },
+        "name": "Moweyds Victory",
+        "description": "Win as Moweyds. Shared first place counts; either ruleset qualifies."
+      },
+      {
+        "id": "win-faction-space-giants",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-faction-space-giants"
+        },
+        "name": "Space Giants Victory",
+        "description": "Win as Space Giants. Shared first place counts; either ruleset qualifies."
+      },
+      {
+        "id": "win-mode-base",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-win-mode-base"
+        },
+        "name": "Base Game Victory",
+        "description": "Win a Base Game game, including shared first place."
+      },
+      {
+        "id": "score-base-150",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-score-150"
+        },
+        "name": "Base Game: 150 Points",
+        "description": "Finish a Base Game game with at least 150 final victory points, after auction deductions. No win required."
+      },
+      {
+        "id": "score-base-200",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-score-200"
+        },
+        "name": "Base Game: 200 Points",
+        "description": "Finish a Base Game game with at least 200 final victory points, after auction deductions. No win required."
+      },
+      {
+        "id": "win-mode-lost-fleet",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-win-mode-lost-fleet"
+        },
+        "name": "Lost Fleet Victory",
+        "description": "Win a Lost Fleet game, including shared first place."
+      },
+      {
+        "id": "score-lost-fleet-150",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-score-150"
+        },
+        "name": "Lost Fleet: 150 Points",
+        "description": "Finish a Lost Fleet game with at least 150 final victory points, after auction deductions. No win required."
+      },
+      {
+        "id": "score-lost-fleet-200",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-score-200"
+        },
+        "name": "Lost Fleet: 200 Points",
+        "description": "Finish a Lost Fleet game with at least 200 final victory points, after auction deductions. No win required."
+      },
+      {
+        "id": "win-automa-automalein",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-win-automa-automalein"
+        },
+        "name": "Defeat Automalein",
+        "description": "Win against Automa at exactly automalein difficulty. A tied score counts as a human win."
+      },
+      {
+        "id": "win-automa-automa",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-win-automa-automa"
+        },
+        "name": "Defeat Automa",
+        "description": "Win against Automa at exactly automa difficulty. A tied score counts as a human win."
+      },
+      {
+        "id": "win-automa-automaechtig",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-win-automa-automaechtig"
+        },
+        "name": "Defeat Automaechtig",
+        "description": "Win against Automa at exactly automaechtig difficulty. A tied score counts as a human win."
+      },
+      {
+        "id": "win-automa-ultoma",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-win-automa-ultoma"
+        },
+        "name": "Defeat Ultoma",
+        "description": "Win against Automa at exactly ultoma difficulty. A tied score counts as a human win."
+      },
+      {
+        "id": "win-automa-alptrauma",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-win-automa-alptrauma"
+        },
+        "name": "Defeat Alptrauma",
+        "description": "Win against Automa at exactly alptrauma difficulty. A tied score counts as a human win."
+      },
+      {
+        "id": "build-all-standard",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-build-all-standard"
+        },
+        "name": "Full Deployment",
+        "description": "Finish with all 18 standard building pieces simultaneously deployed: 8 mines, 4 trading stations, 3 research labs, the institute and both academies. Excludes Lost Planet, artifacts, Gaiaformers and space stations. No win required."
+      },
+      {
+        "id": "federation-form-4",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-federation-form-4"
+        },
+        "name": "Federation Builder",
+        "description": "Complete at least four federation formations in one game (extensions of the growing federation for Ivits). Token rewards and rescores do not count. No win required."
+      },
+      {
+        "id": "explore-all-types-base",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-explore-all-types-base"
+        },
+        "name": "Every World: Base Game",
+        "description": "Finish a base game with main-owned colonies on all seven ordinary planet types, Gaia and the Lost Planet. Gaiaformers and Lantids shared mines do not count. No win required."
+      },
+      {
+        "id": "explore-all-types-lost-fleet",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-explore-all-types-lost-fleet"
+        },
+        "name": "Every World: Lost Fleet",
+        "description": "Finish a Lost Fleet game with main-owned colonies on all seven ordinary types, Gaia, Lost Planet, Asteroid and Protoplanet. Artifacts, Gaiaformers and Lantids shared mines do not count. No win required."
+      },
+      {
+        "id": "faction-ivits-growing-federation",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-faction-ivits-growing-federation"
+        },
+        "name": "Growing Federation",
+        "description": "As Ivits, complete at least four formation milestones of your growing federation in one game. No win required."
+      },
+      {
+        "id": "faction-lantids-shared-civilization",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-faction-lantids-shared-civilization"
+        },
+        "name": "Shared Civilization",
+        "description": "As Lantids, finish with at least six additional mines on opponents' colonies. No win required."
+      },
+      {
+        "id": "faction-bescods-balanced-research",
+        "icon": {
+          "type": "asset",
+          "key": "achievement-faction-bescods-balanced-research"
+        },
+        "name": "Balanced Research",
+        "description": "As Bescods, finish at level 3 or higher on all six research tracks. No win required."
+      }
+    ]
+  },
+  "verification": {
+    "publicCatalog": true,
+    "allAssets": true,
+    "unchangedMetadata": true
+  },
+  "reconciliation": {
+    "readOnly": true,
+    "additionalPOSTs": 0,
+    "originalIncompleteReceiptSha256": "762fb42ea5dfdfa69cbb1cad5eb67120b298b6b50322f8afda89b34b0580d6bd",
+    "originalStage": "awaiting-installer",
+    "originalReceiptUnmodified": true
+  }
+}
