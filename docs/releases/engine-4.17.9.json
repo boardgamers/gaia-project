@@ -1,0 +1,85 @@
+{
+  "game": "gaia-project",
+  "gameinfoVersion": 3,
+  "engineVersion": "4.17.9",
+  "manifestRevision": 4,
+  "status": "active",
+  "sourceCommit": "58ff3f1cd5ff579bb071d5b43aad17c7d9c80a5d",
+  "independentReview": "Coordinator approved exact source and tarball; 25 release-gate tests and 537 archive files verified",
+  "tarball": {
+    "filename": "gaia-project-engine-4.17.9.tgz",
+    "sha256": "33534c7a5b0516abddfeb642bb24066e1cab5702f870dd4b185219a045b01575",
+    "bytes": 914886
+  },
+  "engineUpload": {
+    "at": "2026-11-14T01:08:04.760526+00:00",
+    "engine": {
+      "package": {
+        "name": "@gaia-project/engine",
+        "version": "4.17.9",
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/engine/33534c7a5b0516ab/gaia-project-engine-4.17.9.tgz"
+      },
+      "entryPoint": "dist/wrapper.js"
+    }
+  },
+  "previousEngine": {
+    "package": {
+      "name": "@gaia-project/engine",
+      "version": "4.17.8",
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/engine/cc8dec51ea635414/gaia-project-engine-4.17.8.tgz"
+    },
+    "entryPoint": "dist/wrapper.js"
+  },
+  "checks": {
+    "enginePassed": 1000,
+    "enginePending": 4,
+    "engineLintErrors": 0,
+    "engineLintWarnings": 247,
+    "viewerPassed": 1171,
+    "viewerFiles": 100,
+    "viewerInitialRun": "One unchanged sandbox queued-moves test timed out at 15 seconds; full retry passed without settings or code changes",
+    "engineBuild": "passed",
+    "viewerBuild": "passed; not published",
+    "viewerLint": "passed",
+    "prettier": "passed",
+    "frozenInstall": "passed",
+    "officialProtocolValidators": "passed; other 34 definitions unchanged",
+    "browserSmoke": "passed; no uncaught errors; historical fixture resources HTTP410"
+  },
+  "assetsUploaded": false,
+  "viewerPublished": false,
+  "migrationOrBackfill": false,
+  "activeEngineVersion": "4.17.9",
+  "verifiedAt": "2026-11-14T01:08:41.825402+00:00",
+  "activation": {
+    "activeKey": "gaia-project_3_gaia-project-engine_4.17.9_52314dfb49944e25",
+    "engine": {
+      "package": {
+        "name": "@gaia-project/engine",
+        "version": "4.17.9",
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/engine/33534c7a5b0516ab/gaia-project-engine-4.17.9.tgz"
+      },
+      "entryPoint": "dist/wrapper.js"
+    },
+    "revision": 4,
+    "definitions": 36,
+    "fourFormationDescriptionsVerified": true,
+    "oldGeneralIdAbsent": true,
+    "other34DefinitionsUnchanged": true,
+    "assetReferences": 22,
+    "uniqueAssetKeys": 20,
+    "artworkMetadataAndAnonymousHashesUnchanged": true,
+    "publicManifestMatchesReviewedCatalog": true,
+    "publicTarballHashMatches": true,
+    "viewerUnchanged": true,
+    "albumUrl": "https://boardgamers.space/badges/games/gaia-project",
+    "browserAlbum": {
+      "httpStatus": 200,
+      "achievementCount": 36,
+      "loadedImages": 22,
+      "uniqueImages": 20,
+      "uncaughtErrors": 0,
+      "interception": false
+    }
+  }
+}
