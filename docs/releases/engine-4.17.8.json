@@ -4,7 +4,7 @@
   "engineVersion": "4.17.8",
   "manifestRevision": 3,
   "startedAt": "2026-11-14T00:21:55.666306+00:00",
-  "enginePublished": false,
+  "enginePublished": true,
   "assets": [
     {
       "key": "achievement-faction-ambas",
@@ -451,8 +451,8 @@
   "metadataReadback": "all 20 matched",
   "assetsPixelVerifiedAt": "2026-11-14T00:22:19.583Z",
   "catalogAssetCoverage": "exact match: 22 references, 20 keys",
-  "status": "awaiting-independent-review",
-  "activeEngineVersion": "4.17.7",
+  "status": "active",
+  "activeEngineVersion": "4.17.8",
   "sourceMergeCommit": "0f37489aa3f265ae765d589097fb5e9ed877f502",
   "versionCommit": "ef589687d8cd0da0201734a0c527a495d948e6d5",
   "pullRequest": "https://github.com/boardgamers/gaia-project/pull/343",
@@ -527,5 +527,64 @@
     "readback": "exact match",
     "uploadsResumed": false
   },
-  "verificationAt": "2026-11-14T00:24:37.921065+00:00"
+  "verificationAt": "2026-11-14T00:28:08.665647+00:00",
+  "sourceCommit": "d0bd5825a453c8510c67e8f98e87eb74ad36b3b3",
+  "independentReview": {
+    "head": "d0bd5825a453c8510c67e8f98e87eb74ad36b3b3",
+    "base": "d60485024f4d606f0a6142d2c7b0824d981a966c",
+    "result": "approved by coordinator; no blockers"
+  },
+  "engineUpload": {
+    "at": "2026-11-14T00:27:30.277792+00:00",
+    "status": 200,
+    "engine": {
+      "package": {
+        "name": "@gaia-project/engine",
+        "version": "4.17.8",
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/engine/cc8dec51ea635414/gaia-project-engine-4.17.8.tgz"
+      },
+      "entryPoint": "dist/wrapper.js"
+    },
+    "tarballSha256": "cc8dec51ea635414073849e8255da1f806db93105374b74f6166f02ed75b1d86",
+    "size": 914763
+  },
+  "previousEngine": {
+    "package": {
+      "name": "@gaia-project/engine",
+      "version": "4.17.7",
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/engine/f45d3c9fc13be792/gaia-project-engine-4.17.7.tgz"
+    },
+    "entryPoint": "dist/wrapper.js"
+  },
+  "viewerUnchanged": true,
+  "activation": {
+    "activeKey": "gaia-project_3_gaia-project-engine_4.17.8_316fe368a2f0502f",
+    "engine": {
+      "package": {
+        "name": "@gaia-project/engine",
+        "version": "4.17.8",
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/engine/cc8dec51ea635414/gaia-project-engine-4.17.8.tgz"
+      },
+      "entryPoint": "dist/wrapper.js"
+    },
+    "achievementsProbed": true,
+    "publicManifestMatchesReviewedCatalog": true,
+    "revision": 3,
+    "definitions": 36,
+    "assetReferences": 22,
+    "uniqueAssetKeys": 20,
+    "allAssetsAnonymousHashReverified": true,
+    "publicTarballHashMatches": true,
+    "albumUrl": "https://boardgamers.space/badges/games/gaia-project",
+    "albumHttpStatus": 200,
+    "viewerUnchanged": true,
+    "fabricatedGamesOrAwards": false,
+    "browserAlbum": {
+      "httpStatus": 200,
+      "loadedAchievementImages": 22,
+      "uniqueImages": 20,
+      "uncaughtErrors": 0,
+      "interception": false
+    }
+  }
 }
