@@ -4,7 +4,7 @@ import seedrandom from "seedrandom";
 import { EngineOptions } from "./engine";
 import { Faction, Planet, Player } from "./enums";
 import { GaiaHex, reverseSuffixes } from "./gaia-hex";
-import { generateLostFleetBoard } from "./lost-fleet-board";
+import { generateLostFleetBoard, lostFleetSectorTiles } from "./lost-fleet-board";
 import { classifySectorId, lostFleetSectorCenters, LostFleetSectorType } from "./lost-fleet-map";
 import Sector from "./sector";
 import assert from "./utils/assert";
@@ -181,7 +181,11 @@ export default class SpaceMap {
     } while (!this.isValid(germanRules));
   }
 
-  load(conf: MapConfiguration) {
+  load(conf: MapConfiguration, officialCenterSectors = false) {
+    if (this.lostFleet) {
+      this.loadLostFleet(conf, officialCenterSectors);
+      return;
+    }
     const centers = conf.sectors.length === 7 ? smallCenters : bigCenters;
 
     // Legacy map generation, to keep old tests valid
@@ -221,6 +225,47 @@ export default class SpaceMap {
 
     this.grid = hexagon ? hexagon.merge(...hexagons) : new Grid();
     this.placement = conf;
+  }
+
+  /** Load Space Sectors without discarding the generated Interspace/Deep Space tiles.
+   * Placement only records Space Sectors: the other tiles remain determined by the init seed.
+   * Require the Lost Fleet geometry/pool, rather than falling back to legacy base-game centers.
+   */
+  private loadLostFleet(conf: MapConfiguration, officialCenterSectors: boolean) {
+    const centers = lostFleetSectorCenters(this.nbPlayers);
+    const remainingTiles = new Set(lostFleetSectorTiles(this.nbPlayers).map((tile) => tile.name));
+    const remainingCenters = new Set(centers.map((center) => `${center.q}x${center.r}`));
+    assert(Array.isArray(conf.sectors) && conf.sectors.length === centers.length, "Invalid Lost Fleet sector count");
+    const grids = conf.sectors.map((placement) => {
+      assert(placement && remainingTiles.delete(placement.sector), "Invalid or duplicate Lost Fleet sector");
+      const { center, rotation, sector } = placement;
+      assert(
+        center &&
+          Number.isInteger(center.q) &&
+          Number.isInteger(center.r) &&
+          center.s === -center.q - center.r &&
+          remainingCenters.delete(`${center.q}x${center.r}`),
+        "Invalid or duplicate Lost Fleet sector center"
+      );
+      assert(Number.isInteger(rotation) && rotation >= 0 && rotation < 6, "Invalid Lost Fleet sector rotation");
+      if (
+        officialCenterSectors &&
+        centers.slice(0, this.nbPlayers === 4 ? 2 : 1).some((c) => c.q === center.q && c.r === center.r)
+      ) {
+        assert(["1", "2", "3", "4"].includes(sector), "Lost Fleet center sectors must be drawn from sectors 1-4");
+      }
+      const definition = (conf.mirror ? rSectors : sectors)[sector];
+      return Sector.create(definition.map, sector, center).rotateRight(rotation, center);
+    });
+    const extraHexes = [...this.grid.values()].filter(
+      (hex) => classifySectorId(hex.data.sector) !== LostFleetSectorType.Space
+    );
+    const candidate = new SpaceMap();
+    candidate.grid = grids[0].merge(...grids.slice(1), new Grid(...extraHexes));
+    assert(candidate.isValid(), "Map is invalid with two planets for the same type being near each other");
+    this.grid = candidate.grid;
+    this.placement = conf;
+    this.distanceCache = {};
   }
 
   /**

@@ -158,6 +158,165 @@ describe("Map", () => {
       expect(() => map.isValid()).to.not.throw();
     });
 
+    for (const nbPlayers of [1, 2, 3, 4]) {
+      it(`should reuse a generated ${nbPlayers}-player Lost Fleet map in a rematch`, () => {
+        const seed = `rematch-lost-fleet-${nbPlayers}`;
+        const original = new Engine([`init ${nbPlayers} ${seed}`], { lostFleet: true });
+        const configuration = JSON.parse(JSON.stringify(original.options.map));
+        const rematch = new Engine([`init ${nbPlayers} ${seed}`], { lostFleet: true, map: configuration });
+        expect(rematch.options.map).to.deep.equal(original.options.map);
+        expect(rematch.map.toJSON().map((hex) => hex.toJSON())).to.deep.equal(
+          original.map.toJSON().map((hex) => hex.toJSON())
+        );
+
+        // A new seed changes only the unrecorded Interspace/Deep Space tiles, not Space Sectors.
+        const newSeed = `${seed}-new`;
+        const next = new Engine([`init ${nbPlayers} ${newSeed}`], { lostFleet: true, map: configuration });
+        const generated = new SpaceMap(nbPlayers, newSeed, false, "standard", true);
+        const extras = (map: SpaceMap) =>
+          map
+            .toJSON()
+            .filter((hex) => /^(IS|DS)/.test(hex.data.sector))
+            .map((hex) => hex.toJSON());
+        expect(next.options.map).to.deep.equal(configuration);
+        expect(next.map.grid.size).to.equal(original.map.grid.size);
+        expect(extras(next.map)).to.deep.equal(extras(generated));
+        expect(next.map.isValid()).to.equal(true);
+        for (const hex of next.map.grid.values()) {
+          expect(next.map.getS(hex.toString())).to.equal(hex);
+        }
+      });
+    }
+
+    it("should not apply legacy base-game mirroring to a Lost Fleet rematch", () => {
+      const original = new Engine(["init 4 randomSeed"], { lostFleet: true });
+      const rematch = new Engine(["init 4 randomSeed"], {
+        lostFleet: true,
+        map: JSON.parse(JSON.stringify(original.options.map)),
+      });
+      expect(rematch.map.toJSON().map((hex) => hex.toJSON())).to.deep.equal(
+        original.map.toJSON().map((hex) => hex.toJSON())
+      );
+    });
+
+    it("should place sectors by their explicit centers, regardless of array order", () => {
+      const original = new Engine(["init 4 reordered-rematch"], { lostFleet: true });
+      const conf: MapConfiguration = JSON.parse(JSON.stringify(original.options.map));
+      conf.sectors.reverse();
+      const rematch = new Engine(["init 4 reordered-rematch"], { lostFleet: true, map: conf });
+      expect(rematch.map.grid.size).to.equal(original.map.grid.size);
+      for (const hex of original.map.grid.values()) {
+        expect(rematch.map.grid.get(hex).toJSON()).to.deep.equal(hex.toJSON());
+      }
+    });
+
+    const invalidConfigurations: Array<[string, (conf: MapConfiguration) => void, string]> = [
+      ["missing sectors", (conf) => conf.sectors.pop(), "sector count"],
+      [
+        "empty sectors",
+        (conf) => {
+          conf.sectors = [];
+        },
+        "sector count",
+      ],
+      [
+        "duplicate sectors",
+        (conf) => {
+          conf.sectors[0].sector = conf.sectors[1].sector;
+        },
+        "duplicate Lost Fleet sector",
+      ],
+      [
+        "unknown sectors",
+        (conf) => {
+          conf.sectors[0].sector = "99";
+        },
+        "Invalid or duplicate Lost Fleet sector",
+      ],
+      [
+        "wrong sector face",
+        (conf) => {
+          conf.sectors.find((s) => s.sector === "5A").sector = "5B";
+        },
+        "Invalid or duplicate Lost Fleet sector",
+      ],
+      [
+        "missing centers",
+        (conf) => {
+          delete conf.sectors[0].center;
+        },
+        "sector center",
+      ],
+      [
+        "duplicate centers",
+        (conf) => {
+          conf.sectors[0].center = conf.sectors[1].center;
+        },
+        "sector center",
+      ],
+      [
+        "base-game centers",
+        (conf) => {
+          conf.sectors[0].center = { q: 5, r: -2, s: -3 };
+        },
+        "sector center",
+      ],
+      [
+        "inconsistent cube coordinates",
+        (conf) => {
+          conf.sectors[0].center.s += 1;
+        },
+        "sector center",
+      ],
+      ...[-1, 6, 0.5, NaN].map((rotation): [string, (conf: MapConfiguration) => void, string] => [
+        `rotation ${rotation}`,
+        (conf) => {
+          conf.sectors[0].rotation = rotation;
+        },
+        "sector rotation",
+      ]),
+    ];
+    for (const [name, invalidate, error] of invalidConfigurations) {
+      it(`should reject Lost Fleet maps with ${name}`, () => {
+        const conf: MapConfiguration = JSON.parse(
+          JSON.stringify(new SpaceMap(4, "invalid-custom-map", false, "standard", true).placement)
+        );
+        invalidate(conf);
+        expect(() => new Engine(["init 4 invalid-custom-map"], { lostFleet: true, map: conf })).to.throw(error);
+      });
+    }
+
+    it("should validate adjacency when loading custom Lost Fleet sectors", () => {
+      const map = new SpaceMap(2, "lost-fleet-space-map", false, "standard", true);
+      map.placement.sectors[0].rotation = (map.placement.sectors[0].rotation + 3) % 6;
+      expect(() => new Engine(["init 2 lost-fleet-space-map"], { lostFleet: true, map: map.placement })).to.throw(
+        "Map is invalid with two planets for the same type being near each other"
+      );
+    });
+
+    it("should honor the official-center restriction for supplied Lost Fleet maps", () => {
+      const original = new Engine(["init 4 official-rematch"], { lostFleet: true, officialCenterSectors: true });
+      expect(
+        () =>
+          new Engine(["init 4 official-rematch"], {
+            lostFleet: true,
+            officialCenterSectors: true,
+            map: original.options.map,
+          })
+      ).to.not.throw();
+      const placements = original.options.map.sectors;
+      const outer = placements.find((s) => s.sector === "10");
+      [placements[0].sector, outer.sector] = [outer.sector, placements[0].sector];
+      expect(
+        () =>
+          new Engine(["init 4 official-rematch"], {
+            lostFleet: true,
+            officialCenterSectors: true,
+            map: original.options.map,
+          })
+      ).to.throw("Lost Fleet center sectors must be drawn from sectors 1-4");
+    });
+
     it("should reject a legacy custom map configuration with Lost Fleet", () => {
       expect(
         () =>

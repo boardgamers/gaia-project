@@ -22,10 +22,7 @@ export function moveInit(engine: Engine, players: number, seed: string) {
   assert(players >= 1 && players <= 5, "Invalid number of players");
   const solo = players === 1;
   if (solo) initAutoma(engine);
-  assert(
-    !(engine.options.lostFleet && engine.options.map?.sectors),
-    "A custom map configuration cannot be combined with the Lost Fleet expansion"
-  );
+
   if (engine.options.auction === AuctionVariant.PreferenceSplit) {
     // Checked at the earliest possible moment (a game that reached its bid phase before anyone
     // noticed would have no legal way forward). The faction count needs no check of its own: the
@@ -52,7 +49,7 @@ export function moveInit(engine: Engine, players: number, seed: string) {
   );
 
   if (engine.options.map?.sectors) {
-    engine.map.load(engine.options.map);
+    engine.map.load(engine.options.map, engine.options.officialCenterSectors);
   }
   engine.options.map = engine.map.placement;
 
