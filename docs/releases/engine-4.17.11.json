@@ -1,0 +1,67 @@
+{
+  "game": "gaia-project",
+  "gameinfoVersion": 3,
+  "engineVersion": "4.17.11",
+  "sourceCommit": "5a7fdec4a04a12bca90d33335be6575bb2ded50a",
+  "verifiedAt": "2026-11-14T18:10:20.088Z",
+  "engine": {
+    "package": {
+      "name": "@gaia-project/engine",
+      "version": "4.17.11",
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/engine/42758e9e66dcfe60/gaia-project-engine-4.17.11.tgz"
+    },
+    "entryPoint": "dist/wrapper.js"
+  },
+  "previousEngine": {
+    "package": {
+      "name": "@gaia-project/engine",
+      "version": "4.17.10",
+      "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/engine/a21b4c587f6488fb/gaia-project-engine-4.17.10.tgz"
+    },
+    "entryPoint": "dist/wrapper.js"
+  },
+  "tarball": {
+    "filename": "gaia-project-engine-4.17.11.tgz",
+    "sha256": "42758e9e66dcfe60dcfe31ba6b4a718f175d9be01c6be1e03c63a601aac3d2f2",
+    "bytes": 917691
+  },
+  "publicPackageHashVerified": true,
+  "viewerSettingsAchievementsAssetsPreserved": true,
+  "productionGamesModified": false,
+  "verificationNote": "Upload response is raw version metadata; fresh admin GET confirmed merged shared asset metadata unchanged. One engine POST only.",
+  "activation": {
+    "key": "gaia-project_3_gaia-project-engine_4.17.11_a3dd947b3cc16656",
+    "engine": {
+      "package": {
+        "name": "@gaia-project/engine",
+        "version": "4.17.11",
+        "url": "https://s3.fr-par.scw.cloud/bgs-assets/games/gaia-project/3/engine/42758e9e66dcfe60/gaia-project-engine-4.17.11.tgz"
+      },
+      "entryPoint": "dist/wrapper.js"
+    }
+  },
+  "checks": {
+    "enginePassed": 1021,
+    "enginePending": 4,
+    "viewerPassed": 1171,
+    "viewerFiles": 100,
+    "engineBuild": "passed",
+    "viewerBuild": "passed; not published",
+    "oldUiBuild": "passed; not published",
+    "engineLintErrors": 0,
+    "engineLintWarnings": 247,
+    "viewerLint": "passed",
+    "prettier": "passed",
+    "frozenInstall": "passed; lockfiles unchanged",
+    "packedRematches": "1–4 players passed",
+    "browserProtocol": "8 configurations passed: both viewers, base/Lost Fleet, mobile/desktop",
+    "browserUndo": "4 configurations passed: both viewers, mobile/desktop",
+    "productionBrowser": {
+      "url": "https://boardgamers.space/game/Abstract-piston-1122",
+      "status": 200,
+      "viewerRendered": true,
+      "uncaughtErrors": 0
+    }
+  },
+  "status": "active"
+}
