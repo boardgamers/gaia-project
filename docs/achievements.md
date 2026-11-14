@@ -7,7 +7,7 @@ or a claim that achievements have been enabled on the hosted service.
 
 ## Hook contract
 
-- `achievementDefinitions()` returns `{ revision: 3, achievements }`. Each definition
+- `achievementDefinitions()` returns `{ revision: 4, achievements }`. Each definition
   has string `id`, `name`, and `description` fields and an optional strict `icon`:
   `{ type: "asset", key: string }` or `{ type: "text", text: string }`. Asset keys
   match `^[a-z0-9][a-z0-9-]{0,63}$`; text matches `^[A-Za-z0-9]{1,4}$`. No URLs,
@@ -44,21 +44,23 @@ player order after removing Automa players; they are not raw engine player numbe
 Automa never receives a result. Dropped humans retain their human seat index and
 return `{ seat, earned: [] }`, with no outcome, rather than shifting later seats.
 
-## Revision 3 catalog (36 stable IDs)
+## Revision 4 catalog (36 IDs)
 
 IDs follow BGS's `^[a-z0-9][a-z0-9-]{0,63}$` validator: lowercase letters,
 ASCII digits, and hyphens, at most 64 characters. All 36 IDs are unique. The
 pre-publication dotted spellings were replaced with hyphens; they are not aliases
 and were never published. Revision 2 added 18 faction asset references and four
-150/200 text emblems. Revision 3 replaces those text emblems with two shared
+150/200 text emblems. Revision 3 replaced those text emblems with two shared
 raster score assets: `achievement-score-150` and `achievement-score-200`.
-All 36 IDs and earned predicates remain unchanged. There are 22 icon-bearing
+That revision-2-to-3 artwork change preserved all 36 IDs and earned predicates.
+Revision 4 raises both federation thresholds to four and renames the general
+federation ID, as detailed below. There are still 22 icon-bearing
 definitions referencing 20 unique assets; the remaining 14 definitions have no icon.
 
 **Deployment order:** the platform icon contract (platform commit
 `fca050c9509c1dec3afd8d4631cc57245f834f29`, platform PR
 [578](https://codeberg.org/boardgamers/boardgamers/pulls/578)) must be deployed
-before activating this revision-3 manifest. Older strict validators reject `icon`.
+before activating this revision-4 manifest. Older strict validators reject `icon`.
 No production assets or achievement activation are implied by this source change.
 
 ### Faction victories (18)
@@ -126,10 +128,10 @@ human in an authoritatively completed game.
 | ID                                    | Requirement                                                                  |
 | ------------------------------------- | ---------------------------------------------------------------------------- |
 | `build-all-standard`                  | All 18 standard building pieces simultaneously deployed at game end          |
-| `federation-form-3`                   | At least three federation formations in one game                             |
+| `federation-form-4`                   | At least four federation formations in one game                              |
 | `explore-all-types-base`              | Main-owned colonies on all 9 required physical types in a base game          |
 | `explore-all-types-lost-fleet`        | Main-owned colonies on all 11 required physical types in a Lost Fleet game   |
-| `faction-ivits-growing-federation`    | As Ivits, at least three federation formation milestones                     |
+| `faction-ivits-growing-federation`    | As Ivits, at least four federation formation milestones                      |
 | `faction-lantids-shared-civilization` | As Lantids, at least six additional mines on opponents' colonies at game end |
 | `faction-bescods-balanced-research`   | As Bescods, finish at level 3 or higher on all six research tracks           |
 
@@ -145,7 +147,18 @@ possibility a claim of a demonstrated legal all-18 game.
 
 **Federations:** use `federationCount`, not federation-token inventory. Rewards and
 rescores do not count as formations. Ivits' growing-federation extensions count as
-formation milestones; qualifying Ivits earn both the general and faction feat.
+formation milestones; four completed formations qualify Ivits for both the general
+and faction feat. Ivits' existing cost rule is `7 * (1 + federationCount)`, so the
+fourth milestone requires 28 total federation value, not 28 newly added value.
+Normal connection, satellite/QIC and token-availability constraints still apply.
+The rules support this milestone without a three-formation cap; the threshold
+unit test is not evidence of a demonstrated legal full-game route.
+
+Revision 4 raises both federation feats from three to four as a user-authorized
+pre-adoption correction (no existing awards reported). The general ID becomes
+`federation-form-4`; the Ivits ID remains `faction-ivits-growing-federation`.
+The old general ID is absent from the active catalog. There is no migration,
+revocation or backfill. The other 34 definitions and all artwork are unchanged.
 
 **Physical colony types:** the base set is Terra, Desert, Swamp, Oxide, Volcanic,
 Titanium, Ice, Gaia, and Lost Planet (9). Lost Fleet adds Asteroid and Protoplanet

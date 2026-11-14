@@ -54,10 +54,13 @@ function solo(difficulty = "automa"): Record<string, any> {
 }
 
 describe("BGS achievement hooks", () => {
-  it("exports a complete, unique, isolated revision-3 catalog", () => {
+  it("exports a complete, unique, isolated revision-4 catalog", () => {
     const manifest = achievementDefinitions();
     const ids = manifest.achievements.map((definition) => definition.id);
-    expect(manifest.revision).to.equal(3);
+    expect(manifest.revision).to.equal(4);
+    expect(ids).to.include("federation-form-4");
+    expect(ids).not.to.include("federation-form-3");
+    expect(ids).to.include("faction-ivits-growing-federation");
     expect(ids).to.have.length(36);
     expect(new Set(ids).size).to.equal(ids.length);
     // BGS packages/protocol/achievements.ts: achievementIdSchema.
@@ -242,20 +245,27 @@ describe("BGS achievement hooks", () => {
     }
   });
 
-  it("counts formations, not token inventory, and applies Ivits' growing-federation feat only to Ivits", () => {
-    const data = state();
-    data.players[0].data.federationCount = 2;
-    data.players[0].data.tiles.federations = Array(5).fill({ tile: "fed1", green: true });
-    data.players[0].data.spaceshipFederations = [{ tile: "unused", green: true }];
-    expect(earned(data)).not.to.include("federation-form-3");
-    data.players[0].data.federationCount = 3;
-    data.players[0].data.tiles.federations = [];
-    data.players[0].data.spaceshipFederations = [];
-    expect(earned(data)).to.include("federation-form-3");
-    expect(earned(data)).not.to.include("faction-ivits-growing-federation");
-    data.players[0].faction = Faction.Ivits;
-    delete data.players[0].variant;
-    expect(earned(data)).to.include("faction-ivits-growing-federation");
+  it("requires four actual formations, not token rewards or rescores, for both federation feats", () => {
+    for (const faction of [Faction.Terrans, Faction.Ivits]) {
+      const data = state();
+      data.players[0].faction = faction;
+      delete data.players[0].variant;
+      data.players[0].data.federationCount = 3;
+      data.players[0].data.tiles.federations = Array(5).fill({ tile: "fed1", green: true });
+      data.players[0].data.spaceshipFederations = [{ tile: "unused", green: true }];
+      expect(earned(data)).not.to.include("federation-form-4");
+      expect(earned(data)).not.to.include("faction-ivits-growing-federation");
+
+      data.players[0].data.tiles.federations = [];
+      data.players[0].data.spaceshipFederations = [];
+      for (const count of [4, 5]) {
+        data.players[0].data.federationCount = count;
+        const ids = earned(data);
+        expect(ids).to.include("federation-form-4");
+        expect(ids.includes("faction-ivits-growing-federation")).to.equal(faction === Faction.Ivits);
+        expect(ids).not.to.include("federation-form-3");
+      }
+    }
   });
 
   it("requires all nine physical base types including Lost, but never Transdim", () => {

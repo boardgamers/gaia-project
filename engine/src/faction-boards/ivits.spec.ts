@@ -1,10 +1,15 @@
 import { expect } from "chai";
 import Engine, { AuctionVariant } from "../engine";
-import { Command, Player } from "../enums";
+import { Command, Faction, Player } from "../enums";
+import { federationCost } from "../federation";
 
 const parseMoves = Engine.parseMoves;
 
 describe("Ivits", () => {
+  it("requires 28 total federation value for the fourth growing-federation milestone", () => {
+    expect([0, 1, 2, 3].map((count) => federationCost(Faction.Ivits, true, count))).to.deep.equal([7, 14, 21, 28]);
+  });
+
   it("starts with 2 power in area I and 2 in area II under Lost Fleet", () => {
     const engine = new Engine(["init 2 ivits-power-check", "p1 faction ivits", "p2 faction geodens"]);
 

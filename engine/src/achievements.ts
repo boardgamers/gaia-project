@@ -77,10 +77,10 @@ export function achievementDefinitions(): AchievementManifest {
         "Finish with all 18 standard building pieces simultaneously deployed: 8 mines, 4 trading stations, 3 research labs, the institute and both academies. Excludes Lost Planet, artifacts, Gaiaformers and space stations. No win required.",
     },
     {
-      id: "federation-form-3",
+      id: "federation-form-4",
       name: "Federation Builder",
       description:
-        "Complete at least three federation formations in one game (extensions of the growing federation for Ivits). Token rewards and rescores do not count. No win required.",
+        "Complete at least four federation formations in one game (extensions of the growing federation for Ivits). Token rewards and rescores do not count. No win required.",
     },
     {
       id: "explore-all-types-base",
@@ -97,7 +97,8 @@ export function achievementDefinitions(): AchievementManifest {
     {
       id: "faction-ivits-growing-federation",
       name: "Growing Federation",
-      description: "As Ivits, complete three federation formation milestones in one game. No win required.",
+      description:
+        "As Ivits, complete at least four formation milestones of your growing federation in one game. No win required.",
     },
     {
       id: "faction-lantids-shared-civilization",
@@ -110,7 +111,7 @@ export function achievementDefinitions(): AchievementManifest {
       description: "As Bescods, finish at level 3 or higher on all six research tracks. No win required.",
     }
   );
-  return { revision: 3, achievements: definitions };
+  return { revision: 4, achievements: definitions };
 }
 
 /** Evaluate authoritative completed state only; never advance play or recompute final scoring. */
@@ -148,8 +149,8 @@ export function achievements(data: Engine | Record<string, any>): SeatAchievemen
     if (standardBuildings.every((building) => player.data.buildings[building] === player.maxBuildings(building))) {
       earned.push("build-all-standard");
     }
-    if (player.data.federationCount >= 3) {
-      earned.push("federation-form-3");
+    if (player.data.federationCount >= 4) {
+      earned.push("federation-form-4");
       if (player.faction === Faction.Ivits) earned.push("faction-ivits-growing-federation");
     }
     // Unlike Condition.PlanetType, ownedPlanets excludes virtual artifact types and shared mines.
