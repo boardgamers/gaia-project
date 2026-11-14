@@ -7,7 +7,7 @@ or a claim that achievements have been enabled on the hosted service.
 
 ## Hook contract
 
-- `achievementDefinitions()` returns `{ revision: 4, achievements }`. Each definition
+- `achievementDefinitions()` returns `{ revision: 5, achievements }`. Each definition
   has string `id`, `name`, and `description` fields and an optional strict `icon`:
   `{ type: "asset", key: string }` or `{ type: "text", text: string }`. Asset keys
   match `^[a-z0-9][a-z0-9-]{0,63}$`; text matches `^[A-Za-z0-9]{1,4}$`. No URLs,
@@ -44,7 +44,7 @@ player order after removing Automa players; they are not raw engine player numbe
 Automa never receives a result. Dropped humans retain their human seat index and
 return `{ seat, earned: [] }`, with no outcome, rather than shifting later seats.
 
-## Revision 4 catalog (36 IDs)
+## Revision 5 catalog (36 IDs)
 
 IDs follow BGS's `^[a-z0-9][a-z0-9-]{0,63}$` validator: lowercase letters,
 ASCII digits, and hyphens, at most 64 characters. All 36 IDs are unique. The
@@ -54,13 +54,15 @@ and were never published. Revision 2 added 18 faction asset references and four
 raster score assets: `achievement-score-150` and `achievement-score-200`.
 That revision-2-to-3 artwork change preserved all 36 IDs and earned predicates.
 Revision 4 raises both federation thresholds to four and renames the general
-federation ID, as detailed below. There are still 22 icon-bearing
-definitions referencing 20 unique assets; the remaining 14 definitions have no icon.
+federation ID, as detailed below. Revision 5 adds original scene artwork to the
+remaining 14 definitions: all 36 now reference 34 assets. The 22 previously illustrated
+rows retain their exact 20 keys and public image bytes. IDs, descriptions, and
+evaluation are unchanged from revision 4.
 
 **Deployment order:** the platform icon contract (platform commit
 `fca050c9509c1dec3afd8d4631cc57245f834f29`, platform PR
 [578](https://codeberg.org/boardgamers/boardgamers/pulls/578)) must be deployed
-before activating this revision-4 manifest. Older strict validators reject `icon`.
+before activating an icon-bearing manifest. Older strict validators reject `icon`.
 No production assets or achievement activation are implied by this source change.
 
 ### Faction victories (18)

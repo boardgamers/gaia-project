@@ -50,6 +50,7 @@ export function achievementDefinitions(): AchievementManifest {
     const name = mode === "base" ? "Base Game" : "Lost Fleet";
     definitions.push({
       id: `win-mode-${mode}`,
+      icon: { type: "asset", key: `achievement-win-mode-${mode}` },
       name: `${name} Victory`,
       description: `Win a ${name} game, including shared first place.`,
     });
@@ -65,6 +66,7 @@ export function achievementDefinitions(): AchievementManifest {
   for (const difficulty of automaDifficulties) {
     definitions.push({
       id: `win-automa-${difficulty}`,
+      icon: { type: "asset", key: `achievement-win-automa-${difficulty}` },
       name: `Defeat ${displayName(difficulty)}`,
       description: `Win against Automa at exactly ${difficulty} difficulty. A tied score counts as a human win.`,
     });
@@ -72,46 +74,53 @@ export function achievementDefinitions(): AchievementManifest {
   definitions.push(
     {
       id: "build-all-standard",
+      icon: { type: "asset", key: "achievement-build-all-standard" },
       name: "Full Deployment",
       description:
         "Finish with all 18 standard building pieces simultaneously deployed: 8 mines, 4 trading stations, 3 research labs, the institute and both academies. Excludes Lost Planet, artifacts, Gaiaformers and space stations. No win required.",
     },
     {
       id: "federation-form-4",
+      icon: { type: "asset", key: "achievement-federation-form-4" },
       name: "Federation Builder",
       description:
         "Complete at least four federation formations in one game (extensions of the growing federation for Ivits). Token rewards and rescores do not count. No win required.",
     },
     {
       id: "explore-all-types-base",
+      icon: { type: "asset", key: "achievement-explore-all-types-base" },
       name: "Every World: Base Game",
       description:
         "Finish a base game with main-owned colonies on all seven ordinary planet types, Gaia and the Lost Planet. Gaiaformers and Lantids shared mines do not count. No win required.",
     },
     {
       id: "explore-all-types-lost-fleet",
+      icon: { type: "asset", key: "achievement-explore-all-types-lost-fleet" },
       name: "Every World: Lost Fleet",
       description:
         "Finish a Lost Fleet game with main-owned colonies on all seven ordinary types, Gaia, Lost Planet, Asteroid and Protoplanet. Artifacts, Gaiaformers and Lantids shared mines do not count. No win required.",
     },
     {
       id: "faction-ivits-growing-federation",
+      icon: { type: "asset", key: "achievement-faction-ivits-growing-federation" },
       name: "Growing Federation",
       description:
         "As Ivits, complete at least four formation milestones of your growing federation in one game. No win required.",
     },
     {
       id: "faction-lantids-shared-civilization",
+      icon: { type: "asset", key: "achievement-faction-lantids-shared-civilization" },
       name: "Shared Civilization",
       description: "As Lantids, finish with at least six additional mines on opponents' colonies. No win required.",
     },
     {
       id: "faction-bescods-balanced-research",
+      icon: { type: "asset", key: "achievement-faction-bescods-balanced-research" },
       name: "Balanced Research",
       description: "As Bescods, finish at level 3 or higher on all six research tracks. No win required.",
     }
   );
-  return { revision: 4, achievements: definitions };
+  return { revision: 5, achievements: definitions };
 }
 
 /** Evaluate authoritative completed state only; never advance play or recompute final scoring. */

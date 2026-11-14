@@ -1,0 +1,273 @@
+{
+  "revision": 4,
+  "achievements": [
+    {
+      "id": "win-faction-terrans",
+      "icon": {
+        "type": "asset",
+        "key": "achievement-faction-terrans"
+      },
+      "name": "Terrans Victory",
+      "description": "Win as Terrans. Shared first place counts; either ruleset qualifies."
+    },
+    {
+      "id": "win-faction-lantids",
+      "icon": {
+        "type": "asset",
+        "key": "achievement-faction-lantids"
+      },
+      "name": "Lantids Victory",
+      "description": "Win as Lantids. Shared first place counts; either ruleset qualifies."
+    },
+    {
+      "id": "win-faction-hadsch-hallas",
+      "icon": {
+        "type": "asset",
+        "key": "achievement-faction-hadsch-hallas"
+      },
+      "name": "Hadsch Hallas Victory",
+      "description": "Win as Hadsch Hallas. Shared first place counts; either ruleset qualifies."
+    },
+    {
+      "id": "win-faction-ivits",
+      "icon": {
+        "type": "asset",
+        "key": "achievement-faction-ivits"
+      },
+      "name": "Ivits Victory",
+      "description": "Win as Ivits. Shared first place counts; either ruleset qualifies."
+    },
+    {
+      "id": "win-faction-geodens",
+      "icon": {
+        "type": "asset",
+        "key": "achievement-faction-geodens"
+      },
+      "name": "Geodens Victory",
+      "description": "Win as Geodens. Shared first place counts; either ruleset qualifies."
+    },
+    {
+      "id": "win-faction-baltaks",
+      "icon": {
+        "type": "asset",
+        "key": "achievement-faction-baltaks"
+      },
+      "name": "Baltaks Victory",
+      "description": "Win as Baltaks. Shared first place counts; either ruleset qualifies."
+    },
+    {
+      "id": "win-faction-xenos",
+      "icon": {
+        "type": "asset",
+        "key": "achievement-faction-xenos"
+      },
+      "name": "Xenos Victory",
+      "description": "Win as Xenos. Shared first place counts; either ruleset qualifies."
+    },
+    {
+      "id": "win-faction-gleens",
+      "icon": {
+        "type": "asset",
+        "key": "achievement-faction-gleens"
+      },
+      "name": "Gleens Victory",
+      "description": "Win as Gleens. Shared first place counts; either ruleset qualifies."
+    },
+    {
+      "id": "win-faction-taklons",
+      "icon": {
+        "type": "asset",
+        "key": "achievement-faction-taklons"
+      },
+      "name": "Taklons Victory",
+      "description": "Win as Taklons. Shared first place counts; either ruleset qualifies."
+    },
+    {
+      "id": "win-faction-ambas",
+      "icon": {
+        "type": "asset",
+        "key": "achievement-faction-ambas"
+      },
+      "name": "Ambas Victory",
+      "description": "Win as Ambas. Shared first place counts; either ruleset qualifies."
+    },
+    {
+      "id": "win-faction-firaks",
+      "icon": {
+        "type": "asset",
+        "key": "achievement-faction-firaks"
+      },
+      "name": "Firaks Victory",
+      "description": "Win as Firaks. Shared first place counts; either ruleset qualifies."
+    },
+    {
+      "id": "win-faction-bescods",
+      "icon": {
+        "type": "asset",
+        "key": "achievement-faction-bescods"
+      },
+      "name": "Bescods Victory",
+      "description": "Win as Bescods. Shared first place counts; either ruleset qualifies."
+    },
+    {
+      "id": "win-faction-nevlas",
+      "icon": {
+        "type": "asset",
+        "key": "achievement-faction-nevlas"
+      },
+      "name": "Nevlas Victory",
+      "description": "Win as Nevlas. Shared first place counts; either ruleset qualifies."
+    },
+    {
+      "id": "win-faction-itars",
+      "icon": {
+        "type": "asset",
+        "key": "achievement-faction-itars"
+      },
+      "name": "Itars Victory",
+      "description": "Win as Itars. Shared first place counts; either ruleset qualifies."
+    },
+    {
+      "id": "win-faction-tinkeroids",
+      "icon": {
+        "type": "asset",
+        "key": "achievement-faction-tinkeroids"
+      },
+      "name": "Tinkeroids Victory",
+      "description": "Win as Tinkeroids. Shared first place counts; either ruleset qualifies."
+    },
+    {
+      "id": "win-faction-darkanians",
+      "icon": {
+        "type": "asset",
+        "key": "achievement-faction-darkanians"
+      },
+      "name": "Darkanians Victory",
+      "description": "Win as Darkanians. Shared first place counts; either ruleset qualifies."
+    },
+    {
+      "id": "win-faction-moweyds",
+      "icon": {
+        "type": "asset",
+        "key": "achievement-faction-moweyds"
+      },
+      "name": "Moweyds Victory",
+      "description": "Win as Moweyds. Shared first place counts; either ruleset qualifies."
+    },
+    {
+      "id": "win-faction-space-giants",
+      "icon": {
+        "type": "asset",
+        "key": "achievement-faction-space-giants"
+      },
+      "name": "Space Giants Victory",
+      "description": "Win as Space Giants. Shared first place counts; either ruleset qualifies."
+    },
+    {
+      "id": "win-mode-base",
+      "name": "Base Game Victory",
+      "description": "Win a Base Game game, including shared first place."
+    },
+    {
+      "id": "score-base-150",
+      "icon": {
+        "type": "asset",
+        "key": "achievement-score-150"
+      },
+      "name": "Base Game: 150 Points",
+      "description": "Finish a Base Game game with at least 150 final victory points, after auction deductions. No win required."
+    },
+    {
+      "id": "score-base-200",
+      "icon": {
+        "type": "asset",
+        "key": "achievement-score-200"
+      },
+      "name": "Base Game: 200 Points",
+      "description": "Finish a Base Game game with at least 200 final victory points, after auction deductions. No win required."
+    },
+    {
+      "id": "win-mode-lost-fleet",
+      "name": "Lost Fleet Victory",
+      "description": "Win a Lost Fleet game, including shared first place."
+    },
+    {
+      "id": "score-lost-fleet-150",
+      "icon": {
+        "type": "asset",
+        "key": "achievement-score-150"
+      },
+      "name": "Lost Fleet: 150 Points",
+      "description": "Finish a Lost Fleet game with at least 150 final victory points, after auction deductions. No win required."
+    },
+    {
+      "id": "score-lost-fleet-200",
+      "icon": {
+        "type": "asset",
+        "key": "achievement-score-200"
+      },
+      "name": "Lost Fleet: 200 Points",
+      "description": "Finish a Lost Fleet game with at least 200 final victory points, after auction deductions. No win required."
+    },
+    {
+      "id": "win-automa-automalein",
+      "name": "Defeat Automalein",
+      "description": "Win against Automa at exactly automalein difficulty. A tied score counts as a human win."
+    },
+    {
+      "id": "win-automa-automa",
+      "name": "Defeat Automa",
+      "description": "Win against Automa at exactly automa difficulty. A tied score counts as a human win."
+    },
+    {
+      "id": "win-automa-automaechtig",
+      "name": "Defeat Automaechtig",
+      "description": "Win against Automa at exactly automaechtig difficulty. A tied score counts as a human win."
+    },
+    {
+      "id": "win-automa-ultoma",
+      "name": "Defeat Ultoma",
+      "description": "Win against Automa at exactly ultoma difficulty. A tied score counts as a human win."
+    },
+    {
+      "id": "win-automa-alptrauma",
+      "name": "Defeat Alptrauma",
+      "description": "Win against Automa at exactly alptrauma difficulty. A tied score counts as a human win."
+    },
+    {
+      "id": "build-all-standard",
+      "name": "Full Deployment",
+      "description": "Finish with all 18 standard building pieces simultaneously deployed: 8 mines, 4 trading stations, 3 research labs, the institute and both academies. Excludes Lost Planet, artifacts, Gaiaformers and space stations. No win required."
+    },
+    {
+      "id": "federation-form-4",
+      "name": "Federation Builder",
+      "description": "Complete at least four federation formations in one game (extensions of the growing federation for Ivits). Token rewards and rescores do not count. No win required."
+    },
+    {
+      "id": "explore-all-types-base",
+      "name": "Every World: Base Game",
+      "description": "Finish a base game with main-owned colonies on all seven ordinary planet types, Gaia and the Lost Planet. Gaiaformers and Lantids shared mines do not count. No win required."
+    },
+    {
+      "id": "explore-all-types-lost-fleet",
+      "name": "Every World: Lost Fleet",
+      "description": "Finish a Lost Fleet game with main-owned colonies on all seven ordinary types, Gaia, Lost Planet, Asteroid and Protoplanet. Artifacts, Gaiaformers and Lantids shared mines do not count. No win required."
+    },
+    {
+      "id": "faction-ivits-growing-federation",
+      "name": "Growing Federation",
+      "description": "As Ivits, complete at least four formation milestones of your growing federation in one game. No win required."
+    },
+    {
+      "id": "faction-lantids-shared-civilization",
+      "name": "Shared Civilization",
+      "description": "As Lantids, finish with at least six additional mines on opponents' colonies. No win required."
+    },
+    {
+      "id": "faction-bescods-balanced-research",
+      "name": "Balanced Research",
+      "description": "As Bescods, finish at level 3 or higher on all six research tracks. No win required."
+    }
+  ]
+}

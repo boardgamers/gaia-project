@@ -54,10 +54,10 @@ function solo(difficulty = "automa"): Record<string, any> {
 }
 
 describe("BGS achievement hooks", () => {
-  it("exports a complete, unique, isolated revision-4 catalog", () => {
+  it("exports a complete, unique, isolated revision-5 catalog", () => {
     const manifest = achievementDefinitions();
     const ids = manifest.achievements.map((definition) => definition.id);
-    expect(manifest.revision).to.equal(4);
+    expect(manifest.revision).to.equal(5);
     expect(ids).to.include("federation-form-4");
     expect(ids).not.to.include("federation-form-3");
     expect(ids).to.include("faction-ivits-growing-federation");
@@ -72,14 +72,14 @@ describe("BGS achievement hooks", () => {
     expect(achievementDefinitions().achievements[0].name).not.to.equal("mutated");
   });
 
-  it("references 18 faction assets and two shared score assets without changing IDs", () => {
+  it("references all 34 assets, preserving 18 faction and two shared score keys", () => {
     const definitions = achievementDefinitions().achievements;
     const assets = definitions.filter((definition) => definition.icon?.type === "asset");
     const texts = definitions.filter((definition) => definition.icon?.type === "text");
-    expect(assets).to.have.length(22);
+    expect(assets).to.have.length(36);
     expect(texts).to.have.length(0);
     const keys = assets.map((definition) => (definition.icon.type === "asset" ? definition.icon.key : ""));
-    expect(new Set(keys).size).to.equal(20);
+    expect(new Set(keys).size).to.equal(34);
     for (const faction of Faction.values(Expansion.All)) {
       expect(definitions.find((definition) => definition.id === `win-faction-${faction}`).icon).to.deep.equal({
         type: "asset",

@@ -4,3 +4,4 @@ batch/dist/
 .pnpm-store
 .playwright-mcp/
 /artifacts/achievement-portraits/
+/artifacts/achievement-scenes/

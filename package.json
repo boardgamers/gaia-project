@@ -9,7 +9,9 @@
     "test": "vitest run",
     "test:locales": "node scripts/check-locales.mjs viewer/src/localization && node --test scripts/localization.test.mjs",
     "generate:achievement-portraits": "node scripts/generate-achievement-portraits.mjs",
-    "test:achievement-portraits": "node --test scripts/achievement-portraits.test.mjs"
+    "test:achievement-portraits": "node --test scripts/achievement-portraits.test.mjs",
+    "generate:achievement-scenes": "node scripts/generate-achievement-scenes.mjs",
+    "test:achievement-scenes": "node --test scripts/achievement-scenes.test.mjs"
   },
   "devDependencies": {
     "husky": "^5.0.9",
