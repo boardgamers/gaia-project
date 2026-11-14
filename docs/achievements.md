@@ -17,9 +17,12 @@ or a claim that achievements have been enabled on the hosted service.
   `{ seat, earned, outcome? }[]`. `earned` contains catalog IDs. The structural
   outcome type allows `"win" | "loss" | "draw"`; this implementation emits only
   `"win"` and `"loss"` for eligible humans, because shared first place is a win.
-- These optional exports use local structural TypeScript interfaces. They add no
-  runtime protocol dependency and require no protocol-package upgrade to expose
-  the hooks. Consuming and publishing awards remains a host integration concern.
+- These optional exports use the official achievement types from
+  `@boardgamers/protocol@0.11.0`, imported from `@boardgamers/protocol/engine`.
+  Imports and re-exports are type-only: the CommonJS engine emits no runtime
+  protocol import. The engine declares the published package as a dependency
+  because its distributed TypeScript sources also reference these types.
+  Consuming and publishing awards remains a host integration concern.
 
 ### Authoritative completion only
 
@@ -209,8 +212,12 @@ reproducible inputs.
    **version-independent named game asset** endpoint, not `/gaia-project/3/viewer`.
    Do not upload contact sheets or the hash manifest as achievement images.
 4. BGS re-encodes images to WebP and records the content-hashed URL under the
-   metadata asset key. Verify all 20 keys resolve to the expected artwork and
-   verify the platform fallback for a missing asset. Do not invent public URLs
+   metadata asset key. Production URLs must use the dedicated
+   `achievements/gaia-project/<key>/<hash>/<file>` namespace. Verify anonymous
+   HTTP 200, WebP dimensions and the SHA-256 content-hash URL for all 20 assets;
+   record input and stored hashes separately because WebP encoding is lossy.
+   Verify all 20 keys resolve to the expected artwork and verify the platform
+   fallback for a missing asset. Do not invent public URLs
    or embed them in engine definitions; viewer-bundle retention is irrelevant.
 5. For local platform review, its author must upload these real named assets to
    the local environment **before capturing UI screenshots**. Do not intercept
@@ -220,8 +227,16 @@ reproducible inputs.
    through the normal release workflow and verify portraits and score artwork in
    the platform UI. Deploy the platform icon support before catalog activation.
 
-This PR generates inputs only: no named asset is claimed to exist in production,
-and no upload, engine publication, npm publication or BGS activation is performed.
+Generation alone does not publish assets or activate the engine. Publication
+status and verification receipts belong in `docs/releases/`; do not infer live
+availability from generated files or a successful build.
+
+The existing BGS viewer-bundle publisher cannot consume this manifest as named
+assets. A follow-up shared publisher should accept an explicit game-local list of
+`key`, relative `file`, content type and SHA-256, validate catalog coverage, and
+upload through the named endpoint with dry-run by default and saved receipts.
+The generator can supply that list from its existing manifest. This needs no
+separate catalog editor and is not a prerequisite for this release.
 
 ## Verification and scope
 

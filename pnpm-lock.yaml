@@ -32,6 +32,9 @@ importers:
 
   engine:
     dependencies:
+      '@boardgamers/protocol':
+        specifier: 0.11.0
+        version: 0.11.0
       eventemitter3:
         specifier: ^3.1.0
         version: 3.1.2
@@ -176,8 +179,8 @@ importers:
   viewer:
     dependencies:
       '@boardgamers/protocol':
-        specifier: file:vendor/boardgamers-protocol-0.11.0.tgz
-        version: file:viewer/vendor/boardgamers-protocol-0.11.0.tgz
+        specifier: 0.11.0
+        version: 0.11.0
       '@gaia-project/engine':
         specifier: workspace:../engine
         version: link:../engine
@@ -436,9 +439,8 @@ packages:
     resolution: {integrity: sha512-6zABk/ECA/QYSCQ1NGiVwwbQerUCZ+TQbp64Q3AgmfNvurHH0j8TtXa1qbShXA6qqkpAj4V5W8pP6mLe1mcMqA==}
     engines: {node: '>=18'}
 
-  '@boardgamers/protocol@file:viewer/vendor/boardgamers-protocol-0.11.0.tgz':
-    resolution: {integrity: sha512-WmLTORnjHONvGjx24DzDylB1EQV9EO53rHKlouVX+Y59fIYAVkR1TZ9YbUo1es+jS7YYb0iFSHB3c8aOGxAgKQ==, tarball: file:viewer/vendor/boardgamers-protocol-0.11.0.tgz}
-    version: 0.11.0
+  '@boardgamers/protocol@0.11.0':
+    resolution: {integrity: sha512-YQ54+aVOIZvxUJvFmUbZR7xSBEgQaemstPdmYKVGCUHCviRX2UXRLgqLSQl6PFhr++lUT+Nynbf+p7h19zN+/g==}
 
   '@bramus/specificity@2.4.2':
     resolution: {integrity: sha512-ctxtJ/eA+t+6q2++vj5j7FYX3nRu311q1wfYH3xjlLOsczhlhxAg2FWNUXhpGvAw3BWo1xBcvOV6/YLc2r5FJw==}
@@ -7249,7 +7251,7 @@ snapshots:
 
   '@bcoe/v8-coverage@1.0.2': {}
 
-  '@boardgamers/protocol@file:viewer/vendor/boardgamers-protocol-0.11.0.tgz':
+  '@boardgamers/protocol@0.11.0':
     dependencies:
       zod: 4.6.2
 

@@ -1,27 +1,14 @@
+import type { AchievementDefinition, AchievementManifest, SeatAchievements } from "@boardgamers/protocol/engine";
 import { automaDifficulties } from "./automa";
 import Engine from "./engine";
 import { Building, Expansion, Faction, Phase, Planet, ResearchField, Round } from "./enums";
 
-// Structural BGS protocol types: optional named exports need no runtime protocol dependency.
-export type AchievementIcon = { type: "asset"; key: string } | { type: "text"; text: string };
-
-export interface AchievementDefinition {
-  id: string;
-  name: string;
-  description: string;
-  icon?: AchievementIcon;
-}
-
-export interface AchievementManifest {
-  revision: number;
-  achievements: AchievementDefinition[];
-}
-
-export interface SeatAchievements {
-  seat: number;
-  earned: string[];
-  outcome?: "win" | "loss" | "draw";
-}
+export type {
+  AchievementDefinition,
+  AchievementIcon,
+  AchievementManifest,
+  SeatAchievements,
+} from "@boardgamers/protocol/engine";
 
 const standardBuildings = [
   Building.Mine,

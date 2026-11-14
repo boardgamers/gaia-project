@@ -44,7 +44,7 @@
     "dist/package/*.jpg"
   ],
   "dependencies": {
-    "@boardgamers/protocol": "file:vendor/boardgamers-protocol-0.11.0.tgz",
+    "@boardgamers/protocol": "0.11.0",
     "@gaia-project/engine": "workspace:../engine",
     "bootstrap": "^4.4.1",
     "bootstrap-vue": "^2.12.0",
