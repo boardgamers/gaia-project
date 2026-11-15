@@ -280,6 +280,41 @@ terrans booster booster3`)
     });
   }
 
+  // Chat forwarding and the Beta-2 federation fixture are invariant across scenarios.
+  // Keep one real base -> federation update to cover replacing an already-rendered map.
+  it("forwards platform chat and renders federation paths after a state replacement", async () => {
+    const host = document.createElement("div");
+    host.id = "old-test";
+    document.body.append(host);
+    const viewer = launch("#old-test");
+    try {
+      const engine = new Engine(["init 3 old-test", "p1 faction terrans", "p2 faction nevlas", "p3 faction firaks"]);
+      viewer.emit("state", JSON.parse(JSON.stringify(engine)));
+      viewer.emit("preferences", { platformChat: true });
+      viewer.emit("chat:state", { canSend: true });
+      viewer.emit("chat:messages", [{ type: "text", author: "Teammate", text: "Ready to explore" }]);
+      await vi.waitFor(() => expect(viewer.app.$el.querySelector(".old-map-canvas")).not.toBeNull());
+      expect(document.querySelector(".bgs-game-chat, .chat-shortcut")).toBeNull();
+      const openChat = vi.fn();
+      viewer.on("chat:open", openChat);
+      const chatButton = document.querySelector<HTMLButtonElement>(".game-chat-button")!;
+      expect(chatButton.hidden).toBe(false);
+      chatButton.click();
+      expect(openChat).toHaveBeenCalledOnce();
+
+      const fedFixture = federationFixture();
+      viewer.emit("state", fedFixture);
+      await vi.waitFor(() => {
+        expect(viewer.app.$el.querySelectorAll("path.federation-path--color").length).toBeGreaterThan(0);
+      });
+      // No dangling <use> references to the removed global federation defs
+      expect(viewer.app.$el.querySelectorAll("use[xlink\\:href^='#federation']").length).toBe(0);
+    } finally {
+      viewer.app.$destroy();
+      document.body.replaceChildren();
+    }
+  });
+
   for (const id of ["base", ...selfContainedScenarios.map((s) => s.id)]) {
     it(`renders the actual old player/map components and current controls for ${id}`, async () => {
       const host = document.createElement("div");
@@ -292,9 +327,6 @@ terrans booster booster3`)
             ? new Engine(["init 3 old-test", "p1 faction terrans", "p2 faction nevlas", "p3 faction firaks"])
             : loadScenarioEngine(id);
         viewer.emit("state", JSON.parse(JSON.stringify(engine)));
-        viewer.emit("preferences", { platformChat: true });
-        viewer.emit("chat:state", { canSend: true });
-        viewer.emit("chat:messages", [{ type: "text", author: "Teammate", text: "Ready to explore" }]);
         await vi.waitFor(() => expect(viewer.app.$el.querySelector(".old-map-canvas")).not.toBeNull());
         expect(viewer.app.$el.querySelector(".old-ui-game")).not.toBeNull();
         expect(viewer.app.$el.querySelector(".old-map-canvas")).not.toBeNull();
@@ -316,21 +348,6 @@ terrans booster booster3`)
         for (const action of viewer.app.$el.querySelectorAll(".old-board-action")) {
           expect(action.getAttribute("transform")).toMatch(/^translate\(/);
         }
-        expect(document.querySelector(".bgs-game-chat, .chat-shortcut")).toBeNull();
-        const openChat = vi.fn();
-        viewer.on("chat:open", openChat);
-        const chatButton = document.querySelector<HTMLButtonElement>(".game-chat-button")!;
-        expect(chatButton.hidden).toBe(false);
-        chatButton.click();
-        expect(openChat).toHaveBeenCalledOnce();
-
-        const fedFixture = federationFixture();
-        viewer.emit("state", fedFixture);
-        await vi.waitFor(() => {
-          expect(viewer.app.$el.querySelectorAll("path.federation-path--color").length).toBeGreaterThan(0);
-        });
-        // No dangling <use> references to the removed global federation defs
-        expect(viewer.app.$el.querySelectorAll("use[xlink\\:href^='#federation']").length).toBe(0);
       } finally {
         viewer.app.$destroy();
         document.body.replaceChildren();

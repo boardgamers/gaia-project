@@ -17,7 +17,7 @@ import { parseCommands } from "../recent";
 import { createFixtureEngine, findFirstBad, runMoveHistoryTests } from "../test-utils";
 import { balanceSheetResourceName, balanceSheetResources, currentAmount } from "./balance-sheet";
 import { ChartSetup } from "./chart-factory";
-import { createTestChartConfig } from "./chart.spec";
+import { createTestChartConfig } from "./chart-test-utils";
 import { ChartGroup } from "./charts";
 import {
   BrainstoneSimulator,

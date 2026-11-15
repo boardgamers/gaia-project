@@ -2,23 +2,9 @@ import Engine, { Faction, LogEntry, Player, ResearchField, Reward } from "@gaia-
 import { expect } from "chai";
 import { runJsonTests } from "../test-utils";
 import { ChartSetup } from "./chart-factory";
+import { createTestChartConfig } from "./chart-test-utils";
 import type { ChartType } from "./charts";
 import { countResearch, ResearchCounter } from "./research";
-
-export function createTestChartConfig(setup: ChartSetup, chartSelect: string, chartType: string, engine: Engine) {
-  const config = setup.newBarChart(
-    {
-      type: "table",
-      label: "Table",
-      compact: false,
-    },
-    setup.factory(chartSelect, chartType),
-    engine,
-    (c) => c
-  );
-  delete config.table.descriptions;
-  return config;
-}
 
 describe("Chart", () => {
   describe("initial research", () => {
