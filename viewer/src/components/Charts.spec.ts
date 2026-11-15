@@ -102,6 +102,39 @@ describe("Charts", () => {
     wrapper.destroy();
   });
 
+  it("clicking Over Time selects an all-player time series rather than a missing source", async () => {
+    const engine = new Engine((endedGame as any).moveHistory, (endedGame as any).options, null, true);
+    const store = makeStore();
+    store.commit("receiveData", engine);
+    const wrapper = mount(Charts, { store });
+    const vm: any = wrapper.vm;
+    await Vue.nextTick();
+    const overview = vm.table.title;
+    // Use the rendered dropdown's click handler, not just the factory API.
+    await wrapper
+      .findAll(".dropdown-item")
+      .wrappers.find((item) => item.text() === "Over Time")
+      .trigger("click");
+    expect(vm.chartKindLabel).to.equal("Over Time");
+    expect(vm.table.title).to.equal(overview);
+    expect(vm.table.items.length).to.be.greaterThan(0);
+    expect(vm.table.items[0].Name).to.equal("<span>Start</span>");
+    expect(vm.table.items[vm.table.items.length - 1].Name).to.equal("<span>Final</span>");
+    expect(vm.table.header).to.have.length(engine.players.length + 1);
+
+    // A grouped Breakdown change keeps the common Over Time selection.
+    await wrapper
+      .findAll(".stats-window__field")
+      .at(1)
+      .findAll(".dropdown-item")
+      .wrappers.find((item) => item.text() === "Boosters")
+      .trigger("click");
+    expect(vm.chartKindLabel).to.equal("Over Time");
+    expect(vm.table.title).to.equal("Victory Points from Boosters of all players");
+    expect(vm.table.items[0].Name).to.equal("<span>Start</span>");
+    wrapper.destroy();
+  });
+
   it("no longer renders a Compact toggle (statistics is always compact)", async () => {
     const engine = new Engine(["init 2 djfjjv4k", "p1 faction terrans", "p2 faction itars"]);
     const store = makeStore();

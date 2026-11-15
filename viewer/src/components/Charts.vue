@@ -91,7 +91,7 @@
 </template>
 
 <script lang="ts">
-import Engine, { PlayerEnum } from "@gaia-project/engine";
+import Engine from "@gaia-project/engine";
 import type { ChartConfiguration } from "chart.js";
 import { Component, Vue } from "vue-property-decorator";
 import type { ChartKind, ChartKindDisplay, TableMeta } from "../logic/charts/chart-factory";
@@ -207,8 +207,6 @@ export default class Charts extends Vue {
     if (this.chartKind === barChartKind) {
       const config = this.setup.newBarChart(this.chartStyle, factory, data, colorLookup);
       this.buildTable(config.chart, config.table);
-    } else if (this.chartKind === lineChartKind) {
-      this.buildTable(this.setup.newLineChart(this.chartStyle, factory, data, PlayerEnum.All, colorLookup));
     } else {
       this.buildTable(this.setup.newLineChart(this.chartStyle, factory, data, this.chartKind, colorLookup));
     }

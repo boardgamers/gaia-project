@@ -124,7 +124,7 @@ const vpChartFactory = (
     return `${victoryPointSource(source, allSources).label} of all players`;
   },
   stacked(kind: ChartKind) {
-    return Object.values(PlayerEnum).includes(kind) && kind != PlayerEnum.All;
+    return typeof kind === "number";
   },
   summary: ChartSummary.total,
   roundLabels(source: ChartSource<any>): string[] | null {
@@ -301,8 +301,10 @@ export class ChartSetup {
 
     const allSources = factory.sources;
     const includeRounds = factory.includeRounds;
-    if (typeof kind == "number") {
-      const numbers = kind === PlayerEnum.All ? chartPlayerOrder(data) : [kind as PlayerEnum];
+    // Over Time is a viewer selection, not a player enum member. Keeping its
+    // sentinel here also prevents it from falling through to the source lookup.
+    if (kind === lineChartKind || typeof kind === "number") {
+      const numbers = kind === lineChartKind ? chartPlayerOrder(data) : [kind as PlayerEnum];
 
       if (numbers.length == 1) {
         const p = numbers[0];
