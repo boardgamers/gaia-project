@@ -41,7 +41,7 @@ describe("lost-fleet buttons", () => {
         },
       } as any;
 
-      const [button] = exploreButton(command).buttons;
+      const [button] = exploreButton(command, lostFleetEngine().players[0]).buttons;
       const rewardsElement = button.richText.find((el) => el.rewards);
       expect(rewardStrings(rewardsElement.rewards)).to.deep.equal(["5vp"]);
       expect(rewardsElement.noPlus).to.equal(true);
@@ -55,7 +55,7 @@ describe("lost-fleet buttons", () => {
         },
       } as any;
 
-      const [button] = exploreButton(command).buttons;
+      const [button] = exploreButton(command, lostFleetEngine().players[0]).buttons;
       const [costElement, chargeElement] = button.richText.filter((el) => el.rewards);
       expect(rewardStrings(costElement.rewards)).to.deep.equal(["2q", "5vp"]);
       expect(costElement.noPlus).to.equal(true);

@@ -77,7 +77,7 @@ function commandButton(
       return [chooseTinkeringTileButton(command)];
 
     case Command.Explore:
-      return [exploreButton(command)];
+      return [exploreButton(command, player)];
 
     case Command.SpaceshipAction:
       return [spaceshipActionButton(command)];

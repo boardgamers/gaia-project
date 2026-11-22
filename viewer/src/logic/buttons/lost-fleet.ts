@@ -1,4 +1,14 @@
-import Engine, { ArtifactToken, AvailableCommand, Command, Resource, Reward, Spaceship } from "@gaia-project/engine";
+import Engine, {
+  ArtifactToken,
+  AvailableCommand,
+  Command,
+  Faction,
+  Player,
+  PowerArea,
+  Resource,
+  Reward,
+  Spaceship,
+} from "@gaia-project/engine";
 import type { SpaceshipActionType } from "@gaia-project/engine/src/spaceships";
 import { spaceshipBoards } from "@gaia-project/engine/src/spaceships";
 import { artifactTokenSpec } from "@gaia-project/engine/src/tiles/artifacts";
@@ -11,6 +21,7 @@ import { hexSelectionButton } from "./hex";
 import { tooltipWithShortcut } from "./shortcuts";
 import type { CommandController } from "./types";
 import { autoClickButton, hexMap, symbolButton, textButton } from "./utils";
+import { resourceWasteWarning } from "./warnings";
 
 const artifactNames: Record<ArtifactToken, string> = {
   [ArtifactToken.KnowledgeOre]: "Knowledge + Ore",
@@ -35,13 +46,24 @@ const spaceshipActionLabels: Record<SpaceshipActionType, string> = {
   credit: "Credit",
 };
 
-export function exploreButton(command: AvailableCommand<Command.Explore>): ButtonData {
+export function exploreButton(command: AvailableCommand<Command.Explore>, player: Player): ButtonData {
   return autoClickButton({
     label: "Explore",
     mobileIcon: "explore",
     command: command.name,
     buttons: command.data.ships.map((ship) => {
+      // Preview the payment before the slot reward, without changing the live/planning player.
+      // Exploration also removes the Taklons brainstone before charging (deployExplorationShuttle).
+      const preview = new Player(player.expansions, player.player);
+      preview.faction = player.faction;
+      preview.data = player.data.clone();
+      preview.payCosts(Reward.parse(ship.cost), Command.Explore);
+      if (player.faction === Faction.Taklons && preview.data.brainstone !== PowerArea.Gaia) {
+        preview.data.brainstoneDest = PowerArea.Gaia;
+        preview.data.gainReward(new Reward(1, Resource.MoveTokenToGaiaArea), true, Command.Explore);
+      }
       const button = symbolButton({
+        warning: resourceWasteWarning(preview, [new Reward(ship.charge, Resource.ChargePower)]),
         label: `${spaceshipNames[ship.ship]} (${ship.cost}${ship.charge > 0 ? `, +${ship.charge}pw` : ""})`,
         command: ship.ship,
       });
