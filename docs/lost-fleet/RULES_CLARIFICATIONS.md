@@ -113,9 +113,14 @@ text (effect + depiction plan) is kept here. Concretely, each component-type ent
 base values → high trust)`. Confidence: **CONFIRMED** (owner-verified 2026-06-25: 2k start + 4/2 power split).
 - Terraform: 3 steps for the "cost-3" base colors, 1 step for all others; the cost-3 set is
   determined at setup via the Moweyds/Tinkeroids Terraforming board (see revised §B5).
-  **Gaia planet: a mine costs the normal 1 Q.I.C. — NOT 2** (corrected 2026-06-27; only Darkanians &
-  Space Giants pay the 2-Q.I.C. Gaia surcharge, see §B2/§B4). Source: `RULEBOOK-TEXT p.13` + owner
-  2026-06-27. CONFIRMED.
+  **Gaia planet: making it habitable costs 2 Q.I.C.s.** Source: `rulebook-v1.0.pdf`,
+  p.13, Appendix I, Tinkeroids: “Making a Gaia planet habitable costs you 2 Q.I.C.s.”
+  This supersedes the incorrect 2026-06-27 clarification claiming 1 Q.I.C.; that claim
+  contradicted the cited rulebook. A mine replacing your Gaiaformer still pays no habitability cost
+  and is considered accessible (base rules p.11,
+  [official English rulebook](https://www.feuerland-spiele.de/fileadmin/game/Gaia_Project/GAIA_PROJECT_EN_rules_Web.pdf)).
+  Otherwise, range-extension Q.I.C.s are additional to the habitability cost. This is a faction
+  ability, not a blanket surcharge for every faction playing with Lost Fleet.
 - Starts with Planetary Institute (not mines), placed in stage 2. Source: p.13. CONFIRMED.
 - 6 Tinkering tiles (3 for rounds 1-3, 3 for 4-6); PI: once/round use current Tinkering tile as action.
   Individual tile effects, all confirmed (owner board-read 2026-06-27):
@@ -153,7 +158,7 @@ base values → high trust)`. Confidence: **CONFIRMED** (owner-verified 2026-06-
 - Starts with 1 mine (stage 2) AND an Exploration Shuttle already on T F Mars. Terraform: 3 steps for
   the "cost-3" base colors, 1 step for all others; cost-3 set determined at setup via the Terraforming
   board (see revised §B5). **Gaia planet: a mine costs the normal 1 Q.I.C. — NOT 2** (corrected
-  2026-06-27; only Darkanians & Space Giants pay the 2-Q.I.C. Gaia surcharge). Source: p.13 + owner
+  2026-06-27; Tinkeroids, Darkanians & Space Giants pay the 2-Q.I.C. Gaia surcharge). Source: p.13 + owner
   2026-06-27. CONFIRMED.
 - PI: once/round place a Power Ring (action) on a planet with your building; +2 power value there.
   6 Power Rings available. Source: p.13. CONFIRMED.

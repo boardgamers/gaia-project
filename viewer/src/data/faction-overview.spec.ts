@@ -1,6 +1,6 @@
-import Engine, { AuctionVariant, Faction, Planet } from "@gaia-project/engine";
+import Engine, { AuctionVariant, Faction, Planet, Resource, Reward } from "@gaia-project/engine";
 import { expect } from "chai";
-import { terraformCost3Set } from "./faction-overview";
+import { gaiaMineExtraCost, hasGaiaMineSurcharge, terraformCost3Set } from "./faction-overview";
 
 const row = [Planet.Volcanic, Planet.Ice, Planet.Titanium, Planet.Desert, Planet.Oxide, Planet.Terra, Planet.Swamp];
 
@@ -46,4 +46,23 @@ describe("auction terraforming previews", () => {
     ]);
     expect(terraformCost3Set(engine, Faction.Moweyds, row)).to.have.members([Planet.Ice, Planet.Desert, Planet.Oxide]);
   });
+});
+
+describe("Gaia mine surcharge preview", () => {
+  for (const [faction, qics] of [
+    [Faction.Tinkeroids, 2],
+    [Faction.Darkanians, 2],
+    [Faction.SpaceGiants, 2],
+    [Faction.Moweyds, 1],
+    [Faction.Terrans, 1],
+  ] as const) {
+    it(`shows ${faction}'s engine-derived cost`, () => {
+      const engine = new Engine(["init 2 gaia-preview"], { lostFleet: true });
+      const player = engine.players[0];
+      player.faction = faction;
+      player.loadFaction(null, engine.expansions);
+      expect(gaiaMineExtraCost(player)).to.deep.equal(new Reward(qics, Resource.Qic));
+      expect(hasGaiaMineSurcharge(player)).to.equal(qics > 1);
+    });
+  }
 });

@@ -307,14 +307,14 @@ describe("possibleFederationTokenBuildMine", () => {
     );
   });
 
-  [Faction.Darkanians, Faction.SpaceGiants].forEach((faction) => {
+  [Faction.Tinkeroids, Faction.Darkanians, Faction.SpaceGiants].forEach((faction) => {
     it(`charges ${faction}'s 2-QIC Gaia-forming surcharge (instead of the normal 1 QIC) on Gaia planets, for either token`, () => {
       const engine = createLostFleetRoundMoveEngine(2, [faction, Faction.Terrans]);
       occupyStartingHex(engine, PlayerEnum.Player1);
       const player = engine.player(PlayerEnum.Player1);
 
       // Independent of player.gaiaFormingCost(), so this can't pass merely by mirroring the
-      // implementation: §G5/player.ts hardcode this surcharge at exactly 2 QIC for these 2 factions.
+      // implementation: Lost Fleet rulebook p.13 specifies exactly 2 QIC for these factions.
       const gaiaSurcharge = new Reward(2, Resource.Qic);
       expect(player.gaiaFormingCost()).to.deep.equal(gaiaSurcharge);
 

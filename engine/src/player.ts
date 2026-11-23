@@ -1093,9 +1093,13 @@ export default class Player extends EventEmitter {
     if (this.faction === Faction.Gleens) {
       return new Reward(1, Resource.Ore);
     }
-    // Lost Fleet: Darkanians & Space Giants pay a 2-Q.I.C. surcharge to build a mine on a Gaia
-    // planet (Tinkeroids/Moweyds pay the normal 1, unlike the rest of this no-home-planet group).
-    if (this.faction === Faction.Darkanians || this.faction === Faction.SpaceGiants) {
+    // Lost Fleet rulebook p.13: Tinkeroids, Darkanians and Space Giants pay 2 Q.I.C.s
+    // to make a Gaia planet habitable. Moweyds retain the normal 1-Q.I.C. cost.
+    if (
+      this.faction === Faction.Tinkeroids ||
+      this.faction === Faction.Darkanians ||
+      this.faction === Faction.SpaceGiants
+    ) {
       return new Reward(2, Resource.Qic);
     }
     return new Reward(1, Resource.Qic);

@@ -99,8 +99,8 @@ describe("Player", () => {
       expect(Reward.match(Reward.parse("2c,7o"), cost)).to.be.true;
     });
 
-    it("should charge a 2 QIC surcharge (instead of the standard 1) for Darkanians/Space Giants building a mine on a Gaia planet", () => {
-      for (const faction of [Faction.Darkanians, Faction.SpaceGiants]) {
+    it("should charge a 2 QIC surcharge (instead of the standard 1) for Tinkeroids/Darkanians/Space Giants building a mine on a Gaia planet", () => {
+      for (const faction of [Faction.Tinkeroids, Faction.Darkanians, Faction.SpaceGiants]) {
         const player = new Player(Expansion.LostFleet, PlayerEnum.Player1);
 
         player.faction = faction;

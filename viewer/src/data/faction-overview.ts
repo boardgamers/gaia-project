@@ -44,7 +44,7 @@ export function exploreDeployCost(player: Player): Reward[] {
 }
 
 // The cost to build a mine on a Gaia planet: 1 Q.I.C. by default, so only worth surfacing when a
-// faction pays a genuine surcharge (Darkanians and Space Giants pay 2 Q.I.C.). Gleens' 1-ore
+// faction pays a genuine surcharge (Tinkeroids, Darkanians and Space Giants pay 2 Q.I.C.). Gleens' 1-ore
 // substitution is a lateral change covered by their faction ability, not an extra cost.
 export function gaiaMineExtraCost(player: Player): Reward {
   return player.gaiaFormingCost();
