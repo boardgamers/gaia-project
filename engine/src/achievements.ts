@@ -123,20 +123,29 @@ export function achievementDefinitions(): AchievementManifest {
   return { revision: 5, achievements: definitions };
 }
 
-/** Evaluate authoritative completed state only; never advance play or recompute final scoring. */
+/** Evaluate authoritative completed or resigned state only; never advance play or recompute final scoring. */
 export function achievements(data: Engine | Record<string, any>): SeatAchievements[] {
   // The EndGame log marker is emitted by finalScoringPhase, unlike early termination.
-  if (
-    data.phase !== Phase.EndGame ||
-    data.round !== Round.LastRound ||
-    !data.advancedLog?.some((entry) => entry.phase === Phase.EndGame)
-  ) {
+  const completed =
+    data.phase === Phase.EndGame &&
+    data.round === Round.LastRound &&
+    !!data.advancedLog?.some((entry) => entry.phase === Phase.EndGame);
+  const rawHumans = Array.isArray(data.players) ? data.players.filter((player) => !player.isAutoma) : [];
+  // Multiplayer game ended via opponent resignation after setup (round >= 1): only 1 human remains.
+  const resigned =
+    typeof data.round === "number" &&
+    data.round >= 1 &&
+    rawHumans.length > 1 &&
+    rawHumans.filter((player) => !player.dropped).length === 1;
+  if (!completed && !resigned) {
     return [];
   }
   // Hydration normalizes legacy options and federation caches in place. Never change the
   // caller's authoritative serialized state just to evaluate an optional reporting hook.
   const engine = data instanceof Engine ? data : Engine.fromData(JSON.parse(JSON.stringify(data)));
   const humans = engine.players.filter((player) => !player.isAutoma);
+  const activeHumans = humans.filter((player) => !player.dropped);
+  const opponentResignation = humans.length > 1 && activeHumans.length <= 1;
   const bestScore = Math.max(...engine.players.map((player) => player.data.victoryPoints));
   const mode = engine.options.lostFleet ? "lost-fleet" : "base";
   const requiredTypes = engine.options.lostFleet
@@ -147,8 +156,8 @@ export function achievements(data: Engine | Record<string, any>): SeatAchievemen
     // Preserve wrapper human-seat indexing even when a participant dropped.
     if (player.dropped) return { seat, earned: [] };
     const earned: string[] = [];
-    const won = player.data.victoryPoints >= bestScore;
-    if (won) {
+    const won = opponentResignation || player.data.victoryPoints >= bestScore;
+    if (won && !opponentResignation) {
       earned.push(`win-faction-${player.faction}`, `win-mode-${mode}`);
       if (engine.automa) earned.push(`win-automa-${engine.automa.difficulty}`);
     }

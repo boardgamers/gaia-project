@@ -173,6 +173,62 @@ describe("BGS achievement hooks", () => {
     expect(result[2].earned).to.include("win-faction-hadsch-hallas");
   });
 
+  it("blocks win-faction and win-mode when all opponents drop before passing to Round 6, while keeping board-state feats", () => {
+    const data = state();
+    data.players[0].dropped = true;
+    data.players[1].dropped = true;
+    data.players[3].dropped = true;
+    data.players[2].data.federationCount = 4;
+    const result = achievements(data);
+    expect(result[0]).to.deep.equal({ seat: 0, earned: [] });
+    expect(result[1]).to.deep.equal({ seat: 1, earned: [] });
+    expect(result[3]).to.deep.equal({ seat: 3, earned: [] });
+    expect(result[2].seat).to.equal(2);
+    expect(result[2].outcome).to.equal("win");
+    expect(result[2].earned.some((id) => id.startsWith("win-"))).to.equal(false);
+    expect(result[2].earned).to.include.members(["score-base-150", "score-base-200", "federation-form-4"]);
+  });
+
+  it("awards earned board-state feats on mid-game opponent resignation (round >= 1) without win badges", () => {
+    const data = state();
+    data.round = Round.Round3;
+    data.phase = Phase.RoundMove;
+    data.advancedLog = data.advancedLog.filter((entry) => entry.phase !== Phase.EndGame);
+    data.players[1].dropped = true;
+    data.players[2].dropped = true;
+    data.players[3].dropped = true;
+    data.players[0].data.federationCount = 4;
+    Object.assign(data.players[0].data.buildings, {
+      [Building.Mine]: 8,
+      [Building.TradingStation]: 4,
+      [Building.ResearchLab]: 3,
+      [Building.PlanetaryInstitute]: 1,
+      [Building.Academy1]: 1,
+      [Building.Academy2]: 1,
+    });
+    const result = achievements(data);
+    expect(result).to.have.length(4);
+    expect(result[0].seat).to.equal(0);
+    expect(result[0].outcome).to.equal("win");
+    expect(result[0].earned.some((id) => id.startsWith("win-"))).to.equal(false);
+    expect(result[0].earned).to.include.members(["score-base-150", "build-all-standard", "federation-form-4"]);
+    for (const seat of [1, 2, 3]) {
+      expect(result[seat]).to.deep.equal({ seat, earned: [] });
+    }
+  });
+
+  it("still returns empty on setup drops (round === 0) even if all opponents dropped", () => {
+    const data = state();
+    data.round = 0;
+    data.phase = Phase.SetupBuilding;
+    data.ended = true;
+    data.advancedLog = data.advancedLog.filter((entry) => entry.phase !== Phase.EndGame);
+    data.players[1].dropped = true;
+    data.players[2].dropped = true;
+    data.players[3].dropped = true;
+    expect(achievements(data)).to.deep.equal([]);
+  });
+
   it("treats multiplayer tied first place as wins, not draws", () => {
     const data = state();
     data.players[0].data.victoryPoints = 213;
